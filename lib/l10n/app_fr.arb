@@ -1876,5 +1876,405 @@
   "addressSelectorLivraisonSubtitle": "Où tu déposes les colis à destination",
   "@addressSelectorLivraisonSubtitle": {
     "description": "Sous-titre de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)"
+  },
+
+  "tripPosterTimePattern": "HH'h'mm",
+  "@tripPosterTimePattern": {
+    "description": "Motif intl DateFormat, pas un texte : heure de l'échéance de l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterDepartureLabel": "Départ",
+  "@tripPosterDepartureLabel": {
+    "description": "Libellé de la ligne date de départ sur l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterDeadlineLabel": "Dernier dépôt",
+  "@tripPosterDeadlineLabel": {
+    "description": "Libellé de la ligne date limite de dépôt sur l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterCapacityLabel": "Place disponible",
+  "@tripPosterCapacityLabel": {
+    "description": "Libellé de la ligne capacité disponible sur l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterHandoverLabel": "Remise",
+  "@tripPosterHandoverLabel": {
+    "description": "Libellé du lieu de remise (pickupAddress) sur l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterPickupLabel": "Récupération",
+  "@tripPosterPickupLabel": {
+    "description": "Libellé du lieu de récupération (deliveryAddress) sur l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterFromPrice": "dès {price}",
+  "@tripPosterFromPrice": {
+    "description": "Montant affiché en grand sur l'affiche quand le trajet a une grille de prix (trip_poster_card.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterUnitPerItem": "l'article",
+  "@tripPosterUnitPerItem": {
+    "description": "Unité affichée à côté du prix quand il s'agit d'un tarif à l'article (trip_poster_card.dart)"
+  },
+  "tripPosterUnitPerKg": "le kilo",
+  "@tripPosterUnitPerKg": {
+    "description": "Unité affichée à côté du prix quand il s'agit d'un tarif au kilo (trip_poster_card.dart)"
+  },
+  "tripPosterPriceUnavailable": "Prix indisponible",
+  "@tripPosterPriceUnavailable": {
+    "description": "Prix affiché quand ni la grille ni le tarif au kilo ne sont renseignés (trip_poster_card.dart, trip_poster_screen.dart)"
+  },
+  "tripPosterPricePerKg": "{price} le kilo",
+  "@tripPosterPricePerKg": {
+    "description": "Tarif au kilo secondaire sous le prix de grille (trip_poster_card.dart), et phrase de prix de la légende partageable (trip_poster_screen.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterPriceFromItem": "dès {price} l'article",
+  "@tripPosterPriceFromItem": {
+    "description": "Phrase de prix à l'article dans la légende partageable de l'affiche (trip_poster_screen.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterTagline": "Paiement sécurisé, suivi du colis, voyageurs vérifiés",
+  "@tripPosterTagline": {
+    "description": "Accroche en pied de l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterTitle": "Mon affiche",
+  "@tripPosterTitle": {
+    "description": "Titre de l'écran d'aperçu de l'affiche du trajet (trip_poster_screen.dart)"
+  },
+  "tripPosterNotFoundTitle": "Trajet introuvable",
+  "@tripPosterNotFoundTitle": {
+    "description": "Titre de l'état vide quand le trajet de l'affiche ne charge pas (trip_poster_screen.dart)"
+  },
+  "tripPosterNotFoundDescription": "Impossible de charger ce trajet pour le moment.",
+  "@tripPosterNotFoundDescription": {
+    "description": "Description de l'état vide quand le trajet de l'affiche ne charge pas (trip_poster_screen.dart)"
+  },
+  "tripPosterCaptionCorridor": "{departure} vers {arrival}",
+  "@tripPosterCaptionCorridor": {
+    "description": "Première ligne de la légende partageable : corridor du trajet (trip_poster_screen.dart)",
+    "placeholders": {
+      "departure": {
+        "type": "String"
+      },
+      "arrival": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterCaptionDeparture": "Départ le {day}",
+  "@tripPosterCaptionDeparture": {
+    "description": "Ligne date de départ de la légende partageable (trip_poster_screen.dart)",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterCaptionDeadline": "Dernier dépôt le {deadline}",
+  "@tripPosterCaptionDeadline": {
+    "description": "Ligne date limite de dépôt de la légende partageable (trip_poster_screen.dart)",
+    "placeholders": {
+      "deadline": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterCaptionHandover": "Remise : {address}",
+  "@tripPosterCaptionHandover": {
+    "description": "Ligne lieu de remise de la légende partageable (trip_poster_screen.dart)",
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterCaptionPickup": "Récupération : {address}",
+  "@tripPosterCaptionPickup": {
+    "description": "Ligne lieu de récupération de la légende partageable (trip_poster_screen.dart)",
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterCaptionCta": "Réservez vos kilos ici :",
+  "@tripPosterCaptionCta": {
+    "description": "Appel à l'action avant le lien, dans la légende partageable (trip_poster_screen.dart)"
+  },
+  "tripPosterCaptionFooter": "Paiement sécurisé, suivi du colis, voyageur vérifié.",
+  "@tripPosterCaptionFooter": {
+    "description": "Dernière ligne de la légende partageable (trip_poster_screen.dart)"
+  },
+  "tripPosterShareSubject": "Trajet {departure} vers {arrival}",
+  "@tripPosterShareSubject": {
+    "description": "Objet du partage système de l'affiche (trip_poster_screen.dart)",
+    "placeholders": {
+      "departure": {
+        "type": "String"
+      },
+      "arrival": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterShareError": "Impossible de partager l'affiche",
+  "@tripPosterShareError": {
+    "description": "Message d'échec du partage de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterSaveError": "Impossible d'enregistrer l'affiche",
+  "@tripPosterSaveError": {
+    "description": "Message d'échec de l'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)"
+  },
+  "tripPosterSaveSuccess": "Affiche enregistrée dans votre galerie",
+  "@tripPosterSaveSuccess": {
+    "description": "Message de succès de l'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)"
+  },
+  "tripPosterCaptionCopied": "Légende copiée",
+  "@tripPosterCaptionCopied": {
+    "description": "Confirmation après copie de la légende de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterLinkCopiedMessage": "Lien copié",
+  "@tripPosterLinkCopiedMessage": {
+    "description": "Confirmation après copie du lien de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterInstructions": "Postez cette affiche comme d'habitude, puis collez la légende dans le texte de votre publication. Le lien y devient cliquable, ce qui n'est pas le cas d'une adresse écrite sur l'image.",
+  "@tripPosterInstructions": {
+    "description": "Texte d'instructions sous l'aperçu de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterShareButton": "Partager l'affiche",
+  "@tripPosterShareButton": {
+    "description": "Bouton de partage de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterCopyCaptionButton": "Copier la légende",
+  "@tripPosterCopyCaptionButton": {
+    "description": "Bouton de copie de la légende de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterCopyLinkButton": "Copier le lien",
+  "@tripPosterCopyLinkButton": {
+    "description": "Bouton de copie du lien de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterSaveButton": "Enregistrer dans la galerie",
+  "@tripPosterSaveButton": {
+    "description": "Bouton d'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)"
+  },
+
+  "errorAnnouncementUpdateBlockedTitle": "Modification impossible",
+  "@errorAnnouncementUpdateBlockedTitle": {
+    "description": "Titre du catalogue d'erreurs pour le code announcement-update-blocked : modification refusée car des colis sont déjà acceptés (error_catalog.dart, announcement_bloc.dart)"
+  },
+  "errorAnnouncementUpdateBlockedMessage": "Des colis sont déjà acceptés pour ce trajet",
+  "@errorAnnouncementUpdateBlockedMessage": {
+    "description": "Message du catalogue d'erreurs pour le code announcement-update-blocked (error_catalog.dart, announcement_bloc.dart)"
+  },
+
+  "tripTemplateListTitle": "Mes modèles de trajet",
+  "@tripTemplateListTitle": {
+    "description": "Titre de l'écran liste des modèles de trajet (trip_templates_screen.dart)"
+  },
+  "tripTemplateNewLabel": "Nouveau modèle",
+  "@tripTemplateNewLabel": {
+    "description": "Tooltip du bouton d'ajout de la liste des modèles (trip_templates_screen.dart) et titre de l'écran d'édition en mode création (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateLoadErrorTitle": "Erreur de chargement",
+  "@tripTemplateLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur de la liste des modèles de trajet (trip_templates_screen.dart)"
+  },
+  "tripTemplateLoadErrorFallback": "Une erreur est survenue.",
+  "@tripTemplateLoadErrorFallback": {
+    "description": "Description de repli de l'état d'erreur, quand le serveur n'a pas fourni de message (trip_templates_screen.dart)"
+  },
+  "tripTemplateEmptyTitle": "Aucun modèle",
+  "@tripTemplateEmptyTitle": {
+    "description": "Titre de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)"
+  },
+  "tripTemplateEmptyDescription": "Crée des modèles de trajet réutilisables pour publier tes annonces en quelques secondes.",
+  "@tripTemplateEmptyDescription": {
+    "description": "Description de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)"
+  },
+  "tripTemplateCreateAction": "Créer un modèle",
+  "@tripTemplateCreateAction": {
+    "description": "Bouton d'action de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)"
+  },
+  "tripTemplateGridPriceLabel": "prix à la grille",
+  "@tripTemplateGridPriceLabel": {
+    "description": "Repli affiché à la place du tarif au kilo quand le modèle vend à la grille (trip_templates_screen.dart, trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateDeleteDialogTitle": "Supprimer le modèle",
+  "@tripTemplateDeleteDialogTitle": {
+    "description": "Titre du dialogue de confirmation de suppression d'un modèle (trip_templates_screen.dart)"
+  },
+  "tripTemplateDeleteDialogMessage": "Es-tu sûr de vouloir supprimer \"{label}\" ? Cette action est irréversible.",
+  "@tripTemplateDeleteDialogMessage": {
+    "description": "Message du dialogue de confirmation de suppression d'un modèle (trip_templates_screen.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tripTemplateScheduleRecurrenceAction": "Programmer la récurrence",
+  "@tripTemplateScheduleRecurrenceAction": {
+    "description": "Entrée du menu d'une carte modèle pour programmer sa récurrence (trip_templates_screen.dart)"
+  },
+
+  "tripTemplateNameSectionLabel": "NOM DU MODÈLE",
+  "@tripTemplateNameSectionLabel": {
+    "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateNameFieldLabel": "Nom",
+  "@tripTemplateNameFieldLabel": {
+    "description": "Libellé du champ nom du modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateNameFieldHint": "Ex : Mon Paris → Dakar",
+  "@tripTemplateNameFieldHint": {
+    "description": "Placeholder du champ nom du modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateTripSectionLabel": "TRAJET",
+  "@tripTemplateTripSectionLabel": {
+    "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateTransportSectionLabel": "MODE DE TRANSPORT",
+  "@tripTemplateTransportSectionLabel": {
+    "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateScheduleSectionLabel": "HORAIRES",
+  "@tripTemplateScheduleSectionLabel": {
+    "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateDepartureTimeFieldLabel": "Heure de départ",
+  "@tripTemplateDepartureTimeFieldLabel": {
+    "description": "Libellé complet du champ heure de départ, utilisé au placeholder et en annonce d'accessibilité (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateDepartureShortLabel": "Départ",
+  "@tripTemplateDepartureShortLabel": {
+    "description": "Libellé court affiché en préfixe une fois l'heure de départ posée (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateArrivalTimeFieldLabel": "Heure d'arrivée",
+  "@tripTemplateArrivalTimeFieldLabel": {
+    "description": "Libellé complet du champ heure d'arrivée, utilisé au placeholder et en annonce d'accessibilité (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateArrivalShortLabel": "Arrivée",
+  "@tripTemplateArrivalShortLabel": {
+    "description": "Libellé court affiché en préfixe une fois l'heure d'arrivée posée (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateHandoverDeadlineSectionLabel": "DÉLAI DE REMISE",
+  "@tripTemplateHandoverDeadlineSectionLabel": {
+    "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateHandoverDeadlineHint": "Au plus tard combien de jours avant le départ le colis doit être remis ?",
+  "@tripTemplateHandoverDeadlineHint": {
+    "description": "Texte d'aide sous le titre de la section délai de remise (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateHandoverNone": "Aucun",
+  "@tripTemplateHandoverNone": {
+    "description": "Choix de délai de remise : aucun délai mémorisé (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateHandoverSameDay": "Le jour même",
+  "@tripTemplateHandoverSameDay": {
+    "description": "Choix de délai de remise : le jour du départ (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateHandoverDaysBefore": "{count, plural, =1{{count} jour avant} other{{count} jours avant}}",
+  "@tripTemplateHandoverDaysBefore": {
+    "description": "Choix de délai de remise : N jours avant le départ (trip_template_edit_screen.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripTemplateOptionalSuffix": "{label} (optionnel)",
+  "@tripTemplateOptionalSuffix": {
+    "description": "Placeholder d'un champ heure tant qu'aucune heure n'est posée (trip_template_edit_screen.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tripTemplateClearFieldSemantic": "Effacer {label}",
+  "@tripTemplateClearFieldSemantic": {
+    "description": "Libellé d'accessibilité du bouton d'effacement d'un champ heure (trip_template_edit_screen.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tripTemplateEditTitle": "Modifier le modèle",
+  "@tripTemplateEditTitle": {
+    "description": "Titre de l'écran d'édition d'un modèle existant (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateSaveButton": "Enregistrer le modèle",
+  "@tripTemplateSaveButton": {
+    "description": "Bouton de la dernière étape du formulaire de modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateUpdatedMessage": "Modèle mis à jour",
+  "@tripTemplateUpdatedMessage": {
+    "description": "Confirmation après mise à jour d'un modèle existant (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateSavedMessage": "Modèle enregistré",
+  "@tripTemplateSavedMessage": {
+    "description": "Confirmation après création d'un nouveau modèle (trip_template_edit_screen.dart)"
+  },
+
+  "tripTemplateRecurrenceActivatedMessage": "Récurrence activée. Tes trajets seront publiés automatiquement.",
+  "@tripTemplateRecurrenceActivatedMessage": {
+    "description": "Confirmation après activation d'une récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateRecurrenceTitle": "Trajet récurrent",
+  "@tripTemplateRecurrenceTitle": {
+    "description": "Titre de l'écran de programmation d'une récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateActivateRecurrenceButton": "Activer la récurrence",
+  "@tripTemplateActivateRecurrenceButton": {
+    "description": "Bouton de validation de l'écran de récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateNoPricePerKgWarning": "Ce modèle n'a pas de prix au kilo",
+  "@tripTemplateNoPricePerKgWarning": {
+    "description": "Avertissement quand le modèle source n'a pas de prix au kilo éditable (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateRepeatDaysSectionLabel": "JOURS DE RÉPÉTITION",
+  "@tripTemplateRepeatDaysSectionLabel": {
+    "description": "Titre de section de l'écran de récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateRecurrenceDepartureTimeSectionLabel": "HEURE DE DÉPART",
+  "@tripTemplateRecurrenceDepartureTimeSectionLabel": {
+    "description": "Titre de section de l'écran de récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateOptionalTimeHint": "Optionnel : choisir une heure",
+  "@tripTemplateOptionalTimeHint": {
+    "description": "Placeholder du champ heure de départ tant qu'aucune heure n'est posée (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateClearTimeSemantic": "Effacer l'heure de départ",
+  "@tripTemplateClearTimeSemantic": {
+    "description": "Libellé d'accessibilité du bouton d'effacement de l'heure de départ (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateLocationsSectionLabel": "LIEUX",
+  "@tripTemplateLocationsSectionLabel": {
+    "description": "Titre de section de l'écran de récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplatePickupFieldLabel": "Lieu de remise du colis *",
+  "@tripTemplatePickupFieldLabel": {
+    "description": "Libellé du champ adresse de remise de l'écran de récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateDeliveryFieldLabel": "Lieu de récupération *",
+  "@tripTemplateDeliveryFieldLabel": {
+    "description": "Libellé du champ adresse de récupération de l'écran de récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateActiveLabel": "Récurrence active",
+  "@tripTemplateActiveLabel": {
+    "description": "Titre du bloc bascule d'activation de la récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateActiveDescription": "Publie automatiquement les trajets à venir",
+  "@tripTemplateActiveDescription": {
+    "description": "Sous-titre du bloc bascule d'activation de la récurrence (trip_recurrence_edit_screen.dart)"
   }
 }

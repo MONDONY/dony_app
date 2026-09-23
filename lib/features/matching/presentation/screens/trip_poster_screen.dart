@@ -13,6 +13,7 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/poster/trip_poster_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -72,19 +73,19 @@ class TripPosterRoute extends StatelessWidget {
           return TripPosterScreen(announcement: announcement);
         }
 
+        final l = context.l10n;
         return Scaffold(
           appBar: AppBar(
             actions: const [DonyFeedbackButton()],
             leading: const DonyAppBarBackButton(),
-            title: const Text('Mon affiche'),
+            title: Text(l.tripPosterTitle),
             centerTitle: false,
           ),
           body: Center(
             child: state is AnnouncementError
-                ? const DonyEmptyState(
-                    title: 'Trajet introuvable',
-                    description:
-                        'Impossible de charger ce trajet pour le moment.',
+                ? DonyEmptyState(
+                    title: l.tripPosterNotFoundTitle,
+                    description: l.tripPosterNotFoundDescription,
                     type: DonyEmptyStateType.error,
                   )
                 : const CircularProgressIndicator(),
@@ -188,24 +189,26 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
   /// Légende prête à coller dans le texte du post. C'est elle qui porte le lien
   /// cliquable, l'image ne le rendant pas actionnable sur les réseaux.
   String _captionFor(PosterShareChannel channel) {
+    final l = context.l10n;
+    final locale = l.localeName;
     final a = widget.announcement;
     final deadline = a.handoverDeadline;
     final pickup = a.pickupAddress?.label;
     final delivery = a.deliveryAddress?.label;
 
     return <String>[
-      '✈️ ${a.departureCity} vers ${a.arrivalCity}',
-      '📅 Départ le ${TripPosterCard.dayFormat.format(a.departureDate)}',
+      '✈️ ${l.tripPosterCaptionCorridor(a.departureCity, a.arrivalCity)}',
+      '📅 ${l.tripPosterCaptionDeparture(TripPosterCard.dayFormat(locale).format(a.departureDate))}',
       if (deadline != null)
-        '⏰ Dernier dépôt le ${TripPosterCard.deadlineFormat.format(deadline)}',
-      '📦 ${TripPosterCard.capacityLabel(a)}, ${_priceSentence(a)}',
-      if (pickup != null) '📍 Remise : $pickup',
-      if (delivery != null) '🏁 Récupération : $delivery',
+        '⏰ ${l.tripPosterCaptionDeadline(TripPosterCard.deadlineLabel(l, locale, deadline))}',
+      '📦 ${TripPosterCard.capacityLabel(l, a)}, ${_priceSentence(l, a)}',
+      if (pickup != null) '📍 ${l.tripPosterCaptionHandover(pickup)}',
+      if (delivery != null) '🏁 ${l.tripPosterCaptionPickup(delivery)}',
       '',
-      'Réservez vos kilos ici :',
+      l.tripPosterCaptionCta,
       _urlFor(channel),
       '',
-      'Paiement sécurisé, suivi du colis, voyageur vérifié.',
+      l.tripPosterCaptionFooter,
     ].join('\n');
   }
 
@@ -213,20 +216,22 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
   /// l'affiche : les deux partent des mêmes accesseurs, donc un trajet vendu à
   /// l'article ne peut pas annoncer « 0 € le kilo » d'un côté et sa grille de
   /// l'autre.
-  static String _priceSentence(AnnouncementModel a) {
+  static String _priceSentence(AppLocalizations l, AnnouncementModel a) {
     // Garde sur hasKgPrice (valeur > 0), pas sur la seule nullité :
     // senderPricePerKg n'est en pratique jamais null, mais peut valoir 0
     // (mode MIXED sans grille renseignée, cas limite) — ce 0 est la vraie
     // valeur trompeuse à écarter, pas une absence.
     final senderPricePerKg = a.senderPricePerKg;
     final kilo = a.hasKgPrice
-        ? '${formatPriceIn(senderPricePerKg!, a.currency)} le kilo'
+        ? l.tripPosterPricePerKg(formatPriceIn(senderPricePerKg!, a.currency))
         : null;
     final grid = a.cheapestGridPrice;
-    if (grid == null) return kilo ?? 'Prix indisponible';
+    if (grid == null) return kilo ?? l.tripPosterPriceUnavailable;
 
-    final article = "dès ${formatPriceIn(grid, a.currency)} l'article";
-    return (a.hasKgPrice && kilo != null) ? '$article et $kilo' : article;
+    final article = l.tripPosterPriceFromItem(formatPriceIn(grid, a.currency));
+    return (a.hasKgPrice && kilo != null)
+        ? l.commonListPair(article, kilo)
+        : article;
   }
 
   /// Capture l'affiche en PNG, une seule fois par écran.
@@ -297,7 +302,8 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
     // Lu avant tout await : sharePositionOriginFor interroge le RenderBox du
     // contexte, qui peut être démonté pendant les opérations asynchrones.
     final origin = sharePositionOriginFor(context);
-    return _withPoster('Impossible de partager l\'affiche', (bytes) async {
+    final l = context.l10n;
+    return _withPoster(l.tripPosterShareError, (bytes) async {
       final dir = await getTemporaryDirectory();
       final file = File(
         '${dir.path}/yadony_affiche_${widget.announcement.id}.png',
@@ -306,8 +312,10 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
 
       final result = await Share.shareXFiles(
         [XFile(file.path, mimeType: 'image/png')],
-        subject:
-            'Trajet ${widget.announcement.departureCity} vers ${widget.announcement.arrivalCity}',
+        subject: l.tripPosterShareSubject(
+          widget.announcement.departureCity,
+          widget.announcement.arrivalCity,
+        ),
         text: _captionFor(PosterShareChannel.share),
         sharePositionOrigin: origin,
       );
@@ -323,7 +331,8 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
   }
 
   Future<void> _saveToGallery() {
-    const failureMessage = 'Impossible d\'enregistrer l\'affiche';
+    final l = context.l10n;
+    final failureMessage = l.tripPosterSaveError;
     return _withPoster(failureMessage, (bytes) async {
       // gal expose hasAccess()/requestAccess() mais ne les appelle jamais
       // lui-même avant d'écrire — putImageBytes écrit directement. Sans
@@ -347,10 +356,7 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
           properties: {'action': 'save'},
         ),
       );
-      _notify(
-        'Affiche enregistrée dans votre galerie',
-        DonySnackbarType.success,
-      );
+      _notify(l.tripPosterSaveSuccess, DonySnackbarType.success);
     });
   }
 
@@ -378,12 +384,13 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
         actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
-        title: const Text('Mon affiche'),
+        title: Text(l.tripPosterTitle),
         centerTitle: false,
       ),
       body: SingleChildScrollView(
@@ -414,7 +421,7 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
             ),
             const SizedBox(height: DonySpacing.xl),
             Text(
-              'Postez cette affiche comme d\'habitude, puis collez la légende dans le texte de votre publication. Le lien y devient cliquable, ce qui n\'est pas le cas d\'une adresse écrite sur l\'image.',
+              l.tripPosterInstructions,
               style: text.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.lg),
@@ -424,38 +431,38 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   DonyButton(
-                    label: 'Partager l\'affiche',
+                    label: l.tripPosterShareButton,
                     icon: Icons.ios_share_rounded,
                     isLoading: busy,
                     onPressed: busy ? null : _sharePoster,
                   ),
                   const SizedBox(height: DonySpacing.sm),
                   DonyButton(
-                    label: 'Copier la légende',
+                    label: l.tripPosterCopyCaptionButton,
                     icon: Icons.notes_rounded,
                     variant: DonyButtonVariant.secondary,
                     onPressed: busy
                         ? null
                         : () => _copy(
                             value: _captionFor(PosterShareChannel.caption),
-                            confirmation: 'Légende copiée',
+                            confirmation: l.tripPosterCaptionCopied,
                           ),
                   ),
                   const SizedBox(height: DonySpacing.sm),
                   DonyButton(
-                    label: 'Copier le lien',
+                    label: l.tripPosterCopyLinkButton,
                     icon: Icons.link_rounded,
                     variant: DonyButtonVariant.secondary,
                     onPressed: busy
                         ? null
                         : () => _copy(
                             value: _urlFor(PosterShareChannel.link),
-                            confirmation: 'Lien copié',
+                            confirmation: l.tripPosterLinkCopiedMessage,
                           ),
                   ),
                   const SizedBox(height: DonySpacing.sm),
                   DonyButton(
-                    label: 'Enregistrer dans la galerie',
+                    label: l.tripPosterSaveButton,
                     icon: Icons.download_rounded,
                     variant: DonyButtonVariant.ghost,
                     onPressed: busy ? null : _saveToGallery,

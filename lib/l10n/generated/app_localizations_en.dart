@@ -3072,4 +3072,292 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get addressSelectorLivraisonSubtitle =>
       'Where you drop off parcels at destination';
+
+  @override
+  String get tripPosterTimePattern => 'h:mm a';
+
+  @override
+  String get tripPosterDepartureLabel => 'Departure';
+
+  @override
+  String get tripPosterDeadlineLabel => 'Last drop-off';
+
+  @override
+  String get tripPosterCapacityLabel => 'Available space';
+
+  @override
+  String get tripPosterHandoverLabel => 'Drop-off';
+
+  @override
+  String get tripPosterPickupLabel => 'Pickup';
+
+  @override
+  String tripPosterFromPrice(String price) {
+    return 'from $price';
+  }
+
+  @override
+  String get tripPosterUnitPerItem => 'per item';
+
+  @override
+  String get tripPosterUnitPerKg => 'per kg';
+
+  @override
+  String get tripPosterPriceUnavailable => 'Price unavailable';
+
+  @override
+  String tripPosterPricePerKg(String price) {
+    return '$price per kg';
+  }
+
+  @override
+  String tripPosterPriceFromItem(String price) {
+    return 'from $price per item';
+  }
+
+  @override
+  String get tripPosterTagline =>
+      'Secure payment, parcel tracking, verified travelers';
+
+  @override
+  String get tripPosterTitle => 'My poster';
+
+  @override
+  String get tripPosterNotFoundTitle => 'Trip not found';
+
+  @override
+  String get tripPosterNotFoundDescription =>
+      'Couldn\'t load this trip right now.';
+
+  @override
+  String tripPosterCaptionCorridor(String departure, String arrival) {
+    return '$departure to $arrival';
+  }
+
+  @override
+  String tripPosterCaptionDeparture(String day) {
+    return 'Departure on $day';
+  }
+
+  @override
+  String tripPosterCaptionDeadline(String deadline) {
+    return 'Last drop-off on $deadline';
+  }
+
+  @override
+  String tripPosterCaptionHandover(String address) {
+    return 'Drop-off: $address';
+  }
+
+  @override
+  String tripPosterCaptionPickup(String address) {
+    return 'Pickup: $address';
+  }
+
+  @override
+  String get tripPosterCaptionCta => 'Book your kilos here:';
+
+  @override
+  String get tripPosterCaptionFooter =>
+      'Secure payment, parcel tracking, verified traveler.';
+
+  @override
+  String tripPosterShareSubject(String departure, String arrival) {
+    return 'Trip $departure to $arrival';
+  }
+
+  @override
+  String get tripPosterShareError => 'Couldn\'t share the poster';
+
+  @override
+  String get tripPosterSaveError => 'Couldn\'t save the poster';
+
+  @override
+  String get tripPosterSaveSuccess => 'Poster saved to your gallery';
+
+  @override
+  String get tripPosterCaptionCopied => 'Caption copied';
+
+  @override
+  String get tripPosterLinkCopiedMessage => 'Link copied';
+
+  @override
+  String get tripPosterInstructions =>
+      'Post this poster as usual, then paste the caption into your post\'s text. The link becomes clickable there, unlike an address written on the image.';
+
+  @override
+  String get tripPosterShareButton => 'Share the poster';
+
+  @override
+  String get tripPosterCopyCaptionButton => 'Copy the caption';
+
+  @override
+  String get tripPosterCopyLinkButton => 'Copy the link';
+
+  @override
+  String get tripPosterSaveButton => 'Save to gallery';
+
+  @override
+  String get errorAnnouncementUpdateBlockedTitle => 'Can\'t edit this trip';
+
+  @override
+  String get errorAnnouncementUpdateBlockedMessage =>
+      'Parcels have already been accepted for this trip';
+
+  @override
+  String get tripTemplateListTitle => 'My trip templates';
+
+  @override
+  String get tripTemplateNewLabel => 'New template';
+
+  @override
+  String get tripTemplateLoadErrorTitle => 'Loading error';
+
+  @override
+  String get tripTemplateLoadErrorFallback => 'Something went wrong.';
+
+  @override
+  String get tripTemplateEmptyTitle => 'No templates';
+
+  @override
+  String get tripTemplateEmptyDescription =>
+      'Create reusable trip templates to post your listings in seconds.';
+
+  @override
+  String get tripTemplateCreateAction => 'Create a template';
+
+  @override
+  String get tripTemplateGridPriceLabel => 'grid pricing';
+
+  @override
+  String get tripTemplateDeleteDialogTitle => 'Delete template';
+
+  @override
+  String tripTemplateDeleteDialogMessage(String label) {
+    return 'Are you sure you want to delete \"$label\"? This action can\'t be undone.';
+  }
+
+  @override
+  String get tripTemplateScheduleRecurrenceAction =>
+      'Schedule the recurring trip';
+
+  @override
+  String get tripTemplateNameSectionLabel => 'TEMPLATE NAME';
+
+  @override
+  String get tripTemplateNameFieldLabel => 'Name';
+
+  @override
+  String get tripTemplateNameFieldHint => 'E.g. My Paris → Dakar';
+
+  @override
+  String get tripTemplateTripSectionLabel => 'TRIP';
+
+  @override
+  String get tripTemplateTransportSectionLabel => 'TRANSPORT MODE';
+
+  @override
+  String get tripTemplateScheduleSectionLabel => 'SCHEDULE';
+
+  @override
+  String get tripTemplateDepartureTimeFieldLabel => 'Departure time';
+
+  @override
+  String get tripTemplateDepartureShortLabel => 'Departure';
+
+  @override
+  String get tripTemplateArrivalTimeFieldLabel => 'Arrival time';
+
+  @override
+  String get tripTemplateArrivalShortLabel => 'Arrival';
+
+  @override
+  String get tripTemplateHandoverDeadlineSectionLabel => 'DROP-OFF DEADLINE';
+
+  @override
+  String get tripTemplateHandoverDeadlineHint =>
+      'At the latest, how many days before departure should the parcel be dropped off?';
+
+  @override
+  String get tripTemplateHandoverNone => 'None';
+
+  @override
+  String get tripTemplateHandoverSameDay => 'Same day';
+
+  @override
+  String tripTemplateHandoverDaysBefore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days before',
+      one: '$count day before',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripTemplateOptionalSuffix(String label) {
+    return '$label (optional)';
+  }
+
+  @override
+  String tripTemplateClearFieldSemantic(String label) {
+    return 'Clear $label';
+  }
+
+  @override
+  String get tripTemplateEditTitle => 'Edit the template';
+
+  @override
+  String get tripTemplateSaveButton => 'Save the template';
+
+  @override
+  String get tripTemplateUpdatedMessage => 'Template updated';
+
+  @override
+  String get tripTemplateSavedMessage => 'Template saved';
+
+  @override
+  String get tripTemplateRecurrenceActivatedMessage =>
+      'Recurring trip activated. Your trips will be posted automatically.';
+
+  @override
+  String get tripTemplateRecurrenceTitle => 'Recurring trip';
+
+  @override
+  String get tripTemplateActivateRecurrenceButton =>
+      'Activate the recurring trip';
+
+  @override
+  String get tripTemplateNoPricePerKgWarning =>
+      'This template has no price per kg';
+
+  @override
+  String get tripTemplateRepeatDaysSectionLabel => 'REPEAT DAYS';
+
+  @override
+  String get tripTemplateRecurrenceDepartureTimeSectionLabel =>
+      'DEPARTURE TIME';
+
+  @override
+  String get tripTemplateOptionalTimeHint => 'Optional: pick a time';
+
+  @override
+  String get tripTemplateClearTimeSemantic => 'Clear the departure time';
+
+  @override
+  String get tripTemplateLocationsSectionLabel => 'LOCATIONS';
+
+  @override
+  String get tripTemplatePickupFieldLabel => 'Parcel drop-off location *';
+
+  @override
+  String get tripTemplateDeliveryFieldLabel => 'Pickup location *';
+
+  @override
+  String get tripTemplateActiveLabel => 'Recurring trip active';
+
+  @override
+  String get tripTemplateActiveDescription =>
+      'Automatically posts upcoming trips';
 }

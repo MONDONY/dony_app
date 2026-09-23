@@ -40,15 +40,25 @@ class TripPosterCard extends StatelessWidget {
   static const double logicalWidth = 360;
   static const double logicalHeight = 450;
 
-  /// Formats de date partagés par toute la classe : ce sont des getters,
-  /// recalculés à chaque accès pour suivre la langue de l'app. Ils ne
-  /// dépendent d'aucune donnée d'instance, et l'écran d'aperçu les réutilise
-  /// pour composer sa légende, ce qui garantit que l'image et le texte du post
-  /// annoncent la même chose.
-  static DateFormat get dayFormat =>
-      DateFormat('EEEE d MMMM', AppL10n.localeName);
-  static DateFormat get deadlineFormat =>
-      DateFormat("d MMMM 'à' HH'h'mm", AppL10n.localeName);
+  /// Formats de date partagés par toute la classe : ce sont des méthodes
+  /// statiques, sans `BuildContext`, recalculées à chaque appel pour suivre la
+  /// langue de l'app. Elles ne dépendent d'aucune donnée d'instance, et
+  /// l'écran d'aperçu les réutilise pour composer sa légende (avec
+  /// `context.l10n.localeName`), ce qui garantit que l'image et le texte du
+  /// post annoncent la même chose.
+  static DateFormat dayFormat(String locale) => DateFormat.MMMMEEEEd(locale);
+
+  /// `HH'h'mm` (fr) / `h:mm a` (en) : « 14h05 » est une typographie française
+  /// que le squelette intl `jm` ne produit pas, d'où un motif stocké dans
+  /// l'ARB (`tripPosterTimePattern`) plutôt qu'un squelette.
+  static String deadlineLabel(
+    AppLocalizations l,
+    String locale,
+    DateTime deadline,
+  ) => l.commonDateAtTime(
+    DateFormat.MMMMd(locale).format(deadline),
+    DateFormat(l.tripPosterTimePattern, locale).format(deadline),
+  );
 
   /// Badges officiels des deux plateformes, en français.
   ///
@@ -90,15 +100,19 @@ class TripPosterCard extends StatelessWidget {
   /// `KG_FREE` signifie « pas de plafond déclaré » : `availableKg` n'est alors
   /// qu'une valeur de forme, et l'imprimer comme une limite tromperait
   /// l'expéditeur. Tout le reste de l'application dit « Kg libre » dans ce cas.
-  static String capacityLabel(AnnouncementModel a) => a.isKgFree
-      ? 'Kg libre'
+  static String capacityLabel(AppLocalizations l, AnnouncementModel a) =>
+      a.isKgFree
+      ? l.tripKgFree
       // formatKgPrice retire les décimales superflues ; sa sémantique est celle
-      // d'un nombre, pas d'un prix.
+      // d'un nombre, pas d'un prix. « kg » est une unité, pas un mot à
+      // traduire (formats sans mot).
       : '${formatKgPrice(a.availableKg)} kg';
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final locale = l.localeName;
     final deadline = announcement.handoverDeadline;
     final pickup = announcement.pickupAddress?.label;
     final delivery = announcement.deliveryAddress?.label;
@@ -118,8 +132,8 @@ class TripPosterCard extends StatelessWidget {
               _corridor(text),
               const SizedBox(height: 14),
               _InfoRow(
-                label: 'Départ',
-                value: dayFormat.format(announcement.departureDate),
+                label: l.tripPosterDepartureLabel,
+                value: dayFormat(locale).format(announcement.departureDate),
                 valueColor: _ink,
               ),
               const SizedBox(height: 8),
@@ -129,15 +143,15 @@ class TripPosterCard extends StatelessWidget {
               // en rouge, on garde ce code visuel.
               if (deadline != null) ...[
                 _InfoRow(
-                  label: 'Dernier dépôt',
-                  value: deadlineFormat.format(deadline),
+                  label: l.tripPosterDeadlineLabel,
+                  value: deadlineLabel(l, locale, deadline),
                   valueColor: _terra,
                 ),
                 const SizedBox(height: 8),
               ],
               _InfoRow(
-                label: 'Place disponible',
-                value: capacityLabel(announcement),
+                label: l.tripPosterCapacityLabel,
+                value: capacityLabel(l, announcement),
                 valueColor: _ink,
               ),
               // Lieux de remise et de récupération. Les DTO allégés ne les
@@ -146,7 +160,7 @@ class TripPosterCard extends StatelessWidget {
               if (pickup != null) ...[
                 const SizedBox(height: 8),
                 _InfoRow(
-                  label: 'Remise',
+                  label: l.tripPosterHandoverLabel,
                   value: pickup,
                   valueColor: _ink,
                   maxLines: 2,
@@ -155,16 +169,16 @@ class TripPosterCard extends StatelessWidget {
               if (delivery != null) ...[
                 const SizedBox(height: 8),
                 _InfoRow(
-                  label: 'Récupération',
+                  label: l.tripPosterPickupLabel,
                   value: delivery,
                   valueColor: _ink,
                   maxLines: 2,
                 ),
               ],
               const Spacer(),
-              _priceBlock(text),
+              _priceBlock(text, l),
               const SizedBox(height: 12),
-              _footer(text),
+              _footer(text, l),
             ],
           ),
         ),
@@ -290,7 +304,7 @@ class TripPosterCard extends StatelessWidget {
   /// qu'un affichage naïf annonçait « 0 € le kilo » sur l'affiche même. Le
   /// mode commande donc ce qui est mis en avant, et les deux tarifs coexistent
   /// quand le voyageur a réellement renseigné les deux.
-  Widget _priceBlock(TextTheme text) {
+  Widget _priceBlock(TextTheme text, AppLocalizations l) {
     final currency = announcement.currency;
     final grid = announcement.cheapestGridPrice;
     final senderPricePerKg = announcement.senderPricePerKg;
@@ -303,10 +317,12 @@ class TripPosterCard extends StatelessWidget {
     if (grid != null) {
       // « dès », parce qu'un prix de grille est un point d'entrée : c'est
       // l'article le moins cher, pas le tarif de tous les articles.
-      amount = 'dès ${formatPriceIn(grid, currency)}';
-      unit = "l'article";
+      amount = l.tripPosterFromPrice(formatPriceIn(grid, currency));
+      unit = l.tripPosterUnitPerItem;
       if (hasKg && senderPricePerKg != null) {
-        secondary = '${formatPriceIn(senderPricePerKg, currency)} le kilo';
+        secondary = l.tripPosterPricePerKg(
+          formatPriceIn(senderPricePerKg, currency),
+        );
       }
     } else {
       // Garde sur hasKg (valeur > 0), pas sur la seule nullité :
@@ -314,8 +330,8 @@ class TripPosterCard extends StatelessWidget {
       // trompeuse à écarter (jamais de faux « 0 € »).
       amount = hasKg
           ? formatPriceIn(senderPricePerKg!, currency)
-          : 'Prix indisponible';
-      unit = 'le kilo';
+          : l.tripPosterPriceUnavailable;
+      unit = l.tripPosterUnitPerKg;
     }
 
     return Container(
@@ -392,14 +408,14 @@ class TripPosterCard extends StatelessWidget {
   /// UUID. C'est la légende, elle, collable et cliquable, qui porte le lien.
   /// Les badges prennent le relais pour qui ne voit que l'image : ils disent
   /// quoi chercher, et où.
-  Widget _footer(TextTheme text) {
+  Widget _footer(TextTheme text, AppLocalizations l) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Divider(height: 1, thickness: 1, color: _line),
         const SizedBox(height: 8),
         Text(
-          'Paiement sécurisé, suivi du colis, voyageurs vérifiés',
+          l.tripPosterTagline,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: text.bodySmall?.copyWith(

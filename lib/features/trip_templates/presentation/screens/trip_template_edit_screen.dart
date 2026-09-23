@@ -43,13 +43,14 @@ class TripTemplateEditScreen extends StatefulWidget {
 
 class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   static const _totalSteps = 3;
-  static const _handoverChoices = <(int?, String)>[
-    (null, 'Aucun'),
-    (0, 'Le jour même'),
-    (1, '1 jour avant'),
-    (2, '2 jours avant'),
-    (3, '3 jours avant'),
-    (7, '7 jours avant'),
+
+  static List<(int?, String)> _handoverChoices(AppLocalizations l) => [
+    (null, l.tripTemplateHandoverNone),
+    (0, l.tripTemplateHandoverSameDay),
+    (1, l.tripTemplateHandoverDaysBefore(1)),
+    (2, l.tripTemplateHandoverDaysBefore(2)),
+    (3, l.tripTemplateHandoverDaysBefore(3)),
+    (7, l.tripTemplateHandoverDaysBefore(7)),
   ];
 
   late final TripFormFields _fields;
@@ -363,9 +364,12 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       child: BlocConsumer<TripTemplateBloc, TripTemplateState>(
         listener: (context, state) {
           if (_submitted && state.status == TripTemplateStatus.success) {
+            final l = context.l10n;
             DonySnackbar.show(
               context,
-              message: _isEditing ? 'Modèle mis à jour' : 'Modèle enregistré',
+              message: _isEditing
+                  ? l.tripTemplateUpdatedMessage
+                  : l.tripTemplateSavedMessage,
               type: DonySnackbarType.success,
             );
             context.pop(true);
@@ -402,6 +406,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                 }
               }
 
+              final l = context.l10n;
               return PopScope(
                 canPop: step == 0,
                 onPopInvokedWithResult: (didPop, _) {
@@ -410,14 +415,18 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                   }
                 },
                 child: DonyPageScaffold(
-                  title: _isEditing ? 'Modifier le modèle' : 'Nouveau modèle',
+                  title: _isEditing
+                      ? l.tripTemplateEditTitle
+                      : l.tripTemplateNewLabel,
                   onBack: handleBack,
                   stickyBottom: ValueListenableBuilder<bool>(
                     valueListenable: _canContinue,
                     builder: (context, canContinue, _) {
                       final enabled = canContinue && !isLoading;
                       return DonyButton(
-                        label: step < 2 ? 'Continuer' : 'Enregistrer le modèle',
+                        label: step < 2
+                            ? l.commonContinue
+                            : l.tripTemplateSaveButton,
                         onPressed: enabled
                             ? (step < 2
                                   ? () => _step.value = step + 1
@@ -454,21 +463,28 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   List<Widget> _buildStep0(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return [
       // ── NOM DU MODÈLE ───────────────────────────────────────────
-      const _SectionLabel(label: 'NOM DU MODÈLE', iconAsset: 'bookmark'),
+      _SectionLabel(
+        label: l.tripTemplateNameSectionLabel,
+        iconAsset: 'bookmark',
+      ),
       const SizedBox(height: DonySpacing.sm),
       DonyTextField(
         controller: _labelCtrl,
-        label: 'Nom',
-        hint: 'Ex : Mon Paris → Dakar',
+        label: l.tripTemplateNameFieldLabel,
+        hint: l.tripTemplateNameFieldHint,
         prefixWidget: DonyIcon('tag', size: 20, color: cs.onSurfaceVariant),
       ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.03),
       const SizedBox(height: DonySpacing.xxl),
 
       // ── TRAJET ──────────────────────────────────────────────────
-      const _SectionLabel(label: 'TRAJET', iconAsset: 'plane-takeoff'),
+      _SectionLabel(
+        label: l.tripTemplateTripSectionLabel,
+        iconAsset: 'plane-takeoff',
+      ),
       const SizedBox(height: DonySpacing.sm),
       ListenableBuilder(
         listenable: Listenable.merge([
@@ -511,7 +527,10 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       const SizedBox(height: DonySpacing.xxl),
 
       // ── MODE DE TRANSPORT ───────────────────────────────────────
-      const _SectionLabel(label: 'MODE DE TRANSPORT', iconAsset: 'route'),
+      _SectionLabel(
+        label: l.tripTemplateTransportSectionLabel,
+        iconAsset: 'route',
+      ),
       const SizedBox(height: DonySpacing.sm),
       ListenableBuilder(
         listenable: _fields.transportMode,
@@ -532,29 +551,34 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       const SizedBox(height: DonySpacing.xxl),
 
       // ── HORAIRES ─────────────────────────────────────────────────
-      const _SectionLabel(label: 'HORAIRES', iconAsset: 'clock'),
+      _SectionLabel(
+        label: l.tripTemplateScheduleSectionLabel,
+        iconAsset: 'clock',
+      ),
       const SizedBox(height: DonySpacing.sm),
       _TimeRow(
         icon: 'plane-takeoff',
-        label: 'Heure de départ',
-        shortLabel: 'Départ',
+        label: l.tripTemplateDepartureTimeFieldLabel,
+        shortLabel: l.tripTemplateDepartureShortLabel,
         time: _fields.departureTime,
       ),
       const SizedBox(height: DonySpacing.sm),
       _TimeRow(
         icon: 'plane-landing',
-        label: "Heure d'arrivée",
-        shortLabel: 'Arrivée',
+        label: l.tripTemplateArrivalTimeFieldLabel,
+        shortLabel: l.tripTemplateArrivalShortLabel,
         time: _fields.arrivalTime,
       ),
       const SizedBox(height: DonySpacing.xxl),
 
       // ── DÉLAI DE REMISE ─────────────────────────────────────────
-      const _SectionLabel(label: 'DÉLAI DE REMISE', iconAsset: 'timer'),
+      _SectionLabel(
+        label: l.tripTemplateHandoverDeadlineSectionLabel,
+        iconAsset: 'timer',
+      ),
       const SizedBox(height: DonySpacing.sm),
       Text(
-        'Au plus tard combien de jours avant le départ le colis doit être '
-        'remis ?',
+        l.tripTemplateHandoverDeadlineHint,
         style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
       ),
       const SizedBox(height: DonySpacing.sm),
@@ -564,7 +588,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
           spacing: DonySpacing.sm,
           runSpacing: DonySpacing.sm,
           children: [
-            for (final choice in _handoverChoices)
+            for (final choice in _handoverChoices(l))
               DonyChip(
                 label: choice.$2,
                 selected: selected == choice.$1,
@@ -655,6 +679,7 @@ class _TimeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     return ValueListenableBuilder<TimeOfDay?>(
       valueListenable: time,
       builder: (context, value, _) {
@@ -688,7 +713,7 @@ class _TimeRow extends StatelessWidget {
                   Expanded(
                     child: Text(
                       heure == null
-                          ? '$label (optionnel)'
+                          ? l.tripTemplateOptionalSuffix(label)
                           : '$shortLabel · $heure',
                       style: tt.bodyMedium?.copyWith(
                         color: heure == null
@@ -705,7 +730,7 @@ class _TimeRow extends StatelessWidget {
                       button: true,
                       container: true,
                       excludeSemantics: true,
-                      label: 'Effacer $label',
+                      label: l.tripTemplateClearFieldSemantic(label),
                       child: GestureDetector(
                         onTap: () => time.value = null,
                         child: DonyIcon(

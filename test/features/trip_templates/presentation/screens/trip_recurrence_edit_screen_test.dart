@@ -17,6 +17,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockTripRecurrenceBloc
     extends MockBloc<TripRecurrenceEvent, TripRecurrenceState>
     implements TripRecurrenceBloc {}
@@ -91,5 +93,19 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text("Ce modèle n'a pas de prix au kilo"), findsNothing);
+  });
+
+  testWidgets('anglais : titre et avertissement traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        TripRecurrenceEditScreen(template: _template(pricePerKg: null)),
+        bloc,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Recurring trip'), findsOneWidget);
+    expect(find.text('This template has no price per kg'), findsOneWidget);
   });
 }

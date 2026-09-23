@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 class MockTripTemplateBloc
@@ -132,5 +133,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('Aucun modèle'), findsOneWidget);
+  });
+
+  testWidgets('anglais : titre et état vide traduits', (tester) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(const TripTemplateState(status: TripTemplateStatus.success));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('My trip templates'), findsOneWidget);
+    expect(find.text('No templates'), findsOneWidget);
   });
 }

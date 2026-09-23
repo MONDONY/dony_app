@@ -5257,6 +5257,492 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Où tu déposes les colis à destination'**
   String get addressSelectorLivraisonSubtitle;
+
+  /// Motif intl DateFormat, pas un texte : heure de l'échéance de l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'HH\'h\'mm'**
+  String get tripPosterTimePattern;
+
+  /// Libellé de la ligne date de départ sur l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get tripPosterDepartureLabel;
+
+  /// Libellé de la ligne date limite de dépôt sur l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernier dépôt'**
+  String get tripPosterDeadlineLabel;
+
+  /// Libellé de la ligne capacité disponible sur l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Place disponible'**
+  String get tripPosterCapacityLabel;
+
+  /// Libellé du lieu de remise (pickupAddress) sur l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise'**
+  String get tripPosterHandoverLabel;
+
+  /// Libellé du lieu de récupération (deliveryAddress) sur l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Récupération'**
+  String get tripPosterPickupLabel;
+
+  /// Montant affiché en grand sur l'affiche quand le trajet a une grille de prix (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'dès {price}'**
+  String tripPosterFromPrice(String price);
+
+  /// Unité affichée à côté du prix quand il s'agit d'un tarif à l'article (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'l\'article'**
+  String get tripPosterUnitPerItem;
+
+  /// Unité affichée à côté du prix quand il s'agit d'un tarif au kilo (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'le kilo'**
+  String get tripPosterUnitPerKg;
+
+  /// Prix affiché quand ni la grille ni le tarif au kilo ne sont renseignés (trip_poster_card.dart, trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix indisponible'**
+  String get tripPosterPriceUnavailable;
+
+  /// Tarif au kilo secondaire sous le prix de grille (trip_poster_card.dart), et phrase de prix de la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{price} le kilo'**
+  String tripPosterPricePerKg(String price);
+
+  /// Phrase de prix à l'article dans la légende partageable de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'dès {price} l\'article'**
+  String tripPosterPriceFromItem(String price);
+
+  /// Accroche en pied de l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé, suivi du colis, voyageurs vérifiés'**
+  String get tripPosterTagline;
+
+  /// Titre de l'écran d'aperçu de l'affiche du trajet (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon affiche'**
+  String get tripPosterTitle;
+
+  /// Titre de l'état vide quand le trajet de l'affiche ne charge pas (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet introuvable'**
+  String get tripPosterNotFoundTitle;
+
+  /// Description de l'état vide quand le trajet de l'affiche ne charge pas (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger ce trajet pour le moment.'**
+  String get tripPosterNotFoundDescription;
+
+  /// Première ligne de la légende partageable : corridor du trajet (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{departure} vers {arrival}'**
+  String tripPosterCaptionCorridor(String departure, String arrival);
+
+  /// Ligne date de départ de la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ le {day}'**
+  String tripPosterCaptionDeparture(String day);
+
+  /// Ligne date limite de dépôt de la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernier dépôt le {deadline}'**
+  String tripPosterCaptionDeadline(String deadline);
+
+  /// Ligne lieu de remise de la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise : {address}'**
+  String tripPosterCaptionHandover(String address);
+
+  /// Ligne lieu de récupération de la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Récupération : {address}'**
+  String tripPosterCaptionPickup(String address);
+
+  /// Appel à l'action avant le lien, dans la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réservez vos kilos ici :'**
+  String get tripPosterCaptionCta;
+
+  /// Dernière ligne de la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé, suivi du colis, voyageur vérifié.'**
+  String get tripPosterCaptionFooter;
+
+  /// Objet du partage système de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet {departure} vers {arrival}'**
+  String tripPosterShareSubject(String departure, String arrival);
+
+  /// Message d'échec du partage de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de partager l\'affiche'**
+  String get tripPosterShareError;
+
+  /// Message d'échec de l'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'enregistrer l\'affiche'**
+  String get tripPosterSaveError;
+
+  /// Message de succès de l'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Affiche enregistrée dans votre galerie'**
+  String get tripPosterSaveSuccess;
+
+  /// Confirmation après copie de la légende de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Légende copiée'**
+  String get tripPosterCaptionCopied;
+
+  /// Confirmation après copie du lien de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lien copié'**
+  String get tripPosterLinkCopiedMessage;
+
+  /// Texte d'instructions sous l'aperçu de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Postez cette affiche comme d\'habitude, puis collez la légende dans le texte de votre publication. Le lien y devient cliquable, ce qui n\'est pas le cas d\'une adresse écrite sur l\'image.'**
+  String get tripPosterInstructions;
+
+  /// Bouton de partage de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager l\'affiche'**
+  String get tripPosterShareButton;
+
+  /// Bouton de copie de la légende de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier la légende'**
+  String get tripPosterCopyCaptionButton;
+
+  /// Bouton de copie du lien de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le lien'**
+  String get tripPosterCopyLinkButton;
+
+  /// Bouton d'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer dans la galerie'**
+  String get tripPosterSaveButton;
+
+  /// Titre du catalogue d'erreurs pour le code announcement-update-blocked : modification refusée car des colis sont déjà acceptés (error_catalog.dart, announcement_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification impossible'**
+  String get errorAnnouncementUpdateBlockedTitle;
+
+  /// Message du catalogue d'erreurs pour le code announcement-update-blocked (error_catalog.dart, announcement_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Des colis sont déjà acceptés pour ce trajet'**
+  String get errorAnnouncementUpdateBlockedMessage;
+
+  /// Titre de l'écran liste des modèles de trajet (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes modèles de trajet'**
+  String get tripTemplateListTitle;
+
+  /// Tooltip du bouton d'ajout de la liste des modèles (trip_templates_screen.dart) et titre de l'écran d'édition en mode création (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau modèle'**
+  String get tripTemplateNewLabel;
+
+  /// Titre de l'état d'erreur de la liste des modèles de trajet (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur de chargement'**
+  String get tripTemplateLoadErrorTitle;
+
+  /// Description de repli de l'état d'erreur, quand le serveur n'a pas fourni de message (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue.'**
+  String get tripTemplateLoadErrorFallback;
+
+  /// Titre de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun modèle'**
+  String get tripTemplateEmptyTitle;
+
+  /// Description de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Crée des modèles de trajet réutilisables pour publier tes annonces en quelques secondes.'**
+  String get tripTemplateEmptyDescription;
+
+  /// Bouton d'action de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un modèle'**
+  String get tripTemplateCreateAction;
+
+  /// Repli affiché à la place du tarif au kilo quand le modèle vend à la grille (trip_templates_screen.dart, trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'prix à la grille'**
+  String get tripTemplateGridPriceLabel;
+
+  /// Titre du dialogue de confirmation de suppression d'un modèle (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer le modèle'**
+  String get tripTemplateDeleteDialogTitle;
+
+  /// Message du dialogue de confirmation de suppression d'un modèle (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Es-tu sûr de vouloir supprimer \"{label}\" ? Cette action est irréversible.'**
+  String tripTemplateDeleteDialogMessage(String label);
+
+  /// Entrée du menu d'une carte modèle pour programmer sa récurrence (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Programmer la récurrence'**
+  String get tripTemplateScheduleRecurrenceAction;
+
+  /// Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'NOM DU MODÈLE'**
+  String get tripTemplateNameSectionLabel;
+
+  /// Libellé du champ nom du modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get tripTemplateNameFieldLabel;
+
+  /// Placeholder du champ nom du modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : Mon Paris → Dakar'**
+  String get tripTemplateNameFieldHint;
+
+  /// Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'TRAJET'**
+  String get tripTemplateTripSectionLabel;
+
+  /// Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'MODE DE TRANSPORT'**
+  String get tripTemplateTransportSectionLabel;
+
+  /// Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'HORAIRES'**
+  String get tripTemplateScheduleSectionLabel;
+
+  /// Libellé complet du champ heure de départ, utilisé au placeholder et en annonce d'accessibilité (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure de départ'**
+  String get tripTemplateDepartureTimeFieldLabel;
+
+  /// Libellé court affiché en préfixe une fois l'heure de départ posée (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get tripTemplateDepartureShortLabel;
+
+  /// Libellé complet du champ heure d'arrivée, utilisé au placeholder et en annonce d'accessibilité (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure d\'arrivée'**
+  String get tripTemplateArrivalTimeFieldLabel;
+
+  /// Libellé court affiché en préfixe une fois l'heure d'arrivée posée (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get tripTemplateArrivalShortLabel;
+
+  /// Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DÉLAI DE REMISE'**
+  String get tripTemplateHandoverDeadlineSectionLabel;
+
+  /// Texte d'aide sous le titre de la section délai de remise (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au plus tard combien de jours avant le départ le colis doit être remis ?'**
+  String get tripTemplateHandoverDeadlineHint;
+
+  /// Choix de délai de remise : aucun délai mémorisé (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun'**
+  String get tripTemplateHandoverNone;
+
+  /// Choix de délai de remise : le jour du départ (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le jour même'**
+  String get tripTemplateHandoverSameDay;
+
+  /// Choix de délai de remise : N jours avant le départ (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} jour avant} other{{count} jours avant}}'**
+  String tripTemplateHandoverDaysBefore(int count);
+
+  /// Placeholder d'un champ heure tant qu'aucune heure n'est posée (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{label} (optionnel)'**
+  String tripTemplateOptionalSuffix(String label);
+
+  /// Libellé d'accessibilité du bouton d'effacement d'un champ heure (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer {label}'**
+  String tripTemplateClearFieldSemantic(String label);
+
+  /// Titre de l'écran d'édition d'un modèle existant (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le modèle'**
+  String get tripTemplateEditTitle;
+
+  /// Bouton de la dernière étape du formulaire de modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer le modèle'**
+  String get tripTemplateSaveButton;
+
+  /// Confirmation après mise à jour d'un modèle existant (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modèle mis à jour'**
+  String get tripTemplateUpdatedMessage;
+
+  /// Confirmation après création d'un nouveau modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modèle enregistré'**
+  String get tripTemplateSavedMessage;
+
+  /// Confirmation après activation d'une récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Récurrence activée. Tes trajets seront publiés automatiquement.'**
+  String get tripTemplateRecurrenceActivatedMessage;
+
+  /// Titre de l'écran de programmation d'une récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet récurrent'**
+  String get tripTemplateRecurrenceTitle;
+
+  /// Bouton de validation de l'écran de récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer la récurrence'**
+  String get tripTemplateActivateRecurrenceButton;
+
+  /// Avertissement quand le modèle source n'a pas de prix au kilo éditable (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce modèle n\'a pas de prix au kilo'**
+  String get tripTemplateNoPricePerKgWarning;
+
+  /// Titre de section de l'écran de récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'JOURS DE RÉPÉTITION'**
+  String get tripTemplateRepeatDaysSectionLabel;
+
+  /// Titre de section de l'écran de récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'HEURE DE DÉPART'**
+  String get tripTemplateRecurrenceDepartureTimeSectionLabel;
+
+  /// Placeholder du champ heure de départ tant qu'aucune heure n'est posée (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Optionnel : choisir une heure'**
+  String get tripTemplateOptionalTimeHint;
+
+  /// Libellé d'accessibilité du bouton d'effacement de l'heure de départ (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer l\'heure de départ'**
+  String get tripTemplateClearTimeSemantic;
+
+  /// Titre de section de l'écran de récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'LIEUX'**
+  String get tripTemplateLocationsSectionLabel;
+
+  /// Libellé du champ adresse de remise de l'écran de récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu de remise du colis *'**
+  String get tripTemplatePickupFieldLabel;
+
+  /// Libellé du champ adresse de récupération de l'écran de récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu de récupération *'**
+  String get tripTemplateDeliveryFieldLabel;
+
+  /// Titre du bloc bascule d'activation de la récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Récurrence active'**
+  String get tripTemplateActiveLabel;
+
+  /// Sous-titre du bloc bascule d'activation de la récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Publie automatiquement les trajets à venir'**
+  String get tripTemplateActiveDescription;
 }
 
 class _AppLocalizationsDelegate

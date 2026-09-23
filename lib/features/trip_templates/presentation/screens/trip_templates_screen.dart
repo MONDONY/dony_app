@@ -9,6 +9,7 @@ import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -33,8 +34,9 @@ class TripTemplatesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return DonyPageScaffold(
-      title: 'Mes modèles de trajet',
+      title: l.tripTemplateListTitle,
       scrollable: false,
       padding: EdgeInsets.zero,
       appBarActions: [
@@ -43,7 +45,7 @@ class TripTemplatesScreen extends StatelessWidget {
             'plus',
             color: Theme.of(context).colorScheme.onSurface,
           ),
-          tooltip: 'Nouveau modèle',
+          tooltip: l.tripTemplateNewLabel,
           onPressed: () => _openEditor(context),
         ),
       ],
@@ -76,9 +78,9 @@ class TripTemplatesScreen extends StatelessWidget {
                     mascotte: DonyMascotteType.erreurLegere,
                     type: DonyEmptyStateType.error,
                     iconAsset: 'circle-alert',
-                    title: 'Erreur de chargement',
-                    description: state.error ?? 'Une erreur est survenue.',
-                    actionLabel: 'Réessayer',
+                    title: l.tripTemplateLoadErrorTitle,
+                    description: state.error ?? l.tripTemplateLoadErrorFallback,
+                    actionLabel: l.commonRetry,
                     onAction: () => context.read<TripTemplateBloc>().add(
                       const TripTemplateLoaded(),
                     ),
@@ -87,10 +89,9 @@ class TripTemplatesScreen extends StatelessWidget {
                 if (state.templates.isEmpty) {
                   return DonyEmptyState(
                     mascotte: DonyMascotteType.assis,
-                    title: 'Aucun modèle',
-                    description:
-                        'Crée des modèles de trajet réutilisables pour publier tes annonces en quelques secondes.',
-                    actionLabel: 'Créer un modèle',
+                    title: l.tripTemplateEmptyTitle,
+                    description: l.tripTemplateEmptyDescription,
+                    actionLabel: l.tripTemplateCreateAction,
                     onAction: () => _openEditor(context),
                   );
                 }
@@ -134,6 +135,7 @@ class _TripTemplateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -176,7 +178,7 @@ class _TripTemplateCard extends StatelessWidget {
                     const SizedBox(height: DonySpacing.xs),
                     Text(
                       '${template.departureCity} → ${template.arrivalCity} · '
-                      '${template.pricePerKg == null ? 'prix à la grille' : '${formatPriceActive(template.pricePerKg!)}/kg'}',
+                      '${template.pricePerKg == null ? l.tripTemplateGridPriceLabel : '${formatPriceActive(template.pricePerKg!)}/kg'}',
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
@@ -202,6 +204,7 @@ class _KebabMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return PopupMenuButton<_TemplateAction>(
       icon: DonyIcon('ellipsis-vertical', color: cs.onSurfaceVariant, size: 20),
       shape: RoundedRectangleBorder(
@@ -216,11 +219,10 @@ class _KebabMenu extends StatelessWidget {
           case _TemplateAction.delete:
             final confirmed = await DonyDialog.show(
               context,
-              title: 'Supprimer le modèle',
-              message:
-                  'Es-tu sûr de vouloir supprimer "${template.label}" ? Cette action est irréversible.',
+              title: l.tripTemplateDeleteDialogTitle,
+              message: l.tripTemplateDeleteDialogMessage(template.label),
               iconAsset: 'trash-2',
-              confirmLabel: 'Supprimer',
+              confirmLabel: l.commonDelete,
               variant: DonyDialogVariant.destructive,
             );
             if ((confirmed ?? false) && context.mounted) {
@@ -237,7 +239,7 @@ class _KebabMenu extends StatelessWidget {
             children: [
               DonyIcon('square-pen', size: 18, color: cs.onSurface),
               const SizedBox(width: DonySpacing.sm),
-              const Text('Modifier'),
+              Text(l.commonEdit),
             ],
           ),
         ),
@@ -247,7 +249,7 @@ class _KebabMenu extends StatelessWidget {
             children: [
               DonyIcon('calendar-sync', size: 18, color: cs.onSurface),
               const SizedBox(width: DonySpacing.sm),
-              const Text('Programmer la récurrence'),
+              Text(l.tripTemplateScheduleRecurrenceAction),
             ],
           ),
         ),
@@ -258,7 +260,7 @@ class _KebabMenu extends StatelessWidget {
               DonyIcon('trash-2', size: 18, color: cs.error),
               const SizedBox(width: DonySpacing.sm),
               Text(
-                'Supprimer',
+                l.commonDelete,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],
