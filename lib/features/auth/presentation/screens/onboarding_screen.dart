@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -16,94 +17,9 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  static const _pages = [
-    _OnboardingPageData(
-      imageAsset: 'assets/illustrations/onboarding-handoff.png',
-      eyebrow: 'Étape 1',
-      title: 'Préparez votre envoi.',
-      subtitle:
-          'Indiquez la destination, le format du colis et trouvez un voyageur disponible.',
-      placement: _CopyPlacement.top,
-      steps: [
-        _JourneyStep(
-          number: '1',
-          title: 'Créer l’annonce',
-          subtitle: 'Départ, arrivée, taille du colis.',
-        ),
-        _JourneyStep(
-          number: '2',
-          title: 'Choisir un voyageur',
-          subtitle: 'Profil, trajet et disponibilité.',
-        ),
-        _JourneyStep(
-          number: '3',
-          title: 'Remettre le colis',
-          subtitle: 'Le parcours commence au scan.',
-        ),
-      ],
-    ),
-    _OnboardingPageData(
-      imageAsset: 'assets/illustrations/onboarding-security.png',
-      eyebrow: 'Sécurité',
-      title: 'Chaque remise est encadrée.',
-      subtitle:
-          'Yadony protège les profils, le paiement et les étapes importantes du colis.',
-      placement: _CopyPlacement.middle,
-      chips: [
-        'Identité vérifiée',
-        'Paiement bloqué',
-        'QR de suivi',
-        'Preuve de remise',
-      ],
-    ),
-    _OnboardingPageData(
-      imageAsset: 'assets/illustrations/onboarding-tracking.png',
-      eyebrow: 'Temps réel',
-      title: 'Gardez le fil du colis.',
-      subtitle:
-          'Le suivi avance à chaque scan, du départ jusqu’à la confirmation d’arrivée.',
-      placement: _CopyPlacement.top,
-      showRoute: true,
-      steps: [
-        _JourneyStep(
-          number: '1',
-          title: 'Remis',
-          subtitle: 'Le colis est confié au voyageur.',
-        ),
-        _JourneyStep(
-          number: '2',
-          title: 'Départ, transit, arrivée',
-          subtitle: 'Chaque scan met le suivi à jour.',
-        ),
-        _JourneyStep(
-          number: '3',
-          title: 'Livraison',
-          subtitle: 'La réception confirme la fin du trajet.',
-        ),
-      ],
-    ),
-    _OnboardingPageData(
-      imageAsset: 'assets/illustrations/onboarding-destinations.png',
-      eyebrow: 'Destinations',
-      title: 'Vos colis voyagent plus loin.',
-      subtitle:
-          'Yadony relie les pays disponibles avec des voyageurs qui font déjà le trajet.',
-      placement: _CopyPlacement.top,
-      steps: [
-        _JourneyStep(
-          number: '6',
-          title: 'Remettre à l’arrivée',
-          subtitle: 'Le destinataire confirme la réception.',
-        ),
-        _JourneyStep(
-          number: '7',
-          title: 'Libérer le paiement',
-          subtitle: 'Le voyageur est payé après succès.',
-        ),
-      ],
-      chips: ['Europe', 'Afrique', 'Pays disponibles'],
-    ),
-  ];
+  /// Nombre de pages du carrousel, lu hors d'un `build` (indicateur,
+  /// dernière page). Doit rester égal à la longueur de [_pages].
+  static const _pageCount = 4;
 
   final PageController _pageController = PageController();
   final ValueNotifier<int> _currentPage = ValueNotifier(0);
@@ -127,6 +43,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final pages = _pages(context.l10n);
+    assert(
+      pages.length == _pageCount,
+      'Mettre _pageCount à jour', // i18n-ignore
+    );
     return Scaffold(
       backgroundColor: cs.surface,
       body: ValueListenableBuilder<int>(
@@ -135,13 +56,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           children: [
             PageView.builder(
               controller: _pageController,
-              itemCount: _pages.length,
+              itemCount: pages.length,
               onPageChanged: (page) => _currentPage.value = page,
               itemBuilder: (context, index) =>
-                  _OnboardingPhotoPage(data: _pages[index], pageIndex: index),
+                  _OnboardingPhotoPage(data: pages[index], pageIndex: index),
             ),
             _OnboardingTopBar(
-              showSkip: page < _pages.length - 1,
+              showSkip: page < _pageCount - 1,
               onSkip: _proceed,
             ),
             _OnboardingFooter(
@@ -155,6 +76,96 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 }
+
+/// Les quatre pages du carrousel, dans l'ordre, traduites par [l].
+List<_OnboardingPageData> _pages(AppLocalizations l) => [
+  _OnboardingPageData(
+    imageAsset: 'assets/illustrations/onboarding-handoff.png',
+    eyebrow: l.authOnboardingHandoffEyebrow,
+    title: l.authOnboardingHandoffTitle,
+    subtitle: l.authOnboardingHandoffSubtitle,
+    placement: _CopyPlacement.top,
+    steps: [
+      _JourneyStep(
+        number: '1',
+        title: l.authOnboardingHandoffStep1Title,
+        subtitle: l.authOnboardingHandoffStep1Subtitle,
+      ),
+      _JourneyStep(
+        number: '2',
+        title: l.authOnboardingHandoffStep2Title,
+        subtitle: l.authOnboardingHandoffStep2Subtitle,
+      ),
+      _JourneyStep(
+        number: '3',
+        title: l.authOnboardingHandoffStep3Title,
+        subtitle: l.authOnboardingHandoffStep3Subtitle,
+      ),
+    ],
+  ),
+  _OnboardingPageData(
+    imageAsset: 'assets/illustrations/onboarding-security.png',
+    eyebrow: l.authOnboardingSecurityEyebrow,
+    title: l.authOnboardingSecurityTitle,
+    subtitle: l.authOnboardingSecuritySubtitle,
+    placement: _CopyPlacement.middle,
+    chips: [
+      l.authOnboardingChipVerifiedIdentity,
+      l.authOnboardingChipPaymentOnHold,
+      l.authOnboardingChipTrackingQr,
+      l.authOnboardingChipProofOfDropOff,
+    ],
+  ),
+  _OnboardingPageData(
+    imageAsset: 'assets/illustrations/onboarding-tracking.png',
+    eyebrow: l.authOnboardingTrackingEyebrow,
+    title: l.authOnboardingTrackingTitle,
+    subtitle: l.authOnboardingTrackingSubtitle,
+    placement: _CopyPlacement.top,
+    showRoute: true,
+    steps: [
+      _JourneyStep(
+        number: '1',
+        title: l.authOnboardingTrackingStep1Title,
+        subtitle: l.authOnboardingTrackingStep1Subtitle,
+      ),
+      _JourneyStep(
+        number: '2',
+        title: l.authOnboardingTrackingStep2Title,
+        subtitle: l.authOnboardingTrackingStep2Subtitle,
+      ),
+      _JourneyStep(
+        number: '3',
+        title: l.authOnboardingTrackingStep3Title,
+        subtitle: l.authOnboardingTrackingStep3Subtitle,
+      ),
+    ],
+  ),
+  _OnboardingPageData(
+    imageAsset: 'assets/illustrations/onboarding-destinations.png',
+    eyebrow: l.authOnboardingDestinationsEyebrow,
+    title: l.authOnboardingDestinationsTitle,
+    subtitle: l.authOnboardingDestinationsSubtitle,
+    placement: _CopyPlacement.top,
+    steps: [
+      _JourneyStep(
+        number: '6',
+        title: l.authOnboardingDestinationsStep6Title,
+        subtitle: l.authOnboardingDestinationsStep6Subtitle,
+      ),
+      _JourneyStep(
+        number: '7',
+        title: l.authOnboardingDestinationsStep7Title,
+        subtitle: l.authOnboardingDestinationsStep7Subtitle,
+      ),
+    ],
+    chips: [
+      l.countryZoneEurope,
+      l.authOnboardingChipAfrica,
+      l.authOnboardingChipAvailableCountries,
+    ],
+  ),
+];
 
 class _OnboardingPhotoPage extends StatelessWidget {
   const _OnboardingPhotoPage({required this.data, required this.pageIndex});
@@ -230,7 +241,7 @@ class _BackgroundImage extends StatelessWidget {
     return Image.asset(
       asset,
       fit: BoxFit.cover,
-      semanticLabel: 'Scène d’onboarding Yadony',
+      semanticLabel: context.l10n.authOnboardingImageLabel,
     );
   }
 }
@@ -310,7 +321,10 @@ class _OnboardingTopBar extends StatelessWidget {
           ),
           const Spacer(),
           if (showSkip)
-            _GlassButton(label: 'Passer', onPressed: onSkip)
+            _GlassButton(
+              label: context.l10n.authOnboardingSkip,
+              onPressed: onSkip,
+            )
           else
             const SizedBox(width: 72, height: 44),
         ],
@@ -508,6 +522,7 @@ class _RouteProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return Column(
       children: [
         Row(
@@ -532,13 +547,23 @@ class _RouteProgress extends StatelessWidget {
           }),
         ),
         const SizedBox(height: DonySpacing.sm),
-        const Row(
+        Row(
           children: [
-            Expanded(child: _RouteLabel('Remis', align: TextAlign.left)),
-            Expanded(child: _RouteLabel('Départ')),
-            Expanded(child: _RouteLabel('Transit')),
-            Expanded(child: _RouteLabel('Arrivée')),
-            Expanded(child: _RouteLabel('Livraison', align: TextAlign.right)),
+            Expanded(
+              child: _RouteLabel(
+                l10n.authOnboardingRouteDropOff,
+                align: TextAlign.left,
+              ),
+            ),
+            Expanded(child: _RouteLabel(l10n.authOnboardingRouteDeparture)),
+            Expanded(child: _RouteLabel(l10n.authOnboardingRouteTransit)),
+            Expanded(child: _RouteLabel(l10n.authOnboardingRouteArrival)),
+            Expanded(
+              child: _RouteLabel(
+                l10n.authOnboardingRouteDelivery,
+                align: TextAlign.right,
+              ),
+            ),
           ],
         ),
       ],
@@ -748,17 +773,19 @@ class _OnboardingFooter extends StatelessWidget {
       child: ValueListenableBuilder<int>(
         valueListenable: currentPage,
         builder: (context, page, _) {
-          final isLast = page == _OnboardingScreenState._pages.length - 1;
+          final isLast = page == _OnboardingScreenState._pageCount - 1;
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               DonyStepIndicator(
-                total: _OnboardingScreenState._pages.length,
+                total: _OnboardingScreenState._pageCount,
                 current: page,
               ),
               const SizedBox(height: DonySpacing.md),
               DonyButton(
-                label: isLast ? 'Commencer' : 'Suivant',
+                label: isLast
+                    ? context.l10n.authOnboardingGetStarted
+                    : context.l10n.authOnboardingNext,
                 onPressed: isLast ? onProceed : onNext,
               ),
               if (isLast) ...[
@@ -803,6 +830,7 @@ class _LegalFooterState extends State<_LegalFooter> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     final linkStyle = tt.bodySmall?.copyWith(
       color: cs.onPrimary,
       decoration: TextDecoration.underline,
@@ -810,16 +838,20 @@ class _LegalFooterState extends State<_LegalFooter> {
     );
     return Text.rich(
       TextSpan(
-        text: 'En continuant, vous acceptez nos ',
+        text: l10n.authOnboardingLegalPrefix,
         style: tt.bodySmall?.copyWith(
           color: cs.onPrimary.withValues(alpha: 0.78),
           height: 1.3,
         ),
         children: [
-          TextSpan(text: 'CGU', style: linkStyle, recognizer: _termsTap),
-          const TextSpan(text: ' et notre '),
           TextSpan(
-            text: 'politique de confidentialité',
+            text: l10n.authOnboardingLegalTermsLink,
+            style: linkStyle,
+            recognizer: _termsTap,
+          ),
+          TextSpan(text: l10n.authOnboardingLegalMiddle),
+          TextSpan(
+            text: l10n.authOnboardingLegalPrivacyLink,
             style: linkStyle,
             recognizer: _privacyTap,
           ),

@@ -2383,6 +2383,288 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Publier, contacter, réserver ou payer nécessite un compte Yadony.'**
   String get authRequiredExploreBody;
+
+  /// No description provided for @authOnboardingHandoffEyebrow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape 1'**
+  String get authOnboardingHandoffEyebrow;
+
+  /// No description provided for @authOnboardingHandoffTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Préparez votre envoi.'**
+  String get authOnboardingHandoffTitle;
+
+  /// No description provided for @authOnboardingHandoffSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez la destination, le format du colis et trouvez un voyageur disponible.'**
+  String get authOnboardingHandoffSubtitle;
+
+  /// No description provided for @authOnboardingHandoffStep1Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer l’annonce'**
+  String get authOnboardingHandoffStep1Title;
+
+  /// No description provided for @authOnboardingHandoffStep1Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ, arrivée, taille du colis.'**
+  String get authOnboardingHandoffStep1Subtitle;
+
+  /// No description provided for @authOnboardingHandoffStep2Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir un voyageur'**
+  String get authOnboardingHandoffStep2Title;
+
+  /// No description provided for @authOnboardingHandoffStep2Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil, trajet et disponibilité.'**
+  String get authOnboardingHandoffStep2Subtitle;
+
+  /// No description provided for @authOnboardingHandoffStep3Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remettre le colis'**
+  String get authOnboardingHandoffStep3Title;
+
+  /// No description provided for @authOnboardingHandoffStep3Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le parcours commence au scan.'**
+  String get authOnboardingHandoffStep3Subtitle;
+
+  /// No description provided for @authOnboardingSecurityEyebrow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sécurité'**
+  String get authOnboardingSecurityEyebrow;
+
+  /// No description provided for @authOnboardingSecurityTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque remise est encadrée.'**
+  String get authOnboardingSecurityTitle;
+
+  /// No description provided for @authOnboardingSecuritySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony protège les profils, le paiement et les étapes importantes du colis.'**
+  String get authOnboardingSecuritySubtitle;
+
+  /// No description provided for @authOnboardingChipVerifiedIdentity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée'**
+  String get authOnboardingChipVerifiedIdentity;
+
+  /// No description provided for @authOnboardingChipPaymentOnHold.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement bloqué'**
+  String get authOnboardingChipPaymentOnHold;
+
+  /// No description provided for @authOnboardingChipTrackingQr.
+  ///
+  /// In fr, this message translates to:
+  /// **'QR de suivi'**
+  String get authOnboardingChipTrackingQr;
+
+  /// No description provided for @authOnboardingChipProofOfDropOff.
+  ///
+  /// In fr, this message translates to:
+  /// **'Preuve de remise'**
+  String get authOnboardingChipProofOfDropOff;
+
+  /// No description provided for @authOnboardingTrackingEyebrow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Temps réel'**
+  String get authOnboardingTrackingEyebrow;
+
+  /// No description provided for @authOnboardingTrackingTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gardez le fil du colis.'**
+  String get authOnboardingTrackingTitle;
+
+  /// No description provided for @authOnboardingTrackingSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le suivi avance à chaque scan, du départ jusqu’à la confirmation d’arrivée.'**
+  String get authOnboardingTrackingSubtitle;
+
+  /// No description provided for @authOnboardingTrackingStep1Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remis'**
+  String get authOnboardingTrackingStep1Title;
+
+  /// No description provided for @authOnboardingTrackingStep1Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis est confié au voyageur.'**
+  String get authOnboardingTrackingStep1Subtitle;
+
+  /// No description provided for @authOnboardingTrackingStep2Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ, transit, arrivée'**
+  String get authOnboardingTrackingStep2Title;
+
+  /// No description provided for @authOnboardingTrackingStep2Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque scan met le suivi à jour.'**
+  String get authOnboardingTrackingStep2Subtitle;
+
+  /// No description provided for @authOnboardingTrackingStep3Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison'**
+  String get authOnboardingTrackingStep3Title;
+
+  /// No description provided for @authOnboardingTrackingStep3Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'La réception confirme la fin du trajet.'**
+  String get authOnboardingTrackingStep3Subtitle;
+
+  /// No description provided for @authOnboardingDestinationsEyebrow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinations'**
+  String get authOnboardingDestinationsEyebrow;
+
+  /// No description provided for @authOnboardingDestinationsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos colis voyagent plus loin.'**
+  String get authOnboardingDestinationsTitle;
+
+  /// No description provided for @authOnboardingDestinationsSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony relie les pays disponibles avec des voyageurs qui font déjà le trajet.'**
+  String get authOnboardingDestinationsSubtitle;
+
+  /// No description provided for @authOnboardingDestinationsStep6Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remettre à l’arrivée'**
+  String get authOnboardingDestinationsStep6Title;
+
+  /// No description provided for @authOnboardingDestinationsStep6Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le destinataire confirme la réception.'**
+  String get authOnboardingDestinationsStep6Subtitle;
+
+  /// No description provided for @authOnboardingDestinationsStep7Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Libérer le paiement'**
+  String get authOnboardingDestinationsStep7Title;
+
+  /// No description provided for @authOnboardingDestinationsStep7Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur est payé après succès.'**
+  String get authOnboardingDestinationsStep7Subtitle;
+
+  /// No description provided for @authOnboardingChipAfrica.
+  ///
+  /// In fr, this message translates to:
+  /// **'Afrique'**
+  String get authOnboardingChipAfrica;
+
+  /// No description provided for @authOnboardingChipAvailableCountries.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays disponibles'**
+  String get authOnboardingChipAvailableCountries;
+
+  /// No description provided for @authOnboardingImageLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Scène d’onboarding Yadony'**
+  String get authOnboardingImageLabel;
+
+  /// No description provided for @authOnboardingSkip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer'**
+  String get authOnboardingSkip;
+
+  /// No description provided for @authOnboardingRouteDropOff.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remis'**
+  String get authOnboardingRouteDropOff;
+
+  /// No description provided for @authOnboardingRouteDeparture.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get authOnboardingRouteDeparture;
+
+  /// No description provided for @authOnboardingRouteTransit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transit'**
+  String get authOnboardingRouteTransit;
+
+  /// No description provided for @authOnboardingRouteArrival.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get authOnboardingRouteArrival;
+
+  /// No description provided for @authOnboardingRouteDelivery.
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison'**
+  String get authOnboardingRouteDelivery;
+
+  /// No description provided for @authOnboardingGetStarted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commencer'**
+  String get authOnboardingGetStarted;
+
+  /// No description provided for @authOnboardingNext.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivant'**
+  String get authOnboardingNext;
+
+  /// No description provided for @authOnboardingLegalPrefix.
+  ///
+  /// In fr, this message translates to:
+  /// **'En continuant, vous acceptez nos '**
+  String get authOnboardingLegalPrefix;
+
+  /// No description provided for @authOnboardingLegalTermsLink.
+  ///
+  /// In fr, this message translates to:
+  /// **'CGU'**
+  String get authOnboardingLegalTermsLink;
+
+  /// No description provided for @authOnboardingLegalMiddle.
+  ///
+  /// In fr, this message translates to:
+  /// **' et notre '**
+  String get authOnboardingLegalMiddle;
+
+  /// No description provided for @authOnboardingLegalPrivacyLink.
+  ///
+  /// In fr, this message translates to:
+  /// **'politique de confidentialité'**
+  String get authOnboardingLegalPrivacyLink;
 }
 
 class _AppLocalizationsDelegate

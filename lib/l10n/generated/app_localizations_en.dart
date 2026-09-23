@@ -1296,4 +1296,157 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authRequiredExploreBody =>
       'Posting, contacting, booking or paying requires a Yadony account.';
+
+  @override
+  String get authOnboardingHandoffEyebrow => 'Step 1';
+
+  @override
+  String get authOnboardingHandoffTitle => 'Get your parcel ready.';
+
+  @override
+  String get authOnboardingHandoffSubtitle =>
+      'Enter the destination and parcel size, then find an available traveler.';
+
+  @override
+  String get authOnboardingHandoffStep1Title => 'Create the listing';
+
+  @override
+  String get authOnboardingHandoffStep1Subtitle =>
+      'Departure, arrival, parcel size.';
+
+  @override
+  String get authOnboardingHandoffStep2Title => 'Choose a traveler';
+
+  @override
+  String get authOnboardingHandoffStep2Subtitle =>
+      'Profile, trip and availability.';
+
+  @override
+  String get authOnboardingHandoffStep3Title => 'Drop off the parcel';
+
+  @override
+  String get authOnboardingHandoffStep3Subtitle =>
+      'The journey starts with the scan.';
+
+  @override
+  String get authOnboardingSecurityEyebrow => 'Security';
+
+  @override
+  String get authOnboardingSecurityTitle => 'Every drop-off is safeguarded.';
+
+  @override
+  String get authOnboardingSecuritySubtitle =>
+      'Yadony protects profiles, payments and every key step of the parcel\'s journey.';
+
+  @override
+  String get authOnboardingChipVerifiedIdentity => 'Verified identity';
+
+  @override
+  String get authOnboardingChipPaymentOnHold => 'Payment on hold';
+
+  @override
+  String get authOnboardingChipTrackingQr => 'Tracking QR code';
+
+  @override
+  String get authOnboardingChipProofOfDropOff => 'Proof of drop-off';
+
+  @override
+  String get authOnboardingTrackingEyebrow => 'Real time';
+
+  @override
+  String get authOnboardingTrackingTitle => 'Keep track of your parcel.';
+
+  @override
+  String get authOnboardingTrackingSubtitle =>
+      'Tracking moves forward with every scan, from departure to confirmed arrival.';
+
+  @override
+  String get authOnboardingTrackingStep1Title => 'Dropped off';
+
+  @override
+  String get authOnboardingTrackingStep1Subtitle =>
+      'The parcel is handed to the traveler.';
+
+  @override
+  String get authOnboardingTrackingStep2Title => 'Departure, transit, arrival';
+
+  @override
+  String get authOnboardingTrackingStep2Subtitle =>
+      'Every scan updates the tracking.';
+
+  @override
+  String get authOnboardingTrackingStep3Title => 'Delivery';
+
+  @override
+  String get authOnboardingTrackingStep3Subtitle =>
+      'Receipt confirms the end of the trip.';
+
+  @override
+  String get authOnboardingDestinationsEyebrow => 'Destinations';
+
+  @override
+  String get authOnboardingDestinationsTitle => 'Your parcels go further.';
+
+  @override
+  String get authOnboardingDestinationsSubtitle =>
+      'Yadony connects available countries with travelers already making the trip.';
+
+  @override
+  String get authOnboardingDestinationsStep6Title => 'Hand over on arrival';
+
+  @override
+  String get authOnboardingDestinationsStep6Subtitle =>
+      'The recipient confirms receipt.';
+
+  @override
+  String get authOnboardingDestinationsStep7Title => 'Release the payment';
+
+  @override
+  String get authOnboardingDestinationsStep7Subtitle =>
+      'The traveler gets paid once delivery succeeds.';
+
+  @override
+  String get authOnboardingChipAfrica => 'Africa';
+
+  @override
+  String get authOnboardingChipAvailableCountries => 'Available countries';
+
+  @override
+  String get authOnboardingImageLabel => 'Yadony onboarding scene';
+
+  @override
+  String get authOnboardingSkip => 'Skip';
+
+  @override
+  String get authOnboardingRouteDropOff => 'Drop-off';
+
+  @override
+  String get authOnboardingRouteDeparture => 'Departure';
+
+  @override
+  String get authOnboardingRouteTransit => 'In transit';
+
+  @override
+  String get authOnboardingRouteArrival => 'Arrival';
+
+  @override
+  String get authOnboardingRouteDelivery => 'Delivery';
+
+  @override
+  String get authOnboardingGetStarted => 'Get started';
+
+  @override
+  String get authOnboardingNext => 'Next';
+
+  @override
+  String get authOnboardingLegalPrefix => 'By continuing, you agree to our ';
+
+  @override
+  String get authOnboardingLegalTermsLink => 'Terms of Use';
+
+  @override
+  String get authOnboardingLegalMiddle => ' and our ';
+
+  @override
+  String get authOnboardingLegalPrivacyLink => 'Privacy Policy';
 }

@@ -1308,4 +1308,157 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get authRequiredExploreBody =>
       'Publier, contacter, réserver ou payer nécessite un compte Yadony.';
+
+  @override
+  String get authOnboardingHandoffEyebrow => 'Étape 1';
+
+  @override
+  String get authOnboardingHandoffTitle => 'Préparez votre envoi.';
+
+  @override
+  String get authOnboardingHandoffSubtitle =>
+      'Indiquez la destination, le format du colis et trouvez un voyageur disponible.';
+
+  @override
+  String get authOnboardingHandoffStep1Title => 'Créer l’annonce';
+
+  @override
+  String get authOnboardingHandoffStep1Subtitle =>
+      'Départ, arrivée, taille du colis.';
+
+  @override
+  String get authOnboardingHandoffStep2Title => 'Choisir un voyageur';
+
+  @override
+  String get authOnboardingHandoffStep2Subtitle =>
+      'Profil, trajet et disponibilité.';
+
+  @override
+  String get authOnboardingHandoffStep3Title => 'Remettre le colis';
+
+  @override
+  String get authOnboardingHandoffStep3Subtitle =>
+      'Le parcours commence au scan.';
+
+  @override
+  String get authOnboardingSecurityEyebrow => 'Sécurité';
+
+  @override
+  String get authOnboardingSecurityTitle => 'Chaque remise est encadrée.';
+
+  @override
+  String get authOnboardingSecuritySubtitle =>
+      'Yadony protège les profils, le paiement et les étapes importantes du colis.';
+
+  @override
+  String get authOnboardingChipVerifiedIdentity => 'Identité vérifiée';
+
+  @override
+  String get authOnboardingChipPaymentOnHold => 'Paiement bloqué';
+
+  @override
+  String get authOnboardingChipTrackingQr => 'QR de suivi';
+
+  @override
+  String get authOnboardingChipProofOfDropOff => 'Preuve de remise';
+
+  @override
+  String get authOnboardingTrackingEyebrow => 'Temps réel';
+
+  @override
+  String get authOnboardingTrackingTitle => 'Gardez le fil du colis.';
+
+  @override
+  String get authOnboardingTrackingSubtitle =>
+      'Le suivi avance à chaque scan, du départ jusqu’à la confirmation d’arrivée.';
+
+  @override
+  String get authOnboardingTrackingStep1Title => 'Remis';
+
+  @override
+  String get authOnboardingTrackingStep1Subtitle =>
+      'Le colis est confié au voyageur.';
+
+  @override
+  String get authOnboardingTrackingStep2Title => 'Départ, transit, arrivée';
+
+  @override
+  String get authOnboardingTrackingStep2Subtitle =>
+      'Chaque scan met le suivi à jour.';
+
+  @override
+  String get authOnboardingTrackingStep3Title => 'Livraison';
+
+  @override
+  String get authOnboardingTrackingStep3Subtitle =>
+      'La réception confirme la fin du trajet.';
+
+  @override
+  String get authOnboardingDestinationsEyebrow => 'Destinations';
+
+  @override
+  String get authOnboardingDestinationsTitle => 'Vos colis voyagent plus loin.';
+
+  @override
+  String get authOnboardingDestinationsSubtitle =>
+      'Yadony relie les pays disponibles avec des voyageurs qui font déjà le trajet.';
+
+  @override
+  String get authOnboardingDestinationsStep6Title => 'Remettre à l’arrivée';
+
+  @override
+  String get authOnboardingDestinationsStep6Subtitle =>
+      'Le destinataire confirme la réception.';
+
+  @override
+  String get authOnboardingDestinationsStep7Title => 'Libérer le paiement';
+
+  @override
+  String get authOnboardingDestinationsStep7Subtitle =>
+      'Le voyageur est payé après succès.';
+
+  @override
+  String get authOnboardingChipAfrica => 'Afrique';
+
+  @override
+  String get authOnboardingChipAvailableCountries => 'Pays disponibles';
+
+  @override
+  String get authOnboardingImageLabel => 'Scène d’onboarding Yadony';
+
+  @override
+  String get authOnboardingSkip => 'Passer';
+
+  @override
+  String get authOnboardingRouteDropOff => 'Remis';
+
+  @override
+  String get authOnboardingRouteDeparture => 'Départ';
+
+  @override
+  String get authOnboardingRouteTransit => 'Transit';
+
+  @override
+  String get authOnboardingRouteArrival => 'Arrivée';
+
+  @override
+  String get authOnboardingRouteDelivery => 'Livraison';
+
+  @override
+  String get authOnboardingGetStarted => 'Commencer';
+
+  @override
+  String get authOnboardingNext => 'Suivant';
+
+  @override
+  String get authOnboardingLegalPrefix => 'En continuant, vous acceptez nos ';
+
+  @override
+  String get authOnboardingLegalTermsLink => 'CGU';
+
+  @override
+  String get authOnboardingLegalMiddle => ' et notre ';
+
+  @override
+  String get authOnboardingLegalPrivacyLink => 'politique de confidentialité';
 }

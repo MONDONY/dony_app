@@ -16,6 +16,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 // ─── Mock AuthBloc ────────────────────────────────────────────────────────────
 //
 // We mock AuthBloc so no Firebase/Dio dependencies are needed in widget tests.
@@ -245,5 +247,26 @@ void main() {
     expect(find.text('QR de suivi').hitTestable(), findsOneWidget);
     expect(find.text('Preuve de remise').hitTestable(), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+  testWidgets('en anglais, le carrousel et ses boutons sont traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await _pump(tester, mockAuthBloc);
+
+    expect(find.text('Next'), findsOneWidget);
+    expect(find.text('Skip'), findsOneWidget);
+    expect(find.text('Get your parcel ready.'), findsOneWidget);
+
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+    }
+
+    expect(find.text('Get started'), findsOneWidget);
+    expect(find.text('Release the payment'), findsOneWidget);
+    expect(find.textContaining('you agree to our'), findsOneWidget);
+    expect(find.textContaining('Privacy Policy'), findsOneWidget);
+    expect(find.text('Suivant'), findsNothing);
   });
 }
