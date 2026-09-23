@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 AnnouncementModel _trip() => AnnouncementModel(
   id: 'a-1',
   travelerId: 'tr',
@@ -63,5 +65,17 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     await _pump(tester, TravelerInviteState.hidden);
     expect(find.text('Inviter'), findsNothing);
+  });
+
+  testWidgets('écran traduit en anglais : jauge et bouton Invite', (
+    tester,
+  ) async {
+    useEnglish();
+    var invites = 0;
+    await _pump(tester, TravelerInviteState.idle, onInvite: () => invites++);
+    expect(find.text('8 kg free'), findsOneWidget);
+    expect(find.text('your parcel: 2 kg'), findsOneWidget);
+    await tester.tap(find.text('Invite'));
+    expect(invites, 1);
   });
 }

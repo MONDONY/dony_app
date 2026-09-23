@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/city_code.dart';
@@ -96,10 +97,8 @@ class _Route extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final date = DateFormat(
-      'd MMM',
-      AppL10n.localeName,
-    ).format(request.desiredDate);
+    final l = context.l10n;
+    final date = DateFormat.MMMd(l.localeName).format(request.desiredDate);
     final dateLabel = request.dateToleranceDays > 0
         ? '$date ± ${request.dateToleranceDays} j'
         : date;
@@ -126,7 +125,11 @@ class _Route extends StatelessWidget {
       ],
     );
     return Semantics(
-      label: '${request.departureCity} vers ${request.arrivalCity}, $dateLabel',
+      label: l.requestTicketRouteSemantic(
+        request.departureCity,
+        request.arrivalCity,
+        dateLabel,
+      ),
       excludeSemantics: true,
       child: Padding(
         padding: const EdgeInsets.all(DonySpacing.base),
@@ -209,11 +212,13 @@ class _PhotoAndFacts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final r = request;
     final price = r.grossPriceEur ?? r.targetPriceEur;
     final facts = [
       '${r.weightKg.toStringAsFixed(r.weightKg % 1 == 0 ? 0 : 1)} kg',
-      if (r.categories.isNotEmpty) r.categories.first,
+      if (r.categories.isNotEmpty)
+        contentCategoryDisplayName(l, r.categories.first),
     ].join(' · ');
 
     return Padding(
@@ -255,7 +260,7 @@ class _PhotoAndFacts extends StatelessWidget {
                   children: [
                     Text(
                       price == null
-                          ? 'Prix à définir'
+                          ? l.requestTicketPriceUndefined
                           : formatPriceIn(price, r.currency),
                       style: const TextStyle(
                         fontSize: 17,
@@ -264,7 +269,9 @@ class _PhotoAndFacts extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      r.negotiable ? 'négociable' : 'prix ferme',
+                      r.negotiable
+                          ? l.requestTicketNegotiable
+                          : l.requestTicketFixedPrice,
                       style: TextStyle(
                         fontSize: 12,
                         color: cs.onSurfaceVariant,
@@ -311,7 +318,7 @@ class _Thumb extends StatelessWidget {
     }
     return Semantics(
       button: true,
-      label: 'Voir les photos du colis',
+      label: context.l10n.requestTicketViewPhotosSemantic,
       child: GestureDetector(
         onTap: () => RequestPhotoViewer.show(context, urls: urls),
         child: ClipRRect(

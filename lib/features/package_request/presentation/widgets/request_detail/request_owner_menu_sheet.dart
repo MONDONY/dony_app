@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/presentation/request_screen_case.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 abstract final class RequestOwnerMenuSheet {
@@ -34,23 +35,24 @@ class _MenuRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final (icon, label, consequence, danger) = switch (item) {
       RequestMenuAction.unpublish => (
         'eye-off',
-        'Dépublier',
-        'Redevient un brouillon, invisible des voyageurs',
+        l.requestDetailMenuUnpublishLabel,
+        l.requestDetailMenuUnpublishConsequence,
         false,
       ),
       RequestMenuAction.duplicate => (
         'copy',
-        'Dupliquer la demande',
-        'Même colis, nouvelles dates ou nouveau trajet',
+        l.requestDetailMenuDuplicateLabel,
+        l.requestDetailMenuDuplicateConsequence,
         false,
       ),
       RequestMenuAction.cancel => (
         'circle-x',
-        'Annuler la demande',
-        'Irréversible',
+        l.requestDetailMenuCancelLabel,
+        l.requestDetailMenuCancelConsequence,
         true,
       ),
     };

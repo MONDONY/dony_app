@@ -27,6 +27,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 class _MockPackageRequestBloc
@@ -248,6 +250,20 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.byKey(const Key('envoyer-back')), findsOneWidget);
+    });
+  });
+
+  group('EnvoyerHubScreen — anglais', () {
+    testWidgets('écran traduit en anglais : titre et bouton Nouveau', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(wrap());
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Send'), findsOneWidget);
+      expect(find.text('+ New'), findsOneWidget);
+      expect(find.text('Envoyer'), findsNothing);
     });
   });
 }

@@ -4,6 +4,8 @@ import 'package:dony/features/package_request/presentation/widgets/request_detai
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   testWidgets('liste les actions avec leur conséquence et rend le choix', (
     tester,
@@ -41,5 +43,40 @@ void main() {
     await tester.tap(find.text('Annuler la demande'));
     await tester.pumpAndSettle();
     expect(picked, RequestMenuAction.cancel);
+  });
+
+  testWidgets('écran traduit en anglais : libellés et conséquences', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: TextButton(
+              onPressed: () => RequestOwnerMenuSheet.show(
+                ctx,
+                items: const [
+                  RequestMenuAction.unpublish,
+                  RequestMenuAction.cancel,
+                ],
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Unpublish'), findsOneWidget);
+    expect(
+      find.text('Becomes a draft again, hidden from travelers'),
+      findsOneWidget,
+    );
+    expect(find.text('Cancel the request'), findsOneWidget);
+    expect(find.text('Irreversible'), findsOneWidget);
+    expect(find.text('Dépublier'), findsNothing);
   });
 }

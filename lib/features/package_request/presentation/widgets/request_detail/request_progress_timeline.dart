@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// 0 accord, 1 remise, 2 en voyage, 3 livraison, 4 livré.
@@ -25,11 +26,12 @@ class RequestProgressTimeline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final labels = [
-      'Accord et paiement',
-      'Remise du colis à $travelerName',
-      'En voyage',
-      'Livraison à $arrivalCity',
+      l.requestProgressDealAndPayment,
+      l.requestProgressHandoverTo(travelerName),
+      l.requestProgressInTransit,
+      l.requestProgressDeliveryTo(arrivalCity),
     ];
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),

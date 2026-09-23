@@ -44,6 +44,7 @@ const _sameInBothLanguages = <String>{
   'paymentMethodMobileMoney', // « Mobile money » se dit pareil
   'requestCreateDateFieldLabel', // « Date » se dit pareil
   'requestCreateBudgetTitle', // « Budget » se dit pareil
+  'requestDetailMessageCta', // « Message » se dit pareil
 };
 
 void main() {

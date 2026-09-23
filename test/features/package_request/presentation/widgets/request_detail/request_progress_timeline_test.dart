@@ -3,6 +3,8 @@ import 'package:dony/features/package_request/presentation/widgets/request_detai
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   test('progressStepForBid', () {
     expect(progressStepForBid(null), 1);
@@ -30,5 +32,25 @@ void main() {
     expect(find.text('Remise du colis à Awa K.'), findsOneWidget);
     expect(find.text('En voyage'), findsOneWidget);
     expect(find.text('Livraison à Annemasse'), findsOneWidget);
+  });
+
+  testWidgets('étapes nommées en anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: const Scaffold(
+          body: RequestProgressTimeline(
+            travelerName: 'Awa K.',
+            arrivalCity: 'Annemasse',
+            currentStep: 1,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Deal and payment'), findsOneWidget);
+    expect(find.text('Parcel drop-off to Awa K.'), findsOneWidget);
+    expect(find.text('Traveling'), findsOneWidget);
+    expect(find.text('Delivery to Annemasse'), findsOneWidget);
   });
 }

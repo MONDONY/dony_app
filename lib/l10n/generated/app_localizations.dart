@@ -6529,6 +6529,777 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Prix à payer'**
   String get requestCreateRecapPrice;
+
+  /// Titre de l'écran et de la sheet « Ma demande » (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ma demande'**
+  String get requestDetailTitle;
+
+  /// Snackbar d'échec générique d'une action du détail de demande (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue. Réessaie dans un instant.'**
+  String get requestDetailNoticeActionFailed;
+
+  /// Snackbar de succès après invitation d'un voyageur (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Invitation envoyée. Le voyageur est prévenu.'**
+  String get requestDetailNoticeInvitationSent;
+
+  /// Snackbar d'échec : invitation refusée par le serveur (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur ne peut pas être invité.'**
+  String get requestDetailNoticeInvitationRefused;
+
+  /// Snackbar d'échec : demande qui n'accepte plus d'invitations (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette demande n\'accepte plus d\'invitations.'**
+  String get requestDetailNoticeInvitationNotInvitable;
+
+  /// Snackbar d'échec : limite d'invitations atteinte (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite d\'invitations atteinte pour cette demande.'**
+  String get requestDetailNoticeInvitationLimitReached;
+
+  /// Corps du message de partage d'une demande, avant le lien (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'envoie un colis de {weight} kg {departure} → {arrival} autour du {date}. Tu voyages sur cet axe ? Réponds à ma demande sur Yadony.'**
+  String requestDetailShareMessage(
+    String weight,
+    String departure,
+    String arrival,
+    String date,
+  );
+
+  /// Tooltip du bouton menu « … » du détail de demande (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus d\'actions'**
+  String get requestDetailMoreActionsTooltip;
+
+  /// Titre du dialogue de confirmation d'annulation (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler cette demande ?'**
+  String get requestDetailCancelDialogTitle;
+
+  /// Message du dialogue de confirmation d'annulation (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette action est irréversible. Les voyageurs ne pourront plus y répondre.'**
+  String get requestDetailCancelDialogMessage;
+
+  /// Titre d'erreur 404 (demande annulée/supprimée) (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette demande n\'existe plus'**
+  String get requestDetailErrorNotFoundTitle;
+
+  /// Message d'erreur 404 (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Elle a peut-être été annulée ou supprimée.'**
+  String get requestDetailErrorNotFoundMessage;
+
+  /// Titre d'erreur générique de chargement (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger ta demande'**
+  String get requestDetailErrorLoadTitle;
+
+  /// Message d'erreur générique de chargement (package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifie ta connexion, puis réessaie. Ta demande n\'a pas été modifiée.'**
+  String get requestDetailErrorLoadMessage;
+
+  /// Nom de repli du voyageur, en milieu de phrase (package_request_detail_screen.dart, request_detail_bottom_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'le voyageur'**
+  String get requestTravelerFallbackNameLower;
+
+  /// Titre de l'écran « Mes demandes » (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes demandes'**
+  String get requestListTitle;
+
+  /// Message d'erreur de repli, sans détail serveur (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur'**
+  String get requestListErrorFallback;
+
+  /// Titre de l'état vide global de « Mes demandes » (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu n\'as encore rien envoyé'**
+  String get requestListEmptyTitle;
+
+  /// Description de l'état vide global de « Mes demandes » (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Publie ta première demande et reçois des offres de voyageurs en quelques heures.'**
+  String get requestListEmptyDescription;
+
+  /// CTA de l'état vide global de « Mes demandes » (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'+ Publier ma première demande'**
+  String get requestListEmptyCta;
+
+  /// Indication du champ de recherche de « Mes demandes » (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville, catégorie…'**
+  String get requestListSearchHint;
+
+  /// Libellé du chip de filtre « Toutes », suivi du compte entre parenthèses (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes'**
+  String get requestListFilterAllLabel;
+
+  /// Libellé du chip de filtre « Ouvertes » (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvertes'**
+  String get requestListFilterOpenLabel;
+
+  /// Libellé du chip de filtre « Non abouties » (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Non abouties'**
+  String get requestListFilterClosedLabel;
+
+  /// Libellé du chip de filtre « Brouillons » (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Brouillons'**
+  String get requestListFilterDraftLabel;
+
+  /// État vide du filtre : recherche sans correspondance (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun résultat pour cette recherche'**
+  String get requestListEmptySearchResult;
+
+  /// État vide du filtre « Ouvertes » (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande ouverte'**
+  String get requestListEmptyOpen;
+
+  /// État vide du filtre « Non abouties » (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande non aboutie'**
+  String get requestListEmptyClosed;
+
+  /// État vide du filtre « Brouillons » (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun brouillon'**
+  String get requestListEmptyDraft;
+
+  /// État vide du filtre « Toutes » (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande'**
+  String get requestListEmptyAll;
+
+  /// Libellé du bouton flottant de création (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle demande'**
+  String get requestListNewFab;
+
+  /// CTA d'édition dans le pied d'une carte de la liste (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier →'**
+  String get requestListEditCta;
+
+  /// Badge de statut, tout en majuscules (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'BROUILLON'**
+  String get requestListStatusDraft;
+
+  /// Badge de statut, tout en majuscules (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'OUVERTE'**
+  String get requestListStatusOpen;
+
+  /// Badge de statut, tout en majuscules (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'NÉGOCIATION'**
+  String get requestListStatusNegotiating;
+
+  /// Badge de statut, tout en majuscules (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'ACCEPTÉE'**
+  String get requestListStatusAccepted;
+
+  /// Badge de statut, tout en majuscules (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'LIVRÉE'**
+  String get requestListStatusCompleted;
+
+  /// Badge de statut, tout en majuscules (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'EXPIRÉE'**
+  String get requestListStatusExpired;
+
+  /// Badge de statut, tout en majuscules (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'ANNULÉE'**
+  String get requestListStatusCancelled;
+
+  /// Horodatage relatif d'une carte de la liste (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'à l\'instant'**
+  String get requestListTimeJustNow;
+
+  /// Horodatage relatif d'une carte de la liste (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {minutes} min'**
+  String requestListTimeMinutesAgo(int minutes);
+
+  /// Horodatage relatif d'une carte de la liste (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {hours}h'**
+  String requestListTimeHoursAgo(int hours);
+
+  /// Horodatage relatif d'une carte de la liste (my_package_requests_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {days}j'**
+  String requestListTimeDaysAgo(int days);
+
+  /// Titre du hub « Envoyer » (envoyer_hub_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get requestEnvoyerHubTitle;
+
+  /// Pill d'action « + Nouveau » du hub « Envoyer » (envoyer_hub_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'+ Nouveau'**
+  String get requestEnvoyerHubNewButton;
+
+  /// Compteur de vues affiché dans le méta du billet (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} vue} other{{count} vues}}'**
+  String requestDetailViews(int count);
+
+  /// Pli replié « N voyageurs la verront » sur un brouillon (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} voyageur la verra} other{{count} voyageurs la verront}}'**
+  String requestDetailTravelersWillSee(int count);
+
+  /// Pli replié « N voyageurs sur ton axe » (offres reçues / prix ferme) (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} voyageur sur ton axe} other{{count} voyageurs sur ton axe}}'**
+  String requestDetailTravelersOnRouteCount(int count);
+
+  /// Titre du bandeau brouillon (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore visible'**
+  String get requestDetailNotVisibleTitle;
+
+  /// Message du bandeau brouillon (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Publie ta demande pour que les voyageurs puissent te proposer un prix.'**
+  String get requestDetailNotVisibleMessage;
+
+  /// Titre du bandeau accord en espèces, commission en attente (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} règle sa commission Yadony'**
+  String requestDetailCashCommissionTitle(String name);
+
+  /// Message du bandeau accord en espèces, commission en attente (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accord en espèces trouvé. Tant que ce n\'est pas fait, tu peux encore choisir quelqu\'un d\'autre.'**
+  String get requestDetailCashCommissionMessage;
+
+  /// Titre du bandeau à finaliser (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Finalise pour réserver sa place'**
+  String get requestDetailFinalizeTitle;
+
+  /// Message du bandeau à finaliser (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton argent reste bloqué chez Yadony jusqu\'à la remise du colis.'**
+  String get requestDetailFinalizeMessage;
+
+  /// Titre du bandeau expirée (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date dépassée sans accord'**
+  String get requestDetailExpiredTitle;
+
+  /// Message du bandeau expirée (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun voyageur n\'a été retenu à temps. Tes infos sont gardées, il suffit de choisir de nouvelles dates.'**
+  String get requestDetailExpiredMessage;
+
+  /// Titre du bandeau annulée (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu as annulé cette demande'**
+  String get requestDetailCancelledTitle;
+
+  /// Message du bandeau annulée (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les voyageurs ne peuvent plus y répondre.'**
+  String get requestDetailCancelledMessage;
+
+  /// Titre du bandeau : recherche de voyageurs compatibles en échec (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les voyageurs pour le moment'**
+  String get requestDetailNoSearchTitle;
+
+  /// Message du bandeau : recherche de voyageurs compatibles en échec (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessaie plus tard, ou partage directement ta demande en attendant.'**
+  String get requestDetailNoSearchMessage;
+
+  /// Titre de section : offres reçues (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Offres reçues'**
+  String get requestDetailOffersReceivedTitle;
+
+  /// Titre du bandeau prix ferme, un seul candidat retenu (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Un seul choix'**
+  String get requestDetailSingleChoiceTitle;
+
+  /// Message du bandeau prix ferme, un seul candidat retenu (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les autres candidats seront déclinés automatiquement.'**
+  String get requestDetailSingleChoiceMessage;
+
+  /// Titre de section : candidats sur un prix ferme (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageurs intéressés'**
+  String get requestDetailInterestedTravelersTitle;
+
+  /// Titre de section : offres, cas commission en attente (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Offres'**
+  String get requestDetailOffersTitle;
+
+  /// Titre de section : offre à finaliser (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre retenue'**
+  String get requestDetailSelectedOfferTitle;
+
+  /// Titre du bandeau : bid accepté mais hors des rails (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet n\'a pas abouti'**
+  String get requestDetailTripNotCompletedTitle;
+
+  /// Message du bandeau : bid accepté mais hors des rails (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur n\'a pas pu assurer la livraison. Publie une demande similaire pour retrouver quelqu\'un.'**
+  String get requestDetailTripNotCompletedMessage;
+
+  /// Nom de repli du voyageur dans la frise de progression (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'ton voyageur'**
+  String get requestDetailYourTravelerFallback;
+
+  /// Statut du talon voyageur : espèces déjà réglées (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'réglé en main propre'**
+  String get requestDetailStubCashPaid;
+
+  /// Statut du talon voyageur : espèces à régler (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'à régler en main propre à la remise'**
+  String get requestDetailStubCashPending;
+
+  /// Statut du talon voyageur : paiement carte déjà versé (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'versé au voyageur'**
+  String get requestDetailStubPaidToTraveler;
+
+  /// Statut du talon voyageur : paiement carte en séquestre (request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'payé, bloqué chez Yadony'**
+  String get requestDetailStubHeldByYadony;
+
+  /// Nom de repli du voyageur, en début de phrase (request_offer_card.dart, request_detail_view.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur'**
+  String get requestTravelerFallbackName;
+
+  /// Étiquette d'offre en attente de trajet, partagée avec le bouton principal (request_offer_card.dart, request_detail_bottom_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} ajoute son trajet'**
+  String requestTravelerAddingTrip(String name);
+
+  /// Étiquette d'offre : accord trouvé, en attente de paiement (request_offer_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accord trouvé'**
+  String get requestOfferDealFound;
+
+  /// Étiquette d'offre : accord espèces, commission voyageur en attente (request_offer_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accord en espèces, commission en attente'**
+  String get requestOfferCashDealCommissionPending;
+
+  /// Étiquette d'offre sur un prix ferme (request_offer_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible pour ton colis'**
+  String get requestOfferAvailableForParcel;
+
+  /// CTA de l'étiquette d'offre sur un prix ferme (request_offer_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir'**
+  String get requestOfferChooseCta;
+
+  /// Étiquette d'offre : c'est à l'expéditeur de répondre (request_offer_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À toi de répondre'**
+  String get requestOfferYourTurn;
+
+  /// CTA de l'étiquette d'offre quand c'est à l'expéditeur de répondre (request_offer_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Répondre'**
+  String get requestOfferRespondCta;
+
+  /// Étiquette d'offre de repli : en attente du voyageur (request_offer_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de {name}'**
+  String requestOfferWaitingFor(String name);
+
+  /// Légende sous le prix brut d'une carte d'offre (request_offer_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'tu paies'**
+  String get requestOfferYouPayCaption;
+
+  /// Poids encore disponible chez un voyageur (request_offer_card.dart, compatible_traveler_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{weight} kg libres'**
+  String requestAvailableKg(String weight);
+
+  /// Entrée du menu « … » de « Ma demande » (request_owner_menu_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépublier'**
+  String get requestDetailMenuUnpublishLabel;
+
+  /// Conséquence de « Dépublier » dans le menu « … » (request_owner_menu_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Redevient un brouillon, invisible des voyageurs'**
+  String get requestDetailMenuUnpublishConsequence;
+
+  /// Entrée du menu « … » de « Ma demande » (request_owner_menu_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dupliquer la demande'**
+  String get requestDetailMenuDuplicateLabel;
+
+  /// Conséquence de « Dupliquer la demande » dans le menu « … » (request_owner_menu_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Même colis, nouvelles dates ou nouveau trajet'**
+  String get requestDetailMenuDuplicateConsequence;
+
+  /// Entrée du menu « … » de « Ma demande », réutilisée comme confirmLabel du dialogue (request_owner_menu_sheet.dart, package_request_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la demande'**
+  String get requestDetailMenuCancelLabel;
+
+  /// Conséquence de « Annuler la demande » dans le menu « … » (request_owner_menu_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Irréversible'**
+  String get requestDetailMenuCancelConsequence;
+
+  /// Titre de la liste des voyageurs compatibles (request_travelers_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageurs sur ton axe'**
+  String get requestTravelersOnRouteTitle;
+
+  /// Titre de l'état vide : aucun voyageur compatible (request_travelers_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun voyageur sur {corridor} pour l\'instant'**
+  String requestNoTravelersTitle(String corridor);
+
+  /// Message de l'état vide : aucun voyageur compatible (request_travelers_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les trajets arrivent souvent la semaine du départ. On te prévient dès qu\'un voyageur publie.'**
+  String get requestNoTravelersMessage;
+
+  /// Action de l'état vide : créer une alerte (request_travelers_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Être alerté des nouveaux trajets'**
+  String get requestNoTravelersAlertCta;
+
+  /// Action de l'état vide : élargir la fenêtre de dates (request_travelers_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Élargir mes dates'**
+  String get requestNoTravelersWidenDatesCta;
+
+  /// Pastille de statut : nombre d'offres reçues (request_status_pill.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} offre} other{{count} offres}}'**
+  String requestStatusOffers(int count);
+
+  /// Pastille de statut : nombre de candidats sur un prix ferme (request_status_pill.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} candidat} other{{count} candidats}}'**
+  String requestStatusCandidates(int count);
+
+  /// Pastille de statut d'une demande (request_status_pill.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Brouillon'**
+  String get requestStatusDraft;
+
+  /// Pastille de statut d'une demande publiée sans offre (request_status_pill.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En ligne'**
+  String get requestStatusLive;
+
+  /// Pastille de statut : accord espèces, commission en attente (request_status_pill.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente'**
+  String get requestStatusPendingCommission;
+
+  /// Pastille de statut : offre à finaliser (request_status_pill.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À finaliser'**
+  String get requestStatusToFinalize;
+
+  /// Pastille de statut : demande acceptée (request_status_pill.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmée'**
+  String get requestStatusConfirmed;
+
+  /// Pastille de statut : demande livrée (request_status_pill.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Livrée'**
+  String get requestStatusDelivered;
+
+  /// Pastille de statut : demande expirée (request_status_pill.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Expirée'**
+  String get requestStatusExpired;
+
+  /// Pastille de statut : demande annulée (request_status_pill.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulée'**
+  String get requestStatusCancelled;
+
+  /// Bouton principal : publier la demande brouillon (request_detail_bottom_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier'**
+  String get requestDetailPublishCta;
+
+  /// Bouton principal : ouvrir un fil de négociation (request_detail_bottom_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir la discussion'**
+  String get requestDetailOpenThreadCta;
+
+  /// Bouton principal : payer, sans montant connu (request_detail_bottom_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer'**
+  String get requestDetailPayCta;
+
+  /// Bouton principal : payer un montant donné (request_detail_bottom_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer {amount}'**
+  String requestDetailPayCtaWithAmount(String amount);
+
+  /// Bouton principal : suivre le colis accepté (request_detail_bottom_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre mon colis'**
+  String get requestDetailTrackParcelCta;
+
+  /// Bouton principal : noter le voyageur après livraison (request_detail_bottom_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Noter {name}'**
+  String requestDetailRateCta(String name);
+
+  /// Bouton principal : republier une demande expirée (request_detail_bottom_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Republier avec de nouvelles dates'**
+  String get requestDetailRepublishCta;
+
+  /// Bouton principal : publier une demande similaire après annulation (request_detail_bottom_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier une demande similaire'**
+  String get requestDetailPublishSimilarCta;
+
+  /// Bouton secondaire : ouvrir le message (request_detail_bottom_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Message'**
+  String get requestDetailMessageCta;
+
+  /// Libellé d'accessibilité du billet (route + date) (request_ticket_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{departure} vers {arrival}, {date}'**
+  String requestTicketRouteSemantic(
+    String departure,
+    String arrival,
+    String date,
+  );
+
+  /// Prix du billet quand aucun montant n'est encore fixé (request_ticket_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix à définir'**
+  String get requestTicketPriceUndefined;
+
+  /// Légende sous le prix du billet, prix ouvert aux offres (request_ticket_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'négociable'**
+  String get requestTicketNegotiable;
+
+  /// Légende sous le prix du billet, prix ferme (request_ticket_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'prix ferme'**
+  String get requestTicketFixedPrice;
+
+  /// Libellé d'accessibilité de la vignette photo du billet (request_ticket_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les photos du colis'**
+  String get requestTicketViewPhotosSemantic;
+
+  /// Étape 1 de la frise de progression (request_progress_timeline.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accord et paiement'**
+  String get requestProgressDealAndPayment;
+
+  /// Étape 2 de la frise de progression (request_progress_timeline.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise du colis à {name}'**
+  String requestProgressHandoverTo(String name);
+
+  /// Étape 3 de la frise de progression (request_progress_timeline.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En voyage'**
+  String get requestProgressInTransit;
+
+  /// Étape 4 de la frise de progression (request_progress_timeline.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison à {city}'**
+  String requestProgressDeliveryTo(String city);
+
+  /// Jauge de poids : poids de la demande de l'expéditeur (compatible_traveler_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'ton colis : {weight} kg'**
+  String requestYourParcelWeight(String weight);
+
+  /// État du bouton d'invitation d'un voyageur compatible, déjà invité (compatible_traveler_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Invité'**
+  String get requestTravelerInvited;
+
+  /// Bouton d'invitation d'un voyageur compatible (compatible_traveler_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Inviter'**
+  String get requestTravelerInviteCta;
+
+  /// Libellé d'accessibilité du squelette de chargement (request_detail_skeleton.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Chargement de ta demande'**
+  String get requestDetailLoadingSemantic;
 }
 
 class _AppLocalizationsDelegate

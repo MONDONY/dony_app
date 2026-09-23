@@ -26,7 +26,8 @@ class CompatibleTravelerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final name = trip.traveler?.displayName ?? 'Voyageur';
+    final l = context.l10n;
+    final name = trip.traveler?.displayName ?? l.tripTravelerFallbackName;
     final total = trip.totalKg > 0 ? trip.totalKg : trip.availableKg;
     final freeShare = total > 0
         ? (trip.availableKg / total).clamp(0.0, 1.0)
@@ -81,7 +82,7 @@ class CompatibleTravelerCard extends StatelessWidget {
                               Text(
                                 NumberFormat(
                                   '0.0',
-                                  AppL10n.localeName,
+                                  l.localeName,
                                 ).format(trip.traveler!.averageRating),
                                 style: const TextStyle(
                                   fontSize: 12,
@@ -92,7 +93,7 @@ class CompatibleTravelerCard extends StatelessWidget {
                           ],
                         ),
                         Text(
-                          '${DateFormat('d MMM', AppL10n.localeName).format(trip.departureDate)} · '
+                          '${DateFormat.MMMd(l.localeName).format(trip.departureDate)} · '
                           '${trip.departureCity} → ${trip.arrivalCity}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -132,11 +133,15 @@ class CompatibleTravelerCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${trip.availableKg.toStringAsFixed(0)} kg libres',
+                    l.requestAvailableKg(trip.availableKg.toStringAsFixed(0)),
                     style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                   ),
                   Text(
-                    'ton colis : ${requestWeightKg.toStringAsFixed(requestWeightKg % 1 == 0 ? 0 : 1)} kg',
+                    l.requestYourParcelWeight(
+                      requestWeightKg.toStringAsFixed(
+                        requestWeightKg % 1 == 0 ? 0 : 1,
+                      ),
+                    ),
                     style: TextStyle(
                       fontSize: 12,
                       color: cs.success,
@@ -182,7 +187,7 @@ class _InviteButton extends StatelessWidget {
             DonyIcon('check', size: 14, color: cs.success),
             const SizedBox(width: 4),
             Text(
-              'Invité',
+              context.l10n.requestTravelerInvited,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -202,9 +207,9 @@ class _InviteButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(DonyRadius.md),
           ),
         ),
-        child: const Text(
-          'Inviter',
-          style: TextStyle(fontWeight: FontWeight.w700),
+        child: Text(
+          context.l10n.requestTravelerInviteCta,
+          style: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
     };

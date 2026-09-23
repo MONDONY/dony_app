@@ -17,6 +17,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 PackageRequest _req(PackageRequestStatus s, {bool negotiable = true}) =>
     PackageRequest(
       id: 'pr-1',
@@ -430,6 +432,39 @@ void main() {
     expect(find.text('Tu as annulé cette demande'), findsOneWidget);
     expect(find.byType(CompatibleTravelerCard), findsNothing);
   });
+
+  testWidgets(
+    'écran traduit en anglais : vues et libellé relatif « posted … ago »',
+    (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: RequestDetailView(
+                state: PackageRequestDetailLoaded(
+                  request: _req(PackageRequestStatus.open),
+                  threads: const [],
+                  insights: const PackageRequestInsights(
+                    viewCount: 14,
+                    invitedAnnouncementIds: {},
+                  ),
+                  compatibleTrips: const [],
+                ),
+                callbacks: _noop,
+                now: DateTime.utc(2026, 9, 17, 8, 25),
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(find.textContaining('14 views'), findsOneWidget);
+      expect(find.textContaining('posted'), findsOneWidget);
+      expect(find.textContaining('h ago'), findsOneWidget);
+      expect(find.textContaining('vues'), findsNothing);
+    },
+  );
 
   testWidgets('tap sur une offre ouvre le fil', (tester) async {
     String? opened;

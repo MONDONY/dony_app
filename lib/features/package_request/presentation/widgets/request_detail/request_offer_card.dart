@@ -9,38 +9,43 @@ import 'package:intl/intl.dart';
 enum OfferTagTone { neutral, info, success, warning }
 
 ({String label, OfferTagTone tone, String? cta}) offerTagFor(
+  AppLocalizations l,
   NegotiationThread t, {
   required bool firmPrice,
 }) {
-  final name = t.travelerName ?? 'Le voyageur';
+  final name = t.travelerName ?? l.requestTravelerFallbackName;
   return switch (t.status) {
     NegotiationThreadStatus.awaitingTrip => (
-      label: '$name ajoute son trajet',
+      label: l.requestTravelerAddingTrip(name),
       tone: OfferTagTone.info,
       cta: null,
     ),
     NegotiationThreadStatus.awaitingPayment ||
     NegotiationThreadStatus.awaitingDeposit => (
-      label: 'Accord trouvé',
+      label: l.requestOfferDealFound,
       tone: OfferTagTone.success,
       cta: null,
     ),
     NegotiationThreadStatus.awaitingCommission => (
-      label: 'Accord en espèces, commission en attente',
+      label: l.requestOfferCashDealCommissionPending,
       tone: OfferTagTone.warning,
       cta: null,
     ),
     _ when firmPrice => (
-      label: 'Disponible pour ton colis',
+      label: l.requestOfferAvailableForParcel,
       tone: OfferTagTone.success,
-      cta: 'Choisir',
+      cta: l.requestOfferChooseCta,
     ),
     _ when t.isMyTurn => (
-      label: 'À toi de répondre',
+      label: l.requestOfferYourTurn,
       tone: OfferTagTone.info,
-      cta: 'Répondre',
+      cta: l.requestOfferRespondCta,
     ),
-    _ => (label: 'En attente de $name', tone: OfferTagTone.neutral, cta: null),
+    _ => (
+      label: l.requestOfferWaitingFor(name),
+      tone: OfferTagTone.neutral,
+      cta: null,
+    ),
   };
 }
 
@@ -61,9 +66,10 @@ class RequestOfferCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final t = thread;
-    final name = t.travelerName ?? 'Voyageur';
-    final tag = offerTagFor(t, firmPrice: firmPrice);
+    final name = t.travelerName ?? l.tripTravelerFallbackName;
+    final tag = offerTagFor(l, t, firmPrice: firmPrice);
     final price = PriceDisplay.money(
       t.grossPriceEur ?? PriceDisplay.grossFromNet(t.currentPriceEur),
       t.currency,
@@ -131,7 +137,7 @@ class RequestOfferCard extends StatelessWidget {
                               Text(
                                 NumberFormat(
                                   '0.0',
-                                  AppL10n.localeName,
+                                  l.localeName,
                                 ).format(t.travelerRating),
                                 style: const TextStyle(
                                   fontSize: 12,
@@ -142,8 +148,8 @@ class RequestOfferCard extends StatelessWidget {
                           ],
                         ),
                         Text(
-                          '${DateFormat('d MMM', AppL10n.localeName).format(t.travelerTravelDate)} · '
-                          '${t.travelerAvailableKg.toStringAsFixed(0)} kg libres',
+                          '${DateFormat.MMMd(l.localeName).format(t.travelerTravelDate)} · '
+                          '${l.requestAvailableKg(t.travelerAvailableKg.toStringAsFixed(0))}',
                           style: TextStyle(
                             fontSize: 12,
                             color: cs.onSurfaceVariant,
@@ -164,7 +170,7 @@ class RequestOfferCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'tu paies',
+                        l.requestOfferYouPayCaption,
                         style: TextStyle(
                           fontSize: 12,
                           color: cs.onSurfaceVariant,

@@ -3844,4 +3844,487 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestCreateRecapPrice => 'Price to pay';
+
+  @override
+  String get requestDetailTitle => 'My request';
+
+  @override
+  String get requestDetailNoticeActionFailed =>
+      'Something went wrong. Try again in a moment.';
+
+  @override
+  String get requestDetailNoticeInvitationSent =>
+      'Invitation sent. The traveler has been notified.';
+
+  @override
+  String get requestDetailNoticeInvitationRefused =>
+      'This traveler can\'t be invited.';
+
+  @override
+  String get requestDetailNoticeInvitationNotInvitable =>
+      'This request no longer accepts invitations.';
+
+  @override
+  String get requestDetailNoticeInvitationLimitReached =>
+      'Invitation limit reached for this request.';
+
+  @override
+  String requestDetailShareMessage(
+    String weight,
+    String departure,
+    String arrival,
+    String date,
+  ) {
+    return 'I\'m sending a $weight kg parcel $departure → $arrival around $date. Are you traveling this route? Reply to my request on Yadony.';
+  }
+
+  @override
+  String get requestDetailMoreActionsTooltip => 'More actions';
+
+  @override
+  String get requestDetailCancelDialogTitle => 'Cancel this request?';
+
+  @override
+  String get requestDetailCancelDialogMessage =>
+      'This action can\'t be undone. Travelers won\'t be able to respond to it anymore.';
+
+  @override
+  String get requestDetailErrorNotFoundTitle => 'This request no longer exists';
+
+  @override
+  String get requestDetailErrorNotFoundMessage =>
+      'It may have been canceled or deleted.';
+
+  @override
+  String get requestDetailErrorLoadTitle => 'We couldn\'t load your request';
+
+  @override
+  String get requestDetailErrorLoadMessage =>
+      'Check your connection, then try again. Your request hasn\'t changed.';
+
+  @override
+  String get requestTravelerFallbackNameLower => 'the traveler';
+
+  @override
+  String get requestListTitle => 'My requests';
+
+  @override
+  String get requestListErrorFallback => 'Error';
+
+  @override
+  String get requestListEmptyTitle => 'You haven\'t sent anything yet';
+
+  @override
+  String get requestListEmptyDescription =>
+      'Post your first request and get offers from travelers within hours.';
+
+  @override
+  String get requestListEmptyCta => '+ Post my first request';
+
+  @override
+  String get requestListSearchHint => 'City, category…';
+
+  @override
+  String get requestListFilterAllLabel => 'All';
+
+  @override
+  String get requestListFilterOpenLabel => 'Open';
+
+  @override
+  String get requestListFilterClosedLabel => 'Unsuccessful';
+
+  @override
+  String get requestListFilterDraftLabel => 'Drafts';
+
+  @override
+  String get requestListEmptySearchResult => 'No results for this search';
+
+  @override
+  String get requestListEmptyOpen => 'No open requests';
+
+  @override
+  String get requestListEmptyClosed => 'No unsuccessful requests';
+
+  @override
+  String get requestListEmptyDraft => 'No drafts';
+
+  @override
+  String get requestListEmptyAll => 'No requests';
+
+  @override
+  String get requestListNewFab => 'New request';
+
+  @override
+  String get requestListEditCta => 'Edit →';
+
+  @override
+  String get requestListStatusDraft => 'DRAFT';
+
+  @override
+  String get requestListStatusOpen => 'OPEN';
+
+  @override
+  String get requestListStatusNegotiating => 'NEGOTIATING';
+
+  @override
+  String get requestListStatusAccepted => 'ACCEPTED';
+
+  @override
+  String get requestListStatusCompleted => 'DELIVERED';
+
+  @override
+  String get requestListStatusExpired => 'EXPIRED';
+
+  @override
+  String get requestListStatusCancelled => 'CANCELED';
+
+  @override
+  String get requestListTimeJustNow => 'just now';
+
+  @override
+  String requestListTimeMinutesAgo(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String requestListTimeHoursAgo(int hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String requestListTimeDaysAgo(int days) {
+    return '${days}d ago';
+  }
+
+  @override
+  String get requestEnvoyerHubTitle => 'Send';
+
+  @override
+  String get requestEnvoyerHubNewButton => '+ New';
+
+  @override
+  String requestDetailViews(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count views',
+      one: '$count view',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String requestDetailTravelersWillSee(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers will see it',
+      one: '$count traveler will see it',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String requestDetailTravelersOnRouteCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers on your route',
+      one: '$count traveler on your route',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get requestDetailNotVisibleTitle => 'Not visible yet';
+
+  @override
+  String get requestDetailNotVisibleMessage =>
+      'Post your request so travelers can propose a price.';
+
+  @override
+  String requestDetailCashCommissionTitle(String name) {
+    return '$name is paying their Yadony service fee';
+  }
+
+  @override
+  String get requestDetailCashCommissionMessage =>
+      'Cash deal found. Until it\'s done, you can still choose someone else.';
+
+  @override
+  String get requestDetailFinalizeTitle => 'Finalize to secure their spot';
+
+  @override
+  String get requestDetailFinalizeMessage =>
+      'Your money stays held by Yadony until the parcel is dropped off.';
+
+  @override
+  String get requestDetailExpiredTitle => 'Date passed without a deal';
+
+  @override
+  String get requestDetailExpiredMessage =>
+      'No traveler was selected in time. Your info is kept, just choose new dates.';
+
+  @override
+  String get requestDetailCancelledTitle => 'You canceled this request';
+
+  @override
+  String get requestDetailCancelledMessage =>
+      'Travelers can no longer respond to it.';
+
+  @override
+  String get requestDetailNoSearchTitle =>
+      'We couldn\'t load travelers right now';
+
+  @override
+  String get requestDetailNoSearchMessage =>
+      'Try again later, or share your request directly in the meantime.';
+
+  @override
+  String get requestDetailOffersReceivedTitle => 'Offers received';
+
+  @override
+  String get requestDetailSingleChoiceTitle => 'Only one choice';
+
+  @override
+  String get requestDetailSingleChoiceMessage =>
+      'The other candidates will be automatically declined.';
+
+  @override
+  String get requestDetailInterestedTravelersTitle => 'Interested travelers';
+
+  @override
+  String get requestDetailOffersTitle => 'Offers';
+
+  @override
+  String get requestDetailSelectedOfferTitle => 'Selected offer';
+
+  @override
+  String get requestDetailTripNotCompletedTitle =>
+      'This trip didn\'t go through';
+
+  @override
+  String get requestDetailTripNotCompletedMessage =>
+      'The traveler couldn\'t complete the delivery. Post a similar request to find someone else.';
+
+  @override
+  String get requestDetailYourTravelerFallback => 'your traveler';
+
+  @override
+  String get requestDetailStubCashPaid => 'paid in person';
+
+  @override
+  String get requestDetailStubCashPending => 'to pay in person at drop-off';
+
+  @override
+  String get requestDetailStubPaidToTraveler => 'paid to the traveler';
+
+  @override
+  String get requestDetailStubHeldByYadony => 'paid, held by Yadony';
+
+  @override
+  String get requestTravelerFallbackName => 'The traveler';
+
+  @override
+  String requestTravelerAddingTrip(String name) {
+    return '$name is adding their trip';
+  }
+
+  @override
+  String get requestOfferDealFound => 'Deal found';
+
+  @override
+  String get requestOfferCashDealCommissionPending =>
+      'Cash deal, service fee pending';
+
+  @override
+  String get requestOfferAvailableForParcel => 'Available for your parcel';
+
+  @override
+  String get requestOfferChooseCta => 'Choose';
+
+  @override
+  String get requestOfferYourTurn => 'Your turn to respond';
+
+  @override
+  String get requestOfferRespondCta => 'Respond';
+
+  @override
+  String requestOfferWaitingFor(String name) {
+    return 'Waiting for $name';
+  }
+
+  @override
+  String get requestOfferYouPayCaption => 'you pay';
+
+  @override
+  String requestAvailableKg(String weight) {
+    return '$weight kg free';
+  }
+
+  @override
+  String get requestDetailMenuUnpublishLabel => 'Unpublish';
+
+  @override
+  String get requestDetailMenuUnpublishConsequence =>
+      'Becomes a draft again, hidden from travelers';
+
+  @override
+  String get requestDetailMenuDuplicateLabel => 'Duplicate the request';
+
+  @override
+  String get requestDetailMenuDuplicateConsequence =>
+      'Same parcel, new dates or a new trip';
+
+  @override
+  String get requestDetailMenuCancelLabel => 'Cancel the request';
+
+  @override
+  String get requestDetailMenuCancelConsequence => 'Irreversible';
+
+  @override
+  String get requestTravelersOnRouteTitle => 'Travelers on your route';
+
+  @override
+  String requestNoTravelersTitle(String corridor) {
+    return 'No traveler on $corridor yet';
+  }
+
+  @override
+  String get requestNoTravelersMessage =>
+      'Trips often show up the week of departure. We\'ll let you know as soon as a traveler posts one.';
+
+  @override
+  String get requestNoTravelersAlertCta => 'Get alerted about new trips';
+
+  @override
+  String get requestNoTravelersWidenDatesCta => 'Widen my dates';
+
+  @override
+  String requestStatusOffers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count offers',
+      one: '$count offer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String requestStatusCandidates(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count interested travelers',
+      one: '$count interested traveler',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get requestStatusDraft => 'Draft';
+
+  @override
+  String get requestStatusLive => 'Live';
+
+  @override
+  String get requestStatusPendingCommission => 'Pending';
+
+  @override
+  String get requestStatusToFinalize => 'To finalize';
+
+  @override
+  String get requestStatusConfirmed => 'Confirmed';
+
+  @override
+  String get requestStatusDelivered => 'Delivered';
+
+  @override
+  String get requestStatusExpired => 'Expired';
+
+  @override
+  String get requestStatusCancelled => 'Canceled';
+
+  @override
+  String get requestDetailPublishCta => 'Post';
+
+  @override
+  String get requestDetailOpenThreadCta => 'Open the conversation';
+
+  @override
+  String get requestDetailPayCta => 'Pay';
+
+  @override
+  String requestDetailPayCtaWithAmount(String amount) {
+    return 'Pay $amount';
+  }
+
+  @override
+  String get requestDetailTrackParcelCta => 'Track my parcel';
+
+  @override
+  String requestDetailRateCta(String name) {
+    return 'Rate $name';
+  }
+
+  @override
+  String get requestDetailRepublishCta => 'Republish with new dates';
+
+  @override
+  String get requestDetailPublishSimilarCta => 'Post a similar request';
+
+  @override
+  String get requestDetailMessageCta => 'Message';
+
+  @override
+  String requestTicketRouteSemantic(
+    String departure,
+    String arrival,
+    String date,
+  ) {
+    return '$departure to $arrival, $date';
+  }
+
+  @override
+  String get requestTicketPriceUndefined => 'Price to be set';
+
+  @override
+  String get requestTicketNegotiable => 'negotiable';
+
+  @override
+  String get requestTicketFixedPrice => 'fixed price';
+
+  @override
+  String get requestTicketViewPhotosSemantic => 'View parcel photos';
+
+  @override
+  String get requestProgressDealAndPayment => 'Deal and payment';
+
+  @override
+  String requestProgressHandoverTo(String name) {
+    return 'Parcel drop-off to $name';
+  }
+
+  @override
+  String get requestProgressInTransit => 'Traveling';
+
+  @override
+  String requestProgressDeliveryTo(String city) {
+    return 'Delivery to $city';
+  }
+
+  @override
+  String requestYourParcelWeight(String weight) {
+    return 'your parcel: $weight kg';
+  }
+
+  @override
+  String get requestTravelerInvited => 'Invited';
+
+  @override
+  String get requestTravelerInviteCta => 'Invite';
+
+  @override
+  String get requestDetailLoadingSemantic => 'Loading your request';
 }

@@ -14,6 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class _MockPackageRequestBloc
     extends MockBloc<PackageRequestEvent, PackageRequestState>
     implements PackageRequestBloc {}
@@ -682,6 +684,50 @@ void main() {
       await tester.pumpAndSettle();
       // After clear, search should be empty
       expect(find.text('Paris → Dakar'), findsOneWidget);
+    });
+  });
+
+  group('anglais', () {
+    testWidgets(
+      'écran traduit en anglais : titre, filtres, badge et CTA édition',
+      (tester) async {
+        useEnglish();
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [_request()],
+          ),
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light(),
+            home: BlocProvider<PackageRequestBloc>.value(
+              value: bloc,
+              child: const MyPackageRequestsScreen(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('My requests'), findsOneWidget);
+        expect(find.text('City, category…'), findsOneWidget);
+        expect(find.text('All (1)'), findsOneWidget);
+        expect(find.text('Open (1)'), findsOneWidget);
+        expect(find.text('OPEN'), findsOneWidget);
+        expect(find.textContaining('Edit'), findsOneWidget);
+        expect(find.text('Mes demandes'), findsNothing);
+      },
+    );
+
+    testWidgets('état vide traduit en anglais', (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(status: PackageRequestListStatus.loaded),
+      );
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('+ Post my first request'), findsOneWidget);
+      expect(find.text("You haven't sent anything yet"), findsOneWidget);
     });
   });
 }

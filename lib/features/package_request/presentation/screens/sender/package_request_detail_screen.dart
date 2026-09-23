@@ -44,9 +44,9 @@ class PackageRequestDetailScreen extends StatelessWidget {
       child: Builder(
         builder: (context) => Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: const DonyAppBar(
-            title: 'Ma demande',
-            actions: [_MenuButton()],
+          appBar: DonyAppBar(
+            title: context.l10n.requestDetailTitle,
+            actions: const [_MenuButton()],
           ),
           body: const _DetailBody(),
           bottomNavigationBar: const _DetailBottomBar(),
@@ -121,13 +121,13 @@ class _SheetFrame extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Ma demande',
+                    context.l10n.requestDetailTitle,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ),
                 const _MenuButton(),
                 IconButton(
-                  tooltip: 'Fermer',
+                  tooltip: context.l10n.commonClose,
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const DonyIcon('x', size: 20),
                 ),
@@ -155,19 +155,20 @@ class _DetailBody extends StatelessWidget {
           (prev is! PackageRequestDetailLoaded || prev.notice != curr.notice),
       listener: (context, state) {
         final notice = (state as PackageRequestDetailLoaded).notice!;
+        final l = context.l10n;
         DonySnackbar.show(
           context,
           message: switch (notice.kind) {
             RequestDetailNoticeKind.actionFailed =>
-              'Une erreur est survenue. Réessaie dans un instant.',
+              l.requestDetailNoticeActionFailed,
             RequestDetailNoticeKind.invitationSent =>
-              'Invitation envoyée. Le voyageur est prévenu.',
+              l.requestDetailNoticeInvitationSent,
             RequestDetailNoticeKind.invitationRefused =>
-              'Ce voyageur ne peut pas être invité.',
+              l.requestDetailNoticeInvitationRefused,
             RequestDetailNoticeKind.invitationNotInvitable =>
-              'Cette demande n\'accepte plus d\'invitations.',
+              l.requestDetailNoticeInvitationNotInvitable,
             RequestDetailNoticeKind.invitationLimitReached =>
-              'Limite d\'invitations atteinte pour cette demande.',
+              l.requestDetailNoticeInvitationLimitReached,
           },
           type: notice.kind == RequestDetailNoticeKind.invitationSent
               ? DonySnackbarType.success
@@ -355,16 +356,18 @@ class _DetailBottomBar extends StatelessWidget {
         await cubit.publish();
       case RequestPrimaryAction.share:
         final r = s.request;
-        final date = DateFormat(
-          'd MMMM',
-          AppL10n.localeName,
-        ).format(r.desiredDate);
+        final l = context.l10n;
+        final date = DateFormat.MMMMd(l.localeName).format(r.desiredDate);
+        final message = l.requestDetailShareMessage(
+          r.weightKg.toStringAsFixed(0),
+          r.departureCity,
+          r.arrivalCity,
+          date,
+        );
         cubit.trackShared();
         unawaited(
           Share.share(
-            'J\'envoie un colis de ${r.weightKg.toStringAsFixed(0)} kg ${r.departureCity} → ${r.arrivalCity} '
-            'autour du $date. Tu voyages sur cet axe ? Réponds à ma demande sur Yadony.\n'
-            '$posterShareBaseUrl/demande/${r.id}',
+            '$message\n$posterShareBaseUrl/demande/${r.id}',
             sharePositionOrigin: sharePositionOriginFor(context),
           ),
         );
@@ -382,7 +385,8 @@ class _DetailBottomBar extends StatelessWidget {
         await RatingBottomSheet.show(
           context,
           bidId: bidId,
-          travelerName: travelerName ?? 'le voyageur',
+          travelerName:
+              travelerName ?? context.l10n.requestTravelerFallbackNameLower,
         );
         if (context.mounted) unawaited(cubit.load());
       case RequestPrimaryAction.republish:
@@ -413,7 +417,7 @@ class _MenuButton extends StatelessWidget {
           return const SizedBox.shrink();
         }
         return IconButton(
-          tooltip: 'Plus d\'actions',
+          tooltip: context.l10n.requestDetailMoreActionsTooltip,
           icon: const DonyIcon('ellipsis', size: 22),
           onPressed: state.actionInFlight ? null : () => _open(context, state),
         );
@@ -434,12 +438,12 @@ class _MenuButton extends StatelessWidget {
       case RequestMenuAction.duplicate:
         await _duplicate(context, s, 'duplicate');
       case RequestMenuAction.cancel:
+        final l = context.l10n;
         final confirmed = await DonyDialog.show(
           context,
-          title: 'Annuler cette demande ?',
-          message:
-              'Cette action est irréversible. Les voyageurs ne pourront plus y répondre.',
-          confirmLabel: 'Annuler la demande',
+          title: l.requestDetailCancelDialogTitle,
+          message: l.requestDetailCancelDialogMessage,
+          confirmLabel: l.requestDetailMenuCancelLabel,
           variant: DonyDialogVariant.destructive,
           iconAsset: 'circle-x',
         );
@@ -460,6 +464,7 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(DonySpacing.xl),
@@ -485,23 +490,23 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: DonySpacing.base),
             Text(
               notFound
-                  ? 'Cette demande n\'existe plus'
-                  : 'Impossible de charger ta demande',
+                  ? l.requestDetailErrorNotFoundTitle
+                  : l.requestDetailErrorLoadTitle,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
               notFound
-                  ? 'Elle a peut-être été annulée ou supprimée.'
-                  : 'Vérifie ta connexion, puis réessaie. Ta demande n\'a pas été modifiée.',
+                  ? l.requestDetailErrorNotFoundMessage
+                  : l.requestDetailErrorLoadMessage,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
             ),
             if (!notFound) ...[
               const SizedBox(height: DonySpacing.lg),
               DonyButton(
-                label: 'Réessayer',
+                label: l.commonRetry,
                 iconAsset: 'refresh-cw',
                 fullWidth: false,
                 onPressed: onRetry,
