@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_catalog.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -32,7 +33,8 @@ abstract final class ErrorPresenter {
     Duration snackbarDuration = const Duration(seconds: 4),
   }) async {
     final unwrapped = _unwrap(error);
-    final p = ErrorCatalog.lookup(unwrapped);
+    final l10n = context.l10n;
+    final p = ErrorCatalog.lookup(unwrapped, l10n: l10n);
 
     // Always log raw details in debug — never in prod and never to the user.
     if (kDebugMode && unwrapped is AppException) {
@@ -47,8 +49,8 @@ abstract final class ErrorPresenter {
         context,
         title: p.title,
         message: p.message,
-        confirmLabel: actionLabel ?? 'OK',
-        cancelLabel: actionLabel != null ? 'Fermer' : 'OK',
+        confirmLabel: actionLabel ?? l10n.commonOk,
+        cancelLabel: actionLabel != null ? l10n.commonClose : l10n.commonOk,
         variant: DonyDialogVariant.destructive,
         icon: p.icon,
       ).then((confirmed) {

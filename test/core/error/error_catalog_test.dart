@@ -1,7 +1,10 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_catalog.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/l10n_test_helpers.dart';
 
 void main() {
   group('ErrorCatalog — ValidationException', () {
@@ -785,5 +788,57 @@ void main() {
         expect(p.message, isNot(contains('\u2014')));
       });
     }
+  });
+
+  group('ErrorCatalog — anglais', () {
+    final en = lookupAppLocalizations(AppL10n.en);
+    final fr = lookupAppLocalizations(AppL10n.fr);
+
+    test('currency-mismatch en anglais', () {
+      const error = NetworkException('ignored', code: 'currency-mismatch');
+      final p = ErrorCatalog.lookup(error, l10n: en);
+      expect(p.title, 'Different currency');
+      expect(
+        p.message,
+        'This trip is no longer available in your currency. '
+        'Change your country in Settings to see it.',
+      );
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('violations du serveur gardées, titre traduit', () {
+      const error = ValidationException(
+        'Validation failed',
+        errors: {
+          'x': ['Server text'],
+        },
+      );
+      final p = ErrorCatalog.lookup(error, l10n: en);
+      expect(p.title, 'Invalid information');
+      expect(p.message, 'Server text');
+    });
+
+    test('erreur inconnue → générique anglais', () {
+      expect(ErrorCatalog.lookup(null, l10n: en).title, 'Something went wrong');
+    });
+
+    test('sans l10n : suit Intl.defaultLocale', () {
+      useEnglish();
+      const error = NetworkException('ignored', code: 'currency-mismatch');
+      expect(ErrorCatalog.lookup(error).title, 'Different currency');
+    });
+
+    test('chaque code a une traduction anglaise distincte du français', () {
+      for (final code in ErrorCatalog.debugCodes) {
+        final error = NetworkException('ignored', code: code);
+        final pEn = ErrorCatalog.lookup(error, l10n: en);
+        final pFr = ErrorCatalog.lookup(error, l10n: fr);
+        expect(
+          pEn.title != pFr.title || pEn.message != pFr.message,
+          isTrue,
+          reason: code,
+        );
+      }
+    });
   });
 }

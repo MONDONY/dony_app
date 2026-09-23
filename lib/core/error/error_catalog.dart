@@ -1,4 +1,5 @@
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// How an error should be presented to the user.
@@ -24,8 +25,30 @@ class ErrorPresentation {
   final IconData icon;
 }
 
+/// Entrée du catalogue : textes résolus à la demande dans la langue voulue.
+class _Entry {
+  const _Entry({
+    required this.title,
+    required this.message,
+    required this.severity,
+    required this.icon,
+  });
+
+  final String Function(AppLocalizations l) title;
+  final String Function(AppLocalizations l) message;
+  final ErrorSeverity severity;
+  final IconData icon;
+
+  ErrorPresentation resolve(AppLocalizations l) => ErrorPresentation(
+    title: title(l),
+    message: message(l),
+    severity: severity,
+    icon: icon,
+  );
+}
+
 /// Resolves an [AppException] (or raw error) to a user-facing
-/// [ErrorPresentation] in French.
+/// [ErrorPresentation] in the current app language (French by default).
 ///
 /// Lookup order:
 ///   1. `error.code` matched against [_byCode] (back-end business codes).
@@ -35,7 +58,7 @@ abstract final class ErrorCatalog {
   /// Business codes emitted by the Spring Boot back-end via
   /// `DonyBusinessException` → ProblemDetail `code`.
   /// Source: `dony-back/.../DonyBusinessException` invocations (29 codes).
-  static const Map<String, ErrorPresentation> _byCode = {
+  static final Map<String, _Entry> _byCode = {
     // ─── Mobile money (pawaPay) ───────────────────────────────────────
     // Rail de versement voyageur (Wave / Orange Money) : activation du
     // compte de versement (`mobile-money-account-*`, `MobileMoneyAccountService`)
@@ -45,85 +68,69 @@ abstract final class ErrorCatalog {
     // `PawapayOperationService` / `PawapayErrors`). Le code
     // `payment-method-unavailable-for-currency`, partagé avec la carte,
     // reste documenté plus bas avec son groupe d'origine.
-    'mobile-money-disabled': ErrorPresentation(
-      title: 'Mobile money indisponible',
-      message:
-          'Le paiement mobile money n\'est pas ouvert pour le moment. '
-          'Choisis un autre moyen de paiement.',
+    'mobile-money-disabled': _Entry(
+      title: (l) => l.errorMobileMoneyDisabledTitle,
+      message: (l) => l.errorMobileMoneyDisabledMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
     // Le message ne présume plus d'un profil à compléter : l'app propose
     // maintenant la saisie du numéro directement dans le flux (formulaire de
     // versement, relance de paiement) plutôt que de renvoyer vers le profil.
-    'mobile-money-phone-required': ErrorPresentation(
-      title: 'Numéro manquant',
-      message: 'Indique le numéro mobile money à utiliser pour continuer.',
+    'mobile-money-phone-required': _Entry(
+      title: (l) => l.errorMobileMoneyPhoneRequiredTitle,
+      message: (l) => l.errorMobileMoneyPhoneRequiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
-    'mobile-money-account-unsupported': ErrorPresentation(
-      title: 'Numéro non pris en charge',
-      message:
-          'Ton numéro n\'est pas rattaché à un opérateur mobile money '
-          'compatible, ou sa devise ne correspond pas à ta zone.',
+    'mobile-money-account-unsupported': _Entry(
+      title: (l) => l.errorMobileMoneyAccountUnsupportedTitle,
+      message: (l) => l.errorMobileMoneyAccountUnsupportedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
-    'mobile-money-account-required': ErrorPresentation(
-      title: 'Compte de versement requis',
-      message:
-          'Active ton versement mobile money avant d\'accepter cette '
-          'offre.',
+    'mobile-money-account-required': _Entry(
+      title: (l) => l.errorMobileMoneyAccountRequiredTitle,
+      message: (l) => l.errorMobileMoneyAccountRequiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
-    'mobile-money-currency-mismatch': ErrorPresentation(
-      title: 'Devise différente',
-      message:
-          'Ton compte de versement mobile money n\'est pas dans la '
-          'devise de ce trajet.',
+    'mobile-money-currency-mismatch': _Entry(
+      title: (l) => l.errorMobileMoneyCurrencyMismatchTitle,
+      message: (l) => l.errorMobileMoneyCurrencyMismatchMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
-    'mobile-money-not-available': ErrorPresentation(
-      title: 'Mobile money non proposé',
-      message: 'Ce voyageur n\'accepte pas le paiement mobile money.',
+    'mobile-money-not-available': _Entry(
+      title: (l) => l.errorMobileMoneyNotAvailableTitle,
+      message: (l) => l.errorMobileMoneyNotAvailableMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
-    'mobile-money-payer-unsupported': ErrorPresentation(
-      title: 'Numéro non pris en charge',
-      message:
-          'Vérifie le numéro qui doit payer, ou essaie avec un autre '
-          'numéro.',
+    'mobile-money-payer-unsupported': _Entry(
+      title: (l) => l.errorMobileMoneyPayerUnsupportedTitle,
+      message: (l) => l.errorMobileMoneyPayerUnsupportedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
     // 422 renvoyée quand le numéro payeur, une fois normalisé côté client
     // (normalizePayerPhone), reste invalide pour tout opérateur mobile
     // money (aucun réseau ne le reconnaît).
-    'mobile-money-invalid-phone': ErrorPresentation(
-      title: 'Numéro non reconnu',
-      message:
-          "Ce numéro n'est reconnu par aucun opérateur mobile money. "
-          'Vérifie-le et réessaie.',
+    'mobile-money-invalid-phone': _Entry(
+      title: (l) => l.errorMobileMoneyInvalidPhoneTitle,
+      message: (l) => l.errorMobileMoneyInvalidPhoneMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
-    'mobile-money-deposit-rejected': ErrorPresentation(
-      title: 'Paiement refusé',
-      message:
-          'L\'opérateur a refusé la demande de paiement. Réessaie, '
-          'éventuellement avec un autre numéro.',
+    'mobile-money-deposit-rejected': _Entry(
+      title: (l) => l.errorMobileMoneyDepositRejectedTitle,
+      message: (l) => l.errorMobileMoneyDepositRejectedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
-    'mobile-money-payment-expired': ErrorPresentation(
-      title: 'Délai dépassé',
-      message:
-          'Le délai de paiement de 30 minutes est passé. Refais une '
-          'offre au voyageur.',
+    'mobile-money-payment-expired': _Entry(
+      title: (l) => l.errorMobileMoneyPaymentExpiredTitle,
+      message: (l) => l.errorMobileMoneyPaymentExpiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
@@ -132,39 +139,33 @@ abstract final class ErrorCatalog {
     // (MobileMoneyBidPaymentService) — rien à corriger côté utilisateur,
     // un simple constat, comme `bid-already-paid`/`payment-already-completed`
     // plus bas.
-    'mobile-money-payment-not-pending': ErrorPresentation(
-      title: 'Paiement déjà traité',
-      message: 'Ce paiement n\'est plus en attente.',
+    'mobile-money-payment-not-pending': _Entry(
+      title: (l) => l.errorMobileMoneyPaymentNotPendingTitle,
+      message: (l) => l.errorMobileMoneyPaymentNotPendingMessage,
       severity: ErrorSeverity.info,
       icon: Icons.info_outline_rounded,
     ),
     // 409 : un dépôt pawaPay est déjà en cours pour ce bid
     // (PawapayOperationService), aligné sur `active-transactions` plus bas
     // (même sévérité et icône : une opération en cours empêche l'action).
-    'mobile-money-operation-in-progress': ErrorPresentation(
-      title: 'Opération en cours',
-      message:
-          'Une opération mobile money est déjà en cours pour cet envoi. '
-          'Patiente quelques instants.',
+    'mobile-money-operation-in-progress': _Entry(
+      title: (l) => l.errorMobileMoneyOperationInProgressTitle,
+      message: (l) => l.errorMobileMoneyOperationInProgressMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.pending_rounded,
     ),
     // 502 : pawaPay ne répond pas (PawapayErrors), aligné sur les autres
     // services externes indisponibles plus bas (`SERVER_ERROR`,
     // `email-service-error`, `firebase-error` : sévérité error).
-    'mobile-money-provider-unavailable': ErrorPresentation(
-      title: 'Service indisponible',
-      message:
-          'Le service mobile money ne répond pas. Réessaie dans '
-          'quelques minutes.',
+    'mobile-money-provider-unavailable': _Entry(
+      title: (l) => l.errorMobileMoneyProviderUnavailableTitle,
+      message: (l) => l.errorMobileMoneyProviderUnavailableMessage,
       severity: ErrorSeverity.error,
       icon: Icons.cloud_off_rounded,
     ),
-    'invalid-payment-method': ErrorPresentation(
-      title: 'Moyen de paiement invalide',
-      message:
-          'Ce moyen de paiement n\'est pas reconnu. Mets l\'application '
-          'à jour.',
+    'invalid-payment-method': _Entry(
+      title: (l) => l.errorInvalidPaymentMethodTitle,
+      message: (l) => l.errorInvalidPaymentMethodMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
@@ -173,11 +174,9 @@ abstract final class ErrorCatalog {
     // Le serveur borne le budget dans la devise de la demande (560 € mis à
     // l'échelle). Le formulaire l'empêche déjà ; l'entrée couvre un client
     // pas à jour ou une devise dont le taux a bougé, sans « Erreur réseau ».
-    'request/budget-out-of-bounds': ErrorPresentation(
-      title: 'Budget trop élevé',
-      message:
-          'Ce budget dépasse le plafond autorisé pour cette devise. Réduis '
-          'le montant puis réessaie.',
+    'request/budget-out-of-bounds': _Entry(
+      title: (l) => l.errorRequestBudgetOutOfBoundsTitle,
+      message: (l) => l.errorRequestBudgetOutOfBoundsMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.rule_rounded,
     ),
@@ -186,51 +185,46 @@ abstract final class ErrorCatalog {
     // impossible, l'état actuel ne permet pas cette action », soit exactement
     // le message technique que la règle métier proscrit : il doit comprendre
     // qu'un autre voyageur a réglé avant lui.
-    'request/already-accepted': ErrorPresentation(
-      title: 'Ce colis est parti',
-      message:
-          'Un autre voyageur a réglé la commission avant toi, ce colis ne '
-          'peut plus te revenir.',
+    'request/already-accepted': _Entry(
+      title: (l) => l.errorRequestAlreadyAcceptedTitle,
+      message: (l) => l.errorRequestAlreadyAcceptedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
-    'thread/not-awaiting-commission': ErrorPresentation(
-      title: 'Ce colis est parti',
-      message:
-          'Cette offre n\'attend plus de règlement, elle a été conclue '
-          'autrement ou le délai est écoulé.',
+    'thread/not-awaiting-commission': _Entry(
+      title: (l) => l.errorThreadNotAwaitingCommissionTitle,
+      message: (l) => l.errorThreadNotAwaitingCommissionMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
     // ─── Auth / accès ────────────────────────────────────────────────
-    'unauthorized': ErrorPresentation(
-      title: 'Session expirée',
-      message: 'Reconnecte-toi pour continuer.',
+    'unauthorized': _Entry(
+      title: (l) => l.errorUnauthorizedTitle,
+      message: (l) => l.errorUnauthorizedMessage,
       severity: ErrorSeverity.error,
       icon: Icons.lock_outline,
     ),
-    'reauth-required': ErrorPresentation(
-      title: 'Reconnexion requise',
-      message: 'Pour ta sécurité, identifie-toi à nouveau pour cette action.',
+    'reauth-required': _Entry(
+      title: (l) => l.errorReauthRequiredTitle,
+      message: (l) => l.errorReauthRequiredMessage,
       severity: ErrorSeverity.error,
       icon: Icons.lock_reset_rounded,
     ),
-    'forbidden': ErrorPresentation(
-      title: 'Action non autorisée',
-      message: "Tu n'as pas les droits nécessaires pour cette action.",
+    'forbidden': _Entry(
+      title: (l) => l.errorForbiddenTitle,
+      message: (l) => l.errorForbiddenMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.block_rounded,
     ),
-    'access-denied': ErrorPresentation(
-      title: 'Accès refusé',
-      message: 'Tu ne peux pas accéder à cette ressource.',
+    'access-denied': _Entry(
+      title: (l) => l.errorAccessDeniedTitle,
+      message: (l) => l.errorAccessDeniedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.do_not_disturb_alt_rounded,
     ),
-    'account-banned': ErrorPresentation(
-      title: 'Compte suspendu',
-      message:
-          'Ton compte a été suspendu. Contacte le support pour plus d\'informations.',
+    'account-banned': _Entry(
+      title: (l) => l.errorAccountBannedTitle,
+      message: (l) => l.errorAccountBannedMessage,
       severity: ErrorSeverity.critical,
       icon: Icons.gpp_bad_rounded,
     ),
@@ -240,53 +234,51 @@ abstract final class ErrorCatalog {
     // pour ne jamais collisionner avec les codes homonymes d'autres features
     // (ex: `code-expired`/`code-incorrect` existent déjà plus bas pour les
     // codes de confirmation de livraison).
-    'firebase-invalid-phone-number': ErrorPresentation(
-      title: 'Numéro invalide',
-      message: 'Vérifie le numéro saisi et réessaie.',
+    'firebase-invalid-phone-number': _Entry(
+      title: (l) => l.errorFirebaseInvalidPhoneNumberTitle,
+      message: (l) => l.errorFirebaseInvalidPhoneNumberMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.phone_disabled_rounded,
     ),
-    'firebase-code-incorrect': ErrorPresentation(
-      title: 'Code incorrect',
-      message: 'Le code de vérification saisi est incorrect.',
+    'firebase-code-incorrect': _Entry(
+      title: (l) => l.errorFirebaseCodeIncorrectTitle,
+      message: (l) => l.errorFirebaseCodeIncorrectMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.password_rounded,
     ),
-    'firebase-code-expired': ErrorPresentation(
-      title: 'Code expiré',
-      message: 'Ce code a expiré. Demande un nouveau code.',
+    'firebase-code-expired': _Entry(
+      title: (l) => l.errorFirebaseCodeExpiredTitle,
+      message: (l) => l.errorFirebaseCodeExpiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.timer_off_rounded,
     ),
-    'firebase-too-many-attempts': ErrorPresentation(
-      title: 'Trop de tentatives',
-      message: 'Trop de tentatives. Réessaie dans quelques minutes.',
+    'firebase-too-many-attempts': _Entry(
+      title: (l) => l.errorFirebaseTooManyAttemptsTitle,
+      message: (l) => l.errorFirebaseTooManyAttemptsMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_top_rounded,
     ),
-    'firebase-session-expired': ErrorPresentation(
-      title: 'Session expirée',
-      message: 'Ta session a expiré. Recommence la connexion.',
+    'firebase-session-expired': _Entry(
+      title: (l) => l.errorFirebaseSessionExpiredTitle,
+      message: (l) => l.errorFirebaseSessionExpiredMessage,
       severity: ErrorSeverity.error,
       icon: Icons.lock_reset_rounded,
     ),
-    'firebase-network-request-failed': ErrorPresentation(
-      title: 'Erreur réseau',
-      message:
-          'Impossible de joindre les serveurs Google. Vérifie ta connexion.',
+    'firebase-network-request-failed': _Entry(
+      title: (l) => l.errorFirebaseNetworkRequestFailedTitle,
+      message: (l) => l.errorFirebaseNetworkRequestFailedMessage,
       severity: ErrorSeverity.error,
       icon: Icons.wifi_off_rounded,
     ),
-    'firebase-app-verification-failed': ErrorPresentation(
-      title: 'Vérification impossible',
-      message:
-          'La vérification de l\'application a échoué. Réinstalle l\'app depuis TestFlight ou le Store puis réessaie.',
+    'firebase-app-verification-failed': _Entry(
+      title: (l) => l.errorFirebaseAppVerificationFailedTitle,
+      message: (l) => l.errorFirebaseAppVerificationFailedMessage,
       severity: ErrorSeverity.error,
       icon: Icons.gpp_maybe_rounded,
     ),
-    'firebase-auth-error': ErrorPresentation(
-      title: 'Erreur de connexion',
-      message: 'La connexion a échoué. Réessaie dans un instant.',
+    'firebase-auth-error': _Entry(
+      title: (l) => l.errorFirebaseAuthErrorTitle,
+      message: (l) => l.errorFirebaseAuthErrorMessage,
       severity: ErrorSeverity.error,
       icon: Icons.error_outline_rounded,
     ),
@@ -296,45 +288,45 @@ abstract final class ErrorCatalog {
     // (`otp-invalid`/`otp-expired` plus bas) ni ceux de confirmation de
     // livraison — un OTP téléphone expiré ne doit pas afficher un texte pensé
     // pour un autre canal.
-    'phone-otp-invalid': ErrorPresentation(
-      title: 'Code incorrect',
-      message: 'Le code de vérification saisi est incorrect.',
+    'phone-otp-invalid': _Entry(
+      title: (l) => l.errorPhoneOtpInvalidTitle,
+      message: (l) => l.errorPhoneOtpInvalidMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.password_rounded,
     ),
-    'phone-otp-expired': ErrorPresentation(
-      title: 'Code expiré',
-      message: 'Ce code a expiré. Demande un nouveau code.',
+    'phone-otp-expired': _Entry(
+      title: (l) => l.errorPhoneOtpExpiredTitle,
+      message: (l) => l.errorPhoneOtpExpiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.timer_off_rounded,
     ),
-    'phone-otp-attempts-exceeded': ErrorPresentation(
-      title: 'Trop de tentatives',
-      message: 'Trop de tentatives. Réessaie dans quelques minutes.',
+    'phone-otp-attempts-exceeded': _Entry(
+      title: (l) => l.errorPhoneOtpAttemptsExceededTitle,
+      message: (l) => l.errorPhoneOtpAttemptsExceededMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_top_rounded,
     ),
-    'phone-otp-rate-limit': ErrorPresentation(
-      title: 'Trop de demandes',
-      message: 'Trop de codes envoyés. Réessaie dans quelques minutes.',
+    'phone-otp-rate-limit': _Entry(
+      title: (l) => l.errorPhoneOtpRateLimitTitle,
+      message: (l) => l.errorPhoneOtpRateLimitMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_top_rounded,
     ),
-    'phone-already-set': ErrorPresentation(
-      title: 'Numéro déjà défini',
-      message: 'Un numéro est déjà associé à ce compte.',
+    'phone-already-set': _Entry(
+      title: (l) => l.errorPhoneAlreadySetTitle,
+      message: (l) => l.errorPhoneAlreadySetMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.phone_disabled_rounded,
     ),
-    'phone-already-exists': ErrorPresentation(
-      title: 'Numéro déjà utilisé',
-      message: 'Ce numéro est déjà associé à un autre compte.',
+    'phone-already-exists': _Entry(
+      title: (l) => l.errorPhoneAlreadyExistsTitle,
+      message: (l) => l.errorPhoneAlreadyExistsMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.phone_disabled_rounded,
     ),
-    'sms-otp-disabled': ErrorPresentation(
-      title: 'Indisponible',
-      message: 'La connexion par téléphone n\'est pas encore disponible.',
+    'sms-otp-disabled': _Entry(
+      title: (l) => l.errorSmsOtpDisabledTitle,
+      message: (l) => l.errorSmsOtpDisabledMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.phone_disabled_rounded,
     ),
@@ -342,26 +334,23 @@ abstract final class ErrorCatalog {
     // Le transporteur SMS (Twilio 21211/21614) refuse le numéro lui-même : le
     // back répond désormais 422 au lieu d'un « code envoyé » qui n'arrivait
     // jamais (Sentry YADONY-BACK-STAGING-2, +225 à neuf chiffres).
-    'invalid-phone-number': ErrorPresentation(
-      title: 'Numéro injoignable',
-      message:
-          'Ce numéro ne peut pas recevoir de SMS. Vérifie l\'indicatif et le '
-          'nombre de chiffres, puis réessaie.',
+    'invalid-phone-number': _Entry(
+      title: (l) => l.errorInvalidPhoneNumberTitle,
+      message: (l) => l.errorInvalidPhoneNumberMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.phone_disabled_rounded,
     ),
 
     // ─── Annonces / trajets ──────────────────────────────────────────
-    'announcement-not-found': ErrorPresentation(
-      title: 'Trajet introuvable',
-      message: 'Ce trajet n\'existe plus ou a été retiré.',
+    'announcement-not-found': _Entry(
+      title: (l) => l.errorAnnouncementNotFoundTitle,
+      message: (l) => l.errorAnnouncementNotFoundMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.search_off_rounded,
     ),
-    'currency-mismatch': ErrorPresentation(
-      title: 'Devise différente',
-      message:
-          'Ce trajet n\'est plus disponible dans ta devise. Change de pays dans Réglages pour le voir.',
+    'currency-mismatch': _Entry(
+      title: (l) => l.errorCurrencyMismatchTitle,
+      message: (l) => l.errorCurrencyMismatchMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.currency_exchange_rounded,
     ),
@@ -369,234 +358,210 @@ abstract final class ErrorCatalog {
     // Sans ces trois entrées, un voyageur qui a passé l'étape pays (ce que le
     // parcours autorise) lit un message générique au moment de créer son
     // compte de paiement, sans aucun moyen de deviner quoi corriger.
-    'country-required': ErrorPresentation(
-      title: 'Pays manquant',
-      message:
-          'Renseigne ton pays dans Réglages, rubrique Préférences, avant de '
-          'créer ton compte de paiement. Il détermine ta devise et ne pourra '
-          'plus être modifié ensuite.',
+    'country-required': _Entry(
+      title: (l) => l.errorCountryRequiredTitle,
+      message: (l) => l.errorCountryRequiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.public_rounded,
     ),
-    'country-locked': ErrorPresentation(
-      title: 'Pays verrouillé',
-      message:
-          'Impossible de changer de pays : un envoi est en cours, ton '
-          'portefeuille n\'est pas vide, ou ton compte de paiement est déjà '
-          'créé.',
+    'country-locked': _Entry(
+      title: (l) => l.errorCountryLockedTitle,
+      message: (l) => l.errorCountryLockedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.lock_outline_rounded,
     ),
-    'country-unsupported': ErrorPresentation(
-      title: 'Pays non desservi',
-      message: 'Yadony ne dessert pas encore ce pays. Choisis-en un autre.',
+    'country-unsupported': _Entry(
+      title: (l) => l.errorCountryUnsupportedTitle,
+      message: (l) => l.errorCountryUnsupportedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.public_off_rounded,
     ),
-    'deletion-impossible': ErrorPresentation(
-      title: 'Suppression impossible',
-      message:
-          "Un colis est déjà accepté sur ce trajet. Annule le voyage à la place : l'expéditeur sera remboursé.",
+    'deletion-impossible': _Entry(
+      title: (l) => l.errorDeletionImpossibleTitle,
+      message: (l) => l.errorDeletionImpossibleMessage,
       severity: ErrorSeverity.critical,
       icon: Icons.event_busy_rounded,
     ),
-    'pro-limit-reached': ErrorPresentation(
-      title: 'Limite mensuelle atteinte',
-      message:
-          "Tu as atteint ta limite d'annonces ce mois-ci. Passe en PRO pour publier sans limite.",
+    'pro-limit-reached': _Entry(
+      title: (l) => l.errorProLimitReachedTitle,
+      message: (l) => l.errorProLimitReachedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.workspace_premium_outlined,
     ),
-    'draft-limit-reached': ErrorPresentation(
-      title: 'Limite de brouillons atteinte',
-      message: 'Passe en PRO pour créer davantage de brouillons.',
+    'draft-limit-reached': _Entry(
+      title: (l) => l.errorDraftLimitReachedTitle,
+      message: (l) => l.errorDraftLimitReachedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.drafts_outlined,
     ),
-    'not-a-draft': ErrorPresentation(
-      title: 'Déjà publié',
-      message: 'Ce trajet n\'est pas un brouillon.',
+    'not-a-draft': _Entry(
+      title: (l) => l.errorNotADraftTitle,
+      message: (l) => l.errorNotADraftMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.info_outline_rounded,
     ),
-    'publishing-suspended': ErrorPresentation(
-      title: 'Publication suspendue',
-      message:
-          'La publication est suspendue sur ton compte. Contacte le support.',
+    'publishing-suspended': _Entry(
+      title: (l) => l.errorPublishingSuspendedTitle,
+      message: (l) => l.errorPublishingSuspendedMessage,
       severity: ErrorSeverity.critical,
       icon: Icons.gpp_bad_rounded,
     ),
-    'kyc-not-verified': ErrorPresentation(
-      title: 'Identité non vérifiée',
-      message: 'Vérifie ton identité avant de publier un trajet.',
+    'kyc-not-verified': _Entry(
+      title: (l) => l.errorKycNotVerifiedTitle,
+      message: (l) => l.errorKycNotVerifiedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.badge_outlined,
     ),
-    'departure-date-passed': ErrorPresentation(
-      title: 'Date de départ passée',
-      message: 'Modifie la date de départ avant de publier ce trajet.',
+    'departure-date-passed': _Entry(
+      title: (l) => l.errorDepartureDatePassedTitle,
+      message: (l) => l.errorDepartureDatePassedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.event_busy_rounded,
     ),
 
     // ─── Colis / Bids ────────────────────────────────────────────────
-    'bid-not-found': ErrorPresentation(
-      title: 'Demande introuvable',
-      message: 'Cette demande n\'existe plus.',
+    'bid-not-found': _Entry(
+      title: (l) => l.errorBidNotFoundTitle,
+      message: (l) => l.errorBidNotFoundMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.search_off_rounded,
     ),
     // Le voyageur n'accepte que les profils vérifiés : c'est son choix, pas un
     // blocage de Yadony. Le message oriente vers la vérification d'identité, qui
     // est la seule issue pour cet expéditeur.
-    'contact-kyc-required': ErrorPresentation(
-      title: 'Profil vérifié requis',
-      message:
-          'Ce voyageur ne reçoit que des profils vérifiés. '
-          'Vérifie ton identité pour lui envoyer une demande.',
+    'contact-kyc-required': _Entry(
+      title: (l) => l.errorContactKycRequiredTitle,
+      message: (l) => l.errorContactKycRequiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.badge_outlined,
     ),
-    'bid-not-accepted': ErrorPresentation(
-      title: 'Demande non acceptée',
-      message:
-          'Cette demande doit être acceptée par le voyageur avant cette étape.',
+    'bid-not-accepted': _Entry(
+      title: (l) => l.errorBidNotAcceptedTitle,
+      message: (l) => l.errorBidNotAcceptedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.pending_actions_rounded,
     ),
-    'bid-not-delivered': ErrorPresentation(
-      title: 'Colis non livré',
-      message: 'Cette action nécessite que le colis ait été livré.',
+    'bid-not-delivered': _Entry(
+      title: (l) => l.errorBidNotDeliveredTitle,
+      message: (l) => l.errorBidNotDeliveredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.inventory_2_outlined,
     ),
-    'invalid-bid-status': ErrorPresentation(
-      title: 'État du colis invalide',
-      message: 'Le statut actuel du colis ne permet pas cette action.',
+    'invalid-bid-status': _Entry(
+      title: (l) => l.errorInvalidBidStatusTitle,
+      message: (l) => l.errorInvalidBidStatusMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.error_outline_rounded,
     ),
-    'use-confirm-delivery': ErrorPresentation(
-      title: 'Confirme la livraison',
-      message:
-          "Pour finaliser, utilise l'écran de confirmation de livraison du destinataire.",
+    'use-confirm-delivery': _Entry(
+      title: (l) => l.errorUseConfirmDeliveryTitle,
+      message: (l) => l.errorUseConfirmDeliveryMessage,
       severity: ErrorSeverity.info,
       icon: Icons.check_circle_outline_rounded,
     ),
 
     // ─── Tracking / QR / codes ───────────────────────────────────────
-    'qr-not-ready': ErrorPresentation(
-      title: 'QR pas encore disponible',
-      message:
-          'Le QR sera disponible une fois que l\'expéditeur aura finalisé le paiement.',
+    'qr-not-ready': _Entry(
+      title: (l) => l.errorQrNotReadyTitle,
+      message: (l) => l.errorQrNotReadyMessage,
       severity: ErrorSeverity.info,
       icon: Icons.qr_code_2_rounded,
     ),
     // Second scan DEPART sur un colis déjà remis : le back répond 409 au lieu
     // du 500 d'index unique (Sentry YADONY-BACK-STAGING-8). Rien à refaire.
-    'depart-already-scanned': ErrorPresentation(
-      title: 'Départ déjà scanné',
-      message:
-          'Le départ de ce colis est déjà enregistré. Tu peux passer à l\'étape '
-          'suivante.',
+    'depart-already-scanned': _Entry(
+      title: (l) => l.errorDepartAlreadyScannedTitle,
+      message: (l) => l.errorDepartAlreadyScannedMessage,
       severity: ErrorSeverity.info,
       icon: Icons.check_circle_outline_rounded,
     ),
-    'code-not-generated': ErrorPresentation(
-      title: 'Code non généré',
-      message:
-          'Aucun code de confirmation n\'a encore été généré pour cette livraison.',
+    'code-not-generated': _Entry(
+      title: (l) => l.errorCodeNotGeneratedTitle,
+      message: (l) => l.errorCodeNotGeneratedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.dialpad_rounded,
     ),
-    'code-expired': ErrorPresentation(
-      title: 'Code expiré',
-      message:
-          'Ce code a expiré. Demande à l\'expéditeur d\'en générer un nouveau.',
+    'code-expired': _Entry(
+      title: (l) => l.errorCodeExpiredTitle,
+      message: (l) => l.errorCodeExpiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.timer_off_rounded,
     ),
-    'code-incorrect': ErrorPresentation(
-      title: 'Code incorrect',
-      message: 'Le code saisi est incorrect. Vérifie auprès de l\'expéditeur.',
+    'code-incorrect': _Entry(
+      title: (l) => l.errorCodeIncorrectTitle,
+      message: (l) => l.errorCodeIncorrectMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.password_rounded,
     ),
-    'too-many-attempts': ErrorPresentation(
-      title: 'Trop de tentatives',
-      message:
-          'Tu as fait trop d\'essais. Patiente quelques minutes avant de réessayer.',
+    'too-many-attempts': _Entry(
+      title: (l) => l.errorTooManyAttemptsTitle,
+      message: (l) => l.errorTooManyAttemptsMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_top_rounded,
     ),
-    'too-many-refreshes': ErrorPresentation(
-      title: 'Limite atteinte',
-      message:
-          'Tu as déjà rafraîchi le code plusieurs fois. Attends avant de regénérer.',
+    'too-many-refreshes': _Entry(
+      title: (l) => l.errorTooManyRefreshesTitle,
+      message: (l) => l.errorTooManyRefreshesMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.refresh_rounded,
     ),
-    'invalid-timestamp': ErrorPresentation(
-      title: 'Horodatage invalide',
-      message:
-          'L\'horodatage de la lecture est incohérent. Réessaie une fois en ligne.',
+    'invalid-timestamp': _Entry(
+      title: (l) => l.errorInvalidTimestampTitle,
+      message: (l) => l.errorInvalidTimestampMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.access_time_rounded,
     ),
-    'invalid-window': ErrorPresentation(
-      title: 'Hors créneau',
-      message: 'Cette action n\'est pas autorisée en dehors du créneau prévu.',
+    'invalid-window': _Entry(
+      title: (l) => l.errorInvalidWindowTitle,
+      message: (l) => l.errorInvalidWindowMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.schedule_rounded,
     ),
 
     // ─── Annulations / litiges ───────────────────────────────────────
-    'already-cancelled': ErrorPresentation(
-      title: 'Déjà annulé',
-      message: 'Cet élément a déjà été annulé.',
+    'already-cancelled': _Entry(
+      title: (l) => l.errorAlreadyCancelledTitle,
+      message: (l) => l.errorAlreadyCancelledMessage,
       severity: ErrorSeverity.info,
       icon: Icons.cancel_outlined,
     ),
-    'active-transactions': ErrorPresentation(
-      title: 'Action impossible',
-      message:
-          'Des transactions sont en cours. Termine-les ou annule-les avant de continuer.',
+    'active-transactions': _Entry(
+      title: (l) => l.errorActiveTransactionsTitle,
+      message: (l) => l.errorActiveTransactionsMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.pending_rounded,
     ),
-    'invalid-status': ErrorPresentation(
-      title: 'État invalide',
-      message: 'L\'état actuel ne permet pas cette action.',
+    'invalid-status': _Entry(
+      title: (l) => l.errorInvalidStatusTitle,
+      message: (l) => l.errorInvalidStatusMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.error_outline_rounded,
     ),
-    'not-pending-deletion': ErrorPresentation(
-      title: 'Suppression non demandée',
-      message: 'Aucune demande de suppression de compte en attente.',
+    'not-pending-deletion': _Entry(
+      title: (l) => l.errorNotPendingDeletionTitle,
+      message: (l) => l.errorNotPendingDeletionMessage,
       severity: ErrorSeverity.info,
       icon: Icons.info_outline_rounded,
     ),
 
     // ─── Évaluations ─────────────────────────────────────────────────
-    'already-rated': ErrorPresentation(
-      title: 'Déjà noté',
-      message: 'Tu as déjà laissé une note pour cette livraison.',
+    'already-rated': _Entry(
+      title: (l) => l.errorAlreadyRatedTitle,
+      message: (l) => l.errorAlreadyRatedMessage,
       severity: ErrorSeverity.info,
       icon: Icons.star_outline_rounded,
     ),
-    'rating-window-expired': ErrorPresentation(
-      title: 'Délai dépassé',
-      message: 'La période pour noter cette livraison est expirée.',
+    'rating-window-expired': _Entry(
+      title: (l) => l.errorRatingWindowExpiredTitle,
+      message: (l) => l.errorRatingWindowExpiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.timer_off_rounded,
     ),
 
     // ─── Négociation ─────────────────────────────────────────────────
-    'negotiation/commission-charge-failed': ErrorPresentation(
-      title: 'Accord non validé',
-      message:
-          "La commission n'a pas pu être prélevée au voyageur. L'accord n'est pas validé. "
-          "Il vient d'être invité à recharger son portefeuille, réessaie ensuite.",
+    'negotiation/commission-charge-failed': _Entry(
+      title: (l) => l.errorNegotiationCommissionChargeFailedTitle,
+      message: (l) => l.errorNegotiationCommissionChargeFailedMessage,
       severity: ErrorSeverity.critical,
       icon: Icons.account_balance_wallet_outlined,
     ),
@@ -607,96 +572,79 @@ abstract final class ErrorCatalog {
     // 409 : le fil n'est pas (ou plus) en AWAITING_DEPOSIT quand l'expéditeur
     // renonce ou reprend le dépôt. Simple constat, comme
     // `mobile-money-payment-not-pending`.
-    'negotiation/not-awaiting-deposit': ErrorPresentation(
-      title: 'Aucun dépôt en cours',
-      message: 'Ce fil n\'attend pas de paiement mobile money.',
+    'negotiation/not-awaiting-deposit': _Entry(
+      title: (l) => l.errorNegotiationNotAwaitingDepositTitle,
+      message: (l) => l.errorNegotiationNotAwaitingDepositMessage,
       severity: ErrorSeverity.info,
       icon: Icons.info_outline_rounded,
     ),
     // 409 : l'opérateur a déjà accepté la demande, le renoncement est refusé
     // tant que la confirmation finale n'est pas tombée (aligné sur
     // `mobile-money-operation-in-progress`).
-    'negotiation/deposit-in-flight': ErrorPresentation(
-      title: 'Paiement en cours de validation',
-      message:
-          'Ton opérateur traite encore le paiement, patiente quelques '
-          'instants.',
+    'negotiation/deposit-in-flight': _Entry(
+      title: (l) => l.errorNegotiationDepositInFlightTitle,
+      message: (l) => l.errorNegotiationDepositInFlightMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.pending_rounded,
     ),
     // 422 : le voyageur n'a pas de compte de versement mobile money actif
     // dans la devise du fil au moment du dépôt.
-    'negotiation/traveler-cannot-receive-mobile-money': ErrorPresentation(
-      title: 'Mobile money indisponible',
-      message:
-          'Le voyageur ne peut pas recevoir de versement mobile money dans '
-          'cette devise. Choisis un autre moyen de paiement.',
+    'negotiation/traveler-cannot-receive-mobile-money': _Entry(
+      title: (l) => l.errorNegotiationTravelerCannotReceiveMobileMoneyTitle,
+      message: (l) => l.errorNegotiationTravelerCannotReceiveMobileMoneyMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
     // Refus du checkout d'un accord de prix négocié sur un trajet. Le payeur
     // est toujours l'expéditeur, d'où le vouvoiement.
-    'bid-not-negotiated': ErrorPresentation(
-      title: 'Rien à payer ici',
-      message:
-          'Ce colis n\'est pas issu d\'une discussion de prix, il n\'y a pas de '
-          'paiement à lancer depuis cet écran.',
+    'bid-not-negotiated': _Entry(
+      title: (l) => l.errorBidNotNegotiatedTitle,
+      message: (l) => l.errorBidNotNegotiatedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.receipt_long_outlined,
     ),
-    'bid-not-awaiting-payment': ErrorPresentation(
-      title: 'Accord non payable',
-      message:
-          'Cette discussion n\'attend pas de paiement par carte. Rouvrez-la '
-          'pour voir où elle en est.',
+    'bid-not-awaiting-payment': _Entry(
+      title: (l) => l.errorBidNotAwaitingPaymentTitle,
+      message: (l) => l.errorBidNotAwaitingPaymentMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_empty_rounded,
     ),
-    'bid-already-paid': ErrorPresentation(
-      title: 'Déjà payé',
-      message: 'Ce colis est déjà payé. Actualisez pour voir son état à jour.',
+    'bid-already-paid': _Entry(
+      title: (l) => l.errorBidAlreadyPaidTitle,
+      message: (l) => l.errorBidAlreadyPaidMessage,
       severity: ErrorSeverity.info,
       icon: Icons.check_circle_outline_rounded,
     ),
-    'payment-already-completed': ErrorPresentation(
-      title: 'Déjà payé',
-      message:
-          'Ce colis est déjà payé. Retrouvez-le dans vos envois pour suivre '
-          'la suite.',
+    'payment-already-completed': _Entry(
+      title: (l) => l.errorPaymentAlreadyCompletedTitle,
+      message: (l) => l.errorPaymentAlreadyCompletedMessage,
       severity: ErrorSeverity.info,
       icon: Icons.check_circle_outline_rounded,
     ),
-    'traveler-stripe-invalid': ErrorPresentation(
-      title: 'Voyageur non configuré',
-      message:
-          'Le voyageur n\'a pas terminé la configuration de ses paiements. '
-          'Le paiement par carte est impossible pour l\'instant, contactez-le '
-          'depuis la discussion.',
+    'traveler-stripe-invalid': _Entry(
+      title: (l) => l.errorTravelerStripeInvalidTitle,
+      message: (l) => l.errorTravelerStripeInvalidMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.credit_card_off_outlined,
     ),
-    'payment-method/traveler-insufficient-funds-cash': ErrorPresentation(
-      title: 'Solde insuffisant',
-      message:
-          "Ton portefeuille n'a pas assez de fonds pour payer la commission Yadony en espèces. Recharge-le ou ajoute une carte.",
+    'payment-method/traveler-insufficient-funds-cash': _Entry(
+      title: (l) => l.errorPaymentMethodTravelerInsufficientFundsCashTitle,
+      message: (l) => l.errorPaymentMethodTravelerInsufficientFundsCashMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.account_balance_wallet_outlined,
     ),
-    'payment-method/no-commission-card': ErrorPresentation(
-      title: 'Carte requise',
-      message:
-          "Ajoute d'abord une carte de commission pour payer en espèces sans solde suffisant.",
+    'payment-method/no-commission-card': _Entry(
+      title: (l) => l.errorPaymentMethodNoCommissionCardTitle,
+      message: (l) => l.errorPaymentMethodNoCommissionCardMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.credit_card_outlined,
     ),
     // 422 : le moyen de paiement demandé au checkout d'un colis n'est pas
     // dans l'ensemble calculé par le serveur pour ce fil (déclaré par
     // l'expéditeur, puis filtré par ce que le voyageur peut honorer).
-    'payment-method/not-in-available-set': ErrorPresentation(
-      title: 'Moyen de paiement non proposé',
-      message:
-          'Ce moyen de paiement n\'est pas proposé pour cette offre. '
-          'Choisis-en un autre.',
+    'payment-method/not-in-available-set': _Entry(
+      title: (l) => l.errorPaymentMethodNotInAvailableSetTitle,
+      message: (l) => l.errorPaymentMethodNotInAvailableSetMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
@@ -705,11 +653,9 @@ abstract final class ErrorCatalog {
     // `payment-method/card-capability-required`, qui a sa feuille dédiée
     // (`PaymentCapabilityBlock._byCode`), ce code n'a pas d'écran propre : il
     // est affiché via cette entrée du catalogue.
-    'payment-method/mobile-money-capability-required': ErrorPresentation(
-      title: 'Mobile money indisponible',
-      message:
-          'Le voyageur n\'a pas de compte de versement mobile money dans '
-          'cette devise.',
+    'payment-method/mobile-money-capability-required': _Entry(
+      title: (l) => l.errorPaymentMethodMobileMoneyCapabilityRequiredTitle,
+      message: (l) => l.errorPaymentMethodMobileMoneyCapabilityRequiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
@@ -727,10 +673,9 @@ abstract final class ErrorCatalog {
     // pour la même raison de devise : le message reste donc générique au
     // moyen de paiement plutôt que de nommer la carte.
     // `unsupported-currency` par `CurrencyCatalog.resolve`.
-    'wallet-topup-stripe-error': ErrorPresentation(
-      title: 'Rechargement indisponible',
-      message:
-          'Le rechargement n\'a pas pu être préparé. Réessaie dans un instant.',
+    'wallet-topup-stripe-error': _Entry(
+      title: (l) => l.errorWalletTopupStripeErrorTitle,
+      message: (l) => l.errorWalletTopupStripeErrorMessage,
       severity: ErrorSeverity.error,
       icon: Icons.account_balance_wallet_outlined,
     ),
@@ -746,11 +691,9 @@ abstract final class ErrorCatalog {
     // couverts pour ce numéro (même nature que
     // `mobile-money-account-unsupported`, déjà dans l'ensemble). Le texte
     // ci-dessous ne sert que de repli si le detail n'est pas exploitable.
-    'topup-amount-out-of-range': ErrorPresentation(
-      title: 'Montant hors limites',
-      message:
-          'Ce montant ne respecte pas les limites de recharge autorisées. '
-          'Ajuste le montant puis réessaie.',
+    'topup-amount-out-of-range': _Entry(
+      title: (l) => l.errorTopupAmountOutOfRangeTitle,
+      message: (l) => l.errorTopupAmountOutOfRangeMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.rule_rounded,
     ),
@@ -760,52 +703,42 @@ abstract final class ErrorCatalog {
     // le parcours de recharge tutoie (« Valide le paiement sur ton
     // téléphone », « Payer avec un autre numéro »). L'app écrit donc son
     // propre texte plutôt que d'afficher le detail brut.
-    'topup-already-pending': ErrorPresentation(
-      title: 'Recharge déjà en cours',
-      // Aucun écran ne permet d'annuler une recharge en cours : ne demande
-      // que ce qui est faisable — valider la demande reçue sur le téléphone,
-      // ou laisser le délai s'écouler.
-      message:
-          'Une recharge est déjà en cours. Valide-la sur ton téléphone, ou '
-          'attends qu\'elle expire avant d\'en lancer une nouvelle.',
+    'topup-already-pending': _Entry(
+      title: (l) => l.errorTopupAlreadyPendingTitle,
+      message: (l) => l.errorTopupAlreadyPendingMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.pending_rounded,
     ),
-    'topup-phone-required': ErrorPresentation(
-      title: 'Numéro manquant',
-      message: 'Indique le numéro qui va payer la recharge.',
+    'topup-phone-required': _Entry(
+      title: (l) => l.errorTopupPhoneRequiredTitle,
+      message: (l) => l.errorTopupPhoneRequiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
     // Numéro reconnu mais inexploitable pour une recharge (réseau fermé,
     // devise non prise en charge, pays inconnu...). Dans
     // `_serverDetailCodes` : voir le commentaire de groupe ci-dessus.
-    'topup-phone-unsupported': ErrorPresentation(
-      title: 'Numéro non pris en charge',
-      message:
-          'Ce numéro n\'est pas exploitable pour une recharge mobile money. '
-          'Vérifie-le ou essaie avec un autre numéro.',
+    'topup-phone-unsupported': _Entry(
+      title: (l) => l.errorTopupPhoneUnsupportedTitle,
+      message: (l) => l.errorTopupPhoneUnsupportedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
-    'topup-not-found': ErrorPresentation(
-      title: 'Recharge introuvable',
-      message: 'Cette recharge n\'existe plus ou son lien a expiré.',
+    'topup-not-found': _Entry(
+      title: (l) => l.errorTopupNotFoundTitle,
+      message: (l) => l.errorTopupNotFoundMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.search_off_rounded,
     ),
-    'payment-method-unavailable-for-currency': ErrorPresentation(
-      title: 'Moyen de paiement indisponible',
-      message:
-          'Ce moyen de paiement n\'est pas proposé dans la devise de ce '
-          'trajet.',
+    'payment-method-unavailable-for-currency': _Entry(
+      title: (l) => l.errorPaymentMethodUnavailableForCurrencyTitle,
+      message: (l) => l.errorPaymentMethodUnavailableForCurrencyMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.credit_card_off_outlined,
     ),
-    'unsupported-currency': ErrorPresentation(
-      title: 'Devise non prise en charge',
-      message:
-          'Cette devise n\'est pas encore disponible. Vérifie la devise de ton compte dans les réglages.',
+    'unsupported-currency': _Entry(
+      title: (l) => l.errorUnsupportedCurrencyTitle,
+      message: (l) => l.errorUnsupportedCurrencyMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.currency_exchange_outlined,
     ),
@@ -816,194 +749,176 @@ abstract final class ErrorCatalog {
     // Stripe ou un client pas à jour peut encore les rencontrer : sans ces
     // entrées, l'utilisateur lit « L'état actuel ne permet pas cette action »
     // sur un écran qui ne lui propose qu'un seul bouton.
-    'stripe-account-required': ErrorPresentation(
-      title: 'Compte Stripe à créer',
-      message:
-          'Ton compte de paiement n\'a pas encore été créé. Retape sur le '
-          'bouton pour lancer l\'activation.',
+    'stripe-account-required': _Entry(
+      title: (l) => l.errorStripeAccountRequiredTitle,
+      message: (l) => l.errorStripeAccountRequiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.account_balance_outlined,
     ),
-    'stripe-account-invalid': ErrorPresentation(
-      title: 'Compte de paiement invalide',
-      message:
-          'Ton compte de paiement n\'est plus valide. Retape sur le bouton '
-          'pour en créer un nouveau.',
+    'stripe-account-invalid': _Entry(
+      title: (l) => l.errorStripeAccountInvalidTitle,
+      message: (l) => l.errorStripeAccountInvalidMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.account_balance_outlined,
     ),
-    'stripe-error': ErrorPresentation(
-      title: 'Paiement refusé',
-      message:
-          'Le paiement n\'a pas pu être traité. Vérifie ta carte ou réessaie dans un instant.',
+    'stripe-error': _Entry(
+      title: (l) => l.errorStripeErrorTitle,
+      message: (l) => l.errorStripeErrorMessage,
       severity: ErrorSeverity.critical,
       icon: Icons.credit_card_off_rounded,
     ),
-    'google-timeout': ErrorPresentation(
-      title: 'Service indisponible',
-      message:
-          'Le service de localisation est lent à répondre. Réessaie dans quelques secondes.',
+    'google-timeout': _Entry(
+      title: (l) => l.errorGoogleTimeoutTitle,
+      message: (l) => l.errorGoogleTimeoutMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.location_off_rounded,
     ),
 
     // ─── Email OTP ───────────────────────────────────────────────────
-    'otp-invalid': ErrorPresentation(
-      title: 'Code invalide',
-      message:
-          'Le code saisi est incorrect ou a déjà été utilisé. Vérifie le code reçu par email.',
+    'otp-invalid': _Entry(
+      title: (l) => l.errorOtpInvalidTitle,
+      message: (l) => l.errorOtpInvalidMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.mark_email_unread_outlined,
     ),
-    'otp-expired': ErrorPresentation(
-      title: 'Code expiré',
-      message:
-          'Ce code a expiré. Reviens en arrière et demande un nouveau code.',
+    'otp-expired': _Entry(
+      title: (l) => l.errorOtpExpiredTitle,
+      message: (l) => l.errorOtpExpiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.timer_off_rounded,
     ),
     // Le budget d'essais est compté par adresse, pas par code : demander un
     // nouveau code ne le remet donc pas à zéro. L'ancien texte invitait pourtant
     // à le faire, envoyant l'utilisateur vers une action qui ne débloquait rien.
-    'otp-attempts-exceeded': ErrorPresentation(
-      title: 'Trop de tentatives',
-      message:
-          'Trop d\'essais incorrects. Patiente quelques minutes, un nouveau code ne débloquera pas la saisie.',
+    'otp-attempts-exceeded': _Entry(
+      title: (l) => l.errorOtpAttemptsExceededTitle,
+      message: (l) => l.errorOtpAttemptsExceededMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_top_rounded,
     ),
-    'email-already-exists': ErrorPresentation(
-      title: 'Email déjà utilisé',
-      message: 'Cette adresse email est déjà associée à un autre compte.',
+    'email-already-exists': _Entry(
+      title: (l) => l.errorEmailAlreadyExistsTitle,
+      message: (l) => l.errorEmailAlreadyExistsMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.email_outlined,
     ),
     // 409 au rattachement : l'adresse identifie le compte Firebase, elle
     // s'ajoute mais ne se remplace pas. À distinguer de « email-already-exists »,
     // qui vise une adresse prise par quelqu'un d'autre.
-    'email-already-set': ErrorPresentation(
-      title: 'Adresse déjà définie',
-      message:
-          'Une adresse est déjà associée à ce compte et ne peut pas être remplacée.',
+    'email-already-set': _Entry(
+      title: (l) => l.errorEmailAlreadySetTitle,
+      message: (l) => l.errorEmailAlreadySetMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.email_outlined,
     ),
     // Titre distinct de « Trop de tentatives » : ce cas vise les codes demandés,
     // l'autre les codes mal saisis. Un titre commun laissait croire à l'utilisateur
     // qu'il s'était trompé alors qu'il avait seulement trop cliqué sur « Renvoyer ».
-    'rate-limit': ErrorPresentation(
-      title: 'Trop de codes demandés',
-      message:
-          'Tu as demandé plusieurs codes coup sur coup. Attends quelques minutes avant d\'en redemander un.',
+    'rate-limit': _Entry(
+      title: (l) => l.errorRateLimitTitle,
+      message: (l) => l.errorRateLimitMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.speed_rounded,
     ),
     // Renvoyé quand l'envoi de l'email échoue chez le prestataire (503). Sans
     // cette entrée, l'écran affichait « Quelque chose s'est mal passé de notre
     // côté », qui ne dit pas que réessayer suffit souvent.
-    'email-service-error': ErrorPresentation(
-      title: 'Envoi impossible',
-      message:
-          'L\'email n\'a pas pu être envoyé. Vérifie l\'adresse saisie et réessaie.',
+    'email-service-error': _Entry(
+      title: (l) => l.errorEmailServiceErrorTitle,
+      message: (l) => l.errorEmailServiceErrorMessage,
       severity: ErrorSeverity.error,
       icon: Icons.mark_email_unread_outlined,
     ),
     // Échec de création du jeton d'authentification côté serveur (500).
-    'firebase-error': ErrorPresentation(
-      title: 'Connexion impossible',
-      message: 'La connexion n\'a pas pu aboutir. Réessaie dans un instant.',
+    'firebase-error': _Entry(
+      title: (l) => l.errorFirebaseErrorTitle,
+      message: (l) => l.errorFirebaseErrorMessage,
       severity: ErrorSeverity.error,
       icon: Icons.lock_reset_rounded,
     ),
 
     // ─── Codes promo ─────────────────────────────────────────────────
-    'promo-not-found': ErrorPresentation(
-      title: 'Code promo introuvable',
-      message: 'Ce code promo n\'existe pas. Vérifie la saisie et réessaie.',
+    'promo-not-found': _Entry(
+      title: (l) => l.errorPromoNotFoundTitle,
+      message: (l) => l.errorPromoNotFoundMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.discount_outlined,
     ),
-    'promo-expired': ErrorPresentation(
-      title: 'Code promo expiré',
-      message: 'Ce code promo n\'est plus valide (expiré ou pas encore actif).',
+    'promo-expired': _Entry(
+      title: (l) => l.errorPromoExpiredTitle,
+      message: (l) => l.errorPromoExpiredMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.timer_off_rounded,
     ),
-    'promo-limit-reached': ErrorPresentation(
-      title: 'Code promo épuisé',
-      message:
-          'Ce code promo a atteint sa limite d\'utilisation (globale ou par utilisateur).',
+    'promo-limit-reached': _Entry(
+      title: (l) => l.errorPromoLimitReachedTitle,
+      message: (l) => l.errorPromoLimitReachedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.block_rounded,
     ),
-    'promo-not-eligible': ErrorPresentation(
-      title: 'Code promo non applicable',
-      message: 'Ce code promo n\'est pas disponible pour ton profil.',
+    'promo-not-eligible': _Entry(
+      title: (l) => l.errorPromoNotEligibleTitle,
+      message: (l) => l.errorPromoNotEligibleMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.do_not_disturb_alt_rounded,
     ),
 
     // ─── Parrainage ──────────────────────────────────────────────────
-    'referral-code-not-found': ErrorPresentation(
-      title: 'Code introuvable',
-      message:
-          'Ce code de parrainage n\'existe pas. Vérifie la saisie et réessaie.',
+    'referral-code-not-found': _Entry(
+      title: (l) => l.errorReferralCodeNotFoundTitle,
+      message: (l) => l.errorReferralCodeNotFoundMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.person_search_rounded,
     ),
-    'self-referral': ErrorPresentation(
-      title: 'Auto-parrainage interdit',
-      message: 'Tu ne peux pas utiliser ton propre code de parrainage.',
+    'self-referral': _Entry(
+      title: (l) => l.errorSelfReferralTitle,
+      message: (l) => l.errorSelfReferralMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.block_rounded,
     ),
-    'already-referred': ErrorPresentation(
-      title: 'Code déjà utilisé',
-      message: 'Tu as déjà utilisé un code de parrainage.',
+    'already-referred': _Entry(
+      title: (l) => l.errorAlreadyReferredTitle,
+      message: (l) => l.errorAlreadyReferredMessage,
       severity: ErrorSeverity.info,
       icon: Icons.check_circle_outline_rounded,
     ),
 
     // ─── Utilisateur ─────────────────────────────────────────────────
-    'user-not-found': ErrorPresentation(
-      title: 'Utilisateur introuvable',
-      message: 'Ce compte utilisateur n\'existe plus.',
+    'user-not-found': _Entry(
+      title: (l) => l.errorUserNotFoundTitle,
+      message: (l) => l.errorUserNotFoundMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.person_off_rounded,
     ),
 
     // ─── Synthétiques (transport / interceptor) ──────────────────────
-    'OFFLINE': ErrorPresentation(
-      title: 'Pas de connexion',
-      message:
-          'Vérifie ta connexion Internet puis réessaie. Tes lectures hors-ligne seront synchronisées à la reconnexion.',
+    'OFFLINE': _Entry(
+      title: (l) => l.errorOfflineTitle,
+      message: (l) => l.errorOfflineMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.signal_wifi_off_rounded,
     ),
-    'TIMEOUT': ErrorPresentation(
-      title: 'Le serveur met du temps',
-      message:
-          'La requête a pris trop de temps. Réessaie dans quelques secondes.',
+    'TIMEOUT': _Entry(
+      title: (l) => l.errorTimeoutTitle,
+      message: (l) => l.errorTimeoutMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_disabled_rounded,
     ),
-    'RATE_LIMITED': ErrorPresentation(
-      title: 'Trop de requêtes',
-      message:
-          'Tu as fait trop d\'appels en peu de temps. Patiente un instant avant de réessayer.',
+    'RATE_LIMITED': _Entry(
+      title: (l) => l.errorRateLimitedTitle,
+      message: (l) => l.errorRateLimitedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.speed_rounded,
     ),
-    'SERVER_ERROR': ErrorPresentation(
-      title: 'Erreur serveur',
-      message:
-          'Quelque chose s\'est mal passé de notre côté. On regarde ça, réessaie dans un instant.',
+    'SERVER_ERROR': _Entry(
+      title: (l) => l.errorServerErrorTitle,
+      message: (l) => l.errorServerErrorMessage,
       severity: ErrorSeverity.error,
       icon: Icons.cloud_off_rounded,
     ),
-    'CANCELLED': ErrorPresentation(
-      title: 'Action annulée',
-      message: 'L\'action a été annulée.',
+    'CANCELLED': _Entry(
+      title: (l) => l.errorCancelledTitle,
+      message: (l) => l.errorCancelledMessage,
       severity: ErrorSeverity.info,
       icon: Icons.cancel_outlined,
     ),
@@ -1019,29 +934,36 @@ abstract final class ErrorCatalog {
     'topup-phone-unsupported',
   };
 
-  /// Resolves an exception to its presentation. Never returns null:
+  /// Codes connus du catalogue, pour les tests de traduction.
+  @visibleForTesting
+  static Iterable<String> get debugCodes => _byCode.keys;
+
+  /// Resolves an exception to its presentation, in [l10n] or, by default, in
+  /// the current app language ([AppL10n.current]). Never returns null:
   /// always falls back to a generic message rather than leaking technical
   /// details to the user.
-  static ErrorPresentation lookup(Object? error) {
+  static ErrorPresentation lookup(Object? error, {AppLocalizations? l10n}) {
+    final l = l10n ?? AppL10n.current;
     if (error is AppException) {
-      final byCode = _byCode[error.code];
-      if (byCode != null) {
+      final entry = _byCode[error.code];
+      if (entry != null) {
+        final p = entry.resolve(l);
         // Précédent : `_validationPresentation` construit déjà le message
         // depuis les violations du back plutôt que depuis un texte fixe.
         if (_serverDetailCodes.contains(error.code) &&
             _isUserFacingDetail(error.message)) {
           return ErrorPresentation(
-            title: byCode.title,
+            title: p.title,
             message: error.message.trim(),
-            severity: byCode.severity,
-            icon: byCode.icon,
+            severity: p.severity,
+            icon: p.icon,
           );
         }
-        return byCode;
+        return p;
       }
-      return _byType(error);
+      return _byType(error, l);
     }
-    return _generic;
+    return _generic.resolve(l);
   }
 
   /// Garde simple : un detail rédigé pour l'utilisateur est court, tient sur
@@ -1067,30 +989,36 @@ abstract final class ErrorCatalog {
 
   // ─── Type-based fallbacks ──────────────────────────────────────────
 
-  static ErrorPresentation _byType(AppException error) {
-    if (error is OfflineException) return _byCode['OFFLINE']!;
-    if (error is TimeoutException) return _byCode['TIMEOUT']!;
-    if (error is RateLimitException) return _byCode['RATE_LIMITED']!;
-    if (error is ServerException) return _byCode['SERVER_ERROR']!;
-    if (error is UnauthorizedException) return _byCode['unauthorized']!;
-    if (error is ForbiddenException) return _byCode['forbidden']!;
-    if (error is NotFoundException) return _notFoundGeneric;
-    if (error is ValidationException) return _validationPresentation(error);
-    if (error is ConflictException) return _conflictGeneric;
-    if (error is StorageException) return _storageGeneric;
-    return _networkGeneric;
+  static ErrorPresentation _byType(AppException error, AppLocalizations l) {
+    if (error is OfflineException) return _byCode['OFFLINE']!.resolve(l);
+    if (error is TimeoutException) return _byCode['TIMEOUT']!.resolve(l);
+    if (error is RateLimitException) {
+      return _byCode['RATE_LIMITED']!.resolve(l);
+    }
+    if (error is ServerException) return _byCode['SERVER_ERROR']!.resolve(l);
+    if (error is UnauthorizedException) {
+      return _byCode['unauthorized']!.resolve(l);
+    }
+    if (error is ForbiddenException) return _byCode['forbidden']!.resolve(l);
+    if (error is NotFoundException) return _notFoundGeneric.resolve(l);
+    if (error is ValidationException) {
+      return _validationPresentation(error, l);
+    }
+    if (error is ConflictException) return _conflictGeneric.resolve(l);
+    if (error is StorageException) return _storageGeneric.resolve(l);
+    return _networkGeneric.resolve(l);
   }
 
-  static const ErrorPresentation _notFoundGeneric = ErrorPresentation(
-    title: 'Introuvable',
-    message: 'Cette ressource est introuvable ou a été supprimée.',
+  static final _Entry _notFoundGeneric = _Entry(
+    title: (l) => l.errorNotFoundTitle,
+    message: (l) => l.errorNotFoundMessage,
     severity: ErrorSeverity.warning,
     icon: Icons.search_off_rounded,
   );
 
-  static const ErrorPresentation _validationGeneric = ErrorPresentation(
-    title: 'Données invalides',
-    message: 'Vérifie les informations saisies puis réessaie.',
+  static final _Entry _validationGeneric = _Entry(
+    title: (l) => l.errorValidationTitle,
+    message: (l) => l.errorValidationMessage,
     severity: ErrorSeverity.warning,
     icon: Icons.rule_rounded,
   );
@@ -1098,49 +1026,52 @@ abstract final class ErrorCatalog {
   /// Construit un message à partir des violations renvoyées par le backend
   /// (ex. « La capacité doit être d'au moins 1 kg ») au lieu du générique, pour
   /// que l'utilisateur sache exactement quel champ corriger.
-  static ErrorPresentation _validationPresentation(ValidationException error) {
+  /// Les violations restent le texte du serveur ; elles seront traduites côté
+  /// backend (spec 6.3).
+  static ErrorPresentation _validationPresentation(
+    ValidationException error,
+    AppLocalizations l,
+  ) {
     final errs = error.errors;
-    if (errs == null || errs.isEmpty) return _validationGeneric;
+    if (errs == null || errs.isEmpty) return _validationGeneric.resolve(l);
     final messages = errs.values
         .expand((list) => list)
         .where((m) => m.trim().isNotEmpty)
         .toSet()
         .toList();
-    if (messages.isEmpty) return _validationGeneric;
+    if (messages.isEmpty) return _validationGeneric.resolve(l);
     return ErrorPresentation(
-      title: 'Données invalides',
+      title: l.errorValidationTitle,
       message: messages.join('\n'),
       severity: ErrorSeverity.warning,
       icon: Icons.rule_rounded,
     );
   }
 
-  static const ErrorPresentation _conflictGeneric = ErrorPresentation(
-    title: 'Action impossible',
-    message: 'L\'état actuel ne permet pas cette action.',
+  static final _Entry _conflictGeneric = _Entry(
+    title: (l) => l.errorConflictTitle,
+    message: (l) => l.errorConflictMessage,
     severity: ErrorSeverity.error,
     icon: Icons.error_outline_rounded,
   );
 
-  static const ErrorPresentation _storageGeneric = ErrorPresentation(
-    title: 'Stockage indisponible',
-    message:
-        'Impossible d\'accéder au stockage local. Redémarre l\'application.',
+  static final _Entry _storageGeneric = _Entry(
+    title: (l) => l.errorStorageTitle,
+    message: (l) => l.errorStorageMessage,
     severity: ErrorSeverity.error,
     icon: Icons.sd_storage_outlined,
   );
 
-  static const ErrorPresentation _networkGeneric = ErrorPresentation(
-    title: 'Erreur réseau',
-    message: 'Une erreur est survenue. Vérifie ta connexion et réessaie.',
+  static final _Entry _networkGeneric = _Entry(
+    title: (l) => l.errorNetworkTitle,
+    message: (l) => l.errorNetworkMessage,
     severity: ErrorSeverity.error,
     icon: Icons.wifi_off_rounded,
   );
 
-  static const ErrorPresentation _generic = ErrorPresentation(
-    title: 'Une erreur est survenue',
-    message:
-        'Réessaie dans un instant. Si le problème persiste, contacte le support.',
+  static final _Entry _generic = _Entry(
+    title: (l) => l.errorGenericTitle,
+    message: (l) => l.errorGenericMessage,
     severity: ErrorSeverity.error,
     icon: Icons.error_outline_rounded,
   );
