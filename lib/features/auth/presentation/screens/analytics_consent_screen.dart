@@ -48,7 +48,7 @@ class AnalyticsConsentScreen extends StatelessWidget {
                   children: [
                     AuthFlowHeader.gauge(
                       segments: progress.segments,
-                      label: l.authConsentGaugeLabel,
+                      label: OnboardingStep.consent.label(context.l10n),
                     ),
                     const SizedBox(height: DonySpacing.md),
                     Expanded(

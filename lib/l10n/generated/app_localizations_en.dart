@@ -1451,9 +1451,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authOnboardingLegalPrivacyLink => 'Privacy Policy';
 
   @override
-  String get authCountryGaugeLabel => 'Country';
-
-  @override
   String get authCountryTitle => 'Which country do you live in?';
 
   @override
@@ -1587,9 +1584,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authReferralContinueHome => 'Continue to home';
-
-  @override
-  String get authConsentGaugeLabel => 'Privacy';
 
   @override
   String get authConsentTitle => 'One last thing';

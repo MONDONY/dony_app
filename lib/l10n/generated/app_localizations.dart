@@ -2666,12 +2666,6 @@ abstract class AppLocalizations {
   /// **'politique de confidentialité'**
   String get authOnboardingLegalPrivacyLink;
 
-  /// No description provided for @authCountryGaugeLabel.
-  ///
-  /// In fr, this message translates to:
-  /// **'Pays'**
-  String get authCountryGaugeLabel;
-
   /// No description provided for @authCountryTitle.
   ///
   /// In fr, this message translates to:
@@ -2905,12 +2899,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Continuer vers l\'accueil'**
   String get authReferralContinueHome;
-
-  /// No description provided for @authConsentGaugeLabel.
-  ///
-  /// In fr, this message translates to:
-  /// **'Confidentialité'**
-  String get authConsentGaugeLabel;
 
   /// No description provided for @authConsentTitle.
   ///

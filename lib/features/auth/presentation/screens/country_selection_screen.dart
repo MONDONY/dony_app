@@ -107,7 +107,7 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
                       children: [
                         AuthFlowHeader.gauge(
                           segments: widget.progress.segments,
-                          label: context.l10n.authCountryGaugeLabel,
+                          label: OnboardingStep.country.label(context.l10n),
                         ),
                         SizedBox(
                           height: (media.size.height * 0.018).clamp(
