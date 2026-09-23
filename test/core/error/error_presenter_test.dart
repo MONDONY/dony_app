@@ -34,5 +34,14 @@ void main() {
     await tester.tap(find.text('trigger'));
     await tester.pumpAndSettle();
     expect(find.text('Close'), findsOneWidget);
+    expect(find.text("Can't delete"), findsOneWidget);
+  });
+
+  test('resolve : l10n anglais explicite → titre anglais', () {
+    final p = ErrorPresenter.resolve(
+      const ConflictException('x', code: 'currency-mismatch'),
+      l10n: lookupAppLocalizations(AppL10n.en),
+    );
+    expect(p.title, 'Different currency');
   });
 }

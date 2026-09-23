@@ -73,9 +73,11 @@ abstract final class ErrorPresenter {
   }
 
   /// Resolve [error] without showing anything. Useful when a screen wants to
-  /// inline-render the error (e.g. an `AnnouncementError` widget).
-  static ErrorPresentation resolve(Object? error) =>
-      ErrorCatalog.lookup(_unwrap(error));
+  /// inline-render the error (e.g. an `AnnouncementError` widget). Pass
+  /// `context.l10n` as [l10n] to follow the app language; without it the
+  /// catalog falls back to [AppL10n.current].
+  static ErrorPresentation resolve(Object? error, {AppLocalizations? l10n}) =>
+      ErrorCatalog.lookup(_unwrap(error), l10n: l10n);
 
   static Object? _unwrap(Object? error) {
     if (error == null) return null;
