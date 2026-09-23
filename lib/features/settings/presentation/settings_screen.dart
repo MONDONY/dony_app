@@ -267,13 +267,8 @@ class SettingsScreen extends StatelessWidget {
     _ => 'Auto',
   };
 
-  /// Langue effective affichée : un 'en' stocké se lit « Français » tant que
-  /// l'anglais n'est pas activé.
-  static String _effectiveLanguageCode(String stored) =>
-      stored == 'en' && !AppL10n.englishEnabled ? 'fr' : stored;
-
   String _languageLabel(BuildContext context, String stored) =>
-      switch (_effectiveLanguageCode(stored)) {
+      switch (AppL10n.effectiveChoice(stored)) {
         'fr' => 'Français',
         'en' => 'English',
         _ => context.l10n.settingsLanguagePhone,
@@ -378,7 +373,7 @@ class SettingsScreen extends StatelessWidget {
 
   void _showLanguagePicker(BuildContext context, String current) {
     final bloc = context.read<AppPreferencesBloc>();
-    final selected = _effectiveLanguageCode(current);
+    final selected = AppL10n.effectiveChoice(current);
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,

@@ -24,6 +24,12 @@ abstract final class AppL10n {
 
   static bool get englishEnabled => _debugEnglishEnabled ?? kEnglishEnabled;
 
+  /// Choix de langue effectif à partir de la préférence stockée ('system',
+  /// 'fr' ou 'en') : un 'en' stocké vaut 'fr' tant que l'anglais n'est pas
+  /// activé.
+  static String effectiveChoice(String stored) =>
+      stored == 'en' && !englishEnabled ? 'fr' : stored;
+
   /// Langue de l'app à partir des langues préférées : un choix manuel
   /// (`[Locale('en')]`) ou la liste du téléphone. Seule la première langue
   /// compte : anglais si elle est anglaise, français sinon.

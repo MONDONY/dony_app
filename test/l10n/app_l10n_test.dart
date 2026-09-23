@@ -56,6 +56,19 @@ void main() {
     });
   });
 
+  group('AppL10n.effectiveChoice', () {
+    test("anglais coupé : 'system' et 'fr' inchangés, 'en' → 'fr'", () {
+      expect(AppL10n.effectiveChoice('system'), 'system');
+      expect(AppL10n.effectiveChoice('fr'), 'fr');
+      expect(AppL10n.effectiveChoice('en'), 'fr');
+    });
+    test("anglais activé : 'en' reste 'en'", () {
+      AppL10n.debugEnglishEnabled = true;
+      addTearDown(() => AppL10n.debugEnglishEnabled = null);
+      expect(AppL10n.effectiveChoice('en'), 'en');
+    });
+  });
+
   group('AppL10n.currentLocale', () {
     test('Intl non initialisé → fr', () {
       Intl.defaultLocale = null;

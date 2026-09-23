@@ -40,7 +40,8 @@ class TripPosterCard extends StatelessWidget {
   static const double logicalWidth = 360;
   static const double logicalHeight = 450;
 
-  /// Formats de date construits une fois pour toute la classe : ils ne
+  /// Formats de date partagés par toute la classe : ce sont des getters,
+  /// recalculés à chaque accès pour suivre la langue de l'app. Ils ne
   /// dépendent d'aucune donnée d'instance, et l'écran d'aperçu les réutilise
   /// pour composer sa légende, ce qui garantit que l'image et le texte du post
   /// annoncent la même chose.
