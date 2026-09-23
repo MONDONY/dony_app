@@ -39,7 +39,7 @@ void main() {
     // expirer avant la fin du test.
     await tester.pump(const Duration(seconds: 1));
 
-    expect(find.text('No requests in this radius'), findsOneWidget);
+    expect(find.text('No parcel requests within this radius'), findsOneWidget);
     expect(find.text('Widen your area or turn off “Near me”'), findsOneWidget);
   });
 
@@ -50,9 +50,9 @@ void main() {
     // expirer avant la fin du test.
     await tester.pump(const Duration(seconds: 1));
 
-    expect(find.text('No requests yet'), findsOneWidget);
+    expect(find.text('No parcel requests yet'), findsOneWidget);
     expect(
-      find.text('Check back soon, new requests are posted every day'),
+      find.text('Check back soon, new parcel requests are posted every day'),
       findsOneWidget,
     );
   });

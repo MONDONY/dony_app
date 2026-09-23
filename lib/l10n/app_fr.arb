@@ -956,7 +956,10 @@
   "homeFilterFieldsMinWeight": "POIDS MIN",
   "homeFilterFieldsMinWeightTitle": "Poids minimum du trajet",
   "homeFilterFieldsTransportMode": "Mode de transport",
-  "homeMapAvailable": "Libre",
+  "homeMapOpenPrice": "Libre",
+  "@homeMapOpenPrice": {
+    "description": "Marqueur de carte : la demande n'a pas de prix cible, le prix est libre"
+  },
   "homeMapRequests": "Demandes",
   "homeMapNoRequestsNearby": "Aucune demande dans ce rayon",
   "homeMapNoRequestsYet": "Aucune demande pour le moment",

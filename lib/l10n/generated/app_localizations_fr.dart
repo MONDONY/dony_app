@@ -2272,7 +2272,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeFilterFieldsTransportMode => 'Mode de transport';
 
   @override
-  String get homeMapAvailable => 'Libre';
+  String get homeMapOpenPrice => 'Libre';
 
   @override
   String get homeMapRequests => 'Demandes';

@@ -124,7 +124,7 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
               title: '${it.departureCity} → ${it.arrivalCity}',
               snippet: it.targetPriceEur != null
                   ? formatPriceIn(it.targetPriceEur!, it.currency)
-                  : context.l10n.homeMapAvailable,
+                  : context.l10n.homeMapOpenPrice,
             ),
             icon: BitmapDescriptor.defaultMarkerWithHue(
               _selectedRequestId == it.id

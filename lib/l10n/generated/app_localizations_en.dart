@@ -1823,8 +1823,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count travelers are going',
-      one: '$count traveler is going',
+      other: '$count travelers are traveling',
+      one: '$count traveler is traveling',
     );
     return '$_temp0';
   }
@@ -1834,8 +1834,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count travelers are going on $dep → $arr',
-      one: '$count traveler is going on $dep → $arr',
+      other: '$count travelers are traveling on $dep → $arr',
+      one: '$count traveler is traveling on $dep → $arr',
     );
     return '$_temp0';
   }
@@ -1845,8 +1845,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count travelers are going from $dep',
-      one: '$count traveler is going from $dep',
+      other: '$count travelers are traveling from $dep',
+      one: '$count traveler is traveling from $dep',
     );
     return '$_temp0';
   }
@@ -1856,8 +1856,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count travelers are going to $arr',
-      one: '$count traveler is going to $arr',
+      other: '$count travelers are traveling to $arr',
+      one: '$count traveler is traveling to $arr',
     );
     return '$_temp0';
   }
@@ -1948,7 +1948,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get homeListSubtitleNoTraveler => 'No one offers this trip yet';
+  String get homeListSubtitleNoTraveler => 'No one is offering this trip yet';
 
   @override
   String get homeListSubtitleTravelersCanCarry => 'They can carry your parcel';
@@ -2011,7 +2011,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeEmptyTravelersRoute => 'No travelers on this route';
 
   @override
-  String get homeEmptyNearbyHint => 'Widen your area or turn off \"Near me\"';
+  String get homeEmptyNearbyHint => 'Widen your area or turn off “Near me”';
 
   @override
   String get homeEmptyTravelersFilteredHint =>
@@ -2042,7 +2042,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeDateThisMonthLong => 'This month';
 
   @override
-  String get homeChooseDate => 'Pick a date';
+  String get homeChooseDate => 'Choose a date';
 
   @override
   String get homeMinRatingTitle => 'Minimum rating';
@@ -2270,23 +2270,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeFilterFieldsTransportMode => 'Transport mode';
 
   @override
-  String get homeMapAvailable => 'Available';
+  String get homeMapOpenPrice => 'Open price';
 
   @override
-  String get homeMapRequests => 'Requests';
+  String get homeMapRequests => 'Parcel requests';
 
   @override
-  String get homeMapNoRequestsNearby => 'No requests in this radius';
+  String get homeMapNoRequestsNearby => 'No parcel requests within this radius';
 
   @override
-  String get homeMapNoRequestsYet => 'No requests yet';
+  String get homeMapNoRequestsYet => 'No parcel requests yet';
 
   @override
   String get homeMapEmptyNearbyHint => 'Widen your area or turn off “Near me”';
 
   @override
   String get homeMapEmptyHint =>
-      'Check back soon, new requests are posted every day';
+      'Check back soon, new parcel requests are posted every day';
 
   @override
   String get homeGuidancePublishTrip => 'Post my trip';

@@ -3866,11 +3866,11 @@ abstract class AppLocalizations {
   /// **'Mode de transport'**
   String get homeFilterFieldsTransportMode;
 
-  /// No description provided for @homeMapAvailable.
+  /// Marqueur de carte : la demande n'a pas de prix cible, le prix est libre
   ///
   /// In fr, this message translates to:
   /// **'Libre'**
-  String get homeMapAvailable;
+  String get homeMapOpenPrice;
 
   /// No description provided for @homeMapRequests.
   ///

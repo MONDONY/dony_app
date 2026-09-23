@@ -372,7 +372,7 @@ void main() {
           filters: depOnly,
           count: 12,
         ),
-        '12 travelers are going from Lyon',
+        '12 travelers are traveling from Lyon',
       );
       expect(
         homeCrossDiscoveryLabel(
@@ -381,7 +381,48 @@ void main() {
           filters: arrOnly,
           count: 1,
         ),
-        '1 traveler is going to Bamako',
+        '1 traveler is traveling to Bamako',
+      );
+      expect(
+        homeCrossDiscoveryLabel(
+          en,
+          mode: SearchMode.parcels,
+          filters: both,
+          count: 2,
+        ),
+        '2 travelers are traveling on Lyon → Bamako',
+      );
+      expect(
+        homeCrossDiscoveryLabel(
+          en,
+          mode: SearchMode.parcels,
+          filters: none,
+          count: 1,
+        ),
+        '1 traveler is traveling',
+      );
+      expect(
+        homeCrossDiscoveryLabel(
+          en,
+          mode: SearchMode.parcels,
+          filters: none,
+          count: 5,
+        ),
+        '5 travelers are traveling',
+      );
+    });
+
+    test('sous-titre sans voyageur', () {
+      expect(
+        homeListSubtitle(
+          en,
+          mode: SearchMode.trips,
+          trips: 0,
+          parcels: 0,
+          matching: false,
+          activeTrips: null,
+        ),
+        'No one is offering this trip yet',
       );
     });
 
