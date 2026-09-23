@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockService extends Mock implements AddressAutocompleteService {}
 
 void main() {
@@ -52,5 +54,40 @@ void main() {
     expect(resolved!.street, 'Rue 10');
     expect(resolved!.postalCode, isNull);
     controller.dispose();
+  });
+
+  group('en anglais', () {
+    testWidgets('message hors ligne traduit', (tester) async {
+      useEnglish();
+      final service = _MockService();
+      final controller = TextEditingController();
+
+      when(
+        () => service.search(
+          any(),
+          any(),
+          lat: any(named: 'lat'),
+          lng: any(named: 'lng'),
+        ),
+      ).thenThrow(Exception('network unreachable'));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AddressSuggestField(controller: controller, service: service),
+          ),
+        ),
+      );
+
+      await tester.enterText(find.byType(TextField), '12 rue');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump();
+
+      expect(
+        find.text('Connection required to search for an address'),
+        findsOneWidget,
+      );
+      controller.dispose();
+    });
   });
 }

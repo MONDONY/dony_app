@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockAddressAutocompleteService extends Mock
     implements AddressAutocompleteService {}
 
@@ -300,5 +302,18 @@ void main() {
       findsNothing,
     );
     expect(find.text('Utiliser ma position actuelle'), findsNothing);
+  });
+
+  group('en anglais', () {
+    testWidgets('message de validation traduit', (tester) async {
+      useEnglish();
+      final formKey = GlobalKey<FormState>();
+      await tester.pumpWidget(buildWidget(formKey: formKey));
+
+      formKey.currentState!.validate();
+      await tester.pump();
+
+      expect(find.text('Address required'), findsOneWidget);
+    });
   });
 }
