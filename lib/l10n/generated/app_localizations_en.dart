@@ -332,7 +332,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorProLimitReachedMessage =>
-      'You\'ve reached your listing limit for this month. Upgrade to Pro to publish without limits.';
+      'You\'ve reached your listing limit for this month. Upgrade to Pro to post without limits.';
 
   @override
   String get errorDraftLimitReachedTitle => 'Draft limit reached';
@@ -342,31 +342,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'Upgrade to Pro to create more drafts.';
 
   @override
-  String get errorNotADraftTitle => 'Already published';
+  String get errorNotADraftTitle => 'Already posted';
 
   @override
   String get errorNotADraftMessage => 'This trip isn\'t a draft.';
 
   @override
-  String get errorPublishingSuspendedTitle => 'Publishing suspended';
+  String get errorPublishingSuspendedTitle => 'Posting suspended';
 
   @override
   String get errorPublishingSuspendedMessage =>
-      'Publishing is suspended on your account. Contact support.';
+      'Posting is suspended on your account. Contact support.';
 
   @override
   String get errorKycNotVerifiedTitle => 'Identity not verified';
 
   @override
   String get errorKycNotVerifiedMessage =>
-      'Verify your identity before publishing a trip.';
+      'Verify your identity before posting a trip.';
 
   @override
   String get errorDepartureDatePassedTitle => 'Departure date has passed';
 
   @override
   String get errorDepartureDatePassedMessage =>
-      'Change the departure date before publishing this trip.';
+      'Change the departure date before posting this trip.';
 
   @override
   String get errorBidNotFoundTitle => 'Request not found';
