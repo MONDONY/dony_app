@@ -61,4 +61,40 @@ void main() {
     file.writeAsStringSync('abc');
     expect(readBaseline(file), null);
   });
+
+  group('isInScope', () {
+    test('tout lib/ compte, y compris data/', () {
+      expect(isInScope('lib/features/x/data/y.dart'), isTrue);
+      expect(isInScope('lib/features/x/presentation/y.dart'), isTrue);
+      expect(isInScope('lib/core/error/error_catalog.dart'), isTrue);
+    });
+    test('lib/l10n/ exclu', () {
+      expect(isInScope('lib/l10n/l10n.dart'), isFalse);
+      expect(isInScope('lib/l10n/generated/a.dart'), isFalse);
+    });
+    test('fichiers générés exclus', () {
+      expect(isInScope('lib/x.g.dart'), isFalse);
+      expect(isInScope('lib/features/x/generated/a.dart'), isFalse);
+    });
+  });
+
+  group('verdict', () {
+    test('au seuil → 0, OK', () {
+      final v = verdict(10, 10);
+      expect(v.exitCode, 0);
+      expect(v.message, contains('OK'));
+    });
+    test('au-dessus du seuil → 1', () {
+      expect(verdict(11, 10).exitCode, 1);
+    });
+    test('sous le seuil → 0 avec invitation à abaisser le seuil', () {
+      final v = verdict(8, 10);
+      expect(v.exitCode, 0);
+      expect(v.message, contains('Abaisse'));
+      expect(v.message, contains('8'));
+    });
+    test('seuil illisible → 1', () {
+      expect(verdict(8, null).exitCode, 1);
+    });
+  });
 }

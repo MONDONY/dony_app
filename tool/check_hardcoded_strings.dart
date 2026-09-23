@@ -1,17 +1,26 @@
 // ignore_for_file: avoid_print
 import 'dart:io';
 
-/// Garde-fou i18n : compte les lignes de `lib/` (couches d'affichage et
-/// design system) qui contiennent encore un texte français écrit en dur.
+/// Garde-fou i18n : compte les lignes de `lib/` qui contiennent encore un
+/// texte français écrit en dur. Périmètre : tout `lib/**`, sauf `lib/l10n/**`
+/// (les traductions elles-mêmes), les dossiers `generated/` et les fichiers
+/// `*.g.dart`.
 ///
-/// Le compte ne peut que baisser : il est comparé au seuil enregistré dans
-/// `tool/hardcoded_strings_baseline.txt`. Une PR qui ajoute du français en
-/// dur fait échouer la CI ; une PR qui en retire doit abaisser le seuil.
+/// Le compte est comparé au seuil enregistré dans
+/// `tool/hardcoded_strings_baseline.txt`. Au-dessus du seuil, la CI échoue :
+/// la PR a ajouté du français en dur. Sous le seuil, le script réussit mais
+/// affiche un avertissement qui invite à abaisser le seuil au nouveau compte.
 ///
 /// Heuristique volontairement simple : une ligne compte si elle contient un
 /// littéral de chaîne qui porte une lettre accentuée française ou un mot
 /// outil français courant. Les commentaires sont ignorés, et une ligne
 /// marquée `// i18n-ignore` aussi (nom propre, exemple de numéro…).
+///
+/// Limites connues :
+/// - un verbe isolé sans accent (« Continuer », « Envoyer ») n'est pas
+///   détecté ;
+/// - un texte anglais qui contient « pour » ou « sur » (« pour-over »,
+///   « sur place » en citation…) est compté à tort.
 
 final _literal = RegExp(
   r"'(?:[^'\\\n]|\\.)*'"
@@ -26,9 +35,12 @@ final _frenchWord = RegExp(
 
 final _debugLog = RegExp(r'\b(debugPrint|log|print)\(');
 
-bool _isInScope(String relPath) =>
-    relPath.contains('/presentation/') ||
-    relPath.startsWith('lib/core/design/');
+/// Vrai si [relPath] (chemin relatif commençant par `lib/`) est surveillé.
+bool isInScope(String relPath) =>
+    relPath.startsWith('lib/') &&
+    !relPath.startsWith('lib/l10n/') &&
+    !relPath.contains('/generated/') &&
+    !relPath.endsWith('.g.dart');
 
 /// Nombre de lignes de [source] qui portent un texte français en dur.
 int countHardcodedFrench(String source) {
@@ -75,10 +87,7 @@ int countInLib(Directory libDir) {
     if (entity is! File || !entity.path.endsWith('.dart')) continue;
     final rel = entity.path.replaceAll('\\', '/');
     final relFromLib = rel.substring(rel.indexOf('lib/'));
-    if (relFromLib.endsWith('.g.dart') || relFromLib.contains('/generated/')) {
-      continue;
-    }
-    if (!_isInScope(relFromLib)) continue;
+    if (!isInScope(relFromLib)) continue;
     total += countHardcodedFrench(entity.readAsStringSync());
   }
   return total;
@@ -95,6 +104,42 @@ int? readBaseline(File file) {
   }
 }
 
+/// Code de sortie et message du garde-fou pour [count] face au seuil
+/// [baseline] (`null` si le fichier de seuil est illisible). Échec (1)
+/// seulement au-dessus du seuil ou sans seuil ; sous le seuil, réussite (0)
+/// avec un avertissement.
+({int exitCode, String message}) verdict(int count, int? baseline) {
+  if (baseline == null) {
+    return (
+      exitCode: 1,
+      message:
+          'Seuil illisible : tool/hardcoded_strings_baseline.txt doit '
+          'contenir un entier. Génère-le avec : dart run '
+          'tool/check_hardcoded_strings.dart --print',
+    );
+  }
+  if (count > baseline) {
+    return (
+      exitCode: 1,
+      message:
+          'Textes français en dur : $count (seuil $baseline). '
+          'Passe les nouveaux textes par context.l10n (lib/l10n/app_fr.arb).',
+    );
+  }
+  if (count < baseline) {
+    return (
+      exitCode: 0,
+      message:
+          'Attention : textes français en dur : $count, sous le seuil '
+          '$baseline. Abaisse tool/hardcoded_strings_baseline.txt à $count.',
+    );
+  }
+  return (
+    exitCode: 0,
+    message: 'Textes français en dur : $count (seuil $baseline) OK',
+  );
+}
+
 void main(List<String> args) {
   final baselineFile = File('tool/hardcoded_strings_baseline.txt');
   final count = countInLib(Directory('lib'));
@@ -102,28 +147,7 @@ void main(List<String> args) {
     print(count);
     return;
   }
-  final baseline = readBaseline(baselineFile);
-  if (baseline == null) {
-    print(
-      'Seuil illisible : tool/hardcoded_strings_baseline.txt doit contenir '
-      'un entier. Génère-le avec : dart run tool/check_hardcoded_strings.dart '
-      '--print',
-    );
-    exit(1);
-  }
-  if (count > baseline) {
-    print(
-      'Textes français en dur : $count (seuil $baseline). '
-      'Passe les nouveaux textes par context.l10n (lib/l10n/app_fr.arb).',
-    );
-    exit(1);
-  }
-  if (count < baseline) {
-    print(
-      'Textes français en dur : $count, sous le seuil $baseline. '
-      'Abaisse tool/hardcoded_strings_baseline.txt à $count.',
-    );
-    exit(1);
-  }
-  print('Textes français en dur : $count (seuil $baseline) OK');
+  final result = verdict(count, readBaseline(baselineFile));
+  print(result.message);
+  if (result.exitCode != 0) exit(result.exitCode);
 }
