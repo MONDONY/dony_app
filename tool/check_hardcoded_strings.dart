@@ -84,6 +84,17 @@ int countInLib(Directory libDir) {
   return total;
 }
 
+/// Lit le seuil depuis [file], ou renvoie `null` si absent ou mal formé.
+int? readBaseline(File file) {
+  try {
+    if (!file.existsSync()) return null;
+    final content = file.readAsStringSync().trim();
+    return int.tryParse(content);
+  } catch (_) {
+    return null;
+  }
+}
+
 void main(List<String> args) {
   final baselineFile = File('tool/hardcoded_strings_baseline.txt');
   final count = countInLib(Directory('lib'));
@@ -91,7 +102,15 @@ void main(List<String> args) {
     print(count);
     return;
   }
-  final baseline = int.parse(baselineFile.readAsStringSync().trim());
+  final baseline = readBaseline(baselineFile);
+  if (baseline == null) {
+    print(
+      'Seuil illisible : tool/hardcoded_strings_baseline.txt doit contenir '
+      'un entier. Génère-le avec : dart run tool/check_hardcoded_strings.dart '
+      '--print',
+    );
+    exit(1);
+  }
   if (count > baseline) {
     print(
       'Textes français en dur : $count (seuil $baseline). '

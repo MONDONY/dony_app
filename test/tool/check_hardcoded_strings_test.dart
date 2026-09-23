@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:test/test.dart';
 
 import '../../tool/check_hardcoded_strings.dart';
@@ -13,7 +15,7 @@ void main() {
 
   test('texte anglais ou clé → ignoré', () {
     expect(countHardcodedFrench("final k = 'language_code';"), 0);
-    expect(countHardcodedFrench("Text(context.l10n.commonClose),"), 0);
+    expect(countHardcodedFrench('Text(context.l10n.commonClose),'), 0);
   });
 
   test('commentaires ignorés, y compris en fin de ligne', () {
@@ -35,5 +37,28 @@ void main() {
       countHardcodedFrench("Row(children: [Text('Été'), Text('Hiver à')])"),
       1,
     );
+  });
+
+  test('readBaseline: fichier avec "42\\n" → 42', () {
+    final tempDir = Directory.systemTemp.createTempSync();
+    addTearDown(() => tempDir.deleteSync(recursive: true));
+    final file = File('${tempDir.path}/baseline.txt');
+    file.writeAsStringSync('42\n');
+    expect(readBaseline(file), 42);
+  });
+
+  test('readBaseline: fichier absent → null', () {
+    final tempDir = Directory.systemTemp.createTempSync();
+    addTearDown(() => tempDir.deleteSync(recursive: true));
+    final file = File('${tempDir.path}/nonexistent.txt');
+    expect(readBaseline(file), null);
+  });
+
+  test('readBaseline: fichier avec "abc" → null', () {
+    final tempDir = Directory.systemTemp.createTempSync();
+    addTearDown(() => tempDir.deleteSync(recursive: true));
+    final file = File('${tempDir.path}/baseline.txt');
+    file.writeAsStringSync('abc');
+    expect(readBaseline(file), null);
   });
 }
