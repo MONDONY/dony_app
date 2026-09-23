@@ -1557,8 +1557,8 @@ final appRouter = GoRouter(
     // de premier niveau, calqué sur l'URL web, et listé dans `_publicRoutes`.
     GoRoute(
       path: '/legal/terms',
-      builder: (context, state) => const LegalWebViewScreen(
-        title: 'CGU',
+      builder: (context, state) => LegalWebViewScreen(
+        title: context.l10n.authLegalTermsLink,
         url: 'https://yadony.com/legal/terms',
       ),
     ),
