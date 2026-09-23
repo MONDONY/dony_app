@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 AnnouncementModel _trip({
   Set<BidPaymentMethod> payments = const {BidPaymentMethod.stripe},
   String? capacityUnit,
@@ -157,5 +159,45 @@ void main() {
       find.byKey(const Key('trip-tile-modify-button')),
     );
     expect(inkWell.onTap, isNull);
+  });
+
+  testWidgets('en anglais : bouton, pastille et capacité traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _harness(
+        TripTile(
+          announcement: _trip(),
+          index: 0,
+          isSelected: false,
+          onTap: () {},
+          onModify: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Edit trip'), findsOneWidget);
+    expect(find.text('Cash not accepted'), findsOneWidget);
+    expect(find.textContaining('kg available'), findsOneWidget);
+  });
+
+  testWidgets('en anglais : « Kg libre » devient « Flexible kg »', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _harness(
+        TripTile(
+          announcement: _trip(capacityUnit: 'KG_FREE'),
+          index: 0,
+          isSelected: false,
+          onTap: () {},
+          onModify: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Flexible kg'), findsOneWidget);
   });
 }

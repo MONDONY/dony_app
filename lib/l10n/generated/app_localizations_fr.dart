@@ -4347,4 +4347,268 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestDetailLoadingSemantic => 'Chargement de ta demande';
+
+  @override
+  String requestToleranceDays(int days) {
+    return '±${days}j';
+  }
+
+  @override
+  String requestReviewCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count avis',
+      one: '$count avis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get requestPublicTitle => 'Demande d\'envoi';
+
+  @override
+  String get requestDescriptionLabel => 'Description';
+
+  @override
+  String get requestPublicReportTooltip => 'Signaler';
+
+  @override
+  String get requestPublicReportSheetTitle => 'Signaler la demande';
+
+  @override
+  String get requestPublicReportReasonProhibited => 'Contenu interdit';
+
+  @override
+  String get requestPublicReportReasonScam => 'Arnaque / fraude';
+
+  @override
+  String get requestPublicReportReasonInappropriate => 'Contenu inapproprié';
+
+  @override
+  String get requestPublicReportReasonOther => 'Autre raison';
+
+  @override
+  String get requestPublicReportSuccess => 'Demande signalée. Merci.';
+
+  @override
+  String get requestPublicReportError =>
+      'Impossible de signaler pour le moment';
+
+  @override
+  String get requestPublicBadge => 'DEMANDE D\'ENVOI';
+
+  @override
+  String get requestPublicFirmPriceBadge => 'PRIX FERME';
+
+  @override
+  String requestPublicDesiredDate(String date, String tolerance) {
+    return 'le $date ($tolerance)';
+  }
+
+  @override
+  String get requestPublicParcelHintBag => 'Sac';
+
+  @override
+  String get requestPublicParcelHintBox => 'Carton';
+
+  @override
+  String get requestPublicParcelHintSuitcase => 'Valise';
+
+  @override
+  String get requestPublicCategoriesLabel => 'CATÉGORIES';
+
+  @override
+  String get requestPublicBudget => 'Budget';
+
+  @override
+  String get requestPublicZonesLabel => 'Zones';
+
+  @override
+  String get requestPublicPickupLabel => 'Pickup';
+
+  @override
+  String get requestPublicDeliveryLabel => 'Livraison';
+
+  @override
+  String get requestPublicPaymentTitle => 'Mode de paiement souhaité';
+
+  @override
+  String get requestPublicPaymentSubtitle => 'Accepté par l\'expéditeur';
+
+  @override
+  String get requestPublicProposeTripCta => 'Proposer mon trajet';
+
+  @override
+  String get requestPublicViewNegotiationCta => 'Voir ma négociation';
+
+  @override
+  String get requestPublicViewProposalCta => 'Voir ma proposition';
+
+  @override
+  String get requestPublicTakePackageCta => 'Prendre ce colis';
+
+  @override
+  String requestPublicTakeAt(String price) {
+    return 'Prendre à $price · Prix ferme';
+  }
+
+  @override
+  String get requestPublicOfferConfirmed => 'Offre confirmée';
+
+  @override
+  String get requestSearchTitle => 'Demandes ouvertes';
+
+  @override
+  String get requestSearchEmptyMessage =>
+      'Aucune demande ne correspond à votre filtre';
+
+  @override
+  String requestSearchBudgetLine(String amount) {
+    return 'Budget: $amount';
+  }
+
+  @override
+  String requestListYourTripOn(String date) {
+    return 'Ton trajet du $date';
+  }
+
+  @override
+  String get requestBudgetFreeLabel => 'Budget libre';
+
+  @override
+  String get requestFavoriteToggleError => 'Action impossible, réessaie';
+
+  @override
+  String requestSenderShipmentCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count envois',
+      one: '$count envoi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String requestMatchingBudgetPerKg(String amount) {
+    return 'Budget $amount/kg';
+  }
+
+  @override
+  String get requestPreviewTitle => 'Aperçu de votre demande';
+
+  @override
+  String get requestPreviewPublishCta => 'Publier ma demande';
+
+  @override
+  String get requestPreviewSaveDraftCta => 'Enregistrer en brouillon';
+
+  @override
+  String requestPreviewPhotos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos',
+      one: '$count photo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get requestPreviewDropoffLabel => 'Remise';
+
+  @override
+  String get requestPreviewPaymentLabel => 'Paiement';
+
+  @override
+  String get requestPreviewOpenToOffers => 'Ouvert aux offres';
+
+  @override
+  String requestPreviewBudgetIndicative(String amount) {
+    return 'Budget indicatif : $amount';
+  }
+
+  @override
+  String requestPreviewFixedPrice(String amount) {
+    return 'Prix ferme : $amount';
+  }
+
+  @override
+  String requestCarouselSeeAll(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Voir les $count demandes',
+      one: 'Voir la demande',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get requestCarouselEmptyTitle => 'Aucune demande à proximité';
+
+  @override
+  String get requestCarouselWidenZoneCta => 'Élargir la zone';
+
+  @override
+  String get requestStatusChipOpen => 'Ouverte';
+
+  @override
+  String get requestStatusChipNegotiating => 'En négociation';
+
+  @override
+  String get requestStatusChipAccepted => 'Acceptée';
+
+  @override
+  String get requestSenderProfileTitle => 'Profil expéditeur';
+
+  @override
+  String get requestSenderMoreOptionsTooltip => 'Plus d\'options';
+
+  @override
+  String get requestSenderVerifiedIdentity => 'Identité vérifiée';
+
+  @override
+  String get requestSenderNewMember => 'Nouveau membre';
+
+  @override
+  String get requestPickerModifyTripCta => 'Modifier le trajet';
+
+  @override
+  String get requestPickerPriceUnavailable => 'Indisponible';
+
+  @override
+  String get requestPickerCashEnabled => 'Liquide activé';
+
+  @override
+  String get requestPickerCashDisabled => 'Liquide désactivé';
+
+  @override
+  String requestPickerKgAvailable(String kg) {
+    return '$kg kg dispo';
+  }
+
+  @override
+  String get requestPickerLoadErrorMessage =>
+      'Impossible de charger tes trajets';
+
+  @override
+  String get requestPickerNoMatchTitle => 'Aucun de tes trajets ne correspond';
+
+  @override
+  String get requestPickerMatchingTitle => 'Tes trajets compatibles';
+
+  @override
+  String get requestPickerEmptyCreateHint =>
+      'Crée un trajet correspondant à cette demande';
+
+  @override
+  String get requestPickerCreateTripCta => 'Créer un nouveau trajet';
+
+  @override
+  String get requestCarouselCardPriceFree => 'Libre';
+
+  @override
+  String get requestPreviewPhotosLabel => 'Photos';
 }

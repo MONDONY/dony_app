@@ -201,7 +201,7 @@ class _PhotoHero extends StatelessWidget {
                   ] else ...[
                     const SizedBox(width: 6),
                     Text(
-                      'Libre',
+                      context.l10n.requestCarouselCardPriceFree,
                       style: tt.bodySmall?.copyWith(
                         color: Colors.white70,
                         fontWeight: FontWeight.w600,
@@ -272,7 +272,7 @@ class _OwnRequestBadge extends StatelessWidget {
           const DonyIcon('user', size: 10, color: Colors.white),
           const SizedBox(width: 3),
           Text(
-            'Ma demande',
+            context.l10n.requestDetailTitle,
             style: tt.labelSmall?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w700,
@@ -342,16 +342,14 @@ class _InfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = DateFormat(
-      'd MMM',
-      AppL10n.localeName,
-    ).format(item.desiredDate);
+    final l = context.l10n;
+    final dateStr = DateFormat.MMMd(l.localeName).format(item.desiredDate);
     final toleranceStr = item.dateToleranceDays > 0
-        ? ' ±${item.dateToleranceDays}j'
+        ? ' ${toleranceCompactLabel(l, item.dateToleranceDays)}'
         : '';
     final rawName = item.sender.displayName;
     final senderName = (rawName == null || rawName.isEmpty)
-        ? senderFallbackName(context.l10n)
+        ? senderFallbackName(l)
         : rawName;
 
     return Padding(

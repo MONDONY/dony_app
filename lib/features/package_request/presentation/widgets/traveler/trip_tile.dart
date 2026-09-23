@@ -32,6 +32,7 @@ class TripTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final cashOn = announcement.acceptedPaymentMethods.contains(
       BidPaymentMethod.cash,
@@ -40,7 +41,7 @@ class TripTile extends StatelessWidget {
     // trajet à SOI, donc toujours connecté), mais le type suit le modèle.
     final kgPrice = announcement.pricePerKg;
     final kgPriceLabel = kgPrice == null
-        ? 'Indisponible'
+        ? l.requestPickerPriceUnavailable
         : '${formatPriceIn(kgPrice, announcement.currency)}/kg';
     return Padding(
           padding: const EdgeInsets.only(bottom: 10),
@@ -87,9 +88,8 @@ class TripTile extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  DateFormat(
-                                    'EEE d MMM',
-                                    AppL10n.localeName,
+                                  DateFormat.MMMEd(
+                                    l.localeName,
                                   ).format(announcement.departureDate),
                                   style: Theme.of(context).textTheme.bodyMedium!
                                       .copyWith(
@@ -99,8 +99,8 @@ class TripTile extends StatelessWidget {
                                 ),
                                 Text(
                                   announcement.isKgFree
-                                      ? 'Kg libre · $kgPriceLabel'
-                                      : '${announcement.availableKg} kg dispo · $kgPriceLabel',
+                                      ? '${l.tripKgFree} · $kgPriceLabel'
+                                      : '${l.requestPickerKgAvailable('${announcement.availableKg}')} · $kgPriceLabel',
                                   style: Theme.of(context).textTheme.bodyMedium!
                                       .copyWith(
                                         fontSize: 12,
@@ -177,7 +177,7 @@ class _ModifyButton extends StatelessWidget {
               ),
               const SizedBox(width: DonySpacing.xs),
               Text(
-                'Modifier le trajet',
+                context.l10n.requestPickerModifyTripCta,
                 style: tt.bodySmall?.copyWith(
                   color: enabled ? cs.primary : cs.onSurfaceVariant,
                   fontWeight: FontWeight.w700,
@@ -219,7 +219,9 @@ class _CashChip extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.xs),
           Text(
-            enabled ? 'Liquide activé' : 'Liquide désactivé',
+            enabled
+                ? context.l10n.requestPickerCashEnabled
+                : context.l10n.requestPickerCashDisabled,
             style: tt.bodySmall?.copyWith(
               color: enabled ? cs.success : cs.onSurfaceVariant,
               fontWeight: FontWeight.w600,

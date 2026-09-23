@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_carousel_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Carousel near-me pour les demandes (côté voyageur, tab "Demandes" + filtre
@@ -158,9 +159,7 @@ class _NearMePackageRequestCarouselState
               borderRadius: BorderRadius.circular(DonyRadius.xl),
             ),
             child: Text(
-              widget.items.length == 1
-                  ? 'Voir la demande'
-                  : 'Voir les ${widget.items.length} demandes',
+              context.l10n.requestCarouselSeeAll(widget.items.length),
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -191,7 +190,7 @@ class _EmptyState extends StatelessWidget {
             DonyIcon('locate-fixed', color: cs.onSurfaceVariant, size: 32),
             const SizedBox(height: DonySpacing.sm),
             Text(
-              'Aucune demande à proximité',
+              context.l10n.requestCarouselEmptyTitle,
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -202,7 +201,7 @@ class _EmptyState extends StatelessWidget {
             GestureDetector(
               onTap: onSeeAll,
               child: Text(
-                'Élargir la zone',
+                context.l10n.requestCarouselWidenZoneCta,
                 style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,

@@ -1,32 +1,50 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Chip statut réel d'une demande d'envoi (piloté par [PackageRequestStatus]).
 /// Réutilisé par la carte (feed) et l'écran détail.
 Widget packageStatusChip(BuildContext context, PackageRequestStatus status) {
+  final l = context.l10n;
   final cs = Theme.of(context).colorScheme;
   final tt = Theme.of(context).textTheme;
   final (String label, Color bg, Color fg) = switch (status) {
     PackageRequestStatus.draft => (
-      'Brouillon',
+      l.requestStatusDraft,
       cs.surfaceContainerHighest,
       cs.onSurfaceVariant,
     ),
-    PackageRequestStatus.open => ('Ouverte', cs.successLight, cs.success),
+    PackageRequestStatus.open => (
+      l.requestStatusChipOpen,
+      cs.successLight,
+      cs.success,
+    ),
     PackageRequestStatus.negotiating => (
-      'En négociation',
+      l.requestStatusChipNegotiating,
       cs.warningLight,
       cs.warning,
     ),
-    PackageRequestStatus.accepted => ('Acceptée', cs.infoLight, cs.info),
+    PackageRequestStatus.accepted => (
+      l.requestStatusChipAccepted,
+      cs.infoLight,
+      cs.info,
+    ),
     PackageRequestStatus.expired => (
-      'Expirée',
+      l.requestStatusExpired,
       cs.surfaceContainerHighest,
       cs.onSurfaceVariant,
     ),
-    PackageRequestStatus.cancelled => ('Annulée', cs.errorLight, cs.error),
-    PackageRequestStatus.completed => ('Livrée', cs.successLight, cs.success),
+    PackageRequestStatus.cancelled => (
+      l.requestStatusCancelled,
+      cs.errorLight,
+      cs.error,
+    ),
+    PackageRequestStatus.completed => (
+      l.requestStatusDelivered,
+      cs.successLight,
+      cs.success,
+    ),
   };
   return Container(
     padding: const EdgeInsets.symmetric(

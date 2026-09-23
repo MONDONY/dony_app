@@ -5,6 +5,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/widgets/traveler/trip_tile.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Reusable trip-picking section: loads the traveler's trips, filters them
@@ -174,7 +175,7 @@ class TripPickerSectionState extends State<TripPickerSection> {
                     DonyIcon('circle-alert', size: 36, color: cs.error),
                     const SizedBox(height: DonySpacing.sm),
                     Text(
-                      'Impossible de charger tes trajets',
+                      context.l10n.requestPickerLoadErrorMessage,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 14,
@@ -184,7 +185,7 @@ class TripPickerSectionState extends State<TripPickerSection> {
                     const SizedBox(height: DonySpacing.sm),
                     OutlinedButton(
                       onPressed: _load,
-                      child: const Text('Réessayer'),
+                      child: Text(context.l10n.commonRetry),
                     ),
                   ],
                 ),
@@ -205,8 +206,8 @@ class TripPickerSectionState extends State<TripPickerSection> {
         children: [
           Text(
             matchingTrips.isEmpty
-                ? 'Aucun de tes trajets ne correspond'
-                : 'Tes trajets compatibles',
+                ? context.l10n.requestPickerNoMatchTitle
+                : context.l10n.requestPickerMatchingTitle,
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -228,7 +229,7 @@ class TripPickerSectionState extends State<TripPickerSection> {
                   const DonyIcon('plane', size: 36, color: kTextHint),
                   const SizedBox(height: DonySpacing.sm),
                   Text(
-                    'Crée un trajet correspondant à cette demande',
+                    context.l10n.requestPickerEmptyCreateHint,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 14,
@@ -257,7 +258,7 @@ class TripPickerSectionState extends State<TripPickerSection> {
           OutlinedButton.icon(
             onPressed: widget.onCreateDedicated,
             icon: const DonyIcon('plus'),
-            label: const Text('Créer un nouveau trajet'),
+            label: Text(context.l10n.requestPickerCreateTripCta),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 52),
               foregroundColor: cs.primary,

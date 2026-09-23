@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 PackageRequestSearchItem _item({
   String categoryLabel = 'Vêtements & tissus',
   ParcelSize size = ParcelSize.medium,
@@ -292,6 +294,56 @@ void main() {
           .widget<Text>(find.textContaining('12 juil.'))
           .data!;
       expect(libelle, isNot(contains('—')));
+    });
+  });
+
+  group('PackageRequestListCard – anglais', () {
+    testWidgets('micro-label, catégorie, budget et chip traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(wrap(PackageRequestListCard(item: _item())));
+      await tester.pumpAndSettle();
+      expect(find.text('Shipping request'), findsOneWidget);
+      expect(find.text('5 kg · Clothing & fabrics · M'), findsOneWidget);
+      expect(find.text('Open'), findsOneWidget);
+      expect(find.text('Demande d\'envoi'), findsNothing);
+    });
+
+    testWidgets('« Ma demande » devient « My request »', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(PackageRequestListCard(item: _item(), isOwnRequest: true)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('My request'), findsOneWidget);
+    });
+
+    testWidgets('« Budget libre » devient « Open budget »', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(PackageRequestListCard(item: _item(targetPrice: null))),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Open budget'), findsOneWidget);
+    });
+
+    testWidgets('score de match : « Ton trajet du » devient « Your trip on »', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(
+          PackageRequestListCard(
+            item: _item(
+              matchScore: 94,
+              matchedTripDepartureDate: DateTime(2026, 7, 12),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Your trip on'), findsOneWidget);
     });
   });
 }

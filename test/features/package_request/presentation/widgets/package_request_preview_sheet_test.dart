@@ -6,6 +6,8 @@ import 'package:dony/features/package_request/presentation/widgets/package_reque
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   testWidgets('affiche le budget de l’aperçu en CAD sans conversion', (
     tester,
@@ -100,5 +102,17 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('preview-save-draft')));
     expect(drafted, isTrue);
+  });
+
+  testWidgets('en anglais : titre, moyen de paiement et boutons traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await pumpAndOpen(tester, onConfirm: () {}, onSaveDraft: () {});
+    expect(find.text('Preview your request'), findsOneWidget);
+    expect(find.text('Card'), findsOneWidget);
+    expect(find.text('Post my request'), findsOneWidget);
+    expect(find.text('Save as draft'), findsOneWidget);
+    expect(find.text('Publier ma demande'), findsNothing);
   });
 }

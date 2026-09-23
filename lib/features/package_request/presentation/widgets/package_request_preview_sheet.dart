@@ -24,22 +24,23 @@ abstract final class PackageRequestPreviewSheet {
     // donc pas accès aux providers du wizard.
     int photoCount = 0,
   }) {
+    final l = context.l10n;
     return DonyBottomSheet.show<void>(
       context,
-      title: 'Aperçu de votre demande',
+      title: l.requestPreviewTitle,
       stickyBottom: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
             key: const Key('preview-publish'),
-            label: 'Publier ma demande',
+            label: l.requestPreviewPublishCta,
             onPressed: onConfirm,
           ),
           if (onSaveDraft != null) ...[
             const SizedBox(height: DonySpacing.sm),
             DonyButton(
               key: const Key('preview-save-draft'),
-              label: 'Enregistrer en brouillon',
+              label: l.requestPreviewSaveDraftCta,
               variant: DonyButtonVariant.secondary,
               onPressed: onSaveDraft,
             ),
@@ -68,6 +69,7 @@ class _PreviewBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final s = formState;
@@ -95,22 +97,26 @@ class _PreviewBody extends StatelessWidget {
         // modes de paiement, c'est-à-dire l'essentiel de ce que lit le voyageur.
         if (s.categories.isNotEmpty)
           DonyInfoRow(
-            label: 'Contenu',
+            label: l.requestCreateContentLabel,
             value: s.categories
-                .map((c) => contentCategoryDisplayName(context.l10n, c))
+                .map((c) => contentCategoryDisplayName(l, c))
                 .join(', '),
           ),
         if (s.weightKg != null)
-          DonyInfoRow(label: 'Poids', value: formatWeightKg(s.weightKg!)),
+          DonyInfoRow(
+            label: l.requestCreateRecapWeight,
+            value: formatWeightKg(s.weightKg!),
+          ),
         if (photoCount > 0)
           DonyInfoRow(
-            label: 'Photos',
-            value: photoCount == 1 ? '1 photo' : '$photoCount photos',
+            label: l.requestPreviewPhotosLabel,
+            value: l.requestPreviewPhotos(photoCount),
           ),
-        if (pickup.isNotEmpty) DonyInfoRow(label: 'Remise', value: pickup),
+        if (pickup.isNotEmpty)
+          DonyInfoRow(label: l.requestPreviewDropoffLabel, value: pickup),
         if (description.isNotEmpty)
           DonyInfoRow(
-            label: 'Description',
+            label: l.requestDescriptionLabel,
             value: description,
             // Une description tient rarement sur une ligne, et la valeur d'une
             // DonyInfoRow est tronquée par défaut.
@@ -120,11 +126,14 @@ class _PreviewBody extends StatelessWidget {
               style: tt.bodyMedium?.copyWith(color: cs.onSurface),
             ),
           ),
-        DonyInfoRow(label: 'Paiement', value: _paymentLabel(context, s)),
+        DonyInfoRow(
+          label: l.requestPreviewPaymentLabel,
+          value: _paymentLabel(context, s),
+        ),
 
         const SizedBox(height: DonySpacing.base),
         Text(
-          _priceLine(s),
+          _priceLine(l, s),
           style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
       ],
@@ -141,16 +150,19 @@ class _PreviewBody extends StatelessWidget {
           .map((m) => m.label(context.l10n))
           .join(', ');
 
-  String _priceLine(PackageRequestFormState s) {
+  String _priceLine(AppLocalizations l, PackageRequestFormState s) {
     final amount = s.totalBudgetEur;
     if (s.negotiable) {
       return amount == null
-          ? 'Ouvert aux offres'
-          : 'Budget indicatif : '
-                '${CurrencyFormatter.formatOrPlain(amount, currency)}';
+          ? l.requestPreviewOpenToOffers
+          : l.requestPreviewBudgetIndicative(
+              CurrencyFormatter.formatOrPlain(amount, currency),
+            );
     }
     return amount == null
-        ? 'Prix ferme'
-        : 'Prix ferme : ${CurrencyFormatter.formatOrPlain(amount, currency)}';
+        ? l.tripFixedPrice
+        : l.requestPreviewFixedPrice(
+            CurrencyFormatter.formatOrPlain(amount, currency),
+          );
   }
 }

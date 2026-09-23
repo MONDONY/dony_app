@@ -15,7 +15,7 @@ void showSenderPublicProfileSheet(
 ) {
   DonyBottomSheet.show<void>(
     context,
-    title: 'Profil expéditeur',
+    title: context.l10n.requestSenderProfileTitle,
     child: _SenderPublicProfileContent(sender: sender),
   );
 }
@@ -39,11 +39,12 @@ class _SenderPublicProfileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final rawName = sender.displayName;
     final name = (rawName == null || rawName.isEmpty)
-        ? senderFallbackName(context.l10n)
+        ? senderFallbackName(l)
         : rawName;
 
     // `SenderPublicProfile.guest` ne porte pas d'identifiant : sans cible, pas
@@ -64,7 +65,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: IconButton(
-                tooltip: 'Plus d\'options',
+                tooltip: l.requestSenderMoreOptionsTooltip,
                 icon: DonyIcon('ellipsis', color: cs.onSurfaceVariant),
                 onPressed: () => showBlockMenu(
                   context,
@@ -93,7 +94,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
                 DonyIcon('badge-check', color: cs.primary, size: 16),
                 const SizedBox(width: 4),
                 Text(
-                  'Identité vérifiée',
+                  l.requestSenderVerifiedIdentity,
                   style: tt.bodySmall?.copyWith(
                     color: cs.primary,
                     fontWeight: FontWeight.w600,
@@ -127,7 +128,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
                       ),
                       const SizedBox(width: DonySpacing.sm),
                       Text(
-                        '· ${sender.totalRatings} avis',
+                        '· ${reviewCountLabel(l, sender.totalRatings)}',
                         style: tt.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -140,7 +141,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
                       DonyIcon('user', color: cs.onSurfaceVariant, size: 18),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
-                        'Nouveau membre',
+                        l.requestSenderNewMember,
                         style: tt.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),

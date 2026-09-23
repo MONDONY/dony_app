@@ -4327,4 +4327,265 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestDetailLoadingSemantic => 'Loading your request';
+
+  @override
+  String requestToleranceDays(int days) {
+    return '±${days}d';
+  }
+
+  @override
+  String requestReviewCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews',
+      one: '$count review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get requestPublicTitle => 'Shipping request';
+
+  @override
+  String get requestDescriptionLabel => 'Description';
+
+  @override
+  String get requestPublicReportTooltip => 'Report';
+
+  @override
+  String get requestPublicReportSheetTitle => 'Report this request';
+
+  @override
+  String get requestPublicReportReasonProhibited => 'Prohibited content';
+
+  @override
+  String get requestPublicReportReasonScam => 'Scam / fraud';
+
+  @override
+  String get requestPublicReportReasonInappropriate => 'Inappropriate content';
+
+  @override
+  String get requestPublicReportReasonOther => 'Other reason';
+
+  @override
+  String get requestPublicReportSuccess => 'Request reported. Thanks.';
+
+  @override
+  String get requestPublicReportError => 'Can\'t report right now';
+
+  @override
+  String get requestPublicBadge => 'SHIPPING REQUEST';
+
+  @override
+  String get requestPublicFirmPriceBadge => 'FIXED PRICE';
+
+  @override
+  String requestPublicDesiredDate(String date, String tolerance) {
+    return 'on $date ($tolerance)';
+  }
+
+  @override
+  String get requestPublicParcelHintBag => 'Bag';
+
+  @override
+  String get requestPublicParcelHintBox => 'Box';
+
+  @override
+  String get requestPublicParcelHintSuitcase => 'Suitcase';
+
+  @override
+  String get requestPublicCategoriesLabel => 'CATEGORIES';
+
+  @override
+  String get requestPublicBudget => 'Budget';
+
+  @override
+  String get requestPublicZonesLabel => 'Zones';
+
+  @override
+  String get requestPublicPickupLabel => 'Pickup';
+
+  @override
+  String get requestPublicDeliveryLabel => 'Delivery';
+
+  @override
+  String get requestPublicPaymentTitle => 'Preferred payment method';
+
+  @override
+  String get requestPublicPaymentSubtitle => 'Accepted by the sender';
+
+  @override
+  String get requestPublicProposeTripCta => 'Propose my trip';
+
+  @override
+  String get requestPublicViewNegotiationCta => 'View my negotiation';
+
+  @override
+  String get requestPublicViewProposalCta => 'View my proposal';
+
+  @override
+  String get requestPublicTakePackageCta => 'Take this parcel';
+
+  @override
+  String requestPublicTakeAt(String price) {
+    return 'Take it for $price · Fixed price';
+  }
+
+  @override
+  String get requestPublicOfferConfirmed => 'Offer confirmed';
+
+  @override
+  String get requestSearchTitle => 'Open requests';
+
+  @override
+  String get requestSearchEmptyMessage => 'No request matches your filter';
+
+  @override
+  String requestSearchBudgetLine(String amount) {
+    return 'Budget: $amount';
+  }
+
+  @override
+  String requestListYourTripOn(String date) {
+    return 'Your trip on $date';
+  }
+
+  @override
+  String get requestBudgetFreeLabel => 'Open budget';
+
+  @override
+  String get requestFavoriteToggleError => 'Action failed, try again';
+
+  @override
+  String requestSenderShipmentCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count shipments',
+      one: '$count shipment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String requestMatchingBudgetPerKg(String amount) {
+    return 'Budget $amount/kg';
+  }
+
+  @override
+  String get requestPreviewTitle => 'Preview your request';
+
+  @override
+  String get requestPreviewPublishCta => 'Post my request';
+
+  @override
+  String get requestPreviewSaveDraftCta => 'Save as draft';
+
+  @override
+  String requestPreviewPhotos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos',
+      one: '$count photo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get requestPreviewDropoffLabel => 'Drop-off';
+
+  @override
+  String get requestPreviewPaymentLabel => 'Payment';
+
+  @override
+  String get requestPreviewOpenToOffers => 'Open to offers';
+
+  @override
+  String requestPreviewBudgetIndicative(String amount) {
+    return 'Estimated budget: $amount';
+  }
+
+  @override
+  String requestPreviewFixedPrice(String amount) {
+    return 'Fixed price: $amount';
+  }
+
+  @override
+  String requestCarouselSeeAll(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'See $count requests',
+      one: 'See the request',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get requestCarouselEmptyTitle => 'No requests nearby';
+
+  @override
+  String get requestCarouselWidenZoneCta => 'Widen the area';
+
+  @override
+  String get requestStatusChipOpen => 'Open';
+
+  @override
+  String get requestStatusChipNegotiating => 'Negotiating';
+
+  @override
+  String get requestStatusChipAccepted => 'Accepted';
+
+  @override
+  String get requestSenderProfileTitle => 'Sender profile';
+
+  @override
+  String get requestSenderMoreOptionsTooltip => 'More options';
+
+  @override
+  String get requestSenderVerifiedIdentity => 'Verified identity';
+
+  @override
+  String get requestSenderNewMember => 'New member';
+
+  @override
+  String get requestPickerModifyTripCta => 'Edit trip';
+
+  @override
+  String get requestPickerPriceUnavailable => 'Unavailable';
+
+  @override
+  String get requestPickerCashEnabled => 'Cash accepted';
+
+  @override
+  String get requestPickerCashDisabled => 'Cash not accepted';
+
+  @override
+  String requestPickerKgAvailable(String kg) {
+    return '$kg kg available';
+  }
+
+  @override
+  String get requestPickerLoadErrorMessage => 'Can\'t load your trips';
+
+  @override
+  String get requestPickerNoMatchTitle => 'None of your trips match';
+
+  @override
+  String get requestPickerMatchingTitle => 'Your matching trips';
+
+  @override
+  String get requestPickerEmptyCreateHint =>
+      'Create a trip that matches this request';
+
+  @override
+  String get requestPickerCreateTripCta => 'Create a new trip';
+
+  @override
+  String get requestCarouselCardPriceFree => 'Open';
+
+  @override
+  String get requestPreviewPhotosLabel => 'Photos';
 }

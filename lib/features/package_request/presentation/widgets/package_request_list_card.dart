@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
@@ -79,7 +80,7 @@ class PackageRequestListCard extends StatelessWidget {
             if (ctx.mounted) {
               DonySnackbar.show(
                 ctx,
-                message: 'Action impossible, réessaie',
+                message: ctx.l10n.requestFavoriteToggleError,
                 type: DonySnackbarType.error,
               );
             }
@@ -91,6 +92,7 @@ class PackageRequestListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final accent = cs.warning;
@@ -139,7 +141,7 @@ class PackageRequestListCard extends StatelessWidget {
                                 const SizedBox(width: DonySpacing.xxs),
                                 Expanded(
                                   child: Text(
-                                    'Demande d\'envoi',
+                                    l.requestPublicTitle,
                                     overflow: TextOverflow.ellipsis,
                                     style: tt.labelSmall?.copyWith(
                                       fontWeight: FontWeight.w800,
@@ -186,7 +188,7 @@ class PackageRequestListCard extends StatelessWidget {
                                       // Titre colis-first
                                       Text(
                                         '${item.weightKg.toStringAsFixed(0)} kg · '
-                                        '${item.categories.isNotEmpty ? '${item.categories.first} · ' : ''}$_sizeLabel',
+                                        '${item.categories.isNotEmpty ? '${contentCategoryDisplayName(l, item.categories.first)} · ' : ''}$_sizeLabel',
                                         style: tt.titleMedium?.copyWith(
                                           fontWeight: FontWeight.w800,
                                           letterSpacing: -0.3,
@@ -279,7 +281,9 @@ class _MatchScoreRow extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              'Ton trajet du ${DateFormat('d MMM', AppL10n.localeName).format(depart)}',
+              context.l10n.requestListYourTripOn(
+                DateFormat.MMMd(context.l10n.localeName).format(depart),
+              ),
               overflow: TextOverflow.ellipsis,
               style: tt.bodySmall?.copyWith(
                 color: cs.onSurfaceVariant,
@@ -303,14 +307,14 @@ class _RouteMeta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final depFlag = cityFlag(item.departureCity);
     final arrFlag = cityFlag(item.arrivalCity);
-    final dateStr = DateFormat(
-      'd MMM',
-      AppL10n.localeName,
+    final dateStr = DateFormat.MMMd(
+      l.localeName,
     ).format(item.desiredDate).toLowerCase();
     final tol = item.dateToleranceDays > 0
-        ? ' ±${item.dateToleranceDays}j'
+        ? ' ${toleranceCompactLabel(l, item.dateToleranceDays)}'
         : '';
     final parts = <String>[
       ?depFlag,
@@ -357,7 +361,7 @@ class _Budget extends StatelessWidget {
     final displayPrice = item.grossPriceEur ?? item.targetPriceEur;
     if (displayPrice == null) {
       return Text(
-        'Budget libre',
+        context.l10n.requestBudgetFreeLabel,
         style: tt.bodySmall?.copyWith(
           color: cs.onSurfaceVariant,
           fontWeight: FontWeight.w600,
@@ -373,7 +377,7 @@ class _Budget extends StatelessWidget {
           textBaseline: TextBaseline.alphabetic,
           children: [
             Text(
-              'Budget ',
+              '${context.l10n.requestPublicBudget} ',
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             Text(
@@ -529,7 +533,7 @@ class _SenderRow extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        ' · ${item.sender.totalRatings} avis',
+                        ' · ${reviewCountLabel(context.l10n, item.sender.totalRatings)}',
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -575,7 +579,7 @@ class _OwnRequestChip extends StatelessWidget {
           DonyIcon('user', size: 12, color: cs.primary),
           const SizedBox(width: DonySpacing.xs),
           Text(
-            'Ma demande',
+            context.l10n.requestDetailTitle,
             style: tt.labelSmall?.copyWith(
               fontWeight: FontWeight.w800,
               color: cs.primary,
@@ -605,12 +609,13 @@ class MatchingRequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final accent = cs.warning;
     final depDate = match.tripDepartureDate;
     final dateStr = depDate != null
-        ? DateFormat('d MMM', AppL10n.localeName).format(depDate).toLowerCase()
+        ? DateFormat.MMMd(l.localeName).format(depDate).toLowerCase()
         : '';
 
     return Material(
@@ -688,8 +693,13 @@ class MatchingRequestCard extends StatelessWidget {
                                       const SizedBox(height: DonySpacing.xs),
                                       Text(
                                         match.budgetPerKg != null
-                                            ? 'Budget ${formatPriceIn(match.budgetPerKg!, match.currency)}/kg'
-                                            : 'Budget libre',
+                                            ? l.requestMatchingBudgetPerKg(
+                                                formatPriceIn(
+                                                  match.budgetPerKg!,
+                                                  match.currency,
+                                                ),
+                                              )
+                                            : l.requestBudgetFreeLabel,
                                         style: tt.bodySmall?.copyWith(
                                           color: cs.primary,
                                           fontWeight: FontWeight.w700,
@@ -740,7 +750,7 @@ class MatchingRequestCard extends StatelessWidget {
                                             ),
                                           ),
                                           Text(
-                                            ' · ${match.senderTotalSent} envois',
+                                            ' · ${l.requestSenderShipmentCount(match.senderTotalSent)}',
                                             style: tt.bodySmall?.copyWith(
                                               color: cs.onSurfaceVariant,
                                             ),

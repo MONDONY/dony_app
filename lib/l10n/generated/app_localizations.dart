@@ -7300,6 +7300,426 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Chargement de ta demande'**
   String get requestDetailLoadingSemantic;
+
+  /// Tolérance compacte en jours, format ±Nj, réutilisée par package_request_public_detail_screen.dart, package_request_list_card.dart, package_request_search_screen.dart et package_request_carousel_card.dart
+  ///
+  /// In fr, this message translates to:
+  /// **'±{days}j'**
+  String requestToleranceDays(int days);
+
+  /// Nombre d'avis reçus affiché près de la note (package_request_list_card.dart, sender_public_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} avis} other{{count} avis}}'**
+  String requestReviewCount(int count);
+
+  /// Identité « demande d'envoi » — titre d'écran et micro-label des cartes (package_request_public_detail_screen.dart, package_request_list_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande d\'envoi'**
+  String get requestPublicTitle;
+
+  /// Libellé générique « Description » (package_request_public_detail_screen.dart, package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Description'**
+  String get requestDescriptionLabel;
+
+  /// Tooltip du bouton de signalement (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler'**
+  String get requestPublicReportTooltip;
+
+  /// Titre de la feuille de signalement (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler la demande'**
+  String get requestPublicReportSheetTitle;
+
+  /// Motif de signalement (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu interdit'**
+  String get requestPublicReportReasonProhibited;
+
+  /// Motif de signalement (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Arnaque / fraude'**
+  String get requestPublicReportReasonScam;
+
+  /// Motif de signalement (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu inapproprié'**
+  String get requestPublicReportReasonInappropriate;
+
+  /// Motif de signalement (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre raison'**
+  String get requestPublicReportReasonOther;
+
+  /// Snackbar de succès du signalement (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande signalée. Merci.'**
+  String get requestPublicReportSuccess;
+
+  /// Snackbar d'échec du signalement (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de signaler pour le moment'**
+  String get requestPublicReportError;
+
+  /// Micro-label majuscule du corridor (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DEMANDE D\'ENVOI'**
+  String get requestPublicBadge;
+
+  /// Badge majuscule affiché quand la demande n'est pas négociable (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PRIX FERME'**
+  String get requestPublicFirmPriceBadge;
+
+  /// Date souhaitée + tolérance compacte entre parenthèses (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'le {date} ({tolerance})'**
+  String requestPublicDesiredDate(String date, String tolerance);
+
+  /// Indice de taille de colis « petit » (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sac'**
+  String get requestPublicParcelHintBag;
+
+  /// Indice de taille de colis « moyen » (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Carton'**
+  String get requestPublicParcelHintBox;
+
+  /// Indice de taille de colis « grand » (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Valise'**
+  String get requestPublicParcelHintSuitcase;
+
+  /// Titre de la section catégories (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'CATÉGORIES'**
+  String get requestPublicCategoriesLabel;
+
+  /// Titre de la carte budget et libellé quand la demande est négociable (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Budget'**
+  String get requestPublicBudget;
+
+  /// Titre de la carte pickup/livraison (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Zones'**
+  String get requestPublicZonesLabel;
+
+  /// Libellé de la zone de pickup, déjà en anglais côté français (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pickup'**
+  String get requestPublicPickupLabel;
+
+  /// Libellé de la zone de livraison (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison'**
+  String get requestPublicDeliveryLabel;
+
+  /// Titre de la carte moyens de paiement (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode de paiement souhaité'**
+  String get requestPublicPaymentTitle;
+
+  /// Sous-titre de la carte moyens de paiement (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepté par l\'expéditeur'**
+  String get requestPublicPaymentSubtitle;
+
+  /// CTA voyageur sur une demande négociable (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposer mon trajet'**
+  String get requestPublicProposeTripCta;
+
+  /// CTA quand le voyageur a déjà une offre en cours, négociable (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir ma négociation'**
+  String get requestPublicViewNegotiationCta;
+
+  /// CTA quand le voyageur a déjà une offre en cours, prix ferme (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir ma proposition'**
+  String get requestPublicViewProposalCta;
+
+  /// CTA prix ferme sans montant connu (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre ce colis'**
+  String get requestPublicTakePackageCta;
+
+  /// CTA prix ferme avec montant connu (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre à {price} · Prix ferme'**
+  String requestPublicTakeAt(String price);
+
+  /// Snackbar de succès après prise d'un prix ferme (package_request_public_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre confirmée'**
+  String get requestPublicOfferConfirmed;
+
+  /// Titre de l'écran de recherche publique des demandes (package_request_search_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes ouvertes'**
+  String get requestSearchTitle;
+
+  /// État vide de la recherche (package_request_search_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande ne correspond à votre filtre'**
+  String get requestSearchEmptyMessage;
+
+  /// Ligne budget d'une carte de recherche (package_request_search_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Budget: {amount}'**
+  String requestSearchBudgetLine(String amount);
+
+  /// Score de compatibilité « Pour mes trajets » (package_request_list_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton trajet du {date}'**
+  String requestListYourTripOn(String date);
+
+  /// Budget non renseigné (package_request_list_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Budget libre'**
+  String get requestBudgetFreeLabel;
+
+  /// Snackbar d'échec du cœur favori (package_request_list_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Action impossible, réessaie'**
+  String get requestFavoriteToggleError;
+
+  /// Nombre d'envois de l'expéditeur (package_request_list_card.dart, MatchingRequestCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} envoi} other{{count} envois}}'**
+  String requestSenderShipmentCount(int count);
+
+  /// Budget par kg d'une carte de matching (package_request_list_card.dart, MatchingRequestCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Budget {amount}/kg'**
+  String requestMatchingBudgetPerKg(String amount);
+
+  /// Titre de la sheet d'aperçu étape 3 (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aperçu de votre demande'**
+  String get requestPreviewTitle;
+
+  /// Bouton de publication immédiate (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier ma demande'**
+  String get requestPreviewPublishCta;
+
+  /// Bouton d'enregistrement en brouillon (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer en brouillon'**
+  String get requestPreviewSaveDraftCta;
+
+  /// Nombre de photos affiché dans l'aperçu (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} photo} other{{count} photos}}'**
+  String requestPreviewPhotos(int count);
+
+  /// Libellé de la ligne lieu de remise (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise'**
+  String get requestPreviewDropoffLabel;
+
+  /// Libellé de la ligne moyens de paiement (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement'**
+  String get requestPreviewPaymentLabel;
+
+  /// Prix indicatif non renseigné, négociable (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvert aux offres'**
+  String get requestPreviewOpenToOffers;
+
+  /// Prix indicatif renseigné, négociable (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Budget indicatif : {amount}'**
+  String requestPreviewBudgetIndicative(String amount);
+
+  /// Prix ferme renseigné (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix ferme : {amount}'**
+  String requestPreviewFixedPrice(String amount);
+
+  /// Bouton « voir tout » du carousel near-me (near_me_package_request_carousel.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Voir la demande} other{Voir les {count} demandes}}'**
+  String requestCarouselSeeAll(int count);
+
+  /// État vide du carousel near-me (near_me_package_request_carousel.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande à proximité'**
+  String get requestCarouselEmptyTitle;
+
+  /// CTA de l'état vide du carousel near-me (near_me_package_request_carousel.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Élargir la zone'**
+  String get requestCarouselWidenZoneCta;
+
+  /// Chip statut OPEN (package_status_chip.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouverte'**
+  String get requestStatusChipOpen;
+
+  /// Chip statut NEGOTIATING (package_status_chip.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En négociation'**
+  String get requestStatusChipNegotiating;
+
+  /// Chip statut ACCEPTED (package_status_chip.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Acceptée'**
+  String get requestStatusChipAccepted;
+
+  /// Titre de la sheet profil expéditeur (sender_public_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil expéditeur'**
+  String get requestSenderProfileTitle;
+
+  /// Tooltip du bouton … (sender_public_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus d\'options'**
+  String get requestSenderMoreOptionsTooltip;
+
+  /// Badge KYC vérifié (sender_public_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée'**
+  String get requestSenderVerifiedIdentity;
+
+  /// Repli quand l'expéditeur n'a aucun avis (sender_public_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau membre'**
+  String get requestSenderNewMember;
+
+  /// Bouton de modification d'un trajet proposé (traveler/trip_tile.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le trajet'**
+  String get requestPickerModifyTripCta;
+
+  /// Prix au kg indisponible (traveler/trip_tile.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indisponible'**
+  String get requestPickerPriceUnavailable;
+
+  /// Chip espèces activées (traveler/trip_tile.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Liquide activé'**
+  String get requestPickerCashEnabled;
+
+  /// Chip espèces désactivées (traveler/trip_tile.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Liquide désactivé'**
+  String get requestPickerCashDisabled;
+
+  /// Capacité disponible d'un trajet non Kg libre (traveler/trip_tile.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} kg dispo'**
+  String requestPickerKgAvailable(String kg);
+
+  /// Erreur de chargement des trajets du voyageur (trip_picker_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger tes trajets'**
+  String get requestPickerLoadErrorMessage;
+
+  /// Titre quand aucun trajet ne correspond (trip_picker_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun de tes trajets ne correspond'**
+  String get requestPickerNoMatchTitle;
+
+  /// Titre quand au moins un trajet correspond (trip_picker_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tes trajets compatibles'**
+  String get requestPickerMatchingTitle;
+
+  /// Message de l'état vide invitant à créer un trajet (trip_picker_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Crée un trajet correspondant à cette demande'**
+  String get requestPickerEmptyCreateHint;
+
+  /// Bouton de création d'un nouveau trajet dédié (trip_picker_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un nouveau trajet'**
+  String get requestPickerCreateTripCta;
+
+  /// Prix non renseigné sur la carte carousel (package_request_carousel_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Libre'**
+  String get requestCarouselCardPriceFree;
+
+  /// Libellé de la ligne nombre de photos dans l'aperçu (package_request_preview_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Photos'**
+  String get requestPreviewPhotosLabel;
 }
 
 class _AppLocalizationsDelegate
