@@ -1704,26 +1704,6 @@
   "@tripPublishCurrencyChangeCta": {
     "description": "Bouton « Changer » de la bannière de sélection de devise"
   },
-  "tripPublishAddItemSemantics": "Ajouter un article",
-  "@tripPublishAddItemSemantics": {
-    "description": "Semantics du bouton d'ajout de CaInlineAddRow (widget interne, non branché en production)"
-  },
-  "tripPublishAddItemTooltip": "Ajouter",
-  "@tripPublishAddItemTooltip": {
-    "description": "Tooltip du bouton d'ajout de CaInlineAddRow (widget interne, non branché en production)"
-  },
-  "tripPublishRemoveItemSemanticsLiteral": "Retirer $label",
-  "@tripPublishRemoveItemSemanticsLiteral": {
-    "description": "Semantics de CaRemovableChip (widget interne, non branché en production) ; le texte source échappait \\$label en littéral, comportement préservé à l'identique"
-  },
-  "tripPublishDepartureTimeOptionalLabel": "Heure de départ (optionnel)",
-  "@tripPublishDepartureTimeOptionalLabel": {
-    "description": "Libellé de CaTimeRow côté départ (widget interne, non branché en production)"
-  },
-  "tripPublishClearTimeTooltip": "Effacer l'heure",
-  "@tripPublishClearTimeTooltip": {
-    "description": "Semantics du bouton d'effacement de CaTimeRow (widget interne, non branché en production)"
-  },
   "tripPublishLieuxCapaciteStepLabel": "Lieux & capacité",
   "@tripPublishLieuxCapaciteStepLabel": {
     "description": "Libellé d'étape du stepper de publication (étape 1)"

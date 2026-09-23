@@ -356,8 +356,7 @@ class TrajetStep extends StatelessWidget {
                 key: const Key('departureDateField'),
                 label: l.tripPublishDepartureDateLabel,
                 value: departureDateNotifier.value != null
-                    ? DateFormat(
-                        'EEE d MMM yyyy',
+                    ? DateFormat.yMMMEd(
                         l.localeName,
                       ).format(departureDateNotifier.value!)
                     : null,

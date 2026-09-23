@@ -2755,7 +2755,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishCashSubtitle =>
-      'Commission charged to the traveler at handover';
+      'Service fee charged to the traveler at handover';
 
   @override
   String get tripPublishAcceptedContentSectionLabel => 'What I accept';
@@ -2832,7 +2832,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tripPublishGridSheetCommissionNote(String percent) {
-    return 'Prices paid by the sender, Yadony commission of $percent% included.';
+    return 'Prices paid by the sender, Yadony service fee of $percent% included.';
   }
 
   @override
@@ -2934,22 +2934,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishCurrencyChangeCta => 'Change';
-
-  @override
-  String get tripPublishAddItemSemantics => 'Add an item';
-
-  @override
-  String get tripPublishAddItemTooltip => 'Add';
-
-  @override
-  String get tripPublishRemoveItemSemanticsLiteral => 'Remove \$label';
-
-  @override
-  String get tripPublishDepartureTimeOptionalLabel =>
-      'Departure time (optional)';
-
-  @override
-  String get tripPublishClearTimeTooltip => 'Clear time';
 
   @override
   String get tripPublishLieuxCapaciteStepLabel => 'Places & capacity';

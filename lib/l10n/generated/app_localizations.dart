@@ -5012,36 +5012,6 @@ abstract class AppLocalizations {
   /// **'Changer'**
   String get tripPublishCurrencyChangeCta;
 
-  /// Semantics du bouton d'ajout de CaInlineAddRow (widget interne, non branché en production)
-  ///
-  /// In fr, this message translates to:
-  /// **'Ajouter un article'**
-  String get tripPublishAddItemSemantics;
-
-  /// Tooltip du bouton d'ajout de CaInlineAddRow (widget interne, non branché en production)
-  ///
-  /// In fr, this message translates to:
-  /// **'Ajouter'**
-  String get tripPublishAddItemTooltip;
-
-  /// Semantics de CaRemovableChip (widget interne, non branché en production) ; le texte source échappait \$label en littéral, comportement préservé à l'identique
-  ///
-  /// In fr, this message translates to:
-  /// **'Retirer \$label'**
-  String get tripPublishRemoveItemSemanticsLiteral;
-
-  /// Libellé de CaTimeRow côté départ (widget interne, non branché en production)
-  ///
-  /// In fr, this message translates to:
-  /// **'Heure de départ (optionnel)'**
-  String get tripPublishDepartureTimeOptionalLabel;
-
-  /// Semantics du bouton d'effacement de CaTimeRow (widget interne, non branché en production)
-  ///
-  /// In fr, this message translates to:
-  /// **'Effacer l\'heure'**
-  String get tripPublishClearTimeTooltip;
-
   /// Libellé d'étape du stepper de publication (étape 1)
   ///
   /// In fr, this message translates to:

@@ -21,6 +21,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
@@ -625,6 +626,58 @@ void main() {
         expect(
           find.text('🔥 Départ proche · ce trajet sera signalé urgent'),
           findsNothing,
+        );
+      },
+    );
+  });
+
+  // ── Format de la date de départ (squelette intl DateFormat.yMMMEd) ────────
+
+  group('Champ date de départ — format intl', () {
+    testWidgets(
+      'le rendu français du squelette yMMMEd égale l\'ancien motif EEE d MMM yyyy',
+      (tester) async {
+        final departureCityNotifier = ValueNotifier<String?>(null);
+        final arrivalCityNotifier = ValueNotifier<String?>(null);
+        final fixedDate = DateTime(2026, 10, 6, 14, 5);
+        final departureDateNotifier = ValueNotifier<DateTime?>(fixedDate);
+        final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+        final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: TrajetStep(
+                  departureCityNotifier: departureCityNotifier,
+                  arrivalCityNotifier: arrivalCityNotifier,
+                  departureDateNotifier: departureDateNotifier,
+                  departureTimeNotifier: departureTimeNotifier,
+                  arrivalTimeNotifier: arrivalTimeNotifier,
+                  departureCityBloc: departureCityBloc,
+                  arrivalCityBloc: arrivalCityBloc,
+                  onSelectDepartureTime: () async {},
+                  onSelectArrivalTime: () async {},
+                  onSelectDate: () async {},
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Ancien motif littéral, conservé ici uniquement pour la comparaison :
+        // le rendu du nouveau squelette doit lui être strictement identique
+        // en français (ex. « mar. 6 oct. 2026 »).
+        final oldPatternRendering = DateFormat(
+          'EEE d MMM yyyy',
+          'fr',
+        ).format(fixedDate);
+
+        expect(find.text(oldPatternRendering), findsOneWidget);
+        expect(
+          find.text(DateFormat.yMMMEd('fr').format(fixedDate)),
+          findsOneWidget,
         );
       },
     );

@@ -2951,22 +2951,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishCurrencyChangeCta => 'Changer';
 
   @override
-  String get tripPublishAddItemSemantics => 'Ajouter un article';
-
-  @override
-  String get tripPublishAddItemTooltip => 'Ajouter';
-
-  @override
-  String get tripPublishRemoveItemSemanticsLiteral => 'Retirer \$label';
-
-  @override
-  String get tripPublishDepartureTimeOptionalLabel =>
-      'Heure de départ (optionnel)';
-
-  @override
-  String get tripPublishClearTimeTooltip => 'Effacer l\'heure';
-
-  @override
   String get tripPublishLieuxCapaciteStepLabel => 'Lieux & capacité';
 
   @override
