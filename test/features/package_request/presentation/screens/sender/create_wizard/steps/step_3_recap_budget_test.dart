@@ -106,6 +106,53 @@ void main() {
       expect(find.textContaining('Vêtements'), findsOneWidget);
     });
 
+    testWidgets(
+      'le récap traduit une catégorie du catalogue (Vêtements & tissus)',
+      (tester) async {
+        final seed = PackageRequestFormState(
+          currentStep: 2,
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 6, 15),
+          dateToleranceDays: 2,
+          transportMode: TransportMode.plane,
+          weightKg: 5,
+          parcelSize: ParcelSize.medium,
+          categories: const ['Vêtements & tissus'],
+        );
+        await tester.pumpWidget(
+          wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+        );
+
+        expect(find.text('Vêtements & tissus'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'le récap traduit une catégorie du catalogue en anglais (Clothing & '
+      'fabrics)',
+      (tester) async {
+        useEnglish();
+        final seed = PackageRequestFormState(
+          currentStep: 2,
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 6, 15),
+          dateToleranceDays: 2,
+          transportMode: TransportMode.plane,
+          weightKg: 5,
+          parcelSize: ParcelSize.medium,
+          categories: const ['Vêtements & tissus'],
+        );
+        await tester.pumpWidget(
+          wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+        );
+
+        expect(find.text('Clothing & fabrics'), findsOneWidget);
+        expect(find.text('Vêtements & tissus'), findsNothing);
+      },
+    );
+
     testWidgets('validation budget — accepte vide', (tester) async {
       final key = GlobalKey<Step3RecapBudgetState>();
       await tester.pumpWidget(wrap(Step3RecapBudget(key: key)));

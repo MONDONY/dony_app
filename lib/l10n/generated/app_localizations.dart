@@ -6344,7 +6344,7 @@ abstract class AppLocalizations {
   /// **'Image non supportée ou trop volumineuse'**
   String get requestCreatePhotoUnsupported;
 
-  /// Option caméra de la feuille de choix de source photo (package_request_photo_section.dart, wizard_photo_upload.dart)
+  /// Option caméra de la feuille de choix de source photo (package_request_photo_section.dart)
   ///
   /// In fr, this message translates to:
   /// **'Prendre une photo'**

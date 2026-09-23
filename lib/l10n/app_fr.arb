@@ -2816,7 +2816,7 @@
   },
   "requestCreateTakePhoto": "Prendre une photo",
   "@requestCreateTakePhoto": {
-    "description": "Option caméra de la feuille de choix de source photo (package_request_photo_section.dart, wizard_photo_upload.dart)"
+    "description": "Option caméra de la feuille de choix de source photo (package_request_photo_section.dart)"
   },
   "requestCreatePickFromGalleryIn": "Choisir dans la galerie",
   "@requestCreatePickFromGalleryIn": {

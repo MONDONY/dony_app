@@ -330,5 +330,60 @@ void main() {
         expect(find.text('± 3 jours'), findsNothing);
       },
     );
+
+    // requestCreateToleranceGenericHint corrige un accord faux : l'ancien
+    // texte disait toujours « jours », y compris pour une tolérance de 1
+    // (« ± 1 jours »). Le nouveau message ICU accorde correctement.
+    testWidgets(
+      'le hint générique de tolérance accorde jour/jours (± 1 jour, ± 3 '
+      'jours)',
+      (tester) async {
+        await tester.pumpWidget(wrap(const Step1TrajetColis()));
+        await tester.pumpAndSettle();
+
+        // Bascule sur une tolérance de 1 jour (singulier) via la feuille.
+        await tester.tap(find.text('± 2 j'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('± 1 jour'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining('± 1 jour autour de votre date'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('± 1 jours'), findsNothing);
+
+        // Puis une tolérance de 3 jours (pluriel).
+        await tester.tap(find.text('± 1 j'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('± 3 jours'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining('± 3 jours autour de votre date'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'le hint générique de tolérance est traduit en anglais (± 3 days)',
+      (tester) async {
+        useEnglish();
+        await tester.pumpWidget(wrap(const Step1TrajetColis()));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('± 2 d'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('± 3 days'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining('± 3 days around your date'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('autour de votre date'), findsNothing);
+      },
+    );
   });
 }
