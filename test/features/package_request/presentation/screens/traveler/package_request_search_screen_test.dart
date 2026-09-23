@@ -82,6 +82,10 @@ void main() {
     expect(find.text('Arrivée'), findsOneWidget);
     expect(find.text('Vêtements & tissus'), findsOneWidget);
     expect(find.textContaining('Budget:'), findsOneWidget);
+    // Bug corrigé : le badge affichait le nom brut de l'enum (SMALL) même en
+    // français, faute de passer par ParcelSize.label(l).
+    expect(find.text('PETIT'), findsOneWidget);
+    expect(find.text('SMALL'), findsNothing);
   });
 
   testWidgets('état vide : message affiché', (tester) async {
@@ -126,6 +130,8 @@ void main() {
     expect(find.text('Clothing & fabrics'), findsOneWidget);
     expect(find.textContaining('Budget:'), findsOneWidget);
     expect(find.text('Demandes ouvertes'), findsNothing);
+    expect(find.text('SMALL'), findsOneWidget);
+    expect(find.text('PETIT'), findsNothing);
   });
 
   testWidgets('en anglais : état vide traduit', (tester) async {

@@ -5,23 +5,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-MatchingRequestModel _match() => MatchingRequestModel(
-  id: 'r1',
-  tripId: 't1',
-  tripCorridor: 'Paris → Bamako',
-  tripDepartureDate: DateTime(2026, 7, 10),
-  tripAvailableKg: 12,
-  senderId: 's1',
-  senderName: 'Awa Diallo',
-  senderInitials: 'AD',
-  senderRating: 4.8,
-  senderTotalSent: 7,
-  weightKg: 3,
-  contentType: 'Documents',
-  budgetPerKg: 9.5,
-  matchScore: 92,
-  requestedAt: DateTime(2026, 6, 19),
-);
+import '../../../../helpers/l10n_test_helpers.dart';
+
+MatchingRequestModel _match({int senderTotalSent = 7, String? contentType}) =>
+    MatchingRequestModel(
+      id: 'r1',
+      tripId: 't1',
+      tripCorridor: 'Paris → Bamako',
+      tripDepartureDate: DateTime(2026, 7, 10),
+      tripAvailableKg: 12,
+      senderId: 's1',
+      senderName: 'Awa Diallo',
+      senderInitials: 'AD',
+      senderRating: 4.8,
+      senderTotalSent: senderTotalSent,
+      weightKg: 3,
+      contentType: contentType ?? 'Documents',
+      budgetPerKg: 9.5,
+      matchScore: 92,
+      requestedAt: DateTime(2026, 6, 19),
+    );
 
 Widget _wrap(Widget child) => MaterialApp(
   theme: AppTheme.light(),
@@ -59,4 +62,52 @@ void main() {
     await t.pump();
     expect(tapped, isTrue);
   });
+
+  // Le nombre d'envois de l'expéditeur accordait toujours au pluriel avant
+  // la migration i18n (« 1 envois ») : le nouveau message ICU corrige cette
+  // faute d'accord — décision du contrôleur, signalée dans la PR.
+  testWidgets('accord du nombre d\'envois : singulier à 1, pluriel à 3', (
+    t,
+  ) async {
+    await t.pumpWidget(
+      _wrap(MatchingRequestCard(match: _match(senderTotalSent: 1), index: 0)),
+    );
+    await t.pump(const Duration(milliseconds: 600));
+    expect(find.textContaining('1 envoi'), findsOneWidget);
+    expect(find.textContaining('1 envois'), findsNothing);
+
+    await t.pumpWidget(
+      _wrap(MatchingRequestCard(match: _match(senderTotalSent: 3), index: 0)),
+    );
+    await t.pump(const Duration(milliseconds: 600));
+    expect(find.textContaining('3 envois'), findsOneWidget);
+  });
+
+  testWidgets('en anglais : nombre d\'envois traduit', (t) async {
+    useEnglish();
+    await t.pumpWidget(
+      _wrap(MatchingRequestCard(match: _match(senderTotalSent: 3), index: 0)),
+    );
+    await t.pump(const Duration(milliseconds: 600));
+    expect(find.textContaining('3 shipments'), findsOneWidget);
+    expect(find.textContaining('3 envois'), findsNothing);
+  });
+
+  testWidgets(
+    'en anglais : catégorie « Vêtements & tissus » devient « Clothing & fabrics »',
+    (t) async {
+      useEnglish();
+      await t.pumpWidget(
+        _wrap(
+          MatchingRequestCard(
+            match: _match(contentType: 'Vêtements & tissus'),
+            index: 0,
+          ),
+        ),
+      );
+      await t.pump(const Duration(milliseconds: 600));
+      expect(find.textContaining('Clothing & fabrics'), findsOneWidget);
+      expect(find.textContaining('Vêtements'), findsNothing);
+    },
+  );
 }

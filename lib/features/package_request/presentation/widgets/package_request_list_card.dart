@@ -681,7 +681,7 @@ class MatchingRequestCard extends StatelessWidget {
                                     children: [
                                       Text(
                                         '${match.weightKg.toStringAsFixed(0)} kg'
-                                        '${match.contentType != null ? ' · ${match.contentType}' : ''}',
+                                        '${match.contentType != null ? ' · ${contentCategoryDisplayName(l, match.contentType!)}' : ''}',
                                         style: tt.titleMedium?.copyWith(
                                           fontWeight: FontWeight.w800,
                                           letterSpacing: -0.3,

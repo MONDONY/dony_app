@@ -281,7 +281,7 @@ class _PublicRequestCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      request.parcelSize.name.toUpperCase(),
+                      request.parcelSize.label(l).toUpperCase(),
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,

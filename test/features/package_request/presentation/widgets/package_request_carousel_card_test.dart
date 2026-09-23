@@ -11,6 +11,7 @@ import '../../../../helpers/l10n_test_helpers.dart';
 PackageRequestSearchItem _item({
   double? targetPrice = 35,
   String? displayName = 'Amina',
+  List<String> categories = const ['Vêtements'],
 }) => PackageRequestSearchItem(
   id: 'pr-1',
   departureCity: 'Paris',
@@ -19,7 +20,7 @@ PackageRequestSearchItem _item({
   dateToleranceDays: 3,
   weightKg: 5,
   parcelSize: ParcelSize.medium,
-  categories: const ['Vêtements'],
+  categories: categories,
   targetPriceEur: targetPrice,
   sender: SenderPublicProfile(
     id: 's-1',
@@ -77,4 +78,22 @@ void main() {
     expect(find.text('Libre'), findsNothing);
     expect(find.text('Ma demande'), findsNothing);
   });
+
+  testWidgets(
+    'en anglais : catégorie « Vêtements & tissus » devient « Clothing & fabrics »',
+    (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(
+          PackageRequestCarouselCard(
+            item: _item(categories: const ['Vêtements & tissus']),
+            index: 0,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Clothing & fabrics'), findsOneWidget);
+      expect(find.text('Vêtements & tissus'), findsNothing);
+    },
+  );
 }
