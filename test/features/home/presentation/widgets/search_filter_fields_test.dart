@@ -103,4 +103,33 @@ void main() {
     expect(find.text('Transport mode'), findsOneWidget);
     expect(find.text('Apply'), findsOneWidget);
   });
+
+  testWidgets('DateField sans libellé affiche « DATE »', (tester) async {
+    await tester.pumpWidget(_wrap(DateField(date: null, onChanged: (_) {})));
+
+    expect(find.text('DATE'), findsOneWidget);
+  });
+
+  testWidgets('DateField garde le libellé passé par l\'appelant', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(DateField(date: null, onChanged: (_) {}, label: 'QUAND')),
+    );
+
+    expect(find.text('QUAND'), findsOneWidget);
+    expect(find.text('DATE'), findsNothing);
+  });
+
+  testWidgets('en anglais : en-tête et valeur de TransportModeField', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(TransportModeField(mode: null, onTap: () {})),
+    );
+
+    expect(find.text('TRANSPORT'), findsOneWidget);
+    expect(find.text('Any'), findsOneWidget);
+  });
 }

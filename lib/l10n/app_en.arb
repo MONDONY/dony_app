@@ -642,5 +642,7 @@
   "homeGuidanceDontShowAgain": "Don't show again",
   "homeNoActiveTripTitle": "No active trip",
   "homeNoActiveTripBody": "This filter only shows parcels that fit your upcoming trips. Post a trip to use it.",
-  "homeNoActiveTripPublish": "Post a trip"
+  "homeNoActiveTripPublish": "Post a trip",
+  "homeFilterFieldsTransport": "TRANSPORT",
+  "homeFilterFieldsDate": "DATE"
 }

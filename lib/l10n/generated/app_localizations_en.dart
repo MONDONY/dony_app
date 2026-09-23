@@ -2315,4 +2315,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeNoActiveTripPublish => 'Post a trip';
+
+  @override
+  String get homeFilterFieldsTransport => 'TRANSPORT';
+
+  @override
+  String get homeFilterFieldsDate => 'DATE';
 }

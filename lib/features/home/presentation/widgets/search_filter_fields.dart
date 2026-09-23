@@ -240,7 +240,7 @@ class TransportModeField extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'TRANSPORT',
+              context.l10n.homeFilterFieldsTransport,
               style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.xs),
@@ -462,15 +462,15 @@ class DateField extends StatelessWidget {
     super.key,
     required this.date,
     required this.onChanged,
-    this.label = 'DATE',
+    this.label,
   });
 
   final DateTime? date;
   final ValueChanged<DateTime?> onChanged;
 
-  /// Libellé du champ. Le bloc commun affiche « DATE PRÉCISE » pour le
-  /// distinguer des presets qui le précèdent.
-  final String label;
+  /// Libellé du champ, « DATE » par défaut (`null`). Le bloc commun affiche
+  /// « DATE PRÉCISE » pour le distinguer des presets qui le précèdent.
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -507,7 +507,7 @@ class DateField extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              label,
+              label ?? context.l10n.homeFilterFieldsDate,
               style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.xs),

@@ -3955,6 +3955,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Publier un trajet'**
   String get homeNoActiveTripPublish;
+
+  /// No description provided for @homeFilterFieldsTransport.
+  ///
+  /// In fr, this message translates to:
+  /// **'TRANSPORT'**
+  String get homeFilterFieldsTransport;
+
+  /// No description provided for @homeFilterFieldsDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'DATE'**
+  String get homeFilterFieldsDate;
 }
 
 class _AppLocalizationsDelegate

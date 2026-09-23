@@ -2318,4 +2318,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeNoActiveTripPublish => 'Publier un trajet';
+
+  @override
+  String get homeFilterFieldsTransport => 'TRANSPORT';
+
+  @override
+  String get homeFilterFieldsDate => 'DATE';
 }
