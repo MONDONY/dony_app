@@ -3459,4 +3459,7 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get contentCategoryHintDefault => 'Add a content type…';
 }

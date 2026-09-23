@@ -5863,6 +5863,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{verb, select, created{créée le {date}} other{publiée le {date}}}'**
   String requestTimeOn(String verb, String date);
+
+  /// Texte d'indication par défaut du champ de sélection de catégories, quand l'appelant ne le surcharge pas (content_category_selector.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un type de contenu…'**
+  String get contentCategoryHintDefault;
 }
 
 class _AppLocalizationsDelegate

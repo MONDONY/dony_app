@@ -967,5 +967,6 @@
   "requestTimeMinutesAgo": "{verb, select, created{created {minutes} min ago} other{posted {minutes} min ago}}",
   "requestTimeHoursAgo": "{verb, select, created{created {hours} h ago} other{posted {hours} h ago}}",
   "requestTimeYesterday": "{verb, select, created{created yesterday, {time}} other{posted yesterday, {time}}}",
-  "requestTimeOn": "{verb, select, created{created on {date}} other{posted on {date}}}"
+  "requestTimeOn": "{verb, select, created{created on {date}} other{posted on {date}}}",
+  "contentCategoryHintDefault": "Add a content type…"
 }

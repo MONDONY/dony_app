@@ -2439,5 +2439,9 @@
         "type": "String"
       }
     }
+  },
+  "contentCategoryHintDefault": "Ajouter un type de contenu…",
+  "@contentCategoryHintDefault": {
+    "description": "Texte d'indication par défaut du champ de sélection de catégories, quand l'appelant ne le surcharge pas (content_category_selector.dart)"
   }
 }

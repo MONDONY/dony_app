@@ -525,10 +525,11 @@ void main() {
             FormSubmissionStatus.error,
           )
           .having(
-            (s) => s.error,
-            'error',
+            (s) => s.formError,
+            'formError',
             PackageRequestFormError.budgetRequired,
           )
+          .having((s) => s.error, 'error', isNull)
           .having((s) => s.errorMessage, 'errorMessage', isNull)
           .having((s) => s.draftLimitMessage, 'draftLimitMessage', isNull),
     ],

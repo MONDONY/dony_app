@@ -294,7 +294,7 @@ class _PackageRequestCreateScreenState
         state.draftLimitMessage != null) {
       unawaited(_handleDraftLimitReached(context, state.draftLimitMessage!));
     } else if (state.submissionStatus == FormSubmissionStatus.error &&
-        state.error == PackageRequestFormError.budgetRequired) {
+        state.formError == PackageRequestFormError.budgetRequired) {
       // Erreur connue de l'app elle-même (pas du serveur) : sa traduction,
       // jamais un texte porté par l'état.
       DonySnackbar.show(

@@ -25,7 +25,7 @@ class ContentCategorySelector extends StatefulWidget {
     required this.repository,
     required this.selected,
     required this.onChanged,
-    this.hint = 'Ajouter un type de contenu…',
+    this.hint,
     this.keyPrefix = 'content-combo',
     this.singleSelection = false,
     this.alwaysAllowCustom = false,
@@ -34,7 +34,11 @@ class ContentCategorySelector extends StatefulWidget {
   final IContentCategoryRepository repository;
   final List<String> selected;
   final ValueChanged<List<String>> onChanged;
-  final String hint;
+
+  /// Texte d'indication du champ. `null` retombe sur la traduction par
+  /// défaut ([ContentCategoryComboBox.hint]) — résolue dans son `build`,
+  /// jamais ici (pas de `BuildContext` disponible dans un défaut `const`).
+  final String? hint;
 
   /// Préfixe des [Key] internes — permet de distinguer plusieurs instances
   /// sur un même écran (ex: "accepté" vs "refusé") dans les tests.
@@ -108,7 +112,7 @@ class ContentCategoryComboBox extends StatefulWidget {
     required this.catalog,
     required this.selected,
     required this.onChanged,
-    this.hint = 'Ajouter un type de contenu…',
+    this.hint,
     this.keyPrefix = 'content-combo',
     this.singleSelection = false,
     this.alwaysAllowCustom = false,
@@ -117,7 +121,13 @@ class ContentCategoryComboBox extends StatefulWidget {
   final List<ContentCategory> catalog;
   final List<String> selected;
   final ValueChanged<List<String>> onChanged;
-  final String hint;
+
+  /// Texte d'indication du champ. `null` (défaut des deux appelants qui ne le
+  /// surchargent pas, `step_2_details.dart` et `corridor_alert_form_sheet
+  /// .dart`) retombe sur `context.l10n.contentCategoryHintDefault`, résolu
+  /// dans `build` — un défaut `const` de constructeur ne peut pas appeler
+  /// `context.l10n`.
+  final String? hint;
   final String keyPrefix;
 
   /// Choix exclusif : une nouvelle sélection remplace la précédente.
@@ -534,7 +544,8 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
               style: tt.bodyMedium?.copyWith(color: cs.onSurface),
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
-                hintText: widget.hint,
+                hintText:
+                    widget.hint ?? context.l10n.contentCategoryHintDefault,
                 hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(

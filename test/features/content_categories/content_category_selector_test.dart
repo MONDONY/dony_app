@@ -373,4 +373,36 @@ void main() {
       expect(find.text('Books'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'hint par défaut : français puis anglais quand hint n\'est pas surchargé',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          ContentCategorySelector(
+            repository: repository,
+            selected: const [],
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ajouter un type de contenu…'), findsOneWidget);
+
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          ContentCategorySelector(
+            repository: repository,
+            selected: const [],
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Add a content type…'), findsOneWidget);
+    },
+  );
 }

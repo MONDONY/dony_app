@@ -3474,4 +3474,7 @@ class AppLocalizationsFr extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get contentCategoryHintDefault => 'Ajouter un type de contenu…';
 }
