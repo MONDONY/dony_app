@@ -5041,6 +5041,222 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Capacité fixée par la demande'**
   String get tripPublishLockedCapacityNote;
+
+  /// Libellé de repli utilisé comme adresse quand le géocodage inverse échoue : coordonnées brutes formatées (address_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Position GPS ({lat}, {lng})'**
+  String addressGpsPosition(String lat, String lng);
+
+  /// Titre de la sheet d'info quand le service de localisation est coupé (sélecteurs d'adresse et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'GPS désactivé'**
+  String get addressGpsDisabledTitle;
+
+  /// Titre de la sheet d'info quand la permission de localisation est refusée (sélecteurs d'adresse et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Localisation refusée'**
+  String get addressLocationDeniedTitle;
+
+  /// Titre de la sheet d'info quand la permission de localisation est refusée définitivement (sélecteurs d'adresse et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Localisation définitivement refusée'**
+  String get addressLocationDeniedForeverTitle;
+
+  /// Message de la sheet d'info GPS désactivé (sélecteurs d'adresse et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Activez la géolocalisation dans vos paramètres système.'**
+  String get addressGpsDisabledMessage;
+
+  /// Message de la sheet d'info permission de localisation refusée (sélecteurs d'adresse et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Activez la localisation dans vos paramètres pour utiliser cette fonctionnalité.'**
+  String get addressLocationDeniedMessage;
+
+  /// Bouton de la sheet d'info localisation/GPS (sélecteurs d'adresse et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir les paramètres'**
+  String get addressOpenSettingsButton;
+
+  /// Titre de la sheet d'info quand aucun fix GPS n'est disponible (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Position indisponible'**
+  String get addressPositionUnavailableTitle;
+
+  /// Message de la sheet d'info position indisponible (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de récupérer votre position pour le moment. Réessayez.'**
+  String get addressPositionUnavailableMessage;
+
+  /// Titre de la sheet d'info quand le géocodage inverse échoue après 3 tentatives (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse introuvable'**
+  String get addressReverseGeocodeFailedTitle;
+
+  /// Message de la sheet d'info géocodage inverse en échec (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de convertir votre position en adresse. Réessayez.'**
+  String get addressReverseGeocodeFailedMessage;
+
+  /// SnackBar affiché quand la résolution d'une suggestion échoue (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de sélectionner cette adresse. Réessayez.'**
+  String get addressSelectFailedMessage;
+
+  /// Placeholder du champ de recherche inline des sélecteurs d'adresse pickup/delivery
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher une adresse…'**
+  String get addressSearchHint;
+
+  /// Bouton de validation des sélecteurs d'adresse pickup/delivery
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer cette adresse'**
+  String get addressConfirmButton;
+
+  /// Titre de l'état vide hors ligne de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion requise'**
+  String get addressOfflineTitle;
+
+  /// Sous-titre de l'état vide hors ligne de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre connexion pour rechercher une adresse.'**
+  String get addressOfflineSubtitle;
+
+  /// Titre de l'état d'erreur de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur'**
+  String get addressSearchErrorTitle;
+
+  /// Sous-titre de l'état d'erreur de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de rechercher une adresse. Réessayez.'**
+  String get addressSearchErrorSubtitle;
+
+  /// Titre de l'état vide sans résultat de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun résultat'**
+  String get addressNoResultsTitle;
+
+  /// Sous-titre de l'état vide sans résultat de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Essayez « Utiliser ma position actuelle ».'**
+  String get addressNoResultsSubtitle;
+
+  /// Libellé du bouton GPS (sélecteurs d'adresse pickup/delivery et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Utiliser ma position actuelle'**
+  String get addressUseCurrentLocation;
+
+  /// En-tête de section des adresses récentes (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'RECHERCHES RÉCENTES'**
+  String get addressRecentSearchesHeader;
+
+  /// En-tête de section des adresses enregistrées (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'MES ADRESSES ENREGISTRÉES'**
+  String get addressSavedAddressesHeader;
+
+  /// Titre de la tuile d'ajout d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une adresse'**
+  String get addressAddNewTitle;
+
+  /// Sous-titre de la tuile d'ajout d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer pour la prochaine fois'**
+  String get addressAddNewSubtitle;
+
+  /// Badge sur l'adresse enregistrée par défaut (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Par défaut'**
+  String get addressDefaultBadge;
+
+  /// Titre du sélecteur d'adresse de remise (pickup_address_picker_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'📦  Adresse de remise'**
+  String get addressPickupSheetTitle;
+
+  /// Titre du sélecteur d'adresse de livraison (delivery_address_picker_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'🗺️  Adresse de livraison'**
+  String get addressDeliverySheetTitle;
+
+  /// Message de validation quand le champ d'adresse obligatoire est vide (address_picker_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse obligatoire'**
+  String get addressFieldRequiredError;
+
+  /// Placeholder du champ d'adresse une fois focalisé (address_picker_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tapez pour rechercher une adresse…'**
+  String get addressFieldSearchHint;
+
+  /// Message affiché quand la recherche du champ d'adresse ne renvoie rien (address_picker_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun résultat, essayez \"Ma position actuelle\"'**
+  String get addressFieldNoResultsHint;
+
+  /// Message inline hors ligne sous le champ d'adresse (address_picker_field.dart et address_suggest_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion requise pour la recherche d\'adresse'**
+  String get addressOfflineInlineMessage;
+
+  /// Libellé de la carte vide du sélecteur d'adresse de remise (address_selector_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une adresse de remise'**
+  String get addressSelectorRemiseLabel;
+
+  /// Sous-titre de la carte vide du sélecteur d'adresse de remise (address_selector_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Où tu récupères les colis des expéditeurs'**
+  String get addressSelectorRemiseSubtitle;
+
+  /// Libellé de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une adresse de livraison'**
+  String get addressSelectorLivraisonLabel;
+
+  /// Sous-titre de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Où tu déposes les colis à destination'**
+  String get addressSelectorLivraisonSubtitle;
 }
 
 class _AppLocalizationsDelegate

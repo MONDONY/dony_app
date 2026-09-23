@@ -3,6 +3,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/delivery_address_picker_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/pickup_address_picker_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 enum AddressSelectorType { remise, livraison }
@@ -41,13 +42,14 @@ class AddressSelectorField extends StatelessWidget {
       );
     }
 
+    final l10n = context.l10n;
     return _EmptyCard(
       label: _isRemise
-          ? 'Choisir une adresse de remise'
-          : 'Choisir une adresse de livraison',
+          ? l10n.addressSelectorRemiseLabel
+          : l10n.addressSelectorLivraisonLabel,
       subtitle: _isRemise
-          ? 'Où tu récupères les colis des expéditeurs'
-          : 'Où tu déposes les colis à destination',
+          ? l10n.addressSelectorRemiseSubtitle
+          : l10n.addressSelectorLivraisonSubtitle,
       color: color,
       containerColor: containerColor,
       onTap: () => _openSheet(context),

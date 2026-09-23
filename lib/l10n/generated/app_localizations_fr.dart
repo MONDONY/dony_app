@@ -2965,4 +2965,128 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishLockedCapacityNote => 'Capacité fixée par la demande';
+
+  @override
+  String addressGpsPosition(String lat, String lng) {
+    return 'Position GPS ($lat, $lng)';
+  }
+
+  @override
+  String get addressGpsDisabledTitle => 'GPS désactivé';
+
+  @override
+  String get addressLocationDeniedTitle => 'Localisation refusée';
+
+  @override
+  String get addressLocationDeniedForeverTitle =>
+      'Localisation définitivement refusée';
+
+  @override
+  String get addressGpsDisabledMessage =>
+      'Activez la géolocalisation dans vos paramètres système.';
+
+  @override
+  String get addressLocationDeniedMessage =>
+      'Activez la localisation dans vos paramètres pour utiliser cette fonctionnalité.';
+
+  @override
+  String get addressOpenSettingsButton => 'Ouvrir les paramètres';
+
+  @override
+  String get addressPositionUnavailableTitle => 'Position indisponible';
+
+  @override
+  String get addressPositionUnavailableMessage =>
+      'Impossible de récupérer votre position pour le moment. Réessayez.';
+
+  @override
+  String get addressReverseGeocodeFailedTitle => 'Adresse introuvable';
+
+  @override
+  String get addressReverseGeocodeFailedMessage =>
+      'Impossible de convertir votre position en adresse. Réessayez.';
+
+  @override
+  String get addressSelectFailedMessage =>
+      'Impossible de sélectionner cette adresse. Réessayez.';
+
+  @override
+  String get addressSearchHint => 'Rechercher une adresse…';
+
+  @override
+  String get addressConfirmButton => 'Confirmer cette adresse';
+
+  @override
+  String get addressOfflineTitle => 'Connexion requise';
+
+  @override
+  String get addressOfflineSubtitle =>
+      'Vérifiez votre connexion pour rechercher une adresse.';
+
+  @override
+  String get addressSearchErrorTitle => 'Erreur';
+
+  @override
+  String get addressSearchErrorSubtitle =>
+      'Impossible de rechercher une adresse. Réessayez.';
+
+  @override
+  String get addressNoResultsTitle => 'Aucun résultat';
+
+  @override
+  String get addressNoResultsSubtitle =>
+      'Essayez « Utiliser ma position actuelle ».';
+
+  @override
+  String get addressUseCurrentLocation => 'Utiliser ma position actuelle';
+
+  @override
+  String get addressRecentSearchesHeader => 'RECHERCHES RÉCENTES';
+
+  @override
+  String get addressSavedAddressesHeader => 'MES ADRESSES ENREGISTRÉES';
+
+  @override
+  String get addressAddNewTitle => 'Ajouter une adresse';
+
+  @override
+  String get addressAddNewSubtitle => 'Enregistrer pour la prochaine fois';
+
+  @override
+  String get addressDefaultBadge => 'Par défaut';
+
+  @override
+  String get addressPickupSheetTitle => '📦  Adresse de remise';
+
+  @override
+  String get addressDeliverySheetTitle => '🗺️  Adresse de livraison';
+
+  @override
+  String get addressFieldRequiredError => 'Adresse obligatoire';
+
+  @override
+  String get addressFieldSearchHint => 'Tapez pour rechercher une adresse…';
+
+  @override
+  String get addressFieldNoResultsHint =>
+      'Aucun résultat, essayez \"Ma position actuelle\"';
+
+  @override
+  String get addressOfflineInlineMessage =>
+      'Connexion requise pour la recherche d\'adresse';
+
+  @override
+  String get addressSelectorRemiseLabel => 'Choisir une adresse de remise';
+
+  @override
+  String get addressSelectorRemiseSubtitle =>
+      'Où tu récupères les colis des expéditeurs';
+
+  @override
+  String get addressSelectorLivraisonLabel =>
+      'Choisir une adresse de livraison';
+
+  @override
+  String get addressSelectorLivraisonSubtitle =>
+      'Où tu déposes les colis à destination';
 }

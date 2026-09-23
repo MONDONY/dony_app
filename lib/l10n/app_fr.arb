@@ -1723,5 +1723,158 @@
   "tripPublishLockedCapacityNote": "Capacité fixée par la demande",
   "@tripPublishLockedCapacityNote": {
     "description": "Note sous la capacité verrouillée (flux trajet dédié)"
+  },
+
+  "addressGpsPosition": "Position GPS ({lat}, {lng})",
+  "@addressGpsPosition": {
+    "description": "Libellé de repli utilisé comme adresse quand le géocodage inverse échoue : coordonnées brutes formatées (address_labels.dart)",
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lng": {
+        "type": "String"
+      }
+    }
+  },
+  "addressGpsDisabledTitle": "GPS désactivé",
+  "@addressGpsDisabledTitle": {
+    "description": "Titre de la sheet d'info quand le service de localisation est coupé (sélecteurs d'adresse et champ d'adresse)"
+  },
+  "addressLocationDeniedTitle": "Localisation refusée",
+  "@addressLocationDeniedTitle": {
+    "description": "Titre de la sheet d'info quand la permission de localisation est refusée (sélecteurs d'adresse et champ d'adresse)"
+  },
+  "addressLocationDeniedForeverTitle": "Localisation définitivement refusée",
+  "@addressLocationDeniedForeverTitle": {
+    "description": "Titre de la sheet d'info quand la permission de localisation est refusée définitivement (sélecteurs d'adresse et champ d'adresse)"
+  },
+  "addressGpsDisabledMessage": "Activez la géolocalisation dans vos paramètres système.",
+  "@addressGpsDisabledMessage": {
+    "description": "Message de la sheet d'info GPS désactivé (sélecteurs d'adresse et champ d'adresse)"
+  },
+  "addressLocationDeniedMessage": "Activez la localisation dans vos paramètres pour utiliser cette fonctionnalité.",
+  "@addressLocationDeniedMessage": {
+    "description": "Message de la sheet d'info permission de localisation refusée (sélecteurs d'adresse et champ d'adresse)"
+  },
+  "addressOpenSettingsButton": "Ouvrir les paramètres",
+  "@addressOpenSettingsButton": {
+    "description": "Bouton de la sheet d'info localisation/GPS (sélecteurs d'adresse et champ d'adresse)"
+  },
+  "addressPositionUnavailableTitle": "Position indisponible",
+  "@addressPositionUnavailableTitle": {
+    "description": "Titre de la sheet d'info quand aucun fix GPS n'est disponible (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressPositionUnavailableMessage": "Impossible de récupérer votre position pour le moment. Réessayez.",
+  "@addressPositionUnavailableMessage": {
+    "description": "Message de la sheet d'info position indisponible (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressReverseGeocodeFailedTitle": "Adresse introuvable",
+  "@addressReverseGeocodeFailedTitle": {
+    "description": "Titre de la sheet d'info quand le géocodage inverse échoue après 3 tentatives (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressReverseGeocodeFailedMessage": "Impossible de convertir votre position en adresse. Réessayez.",
+  "@addressReverseGeocodeFailedMessage": {
+    "description": "Message de la sheet d'info géocodage inverse en échec (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressSelectFailedMessage": "Impossible de sélectionner cette adresse. Réessayez.",
+  "@addressSelectFailedMessage": {
+    "description": "SnackBar affiché quand la résolution d'une suggestion échoue (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressSearchHint": "Rechercher une adresse…",
+  "@addressSearchHint": {
+    "description": "Placeholder du champ de recherche inline des sélecteurs d'adresse pickup/delivery"
+  },
+  "addressConfirmButton": "Confirmer cette adresse",
+  "@addressConfirmButton": {
+    "description": "Bouton de validation des sélecteurs d'adresse pickup/delivery"
+  },
+  "addressOfflineTitle": "Connexion requise",
+  "@addressOfflineTitle": {
+    "description": "Titre de l'état vide hors ligne de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressOfflineSubtitle": "Vérifiez votre connexion pour rechercher une adresse.",
+  "@addressOfflineSubtitle": {
+    "description": "Sous-titre de l'état vide hors ligne de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressSearchErrorTitle": "Erreur",
+  "@addressSearchErrorTitle": {
+    "description": "Titre de l'état d'erreur de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressSearchErrorSubtitle": "Impossible de rechercher une adresse. Réessayez.",
+  "@addressSearchErrorSubtitle": {
+    "description": "Sous-titre de l'état d'erreur de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressNoResultsTitle": "Aucun résultat",
+  "@addressNoResultsTitle": {
+    "description": "Titre de l'état vide sans résultat de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressNoResultsSubtitle": "Essayez « Utiliser ma position actuelle ».",
+  "@addressNoResultsSubtitle": {
+    "description": "Sous-titre de l'état vide sans résultat de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressUseCurrentLocation": "Utiliser ma position actuelle",
+  "@addressUseCurrentLocation": {
+    "description": "Libellé du bouton GPS (sélecteurs d'adresse pickup/delivery et champ d'adresse)"
+  },
+  "addressRecentSearchesHeader": "RECHERCHES RÉCENTES",
+  "@addressRecentSearchesHeader": {
+    "description": "En-tête de section des adresses récentes (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressSavedAddressesHeader": "MES ADRESSES ENREGISTRÉES",
+  "@addressSavedAddressesHeader": {
+    "description": "En-tête de section des adresses enregistrées (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressAddNewTitle": "Ajouter une adresse",
+  "@addressAddNewTitle": {
+    "description": "Titre de la tuile d'ajout d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressAddNewSubtitle": "Enregistrer pour la prochaine fois",
+  "@addressAddNewSubtitle": {
+    "description": "Sous-titre de la tuile d'ajout d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressDefaultBadge": "Par défaut",
+  "@addressDefaultBadge": {
+    "description": "Badge sur l'adresse enregistrée par défaut (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressPickupSheetTitle": "📦  Adresse de remise",
+  "@addressPickupSheetTitle": {
+    "description": "Titre du sélecteur d'adresse de remise (pickup_address_picker_sheet.dart)"
+  },
+  "addressDeliverySheetTitle": "🗺️  Adresse de livraison",
+  "@addressDeliverySheetTitle": {
+    "description": "Titre du sélecteur d'adresse de livraison (delivery_address_picker_sheet.dart)"
+  },
+  "addressFieldRequiredError": "Adresse obligatoire",
+  "@addressFieldRequiredError": {
+    "description": "Message de validation quand le champ d'adresse obligatoire est vide (address_picker_field.dart)"
+  },
+  "addressFieldSearchHint": "Tapez pour rechercher une adresse…",
+  "@addressFieldSearchHint": {
+    "description": "Placeholder du champ d'adresse une fois focalisé (address_picker_field.dart)"
+  },
+  "addressFieldNoResultsHint": "Aucun résultat, essayez \"Ma position actuelle\"",
+  "@addressFieldNoResultsHint": {
+    "description": "Message affiché quand la recherche du champ d'adresse ne renvoie rien (address_picker_field.dart)"
+  },
+  "addressOfflineInlineMessage": "Connexion requise pour la recherche d'adresse",
+  "@addressOfflineInlineMessage": {
+    "description": "Message inline hors ligne sous le champ d'adresse (address_picker_field.dart et address_suggest_field.dart)"
+  },
+  "addressSelectorRemiseLabel": "Choisir une adresse de remise",
+  "@addressSelectorRemiseLabel": {
+    "description": "Libellé de la carte vide du sélecteur d'adresse de remise (address_selector_field.dart)"
+  },
+  "addressSelectorRemiseSubtitle": "Où tu récupères les colis des expéditeurs",
+  "@addressSelectorRemiseSubtitle": {
+    "description": "Sous-titre de la carte vide du sélecteur d'adresse de remise (address_selector_field.dart)"
+  },
+  "addressSelectorLivraisonLabel": "Choisir une adresse de livraison",
+  "@addressSelectorLivraisonLabel": {
+    "description": "Libellé de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)"
+  },
+  "addressSelectorLivraisonSubtitle": "Où tu déposes les colis à destination",
+  "@addressSelectorLivraisonSubtitle": {
+    "description": "Sous-titre de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)"
   }
 }

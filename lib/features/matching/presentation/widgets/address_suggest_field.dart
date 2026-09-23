@@ -6,6 +6,7 @@ import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/address_suggestion.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
@@ -444,7 +445,7 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
                   DonyIcon('wifi-off', size: 12, color: cs.warning),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
-                    "Connexion requise pour la recherche d'adresse",
+                    context.l10n.addressOfflineInlineMessage,
                     style: TextStyle(color: cs.warning, fontSize: 12),
                   ),
                 ],

@@ -2950,4 +2950,126 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishLockedCapacityNote => 'Capacity set by the request';
+
+  @override
+  String addressGpsPosition(String lat, String lng) {
+    return 'GPS location ($lat, $lng)';
+  }
+
+  @override
+  String get addressGpsDisabledTitle => 'GPS disabled';
+
+  @override
+  String get addressLocationDeniedTitle => 'Location access denied';
+
+  @override
+  String get addressLocationDeniedForeverTitle =>
+      'Location access permanently denied';
+
+  @override
+  String get addressGpsDisabledMessage =>
+      'Turn on location services in your system settings.';
+
+  @override
+  String get addressLocationDeniedMessage =>
+      'Turn on location access in your settings to use this feature.';
+
+  @override
+  String get addressOpenSettingsButton => 'Open settings';
+
+  @override
+  String get addressPositionUnavailableTitle => 'Position unavailable';
+
+  @override
+  String get addressPositionUnavailableMessage =>
+      'Couldn\'t get your position right now. Try again.';
+
+  @override
+  String get addressReverseGeocodeFailedTitle => 'Address not found';
+
+  @override
+  String get addressReverseGeocodeFailedMessage =>
+      'Couldn\'t convert your position into an address. Try again.';
+
+  @override
+  String get addressSelectFailedMessage =>
+      'Couldn\'t select this address. Try again.';
+
+  @override
+  String get addressSearchHint => 'Search for an address…';
+
+  @override
+  String get addressConfirmButton => 'Confirm this address';
+
+  @override
+  String get addressOfflineTitle => 'Connection required';
+
+  @override
+  String get addressOfflineSubtitle =>
+      'Check your connection to search for an address.';
+
+  @override
+  String get addressSearchErrorTitle => 'Error';
+
+  @override
+  String get addressSearchErrorSubtitle =>
+      'Couldn\'t search for an address. Try again.';
+
+  @override
+  String get addressNoResultsTitle => 'No results';
+
+  @override
+  String get addressNoResultsSubtitle => 'Try “Use my current location”.';
+
+  @override
+  String get addressUseCurrentLocation => 'Use my current location';
+
+  @override
+  String get addressRecentSearchesHeader => 'RECENT SEARCHES';
+
+  @override
+  String get addressSavedAddressesHeader => 'MY SAVED ADDRESSES';
+
+  @override
+  String get addressAddNewTitle => 'Add an address';
+
+  @override
+  String get addressAddNewSubtitle => 'Save it for next time';
+
+  @override
+  String get addressDefaultBadge => 'Default';
+
+  @override
+  String get addressPickupSheetTitle => '📦  Drop-off address';
+
+  @override
+  String get addressDeliverySheetTitle => '🗺️  Pickup address';
+
+  @override
+  String get addressFieldRequiredError => 'Address required';
+
+  @override
+  String get addressFieldSearchHint => 'Type to search for an address…';
+
+  @override
+  String get addressFieldNoResultsHint =>
+      'No results, try \"My current location\"';
+
+  @override
+  String get addressOfflineInlineMessage =>
+      'Connection required to search for an address';
+
+  @override
+  String get addressSelectorRemiseLabel => 'Choose a drop-off address';
+
+  @override
+  String get addressSelectorRemiseSubtitle =>
+      'Where you collect parcels from senders';
+
+  @override
+  String get addressSelectorLivraisonLabel => 'Choose a pickup address';
+
+  @override
+  String get addressSelectorLivraisonSubtitle =>
+      'Where you drop off parcels at destination';
 }

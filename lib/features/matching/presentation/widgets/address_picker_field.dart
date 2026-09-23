@@ -6,6 +6,8 @@ import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/address_suggestion.dart';
+import 'package:dony/features/matching/presentation/address_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:uuid/uuid.dart';
@@ -27,7 +29,9 @@ class AddressPickerField extends FormField<AddressData> {
          validator:
              validator ??
              (isRequired
-                 ? (v) => v == null ? 'Adresse obligatoire' : null
+                 ? (v) => v == null
+                       ? AppL10n.current.addressFieldRequiredError
+                       : null
                  : null),
          builder: (_) => const SizedBox.shrink(),
        );
@@ -272,8 +276,11 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
       _select(
         addr ??
             AddressData(
-              label:
-                  'Position GPS (${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)})',
+              label: gpsPositionLabel(
+                context.l10n,
+                pos.latitude,
+                pos.longitude,
+              ),
               lat: pos.latitude,
               lng: pos.longitude,
             ),
@@ -409,6 +416,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
     super.build(context);
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
 
     final confirmed = value != null;
     final hasErr = errorText != null;
@@ -459,9 +467,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                   fontWeight: FontWeight.w600,
                 ),
                 // Hint visible uniquement après que le label a flotté
-                hintText: isFocused
-                    ? 'Tapez pour rechercher une adresse…'
-                    : null,
+                hintText: isFocused ? l10n.addressFieldSearchHint : null,
                 hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
@@ -540,7 +546,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                     ),
                     const SizedBox(width: DonySpacing.sm),
                     Text(
-                      'Utiliser ma position actuelle',
+                      l10n.addressUseCurrentLocation,
                       style: tt.bodySmall?.copyWith(
                         color: cs.primary,
                         fontWeight: FontWeight.w600,
@@ -572,7 +578,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                   DonyIcon('wifi-off', size: 12, color: cs.warning),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
-                    'Connexion requise pour la recherche d\'adresse',
+                    l10n.addressOfflineInlineMessage,
                     style: TextStyle(color: cs.warning, fontSize: 12),
                   ),
                 ],
@@ -584,7 +590,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
             Padding(
               padding: const EdgeInsets.only(top: 4, left: 4),
               child: Text(
-                'Aucun résultat, essayez "Ma position actuelle"',
+                l10n.addressFieldNoResultsHint,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
@@ -604,6 +610,7 @@ class _PermissionSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -626,14 +633,14 @@ class _PermissionSheet extends StatelessWidget {
           const SizedBox(height: DonySpacing.base),
           Text(
             permanent
-                ? 'Localisation définitivement refusée'
-                : 'Localisation refusée',
+                ? l10n.addressLocationDeniedForeverTitle
+                : l10n.addressLocationDeniedTitle,
             style: tt.titleLarge,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Activez la localisation dans vos paramètres pour utiliser cette fonctionnalité.',
+            l10n.addressLocationDeniedMessage,
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
@@ -645,7 +652,7 @@ class _PermissionSheet extends StatelessWidget {
                 Navigator.pop(context);
                 Geolocator.openAppSettings();
               },
-              child: const Text('Ouvrir les paramètres'),
+              child: Text(l10n.addressOpenSettingsButton),
             ),
           ),
         ],
@@ -663,6 +670,7 @@ class _GpsDisabledSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -684,13 +692,13 @@ class _GpsDisabledSheet extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.base),
           Text(
-            'GPS désactivé',
+            l10n.addressGpsDisabledTitle,
             style: tt.titleLarge,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Activez la géolocalisation dans vos paramètres système.',
+            l10n.addressGpsDisabledMessage,
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
@@ -702,7 +710,7 @@ class _GpsDisabledSheet extends StatelessWidget {
                 Navigator.pop(context);
                 Geolocator.openAppSettings();
               },
-              child: const Text('Ouvrir les paramètres'),
+              child: Text(l10n.addressOpenSettingsButton),
             ),
           ),
         ],
