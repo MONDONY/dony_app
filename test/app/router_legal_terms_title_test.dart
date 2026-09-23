@@ -33,38 +33,50 @@ GoRoute? _findRoute(List<RouteBase> routes, String path) {
   return null;
 }
 
+Future<String> _termsTitle(WidgetTester tester, Locale locale) async {
+  final route = _findRoute(appRouter.configuration.routes, '/legal/terms');
+  expect(route, isNotNull, reason: 'route /legal/terms introuvable');
+
+  late BuildContext ctx;
+  await tester.pumpWidget(
+    localizedApp(
+      Builder(
+        builder: (context) {
+          ctx = context;
+          return const SizedBox.shrink();
+        },
+      ),
+      locale: locale,
+    ),
+  );
+
+  final state = GoRouterState(
+    appRouter.configuration,
+    uri: Uri.parse('/legal/terms'),
+    matchedLocation: '/legal/terms',
+    fullPath: '/legal/terms',
+    pathParameters: const {},
+    pageKey: const ValueKey('/legal/terms'),
+  );
+
+  final widget = route!.builder!(ctx, state);
+
+  expect(widget, isA<LegalWebViewScreen>());
+  return (widget as LegalWebViewScreen).title;
+}
+
 void main() {
   testWidgets('/legal/terms affiche « Terms of Use » en anglais', (
     tester,
   ) async {
-    final route = _findRoute(appRouter.configuration.routes, '/legal/terms');
-    expect(route, isNotNull, reason: 'route /legal/terms introuvable');
+    final title = await _termsTitle(tester, AppL10n.en);
+    expect(title, 'Terms of Use');
+    expect(title, lookupAppLocalizations(AppL10n.en).shellTermsTitle);
+  });
 
-    late BuildContext ctx;
-    await tester.pumpWidget(
-      localizedApp(
-        Builder(
-          builder: (context) {
-            ctx = context;
-            return const SizedBox.shrink();
-          },
-        ),
-        locale: AppL10n.en,
-      ),
-    );
-
-    final state = GoRouterState(
-      appRouter.configuration,
-      uri: Uri.parse('/legal/terms'),
-      matchedLocation: '/legal/terms',
-      fullPath: '/legal/terms',
-      pathParameters: const {},
-      pageKey: const ValueKey('/legal/terms'),
-    );
-
-    final widget = route!.builder!(ctx, state);
-
-    expect(widget, isA<LegalWebViewScreen>());
-    expect((widget as LegalWebViewScreen).title, 'Terms of Use');
+  testWidgets('/legal/terms garde « CGU » en français', (tester) async {
+    final title = await _termsTitle(tester, AppL10n.fr);
+    expect(title, 'CGU');
+    expect(title, lookupAppLocalizations(AppL10n.fr).shellTermsTitle);
   });
 }

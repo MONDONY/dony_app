@@ -1558,7 +1558,7 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/legal/terms',
       builder: (context, state) => LegalWebViewScreen(
-        title: context.l10n.authLegalTermsLink,
+        title: context.l10n.shellTermsTitle,
         url: 'https://yadony.com/legal/terms',
       ),
     ),

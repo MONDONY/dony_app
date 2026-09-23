@@ -582,6 +582,9 @@
   "shellPlaceholderConfirmPayment": "Confirmer paiement",
   "shellPlaceholderAdmin": "Admin",
   "shellRequestsTitle": "Demandes",
+  "@shellRequestsTitle": {
+    "description": "Titre par défaut de l'écran des demandes reçues sur une annonce"
+  },
   "shellPrivacyPolicyTitle": "Politique de confidentialité",
   "homeCorridorFrom": "Départ de {dep}",
   "@homeCorridorFrom": {
@@ -825,6 +828,9 @@
   "homeEmptyTravelersFilteredHint": "Modifie tes filtres pour voir plus de voyageurs.",
   "homeEmptyTravelersRouteHint": "De nouveaux trajets sont publiés chaque jour. Reviens bientôt.",
   "homeMapButton": "Carte",
+  "@homeMapButton": {
+    "description": "Pastille flottante de l'accueil qui ouvre la vue carte"
+  },
   "homeRadiusKm": "Rayon · {km} km",
   "@homeRadiusKm": {
     "placeholders": {
@@ -943,6 +949,9 @@
   },
   "homeModeSelectorParcelsSubtitle": "Colis à transporter",
   "homeFilterChipsDate": "Date",
+  "@homeFilterChipsDate": {
+    "description": "Puce de filtre de l'accueil : date personnalisée choisie mais pas encore renseignée"
+  },
   "homeFilterChipsAnyDate": "Toutes dates",
   "homeFilterChipsRating": "Note",
   "homeFilterChipsWeight": "Kilos",
@@ -952,6 +961,9 @@
   "homeFilterFieldsExactDate": "DATE PRÉCISE",
   "homeFilterFieldsMaxPrice": "PRIX MAX",
   "homeFilterFieldsAll": "Tous",
+  "@homeFilterFieldsAll": {
+    "description": "Valeur d'un champ de filtre (prix max, mode de transport) quand aucun filtre n'est choisi"
+  },
   "homeFilterFieldsChoose": "Choisir",
   "homeFilterFieldsMinWeight": "POIDS MIN",
   "homeFilterFieldsMinWeightTitle": "Poids minimum du trajet",
@@ -983,5 +995,9 @@
   "homeLocationPermissionServiceOffTitle": "Localisation désactivée",
   "homeLocationPermissionDeniedTitle": "Accès à la position refusé",
   "homeLocationPermissionServiceOffBody": "Active la localisation de ton téléphone pour voir ce qui est près de toi.",
-  "homeLocationPermissionDeniedBody": "Autorise l'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte."
+  "homeLocationPermissionDeniedBody": "Autorise l'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte.",
+  "shellTermsTitle": "CGU",
+  "@shellTermsTitle": {
+    "description": "Titre de l'écran des conditions générales d'utilisation (/legal/terms)"
+  }
 }

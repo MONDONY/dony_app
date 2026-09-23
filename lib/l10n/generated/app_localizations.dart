@@ -3140,7 +3140,7 @@ abstract class AppLocalizations {
   /// **'Admin'**
   String get shellPlaceholderAdmin;
 
-  /// No description provided for @shellRequestsTitle.
+  /// Titre par défaut de l'écran des demandes reçues sur une annonce
   ///
   /// In fr, this message translates to:
   /// **'Demandes'**
@@ -3428,7 +3428,7 @@ abstract class AppLocalizations {
   /// **'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.'**
   String get homeEmptyTravelersRouteHint;
 
-  /// No description provided for @homeMapButton.
+  /// Pastille flottante de l'accueil qui ouvre la vue carte
   ///
   /// In fr, this message translates to:
   /// **'Carte'**
@@ -3782,7 +3782,7 @@ abstract class AppLocalizations {
   /// **'Colis à transporter'**
   String get homeModeSelectorParcelsSubtitle;
 
-  /// No description provided for @homeFilterChipsDate.
+  /// Puce de filtre de l'accueil : date personnalisée choisie mais pas encore renseignée
   ///
   /// In fr, this message translates to:
   /// **'Date'**
@@ -3836,7 +3836,7 @@ abstract class AppLocalizations {
   /// **'PRIX MAX'**
   String get homeFilterFieldsMaxPrice;
 
-  /// No description provided for @homeFilterFieldsAll.
+  /// Valeur d'un champ de filtre (prix max, mode de transport) quand aucun filtre n'est choisi
   ///
   /// In fr, this message translates to:
   /// **'Tous'**
@@ -4015,6 +4015,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Autorise l\'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte.'**
   String get homeLocationPermissionDeniedBody;
+
+  /// Titre de l'écran des conditions générales d'utilisation (/legal/terms)
+  ///
+  /// In fr, this message translates to:
+  /// **'CGU'**
+  String get shellTermsTitle;
 }
 
 class _AppLocalizationsDelegate

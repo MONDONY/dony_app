@@ -2535,7 +2535,7 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
       initialDate: _customDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      locale: AppL10n.currentLocale,
+      locale: Localizations.localeOf(context),
     );
     if (picked != null && mounted) {
       setState(() {

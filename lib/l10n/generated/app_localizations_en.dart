@@ -2348,4 +2348,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homeLocationPermissionDeniedBody =>
       'Allow location access in your settings to use “Near me” and see where you are on the map.';
+
+  @override
+  String get shellTermsTitle => 'Terms of Use';
 }

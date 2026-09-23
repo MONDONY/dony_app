@@ -2351,4 +2351,7 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get homeLocationPermissionDeniedBody =>
       'Autorise l\'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte.';
+
+  @override
+  String get shellTermsTitle => 'CGU';
 }

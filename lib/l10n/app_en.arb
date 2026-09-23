@@ -652,5 +652,6 @@
   "homeLocationPermissionServiceOffTitle": "Location is off",
   "homeLocationPermissionDeniedTitle": "Location access denied",
   "homeLocationPermissionServiceOffBody": "Turn on your phone's location to see what's near you.",
-  "homeLocationPermissionDeniedBody": "Allow location access in your settings to use “Near me” and see where you are on the map."
+  "homeLocationPermissionDeniedBody": "Allow location access in your settings to use “Near me” and see where you are on the map.",
+  "shellTermsTitle": "Terms of Use"
 }
