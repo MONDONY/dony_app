@@ -23,19 +23,6 @@ extension CapacityUnitWire on CapacityUnit {
     }
   }
 
-  String get label {
-    switch (this) {
-      case CapacityUnit.suitcase23kg:
-        return '1 valise 23 kg';
-      case CapacityUnit.suitcase32kg:
-        return '1 valise 32 kg';
-      case CapacityUnit.kgFree:
-        return 'Kg libre';
-      case CapacityUnit.custom:
-        return 'Personnalisé';
-    }
-  }
-
   double? get maxKg {
     switch (this) {
       case CapacityUnit.suitcase23kg:

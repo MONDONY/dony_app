@@ -2,36 +2,14 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 
 enum UrgencyFilter {
-  veryUrgent(
-    color: DonyColors.urgencyRed,
-    label: '< 3j',
-    tooltip: 'Départ dans moins de 3 jours',
-  ),
-  urgent(
-    color: DonyColors.urgencyOrange,
-    label: '3–7j',
-    tooltip: 'Départ dans 3 à 7 jours',
-  ),
-  soon(
-    color: DonyColors.urgencyAmber,
-    label: '7–14j',
-    tooltip: 'Départ dans 7 à 14 jours',
-  ),
-  later(
-    color: DonyColors.urgencyGreen,
-    label: '14j+',
-    tooltip: 'Départ dans plus de 14 jours',
-  );
+  veryUrgent(color: DonyColors.urgencyRed),
+  urgent(color: DonyColors.urgencyOrange),
+  soon(color: DonyColors.urgencyAmber),
+  later(color: DonyColors.urgencyGreen);
 
-  const UrgencyFilter({
-    required this.color,
-    required this.label,
-    required this.tooltip,
-  });
+  const UrgencyFilter({required this.color});
 
   final Color color;
-  final String label;
-  final String tooltip;
 
   bool matches(DateTime departureDate) {
     final now = DateTime.now();

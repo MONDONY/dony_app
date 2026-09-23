@@ -4021,6 +4021,192 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'CGU'**
   String get shellTermsTitle;
+
+  /// Bouton générique qui enregistre une modification
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer'**
+  String get commonSave;
+
+  /// Bouton générique qui supprime un élément
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer'**
+  String get commonDelete;
+
+  /// Bouton générique qui ouvre l'édition d'un élément
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier'**
+  String get commonEdit;
+
+  /// Bouton générique de retour en arrière
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour'**
+  String get commonBack;
+
+  /// Bouton générique d'envoi
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get commonSend;
+
+  /// Bouton générique de partage
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager'**
+  String get commonShare;
+
+  /// Bouton générique de copie (presse-papiers)
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier'**
+  String get commonCopy;
+
+  /// Bouton générique qui déplie une liste tronquée
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir tout'**
+  String get commonSeeAll;
+
+  /// Date et heure accolées, sans mot en dur dans un motif de formatage
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} à {time}'**
+  String commonDateAtTime(String date, String time);
+
+  /// Liste de deux éléments jointe pour l'affichage
+  ///
+  /// In fr, this message translates to:
+  /// **'{first} et {second}'**
+  String commonListPair(String first, String second);
+
+  /// Liste de trois éléments ou plus : tête déjà jointe par des virgules, et dernier élément
+  ///
+  /// In fr, this message translates to:
+  /// **'{head} et {last}'**
+  String commonListLast(String head, String last);
+
+  /// Trajet sans capacité fixée : le voyageur accepte le kilo au fil de l'eau
+  ///
+  /// In fr, this message translates to:
+  /// **'Kg libre'**
+  String get tripKgFree;
+
+  /// Trajet dont le prix n'est pas négociable
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix ferme'**
+  String get tripFixedPrice;
+
+  /// Nom affiché quand le voyageur n'a pas de displayName exploitable
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur'**
+  String get tripTravelerFallbackName;
+
+  /// No description provided for @tripTransportPlane.
+  ///
+  /// In fr, this message translates to:
+  /// **'Avion'**
+  String get tripTransportPlane;
+
+  /// No description provided for @tripTransportCar.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voiture'**
+  String get tripTransportCar;
+
+  /// No description provided for @tripTransportTrain.
+  ///
+  /// In fr, this message translates to:
+  /// **'Train'**
+  String get tripTransportTrain;
+
+  /// No description provided for @tripTransportBus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bus'**
+  String get tripTransportBus;
+
+  /// No description provided for @tripTransportBoat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bateau'**
+  String get tripTransportBoat;
+
+  /// No description provided for @tripTransportOther.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get tripTransportOther;
+
+  /// No description provided for @tripUrgencyVeryUrgent.
+  ///
+  /// In fr, this message translates to:
+  /// **'< 3j'**
+  String get tripUrgencyVeryUrgent;
+
+  /// No description provided for @tripUrgencyUrgent.
+  ///
+  /// In fr, this message translates to:
+  /// **'3–7j'**
+  String get tripUrgencyUrgent;
+
+  /// No description provided for @tripUrgencySoon.
+  ///
+  /// In fr, this message translates to:
+  /// **'7–14j'**
+  String get tripUrgencySoon;
+
+  /// No description provided for @tripUrgencyLater.
+  ///
+  /// In fr, this message translates to:
+  /// **'14j+'**
+  String get tripUrgencyLater;
+
+  /// No description provided for @tripUrgencyVeryUrgentTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ dans moins de 3 jours'**
+  String get tripUrgencyVeryUrgentTooltip;
+
+  /// No description provided for @tripUrgencyUrgentTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ dans 3 à 7 jours'**
+  String get tripUrgencyUrgentTooltip;
+
+  /// No description provided for @tripUrgencySoonTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ dans 7 à 14 jours'**
+  String get tripUrgencySoonTooltip;
+
+  /// No description provided for @tripUrgencyLaterTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ dans plus de 14 jours'**
+  String get tripUrgencyLaterTooltip;
+
+  /// No description provided for @tripCapacitySuitcase23.
+  ///
+  /// In fr, this message translates to:
+  /// **'1 valise 23 kg'**
+  String get tripCapacitySuitcase23;
+
+  /// No description provided for @tripCapacitySuitcase32.
+  ///
+  /// In fr, this message translates to:
+  /// **'1 valise 32 kg'**
+  String get tripCapacitySuitcase32;
+
+  /// No description provided for @tripCapacityCustom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Personnalisé'**
+  String get tripCapacityCustom;
 }
 
 class _AppLocalizationsDelegate

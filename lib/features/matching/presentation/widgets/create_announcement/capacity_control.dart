@@ -3,6 +3,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -74,7 +76,7 @@ class _CapacityControlState extends State<CapacityControl> {
               runSpacing: DonySpacing.sm,
               children: CapacityUnit.values.map((unit) {
                 return DonyChip(
-                  label: unit.label,
+                  label: unit.label(context.l10n),
                   selected: state.capacityUnit == unit,
                   onTap: () => context.read<AnnouncementFormBloc>().add(
                     CapacityUnitChanged(unit),

@@ -1,11 +1,15 @@
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('TravelerProfile.resolvedName', () {
+  final l = lookupAppLocalizations(AppL10n.fr);
+
+  group('TravelerProfile.travelerName', () {
     test('returns displayName when set', () {
       const p = TravelerProfile(id: 't1', displayName: 'Ibrahima Diallo');
-      expect(p.resolvedName, 'Ibrahima Diallo');
+      expect(p.travelerName(l), 'Ibrahima Diallo');
     });
 
     // Le numéro n'est plus un repli : il n'a jamais figuré dans TravelerProfileDto côté
@@ -13,7 +17,7 @@ void main() {
     // migration V183 le serveur renvoie toujours un displayName (username à défaut de prénom).
     test('ignore le numéro quand displayName est null', () {
       const p = TravelerProfile(id: 't2', phoneNumber: '+33612345678');
-      expect(p.resolvedName, 'Voyageur');
+      expect(p.travelerName(l), 'Voyageur');
     });
 
     test('ignore le numéro quand displayName est vide', () {
@@ -22,25 +26,25 @@ void main() {
         displayName: '',
         phoneNumber: '+33699999999',
       );
-      expect(p.resolvedName, 'Voyageur');
+      expect(p.travelerName(l), 'Voyageur');
     });
 
     test('affiche le username renvoyé comme displayName', () {
       const p = TravelerProfile(id: 't6', displayName: 'user1785153600');
-      expect(p.resolvedName, 'user1785153600');
+      expect(p.travelerName(l), 'user1785153600');
     });
 
     test(
       'returns "Voyageur" when both displayName and phoneNumber are null',
       () {
         const p = TravelerProfile(id: 't4');
-        expect(p.resolvedName, 'Voyageur');
+        expect(p.travelerName(l), 'Voyageur');
       },
     );
 
     test('returns "Voyageur" when both are empty strings', () {
       const p = TravelerProfile(id: 't5', displayName: '', phoneNumber: '');
-      expect(p.resolvedName, 'Voyageur');
+      expect(p.travelerName(l), 'Voyageur');
     });
   });
 
@@ -112,7 +116,7 @@ void main() {
       expect(p.displayName, isNull);
       expect(p.phoneNumber, isNull);
       expect(p.averageRating, isNull);
-      expect(p.resolvedName, 'Voyageur');
+      expect(p.travelerName(l), 'Voyageur');
       expect(p.resolvedInitials, '?');
     });
 

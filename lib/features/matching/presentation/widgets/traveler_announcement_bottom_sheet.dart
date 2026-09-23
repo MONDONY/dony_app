@@ -19,7 +19,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
@@ -429,7 +429,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
               onTap: () => showBlockMenu(
                 context,
                 userId: _voyageurBloquable!.id,
-                displayName: _voyageurBloquable!.resolvedName,
+                displayName: _voyageurBloquable!.travelerName(context.l10n),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -537,7 +537,7 @@ class _HeroCorridorCard extends StatelessWidget {
     final kgLabel = announcement.isKgFree
         ? 'Kg libre'
         : '${announcement.availableKg.toStringAsFixed(0)} kg dispo';
-    final transportLabel = announcement.transportMode?.label;
+    final transportLabel = announcement.transportMode?.label(context.l10n);
     final depTime = announcement.departureTime;
     final arrTime = announcement.arrivalTime;
     final hoursLabel = (depTime != null && arrTime != null)
@@ -1349,7 +1349,9 @@ class _TravelerCard extends StatelessWidget {
           child: Row(
             children: [
               DonyAvatar(
-                name: traveler?.resolvedName ?? 'Voyageur',
+                name:
+                    traveler?.travelerName(context.l10n) ??
+                    context.l10n.tripTravelerFallbackName,
                 imageUrl: traveler?.avatarUrl,
                 verified: isKycVerified,
                 pro: traveler?.isProAccount ?? false,
@@ -1363,7 +1365,8 @@ class _TravelerCard extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            traveler?.resolvedName ?? 'Voyageur',
+                            traveler?.travelerName(context.l10n) ??
+                                context.l10n.tripTravelerFallbackName,
                             style: tt.titleLarge,
                             overflow: TextOverflow.ellipsis,
                           ),

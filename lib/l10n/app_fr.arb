@@ -999,5 +999,102 @@
   "shellTermsTitle": "CGU",
   "@shellTermsTitle": {
     "description": "Titre de l'écran des conditions générales d'utilisation (/legal/terms)"
-  }
+  },
+  "commonSave": "Enregistrer",
+  "@commonSave": {
+    "description": "Bouton générique qui enregistre une modification"
+  },
+  "commonDelete": "Supprimer",
+  "@commonDelete": {
+    "description": "Bouton générique qui supprime un élément"
+  },
+  "commonEdit": "Modifier",
+  "@commonEdit": {
+    "description": "Bouton générique qui ouvre l'édition d'un élément"
+  },
+  "commonBack": "Retour",
+  "@commonBack": {
+    "description": "Bouton générique de retour en arrière"
+  },
+  "commonSend": "Envoyer",
+  "@commonSend": {
+    "description": "Bouton générique d'envoi"
+  },
+  "commonShare": "Partager",
+  "@commonShare": {
+    "description": "Bouton générique de partage"
+  },
+  "commonCopy": "Copier",
+  "@commonCopy": {
+    "description": "Bouton générique de copie (presse-papiers)"
+  },
+  "commonSeeAll": "Voir tout",
+  "@commonSeeAll": {
+    "description": "Bouton générique qui déplie une liste tronquée"
+  },
+  "commonDateAtTime": "{date} à {time}",
+  "@commonDateAtTime": {
+    "description": "Date et heure accolées, sans mot en dur dans un motif de formatage",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "commonListPair": "{first} et {second}",
+  "@commonListPair": {
+    "description": "Liste de deux éléments jointe pour l'affichage",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "commonListLast": "{head} et {last}",
+  "@commonListLast": {
+    "description": "Liste de trois éléments ou plus : tête déjà jointe par des virgules, et dernier élément",
+    "placeholders": {
+      "head": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "tripKgFree": "Kg libre",
+  "@tripKgFree": {
+    "description": "Trajet sans capacité fixée : le voyageur accepte le kilo au fil de l'eau"
+  },
+  "tripFixedPrice": "Prix ferme",
+  "@tripFixedPrice": {
+    "description": "Trajet dont le prix n'est pas négociable"
+  },
+  "tripTravelerFallbackName": "Voyageur",
+  "@tripTravelerFallbackName": {
+    "description": "Nom affiché quand le voyageur n'a pas de displayName exploitable"
+  },
+  "tripTransportPlane": "Avion",
+  "tripTransportCar": "Voiture",
+  "tripTransportTrain": "Train",
+  "tripTransportBus": "Bus",
+  "tripTransportBoat": "Bateau",
+  "tripTransportOther": "Autre",
+  "tripUrgencyVeryUrgent": "< 3j",
+  "tripUrgencyUrgent": "3–7j",
+  "tripUrgencySoon": "7–14j",
+  "tripUrgencyLater": "14j+",
+  "tripUrgencyVeryUrgentTooltip": "Départ dans moins de 3 jours",
+  "tripUrgencyUrgentTooltip": "Départ dans 3 à 7 jours",
+  "tripUrgencySoonTooltip": "Départ dans 7 à 14 jours",
+  "tripUrgencyLaterTooltip": "Départ dans plus de 14 jours",
+  "tripCapacitySuitcase23": "1 valise 23 kg",
+  "tripCapacitySuitcase32": "1 valise 32 kg",
+  "tripCapacityCustom": "Personnalisé"
 }

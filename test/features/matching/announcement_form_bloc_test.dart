@@ -8,8 +8,10 @@ import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -300,10 +302,11 @@ void main() {
     });
 
     test('CapacityUnit.label retourne les bons libellés', () {
-      expect(CapacityUnit.suitcase23kg.label, '1 valise 23 kg');
-      expect(CapacityUnit.suitcase32kg.label, '1 valise 32 kg');
-      expect(CapacityUnit.kgFree.label, 'Kg libre');
-      expect(CapacityUnit.custom.label, 'Personnalisé');
+      final l = lookupAppLocalizations(AppL10n.fr);
+      expect(CapacityUnit.suitcase23kg.label(l), '1 valise 23 kg');
+      expect(CapacityUnit.suitcase32kg.label(l), '1 valise 32 kg');
+      expect(CapacityUnit.kgFree.label(l), 'Kg libre');
+      expect(CapacityUnit.custom.label(l), 'Personnalisé');
     });
 
     test('CapacityUnit.maxKg retourne les bons plafonds', () {

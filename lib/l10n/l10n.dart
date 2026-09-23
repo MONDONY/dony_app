@@ -75,3 +75,18 @@ extension AppL10nContext on BuildContext {
       Localizations.of<AppLocalizations>(this, AppLocalizations) ??
       AppL10n.current;
 }
+
+/// Joint une liste d'éléments pour l'affichage, sans concaténation de mots.
+///
+/// `''` si vide, l'élément seul s'il y en a un, [AppLocalizations.commonListPair]
+/// pour deux, et [AppLocalizations.commonListLast] pour trois ou plus (tête
+/// jointe par `", "`).
+String joinList(AppLocalizations l, List<String> items) {
+  if (items.isEmpty) return '';
+  if (items.length == 1) return items.first;
+  if (items.length == 2) {
+    return l.commonListPair(items[0], items[1]);
+  }
+  final head = items.sublist(0, items.length - 1).join(', ');
+  return l.commonListLast(head, items.last);
+}

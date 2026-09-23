@@ -6,6 +6,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -55,7 +56,9 @@ class TravelerCard extends StatelessWidget {
   /// ligne ; le détail complet reste sur l'écran du trajet.
   static const int _maxVisibleChips = 1;
 
-  String get _displayName => announcement.traveler?.resolvedName ?? 'Voyageur';
+  String _displayName(BuildContext context) =>
+      announcement.traveler?.travelerName(context.l10n) ??
+      context.l10n.tripTravelerFallbackName;
 
   ({Color border, Color chipBg, Color chipFg, String label}) _bidStyle(
     ColorScheme cs,
@@ -221,7 +224,7 @@ class TravelerCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     DonyAvatar(
-                      name: _displayName,
+                      name: _displayName(context),
                       imageUrl: traveler?.avatarUrl,
                       verified: traveler?.kycVerified ?? false,
                       pro: isProAccount,
@@ -232,7 +235,7 @@ class TravelerCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _displayName,
+                            _displayName(context),
                             style: tt.titleLarge,
                             overflow: TextOverflow.ellipsis,
                           ),

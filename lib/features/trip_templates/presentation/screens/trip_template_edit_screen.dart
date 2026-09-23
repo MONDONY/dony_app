@@ -12,6 +12,7 @@ import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
@@ -25,6 +26,7 @@ import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -519,7 +521,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
           children: [
             for (final mode in TransportMode.values)
               DonyChip(
-                label: mode.label,
+                label: mode.label(context.l10n),
                 icon: mode.icon,
                 selected: _fields.transportMode.value == mode,
                 onTap: () => _fields.transportMode.value = mode,

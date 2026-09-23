@@ -2351,4 +2351,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shellTermsTitle => 'Terms of Use';
+
+  @override
+  String get commonSave => 'Save';
+
+  @override
+  String get commonDelete => 'Delete';
+
+  @override
+  String get commonEdit => 'Edit';
+
+  @override
+  String get commonBack => 'Back';
+
+  @override
+  String get commonSend => 'Send';
+
+  @override
+  String get commonShare => 'Share';
+
+  @override
+  String get commonCopy => 'Copy';
+
+  @override
+  String get commonSeeAll => 'See all';
+
+  @override
+  String commonDateAtTime(String date, String time) {
+    return '$date at $time';
+  }
+
+  @override
+  String commonListPair(String first, String second) {
+    return '$first and $second';
+  }
+
+  @override
+  String commonListLast(String head, String last) {
+    return '$head, and $last';
+  }
+
+  @override
+  String get tripKgFree => 'Flexible kg';
+
+  @override
+  String get tripFixedPrice => 'Fixed price';
+
+  @override
+  String get tripTravelerFallbackName => 'Traveler';
+
+  @override
+  String get tripTransportPlane => 'Plane';
+
+  @override
+  String get tripTransportCar => 'Car';
+
+  @override
+  String get tripTransportTrain => 'Train';
+
+  @override
+  String get tripTransportBus => 'Bus';
+
+  @override
+  String get tripTransportBoat => 'Boat';
+
+  @override
+  String get tripTransportOther => 'Other';
+
+  @override
+  String get tripUrgencyVeryUrgent => '< 3d';
+
+  @override
+  String get tripUrgencyUrgent => '3–7d';
+
+  @override
+  String get tripUrgencySoon => '7–14d';
+
+  @override
+  String get tripUrgencyLater => '14d+';
+
+  @override
+  String get tripUrgencyVeryUrgentTooltip => 'Departing in less than 3 days';
+
+  @override
+  String get tripUrgencyUrgentTooltip => 'Departing in 3 to 7 days';
+
+  @override
+  String get tripUrgencySoonTooltip => 'Departing in 7 to 14 days';
+
+  @override
+  String get tripUrgencyLaterTooltip => 'Departing in more than 14 days';
+
+  @override
+  String get tripCapacitySuitcase23 => '1 suitcase (23 kg)';
+
+  @override
+  String get tripCapacitySuitcase32 => '1 suitcase (32 kg)';
+
+  @override
+  String get tripCapacityCustom => 'Custom';
 }
