@@ -28,6 +28,9 @@ jobs:
       - name: Check formatting
         run: dart format --set-exit-if-changed lib/ test/
 
+      - name: Check hardcoded French strings
+        run: dart run tool/check_hardcoded_strings.dart
+
   test:
     name: Tests & Coverage
     runs-on: ubuntu-latest
