@@ -1,0 +1,11 @@
+{
+  "@@locale": "fr",
+  "commonOk": "OK",
+  "@commonOk": {"description": "Bouton de confirmation générique"},
+  "commonClose": "Fermer",
+  "@commonClose": {"description": "Bouton qui ferme une boîte de dialogue"},
+  "settingsLanguageTitle": "Langue",
+  "@settingsLanguageTitle": {"description": "Ligne Réglages › Langue"},
+  "settingsLanguagePhone": "Langue du téléphone",
+  "@settingsLanguagePhone": {"description": "Choix de langue qui suit la langue du téléphone"}
+}
