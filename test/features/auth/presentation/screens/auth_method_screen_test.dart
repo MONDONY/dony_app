@@ -305,7 +305,7 @@ void main() {
     expect(find.text('Continue with email'), findsOneWidget);
     expect(find.text('Browse without an account'), findsOneWidget);
     expect(
-      find.textContaining('By continuing, you accept our'),
+      find.textContaining('By continuing, you agree to our'),
       findsOneWidget,
     );
   });

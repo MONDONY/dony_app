@@ -1124,7 +1124,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Limited access: search only. Sign-in required to post, contact, book or pay.';
 
   @override
-  String get authLegalPrefix => 'By continuing, you accept our ';
+  String get authLegalPrefix => 'By continuing, you agree to our ';
 
   @override
   String get authLegalTermsLink => 'Terms of Use';
@@ -1267,7 +1267,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authRequiredKeepExploring => 'Keep exploring';
 
   @override
-  String get authRequiredFreeSearchTitle => 'Free search';
+  String get authRequiredFreeSearchTitle => 'Browse freely';
 
   @override
   String get authRequiredFreeSearchBody =>
@@ -1379,7 +1379,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authOnboardingTrackingStep3Subtitle =>
-      'Receipt confirms the end of the trip.';
+      'The recipient\'s confirmation ends the trip.';
 
   @override
   String get authOnboardingDestinationsEyebrow => 'Destinations';
