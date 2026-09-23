@@ -2226,4 +2226,93 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeModeSelectorParcelsSubtitle => 'Parcels to carry';
+
+  @override
+  String get homeFilterChipsDate => 'Date';
+
+  @override
+  String get homeFilterChipsAnyDate => 'Any date';
+
+  @override
+  String get homeFilterChipsRating => 'Rating';
+
+  @override
+  String get homeFilterChipsWeight => 'Weight';
+
+  @override
+  String get homeFilterChipsPrice => 'Price';
+
+  @override
+  String get homeFilterChipsSize => 'Size';
+
+  @override
+  String get homeFilterChipsUrgent => '🔥 Urgent';
+
+  @override
+  String get homeFilterFieldsExactDate => 'EXACT DATE';
+
+  @override
+  String get homeFilterFieldsMaxPrice => 'MAX PRICE';
+
+  @override
+  String get homeFilterFieldsAll => 'Any';
+
+  @override
+  String get homeFilterFieldsChoose => 'Choose';
+
+  @override
+  String get homeFilterFieldsMinWeight => 'MIN WEIGHT';
+
+  @override
+  String get homeFilterFieldsMinWeightTitle => 'Minimum trip weight';
+
+  @override
+  String get homeFilterFieldsTransportMode => 'Transport mode';
+
+  @override
+  String get homeMapAvailable => 'Available';
+
+  @override
+  String get homeMapRequests => 'Requests';
+
+  @override
+  String get homeMapNoRequestsNearby => 'No requests in this radius';
+
+  @override
+  String get homeMapNoRequestsYet => 'No requests yet';
+
+  @override
+  String get homeMapEmptyNearbyHint => 'Widen your area or turn off “Near me”';
+
+  @override
+  String get homeMapEmptyHint =>
+      'Check back soon, new requests are posted every day';
+
+  @override
+  String get homeGuidancePublishTrip => 'Post my trip';
+
+  @override
+  String get homeGuidancePublishParcel => 'Post a parcel';
+
+  @override
+  String get homeGuidanceCreateAlert => 'Create an alert';
+
+  @override
+  String get homeGuidanceVerifyIdentity => 'Verify my identity';
+
+  @override
+  String get homeGuidanceHowItWorks => 'How does it work?';
+
+  @override
+  String get homeGuidanceDontShowAgain => 'Don\'t show again';
+
+  @override
+  String get homeNoActiveTripTitle => 'No active trip';
+
+  @override
+  String get homeNoActiveTripBody =>
+      'This filter only shows parcels that fit your upcoming trips. Post a trip to use it.';
+
+  @override
+  String get homeNoActiveTripPublish => 'Post a trip';
 }

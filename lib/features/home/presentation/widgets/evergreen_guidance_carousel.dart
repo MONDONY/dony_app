@@ -9,6 +9,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -156,6 +157,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
       ),
       builder: (context, box, _) {
         final cs = Theme.of(context).colorScheme;
+        final l = context.l10n;
         final tutorialDismissed =
             tutorial != null &&
             (box.get(
@@ -174,7 +176,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
           _GuidanceSlideData(
             id: 'trip',
             icon: 'plane',
-            title: 'Publier mon trajet',
+            title: l.homeGuidancePublishTrip,
             color: cs.primary,
             onTap: () => _onSlideTap(
               context,
@@ -185,7 +187,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
           _GuidanceSlideData(
             id: 'parcel',
             icon: 'send',
-            title: 'Publier un colis',
+            title: l.homeGuidancePublishParcel,
             color: cs.success,
             onTap: () => _onSlideTap(
               context,
@@ -196,7 +198,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
           _GuidanceSlideData(
             id: 'alert',
             icon: 'bell',
-            title: 'Créer une alerte',
+            title: l.homeGuidanceCreateAlert,
             color: cs.warning,
             onTap: () => _onSlideTap(
               context,
@@ -208,7 +210,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
             _GuidanceSlideData(
               id: 'kyc',
               icon: 'shield-check',
-              title: 'Vérifier mon identité',
+              title: l.homeGuidanceVerifyIdentity,
               color: cs.info,
               onTap: () =>
                   _onSlideTap(context, slideId: 'kyc', route: '/kyc/verify'),
@@ -217,7 +219,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
             _GuidanceSlideData(
               id: 'tutorial',
               icon: 'circle-play',
-              title: 'Comment ça marche ?',
+              title: l.homeGuidanceHowItWorks,
               color: cs.secondary,
               onTap: () => _onTutorialTap(context, tutorial),
             ),
@@ -344,7 +346,7 @@ class _SlideCard extends StatelessWidget {
           IconButton(
             key: Key('guidance-slide-dismiss-${data.id}'),
             onPressed: onDismiss,
-            tooltip: 'Ne plus afficher',
+            tooltip: context.l10n.homeGuidanceDontShowAgain,
             visualDensity: VisualDensity.compact,
             icon: DonyIcon('x', size: 16, color: cs.onSurfaceVariant),
           ),

@@ -11,6 +11,7 @@ import 'package:dony/features/package_request/data/models/package_request_search
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
@@ -86,10 +87,7 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
       );
     } catch (_) {
       if (mounted) {
-        DonySnackbar.show(
-          context,
-          message: 'Impossible de te localiser. Réessaie.',
-        );
+        DonySnackbar.show(context, message: context.l10n.homeLocateError);
       }
       return;
     }
@@ -126,7 +124,7 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
               title: '${it.departureCity} → ${it.arrivalCity}',
               snippet: it.targetPriceEur != null
                   ? formatPriceIn(it.targetPriceEur!, it.currency)
-                  : 'Libre',
+                  : context.l10n.homeMapAvailable,
             ),
             icon: BitmapDescriptor.defaultMarkerWithHue(
               _selectedRequestId == it.id
@@ -269,7 +267,7 @@ class _TravelerSheet extends StatelessWidget {
           else if (state.results.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
-              child: _EmptyState(isNearMe: isNearMe),
+              child: MapTravelerEmptyState(isNearMe: isNearMe),
             )
           else
             SliverPadding(
@@ -340,7 +338,7 @@ class _SheetTitle extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            'Demandes',
+            context.l10n.homeMapRequests,
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -371,21 +369,21 @@ class _SheetTitle extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.isNearMe});
+/// État vide de la liste des demandes. Public pour être monté seul en test :
+/// la vue entière embarque une GoogleMap, non montable sans simulateur.
+@visibleForTesting
+class MapTravelerEmptyState extends StatelessWidget {
+  const MapTravelerEmptyState({super.key, required this.isNearMe});
   final bool isNearMe;
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Padding(
       padding: const EdgeInsets.all(28),
       child: DonyEmptyState(
-        title: isNearMe
-            ? 'Aucune demande dans ce rayon'
-            : 'Aucune demande pour le moment',
-        description: isNearMe
-            ? 'Élargis ta zone ou désactive “Près de moi”'
-            : 'Reviens dans un instant, de nouvelles demandes sont publiées chaque jour',
+        title: isNearMe ? l.homeMapNoRequestsNearby : l.homeMapNoRequestsYet,
+        description: isNearMe ? l.homeMapEmptyNearbyHint : l.homeMapEmptyHint,
         mascotte: DonyMascotteType.aucunResultat,
       ),
     );

@@ -8,6 +8,8 @@ import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.da
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 Widget _wrap({
   SearchMode mode = SearchMode.parcels,
   HomeSearchFilters filters = const HomeSearchFilters(departureCity: 'Paris'),
@@ -42,6 +44,50 @@ Widget _wrap({
 
 void main() {
   group('pastille « Pour mes trajets »', _matchingMyTripsChipTests);
+  group('traductions', _translationTests);
+}
+
+void _translationTests() {
+  testWidgets('en français : libellés de la rangée inchangés', (tester) async {
+    await tester.pumpWidget(_wrap(mode: SearchMode.trips));
+
+    expect(find.text('Toutes dates'), findsOneWidget);
+    expect(find.text('Note'), findsOneWidget);
+    expect(find.text('Kilos'), findsOneWidget);
+    expect(find.text('Prix'), findsOneWidget);
+    expect(find.text('🔥 Urgent'), findsOneWidget);
+    expect(find.text('Kilo Pro'), findsOneWidget);
+  });
+
+  testWidgets('en anglais : aucune date posée, la puce dit « Any date »', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(_wrap());
+
+    expect(find.text('Any date'), findsOneWidget);
+    expect(find.text('For my trips'), findsOneWidget);
+    expect(find.text('Size'), findsOneWidget);
+    expect(find.text('Toutes dates'), findsNothing);
+  });
+
+  testWidgets('en anglais : puces du mode Trajets', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        mode: SearchMode.trips,
+        filters: const HomeSearchFilters(
+          departureCity: 'Paris',
+          datePreset: DonyDatePreset.thisMonth,
+        ),
+      ),
+    );
+
+    expect(find.text('This month'), findsOneWidget);
+    expect(find.text('Rating'), findsOneWidget);
+    expect(find.text('Weight'), findsOneWidget);
+    expect(find.text('Price'), findsOneWidget);
+  });
 }
 
 // Le filtre « Pour mes trajets » doit être atteignable depuis la rangée visible

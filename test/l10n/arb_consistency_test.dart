@@ -35,6 +35,8 @@ const _sameInBothLanguages = <String>{
   'countryZoneEurope',
   'shellTabMessages', // « Messages » se dit pareil
   'shellPlaceholderAdmin', // « Admin » se dit pareil
+  'homeFilterChipsDate', // « Date » se dit pareil
+  'homeFilterChipsUrgent', // « 🔥 Urgent » se dit pareil
 };
 
 void main() {

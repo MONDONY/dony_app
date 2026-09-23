@@ -2228,4 +2228,94 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeModeSelectorParcelsSubtitle => 'Colis à transporter';
+
+  @override
+  String get homeFilterChipsDate => 'Date';
+
+  @override
+  String get homeFilterChipsAnyDate => 'Toutes dates';
+
+  @override
+  String get homeFilterChipsRating => 'Note';
+
+  @override
+  String get homeFilterChipsWeight => 'Kilos';
+
+  @override
+  String get homeFilterChipsPrice => 'Prix';
+
+  @override
+  String get homeFilterChipsSize => 'Taille';
+
+  @override
+  String get homeFilterChipsUrgent => '🔥 Urgent';
+
+  @override
+  String get homeFilterFieldsExactDate => 'DATE PRÉCISE';
+
+  @override
+  String get homeFilterFieldsMaxPrice => 'PRIX MAX';
+
+  @override
+  String get homeFilterFieldsAll => 'Tous';
+
+  @override
+  String get homeFilterFieldsChoose => 'Choisir';
+
+  @override
+  String get homeFilterFieldsMinWeight => 'POIDS MIN';
+
+  @override
+  String get homeFilterFieldsMinWeightTitle => 'Poids minimum du trajet';
+
+  @override
+  String get homeFilterFieldsTransportMode => 'Mode de transport';
+
+  @override
+  String get homeMapAvailable => 'Libre';
+
+  @override
+  String get homeMapRequests => 'Demandes';
+
+  @override
+  String get homeMapNoRequestsNearby => 'Aucune demande dans ce rayon';
+
+  @override
+  String get homeMapNoRequestsYet => 'Aucune demande pour le moment';
+
+  @override
+  String get homeMapEmptyNearbyHint =>
+      'Élargis ta zone ou désactive “Près de moi”';
+
+  @override
+  String get homeMapEmptyHint =>
+      'Reviens dans un instant, de nouvelles demandes sont publiées chaque jour';
+
+  @override
+  String get homeGuidancePublishTrip => 'Publier mon trajet';
+
+  @override
+  String get homeGuidancePublishParcel => 'Publier un colis';
+
+  @override
+  String get homeGuidanceCreateAlert => 'Créer une alerte';
+
+  @override
+  String get homeGuidanceVerifyIdentity => 'Vérifier mon identité';
+
+  @override
+  String get homeGuidanceHowItWorks => 'Comment ça marche ?';
+
+  @override
+  String get homeGuidanceDontShowAgain => 'Ne plus afficher';
+
+  @override
+  String get homeNoActiveTripTitle => 'Aucun trajet actif';
+
+  @override
+  String get homeNoActiveTripBody =>
+      'Ce filtre ne montre que les colis compatibles avec tes trajets à venir. Publie un trajet pour t\'en servir.';
+
+  @override
+  String get homeNoActiveTripPublish => 'Publier un trajet';
 }

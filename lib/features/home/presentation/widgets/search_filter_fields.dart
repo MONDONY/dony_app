@@ -33,10 +33,10 @@ class DatePresetsField extends StatelessWidget {
   final HomeSearchFilters value;
   final ValueChanged<HomeSearchFilters> onChanged;
 
-  static const _presets = <(DonyDatePreset, String)>[
-    (DonyDatePreset.today, "Aujourd'hui"),
-    (DonyDatePreset.thisWeek, 'Cette semaine'),
-    (DonyDatePreset.thisMonth, 'Ce mois'),
+  static List<(DonyDatePreset, String)> _presets(AppLocalizations l) => [
+    (DonyDatePreset.today, l.homeDateToday),
+    (DonyDatePreset.thisWeek, l.homeDateThisWeek),
+    (DonyDatePreset.thisMonth, l.homeDateThisMonth),
   ];
 
   void _togglePreset(DonyDatePreset preset) {
@@ -63,6 +63,7 @@ class DatePresetsField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final customDate = value.datePreset == DonyDatePreset.custom
         ? value.customDate
         : null;
@@ -74,7 +75,7 @@ class DatePresetsField extends StatelessWidget {
           spacing: DonySpacing.sm,
           runSpacing: DonySpacing.sm,
           children: [
-            for (final (preset, label) in _presets)
+            for (final (preset, label) in _presets(l))
               QuickChip(
                 label: label,
                 active: value.datePreset == preset,
@@ -87,7 +88,7 @@ class DatePresetsField extends StatelessWidget {
           children: [
             Expanded(
               child: DateField(
-                label: 'DATE PRÉCISE',
+                label: l.homeFilterFieldsExactDate,
                 date: customDate,
                 onChanged: _onCustomDate,
               ),
@@ -181,7 +182,7 @@ class PriceField extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'PRIX MAX',
+              context.l10n.homeFilterFieldsMaxPrice,
               style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.xs),
@@ -190,7 +191,9 @@ class PriceField extends StatelessWidget {
                 DonyIcon('euro', size: 14, color: cs.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
-                  active ? '≤ ${formatPriceActive(maxPrice!)}/kg' : 'Tous',
+                  active
+                      ? '≤ ${formatPriceActive(maxPrice!)}/kg'
+                      : context.l10n.homeFilterFieldsAll,
                   style: tt.titleSmall?.copyWith(
                     color: active ? cs.primary : cs.onSurfaceVariant,
                     fontWeight: active ? FontWeight.w700 : FontWeight.w400,
@@ -249,7 +252,7 @@ class TransportModeField extends StatelessWidget {
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(
                   child: Text(
-                    active ? mode!.label : 'Tous',
+                    active ? mode!.label : context.l10n.homeFilterFieldsAll,
                     style: tt.titleSmall?.copyWith(
                       color: active ? cs.primary : cs.onSurfaceVariant,
                       fontWeight: active ? FontWeight.w700 : FontWeight.w400,
@@ -514,8 +517,11 @@ class DateField extends StatelessWidget {
                 const SizedBox(width: DonySpacing.xs),
                 Text(
                   date != null
-                      ? DateFormat('d MMM', AppL10n.localeName).format(date!)
-                      : 'Choisir',
+                      ? DateFormat(
+                          'd MMM',
+                          context.l10n.localeName,
+                        ).format(date!)
+                      : context.l10n.homeFilterFieldsChoose,
                   style: tt.titleSmall?.copyWith(
                     color: date != null ? cs.primary : cs.onSurfaceVariant,
                     fontWeight: date != null
@@ -566,7 +572,7 @@ class WeightField extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'POIDS MIN',
+              context.l10n.homeFilterFieldsMinWeight,
               style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.xs),
@@ -599,7 +605,7 @@ class WeightField extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setS) => SimpleSheet(
-          title: 'Poids minimum du trajet',
+          title: ctx.l10n.homeFilterFieldsMinWeightTitle,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -641,7 +647,7 @@ class WeightField extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.md),
               DonyButton(
-                label: 'Confirmer',
+                label: ctx.l10n.commonConfirm,
                 onPressed: () {
                   onChanged(local);
                   // Navigator plutôt que `ctx.pop()` (go_router) : la feuille
@@ -696,7 +702,7 @@ Future<void> showPricePicker(
     backgroundColor: Colors.transparent,
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setS) => SimpleSheet(
-        title: 'Prix maximum',
+        title: ctx.l10n.homeMaxPriceTitle,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -704,7 +710,7 @@ Future<void> showPricePicker(
               child: Text(
                 localEnabled
                     ? '≤ ${formatPriceActive(local)}/kg'
-                    : 'Tous les prix',
+                    : ctx.l10n.homeAnyPrice,
                 style: tt.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: localEnabled ? cs.primary : cs.onSurfaceVariant,
@@ -748,7 +754,7 @@ Future<void> showPricePicker(
             ),
             const SizedBox(height: DonySpacing.lg),
             DonyButton(
-              label: 'Appliquer',
+              label: ctx.l10n.commonApply,
               onPressed: () {
                 onApply(localEnabled ? local : null);
                 Navigator.of(ctx).pop();
@@ -779,7 +785,7 @@ Future<void> showTransportPicker(
         final tt = Theme.of(ctx).textTheme;
         final cs = Theme.of(ctx).colorScheme;
         return SimpleSheet(
-          title: 'Mode de transport',
+          title: ctx.l10n.homeFilterFieldsTransportMode,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -832,7 +838,7 @@ Future<void> showTransportPicker(
               }),
               const SizedBox(height: DonySpacing.md),
               DonyButton(
-                label: 'Appliquer',
+                label: ctx.l10n.commonApply,
                 onPressed: () {
                   onApply(local);
                   Navigator.of(ctx).pop();
