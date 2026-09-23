@@ -13,6 +13,7 @@ import 'package:dony/features/package_request/data/models/package_request_search
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_status_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/sender_public_profile_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -277,7 +278,7 @@ class _MatchScoreRow extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              'Ton trajet du ${DateFormat('d MMM', 'fr').format(depart)}',
+              'Ton trajet du ${DateFormat('d MMM', AppL10n.localeName).format(depart)}',
               overflow: TextOverflow.ellipsis,
               style: tt.bodySmall?.copyWith(
                 color: cs.onSurfaceVariant,
@@ -305,7 +306,7 @@ class _RouteMeta extends StatelessWidget {
     final arrFlag = cityFlag(item.arrivalCity);
     final dateStr = DateFormat(
       'd MMM',
-      'fr',
+      AppL10n.localeName,
     ).format(item.desiredDate).toLowerCase();
     final tol = item.dateToleranceDays > 0
         ? ' ±${item.dateToleranceDays}j'
@@ -604,7 +605,7 @@ class MatchingRequestCard extends StatelessWidget {
     final accent = cs.warning;
     final depDate = match.tripDepartureDate;
     final dateStr = depDate != null
-        ? DateFormat('d MMM', 'fr').format(depDate).toLowerCase()
+        ? DateFormat('d MMM', AppL10n.localeName).format(depDate).toLowerCase()
         : '';
 
     return Material(

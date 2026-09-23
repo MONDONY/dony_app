@@ -8,6 +8,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/pro_stats_bloc.dart';
 import 'package:dony/features/profile/data/pro_stats_repository.dart';
 import 'package:dony/features/profile/presentation/widgets/pro_stats_bottom_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -140,7 +141,7 @@ class _LoadedContent extends StatelessWidget {
       decimalDigits: currency.minorUnit,
     );
     final now = DateTime.now();
-    final monthLabel = DateFormat('MMMM', 'fr_FR').format(now);
+    final monthLabel = DateFormat('MMMM', AppL10n.localeName).format(now);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

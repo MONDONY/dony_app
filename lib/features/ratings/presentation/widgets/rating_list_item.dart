@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -18,7 +19,7 @@ class RatingListItem extends StatelessWidget {
     final isDark = cs.brightness == Brightness.dark;
     final dateStr = DateFormat(
       'd MMM yyyy',
-      'fr_FR',
+      AppL10n.localeName,
     ).format(item.createdAt.toLocal());
 
     return Padding(

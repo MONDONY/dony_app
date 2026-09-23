@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -88,7 +89,7 @@ class TripTile extends StatelessWidget {
                                 Text(
                                   DateFormat(
                                     'EEE d MMM',
-                                    'fr',
+                                    AppL10n.localeName,
                                   ).format(announcement.departureDate),
                                   style: Theme.of(context).textTheme.bodyMedium!
                                       .copyWith(

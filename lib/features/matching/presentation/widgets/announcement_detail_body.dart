@@ -5,6 +5,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -91,7 +92,7 @@ class AnnouncementDetailBody extends StatelessWidget {
                   _HeroChip(
                     label: DateFormat(
                       'EEE d MMM yyyy',
-                      'fr',
+                      AppL10n.localeName,
                     ).format(a.departureDate),
                   ),
                   if (a.transportMode != null)
@@ -562,7 +563,7 @@ class _ParcelStatCell extends StatelessWidget {
 
 /// Formate la plage de remise — toujours dates complètes début et fin.
 String _handoverDeadlineLabel(DateTime deadline) {
-  return 'Jusqu\'au ${DateFormat('EEE d MMM', 'fr').format(deadline)}';
+  return 'Jusqu\'au ${DateFormat('EEE d MMM', AppL10n.localeName).format(deadline)}';
 }
 
 class _HeroChip extends StatelessWidget {

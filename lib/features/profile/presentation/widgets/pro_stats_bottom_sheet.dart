@@ -5,6 +5,7 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/data/models/pro_stats_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -40,7 +41,7 @@ class ProStatsBottomSheet extends StatelessWidget {
       decimalDigits: currency.minorUnit,
     );
     final now = DateTime.now();
-    final monthLabel = DateFormat('MMMM yyyy', 'fr_FR').format(now);
+    final monthLabel = DateFormat('MMMM yyyy', AppL10n.localeName).format(now);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

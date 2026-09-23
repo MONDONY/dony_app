@@ -4,6 +4,7 @@ import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_event.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_state.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -425,7 +426,7 @@ class _ReviewItem extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final dateStr = DateFormat(
       'd MMM yyyy',
-      'fr',
+      AppL10n.localeName,
     ).format(item.createdAt).toUpperCase();
     final name = (item.authorName?.trim().isNotEmpty ?? false)
         ? item.authorName!.trim()

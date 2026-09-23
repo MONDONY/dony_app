@@ -12,6 +12,7 @@ import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:dony/features/notifications/presentation/announcements_inbox_screen.dart';
 import 'package:dony/features/notifications/presentation/notification_detail_screen.dart';
 import 'package:dony/features/subscriptions/data/subscription_badge_consumer.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -70,7 +71,7 @@ String formatNotificationAge(DateTime createdAt, DateTime now) {
   if (diff.inHours < 24) return '${diff.inHours} h';
   if (diff.inDays < 7) return '${diff.inDays} j';
   final pattern = local.year == now.year ? 'd MMM' : 'd MMM yyyy';
-  return DateFormat(pattern, 'fr').format(local);
+  return DateFormat(pattern, AppL10n.localeName).format(local);
 }
 
 void showNotificationBottomSheet(BuildContext context) {

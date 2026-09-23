@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -43,11 +44,10 @@ class TripPosterCard extends StatelessWidget {
   /// dépendent d'aucune donnée d'instance, et l'écran d'aperçu les réutilise
   /// pour composer sa légende, ce qui garantit que l'image et le texte du post
   /// annoncent la même chose.
-  static final DateFormat dayFormat = DateFormat('EEEE d MMMM', 'fr');
-  static final DateFormat deadlineFormat = DateFormat(
-    "d MMMM 'à' HH'h'mm",
-    'fr',
-  );
+  static DateFormat get dayFormat =>
+      DateFormat('EEEE d MMMM', AppL10n.localeName);
+  static DateFormat get deadlineFormat =>
+      DateFormat("d MMMM 'à' HH'h'mm", AppL10n.localeName);
 
   /// Badges officiels des deux plateformes, en français.
   ///

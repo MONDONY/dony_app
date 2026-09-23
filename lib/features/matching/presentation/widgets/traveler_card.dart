@@ -7,6 +7,7 @@ import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -112,7 +113,7 @@ class TravelerCard extends StatelessWidget {
     final isProAccount = traveler?.isProAccount ?? false;
     final dateStr = DateFormat(
       'EEE d MMM',
-      'fr',
+      AppL10n.localeName,
     ).format(announcement.departureDate);
     final categories = announcement.acceptedContentTypes ?? [];
     final hasExistingBid = existingBidStatus != null;

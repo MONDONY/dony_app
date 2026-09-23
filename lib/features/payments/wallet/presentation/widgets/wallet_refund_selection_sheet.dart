@@ -6,6 +6,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_eligible_topups_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -107,7 +108,7 @@ class _SelectionList extends StatelessWidget {
                     ),
                     subtitle: DateFormat(
                       'dd MMM yyyy · HH:mm',
-                      'fr_FR',
+                      AppL10n.localeName,
                     ).format(topup.createdAt),
                     value: selectedIds.contains(topup.id),
                     onChanged: (_) {

@@ -3,6 +3,7 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_requests_list_cubit.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_refund_request_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -135,7 +136,10 @@ class _RefundRequestTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final currency = SupportedCurrency.fromCodeOrDefault(request.currency);
-    final date = DateFormat('dd MMM yyyy', 'fr_FR').format(request.requestedAt);
+    final date = DateFormat(
+      'dd MMM yyyy',
+      AppL10n.localeName,
+    ).format(request.requestedAt);
     final statusColor = _statusColor(cs);
     final fee = request.feeAmount;
     final net = request.netAmount;

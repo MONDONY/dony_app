@@ -49,6 +49,7 @@ import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -2038,7 +2039,9 @@ class _TripFormContentState extends State<_TripFormContent> {
                   'Jusqu\'à quand les expéditeurs peuvent te remettre leurs colis',
                 ),
                 trailing: Text(
-                  dt != null ? DateFormat('d MMM', 'fr').format(dt) : 'Choisir',
+                  dt != null
+                      ? DateFormat('d MMM', AppL10n.localeName).format(dt)
+                      : 'Choisir',
                 ),
                 onTap: _selectHandoverDeadline,
               ),

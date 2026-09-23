@@ -6,6 +6,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -101,7 +102,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
       return '± $_tolerance jours autour de votre date. Plus de souplesse, '
           'plus de voyageurs.';
     }
-    final f = DateFormat('d MMM', 'fr_FR');
+    final f = DateFormat('d MMM', AppL10n.localeName);
     final from = f.format(_date!.subtract(Duration(days: _tolerance)));
     final to = f.format(_date!.add(Duration(days: _tolerance)));
     return 'Les voyageurs partant du $from au $to pourront répondre.';
@@ -360,7 +361,7 @@ class _DatePickerField extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final dateText = date == null
         ? 'Date'
-        : DateFormat('d MMM. y', 'fr_FR').format(date!);
+        : DateFormat('d MMM. y', AppL10n.localeName).format(date!);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

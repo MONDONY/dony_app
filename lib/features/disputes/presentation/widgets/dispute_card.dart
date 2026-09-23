@@ -2,6 +2,7 @@ import 'package:dony/features/disputes/data/models/dispute_model.dart';
 import 'package:dony/features/disputes/presentation/utils/dispute_labels.dart';
 import 'package:dony/features/disputes/presentation/widgets/dispute_status_chip.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -23,7 +24,7 @@ class DisputeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final df = DateFormat('d MMM yyyy', 'fr');
+    final df = DateFormat('d MMM yyyy', AppL10n.localeName);
     final dep = dispute.departureCity;
     final arr = dispute.arrivalCity;
 

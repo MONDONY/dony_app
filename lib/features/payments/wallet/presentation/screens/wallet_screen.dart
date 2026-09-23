@@ -16,6 +16,7 @@ import 'package:dony/features/payments/wallet/data/models/wallet_transaction_mod
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_confirm_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_currency_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_selection_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -842,7 +843,7 @@ class _TxTile extends StatelessWidget {
                             ? 'Remboursement en cours · sous 5 à 10 jours ouvrés'
                             : DateFormat(
                                 'dd MMM · HH:mm',
-                                'fr_FR',
+                                AppL10n.localeName,
                               ).format(tx.createdAt),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: isRefundProcessing

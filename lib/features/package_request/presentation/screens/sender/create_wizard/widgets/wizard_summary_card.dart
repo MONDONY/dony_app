@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -109,7 +110,10 @@ String formatDesiredDate(
   bool long = false,
 }) {
   if (date == null) return '-';
-  final f = DateFormat(long ? 'd MMMM y' : 'd MMM. y', 'fr_FR').format(date);
+  final f = DateFormat(
+    long ? 'd MMMM y' : 'd MMM. y',
+    AppL10n.localeName,
+  ).format(date);
   final tol = toleranceDays ?? 0;
   return tol == 0 ? f : '$f ±${tol}j';
 }

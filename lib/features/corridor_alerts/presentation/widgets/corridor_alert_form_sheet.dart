@@ -10,6 +10,7 @@ import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_notify_mode.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/zone_picker_field.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -424,7 +425,7 @@ class _DateWindowField extends StatelessWidget {
 
   String get _label {
     if (dateFrom != null && dateTo != null) {
-      final fmt = DateFormat('d MMM', 'fr');
+      final fmt = DateFormat('d MMM', AppL10n.localeName);
       return '${fmt.format(dateFrom!)} → ${fmt.format(dateTo!)}';
     }
     return 'Toute date';

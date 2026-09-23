@@ -6,6 +6,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/revenue_details_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -401,7 +402,7 @@ class _RevenueItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final date = DateFormat('d MMM', 'fr').format(item.date);
+    final date = DateFormat('d MMM', AppL10n.localeName).format(item.date);
     final weight = item.weightKg;
     final meta = [
       date,

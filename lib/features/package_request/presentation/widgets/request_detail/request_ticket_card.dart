@@ -6,6 +6,7 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/city_code.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_photo_viewer.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -95,7 +96,10 @@ class _Route extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final date = DateFormat('d MMM', 'fr').format(request.desiredDate);
+    final date = DateFormat(
+      'd MMM',
+      AppL10n.localeName,
+    ).format(request.desiredDate);
     final dateLabel = request.dateToleranceDays > 0
         ? '$date ± ${request.dateToleranceDays} j'
         : date;

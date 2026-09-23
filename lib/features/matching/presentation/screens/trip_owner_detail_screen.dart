@@ -25,6 +25,7 @@ import 'package:dony/features/matching/presentation/widgets/arrival_instructions
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -255,7 +256,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                       Share.share(
                         '✈️ Je voyage ${state.announcement.departureCity} → '
                         '${state.announcement.arrivalCity} le '
-                        '${DateFormat('d MMMM', 'fr').format(state.announcement.departureDate)} '
+                        '${DateFormat('d MMMM', AppL10n.localeName).format(state.announcement.departureDate)} '
                         'avec de la place dans mes bagages !\n'
                         'Réserve tes kilos sur Yadony 📦\n'
                         '$posterShareBaseUrl/annonce/${state.announcement.id}',

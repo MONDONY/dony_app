@@ -49,6 +49,7 @@ import 'package:dony/features/package_request/data/package_request_repository.da
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -2479,7 +2480,7 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
       initialDate: _customDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      locale: const Locale('fr'),
+      locale: AppL10n.currentLocale,
     );
     if (picked != null && mounted) {
       setState(() {
@@ -2544,7 +2545,10 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
           ),
           _PresetOption(
             label: _selected == DonyDatePreset.custom && _customDate != null
-                ? DateFormat('EEE d MMM', 'fr').format(_customDate!)
+                ? DateFormat(
+                    'EEE d MMM',
+                    AppL10n.localeName,
+                  ).format(_customDate!)
                 : 'Choisir une date',
             isSelected: _selected == DonyDatePreset.custom,
             onTap: _pickCustomDate,

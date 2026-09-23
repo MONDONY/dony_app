@@ -1,6 +1,7 @@
+import 'package:dony/l10n/l10n.dart';
 import 'package:intl/intl.dart';
 
-/// Formate une date locale en français, ex. « 24 décembre 2026 ».
+/// Formate une date dans la langue de l'app, ex. « 24 décembre 2026 ».
 ///
 /// `intl` est déjà une dépendance directe du projet (voir
 /// `lib/features/matching/presentation/widgets/trip_card.dart`) et déjà
@@ -11,4 +12,4 @@ import 'package:intl/intl.dart';
 /// Partagée par [SubscriptionStatusBanner] et [SubscriptionStatusCard] pour
 /// que les deux widgets affichent une même date exactement de la même façon.
 String formatSubscriptionDate(DateTime local) =>
-    DateFormat('d MMMM yyyy', 'fr').format(local);
+    DateFormat('d MMMM yyyy', AppL10n.localeName).format(local);

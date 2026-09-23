@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -80,7 +81,7 @@ class CompatibleTravelerCard extends StatelessWidget {
                               Text(
                                 NumberFormat(
                                   '0.0',
-                                  'fr',
+                                  AppL10n.localeName,
                                 ).format(trip.traveler!.averageRating),
                                 style: const TextStyle(
                                   fontSize: 12,
@@ -91,7 +92,7 @@ class CompatibleTravelerCard extends StatelessWidget {
                           ],
                         ),
                         Text(
-                          '${DateFormat('d MMM', 'fr').format(trip.departureDate)} · '
+                          '${DateFormat('d MMM', AppL10n.localeName).format(trip.departureDate)} · '
                           '${trip.departureCity} → ${trip.arrivalCity}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

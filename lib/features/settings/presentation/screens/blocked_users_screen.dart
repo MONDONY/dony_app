@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:dony/features/settings/data/models/blocked_user_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -142,7 +143,7 @@ class _UserTile extends StatelessWidget {
     if (diff.inDays < 30) {
       return 'Bloqué il y a ${(diff.inDays / 7).floor()} semaines';
     }
-    return 'Bloqué le ${DateFormat('d MMM yyyy', 'fr').format(date)}';
+    return 'Bloqué le ${DateFormat('d MMM yyyy', AppL10n.localeName).format(date)}';
   }
 
   @override

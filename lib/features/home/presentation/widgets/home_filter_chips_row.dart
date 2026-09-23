@@ -20,6 +20,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -97,7 +98,10 @@ class HomeFilterChipsRow extends StatelessWidget {
         return 'Ce mois-ci';
       case DonyDatePreset.custom:
         return filters.customDate != null
-            ? DateFormat('d MMM', 'fr').format(filters.customDate!)
+            ? DateFormat(
+                'd MMM',
+                AppL10n.localeName,
+              ).format(filters.customDate!)
             : 'Date';
       case DonyDatePreset.none:
         return 'Toutes dates';

@@ -6,6 +6,7 @@ import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -105,7 +106,7 @@ class TripCard extends StatelessWidget {
     final diff = d.difference(today).inDays;
     final dateStr = DateFormat(
       'd MMM',
-      'fr',
+      AppL10n.localeName,
     ).format(announcement.departureDate);
     if (diff == 0) {
       return "Aujourd'hui · $dateStr";
@@ -118,7 +119,7 @@ class TripCard extends StatelessWidget {
     }
     return DateFormat(
       'EEE d MMM yyyy',
-      'fr',
+      AppL10n.localeName,
     ).format(announcement.departureDate);
   }
 

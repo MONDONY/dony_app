@@ -20,6 +20,7 @@ import 'package:dony/features/package_request/presentation/widgets/request_detai
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_owner_menu_sheet.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -354,7 +355,10 @@ class _DetailBottomBar extends StatelessWidget {
         await cubit.publish();
       case RequestPrimaryAction.share:
         final r = s.request;
-        final date = DateFormat('d MMMM', 'fr').format(r.desiredDate);
+        final date = DateFormat(
+          'd MMMM',
+          AppL10n.localeName,
+        ).format(r.desiredDate);
         cubit.trackShared();
         unawaited(
           Share.share(

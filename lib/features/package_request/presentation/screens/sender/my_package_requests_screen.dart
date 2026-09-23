@@ -10,6 +10,7 @@ import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -741,7 +742,7 @@ String _timeAgo(DateTime dt) {
 }
 
 String _buildDetails(PackageRequest r) {
-  final date = DateFormat('d MMM', 'fr').format(r.desiredDate);
+  final date = DateFormat('d MMM', AppL10n.localeName).format(r.desiredDate);
   final parts = [
     '$date ±${r.dateToleranceDays}j',
     '${r.weightKg.toStringAsFixed(0)} kg',

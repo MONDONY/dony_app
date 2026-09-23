@@ -1,3 +1,4 @@
+import 'package:dony/l10n/l10n.dart';
 import 'package:intl/intl.dart';
 
 class ParticipantModel {
@@ -79,7 +80,7 @@ class ConversationModel {
     if (tripOrigin == null || tripDestination == null) return null;
     final parts = <String>['$tripOrigin → $tripDestination'];
     if (tripDate != null) {
-      parts.add(DateFormat('d MMM', 'fr').format(tripDate!));
+      parts.add(DateFormat('d MMM', AppL10n.localeName).format(tripDate!));
     }
     if (tripWeightKg != null) {
       parts.add('${tripWeightKg!.toStringAsFixed(0)} kg');

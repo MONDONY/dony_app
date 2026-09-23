@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/notifications/bloc/notification_detail_cubit.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -92,7 +93,7 @@ class _NotificationDetailView extends StatelessWidget {
                         Text(
                           DateFormat(
                             "d MMMM yyyy 'à' HH:mm",
-                            'fr',
+                            AppL10n.localeName,
                           ).format(detail.createdAt.toLocal()),
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,

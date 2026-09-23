@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -165,7 +166,10 @@ class _MetaLine extends StatelessWidget {
         const SizedBox(width: DonySpacing.xs),
         Flexible(
           child: Text(
-            DateFormat('d MMM yyyy', 'fr').format(announcement.departureDate),
+            DateFormat(
+              'd MMM yyyy',
+              AppL10n.localeName,
+            ).format(announcement.departureDate),
             style: style,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

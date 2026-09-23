@@ -14,6 +14,7 @@ import 'package:dony/features/package_request/data/package_request_repository.da
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
 import 'package:dony/features/package_request/presentation/widgets/trip_picker_section.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -280,8 +281,8 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                                 confirmedLabel: 'Confirmer ce trajet',
                                 selectedSummary: selectedTrip != null
                                     ? (selectedTrip.isKgFree
-                                          ? '${DateFormat('EEE d MMM', 'fr').format(selectedTrip.departureDate)} · Kg libre'
-                                          : '${DateFormat('EEE d MMM', 'fr').format(selectedTrip.departureDate)} · ${selectedTrip.availableKg} kg dispo')
+                                          ? '${DateFormat('EEE d MMM', AppL10n.localeName).format(selectedTrip.departureDate)} · Kg libre'
+                                          : '${DateFormat('EEE d MMM', AppL10n.localeName).format(selectedTrip.departureDate)} · ${selectedTrip.availableKg} kg dispo')
                                     : null,
                                 selectedCount: selectedTrip != null
                                     ? '1 trajet'
@@ -349,7 +350,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                       ),
                     ),
                     Text(
-                      'Date de voyage : ${DateFormat('d MMM yyyy', 'fr').format(widget.thread.travelerTravelDate)}',
+                      'Date de voyage : ${DateFormat('d MMM yyyy', AppL10n.localeName).format(widget.thread.travelerTravelDate)}',
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 13,
                         color: Colors.white.withValues(alpha: 0.85),

@@ -1,3 +1,4 @@
+import 'package:dony/l10n/l10n.dart';
 import 'package:intl/intl.dart';
 
 /// Libellé relatif d'une date de publication, toujours en heure locale.
@@ -22,7 +23,7 @@ String requestTimeLabel(
   // alors à 0 au lieu de 1 — « hier » n'apparaissait jamais ce jour-là.
   final yesterday = DateTime(today.year, today.month, today.day - 1);
   if (day == yesterday) {
-    return '$verb hier, ${DateFormat('HH:mm', 'fr').format(local)}';
+    return '$verb hier, ${DateFormat('HH:mm', AppL10n.localeName).format(local)}';
   }
-  return '$verb le ${DateFormat('d MMM', 'fr').format(local)}';
+  return '$verb le ${DateFormat('d MMM', AppL10n.localeName).format(local)}';
 }
