@@ -165,7 +165,7 @@ class PackageRequestFormBloc
       emit(
         state.copyWith(
           submissionStatus: FormSubmissionStatus.error,
-          errorMessage: 'Indiquez un budget pour continuer',
+          error: PackageRequestFormError.budgetRequired,
           clearDraftLimitMessage: true,
         ),
       );

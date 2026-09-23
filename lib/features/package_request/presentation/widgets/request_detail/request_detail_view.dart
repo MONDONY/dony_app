@@ -13,6 +13,7 @@ import 'package:dony/features/package_request/presentation/widgets/request_detai
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_status_pill.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_ticket_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_travelers_section.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Gestes de la vue, câblés par l'écran (navigation, sheets, cubit).
@@ -79,7 +80,10 @@ class RequestDetailView extends StatelessWidget {
       requestTimeLabel(
         r.createdAt,
         now: now ?? DateTime.now(),
-        verb: c == RequestScreenCase.draft ? 'créée' : 'publiée',
+        l10n: context.l10n,
+        verb: c == RequestScreenCase.draft
+            ? RequestTimeVerb.created
+            : RequestTimeVerb.posted,
       ),
     ].join(' · ');
 

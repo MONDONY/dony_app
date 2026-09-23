@@ -11,6 +11,7 @@ import 'package:dony/features/package_request/data/models/matching_request.dart'
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_status_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/sender_public_profile_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -489,6 +490,10 @@ class _SenderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final rawName = item.sender.displayName;
+    final name = (rawName == null || rawName.isEmpty)
+        ? senderFallbackName(context.l10n)
+        : rawName;
     return InkWell(
       onTap: () => showSenderPublicProfileSheet(context, item.sender),
       borderRadius: BorderRadius.circular(DonyRadius.sm),
@@ -497,7 +502,7 @@ class _SenderRow extends StatelessWidget {
         child: Row(
           children: [
             DonyAvatar(
-              name: item.sender.displayName,
+              name: name,
               imageUrl: item.sender.avatarUrl,
               size: DonyAvatarSize.sm,
               verified: item.sender.kycVerified,
@@ -508,7 +513,7 @@ class _SenderRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.sender.displayName,
+                    name,
                     style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                     overflow: TextOverflow.ellipsis,
                   ),

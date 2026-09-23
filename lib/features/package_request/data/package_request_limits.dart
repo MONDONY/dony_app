@@ -58,13 +58,4 @@ abstract final class PackageRequestLimits {
       amount != null &&
       amount >= minBudgetFor(currency) &&
       amount <= maxBudgetFor(currency);
-
-  /// Dérivé des bornes plutôt que retapé : le libellé était écrit en clair à
-  /// deux endroits, qu'un changement de borne aurait laissés faux en silence.
-  static String get weightRangeLabel =>
-      'Entre ${_fr(minWeightKg)} et ${_fr(maxWeightKg)} kg';
-
-  static String _fr(double v) => (v.truncateToDouble() == v
-      ? v.toStringAsFixed(0)
-      : v.toStringAsFixed(1).replaceFirst('.', ','));
 }

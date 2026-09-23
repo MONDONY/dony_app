@@ -3343,4 +3343,120 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tripTemplateActiveDescription =>
       'Automatically posts upcoming trips';
+
+  @override
+  String get contentCategoryDocuments => 'Documents & paperwork';
+
+  @override
+  String get contentCategoryDryFood => 'Dry food';
+
+  @override
+  String get contentCategoryFreshFood => 'Fresh / perishable food';
+
+  @override
+  String get contentCategoryCosmetics => 'Cosmetics & perfume';
+
+  @override
+  String get contentCategoryClothing => 'Clothing & fabrics';
+
+  @override
+  String get contentCategoryShoes => 'Shoes';
+
+  @override
+  String get contentCategoryTraditionalMedicine => 'Traditional medicine';
+
+  @override
+  String get contentCategoryElectronics => 'Phones & electronics';
+
+  @override
+  String get contentCategoryBooks => 'Books';
+
+  @override
+  String get contentCategoryGifts => 'Gifts & toys';
+
+  @override
+  String get contentCategoryOther => 'Other';
+
+  @override
+  String contentCategoryAdd(String label) {
+    return 'Add \"$label\"';
+  }
+
+  @override
+  String get contentCategoryRemove => 'Remove this category';
+
+  @override
+  String get paymentMethodCard => 'Card';
+
+  @override
+  String get paymentMethodCash => 'Cash';
+
+  @override
+  String get paymentMethodMobileMoney => 'Mobile money';
+
+  @override
+  String requestThreadYouReceive(String amount) {
+    return 'You receive $amount';
+  }
+
+  @override
+  String requestThreadYouPay(String amount) {
+    return 'You pay $amount';
+  }
+
+  @override
+  String requestWeightRange(String min, String max) {
+    return 'Between $min and $max kg';
+  }
+
+  @override
+  String get requestSenderFallbackName => 'Yadony user';
+
+  @override
+  String get requestBudgetRequired => 'Enter a budget to continue';
+
+  @override
+  String requestTimeJustNow(String verb) {
+    String _temp0 = intl.Intl.selectLogic(verb, {
+      'created': 'created just now',
+      'other': 'posted just now',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String requestTimeMinutesAgo(String verb, int minutes) {
+    String _temp0 = intl.Intl.selectLogic(verb, {
+      'created': 'created $minutes min ago',
+      'other': 'posted $minutes min ago',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String requestTimeHoursAgo(String verb, int hours) {
+    String _temp0 = intl.Intl.selectLogic(verb, {
+      'created': 'created $hours h ago',
+      'other': 'posted $hours h ago',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String requestTimeYesterday(String verb, String time) {
+    String _temp0 = intl.Intl.selectLogic(verb, {
+      'created': 'created yesterday, $time',
+      'other': 'posted yesterday, $time',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String requestTimeOn(String verb, String date) {
+    String _temp0 = intl.Intl.selectLogic(verb, {
+      'created': 'created on $date',
+      'other': 'posted on $date',
+    });
+    return '$_temp0';
+  }
 }

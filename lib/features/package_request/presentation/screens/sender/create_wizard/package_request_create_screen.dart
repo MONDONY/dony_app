@@ -20,6 +20,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/create
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_sheet.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -292,6 +293,15 @@ class _PackageRequestCreateScreenState
     } else if (state.submissionStatus == FormSubmissionStatus.error &&
         state.draftLimitMessage != null) {
       unawaited(_handleDraftLimitReached(context, state.draftLimitMessage!));
+    } else if (state.submissionStatus == FormSubmissionStatus.error &&
+        state.error == PackageRequestFormError.budgetRequired) {
+      // Erreur connue de l'app elle-même (pas du serveur) : sa traduction,
+      // jamais un texte porté par l'état.
+      DonySnackbar.show(
+        context,
+        message: context.l10n.requestBudgetRequired,
+        type: DonySnackbarType.warning,
+      );
     } else if (state.submissionStatus == FormSubmissionStatus.error) {
       // L'exception typée, jamais son texte : un texte nu ressort du
       // présenteur en « Erreur réseau » quel que soit le statut HTTP, et le

@@ -18,7 +18,9 @@ import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -881,7 +883,7 @@ class _PaymentMethodChips extends StatelessWidget {
                   ),
                   const SizedBox(width: DonySpacing.xs + 2),
                   Text(
-                    method.displayLabel,
+                    method.label(context.l10n),
                     style: tt.bodyMedium?.copyWith(
                       color: isSelected ? cs.primary : cs.onSurface,
                       fontWeight: isSelected

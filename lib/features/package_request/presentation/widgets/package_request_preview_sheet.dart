@@ -2,9 +2,12 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/format_weight.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Sheet d'aperçu de l'étape 3 du wizard de demande d'envoi — miroir de
@@ -91,7 +94,12 @@ class _PreviewBody extends StatelessWidget {
         // validait sans voir le contenu, les photos, le lieu de remise ni les
         // modes de paiement, c'est-à-dire l'essentiel de ce que lit le voyageur.
         if (s.categories.isNotEmpty)
-          DonyInfoRow(label: 'Contenu', value: s.categories.join(', ')),
+          DonyInfoRow(
+            label: 'Contenu',
+            value: s.categories
+                .map((c) => contentCategoryDisplayName(context.l10n, c))
+                .join(', '),
+          ),
         if (s.weightKg != null)
           DonyInfoRow(label: 'Poids', value: formatWeightKg(s.weightKg!)),
         if (photoCount > 0)
@@ -112,7 +120,7 @@ class _PreviewBody extends StatelessWidget {
               style: tt.bodyMedium?.copyWith(color: cs.onSurface),
             ),
           ),
-        DonyInfoRow(label: 'Paiement', value: _paymentLabel(s)),
+        DonyInfoRow(label: 'Paiement', value: _paymentLabel(context, s)),
 
         const SizedBox(height: DonySpacing.base),
         Text(
@@ -127,11 +135,11 @@ class _PreviewBody extends StatelessWidget {
   /// cochage du `Set` : l'aperçu annonçait « Espèces, Carte » là où les chips
   /// de l'étape 3 et la fiche lue par le voyageur affichent « Carte, Espèces »
   /// (ou « Mobile money, Espèces » en zone CFA).
-  String _paymentLabel(PackageRequestFormState s) => PaymentMethod
-      .canonicalOrder
-      .where(s.acceptedPaymentMethods.contains)
-      .map((m) => m.displayLabel)
-      .join(', ');
+  String _paymentLabel(BuildContext context, PackageRequestFormState s) =>
+      PaymentMethod.canonicalOrder
+          .where(s.acceptedPaymentMethods.contains)
+          .map((m) => m.label(context.l10n))
+          .join(', ');
 
   String _priceLine(PackageRequestFormState s) {
     final amount = s.totalBudgetEur;

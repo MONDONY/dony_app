@@ -4,6 +4,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -39,6 +41,10 @@ class _SenderPublicProfileContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final rawName = sender.displayName;
+    final name = (rawName == null || rawName.isEmpty)
+        ? senderFallbackName(context.l10n)
+        : rawName;
 
     // `SenderPublicProfile.guest` ne porte pas d'identifiant : sans cible, pas
     // de blocage possible. Et on ne se bloque pas soi-même.
@@ -63,19 +69,19 @@ class _SenderPublicProfileContent extends StatelessWidget {
                 onPressed: () => showBlockMenu(
                   context,
                   userId: sender.id,
-                  displayName: sender.displayName,
+                  displayName: name,
                 ),
               ),
             ),
           DonyAvatar(
-            name: sender.displayName,
+            name: name,
             imageUrl: sender.avatarUrl,
             size: DonyAvatarSize.xl,
             verified: sender.kycVerified,
           ),
           const SizedBox(height: DonySpacing.md),
           Text(
-            sender.displayName,
+            name,
             style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),

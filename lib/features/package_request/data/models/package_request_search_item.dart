@@ -151,9 +151,7 @@ class PackageRequestSearchItem extends Equatable {
       final Map<String, dynamic> senderJson => SenderPublicProfile.fromJson(
         senderJson,
       ),
-      _ => SenderPublicProfile.guest(
-        json['senderDisplayName'] as String? ?? 'Utilisateur Yadony',
-      ),
+      _ => SenderPublicProfile.guest(json['senderDisplayName'] as String?),
     },
     isFavorite: json['isFavorite'] as bool? ?? false,
     urgent: json['urgent'] as bool?,
@@ -214,7 +212,11 @@ class SenderPublicProfile extends Equatable {
   });
 
   final String id;
-  final String displayName;
+
+  /// `null`/vide pour un profil invité sans nom : l'affichage résout alors
+  /// [senderFallbackName] (package_request_labels.dart), jamais ce modèle qui
+  /// n'a pas accès aux traductions.
+  final String? displayName;
   final double averageRating;
   final int totalRatings;
   final bool kycVerified;
@@ -232,7 +234,7 @@ class SenderPublicProfile extends Equatable {
         avatarUrl: json['avatarUrl'] as String?,
       );
 
-  factory SenderPublicProfile.guest(String displayName) => SenderPublicProfile(
+  factory SenderPublicProfile.guest(String? displayName) => SenderPublicProfile(
     id: '',
     displayName: displayName,
     averageRating: 0,

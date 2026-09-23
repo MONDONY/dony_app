@@ -4,6 +4,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -260,14 +262,23 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
     setState(() {}); // rafraîchit la bordure focus du champ
   }
 
+  /// Compare la requête au libellé affiché ET au libellé brut : un
+  /// utilisateur anglophone doit trouver « Books » en tapant « book », et un
+  /// libellé libre (hors catalogue traduit) reste trouvable par sa forme
+  /// brute.
+  bool _matches(ContentCategory c, String q) =>
+      c.label.toLowerCase().contains(q) ||
+      contentCategoryDisplayName(
+        context.l10n,
+        c.label,
+      ).toLowerCase().contains(q);
+
   List<ContentCategory> get _filteredCatalog {
     final q = _query.trim().toLowerCase();
     if (q.isEmpty) {
       return widget.catalog;
     }
-    return widget.catalog
-        .where((c) => c.label.toLowerCase().contains(q))
-        .toList();
+    return widget.catalog.where((c) => _matches(c, q)).toList();
   }
 
   void _emit() => widget.onChanged(_selected.toList());
@@ -410,10 +421,15 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
     // décision d'afficher la ligne « Ajouter ».
     final filtered = _filteredCatalog;
     final query = _controller.text.trim();
-    // La saisie est-elle déjà un libellé exact du catalogue ? Si oui, pas de
-    // ligne d'ajout (l'item existe déjà, sélectionnable directement).
+    // La saisie est-elle déjà un libellé exact du catalogue (brut ou
+    // affiché) ? Si oui, pas de ligne d'ajout (l'item existe déjà,
+    // sélectionnable directement).
+    final lowerQuery = query.toLowerCase();
     final hasExactMatch = widget.catalog.any(
-      (c) => c.label.toLowerCase() == query.toLowerCase(),
+      (c) =>
+          c.label.toLowerCase() == lowerQuery ||
+          contentCategoryDisplayName(context.l10n, c.label).toLowerCase() ==
+              lowerQuery,
     );
     // Par défaut : ligne d'ajout seulement quand la liste filtrée est vide.
     // En mode [alwaysAllowCustom] : dès qu'on tape un contenu hors catalogue,
@@ -657,7 +673,7 @@ class _ComboItem extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
-                    category.label,
+                    contentCategoryDisplayName(context.l10n, category.label),
                     style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                   ),
                 ),
@@ -704,7 +720,7 @@ class _AddRow extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
-                    'Ajouter « $query »',
+                    context.l10n.contentCategoryAdd(query),
                     style: tt.bodyMedium?.copyWith(
                       color: cs.primary,
                       fontWeight: FontWeight.w600,
@@ -760,7 +776,7 @@ class _ComboTag extends StatelessWidget {
           // lui laisse la place de grandir.
           Flexible(
             child: Text(
-              label,
+              contentCategoryDisplayName(context.l10n, label),
               style: tt.bodySmall?.copyWith(
                 color: cs.primary,
                 fontWeight: FontWeight.w600,
@@ -771,7 +787,7 @@ class _ComboTag extends StatelessWidget {
             button: true,
             container: true,
             excludeSemantics: true,
-            label: 'Retirer cette catégorie',
+            label: context.l10n.contentCategoryRemove,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: onRemove,

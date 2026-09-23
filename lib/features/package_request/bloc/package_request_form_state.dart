@@ -7,6 +7,13 @@ import 'package:equatable/equatable.dart';
 
 enum FormSubmissionStatus { idle, submitting, success, error }
 
+/// Erreur de soumission connue de l'app elle-même (pas du serveur) — l'état
+/// ne porte alors aucun texte, seule cette valeur : l'écran choisit sa
+/// traduction (`l10n.requestBudgetRequired`). Rangée dans le champ `error` de
+/// [PackageRequestFormState], au même titre qu'une exception serveur : les
+/// deux sont des [Object] que seul le présenteur d'erreurs interprète.
+enum PackageRequestFormError { budgetRequired }
+
 class PackageRequestFormState extends Equatable {
   const PackageRequestFormState({
     this.currentStep = 0,

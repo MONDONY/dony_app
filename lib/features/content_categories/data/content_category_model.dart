@@ -40,7 +40,7 @@ class ContentCategory {
   int get hashCode => Object.hash(code, label, emoji);
 
   @override
-  String toString() => 'ContentCategory($code, $label, $emoji)';
+  String toString() => 'ContentCategory($code, $label, $emoji)'; // i18n-ignore — débogage uniquement, jamais affiché
 }
 
 /// Catalogue embarqué, identique au catalogue backend

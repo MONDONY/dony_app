@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -348,6 +349,10 @@ class _InfoSection extends StatelessWidget {
     final toleranceStr = item.dateToleranceDays > 0
         ? ' ±${item.dateToleranceDays}j'
         : '';
+    final rawName = item.sender.displayName;
+    final senderName = (rawName == null || rawName.isEmpty)
+        ? senderFallbackName(context.l10n)
+        : rawName;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
@@ -360,7 +365,7 @@ class _InfoSection extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  item.sender.displayName,
+                  senderName,
                   style: tt.bodySmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,

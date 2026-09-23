@@ -5,9 +5,11 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -294,7 +296,7 @@ class _CatalogStepState extends State<_CatalogStep> {
             for (final category in matches)
               _CatalogRow(
                 emoji: category.emoji,
-                label: category.label,
+                label: contentCategoryDisplayName(context.l10n, category.label),
                 onTap: () => widget.onPicked(category.label),
               ),
 

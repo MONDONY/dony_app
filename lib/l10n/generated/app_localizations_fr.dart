@@ -3358,4 +3358,120 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tripTemplateActiveDescription =>
       'Publie automatiquement les trajets à venir';
+
+  @override
+  String get contentCategoryDocuments => 'Documents & administratif';
+
+  @override
+  String get contentCategoryDryFood => 'Alimentation sèche';
+
+  @override
+  String get contentCategoryFreshFood => 'Produits frais / périssables';
+
+  @override
+  String get contentCategoryCosmetics => 'Cosmétiques & parfums';
+
+  @override
+  String get contentCategoryClothing => 'Vêtements & tissus';
+
+  @override
+  String get contentCategoryShoes => 'Chaussures';
+
+  @override
+  String get contentCategoryTraditionalMedicine => 'Médicaments traditionnels';
+
+  @override
+  String get contentCategoryElectronics => 'Téléphone & électronique';
+
+  @override
+  String get contentCategoryBooks => 'Livres';
+
+  @override
+  String get contentCategoryGifts => 'Cadeaux & jouets';
+
+  @override
+  String get contentCategoryOther => 'Autre';
+
+  @override
+  String contentCategoryAdd(String label) {
+    return 'Ajouter « $label »';
+  }
+
+  @override
+  String get contentCategoryRemove => 'Retirer cette catégorie';
+
+  @override
+  String get paymentMethodCard => 'Carte';
+
+  @override
+  String get paymentMethodCash => 'Espèces';
+
+  @override
+  String get paymentMethodMobileMoney => 'Mobile money';
+
+  @override
+  String requestThreadYouReceive(String amount) {
+    return 'Tu reçois $amount';
+  }
+
+  @override
+  String requestThreadYouPay(String amount) {
+    return 'Tu paies $amount';
+  }
+
+  @override
+  String requestWeightRange(String min, String max) {
+    return 'Entre $min et $max kg';
+  }
+
+  @override
+  String get requestSenderFallbackName => 'Utilisateur Yadony';
+
+  @override
+  String get requestBudgetRequired => 'Indiquez un budget pour continuer';
+
+  @override
+  String requestTimeJustNow(String verb) {
+    String _temp0 = intl.Intl.selectLogic(verb, {
+      'created': 'créée à l\'instant',
+      'other': 'publiée à l\'instant',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String requestTimeMinutesAgo(String verb, int minutes) {
+    String _temp0 = intl.Intl.selectLogic(verb, {
+      'created': 'créée il y a $minutes min',
+      'other': 'publiée il y a $minutes min',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String requestTimeHoursAgo(String verb, int hours) {
+    String _temp0 = intl.Intl.selectLogic(verb, {
+      'created': 'créée il y a $hours h',
+      'other': 'publiée il y a $hours h',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String requestTimeYesterday(String verb, String time) {
+    String _temp0 = intl.Intl.selectLogic(verb, {
+      'created': 'créée hier, $time',
+      'other': 'publiée hier, $time',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String requestTimeOn(String verb, String date) {
+    String _temp0 = intl.Intl.selectLogic(verb, {
+      'created': 'créée le $date',
+      'other': 'publiée le $date',
+    });
+    return '$_temp0';
+  }
 }

@@ -23,7 +23,11 @@ enum PaymentMethod {
 
   static PaymentMethod fromWire(String s) =>
       tryFromWire(s) ??
-      (throw ArgumentError.value(s, 'PaymentMethod', 'valeur inconnue'));
+      (throw ArgumentError.value(
+        s,
+        'PaymentMethod', // i18n-ignore
+        'valeur inconnue', // i18n-ignore — message d'exception, jamais affiché
+      ));
 
   /// Ignore les valeurs inconnues au lieu de planter sur toute la liste.
   static Set<PaymentMethod> setFromJson(List<dynamic>? l) => (l ?? const [])
@@ -52,21 +56,6 @@ enum PaymentMethod {
     if (currency.isMobileMoneyEligible) PaymentMethod.mobileMoney,
     PaymentMethod.cash,
   ];
-
-  String get displayLabel {
-    switch (this) {
-      case PaymentMethod.stripe:
-        return 'Carte';
-      case PaymentMethod.cash:
-        return 'Espèces';
-      case PaymentMethod.wave:
-        return 'Wave';
-      case PaymentMethod.orangeMoney:
-        return 'Orange Money';
-      case PaymentMethod.mobileMoney:
-        return 'Mobile money';
-    }
-  }
 
   IconData get icon {
     switch (this) {

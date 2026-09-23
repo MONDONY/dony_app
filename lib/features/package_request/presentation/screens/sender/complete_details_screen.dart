@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/reimbursement_info_banner.dart';
 import 'package:dony/features/package_request/bloc/complete_details_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -9,6 +10,7 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -336,7 +338,12 @@ class _RecapCard extends StatelessWidget {
       ),
       ('Taille', _sizeLabel(request.parcelSize)),
       if (request.categories.isNotEmpty)
-        ('Contenu', request.categories.join(', ')),
+        (
+          'Contenu',
+          request.categories
+              .map((c) => contentCategoryDisplayName(context.l10n, c))
+              .join(', '),
+        ),
       if (gross != null)
         ('Prix à payer', PriceDisplay.money(gross, request.currency)),
     ];
@@ -473,7 +480,7 @@ class _PaymentMethodChoice extends StatelessWidget {
                 ),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
-                  method.displayLabel,
+                  method.label(context.l10n),
                   style: tt.labelMedium?.copyWith(
                     color: isSelected ? cs.primary : cs.onSurfaceVariant,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,

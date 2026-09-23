@@ -5707,6 +5707,162 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Publie automatiquement les trajets à venir'**
   String get tripTemplateActiveDescription;
+
+  /// Traduction affichée du code catalogue DOCUMENTS — ContentCategory.label reste la valeur envoyée/stockée, en français (content_category_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Documents & administratif'**
+  String get contentCategoryDocuments;
+
+  /// Traduction affichée du code catalogue ALIMENTATION_SECHE (content_category_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Alimentation sèche'**
+  String get contentCategoryDryFood;
+
+  /// Traduction affichée du code catalogue PRODUITS_FRAIS (content_category_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Produits frais / périssables'**
+  String get contentCategoryFreshFood;
+
+  /// Traduction affichée du code catalogue COSMETIQUES (content_category_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cosmétiques & parfums'**
+  String get contentCategoryCosmetics;
+
+  /// Traduction affichée du code catalogue VETEMENTS (content_category_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vêtements & tissus'**
+  String get contentCategoryClothing;
+
+  /// Traduction affichée du code catalogue CHAUSSURES (content_category_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaussures'**
+  String get contentCategoryShoes;
+
+  /// Traduction affichée du code catalogue MEDICAMENTS_TRADITIONNELS (content_category_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Médicaments traditionnels'**
+  String get contentCategoryTraditionalMedicine;
+
+  /// Traduction affichée du code catalogue ELECTRONIQUE (content_category_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone & électronique'**
+  String get contentCategoryElectronics;
+
+  /// Traduction affichée du code catalogue LIVRES (content_category_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Livres'**
+  String get contentCategoryBooks;
+
+  /// Traduction affichée du code catalogue CADEAUX (content_category_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cadeaux & jouets'**
+  String get contentCategoryGifts;
+
+  /// Traduction affichée du code catalogue AUTRE (content_category_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get contentCategoryOther;
+
+  /// Ligne « Ajouter … » du sélecteur de catégories pour un libellé libre (content_category_selector.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter « {label} »'**
+  String contentCategoryAdd(String label);
+
+  /// Libellé d'accessibilité du bouton de suppression d'un tag catégorie (content_category_selector.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer cette catégorie'**
+  String get contentCategoryRemove;
+
+  /// Libellé affiché du moyen de paiement STRIPE (package_request_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte'**
+  String get paymentMethodCard;
+
+  /// Libellé affiché du moyen de paiement CASH (package_request_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces'**
+  String get paymentMethodCash;
+
+  /// Libellé affiché du moyen de paiement MOBILE_MONEY (package_request_labels.dart) — identique dans les deux langues
+  ///
+  /// In fr, this message translates to:
+  /// **'Mobile money'**
+  String get paymentMethodMobileMoney;
+
+  /// Prix net vu par le voyageur dans le fil de négociation (package_request_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu reçois {amount}'**
+  String requestThreadYouReceive(String amount);
+
+  /// Prix brut vu par l'expéditeur dans le fil de négociation (package_request_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu paies {amount}'**
+  String requestThreadYouPay(String amount);
+
+  /// Fourchette de poids autorisée pour une demande d'envoi (package_request_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre {min} et {max} kg'**
+  String requestWeightRange(String min, String max);
+
+  /// Nom de repli d'un profil expéditeur sans nom (package_request_labels.dart, package_request_search_item.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateur Yadony'**
+  String get requestSenderFallbackName;
+
+  /// Erreur de soumission de l'étape 3 du wizard de demande sans budget saisi (package_request_form_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un budget pour continuer'**
+  String get requestBudgetRequired;
+
+  /// Libellé relatif : demande créée/publiée à l'instant (request_time_label.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{verb, select, created{créée à l\'instant} other{publiée à l\'instant}}'**
+  String requestTimeJustNow(String verb);
+
+  /// Libellé relatif : il y a N minutes (request_time_label.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{verb, select, created{créée il y a {minutes} min} other{publiée il y a {minutes} min}}'**
+  String requestTimeMinutesAgo(String verb, int minutes);
+
+  /// Libellé relatif : il y a N heures, même jour (request_time_label.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{verb, select, created{créée il y a {hours} h} other{publiée il y a {hours} h}}'**
+  String requestTimeHoursAgo(String verb, int hours);
+
+  /// Libellé relatif : hier à telle heure (request_time_label.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{verb, select, created{créée hier, {time}} other{publiée hier, {time}}}'**
+  String requestTimeYesterday(String verb, String time);
+
+  /// Libellé relatif : à telle date, plus ancien qu'hier (request_time_label.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{verb, select, created{créée le {date}} other{publiée le {date}}}'**
+  String requestTimeOn(String verb, String date);
 }
 
 class _AppLocalizationsDelegate

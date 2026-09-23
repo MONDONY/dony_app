@@ -12,6 +12,7 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
 import 'package:dony/features/package_request/presentation/widgets/trip_picker_section.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -450,7 +451,7 @@ class _AvailablePaymentMethodsPreview extends StatelessWidget {
                   Icon(method.icon, size: 14, color: cs.onSurfaceVariant),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
-                    method.displayLabel,
+                    method.label(context.l10n),
                     style: tt.labelMedium?.copyWith(
                       color: cs.onSurfaceVariant,
                       fontWeight: FontWeight.w500,

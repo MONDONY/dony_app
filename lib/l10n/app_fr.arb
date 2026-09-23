@@ -2272,5 +2272,172 @@
   "tripTemplateActiveDescription": "Publie automatiquement les trajets à venir",
   "@tripTemplateActiveDescription": {
     "description": "Sous-titre du bloc bascule d'activation de la récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "contentCategoryDocuments": "Documents & administratif",
+  "@contentCategoryDocuments": {
+    "description": "Traduction affichée du code catalogue DOCUMENTS — ContentCategory.label reste la valeur envoyée/stockée, en français (content_category_labels.dart)"
+  },
+  "contentCategoryDryFood": "Alimentation sèche",
+  "@contentCategoryDryFood": {
+    "description": "Traduction affichée du code catalogue ALIMENTATION_SECHE (content_category_labels.dart)"
+  },
+  "contentCategoryFreshFood": "Produits frais / périssables",
+  "@contentCategoryFreshFood": {
+    "description": "Traduction affichée du code catalogue PRODUITS_FRAIS (content_category_labels.dart)"
+  },
+  "contentCategoryCosmetics": "Cosmétiques & parfums",
+  "@contentCategoryCosmetics": {
+    "description": "Traduction affichée du code catalogue COSMETIQUES (content_category_labels.dart)"
+  },
+  "contentCategoryClothing": "Vêtements & tissus",
+  "@contentCategoryClothing": {
+    "description": "Traduction affichée du code catalogue VETEMENTS (content_category_labels.dart)"
+  },
+  "contentCategoryShoes": "Chaussures",
+  "@contentCategoryShoes": {
+    "description": "Traduction affichée du code catalogue CHAUSSURES (content_category_labels.dart)"
+  },
+  "contentCategoryTraditionalMedicine": "Médicaments traditionnels",
+  "@contentCategoryTraditionalMedicine": {
+    "description": "Traduction affichée du code catalogue MEDICAMENTS_TRADITIONNELS (content_category_labels.dart)"
+  },
+  "contentCategoryElectronics": "Téléphone & électronique",
+  "@contentCategoryElectronics": {
+    "description": "Traduction affichée du code catalogue ELECTRONIQUE (content_category_labels.dart)"
+  },
+  "contentCategoryBooks": "Livres",
+  "@contentCategoryBooks": {
+    "description": "Traduction affichée du code catalogue LIVRES (content_category_labels.dart)"
+  },
+  "contentCategoryGifts": "Cadeaux & jouets",
+  "@contentCategoryGifts": {
+    "description": "Traduction affichée du code catalogue CADEAUX (content_category_labels.dart)"
+  },
+  "contentCategoryOther": "Autre",
+  "@contentCategoryOther": {
+    "description": "Traduction affichée du code catalogue AUTRE (content_category_labels.dart)"
+  },
+  "contentCategoryAdd": "Ajouter « {label} »",
+  "@contentCategoryAdd": {
+    "description": "Ligne « Ajouter … » du sélecteur de catégories pour un libellé libre (content_category_selector.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "contentCategoryRemove": "Retirer cette catégorie",
+  "@contentCategoryRemove": {
+    "description": "Libellé d'accessibilité du bouton de suppression d'un tag catégorie (content_category_selector.dart)"
+  },
+
+  "paymentMethodCard": "Carte",
+  "@paymentMethodCard": {
+    "description": "Libellé affiché du moyen de paiement STRIPE (package_request_labels.dart)"
+  },
+  "paymentMethodCash": "Espèces",
+  "@paymentMethodCash": {
+    "description": "Libellé affiché du moyen de paiement CASH (package_request_labels.dart)"
+  },
+  "paymentMethodMobileMoney": "Mobile money",
+  "@paymentMethodMobileMoney": {
+    "description": "Libellé affiché du moyen de paiement MOBILE_MONEY (package_request_labels.dart) — identique dans les deux langues"
+  },
+
+  "requestThreadYouReceive": "Tu reçois {amount}",
+  "@requestThreadYouReceive": {
+    "description": "Prix net vu par le voyageur dans le fil de négociation (package_request_labels.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "requestThreadYouPay": "Tu paies {amount}",
+  "@requestThreadYouPay": {
+    "description": "Prix brut vu par l'expéditeur dans le fil de négociation (package_request_labels.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "requestWeightRange": "Entre {min} et {max} kg",
+  "@requestWeightRange": {
+    "description": "Fourchette de poids autorisée pour une demande d'envoi (package_request_labels.dart)",
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "requestSenderFallbackName": "Utilisateur Yadony",
+  "@requestSenderFallbackName": {
+    "description": "Nom de repli d'un profil expéditeur sans nom (package_request_labels.dart, package_request_search_item.dart)"
+  },
+  "requestBudgetRequired": "Indiquez un budget pour continuer",
+  "@requestBudgetRequired": {
+    "description": "Erreur de soumission de l'étape 3 du wizard de demande sans budget saisi (package_request_form_bloc.dart)"
+  },
+
+  "requestTimeJustNow": "{verb, select, created{créée à l'instant} other{publiée à l'instant}}",
+  "@requestTimeJustNow": {
+    "description": "Libellé relatif : demande créée/publiée à l'instant (request_time_label.dart)",
+    "placeholders": {
+      "verb": {
+        "type": "String"
+      }
+    }
+  },
+  "requestTimeMinutesAgo": "{verb, select, created{créée il y a {minutes} min} other{publiée il y a {minutes} min}}",
+  "@requestTimeMinutesAgo": {
+    "description": "Libellé relatif : il y a N minutes (request_time_label.dart)",
+    "placeholders": {
+      "verb": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "requestTimeHoursAgo": "{verb, select, created{créée il y a {hours} h} other{publiée il y a {hours} h}}",
+  "@requestTimeHoursAgo": {
+    "description": "Libellé relatif : il y a N heures, même jour (request_time_label.dart)",
+    "placeholders": {
+      "verb": {
+        "type": "String"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "requestTimeYesterday": "{verb, select, created{créée hier, {time}} other{publiée hier, {time}}}",
+  "@requestTimeYesterday": {
+    "description": "Libellé relatif : hier à telle heure (request_time_label.dart)",
+    "placeholders": {
+      "verb": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "requestTimeOn": "{verb, select, created{créée le {date}} other{publiée le {date}}}",
+  "@requestTimeOn": {
+    "description": "Libellé relatif : à telle date, plus ancien qu'hier (request_time_label.dart)",
+    "placeholders": {
+      "verb": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
   }
 }

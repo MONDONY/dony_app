@@ -9,7 +9,9 @@ import 'package:dony/features/package_request/bloc/package_request_form_bloc.dar
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/package_request_photo_section.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -256,7 +258,7 @@ class Step2DetailsState extends State<Step2Details> {
             Padding(
               padding: const EdgeInsets.only(top: DonySpacing.xs),
               child: Text(
-                '${PackageRequestLimits.weightRangeLabel}.',
+                '${weightRangeLabel(context.l10n)}.',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
@@ -443,7 +445,7 @@ class _WeightInput extends StatelessWidget {
         final d = double.tryParse(v?.replaceAll(',', '.') ?? '');
         if (d == null) return 'Valeur invalide';
         if (!PackageRequestLimits.isWeightValid(d)) {
-          return PackageRequestLimits.weightRangeLabel;
+          return weightRangeLabel(context.l10n);
         }
         return null;
       },

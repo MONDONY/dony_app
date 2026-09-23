@@ -938,5 +938,34 @@
   "tripTemplatePickupFieldLabel": "Parcel drop-off location *",
   "tripTemplateDeliveryFieldLabel": "Pickup location *",
   "tripTemplateActiveLabel": "Recurring trip on",
-  "tripTemplateActiveDescription": "Automatically posts upcoming trips"
+  "tripTemplateActiveDescription": "Automatically posts upcoming trips",
+  "contentCategoryDocuments": "Documents & paperwork",
+  "contentCategoryDryFood": "Dry food",
+  "contentCategoryFreshFood": "Fresh / perishable food",
+  "contentCategoryCosmetics": "Cosmetics & perfume",
+  "contentCategoryClothing": "Clothing & fabrics",
+  "contentCategoryShoes": "Shoes",
+  "contentCategoryTraditionalMedicine": "Traditional medicine",
+  "contentCategoryElectronics": "Phones & electronics",
+  "contentCategoryBooks": "Books",
+  "contentCategoryGifts": "Gifts & toys",
+  "contentCategoryOther": "Other",
+  "contentCategoryAdd": "Add \"{label}\"",
+  "contentCategoryRemove": "Remove this category",
+
+  "paymentMethodCard": "Card",
+  "paymentMethodCash": "Cash",
+  "paymentMethodMobileMoney": "Mobile money",
+
+  "requestThreadYouReceive": "You receive {amount}",
+  "requestThreadYouPay": "You pay {amount}",
+  "requestWeightRange": "Between {min} and {max} kg",
+  "requestSenderFallbackName": "Yadony user",
+  "requestBudgetRequired": "Enter a budget to continue",
+
+  "requestTimeJustNow": "{verb, select, created{created just now} other{posted just now}}",
+  "requestTimeMinutesAgo": "{verb, select, created{created {minutes} min ago} other{posted {minutes} min ago}}",
+  "requestTimeHoursAgo": "{verb, select, created{created {hours} h ago} other{posted {hours} h ago}}",
+  "requestTimeYesterday": "{verb, select, created{created yesterday, {time}} other{posted yesterday, {time}}}",
+  "requestTimeOn": "{verb, select, created{created on {date}} other{posted on {date}}}"
 }
