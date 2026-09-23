@@ -975,5 +975,13 @@
   "homeNoActiveTripBody": "Ce filtre ne montre que les colis compatibles avec tes trajets à venir. Publie un trajet pour t'en servir.",
   "homeNoActiveTripPublish": "Publier un trajet",
   "homeFilterFieldsTransport": "TRANSPORT",
-  "homeFilterFieldsDate": "DATE"
+  "homeFilterFieldsDate": "DATE",
+  "homeNearMeTitle": "Près de moi",
+  "homeNearMeConfirm": "Activer le filtre",
+  "homeNearMeExplanation": "On garde uniquement les annonces dont le point de remise est dans ce rayon autour de toi.",
+  "homeLocationPermissionOpenSettings": "Ouvrir les réglages",
+  "homeLocationPermissionServiceOffTitle": "Localisation désactivée",
+  "homeLocationPermissionDeniedTitle": "Accès à la position refusé",
+  "homeLocationPermissionServiceOffBody": "Active la localisation de ton téléphone pour voir ce qui est près de toi.",
+  "homeLocationPermissionDeniedBody": "Autorise l'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte."
 }

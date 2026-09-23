@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 class NearMeRadiusSheet {
@@ -8,7 +9,7 @@ class NearMeRadiusSheet {
   static Future<double?> show(
     BuildContext context, {
     double initialRadiusKm = 25,
-    String confirmLabel = 'Activer le filtre',
+    String? confirmLabel,
   }) {
     final radiusNotifier = ValueNotifier<double>(
       initialRadiusKm.clamp(minRadiusKm, maxRadiusKm),
@@ -16,11 +17,11 @@ class NearMeRadiusSheet {
 
     return DonyBottomSheet.show<double>(
       context,
-      title: 'Près de moi',
+      title: context.l10n.homeNearMeTitle,
       stickyBottom: ValueListenableBuilder<double>(
         valueListenable: radiusNotifier,
-        builder: (_, radius, _) => DonyButton(
-          label: confirmLabel,
+        builder: (ctx, radius, _) => DonyButton(
+          label: confirmLabel ?? ctx.l10n.homeNearMeConfirm,
           onPressed: () =>
               Navigator.of(context, rootNavigator: true).pop(radius),
         ),
@@ -48,7 +49,7 @@ class _NearMeRadiusContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'On garde uniquement les annonces dont le point de remise est dans ce rayon autour de toi.',
+              context.l10n.homeNearMeExplanation,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.lg),

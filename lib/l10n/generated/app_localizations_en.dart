@@ -2321,4 +2321,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeFilterFieldsDate => 'DATE';
+
+  @override
+  String get homeNearMeTitle => 'Near me';
+
+  @override
+  String get homeNearMeConfirm => 'Turn on the filter';
+
+  @override
+  String get homeNearMeExplanation =>
+      'We only keep listings whose drop-off point is within this radius of you.';
+
+  @override
+  String get homeLocationPermissionOpenSettings => 'Open settings';
+
+  @override
+  String get homeLocationPermissionServiceOffTitle => 'Location is off';
+
+  @override
+  String get homeLocationPermissionDeniedTitle => 'Location access denied';
+
+  @override
+  String get homeLocationPermissionServiceOffBody =>
+      'Turn on your phone\'s location to see what\'s near you.';
+
+  @override
+  String get homeLocationPermissionDeniedBody =>
+      'Allow location access in your settings to use “Near me” and see where you are on the map.';
 }

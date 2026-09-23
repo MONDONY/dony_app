@@ -644,5 +644,13 @@
   "homeNoActiveTripBody": "This filter only shows parcels that fit your upcoming trips. Post a trip to use it.",
   "homeNoActiveTripPublish": "Post a trip",
   "homeFilterFieldsTransport": "TRANSPORT",
-  "homeFilterFieldsDate": "DATE"
+  "homeFilterFieldsDate": "DATE",
+  "homeNearMeTitle": "Near me",
+  "homeNearMeConfirm": "Turn on the filter",
+  "homeNearMeExplanation": "We only keep listings whose drop-off point is within this radius of you.",
+  "homeLocationPermissionOpenSettings": "Open settings",
+  "homeLocationPermissionServiceOffTitle": "Location is off",
+  "homeLocationPermissionDeniedTitle": "Location access denied",
+  "homeLocationPermissionServiceOffBody": "Turn on your phone's location to see what's near you.",
+  "homeLocationPermissionDeniedBody": "Allow location access in your settings to use “Near me” and see where you are on the map."
 }

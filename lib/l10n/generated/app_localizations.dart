@@ -3967,6 +3967,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'DATE'**
   String get homeFilterFieldsDate;
+
+  /// No description provided for @homeNearMeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Près de moi'**
+  String get homeNearMeTitle;
+
+  /// No description provided for @homeNearMeConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer le filtre'**
+  String get homeNearMeConfirm;
+
+  /// No description provided for @homeNearMeExplanation.
+  ///
+  /// In fr, this message translates to:
+  /// **'On garde uniquement les annonces dont le point de remise est dans ce rayon autour de toi.'**
+  String get homeNearMeExplanation;
+
+  /// No description provided for @homeLocationPermissionOpenSettings.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir les réglages'**
+  String get homeLocationPermissionOpenSettings;
+
+  /// No description provided for @homeLocationPermissionServiceOffTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Localisation désactivée'**
+  String get homeLocationPermissionServiceOffTitle;
+
+  /// No description provided for @homeLocationPermissionDeniedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès à la position refusé'**
+  String get homeLocationPermissionDeniedTitle;
+
+  /// No description provided for @homeLocationPermissionServiceOffBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Active la localisation de ton téléphone pour voir ce qui est près de toi.'**
+  String get homeLocationPermissionServiceOffBody;
+
+  /// No description provided for @homeLocationPermissionDeniedBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autorise l\'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte.'**
+  String get homeLocationPermissionDeniedBody;
 }
 
 class _AppLocalizationsDelegate

@@ -2324,4 +2324,31 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeFilterFieldsDate => 'DATE';
+
+  @override
+  String get homeNearMeTitle => 'Près de moi';
+
+  @override
+  String get homeNearMeConfirm => 'Activer le filtre';
+
+  @override
+  String get homeNearMeExplanation =>
+      'On garde uniquement les annonces dont le point de remise est dans ce rayon autour de toi.';
+
+  @override
+  String get homeLocationPermissionOpenSettings => 'Ouvrir les réglages';
+
+  @override
+  String get homeLocationPermissionServiceOffTitle => 'Localisation désactivée';
+
+  @override
+  String get homeLocationPermissionDeniedTitle => 'Accès à la position refusé';
+
+  @override
+  String get homeLocationPermissionServiceOffBody =>
+      'Active la localisation de ton téléphone pour voir ce qui est près de toi.';
+
+  @override
+  String get homeLocationPermissionDeniedBody =>
+      'Autorise l\'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte.';
 }

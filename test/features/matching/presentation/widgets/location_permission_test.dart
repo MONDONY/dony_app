@@ -1,8 +1,11 @@
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/l10n_test_helpers.dart';
 
 class MockLocationService extends Mock implements LocationService {}
 
@@ -252,5 +255,89 @@ void main() {
         verify(() => mockSvc.openAppSettings()).called(1);
       },
     );
+  });
+
+  group('LocationDeniedSheet en anglais', () {
+    testWidgets('localisation désactivée : titre, texte et bouton', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        localizedApp(
+          Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () => LocationDeniedSheet.show(
+                  ctx,
+                  access: LocationAccess.serviceDisabled,
+                  service: MockLocationService(),
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+          locale: AppL10n.en,
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Location is off'), findsOneWidget);
+      expect(
+        find.text("Turn on your phone's location to see what's near you."),
+        findsOneWidget,
+      );
+      expect(find.text('Open settings'), findsOneWidget);
+    });
+
+    testWidgets('accès refusé : titre et texte', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        localizedApp(
+          const Scaffold(
+            body: LocationDeniedSheet(access: LocationAccess.deniedForever),
+          ),
+          locale: AppL10n.en,
+        ),
+      );
+
+      expect(find.text('Location access denied'), findsOneWidget);
+      expect(
+        find.text(
+          'Allow location access in your settings to use “Near me” and see where you are on the map.',
+        ),
+        findsOneWidget,
+      );
+    });
+  });
+
+  group('LocationDeniedSheet en français', () {
+    testWidgets('textes d’origine inchangés', (tester) async {
+      await tester.pumpWidget(
+        localizedApp(
+          const Scaffold(
+            body: Column(
+              children: [
+                LocationDeniedSheet(access: LocationAccess.serviceDisabled),
+                LocationDeniedSheet(access: LocationAccess.denied),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        find.text(
+          'Active la localisation de ton téléphone pour voir ce qui est près de toi.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          "Autorise l'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte.",
+        ),
+        findsOneWidget,
+      );
+    });
   });
 }
