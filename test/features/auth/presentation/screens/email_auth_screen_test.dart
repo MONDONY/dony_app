@@ -11,6 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 Widget _wrap(Widget child, {required AuthBloc bloc}) {
@@ -110,5 +112,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('OTP Screen'), findsOneWidget);
+  });
+
+  testWidgets('affiche l\'écran en anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(_wrap(const EmailAuthScreen(), bloc: mockBloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Send code'), findsOneWidget);
+    expect(find.text('Your email address'), findsOneWidget);
+    expect(find.text('Protected sign-in'), findsOneWidget);
   });
 }

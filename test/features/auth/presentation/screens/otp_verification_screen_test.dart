@@ -18,6 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/stripe_account_test_doubles.dart';
 
@@ -444,5 +445,21 @@ void main() {
 
     // Should have popped back to previous screen
     expect(find.text('previous-screen'), findsOneWidget);
+  });
+
+  testWidgets('affiche l\'écran en anglais', (tester) async {
+    useEnglish();
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(buildScreen([]));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Verify'), findsOneWidget);
+    expect(find.text('Code sent to +33600000000'), findsOneWidget);
+    expect(find.text('2 / 3 · SMS code'), findsOneWidget);
   });
 }

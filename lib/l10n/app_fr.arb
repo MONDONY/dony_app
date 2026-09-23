@@ -327,5 +327,91 @@
   "authStepCountry": "Pays",
   "authStepIdentity": "Identité",
   "authStepPersonalInfo": "Vos infos",
-  "authStepPayouts": "Paiements"
+  "authStepPayouts": "Paiements",
+  "authMethodIllustrationLabel": "Voyageur Yadony tenant un colis sécurisé",
+  "authMethodSecureBadge": "Sécurisé",
+  "authMethodTitle": "Connecte-toi en toute confiance",
+  "authMethodSubtitle": "Tes échanges, ton paiement et ton suivi colis sont protégés à chaque étape.",
+  "authMethodContinueWithApple": "Continuer avec Apple",
+  "authMethodContinueWithEmail": "Continuer avec mon email",
+  "authMethodContinueWithPhone": "Continuer avec mon téléphone",
+  "authMethodContinueWithGoogle": "Continuer avec Google",
+  "authMethodOr": "OU",
+  "authMethodGuestSemantics": "Parcourir sans compte. Accès limité à la recherche. Connexion requise pour publier, contacter, réserver ou payer.",
+  "authMethodBrowseWithoutAccount": "Parcourir sans compte",
+  "authMethodGuestNotice": "Accès limité : recherche uniquement. Connexion requise pour publier, contacter, réserver ou payer.",
+  "authLegalPrefix": "En continuant tu acceptes nos ",
+  "authLegalTermsLink": "CGU",
+  "authLegalMiddle": " et notre ",
+  "authLegalPrivacyLink": "politique de confidentialité",
+  "authEmailStepLabel": "Email",
+  "authEmailTitle": "Ton adresse email",
+  "authEmailBody": "Saisis ton adresse email pour recevoir un code de connexion.",
+  "authEmailFootnote": "On protège ton accès sans partager ton email avec les voyageurs.",
+  "authEmailHint": "exemple@email.com",
+  "authEmailSpamHint": "Vérifie tes spams si tu ne reçois pas le code.",
+  "authEmailSendCode": "Envoyer le code",
+  "authEmailPreferSms": "Préfères le SMS ?",
+  "authPhoneDialCodeTitle": "Indicatif pays",
+  "authPhoneStepLabel": "Téléphone",
+  "authPhoneTitle": "Ton numéro",
+  "authPhoneBody": "On t’envoie un code à 6 chiffres par SMS pour vérifier que c’est bien toi.",
+  "authPhoneFootnote": "Ton numéro sert uniquement à sécuriser ton compte et tes échanges Yadony.",
+  "authPhoneNumberLabel": "NUMÉRO DE TÉLÉPHONE",
+  "authPhoneEnterNumber": "Entrez votre numéro",
+  "authPhoneNumberTooShort": "Numéro trop court",
+  "authPhoneGetSmsCode": "Recevoir le code SMS",
+  "authPhoneContinueWithEmail": "Continuer avec une adresse email",
+  "authOtpEnterSixDigits": "Entrez le code à 6 chiffres",
+  "authOtpSessionExpired": "Session expirée, veuillez recommencer",
+  "authOtpEmailVerified": "Email vérifié avec succès !",
+  "authOtpPhoneAdded": "Numéro ajouté avec succès !",
+  "authOtpStepEmail": "Code email",
+  "authOtpStepSms": "Code SMS",
+  "authOtpEmailTitle": "Code reçu ?",
+  "authOtpPhoneTitle": "Entrez le code",
+  "authOtpCodeSentTo": "Code envoyé à {contact}",
+  "@authOtpCodeSentTo": {
+    "placeholders": {
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "authOtpCodeSentToPhone": "Code envoyé au {contact}",
+  "@authOtpCodeSentToPhone": {
+    "placeholders": {
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "authOtpFootnote": "Le code expire rapidement pour garder ton compte Yadony protégé.",
+  "authOtpResendIn": "Renvoyer le code ({seconds} s)",
+  "@authOtpResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "authOtpResend": "Renvoyer le code",
+  "authOtpVerify": "Vérifier",
+  "authDialCodeSearchHint": "Rechercher un pays ou un indicatif",
+  "authDialCodeNoMatch": "Aucun pays ne correspond",
+  "authFlowIllustrationLabel": "Connexion sécurisée Yadony",
+  "authFlowProtectedBadge": "Connexion protégée",
+  "authFlowSkipForNow": "Passer pour l'instant",
+  "authRequiredTitle": "Connexion requise",
+  "authRequiredSignIn": "Se connecter",
+  "authRequiredKeepExploring": "Continuer à explorer",
+  "authRequiredFreeSearchTitle": "Recherche libre",
+  "authRequiredFreeSearchBody": "Tu peux consulter les demandes et comparer les trajets.",
+  "authRequiredProtectedTitle": "Actions protégées",
+  "authRequiredOfferSubtitle": "Connecte-toi pour proposer ton trajet en toute sécurité.",
+  "authRequiredOfferBody": "La connexion protège les échanges, les propositions et le suivi du colis.",
+  "authRequiredReportSubtitle": "Connecte-toi pour signaler une annonce.",
+  "authRequiredReportBody": "Les signalements sont reliés à un compte pour éviter les abus et mieux protéger la communauté.",
+  "authRequiredExploreSubtitle": "Connecte-toi pour utiliser cette action.",
+  "authRequiredExploreBody": "Publier, contacter, réserver ou payer nécessite un compte Yadony."
 }

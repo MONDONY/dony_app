@@ -13,6 +13,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/dial_code_cubit.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/auth/presentation/widgets/dial_code_picker.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -61,7 +62,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   void _showCodePicker() {
     DonyBottomSheet.show<void>(
       context,
-      title: 'Indicatif pays',
+      title: context.l10n.authPhoneDialCodeTitle,
       child: Builder(
         builder: (innerContext) => DialCodePicker(
           selectedCode: _dialCodeCubit.state.code,
@@ -125,7 +126,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                           child: AuthFlowHeader(
                             current: 1,
                             total: 3,
-                            label: 'Téléphone',
+                            label: context.l10n.authPhoneStepLabel,
                             showBack: !widget.fromProfile,
                           ),
                         ),
@@ -147,17 +148,15 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const AuthIntroCard(
+                                  AuthIntroCard(
                                     iconAsset: 'smartphone',
-                                    title: 'Ton numéro',
-                                    body:
-                                        'On t’envoie un code à 6 chiffres par SMS pour vérifier que c’est bien toi.',
-                                    footnote:
-                                        'Ton numéro sert uniquement à sécuriser ton compte et tes échanges Yadony.',
+                                    title: context.l10n.authPhoneTitle,
+                                    body: context.l10n.authPhoneBody,
+                                    footnote: context.l10n.authPhoneFootnote,
                                   ),
                                   const SizedBox(height: DonySpacing.xxl),
                                   Text(
-                                    'NUMÉRO DE TÉLÉPHONE',
+                                    context.l10n.authPhoneNumberLabel,
                                     style: tt.labelMedium?.copyWith(
                                       color: cs.onSurfaceVariant,
                                       letterSpacing: 0.8,
@@ -253,7 +252,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                             validator: (v) {
                                               if (v == null ||
                                                   v.trim().isEmpty) {
-                                                return 'Entrez votre numéro';
+                                                return context
+                                                    .l10n
+                                                    .authPhoneEnterNumber;
                                               }
                                               final digits = v
                                                   .trim()
@@ -262,7 +263,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                                     '',
                                                   );
                                               if (digits.length < 6) {
-                                                return 'Numéro trop court';
+                                                return context
+                                                    .l10n
+                                                    .authPhoneNumberTooShort;
                                               }
                                               return null;
                                             },
@@ -300,7 +303,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               DonyButton(
-                                label: 'Recevoir le code SMS',
+                                label: context.l10n.authPhoneGetSmsCode,
                                 onPressed: isLoading ? null : _submit,
                                 isLoading: isLoading,
                               ),
@@ -315,7 +318,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  'Continuer avec une adresse email',
+                                  context.l10n.authPhoneContinueWithEmail,
                                   style: tt.bodyMedium?.copyWith(
                                     color: cs.primary,
                                     fontWeight: FontWeight.w600,

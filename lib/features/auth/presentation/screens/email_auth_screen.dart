@@ -5,6 +5,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -101,7 +102,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                         child: AuthFlowHeader(
                           current: 1,
                           total: 3,
-                          label: 'Email',
+                          label: context.l10n.authEmailStepLabel,
                           showBack: !widget.fromProfile,
                         ),
                       ),
@@ -123,13 +124,11 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const AuthIntroCard(
+                                AuthIntroCard(
                                   iconAsset: 'mail',
-                                  title: 'Ton adresse email',
-                                  body:
-                                      'Saisis ton adresse email pour recevoir un code de connexion.',
-                                  footnote:
-                                      'On protège ton accès sans partager ton email avec les voyageurs.',
+                                  title: context.l10n.authEmailTitle,
+                                  body: context.l10n.authEmailBody,
+                                  footnote: context.l10n.authEmailFootnote,
                                 ),
                                 const SizedBox(height: DonySpacing.xxl),
                                 Container(
@@ -154,7 +153,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                                       color: cs.onSurface,
                                     ),
                                     decoration: InputDecoration(
-                                      hintText: 'exemple@email.com',
+                                      hintText: context.l10n.authEmailHint,
                                       hintStyle: tt.bodyLarge?.copyWith(
                                         color: cs.onSurfaceVariant,
                                       ),
@@ -206,7 +205,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                                     const SizedBox(width: DonySpacing.xs),
                                     Expanded(
                                       child: Text(
-                                        'Vérifie tes spams si tu ne reçois pas le code.',
+                                        context.l10n.authEmailSpamHint,
                                         style: tt.bodySmall?.copyWith(
                                           color: cs.onSurfaceVariant,
                                         ),
@@ -242,7 +241,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             DonyButton(
-                              label: 'Envoyer le code',
+                              label: context.l10n.authEmailSendCode,
                               onPressed: (_isValid && !isLoading)
                                   ? _submit
                                   : null,
@@ -259,7 +258,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                                 ),
                               ),
                               child: Text(
-                                'Préfères le SMS ?',
+                                context.l10n.authEmailPreferSms,
                                 style: tt.bodySmall?.copyWith(
                                   color: cs.onSurfaceVariant,
                                   decoration: TextDecoration.underline,

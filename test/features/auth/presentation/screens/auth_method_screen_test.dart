@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/stripe_account_test_doubles.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
@@ -288,5 +289,24 @@ void main() {
     );
 
     await bloc.close();
+  });
+
+  testWidgets('affiche les boutons de connexion en anglais', (tester) async {
+    useEnglish();
+    setSmsAuthEnabled(true);
+    final bloc = MockAuthBloc();
+    when(() => bloc.state).thenReturn(const AuthInitial());
+    when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+    await tester.pumpWidget(_app(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Continue with phone'), findsOneWidget);
+    expect(find.text('Continue with email'), findsOneWidget);
+    expect(find.text('Browse without an account'), findsOneWidget);
+    expect(
+      find.textContaining('By continuing, you accept our'),
+      findsOneWidget,
+    );
   });
 }

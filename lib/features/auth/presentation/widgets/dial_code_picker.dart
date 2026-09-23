@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/phone/phone_country.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/country_names.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Liste de choix de l'indicatif pays, avec recherche.
@@ -50,7 +52,7 @@ class _DialCodePickerState extends State<DialCodePicker> {
 
   /// Replie les accents pour que « senegal » trouve Sénégal.
   static String _fold(String value) {
-    const from = 'àâäçéèêëîïôöùûü';
+    const from = 'àâäçéèêëîïôöùûü'; // i18n-ignore
     const to = 'aaaceeeeiioouuu';
     final buffer = StringBuffer();
     for (final rune in value.trim().toLowerCase().runes) {
@@ -61,12 +63,15 @@ class _DialCodePickerState extends State<DialCodePicker> {
     return buffer.toString();
   }
 
-  List<PhoneCountry> _filtered(String query) {
+  /// Cherche dans le nom affiché (langue de l'app) et dans le nom français
+  /// de référence : « allemagne » trouve toujours l'Allemagne en anglais.
+  List<PhoneCountry> _filtered(String query, AppLocalizations l10n) {
     final needle = _fold(query);
     if (needle.isEmpty) return kPhoneCountries;
     return kPhoneCountries
         .where(
           (c) =>
+              _fold(countryName(l10n, c.code)).contains(needle) ||
               _fold(c.name).contains(needle) ||
               c.dialCode.contains(needle) ||
               c.code.toLowerCase() == needle,
@@ -87,7 +92,7 @@ class _DialCodePickerState extends State<DialCodePicker> {
           controller: _searchController,
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
-            hintText: 'Rechercher un pays ou un indicatif',
+            hintText: context.l10n.authDialCodeSearchHint,
             prefixIcon: Padding(
               padding: const EdgeInsets.all(DonySpacing.md),
               child: DonyIcon('search', color: cs.onSurfaceVariant, size: 18),
@@ -108,12 +113,12 @@ class _DialCodePickerState extends State<DialCodePicker> {
           child: ValueListenableBuilder<String>(
             valueListenable: _query,
             builder: (context, query, _) {
-              final countries = _filtered(query);
+              final countries = _filtered(query, context.l10n);
               if (countries.isEmpty) {
                 return Padding(
                   padding: const EdgeInsets.all(DonySpacing.xl),
                   child: Text(
-                    'Aucun pays ne correspond',
+                    context.l10n.authDialCodeNoMatch,
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 );
@@ -131,7 +136,7 @@ class _DialCodePickerState extends State<DialCodePicker> {
                         style: const TextStyle(fontSize: 22),
                       ),
                       title: Text(
-                        '${c.name} (${c.dialCode})',
+                        '${countryName(context.l10n, c.code)} (${c.dialCode})',
                         style: tt.titleMedium,
                       ),
                       trailing: widget.selectedCode == c.code

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 class AuthFlowBackground extends StatelessWidget {
@@ -21,7 +22,7 @@ class AuthFlowBackground extends StatelessWidget {
           imageAsset,
           fit: BoxFit.cover,
           opacity: AlwaysStoppedAnimation(isLight ? 0.24 : 0.48),
-          semanticLabel: 'Connexion sécurisée Yadony',
+          semanticLabel: context.l10n.authFlowIllustrationLabel,
         ),
         DecoratedBox(
           decoration: BoxDecoration(
@@ -165,7 +166,7 @@ class AuthTrustBadge extends StatelessWidget {
           const SizedBox(width: DonySpacing.xs),
           Flexible(
             child: Text(
-              'Connexion protégée',
+              context.l10n.authFlowProtectedBadge,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: tt.labelLarge?.copyWith(
@@ -374,7 +375,7 @@ class AuthFlowActions extends StatelessWidget {
     this.primary,
     this.onSkip,
     this.skipEnabled = true,
-    this.skipLabel = 'Passer pour l\'instant',
+    this.skipLabel,
   });
 
   final Widget? primary;
@@ -391,7 +392,8 @@ class AuthFlowActions extends StatelessWidget {
   /// et faire sauter la mise en page.
   final bool skipEnabled;
 
-  final String skipLabel;
+  /// Libellé du lien « passer ». `null` : « Passer pour l'instant » traduit.
+  final String? skipLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -416,7 +418,7 @@ class AuthFlowActions extends StatelessWidget {
               : TextButton(
                   onPressed: skipEnabled ? onSkip : null,
                   child: Text(
-                    skipLabel,
+                    skipLabel ?? context.l10n.authFlowSkipForNow,
                     style: tt.bodyMedium?.copyWith(
                       color: skipEnabled
                           ? cs.onSurfaceVariant

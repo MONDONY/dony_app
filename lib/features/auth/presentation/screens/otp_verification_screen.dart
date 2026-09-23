@@ -13,6 +13,7 @@ import 'package:dony/features/auth/presentation/post_signup_route.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -61,7 +62,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     if (_otpCode.length != 6) {
       DonySnackbar.show(
         context,
-        message: 'Entrez le code à 6 chiffres',
+        message: context.l10n.authOtpEnterSixDigits,
         type: DonySnackbarType.error,
       );
       return;
@@ -82,7 +83,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       if (state is! AuthOtpSent) {
         DonySnackbar.show(
           context,
-          message: 'Session expirée, veuillez recommencer',
+          message: context.l10n.authOtpSessionExpired,
           type: DonySnackbarType.error,
         );
         return;
@@ -155,7 +156,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 // Email vérifié via OTP — déjà sauvegardé côté backend
                 DonySnackbar.show(
                   context,
-                  message: 'Email vérifié avec succès !',
+                  message: context.l10n.authOtpEmailVerified,
                   type: DonySnackbarType.success,
                 );
                 context.go('/profile');
@@ -163,7 +164,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             } else if (state is AuthProfileUpdated) {
               DonySnackbar.show(
                 context,
-                message: 'Numéro ajouté avec succès !',
+                message: context.l10n.authOtpPhoneAdded,
                 type: DonySnackbarType.success,
               );
               context.go('/profile');
@@ -226,8 +227,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         current: 2,
                         total: 3,
                         label: widget.mode == OtpMode.email
-                            ? 'Code email'
-                            : 'Code SMS',
+                            ? context.l10n.authOtpStepEmail
+                            : context.l10n.authOtpStepSms,
                       ),
                     ),
 
@@ -253,13 +254,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                     ? 'mail'
                                     : 'key-round',
                                 title: widget.mode == OtpMode.email
-                                    ? 'Code reçu ?'
-                                    : 'Entrez le code',
+                                    ? context.l10n.authOtpEmailTitle
+                                    : context.l10n.authOtpPhoneTitle,
                                 body: widget.mode == OtpMode.email
-                                    ? 'Code envoyé à $contact'
-                                    : 'Code envoyé au $contact',
-                                footnote:
-                                    'Le code expire rapidement pour garder ton compte Yadony protégé.',
+                                    ? context.l10n.authOtpCodeSentTo(contact)
+                                    : context.l10n.authOtpCodeSentToPhone(
+                                        contact,
+                                      ),
+                                footnote: context.l10n.authOtpFootnote,
                               ),
                               const SizedBox(height: DonySpacing.xxl),
 
@@ -336,8 +338,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                 onTap: secondsLeft <= 0 ? _resend : null,
                                 child: Text(
                                   secondsLeft > 0
-                                      ? 'Renvoyer le code ($secondsLeft s)'
-                                      : 'Renvoyer le code',
+                                      ? context.l10n.authOtpResendIn(
+                                          secondsLeft,
+                                        )
+                                      : context.l10n.authOtpResend,
                                   style: tt.bodyMedium?.copyWith(
                                     color: secondsLeft > 0
                                         ? cs.onSurfaceVariant
@@ -371,7 +375,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         DonySpacing.base + bottom,
                       ),
                       child: DonyButton(
-                        label: 'Vérifier',
+                        label: context.l10n.authOtpVerify,
                         onPressed: isLoading ? null : _verify,
                         isLoading: isLoading,
                       ),

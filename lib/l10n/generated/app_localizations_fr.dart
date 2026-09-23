@@ -1090,4 +1090,222 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authStepPayouts => 'Paiements';
+
+  @override
+  String get authMethodIllustrationLabel =>
+      'Voyageur Yadony tenant un colis sécurisé';
+
+  @override
+  String get authMethodSecureBadge => 'Sécurisé';
+
+  @override
+  String get authMethodTitle => 'Connecte-toi en toute confiance';
+
+  @override
+  String get authMethodSubtitle =>
+      'Tes échanges, ton paiement et ton suivi colis sont protégés à chaque étape.';
+
+  @override
+  String get authMethodContinueWithApple => 'Continuer avec Apple';
+
+  @override
+  String get authMethodContinueWithEmail => 'Continuer avec mon email';
+
+  @override
+  String get authMethodContinueWithPhone => 'Continuer avec mon téléphone';
+
+  @override
+  String get authMethodContinueWithGoogle => 'Continuer avec Google';
+
+  @override
+  String get authMethodOr => 'OU';
+
+  @override
+  String get authMethodGuestSemantics =>
+      'Parcourir sans compte. Accès limité à la recherche. Connexion requise pour publier, contacter, réserver ou payer.';
+
+  @override
+  String get authMethodBrowseWithoutAccount => 'Parcourir sans compte';
+
+  @override
+  String get authMethodGuestNotice =>
+      'Accès limité : recherche uniquement. Connexion requise pour publier, contacter, réserver ou payer.';
+
+  @override
+  String get authLegalPrefix => 'En continuant tu acceptes nos ';
+
+  @override
+  String get authLegalTermsLink => 'CGU';
+
+  @override
+  String get authLegalMiddle => ' et notre ';
+
+  @override
+  String get authLegalPrivacyLink => 'politique de confidentialité';
+
+  @override
+  String get authEmailStepLabel => 'Email';
+
+  @override
+  String get authEmailTitle => 'Ton adresse email';
+
+  @override
+  String get authEmailBody =>
+      'Saisis ton adresse email pour recevoir un code de connexion.';
+
+  @override
+  String get authEmailFootnote =>
+      'On protège ton accès sans partager ton email avec les voyageurs.';
+
+  @override
+  String get authEmailHint => 'exemple@email.com';
+
+  @override
+  String get authEmailSpamHint =>
+      'Vérifie tes spams si tu ne reçois pas le code.';
+
+  @override
+  String get authEmailSendCode => 'Envoyer le code';
+
+  @override
+  String get authEmailPreferSms => 'Préfères le SMS ?';
+
+  @override
+  String get authPhoneDialCodeTitle => 'Indicatif pays';
+
+  @override
+  String get authPhoneStepLabel => 'Téléphone';
+
+  @override
+  String get authPhoneTitle => 'Ton numéro';
+
+  @override
+  String get authPhoneBody =>
+      'On t’envoie un code à 6 chiffres par SMS pour vérifier que c’est bien toi.';
+
+  @override
+  String get authPhoneFootnote =>
+      'Ton numéro sert uniquement à sécuriser ton compte et tes échanges Yadony.';
+
+  @override
+  String get authPhoneNumberLabel => 'NUMÉRO DE TÉLÉPHONE';
+
+  @override
+  String get authPhoneEnterNumber => 'Entrez votre numéro';
+
+  @override
+  String get authPhoneNumberTooShort => 'Numéro trop court';
+
+  @override
+  String get authPhoneGetSmsCode => 'Recevoir le code SMS';
+
+  @override
+  String get authPhoneContinueWithEmail => 'Continuer avec une adresse email';
+
+  @override
+  String get authOtpEnterSixDigits => 'Entrez le code à 6 chiffres';
+
+  @override
+  String get authOtpSessionExpired => 'Session expirée, veuillez recommencer';
+
+  @override
+  String get authOtpEmailVerified => 'Email vérifié avec succès !';
+
+  @override
+  String get authOtpPhoneAdded => 'Numéro ajouté avec succès !';
+
+  @override
+  String get authOtpStepEmail => 'Code email';
+
+  @override
+  String get authOtpStepSms => 'Code SMS';
+
+  @override
+  String get authOtpEmailTitle => 'Code reçu ?';
+
+  @override
+  String get authOtpPhoneTitle => 'Entrez le code';
+
+  @override
+  String authOtpCodeSentTo(String contact) {
+    return 'Code envoyé à $contact';
+  }
+
+  @override
+  String authOtpCodeSentToPhone(String contact) {
+    return 'Code envoyé au $contact';
+  }
+
+  @override
+  String get authOtpFootnote =>
+      'Le code expire rapidement pour garder ton compte Yadony protégé.';
+
+  @override
+  String authOtpResendIn(int seconds) {
+    return 'Renvoyer le code ($seconds s)';
+  }
+
+  @override
+  String get authOtpResend => 'Renvoyer le code';
+
+  @override
+  String get authOtpVerify => 'Vérifier';
+
+  @override
+  String get authDialCodeSearchHint => 'Rechercher un pays ou un indicatif';
+
+  @override
+  String get authDialCodeNoMatch => 'Aucun pays ne correspond';
+
+  @override
+  String get authFlowIllustrationLabel => 'Connexion sécurisée Yadony';
+
+  @override
+  String get authFlowProtectedBadge => 'Connexion protégée';
+
+  @override
+  String get authFlowSkipForNow => 'Passer pour l\'instant';
+
+  @override
+  String get authRequiredTitle => 'Connexion requise';
+
+  @override
+  String get authRequiredSignIn => 'Se connecter';
+
+  @override
+  String get authRequiredKeepExploring => 'Continuer à explorer';
+
+  @override
+  String get authRequiredFreeSearchTitle => 'Recherche libre';
+
+  @override
+  String get authRequiredFreeSearchBody =>
+      'Tu peux consulter les demandes et comparer les trajets.';
+
+  @override
+  String get authRequiredProtectedTitle => 'Actions protégées';
+
+  @override
+  String get authRequiredOfferSubtitle =>
+      'Connecte-toi pour proposer ton trajet en toute sécurité.';
+
+  @override
+  String get authRequiredOfferBody =>
+      'La connexion protège les échanges, les propositions et le suivi du colis.';
+
+  @override
+  String get authRequiredReportSubtitle =>
+      'Connecte-toi pour signaler une annonce.';
+
+  @override
+  String get authRequiredReportBody =>
+      'Les signalements sont reliés à un compte pour éviter les abus et mieux protéger la communauté.';
+
+  @override
+  String get authRequiredExploreSubtitle =>
+      'Connecte-toi pour utiliser cette action.';
+
+  @override
+  String get authRequiredExploreBody =>
+      'Publier, contacter, réserver ou payer nécessite un compte Yadony.';
 }
