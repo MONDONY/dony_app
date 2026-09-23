@@ -69,7 +69,9 @@ Future<void> _bootstrap() async {
   );
   // Maintient la native splash visible jusqu'à ce que Flutter soit prêt
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  await initializeDateFormatting('fr');
+  // Symboles de date de toutes les locales : les formats suivent la langue
+  // de l'app (AppL10n.localeName).
+  await initializeDateFormatting();
 
   // Fail-fast on misconfigured release builds (a release shipped without
   // --dart-define-from-file would silently call http://localhost and use
