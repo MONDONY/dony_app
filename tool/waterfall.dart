@@ -59,7 +59,8 @@ List<String> detectWaterfalls(List<Map<String, dynamic>> samples) {
 
     if (chain.length >= 3) {
       final paths = chain.map((s) => s['path'] as String).join(' → ');
-      final totalMs = (chain.last['startTsMs'] as int) +
+      final totalMs =
+          (chain.last['startTsMs'] as int) +
           (chain.last['durationMs'] as int) -
           (chain.first['startTsMs'] as int);
       findings.add(
@@ -85,8 +86,11 @@ void main(List<String> args) {
   final rawFiles = dir
       .listSync()
       .whereType<File>()
-      .where((f) => f.uri.pathSegments.last.startsWith('raw-') &&
-          f.path.endsWith('.json'))
+      .where(
+        (f) =>
+            f.uri.pathSegments.last.startsWith('raw-') &&
+            f.path.endsWith('.json'),
+      )
       .toList();
 
   if (rawFiles.isEmpty) {
@@ -127,7 +131,9 @@ void main(List<String> args) {
   buffer.writeln('Generated: ${DateTime.now().toIso8601String()}');
   buffer.writeln();
   if (allFindings.isEmpty) {
-    buffer.writeln('No waterfall chains detected across ${rawFiles.length} scenario(s).');
+    buffer.writeln(
+      'No waterfall chains detected across ${rawFiles.length} scenario(s).',
+    );
   } else {
     buffer.writeln('## Waterfalls');
     buffer.writeln();
