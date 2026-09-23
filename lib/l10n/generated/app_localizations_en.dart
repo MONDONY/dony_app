@@ -1666,4 +1666,7 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get countryNameCd => 'DR Congo';
 }

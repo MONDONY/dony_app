@@ -45,6 +45,8 @@ String countryName(AppLocalizations l, String code) => switch (code) {
   'GA' => l.countryNameGa,
   'GQ' => l.countryNameGq,
   'TD' => l.countryNameTd,
+  // Hors catalogue, proposé seulement par le sélecteur d'indicatif.
+  'CD' => l.countryNameCd,
   _ => code,
 };
 

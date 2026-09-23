@@ -486,5 +486,6 @@
   "authLocalEnterPin": "Enter your PIN",
   "authLocalLastAttempt": "Last attempt before lockout",
   "authLocalAttemptsLeft": "{count, plural, =1{{count} attempt left} other{{count} attempts left}}",
-  "authLocalRetryIn": "{seconds, plural, =1{Try again in {seconds} second} other{Try again in {seconds} seconds}}"
+  "authLocalRetryIn": "{seconds, plural, =1{Try again in {seconds} second} other{Try again in {seconds} seconds}}",
+  "countryNameCd": "DR Congo"
 }

@@ -3019,6 +3019,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{seconds, plural, =1{Réessayez dans {seconds} seconde} other{Réessayez dans {seconds} secondes}}'**
   String authLocalRetryIn(int seconds);
+
+  /// No description provided for @countryNameCd.
+  ///
+  /// In fr, this message translates to:
+  /// **'RD Congo'**
+  String get countryNameCd;
 }
 
 class _AppLocalizationsDelegate

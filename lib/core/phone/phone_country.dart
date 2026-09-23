@@ -133,7 +133,9 @@ const Map<String, _Meta> _phoneMeta = {
 };
 
 /// Nom affiché des entrées absentes du catalogue pays.
-const Map<String, String> _horsCatalogueNames = {'CD': 'RD Congo'};
+const Map<String, String> _horsCatalogueNames = {
+  'CD': 'RD Congo', // i18n-ignore
+};
 
 /// Les pays proposés, dans l'ordre du catalogue puis les exceptions.
 ///
