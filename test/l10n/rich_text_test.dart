@@ -46,6 +46,32 @@ void main() {
       expect(only.style, isNull);
     });
 
+    test(
+      'part répété plusieurs fois : seule la première occurrence est stylée',
+      () {
+        // « 5 € » apparaît deux fois : le comportement documenté est de ne
+        // styler que la première occurrence, la seconde restant dans le
+        // span « après », en texte normal.
+        final spans = emphasizedSpans(
+          'Envoie pour 5 €, reçois 5 € de bonus.',
+          '5 €',
+          style: style,
+        );
+
+        expect(spans, hasLength(3));
+        final before = spans[0] as TextSpan;
+        final middle = spans[1] as TextSpan;
+        final after = spans[2] as TextSpan;
+        expect(before.text, 'Envoie pour ');
+        expect(middle.text, '5 €');
+        expect(middle.style, style);
+        // La seconde occurrence de « 5 € » reste dans le span « après »,
+        // non stylée.
+        expect(after.text, ', reçois 5 € de bonus.');
+        expect(after.style, isNull);
+      },
+    );
+
     test('le recognizer est porté par le span du milieu uniquement', () {
       final recognizer = TapGestureRecognizer();
       addTearDown(recognizer.dispose);

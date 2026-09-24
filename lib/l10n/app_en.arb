@@ -4223,7 +4223,7 @@
   },
 
   "paymentAuthConfirmTitle": "Confirm payment",
-  "paymentAuthConfirmMessage": "The amount will be held until delivery, then paid to the traveler.",
+  "paymentAuthConfirmMessage": "The amount will be on hold until delivery, then paid to the traveler.",
 
   "paymentScreenTitle": "Pay for my shipment",
   "paymentSecureNotice": "Your payment is secure, released only once the recipient confirms delivery.",
@@ -4242,7 +4242,7 @@
   "paymentSummaryFlatRateValue": "Flat rate for items",
   "paymentSummaryTotalLabel": "You pay",
   "paymentEscrowTitle": "Shipment reserved!",
-  "paymentEscrowSubtitle": "{amount} is held securely, then released once the recipient confirms delivery.",
+  "paymentEscrowSubtitle": "{amount} is held and secured, then released once the recipient confirms delivery.",
   "@paymentEscrowSubtitle": {
     "placeholders": {
       "amount": {
@@ -4254,6 +4254,6 @@
 
   "paymentSheetTitle": "Payment",
   "paymentSheetConfirmedTitle": "Payment confirmed",
-  "paymentSheetEscrowNote": "Funds are held in escrow, the traveler will be paid once the parcel is delivered.",
+  "paymentSheetEscrowNote": "Funds are on hold until the parcel is delivered, then paid to the traveler.",
   "paymentSheetSecureFooter": "Payment secured by Stripe"
 }

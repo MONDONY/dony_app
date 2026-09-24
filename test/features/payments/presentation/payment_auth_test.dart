@@ -453,7 +453,7 @@ void main() {
         expect(find.text('Confirm payment'), findsOneWidget);
         expect(
           find.text(
-            'The amount will be held until delivery, then paid to the traveler.',
+            'The amount will be on hold until delivery, then paid to the traveler.',
           ),
           findsOneWidget,
         );

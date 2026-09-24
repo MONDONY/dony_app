@@ -296,7 +296,7 @@ void main() {
       expect(find.text('Payment confirmed'), findsOneWidget);
       expect(
         find.text(
-          'Funds are held in escrow, the traveler will be paid once the parcel is delivered.',
+          'Funds are on hold until the parcel is delivered, then paid to the traveler.',
         ),
         findsOneWidget,
       );

@@ -13,6 +13,14 @@ import 'package:flutter/widgets.dart';
 /// ou absent de [text], rend un seul span portant tout le texte, sans style ni
 /// recognizer — jamais de crash sur une traduction où le paramètre change de
 /// forme.
+///
+/// Si [part] apparaît plusieurs fois dans [text] (paramètre court comme un
+/// nombre ou un mot commun), seule la **première occurrence** est stylée : les
+/// occurrences suivantes restent dans le span « après », en texte normal. Ce
+/// choix évite un `RegExp`/`splitMapJoin` coûteux pour un cas rare en pratique
+/// (les phrases de ce plan interpolent un montant ou une durée qui ne se répète
+/// pas ailleurs dans le même message) ; à revoir si un futur appelant a besoin
+/// d'un style sur chaque occurrence.
 List<InlineSpan> emphasizedSpans(
   String text,
   String part, {

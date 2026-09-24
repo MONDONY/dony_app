@@ -534,5 +534,55 @@ void main() {
         startsWith('Pay '),
       );
     });
+
+    testWidgets('récapitulatif traduit (poids, prix/kg, total)', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: _testBid,
+            localAuthService: mockLocalAuth,
+            userPrefs: _mockUserPrefs(biometricEnabled: true),
+          ),
+          mockBloc,
+          configBloc: mockConfigBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Summary'), findsOneWidget);
+      expect(find.text('Weight'), findsOneWidget);
+      expect(find.text('Price/kg'), findsOneWidget);
+      expect(find.text('You pay'), findsOneWidget);
+    });
+
+    testWidgets('vue de confirmation escrow traduite', (tester) async {
+      useEnglish();
+      whenListen<PaymentState>(
+        mockBloc,
+        Stream.value(const PaymentEscrowPending(50.0)),
+        initialState: const PaymentEscrowPending(50.0),
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: _testBid,
+            localAuthService: mockLocalAuth,
+            userPrefs: _mockUserPrefs(biometricEnabled: true),
+          ),
+          mockBloc,
+          configBloc: mockConfigBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Shipment reserved!'), findsOneWidget);
+      expect(find.text('View my shipments'), findsOneWidget);
+      expect(find.textContaining('is held and secured'), findsOneWidget);
+    });
   });
 }

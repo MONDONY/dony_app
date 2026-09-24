@@ -8619,7 +8619,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentAuthConfirmMessage =>
-      'The amount will be held until delivery, then paid to the traveler.';
+      'The amount will be on hold until delivery, then paid to the traveler.';
 
   @override
   String get paymentScreenTitle => 'Pay for my shipment';
@@ -8656,7 +8656,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String paymentEscrowSubtitle(String amount) {
-    return '$amount is held securely, then released once the recipient confirms delivery.';
+    return '$amount is held and secured, then released once the recipient confirms delivery.';
   }
 
   @override
@@ -8670,7 +8670,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentSheetEscrowNote =>
-      'Funds are held in escrow, the traveler will be paid once the parcel is delivered.';
+      'Funds are on hold until the parcel is delivered, then paid to the traveler.';
 
   @override
   String get paymentSheetSecureFooter => 'Payment secured by Stripe';
