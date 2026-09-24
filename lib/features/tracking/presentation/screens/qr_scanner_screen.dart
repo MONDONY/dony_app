@@ -121,7 +121,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       listener: (context, state) {
         if (state is QrScanSuccess) {
           context.pop(); // close sheet
-          _showSuccessDialog(state.event.stepLabel);
+          _showSuccessDialog(state.event.stepLabel(l));
         } else if (state is QrScanQueued) {
           context.pop(); // close sheet
           _showQueuedDialog();

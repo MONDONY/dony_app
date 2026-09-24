@@ -26,7 +26,6 @@ void main() {
       expect(model.gpsLat, 48.8566);
       expect(model.gpsLon, 2.3522);
       expect(model.gpsLabel, 'Paris');
-      expect(model.displayLocationLabel, 'Paris');
       expect(model.photoUrl, 'https://cdn.dony.app/photo.jpg');
       expect(model.offlineTimestamp, isNotNull);
     });
@@ -42,46 +41,8 @@ void main() {
       expect(model.gpsLat, isNull);
       expect(model.gpsLon, isNull);
       expect(model.gpsLabel, isNull);
-      expect(model.displayLocationLabel, isNull);
       expect(model.photoUrl, isNull);
       expect(model.offlineTimestamp, isNull);
-    });
-
-    test('stepLabel returns Départ confirmé for DEPART', () {
-      final model = TrackingEventModel.fromJson({
-        ...baseJson,
-        'eventType': 'DEPART',
-      });
-      expect(model.stepLabel, 'Départ confirmé');
-    });
-
-    test('displayLocationLabel hides raw coordinates when label is absent', () {
-      final model = TrackingEventModel.fromJson({
-        ...baseJson,
-        'gpsLabel': null,
-      });
-      expect(model.displayLocationLabel, 'Lieu GPS enregistré');
-    });
-
-    test('stepLabel returns En transit for TRANSIT', () {
-      final model = TrackingEventModel.fromJson(baseJson);
-      expect(model.stepLabel, 'En transit');
-    });
-
-    test('stepLabel returns Arrivée confirmée for ARRIVEE', () {
-      final model = TrackingEventModel.fromJson({
-        ...baseJson,
-        'eventType': 'ARRIVEE',
-      });
-      expect(model.stepLabel, 'Arrivée confirmée');
-    });
-
-    test('stepLabel falls back to eventType for unknown', () {
-      final model = TrackingEventModel.fromJson({
-        ...baseJson,
-        'eventType': 'CUSTOM_EVENT',
-      });
-      expect(model.stepLabel, 'CUSTOM_EVENT');
     });
   });
 

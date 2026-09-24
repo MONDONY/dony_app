@@ -7,6 +7,8 @@ import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
+import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,7 +23,7 @@ void showTrackingTimelineSheet(
 }) {
   DonyBottomSheet.show(
     context,
-    title: 'Suivi du colis',
+    title: context.l10n.trackingTimelineTitle,
     subtitle: corridor.isNotEmpty ? corridor : null,
     wrapper: (child) => BlocProvider(
       create: (_) => getIt<TrackingBloc>()..add(TrackingEventsRequested(bidId)),
@@ -33,7 +35,7 @@ void showTrackingTimelineSheet(
           return const SizedBox.shrink();
         }
         return DonyButton(
-          label: 'Partager le suivi',
+          label: context.l10n.trackingTimelineShare,
           iconAsset: 'share-2',
           onPressed: onShareTracking,
         );
@@ -60,21 +62,22 @@ class _TrackingTimelineContent extends StatelessWidget {
     this.arrivalInstructions,
   });
 
+  // Noms de villes : valeur de donnée, jamais traduite (i18n-ignore).
   static const _cityToCodes = <String, (String, String)>{
-    'Paris': ('PAR', 'CDG'),
-    'Lyon': ('LYS', 'LYS'),
-    'Marseille': ('MRS', 'MRS'),
-    'Dakar': ('DKR', 'DSS'),
-    'Abidjan': ('ABJ', 'ABJ'),
-    'Bamako': ('BKO', 'BKO'),
-    'Douala': ('DLA', 'DLA'),
+    'Paris': ('PAR', 'CDG'), // i18n-ignore
+    'Lyon': ('LYS', 'LYS'), // i18n-ignore
+    'Marseille': ('MRS', 'MRS'), // i18n-ignore
+    'Dakar': ('DKR', 'DSS'), // i18n-ignore
+    'Abidjan': ('ABJ', 'ABJ'), // i18n-ignore
+    'Bamako': ('BKO', 'BKO'), // i18n-ignore
+    'Douala': ('DLA', 'DLA'), // i18n-ignore
   };
 
   (String, String, String, String) _parseCorridor() {
     // corridor format: "Paris → Dakar" or "Paris CDG → Dakar DSS"
     final parts = corridor.split('→').map((s) => s.trim()).toList();
-    final dep = parts.isNotEmpty ? parts[0].trim() : 'Paris';
-    final arr = parts.length > 1 ? parts[1].trim() : 'Dakar';
+    final dep = parts.isNotEmpty ? parts[0].trim() : 'Paris'; // i18n-ignore
+    final arr = parts.length > 1 ? parts[1].trim() : 'Dakar'; // i18n-ignore
 
     final depCodes =
         _cityToCodes[dep] ??
@@ -145,7 +148,7 @@ class _TrackingTimelineContent extends StatelessWidget {
                   const SizedBox(height: DonySpacing.base),
 
                   // "Pas besoin d'app !" banner
-                  const _ApplessBanner(travelerName: 'le voyageur'),
+                  const _ApplessBanner(),
                 ],
               )
               .animate()
@@ -180,7 +183,7 @@ class _Timeline extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'ÉTAPES',
+          context.l10n.trackingTimelineStepsHeader,
           style: tt.labelMedium?.copyWith(
             color: cs.onSurfaceVariant,
             letterSpacing: 0.8,
@@ -205,7 +208,7 @@ class _Timeline extends StatelessWidget {
           DonyStatusBanner(
             type: DonyStatusBannerType.info,
             iconAsset: 'map-pin',
-            title: 'Instructions de retrait',
+            title: context.l10n.tripOwnerArrivalEditingTitle,
             message: arrivalInstructions,
           ),
         ],
@@ -229,6 +232,9 @@ class _TimelineItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final localeName = l.localeName;
+    final locationLabel = event.locationLabel(l);
 
     final Color stepColor = switch (event.eventType) {
       'ARRIVEE' => cs.success,
@@ -288,19 +294,24 @@ class _TimelineItem extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        event.stepLabel,
+                        event.stepLabel(l),
                         style: tt.titleSmall?.copyWith(color: cs.onSurface),
                       ),
                       const SizedBox(height: DonySpacing.xs),
                       Text(
-                        DateFormat(
-                          'dd/MM/yyyy à HH:mm',
-                        ).format(event.scannedAt.toLocal()),
+                        l.commonDateAtTime(
+                          DateFormat.yMd(
+                            localeName,
+                          ).format(event.scannedAt.toLocal()),
+                          DateFormat.jm(
+                            localeName,
+                          ).format(event.scannedAt.toLocal()),
+                        ),
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
                       ),
-                      if (event.displayLocationLabel != null) ...[
+                      if (locationLabel != null) ...[
                         const SizedBox(height: DonySpacing.xs),
                         Row(
                           children: [
@@ -311,7 +322,7 @@ class _TimelineItem extends StatelessWidget {
                             ),
                             const SizedBox(width: DonySpacing.xs),
                             Text(
-                              event.displayLocationLabel!,
+                              locationLabel,
                               style: tt.bodySmall?.copyWith(
                                 color: cs.onSurfaceVariant,
                               ),
@@ -357,7 +368,7 @@ class _TimelineItem extends StatelessWidget {
                             DonyIcon('wifi-off', size: 12, color: cs.warning),
                             const SizedBox(width: DonySpacing.xs),
                             Text(
-                              'Lecture hors-ligne synchronisée',
+                              l.trackingOfflineScanSynced,
                               style: tt.bodySmall?.copyWith(
                                 color: cs.warning,
                                 fontWeight: FontWeight.w500,
@@ -401,12 +412,12 @@ class _PendingConfirmationBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'En attente de confirmation',
+                  context.l10n.trackingAwaitingConfirmationTitle,
                   style: tt.titleSmall?.copyWith(color: cs.warning),
                 ),
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
-                  'Le destinataire doit confirmer la réception via le code SMS.',
+                  context.l10n.trackingAwaitingConfirmationDesc,
                   style: tt.bodySmall?.copyWith(
                     color: cs.onSurfaceVariant,
                     height: 1.4,
@@ -445,10 +456,10 @@ class _EmptyTimeline extends StatelessWidget {
             child: DonyIcon('hourglass', color: cs.primary, size: 32),
           ),
           const SizedBox(height: DonySpacing.base),
-          Text('En attente de la lecture au départ', style: tt.titleLarge),
+          Text(context.l10n.trackingEmptyTimelineTitle, style: tt.titleLarge),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Le voyageur lira le QR code lors de la remise du colis.',
+            context.l10n.trackingEmptyTimelineDesc,
             textAlign: TextAlign.center,
             style: tt.bodySmall?.copyWith(
               color: cs.onSurfaceVariant,
@@ -464,8 +475,7 @@ class _EmptyTimeline extends StatelessWidget {
 // ── "Pas besoin d'app !" banner ───────────────────────────────────────────────
 
 class _ApplessBanner extends StatelessWidget {
-  final String travelerName;
-  const _ApplessBanner({required this.travelerName});
+  const _ApplessBanner();
 
   @override
   Widget build(BuildContext context) {
@@ -487,7 +497,7 @@ class _ApplessBanner extends StatelessWidget {
               DonyIcon('circle-check', color: cs.secondary, size: 20),
               const SizedBox(width: DonySpacing.sm),
               Text(
-                'Pas besoin d\'app !',
+                context.l10n.trackingApplessTitle,
                 style: tt.titleSmall?.copyWith(
                   color: cs.secondary,
                   fontWeight: FontWeight.w700,
@@ -497,7 +507,7 @@ class _ApplessBanner extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Quand $travelerName sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.',
+            context.l10n.trackingApplessMessage,
             style: tt.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurface,
               height: 1.4,
@@ -536,7 +546,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.lg),
             DonyButton(
-              label: 'Réessayer',
+              label: context.l10n.commonRetry,
               iconAsset: 'refresh-cw',
               onPressed: onRetry,
               fullWidth: false,

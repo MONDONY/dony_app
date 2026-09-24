@@ -8,6 +8,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockRatingBloc extends Mock implements RatingBloc {}
 
 Widget _wrap(Widget child, RatingBloc bloc) => MaterialApp(
@@ -122,5 +124,58 @@ void main() {
       ),
     );
     expect(btn.onTap, isNotNull);
+  });
+
+  testWidgets('titre "Rate the sender" en anglais quand isTravelerRating', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        Builder(
+          builder: (ctx) => TextButton(
+            onPressed: () => RatingBottomSheet.show(
+              ctx,
+              bidId: 'bid-1',
+              isTravelerRating: true,
+            ),
+            child: const Text('Open'),
+          ),
+        ),
+        bloc,
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rate the sender'), findsOneWidget);
+    expect(find.text('Send review'), findsOneWidget);
+  });
+
+  testWidgets('titre "Rate {name}" en anglais sans isTravelerRating', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        Builder(
+          builder: (ctx) => TextButton(
+            onPressed: () => RatingBottomSheet.show(
+              ctx,
+              bidId: 'bid-1',
+              travelerName: 'Amadou',
+            ),
+            child: const Text('Open'),
+          ),
+        ),
+        bloc,
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rate Amadou'), findsOneWidget);
   });
 }

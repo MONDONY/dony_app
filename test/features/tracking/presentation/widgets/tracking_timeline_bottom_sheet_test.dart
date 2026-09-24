@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockTrackingBloc extends Mock implements TrackingBloc {}
 
 class _FakeTrackingEvent extends Fake implements TrackingEvent {}
@@ -158,5 +160,17 @@ void main() {
       expect(find.text('Instructions de retrait'), findsNothing);
       expect(find.text('En attente de confirmation'), findsOneWidget);
     });
+  });
+
+  testWidgets('titre et étapes traduits en anglais', (tester) async {
+    useEnglish();
+    when(() => bloc.state).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
+
+    await _openSheet(tester, bloc);
+
+    expect(find.text('Parcel tracking'), findsOneWidget);
+    expect(find.text('STEPS'), findsOneWidget);
+    expect(find.text('Departure confirmed'), findsOneWidget);
+    expect(find.text('No app needed!'), findsOneWidget);
   });
 }

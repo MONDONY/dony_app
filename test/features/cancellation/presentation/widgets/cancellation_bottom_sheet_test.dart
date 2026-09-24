@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockCancellationBloc extends Mock implements CancellationBloc {}
 
 Widget _wrap(Widget child, CancellationBloc bloc) => MaterialApp(
@@ -61,5 +63,29 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text("Confirmer l'annulation"), findsOneWidget);
+  });
+
+  testWidgets('titre et motifs traduits en anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        Builder(
+          builder: (ctx) => TextButton(
+            onPressed: () =>
+                CancellationBottomSheet.show(ctx, announcementId: 'ann-1'),
+            child: const Text('Open'),
+          ),
+        ),
+        bloc,
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cancel this trip?'), findsOneWidget);
+    expect(find.text('Flight canceled'), findsOneWidget);
+    expect(find.text('Other'), findsOneWidget);
+    expect(find.text('Confirm cancellation'), findsOneWidget);
   });
 }

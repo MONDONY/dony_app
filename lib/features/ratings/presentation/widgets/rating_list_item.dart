@@ -17,9 +17,8 @@ class RatingListItem extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final isDark = cs.brightness == Brightness.dark;
-    final dateStr = DateFormat(
-      'd MMM yyyy',
-      AppL10n.localeName,
+    final dateStr = DateFormat.yMMMd(
+      context.l10n.localeName,
     ).format(item.createdAt.toLocal());
 
     return Padding(

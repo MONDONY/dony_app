@@ -11049,12 +11049,472 @@
       }
     }
   },
-  "scanOfflineSyncingSubtitle": "En attente de synchronisation",
-  "@scanOfflineSyncingSubtitle": {
-    "description": "Sous-titre de la feuille de file d'attente hors-ligne (offline_queue_bottom_sheet.dart)."
+
+  "trackingSearchTitle": "Suivre un colis",
+  "@trackingSearchTitle": {
+    "description": "Titre de l'app bar de l'écran de recherche de suivi (tracking_search_screen.dart)."
   },
-  "scanSyncButton": "Synchroniser",
-  "@scanSyncButton": {
-    "description": "Bouton de synchronisation de la feuille de file d'attente hors-ligne (offline_queue_bottom_sheet.dart)."
+  "trackingSearchScanTripEntry": "Lire le QR d'un trajet",
+  "@trackingSearchScanTripEntry": {
+    "description": "Entrée additive (voyageur occasionnel) de tracking_search_screen.dart, affichée seulement si onScanTrip est fourni."
+  },
+  "trackingSearchNumberLabel": "Numéro de suivi",
+  "@trackingSearchNumberLabel": {
+    "description": "Titre de section et labelText du champ de recherche de tracking_search_screen.dart (même texte aux deux endroits), réutilisé pour le même champ de tracking_search_bottom_sheet.dart (même feature, même préfixe)."
+  },
+  "trackingSearchNumberHint": "Entrez le numéro DON-XXXXXX pour suivre votre colis en temps réel.",
+  "@trackingSearchNumberHint": {
+    "description": "Sous-titre explicatif de tracking_search_screen.dart, sous le titre « Numéro de suivi »."
+  },
+  "trackingSearchSubmit": "Rechercher",
+  "@trackingSearchSubmit": {
+    "description": "Bouton de recherche de tracking_search_screen.dart, réutilisé par tracking_search_bottom_sheet.dart (même feature, même préfixe)."
+  },
+  "trackingSearchViewDetails": "Voir le suivi détaillé",
+  "@trackingSearchViewDetails": {
+    "description": "Bouton de la carte résultat qui ouvre la frise de suivi (tracking_search_screen.dart, _TrackingResultCard)."
+  },
+  "trackingSearchStatusPending": "En attente",
+  "@trackingSearchStatusPending": {
+    "description": "Libellé de l'étape PENDING dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
+  },
+  "trackingSearchStatusAccepted": "Confirmé",
+  "@trackingSearchStatusAccepted": {
+    "description": "Libellé de l'étape ACCEPTED dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
+  },
+  "trackingSearchStatusPaid": "Payé",
+  "@trackingSearchStatusPaid": {
+    "description": "Libellé de l'étape PAYMENT_SECURED dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
+  },
+  "trackingSearchStatusDroppedOff": "Remis",
+  "@trackingSearchStatusDroppedOff": {
+    "description": "Libellé de l'étape DEPARTED (remise au voyageur) dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
+  },
+  "trackingSearchStatusDelivered": "Livré",
+  "@trackingSearchStatusDelivered": {
+    "description": "Libellé de l'étape DELIVERED dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
+  },
+  "receptionConfirmTitle": "Confirmation",
+  "@receptionConfirmTitle": {
+    "description": "Titre de l'app bar de reception_confirm_screen.dart. Identique en anglais : mot cognate (voir _sameInBothLanguages)."
+  },
+  "receptionConfirmHeading": "Confirmer la réception",
+  "@receptionConfirmHeading": {
+    "description": "Titre Caveat et libellé du bouton CTA de reception_confirm_screen.dart (même texte aux deux endroits)."
+  },
+  "receptionChooseInFrontOf": "Devant {name}, choisissez :",
+  "@receptionChooseInFrontOf": {
+    "description": "Sous-titre de reception_confirm_screen.dart, sous le titre Confirmer la réception.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionTabQr": "Lire le QR",
+  "@receptionTabQr": {
+    "description": "Onglet gauche du sélecteur de reception_confirm_screen.dart (_TabToggle)."
+  },
+  "receptionTabCode": "Taper le code",
+  "@receptionTabCode": {
+    "description": "Onglet droit du sélecteur de reception_confirm_screen.dart (_TabToggle)."
+  },
+  "receptionQrTitle": "Lire le QR code",
+  "@receptionQrTitle": {
+    "description": "Titre du contenu de l'onglet QR de reception_confirm_screen.dart (_QrTabContent)."
+  },
+  "receptionQrDescription": "Demandez au voyageur d'afficher le QR code sur son téléphone.",
+  "@receptionQrDescription": {
+    "description": "Description du contenu de l'onglet QR de reception_confirm_screen.dart (_QrTabContent)."
+  },
+  "receptionCodeOptionLabel": "OPTION 2 · CODE",
+  "@receptionCodeOptionLabel": {
+    "description": "Étiquette d'en-tête de l'onglet code de reception_confirm_screen.dart (_CodeTabContent). Identique en anglais : « OPTION »/« CODE » se disent pareil (voir _sameInBothLanguages)."
+  },
+  "receptionCodeTitle": "Tapez le code reçu",
+  "@receptionCodeTitle": {
+    "description": "Titre du contenu de l'onglet code de reception_confirm_screen.dart (_CodeTabContent)."
+  },
+  "receptionCodeExpiresIn": "Reçu par SMS · expire dans {time}",
+  "@receptionCodeExpiresIn": {
+    "description": "Minuteur de reception_confirm_screen.dart (_CodeTabContent) — {time} est le compte à rebours mm:ss déjà formaté, mis en valeur via emphasizedSpans.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionReleaseWarning": "En confirmant, vous libérez le paiement vers {name}. Si quelque chose ne va pas, contestez d'abord.",
+  "@receptionReleaseWarning": {
+    "description": "Note légale complète de reception_confirm_screen.dart (_LegalNote) — le segment receptionContestFirst y est retrouvé et mis en forme/rendu cliquable via emphasizedSpans.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionContestFirst": "contestez d'abord",
+  "@receptionContestFirst": {
+    "description": "Segment cliquable (vers /disputes) de receptionReleaseWarning, isolé pour emphasizedSpans (reception_confirm_screen.dart, _LegalNote)."
+  },
+  "trackingTimelineTitle": "Suivi du colis",
+  "@trackingTimelineTitle": {
+    "description": "Titre de la sheet showTrackingTimelineSheet (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingTimelineShare": "Partager le suivi",
+  "@trackingTimelineShare": {
+    "description": "Bouton sticky de la sheet showTrackingTimelineSheet, visible seulement si onShareTracking est fourni (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingTimelineStepsHeader": "ÉTAPES",
+  "@trackingTimelineStepsHeader": {
+    "description": "En-tête de section de la frise d'événements (tracking_timeline_bottom_sheet.dart, _Timeline)."
+  },
+  "trackingEventDepartureConfirmed": "Départ confirmé",
+  "@trackingEventDepartureConfirmed": {
+    "description": "Libellé complet de l'étape DEPART d'un événement de suivi (extension TrackingEventL10n, tracking_labels.dart) — distinct de trackingStepDeparture (« Départ » seul, écrans de lecture)."
+  },
+  "trackingEventInTransit": "En transit",
+  "@trackingEventInTransit": {
+    "description": "Libellé complet de l'étape TRANSIT d'un événement de suivi (extension TrackingEventL10n, tracking_labels.dart)."
+  },
+  "trackingEventArrivalConfirmed": "Arrivée confirmée",
+  "@trackingEventArrivalConfirmed": {
+    "description": "Libellé complet de l'étape ARRIVEE d'un événement de suivi (extension TrackingEventL10n, tracking_labels.dart)."
+  },
+  "trackingGpsRecorded": "Lieu GPS enregistré",
+  "@trackingGpsRecorded": {
+    "description": "Repli affiché quand un événement de suivi a des coordonnées GPS mais aucun gpsLabel (extension TrackingEventL10n, tracking_labels.dart)."
+  },
+  "trackingOfflineScanSynced": "Lecture hors-ligne synchronisée",
+  "@trackingOfflineScanSynced": {
+    "description": "Badge d'un événement de suivi ayant un offlineTimestamp (tracking_timeline_bottom_sheet.dart, _TimelineItem)."
+  },
+  "trackingAwaitingConfirmationTitle": "En attente de confirmation",
+  "@trackingAwaitingConfirmationTitle": {
+    "description": "Titre du bandeau affiché tant qu'aucun événement ARRIVEE n'est enregistré (tracking_timeline_bottom_sheet.dart, _PendingConfirmationBanner)."
+  },
+  "trackingAwaitingConfirmationDesc": "Le destinataire doit confirmer la réception via le code SMS.",
+  "@trackingAwaitingConfirmationDesc": {
+    "description": "Description du bandeau _PendingConfirmationBanner (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingEmptyTimelineTitle": "En attente de la lecture au départ",
+  "@trackingEmptyTimelineTitle": {
+    "description": "Titre de la frise vide, avant tout événement (tracking_timeline_bottom_sheet.dart, _EmptyTimeline)."
+  },
+  "trackingEmptyTimelineDesc": "Le voyageur lira le QR code lors de la remise du colis.",
+  "@trackingEmptyTimelineDesc": {
+    "description": "Description de la frise vide (tracking_timeline_bottom_sheet.dart, _EmptyTimeline)."
+  },
+  "trackingApplessTitle": "Pas besoin d'app !",
+  "@trackingApplessTitle": {
+    "description": "Titre du bandeau « pas besoin d'app » (tracking_timeline_bottom_sheet.dart, _ApplessBanner)."
+  },
+  "trackingApplessMessage": "Quand le voyageur sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.",
+  "@trackingApplessMessage": {
+    "description": "Message complet du bandeau _ApplessBanner (tracking_timeline_bottom_sheet.dart) — l'ancien paramètre travelerName valait toujours le littéral « le voyageur » (seul appelant), donc intégré tel quel dans le message plutôt que fragmenté."
+  },
+  "trackingSearchSheetTitle": "Rechercher un colis",
+  "@trackingSearchSheetTitle": {
+    "description": "Titre de la sheet TrackingSearchBottomSheet.show (tracking_search_bottom_sheet.dart)."
+  },
+  "trackingSearchSheetSubtitle": "Format : DON-XXXXXX",
+  "@trackingSearchSheetSubtitle": {
+    "description": "Sous-titre de la sheet TrackingSearchBottomSheet.show (tracking_search_bottom_sheet.dart)."
+  },
+  "cancellationConfirmTitle": "Annuler ce trajet ?",
+  "@cancellationConfirmTitle": {
+    "description": "Titre de la sheet CancellationBottomSheet.show (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationIrreversibleSubtitle": "Cette action est irréversible",
+  "@cancellationIrreversibleSubtitle": {
+    "description": "Sous-titre de la sheet CancellationBottomSheet.show (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationConfirmAction": "Confirmer l'annulation",
+  "@cancellationConfirmAction": {
+    "description": "Bouton sticky et titre du dialogue de confirmation de cancellation_bottom_sheet.dart (même texte aux deux endroits)."
+  },
+  "cancellationAutoRefundNotice": "Tous les expéditeurs liés seront remboursés automatiquement.",
+  "@cancellationAutoRefundNotice": {
+    "description": "Bandeau d'avertissement de cancellation_bottom_sheet.dart."
+  },
+  "cancellationReasonFieldLabel": "Raison",
+  "@cancellationReasonFieldLabel": {
+    "description": "Libellé du groupe de boutons radio de motifs (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationSpecifyLabel": "Précisez...",
+  "@cancellationSpecifyLabel": {
+    "description": "Label du champ texte affiché quand le motif « Autre » est sélectionné (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationSpecifyHint": "Décrivez votre raison",
+  "@cancellationSpecifyHint": {
+    "description": "Hint du champ texte affiché quand le motif « Autre » est sélectionné (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationSelectReasonError": "Veuillez sélectionner une raison",
+  "@cancellationSelectReasonError": {
+    "description": "Snackbar d'erreur quand aucun motif n'est sélectionné à la confirmation (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationSpecifyReasonError": "Veuillez préciser votre raison",
+  "@cancellationSpecifyReasonError": {
+    "description": "Snackbar d'erreur quand « Autre » est sélectionné sans texte de précision (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationConfirmDialogMessage": "Cette action annulera votre trajet et remboursera automatiquement tous les expéditeurs concernés.",
+  "@cancellationConfirmDialogMessage": {
+    "description": "Message du dialogue de confirmation finale (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationRefundedSenders": "{count, plural, =1{Trajet annulé · {count} expéditeur remboursé} other{Trajet annulé · {count} expéditeurs remboursés}}",
+  "@cancellationRefundedSenders": {
+    "description": "Snackbar de succès de l'annulation (cancellation_bottom_sheet.dart), avec le nombre d'expéditeurs remboursés porté par CancellationModel.affectedBidsCount.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deliveryNoShowTravelerNotDeliveringTitle": "Le voyageur ne livre pas",
+  "@deliveryNoShowTravelerNotDeliveringTitle": {
+    "description": "Titre de la cellule côté expéditeur (delivery_noshow_cta_cell.dart, isSender: true)."
+  },
+  "deliveryNoShowReportAbsentRecipientTitle": "Signaler l'absence du destinataire",
+  "@deliveryNoShowReportAbsentRecipientTitle": {
+    "description": "Titre de la cellule côté voyageur (delivery_noshow_cta_cell.dart, isSender: false)."
+  },
+  "deliveryNoShowTravelerNotDeliveringSubtitle": "Injoignable ou refus de remettre le colis",
+  "@deliveryNoShowTravelerNotDeliveringSubtitle": {
+    "description": "Sous-titre de la cellule côté expéditeur (delivery_noshow_cta_cell.dart, isSender: true)."
+  },
+  "deliveryNoShowReportAbsentRecipientSubtitle": "Si vous êtes sur place et qu'il ne répond pas",
+  "@deliveryNoShowReportAbsentRecipientSubtitle": {
+    "description": "Sous-titre de la cellule côté voyageur (delivery_noshow_cta_cell.dart, isSender: false)."
+  },
+  "deliveryNoShowTravelerAbsentSheetTitle": "Le voyageur ne s'est pas présenté à la remise ?",
+  "@deliveryNoShowTravelerAbsentSheetTitle": {
+    "description": "Titre de la sheet de confirmation côté expéditeur (delivery_noshow_cta_cell.dart, _showSheet, isSender: true)."
+  },
+  "deliveryNoShowRecipientAbsentSheetTitle": "Le destinataire ne s'est pas présenté à la remise ?",
+  "@deliveryNoShowRecipientAbsentSheetTitle": {
+    "description": "Titre de la sheet de confirmation côté voyageur (delivery_noshow_cta_cell.dart, _showSheet, isSender: false)."
+  },
+  "deliveryNoShowConfirmReportAction": "Confirmer le signalement",
+  "@deliveryNoShowConfirmReportAction": {
+    "description": "Bouton sticky de la sheet de confirmation (delivery_noshow_cta_cell.dart, _showSheet)."
+  },
+  "deliveryNoShowTravelerNotDeliveringBody": "Le voyageur ne livre pas le colis à votre destinataire.",
+  "@deliveryNoShowTravelerNotDeliveringBody": {
+    "description": "Corps de la sheet de confirmation côté expéditeur (delivery_noshow_cta_cell.dart, _showSheet, isSender: true)."
+  },
+  "deliveryNoShowRecipientAbsentBody": "Le destinataire ne s'est pas présenté au point de remise.",
+  "@deliveryNoShowRecipientAbsentBody": {
+    "description": "Corps de la sheet de confirmation côté voyageur (delivery_noshow_cta_cell.dart, _showSheet, isSender: false)."
+  },
+  "deliveryNoShowContestNotice": "L'autre partie aura 24 h pour contester. Le paiement reste gelé le temps de l'instruction. Aucun versement automatique.",
+  "@deliveryNoShowContestNotice": {
+    "description": "Note légale de la sheet de confirmation (delivery_noshow_cta_cell.dart, _showSheet). Tiret cadratin d'origine (« ... l'instruction — aucun versement automatique. ») remplacé par un point : deux phrases, signalé en PR."
+  },
+  "rematchAlternativesTitle": "Alternatives disponibles",
+  "@rematchAlternativesTitle": {
+    "description": "Titre de l'app bar de RematchSearchScreen (rematch_search_screen.dart)."
+  },
+  "rematchAnnouncementUnavailable": "Cette annonce n'est plus disponible",
+  "@rematchAnnouncementUnavailable": {
+    "description": "Snackbar d'erreur quand le fetch de l'annonce réelle échoue au tap sur une suggestion (rematch_search_screen.dart)."
+  },
+  "rematchNoTravelersTitle": "Aucun voyageur disponible",
+  "@rematchNoTravelersTitle": {
+    "description": "Titre de l'état vide quand aucune suggestion de rematch n'existe (rematch_search_screen.dart, _RematchBody)."
+  },
+  "rematchNoTravelersDescription": "Aucun voyageur disponible dans les 72h : votre remboursement est traité",
+  "@rematchNoTravelersDescription": {
+    "description": "Description de l'état vide (rematch_search_screen.dart, _RematchBody). Tiret cadratin d'origine remplacé par « : » (l'explication qui suit), signalé en PR."
+  },
+  "rematchTravelersAvailable": "{count, plural, =1{{count} voyageur disponible} other{{count} voyageurs disponibles}}",
+  "@rematchTravelersAvailable": {
+    "description": "Compteur de suggestions au-dessus de la liste (rematch_search_screen.dart, _RematchBody).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rematchTripCancelledTitle": "Trajet annulé",
+  "@rematchTripCancelledTitle": {
+    "description": "Titre du bandeau de confirmation d'annulation (rematch_search_screen.dart, _ConfirmationBanner). Clé dédiée : même texte que chatBidStatusTripCancelled mais préfixe non partagé (R40)."
+  },
+  "rematchSendersRefunded": "{count, plural, =1{{count} expéditeur remboursé automatiquement.} other{{count} expéditeurs remboursés automatiquement.}}",
+  "@rematchSendersRefunded": {
+    "description": "Sous-texte du bandeau de confirmation quand affectedBidsCount est connu (rematch_search_screen.dart, _ConfirmationBanner).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rematchRefundInProgress": "Votre remboursement est en cours.",
+  "@rematchRefundInProgress": {
+    "description": "Sous-texte du bandeau de confirmation quand affectedBidsCount est null, chemin self-fetching (rematch_search_screen.dart, _ConfirmationBanner)."
+  },
+  "rematchBackHomeAction": "Retour à l'accueil",
+  "@rematchBackHomeAction": {
+    "description": "Bouton fantôme en bas de RematchSearchScreen (rematch_search_screen.dart, _RematchBody)."
+  },
+  "ratingRateSender": "Évaluer l'expéditeur",
+  "@ratingRateSender": {
+    "description": "Titre de la sheet quand isTravelerRating est vrai (rating_bottom_sheet.dart, show)."
+  },
+  "ratingRateTraveler": "Évaluer {name}",
+  "@ratingRateTraveler": {
+    "description": "Titre de la sheet quand isTravelerRating est faux — {name} est alors garanti non-null par le contrat des appelants (rating_bottom_sheet.dart, show).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ratingSubtitle": "Votre avis aide la communauté Yadony",
+  "@ratingSubtitle": {
+    "description": "Sous-titre de la sheet RatingBottomSheet.show (rating_bottom_sheet.dart)."
+  },
+  "ratingSubmitAction": "Envoyer l'évaluation",
+  "@ratingSubmitAction": {
+    "description": "Bouton sticky de la sheet RatingBottomSheet.show (rating_bottom_sheet.dart)."
+  },
+  "ratingCommentLabel": "Commentaire (facultatif)",
+  "@ratingCommentLabel": {
+    "description": "Label du champ commentaire (rating_bottom_sheet.dart)."
+  },
+  "ratingCommentHint": "Partagez votre expérience…",
+  "@ratingCommentHint": {
+    "description": "Hint du champ commentaire (rating_bottom_sheet.dart)."
+  },
+  "ratingThanksSnackbar": "Merci pour votre évaluation !",
+  "@ratingThanksSnackbar": {
+    "description": "Snackbar de succès après soumission d'un avis (rating_bottom_sheet.dart)."
+  },
+  "ratingStarsSemantics": "Noter {index} sur 5",
+  "@ratingStarsSemantics": {
+    "description": "Label d'accessibilité de chaque étoile du sélecteur (star_selector.dart).",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingReviewCount": "{count, plural, =1{{count} avis} other{{count} avis}}",
+  "@ratingReviewCount": {
+    "description": "Nombre d'avis sous la note moyenne (rating_summary_card.dart) — « avis » est invariable en français.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingMyReviewsTitle": "Mes avis reçus",
+  "@ratingMyReviewsTitle": {
+    "description": "Titre de l'écran MyReviewsScreen (my_reviews_screen.dart)."
+  },
+  "ratingEmptyTitle": "Tu n'as pas encore reçu d'avis",
+  "@ratingEmptyTitle": {
+    "description": "Titre de l'état vide de MyReviewsScreen (my_reviews_screen.dart, _EmptyView)."
+  },
+  "ratingEmptyDescription": "Les notes et commentaires laissés par les voyageurs apparaîtront ici.",
+  "@ratingEmptyDescription": {
+    "description": "Description de l'état vide de MyReviewsScreen (my_reviews_screen.dart, _EmptyView)."
+  },
+  "ratingLoadErrorTitle": "Impossible de charger les avis",
+  "@ratingLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur de MyReviewsScreen (my_reviews_screen.dart, _ErrorView)."
+  },
+  "ratingReceivedHeader": "AVIS REÇUS",
+  "@ratingReceivedHeader": {
+    "description": "En-tête de section quand aucun filtre n'est actif (my_reviews_screen.dart, _LoadedView)."
+  },
+  "ratingFilteredHeader": "AVIS {stars}★ · {count}",
+  "@ratingFilteredHeader": {
+    "description": "En-tête de section quand un filtre par note est actif (my_reviews_screen.dart, _LoadedView).",
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingShowAll": "Tout afficher",
+  "@ratingShowAll": {
+    "description": "Bouton de réinitialisation du filtre par note (my_reviews_screen.dart, _LoadedView)."
+  },
+  "ratingTotalReceived": "Sur {count} avis reçus",
+  "@ratingTotalReceived": {
+    "description": "Sous-titre du hero éditorial de MyReviewsScreen (my_reviews_screen.dart, _HeaderSummary) — le français n'a pas de pluriel (« avis » invariable), l'anglais en a un ; même paramètre count des deux côtés.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingDistributionSemantics": "{stars} étoiles, {count} avis",
+  "@ratingDistributionSemantics": {
+    "description": "Label d'accessibilité d'une ligne de distribution (my_reviews_screen.dart, _RatingBar) — même remarque que ratingTotalReceived sur le pluriel.",
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingQuotedComment": "« {comment} »",
+  "@ratingQuotedComment": {
+    "description": "Commentaire d'un avis entre guillemets (my_reviews_screen.dart, _ReviewItem).",
+    "placeholders": {
+      "comment": {
+        "type": "String"
+      }
+    }
+  },
+  "ratingExcludedNotice": "Avis exclu du calcul",
+  "@ratingExcludedNotice": {
+    "description": "Mention sous un avis exclu du calcul de la moyenne (my_reviews_screen.dart, _ReviewItem)."
+  },
+  "cancellationReasonFlightCanceled": "Vol annulé",
+  "@cancellationReasonFlightCanceled": {
+    "description": "Libellé affiché du motif d'annulation 'Vol annulé' (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste envoyée au serveur telle quelle (cancellation_bottom_sheet.dart, _reasons)."
+  },
+  "cancellationReasonPersonalEmergency": "Urgence personnelle",
+  "@cancellationReasonPersonalEmergency": {
+    "description": "Libellé affiché du motif d'annulation 'Urgence personnelle' (cancellation_labels.dart, cancellationReasonLabel)."
+  },
+  "cancellationReasonHealthIssue": "Problème de santé",
+  "@cancellationReasonHealthIssue": {
+    "description": "Libellé affiché du motif d'annulation 'Problème de santé' (cancellation_labels.dart, cancellationReasonLabel)."
+  },
+  "cancellationReasonItineraryChange": "Changement d'itinéraire",
+  "@cancellationReasonItineraryChange": {
+    "description": "Libellé affiché du motif d'annulation 'Changement d'itinéraire' (cancellation_labels.dart, cancellationReasonLabel)."
+  },
+  "cancellationReasonOther": "Autre",
+  "@cancellationReasonOther": {
+    "description": "Libellé affiché du motif d'annulation 'Autre' (cancellation_labels.dart, cancellationReasonLabel)."
+  },
+  "ratingStarVeryDisappointing": "Très décevant",
+  "@ratingStarVeryDisappointing": {
+    "description": "Libellé affiché pour 1 étoile (rating_labels.dart, ratingStarLabel)."
+  },
+  "ratingStarDisappointing": "Décevant",
+  "@ratingStarDisappointing": {
+    "description": "Libellé affiché pour 2 étoiles (rating_labels.dart, ratingStarLabel)."
+  },
+  "ratingStarFair": "Correct",
+  "@ratingStarFair": {
+    "description": "Libellé affiché pour 3 étoiles (rating_labels.dart, ratingStarLabel)."
+  },
+  "ratingStarGood": "Bien",
+  "@ratingStarGood": {
+    "description": "Libellé affiché pour 4 étoiles (rating_labels.dart, ratingStarLabel)."
+  },
+  "ratingStarExcellent": "Excellent !",
+  "@ratingStarExcellent": {
+    "description": "Libellé affiché pour 5 étoiles (rating_labels.dart, ratingStarLabel)."
   }
 }

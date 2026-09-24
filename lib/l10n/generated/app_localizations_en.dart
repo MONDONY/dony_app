@@ -10027,8 +10027,380 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get scanOfflineSyncingSubtitle => 'Waiting to sync';
+  String get trackingSearchTitle => 'Track a parcel';
 
   @override
-  String get scanSyncButton => 'Sync';
+  String get trackingSearchScanTripEntry => 'Scan a trip\'s QR code';
+
+  @override
+  String get trackingSearchNumberLabel => 'Tracking number';
+
+  @override
+  String get trackingSearchNumberHint =>
+      'Enter the DON-XXXXXX number to track your parcel in real time.';
+
+  @override
+  String get trackingSearchSubmit => 'Search';
+
+  @override
+  String get trackingSearchViewDetails => 'View full tracking';
+
+  @override
+  String get trackingSearchStatusPending => 'Pending';
+
+  @override
+  String get trackingSearchStatusAccepted => 'Confirmed';
+
+  @override
+  String get trackingSearchStatusPaid => 'Paid';
+
+  @override
+  String get trackingSearchStatusDroppedOff => 'Dropped off';
+
+  @override
+  String get trackingSearchStatusDelivered => 'Delivered';
+
+  @override
+  String get receptionConfirmTitle => 'Confirmation';
+
+  @override
+  String get receptionConfirmHeading => 'Confirm receipt';
+
+  @override
+  String receptionChooseInFrontOf(String name) {
+    return 'In front of $name, choose:';
+  }
+
+  @override
+  String get receptionTabQr => 'Scan QR';
+
+  @override
+  String get receptionTabCode => 'Enter code';
+
+  @override
+  String get receptionQrTitle => 'Scan the QR code';
+
+  @override
+  String get receptionQrDescription =>
+      'Ask the traveler to show the QR code on their phone.';
+
+  @override
+  String get receptionCodeOptionLabel => 'OPTION 2 · CODE';
+
+  @override
+  String get receptionCodeTitle => 'Enter the code you received';
+
+  @override
+  String receptionCodeExpiresIn(String time) {
+    return 'Sent by SMS · expires in $time';
+  }
+
+  @override
+  String receptionReleaseWarning(String name) {
+    return 'By confirming, you release the payment to $name. If something\'s wrong, contest first.';
+  }
+
+  @override
+  String get receptionContestFirst => 'contest first';
+
+  @override
+  String get trackingTimelineTitle => 'Parcel tracking';
+
+  @override
+  String get trackingTimelineShare => 'Share tracking';
+
+  @override
+  String get trackingTimelineStepsHeader => 'STEPS';
+
+  @override
+  String get trackingEventDepartureConfirmed => 'Departure confirmed';
+
+  @override
+  String get trackingEventInTransit => 'In transit';
+
+  @override
+  String get trackingEventArrivalConfirmed => 'Arrival confirmed';
+
+  @override
+  String get trackingGpsRecorded => 'GPS location recorded';
+
+  @override
+  String get trackingOfflineScanSynced => 'Offline scan synced';
+
+  @override
+  String get trackingAwaitingConfirmationTitle => 'Awaiting confirmation';
+
+  @override
+  String get trackingAwaitingConfirmationDesc =>
+      'The recipient must confirm receipt with the SMS code.';
+
+  @override
+  String get trackingEmptyTimelineTitle => 'Waiting for the departure scan';
+
+  @override
+  String get trackingEmptyTimelineDesc =>
+      'The traveler will scan the QR code when the parcel is handed over.';
+
+  @override
+  String get trackingApplessTitle => 'No app needed!';
+
+  @override
+  String get trackingApplessMessage =>
+      'When the traveler is at your door, you\'ll confirm with a QR code or a 4-digit code.';
+
+  @override
+  String get trackingSearchSheetTitle => 'Search for a parcel';
+
+  @override
+  String get trackingSearchSheetSubtitle => 'Format: DON-XXXXXX';
+
+  @override
+  String get cancellationConfirmTitle => 'Cancel this trip?';
+
+  @override
+  String get cancellationIrreversibleSubtitle => 'This action can\'t be undone';
+
+  @override
+  String get cancellationConfirmAction => 'Confirm cancellation';
+
+  @override
+  String get cancellationAutoRefundNotice =>
+      'All affected senders will be refunded automatically.';
+
+  @override
+  String get cancellationReasonFieldLabel => 'Reason';
+
+  @override
+  String get cancellationSpecifyLabel => 'Please specify...';
+
+  @override
+  String get cancellationSpecifyHint => 'Describe your reason';
+
+  @override
+  String get cancellationSelectReasonError => 'Please select a reason';
+
+  @override
+  String get cancellationSpecifyReasonError => 'Please specify your reason';
+
+  @override
+  String get cancellationConfirmDialogMessage =>
+      'This will cancel your trip and automatically refund all affected senders.';
+
+  @override
+  String cancellationRefundedSenders(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Trip canceled · $count senders refunded',
+      one: 'Trip canceled · $count sender refunded',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deliveryNoShowTravelerNotDeliveringTitle =>
+      'The traveler isn\'t delivering';
+
+  @override
+  String get deliveryNoShowReportAbsentRecipientTitle =>
+      'Report the recipient\'s absence';
+
+  @override
+  String get deliveryNoShowTravelerNotDeliveringSubtitle =>
+      'Unreachable or refuses to hand over the parcel';
+
+  @override
+  String get deliveryNoShowReportAbsentRecipientSubtitle =>
+      'If you\'re on-site and they\'re not answering';
+
+  @override
+  String get deliveryNoShowTravelerAbsentSheetTitle =>
+      'Didn\'t the traveler show up for the handover?';
+
+  @override
+  String get deliveryNoShowRecipientAbsentSheetTitle =>
+      'Didn\'t the recipient show up for the handover?';
+
+  @override
+  String get deliveryNoShowConfirmReportAction => 'Confirm the report';
+
+  @override
+  String get deliveryNoShowTravelerNotDeliveringBody =>
+      'The traveler isn\'t delivering the parcel to your recipient.';
+
+  @override
+  String get deliveryNoShowRecipientAbsentBody =>
+      'The recipient didn\'t show up at the handover point.';
+
+  @override
+  String get deliveryNoShowContestNotice =>
+      'The other party has 24 hours to contest. The payment stays on hold during the review. No automatic payout.';
+
+  @override
+  String get rematchAlternativesTitle => 'Available alternatives';
+
+  @override
+  String get rematchAnnouncementUnavailable =>
+      'This listing is no longer available';
+
+  @override
+  String get rematchNoTravelersTitle => 'No traveler available';
+
+  @override
+  String get rematchNoTravelersDescription =>
+      'No traveler available within 72h: your refund is being processed';
+
+  @override
+  String rematchTravelersAvailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers available',
+      one: '$count traveler available',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get rematchTripCancelledTitle => 'Trip canceled';
+
+  @override
+  String rematchSendersRefunded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count senders refunded automatically.',
+      one: '$count sender refunded automatically.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get rematchRefundInProgress => 'Your refund is in progress.';
+
+  @override
+  String get rematchBackHomeAction => 'Back to home';
+
+  @override
+  String get ratingRateSender => 'Rate the sender';
+
+  @override
+  String ratingRateTraveler(String name) {
+    return 'Rate $name';
+  }
+
+  @override
+  String get ratingSubtitle => 'Your review helps the Yadony community';
+
+  @override
+  String get ratingSubmitAction => 'Send review';
+
+  @override
+  String get ratingCommentLabel => 'Comment (optional)';
+
+  @override
+  String get ratingCommentHint => 'Share your experience…';
+
+  @override
+  String get ratingThanksSnackbar => 'Thanks for your review!';
+
+  @override
+  String ratingStarsSemantics(int index) {
+    return 'Rate $index out of 5';
+  }
+
+  @override
+  String ratingReviewCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews',
+      one: '$count review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ratingMyReviewsTitle => 'My reviews';
+
+  @override
+  String get ratingEmptyTitle => 'You haven\'t received any reviews yet';
+
+  @override
+  String get ratingEmptyDescription =>
+      'Ratings and comments left by travelers will appear here.';
+
+  @override
+  String get ratingLoadErrorTitle => 'Couldn\'t load reviews';
+
+  @override
+  String get ratingReceivedHeader => 'REVIEWS RECEIVED';
+
+  @override
+  String ratingFilteredHeader(int stars, int count) {
+    return '$stars★ REVIEWS · $count';
+  }
+
+  @override
+  String get ratingShowAll => 'Show all';
+
+  @override
+  String ratingTotalReceived(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'From $count reviews',
+      one: 'From $count review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ratingDistributionSemantics(int stars, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews',
+      one: '$count review',
+    );
+    return '$stars stars, $_temp0';
+  }
+
+  @override
+  String ratingQuotedComment(String comment) {
+    return '\"$comment\"';
+  }
+
+  @override
+  String get ratingExcludedNotice => 'Excluded from the average';
+
+  @override
+  String get cancellationReasonFlightCanceled => 'Flight canceled';
+
+  @override
+  String get cancellationReasonPersonalEmergency => 'Personal emergency';
+
+  @override
+  String get cancellationReasonHealthIssue => 'Health issue';
+
+  @override
+  String get cancellationReasonItineraryChange => 'Itinerary change';
+
+  @override
+  String get cancellationReasonOther => 'Other';
+
+  @override
+  String get ratingStarVeryDisappointing => 'Very disappointing';
+
+  @override
+  String get ratingStarDisappointing => 'Disappointing';
+
+  @override
+  String get ratingStarFair => 'Fair';
+
+  @override
+  String get ratingStarGood => 'Good';
+
+  @override
+  String get ratingStarExcellent => 'Excellent!';
 }

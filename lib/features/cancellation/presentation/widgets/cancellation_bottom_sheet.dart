@@ -4,16 +4,20 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/cancellation/presentation/cancellation_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+// Motifs envoyés au serveur et comparés tels quels (_finalReason) : valeur de
+// donnée, jamais traduite. Seul l'affichage passe par cancellationReasonLabel.
 const _reasons = [
-  'Vol annulé',
-  'Urgence personnelle',
-  'Problème de santé',
-  "Changement d'itinéraire",
-  'Autre',
+  'Vol annulé', // i18n-ignore
+  'Urgence personnelle', // i18n-ignore
+  'Problème de santé', // i18n-ignore
+  "Changement d'itinéraire", // i18n-ignore
+  'Autre', // i18n-ignore
 ];
 
 class CancellationBottomSheet extends StatefulWidget {
@@ -31,17 +35,18 @@ class CancellationBottomSheet extends StatefulWidget {
     required String announcementId,
   }) {
     final cancellationBloc = context.read<CancellationBloc>();
+    final l = context.l10n;
     VoidCallback? submit;
     return DonyBottomSheet.show(
       context,
       isDanger: true,
-      title: 'Annuler ce trajet ?',
-      subtitle: 'Cette action est irréversible',
+      title: l.cancellationConfirmTitle,
+      subtitle: l.cancellationIrreversibleSubtitle,
       wrapper: (child) =>
           BlocProvider.value(value: cancellationBloc, child: child),
       stickyBottom: BlocBuilder<CancellationBloc, CancellationState>(
         builder: (ctx, state) => DonyButton(
-          label: "Confirmer l'annulation",
+          label: l.cancellationConfirmAction,
           variant: DonyButtonVariant.destructive,
           isLoading: state is CancellationLoading,
           onPressed: state is CancellationLoading ? null : () => submit?.call(),
@@ -79,23 +84,26 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
     if (_selectedReason == null) {
       return null;
     }
-    if (_selectedReason == 'Autre' && _otherCtrl.text.trim().isNotEmpty) {
+    if (_selectedReason == 'Autre' && // i18n-ignore
+        _otherCtrl.text.trim().isNotEmpty) {
       return _otherCtrl.text.trim();
     }
     if (_selectedReason == 'Autre') {
+      // i18n-ignore
       return null; // require text when "Autre"
     }
     return _selectedReason;
   }
 
   void _confirm() {
+    final l = context.l10n;
     final reason = _finalReason;
     if (reason == null) {
       DonySnackbar.show(
         context,
         message: _selectedReason == null
-            ? 'Veuillez sélectionner une raison'
-            : 'Veuillez préciser votre raison',
+            ? l.cancellationSelectReasonError
+            : l.cancellationSpecifyReasonError,
         type: DonySnackbarType.error,
       );
       return;
@@ -104,9 +112,8 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
     Navigator.of(context, rootNavigator: true).pop();
     DonyDialog.show(
       context,
-      title: "Confirmer l'annulation",
-      message:
-          'Cette action annulera votre trajet et remboursera automatiquement tous les expéditeurs concernés.',
+      title: l.cancellationConfirmAction,
+      message: l.cancellationConfirmDialogMessage,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'triangle-alert',
     ).then((confirmed) {
@@ -125,13 +132,16 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return BlocListener<CancellationBloc, CancellationState>(
       listener: (context, state) {
         if (state is CancellationSuccess) {
           DonySnackbar.show(
             context,
-            message: 'Trajet annulé',
+            message: l.cancellationRefundedSenders(
+              state.cancellation.affectedBidsCount,
+            ),
             type: DonySnackbarType.success,
           );
           context.go('/announcements');
@@ -156,7 +166,7 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
-                    'Tous les expéditeurs liés seront remboursés automatiquement.',
+                    l.cancellationAutoRefundNotice,
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
@@ -166,7 +176,7 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
           const SizedBox(height: DonySpacing.base),
 
           // Radio group label
-          Text('Raison', style: tt.titleSmall),
+          Text(l.cancellationReasonFieldLabel, style: tt.titleSmall),
           const SizedBox(height: DonySpacing.sm),
 
           // Radio options
@@ -174,17 +184,23 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
             value: _selectedReason,
             onChanged: (v) => setState(() => _selectedReason = v),
             options: _reasons
-                .map((r) => DonyRadioOption(value: r, label: r))
+                .map(
+                  (r) => DonyRadioOption(
+                    value: r,
+                    label: cancellationReasonLabel(l, r),
+                  ),
+                )
                 .toList(),
           ),
 
           // "Autre" text field
           if (_selectedReason == 'Autre') ...[
+            // i18n-ignore
             const SizedBox(height: DonySpacing.md),
             DonyTextField(
               controller: _otherCtrl,
-              label: 'Précisez...',
-              hint: 'Décrivez votre raison',
+              label: l.cancellationSpecifyLabel,
+              hint: l.cancellationSpecifyHint,
             ),
           ],
 

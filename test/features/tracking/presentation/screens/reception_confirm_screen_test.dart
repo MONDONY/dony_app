@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 GoRouter _buildRouter({
   String bidId = 'bid-001',
   String travelerName = 'Ibrahima',
@@ -131,6 +133,16 @@ void main() {
     testWidgets('legal note mentions traveler name', (tester) async {
       await _pump(tester);
       expect(find.textContaining('Ibrahima'), findsWidgets);
+    });
+
+    testWidgets('title and tabs are translated in English', (tester) async {
+      useEnglish();
+      await _pump(tester);
+      expect(find.text('Confirmation'), findsOneWidget);
+      expect(find.text('Confirm receipt'), findsWidgets);
+      expect(find.text('Scan QR'), findsOneWidget);
+      expect(find.text('Enter code'), findsOneWidget);
+      expect(find.textContaining('contest first'), findsWidgets);
     });
   });
 }

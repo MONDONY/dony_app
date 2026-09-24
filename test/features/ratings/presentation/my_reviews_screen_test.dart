@@ -12,6 +12,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockMyReviewsBloc extends MockBloc<MyReviewsEvent, MyReviewsState>
     implements MyReviewsBloc {}
 
@@ -190,5 +192,36 @@ void main() {
     expect(find.text('Tout afficher'), findsOneWidget);
     // _summaryWithReviews a 1 avis 5★ et 1 avis 4★ → filtre 5★ ⇒ 1 visible.
     expect(find.text('AVIS 5★ · 1'), findsOneWidget);
+  });
+
+  testWidgets('titre et en-têtes traduits en anglais', (tester) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(MyReviewsLoaded(summary: _summaryWithReviews));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('My reviews'), findsOneWidget);
+    expect(find.text('REVIEWS RECEIVED'), findsOneWidget);
+    expect(find.text('From 3 reviews'), findsOneWidget);
+    expect(find.text('"Excellent envoi !"'), findsOneWidget);
+    expect(find.text('« Excellent envoi ! »'), findsNothing);
+  });
+
+  testWidgets('état vide traduit en anglais', (tester) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(const MyReviewsLoaded(summary: _emptySummary));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      find.textContaining("haven't received any reviews yet"),
+      findsOneWidget,
+    );
   });
 }

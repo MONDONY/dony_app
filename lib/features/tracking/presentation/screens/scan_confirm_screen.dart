@@ -94,13 +94,13 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
     return BlocConsumer<TrackingBloc, TrackingState>(
       listener: (context, state) {
         if (state is QrScanSuccess) {
-          _showSuccess(context, state.event.stepLabel);
+          _showSuccess(context, state.event.stepLabel(l));
         } else if (state is QrScanQueued) {
           _showQueued(context);
         } else if (state is DeliveryConfirmSuccess) {
           _navigateToDeliverySuccess(
             context,
-            state.event.stepLabel,
+            state.event.stepLabel(l),
             finalBidId: state.event.bidId,
           );
         }
