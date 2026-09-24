@@ -115,55 +115,55 @@ String _senderAmountLabel(BidModel bid) {
 }
 
 _HeroContent? _buildContent(BuildContext context, BidModel bid) {
+  final l = context.l10n;
   switch (bid.status) {
     case 'PENDING':
-      return const _HeroContent(
+      return _HeroContent(
         variant: SenderHeroVariant.wait,
-        title: '⏳ En attente du voyageur',
-        subtitle: 'Vous serez notifié dès sa réponse.',
+        title: l.bidDetailSenderPendingTitle,
+        subtitle: l.bidDetailSenderPendingSubtitle,
       );
 
     case 'AWAITING_PAYMENT':
       final amount = _senderAmountLabel(bid);
       return _HeroContent(
         variant: SenderHeroVariant.pay,
-        title: "Payez pour confirmer l'envoi",
-        subtitle:
-            'Votre paiement de $amount sera séquestré jusqu\'à la livraison.',
+        title: l.bidDetailSenderAwaitingPaymentTitle,
+        subtitle: l.bidDetailSenderAwaitingPaymentSubtitle(amount),
       );
 
     case 'PAYMENT_ESCROWED':
       final amount = _senderAmountLabel(bid);
       return _HeroContent(
         variant: SenderHeroVariant.wait,
-        title: '🔒 Paiement sécurisé',
-        subtitle: '$amount séquestrés. En attente de remise.',
+        title: l.bidDetailSenderEscrowedTitle,
+        subtitle: l.bidDetailSenderEscrowedSubtitle(amount),
       );
 
     case 'ACCEPTED':
-      final subtitle = _buildAcceptedSubtitle(bid);
+      final subtitle = _buildAcceptedSubtitle(context, bid);
       return _HeroContent(
         variant: SenderHeroVariant.info,
-        title: '⚡ Remise du colis',
+        title: l.bidDetailSenderAcceptedTitle,
         subtitle: subtitle,
       );
 
     case 'HANDED_OVER':
-      final name = bid.travelerName ?? 'le voyageur';
-      final dateStr = _formatDepartureDate(bid.departureDate);
+      final name = bid.travelerName ?? l.bidDetailSenderTravelerFallback;
+      final dateStr = _formatDepartureDate(context, bid.departureDate);
       return _HeroContent(
         variant: SenderHeroVariant.info,
-        title: '✓ Colis remis à $name',
+        title: l.bidDetailSenderHandedOverTitle(name),
         subtitle: dateStr.isNotEmpty
-            ? 'Embarquement prévu le $dateStr.'
-            : 'Colis remis.',
+            ? l.bidDetailSenderHandedOverSubtitleWithDate(dateStr)
+            : l.bidDetailSenderHandedOverSubtitleDefault,
       );
 
     case 'IN_TRANSIT':
-      final subtitle = _buildInTransitSubtitle(bid);
+      final subtitle = _buildInTransitSubtitle(context, bid);
       return _HeroContent(
         variant: SenderHeroVariant.info,
-        title: '✈ Colis en vol',
+        title: l.bidDetailSenderInTransitTitle,
         subtitle: subtitle,
       );
 
@@ -171,19 +171,21 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
       final hasInstructions = (bid.arrivalInstructions ?? '').trim().isNotEmpty;
       return _HeroContent(
         variant: SenderHeroVariant.info,
-        title: '📍 Colis arrivé à destination',
+        title: l.bidDetailSenderArrivedTitle,
+        // bid.arrivalInstructions : texte libre saisi par le voyageur, donnée
+        // serveur, jamais un littéral à traduire.
         subtitle: hasInstructions
             ? bid.arrivalInstructions!
-            : 'Le voyageur est arrivé, les instructions de retrait arrivent bientôt.',
+            : l.bidDetailSenderArrivedSubtitleDefault,
       );
 
     case 'COMPLETED':
     case 'DELIVERED':
-      final recipient = bid.recipientName ?? 'votre destinataire';
+      final recipient = bid.recipientName ?? l.bidDetailSenderRecipientFallback;
       return _HeroContent(
         variant: SenderHeroVariant.done,
-        title: '✓ Livré à $recipient',
-        subtitle: 'Paiement libéré au voyageur.',
+        title: l.bidDetailSenderDeliveredTitle(recipient),
+        subtitle: l.bidDetailSenderDeliveredSubtitle,
       );
 
     // Terminal or unknown statuses → shrink
@@ -199,31 +201,42 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
-String _formatDeadline(DateTime? deadline) {
+String _formatDeadline(BuildContext context, DateTime? deadline) {
   if (deadline == null) {
     return '';
   }
+  final l = context.l10n;
+  final locale = l.localeName;
   try {
-    return 'jusqu\'au ${DateFormat('EEE d MMM', AppL10n.localeName).format(deadline)}';
+    return l.bidDetailUntil(DateFormat.MMMEd(locale).format(deadline));
   } catch (_) {
     // Repli quand les données de locale manquent (tests isolés).
-    return 'jusqu\'au ${DateFormat('dd/MM').format(deadline)}';
+    return l.bidDetailUntil(DateFormat.Md(locale).format(deadline));
   }
 }
 
-String _formatDepartureDate(DateTime? date) {
+String _formatDepartureDate(BuildContext context, DateTime? date) {
   if (date == null) {
     return '';
   }
+  final l = context.l10n;
+  final locale = l.localeName;
   try {
-    return DateFormat('EEE d MMM à HH:mm', AppL10n.localeName).format(date);
+    return l.commonDateAtTime(
+      DateFormat.MMMEd(locale).format(date),
+      DateFormat.jm(locale).format(date),
+    );
   } catch (_) {
-    return DateFormat('dd/MM HH:mm').format(date);
+    // Repli quand les données de locale manquent (tests isolés) : même
+    // gabarit espace (sans « à ») que l'ancien motif fixe 'dd/MM HH:mm'.
+    return '${DateFormat.Md(locale).format(date)} '
+        '${DateFormat.jm(locale).format(date)}';
   }
 }
 
-String _buildAcceptedSubtitle(BidModel bid) {
-  final window = _formatDeadline(bid.handoverDeadline);
+String _buildAcceptedSubtitle(BuildContext context, BidModel bid) {
+  final l = context.l10n;
+  final window = _formatDeadline(context, bid.handoverDeadline);
   final location = bid.handoverLocation;
   final parts = <String>[];
   if (window.isNotEmpty) {
@@ -233,24 +246,26 @@ String _buildAcceptedSubtitle(BidModel bid) {
     parts.add(location);
   }
 
+  final instructions = l.bidDetailSenderAcceptedInstructions;
   final base = parts.join(' · ');
   if (base.isNotEmpty) {
-    return '$base.\nPrésentez le QR, ou collez-le sur le colis.';
+    return '$base.\n$instructions';
   }
-  return 'Présentez le QR, ou collez-le sur le colis.';
+  return instructions;
 }
 
-String _buildInTransitSubtitle(BidModel bid) {
-  final arrivalCity = bid.arrivalCity ?? 'destination';
+String _buildInTransitSubtitle(BuildContext context, BidModel bid) {
+  final l = context.l10n;
+  final arrivalCity = bid.arrivalCity ?? l.bidDetailFallbackDestination;
   final arrivalTime = bid.arrivalTime ?? '';
   final timePart = arrivalTime.isNotEmpty
-      ? 'Arrivée prévue $arrivalTime à $arrivalCity.'
-      : 'En route vers $arrivalCity.';
+      ? l.bidDetailSenderInTransitEta(arrivalTime, arrivalCity)
+      : l.bidDetailSenderInTransitEnRoute(arrivalCity);
 
   if (bid.confirmationCode != null) {
     // Pas de mention « à qui » ici : l'instruction de transmission fait
     // autorité sur le talon (carte « CODE DE RETRAIT »), juste au-dessus.
-    return '$timePart Le code de retrait figure sur votre billet.';
+    return '$timePart ${l.bidDetailSenderInTransitTicketNote}';
   }
   return timePart;
 }
@@ -394,19 +409,19 @@ class _WindowExpiredHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final window = _formatDeadline(bid.handoverDeadline);
-    final subtitle =
-        "Le dépôt était possible $window. Le voyageur ne s'est pas présenté ?";
+    final l = context.l10n;
+    final window = _formatDeadline(context, bid.handoverDeadline);
+    final subtitle = l.bidDetailSenderWindowExpiredSubtitle(window);
 
     return BlocBuilder<CancellationBloc, CancellationState>(
       builder: (context, state) {
         final isLoading = state is CancellationLoading;
         return _HeroShell(
           variant: SenderHeroVariant.alert,
-          title: '⚠ Fenêtre de remise dépassée',
+          title: l.bidDetailSenderWindowExpiredTitle,
           subtitle: subtitle,
           footer: _HeroButton(
-            label: "Signaler l'absence du voyageur",
+            label: l.bidDetailSenderReportNoShowButton,
             isLoading: isLoading,
             onPressed: () => _showNoShowSheet(context),
           ),
@@ -416,12 +431,13 @@ class _WindowExpiredHero extends StatelessWidget {
   }
 
   Future<void> _showNoShowSheet(BuildContext context) async {
+    final l = context.l10n;
     final confirmed = await DonyBottomSheet.show<bool>(
       context,
-      title: "Le voyageur ne s'est pas présenté ?",
+      title: l.bidDetailSenderNoShowSheetTitle,
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(
-          label: "Signaler l'absence",
+          label: l.bidDetailReportNoShowConfirmButton,
           iconAsset: 'user-x',
           onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
         ),
@@ -432,13 +448,12 @@ class _WindowExpiredHero extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Le voyageur ne s'est pas présenté au point de remise.",
+              l.bidDetailSenderNoShowSheetBody,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: DonySpacing.md),
             Text(
-              'Le voyageur aura 48 h pour contester. '
-              'Sans réponse de sa part, l\'envoi sera annulé.',
+              l.bidDetailSenderNoShowSheetHint,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -468,7 +483,12 @@ class _ContestationHero extends StatefulWidget {
 
 class _ContestationHeroState extends State<_ContestationHero> {
   Timer? _tick;
-  String _timeLeft = '';
+
+  /// `null` tant qu'il n'y a pas de délai. Le texte affiché (dont "Délai
+  /// expiré", traduit) n'est calculé qu'au build : `context.l10n` ne doit
+  /// jamais être lu depuis `initState`.
+  Duration? _remaining;
+  bool _expired = false;
 
   @override
   void initState() {
@@ -490,30 +510,36 @@ class _ContestationHeroState extends State<_ContestationHero> {
   void _updateCountdown() {
     final deadline = widget.bid.contestationDeadline;
     if (deadline == null) {
-      _timeLeft = '';
+      _remaining = null;
+      _expired = false;
       return;
     }
     final remaining = deadline.difference(DateTime.now());
-    if (remaining.isNegative) {
-      _timeLeft = 'Délai expiré';
-      return;
-    }
-    final h = remaining.inHours;
-    final m = remaining.inMinutes % 60;
-    final s = remaining.inSeconds % 60;
-    _timeLeft =
-        '${h}h ${m.toString().padLeft(2, '0')}m ${s.toString().padLeft(2, '0')}s';
+    _expired = remaining.isNegative;
+    _remaining = _expired ? null : remaining;
   }
 
   @override
   Widget build(BuildContext context) {
-    final timeLeft = _timeLeft;
+    final l = context.l10n;
+
+    var timeLeft = '';
+    if (_expired) {
+      timeLeft = l.bidDetailSenderContestationExpired;
+    } else if (_remaining != null) {
+      final remaining = _remaining!;
+      final h = remaining.inHours;
+      final m = remaining.inMinutes % 60;
+      final s = remaining.inSeconds % 60;
+      timeLeft =
+          '${h}h ${m.toString().padLeft(2, '0')}m ${s.toString().padLeft(2, '0')}s';
+    }
 
     const white = Color(0xFFFFFFFF);
 
     final countdownWidget = timeLeft.isNotEmpty
         ? Text(
-            '⏱ Temps pour contester : $timeLeft',
+            l.bidDetailSenderContestCountdown(timeLeft),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: white.withValues(alpha: 0.85),
               height: 1.45,
@@ -527,15 +553,14 @@ class _ContestationHeroState extends State<_ContestationHero> {
         final isLoading = state is CancellationLoading;
         return _HeroShell(
           variant: SenderHeroVariant.alert,
-          title: '⚠ Absence signalée par le voyageur',
-          subtitle:
-              "Il indique que vous n'étiez pas présent au point de remise.",
+          title: l.bidDetailSenderNoShowByTravelerTitle,
+          subtitle: l.bidDetailSenderNoShowByTravelerSubtitle,
           countdownWidget: countdownWidget,
           footer: Row(
             children: [
               Expanded(
                 child: _HeroButton(
-                  label: 'Je conteste',
+                  label: l.bidDetailContestButton,
                   isLoading: isLoading,
                   onPressed: () => _showContestSheet(context),
                 ),
@@ -543,7 +568,7 @@ class _ContestationHeroState extends State<_ContestationHero> {
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: _HeroButton(
-                  label: 'Je confirme',
+                  label: l.bidDetailSenderConfirmNoShowButton,
                   isLoading: isLoading,
                   onPressed: () => _showConfirmSheet(context),
                 ),
@@ -556,12 +581,13 @@ class _ContestationHeroState extends State<_ContestationHero> {
   }
 
   Future<void> _showContestSheet(BuildContext context) async {
+    final l = context.l10n;
     final confirmed = await DonyBottomSheet.show<bool>(
       context,
-      title: "Contester l'absence",
+      title: l.bidDetailSenderContestSheetTitle,
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(
-          label: 'Confirmer la contestation',
+          label: l.bidDetailSenderContestConfirmButton,
           iconAsset: 'gavel',
           onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
         ),
@@ -572,12 +598,12 @@ class _ContestationHeroState extends State<_ContestationHero> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Vous contestez l'absence signalée par le voyageur.",
+              l.bidDetailSenderContestSheetBody,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: DonySpacing.md),
             Text(
-              'Notre équipe examinera votre demande et vous contactera sous 24 h.',
+              l.bidDetailSenderContestSheetHint,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -594,20 +620,20 @@ class _ContestationHeroState extends State<_ContestationHero> {
   }
 
   Future<void> _showConfirmSheet(BuildContext context) async {
+    final l = context.l10n;
     final confirmed = await DonyBottomSheet.show<bool>(
       context,
-      title: 'Confirmer votre absence',
+      title: l.bidDetailSenderConfirmSheetTitle,
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(
-          label: 'Confirmer mon absence',
+          label: l.bidDetailSenderConfirmSheetButton,
           onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
         ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
         child: Text(
-          'En confirmant votre absence, l\'envoi sera annulé '
-          'et vous ne serez pas débité.',
+          l.bidDetailSenderConfirmSheetBody,
           style: Theme.of(context).textTheme.bodyMedium,
         ),
       ),
@@ -636,15 +662,16 @@ class _DeliveryNoShowHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     if (iAmReporter) {
       return _HeroShell(
         variant: SenderHeroVariant.wait,
-        title: contested ? '⚖ Absence contestée' : '⏳ Absence signalée',
+        title: contested
+            ? l.bidDetailNoShowContestedTitle
+            : l.bidDetailNoShowReportedTitle,
         subtitle: contested
-            ? "L'autre partie conteste votre signalement. Notre équipe examine "
-                  'la demande et vous tiendra informé.'
-            : "Signalement envoyé. L'autre partie a 24 h pour contester. "
-                  'Notre équipe tranche ensuite.',
+            ? l.bidDetailDeliveryNoShowReporterContestedSubtitle
+            : l.bidDetailDeliveryNoShowReporterPendingSubtitle,
       );
     }
     return BlocBuilder<CancellationBloc, CancellationState>(
@@ -653,17 +680,15 @@ class _DeliveryNoShowHero extends StatelessWidget {
         return _HeroShell(
           variant: SenderHeroVariant.alert,
           title: contested
-              ? '⚖ Contestation envoyée'
-              : '⚠ Une absence est signalée',
+              ? l.bidDetailDeliveryNoShowContestSentTitle
+              : l.bidDetailDeliveryNoShowAlertTitle,
           subtitle: contested
-              ? 'Votre contestation a été transmise. Notre équipe examine '
-                    'la demande et vous tiendra informé.'
-              : 'Une absence à la livraison a été signalée sur cet envoi. '
-                    'Vous pouvez contester si ce signalement est erroné.',
+              ? l.bidDetailDeliveryNoShowContestSentSubtitle
+              : l.bidDetailDeliveryNoShowAlertSubtitle,
           footer: contested
               ? null
               : _HeroButton(
-                  label: 'Contester ce signalement',
+                  label: l.bidDetailDeliveryNoShowContestButton,
                   isLoading: isLoading,
                   onPressed: () => context.read<CancellationBloc>().add(
                     DeliveryNoShowContestRequested(bid.id),

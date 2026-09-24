@@ -150,6 +150,8 @@ const _sameInBothLanguages = <String>{
   'negotiationMakeOfferMessageLabel', // « MESSAGE » se dit pareil
   'negotiationPriceBreakdownPromoBadge', // « Promo » se dit pareil
   'negotiationCounterOfferSubtitle', // gabarit identique, « Round » déjà utilisé tel quel en français
+  'bidDetailFallbackDestination', // « destination » se dit pareil
+  'bidDetailGainMobileMoneyPill', // « Mobile money » se dit pareil
 };
 
 void main() {

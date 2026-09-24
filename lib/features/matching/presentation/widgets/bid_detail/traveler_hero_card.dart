@@ -111,60 +111,59 @@ class _HeroContent {
 // ── Status mapping ────────────────────────────────────────────────────────────
 
 _HeroContent? _buildContent(BuildContext context, BidModel bid) {
+  final l = context.l10n;
   switch (bid.status) {
     case 'PENDING':
       final amount = travelerAmountLabel(bid);
       return _HeroContent(
         variant: TravelerHeroVariant.wait,
-        title: '📨 Nouvelle demande d\'envoi',
-        subtitle: 'Gain potentiel : $amount. Acceptez ou refusez la demande.',
+        title: l.bidDetailTravelerPendingTitle,
+        subtitle: l.bidDetailTravelerPendingSubtitle(amount),
       );
 
     case 'ACCEPTED':
       if (bid.voyageurConfirmed) {
-        return const _HeroContent(
+        return _HeroContent(
           variant: TravelerHeroVariant.info,
-          title: '📷 Lisez le QR du colis',
-          subtitle:
-              'Lisez le QR code de l\'expéditeur pour confirmer la prise en charge.',
+          title: l.bidDetailTravelerScanQrTitle,
+          subtitle: l.bidDetailTravelerScanQrSubtitle,
         );
       }
-      final subtitle = _buildAcceptedSubtitle(bid);
+      final subtitle = _buildAcceptedSubtitle(context, bid);
       return _HeroContent(
         variant: TravelerHeroVariant.info,
-        title: '⚡ Récupérez le colis',
+        title: l.bidDetailTravelerAcceptedTitle,
         subtitle: subtitle,
       );
 
     case 'HANDED_OVER':
-      return const _HeroContent(
+      return _HeroContent(
         variant: TravelerHeroVariant.info,
-        title: '✓ Colis récupéré',
-        subtitle: 'Le colis est en votre possession. Bon voyage !',
+        title: l.bidDetailTravelerCollectedTitle,
+        subtitle: l.bidDetailTravelerCollectedSubtitle,
       );
 
     case 'IN_TRANSIT':
-      final arrivalCity = bid.arrivalCity ?? 'destination';
+      final arrivalCity = bid.arrivalCity ?? l.bidDetailFallbackDestination;
       return _HeroContent(
         variant: TravelerHeroVariant.info,
-        title: '✈ Colis en route',
-        subtitle: 'En transit vers $arrivalCity. Bonne livraison !',
+        title: l.bidDetailTravelerInTransitTitle,
+        subtitle: l.bidDetailTravelerInTransitSubtitle(arrivalCity),
       );
 
     case 'ARRIVED':
-      return const _HeroContent(
+      return _HeroContent(
         variant: TravelerHeroVariant.info,
-        title: '📍 Arrivé à destination',
-        subtitle:
-            'Attendez que le destinataire récupère le colis, puis validez la remise.',
+        title: l.bidDetailTravelerArrivedTitle,
+        subtitle: l.bidDetailTravelerArrivedSubtitle,
       );
 
     case 'COMPLETED':
     case 'DELIVERED':
-      return const _HeroContent(
+      return _HeroContent(
         variant: TravelerHeroVariant.done,
-        title: '✓ Livraison confirmée',
-        subtitle: 'Le paiement va être libéré sur votre compte.',
+        title: l.bidDetailTravelerDeliveredTitle,
+        subtitle: l.bidDetailTravelerDeliveredSubtitle,
       );
 
     // Terminal or unknown statuses → shrink
@@ -180,20 +179,23 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
 
 // ── Date / window helpers ─────────────────────────────────────────────────────
 
-String _formatDeadline(DateTime? deadline) {
+String _formatDeadline(BuildContext context, DateTime? deadline) {
   if (deadline == null) {
     return '';
   }
+  final l = context.l10n;
+  final locale = l.localeName;
   try {
-    return 'jusqu\'au ${DateFormat('EEE d MMM', AppL10n.localeName).format(deadline)}';
+    return l.bidDetailUntil(DateFormat.MMMEd(locale).format(deadline));
   } catch (_) {
     // Repli quand les données de locale manquent (tests isolés).
-    return 'jusqu\'au ${DateFormat('dd/MM').format(deadline)}';
+    return l.bidDetailUntil(DateFormat.Md(locale).format(deadline));
   }
 }
 
-String _buildAcceptedSubtitle(BidModel bid) {
-  final window = _formatDeadline(bid.handoverDeadline);
+String _buildAcceptedSubtitle(BuildContext context, BidModel bid) {
+  final l = context.l10n;
+  final window = _formatDeadline(context, bid.handoverDeadline);
   final location = bid.handoverLocation;
   final parts = <String>[];
   if (window.isNotEmpty) {
@@ -204,9 +206,9 @@ String _buildAcceptedSubtitle(BidModel bid) {
   }
   final base = parts.join(' · ');
   if (base.isNotEmpty) {
-    return '$base.\nPrésentez-vous au point de remise.';
+    return '$base.\n${l.bidDetailTravelerAcceptedInstructions}';
   }
-  return 'Présentez-vous au point de remise convenu avec l\'expéditeur.';
+  return l.bidDetailTravelerAcceptedInstructionsDefault;
 }
 
 // ── _HeroShell ────────────────────────────────────────────────────────────────
@@ -335,20 +337,21 @@ class _WindowExpiredHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final window = _formatDeadline(bid.handoverDeadline);
+    final l = context.l10n;
+    final window = _formatDeadline(context, bid.handoverDeadline);
     final subtitle = window.isNotEmpty
-        ? 'Le dépôt était possible $window. L\'expéditeur ne s\'est pas présenté ?'
-        : "L'expéditeur ne s'est pas présenté au point de dépôt ?";
+        ? l.bidDetailTravelerWindowExpiredSubtitleWithWindow(window)
+        : l.bidDetailTravelerWindowExpiredSubtitleDefault;
 
     return BlocBuilder<CancellationBloc, CancellationState>(
       builder: (context, state) {
         final isLoading = state is CancellationLoading;
         return _HeroShell(
           variant: TravelerHeroVariant.alert,
-          title: '⚠ Date limite de dépôt dépassée',
+          title: l.bidDetailTravelerWindowExpiredTitle,
           subtitle: subtitle,
           footer: _HeroButton(
-            label: "Signaler l'absence de l'expéditeur",
+            label: l.bidDetailTravelerReportNoShowButton,
             isLoading: isLoading,
             onPressed: () => _showNoShowSheet(context),
           ),
@@ -358,12 +361,13 @@ class _WindowExpiredHero extends StatelessWidget {
   }
 
   Future<void> _showNoShowSheet(BuildContext context) async {
+    final l = context.l10n;
     final confirmed = await DonyBottomSheet.show<bool>(
       context,
-      title: "L'expéditeur ne s'est pas présenté ?",
+      title: l.bidDetailTravelerNoShowSheetTitle,
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(
-          label: "Signaler l'absence",
+          label: l.bidDetailReportNoShowConfirmButton,
           iconAsset: 'user-x',
           onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
         ),
@@ -374,13 +378,12 @@ class _WindowExpiredHero extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "L'expéditeur ne s'est pas présenté au point de remise.",
+              l.bidDetailTravelerNoShowSheetBody,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: DonySpacing.md),
             Text(
-              "L'expéditeur aura 48 h pour contester. "
-              'Sans réponse de sa part, l\'envoi sera annulé.',
+              l.bidDetailTravelerNoShowSheetHint,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -406,14 +409,15 @@ class _NoShowReportedHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return _HeroShell(
       variant: TravelerHeroVariant.wait,
-      title: contested ? '⚖ Absence contestée' : '⏳ Absence signalée',
+      title: contested
+          ? l.bidDetailNoShowContestedTitle
+          : l.bidDetailNoShowReportedTitle,
       subtitle: contested
-          ? "L'expéditeur conteste votre signalement. Notre équipe examine la "
-                'demande et vous tiendra informé.'
-          : "Signalement envoyé. L'expéditeur a 48 h pour confirmer ou "
-                'contester. Sans réponse, l\'envoi sera annulé automatiquement.',
+          ? l.bidDetailTravelerNoShowContestedSubtitle
+          : l.bidDetailTravelerNoShowPendingSubtitle,
     );
   }
 }
@@ -434,15 +438,16 @@ class _DeliveryNoShowHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     if (iAmReporter) {
       return _HeroShell(
         variant: TravelerHeroVariant.wait,
-        title: contested ? '⚖ Absence contestée' : '⏳ Absence signalée',
+        title: contested
+            ? l.bidDetailNoShowContestedTitle
+            : l.bidDetailNoShowReportedTitle,
         subtitle: contested
-            ? "L'autre partie conteste votre signalement. Notre équipe examine "
-                  'la demande et vous tiendra informé.'
-            : "Signalement envoyé. L'autre partie a 24 h pour contester. "
-                  'Notre équipe tranche ensuite.',
+            ? l.bidDetailDeliveryNoShowReporterContestedSubtitle
+            : l.bidDetailDeliveryNoShowReporterPendingSubtitle,
       );
     }
     return BlocBuilder<CancellationBloc, CancellationState>(
@@ -451,17 +456,15 @@ class _DeliveryNoShowHero extends StatelessWidget {
         return _HeroShell(
           variant: TravelerHeroVariant.alert,
           title: contested
-              ? '⚖ Contestation envoyée'
-              : '⚠ Une absence est signalée',
+              ? l.bidDetailDeliveryNoShowContestSentTitle
+              : l.bidDetailDeliveryNoShowAlertTitle,
           subtitle: contested
-              ? 'Votre contestation a été transmise. Notre équipe examine '
-                    'la demande et vous tiendra informé.'
-              : 'Une absence à la livraison a été signalée sur cet envoi. '
-                    'Vous pouvez contester si ce signalement est erroné.',
+              ? l.bidDetailDeliveryNoShowContestSentSubtitle
+              : l.bidDetailDeliveryNoShowAlertSubtitle,
           footer: contested
               ? null
               : _HeroButton(
-                  label: 'Contester ce signalement',
+                  label: l.bidDetailDeliveryNoShowContestButton,
                   isLoading: isLoading,
                   onPressed: () => context.read<CancellationBloc>().add(
                     DeliveryNoShowContestRequested(bid.id),

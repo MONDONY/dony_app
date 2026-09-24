@@ -3143,5 +3143,442 @@
     "@negotiationMakeOfferConfidenceLow": {
     "description": "Badge de confiance de l'estimation de prix, valeur LOW/repli (make_offer_bottom_sheet.dart, _EstimationBanner) — correction relecture C5"
   },
-  "profileSheetRatingLabel": "Rating"
+  "profileSheetRatingLabel": "Rating",
+  "bidDetailUntil": "until {date}",
+    "@bidDetailUntil": {
+    "description": "Date limite formatée, ex. deadline de remise (sender_hero_card.dart, traveler_hero_card.dart, _formatDeadline)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailFallbackDestination": "destination",
+    "@bidDetailFallbackDestination": {
+    "description": "Repli quand la ville d'arrivée n'est pas connue (sender_hero_card.dart, traveler_hero_card.dart) — identique en anglais"
+  },
+  "bidDetailReportNoShowConfirmButton": "Report the no-show",
+    "@bidDetailReportNoShowConfirmButton": {
+    "description": "Bouton de confirmation dans la feuille de signalement d'absence (sender_hero_card.dart, traveler_hero_card.dart)"
+  },
+  "bidDetailContestButton": "I contest",
+    "@bidDetailContestButton": {
+    "description": "Bouton de contestation d'une absence signalée par l'autre partie (sender_hero_card.dart, _ContestationHero)"
+  },
+  "bidDetailNoShowReportedTitle": "⏳ No-show reported",
+    "@bidDetailNoShowReportedTitle": {
+    "description": "Titre commun aux bannieres d'absence en attente : auteur du signalement (cancellationNoShowStatus ou deliveryNoShowStatus) (sender_hero_card.dart, traveler_hero_card.dart)"
+  },
+  "bidDetailNoShowContestedTitle": "⚖ No-show contested",
+    "@bidDetailNoShowContestedTitle": {
+    "description": "Titre commun aux memes bannieres une fois la contestation recue (sender_hero_card.dart, traveler_hero_card.dart)"
+  },
+  "bidDetailDeliveryNoShowReporterContestedSubtitle": "The other party is contesting your report. Our team is reviewing the request and will keep you informed.",
+    "@bidDetailDeliveryNoShowReporterContestedSubtitle": {
+    "description": "_DeliveryNoShowHero, sous-titre cote auteur du signalement quand conteste (sender_hero_card.dart, traveler_hero_card.dart)"
+  },
+  "bidDetailDeliveryNoShowReporterPendingSubtitle": "Report sent. The other party has 24 hours to contest. Our team will then decide.",
+    "@bidDetailDeliveryNoShowReporterPendingSubtitle": {
+    "description": "_DeliveryNoShowHero, sous-titre cote auteur du signalement en attente (sender_hero_card.dart, traveler_hero_card.dart)"
+  },
+  "bidDetailDeliveryNoShowContestSentTitle": "⚖ Contest sent",
+    "@bidDetailDeliveryNoShowContestSentTitle": {
+    "description": "_DeliveryNoShowHero, titre cote adversaire une fois sa contestation envoyee (sender_hero_card.dart, traveler_hero_card.dart)"
+  },
+  "bidDetailDeliveryNoShowAlertTitle": "⚠ A no-show has been reported",
+    "@bidDetailDeliveryNoShowAlertTitle": {
+    "description": "_DeliveryNoShowHero, titre cote adversaire quand le signalement est encore ouvert (sender_hero_card.dart, traveler_hero_card.dart)"
+  },
+  "bidDetailDeliveryNoShowContestSentSubtitle": "Your contest has been sent. Our team is reviewing the request and will keep you informed.",
+    "@bidDetailDeliveryNoShowContestSentSubtitle": {
+    "description": "_DeliveryNoShowHero, sous-titre cote adversaire une fois conteste (sender_hero_card.dart, traveler_hero_card.dart)"
+  },
+  "bidDetailDeliveryNoShowAlertSubtitle": "A delivery no-show has been reported on this shipment. You can contest it if this report is wrong.",
+    "@bidDetailDeliveryNoShowAlertSubtitle": {
+    "description": "_DeliveryNoShowHero, sous-titre cote adversaire quand le signalement est encore ouvert (sender_hero_card.dart, traveler_hero_card.dart)"
+  },
+  "bidDetailDeliveryNoShowContestButton": "Contest this report",
+    "@bidDetailDeliveryNoShowContestButton": {
+    "description": "_DeliveryNoShowHero, bouton de contestation cote adversaire (sender_hero_card.dart, traveler_hero_card.dart)"
+  },
+  "bidDetailSenderPendingTitle": "⏳ Waiting for the traveler",
+    "@bidDetailSenderPendingTitle": {
+    "description": "PENDING, titre (sender_hero_card.dart)"
+  },
+  "bidDetailSenderPendingSubtitle": "You'll be notified as soon as they reply.",
+    "@bidDetailSenderPendingSubtitle": {
+    "description": "PENDING, sous-titre (sender_hero_card.dart)"
+  },
+  "bidDetailSenderAwaitingPaymentTitle": "Pay to confirm the shipment",
+    "@bidDetailSenderAwaitingPaymentTitle": {
+    "description": "AWAITING_PAYMENT, titre (sender_hero_card.dart)"
+  },
+  "bidDetailSenderAwaitingPaymentSubtitle": "Your payment of {amount} will be held until delivery.",
+    "@bidDetailSenderAwaitingPaymentSubtitle": {
+    "description": "AWAITING_PAYMENT, sous-titre (sender_hero_card.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailSenderEscrowedTitle": "🔒 Payment secured",
+    "@bidDetailSenderEscrowedTitle": {
+    "description": "PAYMENT_ESCROWED, titre (sender_hero_card.dart)"
+  },
+  "bidDetailSenderEscrowedSubtitle": "{amount} on hold. Awaiting drop-off.",
+    "@bidDetailSenderEscrowedSubtitle": {
+    "description": "PAYMENT_ESCROWED, sous-titre (sender_hero_card.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailSenderAcceptedTitle": "⚡ Parcel drop-off",
+    "@bidDetailSenderAcceptedTitle": {
+    "description": "ACCEPTED, titre (sender_hero_card.dart)"
+  },
+  "bidDetailSenderAcceptedInstructions": "Show the QR code, or stick it on the parcel.",
+    "@bidDetailSenderAcceptedInstructions": {
+    "description": "ACCEPTED, instruction commune avec ou sans fenetre/lieu (sender_hero_card.dart, _buildAcceptedSubtitle)"
+  },
+  "bidDetailSenderTravelerFallback": "the traveler",
+    "@bidDetailSenderTravelerFallback": {
+    "description": "Repli quand bid.travelerName est vide (sender_hero_card.dart, HANDED_OVER)"
+  },
+  "bidDetailSenderHandedOverTitle": "✓ Parcel handed to {name}",
+    "@bidDetailSenderHandedOverTitle": {
+    "description": "HANDED_OVER, titre (sender_hero_card.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailSenderHandedOverSubtitleWithDate": "Boarding scheduled for {date}.",
+    "@bidDetailSenderHandedOverSubtitleWithDate": {
+    "description": "HANDED_OVER, sous-titre avec date de depart connue (sender_hero_card.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailSenderHandedOverSubtitleDefault": "Parcel handed over.",
+    "@bidDetailSenderHandedOverSubtitleDefault": {
+    "description": "HANDED_OVER, sous-titre sans date de depart (sender_hero_card.dart)"
+  },
+  "bidDetailSenderInTransitTitle": "✈ Parcel in flight",
+    "@bidDetailSenderInTransitTitle": {
+    "description": "IN_TRANSIT, titre (sender_hero_card.dart)"
+  },
+  "bidDetailSenderInTransitEta": "Arrival expected {time} in {city}.",
+    "@bidDetailSenderInTransitEta": {
+    "description": "IN_TRANSIT, sous-titre avec heure d'arrivee connue (sender_hero_card.dart, _buildInTransitSubtitle)",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailSenderInTransitEnRoute": "On the way to {city}.",
+    "@bidDetailSenderInTransitEnRoute": {
+    "description": "IN_TRANSIT, sous-titre sans heure d'arrivee (sender_hero_card.dart, _buildInTransitSubtitle)",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailSenderInTransitTicketNote": "The pickup code is on your ticket.",
+    "@bidDetailSenderInTransitTicketNote": {
+    "description": "IN_TRANSIT, complement quand confirmationCode existe (sender_hero_card.dart, _buildInTransitSubtitle)"
+  },
+  "bidDetailSenderArrivedTitle": "📍 Parcel arrived at destination",
+    "@bidDetailSenderArrivedTitle": {
+    "description": "ARRIVED, titre (sender_hero_card.dart)"
+  },
+  "bidDetailSenderArrivedSubtitleDefault": "The traveler has arrived, pickup instructions are coming soon.",
+    "@bidDetailSenderArrivedSubtitleDefault": {
+    "description": "ARRIVED, sous-titre sans instructions saisies par le voyageur (sender_hero_card.dart)"
+  },
+  "bidDetailSenderRecipientFallback": "your recipient",
+    "@bidDetailSenderRecipientFallback": {
+    "description": "Repli quand bid.recipientName est vide (sender_hero_card.dart, COMPLETED/DELIVERED)"
+  },
+  "bidDetailSenderDeliveredTitle": "✓ Delivered to {recipient}",
+    "@bidDetailSenderDeliveredTitle": {
+    "description": "COMPLETED/DELIVERED, titre (sender_hero_card.dart)",
+    "placeholders": {
+      "recipient": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailSenderDeliveredSubtitle": "Payment released to the traveler.",
+    "@bidDetailSenderDeliveredSubtitle": {
+    "description": "COMPLETED/DELIVERED, sous-titre (sender_hero_card.dart)"
+  },
+  "bidDetailSenderWindowExpiredTitle": "⚠ Drop-off window expired",
+    "@bidDetailSenderWindowExpiredTitle": {
+    "description": "_WindowExpiredHero, titre (sender_hero_card.dart)"
+  },
+  "bidDetailSenderWindowExpiredSubtitle": "Drop-off was possible {window}. Did the traveler not show up?",
+    "@bidDetailSenderWindowExpiredSubtitle": {
+    "description": "_WindowExpiredHero, sous-titre (sender_hero_card.dart)",
+    "placeholders": {
+      "window": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailSenderReportNoShowButton": "Report the traveler's no-show",
+    "@bidDetailSenderReportNoShowButton": {
+    "description": "_WindowExpiredHero, bouton d'ouverture de la feuille de signalement (sender_hero_card.dart)"
+  },
+  "bidDetailSenderNoShowSheetTitle": "Did the traveler not show up?",
+    "@bidDetailSenderNoShowSheetTitle": {
+    "description": "Titre de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)"
+  },
+  "bidDetailSenderNoShowSheetBody": "The traveler didn't show up at the drop-off point.",
+    "@bidDetailSenderNoShowSheetBody": {
+    "description": "Corps de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)"
+  },
+  "bidDetailSenderNoShowSheetHint": "The traveler will have 48 hours to contest. If they don't respond, the shipment will be canceled.",
+    "@bidDetailSenderNoShowSheetHint": {
+    "description": "Note explicative de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)"
+  },
+  "bidDetailSenderContestationExpired": "Expired",
+    "@bidDetailSenderContestationExpired": {
+    "description": "_ContestationHero, decompte expire (sender_hero_card.dart)"
+  },
+  "bidDetailSenderContestCountdown": "⏱ Time left to contest: {timeLeft}",
+    "@bidDetailSenderContestCountdown": {
+    "description": "_ContestationHero, decompte affiche sous le sous-titre (sender_hero_card.dart)",
+    "placeholders": {
+      "timeLeft": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailSenderNoShowByTravelerTitle": "⚠ No-show reported by the traveler",
+    "@bidDetailSenderNoShowByTravelerTitle": {
+    "description": "_ContestationHero, titre (sender_hero_card.dart)"
+  },
+  "bidDetailSenderNoShowByTravelerSubtitle": "They indicate you weren't at the drop-off point.",
+    "@bidDetailSenderNoShowByTravelerSubtitle": {
+    "description": "_ContestationHero, sous-titre (sender_hero_card.dart)"
+  },
+  "bidDetailSenderConfirmNoShowButton": "I confirm",
+    "@bidDetailSenderConfirmNoShowButton": {
+    "description": "_ContestationHero, bouton d'ouverture de la feuille de confirmation d'absence (sender_hero_card.dart)"
+  },
+  "bidDetailSenderContestSheetTitle": "Contest the no-show",
+    "@bidDetailSenderContestSheetTitle": {
+    "description": "Titre de la feuille de contestation (sender_hero_card.dart, _showContestSheet)"
+  },
+  "bidDetailSenderContestConfirmButton": "Confirm the contest",
+    "@bidDetailSenderContestConfirmButton": {
+    "description": "Bouton sticky de la feuille de contestation (sender_hero_card.dart, _showContestSheet)"
+  },
+  "bidDetailSenderContestSheetBody": "You're contesting the no-show reported by the traveler.",
+    "@bidDetailSenderContestSheetBody": {
+    "description": "Corps de la feuille de contestation (sender_hero_card.dart, _showContestSheet)"
+  },
+  "bidDetailSenderContestSheetHint": "Our team will review your request and contact you within 24 hours.",
+    "@bidDetailSenderContestSheetHint": {
+    "description": "Note explicative de la feuille de contestation (sender_hero_card.dart, _showContestSheet)"
+  },
+  "bidDetailSenderConfirmSheetTitle": "Confirm your no-show",
+    "@bidDetailSenderConfirmSheetTitle": {
+    "description": "Titre de la feuille de confirmation d'absence (sender_hero_card.dart, _showConfirmSheet)"
+  },
+  "bidDetailSenderConfirmSheetButton": "Confirm my no-show",
+    "@bidDetailSenderConfirmSheetButton": {
+    "description": "Bouton sticky de la feuille de confirmation d'absence (sender_hero_card.dart, _showConfirmSheet)"
+  },
+  "bidDetailSenderConfirmSheetBody": "By confirming your no-show, the shipment will be canceled and you won't be charged.",
+    "@bidDetailSenderConfirmSheetBody": {
+    "description": "Corps de la feuille de confirmation d'absence (sender_hero_card.dart, _showConfirmSheet)"
+  },
+  "bidDetailTravelerPendingTitle": "📨 New shipment request",
+    "@bidDetailTravelerPendingTitle": {
+    "description": "PENDING, titre (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerPendingSubtitle": "Potential earnings: {amount}. Accept or decline the request.",
+    "@bidDetailTravelerPendingSubtitle": {
+    "description": "PENDING, sous-titre (traveler_hero_card.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailTravelerScanQrTitle": "📷 Scan the parcel's QR code",
+    "@bidDetailTravelerScanQrTitle": {
+    "description": "ACCEPTED deja scanne par le voyageur (voyageurConfirmed), titre (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerScanQrSubtitle": "Scan the sender's QR code to confirm the drop-off.",
+    "@bidDetailTravelerScanQrSubtitle": {
+    "description": "ACCEPTED deja scanne par le voyageur (voyageurConfirmed), sous-titre (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerAcceptedTitle": "⚡ Collect the parcel",
+    "@bidDetailTravelerAcceptedTitle": {
+    "description": "ACCEPTED, titre (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerAcceptedInstructions": "Be at the drop-off point.",
+    "@bidDetailTravelerAcceptedInstructions": {
+    "description": "ACCEPTED, instruction avec fenetre/lieu connus (traveler_hero_card.dart, _buildAcceptedSubtitle)"
+  },
+  "bidDetailTravelerAcceptedInstructionsDefault": "Be at the drop-off point agreed with the sender.",
+    "@bidDetailTravelerAcceptedInstructionsDefault": {
+    "description": "ACCEPTED, instruction sans fenetre ni lieu connus (traveler_hero_card.dart, _buildAcceptedSubtitle)"
+  },
+  "bidDetailTravelerCollectedTitle": "✓ Parcel collected",
+    "@bidDetailTravelerCollectedTitle": {
+    "description": "HANDED_OVER, titre (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerCollectedSubtitle": "You have the parcel. Have a safe trip!",
+    "@bidDetailTravelerCollectedSubtitle": {
+    "description": "HANDED_OVER, sous-titre (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerInTransitTitle": "✈ Parcel on its way",
+    "@bidDetailTravelerInTransitTitle": {
+    "description": "IN_TRANSIT, titre (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerInTransitSubtitle": "In transit to {city}. Have a good delivery!",
+    "@bidDetailTravelerInTransitSubtitle": {
+    "description": "IN_TRANSIT, sous-titre (traveler_hero_card.dart)",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailTravelerArrivedTitle": "📍 Arrived at destination",
+    "@bidDetailTravelerArrivedTitle": {
+    "description": "ARRIVED, titre (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerArrivedSubtitle": "Wait for the recipient to pick up the parcel, then confirm the drop-off.",
+    "@bidDetailTravelerArrivedSubtitle": {
+    "description": "ARRIVED, sous-titre (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerDeliveredTitle": "✓ Delivery confirmed",
+    "@bidDetailTravelerDeliveredTitle": {
+    "description": "COMPLETED/DELIVERED, titre (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerDeliveredSubtitle": "The payment will be released to your account.",
+    "@bidDetailTravelerDeliveredSubtitle": {
+    "description": "COMPLETED/DELIVERED, sous-titre (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerWindowExpiredTitle": "⚠ Drop-off deadline passed",
+    "@bidDetailTravelerWindowExpiredTitle": {
+    "description": "_WindowExpiredHero, titre (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerWindowExpiredSubtitleWithWindow": "Drop-off was possible {window}. Did the sender not show up?",
+    "@bidDetailTravelerWindowExpiredSubtitleWithWindow": {
+    "description": "_WindowExpiredHero, sous-titre avec fenetre connue (traveler_hero_card.dart)",
+    "placeholders": {
+      "window": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailTravelerWindowExpiredSubtitleDefault": "Did the sender not show up at the drop-off point?",
+    "@bidDetailTravelerWindowExpiredSubtitleDefault": {
+    "description": "_WindowExpiredHero, sous-titre sans fenetre connue (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerReportNoShowButton": "Report the sender's no-show",
+    "@bidDetailTravelerReportNoShowButton": {
+    "description": "_WindowExpiredHero, bouton d'ouverture de la feuille de signalement (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerNoShowSheetTitle": "Did the sender not show up?",
+    "@bidDetailTravelerNoShowSheetTitle": {
+    "description": "Titre de la feuille de signalement d'absence de l'expediteur (traveler_hero_card.dart, _showNoShowSheet)"
+  },
+  "bidDetailTravelerNoShowSheetBody": "The sender didn't show up at the drop-off point.",
+    "@bidDetailTravelerNoShowSheetBody": {
+    "description": "Corps de la feuille de signalement d'absence de l'expediteur (traveler_hero_card.dart, _showNoShowSheet)"
+  },
+  "bidDetailTravelerNoShowSheetHint": "The sender will have 48 hours to contest. If they don't respond, the shipment will be canceled.",
+    "@bidDetailTravelerNoShowSheetHint": {
+    "description": "Note explicative de la feuille de signalement d'absence de l'expediteur (traveler_hero_card.dart, _showNoShowSheet)"
+  },
+  "bidDetailTravelerNoShowContestedSubtitle": "The sender is contesting your report. Our team is reviewing the request and will keep you informed.",
+    "@bidDetailTravelerNoShowContestedSubtitle": {
+    "description": "_NoShowReportedHero, sous-titre conteste (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerNoShowPendingSubtitle": "Report sent. The sender has 48 hours to confirm or contest. If there's no response, the shipment will be canceled automatically.",
+    "@bidDetailTravelerNoShowPendingSubtitle": {
+    "description": "_NoShowReportedHero, sous-titre en attente (traveler_hero_card.dart)"
+  },
+  "bidDetailGainCashTopLabel": "YOU COLLECT",
+    "@bidDetailGainCashTopLabel": {
+    "description": "Libelle du haut, paiement en especes (traveler_gain_card.dart)"
+  },
+  "bidDetailGainCashAmount": "{amount} in cash",
+    "@bidDetailGainCashAmount": {
+    "description": "Montant affiche, paiement en especes (traveler_gain_card.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailGainCashNote": "Yadony service fee charged separately.",
+    "@bidDetailGainCashNote": {
+    "description": "Note, paiement en especes (traveler_gain_card.dart)"
+  },
+  "bidDetailGainCashPill": "CASH",
+    "@bidDetailGainCashPill": {
+    "description": "Pastille, paiement en especes (traveler_gain_card.dart)"
+  },
+  "bidDetailGainReceivedTopLabel": "YOU RECEIVED",
+    "@bidDetailGainReceivedTopLabel": {
+    "description": "Libelle du haut, paiement terminal (mobile money verse ou carte recue) (traveler_gain_card.dart)"
+  },
+  "bidDetailGainMobileMoneyPaidNote": "Paid to your mobile money account.",
+    "@bidDetailGainMobileMoneyPaidNote": {
+    "description": "Note, mobile money verse (statut terminal) (traveler_gain_card.dart)"
+  },
+  "bidDetailGainPaidPill": "● Paid",
+    "@bidDetailGainPaidPill": {
+    "description": "Pastille, mobile money verse (traveler_gain_card.dart)"
+  },
+  "bidDetailGainReceivingTopLabel": "YOU RECEIVE",
+    "@bidDetailGainReceivingTopLabel": {
+    "description": "Libelle du haut, paiement encore en attente (mobile money ou carte sequestree) (traveler_gain_card.dart)"
+  },
+  "bidDetailGainMobileMoneyPendingNote": "Paid to your mobile money account on delivery.",
+    "@bidDetailGainMobileMoneyPendingNote": {
+    "description": "Note, mobile money en attente de livraison (traveler_gain_card.dart)"
+  },
+  "bidDetailGainMobileMoneyPill": "📱 mobile money",
+    "@bidDetailGainMobileMoneyPill": {
+    "description": "Pastille, mobile money en attente (traveler_gain_card.dart) - identique en anglais"
+  },
+  "bidDetailGainReceivedPill": "● Received",
+    "@bidDetailGainReceivedPill": {
+    "description": "Pastille, paiement carte recu (statut terminal) (traveler_gain_card.dart)"
+  },
+  "bidDetailGainCancelledTopLabel": "PAYMENT",
+    "@bidDetailGainCancelledTopLabel": {
+    "description": "Libelle du haut, envoi annule (traveler_gain_card.dart)"
+  },
+  "bidDetailGainCancelledNote": "Payment canceled.",
+    "@bidDetailGainCancelledNote": {
+    "description": "Note, envoi annule (traveler_gain_card.dart)"
+  },
+  "bidDetailGainEscrowedNote": "Released on delivery.",
+    "@bidDetailGainEscrowedNote": {
+    "description": "Note, paiement carte sequestre (traveler_gain_card.dart)"
+  },
+  "bidDetailGainEscrowedPill": "🔒 on hold",
+    "@bidDetailGainEscrowedPill": {
+    "description": "Pastille, paiement carte sequestre (traveler_gain_card.dart)"
+  }
 }

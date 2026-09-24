@@ -6466,4 +6466,339 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileSheetRatingLabel => 'Rating';
+
+  @override
+  String bidDetailUntil(String date) {
+    return 'until $date';
+  }
+
+  @override
+  String get bidDetailFallbackDestination => 'destination';
+
+  @override
+  String get bidDetailReportNoShowConfirmButton => 'Report the no-show';
+
+  @override
+  String get bidDetailContestButton => 'I contest';
+
+  @override
+  String get bidDetailNoShowReportedTitle => '⏳ No-show reported';
+
+  @override
+  String get bidDetailNoShowContestedTitle => '⚖ No-show contested';
+
+  @override
+  String get bidDetailDeliveryNoShowReporterContestedSubtitle =>
+      'The other party is contesting your report. Our team is reviewing the request and will keep you informed.';
+
+  @override
+  String get bidDetailDeliveryNoShowReporterPendingSubtitle =>
+      'Report sent. The other party has 24 hours to contest. Our team will then decide.';
+
+  @override
+  String get bidDetailDeliveryNoShowContestSentTitle => '⚖ Contest sent';
+
+  @override
+  String get bidDetailDeliveryNoShowAlertTitle =>
+      '⚠ A no-show has been reported';
+
+  @override
+  String get bidDetailDeliveryNoShowContestSentSubtitle =>
+      'Your contest has been sent. Our team is reviewing the request and will keep you informed.';
+
+  @override
+  String get bidDetailDeliveryNoShowAlertSubtitle =>
+      'A delivery no-show has been reported on this shipment. You can contest it if this report is wrong.';
+
+  @override
+  String get bidDetailDeliveryNoShowContestButton => 'Contest this report';
+
+  @override
+  String get bidDetailSenderPendingTitle => '⏳ Waiting for the traveler';
+
+  @override
+  String get bidDetailSenderPendingSubtitle =>
+      'You\'ll be notified as soon as they reply.';
+
+  @override
+  String get bidDetailSenderAwaitingPaymentTitle =>
+      'Pay to confirm the shipment';
+
+  @override
+  String bidDetailSenderAwaitingPaymentSubtitle(String amount) {
+    return 'Your payment of $amount will be held until delivery.';
+  }
+
+  @override
+  String get bidDetailSenderEscrowedTitle => '🔒 Payment secured';
+
+  @override
+  String bidDetailSenderEscrowedSubtitle(String amount) {
+    return '$amount on hold. Awaiting drop-off.';
+  }
+
+  @override
+  String get bidDetailSenderAcceptedTitle => '⚡ Parcel drop-off';
+
+  @override
+  String get bidDetailSenderAcceptedInstructions =>
+      'Show the QR code, or stick it on the parcel.';
+
+  @override
+  String get bidDetailSenderTravelerFallback => 'the traveler';
+
+  @override
+  String bidDetailSenderHandedOverTitle(String name) {
+    return '✓ Parcel handed to $name';
+  }
+
+  @override
+  String bidDetailSenderHandedOverSubtitleWithDate(String date) {
+    return 'Boarding scheduled for $date.';
+  }
+
+  @override
+  String get bidDetailSenderHandedOverSubtitleDefault => 'Parcel handed over.';
+
+  @override
+  String get bidDetailSenderInTransitTitle => '✈ Parcel in flight';
+
+  @override
+  String bidDetailSenderInTransitEta(String time, String city) {
+    return 'Arrival expected $time in $city.';
+  }
+
+  @override
+  String bidDetailSenderInTransitEnRoute(String city) {
+    return 'On the way to $city.';
+  }
+
+  @override
+  String get bidDetailSenderInTransitTicketNote =>
+      'The pickup code is on your ticket.';
+
+  @override
+  String get bidDetailSenderArrivedTitle => '📍 Parcel arrived at destination';
+
+  @override
+  String get bidDetailSenderArrivedSubtitleDefault =>
+      'The traveler has arrived, pickup instructions are coming soon.';
+
+  @override
+  String get bidDetailSenderRecipientFallback => 'your recipient';
+
+  @override
+  String bidDetailSenderDeliveredTitle(String recipient) {
+    return '✓ Delivered to $recipient';
+  }
+
+  @override
+  String get bidDetailSenderDeliveredSubtitle =>
+      'Payment released to the traveler.';
+
+  @override
+  String get bidDetailSenderWindowExpiredTitle => '⚠ Drop-off window expired';
+
+  @override
+  String bidDetailSenderWindowExpiredSubtitle(String window) {
+    return 'Drop-off was possible $window. Did the traveler not show up?';
+  }
+
+  @override
+  String get bidDetailSenderReportNoShowButton =>
+      'Report the traveler\'s no-show';
+
+  @override
+  String get bidDetailSenderNoShowSheetTitle => 'Did the traveler not show up?';
+
+  @override
+  String get bidDetailSenderNoShowSheetBody =>
+      'The traveler didn\'t show up at the drop-off point.';
+
+  @override
+  String get bidDetailSenderNoShowSheetHint =>
+      'The traveler will have 48 hours to contest. If they don\'t respond, the shipment will be canceled.';
+
+  @override
+  String get bidDetailSenderContestationExpired => 'Expired';
+
+  @override
+  String bidDetailSenderContestCountdown(String timeLeft) {
+    return '⏱ Time left to contest: $timeLeft';
+  }
+
+  @override
+  String get bidDetailSenderNoShowByTravelerTitle =>
+      '⚠ No-show reported by the traveler';
+
+  @override
+  String get bidDetailSenderNoShowByTravelerSubtitle =>
+      'They indicate you weren\'t at the drop-off point.';
+
+  @override
+  String get bidDetailSenderConfirmNoShowButton => 'I confirm';
+
+  @override
+  String get bidDetailSenderContestSheetTitle => 'Contest the no-show';
+
+  @override
+  String get bidDetailSenderContestConfirmButton => 'Confirm the contest';
+
+  @override
+  String get bidDetailSenderContestSheetBody =>
+      'You\'re contesting the no-show reported by the traveler.';
+
+  @override
+  String get bidDetailSenderContestSheetHint =>
+      'Our team will review your request and contact you within 24 hours.';
+
+  @override
+  String get bidDetailSenderConfirmSheetTitle => 'Confirm your no-show';
+
+  @override
+  String get bidDetailSenderConfirmSheetButton => 'Confirm my no-show';
+
+  @override
+  String get bidDetailSenderConfirmSheetBody =>
+      'By confirming your no-show, the shipment will be canceled and you won\'t be charged.';
+
+  @override
+  String get bidDetailTravelerPendingTitle => '📨 New shipment request';
+
+  @override
+  String bidDetailTravelerPendingSubtitle(String amount) {
+    return 'Potential earnings: $amount. Accept or decline the request.';
+  }
+
+  @override
+  String get bidDetailTravelerScanQrTitle => '📷 Scan the parcel\'s QR code';
+
+  @override
+  String get bidDetailTravelerScanQrSubtitle =>
+      'Scan the sender\'s QR code to confirm the drop-off.';
+
+  @override
+  String get bidDetailTravelerAcceptedTitle => '⚡ Collect the parcel';
+
+  @override
+  String get bidDetailTravelerAcceptedInstructions =>
+      'Be at the drop-off point.';
+
+  @override
+  String get bidDetailTravelerAcceptedInstructionsDefault =>
+      'Be at the drop-off point agreed with the sender.';
+
+  @override
+  String get bidDetailTravelerCollectedTitle => '✓ Parcel collected';
+
+  @override
+  String get bidDetailTravelerCollectedSubtitle =>
+      'You have the parcel. Have a safe trip!';
+
+  @override
+  String get bidDetailTravelerInTransitTitle => '✈ Parcel on its way';
+
+  @override
+  String bidDetailTravelerInTransitSubtitle(String city) {
+    return 'In transit to $city. Have a good delivery!';
+  }
+
+  @override
+  String get bidDetailTravelerArrivedTitle => '📍 Arrived at destination';
+
+  @override
+  String get bidDetailTravelerArrivedSubtitle =>
+      'Wait for the recipient to pick up the parcel, then confirm the drop-off.';
+
+  @override
+  String get bidDetailTravelerDeliveredTitle => '✓ Delivery confirmed';
+
+  @override
+  String get bidDetailTravelerDeliveredSubtitle =>
+      'The payment will be released to your account.';
+
+  @override
+  String get bidDetailTravelerWindowExpiredTitle =>
+      '⚠ Drop-off deadline passed';
+
+  @override
+  String bidDetailTravelerWindowExpiredSubtitleWithWindow(String window) {
+    return 'Drop-off was possible $window. Did the sender not show up?';
+  }
+
+  @override
+  String get bidDetailTravelerWindowExpiredSubtitleDefault =>
+      'Did the sender not show up at the drop-off point?';
+
+  @override
+  String get bidDetailTravelerReportNoShowButton =>
+      'Report the sender\'s no-show';
+
+  @override
+  String get bidDetailTravelerNoShowSheetTitle => 'Did the sender not show up?';
+
+  @override
+  String get bidDetailTravelerNoShowSheetBody =>
+      'The sender didn\'t show up at the drop-off point.';
+
+  @override
+  String get bidDetailTravelerNoShowSheetHint =>
+      'The sender will have 48 hours to contest. If they don\'t respond, the shipment will be canceled.';
+
+  @override
+  String get bidDetailTravelerNoShowContestedSubtitle =>
+      'The sender is contesting your report. Our team is reviewing the request and will keep you informed.';
+
+  @override
+  String get bidDetailTravelerNoShowPendingSubtitle =>
+      'Report sent. The sender has 48 hours to confirm or contest. If there\'s no response, the shipment will be canceled automatically.';
+
+  @override
+  String get bidDetailGainCashTopLabel => 'YOU COLLECT';
+
+  @override
+  String bidDetailGainCashAmount(String amount) {
+    return '$amount in cash';
+  }
+
+  @override
+  String get bidDetailGainCashNote => 'Yadony service fee charged separately.';
+
+  @override
+  String get bidDetailGainCashPill => 'CASH';
+
+  @override
+  String get bidDetailGainReceivedTopLabel => 'YOU RECEIVED';
+
+  @override
+  String get bidDetailGainMobileMoneyPaidNote =>
+      'Paid to your mobile money account.';
+
+  @override
+  String get bidDetailGainPaidPill => '● Paid';
+
+  @override
+  String get bidDetailGainReceivingTopLabel => 'YOU RECEIVE';
+
+  @override
+  String get bidDetailGainMobileMoneyPendingNote =>
+      'Paid to your mobile money account on delivery.';
+
+  @override
+  String get bidDetailGainMobileMoneyPill => '📱 mobile money';
+
+  @override
+  String get bidDetailGainReceivedPill => '● Received';
+
+  @override
+  String get bidDetailGainCancelledTopLabel => 'PAYMENT';
+
+  @override
+  String get bidDetailGainCancelledNote => 'Payment canceled.';
+
+  @override
+  String get bidDetailGainEscrowedNote => 'Released on delivery.';
+
+  @override
+  String get bidDetailGainEscrowedPill => '🔒 on hold';
 }

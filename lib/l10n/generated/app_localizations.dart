@@ -10826,6 +10826,552 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Note'**
   String get profileSheetRatingLabel;
+
+  /// Date limite formatée, ex. deadline de remise (sender_hero_card.dart, traveler_hero_card.dart, _formatDeadline)
+  ///
+  /// In fr, this message translates to:
+  /// **'jusqu\'au {date}'**
+  String bidDetailUntil(String date);
+
+  /// Repli quand la ville d'arrivée n'est pas connue (sender_hero_card.dart, traveler_hero_card.dart) — identique en anglais
+  ///
+  /// In fr, this message translates to:
+  /// **'destination'**
+  String get bidDetailFallbackDestination;
+
+  /// Bouton de confirmation dans la feuille de signalement d'absence (sender_hero_card.dart, traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler l\'absence'**
+  String get bidDetailReportNoShowConfirmButton;
+
+  /// Bouton de contestation d'une absence signalée par l'autre partie (sender_hero_card.dart, _ContestationHero)
+  ///
+  /// In fr, this message translates to:
+  /// **'Je conteste'**
+  String get bidDetailContestButton;
+
+  /// Titre commun aux bannieres d'absence en attente : auteur du signalement (cancellationNoShowStatus ou deliveryNoShowStatus) (sender_hero_card.dart, traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'⏳ Absence signalée'**
+  String get bidDetailNoShowReportedTitle;
+
+  /// Titre commun aux memes bannieres une fois la contestation recue (sender_hero_card.dart, traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'⚖ Absence contestée'**
+  String get bidDetailNoShowContestedTitle;
+
+  /// _DeliveryNoShowHero, sous-titre cote auteur du signalement quand conteste (sender_hero_card.dart, traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'autre partie conteste votre signalement. Notre équipe examine la demande et vous tiendra informé.'**
+  String get bidDetailDeliveryNoShowReporterContestedSubtitle;
+
+  /// _DeliveryNoShowHero, sous-titre cote auteur du signalement en attente (sender_hero_card.dart, traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signalement envoyé. L\'autre partie a 24 h pour contester. Notre équipe tranche ensuite.'**
+  String get bidDetailDeliveryNoShowReporterPendingSubtitle;
+
+  /// _DeliveryNoShowHero, titre cote adversaire une fois sa contestation envoyee (sender_hero_card.dart, traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'⚖ Contestation envoyée'**
+  String get bidDetailDeliveryNoShowContestSentTitle;
+
+  /// _DeliveryNoShowHero, titre cote adversaire quand le signalement est encore ouvert (sender_hero_card.dart, traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'⚠ Une absence est signalée'**
+  String get bidDetailDeliveryNoShowAlertTitle;
+
+  /// _DeliveryNoShowHero, sous-titre cote adversaire une fois conteste (sender_hero_card.dart, traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre contestation a été transmise. Notre équipe examine la demande et vous tiendra informé.'**
+  String get bidDetailDeliveryNoShowContestSentSubtitle;
+
+  /// _DeliveryNoShowHero, sous-titre cote adversaire quand le signalement est encore ouvert (sender_hero_card.dart, traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Une absence à la livraison a été signalée sur cet envoi. Vous pouvez contester si ce signalement est erroné.'**
+  String get bidDetailDeliveryNoShowAlertSubtitle;
+
+  /// _DeliveryNoShowHero, bouton de contestation cote adversaire (sender_hero_card.dart, traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Contester ce signalement'**
+  String get bidDetailDeliveryNoShowContestButton;
+
+  /// PENDING, titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'⏳ En attente du voyageur'**
+  String get bidDetailSenderPendingTitle;
+
+  /// PENDING, sous-titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous serez notifié dès sa réponse.'**
+  String get bidDetailSenderPendingSubtitle;
+
+  /// AWAITING_PAYMENT, titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payez pour confirmer l\'envoi'**
+  String get bidDetailSenderAwaitingPaymentTitle;
+
+  /// AWAITING_PAYMENT, sous-titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre paiement de {amount} sera séquestré jusqu\'à la livraison.'**
+  String bidDetailSenderAwaitingPaymentSubtitle(String amount);
+
+  /// PAYMENT_ESCROWED, titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'🔒 Paiement sécurisé'**
+  String get bidDetailSenderEscrowedTitle;
+
+  /// PAYMENT_ESCROWED, sous-titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} séquestrés. En attente de remise.'**
+  String bidDetailSenderEscrowedSubtitle(String amount);
+
+  /// ACCEPTED, titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'⚡ Remise du colis'**
+  String get bidDetailSenderAcceptedTitle;
+
+  /// ACCEPTED, instruction commune avec ou sans fenetre/lieu (sender_hero_card.dart, _buildAcceptedSubtitle)
+  ///
+  /// In fr, this message translates to:
+  /// **'Présentez le QR, ou collez-le sur le colis.'**
+  String get bidDetailSenderAcceptedInstructions;
+
+  /// Repli quand bid.travelerName est vide (sender_hero_card.dart, HANDED_OVER)
+  ///
+  /// In fr, this message translates to:
+  /// **'le voyageur'**
+  String get bidDetailSenderTravelerFallback;
+
+  /// HANDED_OVER, titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'✓ Colis remis à {name}'**
+  String bidDetailSenderHandedOverTitle(String name);
+
+  /// HANDED_OVER, sous-titre avec date de depart connue (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Embarquement prévu le {date}.'**
+  String bidDetailSenderHandedOverSubtitleWithDate(String date);
+
+  /// HANDED_OVER, sous-titre sans date de depart (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis remis.'**
+  String get bidDetailSenderHandedOverSubtitleDefault;
+
+  /// IN_TRANSIT, titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'✈ Colis en vol'**
+  String get bidDetailSenderInTransitTitle;
+
+  /// IN_TRANSIT, sous-titre avec heure d'arrivee connue (sender_hero_card.dart, _buildInTransitSubtitle)
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée prévue {time} à {city}.'**
+  String bidDetailSenderInTransitEta(String time, String city);
+
+  /// IN_TRANSIT, sous-titre sans heure d'arrivee (sender_hero_card.dart, _buildInTransitSubtitle)
+  ///
+  /// In fr, this message translates to:
+  /// **'En route vers {city}.'**
+  String bidDetailSenderInTransitEnRoute(String city);
+
+  /// IN_TRANSIT, complement quand confirmationCode existe (sender_hero_card.dart, _buildInTransitSubtitle)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code de retrait figure sur votre billet.'**
+  String get bidDetailSenderInTransitTicketNote;
+
+  /// ARRIVED, titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'📍 Colis arrivé à destination'**
+  String get bidDetailSenderArrivedTitle;
+
+  /// ARRIVED, sous-titre sans instructions saisies par le voyageur (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur est arrivé, les instructions de retrait arrivent bientôt.'**
+  String get bidDetailSenderArrivedSubtitleDefault;
+
+  /// Repli quand bid.recipientName est vide (sender_hero_card.dart, COMPLETED/DELIVERED)
+  ///
+  /// In fr, this message translates to:
+  /// **'votre destinataire'**
+  String get bidDetailSenderRecipientFallback;
+
+  /// COMPLETED/DELIVERED, titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'✓ Livré à {recipient}'**
+  String bidDetailSenderDeliveredTitle(String recipient);
+
+  /// COMPLETED/DELIVERED, sous-titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement libéré au voyageur.'**
+  String get bidDetailSenderDeliveredSubtitle;
+
+  /// _WindowExpiredHero, titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'⚠ Fenêtre de remise dépassée'**
+  String get bidDetailSenderWindowExpiredTitle;
+
+  /// _WindowExpiredHero, sous-titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le dépôt était possible {window}. Le voyageur ne s\'est pas présenté ?'**
+  String bidDetailSenderWindowExpiredSubtitle(String window);
+
+  /// _WindowExpiredHero, bouton d'ouverture de la feuille de signalement (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler l\'absence du voyageur'**
+  String get bidDetailSenderReportNoShowButton;
+
+  /// Titre de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur ne s\'est pas présenté ?'**
+  String get bidDetailSenderNoShowSheetTitle;
+
+  /// Corps de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur ne s\'est pas présenté au point de remise.'**
+  String get bidDetailSenderNoShowSheetBody;
+
+  /// Note explicative de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur aura 48 h pour contester. Sans réponse de sa part, l\'envoi sera annulé.'**
+  String get bidDetailSenderNoShowSheetHint;
+
+  /// _ContestationHero, decompte expire (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Délai expiré'**
+  String get bidDetailSenderContestationExpired;
+
+  /// _ContestationHero, decompte affiche sous le sous-titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'⏱ Temps pour contester : {timeLeft}'**
+  String bidDetailSenderContestCountdown(String timeLeft);
+
+  /// _ContestationHero, titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'⚠ Absence signalée par le voyageur'**
+  String get bidDetailSenderNoShowByTravelerTitle;
+
+  /// _ContestationHero, sous-titre (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Il indique que vous n\'étiez pas présent au point de remise.'**
+  String get bidDetailSenderNoShowByTravelerSubtitle;
+
+  /// _ContestationHero, bouton d'ouverture de la feuille de confirmation d'absence (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Je confirme'**
+  String get bidDetailSenderConfirmNoShowButton;
+
+  /// Titre de la feuille de contestation (sender_hero_card.dart, _showContestSheet)
+  ///
+  /// In fr, this message translates to:
+  /// **'Contester l\'absence'**
+  String get bidDetailSenderContestSheetTitle;
+
+  /// Bouton sticky de la feuille de contestation (sender_hero_card.dart, _showContestSheet)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la contestation'**
+  String get bidDetailSenderContestConfirmButton;
+
+  /// Corps de la feuille de contestation (sender_hero_card.dart, _showContestSheet)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous contestez l\'absence signalée par le voyageur.'**
+  String get bidDetailSenderContestSheetBody;
+
+  /// Note explicative de la feuille de contestation (sender_hero_card.dart, _showContestSheet)
+  ///
+  /// In fr, this message translates to:
+  /// **'Notre équipe examinera votre demande et vous contactera sous 24 h.'**
+  String get bidDetailSenderContestSheetHint;
+
+  /// Titre de la feuille de confirmation d'absence (sender_hero_card.dart, _showConfirmSheet)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer votre absence'**
+  String get bidDetailSenderConfirmSheetTitle;
+
+  /// Bouton sticky de la feuille de confirmation d'absence (sender_hero_card.dart, _showConfirmSheet)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer mon absence'**
+  String get bidDetailSenderConfirmSheetButton;
+
+  /// Corps de la feuille de confirmation d'absence (sender_hero_card.dart, _showConfirmSheet)
+  ///
+  /// In fr, this message translates to:
+  /// **'En confirmant votre absence, l\'envoi sera annulé et vous ne serez pas débité.'**
+  String get bidDetailSenderConfirmSheetBody;
+
+  /// PENDING, titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'📨 Nouvelle demande d\'envoi'**
+  String get bidDetailTravelerPendingTitle;
+
+  /// PENDING, sous-titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Gain potentiel : {amount}. Acceptez ou refusez la demande.'**
+  String bidDetailTravelerPendingSubtitle(String amount);
+
+  /// ACCEPTED deja scanne par le voyageur (voyageurConfirmed), titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'📷 Lisez le QR du colis'**
+  String get bidDetailTravelerScanQrTitle;
+
+  /// ACCEPTED deja scanne par le voyageur (voyageurConfirmed), sous-titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lisez le QR code de l\'expéditeur pour confirmer la prise en charge.'**
+  String get bidDetailTravelerScanQrSubtitle;
+
+  /// ACCEPTED, titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'⚡ Récupérez le colis'**
+  String get bidDetailTravelerAcceptedTitle;
+
+  /// ACCEPTED, instruction avec fenetre/lieu connus (traveler_hero_card.dart, _buildAcceptedSubtitle)
+  ///
+  /// In fr, this message translates to:
+  /// **'Présentez-vous au point de remise.'**
+  String get bidDetailTravelerAcceptedInstructions;
+
+  /// ACCEPTED, instruction sans fenetre ni lieu connus (traveler_hero_card.dart, _buildAcceptedSubtitle)
+  ///
+  /// In fr, this message translates to:
+  /// **'Présentez-vous au point de remise convenu avec l\'expéditeur.'**
+  String get bidDetailTravelerAcceptedInstructionsDefault;
+
+  /// HANDED_OVER, titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'✓ Colis récupéré'**
+  String get bidDetailTravelerCollectedTitle;
+
+  /// HANDED_OVER, sous-titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis est en votre possession. Bon voyage !'**
+  String get bidDetailTravelerCollectedSubtitle;
+
+  /// IN_TRANSIT, titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'✈ Colis en route'**
+  String get bidDetailTravelerInTransitTitle;
+
+  /// IN_TRANSIT, sous-titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En transit vers {city}. Bonne livraison !'**
+  String bidDetailTravelerInTransitSubtitle(String city);
+
+  /// ARRIVED, titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'📍 Arrivé à destination'**
+  String get bidDetailTravelerArrivedTitle;
+
+  /// ARRIVED, sous-titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Attendez que le destinataire récupère le colis, puis validez la remise.'**
+  String get bidDetailTravelerArrivedSubtitle;
+
+  /// COMPLETED/DELIVERED, titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'✓ Livraison confirmée'**
+  String get bidDetailTravelerDeliveredTitle;
+
+  /// COMPLETED/DELIVERED, sous-titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement va être libéré sur votre compte.'**
+  String get bidDetailTravelerDeliveredSubtitle;
+
+  /// _WindowExpiredHero, titre (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'⚠ Date limite de dépôt dépassée'**
+  String get bidDetailTravelerWindowExpiredTitle;
+
+  /// _WindowExpiredHero, sous-titre avec fenetre connue (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le dépôt était possible {window}. L\'expéditeur ne s\'est pas présenté ?'**
+  String bidDetailTravelerWindowExpiredSubtitleWithWindow(String window);
+
+  /// _WindowExpiredHero, sous-titre sans fenetre connue (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur ne s\'est pas présenté au point de dépôt ?'**
+  String get bidDetailTravelerWindowExpiredSubtitleDefault;
+
+  /// _WindowExpiredHero, bouton d'ouverture de la feuille de signalement (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler l\'absence de l\'expéditeur'**
+  String get bidDetailTravelerReportNoShowButton;
+
+  /// Titre de la feuille de signalement d'absence de l'expediteur (traveler_hero_card.dart, _showNoShowSheet)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur ne s\'est pas présenté ?'**
+  String get bidDetailTravelerNoShowSheetTitle;
+
+  /// Corps de la feuille de signalement d'absence de l'expediteur (traveler_hero_card.dart, _showNoShowSheet)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur ne s\'est pas présenté au point de remise.'**
+  String get bidDetailTravelerNoShowSheetBody;
+
+  /// Note explicative de la feuille de signalement d'absence de l'expediteur (traveler_hero_card.dart, _showNoShowSheet)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur aura 48 h pour contester. Sans réponse de sa part, l\'envoi sera annulé.'**
+  String get bidDetailTravelerNoShowSheetHint;
+
+  /// _NoShowReportedHero, sous-titre conteste (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur conteste votre signalement. Notre équipe examine la demande et vous tiendra informé.'**
+  String get bidDetailTravelerNoShowContestedSubtitle;
+
+  /// _NoShowReportedHero, sous-titre en attente (traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signalement envoyé. L\'expéditeur a 48 h pour confirmer ou contester. Sans réponse, l\'envoi sera annulé automatiquement.'**
+  String get bidDetailTravelerNoShowPendingSubtitle;
+
+  /// Libelle du haut, paiement en especes (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'VOUS ENCAISSEZ'**
+  String get bidDetailGainCashTopLabel;
+
+  /// Montant affiche, paiement en especes (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} en espèces'**
+  String bidDetailGainCashAmount(String amount);
+
+  /// Note, paiement en especes (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission Yadony prélevée séparément.'**
+  String get bidDetailGainCashNote;
+
+  /// Pastille, paiement en especes (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'ESPÈCES'**
+  String get bidDetailGainCashPill;
+
+  /// Libelle du haut, paiement terminal (mobile money verse ou carte recue) (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'VOUS AVEZ REÇU'**
+  String get bidDetailGainReceivedTopLabel;
+
+  /// Note, mobile money verse (statut terminal) (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Versé sur ton compte mobile money.'**
+  String get bidDetailGainMobileMoneyPaidNote;
+
+  /// Pastille, mobile money verse (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'● Versé'**
+  String get bidDetailGainPaidPill;
+
+  /// Libelle du haut, paiement encore en attente (mobile money ou carte sequestree) (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'VOUS RECEVEZ'**
+  String get bidDetailGainReceivingTopLabel;
+
+  /// Note, mobile money en attente de livraison (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Versé sur ton compte mobile money à la livraison.'**
+  String get bidDetailGainMobileMoneyPendingNote;
+
+  /// Pastille, mobile money en attente (traveler_gain_card.dart) - identique en anglais
+  ///
+  /// In fr, this message translates to:
+  /// **'📱 mobile money'**
+  String get bidDetailGainMobileMoneyPill;
+
+  /// Pastille, paiement carte recu (statut terminal) (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'● Reçu'**
+  String get bidDetailGainReceivedPill;
+
+  /// Libelle du haut, envoi annule (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PAIEMENT'**
+  String get bidDetailGainCancelledTopLabel;
+
+  /// Note, envoi annule (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement annulé.'**
+  String get bidDetailGainCancelledNote;
+
+  /// Note, paiement carte sequestre (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Libéré à la livraison.'**
+  String get bidDetailGainEscrowedNote;
+
+  /// Pastille, paiement carte sequestre (traveler_gain_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'🔒 séquestré'**
+  String get bidDetailGainEscrowedPill;
 }
 
 class _AppLocalizationsDelegate
