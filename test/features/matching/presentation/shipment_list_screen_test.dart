@@ -602,6 +602,44 @@ void main() {
   });
 
   group('shipmentResultCount', () {
+    testWidgets('0 résultat filtré → « 0 résultat » (singulier, Ruling R41)', (
+      tester,
+    ) async {
+      final bids = [_bid('CANCELLED', 'Dakar')];
+      whenListen(
+        bidBloc,
+        Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+        initialState: BidListLoaded(bids),
+      );
+      await tester.pumpWidget(subject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('En cours'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('0 résultat'), findsOneWidget);
+      expect(find.text('0 résultats'), findsNothing);
+    });
+
+    testWidgets('en anglais : 0 résultat → « 0 results » (pluriel anglais)', (
+      tester,
+    ) async {
+      useEnglish();
+      final bids = [_bid('CANCELLED', 'Dakar')];
+      whenListen(
+        bidBloc,
+        Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+        initialState: BidListLoaded(bids),
+      );
+      await tester.pumpWidget(subject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('In progress'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('0 results'), findsOneWidget);
+    });
+
     testWidgets('1 résultat filtré → « 1 résultat » (singulier)', (
       tester,
     ) async {

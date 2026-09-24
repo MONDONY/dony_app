@@ -7850,9 +7850,9 @@
   "@shipmentSearchFieldHint": {
     "description": "Placeholder du champ de recherche de la liste d'envois (shipment_list_screen.dart)"
   },
-  "shipmentResultCount": "{count, plural, =1{{count} résultat} other{{count} résultats}}",
+  "shipmentResultCount": "{count, plural, one{{count} résultat} other{{count} résultats}}",
   "@shipmentResultCount": {
-    "description": "Compteur de résultats filtrés de la liste d'envois, remplace shipment_list_screen.dart:297 (shipment_list_screen.dart)",
+    "description": "Compteur de résultats filtrés de la liste d'envois, remplace shipment_list_screen.dart:297 (shipment_list_screen.dart). Ruling R41 : one{} au lieu de =1{}, la catégorie CLDR fr couvre 0 et 1 (0 résultat, singulier).",
     "placeholders": {
       "count": {
         "type": "int"

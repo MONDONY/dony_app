@@ -12693,10 +12693,10 @@ abstract class AppLocalizations {
   /// **'Ville, destinataire, voyageur…'**
   String get shipmentSearchFieldHint;
 
-  /// Compteur de résultats filtrés de la liste d'envois, remplace shipment_list_screen.dart:297 (shipment_list_screen.dart)
+  /// Compteur de résultats filtrés de la liste d'envois, remplace shipment_list_screen.dart:297 (shipment_list_screen.dart). Ruling R41 : one{} au lieu de =1{}, la catégorie CLDR fr couvre 0 et 1 (0 résultat, singulier).
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{{count} résultat} other{{count} résultats}}'**
+  /// **'{count, plural, one{{count} résultat} other{{count} résultats}}'**
   String shipmentResultCount(int count);
 
   /// Lien d'effacement de tous les filtres actifs (shipment_list_screen.dart)
