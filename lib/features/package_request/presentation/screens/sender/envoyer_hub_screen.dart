@@ -113,6 +113,10 @@ class _EnvoyerHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          // Header maison (pas de DonyAppBar) : le scarabée de signalement
+          // se pose à la main, à gauche de la pastille d'action.
+          const DonyFeedbackButton(),
+          const SizedBox(width: DonySpacing.xs),
           HeaderPill(label: '+ Nouveau', onTap: onNew),
         ],
       ),

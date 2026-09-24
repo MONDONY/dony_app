@@ -353,7 +353,7 @@ void main() {
       expect: () => [
         isA<AuthLoading>(),
         predicate<AuthState>(
-          (s) => s is AuthError && s.error.code == 'phone-already-registered',
+          (s) => s is AuthError && s.error.code == 'phone-already-exists',
         ),
       ],
     );
