@@ -258,23 +258,22 @@ void main() {
       expect(find.textContaining('24 trajets'), findsOneWidget);
     });
 
-    testWidgets(
-      'accorde "1 trajet" au singulier (correction d\'accord R39)',
-      (tester) async {
-        when(() => bloc.state).thenReturn(
-          NegotiationLoaded(_thread(travelerTripsCount: 1)),
-        );
-        await tester.pumpWidget(wrap());
-        await tester.pumpAndSettle();
-        expect(find.textContaining('★4.9 · 1 trajet'), findsOneWidget);
-        expect(find.textContaining('1 trajets'), findsNothing);
-      },
-    );
+    testWidgets('accorde "1 trajet" au singulier (correction d\'accord R39)', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationLoaded(_thread(travelerTripsCount: 1)));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.textContaining('★4.9 · 1 trajet'), findsOneWidget);
+      expect(find.textContaining('1 trajets'), findsNothing);
+    });
 
     testWidgets('accorde "2 trajets" au pluriel', (tester) async {
-      when(() => bloc.state).thenReturn(
-        NegotiationLoaded(_thread(travelerTripsCount: 2)),
-      );
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationLoaded(_thread(travelerTripsCount: 2)));
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       expect(find.textContaining('★4.9 · 2 trajets'), findsOneWidget);

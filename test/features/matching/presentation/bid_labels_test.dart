@@ -150,10 +150,7 @@ void main() {
     test('serverMessage null : clé bankAuthInterrupted', () {
       final state = BidFailed(reason: BidFailureReason.bankAuthInterrupted);
       expect(state.displayMessage(l), 'Authentification bancaire interrompue');
-      expect(
-        state.displayMessage(en),
-        'Bank authentication was interrupted',
-      );
+      expect(state.displayMessage(en), 'Bank authentication was interrupted');
     });
 
     test('serverMessage null : clé refused', () {
