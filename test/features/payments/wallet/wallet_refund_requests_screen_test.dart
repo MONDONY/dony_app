@@ -10,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockWalletRefundRequestsListCubit
     extends MockCubit<WalletRefundRequestsListState>
     implements WalletRefundRequestsListCubit {}
@@ -349,4 +351,32 @@ void main() {
       );
     },
   );
+
+  testWidgets('anglais : titre, statut, rail et date traduits', (tester) async {
+    useEnglish();
+    stub(
+      WalletRefundRequestsListState(
+        isLoading: false,
+        requests: [
+          WalletRefundRequestModel(
+            id: 'req-10',
+            currency: 'XOF',
+            amount: 5000,
+            channel: 'MANUAL',
+            status: 'PROCESSING',
+            requestedAt: DateTime(2026, 8, 20),
+            rail: 'PAWAPAY',
+          ),
+        ],
+      ),
+    );
+
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    expect(find.text('My refunds'), findsOneWidget);
+    expect(find.text('In progress'), findsOneWidget);
+    expect(find.textContaining('Mobile money'), findsOneWidget);
+    expect(find.textContaining('Aug 20, 2026'), findsOneWidget);
+  });
 }

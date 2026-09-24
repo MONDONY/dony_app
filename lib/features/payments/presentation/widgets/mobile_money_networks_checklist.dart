@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -20,6 +21,7 @@ class MobileMoneyNetworksChecklist extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final all = catalog.providers.map((p) => p.code).toSet();
     return ValueListenableBuilder<Set<String>>(
       valueListenable: selection,
@@ -31,7 +33,7 @@ class MobileMoneyNetworksChecklist extends StatelessWidget {
             children: [
               DonyOperatorTile(
                 key: const Key('network-all'),
-                title: 'Tous les réseaux',
+                title: l.mobileMoneyAllNetworks,
                 control: DonyOperatorControl.checkbox,
                 selected: allSelected,
                 indeterminate: !allSelected && selected.isNotEmpty,
@@ -43,7 +45,7 @@ class MobileMoneyNetworksChecklist extends StatelessWidget {
                   brand: catalog.providers[i].brand,
                   title: catalog.providers[i].label,
                   subtitle: catalog.providers[i].detected
-                      ? 'Détecté pour ce numéro'
+                      ? l.mobileMoneyDetectedForNumber
                       : null,
                   control: DonyOperatorControl.checkbox,
                   selected: selected.contains(catalog.providers[i].code),

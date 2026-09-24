@@ -4,6 +4,8 @@ import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   const xof = WalletCurrencyBalanceModel(
     currency: 'XOF',
@@ -109,5 +111,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(chosen?.currency, 'XOF');
+  });
+
+  testWidgets('anglais : titre, choix et bouton traduits', (tester) async {
+    useEnglish();
+    await pumpAndOpen(tester);
+
+    expect(find.text('Which currency to refund?'), findsOneWidget);
+    expect(find.textContaining('refundable'), findsNWidgets(2));
+    expect(find.textContaining('you get'), findsNWidgets(2));
+    expect(find.widgetWithText(DonyButton, 'Continue'), findsOneWidget);
   });
 }

@@ -1,7 +1,7 @@
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
@@ -176,7 +176,7 @@ class _GridPreviewSheetContent extends StatelessWidget {
           ),
         const SizedBox(height: DonySpacing.xs),
         Text(
-          l.tripPublishGridSheetCommissionNote(donyCommissionPercentLabel),
+          l.tripPublishGridSheetCommissionNote(commissionPercentLabel(l)),
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),

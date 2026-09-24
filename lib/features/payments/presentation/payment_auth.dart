@@ -1,6 +1,7 @@
 import 'package:dony/core/design/accessibility_scope.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
@@ -28,11 +29,11 @@ Future<bool> requirePaymentAuth(
   required LocalAuthService authService,
   required Box userPrefs,
 }) async {
+  final l = context.l10n;
   final confirmed = await confirmImportantAction(
     context,
-    title: 'Confirmer le paiement',
-    message:
-        'Le montant sera bloqué jusqu\'à la livraison, puis versé au voyageur.',
+    title: l.paymentAuthConfirmTitle,
+    message: l.paymentAuthConfirmMessage,
   );
   if (!confirmed) {
     return false;

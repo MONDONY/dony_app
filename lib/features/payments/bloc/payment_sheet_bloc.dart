@@ -108,16 +108,6 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     () => _gateway.confirmPayPal(config.clientSecret),
   );
 
-  /// Message du parcours carte quand la clé éphémère est irrécupérable :
-  /// le toString() brut d'une AppException réseau n'est pas montrable.
-  static const cardUnavailableMessage =
-      'Le paiement par carte est indisponible pour le moment. '
-      'Réessaie dans un instant.';
-
-  /// Dernier filet de [_confirm] pour une erreur non mappée par le gateway.
-  static const genericFailureMessage =
-      'Le paiement a échoué. Réessaie dans un instant.';
-
   /// Clé éphémère mémoïsée pour la durée de vie de la sheet : un tap
   /// Carte annulé puis retenté ne refait pas l'aller-retour réseau
   /// (la clé Stripe reste valide bien plus longtemps que la sheet).
@@ -129,7 +119,9 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
   ///
   /// Les erreurs Stripe (carte refusée…) remontent déjà localisées via le
   /// gateway, comme pour wallet/PayPal ; seul l'échec de la clé éphémère
-  /// est remappé sur [cardUnavailableMessage].
+  /// est remappé sur [_EphemeralKeyUnavailableException], que [_confirm]
+  /// distingue des échecs Stripe pour émettre
+  /// [PaymentSheetFailureReason.cardUnavailable].
   Future<void> _onCardPressed(
     PaymentSheetCardPressed event,
     Emitter<PaymentSheetState> emit,
@@ -148,7 +140,7 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
         ),
       );
       _ephemeralKeyFuture = null; // ne pas mémoïser un échec
-      throw const PaymentConfirmationException(cardUnavailableMessage);
+      throw const _EphemeralKeyUnavailableException();
     }
     await _gateway.initPaymentSheet(
       clientSecret: config.clientSecret,
@@ -177,8 +169,22 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
       emit(PaymentSheetSuccess(method: method));
     } on PaymentCancelledException {
       emit(ready); // annulation silencieuse — la sheet reste prête
+    } on _EphemeralKeyUnavailableException {
+      emit(
+        PaymentSheetFailure(
+          reason: PaymentSheetFailureReason.cardUnavailable,
+          ready: ready,
+        ),
+      );
+      emit(ready); // failure transitoire (snackbar) puis bouton ré-armé
     } on PaymentConfirmationException catch (e) {
-      emit(PaymentSheetFailure(message: e.message, ready: ready));
+      emit(
+        PaymentSheetFailure(
+          reason: PaymentSheetFailureReason.declined,
+          providerMessage: e.message,
+          ready: ready,
+        ),
+      );
       emit(ready); // failure transitoire (snackbar) puis bouton ré-armé
     } catch (error, stackTrace) {
       // Dernier filet : une erreur non mappée par le gateway n'a pas de
@@ -191,7 +197,12 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
           context: {'feature': 'payments', 'method': method.name},
         ),
       );
-      emit(PaymentSheetFailure(message: genericFailureMessage, ready: ready));
+      emit(
+        PaymentSheetFailure(
+          reason: PaymentSheetFailureReason.generic,
+          ready: ready,
+        ),
+      );
       emit(ready);
     }
   }
@@ -202,4 +213,12 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     PaymentSheetFailure(:final ready) => ready,
     _ => null,
   };
+}
+
+/// Marqueur interne : la clé éphémère du customer n'a pas pu être récupérée.
+/// Distingue ce cas, dans [PaymentSheetBloc._confirm], d'un échec Stripe
+/// ([PaymentConfirmationException]) pour émettre
+/// [PaymentSheetFailureReason.cardUnavailable] plutôt que `declined`.
+class _EphemeralKeyUnavailableException implements Exception {
+  const _EphemeralKeyUnavailableException();
 }

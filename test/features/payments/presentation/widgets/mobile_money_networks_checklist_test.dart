@@ -3,6 +3,8 @@ import 'package:dony/features/payments/presentation/widgets/mobile_money_network
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   const catalog = MobileMoneyProviderCatalog(
     country: 'CI',
@@ -73,4 +75,14 @@ void main() {
     await tester.pump();
     expect(selection.value, isEmpty);
   });
+
+  testWidgets(
+    'en anglais : « All networks » et le sous-titre du détecté traduits',
+    (tester) async {
+      useEnglish();
+      await pump(tester, {'ORANGE_CIV'});
+      expect(find.text('All networks'), findsOneWidget);
+      expect(find.text('Detected for this number'), findsOneWidget);
+    },
+  );
 }

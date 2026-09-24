@@ -43,11 +43,25 @@ class PaymentSheetSuccess extends PaymentSheetState {
   List<Object?> get props => [method];
 }
 
+/// Raison d'un [PaymentSheetFailure], pour l'affichage d'un libellé générique
+/// quand aucun [PaymentSheetFailure.providerMessage] n'est disponible.
+enum PaymentSheetFailureReason { cardUnavailable, declined, generic }
+
 /// Échec transitoire (snackbar) — immédiatement suivi d'un retour à [ready].
+///
+/// Ne porte plus de texte : [providerMessage], quand présent, est le message
+/// déjà localisé par le SDK Stripe (`localizedMessage`) dans la langue du
+/// téléphone — affiché tel quel. Sans lui, l'UI affiche le libellé générique
+/// associé à [reason].
 class PaymentSheetFailure extends PaymentSheetState {
-  final String message;
+  final String? providerMessage;
+  final PaymentSheetFailureReason reason;
   final PaymentSheetResolved ready;
-  const PaymentSheetFailure({required this.message, required this.ready});
+  const PaymentSheetFailure({
+    this.providerMessage,
+    required this.reason,
+    required this.ready,
+  });
   @override
-  List<Object?> get props => [message, ready];
+  List<Object?> get props => [providerMessage, reason, ready];
 }

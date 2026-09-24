@@ -110,7 +110,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
         emit(
           const PaymentError(
             NetworkException(
-              'Paiement déjà effectué pour cette demande.',
+              'Paiement déjà effectué pour cette demande.', // i18n-ignore : code absent du catalogue, jamais affiché tel quel (ErrorCatalog retombe sur le message réseau générique)
               code: 'payment-already-done',
             ),
           ),

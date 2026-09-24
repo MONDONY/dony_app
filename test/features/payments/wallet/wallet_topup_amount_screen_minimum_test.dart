@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/currency_test_doubles.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 /// Régression : sous le minimum Stripe (5 € équivalent), le bouton doit
@@ -218,6 +219,27 @@ void main() {
       expect(find.textContaining('Rechargement indisponible'), findsWidgets);
     },
   );
+
+  testWidgets('anglais : titre, sous-texte et bouton traduits', (tester) async {
+    useEnglish();
+    final bloc = WalletBloc(
+      walletRepository,
+      makeEnabledAnalytics(MockAnalyticsBackend()),
+    );
+    addTearDown(bloc.close);
+
+    await tester.pumpWidget(buildSubject(bloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Top up · Step 2/2'), findsOneWidget);
+    expect(find.text('Amount to top up'), findsOneWidget);
+    expect(find.text('Enter an amount'), findsOneWidget);
+
+    await tester.tap(find.text('5'));
+    await tester.pump();
+
+    expect(find.text('Top up 5 € via Credit card'), findsOneWidget);
+  });
 
   group('Devise réelle du wallet (pas la préférence Hive en cache)', () {
     setUp(() {

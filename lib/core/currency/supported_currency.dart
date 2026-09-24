@@ -9,7 +9,6 @@ class SupportedCurrency {
   final String symbol;
   final int minorUnit;
   final String locale;
-  final String displayName;
   final double unitsPerEur;
 
   const SupportedCurrency._({
@@ -17,7 +16,6 @@ class SupportedCurrency {
     required this.symbol,
     required this.minorUnit,
     required this.locale,
-    required this.displayName,
     required this.unitsPerEur,
   });
 
@@ -26,7 +24,6 @@ class SupportedCurrency {
     symbol: '€',
     minorUnit: 2,
     locale: 'fr_FR',
-    displayName: 'Euro',
     unitsPerEur: 1,
   );
   static const usd = SupportedCurrency._(
@@ -34,7 +31,6 @@ class SupportedCurrency {
     symbol: '\$',
     minorUnit: 2,
     locale: 'en_US',
-    displayName: 'Dollar américain',
     unitsPerEur: 1.08,
   );
   static const cad = SupportedCurrency._(
@@ -42,7 +38,6 @@ class SupportedCurrency {
     symbol: 'CA\$',
     minorUnit: 2,
     locale: 'fr_CA',
-    displayName: 'Dollar canadien',
     unitsPerEur: 1.47,
   );
   static const gbp = SupportedCurrency._(
@@ -50,7 +45,6 @@ class SupportedCurrency {
     symbol: '£',
     minorUnit: 2,
     locale: 'en_GB',
-    displayName: 'Livre sterling',
     unitsPerEur: 0.86,
   );
   static const chf = SupportedCurrency._(
@@ -58,7 +52,6 @@ class SupportedCurrency {
     symbol: 'CHF',
     minorUnit: 2,
     locale: 'fr_CH',
-    displayName: 'Franc suisse',
     unitsPerEur: 0.95,
   );
   static const xof = SupportedCurrency._(
@@ -66,7 +59,6 @@ class SupportedCurrency {
     symbol: 'F CFA',
     minorUnit: 0,
     locale: 'fr_SN',
-    displayName: 'Franc CFA Ouest',
     unitsPerEur: 655.957,
   );
   static const xaf = SupportedCurrency._(
@@ -74,7 +66,6 @@ class SupportedCurrency {
     symbol: 'FCFA',
     minorUnit: 0,
     locale: 'fr_CM',
-    displayName: 'Franc CFA Centre',
     unitsPerEur: 655.957,
   );
 
@@ -134,7 +125,7 @@ class SupportedCurrency {
     final normalized = value?.trim().toUpperCase() ?? '';
     if (normalized.isNotEmpty && _reportedUnknownCodes.add(normalized)) {
       AppLog.warn(
-        'Devise hors catalogue affichée en euros',
+        'Devise hors catalogue affichée en euros', // i18n-ignore : journal
         data: {'code': normalized},
       );
     }

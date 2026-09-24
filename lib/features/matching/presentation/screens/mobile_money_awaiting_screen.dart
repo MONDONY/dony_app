@@ -18,6 +18,8 @@ import 'package:dony/features/matching/data/models/mobile_money_payment_status.d
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:dony/features/payments/presentation/widgets/mobile_money_networks_checklist.dart';
+import 'package:dony/l10n/country_names.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -206,13 +208,14 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Scaffold(
       backgroundColor: cs.surfaceContainerLowest,
       appBar: AppBar(
         actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
-        title: const Text('Paiement mobile money'),
+        title: Text(l.mobileMoneyAwaitingTitle),
         backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -236,7 +239,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
                 _cancelAllTimers();
                 DonySnackbar.show(
                   context,
-                  message: 'Paiement confirmé, ton envoi est sécurisé',
+                  message: l.mobileMoneyPaymentConfirmedSecured,
                   type: DonySnackbarType.success,
                 );
                 _close(context, paid: true);
@@ -311,8 +314,8 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
               ),
             MobileMoneyPaymentError() => DonyEmptyState(
               type: DonyEmptyStateType.error,
-              title: 'Une erreur est survenue',
-              actionLabel: 'Réessayer',
+              title: l.commonSomethingWentWrong,
+              actionLabel: l.commonRetry,
               onAction: () => context.read<MobileMoneyPaymentBloc>().add(
                 MobileMoneyPaymentOpened(scope: widget.scope),
               ),
@@ -343,6 +346,7 @@ class _CountdownLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     return ValueListenableBuilder<Duration>(
       valueListenable: remaining,
       builder: (context, value, _) {
@@ -357,7 +361,7 @@ class _CountdownLabel extends StatelessWidget {
             ),
             const SizedBox(width: DonySpacing.xs),
             Text(
-              'Temps restant ${_format(value)}',
+              l.mobileMoneyTimeLeft(_format(value)),
               style: tt.bodyMedium?.copyWith(
                 color: isUrgent ? cs.error : cs.onSurfaceVariant,
                 fontWeight: FontWeight.w700,
@@ -515,40 +519,43 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
     super.dispose();
   }
 
-  String _country(String? code) =>
-      CountryCatalog.byCode(code)?.name ?? code ?? '';
-
-  String _joinLabels(List<String> labels) => switch (labels.length) {
-    0 => '',
-    1 => labels.first,
-    _ => '${labels.sublist(0, labels.length - 1).join(', ')} et ${labels.last}',
-  };
+  /// Nom lisible d'un pays alpha-2, traduit s'il est au catalogue
+  /// ([CountryCatalog]), sinon repli sur le code brut (même repli qu'avant la
+  /// traduction).
+  String _country(AppLocalizations l, String? code) {
+    if (code == null) return '';
+    return CountryCatalog.byCode(code) != null ? countryName(l, code) : code;
+  }
 
   /// Message du bandeau « aucun réseau commun ». Garde défensive : le bloc
   /// actuel ne renvoie jamais `travelerAccepts` vide (le voyageur accepte
   /// toujours au moins un réseau), mais sans cette garde un futur catalogue
-  /// dégénéré produirait « Le voyageur accepte , qui n'existent pas... () »
-  /// — parenthèse vide et virgule orpheline.
+  /// dégénéré produirait un message avec un nom de réseaux vide.
   String _noCommonNetworkMessage(
+    AppLocalizations l,
     String firstName,
     MobileMoneyProviderCatalog? catalog,
   ) {
     final accepts = catalog?.travelerAccepts ?? const <String>[];
     if (accepts.isEmpty) {
-      return 'Aucun réseau mobile money disponible pour ce paiement.';
+      return l.mobileMoneyNoNetworkForPayment;
     }
-    return '$firstName accepte ${_joinLabels(accepts)}, '
-        "qui n'existent pas pour ton numéro (${_country(catalog?.country)}). "
-        'Change de numéro payeur ou écris-lui depuis la conversation.';
+    return l.mobileMoneyNoCommonNetwork(
+      firstName,
+      joinList(l, accepts),
+      _country(l, catalog?.country),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final status = widget.state.status;
     final catalog = widget.state.catalog;
-    final firstName = catalog?.travelerFirstName ?? 'Le voyageur';
+    final firstName =
+        catalog?.travelerFirstName ?? l.mobileMoneyTravelerFallback;
     final amount = formatPriceIn(status.amount ?? 0, status.currency);
 
     return Column(
@@ -576,14 +583,14 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       DonyInfoRow(
-                        label: 'Numéro qui paie',
+                        label: l.mobileMoneyPayingNumberLabel,
                         value: catalog?.msisdnMasked ?? '…',
                       ),
                       const SizedBox(height: DonySpacing.sm),
                       DonyTextField(
                         key: const Key('mobile-money-payer-phone-field'),
                         controller: widget.phoneController,
-                        label: 'Payer avec un autre numéro (facultatif)',
+                        label: l.mobileMoneyPayWithAnotherNumberOptional,
                         keyboardType: TextInputType.phone,
                       ),
                     ],
@@ -595,13 +602,13 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Avec quel opérateur ?',
+                        l.mobileMoneyChooseOperatorTitle,
                         style: tt.titleLarge,
                       ),
                     ),
                     if (catalog?.country != null)
                       Text(
-                        _country(catalog!.country),
+                        _country(l, catalog!.country),
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -618,13 +625,13 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
                     action: TextButton(
                       onPressed: () =>
                           widget.onPhoneConfirmed(widget.state.payerPhone),
-                      child: const Text('Réessayer'),
+                      child: Text(l.commonRetry),
                     ),
                   )
                 else if (catalog == null || catalog.isEmpty)
                   DonyStatusBanner(
                     type: DonyStatusBannerType.warning,
-                    message: _noCommonNetworkMessage(firstName, catalog),
+                    message: _noCommonNetworkMessage(l, firstName, catalog),
                   )
                 else ...[
                   ValueListenableBuilder<String?>(
@@ -641,9 +648,10 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
                               brand: catalog.providers[i].brand,
                               title: catalog.providers[i].label,
                               subtitle: catalog.providers[i].detected
-                                  ? 'Détecté pour ce numéro'
-                                  : catalog.providers[i].brand == 'WAVE'
-                                  ? "Tu confirmes dans l'application Wave"
+                                  ? l.mobileMoneyDetectedForNumber
+                                  : catalog.providers[i].brand ==
+                                        'WAVE' // i18n-ignore
+                                  ? l.mobileMoneyConfirmInWaveApp
                                   : null,
                               control: DonyOperatorControl.radio,
                               selected: selected == catalog.providers[i].code,
@@ -663,8 +671,10 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: Text(
-                          '$firstName accepte ${_joinLabels(catalog.travelerAccepts)}, '
-                          'et reçoit sur le réseau que tu choisis.',
+                          l.mobileMoneyAcceptsAndReceives(
+                            firstName,
+                            joinList(l, catalog.travelerAccepts),
+                          ),
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
                           ),
@@ -690,7 +700,7 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
             builder: (context, pending, _) => ValueListenableBuilder<String?>(
               valueListenable: _selected,
               builder: (context, selected, _) => DonyButton(
-                label: 'Payer $amount',
+                label: l.mobileMoneyPay(amount),
                 iconAsset: 'smartphone',
                 isLoading: widget.state.isLoadingCatalog && catalog != null,
                 onPressed:
@@ -721,6 +731,7 @@ class _AwaitingBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final waveUrl = status.deposit?.authorizationUrl;
     final providerLabel = status.deposit?.providerLabel;
 
@@ -736,13 +747,10 @@ class _AwaitingBody extends StatelessWidget {
           ],
           const SizedBox(height: DonySpacing.xl),
           if (status.isWaveRedirect) ...[
-            Text(
-              "Termine le paiement dans l'application Wave",
-              style: tt.bodyMedium,
-            ),
+            Text(l.mobileMoneyFinishInWaveApp, style: tt.bodyMedium),
             const SizedBox(height: DonySpacing.base),
             DonyButton(
-              label: 'Ouvrir Wave',
+              label: l.mobileMoneyOpenWave,
               iconAsset: 'external-link',
               onPressed: waveUrl != null
                   ? () => getIt<ExternalUrlLauncher>().open(Uri.parse(waveUrl))
@@ -750,14 +758,14 @@ class _AwaitingBody extends StatelessWidget {
             ),
           ] else
             Text(
-              'Valide le paiement sur ton téléphone : une demande de code '
-              "PIN vient de t'être envoyée par "
-              "${providerLabel ?? 'ton opérateur'}.",
+              providerLabel != null
+                  ? l.mobileMoneyPinSent(providerLabel)
+                  : l.mobileMoneyPinSentUnknownProvider,
               style: tt.bodyMedium,
             ),
           const SizedBox(height: DonySpacing.xl),
           Text(
-            'La confirmation est automatique, garde cet écran ouvert.',
+            l.mobileMoneyConfirmationAutomatic,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
@@ -785,6 +793,7 @@ class _FailedBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(DonySpacing.lg),
@@ -795,7 +804,7 @@ class _FailedBody extends StatelessWidget {
           const SizedBox(height: DonySpacing.base),
           Text(
             status.deposit?.failureMessage ??
-                "Le paiement a été refusé par l'opérateur",
+                l.mobileMoneyDepositRefusedFallback,
             textAlign: TextAlign.center,
             style: tt.bodyMedium,
           ),
@@ -807,11 +816,11 @@ class _FailedBody extends StatelessWidget {
           DonyTextField(
             key: const Key('mobile-money-retry-phone-field'),
             controller: phoneController,
-            label: 'Payer avec un autre numéro (facultatif)',
+            label: l.mobileMoneyPayWithAnotherNumberOptional,
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: DonySpacing.base),
-          DonyButton(label: 'Réessayer', onPressed: onRetry),
+          DonyButton(label: l.commonRetry, onPressed: onRetry),
         ],
       ),
     );
@@ -837,6 +846,7 @@ class _PhoneRequiredBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(DonySpacing.lg),
@@ -846,8 +856,7 @@ class _PhoneRequiredBody extends StatelessWidget {
           Center(child: DonyIcon('smartphone', color: cs.primary, size: 48)),
           const SizedBox(height: DonySpacing.base),
           Text(
-            "Ton compte Yadony n'a pas de numéro de téléphone : indique le "
-            'numéro mobile money qui paiera.',
+            l.mobileMoneyPhoneRequiredExplanation,
             textAlign: TextAlign.center,
             style: tt.bodyMedium,
           ),
@@ -855,14 +864,14 @@ class _PhoneRequiredBody extends StatelessWidget {
           DonyTextField(
             key: const Key('mobile-money-phone-required-field'),
             controller: phoneController,
-            label: 'Numéro qui paiera',
+            label: l.mobileMoneyPhoneThatWillPayLabel,
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: DonySpacing.base),
           ListenableBuilder(
             listenable: phoneController,
             builder: (context, _) => DonyButton(
-              label: 'Réessayer',
+              label: l.commonRetry,
               onPressed: normalizePayerPhone(phoneController.text) == null
                   ? null
                   : onRetry,
@@ -882,19 +891,16 @@ class _ExpiredBody extends StatelessWidget {
   final MobileMoneyScope scope;
   final VoidCallback onBack;
 
-  String get _message => switch (scope) {
-    BidMobileMoneyScope() =>
-      'Délai dépassé. La demande a été annulée, refais une offre au '
-          'voyageur.',
-    NegotiationMobileMoneyScope() =>
-      'Délai dépassé. Le fil est revenu à « à payer » : tu peux relancer le '
-          'paiement ou changer de moyen de paiement depuis le fil.',
+  String _message(AppLocalizations l) => switch (scope) {
+    BidMobileMoneyScope() => l.mobileMoneyExpiredBid,
+    NegotiationMobileMoneyScope() => l.mobileMoneyExpiredNegotiation,
   };
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
@@ -903,10 +909,14 @@ class _ExpiredBody extends StatelessWidget {
           children: [
             DonyIcon('timer-off', color: cs.warning, size: 48),
             const SizedBox(height: DonySpacing.base),
-            Text(_message, textAlign: TextAlign.center, style: tt.bodyMedium),
+            Text(
+              _message(l),
+              textAlign: TextAlign.center,
+              style: tt.bodyMedium,
+            ),
             const SizedBox(height: DonySpacing.xl),
             DonyButton(
-              label: 'Retour',
+              label: l.commonBack,
               variant: DonyButtonVariant.ghost,
               onPressed: onBack,
             ),
@@ -932,7 +942,10 @@ class _EscrowedBody extends StatelessWidget {
         children: [
           DonyIcon('circle-check', color: cs.success, size: 64),
           const SizedBox(height: DonySpacing.base),
-          Text('Paiement confirmé', style: tt.headlineLarge),
+          Text(
+            context.l10n.mobileMoneyPaymentConfirmedTitle,
+            style: tt.headlineLarge,
+          ),
         ],
       ),
     );

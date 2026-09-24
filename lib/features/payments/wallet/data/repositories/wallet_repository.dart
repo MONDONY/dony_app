@@ -22,12 +22,14 @@ class WalletRepository {
 
   Future<String?> topupStripe({
     required double amount,
-    String currencyCode = 'EUR',
+    String currencyCode =
+        'EUR', // i18n-ignore : code devise par défaut envoyé au serveur
   }) async {
     try {
       final data = await _datasource.topup(
         amount: amount,
-        paymentMethod: 'STRIPE',
+        paymentMethod:
+            'STRIPE', // i18n-ignore : code de méthode de paiement envoyé au serveur
         currencyCode: currencyCode,
       );
       return data['clientSecret'] as String?;

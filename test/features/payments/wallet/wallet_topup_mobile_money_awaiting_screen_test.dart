@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 /// Écran d'attente de la recharge mobile money : textes figés, carte de
 /// détails, `Confirmed` -> retour au portefeuille, `Failed` -> message et
 /// bouton de reprise.
@@ -252,7 +254,10 @@ void main() {
     whenListen(
       cubit,
       Stream.fromIterable([
-        const WalletTopupMobileMoneyFailed('Solde insuffisant.'),
+        const WalletTopupMobileMoneyFailed(
+          reason: WalletTopupFailureReason.refused,
+          operatorMessage: 'Solde insuffisant.',
+        ),
       ]),
       initialState: WalletTopupMobileMoneyAwaiting(
         topup: topup,
@@ -283,7 +288,10 @@ void main() {
       whenListen(
         cubit,
         Stream.fromIterable([const WalletTopupMobileMoneyError(failure)]),
-        initialState: const WalletTopupMobileMoneyFailed('Refusé.'),
+        initialState: const WalletTopupMobileMoneyFailed(
+          reason: WalletTopupFailureReason.refused,
+          operatorMessage: 'Refusé.',
+        ),
       );
 
       await tester.pumpWidget(buildHarness());
@@ -369,4 +377,59 @@ void main() {
       verify(() => cubit.reset()).called(1);
     },
   );
+
+  group('anglais', () {
+    testWidgets('textes traduits de l\'écran d\'attente, expiration traduite', (
+      tester,
+    ) async {
+      useEnglish();
+      whenListen(
+        cubit,
+        const Stream<WalletTopupMobileMoneyState>.empty(),
+        initialState: WalletTopupMobileMoneyAwaiting(
+          topup: topup,
+          startedAt: startedAt,
+        ),
+      );
+
+      await tester.pumpWidget(buildHarness());
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Mobile money top-up'), findsOneWidget);
+      expect(find.text('Approve the payment on your phone'), findsOneWidget);
+      expect(
+        find.textContaining('A payment request was sent to'),
+        findsOneWidget,
+      );
+      expect(find.text('Amount'), findsOneWidget);
+      expect(find.text('Credited to'), findsOneWidget);
+      expect(find.text('Expires in'), findsOneWidget);
+    });
+
+    testWidgets('Failed sans motif serveur : message générique traduit', (
+      tester,
+    ) async {
+      useEnglish();
+      whenListen(
+        cubit,
+        Stream.fromIterable([
+          const WalletTopupMobileMoneyFailed(
+            reason: WalletTopupFailureReason.expired,
+          ),
+        ]),
+        initialState: WalletTopupMobileMoneyAwaiting(
+          topup: topup,
+          startedAt: startedAt,
+        ),
+      );
+
+      await tester.pumpWidget(buildHarness());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.text("The payment wasn't approved in time."), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
+    });
+  });
 }

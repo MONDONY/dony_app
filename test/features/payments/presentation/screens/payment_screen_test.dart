@@ -21,6 +21,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 class MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
@@ -270,6 +271,42 @@ void main() {
       },
     );
 
+    testWidgets(
+      'poids décimal : virgule en français (correction R46, formatOneDecimal)',
+      (tester) async {
+        final decimalWeightBid = BidModel(
+          id: 'bid-decimal-1',
+          announcementId: 'ann-1',
+          senderId: 'sender-1',
+          weightKg: 4.5,
+          pricePerKg: 6.0,
+          description: 'Vêtements',
+          status: 'ACCEPTED',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2025, 6),
+          createdAt: DateTime(2025, 5),
+          updatedAt: DateTime(2025, 5),
+        );
+
+        await tester.pumpWidget(
+          _wrap(
+            PaymentScreen(
+              bid: decimalWeightBid,
+              localAuthService: mockLocalAuth,
+              userPrefs: _mockUserPrefs(biometricEnabled: true),
+            ),
+            mockBloc,
+            configBloc: mockConfigBloc,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('4,5 kg'), findsOneWidget);
+        expect(find.textContaining('4.5 kg'), findsNothing);
+      },
+    );
+
     testWidgets('tarif/kg affiché dans la devise du bid, pas toujours en EUR', (
       tester,
     ) async {
@@ -509,5 +546,116 @@ void main() {
         expect(find.text('Envoi réservé !'), findsOneWidget);
       },
     );
+  });
+
+  group('PaymentScreen en anglais', () {
+    testWidgets('titre et bouton de paiement traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: _testBid,
+            localAuthService: mockLocalAuth,
+            userPrefs: _mockUserPrefs(biometricEnabled: true),
+          ),
+          mockBloc,
+          configBloc: mockConfigBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pay for my shipment'), findsOneWidget);
+      expect(
+        tester.widget<DonyButton>(find.byType(DonyButton)).label,
+        startsWith('Pay '),
+      );
+    });
+
+    testWidgets('récapitulatif traduit (poids, prix/kg, total)', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: _testBid,
+            localAuthService: mockLocalAuth,
+            userPrefs: _mockUserPrefs(biometricEnabled: true),
+          ),
+          mockBloc,
+          configBloc: mockConfigBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Summary'), findsOneWidget);
+      expect(find.text('Weight'), findsOneWidget);
+      expect(find.text('Price/kg'), findsOneWidget);
+      expect(find.text('You pay'), findsOneWidget);
+    });
+
+    testWidgets(
+      'poids décimal : point en anglais (correction R46, formatOneDecimal)',
+      (tester) async {
+        useEnglish();
+        final decimalWeightBid = BidModel(
+          id: 'bid-decimal-en-1',
+          announcementId: 'ann-1',
+          senderId: 'sender-1',
+          weightKg: 4.5,
+          pricePerKg: 6.0,
+          description: 'Clothes',
+          status: 'ACCEPTED',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2025, 6),
+          createdAt: DateTime(2025, 5),
+          updatedAt: DateTime(2025, 5),
+        );
+
+        await tester.pumpWidget(
+          _wrap(
+            PaymentScreen(
+              bid: decimalWeightBid,
+              localAuthService: mockLocalAuth,
+              userPrefs: _mockUserPrefs(biometricEnabled: true),
+            ),
+            mockBloc,
+            configBloc: mockConfigBloc,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('4.5 kg'), findsOneWidget);
+        expect(find.textContaining('4,5 kg'), findsNothing);
+      },
+    );
+
+    testWidgets('vue de confirmation escrow traduite', (tester) async {
+      useEnglish();
+      whenListen<PaymentState>(
+        mockBloc,
+        Stream.value(const PaymentEscrowPending(50.0)),
+        initialState: const PaymentEscrowPending(50.0),
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: _testBid,
+            localAuthService: mockLocalAuth,
+            userPrefs: _mockUserPrefs(biometricEnabled: true),
+          ),
+          mockBloc,
+          configBloc: mockConfigBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Shipment reserved!'), findsOneWidget);
+      expect(find.text('View my shipments'), findsOneWidget);
+      expect(find.textContaining('is held and secured'), findsOneWidget);
+    });
   });
 }

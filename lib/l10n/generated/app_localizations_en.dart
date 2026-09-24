@@ -8480,4 +8480,1042 @@ class AppLocalizationsEn extends AppLocalizations {
   String bidCreateMaxWeightLabel(String maxKg) {
     return 'max $maxKg kg';
   }
+
+  @override
+  String get commonDone => 'Done';
+
+  @override
+  String get commonLater => 'Later';
+
+  @override
+  String get commonLoadError => 'Couldn\'t load';
+
+  @override
+  String get commonSomethingWentWrong => 'Something went wrong';
+
+  @override
+  String get commonSomethingWentWrongDot => 'Something went wrong.';
+
+  @override
+  String get commonTakePhoto => 'Take a photo';
+
+  @override
+  String get commonPickFromGallery => 'Choose from gallery';
+
+  @override
+  String get commonImageUnsupported => 'Unsupported or too large image';
+
+  @override
+  String get commonDefault => 'Default';
+
+  @override
+  String get commonDateYesterday => 'Yesterday';
+
+  @override
+  String get currencyNameEur => 'Euro';
+
+  @override
+  String get currencyNameUsd => 'US dollar';
+
+  @override
+  String get currencyNameCad => 'Canadian dollar';
+
+  @override
+  String get currencyNameGbp => 'Pound sterling';
+
+  @override
+  String get currencyNameChf => 'Swiss franc';
+
+  @override
+  String get currencyNameXof => 'West African CFA franc';
+
+  @override
+  String get currencyNameXaf => 'Central African CFA franc';
+
+  @override
+  String get paymentCardUnavailable =>
+      'Card payment is unavailable right now. Try again in a moment.';
+
+  @override
+  String get paymentFailedGeneric =>
+      'The payment failed. Try again in a moment.';
+
+  @override
+  String get paymentDeclined => 'Payment declined';
+
+  @override
+  String paymentMethodsSemantics(String wallet) {
+    return 'Card, $wallet, PayPal';
+  }
+
+  @override
+  String paymentContextRecipient(String name) {
+    return 'Shipment for $name';
+  }
+
+  @override
+  String get paymentContextDefault => 'Your parcel shipment';
+
+  @override
+  String commissionCardDebitNoticeMin(String percent, String min) {
+    return 'This card will be charged the service fee ($percent%, min. $min) for each cash parcel you accept.';
+  }
+
+  @override
+  String commissionCardDebitNotice(String percent) {
+    return 'This card will be charged the service fee ($percent%) for each cash parcel you accept.';
+  }
+
+  @override
+  String get commissionCardScreenTitle => 'Service fee card';
+
+  @override
+  String get commissionCardLoadError =>
+      'Something went wrong. Please try again.';
+
+  @override
+  String get paymentNotConfirmedSnackbar => 'Payment not confirmed, try again';
+
+  @override
+  String get commissionCardReplaceButton => 'Replace card';
+
+  @override
+  String get commissionCardDeleteButton => 'Delete card';
+
+  @override
+  String get commissionCardAddErrorMessage => 'Error adding the card.';
+
+  @override
+  String get commissionCardDeleteConfirmMessage =>
+      'Delete this card? You won\'t be able to accept cash parcels until you register a new one.';
+
+  @override
+  String get commissionCardEmptyTitle => 'No card registered';
+
+  @override
+  String commissionCardEmptyBody(String percent) {
+    return 'To accept cash payments, register a card we\'ll charge our service fee ($percent%) on for each parcel you accept.';
+  }
+
+  @override
+  String get commissionCardAddButton => 'Add a card';
+
+  @override
+  String get commissionCardExpiredMessage =>
+      'Your card has expired. Replace it to reactivate cash payments.';
+
+  @override
+  String commissionCardExpiringMessage(String date) {
+    return 'Your card expires on $date. Remember to replace it.';
+  }
+
+  @override
+  String commissionCardExpiryLabel(String date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String get paymentAuthConfirmTitle => 'Confirm payment';
+
+  @override
+  String get paymentAuthConfirmMessage =>
+      'The amount will be on hold until delivery, then paid to the traveler.';
+
+  @override
+  String get paymentScreenTitle => 'Pay for my shipment';
+
+  @override
+  String get paymentSecureNotice =>
+      'Your payment is secure, released only once the recipient confirms delivery.';
+
+  @override
+  String paymentPayButtonLabel(String price) {
+    return 'Pay $price';
+  }
+
+  @override
+  String get paymentSummaryTitle => 'Summary';
+
+  @override
+  String get paymentSummaryWeightLabel => 'Weight';
+
+  @override
+  String get paymentSummaryPricePerKgLabel => 'Price/kg';
+
+  @override
+  String get paymentSummaryTypeLabel => 'Type';
+
+  @override
+  String get paymentSummaryFlatRateValue => 'Flat rate for items';
+
+  @override
+  String get paymentSummaryTotalLabel => 'You pay';
+
+  @override
+  String get paymentEscrowTitle => 'Shipment reserved!';
+
+  @override
+  String paymentEscrowSubtitle(String amount) {
+    return '$amount is held and secured, then released once the recipient confirms delivery.';
+  }
+
+  @override
+  String get paymentEscrowCta => 'View my shipments';
+
+  @override
+  String get paymentSheetTitle => 'Payment';
+
+  @override
+  String get paymentSheetConfirmedTitle => 'Payment confirmed';
+
+  @override
+  String get paymentSheetEscrowNote =>
+      'Funds are on hold until the parcel is delivered, then paid to the traveler.';
+
+  @override
+  String get paymentSheetSecureFooter => 'Payment secured by Stripe';
+
+  @override
+  String get mobileMoneyAccountTitle => 'Mobile money payout';
+
+  @override
+  String get mobileMoneyAccountLoadError => 'Couldn\'t load your account';
+
+  @override
+  String get mobileMoneyExplanationActivate =>
+      'Enter the mobile money number that will receive your payouts. It can be different from your Yadony number.';
+
+  @override
+  String get mobileMoneyExplanationReactivateNoPrevious =>
+      'Your payout is turned off. Enter the mobile money number to turn it back on.';
+
+  @override
+  String mobileMoneyReactivateWithPrevious(String masked) {
+    return 'Your payout is turned off. Enter the mobile money number to turn it back on (previous: $masked).';
+  }
+
+  @override
+  String get mobileMoneyExplanationChangeNumber =>
+      'Enter the new payout number. You\'ll need to check the networks again for this number.';
+
+  @override
+  String get mobileMoneyButtonActivate => 'Activate mobile money payout';
+
+  @override
+  String get mobileMoneyButtonReactivate => 'Turn back on';
+
+  @override
+  String get mobileMoneyButtonChangeNumber => 'Save the new number';
+
+  @override
+  String get mobileMoneyPayoutNumberLabel => 'Payout number';
+
+  @override
+  String get mobileMoneyConfirmNumberLabel => 'Confirm the number';
+
+  @override
+  String get mobileMoneyNetworksSectionTitle => 'Networks on this number';
+
+  @override
+  String get mobileMoneyNetworksUnavailable =>
+      'Choosing networks isn\'t available yet. Your mobile operator will be detected automatically.';
+
+  @override
+  String get mobileMoneyNoNetworksAvailable =>
+      'No network is available for this number.';
+
+  @override
+  String get mobileMoneyPayerChoosesNetwork =>
+      'The sender pays with one of the checked networks. You receive on that same network.';
+
+  @override
+  String get mobileMoneyConfirmToSeeNetworks =>
+      'Confirm your number to see the available networks.';
+
+  @override
+  String get mobileMoneyAcceptedNetworksTitle => 'Accepted networks';
+
+  @override
+  String get mobileMoneyActiveBadge => 'ACTIVE';
+
+  @override
+  String get mobileMoneyNumberLabel => 'Number';
+
+  @override
+  String get mobileMoneyNotProvided => 'Not provided';
+
+  @override
+  String get mobileMoneyCountryLabel => 'Country';
+
+  @override
+  String get mobileMoneyCurrencyLabel => 'Currency';
+
+  @override
+  String get mobileMoneyPayerChoosesOneNetwork =>
+      'The sender picks one of these networks to pay. You receive on the same one.';
+
+  @override
+  String get mobileMoneyChangeNumberButton => 'Change number';
+
+  @override
+  String get mobileMoneyDisableButton => 'Turn off';
+
+  @override
+  String get mobileMoneyAllNetworks => 'All networks';
+
+  @override
+  String get mobileMoneyDetectedForNumber => 'Detected for this number';
+
+  @override
+  String get mobileMoneyAwaitingTitle => 'Mobile money payment';
+
+  @override
+  String get mobileMoneyPaymentConfirmedSecured =>
+      'Payment confirmed, your shipment is secured';
+
+  @override
+  String mobileMoneyTimeLeft(String time) {
+    return 'Time left $time';
+  }
+
+  @override
+  String get mobileMoneyTravelerFallback => 'The traveler';
+
+  @override
+  String get mobileMoneyChooseOperatorTitle => 'Which operator?';
+
+  @override
+  String get mobileMoneyPayingNumberLabel => 'Paying number';
+
+  @override
+  String get mobileMoneyPayWithAnotherNumberOptional =>
+      'Pay with a different number (optional)';
+
+  @override
+  String get mobileMoneyConfirmInWaveApp => 'You confirm in the Wave app';
+
+  @override
+  String mobileMoneyAcceptsAndReceives(String name, String networks) {
+    return '$name accepts $networks and receives on the network you choose.';
+  }
+
+  @override
+  String get mobileMoneyNoNetworkForPayment =>
+      'No mobile money network is available for this payment.';
+
+  @override
+  String mobileMoneyNoCommonNetwork(
+    String name,
+    String networks,
+    String country,
+  ) {
+    return '$name accepts $networks, which aren\'t available for your number ($country). Change the paying number or message them from the conversation.';
+  }
+
+  @override
+  String mobileMoneyPay(String amount) {
+    return 'Pay $amount';
+  }
+
+  @override
+  String get mobileMoneyFinishInWaveApp => 'Finish the payment in the Wave app';
+
+  @override
+  String get mobileMoneyOpenWave => 'Open Wave';
+
+  @override
+  String mobileMoneyPinSent(String provider) {
+    return 'Approve the payment on your phone: $provider just sent you a PIN request.';
+  }
+
+  @override
+  String get mobileMoneyPinSentUnknownProvider =>
+      'Approve the payment on your phone: your mobile operator just sent you a PIN request.';
+
+  @override
+  String get mobileMoneyConfirmationAutomatic =>
+      'Confirmation is automatic, keep this screen open.';
+
+  @override
+  String get mobileMoneyDepositRefusedFallback =>
+      'The payment was declined by the mobile operator';
+
+  @override
+  String get mobileMoneyPhoneRequiredExplanation =>
+      'Your Yadony account has no phone number: enter the mobile money number that will pay.';
+
+  @override
+  String get mobileMoneyPhoneThatWillPayLabel => 'Number that will pay';
+
+  @override
+  String get mobileMoneyExpiredBid =>
+      'Time\'s up. The request was canceled. Make a new offer to the traveler.';
+
+  @override
+  String get mobileMoneyExpiredNegotiation =>
+      'Time\'s up. The thread is back to \"to pay\": you can retry the payment or change the payment method from the thread.';
+
+  @override
+  String get mobileMoneyPaymentConfirmedTitle => 'Payment confirmed';
+
+  @override
+  String get walletTopupMmAwaitingTitle => 'Mobile money top-up';
+
+  @override
+  String get walletTopupMmPayWithAnotherNumber => 'Pay with a different number';
+
+  @override
+  String get walletTopupMmValidateTitle => 'Approve the payment on your phone';
+
+  @override
+  String walletTopupMmRequestSent(String number, String provider) {
+    return 'A payment request was sent to $number via $provider.';
+  }
+
+  @override
+  String get walletTopupMmConfirmationAutomatic =>
+      'Confirmation is automatic, keep this screen open.';
+
+  @override
+  String get walletTopupMmAmountLabel => 'Amount';
+
+  @override
+  String get walletTopupMmCreditedToLabel => 'Credited to';
+
+  @override
+  String walletTopupMmCreditedTo(String code) {
+    return 'Yadony balance ($code)';
+  }
+
+  @override
+  String get walletTopupMmExpiresInLabel => 'Expires in';
+
+  @override
+  String walletTopupMmOpenProvider(String provider) {
+    return 'Open $provider';
+  }
+
+  @override
+  String get walletTopupMmExpired => 'The payment wasn\'t approved in time.';
+
+  @override
+  String get walletTopupMmRefused =>
+      'The payment was declined by the mobile operator.';
+
+  @override
+  String walletShortfallRequired(String amount) {
+    return 'Service fee due: $amount';
+  }
+
+  @override
+  String walletShortfallBalance(String amount) {
+    return 'Wallet balance: $amount';
+  }
+
+  @override
+  String walletShortfallCommission(String amount) {
+    return 'Service fee: $amount';
+  }
+
+  @override
+  String walletShortfallCovered(String currency, String amount) {
+    return 'Your $currency wallet covers $amount';
+  }
+
+  @override
+  String walletShortfallMissing(
+    String missing,
+    String converted,
+    String currency,
+    String balance,
+  ) {
+    return 'You\'re short $missing ($converted), and your $currency wallet only has $balance';
+  }
+
+  @override
+  String walletShortfallCommissionConverted(String amount, String converted) {
+    return 'Service fee: $amount ($converted)';
+  }
+
+  @override
+  String walletShortfallTopUpHint(
+    String currency,
+    String balance,
+    String symbol,
+  ) {
+    return 'Your $currency wallet only has $balance. Top up in $symbol or $currency, or pay by card.';
+  }
+
+  @override
+  String get walletTitle => 'My wallet';
+
+  @override
+  String get walletInfoTooltip => 'How it works';
+
+  @override
+  String get walletInfoTitle => 'How the wallet works';
+
+  @override
+  String walletTopupConfirmed(String amount, String currency, String provider) {
+    return '+$amount added to your $currency wallet, confirmed by $provider.';
+  }
+
+  @override
+  String get walletRefundAbsorbedByFees =>
+      'This balance can\'t be refunded: the payment provider\'s fees absorb it entirely. It stays usable to pay for your shipments.';
+
+  @override
+  String get walletEmptyTransactions => 'No transactions yet';
+
+  @override
+  String get walletHistorySectionTitle => 'History';
+
+  @override
+  String get walletEstimatedTotalLabel => 'Estimated total';
+
+  @override
+  String get walletAvailableBalanceLabel => 'Available balance';
+
+  @override
+  String get walletEstimateCompleteNote =>
+      'Estimated at today\'s rate, currencies kept separate.';
+
+  @override
+  String get walletEstimatePartialNote =>
+      'Partial estimate: one currency has no rate.';
+
+  @override
+  String get walletRefundRequestSentSnackbar => 'Refund request sent.';
+
+  @override
+  String get walletActionTopUp => 'Top up';
+
+  @override
+  String get walletActionRefund => 'Refund';
+
+  @override
+  String get walletActionRequests => 'Requests';
+
+  @override
+  String get walletTxTypeMobileMoneyTopUp => 'Mobile money top-up';
+
+  @override
+  String get walletTxTypeTopUp => 'Top-up';
+
+  @override
+  String get walletTxTypeBidPayment => 'Parcel payment';
+
+  @override
+  String get walletTxTypeCommission => 'Service fee';
+
+  @override
+  String get walletTxTypeRefund => 'Refund';
+
+  @override
+  String get walletTxTypeReferral => 'Referral';
+
+  @override
+  String get walletTxDateTimePattern => 'MMM d · h:mm a';
+
+  @override
+  String get walletRefundProcessingNote =>
+      'Refund in progress · within 5 to 10 business days';
+
+  @override
+  String get walletRateUnavailable => 'rate unavailable';
+
+  @override
+  String walletLockedCurrencySemantics(String currency) {
+    return 'Locked currency $currency, this balance stays available in its own currency';
+  }
+
+  @override
+  String get walletLockedBadge => 'locked';
+
+  @override
+  String walletLockedCurrencyNote(String currency) {
+    return 'Stays in its original currency ($currency).';
+  }
+
+  @override
+  String get walletInfoBalanceDesc =>
+      'The amount you can use to pay for a shipment or request a refund.';
+
+  @override
+  String get walletInfoTopUpDesc =>
+      'Add funds by credit card. The credit appears as soon as the payment is validated.';
+
+  @override
+  String get walletInfoRefundDesc =>
+      'Request a refund of your balance to your original payment method.';
+
+  @override
+  String get walletInfoRequestsDesc =>
+      'Find the status of your sent refund requests.';
+
+  @override
+  String get walletInfoMultiCurrencyTitle => 'Multiple currencies';
+
+  @override
+  String get walletInfoMultiCurrencyDesc =>
+      'Your money stays in the currency it was received in. The total at the top is an estimate at today\'s rate, it doesn\'t convert anything.';
+
+  @override
+  String get walletInfoChangeCurrencyTitle => 'Change currency';
+
+  @override
+  String get walletInfoChangeCurrencyDesc =>
+      'The active currency can be changed in Preferences as long as your total balance is zero. Otherwise, empty your wallets first.';
+
+  @override
+  String get walletTopupMethodCard => 'Credit card';
+
+  @override
+  String get walletTopupPaymentContextLabel => 'Top-up of your Yadony balance';
+
+  @override
+  String get walletTopupSuccessTitle => 'Top-up successful!';
+
+  @override
+  String get walletTopupSuccessSubtitle =>
+      'Your balance will be credited shortly.';
+
+  @override
+  String get walletTopupSuccessCta => 'See my balance';
+
+  @override
+  String get walletTopupAmountTitle => 'Top up · Step 2/2';
+
+  @override
+  String walletTopupCreditNotice(String code) {
+    return 'Your Yadony balance will be credited in $code after confirmation.';
+  }
+
+  @override
+  String walletTopupNoDecimalsNotice(String symbol) {
+    return '$symbol doesn\'t use cents: enter a whole number.';
+  }
+
+  @override
+  String walletTopupCreditedAmount(
+    String currency,
+    String amount,
+    String active,
+  ) {
+    return 'Your $currency wallet will be credited $amount. Your $active wallet stays the same.';
+  }
+
+  @override
+  String walletTopupCreditedPending(String currency, String active) {
+    return 'Your $currency wallet will be credited the amount you enter. Your $active wallet stays the same.';
+  }
+
+  @override
+  String get walletTopupProcessing => 'Processing…';
+
+  @override
+  String get walletTopupEnterAmount => 'Enter an amount';
+
+  @override
+  String walletTopupPayAmount(String amount, String symbol) {
+    return 'Pay $amount $symbol';
+  }
+
+  @override
+  String get walletTopupAmountLabel => 'Amount to top up';
+
+  @override
+  String walletTopupBelowMinimum(String amount) {
+    return 'Minimum $amount';
+  }
+
+  @override
+  String walletTopupViaMethod(String amount, String symbol, String method) {
+    return 'Top up $amount $symbol via $method';
+  }
+
+  @override
+  String get walletTopupMethodCardSubtitle => 'Via Stripe · Visa, Mastercard';
+
+  @override
+  String get walletTopupMethodMobileMoneySubtitle =>
+      'Orange Money, Wave, MTN MoMo';
+
+  @override
+  String get walletTopupMethodTitle => 'Top up · Step 1/2';
+
+  @override
+  String get walletTopupMethodSectionLabel => 'TOP-UP METHOD';
+
+  @override
+  String get walletTopupMethodNextCta => 'Next → Amount';
+
+  @override
+  String walletTopupMethodCurrencyNotice(String code) {
+    return 'The balance is credited in $code, the mobile operator\'s currency.';
+  }
+
+  @override
+  String get walletTopupMethodNoNetworks =>
+      'No mobile money network available for this number.';
+
+  @override
+  String get walletRefundConfirmTitle => 'Refund my balance';
+
+  @override
+  String walletRefundConfirmCta(String amount) {
+    return 'Refund $amount';
+  }
+
+  @override
+  String walletRefundableOnMobileMoney(String amount) {
+    return 'Refundable to mobile money: $amount';
+  }
+
+  @override
+  String walletRefundableOnCard(String amount) {
+    return 'Refundable to your card: $amount';
+  }
+
+  @override
+  String walletRefundable(String amount) {
+    return 'Refundable: $amount';
+  }
+
+  @override
+  String walletRefundExplainUnknown(String currency) {
+    return 'The amount goes back to the payment method used for the top-up. Your $currency balance is frozen while this is processed.';
+  }
+
+  @override
+  String walletRefundExplainMobileMoney(String currency) {
+    return 'The amount goes back to the number that paid for the top-up, usually within a few minutes. Your $currency balance is frozen while this is processed.';
+  }
+
+  @override
+  String get walletRefundExplainCard =>
+      'The amount goes back to the card used for the top-up, within 5 to 10 days depending on your bank. Your balance is frozen while this is processed.';
+
+  @override
+  String get walletRefundFeeLabel => 'Refund fee';
+
+  @override
+  String get walletRefundFeeFreeValue => 'Free';
+
+  @override
+  String get walletRefundWillReceiveLabel => 'You\'ll receive';
+
+  @override
+  String walletRefundBonusNotice(String amount) {
+    return '$amount in bonus isn\'t refundable and stays in your wallet.';
+  }
+
+  @override
+  String get walletRefundFeeRetainedNotice =>
+      'This top-up was never used: the payment provider\'s fees are withheld. They\'re canceled as soon as a top-up pays for a shipment.';
+
+  @override
+  String get walletRefundCurrencyTitle => 'Which currency to refund?';
+
+  @override
+  String get walletRefundCurrencyHint =>
+      'One request per currency. You can make another one afterward.';
+
+  @override
+  String get walletRefundFeeFree => 'Refund fee: Free';
+
+  @override
+  String walletRefundFee(String amount) {
+    return 'Refund fee: $amount';
+  }
+
+  @override
+  String walletRefundCurrencyChoiceTitle(String amount) {
+    return '$amount refundable';
+  }
+
+  @override
+  String walletRefundCurrencyChoiceSubtitle(String amount) {
+    return 'you get $amount';
+  }
+
+  @override
+  String get walletRefundSelectionTitle => 'Choose a top-up';
+
+  @override
+  String get walletRefundSelectionSubtitle => 'Select the top-up(s) to refund';
+
+  @override
+  String get walletRefundSelectionEmpty =>
+      'No top-up available for refund right now.';
+
+  @override
+  String get walletTopupDateTimePattern => 'MMM d, yyyy · h:mm a';
+
+  @override
+  String get walletRefundSelectionCta => 'Select a top-up';
+
+  @override
+  String walletRefundSelectionCount(int count) {
+    return 'Refund ($count)';
+  }
+
+  @override
+  String get walletRefundRequestsTitle => 'My refunds';
+
+  @override
+  String get walletRefundRequestsLoadError =>
+      'Couldn\'t load your refund requests.';
+
+  @override
+  String get walletRefundRequestsEmpty => 'No refund requests yet.';
+
+  @override
+  String get walletRefundStatusInProgress => 'In progress';
+
+  @override
+  String get walletRefundStatusRefunded => 'Refunded';
+
+  @override
+  String get walletRefundStatusFailed => 'Failed';
+
+  @override
+  String get walletRefundRailManual => 'Manual';
+
+  @override
+  String get walletDatePattern => 'MMM d, yyyy';
+
+  @override
+  String walletRefundFallbackNotice(String destination) {
+    return 'The refund is sent to $destination. If the mobile operator refuses it, the money is sent back via a payout to the same number.';
+  }
+
+  @override
+  String walletRefundFeeDetail(String gross, String fee, String net) {
+    return '$gross refundable, $fee in fees withheld, you receive $net';
+  }
+
+  @override
+  String get payoutTitle => 'Get paid';
+
+  @override
+  String get payoutGaugeLabel => 'Payments';
+
+  @override
+  String get payoutBrowserLaunchFailed =>
+      'Unable to open the setup page. Check that a browser is installed.';
+
+  @override
+  String get payoutPendingBanner =>
+      'Sign-up started but not finished. Resume it to get paid, you\'ll find the information you already entered.';
+
+  @override
+  String get payoutRefreshStatus => 'Refresh status';
+
+  @override
+  String get payoutResumeSignup => 'Resume my sign-up';
+
+  @override
+  String get payoutConnectBankAccount => 'Connect my bank account';
+
+  @override
+  String get payoutHeroTitle => 'Connect your\nbank account';
+
+  @override
+  String get payoutHeroSubtitle =>
+      'Automatically receive your payment within 24h of each confirmed delivery.';
+
+  @override
+  String get payoutBenefitSecureTitle => 'Secure payment';
+
+  @override
+  String get payoutBenefitSecureSubtitle =>
+      'The money is held and secured until delivery is confirmed.';
+
+  @override
+  String get payoutBenefitFastTransferTitle => 'Fast transfer';
+
+  @override
+  String get payoutBenefitFastTransferSubtitle =>
+      'Received in your account within 24h of confirmation.';
+
+  @override
+  String get payoutBenefitStripeManagedTitle => 'Managed by Stripe';
+
+  @override
+  String get payoutBenefitStripeManagedSubtitle =>
+      'Identity verification and compliance are handled by Stripe.';
+
+  @override
+  String get payoutActiveTitle => 'Bank account connected';
+
+  @override
+  String get payoutActiveSubtitle =>
+      'Your Stripe account is active. After each confirmed delivery, the payment is automatically transferred to your bank account within 1 to 2 business days.';
+
+  @override
+  String get payoutActiveInfoSecureSubtitle =>
+      'The money is held until delivery is confirmed.';
+
+  @override
+  String get payoutActiveInfoAutoTransferTitle => 'Automatic transfer';
+
+  @override
+  String get payoutActiveInfoAutoTransferSubtitle =>
+      'No action needed, Stripe transfers directly to your bank details.';
+
+  @override
+  String get payoutActiveInfoBankAccountTitle => 'To your bank account';
+
+  @override
+  String get payoutActiveInfoBankAccountSubtitle =>
+      'You receive the money in the account linked to your bank details/IBAN, not in a Stripe wallet.';
+
+  @override
+  String get payoutContinueToHome => 'Continue to home';
+
+  @override
+  String get payoutSuccessTitle => 'Payments enabled ✓';
+
+  @override
+  String get payoutSuccessSubtitle =>
+      'Your bank account is connected. You\'ll automatically receive your payments after each delivery.';
+
+  @override
+  String get stripeAccountDisabledTitle => 'Payments to activate';
+
+  @override
+  String get stripeAccountDisabledHeading => 'Finish setting up your payments';
+
+  @override
+  String get stripeAccountDisabledBody =>
+      'Your payment account is missing some information, so it can\'t receive money yet. Posting a trip stays blocked until you complete it.';
+
+  @override
+  String get stripeAccountDisabledRequirementsHeading =>
+      'What you\'ll be asked for';
+
+  @override
+  String get stripeAccountDisabledRequirementIdentity =>
+      'Your identity, name, date of birth and address';
+
+  @override
+  String get stripeAccountDisabledRequirementPayout =>
+      'A way to receive your earnings, IBAN or bank account';
+
+  @override
+  String get stripeAccountDisabledRequirementTerms =>
+      'Acceptance of our payment provider\'s terms';
+
+  @override
+  String get stripeAccountDisabledEta =>
+      'It takes about two to three minutes. You\'ll be able to pick up where you left off.';
+
+  @override
+  String get stripeAccountDisabledCta => 'Complete my information';
+
+  @override
+  String get stripeAccountContactSupport => 'Contact Yadony support';
+
+  @override
+  String get stripeAccountRejectedTitle => 'Account rejected';
+
+  @override
+  String get stripeAccountRejectedBody =>
+      'Your Stripe account was rejected. You need to set up a new account to continue.';
+
+  @override
+  String stripeAccountRejectedReason(String reason) {
+    return 'Reason: $reason';
+  }
+
+  @override
+  String get stripeAccountRejectedCta => 'Set up my account again';
+
+  @override
+  String get stripeAccountRejectedBannerMessage =>
+      'Your Stripe account was rejected';
+
+  @override
+  String get stripeAccountRejectedBannerCta => 'Reconfigure';
+
+  @override
+  String get stripeAccountUnavailableHeading =>
+      'Not available yet\nin your country';
+
+  @override
+  String get stripeAccountUnavailableBody =>
+      'Stripe doesn\'t yet allow opening a payment account from your country. You can keep carrying parcels and get paid in cash, at drop-off.';
+
+  @override
+  String get stripeAccountIdentityRequiredHeading =>
+      'Verify your identity\nfirst';
+
+  @override
+  String get stripeAccountIdentityRequiredBody =>
+      'To receive money, Stripe needs to link your payment account to a verified identity. It\'s just an ID document to photograph, nothing more.';
+
+  @override
+  String get stripeAccountIdentityRequiredCta => 'Verify my identity';
+
+  @override
+  String get connectOnboardingTitle => 'Stripe Connect account';
+
+  @override
+  String get connectOnboardingHeroTitle => 'Complete your\nStripe account';
+
+  @override
+  String get connectOnboardingHeroSubtitle =>
+      'To post your trip and receive payments, complete your Stripe account. It takes about 5 minutes.';
+
+  @override
+  String get connectOnboardingSecurityNotice =>
+      'Your data is encrypted and managed directly by Stripe: Yadony never has access to your banking information.';
+
+  @override
+  String get connectOnboardingCta => 'Complete my account';
+
+  @override
+  String get connectOnboardingBenefitTimeTitle => '5 minutes';
+
+  @override
+  String get connectOnboardingBenefitTimeSubtitle =>
+      'Fast and guided step by step';
+
+  @override
+  String get connectOnboardingBenefitTransferTitle => 'Automatic transfer';
+
+  @override
+  String get connectOnboardingBenefitTransferSubtitle =>
+      'Received in your account after each confirmed delivery';
+
+  @override
+  String get connectOnboardingBenefitSecureTitle => 'Secured by Stripe';
+
+  @override
+  String get connectOnboardingBenefitSecureSubtitle =>
+      'World leader in online payments';
+
+  @override
+  String get connectPendingCompleteCta => 'I completed the form';
+
+  @override
+  String get connectPendingLaterCta => 'Come back later';
+
+  @override
+  String get connectPendingConfigured => 'Bank account set up!';
+
+  @override
+  String get connectPendingNotReceived =>
+      'Stripe hasn\'t received all your information yet. Resume the form to finish it.';
+
+  @override
+  String get connectPendingTitle => 'Waiting for Stripe';
+
+  @override
+  String get connectPendingSubtitle =>
+      'Come back here after completing the Stripe form in your browser.';
+
+  @override
+  String get walletActiveCurrencyBadge => 'active';
 }

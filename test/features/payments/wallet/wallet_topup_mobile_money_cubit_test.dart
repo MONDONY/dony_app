@@ -351,11 +351,17 @@ void main() {
 
         expect(
           cubit.state,
-          isA<WalletTopupMobileMoneyFailed>().having(
-            (s) => s.message,
-            'message',
-            'Solde insuffisant',
-          ),
+          isA<WalletTopupMobileMoneyFailed>()
+              .having(
+                (s) => s.reason,
+                'reason',
+                WalletTopupFailureReason.refused,
+              )
+              .having(
+                (s) => s.operatorMessage,
+                'operatorMessage',
+                'Solde insuffisant',
+              ),
         );
         expect(async.periodicTimerCount, 0);
         verifyNever(
@@ -369,37 +375,40 @@ void main() {
       });
     });
 
-    test(
-      'FAILED sans motif serveur -> message générique (jamais de tiret cadratin)',
-      () {
-        fakeAsync((async) {
-          when(
-            () => repo.topupStatus('topup-1'),
-          ).thenAnswer((_) async => statusFor('FAILED'));
+    test('FAILED sans motif serveur -> reason refused, aucun operatorMessage '
+        '(l\'écran affiche le message générique)', () {
+      fakeAsync((async) {
+        when(
+          () => repo.topupStatus('topup-1'),
+        ).thenAnswer((_) async => statusFor('FAILED'));
 
-          final cubit = WalletTopupMobileMoneyCubit(
-            repo,
-            analytics,
-            now: () => clock.now(),
-          );
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
 
-          unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
-          async.flushMicrotasks();
-          async.elapse(WalletTopupMobileMoneyCubit.pollInterval);
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval);
 
-          final state = cubit.state;
-          expect(state, isA<WalletTopupMobileMoneyFailed>());
-          final message = (state as WalletTopupMobileMoneyFailed).message;
-          expect(message, isNotEmpty);
-          expect(message.contains('—'), isFalse);
+        expect(
+          cubit.state,
+          isA<WalletTopupMobileMoneyFailed>()
+              .having(
+                (s) => s.reason,
+                'reason',
+                WalletTopupFailureReason.refused,
+              )
+              .having((s) => s.operatorMessage, 'operatorMessage', isNull),
+        );
 
-          unawaited(cubit.close());
-        });
-      },
-    );
+        unawaited(cubit.close());
+      });
+    });
 
-    test('expiration après 15 min sans confirmation -> Failed avec le message '
-        "d'expiration", () {
+    test('expiration après 15 min sans confirmation -> Failed reason expired, '
+        'aucun operatorMessage', () {
       fakeAsync((async) {
         when(
           () => repo.topupStatus('topup-1'),
@@ -418,11 +427,16 @@ void main() {
           WalletTopupMobileMoneyCubit.expiry + const Duration(seconds: 1),
         );
 
-        final state = cubit.state;
-        expect(state, isA<WalletTopupMobileMoneyFailed>());
-        final message = (state as WalletTopupMobileMoneyFailed).message;
-        expect(message, isNotEmpty);
-        expect(message.contains('—'), isFalse);
+        expect(
+          cubit.state,
+          isA<WalletTopupMobileMoneyFailed>()
+              .having(
+                (s) => s.reason,
+                'reason',
+                WalletTopupFailureReason.expired,
+              )
+              .having((s) => s.operatorMessage, 'operatorMessage', isNull),
+        );
         expect(async.periodicTimerCount, 0);
 
         unawaited(cubit.close());
@@ -531,8 +545,8 @@ void main() {
         expect(
           cubit.state,
           isA<WalletTopupMobileMoneyFailed>().having(
-            (s) => s.message,
-            'message',
+            (s) => s.operatorMessage,
+            'operatorMessage',
             'Solde insuffisant',
           ),
         );
@@ -542,7 +556,7 @@ void main() {
     });
 
     test("motif d'échec composé uniquement d'espaces : traité comme absent, "
-        'message générique', () {
+        'aucun operatorMessage (l\'écran affiche le message générique)', () {
       fakeAsync((async) {
         when(
           () => repo.topupStatus('topup-1'),
@@ -560,11 +574,13 @@ void main() {
 
         expect(
           cubit.state,
-          isA<WalletTopupMobileMoneyFailed>().having(
-            (s) => s.message,
-            'message',
-            "Le paiement a été refusé par l'opérateur.",
-          ),
+          isA<WalletTopupMobileMoneyFailed>()
+              .having(
+                (s) => s.reason,
+                'reason',
+                WalletTopupFailureReason.refused,
+              )
+              .having((s) => s.operatorMessage, 'operatorMessage', isNull),
         );
 
         unawaited(cubit.close());

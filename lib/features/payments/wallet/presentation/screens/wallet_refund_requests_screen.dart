@@ -26,11 +26,12 @@ class _WalletRefundRequestsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
       appBar: AppBar(
         actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
-        title: const Text('Mes remboursements'),
+        title: Text(l.walletRefundRequestsTitle),
       ),
       body:
           BlocBuilder<
@@ -46,7 +47,7 @@ class _WalletRefundRequestsScreenState
                   child: Padding(
                     padding: const EdgeInsets.all(DonySpacing.lg),
                     child: Text(
-                      'Impossible de charger vos demandes de remboursement.',
+                      l.walletRefundRequestsLoadError,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
@@ -60,7 +61,7 @@ class _WalletRefundRequestsScreenState
                       horizontal: DonySpacing.lg,
                     ),
                     child: Text(
-                      'Aucune demande de remboursement pour l\'instant.',
+                      l.walletRefundRequestsEmpty,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -92,34 +93,37 @@ class _RefundRequestTile extends StatelessWidget {
 
   final WalletRefundRequestModel request;
 
-  String get _statusLabel => switch (request.status) {
-    'PENDING' || 'PROCESSING' => 'En cours',
-    'RESOLVED' || 'REFUNDED' => 'Remboursé',
-    'FAILED' => 'Échoué',
+  // Comparaisons sur `request.status` : code serveur, jamais affiché brut.
+  String _statusLabel(AppLocalizations l) => switch (request.status) {
+    'PENDING' || 'PROCESSING' => l.walletRefundStatusInProgress, // i18n-ignore
+    'RESOLVED' || 'REFUNDED' => l.walletRefundStatusRefunded, // i18n-ignore
+    'FAILED' => l.walletRefundStatusFailed, // i18n-ignore
     _ => request.status,
   };
 
+  // Comparaisons sur `request.status`/`request.rail` : codes serveur.
   Color _statusColor(ColorScheme cs) => switch (request.status) {
-    'RESOLVED' || 'REFUNDED' => DonyColors.success500,
-    'FAILED' => DonyColors.terra600,
+    'RESOLVED' || 'REFUNDED' => DonyColors.success500, // i18n-ignore
+    'FAILED' => DonyColors.terra600, // i18n-ignore
     _ => cs.primary,
   };
 
   /// Icône selon le rail. `null` (ancien contrat) garde l'icône générique
   /// d'avant.
   IconData get _railIcon => switch (request.rail) {
-    'PAWAPAY' => Icons.smartphone_rounded,
-    'STRIPE' => Icons.credit_card_rounded,
+    'PAWAPAY' => Icons.smartphone_rounded, // i18n-ignore
+    'STRIPE' => Icons.credit_card_rounded, // i18n-ignore
     _ => Icons.receipt_long,
   };
 
   /// Le back n'expose pas le nom de l'opérateur sur une demande de
   /// remboursement, seul le rail (`STRIPE`/`PAWAPAY`/`MANUAL`) : le
   /// sous-titre reste générique, jamais un nom inventé.
-  String? get _railLabel => switch (request.rail) {
-    'PAWAPAY' => 'Mobile money',
-    'STRIPE' => 'Carte',
-    'MANUAL' => 'Manuel',
+  /// Comparaisons sur `request.rail` : code serveur, jamais affiché brut.
+  String? _railLabel(AppLocalizations l) => switch (request.rail) {
+    'PAWAPAY' => l.paymentMethodMobileMoney, // i18n-ignore
+    'STRIPE' => l.paymentMethodCard, // i18n-ignore
+    'MANUAL' => l.walletRefundRailManual, // i18n-ignore
     _ => null,
   };
 
@@ -128,23 +132,24 @@ class _RefundRequestTile extends StatelessWidget {
   /// (rail pawaPay, demande non terminale, destination connue) — jamais
   /// inventée à partir d'un statut seul.
   bool get _showFallbackNotice =>
-      request.rail == 'PAWAPAY' &&
+      request.rail == 'PAWAPAY' && // i18n-ignore : code serveur comparé
       !request.isTerminal &&
       request.destinationMasked != null;
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final currency = SupportedCurrency.fromCodeOrDefault(request.currency);
     final date = DateFormat(
-      'dd MMM yyyy',
-      AppL10n.localeName,
+      l.walletDatePattern,
+      l.localeName,
     ).format(request.requestedAt);
     final statusColor = _statusColor(cs);
     final fee = request.feeAmount;
     final net = request.netAmount;
     final subtitle = [
-      ?_railLabel,
+      ?_railLabel(l),
       ?request.destinationMasked,
       date,
     ].join(' · ');
@@ -200,7 +205,7 @@ class _RefundRequestTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(DonyRadius.full),
                 ),
                 child: Text(
-                  _statusLabel,
+                  _statusLabel(l),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: statusColor,
                     fontWeight: FontWeight.w700,
@@ -212,9 +217,7 @@ class _RefundRequestTile extends StatelessWidget {
           if (_showFallbackNotice) ...[
             const SizedBox(height: DonySpacing.sm),
             Text(
-              'Le remboursement part vers ${request.destinationMasked}. En '
-              'cas de refus de l\'opérateur, l\'argent est renvoyé par un '
-              'versement sur le même numéro.',
+              l.walletRefundFallbackNotice(request.destinationMasked ?? ''),
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -227,10 +230,11 @@ class _RefundRequestTile extends StatelessWidget {
           if (fee != null && fee > 0 && net != null) ...[
             const SizedBox(height: DonySpacing.sm),
             Text(
-              '${CurrencyFormatter.format(request.amount, currency)} '
-              'remboursables, ${CurrencyFormatter.format(fee, currency)} de '
-              'frais retenus, vous recevez '
-              '${CurrencyFormatter.format(net, currency)}',
+              l.walletRefundFeeDetail(
+                CurrencyFormatter.format(request.amount, currency),
+                CurrencyFormatter.format(fee, currency),
+                CurrencyFormatter.format(net, currency),
+              ),
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: cs.warning),

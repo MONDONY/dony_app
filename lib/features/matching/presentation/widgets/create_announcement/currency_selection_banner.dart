@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/currency_selector.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -59,7 +60,7 @@ class CurrencySelectionBanner extends StatelessWidget {
       valueListenable: currencyNotifier,
       builder: (context, currency, _) {
         final semanticsLabel = l.tripPublishCurrencySemanticsLabel(
-          currency.displayName,
+          currency.name(l),
           currency.code,
         );
         return Semantics(
@@ -89,7 +90,7 @@ class CurrencySelectionBanner extends StatelessWidget {
                         children: [
                           Text(
                             l.tripPublishCurrencyBannerTitle(
-                              currency.displayName,
+                              currency.name(l),
                               currency.code,
                             ),
                             style: tt.titleMedium?.copyWith(

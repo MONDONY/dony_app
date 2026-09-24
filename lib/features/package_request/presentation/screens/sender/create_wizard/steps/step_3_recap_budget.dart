@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/currency_selector.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -523,7 +524,7 @@ class _CurrencySelectionRow extends StatelessWidget {
     return Semantics(
       button: true,
       label: l10n.requestCreateCurrencySemanticLabel(
-        currency.displayName,
+        currency.name(l10n),
         currency.code,
       ),
       child: ExcludeSemantics(
@@ -547,7 +548,7 @@ class _CurrencySelectionRow extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
-                    '${currency.displayName} (${currency.code})',
+                    '${currency.name(l10n)} (${currency.code})',
                     style: tt.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: cs.onSurface,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -64,7 +65,7 @@ class ReimbursementInfoBanner extends StatelessWidget {
                   children: [
                     Text(
                       l.shipmentReimbursementInfoMessage(
-                        donyReimbursementCapLabel,
+                        reimbursementCapLabel(l),
                       ),
                       style: textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,

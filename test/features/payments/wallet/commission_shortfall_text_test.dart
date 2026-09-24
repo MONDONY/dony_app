@@ -1,10 +1,14 @@
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  final fr = lookupAppLocalizations(AppL10n.fr);
+
   test('sans breakdown : textes historiques', () {
     final lines = commissionShortfallLines(
+      fr,
       breakdown: null,
       requiredCommission: 1.60,
       availableBalance: 1.33,
@@ -20,6 +24,7 @@ void main() {
 
   test('breakdown avec une part couverte par le portefeuille du colis', () {
     final lines = commissionShortfallLines(
+      fr,
       breakdown: const CommissionShortfall(
         bidCurrency: 'XOF',
         commission: 1050,
@@ -48,6 +53,7 @@ void main() {
 
   test('breakdown sans rien sur le portefeuille du colis', () {
     final lines = commissionShortfallLines(
+      fr,
       breakdown: const CommissionShortfall(
         bidCurrency: 'XOF',
         commission: 1050,
@@ -75,6 +81,7 @@ void main() {
 
   test('aucun tiret cadratin dans les textes', () {
     final lines = commissionShortfallLines(
+      fr,
       breakdown: const CommissionShortfall(
         bidCurrency: 'XOF',
         commission: 1050,

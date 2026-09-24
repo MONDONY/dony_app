@@ -21,6 +21,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 class _MockBloc extends Mock implements MobileMoneyPaymentBloc {}
@@ -1541,5 +1542,74 @@ void main() {
         );
       },
     );
+  });
+
+  group('anglais', () {
+    testWidgets(
+      'PIN opérateur connu : montant, opérateur et texte PIN traduits',
+      (tester) async {
+        useEnglish();
+        stub(const MobileMoneyPaymentAwaitingConfirmation(awaitingPinStatus));
+
+        await pumpScreen(tester);
+
+        expect(find.text('Mobile money payment'), findsOneWidget);
+        expect(
+          find.text(
+            'Approve the payment on your phone: Orange Money just sent '
+            'you a PIN request.',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.text('Confirmation is automatic, keep this screen open.'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('choix de l\'opérateur : titre et bouton payer traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      stub(
+        const MobileMoneyPaymentChooseOperator(
+          status: noDepositStatus,
+          catalog: catalog,
+        ),
+      );
+
+      await pumpScreen(tester);
+
+      expect(find.text('Which operator?'), findsOneWidget);
+      expect(find.text('Detected for this number'), findsOneWidget);
+      expect(
+        find.textContaining('Aminata accepts Orange Money and Wave'),
+        findsOneWidget,
+      );
+      expect(
+        find.widgetWithText(
+          DonyButton,
+          'Pay ${formatPriceIn(noDepositStatus.amount ?? 0, noDepositStatus.currency)}',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Expired (portée bid) : texte traduit', (tester) async {
+      useEnglish();
+      stub(const MobileMoneyPaymentExpired(expiredStatus));
+
+      await pumpScreen(tester);
+
+      expect(
+        find.text(
+          "Time's up. The request was canceled. Make a new offer to the "
+          'traveler.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Back'), findsOneWidget);
+    });
   });
 }

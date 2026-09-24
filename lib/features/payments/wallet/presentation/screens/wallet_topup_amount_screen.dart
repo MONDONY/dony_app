@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -16,6 +17,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cub
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_mobile_money_awaiting_args.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -115,8 +117,10 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
   double get _amount =>
       _rawAmount.isEmpty ? 0.0 : (double.tryParse(_rawAmount) ?? 0.0);
 
-  String get _methodLabel => switch (widget.paymentMethod) {
-    'STRIPE' => 'Carte bancaire',
+  // Comparaison sur un code de méthode de paiement transmis par l'appelant :
+  // donnée, jamais affichée brute.
+  String _methodLabel(AppLocalizations l) => switch (widget.paymentMethod) {
+    'STRIPE' => l.walletTopupMethodCard, // i18n-ignore
     _ => widget.paymentMethod,
   };
 
@@ -168,6 +172,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
     BuildContext context,
     String clientSecret,
   ) async {
+    final l = context.l10n;
     await DonyPaymentSheet.show(
       context,
       config: PaymentSheetConfig(
@@ -178,16 +183,16 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
         // wallet — le bouton PayPal reste donc masqué (dégradation propre).
         paymentMethodTypes: const [],
       ),
-      contextLabel: 'Recharge de votre solde Yadony',
+      contextLabel: l.walletTopupPaymentContextLabel,
       onSuccess: () {
         if (!context.mounted) return;
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (routeContext) => DonySuccessScreen(
               mascotteType: DonyMascotteType.securise,
-              title: 'Recharge réussie !',
-              subtitle: 'Ton solde sera crédité dans un instant.',
-              ctaLabel: 'Voir mon solde',
+              title: l.walletTopupSuccessTitle,
+              subtitle: l.walletTopupSuccessSubtitle,
+              ctaLabel: l.walletTopupSuccessCta,
               onCta: () {
                 Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
                 // pop(true) plutôt que go() : préserve la pile de navigation (le
@@ -228,6 +233,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
 
   Widget _buildStripe(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return BlocListener<WalletBloc, WalletState>(
       listener: (context, state) {
@@ -260,7 +266,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
           centerTitle: false,
           leading: const DonyAppBarBackButton(),
           title: Text(
-            'Recharger · Étape 2/2',
+            l.walletTopupAmountTitle,
             style: tt.headlineLarge?.copyWith(
               color: DonyColors.neutral0,
               fontSize: 17,
@@ -295,7 +301,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
                     const SizedBox(height: DonySpacing.xl),
 
                     Text(
-                      'Le solde Yadony sera crédité en ${_currency.code} après confirmation.',
+                      l.walletTopupCreditNotice(_currency.code),
                       textAlign: TextAlign.center,
                       style: tt.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -325,7 +331,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
             // ── Sticky bottom CTA ─────────────────────────────────────────────
             _StickyButton(
               amount: _amount,
-              methodLabel: _methodLabel,
+              methodLabel: _methodLabel(l),
               paymentMethod: widget.paymentMethod,
               currency: _currency,
             ),
@@ -344,6 +350,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
   /// directement à l'écran de choix, pas à cet écran de montant.
   Widget _buildMobileMoney(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final currency = _currency;
     final activeCurrency = _activeCurrency;
     final phoneNumber = widget.mobileMoneyPhoneNumber ?? '';
@@ -381,7 +388,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
           centerTitle: false,
           leading: const DonyAppBarBackButton(),
           title: Text(
-            'Recharger · Étape 2/2',
+            l.walletTopupAmountTitle,
             style: tt.headlineLarge?.copyWith(
               color: DonyColors.neutral0,
               fontSize: 17,
@@ -415,7 +422,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
                     const SizedBox(height: DonySpacing.xl),
 
                     Text(
-                      'Le solde Yadony sera crédité en ${currency.code} après confirmation.',
+                      l.walletTopupCreditNotice(currency.code),
                       textAlign: TextAlign.center,
                       style: tt.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -424,8 +431,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
                     if (currency.minorUnit == 0) ...[
                       const SizedBox(height: DonySpacing.xs),
                       Text(
-                        'Le ${currency.symbol} ne connaît pas les centimes : '
-                        'indique un montant entier.',
+                        l.walletTopupNoDecimalsNotice(currency.symbol),
                         textAlign: TextAlign.center,
                         style: tt.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -443,11 +449,16 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
                         type: DonyStatusBannerType.info,
                         iconAsset: 'wallet',
                         // Avant toute saisie, pas de « crédité de 0 F CFA ».
-                        message:
-                            'Ton portefeuille ${currency.displayName} sera '
-                            'crédité ${_amount > 0 ? 'de ${CurrencyFormatter.format(_amount, currency)}' : 'du montant que tu saisis'}. '
-                            'Ton portefeuille ${activeCurrency.displayName} '
-                            'ne bouge pas.',
+                        message: _amount > 0
+                            ? l.walletTopupCreditedAmount(
+                                currency.name(l),
+                                CurrencyFormatter.format(_amount, currency),
+                                activeCurrency.name(l),
+                              )
+                            : l.walletTopupCreditedPending(
+                                currency.name(l),
+                                activeCurrency.name(l),
+                              ),
                       ),
                     ],
 
@@ -500,14 +511,15 @@ class _MobileMoneyStickyButton extends StatelessWidget {
       WalletTopupMobileMoneyState
     >(
       builder: (context, state) {
+        final l = context.l10n;
         final isLoading = state is WalletTopupMobileMoneyInitiating;
         final canSubmit = amount > 0 && !isLoading && phoneNumber.isNotEmpty;
 
         final label = isLoading
-            ? 'Traitement en cours…'
+            ? l.walletTopupProcessing
             : amount <= 0
-            ? 'Entrez un montant'
-            : 'Payer ${amount.toInt()} ${currency.symbol}';
+            ? l.walletTopupEnterAmount
+            : l.walletTopupPayAmount('${amount.toInt()}', currency.symbol);
 
         return Padding(
           padding: EdgeInsets.fromLTRB(
@@ -578,7 +590,7 @@ class _AmountDisplay extends StatelessWidget {
         ),
         const SizedBox(height: DonySpacing.xs),
         Text(
-          'Montant à recharger',
+          context.l10n.walletTopupAmountLabel,
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
@@ -665,18 +677,28 @@ class _StickyButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<WalletBloc, WalletState>(
       builder: (context, state) {
+        final l = context.l10n;
         final isLoading = state is WalletLoading;
         final amountInEur = amount / currency.unitsPerEur;
         final belowMinimum = amount > 0 && amountInEur < _minTopupEur;
         final canSubmit = amount > 0 && !belowMinimum && !isLoading;
 
         final label = isLoading
-            ? 'Traitement en cours…'
+            ? l.walletTopupProcessing
             : amount <= 0
-            ? 'Entrez un montant'
+            ? l.walletTopupEnterAmount
             : belowMinimum
-            ? 'Minimum ${CurrencyFormatter.format(_minTopupEur * currency.unitsPerEur, currency)}'
-            : 'Recharger ${amount.toInt()} ${currency.symbol} via $methodLabel';
+            ? l.walletTopupBelowMinimum(
+                CurrencyFormatter.format(
+                  _minTopupEur * currency.unitsPerEur,
+                  currency,
+                ),
+              )
+            : l.walletTopupViaMethod(
+                '${amount.toInt()}',
+                currency.symbol,
+                methodLabel,
+              );
 
         return Padding(
           padding: EdgeInsets.fromLTRB(

@@ -98,8 +98,11 @@ class ConnectOnboardingBloc
     Emitter<ConnectOnboardingState> emit,
   ) async {
     emit(
-      ConnectOnboardingError(
-        NetworkException(event.message, code: 'launch-failed'),
+      const ConnectOnboardingError(
+        NetworkException(
+          "Impossible d'ouvrir le navigateur.", // i18n-ignore : code absent du catalogue, jamais affiché tel quel (ErrorCatalog retombe sur le message réseau générique), aligné sur payment-already-done
+          code: 'launch-failed',
+        ),
       ),
     );
   }

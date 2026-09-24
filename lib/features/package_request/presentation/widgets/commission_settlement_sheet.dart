@@ -34,6 +34,7 @@ Future<void> showCommissionSettlementSheet(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (final (i, line) in commissionShortfallLines(
+          l,
           breakdown: breakdown,
           requiredCommission: requiredCommission,
           availableBalance: availableBalance,

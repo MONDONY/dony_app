@@ -10,6 +10,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -126,7 +127,7 @@ class _WalletTopupMobileMoneyAwaitingScreenState
       appBar: AppBar(
         actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
-        title: const Text('Recharge mobile money'),
+        title: Text(context.l10n.walletTopupMmAwaitingTitle),
         backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -168,7 +169,7 @@ class _WalletTopupMobileMoneyAwaitingScreenState
                         remaining: _remaining,
                       ),
                       final WalletTopupMobileMoneyFailed f => _FailedBody(
-                        message: f.message,
+                        message: _failureMessage(context.l10n, f),
                       ),
                       // Une erreur technique (réseau coupé pendant une
                       // reprise) se traite comme un échec : sans ce bras,
@@ -202,7 +203,7 @@ class _WalletTopupMobileMoneyAwaitingScreenState
         ),
         child: DonyButton(
           key: const Key('mobile-money-awaiting-retry'),
-          label: 'Réessayer',
+          label: context.l10n.commonRetry,
           onPressed: () => _retry(context),
         ),
       );
@@ -217,7 +218,7 @@ class _WalletTopupMobileMoneyAwaitingScreenState
         ),
         child: DonyButton(
           key: const Key('mobile-money-awaiting-other-number'),
-          label: 'Payer avec un autre numéro',
+          label: context.l10n.walletTopupMmPayWithAnotherNumber,
           variant: DonyButtonVariant.ghost,
           // L'abandon de la recharge n'est pas écrit ici : il vit dans le
           // [PopScope] de l'écran, seul endroit traversé par TOUTES les
@@ -228,6 +229,20 @@ class _WalletTopupMobileMoneyAwaitingScreenState
     }
     return const SizedBox.shrink();
   }
+}
+
+/// Message affiché pour un [WalletTopupMobileMoneyFailed] : le motif renvoyé
+/// par l'opérateur ([WalletTopupMobileMoneyFailed.operatorMessage]) s'il est
+/// présent, sinon un message générique déterminé par
+/// [WalletTopupMobileMoneyFailed.reason] (spec i18n : aucun texte traduit
+/// gardé dans l'état du cubit).
+String _failureMessage(AppLocalizations l, WalletTopupMobileMoneyFailed state) {
+  final operatorMessage = state.operatorMessage;
+  if (operatorMessage != null) return operatorMessage;
+  return switch (state.reason) {
+    WalletTopupFailureReason.expired => l.walletTopupMmExpired,
+    WalletTopupFailureReason.refused => l.walletTopupMmRefused,
+  };
 }
 
 /// Icône pulsée, texte d'attente, carte de détails (montant, crédité sur,
@@ -247,6 +262,7 @@ class _AwaitingBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final currency = SupportedCurrency.fromCodeOrDefault(topup.currency);
 
     return SingleChildScrollView(
@@ -257,20 +273,19 @@ class _AwaitingBody extends StatelessWidget {
           const _PulsingIcon(),
           const SizedBox(height: DonySpacing.xl),
           Text(
-            'Valide le paiement sur ton téléphone',
+            l.walletTopupMmValidateTitle,
             textAlign: TextAlign.center,
             style: tt.headlineMedium,
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Une demande de paiement a été envoyée à ${topup.msisdnMasked} '
-            'via ${topup.providerLabel}.',
+            l.walletTopupMmRequestSent(topup.msisdnMasked, topup.providerLabel),
             textAlign: TextAlign.center,
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.base),
           Text(
-            'La confirmation est automatique, garde cet écran ouvert.',
+            l.walletTopupMmConfirmationAutomatic,
             textAlign: TextAlign.center,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
@@ -279,17 +294,17 @@ class _AwaitingBody extends StatelessWidget {
             child: Column(
               children: [
                 DonyInfoRow(
-                  label: 'Montant',
+                  label: l.walletTopupMmAmountLabel,
                   value: CurrencyFormatter.format(amount, currency),
                 ),
                 const DonyInfoRow.divider(),
                 DonyInfoRow(
-                  label: 'Crédité sur',
-                  value: 'Solde Yadony (${currency.code})',
+                  label: l.walletTopupMmCreditedToLabel,
+                  value: l.walletTopupMmCreditedTo(currency.code),
                 ),
                 const DonyInfoRow.divider(),
                 DonyInfoRow(
-                  label: 'Expire dans',
+                  label: l.walletTopupMmExpiresInLabel,
                   value: '',
                   valueWidget: ValueListenableBuilder<Duration>(
                     valueListenable: remaining,
@@ -304,7 +319,7 @@ class _AwaitingBody extends StatelessWidget {
             const SizedBox(height: DonySpacing.xl),
             DonyButton(
               key: const Key('mobile-money-awaiting-open-authorization'),
-              label: 'Ouvrir ${topup.providerLabel}',
+              label: l.walletTopupMmOpenProvider(topup.providerLabel),
               iconAsset: 'external-link',
               onPressed: () =>
                   getIt<ExternalUrlLauncher>().open(Uri.parse(url)),

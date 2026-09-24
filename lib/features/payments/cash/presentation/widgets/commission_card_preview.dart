@@ -1,4 +1,5 @@
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -35,7 +36,7 @@ class CommissionCardPreview extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Expire le ${card.formattedExpiry}',
+            context.l10n.commissionCardExpiryLabel(card.formattedExpiry),
             style: GoogleFonts.plusJakartaSans(
               color: Colors.white70,
               fontSize: 13,

@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
@@ -9,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../../helpers/l10n_test_helpers.dart';
 
 class MockCommissionMethodBloc
     extends MockBloc<CommissionMethodEvent, CommissionMethodState>
@@ -197,5 +200,25 @@ void main() {
     verify(
       () => bloc.add(any(that: isA<CommissionMethodLoadRequested>())),
     ).called(1);
+  });
+
+  testWidgets('en anglais : texte de débit avec le taux courant (12%)', (
+    tester,
+  ) async {
+    useEnglish();
+    setDonyCommissionRate(0.12);
+    addTearDown(() => setDonyCommissionRate(kDonyCommissionRateDefault));
+    whenListen(
+      bloc,
+      Stream.value(CommissionMethodLoaded(_fakeCard)),
+      initialState: CommissionMethodLoaded(_fakeCard),
+    );
+    await tester.pumpWidget(_wrap(const CommissionMethodScreen(), bloc));
+    await tester.pump();
+
+    expect(find.text('Service fee card'), findsOneWidget);
+    expect(find.textContaining('charged the service fee (12%'), findsOneWidget);
+    expect(find.text('Replace card'), findsOneWidget);
+    expect(find.text('Delete card'), findsOneWidget);
   });
 }

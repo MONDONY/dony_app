@@ -22,6 +22,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 /// Écran de choix de méthode de recharge : tuile mobile money (numéro +
@@ -745,6 +746,26 @@ void main() {
       expect(find.byKey(const Key('network-ORANGE_SEN')), findsOneWidget);
     },
   );
+
+  testWidgets('anglais : titre, tuiles et bouton Suivant traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(buildHarness());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Top up · Step 1/2'), findsOneWidget);
+    expect(find.text('TOP-UP METHOD'), findsOneWidget);
+    expect(find.text('Credit card'), findsOneWidget);
+    expect(find.text('Mobile money'), findsOneWidget);
+
+    await tester.tap(find.text('Credit card'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Next → Amount'));
+    await tester.pumpAndSettle();
+
+    expect(capturedSelection?.method, 'STRIPE');
+  });
 
   group('sonde de capacité jugée sur le code d\'erreur du backend', () {
     /// Vraie chaîne repository → datasource : la sonde sans corps échoue

@@ -23,6 +23,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/currency_test_doubles.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 
 class MockWalletBloc extends MockBloc<WalletEvent, WalletState>
     implements WalletBloc {}
@@ -1310,5 +1311,27 @@ void main() {
         await tester.pumpAndSettle();
       },
     );
+  });
+
+  testWidgets('anglais : titre et actions traduits', (tester) async {
+    useEnglish();
+    const wallet = WalletModel(
+      balance: 47.50,
+      currency: 'EUR',
+      transactions: [],
+    );
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(wallet)),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('My wallet'), findsOneWidget);
+    expect(find.text('Available balance'), findsOneWidget);
+    expect(find.text('Top up'), findsOneWidget);
+    expect(find.text('Requests'), findsOneWidget);
   });
 }

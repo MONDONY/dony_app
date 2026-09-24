@@ -163,6 +163,13 @@ const _sameInBothLanguages = <String>{
   'activityRevenueMobileMoney', // « Mobile money » se dit pareil (tâche D5)
   'activityMenuButtonTooltip', // « Menu » se dit pareil (tâche D5)
   'bidCreateMaxWeightLabel', // « max » se dit pareil (vague finale D, I5/M12)
+  'currencyNameEur', // « Euro » se dit pareil (tâche E1)
+  'paymentSummaryTypeLabel', // « Type » se dit pareil (tâche E1)
+  'walletTopupMethodCardSubtitle', // « Via Stripe · Visa, Mastercard » : noms de marques (tâche E3)
+  'walletTopupMethodMobileMoneySubtitle', // « Orange Money, Wave, MTN MoMo » : noms de marques (tâche E3)
+  'walletTopupBelowMinimum', // « Minimum » se dit pareil (tâche E3)
+  'connectOnboardingBenefitTimeTitle', // « 5 minutes » se dit pareil (tâche E4)
+  'walletActiveCurrencyBadge', // « active » se dit pareil (vague finale E, mineur 5)
 };
 
 void main() {

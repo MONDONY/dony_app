@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -21,13 +22,15 @@ class PaymentMethodNames extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
     final walletLogo = isIOS ? 'apple-pay' : 'google-pay';
+    // i18n-ignore : noms de marque (Apple Pay / Google Pay)
     final walletName = isIOS ? 'Apple Pay' : 'Google Pay';
 
     if (compact) {
       return Semantics(
-        label: 'Carte, $walletName, PayPal',
+        label: l.paymentMethodsSemantics(walletName),
         child: ExcludeSemantics(
           child: Wrap(
             spacing: DonySpacing.sm,
@@ -49,18 +52,31 @@ class PaymentMethodNames extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _row(context, const ['visa', 'mastercard'], 'Carte'),
-        _row(context, [walletLogo], walletName),
-        _row(context, const ['paypal'], 'PayPal'),
+        _row(
+          context,
+          const ['visa', 'mastercard'],
+          l.paymentMethodCard,
+          id: 'card',
+        ),
+        _row(context, [walletLogo], walletName, id: walletLogo),
+        // i18n-ignore : nom de marque
+        _row(context, const ['paypal'], 'PayPal', id: 'paypal'),
       ],
     );
   }
 
-  Widget _row(BuildContext context, List<String> logos, String name) {
+  Widget _row(
+    BuildContext context,
+    List<String> logos,
+    String name, {
+    required String id,
+  }) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      key: Key('payment-row-${name.toLowerCase().replaceAll(' ', '-')}'),
+      // Clé stable : ne dérive plus du libellé traduit (anti-motif littéral
+      // dans une Key), sinon elle changerait de valeur avec la langue.
+      key: Key('payment-row-$id'),
       padding: const EdgeInsets.only(top: DonySpacing.sm),
       child: Row(
         children: [

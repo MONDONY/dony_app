@@ -1,7 +1,9 @@
 import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 Set<BidPaymentMethod> _paymentMethodsFromJson(List<dynamic>? values) {
@@ -120,6 +122,7 @@ class _CurrencyOptionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return ValueListenableBuilder<SupportedCurrency>(
       valueListenable: selected,
       builder: (context, value, _) {
@@ -140,7 +143,7 @@ class _CurrencyOptionList extends StatelessWidget {
                 for (final currency in SupportedCurrency.values)
                   DonyRadioOption<SupportedCurrency>(
                     value: currency,
-                    label: '${currency.displayName} (${currency.code})',
+                    label: '${currency.name(l)} (${currency.code})',
                     subtitle: _subtitleFor(currency),
                   ),
               ],
@@ -177,6 +180,7 @@ class _PaymentMethodsNotice extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     final String title;
     final String description;
@@ -198,8 +202,8 @@ class _PaymentMethodsNotice extends StatelessWidget {
     }
     final hasRail = hasCardRail || hasMobileMoneyRail;
     final semanticsLabel = hasRail
-        ? '$title.'.replaceFirst(currency.code, currency.displayName)
-        : 'Espèces uniquement en ${currency.displayName}. $description';
+        ? '$title.'.replaceFirst(currency.code, currency.name(l))
+        : 'Espèces uniquement en ${currency.name(l)}. $description';
 
     return Semantics(
       container: true,

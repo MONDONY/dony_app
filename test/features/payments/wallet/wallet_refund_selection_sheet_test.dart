@@ -12,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class _MockWalletRefundRequestCubit extends MockCubit<WalletRefundRequestState>
     implements WalletRefundRequestCubit {}
 
@@ -223,5 +225,18 @@ void main() {
 
     expect(find.text('Choisir une recharge'), findsNothing);
     expect(sheetResult, isTrue);
+  });
+
+  testWidgets('anglais : titre, état vide et bouton traduits', (tester) async {
+    useEnglish();
+    when(
+      () => _currentTopupsCubit.state,
+    ).thenReturn(const WalletEligibleTopupsState(isLoading: false));
+
+    await _openSheet(tester, refundCubit);
+
+    expect(find.text('Choose a top-up'), findsOneWidget);
+    expect(find.text('Select the top-up(s) to refund'), findsOneWidget);
+    expect(find.textContaining('No top-up available'), findsOneWidget);
   });
 }

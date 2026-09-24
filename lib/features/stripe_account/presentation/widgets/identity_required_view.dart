@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -24,6 +25,7 @@ class IdentityRequiredView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final h = DonyLayout.hPadding(context);
@@ -42,12 +44,10 @@ class IdentityRequiredView extends StatelessWidget {
             iconColor: cs.primary,
           ),
           const SizedBox(height: DonySpacing.lg),
-          Text('Vérifiez votre identité\nd\'abord', style: tt.headlineSmall),
+          Text(l.stripeAccountIdentityRequiredHeading, style: tt.headlineSmall),
           const SizedBox(height: DonySpacing.md),
           Text(
-            'Pour recevoir de l\'argent, Stripe doit pouvoir rattacher votre '
-            'compte de paiement à une identité vérifiée. C\'est une pièce '
-            'd\'identité à photographier, rien de plus.',
+            l.stripeAccountIdentityRequiredBody,
             style: tt.bodyMedium?.copyWith(
               color: cs.onSurfaceVariant,
               height: 1.5,
@@ -59,7 +59,7 @@ class IdentityRequiredView extends StatelessWidget {
           // toute façon sans défilement.
           const SizedBox(height: DonySpacing.xxl),
           DonyButton(
-            label: 'Vérifier mon identité',
+            label: l.stripeAccountIdentityRequiredCta,
             iconAsset: 'shield-check',
             onPressed: () => context.push(OnboardingStep.identity.route),
           ),

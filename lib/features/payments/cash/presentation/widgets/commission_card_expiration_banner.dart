@@ -1,5 +1,6 @@
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -35,8 +36,8 @@ class CommissionCardExpirationBanner extends StatelessWidget {
           Expanded(
             child: Text(
               isExpired
-                  ? 'Votre carte a expiré. Remplacez-la pour réactiver le paiement en espèces.'
-                  : 'Votre carte expire le $formattedExpiry. Pensez à la remplacer.',
+                  ? context.l10n.commissionCardExpiredMessage
+                  : context.l10n.commissionCardExpiringMessage(formattedExpiry),
               style: GoogleFonts.plusJakartaSans(fontSize: 13),
             ),
           ),

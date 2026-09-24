@@ -6,6 +6,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -47,6 +48,19 @@ abstract final class DonyPaymentSheet {
   }
 }
 
+/// Libellé générique affiché quand [PaymentSheetFailure.providerMessage] est
+/// absent — le SDK Stripe n'a rien fourni de montrable pour cette raison.
+String _reasonMessage(AppLocalizations l, PaymentSheetFailureReason reason) {
+  switch (reason) {
+    case PaymentSheetFailureReason.cardUnavailable:
+      return l.paymentCardUnavailable;
+    case PaymentSheetFailureReason.declined:
+      return l.paymentDeclined;
+    case PaymentSheetFailureReason.generic:
+      return l.paymentFailedGeneric;
+  }
+}
+
 enum _ViewKind { loading, main, success }
 
 _ViewKind _resolveView(PaymentSheetState state) {
@@ -73,7 +87,9 @@ class _Body extends StatelessWidget {
         final failure = state as PaymentSheetFailure;
         DonySnackbar.show(
           context,
-          message: failure.message,
+          message:
+              failure.providerMessage ??
+              _reasonMessage(context.l10n, failure.reason),
           type: DonySnackbarType.error,
         );
       },
@@ -114,6 +130,7 @@ class _MainView extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final bloc = context.read<PaymentSheetBloc>();
     final config = bloc.config;
     final state = context.watch<PaymentSheetBloc>().state;
@@ -131,7 +148,7 @@ class _MainView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Paiement', style: tt.headlineMedium),
+        Text(l.paymentSheetTitle, style: tt.headlineMedium),
         const SizedBox(height: DonySpacing.xs),
         Text(
           contextLabel,
@@ -163,6 +180,7 @@ class _MainView extends StatelessWidget {
             foreground: Colors.black87,
             enabled: !processing,
             onPressed: () => bloc.add(const PaymentSheetPayPalPressed()),
+            // i18n-ignore : nom de marque
             child: const Text('PayPal', style: _methodLabelStyle),
           ),
           const SizedBox(height: DonySpacing.md),
@@ -184,7 +202,7 @@ class _MainView extends StatelessWidget {
             children: [
               DonyIcon('credit-card', size: 18, color: cs.onPrimary),
               const SizedBox(width: DonySpacing.xs),
-              const Text('Carte', style: _methodLabelStyle),
+              Text(l.paymentMethodCard, style: _methodLabelStyle),
             ],
           ),
         ),
@@ -262,6 +280,7 @@ class _SuccessView extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
@@ -286,7 +305,7 @@ class _SuccessView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: DonySpacing.lg),
-          Text('Paiement confirmé', style: tt.headlineMedium),
+          Text(l.paymentSheetConfirmedTitle, style: tt.headlineMedium),
           const SizedBox(height: DonySpacing.sm),
           Container(
             key: const Key('paymentSheetEscrowNote'),
@@ -301,8 +320,7 @@ class _SuccessView extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
-                    'Les fonds sont conservés en séquestre, le voyageur sera '
-                    'payé après la remise du colis.',
+                    l.paymentSheetEscrowNote,
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
@@ -334,10 +352,11 @@ class _StickyBottom extends StatelessWidget {
         });
       },
       builder: (context, state) {
+        final l = context.l10n;
         if (state is PaymentSheetSuccess) {
           return DonyButton(
             key: const Key('paymentSheetDoneButton'),
-            label: 'Terminé',
+            label: l.commonDone,
             onPressed: () {
               Navigator.of(context).pop();
               onSuccess();
@@ -358,7 +377,7 @@ class _StickyBottom extends StatelessWidget {
             ),
             const SizedBox(width: DonySpacing.xxs),
             Text(
-              'Paiement sécurisé par Stripe',
+              l.paymentSheetSecureFooter,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),

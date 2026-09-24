@@ -38,22 +38,6 @@ void main() {
     });
   });
 
-  group('donyCommissionPercentLabel', () {
-    test('taux par défaut → entier sans décimale', () {
-      expect(donyCommissionPercentLabel, '5');
-    });
-
-    test('taux entier → entier sans décimale', () {
-      setDonyCommissionRate(0.12);
-      expect(donyCommissionPercentLabel, '12');
-    });
-
-    test('taux décimal → 1 décimale avec virgule française', () {
-      setDonyCommissionRate(0.125);
-      expect(donyCommissionPercentLabel, '12,5');
-    });
-  });
-
   group('setDonyCommissionRate (source unique ajustable)', () {
     test('met à jour taux, multiplicateur et conversion', () {
       setDonyCommissionRate(0.20);

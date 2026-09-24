@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -24,6 +25,7 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final stripeState = context.watch<StripeAccountBloc>().state;
     final reason = stripeState is StripeAccountReady
         ? stripeState.accountStatus.reason
@@ -33,7 +35,7 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
       appBar: AppBar(
         actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(leadingIconAsset: 'x'),
-        title: const Text('Compte rejeté'),
+        title: Text(l.stripeAccountRejectedTitle),
       ),
       body: BlocListener<ConnectOnboardingBloc, ConnectOnboardingState>(
         listener: (context, state) async {
@@ -79,20 +81,17 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Compte rejeté',
+                                l.stripeAccountRejectedTitle,
                                 style: Theme.of(
                                   context,
                                 ).textTheme.headlineSmall,
                               ),
                               const SizedBox(height: 12),
-                              const Text(
-                                'Votre compte Stripe a été rejeté. Vous devez '
-                                'reconfigurer un nouveau compte pour continuer.',
-                              ),
+                              Text(l.stripeAccountRejectedBody),
                               if (reason != null) ...[
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Raison : $reason',
+                                  l.stripeAccountRejectedReason(reason),
                                   style: const TextStyle(
                                     fontStyle: FontStyle.italic,
                                   ),
@@ -114,7 +113,7 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
                           const ConnectOnboardingLinkRequested(),
                         );
                       },
-                      child: const Text('Reconfigurer mon compte'),
+                      child: Text(l.stripeAccountRejectedCta),
                     ),
                   ),
                   if (count >= 2) ...[
@@ -128,7 +127,7 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
                             await launchUrl(uri);
                           }
                         },
-                        child: const Text('Contacter le support Yadony'),
+                        child: Text(l.stripeAccountContactSupport),
                       ),
                     ),
                   ],

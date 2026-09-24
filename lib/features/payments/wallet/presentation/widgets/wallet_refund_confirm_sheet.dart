@@ -6,6 +6,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_eligible_topups_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -30,10 +31,11 @@ abstract final class WalletRefundConfirmSheet {
     // dans cette sheet, seulement dans « Mes remboursements ».
     final topupsCubit = getIt<WalletEligibleTopupsCubit>()..load(currency);
     final displayCurrency = SupportedCurrency.fromCodeOrDefault(currency);
+    final l = context.l10n;
 
     return DonyBottomSheet.show<bool>(
       context,
-      title: 'Rembourser mon solde',
+      title: l.walletRefundConfirmTitle,
       wrapper: (child) => MultiBlocProvider(
         providers: [
           BlocProvider.value(value: refundCubit),
@@ -50,8 +52,12 @@ abstract final class WalletRefundConfirmSheet {
       ),
       stickyBottom: _ConfirmStickyBottom(
         currencyCode: currency,
-        label:
-            'Rembourser ${CurrencyFormatter.format(netAmount ?? refundableAmount, displayCurrency)}',
+        label: l.walletRefundConfirmCta(
+          CurrencyFormatter.format(
+            netAmount ?? refundableAmount,
+            displayCurrency,
+          ),
+        ),
       ),
     ).whenComplete(() => unawaited(topupsCubit.close()));
   }
@@ -74,6 +80,7 @@ class _ConfirmContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final fee = feeAmount;
@@ -96,44 +103,41 @@ class _ConfirmContent extends StatelessWidget {
         final isPawapay =
             railKnown && topupsState.topups.every((t) => t.isMobileMoneyTopup);
 
-        final railSuffix = !railKnown
-            ? ''
+        final refundableAmountText = CurrencyFormatter.format(
+          refundableAmount,
+          currency,
+        );
+        final refundableLine = !railKnown
+            ? l.walletRefundable(refundableAmountText)
             : isPawapay
-            ? ' sur mobile money'
-            : ' sur votre carte';
+            ? l.walletRefundableOnMobileMoney(refundableAmountText)
+            : l.walletRefundableOnCard(refundableAmountText);
+        final explainLine = !railKnown
+            ? l.walletRefundExplainUnknown(currency.code)
+            : isPawapay
+            ? l.walletRefundExplainMobileMoney(currency.code)
+            : l.walletRefundExplainCard;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Remboursable$railSuffix : '
-              '${CurrencyFormatter.format(refundableAmount, currency)}',
+              refundableLine,
               style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: DonySpacing.sm),
             Text(
-              !railKnown
-                  ? 'Le montant revient sur le moyen de paiement utilisé '
-                        'pour la recharge. Votre solde ${currency.code} est '
-                        'gelé le temps du traitement.'
-                  : isPawapay
-                  ? 'Le montant revient sur le numéro qui a payé la '
-                        'recharge, en général en quelques minutes. Votre '
-                        'solde ${currency.code} est gelé le temps du '
-                        'traitement.'
-                  : 'Le montant revient sur la carte utilisée pour la '
-                        'recharge, sous 5 à 10 jours selon votre banque. '
-                        'Votre solde est gelé le temps du traitement.',
+              explainLine,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             if (fee != null) ...[
               const SizedBox(height: DonySpacing.base),
               DonyInfoRow(
-                label: 'Frais de remboursement',
+                label: l.walletRefundFeeLabel,
                 value: fee > 0
                     ? CurrencyFormatter.format(fee, currency)
-                    : 'Offerts',
+                    : l.walletRefundFeeFreeValue,
                 valueStyle: fee > 0
                     ? DonyInfoRowValueStyle.warning
                     : DonyInfoRowValueStyle.success,
@@ -145,7 +149,7 @@ class _ConfirmContent extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Vous recevrez',
+                    l.walletRefundWillReceiveLabel,
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   Text(
@@ -163,21 +167,17 @@ class _ConfirmContent extends StatelessWidget {
               DonyStatusBanner(
                 type: DonyStatusBannerType.info,
                 iconAsset: 'circle-alert',
-                message:
-                    '${CurrencyFormatter.format(nonRefundableAmount, currency)} '
-                    'de bonus ne sont pas remboursables et restent sur votre '
-                    'portefeuille.',
+                message: l.walletRefundBonusNotice(
+                  CurrencyFormatter.format(nonRefundableAmount, currency),
+                ),
               ),
             ],
             if (fee != null && fee > 0) ...[
               const SizedBox(height: DonySpacing.base),
-              const DonyStatusBanner(
+              DonyStatusBanner(
                 type: DonyStatusBannerType.warning,
                 iconAsset: 'circle-alert',
-                message:
-                    'Cette recharge n\'a jamais servi : les frais du '
-                    'prestataire de paiement sont retenus. Ils sont annulés '
-                    'dès qu\'une recharge a payé un envoi.',
+                message: l.walletRefundFeeRetainedNotice,
               ),
             ],
           ],

@@ -90,3 +90,13 @@ String joinList(AppLocalizations l, List<String> items) {
   final head = items.sublist(0, items.length - 1).join(', ');
   return l.commonListLast(head, items.last);
 }
+
+/// Formate [value] avec une décimale, à la langue (`,` en français, `.` en
+/// anglais) — jamais `toStringAsFixed(1).replaceAll('.', ',')` ni
+/// `replaceFirst('.', ',')`, qui figent la virgule française quelle que soit
+/// la langue effective.
+String formatOneDecimal(AppLocalizations l, double value) =>
+    NumberFormat.decimalPatternDigits(
+      locale: l.localeName,
+      decimalDigits: 1,
+    ).format(value);

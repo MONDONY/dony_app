@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/currency/country_catalog.dart';
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/currency_selector.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -12,6 +13,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -293,6 +295,7 @@ class _DisplayCurrencyPickerList extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     Widget tile({
       required String code,
@@ -326,7 +329,7 @@ class _DisplayCurrencyPickerList extends StatelessWidget {
         for (final (index, currency) in SupportedCurrency.values.indexed)
           tile(
             code: currency.code,
-            label: '${currency.displayName} (${currency.symbol})',
+            label: '${currency.name(l)} (${currency.symbol})',
             showDivider: index < SupportedCurrency.values.length - 1,
           ),
         SizedBox(height: tt.bodySmall?.fontSize ?? 12),

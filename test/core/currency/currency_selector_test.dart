@@ -104,7 +104,7 @@ void main() {
     // Départ : EUR a le rail carte d'après le serveur.
     expect(find.text('Carte et espèces disponibles en EUR'), findsOneWidget);
 
-    await tester.tap(find.text('${SupportedCurrency.xof.displayName} (XOF)'));
+    await tester.tap(find.text('Franc CFA Ouest (XOF)'));
     await tester.pumpAndSettle();
 
     expect(find.text('Espèces uniquement en XOF'), findsOneWidget);
@@ -231,7 +231,7 @@ void main() {
       ],
     );
 
-    await tester.tap(find.text('${SupportedCurrency.xof.displayName} (XOF)'));
+    await tester.tap(find.text('Franc CFA Ouest (XOF)'));
     await tester.pumpAndSettle();
 
     final texts = tester.widgetList<Text>(find.byType(Text));

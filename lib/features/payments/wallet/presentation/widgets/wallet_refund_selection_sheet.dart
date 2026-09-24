@@ -23,8 +23,8 @@ abstract final class WalletRefundSelectionSheet {
 
     return DonyBottomSheet.show<bool>(
       context,
-      title: 'Choisir une recharge',
-      subtitle: 'Sélectionnez la ou les recharges à rembourser',
+      title: context.l10n.walletRefundSelectionTitle,
+      subtitle: context.l10n.walletRefundSelectionSubtitle,
       wrapper: (child) => MultiBlocProvider(
         providers: [
           BlocProvider.value(value: topupsCubit),
@@ -52,6 +52,7 @@ class _SelectionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final displayCurrency = SupportedCurrency.fromCodeOrDefault(currency);
 
@@ -84,8 +85,7 @@ class _SelectionList extends StatelessWidget {
                 const DonyMascotteAnimated(type: DonyMascotteType.assis),
                 const SizedBox(height: DonySpacing.base),
                 Text(
-                  'Aucune recharge disponible pour le remboursement pour '
-                  'le moment.',
+                  l.walletRefundSelectionEmpty,
                   textAlign: TextAlign.center,
                   style: Theme.of(
                     context,
@@ -107,8 +107,8 @@ class _SelectionList extends StatelessWidget {
                       displayCurrency,
                     ),
                     subtitle: DateFormat(
-                      'dd MMM yyyy · HH:mm',
-                      AppL10n.localeName,
+                      l.walletTopupDateTimePattern,
+                      l.localeName,
                     ).format(topup.createdAt),
                     value: selectedIds.contains(topup.id),
                     onChanged: (_) {
@@ -150,12 +150,13 @@ class _SelectionStickyBottom extends StatelessWidget {
         return ValueListenableBuilder<Set<String>>(
           valueListenable: selected,
           builder: (context, selectedIds, _) {
+            final l = context.l10n;
             final canSubmit =
                 selectedIds.isNotEmpty && !refundState.isSubmitting;
             return DonyButton(
               label: selectedIds.isEmpty
-                  ? 'Sélectionnez une recharge'
-                  : 'Rembourser (${selectedIds.length})',
+                  ? l.walletRefundSelectionCta
+                  : l.walletRefundSelectionCount(selectedIds.length),
               isLoading: refundState.isSubmitting,
               onPressed: canSubmit
                   ? () => context.read<WalletRefundRequestCubit>().submit(

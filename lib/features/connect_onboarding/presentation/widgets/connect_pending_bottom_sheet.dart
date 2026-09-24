@@ -3,6 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,6 +14,7 @@ class ConnectPendingBottomSheet extends StatelessWidget {
 
   static Future<void> show(BuildContext context) {
     final connectBloc = context.read<ConnectOnboardingBloc>();
+    final l = context.l10n;
     return DonyBottomSheet.show(
       context,
       isDismissible: false,
@@ -23,7 +25,7 @@ class ConnectPendingBottomSheet extends StatelessWidget {
         children: [
           BlocBuilder<ConnectOnboardingBloc, ConnectOnboardingState>(
             builder: (ctx, state) => DonyButton(
-              label: "J'ai complété le formulaire",
+              label: l.connectPendingCompleteCta,
               isLoading: state is ConnectOnboardingLoading,
               onPressed: state is ConnectOnboardingLoading
                   ? null
@@ -34,7 +36,7 @@ class ConnectPendingBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           DonyButton(
-            label: 'Revenir plus tard',
+            label: l.connectPendingLaterCta,
             variant: DonyButtonVariant.ghost,
             onPressed: () {
               Navigator.of(context, rootNavigator: true).pop();
@@ -49,6 +51,7 @@ class ConnectPendingBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
@@ -59,7 +62,7 @@ class ConnectPendingBottomSheet extends StatelessWidget {
           Navigator.of(context, rootNavigator: true).pop();
           DonySnackbar.show(
             context,
-            message: 'Compte bancaire configuré !',
+            message: context.l10n.connectPendingConfigured,
             type: DonySnackbarType.success,
           );
           context.go('/home');
@@ -68,9 +71,7 @@ class ConnectPendingBottomSheet extends StatelessWidget {
           // sans ce retour, le bouton semblait ne rien faire.
           DonySnackbar.show(
             context,
-            message:
-                "Stripe n'a pas encore reçu toutes vos informations. "
-                'Reprenez le formulaire pour le terminer.',
+            message: context.l10n.connectPendingNotReceived,
           );
         } else if (state is ConnectOnboardingError) {
           ErrorPresenter.show(context, state.error);
@@ -87,7 +88,7 @@ class ConnectPendingBottomSheet extends StatelessWidget {
 
           // Title
           Text(
-            'En attente de Stripe',
+            l.connectPendingTitle,
             style: tt.headlineMedium,
             textAlign: TextAlign.center,
           ).animate().fadeIn(delay: 60.ms),
@@ -95,7 +96,7 @@ class ConnectPendingBottomSheet extends StatelessWidget {
 
           // Description
           Text(
-            'Revenez ici après avoir complété le formulaire Stripe dans votre navigateur.',
+            l.connectPendingSubtitle,
             style: tt.bodyMedium?.copyWith(
               color: cs.onSurfaceVariant,
               height: 1.5,

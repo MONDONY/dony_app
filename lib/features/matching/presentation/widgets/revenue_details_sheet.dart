@@ -1,4 +1,5 @@
 import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -229,7 +230,7 @@ class _CurrencyGroupCard extends StatelessWidget {
     final knownCurrency = SupportedCurrency.fromCode(group.currency);
     final currency = SupportedCurrency.fromCodeOrDefault(group.currency);
     final pillCode = knownCurrency?.code ?? group.currency;
-    final displayName = knownCurrency?.displayName ?? group.currency;
+    final displayName = knownCurrency?.name(l) ?? group.currency;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final duration = reduceMotion ? Duration.zero : DonyDuration.base;
 

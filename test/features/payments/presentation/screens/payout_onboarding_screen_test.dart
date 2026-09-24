@@ -18,6 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 // `MockStripeAccountBloc` est déjà déclaré localement ci-dessous : on n'importe
 // que la constante d'état pour éviter la collision de noms.
 import '../../../../helpers/stripe_account_test_doubles.dart'
@@ -403,6 +404,14 @@ void main() {
         findsOneWidget,
       );
       verifyNever(() => mockAuthRepository.markOnboardingSeen());
+    });
+
+    testWidgets('en anglais : titre traduit', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap(mockBloc));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Get paid'), findsOneWidget);
+      expect(find.text('Connect my bank account'), findsOneWidget);
     });
   });
 }

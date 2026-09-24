@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -160,7 +161,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.xl),
             DonyButton(
-              label: 'Réessayer',
+              label: context.l10n.commonRetry,
               onPressed: () =>
                   context.read<WalletBloc>().add(WalletLoadRequested()),
               fullWidth: false,
@@ -195,6 +196,7 @@ class _LoadedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final transactions = wallet.transactions;
     final activeCurrency = SupportedCurrency.fromCodeOrDefault(wallet.currency);
     // Une devise non active à solde 0 ne bloque rien : on ne l'affiche pas
@@ -225,7 +227,7 @@ class _LoadedView extends StatelessWidget {
             backgroundColor: DonyColors.blue700,
             leading: const DonyAppBarBackButton(),
             title: Text(
-              'Mon portefeuille',
+              l.walletTitle,
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                 color: DonyColors.neutral0,
                 fontSize: 17,
@@ -233,10 +235,10 @@ class _LoadedView extends StatelessWidget {
             ),
             actions: [
               IconButton(
-                tooltip: 'Comment ça marche',
+                tooltip: l.walletInfoTooltip,
                 onPressed: () => DonyBottomSheet.show(
                   context,
-                  title: 'Comment fonctionne le portefeuille',
+                  title: l.walletInfoTitle,
                   child: const _WalletInfoContent(),
                 ),
                 icon: const DonyIcon(
@@ -286,10 +288,11 @@ class _LoadedView extends StatelessWidget {
                   child: DonyStatusBanner(
                     type: DonyStatusBannerType.success,
                     iconAsset: 'circle-check',
-                    message:
-                        '+${CurrencyFormatter.format(status.amount, topupCurrency)} '
-                        'sur ton portefeuille ${topupCurrency.displayName}, '
-                        'confirmé par ${status.providerLabel}.',
+                    message: l.walletTopupConfirmed(
+                      CurrencyFormatter.format(status.amount, topupCurrency),
+                      topupCurrency.name(l),
+                      status.providerLabel,
+                    ),
                     onDismiss: () => topupBanner.value = null,
                   ),
                 );
@@ -302,22 +305,19 @@ class _LoadedView extends StatelessWidget {
           // un mot, l'utilisateur ne comprend pas pourquoi. On le dit,
           // plutôt que de masquer en silence.
           if (_refundFullyAbsorbedByFees(wallet))
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(
+                padding: const EdgeInsets.fromLTRB(
                   DonySpacing.lg,
                   DonySpacing.lg,
                   DonySpacing.lg,
                   0,
                 ),
                 child: DonyStatusBanner(
-                  key: Key('wallet-refund-absorbed-by-fees'),
+                  key: const Key('wallet-refund-absorbed-by-fees'),
                   type: DonyStatusBannerType.info,
                   iconAsset: 'circle-alert',
-                  message:
-                      'Ce solde ne peut pas être remboursé : les frais du '
-                      'prestataire de paiement l\'absorbent entièrement. Il '
-                      'reste utilisable pour payer tes envois.',
+                  message: l.walletRefundAbsorbedByFees,
                 ),
               ),
             ),
@@ -381,7 +381,7 @@ class _LoadedView extends StatelessWidget {
                       ),
                       const SizedBox(height: DonySpacing.base),
                       Text(
-                        'Aucune transaction pour l\'instant',
+                        l.walletEmptyTransactions,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -401,7 +401,7 @@ class _LoadedView extends StatelessWidget {
                   DonySpacing.sm,
                 ),
                 child: Text(
-                  'Historique',
+                  l.walletHistorySectionTitle,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     letterSpacing: 0.5,
@@ -480,6 +480,7 @@ class _HeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -513,8 +514,8 @@ class _HeroHeader extends StatelessWidget {
               children: [
                 Text(
                   estimatedTotal != null && multiCurrency
-                      ? 'Total estimé'
-                      : 'Solde disponible',
+                      ? l.walletEstimatedTotalLabel
+                      : l.walletAvailableBalanceLabel,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: DonyColors.neutral0.withValues(alpha: 0.75),
                     fontSize: 13,
@@ -541,8 +542,8 @@ class _HeroHeader extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     estimateComplete
-                        ? 'Estimé au taux du jour, devises séparées.'
-                        : 'Estimation partielle : une devise sans taux.',
+                        ? l.walletEstimateCompleteNote
+                        : l.walletEstimatePartialNote,
                     key: estimateComplete
                         ? null
                         : const Key('wallet-estimate-partial'),
@@ -565,8 +566,10 @@ class _HeroHeader extends StatelessWidget {
                     listener: (context, state) {
                       if (state.result != null) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Demande de remboursement envoyée.'),
+                          SnackBar(
+                            content: Text(
+                              context.l10n.walletRefundRequestSentSnackbar,
+                            ),
                           ),
                         );
                         context.read<WalletBloc>().add(
@@ -592,10 +595,11 @@ class _HeroHeader extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
+    final l = context.l10n;
     final actions = [
       _HeroAction(
         iconAsset: 'plus',
-        label: 'Recharger',
+        label: l.walletActionTopUp,
         onTap: () async {
           // Solde avant la recharge : sert de référence au polling
           // post-recharge (on s'arrête dès qu'il augmente).
@@ -614,7 +618,7 @@ class _HeroHeader extends StatelessWidget {
       if (_canRefund)
         _HeroAction(
           iconAsset: 'arrow-up',
-          label: 'Rembourser',
+          label: l.walletActionRefund,
           onTap: () async {
             if (eligibleBalances.length > 1) {
               final chosen = await WalletRefundCurrencySheet.show(
@@ -665,7 +669,7 @@ class _HeroHeader extends StatelessWidget {
         ),
       _HeroAction(
         iconAsset: 'history',
-        label: 'Demandes',
+        label: l.walletActionRequests,
         onTap: () => context.push('/payments/wallet/refunds'),
       ),
     ];
@@ -773,18 +777,21 @@ class _TxTile extends StatelessWidget {
   // sondage de la recharge en cours) : impossible d'afficher
   // « Recharge {providerLabel} · {msisdnMasked} », seul `isMobileMoneyTopup`
   // (dérivé du préfixe `pawapay:` du `paymentRef`) distingue le rail.
-  String get _label => switch (tx.type) {
-    'TOP_UP' when tx.isMobileMoneyTopup => 'Recharge mobile money',
-    'TOP_UP' => 'Recharge',
-    'BID_PAYMENT' => 'Paiement colis',
-    'COMMISSION_DEDUCTED' => 'Commission',
-    'REFUND' || 'SELF_REFUND_OUT' => 'Remboursement',
-    'REFERRAL_REWARD' => 'Parrainage',
+  // Comparaisons sur `tx.type` : codes serveur, jamais affichés bruts.
+  String _label(AppLocalizations l) => switch (tx.type) {
+    'TOP_UP' when tx.isMobileMoneyTopup => // i18n-ignore
+    l.walletTxTypeMobileMoneyTopUp,
+    'TOP_UP' => l.walletTxTypeTopUp, // i18n-ignore
+    'BID_PAYMENT' => l.walletTxTypeBidPayment, // i18n-ignore
+    'COMMISSION_DEDUCTED' => l.walletTxTypeCommission, // i18n-ignore
+    'REFUND' || 'SELF_REFUND_OUT' => l.walletTxTypeRefund, // i18n-ignore
+    'REFERRAL_REWARD' => l.walletTxTypeReferral, // i18n-ignore
     _ => tx.type,
   };
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final isCredit = tx.isCredit;
     final isRefundProcessing = tx.isRefundProcessing;
@@ -832,7 +839,7 @@ class _TxTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _label,
+                        _label(l),
                         style: Theme.of(
                           context,
                         ).textTheme.titleLarge?.copyWith(fontSize: 14),
@@ -840,10 +847,10 @@ class _TxTile extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         isRefundProcessing
-                            ? 'Remboursement en cours · sous 5 à 10 jours ouvrés'
+                            ? l.walletRefundProcessingNote
                             : DateFormat(
-                                'dd MMM · HH:mm',
-                                AppL10n.localeName,
+                                l.walletTxDateTimePattern,
+                                l.localeName,
                               ).format(tx.createdAt),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: isRefundProcessing
@@ -957,13 +964,13 @@ class _CurrencyBalanceRow extends StatelessWidget {
           borderRadius: BorderRadius.circular(DonyRadius.sm),
         ),
         child: Text(
-          'active',
+          context.l10n.walletActiveCurrencyBadge,
           style: tt.labelSmall?.copyWith(color: cs.onPrimaryContainer),
         ),
       );
     } else if (estimate == null) {
       trailing = Text(
-        'taux indisponible',
+        context.l10n.walletRateUnavailable,
         style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
       );
     } else {
@@ -988,7 +995,7 @@ class _CurrencyBalanceRow extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                currency.displayName,
+                currency.name(context.l10n),
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],
@@ -1029,15 +1036,14 @@ class _LockedBalanceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final currency = SupportedCurrency.fromCodeOrDefault(balance.currency);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: DonySpacing.sm),
       child: Semantics(
-        label:
-            'Devise verrouillée ${currency.displayName}, ce solde reste '
-            'disponible dans sa propre devise',
+        label: l.walletLockedCurrencySemantics(currency.name(l)),
         child: DonyCard(
           child: Row(
             children: [
@@ -1080,7 +1086,7 @@ class _LockedBalanceTile extends StatelessWidget {
                             borderRadius: BorderRadius.circular(DonyRadius.sm),
                           ),
                           child: Text(
-                            'verrouillé',
+                            l.walletLockedBadge,
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(color: cs.onSurfaceVariant),
                           ),
@@ -1089,7 +1095,7 @@ class _LockedBalanceTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Reste dans sa devise d\'origine (${currency.displayName}).',
+                      l.walletLockedCurrencyNote(currency.name(l)),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),
@@ -1112,48 +1118,38 @@ class _WalletInfoContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    final l = context.l10n;
+    return Column(
       children: [
         _WalletInfoRow(
           iconAsset: 'wallet',
-          title: 'Solde disponible',
-          description:
-              'Le montant utilisable pour payer un envoi ou demander un '
-              'remboursement.',
+          title: l.walletAvailableBalanceLabel,
+          description: l.walletInfoBalanceDesc,
         ),
         _WalletInfoRow(
           iconAsset: 'plus',
-          title: 'Recharger',
-          description:
-              'Ajoute des fonds par carte bancaire. Le crédit apparaît dès '
-              'la validation du paiement.',
+          title: l.walletActionTopUp,
+          description: l.walletInfoTopUpDesc,
         ),
         _WalletInfoRow(
           iconAsset: 'arrow-up',
-          title: 'Rembourser',
-          description:
-              'Demande le remboursement de ton solde vers ton moyen de '
-              'paiement d\'origine.',
+          title: l.walletActionRefund,
+          description: l.walletInfoRefundDesc,
         ),
         _WalletInfoRow(
           iconAsset: 'history',
-          title: 'Demandes',
-          description:
-              'Retrouve le suivi de tes demandes de remboursement envoyées.',
+          title: l.walletActionRequests,
+          description: l.walletInfoRequestsDesc,
         ),
         _WalletInfoRow(
           iconAsset: 'wallet',
-          title: 'Plusieurs devises',
-          description:
-              'Ton argent reste dans la devise où il a été reçu. Le total en '
-              'haut est une estimation au taux du jour, il ne convertit rien.',
+          title: l.walletInfoMultiCurrencyTitle,
+          description: l.walletInfoMultiCurrencyDesc,
         ),
         _WalletInfoRow(
           iconAsset: 'lock',
-          title: 'Changer de devise',
-          description:
-              'La devise active se change dans Préférences tant que ton solde '
-              'total est à zéro. Sinon, vide d\'abord tes portefeuilles.',
+          title: l.walletInfoChangeCurrencyTitle,
+          description: l.walletInfoChangeCurrencyDesc,
         ),
       ],
     );
