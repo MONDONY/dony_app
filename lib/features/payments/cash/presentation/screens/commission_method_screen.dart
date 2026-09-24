@@ -2,6 +2,7 @@ import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
@@ -111,11 +112,14 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
                 Text(
                   // Le plancher de 1 € n'est vrai qu'en euros : ne pas
                   // l'afficher à un voyageur dont la commission est prélevée
-                  // dans une autre devise.
+                  // dans une autre devise. Le montant est toujours formaté en
+                  // EUR (formatPriceIn) : il garde la locale de sa devise,
+                  // jamais celle de la langue de l'app.
                   (ActiveCurrency.current ?? SupportedCurrency.eur) ==
                           SupportedCurrency.eur
                       ? l.commissionCardDebitNoticeMin(
                           commissionPercentLabel(l),
+                          formatPriceIn(1, 'EUR'),
                         )
                       : l.commissionCardDebitNotice(commissionPercentLabel(l)),
                   style: Theme.of(ctx).textTheme.bodyMedium,

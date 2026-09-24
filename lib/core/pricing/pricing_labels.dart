@@ -1,5 +1,6 @@
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/l10n/l10n.dart';
+import 'package:intl/intl.dart';
 
 /// Libellé du taux de commission Yadony courant ([donyCommissionRate]),
 /// entier sans décimale si le taux est rond, sinon une décimale à la langue
@@ -25,6 +26,10 @@ String reimbursementCapLabel(AppLocalizations l) {
   if (decimalIndex < 0) return trimmed;
   final integerPart = trimmed.substring(0, decimalIndex);
   final decimalPart = trimmed.substring(decimalIndex + 1);
-  final separator = l.localeName == 'en' ? '.' : ',';
+  // Séparateur décimal de la locale (au lieu d'un choix fr/en codé en dur) :
+  // une langue ajoutée plus tard n'a pas besoin de toucher cette fonction.
+  final separator = NumberFormat.decimalPattern(
+    l.localeName,
+  ).symbols.DECIMAL_SEP;
   return '$integerPart$separator$decimalPart';
 }

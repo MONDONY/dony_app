@@ -8608,8 +8608,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get paymentContextDefault => 'Envoi de votre colis';
 
   @override
-  String commissionCardDebitNoticeMin(String percent) {
-    return 'Cette carte sera débitée de la commission ($percent %, min. 1 €) à chaque colis en espèces accepté.';
+  String commissionCardDebitNoticeMin(String percent, String min) {
+    return 'Cette carte sera débitée de la commission ($percent %, min. $min) à chaque colis en espèces accepté.';
   }
 
   @override
@@ -9521,10 +9521,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get connectOnboardingTitle => 'Compte Stripe Connect';
 
   @override
-  String get connectOnboardingBrowserLaunchFailed =>
-      'Impossible d\'ouvrir le navigateur. Vérifie ta connexion.';
-
-  @override
   String get connectOnboardingHeroTitle => 'Complète ton\ncompte Stripe';
 
   @override
@@ -9578,4 +9574,7 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get connectPendingSubtitle =>
       'Revenez ici après avoir complété le formulaire Stripe dans votre navigateur.';
+
+  @override
+  String get walletActiveCurrencyBadge => 'active';
 }

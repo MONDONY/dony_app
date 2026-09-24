@@ -68,6 +68,21 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
+  testWidgets(
+    'clé de ligne stable, indépendante de la langue (pas dérivée du libellé traduit)',
+    (tester) async {
+      useEnglish();
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: PaymentMethodNames())),
+      );
+      expect(find.byKey(const Key('payment-row-card')), findsOneWidget);
+      expect(find.byKey(const Key('payment-row-google-pay')), findsOneWidget);
+      expect(find.byKey(const Key('payment-row-paypal')), findsOneWidget);
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
+
   testWidgets('en anglais : mode compact, semantics regroupée traduite', (
     tester,
   ) async {

@@ -17,6 +17,5 @@ class ConnectOnboardingPollingRequested extends ConnectOnboardingEvent {
 }
 
 class ConnectOnboardingLaunchFailed extends ConnectOnboardingEvent {
-  final String message;
-  const ConnectOnboardingLaunchFailed(this.message);
+  const ConnectOnboardingLaunchFailed();
 }

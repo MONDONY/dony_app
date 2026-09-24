@@ -111,15 +111,12 @@ class _ConnectOnboardingIntroScreenState
       }
     } else {
       if (context.mounted) {
-        // Le message n'est jamais affiché tel quel : code 'launch-failed'
-        // absent d'ErrorCatalog._byCode, résolu en générique réseau
-        // (ErrorCatalog._byType, NetworkException -> _networkGeneric). Il
-        // passe quand même par l10n pour rester traduit si ce comportement
-        // change un jour.
+        // Aucun message traduit ici : code 'launch-failed' absent
+        // d'ErrorCatalog._byCode, résolu en générique réseau
+        // (ErrorCatalog._byType, NetworkException -> _networkGeneric).
+        // Aligné sur payment-already-done (payment_bloc.dart).
         context.read<ConnectOnboardingBloc>().add(
-          ConnectOnboardingLaunchFailed(
-            context.l10n.connectOnboardingBrowserLaunchFailed,
-          ),
+          const ConnectOnboardingLaunchFailed(),
         );
       }
     }

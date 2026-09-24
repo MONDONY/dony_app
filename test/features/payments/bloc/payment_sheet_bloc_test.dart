@@ -356,6 +356,42 @@ void main() {
     );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'PaymentConfirmationException() sans message → reason declined, '
+      'providerMessage null (repli sur le libellé générique côté UI)',
+      build: () {
+        when(
+          () => repository.createEphemeralKey(),
+        ).thenAnswer((_) async => _ephemeralKey);
+        when(
+          () => gateway.initPaymentSheet(
+            clientSecret: any(named: 'clientSecret'),
+            customerId: any(named: 'customerId'),
+            customerEphemeralKeySecret: any(
+              named: 'customerEphemeralKeySecret',
+            ),
+          ),
+        ).thenAnswer((_) async {});
+        when(
+          () => gateway.presentPaymentSheet(),
+        ).thenThrow(const PaymentConfirmationException());
+        return buildBloc();
+      },
+      seed: () => ready,
+      act: (bloc) => bloc.add(const PaymentSheetCardPressed()),
+      expect: () => [
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
+        const PaymentSheetFailure(
+          reason: PaymentSheetFailureReason.declined,
+          ready: ready,
+        ),
+        ready,
+      ],
+    );
+
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
       'erreur inattendue (non mappée par le gateway) → reason generic, '
       'jamais le toString brut ni un providerMessage',
       build: () {

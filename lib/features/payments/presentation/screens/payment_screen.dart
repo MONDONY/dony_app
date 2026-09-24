@@ -272,8 +272,11 @@ class _SummaryCard extends StatelessWidget {
                     bid.pricingMode == BidPricingMode.mixed) ...[
                   DonyInfoRow(
                     label: l.paymentSummaryWeightLabel,
+                    // Correction R46 : formatOneDecimal suit la langue
+                    // (« 4,5 kg » en fr, « 4.5 kg » en en), au lieu d'un
+                    // point décimal figé.
                     value: bid.weightKg != null
-                        ? '${bid.weightKg!.toStringAsFixed(1)} kg'
+                        ? '${formatOneDecimal(l, bid.weightKg!)} kg'
                         : '-',
                   ),
                   const DonyInfoRow.divider(),

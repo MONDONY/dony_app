@@ -169,6 +169,7 @@ const _sameInBothLanguages = <String>{
   'walletTopupMethodMobileMoneySubtitle', // « Orange Money, Wave, MTN MoMo » : noms de marques (tâche E3)
   'walletTopupBelowMinimum', // « Minimum » se dit pareil (tâche E3)
   'connectOnboardingBenefitTimeTitle', // « 5 minutes » se dit pareil (tâche E4)
+  'walletActiveCurrencyBadge', // « active » se dit pareil (vague finale E, mineur 5)
 };
 
 void main() {

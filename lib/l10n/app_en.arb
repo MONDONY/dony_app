@@ -4167,10 +4167,14 @@
     }
   },
   "paymentContextDefault": "Your parcel shipment",
-  "commissionCardDebitNoticeMin": "This card will be charged the service fee ({percent}%, min. €1) for each cash parcel you accept.",
+  "commissionCardDebitNoticeMin": "This card will be charged the service fee ({percent}%, min. {min}) for each cash parcel you accept.",
   "@commissionCardDebitNoticeMin": {
+    "description": "Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart). {min} est déjà formaté dans sa devise (formatPriceIn) : le plancher de 1 € est un montant serveur en euros, fixe quelle que soit la langue.",
     "placeholders": {
       "percent": {
+        "type": "String"
+      },
+      "min": {
         "type": "String"
       }
     }
@@ -4276,7 +4280,7 @@
   "mobileMoneyPayoutNumberLabel": "Payout number",
   "mobileMoneyConfirmNumberLabel": "Confirm the number",
   "mobileMoneyNetworksSectionTitle": "Networks on this number",
-  "mobileMoneyNetworksUnavailable": "Choosing networks isn't available yet. Your operator will be detected automatically.",
+  "mobileMoneyNetworksUnavailable": "Choosing networks isn't available yet. Your mobile operator will be detected automatically.",
   "mobileMoneyNoNetworksAvailable": "No network is available for this number.",
   "mobileMoneyPayerChoosesNetwork": "The sender pays with one of the checked networks. You receive on that same network.",
   "mobileMoneyConfirmToSeeNetworks": "Confirm your number to see the available networks.",
@@ -4783,7 +4787,7 @@
   "@walletTopupMethodNextCta": {
     "description": "Bouton sticky de l'écran de choix de méthode (wallet_topup_method_screen.dart)."
   },
-  "walletTopupMethodCurrencyNotice": "The balance is credited in {code}, the operator's currency.",
+  "walletTopupMethodCurrencyNotice": "The balance is credited in {code}, the mobile operator's currency.",
   "@walletTopupMethodCurrencyNotice": {
     "description": "Note sous le champ numéro payeur mobile money, une fois le catalogue chargé (wallet_topup_method_screen.dart _MobileMoneySection).",
     "placeholders": {
@@ -4837,7 +4841,7 @@
       }
     }
   },
-  "walletRefundExplainUnknown": "The amount goes back to the payment method used for the top-up. Your {currency} balance is on hold while this is processed.",
+  "walletRefundExplainUnknown": "The amount goes back to the payment method used for the top-up. Your {currency} balance is frozen while this is processed.",
   "@walletRefundExplainUnknown": {
     "description": "Texte explicatif quand le rail du remboursement n'est pas encore connu (wallet_refund_confirm_sheet.dart _ConfirmContent).",
     "placeholders": {
@@ -4846,7 +4850,7 @@
       }
     }
   },
-  "walletRefundExplainMobileMoney": "The amount goes back to the number that paid for the top-up, usually within a few minutes. Your {currency} balance is on hold while this is processed.",
+  "walletRefundExplainMobileMoney": "The amount goes back to the number that paid for the top-up, usually within a few minutes. Your {currency} balance is frozen while this is processed.",
   "@walletRefundExplainMobileMoney": {
     "description": "Texte explicatif quand le rail du remboursement est mobile money (wallet_refund_confirm_sheet.dart _ConfirmContent).",
     "placeholders": {
@@ -4855,7 +4859,7 @@
       }
     }
   },
-  "walletRefundExplainCard": "The amount goes back to the card used for the top-up, within 5 to 10 days depending on your bank. Your balance is on hold while this is processed.",
+  "walletRefundExplainCard": "The amount goes back to the card used for the top-up, within 5 to 10 days depending on your bank. Your balance is frozen while this is processed.",
   "@walletRefundExplainCard": {
     "description": "Texte explicatif quand le rail du remboursement est la carte (wallet_refund_confirm_sheet.dart _ConfirmContent)."
   },
@@ -4987,7 +4991,7 @@
   "@walletDatePattern": {
     "description": "Motif intl DateFormat, pas un texte. Date d'une demande de remboursement (wallet_refund_requests_screen.dart _RefundRequestTile)."
   },
-  "walletRefundFallbackNotice": "The refund is sent to {destination}. If the operator refuses it, the money is sent back via a payout to the same number.",
+  "walletRefundFallbackNotice": "The refund is sent to {destination}. If the mobile operator refuses it, the money is sent back via a payout to the same number.",
   "@walletRefundFallbackNotice": {
     "description": "Notice affichée sur une demande mobile money non terminale avec destination connue (wallet_refund_requests_screen.dart _RefundRequestTile).",
     "placeholders": {
@@ -5120,7 +5124,7 @@
   "@stripeAccountDisabledHeading": {
     "description": "Titre du corps de account_disabled_screen.dart."
   },
-  "stripeAccountDisabledBody": "Your payment account is missing some information, so it can't receive money yet. Publishing a trip stays blocked until you complete it.",
+  "stripeAccountDisabledBody": "Your payment account is missing some information, so it can't receive money yet. Posting a trip stays blocked until you complete it.",
   "@stripeAccountDisabledBody": {
     "description": "Paragraphe d'explication de account_disabled_screen.dart."
   },
@@ -5205,15 +5209,11 @@
   "@connectOnboardingTitle": {
     "description": "Titre de connect_onboarding_intro_screen.dart, répété dans l'app bar et passé comme titre à ConnectUnavailableView/IdentityRequiredView."
   },
-  "connectOnboardingBrowserLaunchFailed": "Unable to open the browser. Check your connection.",
-  "@connectOnboardingBrowserLaunchFailed": {
-    "description": "Clé conservée pour cohérence documentaire : le message d'origine n'est jamais affiché (code 'launch-failed' absent d'ErrorCatalog, résolu en générique réseau) et reste marqué i18n-ignore dans connect_onboarding_intro_screen.dart._openExternalBrowser."
-  },
   "connectOnboardingHeroTitle": "Complete your\nStripe account",
   "@connectOnboardingHeroTitle": {
     "description": "Titre sur deux lignes de connect_onboarding_intro_screen.dart _IntroView ; le saut de ligne fait partie de la valeur."
   },
-  "connectOnboardingHeroSubtitle": "To publish your trip and receive payments, complete your Stripe account. It takes about 5 minutes.",
+  "connectOnboardingHeroSubtitle": "To post your trip and receive payments, complete your Stripe account. It takes about 5 minutes.",
   "@connectOnboardingHeroSubtitle": {
     "description": "Sous-titre de connect_onboarding_intro_screen.dart _IntroView."
   },
@@ -5272,5 +5272,9 @@
   "connectPendingSubtitle": "Come back here after completing the Stripe form in your browser.",
   "@connectPendingSubtitle": {
     "description": "Sous-titre de connect_pending_bottom_sheet.dart."
+  },
+  "walletActiveCurrencyBadge": "active",
+  "@walletActiveCurrencyBadge": {
+    "description": "Badge de la devise active de l'utilisateur, dans la liste des soldes (wallet_screen.dart _CurrencyBalanceRow). Relevé en E3, corrigé en vague finale E."
   }
 }

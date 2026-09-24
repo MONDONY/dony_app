@@ -14319,11 +14319,11 @@ abstract class AppLocalizations {
   /// **'Envoi de votre colis'**
   String get paymentContextDefault;
 
-  /// Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart) : le plancher de 1 € est un montant serveur en euros, fixe quelle que soit la langue.
+  /// Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart). {min} est déjà formaté dans sa devise (formatPriceIn) : le plancher de 1 € est un montant serveur en euros, fixe quelle que soit la langue.
   ///
   /// In fr, this message translates to:
-  /// **'Cette carte sera débitée de la commission ({percent} %, min. 1 €) à chaque colis en espèces accepté.'**
-  String commissionCardDebitNoticeMin(String percent);
+  /// **'Cette carte sera débitée de la commission ({percent} %, min. {min}) à chaque colis en espèces accepté.'**
+  String commissionCardDebitNoticeMin(String percent, String min);
 
   /// Notice de débit de la carte commission, cas devise active différente de l'EUR (commission_method_screen.dart), sans le plancher en euros.
   ///
@@ -15788,12 +15788,6 @@ abstract class AppLocalizations {
   /// **'Compte Stripe Connect'**
   String get connectOnboardingTitle;
 
-  /// Clé conservée pour cohérence documentaire : le message d'origine n'est jamais affiché (code 'launch-failed' absent d'ErrorCatalog, résolu en générique réseau) et reste marqué i18n-ignore dans connect_onboarding_intro_screen.dart._openExternalBrowser.
-  ///
-  /// In fr, this message translates to:
-  /// **'Impossible d\'ouvrir le navigateur. Vérifie ta connexion.'**
-  String get connectOnboardingBrowserLaunchFailed;
-
   /// Titre sur deux lignes de connect_onboarding_intro_screen.dart _IntroView ; le saut de ligne fait partie de la valeur.
   ///
   /// In fr, this message translates to:
@@ -15889,6 +15883,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Revenez ici après avoir complété le formulaire Stripe dans votre navigateur.'**
   String get connectPendingSubtitle;
+
+  /// Badge de la devise active de l'utilisateur, dans la liste des soldes (wallet_screen.dart _CurrencyBalanceRow). Relevé en E3, corrigé en vague finale E.
+  ///
+  /// In fr, this message translates to:
+  /// **'active'**
+  String get walletActiveCurrencyBadge;
 }
 
 class _AppLocalizationsDelegate

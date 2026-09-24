@@ -271,6 +271,42 @@ void main() {
       },
     );
 
+    testWidgets(
+      'poids décimal : virgule en français (correction R46, formatOneDecimal)',
+      (tester) async {
+        final decimalWeightBid = BidModel(
+          id: 'bid-decimal-1',
+          announcementId: 'ann-1',
+          senderId: 'sender-1',
+          weightKg: 4.5,
+          pricePerKg: 6.0,
+          description: 'Vêtements',
+          status: 'ACCEPTED',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2025, 6),
+          createdAt: DateTime(2025, 5),
+          updatedAt: DateTime(2025, 5),
+        );
+
+        await tester.pumpWidget(
+          _wrap(
+            PaymentScreen(
+              bid: decimalWeightBid,
+              localAuthService: mockLocalAuth,
+              userPrefs: _mockUserPrefs(biometricEnabled: true),
+            ),
+            mockBloc,
+            configBloc: mockConfigBloc,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('4,5 kg'), findsOneWidget);
+        expect(find.textContaining('4.5 kg'), findsNothing);
+      },
+    );
+
     testWidgets('tarif/kg affiché dans la devise du bid, pas toujours en EUR', (
       tester,
     ) async {
@@ -557,6 +593,43 @@ void main() {
       expect(find.text('Price/kg'), findsOneWidget);
       expect(find.text('You pay'), findsOneWidget);
     });
+
+    testWidgets(
+      'poids décimal : point en anglais (correction R46, formatOneDecimal)',
+      (tester) async {
+        useEnglish();
+        final decimalWeightBid = BidModel(
+          id: 'bid-decimal-en-1',
+          announcementId: 'ann-1',
+          senderId: 'sender-1',
+          weightKg: 4.5,
+          pricePerKg: 6.0,
+          description: 'Clothes',
+          status: 'ACCEPTED',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2025, 6),
+          createdAt: DateTime(2025, 5),
+          updatedAt: DateTime(2025, 5),
+        );
+
+        await tester.pumpWidget(
+          _wrap(
+            PaymentScreen(
+              bid: decimalWeightBid,
+              localAuthService: mockLocalAuth,
+              userPrefs: _mockUserPrefs(biometricEnabled: true),
+            ),
+            mockBloc,
+            configBloc: mockConfigBloc,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('4.5 kg'), findsOneWidget);
+        expect(find.textContaining('4,5 kg'), findsNothing);
+      },
+    );
 
     testWidgets('vue de confirmation escrow traduite', (tester) async {
       useEnglish();

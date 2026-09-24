@@ -8557,8 +8557,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentContextDefault => 'Your parcel shipment';
 
   @override
-  String commissionCardDebitNoticeMin(String percent) {
-    return 'This card will be charged the service fee ($percent%, min. €1) for each cash parcel you accept.';
+  String commissionCardDebitNoticeMin(String percent, String min) {
+    return 'This card will be charged the service fee ($percent%, min. $min) for each cash parcel you accept.';
   }
 
   @override
@@ -8718,7 +8718,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mobileMoneyNetworksUnavailable =>
-      'Choosing networks isn\'t available yet. Your operator will be detected automatically.';
+      'Choosing networks isn\'t available yet. Your mobile operator will be detected automatically.';
 
   @override
   String get mobileMoneyNoNetworksAvailable =>
@@ -9152,7 +9152,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String walletTopupMethodCurrencyNotice(String code) {
-    return 'The balance is credited in $code, the operator\'s currency.';
+    return 'The balance is credited in $code, the mobile operator\'s currency.';
   }
 
   @override
@@ -9184,17 +9184,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String walletRefundExplainUnknown(String currency) {
-    return 'The amount goes back to the payment method used for the top-up. Your $currency balance is on hold while this is processed.';
+    return 'The amount goes back to the payment method used for the top-up. Your $currency balance is frozen while this is processed.';
   }
 
   @override
   String walletRefundExplainMobileMoney(String currency) {
-    return 'The amount goes back to the number that paid for the top-up, usually within a few minutes. Your $currency balance is on hold while this is processed.';
+    return 'The amount goes back to the number that paid for the top-up, usually within a few minutes. Your $currency balance is frozen while this is processed.';
   }
 
   @override
   String get walletRefundExplainCard =>
-      'The amount goes back to the card used for the top-up, within 5 to 10 days depending on your bank. Your balance is on hold while this is processed.';
+      'The amount goes back to the card used for the top-up, within 5 to 10 days depending on your bank. Your balance is frozen while this is processed.';
 
   @override
   String get walletRefundFeeLabel => 'Refund fee';
@@ -9287,7 +9287,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String walletRefundFallbackNotice(String destination) {
-    return 'The refund is sent to $destination. If the operator refuses it, the money is sent back via a payout to the same number.';
+    return 'The refund is sent to $destination. If the mobile operator refuses it, the money is sent back via a payout to the same number.';
   }
 
   @override
@@ -9389,7 +9389,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stripeAccountDisabledBody =>
-      'Your payment account is missing some information, so it can\'t receive money yet. Publishing a trip stays blocked until you complete it.';
+      'Your payment account is missing some information, so it can\'t receive money yet. Posting a trip stays blocked until you complete it.';
 
   @override
   String get stripeAccountDisabledRequirementsHeading =>
@@ -9462,15 +9462,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectOnboardingTitle => 'Stripe Connect account';
 
   @override
-  String get connectOnboardingBrowserLaunchFailed =>
-      'Unable to open the browser. Check your connection.';
-
-  @override
   String get connectOnboardingHeroTitle => 'Complete your\nStripe account';
 
   @override
   String get connectOnboardingHeroSubtitle =>
-      'To publish your trip and receive payments, complete your Stripe account. It takes about 5 minutes.';
+      'To post your trip and receive payments, complete your Stripe account. It takes about 5 minutes.';
 
   @override
   String get connectOnboardingSecurityNotice =>
@@ -9519,4 +9515,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get connectPendingSubtitle =>
       'Come back here after completing the Stripe form in your browser.';
+
+  @override
+  String get walletActiveCurrencyBadge => 'active';
 }

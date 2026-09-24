@@ -964,7 +964,7 @@ class _CurrencyBalanceRow extends StatelessWidget {
           borderRadius: BorderRadius.circular(DonyRadius.sm),
         ),
         child: Text(
-          'active',
+          context.l10n.walletActiveCurrencyBadge,
           style: tt.labelSmall?.copyWith(color: cs.onPrimaryContainer),
         ),
       );

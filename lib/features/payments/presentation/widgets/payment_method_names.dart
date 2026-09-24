@@ -52,19 +52,31 @@ class PaymentMethodNames extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _row(context, const ['visa', 'mastercard'], l.paymentMethodCard),
-        _row(context, [walletLogo], walletName),
+        _row(
+          context,
+          const ['visa', 'mastercard'],
+          l.paymentMethodCard,
+          id: 'card',
+        ),
+        _row(context, [walletLogo], walletName, id: walletLogo),
         // i18n-ignore : nom de marque
-        _row(context, const ['paypal'], 'PayPal'),
+        _row(context, const ['paypal'], 'PayPal', id: 'paypal'),
       ],
     );
   }
 
-  Widget _row(BuildContext context, List<String> logos, String name) {
+  Widget _row(
+    BuildContext context,
+    List<String> logos,
+    String name, {
+    required String id,
+  }) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      key: Key('payment-row-${name.toLowerCase().replaceAll(' ', '-')}'),
+      // Clé stable : ne dérive plus du libellé traduit (anti-motif littéral
+      // dans une Key), sinon elle changerait de valeur avec la langue.
+      key: Key('payment-row-$id'),
       padding: const EdgeInsets.only(top: DonySpacing.sm),
       child: Row(
         children: [

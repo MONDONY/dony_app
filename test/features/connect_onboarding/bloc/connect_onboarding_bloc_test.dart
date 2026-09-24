@@ -320,18 +320,14 @@ void main() {
 
   group('ConnectOnboardingLaunchFailed', () {
     blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
-      'emits [Error] with provided message',
+      'emits [Error] avec le code launch-failed, sans message traduit',
       build: buildBloc,
-      act: (b) => b.add(
-        const ConnectOnboardingLaunchFailed(
-          "Impossible d'ouvrir le navigateur.",
-        ),
-      ),
+      act: (b) => b.add(const ConnectOnboardingLaunchFailed()),
       expect: () => [
         isA<ConnectOnboardingError>().having(
-          (s) => s.error.message,
-          'message',
-          "Impossible d'ouvrir le navigateur.",
+          (s) => s.error.code,
+          'code',
+          'launch-failed',
         ),
       ],
     );
