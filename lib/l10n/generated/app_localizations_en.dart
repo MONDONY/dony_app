@@ -6790,7 +6790,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailContestSentSnackbar =>
-      'Objection sent. Our team will review your request.';
+      'Contest sent. Our team will review your request.';
 
   @override
   String get bidDetailNoShowConfirmedSnackbar =>
@@ -7159,4 +7159,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailParcelRecipientTitle => 'Parcel & recipient';
+
+  @override
+  String get bidDetailCancelRequestLabel => 'Cancel the request';
+
+  @override
+  String get bidDetailParcelLabel => 'Parcel';
+
+  @override
+  String get bidDetailRecipientLabel => 'Recipient';
+
+  @override
+  String get bidDetailPhoneLabel => 'Phone';
+
+  @override
+  String get bidDetailDescriptionLabel => 'Description';
+
+  @override
+  String get bidDetailSenderCallSemanticLabel => 'Call';
+
+  @override
+  String get bidDetailSenderOpenChatSemanticLabel => 'Open the conversation';
+
+  @override
+  String get bidDetailCopyTrackingLinkButton => 'Copy the link';
+
+  @override
+  String get bidDetailTrackingLinkCopiedMessage => 'Link copied';
+
+  @override
+  String get bidDetailAcceptRequestButton => 'Accept';
+
+  @override
+  String get bidDetailDeclineRequestButton => 'Decline';
 }

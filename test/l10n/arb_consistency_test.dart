@@ -155,6 +155,7 @@ const _sameInBothLanguages = <String>{
   'bidDetailOptionsTitle', // « Options » se dit pareil (tâche D2)
   'bidDetailMobileMoneyBadge', // « MOBILE MONEY » se dit pareil (tâche D2)
   'bidDetailCashBadge', // « CASH » se dit pareil (tâche D2)
+  'bidDetailDescriptionLabel', // « Description » se dit pareil (tâche D2, correction R40)
 };
 
 void main() {

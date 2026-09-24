@@ -906,5 +906,35 @@ void main() {
         expect(find.text('Report this trip'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'DeliveryNoShowContested → snackbar "Contest sent" (glossaire D1 : contest)',
+      (tester) async {
+        useEnglish();
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
+
+        whenListen(
+          cancellationBloc,
+          Stream<CancellationState>.fromIterable([DeliveryNoShowContested()]),
+          initialState: CancellationInitial(),
+        );
+
+        await _pump(tester, bid: _makeBid(), authBloc: authBloc);
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining(
+            'Contest sent. Our team will review your request.',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

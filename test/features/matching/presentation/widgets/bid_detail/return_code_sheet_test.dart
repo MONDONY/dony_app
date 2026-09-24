@@ -9,6 +9,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/return_code_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
@@ -236,6 +237,63 @@ void main() {
     // L'erreur n'a pas refermé le sheet (contrairement à ReturnConfirmed).
     expect(find.text('Confirmer la restitution'), findsOneWidget);
   });
+
+  testWidgets(
+    'non-régression — date limite (dd/MM → DateFormat.Md) : fr identique à '
+    'l\'ancien motif, avec zéros de tête (5 mars)',
+    (tester) async {
+      await tester.pumpWidget(
+        _host(
+          (ctx) => ReturnCodeSheet.show(
+            ctx,
+            bid: _bid(
+              returnCode: '654321',
+              returnDeadline: DateTime(2026, 3, 5),
+            ),
+            cancellationBloc: bloc,
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // Ancien motif : DateFormat('dd/MM').format(d) == '05/03'.
+      // Locale explicite ('fr') dans l'assertion : un DateFormat sans locale
+      // pollue Intl.defaultLocale en test et casse les tests suivants.
+      expect(
+        find.textContaining(
+          DateFormat('dd/MM', 'fr').format(DateTime(2026, 3, 5)),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'anglais — date limite (DateFormat.Md) rendue à l\'anglo-saxonne',
+    (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _host(
+          (ctx) => ReturnCodeSheet.show(
+            ctx,
+            bid: _bid(
+              returnCode: '654321',
+              returnDeadline: DateTime(2026, 3, 5),
+            ),
+            cancellationBloc: bloc,
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining(DateFormat.Md('en').format(DateTime(2026, 3, 5))),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('anglais — ReturnCodeSheet titre et bouton copier traduits', (
     tester,

@@ -162,7 +162,7 @@ class ExpediteurContactCard extends StatelessWidget {
                       final isRevealing = state is ContactRevealLoading;
                       return _IconActionButton(
                         iconAsset: 'phone',
-                        semanticLabel: l.voyageurCardCallSemanticLabel,
+                        semanticLabel: l.bidDetailSenderCallSemanticLabel,
                         isLoading: isRevealing,
                         onTap: isRevealing ? null : () => _requestCall(context),
                       );
@@ -176,7 +176,7 @@ class ExpediteurContactCard extends StatelessWidget {
                     final isOpening = openState is ConversationOpenLoading;
                     return _IconActionButton(
                       iconAsset: 'message-circle',
-                      semanticLabel: l.voyageurCardOpenChatSemanticLabel,
+                      semanticLabel: l.bidDetailSenderOpenChatSemanticLabel,
                       isLoading: isOpening,
                       onTap: isOpening
                           ? null

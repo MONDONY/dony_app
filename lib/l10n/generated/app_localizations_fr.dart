@@ -7200,4 +7200,37 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailParcelRecipientTitle => 'Colis & destinataire';
+
+  @override
+  String get bidDetailCancelRequestLabel => 'Annuler la demande';
+
+  @override
+  String get bidDetailParcelLabel => 'Colis';
+
+  @override
+  String get bidDetailRecipientLabel => 'Destinataire';
+
+  @override
+  String get bidDetailPhoneLabel => 'Téléphone';
+
+  @override
+  String get bidDetailDescriptionLabel => 'Description';
+
+  @override
+  String get bidDetailSenderCallSemanticLabel => 'Appeler';
+
+  @override
+  String get bidDetailSenderOpenChatSemanticLabel => 'Ouvrir la discussion';
+
+  @override
+  String get bidDetailCopyTrackingLinkButton => 'Copier le lien';
+
+  @override
+  String get bidDetailTrackingLinkCopiedMessage => 'Lien copié';
+
+  @override
+  String get bidDetailAcceptRequestButton => 'Accepter';
+
+  @override
+  String get bidDetailDeclineRequestButton => 'Refuser';
 }

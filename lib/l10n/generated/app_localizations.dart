@@ -11990,6 +11990,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Colis & destinataire'**
   String get bidDetailParcelRecipientTitle;
+
+  /// Clé dédiée (Ruling R40, correction relecture D2) — remplace la réutilisation de requestDetailMenuCancelLabel (feature package_request) dans bid_detail_action_bars.dart et sender_sticky_bar.dart
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la demande'**
+  String get bidDetailCancelRequestLabel;
+
+  /// Clé dédiée (Ruling R40) — remplace requestCreateRecapPackage dans colis_destinataire_card.dart
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get bidDetailParcelLabel;
+
+  /// Clé dédiée (Ruling R40) — remplace requestCreateRecipientSection dans colis_destinataire_card.dart
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire'**
+  String get bidDetailRecipientLabel;
+
+  /// Clé dédiée (Ruling R40) — remplace requestCreateRecipientPhoneLabel dans colis_destinataire_card.dart
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone'**
+  String get bidDetailPhoneLabel;
+
+  /// Clé dédiée (Ruling R40) — remplace requestDescriptionLabel dans colis_destinataire_card.dart - identique en anglais
+  ///
+  /// In fr, this message translates to:
+  /// **'Description'**
+  String get bidDetailDescriptionLabel;
+
+  /// Clé dédiée (Ruling R40) — remplace voyageurCardCallSemanticLabel réutilisée sur la carte expéditeur (expediteur_contact_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler'**
+  String get bidDetailSenderCallSemanticLabel;
+
+  /// Clé dédiée (Ruling R40) — remplace voyageurCardOpenChatSemanticLabel réutilisée sur la carte expéditeur (expediteur_contact_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir la discussion'**
+  String get bidDetailSenderOpenChatSemanticLabel;
+
+  /// Clé dédiée (Ruling R40) — remplace tripPosterCopyLinkButton dans details_accordion.dart (lien de suivi)
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le lien'**
+  String get bidDetailCopyTrackingLinkButton;
+
+  /// Clé dédiée (Ruling R40) — remplace tripPosterLinkCopiedMessage dans details_accordion.dart (lien de suivi)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lien copié'**
+  String get bidDetailTrackingLinkCopiedMessage;
+
+  /// Clé dédiée (Ruling R40) — remplace negotiationThreadAcceptButton dans TravelerPendingBar (bid_detail_action_bars.dart), accepter une demande de transport
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter'**
+  String get bidDetailAcceptRequestButton;
+
+  /// Clé dédiée (Ruling R40) — remplace negotiationThreadRejectButton dans TravelerPendingBar (bid_detail_action_bars.dart), refuser une demande de transport
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser'**
+  String get bidDetailDeclineRequestButton;
 }
 
 class _AppLocalizationsDelegate

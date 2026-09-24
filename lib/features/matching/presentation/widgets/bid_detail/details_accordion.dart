@@ -271,13 +271,13 @@ class _TrackingUrlRow extends StatelessWidget {
         ),
         IconButton(
           icon: DonyIcon('copy', size: 16, color: cs.primary),
-          tooltip: context.l10n.tripPosterCopyLinkButton,
+          tooltip: context.l10n.bidDetailCopyTrackingLinkButton,
           color: cs.primary,
           onPressed: () {
             unawaited(Clipboard.setData(ClipboardData(text: url)));
             DonySnackbar.show(
               context,
-              message: context.l10n.tripPosterLinkCopiedMessage,
+              message: context.l10n.bidDetailTrackingLinkCopiedMessage,
               type: DonySnackbarType.success,
             );
           },

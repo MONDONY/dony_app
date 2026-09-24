@@ -3577,7 +3577,7 @@
   "bidDetailAcceptedSetHandoverWindow": "Request accepted! Now set the drop-off window.",
   "bidDetailNoShowReportedSnackbar": "Absence reported. The sender has 48 hours to contest.",
   "bidDetailDeliveryNoShowReportedSnackbar": "Absence reported. The other party has 24 hours to contest.",
-  "bidDetailContestSentSnackbar": "Objection sent. Our team will review your request.",
+  "bidDetailContestSentSnackbar": "Contest sent. Our team will review your request.",
   "bidDetailNoShowConfirmedSnackbar": "Absence confirmed. The shipment has been canceled, you will not be charged.",
   "bidDetailCancelledAfterHandoverSnackbar": "Trip canceled. Return the parcel within 3 days using the return code.",
   "bidDetailReturnConfirmedSnackbar": "Return confirmed. The parcel has been returned.",
@@ -3763,5 +3763,16 @@
   },
   "bidSenderRoleTag": "SENDER",
   "bidDetailRatingSentBadge": "Rating sent",
-  "bidDetailParcelRecipientTitle": "Parcel & recipient"
+  "bidDetailParcelRecipientTitle": "Parcel & recipient",
+  "bidDetailCancelRequestLabel": "Cancel the request",
+  "bidDetailParcelLabel": "Parcel",
+  "bidDetailRecipientLabel": "Recipient",
+  "bidDetailPhoneLabel": "Phone",
+  "bidDetailDescriptionLabel": "Description",
+  "bidDetailSenderCallSemanticLabel": "Call",
+  "bidDetailSenderOpenChatSemanticLabel": "Open the conversation",
+  "bidDetailCopyTrackingLinkButton": "Copy the link",
+  "bidDetailTrackingLinkCopiedMessage": "Link copied",
+  "bidDetailAcceptRequestButton": "Accept",
+  "bidDetailDeclineRequestButton": "Decline"
 }

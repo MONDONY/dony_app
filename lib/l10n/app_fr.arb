@@ -7330,5 +7330,49 @@
   "bidDetailParcelRecipientTitle": "Colis & destinataire",
   "@bidDetailParcelRecipientTitle": {
     "description": "Titre de la carte fusionnée colis + destinataire (colis_destinataire_card.dart)"
+  },
+  "bidDetailCancelRequestLabel": "Annuler la demande",
+  "@bidDetailCancelRequestLabel": {
+    "description": "Clé dédiée (Ruling R40, correction relecture D2) — remplace la réutilisation de requestDetailMenuCancelLabel (feature package_request) dans bid_detail_action_bars.dart et sender_sticky_bar.dart"
+  },
+  "bidDetailParcelLabel": "Colis",
+  "@bidDetailParcelLabel": {
+    "description": "Clé dédiée (Ruling R40) — remplace requestCreateRecapPackage dans colis_destinataire_card.dart"
+  },
+  "bidDetailRecipientLabel": "Destinataire",
+  "@bidDetailRecipientLabel": {
+    "description": "Clé dédiée (Ruling R40) — remplace requestCreateRecipientSection dans colis_destinataire_card.dart"
+  },
+  "bidDetailPhoneLabel": "Téléphone",
+  "@bidDetailPhoneLabel": {
+    "description": "Clé dédiée (Ruling R40) — remplace requestCreateRecipientPhoneLabel dans colis_destinataire_card.dart"
+  },
+  "bidDetailDescriptionLabel": "Description",
+  "@bidDetailDescriptionLabel": {
+    "description": "Clé dédiée (Ruling R40) — remplace requestDescriptionLabel dans colis_destinataire_card.dart - identique en anglais"
+  },
+  "bidDetailSenderCallSemanticLabel": "Appeler",
+  "@bidDetailSenderCallSemanticLabel": {
+    "description": "Clé dédiée (Ruling R40) — remplace voyageurCardCallSemanticLabel réutilisée sur la carte expéditeur (expediteur_contact_card.dart)"
+  },
+  "bidDetailSenderOpenChatSemanticLabel": "Ouvrir la discussion",
+  "@bidDetailSenderOpenChatSemanticLabel": {
+    "description": "Clé dédiée (Ruling R40) — remplace voyageurCardOpenChatSemanticLabel réutilisée sur la carte expéditeur (expediteur_contact_card.dart)"
+  },
+  "bidDetailCopyTrackingLinkButton": "Copier le lien",
+  "@bidDetailCopyTrackingLinkButton": {
+    "description": "Clé dédiée (Ruling R40) — remplace tripPosterCopyLinkButton dans details_accordion.dart (lien de suivi)"
+  },
+  "bidDetailTrackingLinkCopiedMessage": "Lien copié",
+  "@bidDetailTrackingLinkCopiedMessage": {
+    "description": "Clé dédiée (Ruling R40) — remplace tripPosterLinkCopiedMessage dans details_accordion.dart (lien de suivi)"
+  },
+  "bidDetailAcceptRequestButton": "Accepter",
+  "@bidDetailAcceptRequestButton": {
+    "description": "Clé dédiée (Ruling R40) — remplace negotiationThreadAcceptButton dans TravelerPendingBar (bid_detail_action_bars.dart), accepter une demande de transport"
+  },
+  "bidDetailDeclineRequestButton": "Refuser",
+  "@bidDetailDeclineRequestButton": {
+    "description": "Clé dédiée (Ruling R40) — remplace negotiationThreadRejectButton dans TravelerPendingBar (bid_detail_action_bars.dart), refuser une demande de transport"
   }
 }

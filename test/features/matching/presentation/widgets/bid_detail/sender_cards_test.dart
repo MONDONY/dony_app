@@ -578,6 +578,53 @@ void main() {
     });
 
     testWidgets(
+      'non-régression — Date limite (dd/MM/yyyy → DateFormat.yMd) : fr identique '
+      'à l\'ancien motif, avec zéros de tête (5 mars)',
+      (tester) async {
+        final bid = _bid(
+          handoverLocation: 'CDG',
+          handoverDeadline: DateTime(2026, 3, 5, 16),
+        );
+
+        await tester.pumpWidget(_hostAccordion(bid));
+        await tester.tap(find.textContaining('Plus de détails'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Ancien motif : DateFormat('dd/MM/yyyy').format(d) == '05/03/2026'.
+        // Locale explicite ('fr') dans l'assertion : un DateFormat sans locale
+        // pollue Intl.defaultLocale en test et casse les tests suivants.
+        expect(
+          find.text(
+            DateFormat('dd/MM/yyyy', 'fr').format(DateTime(2026, 3, 5, 16)),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'anglais — Date limite (DateFormat.yMd) rendue à l\'anglo-saxonne',
+      (tester) async {
+        useEnglish();
+        final bid = _bid(
+          handoverLocation: 'CDG',
+          handoverDeadline: DateTime(2026, 3, 5, 16),
+        );
+
+        await tester.pumpWidget(_hostAccordion(bid));
+        await tester.tap(find.textContaining('More details'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(
+          find.text(DateFormat.yMd('en').format(DateTime(2026, 3, 5, 16))),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
       'anglais — sections et date de départ (DateFormat.yMMMEd) traduites',
       (tester) async {
         useEnglish();

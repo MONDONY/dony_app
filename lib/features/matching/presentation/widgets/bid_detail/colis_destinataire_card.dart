@@ -39,19 +39,22 @@ class ColisDestinataireCard extends StatelessWidget {
             _PhotoGallery(photos: bid.photos),
             const SizedBox(height: DonySpacing.md),
           ],
-          InfoRow(label: l.requestCreateRecapPackage, value: _colisLabel),
+          InfoRow(label: l.bidDetailParcelLabel, value: _colisLabel),
           if (bid.description != null && bid.description!.isNotEmpty) ...[
             const SizedBox(height: DonySpacing.sm),
-            InfoRow(label: l.requestDescriptionLabel, value: bid.description!),
+            InfoRow(
+              label: l.bidDetailDescriptionLabel,
+              value: bid.description!,
+            ),
           ],
           const SizedBox(height: DonySpacing.sm),
           InfoRow(
-            label: l.requestCreateRecipientSection,
+            label: l.bidDetailRecipientLabel,
             value: bid.recipientName ?? '-',
           ),
           const SizedBox(height: DonySpacing.sm),
           InfoRow(
-            label: l.requestCreateRecipientPhoneLabel,
+            label: l.bidDetailPhoneLabel,
             value: bid.recipientPhone ?? '-',
           ),
         ],

@@ -333,7 +333,7 @@ class SenderStickyBar extends StatelessWidget {
   Widget _cancelRequestButton(BuildContext context) {
     final l = context.l10n;
     return DonyButton(
-      label: l.requestDetailMenuCancelLabel,
+      label: l.bidDetailCancelRequestLabel,
       variant: DonyButtonVariant.ghost,
       onPressed: isLoading
           ? null

@@ -63,7 +63,7 @@ class TravelerPendingBar extends StatelessWidget {
               icon: DonyIcon('x', size: 20, color: cs.error),
               label: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text(l.negotiationThreadRejectButton, maxLines: 1),
+                child: Text(l.bidDetailDeclineRequestButton, maxLines: 1),
               ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: cs.error,
@@ -93,7 +93,7 @@ class TravelerPendingBar extends StatelessWidget {
                   : const DonyIcon('check', color: DonyColors.white),
               label: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text(l.negotiationThreadAcceptButton, maxLines: 1),
+                child: Text(l.bidDetailAcceptRequestButton, maxLines: 1),
               ),
               style: FilledButton.styleFrom(
                 backgroundColor: cs.success,
@@ -661,7 +661,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               iconAsset: 'ban',
               iconColor: cs.error,
               iconBg: cs.errorLight,
-              label: l.requestDetailMenuCancelLabel,
+              label: l.bidDetailCancelRequestLabel,
               subtitle: l.bidDetailCancelRefundAutoSubtitle,
               onTap: () {
                 context.pop();
@@ -677,7 +677,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               iconAsset: 'ban',
               iconColor: cs.error,
               iconBg: cs.errorLight,
-              label: l.requestDetailMenuCancelLabel,
+              label: l.bidDetailCancelRequestLabel,
               subtitle: l.bidDetailCancelAfterHandoverOptionSubtitle,
               onTap: () {
                 context.pop();
@@ -728,7 +728,7 @@ class _SenderOptionsSheet extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DonyRadius.sheet),
         ),
-        title: Text(l.requestDetailMenuCancelLabel, style: tt.headlineMedium),
+        title: Text(l.bidDetailCancelRequestLabel, style: tt.headlineMedium),
         content: Text(
           l.bidDetailCancelConfirmBody,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
