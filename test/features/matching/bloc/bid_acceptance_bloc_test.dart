@@ -167,10 +167,7 @@ void main() {
     'network error on card path emits BidFailed with no server message',
     build: () {
       when(
-        () => repo.acceptBidWithCommission(
-          'bid_x',
-          commissionSource: 'CARD',
-        ),
+        () => repo.acceptBidWithCommission('bid_x', commissionSource: 'CARD'),
       ).thenThrow(Exception('timeout'));
       return BidAcceptanceBloc(repo, stripe);
     },
