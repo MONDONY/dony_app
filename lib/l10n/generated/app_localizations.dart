@@ -2917,6 +2917,1020 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Continuer'**
   String get commonContinue;
+
+  /// No description provided for @commonApply.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appliquer'**
+  String get commonApply;
+
+  /// No description provided for @commonClear.
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer'**
+  String get commonClear;
+
+  /// No description provided for @commonRetry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer'**
+  String get commonRetry;
+
+  /// No description provided for @commonConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer'**
+  String get commonConfirm;
+
+  /// No description provided for @commonClearFilters.
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer les filtres'**
+  String get commonClearFilters;
+
+  /// No description provided for @parcelSizeSmall.
+  ///
+  /// In fr, this message translates to:
+  /// **'Petit'**
+  String get parcelSizeSmall;
+
+  /// No description provided for @parcelSizeMedium.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moyen'**
+  String get parcelSizeMedium;
+
+  /// No description provided for @parcelSizeLarge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Grand'**
+  String get parcelSizeLarge;
+
+  /// No description provided for @cityClearCity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer la ville'**
+  String get cityClearCity;
+
+  /// No description provided for @cityChooseCity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une ville'**
+  String get cityChooseCity;
+
+  /// No description provided for @cityRecentSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'RÉCENTS'**
+  String get cityRecentSection;
+
+  /// No description provided for @cityDepartureLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get cityDepartureLabel;
+
+  /// No description provided for @cityArrivalLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get cityArrivalLabel;
+
+  /// No description provided for @citySwapLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Interchanger départ et arrivée'**
+  String get citySwapLabel;
+
+  /// No description provided for @shellTabActivity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activités'**
+  String get shellTabActivity;
+
+  /// No description provided for @shellTabSearch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher'**
+  String get shellTabSearch;
+
+  /// No description provided for @shellTabMessages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Messages'**
+  String get shellTabMessages;
+
+  /// No description provided for @shellTabProfile.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moi'**
+  String get shellTabProfile;
+
+  /// No description provided for @shellOrbTracking.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi'**
+  String get shellOrbTracking;
+
+  /// No description provided for @shellOrbQrScanner.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecteur QR'**
+  String get shellOrbQrScanner;
+
+  /// No description provided for @shellPlaceholderConfirmPayment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer paiement'**
+  String get shellPlaceholderConfirmPayment;
+
+  /// No description provided for @shellPlaceholderAdmin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Admin'**
+  String get shellPlaceholderAdmin;
+
+  /// Titre par défaut de l'écran des demandes reçues sur une annonce
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes'**
+  String get shellRequestsTitle;
+
+  /// No description provided for @shellPrivacyPolicyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Politique de confidentialité'**
+  String get shellPrivacyPolicyTitle;
+
+  /// No description provided for @homeCorridorFrom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ de {dep}'**
+  String homeCorridorFrom(String dep);
+
+  /// No description provided for @homeCorridorTo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vers {arr}'**
+  String homeCorridorTo(String arr);
+
+  /// No description provided for @homeCorridorAll.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les corridors'**
+  String get homeCorridorAll;
+
+  /// No description provided for @homePullToList.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tirer pour voir la liste'**
+  String get homePullToList;
+
+  /// No description provided for @homePullToTravelers.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Tirer pour voir le voyageur} other{Tirer pour voir les {count} voyageurs}}'**
+  String homePullToTravelers(int count);
+
+  /// No description provided for @homePullToParcels.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Tirer pour voir le colis} other{Tirer pour voir les {count} colis}}'**
+  String homePullToParcels(int count);
+
+  /// No description provided for @homePullToMap.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tirer vers le bas pour voir la carte'**
+  String get homePullToMap;
+
+  /// No description provided for @homeCrossParcels.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} colis cherche un voyageur} other{{count} colis cherchent un voyageur}}'**
+  String homeCrossParcels(int count);
+
+  /// No description provided for @homeCrossParcelsRoute.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} colis cherche un voyageur sur {dep} → {arr}} other{{count} colis cherchent un voyageur sur {dep} → {arr}}}'**
+  String homeCrossParcelsRoute(int count, String dep, String arr);
+
+  /// No description provided for @homeCrossParcelsFrom.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} colis cherche un voyageur au départ de {dep}} other{{count} colis cherchent un voyageur au départ de {dep}}}'**
+  String homeCrossParcelsFrom(int count, String dep);
+
+  /// No description provided for @homeCrossParcelsTo.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} colis cherche un voyageur vers {arr}} other{{count} colis cherchent un voyageur vers {arr}}}'**
+  String homeCrossParcelsTo(int count, String arr);
+
+  /// No description provided for @homeCrossTravelers.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} voyageur passe} other{{count} voyageurs passent}}'**
+  String homeCrossTravelers(int count);
+
+  /// No description provided for @homeCrossTravelersRoute.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} voyageur passe sur {dep} → {arr}} other{{count} voyageurs passent sur {dep} → {arr}}}'**
+  String homeCrossTravelersRoute(int count, String dep, String arr);
+
+  /// No description provided for @homeCrossTravelersFrom.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} voyageur passe au départ de {dep}} other{{count} voyageurs passent au départ de {dep}}}'**
+  String homeCrossTravelersFrom(int count, String dep);
+
+  /// No description provided for @homeCrossTravelersTo.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} voyageur passe vers {arr}} other{{count} voyageurs passent vers {arr}}}'**
+  String homeCrossTravelersTo(int count, String arr);
+
+  /// No description provided for @homeAlertTrip.
+  ///
+  /// In fr, this message translates to:
+  /// **'M\'alerter dès qu\'un trajet apparaît sur {dep} → {arr}'**
+  String homeAlertTrip(String dep, String arr);
+
+  /// No description provided for @homeAlertParcel.
+  ///
+  /// In fr, this message translates to:
+  /// **'M\'alerter dès qu\'un colis apparaît sur {dep} → {arr}'**
+  String homeAlertParcel(String dep, String arr);
+
+  /// No description provided for @homeLocateError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de te localiser. Réessaie.'**
+  String get homeLocateError;
+
+  /// No description provided for @homeMaxWeightTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids max du colis'**
+  String get homeMaxWeightTitle;
+
+  /// No description provided for @homeParcelSizeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille du colis'**
+  String get homeParcelSizeTitle;
+
+  /// No description provided for @homeListTravelersNearby.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} voyageur à proximité} other{{count} voyageurs à proximité}}'**
+  String homeListTravelersNearby(int count);
+
+  /// No description provided for @homeListTravelersRoute.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} voyageur pour {dep} → {arr}} other{{count} voyageurs pour {dep} → {arr}}}'**
+  String homeListTravelersRoute(int count, String dep, String arr);
+
+  /// No description provided for @homeListTravelersCorridor.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} voyageur · {corridor}} other{{count} voyageurs · {corridor}}}'**
+  String homeListTravelersCorridor(int count, String corridor);
+
+  /// No description provided for @homeListParcelsMatching.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} colis compatible} other{{count} colis compatibles}}'**
+  String homeListParcelsMatching(int count);
+
+  /// No description provided for @homeListParcelsRoute.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} colis à transporter pour {dep} → {arr}'**
+  String homeListParcelsRoute(int count, String dep, String arr);
+
+  /// No description provided for @homeListParcelsCorridor.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} colis à transporter · {corridor}'**
+  String homeListParcelsCorridor(int count, String corridor);
+
+  /// No description provided for @homeListSubtitleNoTraveler.
+  ///
+  /// In fr, this message translates to:
+  /// **'Personne ne propose ce trajet pour l\'instant'**
+  String get homeListSubtitleNoTraveler;
+
+  /// No description provided for @homeListSubtitleTravelersCanCarry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ils peuvent emporter ton colis'**
+  String get homeListSubtitleTravelersCanCarry;
+
+  /// No description provided for @homeListSubtitleActiveTripsUnknown.
+  ///
+  /// In fr, this message translates to:
+  /// **'Avec tes trajets actifs'**
+  String get homeListSubtitleActiveTripsUnknown;
+
+  /// No description provided for @homeListSubtitleActiveTrips.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Avec ton trajet actif} other{Avec tes {count} trajets actifs}}'**
+  String homeListSubtitleActiveTrips(int count);
+
+  /// No description provided for @homeListSubtitleNoRequest.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande d\'envoi pour l\'instant'**
+  String get homeListSubtitleNoRequest;
+
+  /// No description provided for @homeListSubtitleYouCanCarry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu peux les emporter sur ton trajet'**
+  String get homeListSubtitleYouCanCarry;
+
+  /// No description provided for @homeSort.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trier'**
+  String get homeSort;
+
+  /// No description provided for @homeConnectionErrorTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion impossible'**
+  String get homeConnectionErrorTitle;
+
+  /// No description provided for @homeRequestsLoadError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les demandes. Vérifie ta connexion puis réessaie.'**
+  String get homeRequestsLoadError;
+
+  /// No description provided for @homeEmptyParcelsFiltered.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun colis avec ces filtres'**
+  String get homeEmptyParcelsFiltered;
+
+  /// No description provided for @homeEmptyParcelsSoon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes bientôt disponibles'**
+  String get homeEmptyParcelsSoon;
+
+  /// No description provided for @homeEmptyParcelsFilteredHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifie ou supprime tes filtres pour voir plus de demandes.'**
+  String get homeEmptyParcelsFilteredHint;
+
+  /// No description provided for @homeEmptyParcelsSoonHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.'**
+  String get homeEmptyParcelsSoonHint;
+
+  /// No description provided for @homeTripsLoadError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les trajets. Vérifie ta connexion puis réessaie.'**
+  String get homeTripsLoadError;
+
+  /// No description provided for @homeEmptyTravelersNearby.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun voyageur à proximité'**
+  String get homeEmptyTravelersNearby;
+
+  /// No description provided for @homeEmptyTravelersFiltered.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun voyageur avec ces filtres'**
+  String get homeEmptyTravelersFiltered;
+
+  /// No description provided for @homeEmptyTravelersRoute.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun voyageur sur ce corridor'**
+  String get homeEmptyTravelersRoute;
+
+  /// No description provided for @homeEmptyNearbyHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élargis ta zone ou désactive \"Près de moi\"'**
+  String get homeEmptyNearbyHint;
+
+  /// No description provided for @homeEmptyTravelersFilteredHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifie tes filtres pour voir plus de voyageurs.'**
+  String get homeEmptyTravelersFilteredHint;
+
+  /// No description provided for @homeEmptyTravelersRouteHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.'**
+  String get homeEmptyTravelersRouteHint;
+
+  /// Pastille flottante de l'accueil qui ouvre la vue carte
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte'**
+  String get homeMapButton;
+
+  /// No description provided for @homeRadiusKm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rayon · {km} km'**
+  String homeRadiusKm(int km);
+
+  /// No description provided for @homeDepartureDateTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de départ'**
+  String get homeDepartureDateTitle;
+
+  /// No description provided for @commonDateToday.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aujourd\'hui'**
+  String get commonDateToday;
+
+  /// No description provided for @commonDateThisWeek.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette semaine'**
+  String get commonDateThisWeek;
+
+  /// No description provided for @commonDateThisMonthLong.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce mois-ci'**
+  String get commonDateThisMonthLong;
+
+  /// No description provided for @homeChooseDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une date'**
+  String get homeChooseDate;
+
+  /// No description provided for @homeMinRatingTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Note minimum'**
+  String get homeMinRatingTitle;
+
+  /// No description provided for @homeRatingOnlyFive.
+  ///
+  /// In fr, this message translates to:
+  /// **'★ 5.0 uniquement'**
+  String get homeRatingOnlyFive;
+
+  /// No description provided for @homeRatingAndUp.
+  ///
+  /// In fr, this message translates to:
+  /// **'★ {rating} et plus'**
+  String homeRatingAndUp(String rating);
+
+  /// No description provided for @homeWeightCapacityTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité kilo'**
+  String get homeWeightCapacityTitle;
+
+  /// No description provided for @homeMaxPriceTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix maximum'**
+  String get homeMaxPriceTitle;
+
+  /// No description provided for @homeAnyPrice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les prix'**
+  String get homeAnyPrice;
+
+  /// No description provided for @homeComposerTitleTrips.
+  ///
+  /// In fr, this message translates to:
+  /// **'Filtrer les trajets'**
+  String get homeComposerTitleTrips;
+
+  /// No description provided for @homeComposerTitleParcels.
+  ///
+  /// In fr, this message translates to:
+  /// **'Filtrer les colis'**
+  String get homeComposerTitleParcels;
+
+  /// No description provided for @homeComposerClearAll.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout effacer'**
+  String get homeComposerClearAll;
+
+  /// No description provided for @homeComposerSectionPhrase.
+  ///
+  /// In fr, this message translates to:
+  /// **'EN UNE PHRASE'**
+  String get homeComposerSectionPhrase;
+
+  /// No description provided for @homeComposerSectionWhere.
+  ///
+  /// In fr, this message translates to:
+  /// **'OÙ'**
+  String get homeComposerSectionWhere;
+
+  /// No description provided for @homeComposerSectionWhen.
+  ///
+  /// In fr, this message translates to:
+  /// **'QUAND'**
+  String get homeComposerSectionWhen;
+
+  /// No description provided for @homeComposerSectionAroundMe.
+  ///
+  /// In fr, this message translates to:
+  /// **'AUTOUR DE MOI'**
+  String get homeComposerSectionAroundMe;
+
+  /// No description provided for @homeComposerSearch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher'**
+  String get homeComposerSearch;
+
+  /// No description provided for @homeComposerSearchWithCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher ({count})'**
+  String homeComposerSearchWithCount(int count);
+
+  /// No description provided for @homeComposerSectionWeightPrice.
+  ///
+  /// In fr, this message translates to:
+  /// **'POIDS ET PRIX'**
+  String get homeComposerSectionWeightPrice;
+
+  /// No description provided for @homeComposerSectionContents.
+  ///
+  /// In fr, this message translates to:
+  /// **'MON COLIS CONTIENT'**
+  String get homeComposerSectionContents;
+
+  /// No description provided for @homeComposerContentHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un type de contenu…'**
+  String get homeComposerContentHint;
+
+  /// No description provided for @homeComposerSectionQuickFilters.
+  ///
+  /// In fr, this message translates to:
+  /// **'FILTRES RAPIDES'**
+  String get homeComposerSectionQuickFilters;
+
+  /// No description provided for @homeComposerMinRating.
+  ///
+  /// In fr, this message translates to:
+  /// **'Note ≥ 4.5'**
+  String get homeComposerMinRating;
+
+  /// No description provided for @homeComposerWeekend.
+  ///
+  /// In fr, this message translates to:
+  /// **'Week-end'**
+  String get homeComposerWeekend;
+
+  /// No description provided for @homeComposerVerifiedIdentity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée'**
+  String get homeComposerVerifiedIdentity;
+
+  /// No description provided for @homeComposerSectionUrgency.
+  ///
+  /// In fr, this message translates to:
+  /// **'URGENCE DU DÉPART'**
+  String get homeComposerSectionUrgency;
+
+  /// No description provided for @homeComposerUrgencyHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Filtrer les trajets selon leur proximité de départ'**
+  String get homeComposerUrgencyHint;
+
+  /// No description provided for @homeComposerSectionMaxWeight.
+  ///
+  /// In fr, this message translates to:
+  /// **'POIDS MAXIMAL'**
+  String get homeComposerSectionMaxWeight;
+
+  /// No description provided for @homeComposerSectionParcelSize.
+  ///
+  /// In fr, this message translates to:
+  /// **'TAILLE DU COLIS'**
+  String get homeComposerSectionParcelSize;
+
+  /// No description provided for @homeComposerForMyTrips.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour mes trajets'**
+  String get homeComposerForMyTrips;
+
+  /// No description provided for @homeComposerAlertTip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Astuce, tu peux être prévenu des nouveaux colis compatibles depuis Réglages, Notifications.'**
+  String get homeComposerAlertTip;
+
+  /// No description provided for @homeComposerAroundMe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autour de moi'**
+  String get homeComposerAroundMe;
+
+  /// No description provided for @homeComposerLocating.
+  ///
+  /// In fr, this message translates to:
+  /// **'Localisation en cours…'**
+  String get homeComposerLocating;
+
+  /// No description provided for @homeRecapTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'RÉGLÉ DEPUIS VOTRE PHRASE'**
+  String get homeRecapTitle;
+
+  /// No description provided for @homeRecapArrival.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get homeRecapArrival;
+
+  /// No description provided for @homeRecapDeparture.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get homeRecapDeparture;
+
+  /// No description provided for @homeRecapWhen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand'**
+  String get homeRecapWhen;
+
+  /// No description provided for @homeRecapMinWeight.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids minimum'**
+  String get homeRecapMinWeight;
+
+  /// No description provided for @homeRecapFieldLine.
+  ///
+  /// In fr, this message translates to:
+  /// **'{label} : {value}'**
+  String homeRecapFieldLine(String label, String value);
+
+  /// No description provided for @homeUnresolvedPriceQuestion.
+  ///
+  /// In fr, this message translates to:
+  /// **'« {phrase} », c\'est combien ?'**
+  String homeUnresolvedPriceQuestion(String phrase);
+
+  /// No description provided for @homeUnresolvedCityUnknown.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vers quelle ville ?'**
+  String get homeUnresolvedCityUnknown;
+
+  /// No description provided for @homeUnresolvedCityAmbiguous.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quelle ville exactement ?'**
+  String get homeUnresolvedCityAmbiguous;
+
+  /// No description provided for @homeUnresolvedDateQuestion.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand voulez-vous partir ?'**
+  String get homeUnresolvedDateQuestion;
+
+  /// No description provided for @homeUnresolvedUpTo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jusqu\'à {price}/kg'**
+  String homeUnresolvedUpTo(String price);
+
+  /// No description provided for @homeUnresolvedAnyPrice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Peu importe le prix'**
+  String get homeUnresolvedAnyPrice;
+
+  /// No description provided for @commonDateThisMonth.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce mois'**
+  String get commonDateThisMonth;
+
+  /// No description provided for @homeUnresolvedAnyTime.
+  ///
+  /// In fr, this message translates to:
+  /// **'Peu importe'**
+  String get homeUnresolvedAnyTime;
+
+  /// No description provided for @homePhraseHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'20 kilos à Bamako en mars'**
+  String get homePhraseHint;
+
+  /// No description provided for @homeSectionOptional.
+  ///
+  /// In fr, this message translates to:
+  /// **'Facultatif'**
+  String get homeSectionOptional;
+
+  /// No description provided for @homeModeSelectorSending.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'envoie un colis'**
+  String get homeModeSelectorSending;
+
+  /// No description provided for @homeModeSelectorTraveling.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je voyage'**
+  String get homeModeSelectorTraveling;
+
+  /// No description provided for @homeModeSelectorTravelersAvailable.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} voyageur disponible} other{{count} voyageurs disponibles}}'**
+  String homeModeSelectorTravelersAvailable(int count);
+
+  /// No description provided for @homeModeSelectorTravelersSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageurs disponibles'**
+  String get homeModeSelectorTravelersSubtitle;
+
+  /// No description provided for @homeModeSelectorParcelsToCarry.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} colis à transporter'**
+  String homeModeSelectorParcelsToCarry(int count);
+
+  /// No description provided for @homeModeSelectorParcelsSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis à transporter'**
+  String get homeModeSelectorParcelsSubtitle;
+
+  /// Puce de filtre de l'accueil : date personnalisée choisie mais pas encore renseignée
+  ///
+  /// In fr, this message translates to:
+  /// **'Date'**
+  String get homeFilterChipsDate;
+
+  /// No description provided for @homeFilterChipsAnyDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes dates'**
+  String get homeFilterChipsAnyDate;
+
+  /// No description provided for @homeFilterChipsRating.
+  ///
+  /// In fr, this message translates to:
+  /// **'Note'**
+  String get homeFilterChipsRating;
+
+  /// No description provided for @homeFilterChipsWeight.
+  ///
+  /// In fr, this message translates to:
+  /// **'Kilos'**
+  String get homeFilterChipsWeight;
+
+  /// No description provided for @homeFilterChipsPrice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix'**
+  String get homeFilterChipsPrice;
+
+  /// No description provided for @homeFilterChipsSize.
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille'**
+  String get homeFilterChipsSize;
+
+  /// No description provided for @homeFilterChipsUrgent.
+  ///
+  /// In fr, this message translates to:
+  /// **'🔥 Urgent'**
+  String get homeFilterChipsUrgent;
+
+  /// No description provided for @homeFilterFieldsExactDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'DATE PRÉCISE'**
+  String get homeFilterFieldsExactDate;
+
+  /// No description provided for @homeFilterFieldsMaxPrice.
+  ///
+  /// In fr, this message translates to:
+  /// **'PRIX MAX'**
+  String get homeFilterFieldsMaxPrice;
+
+  /// Valeur d'un champ de filtre (prix max, mode de transport) quand aucun filtre n'est choisi
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous'**
+  String get homeFilterFieldsAll;
+
+  /// No description provided for @homeFilterFieldsChoose.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir'**
+  String get homeFilterFieldsChoose;
+
+  /// No description provided for @homeFilterFieldsMinWeight.
+  ///
+  /// In fr, this message translates to:
+  /// **'POIDS MIN'**
+  String get homeFilterFieldsMinWeight;
+
+  /// No description provided for @homeFilterFieldsMinWeightTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids minimum du trajet'**
+  String get homeFilterFieldsMinWeightTitle;
+
+  /// No description provided for @homeFilterFieldsTransportMode.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode de transport'**
+  String get homeFilterFieldsTransportMode;
+
+  /// Marqueur de carte : la demande n'a pas de prix cible, le prix est libre
+  ///
+  /// In fr, this message translates to:
+  /// **'Libre'**
+  String get homeMapOpenPrice;
+
+  /// No description provided for @homeMapRequests.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes'**
+  String get homeMapRequests;
+
+  /// No description provided for @homeMapNoRequestsNearby.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande dans ce rayon'**
+  String get homeMapNoRequestsNearby;
+
+  /// No description provided for @homeMapNoRequestsYet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande pour le moment'**
+  String get homeMapNoRequestsYet;
+
+  /// No description provided for @homeMapEmptyNearbyHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Élargis ta zone ou désactive “Près de moi”'**
+  String get homeMapEmptyNearbyHint;
+
+  /// No description provided for @homeMapEmptyHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reviens dans un instant, de nouvelles demandes sont publiées chaque jour'**
+  String get homeMapEmptyHint;
+
+  /// No description provided for @homeGuidancePublishTrip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier mon trajet'**
+  String get homeGuidancePublishTrip;
+
+  /// No description provided for @homeGuidancePublishParcel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier un colis'**
+  String get homeGuidancePublishParcel;
+
+  /// No description provided for @homeGuidanceCreateAlert.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer une alerte'**
+  String get homeGuidanceCreateAlert;
+
+  /// No description provided for @homeGuidanceVerifyIdentity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier mon identité'**
+  String get homeGuidanceVerifyIdentity;
+
+  /// No description provided for @homeGuidanceHowItWorks.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment ça marche ?'**
+  String get homeGuidanceHowItWorks;
+
+  /// No description provided for @homeGuidanceDontShowAgain.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne plus afficher'**
+  String get homeGuidanceDontShowAgain;
+
+  /// No description provided for @homeNoActiveTripTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet actif'**
+  String get homeNoActiveTripTitle;
+
+  /// No description provided for @homeNoActiveTripBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce filtre ne montre que les colis compatibles avec tes trajets à venir. Publie un trajet pour t\'en servir.'**
+  String get homeNoActiveTripBody;
+
+  /// No description provided for @homeNoActiveTripPublish.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier un trajet'**
+  String get homeNoActiveTripPublish;
+
+  /// No description provided for @homeFilterFieldsTransport.
+  ///
+  /// In fr, this message translates to:
+  /// **'TRANSPORT'**
+  String get homeFilterFieldsTransport;
+
+  /// No description provided for @homeFilterFieldsDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'DATE'**
+  String get homeFilterFieldsDate;
+
+  /// No description provided for @homeNearMeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Près de moi'**
+  String get homeNearMeTitle;
+
+  /// No description provided for @homeNearMeConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer le filtre'**
+  String get homeNearMeConfirm;
+
+  /// No description provided for @homeNearMeExplanation.
+  ///
+  /// In fr, this message translates to:
+  /// **'On garde uniquement les annonces dont le point de remise est dans ce rayon autour de toi.'**
+  String get homeNearMeExplanation;
+
+  /// No description provided for @homeLocationPermissionOpenSettings.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir les réglages'**
+  String get homeLocationPermissionOpenSettings;
+
+  /// No description provided for @homeLocationPermissionServiceOffTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Localisation désactivée'**
+  String get homeLocationPermissionServiceOffTitle;
+
+  /// No description provided for @homeLocationPermissionDeniedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès à la position refusé'**
+  String get homeLocationPermissionDeniedTitle;
+
+  /// No description provided for @homeLocationPermissionServiceOffBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Active la localisation de ton téléphone pour voir ce qui est près de toi.'**
+  String get homeLocationPermissionServiceOffBody;
+
+  /// No description provided for @homeLocationPermissionDeniedBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autorise l\'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte.'**
+  String get homeLocationPermissionDeniedBody;
+
+  /// Titre de l'écran des conditions générales d'utilisation (/legal/terms)
+  ///
+  /// In fr, this message translates to:
+  /// **'CGU'**
+  String get shellTermsTitle;
 }
 
 class _AppLocalizationsDelegate

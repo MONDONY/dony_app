@@ -1,3 +1,4 @@
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Champ de saisie du bloc « En une phrase ».
@@ -25,7 +26,7 @@ class SearchPhraseField extends StatelessWidget {
       maxLength: 200,
       decoration: InputDecoration(
         counterText: '',
-        hintText: '20 kilos à Bamako en mars',
+        hintText: context.l10n.homePhraseHint,
         prefixIcon: const Icon(Icons.search_rounded, size: 20),
         suffixIcon: isParsing
             ? const Padding(

@@ -3,6 +3,7 @@ import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/bloc/search_composer_event.dart';
 import 'package:dony/features/home/data/models/search_parse_result.dart';
 import 'package:dony/features/home/presentation/widgets/search_section_label.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -16,11 +17,11 @@ class UnresolvedQuestion extends StatelessWidget {
 
   final UnresolvedItem item;
 
-  String get _question => switch (item.kind) {
-    UnresolvedKind.priceVague => '« ${item.phrase} », c\'est combien ?',
-    UnresolvedKind.cityUnknown => 'Vers quelle ville ?',
-    UnresolvedKind.cityAmbiguous => 'Quelle ville exactement ?',
-    UnresolvedKind.dateVague => 'Quand voulez-vous partir ?',
+  String _question(AppLocalizations l) => switch (item.kind) {
+    UnresolvedKind.priceVague => l.homeUnresolvedPriceQuestion(item.phrase),
+    UnresolvedKind.cityUnknown => l.homeUnresolvedCityUnknown,
+    UnresolvedKind.cityAmbiguous => l.homeUnresolvedCityAmbiguous,
+    UnresolvedKind.dateVague => l.homeUnresolvedDateQuestion,
   };
 
   /// Libellé affiché et valeur renvoyée au BLoC.
@@ -28,37 +29,39 @@ class UnresolvedQuestion extends StatelessWidget {
   /// Prix : montants scalés vers la devise ACTIVE (le backend interprète le
   /// filtre dans la devise du lecteur). « 6 €/kg » figé éliminait 100 % des
   /// annonces pour un lecteur XOF, tout prix CFA dépassant 6.
-  List<({String label, String value})> get _options => switch (item.kind) {
-    UnresolvedKind.priceVague => [
-      for (final amount in quickPriceFilterOptionsActive())
-        (
-          label: 'Jusqu\'à ${formatPriceActive(amount)}/kg',
-          value: amount.toStringAsFixed(
-            amount == amount.truncateToDouble() ? 0 : 2,
-          ),
-        ),
-      (label: 'Peu importe le prix', value: ''),
-    ],
-    UnresolvedKind.dateVague => const [
-      (label: 'Cette semaine', value: 'thisWeek'),
-      (label: 'Ce mois', value: 'thisMonth'),
-      (label: 'Peu importe', value: ''),
-    ],
-    // Les villes viennent du serveur : pour une ambiguïté ce sont les
-    // candidats, pour une ville inconnue les corridors les plus fournis.
-    UnresolvedKind.cityUnknown || UnresolvedKind.cityAmbiguous =>
-      item.options.map((o) => (label: o, value: o)).toList(),
-  };
+  List<({String label, String value})> _options(AppLocalizations l) =>
+      switch (item.kind) {
+        UnresolvedKind.priceVague => [
+          for (final amount in quickPriceFilterOptionsActive())
+            (
+              label: l.homeUnresolvedUpTo(formatPriceActive(amount)),
+              value: amount.toStringAsFixed(
+                amount == amount.truncateToDouble() ? 0 : 2,
+              ),
+            ),
+          (label: l.homeUnresolvedAnyPrice, value: ''),
+        ],
+        UnresolvedKind.dateVague => [
+          (label: l.commonDateThisWeek, value: 'thisWeek'),
+          (label: l.commonDateThisMonth, value: 'thisMonth'),
+          (label: l.homeUnresolvedAnyTime, value: ''),
+        ],
+        // Les villes viennent du serveur : pour une ambiguïté ce sont les
+        // candidats, pour une ville inconnue les corridors les plus fournis.
+        UnresolvedKind.cityUnknown || UnresolvedKind.cityAmbiguous =>
+          item.options.map((o) => (label: o, value: o)).toList(),
+      };
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SearchSectionLabel(_question, tint: cs.tertiary),
+        SearchSectionLabel(_question(l), tint: cs.tertiary),
         Container(
           decoration: BoxDecoration(
             color: cs.surface,
@@ -67,7 +70,7 @@ class UnresolvedQuestion extends StatelessWidget {
           ),
           child: Column(
             children: [
-              for (final option in _options)
+              for (final option in _options(l))
                 InkWell(
                   onTap: () => context.read<SearchComposerBloc>().add(
                     SearchComposerUnresolvedAnswered(

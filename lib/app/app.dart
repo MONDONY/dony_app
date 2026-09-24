@@ -444,7 +444,7 @@ class _DonyAppState extends State<DonyApp> {
                     statusBarColor: Colors.transparent,
                   ),
                   child: MaterialApp.router(
-                    title: 'Yadony',
+                    title: 'Yadony', // i18n-ignore
                     theme: AppTheme.light(a11y: themeOptions),
                     darkTheme: AppTheme.dark(a11y: themeOptions),
                     themeMode: themeMode,

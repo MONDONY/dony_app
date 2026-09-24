@@ -41,7 +41,7 @@ class DonyNavItem extends StatelessWidget {
          avatarName != null ||
              iconAsset != null ||
              (icon != null && outlinedIcon != null),
-         'DonyNavItem requiert iconAsset, ou (icon + outlinedIcon), ou avatarName',
+         'DonyNavItem requiert iconAsset, ou (icon + outlinedIcon), ou avatarName', // i18n-ignore
        );
 
   final IconData? icon;

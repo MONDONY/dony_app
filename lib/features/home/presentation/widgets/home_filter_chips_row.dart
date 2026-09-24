@@ -88,31 +88,28 @@ class HomeFilterChipsRow extends StatelessWidget {
   /// Même règle que dans la feuille de filtres, les deux doivent rester alignés.
   bool get _canFilterOnMyTrips => activeTrips == null || activeTrips! > 0;
 
-  String get _dateLabel {
+  String _dateLabel(AppLocalizations l) {
     switch (filters.datePreset) {
       case DonyDatePreset.today:
-        return 'Aujourd\'hui';
+        return l.commonDateToday;
       case DonyDatePreset.thisWeek:
-        return 'Cette semaine';
+        return l.commonDateThisWeek;
       case DonyDatePreset.thisMonth:
-        return 'Ce mois-ci';
+        return l.commonDateThisMonthLong;
       case DonyDatePreset.custom:
         return filters.customDate != null
-            ? DateFormat(
-                'd MMM',
-                AppL10n.localeName,
-              ).format(filters.customDate!)
-            : 'Date';
+            ? DateFormat('d MMM', l.localeName).format(filters.customDate!)
+            : l.homeFilterChipsDate;
       case DonyDatePreset.none:
-        return 'Toutes dates';
+        return l.homeFilterChipsAnyDate;
     }
   }
 
-  String get _ratingLabel => filters.minRating != null
+  String _ratingLabel(AppLocalizations l) => filters.minRating != null
       ? '★ ${filters.minRating!.toStringAsFixed(1)}+'
-      : 'Note';
+      : l.homeFilterChipsRating;
 
-  String get _capacityLabel {
+  String _capacityLabel(AppLocalizations l) {
     final min = filters.weightMin;
     final max = filters.weightMax;
     if (min != null && max != null) {
@@ -124,22 +121,24 @@ class HomeFilterChipsRow extends StatelessWidget {
     if (max != null) {
       return '≤ ${max.toInt()} kg';
     }
-    return 'Kilos';
+    return l.homeFilterChipsWeight;
   }
 
-  String get _priceLabel => filters.maxPricePerKg != null
+  String _priceLabel(AppLocalizations l) => filters.maxPricePerKg != null
       ? '≤ ${formatPriceActive(filters.maxPricePerKg!)}/kg'
-      : 'Prix';
+      : l.homeFilterChipsPrice;
 
-  String get _maxWeightLabel => filters.maxWeight != null
+  String _maxWeightLabel(AppLocalizations l) => filters.maxWeight != null
       ? '≤ ${filters.maxWeight!.toInt()} kg'
-      : 'Kilos';
+      : l.homeFilterChipsWeight;
 
-  String get _parcelSizeLabel =>
-      filters.parcelSize != null ? filters.parcelSize!.wireName : 'Taille';
+  String _parcelSizeLabel(AppLocalizations l) => filters.parcelSize != null
+      ? filters.parcelSize!.wireName
+      : l.homeFilterChipsSize;
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final hasDate = filters.datePreset != DonyDatePreset.none;
     final hasCapacity = filters.weightMin != null || filters.weightMax != null;
     return SingleChildScrollView(
@@ -149,14 +148,14 @@ class HomeFilterChipsRow extends StatelessWidget {
           // ── Communs ─────────────────────────────────────────────────────────
           HomeSmallChip(
             key: const Key('chip-urgent'),
-            label: '🔥 Urgent',
+            label: l.homeFilterChipsUrgent,
             isActive: filters.urgentOnly,
             onTap: onUrgentToggle,
           ),
           const SizedBox(width: DonySpacing.xs),
           HomeSmallChip(
             key: const Key('chip-date'),
-            label: _dateLabel,
+            label: _dateLabel(l),
             isActive: hasDate,
             iconAsset: 'calendar',
             onTap: hasDate ? onDateClear : onDateTap,
@@ -166,28 +165,28 @@ class HomeFilterChipsRow extends StatelessWidget {
           // ── Spécifiques au mode ─────────────────────────────────────────────
           if (mode.isTrips) ...[
             HomeSmallChip(
-              label: _ratingLabel,
+              label: _ratingLabel(l),
               isActive: filters.minRating != null,
               iconAsset: 'star',
               onTap: filters.minRating != null ? onRatingClear : onRatingTap,
             ),
             const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(
-              label: _capacityLabel,
+              label: _capacityLabel(l),
               isActive: hasCapacity,
               iconAsset: 'dumbbell',
               onTap: hasCapacity ? onCapacityClear : onCapacityTap,
             ),
             const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(
-              label: _priceLabel,
+              label: _priceLabel(l),
               isActive: filters.maxPricePerKg != null,
               iconAsset: 'euro',
               onTap: filters.maxPricePerKg != null ? onPriceClear : onPriceTap,
             ),
             const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(
-              label: 'Kilo Pro',
+              label: 'Kilo Pro', // i18n-ignore
               isActive: filters.kiloProOnly,
               onTap: onKiloProToggle,
             ),
@@ -198,7 +197,7 @@ class HomeFilterChipsRow extends StatelessWidget {
               opacity: _canFilterOnMyTrips ? 1 : 0.4,
               child: HomeSmallChip(
                 key: const Key('chip-row-matching-my-trips'),
-                label: 'Pour mes trajets',
+                label: l.homeComposerForMyTrips,
                 isActive: filters.matchingMyTrips,
                 iconAsset: 'plane',
                 onTap: _canFilterOnMyTrips
@@ -208,7 +207,7 @@ class HomeFilterChipsRow extends StatelessWidget {
             ),
             const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(
-              label: _maxWeightLabel,
+              label: _maxWeightLabel(l),
               isActive: filters.maxWeight != null,
               iconAsset: 'dumbbell',
               onTap: filters.maxWeight != null
@@ -217,7 +216,7 @@ class HomeFilterChipsRow extends StatelessWidget {
             ),
             const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(
-              label: _parcelSizeLabel,
+              label: _parcelSizeLabel(l),
               isActive: filters.parcelSize != null,
               iconAsset: 'package',
               onTap: filters.parcelSize != null

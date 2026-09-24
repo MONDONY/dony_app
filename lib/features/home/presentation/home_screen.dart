@@ -96,6 +96,182 @@ class HomeScreen extends StatelessWidget {
 /// bottom nav flottante (île ~62 + marge ~28) au lieu d'être caché dessous.
 const double _kFloatingNavClearance = 96;
 
+// ── Libellés reconstruits ────────────────────────────────────────────────────
+//
+// Fonctions de premier niveau : un test les appelle sans monter l'écran
+// (`home_screen_messages_test.dart`).
+
+/// Libellé de la barre corridor : le corridor posé, ou son absence.
+@visibleForTesting
+String homeCorridorLabel(AppLocalizations l, HomeSearchFilters filters) {
+  final dep = filters.departureCity;
+  final arr = filters.arrivalCity;
+  if (dep != null && arr != null) {
+    return '$dep → $arr';
+  }
+  if (dep != null) {
+    return l.homeCorridorFrom(dep);
+  }
+  if (arr != null) {
+    return l.homeCorridorTo(arr);
+  }
+  return l.homeCorridorAll;
+}
+
+/// « Tirer pour voir les 4 voyageurs » : la poignée nomme ce qu'il y a
+/// dessous, dans les mots du sélecteur de mode, jamais « résultats ».
+@visibleForTesting
+String homePullUpLabel(
+  AppLocalizations l, {
+  required SearchMode mode,
+  required int count,
+}) {
+  if (count == 0) {
+    return l.homePullToList;
+  }
+  return mode.isTrips
+      ? l.homePullToTravelers(count)
+      : l.homePullToParcels(count);
+}
+
+/// Indication de drag dans le header du sheet selon l'état : peek → « tirer
+/// pour voir les N voyageurs/colis », plein écran → « tirer pour voir la
+/// carte ».
+@visibleForTesting
+String homePullHintLabel(
+  AppLocalizations l, {
+  required SearchMode mode,
+  required int count,
+  required bool down,
+}) {
+  return down ? l.homePullToMap : homePullUpLabel(l, mode: mode, count: count);
+}
+
+/// Nomme le corridor courant : « 5 colis cherchent un voyageur sur Lyon →
+/// Bamako » en mode trajets, son symétrique « 12 voyageurs passent sur Lyon →
+/// Bamako » en mode colis. Jamais de tiret cadratin ici, c'est un texte
+/// affiché.
+///
+/// Le compteur peut être significatif sans corridor (date seule, ou « près de
+/// moi ») : dans ce cas le libellé se passe simplement de suffixe. Décision
+/// assumée, plutôt que d'afficher une flèche orpheline ou un « Tous les
+/// corridors » qui ne veut rien dire dans cette phrase.
+@visibleForTesting
+String homeCrossDiscoveryLabel(
+  AppLocalizations l, {
+  required SearchMode mode,
+  required HomeSearchFilters filters,
+  required int count,
+}) {
+  final dep = filters.departureCity;
+  final arr = filters.arrivalCity;
+  if (mode.isTrips) {
+    if (dep != null && arr != null) {
+      return l.homeCrossParcelsRoute(count, dep, arr);
+    }
+    if (dep != null) {
+      return l.homeCrossParcelsFrom(count, dep);
+    }
+    if (arr != null) {
+      return l.homeCrossParcelsTo(count, arr);
+    }
+    return l.homeCrossParcels(count);
+  }
+  if (dep != null && arr != null) {
+    return l.homeCrossTravelersRoute(count, dep, arr);
+  }
+  if (dep != null) {
+    return l.homeCrossTravelersFrom(count, dep);
+  }
+  if (arr != null) {
+    return l.homeCrossTravelersTo(count, arr);
+  }
+  return l.homeCrossTravelers(count);
+}
+
+/// Libellé de la tuile d'alerte proposée sous un état vide, corridor complet.
+@visibleForTesting
+String homeAlertForSearchLabel(
+  AppLocalizations l, {
+  required SearchMode mode,
+  required String departureCity,
+  required String arrivalCity,
+}) {
+  return mode.isTrips
+      ? l.homeAlertTrip(departureCity, arrivalCity)
+      : l.homeAlertParcel(departureCity, arrivalCity);
+}
+
+/// Titre de la liste : le nombre, ce que la liste contient et le corridor.
+/// Il répète l'intention du sélecteur de mode (« voyageurs » / « colis à
+/// transporter ») pour que le contenu de la liste ne soit jamais à deviner.
+///
+/// Le corridor s'écrit « pour Abidjan → Paris » quand les deux villes sont
+/// posées, sinon c'est le libellé de corridor tel quel (« Départ de Lyon »,
+/// « Tous les corridors ») derrière un point médian.
+///
+/// Le mot « compatibles » est essentiel : le filtre « Pour mes trajets »
+/// liste les demandes encore libres qu'on POURRAIT prendre, pas les colis
+/// déjà embarqués sur ses trajets, qui se consultent depuis le détail du
+/// trajet. Un titre du genre « colis sur tes trajets » se lit à l'envers.
+@visibleForTesting
+String homeListTitle(
+  AppLocalizations l, {
+  required SearchMode mode,
+  required HomeSearchFilters filters,
+  required int trips,
+  required int parcels,
+  required bool matching,
+}) {
+  final dep = filters.departureCity;
+  final arr = filters.arrivalCity;
+  final hasRoute = dep != null && arr != null;
+  if (mode.isTrips) {
+    if (filters.nearMeActive) {
+      return l.homeListTravelersNearby(trips);
+    }
+    return hasRoute
+        ? l.homeListTravelersRoute(trips, dep, arr)
+        : l.homeListTravelersCorridor(trips, homeCorridorLabel(l, filters));
+  }
+  if (matching) {
+    return l.homeListParcelsMatching(parcels);
+  }
+  return hasRoute
+      ? l.homeListParcelsRoute(parcels, dep, arr)
+      : l.homeListParcelsCorridor(parcels, homeCorridorLabel(l, filters));
+}
+
+/// Sous-titre de la liste : ce que l'utilisateur peut en faire, ou pourquoi
+/// elle est vide. En mode « Pour mes trajets », l'accord porte sur le
+/// nombre de trajets actifs, connu ou non (voir `knownActiveTrips`) :
+/// [activeTrips] à `null` annonce les résultats sans inventer un « 0 trajet
+/// actif » que rien ne prouve.
+@visibleForTesting
+String homeListSubtitle(
+  AppLocalizations l, {
+  required SearchMode mode,
+  required int trips,
+  required int parcels,
+  required bool matching,
+  required int? activeTrips,
+}) {
+  if (mode.isTrips) {
+    return trips == 0
+        ? l.homeListSubtitleNoTraveler
+        : l.homeListSubtitleTravelersCanCarry;
+  }
+  if (matching) {
+    if (activeTrips == null) {
+      return l.homeListSubtitleActiveTripsUnknown;
+    }
+    return l.homeListSubtitleActiveTrips(activeTrips);
+  }
+  return parcels == 0
+      ? l.homeListSubtitleNoRequest
+      : l.homeListSubtitleYouCanCarry;
+}
+
 class _MapSenderView extends StatefulWidget {
   const _MapSenderView();
 
@@ -149,21 +325,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   int get _activeFilterCount => _filters.activeCountFor(_mode);
 
-  /// Libellé de la barre corridor : le corridor posé, ou son absence.
-  String get _corridorLabel {
-    final dep = _filters.departureCity;
-    final arr = _filters.arrivalCity;
-    if (dep != null && arr != null) {
-      return '$dep → $arr';
-    }
-    if (dep != null) {
-      return 'Départ de $dep';
-    }
-    if (arr != null) {
-      return 'Vers $arr';
-    }
-    return 'Tous les corridors';
-  }
+  String get _corridorLabel => homeCorridorLabel(context.l10n, _filters);
 
   @override
   void initState() {
@@ -306,29 +468,16 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
-  /// « Tirer pour voir les 4 voyageurs » : la poignée nomme ce qu'il y a
-  /// dessous, dans les mots du sélecteur de mode, jamais « résultats ».
-  String _pullUpLabel(int count) {
-    if (count == 0) {
-      return 'Tirer pour voir la liste';
-    }
-    if (_mode.isTrips) {
-      return count == 1
-          ? 'Tirer pour voir le voyageur'
-          : 'Tirer pour voir les $count voyageurs';
-    }
-    return count == 1
-        ? 'Tirer pour voir le colis'
-        : 'Tirer pour voir les $count colis';
-  }
-
   /// Indication de drag dans le header du sheet selon l'état : peek → « tirer
   /// pour voir les N voyageurs/colis », plein écran → « tirer pour voir la
   /// carte ».
   Widget _pullHint(ColorScheme cs, {required bool down, required int count}) {
-    final text = down
-        ? 'Tirer vers le bas pour voir la carte'
-        : _pullUpLabel(count);
+    final text = homePullHintLabel(
+      context.l10n,
+      mode: _mode,
+      count: count,
+      down: down,
+    );
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
@@ -580,38 +729,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// l'autre mode, lui, a des résultats sur les mêmes critères.
   bool get _showCrossDiscovery => (_otherModeCount ?? 0) > 0;
 
-  /// Suffixe corridor du libellé de découverte croisée.
-  ///
-  /// Le compteur peut être significatif sans corridor (date seule, ou « près de
-  /// moi ») : dans ce cas le libellé se passe simplement de suffixe. Décision
-  /// assumée, plutôt que d'afficher une flèche orpheline ou un « Tous les
-  /// corridors » qui ne veut rien dire dans cette phrase.
-  String get _crossDiscoveryCorridorSuffix {
-    final dep = _filters.departureCity;
-    final arr = _filters.arrivalCity;
-    if (dep != null && arr != null) {
-      return ' sur $dep → $arr';
-    }
-    if (dep != null) {
-      return ' au départ de $dep';
-    }
-    if (arr != null) {
-      return ' vers $arr';
-    }
-    return '';
-  }
-
-  /// Nomme le corridor courant : « 5 colis cherchent un voyageur sur Lyon →
-  /// Bamako » en mode trajets, son symétrique « 12 voyageurs passent sur Lyon →
-  /// Bamako » en mode colis. Jamais de tiret cadratin ici, c'est un texte
-  /// affiché.
-  String get _crossDiscoveryLabel {
-    final n = _otherModeCount ?? 0;
-    final corridor = _crossDiscoveryCorridorSuffix;
-    return _mode.isTrips
-        ? '$n colis ${n > 1 ? 'cherchent' : 'cherche'} un voyageur$corridor'
-        : '$n voyageur${n > 1 ? 's' : ''} ${n > 1 ? 'passent' : 'passe'}$corridor';
-  }
+  String get _crossDiscoveryLabel => homeCrossDiscoveryLabel(
+    context.l10n,
+    mode: _mode,
+    filters: _filters,
+    count: _otherModeCount ?? 0,
+  );
 
   /// Empile l'état vide et, quand l'autre mode a des résultats sur les mêmes
   /// critères, la tuile de bascule. Zéro résultat sur un corridor est le moment
@@ -651,9 +774,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
             ),
             child: _CrossDiscoveryTile(
               key: const Key('alert-for-search'),
-              label: _mode.isTrips
-                  ? 'M\'alerter dès qu\'un trajet apparaît sur ${_filters.departureCity} → ${_filters.arrivalCity}'
-                  : 'M\'alerter dès qu\'un colis apparaît sur ${_filters.departureCity} → ${_filters.arrivalCity}',
+              label: homeAlertForSearchLabel(
+                context.l10n,
+                mode: _mode,
+                departureCity: _filters.departureCity!,
+                arrivalCity: _filters.arrivalCity!,
+              ),
               onTap: _onAlertForSearchTap,
             ),
           ),
@@ -765,7 +891,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final radiusKm = await NearMeRadiusSheet.show(
       context,
       initialRadiusKm: _nearMeRadiusKm ?? 25,
-      confirmLabel: 'Appliquer',
+      confirmLabel: context.l10n.commonApply,
     );
     if (radiusKm == null || !mounted) return;
     _onFiltersChanged(_filters.copyWith(nearMeRadiusKm: radiusKm));
@@ -794,10 +920,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     } catch (_) {
       if (mounted) {
         setState(() => _isLocatingNearMe = false);
-        DonySnackbar.show(
-          context,
-          message: 'Impossible de te localiser. Réessaie.',
-        );
+        DonySnackbar.show(context, message: context.l10n.homeLocateError);
       }
       return;
     }
@@ -1410,7 +1533,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Poids max du colis',
+                  ctx2.l10n.homeMaxWeightTitle,
                   style: Theme.of(ctx2).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -1434,7 +1557,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: () => Navigator.pop(ctx2, selected),
-                    child: const Text('Appliquer'),
+                    child: Text(ctx2.l10n.commonApply),
                   ),
                 ),
               ],
@@ -1457,7 +1580,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Taille du colis',
+                sheetCtx.l10n.homeParcelSizeTitle,
                 style: Theme.of(
                   sheetCtx,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -1604,77 +1727,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
     _onFiltersChanged(_filters.copyWith(matchingMyTrips: active));
   }
 
-  /// Sous-titre de l'en-tête quand la recherche colis est filtrée sur les
-  /// trajets de l'utilisateur : ce qu'on a trouvé, et sur combien de trajets.
-  ///
-  /// Le mot « compatibles » est essentiel : ce filtre liste les demandes encore
-  /// libres qu'on POURRAIT prendre, pas les colis déjà embarqués sur ses
-  /// trajets, qui se consultent depuis le détail du trajet. Un titre du genre
-  /// « colis sur tes trajets » se lit à l'envers et fait chercher un colis
-  /// accepté qui n'a rien à faire ici.
-  ///
-  /// [trips] à `null` = nombre de trajets actifs inconnu : on annonce les
-  /// résultats sans inventer un « 0 trajet actif » que rien ne prouve.
-  /// Titre de la liste : le nombre, ce que la liste contient et le corridor.
-  /// Il répète l'intention du sélecteur de mode (« voyageurs » / « colis à
-  /// transporter ») pour que le contenu de la liste ne soit jamais à deviner.
-  String _listTitle({
-    required int trips,
-    required int parcels,
-    required bool matching,
-  }) {
-    if (_mode.isTrips) {
-      final voyageurs = '$trips voyageur${trips > 1 ? 's' : ''}';
-      if (_isNearMeActive) {
-        return '$voyageurs à proximité';
-      }
-      return '$voyageurs $_corridorSuffix';
-    }
-    if (matching) {
-      return '$parcels colis compatible${parcels > 1 ? 's' : ''}';
-    }
-    return '$parcels colis à transporter $_corridorSuffix';
-  }
-
-  /// Sous-titre de la liste : ce que l'utilisateur peut en faire, ou pourquoi
-  /// elle est vide. En mode « Pour mes trajets », l'accord porte sur le
-  /// nombre de trajets actifs, connu ou non (voir `knownActiveTrips`).
-  String _listSubtitle({
-    required int trips,
-    required int parcels,
-    required bool matching,
-    required int? activeTrips,
-  }) {
-    if (_mode.isTrips) {
-      return trips == 0
-          ? 'Personne ne propose ce trajet pour l\'instant'
-          : 'Ils peuvent emporter ton colis';
-    }
-    if (matching) {
-      if (activeTrips == null) {
-        return 'Avec tes trajets actifs';
-      }
-      return activeTrips > 1
-          ? 'Avec tes $activeTrips trajets actifs'
-          : 'Avec ton trajet actif';
-    }
-    return parcels == 0
-        ? 'Aucune demande d\'envoi pour l\'instant'
-        : 'Tu peux les emporter sur ton trajet';
-  }
-
-  /// « pour Abidjan → Paris » quand les deux villes sont posées, sinon le
-  /// libellé de corridor tel quel (« Départ de Lyon », « Tous les corridors »)
-  /// derrière un point médian.
-  String get _corridorSuffix {
-    final dep = _filters.departureCity;
-    final arr = _filters.arrivalCity;
-    if (dep != null && arr != null) {
-      return 'pour $dep → $arr';
-    }
-    return '· $_corridorLabel';
-  }
-
   /// Les états vides remplissent le reste de la feuille et se centrent. Comme
   /// les listes, ils s'arrêtent au-dessus de la pastille « Carte » (feuille
   /// plein écran) et de la barre flottante : sans cette marge, le bouton
@@ -1808,7 +1860,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               children: [
                                 Text(
                                   key: const Key('results-header-title'),
-                                  _listTitle(
+                                  homeListTitle(
+                                    context.l10n,
+                                    mode: _mode,
+                                    filters: _filters,
                                     trips: count,
                                     parcels: parcels,
                                     matching: matching,
@@ -1820,7 +1875,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                 const SizedBox(height: 2),
                                 Text(
                                   key: const Key('results-header-subtitle'),
-                                  _listSubtitle(
+                                  homeListSubtitle(
+                                    context.l10n,
+                                    mode: _mode,
                                     trips: count,
                                     parcels: parcels,
                                     matching: matching,
@@ -1846,7 +1903,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   GestureDetector(
                     onTap: () => _openComposer(ctx),
                     child: Text(
-                      'Trier',
+                      ctx.l10n.homeSort,
                       style: tt.labelMedium?.copyWith(
                         color: cs.primary,
                         fontWeight: FontWeight.w600,
@@ -1911,11 +1968,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             hasScrollBody: false,
                             child: DonyEmptyState(
                               type: DonyEmptyStateType.error,
-                              title: 'Connexion impossible',
-                              description:
-                                  'Impossible de charger les demandes. Vérifie ta connexion puis réessaie.',
+                              title: ctx.l10n.homeConnectionErrorTitle,
+                              description: ctx.l10n.homeRequestsLoadError,
                               mascotte: DonyMascotteType.erreurLegere,
-                              actionLabel: 'Réessayer',
+                              actionLabel: ctx.l10n.commonRetry,
                               onAction: () => ctx
                                   .read<PackageRequestSearchBloc>()
                                   .add(const SearchRefresh()),
@@ -1935,14 +1991,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             child: _emptyWithCrossDiscovery(
                               DonyEmptyState(
                                 title: hasFilters
-                                    ? 'Aucun colis avec ces filtres'
-                                    : 'Demandes bientôt disponibles',
+                                    ? ctx.l10n.homeEmptyParcelsFiltered
+                                    : ctx.l10n.homeEmptyParcelsSoon,
                                 description: hasFilters
-                                    ? 'Modifie ou supprime tes filtres pour voir plus de demandes.'
-                                    : 'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.',
+                                    ? ctx.l10n.homeEmptyParcelsFilteredHint
+                                    : ctx.l10n.homeEmptyParcelsSoonHint,
                                 mascotte: DonyMascotteType.aucunResultat,
                                 actionLabel: hasFilters
-                                    ? 'Effacer les filtres'
+                                    ? ctx.l10n.commonClearFilters
                                     : null,
                                 onAction: hasFilters ? _resetFilters : null,
                               ),
@@ -2024,11 +2080,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       hasScrollBody: false,
                       child: DonyEmptyState(
                         type: DonyEmptyStateType.error,
-                        title: 'Connexion impossible',
-                        description:
-                            'Impossible de charger les trajets. Vérifie ta connexion puis réessaie.',
+                        title: ctx.l10n.homeConnectionErrorTitle,
+                        description: ctx.l10n.homeTripsLoadError,
                         mascotte: DonyMascotteType.erreurLegere,
-                        actionLabel: 'Réessayer',
+                        actionLabel: ctx.l10n.commonRetry,
                         onAction: _dispatchSearch,
                       ),
                     ),
@@ -2041,19 +2096,19 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       child: _emptyWithCrossDiscovery(
                         DonyEmptyState(
                           title: _isNearMeActive
-                              ? 'Aucun voyageur à proximité'
+                              ? ctx.l10n.homeEmptyTravelersNearby
                               : _activeFilterCount > 0
-                              ? 'Aucun voyageur avec ces filtres'
-                              : 'Aucun voyageur sur ce corridor',
+                              ? ctx.l10n.homeEmptyTravelersFiltered
+                              : ctx.l10n.homeEmptyTravelersRoute,
                           description: _isNearMeActive
-                              ? 'Élargis ta zone ou désactive "Près de moi"'
+                              ? ctx.l10n.homeEmptyNearbyHint
                               : _activeFilterCount > 0
-                              ? 'Modifie tes filtres pour voir plus de voyageurs.'
-                              : 'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.',
+                              ? ctx.l10n.homeEmptyTravelersFilteredHint
+                              : ctx.l10n.homeEmptyTravelersRouteHint,
                           mascotte: DonyMascotteType.aucunResultat,
                           actionLabel:
                               !_isNearMeActive && _activeFilterCount > 0
-                              ? 'Effacer les filtres'
+                              ? ctx.l10n.commonClearFilters
                               : null,
                           onAction: !_isNearMeActive && _activeFilterCount > 0
                               ? _resetFilters
@@ -2372,7 +2427,7 @@ class _HomeCarteFab extends StatelessWidget {
             DonyIcon('map', size: 16, color: cs.surface),
             const SizedBox(width: DonySpacing.xs),
             Text(
-              'Carte',
+              context.l10n.homeMapButton,
               style: tt.labelMedium?.copyWith(
                 color: cs.surface,
                 fontWeight: FontWeight.w600,
@@ -2428,7 +2483,7 @@ class _NearMeRadiusPill extends StatelessWidget {
               DonyIcon('circle-dot', size: 16, color: cs.primary),
               const SizedBox(width: DonySpacing.xs),
               Text(
-                'Rayon · ${radiusKm.round()} km',
+                context.l10n.homeRadiusKm(radiusKm.round()),
                 style: tt.labelLarge?.copyWith(
                   color: cs.onSurface,
                   fontWeight: FontWeight.w700,
@@ -2480,7 +2535,7 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
       initialDate: _customDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      locale: AppL10n.currentLocale,
+      locale: Localizations.localeOf(context),
     );
     if (picked != null && mounted) {
       setState(() {
@@ -2524,22 +2579,22 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
             ),
           ),
           Text(
-            'Date de départ',
+            context.l10n.homeDepartureDateTitle,
             style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: DonySpacing.md),
           _PresetOption(
-            label: 'Aujourd\'hui',
+            label: context.l10n.commonDateToday,
             isSelected: _selected == DonyDatePreset.today,
             onTap: () => setState(() => _selected = DonyDatePreset.today),
           ),
           _PresetOption(
-            label: 'Cette semaine',
+            label: context.l10n.commonDateThisWeek,
             isSelected: _selected == DonyDatePreset.thisWeek,
             onTap: () => setState(() => _selected = DonyDatePreset.thisWeek),
           ),
           _PresetOption(
-            label: 'Ce mois-ci',
+            label: context.l10n.commonDateThisMonthLong,
             isSelected: _selected == DonyDatePreset.thisMonth,
             onTap: () => setState(() => _selected = DonyDatePreset.thisMonth),
           ),
@@ -2547,9 +2602,9 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
             label: _selected == DonyDatePreset.custom && _customDate != null
                 ? DateFormat(
                     'EEE d MMM',
-                    AppL10n.localeName,
+                    context.l10n.localeName,
                   ).format(_customDate!)
-                : 'Choisir une date',
+                : context.l10n.homeChooseDate,
             isSelected: _selected == DonyDatePreset.custom,
             onTap: _pickCustomDate,
           ),
@@ -2571,7 +2626,7 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
                     ),
                     child: Center(
                       child: Text(
-                        'Effacer',
+                        context.l10n.commonClear,
                         style: tt.labelLarge?.copyWith(
                           color: cs.onSurface,
                           fontWeight: FontWeight.w600,
@@ -2584,7 +2639,7 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: DonyButton(
-                  label: 'Appliquer',
+                  label: context.l10n.commonApply,
                   onPressed: () => Navigator.of(
                     context,
                   ).pop((preset: _selected, customDate: _customDate)),
@@ -2701,15 +2756,15 @@ class _RatingFilterSheetState extends State<_RatingFilterSheet> {
             ),
           ),
           Text(
-            'Note minimum',
+            context.l10n.homeMinRatingTitle,
             style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: DonySpacing.md),
           for (final r in ratings)
             _PresetOption(
               label: r == 5.0
-                  ? '★ 5.0 uniquement'
-                  : '★ ${r.toStringAsFixed(1)} et plus',
+                  ? context.l10n.homeRatingOnlyFive
+                  : context.l10n.homeRatingAndUp(r.toStringAsFixed(1)),
               isSelected: _selected == r,
               onTap: () => setState(() => _selected = r),
             ),
@@ -2728,7 +2783,7 @@ class _RatingFilterSheetState extends State<_RatingFilterSheet> {
                     ),
                     child: Center(
                       child: Text(
-                        'Effacer',
+                        context.l10n.commonClear,
                         style: tt.labelLarge?.copyWith(
                           color: cs.onSurface,
                           fontWeight: FontWeight.w600,
@@ -2741,7 +2796,7 @@ class _RatingFilterSheetState extends State<_RatingFilterSheet> {
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: DonyButton(
-                  label: 'Appliquer',
+                  label: context.l10n.commonApply,
                   onPressed: () => Navigator.of(context).pop(_selected ?? -1.0),
                 ),
               ),
@@ -2813,7 +2868,7 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
             ),
           ),
           Text(
-            'Capacité kilo',
+            context.l10n.homeWeightCapacityTitle,
             style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: DonySpacing.xl),
@@ -2876,7 +2931,7 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
                     ),
                     child: Center(
                       child: Text(
-                        'Effacer',
+                        context.l10n.commonClear,
                         style: tt.labelLarge?.copyWith(
                           color: cs.onSurface,
                           fontWeight: FontWeight.w600,
@@ -2889,7 +2944,7 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: DonyButton(
-                  label: 'Appliquer',
+                  label: context.l10n.commonApply,
                   onPressed: () =>
                       Navigator.of(context).pop((min: _min, max: _max)),
                 ),
@@ -2960,14 +3015,14 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
             ),
           ),
           Text(
-            'Prix maximum',
+            context.l10n.homeMaxPriceTitle,
             style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: DonySpacing.xl),
           Center(
             child: Text(
               isAtMax
-                  ? 'Tous les prix'
+                  ? context.l10n.homeAnyPrice
                   : '≤ ${formatPriceActive(_maxPrice)}/kg',
               style: tt.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
@@ -3022,7 +3077,7 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
                     ),
                     child: Center(
                       child: Text(
-                        'Effacer',
+                        context.l10n.commonClear,
                         style: tt.labelLarge?.copyWith(
                           color: cs.onSurface,
                           fontWeight: FontWeight.w600,
@@ -3035,7 +3090,7 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: DonyButton(
-                  label: 'Appliquer',
+                  label: context.l10n.commonApply,
                   onPressed: () =>
                       Navigator.of(context).pop(isAtMax ? -1.0 : _maxPrice),
                 ),

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -29,7 +30,7 @@ class _CitySwapButtonState extends State<CitySwapButton> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Tooltip(
-      message: 'Interchanger départ et arrivée',
+      message: context.l10n.citySwapLabel,
       child: InkWell(
         key: const Key('swap-corridor-cities'),
         onTap: _handleTap,

@@ -36,6 +36,7 @@ import 'package:dony/features/home/presentation/widgets/unresolved_question.dart
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -128,18 +129,21 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
       appBar: AppBar(
         leading: const DonyAppBarBackButton(),
         title: Text(
-          widget.mode.isTrips ? 'Filtrer les trajets' : 'Filtrer les colis',
+          widget.mode.isTrips
+              ? l.homeComposerTitleTrips
+              : l.homeComposerTitleParcels,
         ),
         actions: [
           TextButton(
             onPressed: () => context.read<SearchComposerBloc>().add(
               const SearchComposerCleared(),
             ),
-            child: const Text('Tout effacer'),
+            child: Text(l.homeComposerClearAll),
           ),
           const DonyFeedbackButton(),
         ],
@@ -159,7 +163,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
             children: [
-              const SearchSectionLabel('EN UNE PHRASE', optional: true),
+              SearchSectionLabel(l.homeComposerSectionPhrase, optional: true),
               SearchPhraseField(
                 controller: _phraseController,
                 onSubmitted: _submitPhrase,
@@ -169,7 +173,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
                 ParsedRecapCard(state.recognized),
               for (final item in state.unresolved) UnresolvedQuestion(item),
 
-              const SearchSectionLabel('OÙ'),
+              SearchSectionLabel(l.homeComposerSectionWhere),
               CityCorridorFields(
                 departureValue: f.departureCity,
                 arrivalValue: f.arrivalCity,
@@ -184,7 +188,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
                 onSwap: () => _update(f.swapCorridor()),
               ).animate().fadeIn(duration: 250.ms),
 
-              const SearchSectionLabel('QUAND'),
+              SearchSectionLabel(l.homeComposerSectionWhen),
               DatePresetsField(
                 value: f,
                 onChanged: _update,
@@ -195,7 +199,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
               else
                 ..._parcelsBlocks(context, f),
 
-              const SearchSectionLabel('AUTOUR DE MOI'),
+              SearchSectionLabel(l.homeComposerSectionAroundMe),
               _AroundMeBlock(filters: f).animate().fadeIn(delay: 120.ms),
             ],
           );
@@ -212,8 +216,8 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
               // conditionne jamais l'activation du bouton : chercher sans
               // compteur (comptage en échec) reste possible.
               final label = state.resultCount == null
-                  ? 'Rechercher'
-                  : 'Rechercher (${state.resultCount})';
+                  ? l.homeComposerSearch
+                  : l.homeComposerSearchWithCount(state.resultCount!);
               return DonyButton(
                 label: label,
                 // `context.read` et non le `state` capturé par ce
@@ -248,8 +252,9 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
   List<Widget> _tripsBlocks(BuildContext context, HomeSearchFilters f) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return [
-      const SearchSectionLabel('POIDS ET PRIX'),
+      SearchSectionLabel(l.homeComposerSectionWeightPrice),
       Row(
         children: [
           Expanded(
@@ -304,14 +309,14 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         ],
       ).animate().fadeIn(delay: 60.ms),
 
-      const SearchSectionLabel('MON COLIS CONTIENT'),
+      SearchSectionLabel(l.homeComposerSectionContents),
       // Autocomplétion plutôt que les onze types dépliés : la liste occuperait
       // l'écran entier. `singleSelection` conserve la sémantique du filtre.
       ContentCategorySelector(
         repository: getIt<IContentCategoryRepository>(),
         keyPrefix: 'filter-content',
         singleSelection: true,
-        hint: 'Rechercher un type de contenu…',
+        hint: l.homeComposerContentHint,
         selected: f.contentType == null ? const [] : [f.contentType!],
         onChanged: (sel) => _update(
           sel.isEmpty
@@ -320,19 +325,19 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         ),
       ).animate().fadeIn(delay: 80.ms),
 
-      const SearchSectionLabel('FILTRES RAPIDES'),
+      SearchSectionLabel(l.homeComposerSectionQuickFilters),
       Wrap(
         spacing: DonySpacing.sm,
         runSpacing: DonySpacing.sm,
         children: [
           QuickChip(
-            label: 'Kilo Pro',
+            label: 'Kilo Pro', // i18n-ignore
             iconAsset: 'award',
             active: f.kiloProOnly,
             onChanged: (v) => _update(f.copyWith(kiloProOnly: v)),
           ),
           QuickChip(
-            label: 'Note ≥ 4.5',
+            label: l.homeComposerMinRating,
             iconAsset: 'star',
             active: f.minRating != null,
             onChanged: (v) => _update(
@@ -340,13 +345,13 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
             ),
           ),
           QuickChip(
-            label: 'Week-end',
+            label: l.homeComposerWeekend,
             iconAsset: 'sofa',
             active: f.weekendOnly,
             onChanged: (v) => _update(f.copyWith(weekendOnly: v)),
           ),
           QuickChip(
-            label: 'Identité vérifiée',
+            label: l.homeComposerVerifiedIdentity,
             iconAsset: 'shield-check',
             active: f.kycVerifiedOnly,
             onChanged: (v) => _update(f.copyWith(kycVerifiedOnly: v)),
@@ -354,9 +359,9 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         ],
       ).animate().fadeIn(delay: 100.ms),
 
-      const SearchSectionLabel('URGENCE DU DÉPART'),
+      SearchSectionLabel(l.homeComposerSectionUrgency),
       Text(
-        'Filtrer les trajets selon leur proximité de départ',
+        l.homeComposerUrgencyHint,
         style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
       ),
       const SizedBox(height: DonySpacing.md),
@@ -374,8 +379,9 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
   // ── Colis ────────────────────────────────────────────────────────────────
 
   List<Widget> _parcelsBlocks(BuildContext context, HomeSearchFilters f) {
+    final l = context.l10n;
     return [
-      const SearchSectionLabel('POIDS MAXIMAL'),
+      SearchSectionLabel(l.homeComposerSectionMaxWeight),
       Wrap(
         spacing: DonySpacing.sm,
         runSpacing: DonySpacing.sm,
@@ -394,14 +400,14 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         ],
       ).animate().fadeIn(delay: 40.ms),
 
-      const SearchSectionLabel('TAILLE DU COLIS'),
+      SearchSectionLabel(l.homeComposerSectionParcelSize),
       Wrap(
         spacing: DonySpacing.sm,
         runSpacing: DonySpacing.sm,
         children: [
           for (final size in ParcelSize.values)
             ContentTypeChip(
-              label: _parcelSizeLabel(size),
+              label: _parcelSizeLabel(l, size),
               emoji: _parcelSizeEmoji(size),
               selected: f.parcelSize == size,
               onTap: () => _update(
@@ -413,7 +419,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
         ],
       ).animate().fadeIn(delay: 60.ms),
 
-      const SearchSectionLabel('FILTRES RAPIDES'),
+      SearchSectionLabel(l.homeComposerSectionQuickFilters),
       Wrap(
         spacing: DonySpacing.sm,
         runSpacing: DonySpacing.sm,
@@ -422,7 +428,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
             opacity: _canFilterOnMyTrips ? 1 : 0.4,
             child: QuickChip(
               key: const Key('chip-matching-my-trips'),
-              label: 'Pour mes trajets',
+              label: l.homeComposerForMyTrips,
               iconAsset: 'plane',
               active: f.matchingMyTrips,
               onChanged: _canFilterOnMyTrips
@@ -434,8 +440,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
       ).animate().fadeIn(delay: 80.ms),
       const SizedBox(height: DonySpacing.md),
       Text(
-        'Astuce, tu peux être prévenu des nouveaux colis compatibles depuis '
-        'Réglages, Notifications.',
+        l.homeComposerAlertTip,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
@@ -443,11 +448,12 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
     ];
   }
 
-  static String _parcelSizeLabel(ParcelSize s) => switch (s) {
-    ParcelSize.small => 'Petit',
-    ParcelSize.medium => 'Moyen',
-    ParcelSize.large => 'Grand',
-  };
+  static String _parcelSizeLabel(AppLocalizations l, ParcelSize s) =>
+      switch (s) {
+        ParcelSize.small => l.parcelSizeSmall,
+        ParcelSize.medium => l.parcelSizeMedium,
+        ParcelSize.large => l.parcelSizeLarge,
+      };
 
   static String _parcelSizeEmoji(ParcelSize s) => switch (s) {
     ParcelSize.small => '📦',
@@ -532,7 +538,7 @@ class _AroundMeBlockState extends State<_AroundMeBlock> {
     final radiusKm = await NearMeRadiusSheet.show(
       context,
       initialRadiusKm: widget.filters.nearMeRadiusKm ?? 25,
-      confirmLabel: 'Appliquer',
+      confirmLabel: context.l10n.commonApply,
     );
     if (radiusKm == null || !mounted) return;
     context.read<SearchComposerBloc>().add(
@@ -547,6 +553,7 @@ class _AroundMeBlockState extends State<_AroundMeBlock> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final active = widget.filters.nearMeActive;
+    final l = context.l10n;
 
     return ValueListenableBuilder<bool>(
       valueListenable: _isLocating,
@@ -554,7 +561,7 @@ class _AroundMeBlockState extends State<_AroundMeBlock> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           QuickChip(
-            label: 'Autour de moi',
+            label: l.homeComposerAroundMe,
             iconAsset: 'circle-dot',
             active: active,
             onChanged: (v) {
@@ -580,7 +587,7 @@ class _AroundMeBlockState extends State<_AroundMeBlock> {
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 Text(
-                  'Localisation en cours…',
+                  l.homeComposerLocating,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
@@ -605,7 +612,9 @@ class _AroundMeBlockState extends State<_AroundMeBlock> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Rayon · ${(widget.filters.nearMeRadiusKm ?? 25).round()} km',
+                      l.homeRadiusKm(
+                        (widget.filters.nearMeRadiusKm ?? 25).round(),
+                      ),
                       style: tt.labelMedium?.copyWith(
                         color: cs.primary,
                         fontWeight: FontWeight.w700,

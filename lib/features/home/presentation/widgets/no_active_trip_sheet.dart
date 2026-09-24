@@ -6,6 +6,7 @@
 // lui-même (pastille dans le bloc « FILTRES RAPIDES » du mode colis).
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Explique pourquoi « Pour mes trajets » est indisponible et propose l'action
@@ -27,14 +28,13 @@ Future<void> showNoActiveTripSheet(
   VoidCallback? onPublishTrip,
 }) {
   final sheetNavigator = Navigator.of(context, rootNavigator: true);
+  final l = context.l10n;
   return DonyBottomSheet.show<void>(
     context,
-    title: 'Aucun trajet actif',
-    subtitle:
-        'Ce filtre ne montre que les colis compatibles avec tes '
-        'trajets à venir. Publie un trajet pour t\'en servir.',
+    title: l.homeNoActiveTripTitle,
+    subtitle: l.homeNoActiveTripBody,
     stickyBottom: DonyButton(
-      label: 'Publier un trajet',
+      label: l.homeNoActiveTripPublish,
       onPressed: () {
         for (var i = 0; i < sheetsToPop; i++) {
           sheetNavigator.pop();

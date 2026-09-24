@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -87,7 +88,7 @@ class LocationDeniedSheet extends StatelessWidget {
       ),
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(
-          label: 'Ouvrir les réglages',
+          label: ctx.l10n.homeLocationPermissionOpenSettings,
           onPressed: () async {
             Navigator.of(ctx, rootNavigator: true).pop();
             if (isServiceOff) {
@@ -101,18 +102,19 @@ class LocationDeniedSheet extends StatelessWidget {
     );
   }
 
-  String get _title => access == LocationAccess.serviceDisabled
-      ? 'Localisation désactivée'
-      : 'Accès à la position refusé';
+  String _title(AppLocalizations l) => access == LocationAccess.serviceDisabled
+      ? l.homeLocationPermissionServiceOffTitle
+      : l.homeLocationPermissionDeniedTitle;
 
-  String get _body => access == LocationAccess.serviceDisabled
-      ? 'Active la localisation de ton téléphone pour voir ce qui est près de toi.'
-      : "Autorise l'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte.";
+  String _body(AppLocalizations l) => access == LocationAccess.serviceDisabled
+      ? l.homeLocationPermissionServiceOffBody
+      : l.homeLocationPermissionDeniedBody;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -125,10 +127,10 @@ class LocationDeniedSheet extends StatelessWidget {
         children: [
           DonyIcon('map-pin-off', size: 48, color: cs.primary),
           const SizedBox(height: DonySpacing.md),
-          Text(_title, style: tt.titleLarge, textAlign: TextAlign.center),
+          Text(_title(l), style: tt.titleLarge, textAlign: TextAlign.center),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            _body,
+            _body(l),
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),

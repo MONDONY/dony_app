@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Sélecteur de mode de la recherche : deux intentions exclusives, une
@@ -27,21 +28,23 @@ class SearchModeSelector extends StatelessWidget {
   final ValueChanged<SearchMode> onChanged;
   final int? otherModeCount;
 
-  static const String tripsTitle = 'J\'envoie un colis';
-  static const String parcelsTitle = 'Je voyage';
+  static String tripsTitle(AppLocalizations l) => l.homeModeSelectorSending;
+  static String parcelsTitle(AppLocalizations l) => l.homeModeSelectorTraveling;
 
   /// Ce que la liste montre dans ce mode ; sur le segment inactif, avec le
   /// nombre quand il est connu et non nul.
-  String _subtitle(SearchMode segment) {
+  String _subtitle(AppLocalizations l, SearchMode segment) {
     final n = segment == mode ? null : otherModeCount;
     final withCount = n != null && n > 0;
     return switch (segment) {
       SearchMode.trips =>
         withCount
-            ? '$n voyageur${n > 1 ? 's' : ''} disponible${n > 1 ? 's' : ''}'
-            : 'Voyageurs disponibles',
+            ? l.homeModeSelectorTravelersAvailable(n)
+            : l.homeModeSelectorTravelersSubtitle,
       SearchMode.parcels =>
-        withCount ? '$n colis à transporter' : 'Colis à transporter',
+        withCount
+            ? l.homeModeSelectorParcelsToCarry(n)
+            : l.homeModeSelectorParcelsSubtitle,
     };
   }
 
@@ -51,6 +54,7 @@ class SearchModeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return ClipRRect(
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: BackdropFilter(
@@ -78,8 +82,8 @@ class SearchModeSelector extends StatelessWidget {
                 Expanded(
                   child: _Segment(
                     key: const Key('search_mode_segment_trips'),
-                    title: tripsTitle,
-                    subtitle: _subtitle(SearchMode.trips),
+                    title: tripsTitle(l),
+                    subtitle: _subtitle(l, SearchMode.trips),
                     countShown: _countShown(SearchMode.trips),
                     isActive: mode.isTrips,
                     onTap: () =>
@@ -90,8 +94,8 @@ class SearchModeSelector extends StatelessWidget {
                 Expanded(
                   child: _Segment(
                     key: const Key('search_mode_segment_colis'),
-                    title: parcelsTitle,
-                    subtitle: _subtitle(SearchMode.parcels),
+                    title: parcelsTitle(l),
+                    subtitle: _subtitle(l, SearchMode.parcels),
                     countShown: _countShown(SearchMode.parcels),
                     isActive: mode.isParcels,
                     onTap: () =>

@@ -6,6 +6,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/l10n_test_helpers.dart';
+
 void main() {
   const scheme = ColorScheme.light(primary: DonyColors.primary);
 
@@ -57,6 +59,26 @@ void main() {
 
       await tester.tap(find.byType(DonyNavOrb));
       expect(tapped, isTrue);
+    });
+
+    testWidgets('Semantics traduit en anglais (Tracking)', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(host(DonyNavOrb(active: true, onTap: () {})));
+
+      final node = tester.getSemantics(find.bySemanticsLabel('Tracking'));
+      expect(node.flagsCollection.isSelected, Tristate.isTrue);
+    });
+
+    testWidgets('icône traduite en anglais (QR scanner)', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(host(DonyNavOrb(active: false, onTap: () {})));
+
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.semanticLabel == 'QR scanner',
+        ),
+        findsOneWidget,
+      );
     });
   });
 }

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Glint cyan décoratif (bas-droite de la sphère) — accent glossy, non sémantique.
@@ -33,7 +34,7 @@ class DonyNavOrb extends StatelessWidget {
     return Semantics(
       button: true,
       selected: active,
-      label: 'Suivi',
+      label: context.l10n.shellOrbTracking,
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
@@ -118,7 +119,7 @@ class DonyNavOrb extends StatelessWidget {
                 'scan-line',
                 size: size * 0.42,
                 color: Colors.white,
-                semanticLabel: 'Lecteur QR',
+                semanticLabel: context.l10n.shellOrbQrScanner,
               ),
             ],
           ),

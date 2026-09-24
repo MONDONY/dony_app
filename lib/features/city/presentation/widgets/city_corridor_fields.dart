@@ -7,6 +7,7 @@ import 'package:dony/features/city/data/recent_city_store.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/city/presentation/widgets/city_swap_button.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -145,7 +146,7 @@ class _CityCorridorFieldsState extends State<CityCorridorFields> {
                           widget.departureCityBloc ?? getIt<CitySearchBloc>(),
                       child: CityAutocompleteField(
                         fieldKey: widget.departureFieldKey,
-                        label: 'Départ',
+                        label: context.l10n.cityDepartureLabel,
                         requiredLabel: widget.requiredLabels,
                         initialValue: widget.departureValue,
                         variant: CityFieldVariant.connected,
@@ -172,7 +173,7 @@ class _CityCorridorFieldsState extends State<CityCorridorFields> {
                           widget.arrivalCityBloc ?? getIt<CitySearchBloc>(),
                       child: CityAutocompleteField(
                         fieldKey: widget.arrivalFieldKey,
-                        label: 'Arrivée',
+                        label: context.l10n.cityArrivalLabel,
                         requiredLabel: widget.requiredLabels,
                         initialValue: widget.arrivalValue,
                         variant: CityFieldVariant.connected,

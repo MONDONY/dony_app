@@ -8,6 +8,7 @@ import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/data/recent_city_store.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -232,9 +233,10 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
     isRequired: widget.requiredLabel,
   );
 
-  Widget? _buildClearButton(ColorScheme cs) => _controller.text.isNotEmpty
+  Widget? _buildClearButton(BuildContext context, ColorScheme cs) =>
+      _controller.text.isNotEmpty
       ? IconButton(
-          tooltip: 'Effacer la ville',
+          tooltip: context.l10n.cityClearCity,
           icon: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
           onPressed: () {
             _controller.clear();
@@ -297,7 +299,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
         labelText: labelWidget == null ? widget.label : null,
         errorText: widget.errorText,
         prefixIcon: widget.prefixIcon,
-        suffixIcon: _buildClearButton(cs),
+        suffixIcon: _buildClearButton(context, cs),
       ),
       onChanged: _onChanged,
     );
@@ -361,14 +363,14 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
               contentPadding: const EdgeInsets.only(top: 3),
-              hintText: 'Choisir une ville',
+              hintText: context.l10n.cityChooseCity,
               hintStyle: tt.headlineMedium?.copyWith(
                 fontSize: 21,
                 fontWeight: FontWeight.w600,
                 color: cs.onSurfaceVariant,
               ),
               suffix: widget.valueSuffix,
-              suffixIcon: _buildClearButton(cs),
+              suffixIcon: _buildClearButton(context, cs),
               suffixIconConstraints: const BoxConstraints(
                 minWidth: 32,
                 minHeight: 32,
@@ -521,7 +523,7 @@ class _RecentCityList extends StatelessWidget {
               DonySpacing.xs,
             ),
             child: Text(
-              'RÉCENTS',
+              context.l10n.cityRecentSection,
               style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),

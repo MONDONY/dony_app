@@ -61,6 +61,7 @@ import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 import '../../../helpers/mock_recent_city_store.dart';
 
@@ -1109,6 +1110,20 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1000));
 
       expect(find.text('Aucun voyageur sur ce corridor'), findsOneWidget);
+    });
+
+    testWidgets('état vide et en-tête de liste traduits en anglais', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded(const [])),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      expect(find.text('No travelers on this route'), findsOneWidget);
+      expect(find.text('0 travelers · All routes'), findsOneWidget);
+      expect(find.text('Aucun voyageur sur ce corridor'), findsNothing);
     });
 
     testWidgets(

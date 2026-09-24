@@ -14,6 +14,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 const _emptyHelpConfigJson = '''
@@ -425,4 +426,30 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('en anglais : titres des slides et bouton de fermeture', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(_wrap(hive: hive, isKycVerified: false));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Post my trip'), findsOneWidget);
+    expect(find.byTooltip("Don't show again"), findsOneWidget);
+    expect(find.text('Publier mon trajet'), findsNothing);
+
+    await _swipeNext(tester);
+    expect(find.text('Post a parcel'), findsOneWidget);
+    await _swipeNext(tester);
+    expect(find.text('Create an alert'), findsOneWidget);
+    await _swipeNext(tester);
+    expect(find.text('Verify my identity'), findsOneWidget);
+  });
+
+  testWidgets('en français : bouton de fermeture inchangé', (tester) async {
+    await tester.pumpWidget(_wrap(hive: hive));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Ne plus afficher'), findsOneWidget);
+  });
 }
