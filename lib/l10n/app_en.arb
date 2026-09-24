@@ -5201,7 +5201,7 @@
   "@stripeAccountIdentityRequiredCta": {
     "description": "Bouton principal de identity_required_view.dart."
   },
-  "connectOnboardingTitle": "Compte Stripe Connect",
+  "connectOnboardingTitle": "Stripe Connect account",
   "@connectOnboardingTitle": {
     "description": "Titre de connect_onboarding_intro_screen.dart, répété dans l'app bar et passé comme titre à ConnectUnavailableView/IdentityRequiredView ; nom de fonctionnalité, identique dans les deux langues (voir _sameInBothLanguages)."
   },

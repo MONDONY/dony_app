@@ -9459,7 +9459,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stripeAccountIdentityRequiredCta => 'Verify my identity';
 
   @override
-  String get connectOnboardingTitle => 'Compte Stripe Connect';
+  String get connectOnboardingTitle => 'Stripe Connect account';
 
   @override
   String get connectOnboardingBrowserLaunchFailed =>

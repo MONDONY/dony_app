@@ -216,7 +216,7 @@ void main() {
       await tester.pumpWidget(_wrap(mockBloc));
       await tester.pump(_kSettle);
 
-      expect(find.text('Compte Stripe Connect'), findsOneWidget);
+      expect(find.text('Stripe Connect account'), findsOneWidget);
       expect(find.text('Complete my account'), findsOneWidget);
     });
   });
