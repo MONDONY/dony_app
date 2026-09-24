@@ -5596,7 +5596,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get negotiationThreadKindAccepted => 'Accepted';
 
   @override
-  String get negotiationThreadKindRejected => 'Rejected';
+  String get negotiationThreadKindRejected => 'Declined';
 
   @override
   String get negotiationThreadPayHint =>
@@ -5619,10 +5619,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get negotiationThreadClosedAccepted =>
-      'Price accepted. Head to your shipment for what\'s next.';
+      'Price accepted. Head to your parcel for what\'s next.';
 
   @override
-  String get negotiationThreadClosedRejected => 'Proposal rejected.';
+  String get negotiationThreadClosedRejected => 'Proposal declined.';
 
   @override
   String get negotiationThreadClosedExpired => 'Proposal expired.';
@@ -5645,7 +5645,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get negotiationThreadCounterButton => 'Counter-propose';
 
   @override
-  String get negotiationThreadRejectButton => 'Reject';
+  String get negotiationThreadRejectButton => 'Decline';
 
   @override
   String get negotiationThreadCounterSubtitle =>

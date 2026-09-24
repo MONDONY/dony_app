@@ -810,7 +810,7 @@ void main() {
       expect(find.text('Round 1 of 6'), findsOneWidget);
       expect(find.text('Accept'), findsOneWidget);
       expect(find.text('Counter-propose'), findsOneWidget);
-      expect(find.text('Reject'), findsOneWidget);
+      expect(find.text('Decline'), findsOneWidget);
     });
 
     testWidgets('fil clos par refus : message traduit', (tester) async {
@@ -838,7 +838,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Proposal rejected.'), findsOneWidget);
+      expect(find.text('Proposal declined.'), findsOneWidget);
     });
   });
 }

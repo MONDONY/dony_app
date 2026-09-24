@@ -1992,7 +1992,7 @@
   "@negotiationThreadKindAccepted": {
     "description": "Libellé d'un message d'acceptation (bid_negotiation_thread_screen.dart)"
   },
-  "negotiationThreadKindRejected": "Rejected",
+  "negotiationThreadKindRejected": "Declined",
   "@negotiationThreadKindRejected": {
     "description": "Libellé d'un message de refus (bid_negotiation_thread_screen.dart)"
   },
@@ -2016,11 +2016,11 @@
   "@negotiationThreadCashSenderHint": {
     "description": "Accord en espèces, vue expéditeur (bid_negotiation_thread_screen.dart)"
   },
-  "negotiationThreadClosedAccepted": "Price accepted. Head to your shipment for what's next.",
+  "negotiationThreadClosedAccepted": "Price accepted. Head to your parcel for what's next.",
   "@negotiationThreadClosedAccepted": {
     "description": "Fil clos, statut ACCEPTED (bid_negotiation_thread_screen.dart)"
   },
-  "negotiationThreadClosedRejected": "Proposal rejected.",
+  "negotiationThreadClosedRejected": "Proposal declined.",
   "@negotiationThreadClosedRejected": {
     "description": "Fil clos par un refus explicite, message REJECT présent (bid_negotiation_thread_screen.dart)"
   },
@@ -2053,7 +2053,7 @@
   "@negotiationThreadCounterButton": {
     "description": "Bouton et titre de la feuille de contre-proposition (bid_negotiation_thread_screen.dart)"
   },
-  "negotiationThreadRejectButton": "Reject",
+  "negotiationThreadRejectButton": "Decline",
   "@negotiationThreadRejectButton": {
     "description": "Bouton de refus d'une proposition (bid_negotiation_thread_screen.dart)"
   },
