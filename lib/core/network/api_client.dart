@@ -334,7 +334,10 @@ AppException mapHttpError(DioException err) {
     );
   }
   if (statusCode == 401) {
-    return UnauthorizedException(detail ?? l.networkFallbackSessionExpired, apiCode);
+    return UnauthorizedException(
+      detail ?? l.networkFallbackSessionExpired,
+      apiCode,
+    );
   }
   if (statusCode == 403) {
     return ForbiddenException(detail ?? l.networkFallbackAccessDenied, apiCode);
@@ -346,7 +349,10 @@ AppException mapHttpError(DioException err) {
     );
   }
   if (statusCode == 409) {
-    return ConflictException(detail ?? l.networkFallbackConflict, code: apiCode);
+    return ConflictException(
+      detail ?? l.networkFallbackConflict,
+      code: apiCode,
+    );
   }
   if (statusCode == 422) {
     return ValidationException(
