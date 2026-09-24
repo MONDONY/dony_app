@@ -8555,23 +8555,11 @@ abstract class AppLocalizations {
   /// **'Réinitialiser'**
   String get listingResetFiltersButton;
 
-  /// Bouton de recherche avec un seul filtre actif (search_form_bottom_sheet.dart)
+  /// Bouton de recherche de la feuille de filtres, avec le nombre de filtres actifs (search_form_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Rechercher · 1 filtre'**
-  String get listingSearchButtonOneFilter;
-
-  /// Bouton de recherche avec plusieurs filtres actifs (search_form_bottom_sheet.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Rechercher · {count} filtres'**
-  String listingSearchButtonNFilters(int count);
-
-  /// Bouton de recherche sans filtre actif (search_form_bottom_sheet.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Rechercher'**
-  String get listingSearchButton;
+  /// **'{count, plural, =0{Rechercher} =1{Rechercher · {count} filtre} other{Rechercher · {count} filtres}}'**
+  String listingSearchButton(int count);
 
   /// Titre de section des chips de filtres rapides (search_form_bottom_sheet.dart)
   ///

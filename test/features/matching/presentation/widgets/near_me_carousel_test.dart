@@ -20,6 +20,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
@@ -357,4 +359,23 @@ void main() {
       expect(find.byType(FavoriteHeartButton), findsNothing);
     },
   );
+
+  testWidgets('en anglais : bouton "See the N listings" traduit', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        NearMeCarousel(
+          announcements: [_ann('a1'), _ann('a2')],
+          userPosition: null,
+          onSeeAll: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('See the 2 listings'), findsOneWidget);
+    expect(find.text('Voir les 2 annonces'), findsNothing);
+  });
 }

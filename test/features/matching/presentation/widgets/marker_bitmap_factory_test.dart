@@ -215,6 +215,21 @@ void main() {
       );
       expect(identical(a, b), isTrue);
     });
+
+    test(
+      'different grid labels produce different bitmaps in grid mode (pricePerKg <= 0)',
+      () async {
+        final fr = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 0,
+          gridLabel: 'Grille',
+        );
+        final en = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 0,
+          gridLabel: 'Grid',
+        );
+        expect(identical(fr, en), isFalse);
+      },
+    );
   });
 
   group('MarkerBitmapFactory.stackedPricePill brightness', () {
@@ -264,5 +279,22 @@ void main() {
       );
       expect(identical(eur, cad), isFalse);
     });
+
+    test(
+      'different grid labels produce different stacked bitmaps in grid mode (pricePerKg <= 0)',
+      () async {
+        final fr = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 0,
+          gridLabel: 'Grille',
+          count: 3,
+        );
+        final en = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 0,
+          gridLabel: 'Grid',
+          count: 3,
+        );
+        expect(identical(fr, en), isFalse);
+      },
+    );
   });
 }

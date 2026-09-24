@@ -4613,7 +4613,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingPickupLocationsTitle => 'Drop-off locations';
 
   @override
-  String get listingHandoverDeadlineTitle => 'Parcel drop-off';
+  String get listingHandoverDeadlineTitle => 'Parcel drop-off deadline';
 
   @override
   String get listingCapacityAvailableLabel => 'Available capacity';
@@ -5106,15 +5106,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingResetFiltersButton => 'Reset';
 
   @override
-  String get listingSearchButtonOneFilter => 'Search · 1 filter';
-
-  @override
-  String listingSearchButtonNFilters(int count) {
-    return 'Search · $count filters';
+  String listingSearchButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Search · $count filters',
+      one: 'Search · $count filter',
+      zero: 'Search',
+    );
+    return '$_temp0';
   }
-
-  @override
-  String get listingSearchButton => 'Search';
 
   @override
   String get listingQuickFiltersTitle => 'QUICK FILTERS';

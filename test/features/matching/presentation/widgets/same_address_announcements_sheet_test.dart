@@ -14,6 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
@@ -153,4 +155,22 @@ void main() {
       expect(find.byType(FavoriteHeartButton), findsNothing);
     },
   );
+
+  testWidgets('en anglais : compteur de voyageurs traduit', (tester) async {
+    useEnglish();
+    final list = [_ann('a1', 'Paris', 'Dakar'), _ann('a2', 'Paris', 'Dakar')];
+    await tester.pumpWidget(
+      _wrap(
+        SameAddressAnnouncementsSheet(
+          addressLabel: '12 rue Hugo, Paris',
+          announcements: list,
+          onTap: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('2 travelers available at this address'), findsOneWidget);
+    expect(find.text('2 voyageurs disponibles à cette adresse'), findsNothing);
+  });
 }

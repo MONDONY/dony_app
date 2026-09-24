@@ -12,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
 
 AnnouncementModel _makeAnn({
@@ -929,6 +931,24 @@ void main() {
 
       expect(find.text('Vêtements & tissus'), findsOneWidget);
       expect(find.textContaining('+'), findsNothing);
+    });
+
+    testWidgets('en anglais : pill « Your trip » traduite', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(),
+            index: 0,
+            isOwnAnnouncement: true,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Your trip'), findsOneWidget);
+      expect(find.text('Votre trajet'), findsNothing);
     });
   });
 }

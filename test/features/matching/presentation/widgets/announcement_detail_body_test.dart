@@ -13,6 +13,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/stripe_account_test_doubles.dart';
 
 AnnouncementModel _full() => AnnouncementModel(
@@ -198,5 +199,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('🔥 Urgent'), findsNothing);
+  });
+
+  testWidgets('en anglais : titres de section traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(host(_full()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('DROP-OFF LOCATIONS'), findsOneWidget);
+    expect(find.text('PARCEL DROP-OFF DEADLINE'), findsOneWidget);
+    expect(find.text('LIEUX DE REMISE'), findsNothing);
   });
 }

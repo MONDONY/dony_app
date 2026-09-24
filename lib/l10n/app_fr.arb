@@ -4603,22 +4603,14 @@
   "@listingResetFiltersButton": {
     "description": "Bouton de réinitialisation des filtres (search_form_bottom_sheet.dart)"
   },
-  "listingSearchButtonOneFilter": "Rechercher · 1 filtre",
-  "@listingSearchButtonOneFilter": {
-    "description": "Bouton de recherche avec un seul filtre actif (search_form_bottom_sheet.dart)"
-  },
-  "listingSearchButtonNFilters": "Rechercher · {count} filtres",
-  "@listingSearchButtonNFilters": {
-    "description": "Bouton de recherche avec plusieurs filtres actifs (search_form_bottom_sheet.dart)",
+  "listingSearchButton": "{count, plural, =0{Rechercher} =1{Rechercher · {count} filtre} other{Rechercher · {count} filtres}}",
+  "@listingSearchButton": {
+    "description": "Bouton de recherche de la feuille de filtres, avec le nombre de filtres actifs (search_form_bottom_sheet.dart)",
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
-  },
-  "listingSearchButton": "Rechercher",
-  "@listingSearchButton": {
-    "description": "Bouton de recherche sans filtre actif (search_form_bottom_sheet.dart)"
   },
   "listingQuickFiltersTitle": "FILTRES RAPIDES",
   "@listingQuickFiltersTitle": {

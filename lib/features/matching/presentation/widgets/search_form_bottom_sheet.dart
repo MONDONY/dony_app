@@ -63,11 +63,7 @@ class SearchFormBottomSheet {
               Expanded(
                 flex: 2,
                 child: DonyButton(
-                  label: count == 1
-                      ? l.listingSearchButtonOneFilter
-                      : count > 1
-                      ? l.listingSearchButtonNFilters(count)
-                      : l.listingSearchButton,
+                  label: l.listingSearchButton(count),
                   onPressed: () => submitFn?.call(),
                 ),
               ),

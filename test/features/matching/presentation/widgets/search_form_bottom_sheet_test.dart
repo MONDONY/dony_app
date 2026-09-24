@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_recent_city_store.dart';
 
 class _MockCityRepository extends Mock implements CityRepository {}
@@ -185,4 +186,16 @@ void main() {
       expect(result.value?.arrivalCity, 'Dakar');
     },
   );
+
+  testWidgets('en anglais : titre de la feuille et bouton de recherche', (
+    tester,
+  ) async {
+    useEnglish();
+    final result = ValueNotifier<SearchParams?>(null);
+    await _openSheet(tester, result);
+
+    expect(find.text('Filter trips'), findsOneWidget);
+    expect(find.text('Search'), findsOneWidget);
+    expect(find.text('Filtrer les trajets'), findsNothing);
+  });
 }

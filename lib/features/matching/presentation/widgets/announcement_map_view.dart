@@ -106,6 +106,11 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   bool _awaitingFirstLocation = false;
   // Cached brightness — updated in didChangeDependencies (safe to read in initState-triggered async work).
   Brightness _brightness = Brightness.light;
+  // Cached langue — le libellé de grille tarifaire dessiné sur les marqueurs
+  // (gridLabel) dépend de la langue ; sans ce suivi, un changement de langue
+  // en session laisserait les marqueurs déjà construits dans l'ancienne
+  // langue jusqu'au prochain critère de rebuild (zoom, sélection...).
+  String _localeName = 'fr';
   // Improvement A: signature guard to skip redundant re-clustering.
   String? _lastMarkerSignature;
 
@@ -126,8 +131,12 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final newBrightness = Theme.of(context).brightness;
-    if (newBrightness != _brightness) {
+    final newLocaleName = context.l10n.localeName;
+    final brightnessChanged = newBrightness != _brightness;
+    final localeChanged = newLocaleName != _localeName;
+    if (brightnessChanged || localeChanged) {
       _brightness = newBrightness;
+      _localeName = newLocaleName;
       _rebuildMarkers();
     }
   }
@@ -247,6 +256,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       ..write(widget.selectedAnnouncementId)
       ..write('|b=')
       ..write(_brightness.index)
+      ..write('|l=')
+      ..write(_localeName)
       ..write('|c=')
       ..write(cellDegForZoom(_currentZoom));
     return buf.toString();

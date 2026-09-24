@@ -11,8 +11,18 @@ Map<String, String> _messages(String path) {
   };
 }
 
-Set<String> _placeholders(String message) =>
-    RegExp(r'\{(\w+)[,}]').allMatches(message).map((m) => m.group(1)!).toSet();
+// Un placeholder ARB (`{count}`, `{date, plural, ...}`) est toujours
+// lowerCamelCase par convention du projet (vérifié : aucune exception dans
+// les 56 placeholders déclarés). Une branche ICU à un seul mot sans espace
+// (`=0{Rechercher}`, `=0{Search}`) a la même forme `{mot}` mais commence par
+// une majuscule : on l'exclut, sinon `listingSearchButton` faisait détecter
+// "Rechercher"/"Search" comme un placeholder et faisait échouer la
+// comparaison fr/en (texte de branche, pas un paramètre).
+Set<String> _placeholders(String message) => RegExp(r'\{(\w+)[,}]')
+    .allMatches(message)
+    .map((m) => m.group(1)!)
+    .where((name) => RegExp(r'^[a-z]').hasMatch(name))
+    .toSet();
 
 /// Clés dont l'anglais est volontairement identique au français.
 /// Toute nouvelle entrée doit être justifiée en commentaire.

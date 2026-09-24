@@ -19,6 +19,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
@@ -188,6 +190,22 @@ void main() {
         find.text('Aucun trajet disponible sur cette route'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('en anglais : titre et état vide traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          RouteBottomSheet(
+            announcements: announcements,
+            filter: DepartureCityFilter(_paris),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Departures from Paris'), findsOneWidget);
+      expect(find.text('Départs depuis Paris'), findsNothing);
     });
   });
 

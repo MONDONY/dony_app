@@ -1,6 +1,8 @@
-// Couvre les six messages ICU imposés par la tâche C1 (détail d'annonce,
-// cartes et feuilles de trajet) : pour chacun, on compare le rendu du
-// nouveau message (fr et en) à l'ancien calcul concaténé, pour 0, 1, 2 et 12.
+// Couvre les messages ICU de la tâche C1 (détail d'annonce, cartes et
+// feuilles de trajet) : pour chacun, on compare le rendu du nouveau message
+// (fr et en) à l'ancien calcul concaténé — les six imposés par la fiche
+// (0, 1, 2 et 12), plus `listingSearchButton` (0, 1 et 3), fusionné en un
+// seul message ICU lors de la relecture (search_form_bottom_sheet.dart).
 //
 // Seule exception délibérée : `listingRouteTrips` à 0, qui corrige un
 // accord faux (« 0 trajets » → « 0 trajet »), signalée dans le corps de la
@@ -125,6 +127,29 @@ void main() {
       expect(en.listingTravelerTrips(0), '· 0 trips');
       expect(en.listingTravelerTrips(2), '· 2 trips');
       expect(en.listingTravelerTrips(12), '· 12 trips');
+    });
+  });
+
+  group('listingSearchButton', () {
+    // Ancien code (search_form_bottom_sheet.dart) :
+    // count == 1 ? 'Rechercher · 1 filtre'
+    //   : count > 1 ? 'Rechercher · $count filtres' : 'Rechercher'
+    String oldFr(int n) => n == 1
+        ? 'Rechercher · 1 filtre'
+        : n > 1
+        ? 'Rechercher · $n filtres'
+        : 'Rechercher';
+
+    for (final n in [0, 1, 3]) {
+      test('fr count=$n identique à l\'ancien calcul', () {
+        expect(fr.listingSearchButton(n), oldFr(n));
+      });
+    }
+
+    test('en count=0 sans filtre, =1 singulier, sinon pluriel', () {
+      expect(en.listingSearchButton(0), 'Search');
+      expect(en.listingSearchButton(1), 'Search · 1 filter');
+      expect(en.listingSearchButton(3), 'Search · 3 filters');
     });
   });
 

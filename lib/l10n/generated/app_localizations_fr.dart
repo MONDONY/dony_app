@@ -5132,15 +5132,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingResetFiltersButton => 'Réinitialiser';
 
   @override
-  String get listingSearchButtonOneFilter => 'Rechercher · 1 filtre';
-
-  @override
-  String listingSearchButtonNFilters(int count) {
-    return 'Rechercher · $count filtres';
+  String listingSearchButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Rechercher · $count filtres',
+      one: 'Rechercher · $count filtre',
+      zero: 'Rechercher',
+    );
+    return '$_temp0';
   }
-
-  @override
-  String get listingSearchButton => 'Rechercher';
 
   @override
   String get listingQuickFiltersTitle => 'FILTRES RAPIDES';
