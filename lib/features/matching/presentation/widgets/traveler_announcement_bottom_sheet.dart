@@ -9,6 +9,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
@@ -108,7 +109,7 @@ Future<void> showTravelerAnnouncementSheet(
 
   return DonyBottomSheet.show<void>(
     context,
-    title: 'Détail du trajet',
+    title: context.l10n.listingTripDetailTitle,
     wrapper: favoris == null
         ? null
         : (child) => BlocProvider<FavoriteIdsCubit>.value(
@@ -122,6 +123,7 @@ Future<void> showTravelerAnnouncementSheet(
         if (hasActiveBid) {
           final tt = Theme.of(innerCtx).textTheme;
           final cs = Theme.of(innerCtx).colorScheme;
+          final innerL = innerCtx.l10n;
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -134,7 +136,7 @@ Future<void> showTravelerAnnouncementSheet(
                     const SizedBox(width: DonySpacing.xs),
                     Flexible(
                       child: Text(
-                        'Vous avez déjà un colis sur ce trajet',
+                        innerL.listingAlreadyHasParcelMessage,
                         textAlign: TextAlign.center,
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
@@ -146,7 +148,7 @@ Future<void> showTravelerAnnouncementSheet(
               ),
               DonyButton(
                 key: const Key('see-my-parcel-btn'),
-                label: 'Voir mon colis',
+                label: innerL.listingSeeMyParcelButton,
                 iconAsset: 'package',
                 onPressed: resolvedBid == null
                     ? null
@@ -192,11 +194,12 @@ Future<void> showTravelerAnnouncementSheet(
 
         final tt = Theme.of(innerCtx).textTheme;
         final cs = Theme.of(innerCtx).colorScheme;
+        final innerL = innerCtx.l10n;
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             DonyButton(
-              label: 'Faire une demande',
+              label: innerL.listingMakeRequestButton,
               iconAsset: 'send',
               onPressed: () => openCreateBid(negotiation: false),
             ),
@@ -219,13 +222,13 @@ Future<void> showTravelerAnnouncementSheet(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Trajet négociable · ',
+                        innerL.listingNegotiableTripPrefix,
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
                       ),
                       Text(
-                        'Proposer un prix',
+                        innerL.listingProposePriceLink,
                         style: tt.bodySmall?.copyWith(
                           color: cs.primary,
                           fontWeight: FontWeight.w700,
@@ -278,6 +281,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final categories = announcement.acceptedContentTypes ?? [];
     final hasGrid =
         announcement.pricingMode == 'MIXED' &&
@@ -311,7 +315,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         if (announcement.acceptedPaymentMethods.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),
           Text(
-            'Paiements acceptés',
+            l.listingPaymentsAcceptedTitle,
             style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.sm),
@@ -337,15 +341,10 @@ class _TravelerAnnouncementContent extends StatelessWidget {
               messageSpan: TextSpan(
                 children: [
                   TextSpan(
-                    text: 'Trajet en espèces uniquement. ',
+                    text: l.listingCashOnlyWarningBold,
                     style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w700),
                   ),
-                  const TextSpan(
-                    text:
-                        'Le paiement se fait en main propre au voyageur, '
-                        'Yadony ne séquestre pas votre argent et ne peut pas '
-                        'le rembourser automatiquement en cas de litige.',
-                  ),
+                  TextSpan(text: l.listingCashOnlyWarningBody),
                 ],
               ),
             ),
@@ -361,14 +360,18 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         if (categories.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),
           Text(
-            'Types de colis acceptés',
+            l.listingCategoriesAcceptedTitle,
             style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.sm),
           Wrap(
             spacing: DonySpacing.xs,
             runSpacing: DonySpacing.xs,
-            children: categories.map((c) => _CategoryChip(label: c)).toList(),
+            children: categories
+                .map(
+                  (c) => _CategoryChip(label: contentCategoryDisplayName(l, c)),
+                )
+                .toList(),
           ),
         ],
 
@@ -376,7 +379,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
             announcement.description!.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),
           Text(
-            'Message du voyageur',
+            l.listingTravelerMessageTitle,
             style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.sm),
@@ -409,7 +412,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                   DonyIcon('flag', size: 14, color: cs.onSurfaceVariant),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
-                    'Signaler ce trajet',
+                    l.listingReportTripLink,
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
@@ -442,7 +445,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                     DonyIcon('ban', size: 14, color: cs.onSurfaceVariant),
                     const SizedBox(width: DonySpacing.xs),
                     Text(
-                      'Bloquer ce voyageur',
+                      l.listingBlockTravelerLink,
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
@@ -505,8 +508,8 @@ class _HeroWithFavorite extends StatelessWidget {
       DonySnackbar.show(
         context,
         message: desormaisFavori
-            ? 'Trajet ajouté aux favoris'
-            : 'Trajet retiré des favoris',
+            ? context.l10n.listingFavoriteAddedMessage
+            : context.l10n.listingFavoriteRemovedMessage,
         type: desormaisFavori
             ? DonySnackbarType.success
             : DonySnackbarType.info,
@@ -515,7 +518,7 @@ class _HeroWithFavorite extends StatelessWidget {
       if (!context.mounted) return;
       DonySnackbar.show(
         context,
-        message: 'Impossible de modifier les favoris',
+        message: context.l10n.listingFavoriteToggleErrorMessage,
         type: DonySnackbarType.error,
       );
     }
@@ -530,14 +533,17 @@ class _HeroCorridorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final dateStr = DateFormat(
       'EEE d MMM yyyy',
-      AppL10n.localeName,
+      l.localeName,
     ).format(announcement.departureDate);
     final kgLabel = announcement.isKgFree
-        ? 'Kg libre'
-        : '${announcement.availableKg.toStringAsFixed(0)} kg dispo';
-    final transportLabel = announcement.transportMode?.label(context.l10n);
+        ? l.tripKgFree
+        : l.listingKgAvailableLabel(
+            announcement.availableKg.toStringAsFixed(0),
+          );
+    final transportLabel = announcement.transportMode?.label(l);
     final depTime = announcement.departureTime;
     final arrTime = announcement.arrivalTime;
     final hoursLabel = (depTime != null && arrTime != null)
@@ -564,7 +570,7 @@ class _HeroCorridorCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'TRAJET',
+            l.listingHeroTripLabelCaps,
             style: tt.labelSmall?.copyWith(
               color: Colors.white.withValues(alpha: 0.65),
               letterSpacing: 2,
@@ -645,6 +651,7 @@ class _StatCardsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final deadline = announcement.handoverDeadline?.toLocal();
     // IntrinsicHeight : égalise la hauteur des deux cartes sans stretch
     // non borné (la colonne parente est dans un scrollable).
@@ -664,11 +671,8 @@ class _StatCardsRow extends StatelessWidget {
             const SizedBox(width: DonySpacing.sm),
             Expanded(
               child: _StatCard(
-                value: DateFormat(
-                  'EEE d MMM',
-                  AppL10n.localeName,
-                ).format(deadline),
-                label: 'date limite de dépôt',
+                value: DateFormat('EEE d MMM', l.localeName).format(deadline),
+                label: l.listingDepositDeadlineLabel,
               ),
             ),
           ],
@@ -748,11 +752,12 @@ class _PriceStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     // Garde sur hasKgPrice (valeur > 0), pas sur la seule nullité :
     // senderPricePerKg n'est en pratique jamais null (pricePerKgDisplay
     // toujours servi), 0 est la vraie valeur trompeuse en mode MIXED.
     if (!announcement.hasKgPrice) {
-      return const _StatCard(value: '—', label: 'Prix indisponible');
+      return _StatCard(value: '—', label: l.tripPosterPriceUnavailable);
     }
     return _StatCard(
       value: formatPriceIn(
@@ -764,9 +769,14 @@ class _PriceStatCard extends StatelessWidget {
       subtitle:
           announcement.pricePerKgDisplayConverted != null &&
               announcement.convertedCurrency != null
-          ? 'environ ${formatPriceIn(announcement.pricePerKgDisplayConverted!, announcement.convertedCurrency)}/kg'
+          ? l.listingApproxPricePerKg(
+              formatPriceIn(
+                announcement.pricePerKgDisplayConverted!,
+                announcement.convertedCurrency,
+              ),
+            )
           : null,
-      label: 'par kilo',
+      label: l.listingPricePerKiloLabel,
       valueColor: cs.primary,
     );
   }
@@ -784,6 +794,7 @@ class _GridStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final minPrice = items
         .map((i) => i.unitPriceDisplay)
         .reduce((a, b) => a < b ? a : b);
@@ -804,7 +815,7 @@ class _GridStatCard extends StatelessWidget {
               const SizedBox(width: DonySpacing.xs + 2),
               Flexible(
                 child: Text(
-                  'Grille tarifaire',
+                  l.listingPriceGridLabel,
                   style: tt.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     fontSize: 17,
@@ -818,8 +829,8 @@ class _GridStatCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xxs),
           Text(
-            '${items.length} article${items.length > 1 ? 's' : ''} · '
-            'dès ${formatPriceIn(minPrice, currency)}',
+            '${l.listingItemCount(items.length)} · '
+            '${l.tripPosterFromPrice(formatPriceIn(minPrice, currency))}',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
@@ -866,6 +877,7 @@ class _PriceGridCardState extends State<_PriceGridCard> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -884,7 +896,7 @@ class _PriceGridCardState extends State<_PriceGridCard> {
               DonySpacing.sm,
             ),
             child: Text(
-              'Tarif par article',
+              l.listingPricePerItemTitle,
               style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
@@ -947,7 +959,12 @@ class _PriceGridCardState extends State<_PriceGridCard> {
                                         null &&
                                     widget.convertedCurrency != null)
                                   Text(
-                                    'environ ${formatPriceIn(visible[i].convertedUnitPriceDisplay!, widget.convertedCurrency)}',
+                                    l.listingApproxPrice(
+                                      formatPriceIn(
+                                        visible[i].convertedUnitPriceDisplay!,
+                                        widget.convertedCurrency,
+                                      ),
+                                    ),
                                     style: tt.bodySmall?.copyWith(
                                       color: cs.onSurfaceVariant,
                                       fontStyle: FontStyle.italic,
@@ -974,7 +991,9 @@ class _PriceGridCardState extends State<_PriceGridCard> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Voir tous les tarifs (${widget.items.length})',
+                                l.listingSeeAllPricesButton(
+                                  widget.items.length,
+                                ),
                                 style: tt.bodySmall?.copyWith(
                                   color: cs.primary,
                                   fontWeight: FontWeight.w700,
@@ -1012,6 +1031,7 @@ class _LocationsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final pickup = announcement.pickupAddress;
     final delivery = announcement.deliveryAddress;
     return Container(
@@ -1032,7 +1052,7 @@ class _LocationsCard extends StatelessWidget {
               iconAsset: 'upload',
               iconColor: cs.primary,
               iconBackground: cs.primaryContainer,
-              title: 'Remise du colis',
+              title: l.listingPickupParcelTitle,
               address: pickup,
             ),
           if (pickup != null && delivery != null)
@@ -1043,7 +1063,7 @@ class _LocationsCard extends StatelessWidget {
               iconAsset: 'download',
               iconColor: DonyColors.accent,
               iconBackground: DonyColors.accentSoft,
-              title: 'Récupération',
+              title: l.listingDeliveryPickupTitle,
               address: delivery,
             ),
         ],
@@ -1119,7 +1139,7 @@ class _LocationRow extends StatelessWidget {
                 DonyIcon('map-pin', size: 13, color: cs.primary),
                 const SizedBox(width: DonySpacing.xxs),
                 Text(
-                  'Itinéraire',
+                  context.l10n.listingRouteLabel,
                   style: tt.bodySmall?.copyWith(
                     color: cs.primary,
                     fontWeight: FontWeight.w600,
@@ -1227,15 +1247,16 @@ class _PaymentChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final isCash = method == BidPaymentMethod.cash;
     // Le mobile money s'affichait « Carte » : un expéditeur en zone CFA
     // cherchait une carte qui n'existe pas.
     final isMobileMoney = method == BidPaymentMethod.mobileMoney;
     final label = isCash
-        ? 'Espèces'
+        ? l.paymentMethodCash
         : isMobileMoney
-        ? 'Mobile money'
-        : 'Carte';
+        ? l.paymentMethodMobileMoney
+        : l.paymentMethodCard;
     final icon = isCash
         ? 'banknote'
         : isMobileMoney
@@ -1297,7 +1318,7 @@ class _InstructionsCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Instructions du voyageur',
+                  context.l10n.listingInstructionsCardTitle,
                   style: tt.labelMedium?.copyWith(color: cs.warning),
                 ),
                 const SizedBox(height: DonySpacing.xxs),
@@ -1385,7 +1406,7 @@ class _TravelerCard extends StatelessWidget {
                         Text(
                           rating != null
                               ? '${rating.toStringAsFixed(1)}/5'
-                              : 'Nouveau',
+                              : context.l10n.listingNewRatingLabel,
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
@@ -1393,7 +1414,7 @@ class _TravelerCard extends StatelessWidget {
                         ),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
-                          '· $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
+                          context.l10n.listingTravelerTrips(totalTrips),
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
                           ),
@@ -1461,7 +1482,7 @@ class _KycVerifiedBadge extends StatelessWidget {
           DonyIcon('badge-check', size: 11, color: cs.success),
           const SizedBox(width: DonySpacing.xxs),
           Text(
-            'Identité',
+            context.l10n.listingIdentityBadge,
             style: tt.labelSmall?.copyWith(
               color: cs.success,
               fontWeight: FontWeight.w600,

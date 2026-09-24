@@ -1212,6 +1212,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       final price = item.grossPriceEur ?? item.targetPriceEur ?? 0;
       final icon = await MarkerBitmapFactory.pricePill(
         pricePerKg: price,
+        gridLabel: context.l10n.listingPriceGridShort,
         dotColor: DonyColors.terra500,
         brightness: Theme.of(context).brightness,
         prefix: '📦',

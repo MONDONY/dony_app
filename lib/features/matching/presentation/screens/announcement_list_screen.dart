@@ -9,6 +9,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -113,12 +114,12 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
   }
 
   Future<bool?> _confirmDeleteDialog(BuildContext ctx) {
+    final l = ctx.l10n;
     return DonyDialog.show(
       ctx,
-      title: 'Supprimer ce trajet ?',
-      message:
-          'Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.',
-      confirmLabel: 'Supprimer',
+      title: l.listingDeleteTripConfirmTitle,
+      message: l.listingDeleteTripAssociatedRequestsMessage,
+      confirmLabel: l.commonDelete,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'trash-2',
     );
@@ -221,7 +222,12 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
           return BlocBuilder<TripFilterCubit, TripFilterState>(
             builder: (context, filterState) {
               final filtered = _filtered(filterState);
-              final chips = _buildChips(counts, cs, filterState.filter);
+              final chips = _buildChips(
+                counts,
+                cs,
+                filterState.filter,
+                context.l10n,
+              );
 
               return RefreshIndicator(
                 color: cs.primary,
@@ -248,7 +254,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
                             0,
                           ),
                           child: ActivitySearchField(
-                            hint: 'Rechercher une destination…',
+                            hint: context.l10n.listingSearchDestinationHint,
                             onChanged: (v) =>
                                 context.read<TripFilterCubit>().setQuery(v),
                           ),
@@ -336,7 +342,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
                                     ),
                                     const SizedBox(height: DonySpacing.xs),
                                     Text(
-                                      'Supprimer',
+                                      context.l10n.commonDelete,
                                       style: tt.labelMedium?.copyWith(
                                         color: cs.onError,
                                         fontSize: 11,
@@ -379,35 +385,36 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
     ({int all, int draft, int active, int completed, int cancelled}) counts,
     ColorScheme cs,
     TripStatusFilter currentFilter,
+    AppLocalizations l,
   ) {
     return [
       StatusChipData(
-        label: 'Tous',
+        label: l.listingFilterAllChip,
         value: TripStatusFilter.all,
         count: counts.all,
       ),
       if (counts.draft > 0)
         StatusChipData(
-          label: 'Brouillons',
+          label: l.listingFilterDraftsChip,
           value: TripStatusFilter.draft,
           count: counts.draft,
           dotColor: cs.warning,
         ),
       StatusChipData(
-        label: 'Actifs',
+        label: l.listingFilterActiveChip,
         value: TripStatusFilter.active,
         count: counts.active,
         dotColor: cs.success,
       ),
       StatusChipData(
-        label: 'Terminés',
+        label: l.listingFilterCompletedChip,
         value: TripStatusFilter.completed,
         count: counts.completed,
         dotColor: DonyColors.neutral400,
       ),
       if (counts.cancelled > 0)
         StatusChipData(
-          label: 'Annulés',
+          label: l.listingFilterCancelledChip,
           value: TripStatusFilter.cancelled,
           count: counts.cancelled,
           dotColor: cs.error,
@@ -442,6 +449,7 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Container(
       color: cs.surface,
       child: SafeArea(
@@ -464,7 +472,7 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
                             key: Key('activites-back'),
                           ),
                         Text(
-                          'Mes trajets',
+                          l.listingHeaderTitle,
                           style: tt.displaySmall?.copyWith(
                             color: cs.onSurface,
                             fontWeight: FontWeight.w800,
@@ -478,7 +486,7 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
                         if (onSendParcel != null) ...[
                           HeaderPill(
                             key: const Key('send-parcel-btn'),
-                            label: 'Envoyer',
+                            label: l.commonSend,
                             iconAsset: 'package',
                             style: HeaderPillStyle.warm,
                             badge: sendParcelBadge,
@@ -486,7 +494,10 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
                           ),
                           const SizedBox(width: DonySpacing.xs),
                         ],
-                        HeaderPill(label: '+ Nouveau', onTap: onCreateTrip),
+                        HeaderPill(
+                          label: l.listingNewTripPill,
+                          onTap: onCreateTrip,
+                        ),
                       ],
                     ),
                   ],
@@ -511,6 +522,7 @@ class _ErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(DonySpacing.xxl),
@@ -520,7 +532,7 @@ class _ErrorView extends StatelessWidget {
             DonyIcon('wifi-off', size: 56, color: cs.outline),
             const SizedBox(height: DonySpacing.base),
             Text(
-              'Impossible de charger vos trajets',
+              l.listingLoadErrorTitle,
               style: tt.titleLarge?.copyWith(color: cs.onSurface),
               textAlign: TextAlign.center,
             ),
@@ -533,7 +545,7 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: DonySpacing.xl),
             OutlinedButton.icon(
               icon: const DonyIcon('refresh-cw'),
-              label: const Text('Réessayer'),
+              label: Text(l.commonRetry),
               onPressed: () => context.read<AnnouncementBloc>().add(
                 AnnouncementListRequested(),
               ),
@@ -551,36 +563,33 @@ class _EmptyView extends StatelessWidget {
 
   const _EmptyView({required this.rawListEmpty, required this.activeFilter});
 
-  String get _title => rawListEmpty
-      ? 'Aucun trajet à venir'
+  String _title(AppLocalizations l) => rawListEmpty
+      ? l.listingEmptyNoTripsTitle
       : switch (activeFilter) {
-          TripStatusFilter.draft => 'Aucun brouillon',
-          TripStatusFilter.active => 'Aucun trajet actif',
-          TripStatusFilter.completed => 'Aucun historique',
-          TripStatusFilter.cancelled => 'Aucune annulation',
-          TripStatusFilter.all => 'Aucun trajet trouvé',
+          TripStatusFilter.draft => l.listingEmptyDraftTitle,
+          TripStatusFilter.active => l.listingEmptyActiveTitle,
+          TripStatusFilter.completed => l.listingEmptyCompletedTitle,
+          TripStatusFilter.cancelled => l.listingEmptyCancelledTitle,
+          TripStatusFilter.all => l.listingEmptyAllTitle,
         };
 
-  String get _description => rawListEmpty
-      ? 'Publiez votre premier trajet et commencez à transporter des colis.'
+  String _description(AppLocalizations l) => rawListEmpty
+      ? l.listingEmptyNoTripsDesc
       : switch (activeFilter) {
-          TripStatusFilter.draft =>
-            'Vos trajets enregistrés sans publication apparaîtront ici.',
-          TripStatusFilter.active =>
-            'Vos trajets en cours et à venir apparaîtront ici.',
-          TripStatusFilter.completed =>
-            'Vos trajets passés et terminés apparaîtront ici.',
-          TripStatusFilter.cancelled => 'Vos trajets annulés apparaîtront ici.',
-          TripStatusFilter.all =>
-            'Aucun trajet ne correspond à votre recherche.',
+          TripStatusFilter.draft => l.listingEmptyDraftDesc,
+          TripStatusFilter.active => l.listingEmptyActiveDesc,
+          TripStatusFilter.completed => l.listingEmptyCompletedDesc,
+          TripStatusFilter.cancelled => l.listingEmptyCancelledDesc,
+          TripStatusFilter.all => l.listingEmptyAllDesc,
         };
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return DonyEmptyState(
       mascotte: DonyMascotteType.assis,
-      title: _title,
-      description: _description,
+      title: _title(l),
+      description: _description(l),
       iconAsset: 'plane-takeoff',
     );
   }

@@ -52,6 +52,10 @@ const _sameInBothLanguages = <String>{
   'requestPreviewPhotos', // gabarit identique, seul le pluriel ICU varie
   'requestPreviewPhotosLabel', // « Photos » se dit pareil
   'requestCreateRecapTransport', // « Transport » se dit pareil
+  'listingProBadge', // « PRO » se dit pareil
+  'listingRowLabelNote', // « Note » se dit pareil
+  'listingKiloProChip', // nom de fonctionnalité, identique en anglais
+  'listingRowLabelDate', // « Date » se dit pareil
 };
 
 void main() {

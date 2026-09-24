@@ -4,6 +4,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -73,7 +74,7 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            '${announcements.length} voyageur${announcements.length > 1 ? "s" : ""} disponible${announcements.length > 1 ? "s" : ""} à cette adresse',
+            context.l10n.listingSameAddressTravelers(announcements.length),
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.md),

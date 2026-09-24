@@ -4608,4 +4608,580 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestCreateRecapPackage => 'Colis';
+
+  @override
+  String get listingDeleteTripConfirmTitle => 'Supprimer ce trajet ?';
+
+  @override
+  String get listingDeleteTripCancelledMessage =>
+      'Cette action est irréversible. Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.';
+
+  @override
+  String get listingDeleteTripActiveMessage =>
+      'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.';
+
+  @override
+  String get listingTripDetailTitle => 'Détail du trajet';
+
+  @override
+  String get listingTripDeletedMessage => 'Trajet supprimé';
+
+  @override
+  String get listingAnnouncementGoneMessage => 'Cette annonce n\'existe plus';
+
+  @override
+  String get listingHeroTripLabel => 'Trajet';
+
+  @override
+  String get listingPickupLocationsTitle => 'Lieux de remise';
+
+  @override
+  String get listingHandoverDeadlineTitle => 'Dépôt des colis';
+
+  @override
+  String get listingCapacityAvailableLabel => 'Capacité dispo.';
+
+  @override
+  String get listingPricingModeLabel => 'Tarification';
+
+  @override
+  String get listingPricePerKgLabel => 'Prix par kg';
+
+  @override
+  String get listingPriceGridShort => 'Grille';
+
+  @override
+  String get listingPriceUnavailableShort => 'Indisponible';
+
+  @override
+  String listingSeeRequestsButton(int count) {
+    return 'Voir les demandes ($count)';
+  }
+
+  @override
+  String get listingEditTripButton => 'Modifier ce trajet';
+
+  @override
+  String get listingCancelTripButton => 'Annuler ce trajet';
+
+  @override
+  String get listingDeleteTripButton => 'Supprimer ce trajet';
+
+  @override
+  String get listingTripLockedMessage => 'Ce trajet ne peut plus être modifié.';
+
+  @override
+  String get listingStatusActive => 'Actif';
+
+  @override
+  String get listingStatusFull => 'Complet';
+
+  @override
+  String get listingStatusCompleted => 'Terminé';
+
+  @override
+  String get listingStatusCancelled => 'Annulé';
+
+  @override
+  String listingHandoverUntil(String date) {
+    return 'Jusqu\'au $date';
+  }
+
+  @override
+  String get listingSearchDestinationHint => 'Rechercher une destination…';
+
+  @override
+  String get listingFilterAllChip => 'Tous';
+
+  @override
+  String get listingFilterDraftsChip => 'Brouillons';
+
+  @override
+  String get listingFilterActiveChip => 'Actifs';
+
+  @override
+  String get listingFilterCompletedChip => 'Terminés';
+
+  @override
+  String get listingFilterCancelledChip => 'Annulés';
+
+  @override
+  String get listingHeaderTitle => 'Mes trajets';
+
+  @override
+  String get listingNewTripPill => '+ Nouveau';
+
+  @override
+  String get listingLoadErrorTitle => 'Impossible de charger vos trajets';
+
+  @override
+  String get listingEmptyNoTripsTitle => 'Aucun trajet à venir';
+
+  @override
+  String get listingEmptyDraftTitle => 'Aucun brouillon';
+
+  @override
+  String get listingEmptyActiveTitle => 'Aucun trajet actif';
+
+  @override
+  String get listingEmptyCompletedTitle => 'Aucun historique';
+
+  @override
+  String get listingEmptyCancelledTitle => 'Aucune annulation';
+
+  @override
+  String get listingEmptyAllTitle => 'Aucun trajet trouvé';
+
+  @override
+  String get listingEmptyNoTripsDesc =>
+      'Publiez votre premier trajet et commencez à transporter des colis.';
+
+  @override
+  String get listingEmptyDraftDesc =>
+      'Vos trajets enregistrés sans publication apparaîtront ici.';
+
+  @override
+  String get listingEmptyActiveDesc =>
+      'Vos trajets en cours et à venir apparaîtront ici.';
+
+  @override
+  String get listingEmptyCompletedDesc =>
+      'Vos trajets passés et terminés apparaîtront ici.';
+
+  @override
+  String get listingEmptyCancelledDesc =>
+      'Vos trajets annulés apparaîtront ici.';
+
+  @override
+  String get listingEmptyAllDesc =>
+      'Aucun trajet ne correspond à votre recherche.';
+
+  @override
+  String get listingHeroTripLabelCaps => 'TRAJET';
+
+  @override
+  String get listingCapacityAvailableSuffix => 'disponibles';
+
+  @override
+  String get listingPricingSuffixTarifaire => 'tarifaire';
+
+  @override
+  String get listingPricingSuffixPrix => 'prix';
+
+  @override
+  String listingAcceptedParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'colis acceptés',
+      one: 'colis accepté',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingPendingParcelsLabel => 'en attente';
+
+  @override
+  String get listingPaymentsAcceptedTitle => 'Paiements acceptés';
+
+  @override
+  String get listingCashOnlyNudgeMessage =>
+      'Trajet en espèces uniquement. Beaucoup d\'expéditeurs préfèrent payer par carte, activez cette option pour augmenter vos chances de recevoir des colis.';
+
+  @override
+  String get listingActivateCardPaymentsButton =>
+      'Activer les paiements par carte';
+
+  @override
+  String get listingAcceptedContentTitle => 'Ce que j\'accepte';
+
+  @override
+  String get listingRefusedContentTitle => 'Ce que je refuse';
+
+  @override
+  String get listingSenderNoteTitle => 'Note aux expéditeurs';
+
+  @override
+  String get listingBadgeActive => '● ACTIF';
+
+  @override
+  String get listingBadgeDraft => '✎ BROUILLON';
+
+  @override
+  String get listingBadgeFull => '● COMPLET';
+
+  @override
+  String get listingBadgeInProgress => '● EN COURS';
+
+  @override
+  String get listingBadgeCompleted => '✓ TERMINÉ';
+
+  @override
+  String get listingBadgeCancelled => '✕ ANNULÉ';
+
+  @override
+  String listingReservedKgLabel(String kg) {
+    return '$kg kg réservés';
+  }
+
+  @override
+  String listingOpenKgLabel(String kg) {
+    return '$kg kg ouverts';
+  }
+
+  @override
+  String get listingPickupParcelTitleShort => 'Remise colis';
+
+  @override
+  String get listingDeliveryPickupTitle => 'Récupération';
+
+  @override
+  String get listingAlreadyHasParcelMessage =>
+      'Vous avez déjà un colis sur ce trajet';
+
+  @override
+  String get listingSeeMyParcelButton => 'Voir mon colis';
+
+  @override
+  String get listingMakeRequestButton => 'Faire une demande';
+
+  @override
+  String get listingNegotiableTripPrefix => 'Trajet négociable · ';
+
+  @override
+  String get listingProposePriceLink => 'Proposer un prix';
+
+  @override
+  String get listingPricePerKiloLabel => 'par kilo';
+
+  @override
+  String listingApproxPricePerKg(String price) {
+    return 'environ $price/kg';
+  }
+
+  @override
+  String listingApproxPrice(String price) {
+    return 'environ $price';
+  }
+
+  @override
+  String get listingDepositDeadlineLabel => 'date limite de dépôt';
+
+  @override
+  String get listingPriceGridLabel => 'Grille tarifaire';
+
+  @override
+  String listingItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count articles',
+      one: '$count article',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingPricePerItemTitle => 'Tarif par article';
+
+  @override
+  String listingSeeAllPricesButton(int count) {
+    return 'Voir tous les tarifs ($count)';
+  }
+
+  @override
+  String get listingPickupParcelTitle => 'Remise du colis';
+
+  @override
+  String get listingReportTripLink => 'Signaler ce trajet';
+
+  @override
+  String get listingBlockTravelerLink => 'Bloquer ce voyageur';
+
+  @override
+  String get listingFavoriteAddedMessage => 'Trajet ajouté aux favoris';
+
+  @override
+  String get listingFavoriteRemovedMessage => 'Trajet retiré des favoris';
+
+  @override
+  String get listingFavoriteToggleErrorMessage =>
+      'Impossible de modifier les favoris';
+
+  @override
+  String listingKgAvailableLabel(String kg) {
+    return '$kg kg dispo';
+  }
+
+  @override
+  String get listingIdentityBadge => 'Identité';
+
+  @override
+  String get listingCategoriesAcceptedTitle => 'Types de colis acceptés';
+
+  @override
+  String get listingTravelerMessageTitle => 'Message du voyageur';
+
+  @override
+  String get listingRouteLabel => 'Itinéraire';
+
+  @override
+  String get listingCashOnlyWarningBold => 'Trajet en espèces uniquement. ';
+
+  @override
+  String get listingCashOnlyWarningBody =>
+      'Le paiement se fait en main propre au voyageur, Yadony ne séquestre pas votre argent et ne peut pas le rembourser automatiquement en cas de litige.';
+
+  @override
+  String get listingNewRatingLabel => 'Nouveau';
+
+  @override
+  String listingTravelerTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '· $count trajets',
+      one: '· $count trajet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingPreviewTitle => 'Aperçu de votre annonce';
+
+  @override
+  String get listingPublishButton => 'Publier l\'annonce';
+
+  @override
+  String get listingSaveDraftButton => 'Enregistrer comme brouillon';
+
+  @override
+  String get listingPreviewDepartureLabel => 'Départ';
+
+  @override
+  String get listingRowLabelPickup => 'Remise';
+
+  @override
+  String get listingRowLabelCapacity => 'Capacité';
+
+  @override
+  String get listingRowLabelPayment => 'Paiement';
+
+  @override
+  String get listingPaymentCardCash => 'Carte + Espèces';
+
+  @override
+  String get listingPaymentCardOnly => 'Carte uniquement';
+
+  @override
+  String get listingRowLabelAccept => 'Accepte';
+
+  @override
+  String get listingRowLabelRefuse => 'Refuse';
+
+  @override
+  String get listingRowLabelNote => 'Note';
+
+  @override
+  String get listingPriceTooLowWarning =>
+      'Prix bas. Vous pourrez le modifier après publication.';
+
+  @override
+  String get listingPriceTooHighWarning =>
+      'Prix élevé. Vous pourrez le modifier après publication.';
+
+  @override
+  String get listingStatusInProgress => 'En cours';
+
+  @override
+  String listingDateTodayLabel(String date) {
+    return 'Aujourd\'hui · $date';
+  }
+
+  @override
+  String listingDateTomorrowLabel(String date) {
+    return 'Demain · $date';
+  }
+
+  @override
+  String listingDateInDaysLabel(int days, String date) {
+    return 'Départ dans $days jours · $date';
+  }
+
+  @override
+  String get listingRetryActionMessage => 'Action impossible, réessaie';
+
+  @override
+  String listingAcceptedBidsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count acceptées',
+      one: '$count acceptée',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String listingPendingBidsCount(int count) {
+    return '$count en attente';
+  }
+
+  @override
+  String listingSoldOfTotalLabel(String sold, String total) {
+    return '$sold vendus sur $total';
+  }
+
+  @override
+  String listingAvailableKgLabel(String kg) {
+    return '$kg disponibles';
+  }
+
+  @override
+  String listingSoldLabel(String kg) {
+    return '$kg vendus';
+  }
+
+  @override
+  String listingEarnedLabel(String price) {
+    return '$price gagnés';
+  }
+
+  @override
+  String get listingBidStatusAccepted => 'Demande acceptée';
+
+  @override
+  String get listingBidStatusOnTrip => 'Colis sur ce trajet';
+
+  @override
+  String get listingBidStatusArrived => 'Arrivé';
+
+  @override
+  String get listingBidStatusPending => 'Demande en attente';
+
+  @override
+  String get listingYourTripPill => 'Votre trajet';
+
+  @override
+  String get listingProBadge => 'PRO';
+
+  @override
+  String get listingNoTravelersNearbyTitle => 'Aucun voyageur à proximité';
+
+  @override
+  String get listingNoTravelersNearbyDesc =>
+      'Essaie d\'augmenter le rayon ou de changer de date.';
+
+  @override
+  String get listingSeeAnnouncementButton => 'Voir l\'annonce';
+
+  @override
+  String listingSeeAnnouncementsCountButton(int count) {
+    return 'Voir les $count annonces';
+  }
+
+  @override
+  String listingRouteDeparturesFrom(String city) {
+    return 'Départs depuis $city';
+  }
+
+  @override
+  String listingRouteArrivalsTo(String city) {
+    return 'Arrivées à $city';
+  }
+
+  @override
+  String listingRouteTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trajets',
+      one: '$count trajet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingNoTripsOnRoute => 'Aucun trajet disponible sur cette route';
+
+  @override
+  String listingSameAddressTravelers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs disponibles à cette adresse',
+      one: '$count voyageur disponible à cette adresse',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingAddressFallback => 'Adresse';
+
+  @override
+  String get listingNearMeDeactivateTooltip => 'Désactiver « Près de moi »';
+
+  @override
+  String get listingNearMeActivateTooltip => 'Voir les voyageurs près de moi';
+
+  @override
+  String get listingFilterTripsTitle => 'Filtrer les trajets';
+
+  @override
+  String get listingResetFiltersButton => 'Réinitialiser';
+
+  @override
+  String get listingSearchButtonOneFilter => 'Rechercher · 1 filtre';
+
+  @override
+  String listingSearchButtonNFilters(int count) {
+    return 'Rechercher · $count filtres';
+  }
+
+  @override
+  String get listingSearchButton => 'Rechercher';
+
+  @override
+  String get listingQuickFiltersTitle => 'FILTRES RAPIDES';
+
+  @override
+  String get listingKiloProChip => 'Kilo Pro';
+
+  @override
+  String get listingRatingChip => 'Note ≥ 4.5';
+
+  @override
+  String get listingWeekendChip => 'Week-end';
+
+  @override
+  String get listingContentContainsTitle => 'MON COLIS CONTIENT';
+
+  @override
+  String get listingDepartureUrgencyTitle => 'URGENCE DU DÉPART';
+
+  @override
+  String get listingDepartureUrgencyDesc =>
+      'Filtrer les trajets selon leur proximité de départ';
+
+  @override
+  String get listingDeleteTripAssociatedRequestsMessage =>
+      'Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.';
+
+  @override
+  String get listingDeadlineLabel => 'Date limite';
+
+  @override
+  String get listingInstructionsCardTitle => 'Instructions du voyageur';
+
+  @override
+  String get listingRowLabelDate => 'Date';
+
+  @override
+  String get listingRowLabelPrice => 'Prix';
+
+  @override
+  String listingPriceEstimateSuffix(String amount) {
+    return ' · estimation $amount net';
+  }
 }

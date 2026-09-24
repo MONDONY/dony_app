@@ -3911,5 +3911,770 @@
   "requestCreateRecapPackage": "Colis",
   "@requestCreateRecapPackage": {
     "description": "Libellé de la ligne colis (poids) de la carte récapitulative de l'étape 3 (wizard_summary_card.dart)"
+  },
+  "listingDeleteTripConfirmTitle": "Supprimer ce trajet ?",
+  "@listingDeleteTripConfirmTitle": {
+    "description": "Titre de la confirmation de suppression d'un trajet (announcement_detail_screen.dart, announcement_list_screen.dart)"
+  },
+  "listingDeleteTripCancelledMessage": "Cette action est irréversible. Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.",
+  "@listingDeleteTripCancelledMessage": {
+    "description": "Message de confirmation de suppression d'un trajet annulé (announcement_detail_screen.dart, announcement_list_screen.dart)"
+  },
+  "listingDeleteTripActiveMessage": "Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.",
+  "@listingDeleteTripActiveMessage": {
+    "description": "Message de confirmation de suppression d'un trajet actif (announcement_detail_screen.dart)"
+  },
+  "listingTripDetailTitle": "Détail du trajet",
+  "@listingTripDetailTitle": {
+    "description": "Titre de l'écran/feuille détail du trajet (announcement_detail_screen.dart, traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingTripDeletedMessage": "Trajet supprimé",
+  "@listingTripDeletedMessage": {
+    "description": "Confirmation après suppression d'un trajet (announcement_detail_screen.dart)"
+  },
+  "listingAnnouncementGoneMessage": "Cette annonce n'existe plus",
+  "@listingAnnouncementGoneMessage": {
+    "description": "Message affiché quand l'annonce a disparu (announcement_detail_screen.dart)"
+  },
+  "listingHeroTripLabel": "Trajet",
+  "@listingHeroTripLabel": {
+    "description": "Petit libellé au-dessus du corridor dans la carte héro (announcement_detail_screen.dart), et libellé de ligne « Trajet » de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingPickupLocationsTitle": "Lieux de remise",
+  "@listingPickupLocationsTitle": {
+    "description": "Titre de la section adresses de remise/récupération (announcement_detail_screen.dart, announcement_detail_body.dart)"
+  },
+  "listingHandoverDeadlineTitle": "Dépôt des colis",
+  "@listingHandoverDeadlineTitle": {
+    "description": "Titre de la section date limite de dépôt (announcement_detail_screen.dart, announcement_detail_body.dart)"
+  },
+  "listingCapacityAvailableLabel": "Capacité dispo.",
+  "@listingCapacityAvailableLabel": {
+    "description": "Libellé de la carte statistique capacité disponible (announcement_detail_screen.dart)"
+  },
+  "listingPricingModeLabel": "Tarification",
+  "@listingPricingModeLabel": {
+    "description": "Libellé de la carte statistique en mode grille (announcement_detail_screen.dart)"
+  },
+  "listingPricePerKgLabel": "Prix par kg",
+  "@listingPricePerKgLabel": {
+    "description": "Libellé de la carte statistique prix au kg (announcement_detail_screen.dart)"
+  },
+  "listingPriceGridShort": "Grille",
+  "@listingPriceGridShort": {
+    "description": "Valeur compacte affichée en mode grille tarifaire (announcement_detail_screen.dart, announcement_detail_body.dart, marker_bitmap_factory.dart via announcement_map_view.dart)"
+  },
+  "listingPriceUnavailableShort": "Indisponible",
+  "@listingPriceUnavailableShort": {
+    "description": "Valeur compacte quand le prix au kg est indisponible (announcement_detail_screen.dart)"
+  },
+  "listingSeeRequestsButton": "Voir les demandes ({count})",
+  "@listingSeeRequestsButton": {
+    "description": "Bouton d'accès aux demandes reçues, avec leur nombre (announcement_detail_screen.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingEditTripButton": "Modifier ce trajet",
+  "@listingEditTripButton": {
+    "description": "Bouton de modification d'un trajet (announcement_detail_screen.dart)"
+  },
+  "listingCancelTripButton": "Annuler ce trajet",
+  "@listingCancelTripButton": {
+    "description": "Bouton d'annulation d'un trajet (announcement_detail_screen.dart)"
+  },
+  "listingDeleteTripButton": "Supprimer ce trajet",
+  "@listingDeleteTripButton": {
+    "description": "Bouton de suppression d'un trajet (announcement_detail_screen.dart)"
+  },
+  "listingTripLockedMessage": "Ce trajet ne peut plus être modifié.",
+  "@listingTripLockedMessage": {
+    "description": "Message quand un trajet passé n'est plus modifiable (announcement_detail_screen.dart)"
+  },
+  "listingStatusActive": "Actif",
+  "@listingStatusActive": {
+    "description": "Badge de statut ACTIVE d'un trajet (announcement_detail_screen.dart, trip_card.dart)"
+  },
+  "listingStatusFull": "Complet",
+  "@listingStatusFull": {
+    "description": "Badge de statut FULL d'un trajet (announcement_detail_screen.dart, trip_card.dart)"
+  },
+  "listingStatusCompleted": "Terminé",
+  "@listingStatusCompleted": {
+    "description": "Badge de statut COMPLETED d'un trajet (announcement_detail_screen.dart, trip_card.dart)"
+  },
+  "listingStatusCancelled": "Annulé",
+  "@listingStatusCancelled": {
+    "description": "Badge de statut CANCELLED d'un trajet (announcement_detail_screen.dart, trip_card.dart)"
+  },
+  "listingHandoverUntil": "Jusqu'au {date}",
+  "@listingHandoverUntil": {
+    "description": "Date limite de dépôt affichée en toutes lettres (announcement_detail_screen.dart, announcement_detail_body.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "listingSearchDestinationHint": "Rechercher une destination…",
+  "@listingSearchDestinationHint": {
+    "description": "Placeholder du champ de recherche de « Mes trajets » (announcement_list_screen.dart)"
+  },
+  "listingFilterAllChip": "Tous",
+  "@listingFilterAllChip": {
+    "description": "Chip de filtre statut « Tous » (announcement_list_screen.dart)"
+  },
+  "listingFilterDraftsChip": "Brouillons",
+  "@listingFilterDraftsChip": {
+    "description": "Chip de filtre statut « Brouillons » (announcement_list_screen.dart)"
+  },
+  "listingFilterActiveChip": "Actifs",
+  "@listingFilterActiveChip": {
+    "description": "Chip de filtre statut « Actifs » (announcement_list_screen.dart)"
+  },
+  "listingFilterCompletedChip": "Terminés",
+  "@listingFilterCompletedChip": {
+    "description": "Chip de filtre statut « Terminés » (announcement_list_screen.dart)"
+  },
+  "listingFilterCancelledChip": "Annulés",
+  "@listingFilterCancelledChip": {
+    "description": "Chip de filtre statut « Annulés » (announcement_list_screen.dart)"
+  },
+  "listingHeaderTitle": "Mes trajets",
+  "@listingHeaderTitle": {
+    "description": "Titre de l'en-tête de l'écran « Mes trajets » (announcement_list_screen.dart)"
+  },
+  "listingNewTripPill": "+ Nouveau",
+  "@listingNewTripPill": {
+    "description": "Pill de création d'un nouveau trajet (announcement_list_screen.dart)"
+  },
+  "listingLoadErrorTitle": "Impossible de charger vos trajets",
+  "@listingLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur de chargement (announcement_list_screen.dart)"
+  },
+  "listingEmptyNoTripsTitle": "Aucun trajet à venir",
+  "@listingEmptyNoTripsTitle": {
+    "description": "Titre de l'état vide sans aucun trajet (announcement_list_screen.dart)"
+  },
+  "listingEmptyDraftTitle": "Aucun brouillon",
+  "@listingEmptyDraftTitle": {
+    "description": "Titre de l'état vide filtré sur les brouillons (announcement_list_screen.dart)"
+  },
+  "listingEmptyActiveTitle": "Aucun trajet actif",
+  "@listingEmptyActiveTitle": {
+    "description": "Titre de l'état vide filtré sur les trajets actifs (announcement_list_screen.dart)"
+  },
+  "listingEmptyCompletedTitle": "Aucun historique",
+  "@listingEmptyCompletedTitle": {
+    "description": "Titre de l'état vide filtré sur les trajets terminés (announcement_list_screen.dart)"
+  },
+  "listingEmptyCancelledTitle": "Aucune annulation",
+  "@listingEmptyCancelledTitle": {
+    "description": "Titre de l'état vide filtré sur les trajets annulés (announcement_list_screen.dart)"
+  },
+  "listingEmptyAllTitle": "Aucun trajet trouvé",
+  "@listingEmptyAllTitle": {
+    "description": "Titre de l'état vide sans résultat de recherche (announcement_list_screen.dart)"
+  },
+  "listingEmptyNoTripsDesc": "Publiez votre premier trajet et commencez à transporter des colis.",
+  "@listingEmptyNoTripsDesc": {
+    "description": "Description de l'état vide sans aucun trajet (announcement_list_screen.dart)"
+  },
+  "listingEmptyDraftDesc": "Vos trajets enregistrés sans publication apparaîtront ici.",
+  "@listingEmptyDraftDesc": {
+    "description": "Description de l'état vide filtré sur les brouillons (announcement_list_screen.dart)"
+  },
+  "listingEmptyActiveDesc": "Vos trajets en cours et à venir apparaîtront ici.",
+  "@listingEmptyActiveDesc": {
+    "description": "Description de l'état vide filtré sur les trajets actifs (announcement_list_screen.dart)"
+  },
+  "listingEmptyCompletedDesc": "Vos trajets passés et terminés apparaîtront ici.",
+  "@listingEmptyCompletedDesc": {
+    "description": "Description de l'état vide filtré sur les trajets terminés (announcement_list_screen.dart)"
+  },
+  "listingEmptyCancelledDesc": "Vos trajets annulés apparaîtront ici.",
+  "@listingEmptyCancelledDesc": {
+    "description": "Description de l'état vide filtré sur les trajets annulés (announcement_list_screen.dart)"
+  },
+  "listingEmptyAllDesc": "Aucun trajet ne correspond à votre recherche.",
+  "@listingEmptyAllDesc": {
+    "description": "Description de l'état vide sans résultat de recherche (announcement_list_screen.dart)"
+  },
+  "listingHeroTripLabelCaps": "TRAJET",
+  "@listingHeroTripLabelCaps": {
+    "description": "Petit libellé capitalisé au-dessus du corridor (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingCapacityAvailableSuffix": "disponibles",
+  "@listingCapacityAvailableSuffix": {
+    "description": "Libellé secondaire de la pastille capacité disponible (announcement_detail_body.dart)"
+  },
+  "listingPricingSuffixTarifaire": "tarifaire",
+  "@listingPricingSuffixTarifaire": {
+    "description": "Libellé secondaire de la pastille prix en mode grille (announcement_detail_body.dart)"
+  },
+  "listingPricingSuffixPrix": "prix",
+  "@listingPricingSuffixPrix": {
+    "description": "Libellé secondaire de la pastille prix au kilo (announcement_detail_body.dart)"
+  },
+  "listingAcceptedParcels": "{count, plural, =1{colis accepté} other{colis acceptés}}",
+  "@listingAcceptedParcels": {
+    "description": "Nombre de colis acceptés sur le trajet (announcement_detail_body.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingPendingParcelsLabel": "en attente",
+  "@listingPendingParcelsLabel": {
+    "description": "Libellé secondaire du compteur de demandes en attente (announcement_detail_body.dart)"
+  },
+  "listingPaymentsAcceptedTitle": "Paiements acceptés",
+  "@listingPaymentsAcceptedTitle": {
+    "description": "Titre de la section moyens de paiement acceptés (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingCashOnlyNudgeMessage": "Trajet en espèces uniquement. Beaucoup d'expéditeurs préfèrent payer par carte, activez cette option pour augmenter vos chances de recevoir des colis.",
+  "@listingCashOnlyNudgeMessage": {
+    "description": "Message incitant le voyageur à activer la carte quand seul le cash est accepté (announcement_detail_body.dart)"
+  },
+  "listingActivateCardPaymentsButton": "Activer les paiements par carte",
+  "@listingActivateCardPaymentsButton": {
+    "description": "Bouton d'activation des paiements par carte (announcement_detail_body.dart)"
+  },
+  "listingAcceptedContentTitle": "Ce que j'accepte",
+  "@listingAcceptedContentTitle": {
+    "description": "Titre de la section contenus acceptés (announcement_detail_body.dart)"
+  },
+  "listingRefusedContentTitle": "Ce que je refuse",
+  "@listingRefusedContentTitle": {
+    "description": "Titre de la section contenus refusés (announcement_detail_body.dart)"
+  },
+  "listingSenderNoteTitle": "Note aux expéditeurs",
+  "@listingSenderNoteTitle": {
+    "description": "Titre de la note libre du voyageur à destination des expéditeurs (announcement_detail_body.dart)"
+  },
+  "listingBadgeActive": "● ACTIF",
+  "@listingBadgeActive": {
+    "description": "Badge de statut compact ACTIVE (announcement_detail_body.dart)"
+  },
+  "listingBadgeDraft": "✎ BROUILLON",
+  "@listingBadgeDraft": {
+    "description": "Badge de statut compact DRAFT (announcement_detail_body.dart)"
+  },
+  "listingBadgeFull": "● COMPLET",
+  "@listingBadgeFull": {
+    "description": "Badge de statut compact FULL (announcement_detail_body.dart)"
+  },
+  "listingBadgeInProgress": "● EN COURS",
+  "@listingBadgeInProgress": {
+    "description": "Badge de statut compact IN_PROGRESS (announcement_detail_body.dart)"
+  },
+  "listingBadgeCompleted": "✓ TERMINÉ",
+  "@listingBadgeCompleted": {
+    "description": "Badge de statut compact COMPLETED (announcement_detail_body.dart)"
+  },
+  "listingBadgeCancelled": "✕ ANNULÉ",
+  "@listingBadgeCancelled": {
+    "description": "Badge de statut compact CANCELLED (announcement_detail_body.dart)"
+  },
+  "listingReservedKgLabel": "{kg} kg réservés",
+  "@listingReservedKgLabel": {
+    "description": "Répartition kg réservés d'un trajet dédié au surplus (announcement_detail_body.dart)",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "listingOpenKgLabel": "{kg} kg ouverts",
+  "@listingOpenKgLabel": {
+    "description": "Répartition kg ouverts au public d'un trajet dédié au surplus (announcement_detail_body.dart)",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "listingPickupParcelTitleShort": "Remise colis",
+  "@listingPickupParcelTitleShort": {
+    "description": "Libellé court de la ligne remise du colis (announcement_detail_body.dart)"
+  },
+  "listingDeliveryPickupTitle": "Récupération",
+  "@listingDeliveryPickupTitle": {
+    "description": "Libellé de la ligne récupération du colis (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart)"
+  },
+  "listingAlreadyHasParcelMessage": "Vous avez déjà un colis sur ce trajet",
+  "@listingAlreadyHasParcelMessage": {
+    "description": "Message quand l'expéditeur a déjà un colis actif sur ce trajet (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingSeeMyParcelButton": "Voir mon colis",
+  "@listingSeeMyParcelButton": {
+    "description": "Bouton vers le colis déjà en cours sur ce trajet (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingMakeRequestButton": "Faire une demande",
+  "@listingMakeRequestButton": {
+    "description": "Bouton principal de demande de transport (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingNegotiableTripPrefix": "Trajet négociable · ",
+  "@listingNegotiableTripPrefix": {
+    "description": "Préfixe avant le lien de négociation de prix (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingProposePriceLink": "Proposer un prix",
+  "@listingProposePriceLink": {
+    "description": "Lien d'entrée en négociation de prix (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingPricePerKiloLabel": "par kilo",
+  "@listingPricePerKiloLabel": {
+    "description": "Libellé secondaire de la carte prix au kilo (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingApproxPricePerKg": "environ {price}/kg",
+  "@listingApproxPricePerKg": {
+    "description": "Équivalent converti « environ » du prix au kilo (traveler_announcement_bottom_sheet.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "listingApproxPrice": "environ {price}",
+  "@listingApproxPrice": {
+    "description": "Équivalent converti « environ » d'un article de la grille (traveler_announcement_bottom_sheet.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "listingDepositDeadlineLabel": "date limite de dépôt",
+  "@listingDepositDeadlineLabel": {
+    "description": "Libellé secondaire de la carte date limite de dépôt (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingPriceGridLabel": "Grille tarifaire",
+  "@listingPriceGridLabel": {
+    "description": "Titre de la carte grille tarifaire (traveler_announcement_bottom_sheet.dart, trip_card.dart, traveler_card.dart)"
+  },
+  "listingItemCount": "{count, plural, =1{{count} article} other{{count} articles}}",
+  "@listingItemCount": {
+    "description": "Nombre d'articles de la grille tarifaire (traveler_announcement_bottom_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingPricePerItemTitle": "Tarif par article",
+  "@listingPricePerItemTitle": {
+    "description": "Titre de la liste des tarifs à l'article (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingSeeAllPricesButton": "Voir tous les tarifs ({count})",
+  "@listingSeeAllPricesButton": {
+    "description": "Bouton de dépliage de la liste des tarifs (traveler_announcement_bottom_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingPickupParcelTitle": "Remise du colis",
+  "@listingPickupParcelTitle": {
+    "description": "Titre de la ligne remise du colis (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingReportTripLink": "Signaler ce trajet",
+  "@listingReportTripLink": {
+    "description": "Lien de signalement du trajet (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingBlockTravelerLink": "Bloquer ce voyageur",
+  "@listingBlockTravelerLink": {
+    "description": "Lien de blocage du voyageur (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingFavoriteAddedMessage": "Trajet ajouté aux favoris",
+  "@listingFavoriteAddedMessage": {
+    "description": "Confirmation d'ajout aux favoris (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingFavoriteRemovedMessage": "Trajet retiré des favoris",
+  "@listingFavoriteRemovedMessage": {
+    "description": "Confirmation de retrait des favoris (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingFavoriteToggleErrorMessage": "Impossible de modifier les favoris",
+  "@listingFavoriteToggleErrorMessage": {
+    "description": "Erreur lors du basculement d'un favori (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingKgAvailableLabel": "{kg} kg dispo",
+  "@listingKgAvailableLabel": {
+    "description": "Capacité disponible compacte (traveler_announcement_bottom_sheet.dart, traveler_card.dart)",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "listingIdentityBadge": "Identité",
+  "@listingIdentityBadge": {
+    "description": "Badge compact identité vérifiée du voyageur (traveler_announcement_bottom_sheet.dart, traveler_card.dart)"
+  },
+  "listingCategoriesAcceptedTitle": "Types de colis acceptés",
+  "@listingCategoriesAcceptedTitle": {
+    "description": "Titre de la section types de colis acceptés (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingTravelerMessageTitle": "Message du voyageur",
+  "@listingTravelerMessageTitle": {
+    "description": "Titre du message libre du voyageur (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingRouteLabel": "Itinéraire",
+  "@listingRouteLabel": {
+    "description": "Badge d'ouverture de l'app de cartes sur une adresse (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingCashOnlyWarningBold": "Trajet en espèces uniquement. ",
+  "@listingCashOnlyWarningBold": {
+    "description": "Amorce en gras de l'avertissement paiement cash uniquement (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingCashOnlyWarningBody": "Le paiement se fait en main propre au voyageur, Yadony ne séquestre pas votre argent et ne peut pas le rembourser automatiquement en cas de litige.",
+  "@listingCashOnlyWarningBody": {
+    "description": "Corps de l'avertissement paiement cash uniquement (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingNewRatingLabel": "Nouveau",
+  "@listingNewRatingLabel": {
+    "description": "Repli affiché quand le voyageur n'a pas encore de note (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingTravelerTrips": "{count, plural, =1{· {count} trajet} other{· {count} trajets}}",
+  "@listingTravelerTrips": {
+    "description": "Nombre de trajets déjà effectués par le voyageur (traveler_announcement_bottom_sheet.dart, traveler_card.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingPreviewTitle": "Aperçu de votre annonce",
+  "@listingPreviewTitle": {
+    "description": "Titre de la feuille d'aperçu avant publication (announcement_preview_sheet.dart)"
+  },
+  "listingPublishButton": "Publier l'annonce",
+  "@listingPublishButton": {
+    "description": "Bouton de publication de l'annonce (announcement_preview_sheet.dart)"
+  },
+  "listingSaveDraftButton": "Enregistrer comme brouillon",
+  "@listingSaveDraftButton": {
+    "description": "Bouton d'enregistrement en brouillon (announcement_preview_sheet.dart)"
+  },
+  "listingPreviewDepartureLabel": "Départ",
+  "@listingPreviewDepartureLabel": {
+    "description": "Libellé de la ligne heure de départ de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelPickup": "Remise",
+  "@listingRowLabelPickup": {
+    "description": "Libellé de la ligne adresse de remise de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelCapacity": "Capacité",
+  "@listingRowLabelCapacity": {
+    "description": "Libellé de la ligne capacité de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelPayment": "Paiement",
+  "@listingRowLabelPayment": {
+    "description": "Libellé de la ligne mode de paiement de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingPaymentCardCash": "Carte + Espèces",
+  "@listingPaymentCardCash": {
+    "description": "Valeur de la ligne paiement quand carte et espèces sont acceptées (announcement_preview_sheet.dart)"
+  },
+  "listingPaymentCardOnly": "Carte uniquement",
+  "@listingPaymentCardOnly": {
+    "description": "Valeur de la ligne paiement quand seule la carte est acceptée (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelAccept": "Accepte",
+  "@listingRowLabelAccept": {
+    "description": "Libellé de la ligne contenus acceptés de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelRefuse": "Refuse",
+  "@listingRowLabelRefuse": {
+    "description": "Libellé de la ligne contenus refusés de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelNote": "Note",
+  "@listingRowLabelNote": {
+    "description": "Libellé de la ligne note libre de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingPriceTooLowWarning": "Prix bas. Vous pourrez le modifier après publication.",
+  "@listingPriceTooLowWarning": {
+    "description": "Avertissement prix jugé bas dans l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingPriceTooHighWarning": "Prix élevé. Vous pourrez le modifier après publication.",
+  "@listingPriceTooHighWarning": {
+    "description": "Avertissement prix jugé élevé dans l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingStatusInProgress": "En cours",
+  "@listingStatusInProgress": {
+    "description": "Badge de statut IN_PROGRESS d'une carte de trajet (trip_card.dart)"
+  },
+  "listingDateTodayLabel": "Aujourd'hui · {date}",
+  "@listingDateTodayLabel": {
+    "description": "Date de départ relative — aujourd'hui (trip_card.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "listingDateTomorrowLabel": "Demain · {date}",
+  "@listingDateTomorrowLabel": {
+    "description": "Date de départ relative — demain (trip_card.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "listingDateInDaysLabel": "Départ dans {days} jours · {date}",
+  "@listingDateInDaysLabel": {
+    "description": "Date de départ relative — dans N jours (trip_card.dart)",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "listingRetryActionMessage": "Action impossible, réessaie",
+  "@listingRetryActionMessage": {
+    "description": "Erreur du bouton favori sur une carte de trajet (trip_card.dart, traveler_card.dart)"
+  },
+  "listingAcceptedBidsCount": "{count, plural, =1{{count} acceptée} other{{count} acceptées}}",
+  "@listingAcceptedBidsCount": {
+    "description": "Compteur de demandes acceptées sur une carte de trajet (trip_card.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingPendingBidsCount": "{count} en attente",
+  "@listingPendingBidsCount": {
+    "description": "Compteur de demandes en attente sur une carte de trajet (trip_card.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingSoldOfTotalLabel": "{sold} vendus sur {total}",
+  "@listingSoldOfTotalLabel": {
+    "description": "Progression kg vendus / total sur une carte de trajet (trip_card.dart)",
+    "placeholders": {
+      "sold": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "listingAvailableKgLabel": "{kg} disponibles",
+  "@listingAvailableKgLabel": {
+    "description": "Capacité disponible du footer d'une carte de trajet active (trip_card.dart)",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "listingSoldLabel": "{kg} vendus",
+  "@listingSoldLabel": {
+    "description": "Kg vendus condensé d'une carte de trajet passée (trip_card.dart)",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "listingEarnedLabel": "{price} gagnés",
+  "@listingEarnedLabel": {
+    "description": "Montant gagné condensé d'une carte de trajet terminée (trip_card.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "listingBidStatusAccepted": "Demande acceptée",
+  "@listingBidStatusAccepted": {
+    "description": "Chip de statut d'une demande acceptée sur une carte voyageur (traveler_card.dart)"
+  },
+  "listingBidStatusOnTrip": "Colis sur ce trajet",
+  "@listingBidStatusOnTrip": {
+    "description": "Chip de statut d'un colis déjà en cours sur ce trajet (traveler_card.dart)"
+  },
+  "listingBidStatusArrived": "Arrivé",
+  "@listingBidStatusArrived": {
+    "description": "Chip de statut voyageur arrivé à destination (traveler_card.dart)"
+  },
+  "listingBidStatusPending": "Demande en attente",
+  "@listingBidStatusPending": {
+    "description": "Chip de statut d'une demande en attente sur une carte voyageur (traveler_card.dart)"
+  },
+  "listingYourTripPill": "Votre trajet",
+  "@listingYourTripPill": {
+    "description": "Pill signalant que l'annonce appartient au voyageur courant (traveler_card.dart)"
+  },
+  "listingProBadge": "PRO",
+  "@listingProBadge": {
+    "description": "Badge compte PRO sur une carte voyageur (traveler_card.dart)"
+  },
+  "listingNoTravelersNearbyTitle": "Aucun voyageur à proximité",
+  "@listingNoTravelersNearbyTitle": {
+    "description": "Titre de l'état vide du carousel « près de moi » (near_me_carousel.dart)"
+  },
+  "listingNoTravelersNearbyDesc": "Essaie d'augmenter le rayon ou de changer de date.",
+  "@listingNoTravelersNearbyDesc": {
+    "description": "Description de l'état vide du carousel « près de moi » (near_me_carousel.dart)"
+  },
+  "listingSeeAnnouncementButton": "Voir l'annonce",
+  "@listingSeeAnnouncementButton": {
+    "description": "Bouton « voir tout » quand une seule annonce est disponible (near_me_carousel.dart)"
+  },
+  "listingSeeAnnouncementsCountButton": "Voir les {count} annonces",
+  "@listingSeeAnnouncementsCountButton": {
+    "description": "Bouton « voir tout » avec le nombre d'annonces (near_me_carousel.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingRouteDeparturesFrom": "Départs depuis {city}",
+  "@listingRouteDeparturesFrom": {
+    "description": "Titre de la feuille filtrée sur une ville de départ (route_bottom_sheet.dart)",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "listingRouteArrivalsTo": "Arrivées à {city}",
+  "@listingRouteArrivalsTo": {
+    "description": "Titre de la feuille filtrée sur une ville d'arrivée (route_bottom_sheet.dart)",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "listingRouteTrips": "{count, plural, =1{{count} trajet} other{{count} trajets}}",
+  "@listingRouteTrips": {
+    "description": "Nombre de trajets sur la route filtrée (route_bottom_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingNoTripsOnRoute": "Aucun trajet disponible sur cette route",
+  "@listingNoTripsOnRoute": {
+    "description": "État vide de la feuille route filtrée (route_bottom_sheet.dart)"
+  },
+  "listingSameAddressTravelers": "{count, plural, =1{{count} voyageur disponible à cette adresse} other{{count} voyageurs disponibles à cette adresse}}",
+  "@listingSameAddressTravelers": {
+    "description": "Nombre de voyageurs disponibles à la même adresse (same_address_announcements_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingAddressFallback": "Adresse",
+  "@listingAddressFallback": {
+    "description": "Repli affiché quand l'adresse d'un cluster n'a pas de libellé (announcement_map_view.dart)"
+  },
+  "listingNearMeDeactivateTooltip": "Désactiver « Près de moi »",
+  "@listingNearMeDeactivateTooltip": {
+    "description": "Infobulle du bouton « Près de moi » actif (announcement_map_view.dart)"
+  },
+  "listingNearMeActivateTooltip": "Voir les voyageurs près de moi",
+  "@listingNearMeActivateTooltip": {
+    "description": "Infobulle du bouton « Près de moi » inactif (announcement_map_view.dart)"
+  },
+  "listingFilterTripsTitle": "Filtrer les trajets",
+  "@listingFilterTripsTitle": {
+    "description": "Titre de la feuille de filtres de recherche de trajets (search_form_bottom_sheet.dart)"
+  },
+  "listingResetFiltersButton": "Réinitialiser",
+  "@listingResetFiltersButton": {
+    "description": "Bouton de réinitialisation des filtres (search_form_bottom_sheet.dart)"
+  },
+  "listingSearchButtonOneFilter": "Rechercher · 1 filtre",
+  "@listingSearchButtonOneFilter": {
+    "description": "Bouton de recherche avec un seul filtre actif (search_form_bottom_sheet.dart)"
+  },
+  "listingSearchButtonNFilters": "Rechercher · {count} filtres",
+  "@listingSearchButtonNFilters": {
+    "description": "Bouton de recherche avec plusieurs filtres actifs (search_form_bottom_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingSearchButton": "Rechercher",
+  "@listingSearchButton": {
+    "description": "Bouton de recherche sans filtre actif (search_form_bottom_sheet.dart)"
+  },
+  "listingQuickFiltersTitle": "FILTRES RAPIDES",
+  "@listingQuickFiltersTitle": {
+    "description": "Titre de section des chips de filtres rapides (search_form_bottom_sheet.dart)"
+  },
+  "listingKiloProChip": "Kilo Pro",
+  "@listingKiloProChip": {
+    "description": "Chip de filtre voyageur Kilo Pro (search_form_bottom_sheet.dart)"
+  },
+  "listingRatingChip": "Note ≥ 4.5",
+  "@listingRatingChip": {
+    "description": "Chip de filtre note minimale (search_form_bottom_sheet.dart)"
+  },
+  "listingWeekendChip": "Week-end",
+  "@listingWeekendChip": {
+    "description": "Chip de filtre départ le week-end (search_form_bottom_sheet.dart)"
+  },
+  "listingContentContainsTitle": "MON COLIS CONTIENT",
+  "@listingContentContainsTitle": {
+    "description": "Titre de section du filtre type de contenu (search_form_bottom_sheet.dart)"
+  },
+  "listingDepartureUrgencyTitle": "URGENCE DU DÉPART",
+  "@listingDepartureUrgencyTitle": {
+    "description": "Titre de section du filtre urgence du départ (search_form_bottom_sheet.dart)"
+  },
+  "listingDepartureUrgencyDesc": "Filtrer les trajets selon leur proximité de départ",
+  "@listingDepartureUrgencyDesc": {
+    "description": "Description du filtre urgence du départ (search_form_bottom_sheet.dart)"
+  },
+  "listingDeleteTripAssociatedRequestsMessage": "Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.",
+  "@listingDeleteTripAssociatedRequestsMessage": {
+    "description": "Message de confirmation de suppression, sans la phrase d irréversibilité (announcement_list_screen.dart)"
+  },
+  "listingDeadlineLabel": "Date limite",
+  "@listingDeadlineLabel": {
+    "description": "Libellé de la ligne date limite de dépôt (announcement_detail_body.dart)"
+  },
+  "listingInstructionsCardTitle": "Instructions du voyageur",
+  "@listingInstructionsCardTitle": {
+    "description": "Titre de l encart instructions de retrait laissees par le voyageur (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingRowLabelDate": "Date",
+  "@listingRowLabelDate": {
+    "description": "Libellé de la ligne date de départ de l aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelPrice": "Prix",
+  "@listingRowLabelPrice": {
+    "description": "Libellé de la ligne prix de l aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingPriceEstimateSuffix": " · estimation {amount} net",
+  "@listingPriceEstimateSuffix": {
+    "description": "Suffixe estimation du revenu net affiché après le prix au kg de l aperçu (announcement_preview_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   }
 }

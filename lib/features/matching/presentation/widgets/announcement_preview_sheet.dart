@@ -2,6 +2,7 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -33,21 +34,22 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     TimeOfDay? departureTime,
     SupportedCurrency? currency,
   }) {
+    final l = context.l10n;
     return DonyBottomSheet.show<void>(
       context,
-      title: 'Aperçu de votre annonce',
+      title: l.listingPreviewTitle,
       stickyBottom: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: 'Publier l\'annonce',
+            label: l.listingPublishButton,
             onPressed: isSubmitting ? null : onConfirm,
             isLoading: isSubmitting,
           ),
           if (onSaveDraft != null) ...[
             const SizedBox(height: DonySpacing.sm),
             DonyButton(
-              label: 'Enregistrer comme brouillon',
+              label: l.listingSaveDraftButton,
               variant: DonyButtonVariant.secondary,
               onPressed: isSubmitting ? null : onSaveDraft,
             ),
@@ -74,11 +76,12 @@ class AnnouncementPreviewSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     final dateStr = formState.departureDate != null
         ? DateFormat(
             'dd MMM yyyy',
-            AppL10n.localeName,
+            l.localeName,
           ).format(formState.departureDate!)
         : '-';
 
@@ -91,7 +94,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
 
     final prixStr = formState.pricePerKg != null
         ? '${CurrencyFormatter.formatOrPlain(formState.pricePerKg!, currency)}/kg'
-              '${netEstimate != null ? ' · estimation ${CurrencyFormatter.formatOrPlain(netEstimate, currency)} net' : ''}'
+              '${netEstimate != null ? l.listingPriceEstimateSuffix(CurrencyFormatter.formatOrPlain(netEstimate, currency)) : ''}'
         : '-';
 
     return Padding(
@@ -101,59 +104,71 @@ class AnnouncementPreviewSheet extends StatelessWidget {
         children: [
           _PreviewRow(
             iconAsset: 'plane-takeoff',
-            label: 'Trajet',
+            label: l.listingHeroTripLabel,
             value:
                 '${formState.departureCity ?? '-'} → ${formState.arrivalCity ?? '-'}',
           ),
-          _PreviewRow(iconAsset: 'calendar', label: 'Date', value: dateStr),
+          _PreviewRow(
+            iconAsset: 'calendar',
+            label: l.listingRowLabelDate,
+            value: dateStr,
+          ),
           if (departureTime != null)
             _PreviewRow(
               iconAsset: 'clock',
-              label: 'Départ',
+              label: l.listingPreviewDepartureLabel,
               value: _formatTime(departureTime!),
             ),
           if (formState.pickupAddress != null)
             _PreviewRow(
               iconAsset: 'arrow-left-right',
-              label: 'Remise',
+              label: l.listingRowLabelPickup,
               value: formState.pickupAddress!.label,
             ),
           if (formState.deliveryAddress != null)
             _PreviewRow(
               iconAsset: 'arrow-left-right',
-              label: 'Récupération',
+              label: l.listingDeliveryPickupTitle,
               value: formState.deliveryAddress!.label,
             ),
           _PreviewRow(
             iconAsset: 'luggage',
-            label: 'Capacité',
-            value: formState.capacityUnit.label(context.l10n),
+            label: l.listingRowLabelCapacity,
+            value: formState.capacityUnit.label(l),
           ),
-          _PreviewRow(iconAsset: 'banknote', label: 'Prix', value: prixStr),
           _PreviewRow(
             iconAsset: 'banknote',
-            label: 'Paiement',
+            label: l.listingRowLabelPrice,
+            value: prixStr,
+          ),
+          _PreviewRow(
+            iconAsset: 'banknote',
+            label: l.listingRowLabelPayment,
             value: formState.cashAccepted
-                ? 'Carte + Espèces'
-                : 'Carte uniquement',
+                ? l.listingPaymentCardCash
+                : l.listingPaymentCardOnly,
           ),
           if (formState.acceptedTypes.isNotEmpty)
             _PreviewRow(
               iconAsset: 'circle-check',
-              label: 'Accepte',
-              value: formState.acceptedTypes.join(', '),
+              label: l.listingRowLabelAccept,
+              value: formState.acceptedTypes
+                  .map((t) => contentCategoryDisplayName(l, t))
+                  .join(', '),
             ),
           if (formState.rejectedTypes.isNotEmpty)
             _PreviewRow(
               iconAsset: 'circle-x',
-              label: 'Refuse',
-              value: formState.rejectedTypes.join(', '),
+              label: l.listingRowLabelRefuse,
+              value: formState.rejectedTypes
+                  .map((t) => contentCategoryDisplayName(l, t))
+                  .join(', '),
             ),
           if (formState.description != null &&
               formState.description!.isNotEmpty)
             _PreviewRow(
               iconAsset: 'file-text',
-              label: 'Note',
+              label: l.listingRowLabelNote,
               value: formState.description!,
             ),
           if (formState.priceWarning != null)
@@ -171,8 +186,8 @@ class AnnouncementPreviewSheet extends StatelessWidget {
                   Expanded(
                     child: Text(
                       formState.priceWarning == PriceWarning.tooLow
-                          ? 'Prix bas. Vous pourrez le modifier après publication.'
-                          : 'Prix élevé. Vous pourrez le modifier après publication.',
+                          ? l.listingPriceTooLowWarning
+                          : l.listingPriceTooHighWarning,
                       style: tt.bodySmall?.copyWith(color: cs.warning),
                     ),
                   ),

@@ -4585,4 +4585,577 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestCreateRecapPackage => 'Parcel';
+
+  @override
+  String get listingDeleteTripConfirmTitle => 'Delete this trip?';
+
+  @override
+  String get listingDeleteTripCancelledMessage =>
+      'This action is irreversible. The cancelled trip and all related requests will be permanently removed from the platform.';
+
+  @override
+  String get listingDeleteTripActiveMessage =>
+      'This action is irreversible. The trip will no longer be visible to senders.';
+
+  @override
+  String get listingTripDetailTitle => 'Trip details';
+
+  @override
+  String get listingTripDeletedMessage => 'Trip deleted';
+
+  @override
+  String get listingAnnouncementGoneMessage => 'This listing no longer exists';
+
+  @override
+  String get listingHeroTripLabel => 'Trip';
+
+  @override
+  String get listingPickupLocationsTitle => 'Drop-off locations';
+
+  @override
+  String get listingHandoverDeadlineTitle => 'Parcel drop-off';
+
+  @override
+  String get listingCapacityAvailableLabel => 'Available capacity';
+
+  @override
+  String get listingPricingModeLabel => 'Pricing';
+
+  @override
+  String get listingPricePerKgLabel => 'Price per kg';
+
+  @override
+  String get listingPriceGridShort => 'Grid';
+
+  @override
+  String get listingPriceUnavailableShort => 'Unavailable';
+
+  @override
+  String listingSeeRequestsButton(int count) {
+    return 'See requests ($count)';
+  }
+
+  @override
+  String get listingEditTripButton => 'Edit this trip';
+
+  @override
+  String get listingCancelTripButton => 'Cancel this trip';
+
+  @override
+  String get listingDeleteTripButton => 'Delete this trip';
+
+  @override
+  String get listingTripLockedMessage => 'This trip can no longer be edited.';
+
+  @override
+  String get listingStatusActive => 'Active';
+
+  @override
+  String get listingStatusFull => 'Full';
+
+  @override
+  String get listingStatusCompleted => 'Completed';
+
+  @override
+  String get listingStatusCancelled => 'Cancelled';
+
+  @override
+  String listingHandoverUntil(String date) {
+    return 'Until $date';
+  }
+
+  @override
+  String get listingSearchDestinationHint => 'Search a destination…';
+
+  @override
+  String get listingFilterAllChip => 'All';
+
+  @override
+  String get listingFilterDraftsChip => 'Drafts';
+
+  @override
+  String get listingFilterActiveChip => 'Active';
+
+  @override
+  String get listingFilterCompletedChip => 'Completed';
+
+  @override
+  String get listingFilterCancelledChip => 'Cancelled';
+
+  @override
+  String get listingHeaderTitle => 'My trips';
+
+  @override
+  String get listingNewTripPill => '+ New';
+
+  @override
+  String get listingLoadErrorTitle => 'We couldn\'t load your trips';
+
+  @override
+  String get listingEmptyNoTripsTitle => 'No upcoming trips';
+
+  @override
+  String get listingEmptyDraftTitle => 'No drafts';
+
+  @override
+  String get listingEmptyActiveTitle => 'No active trips';
+
+  @override
+  String get listingEmptyCompletedTitle => 'No history';
+
+  @override
+  String get listingEmptyCancelledTitle => 'No cancellations';
+
+  @override
+  String get listingEmptyAllTitle => 'No trips found';
+
+  @override
+  String get listingEmptyNoTripsDesc =>
+      'Post your first trip and start carrying parcels.';
+
+  @override
+  String get listingEmptyDraftDesc =>
+      'Your trips saved without publishing will appear here.';
+
+  @override
+  String get listingEmptyActiveDesc =>
+      'Your ongoing and upcoming trips will appear here.';
+
+  @override
+  String get listingEmptyCompletedDesc =>
+      'Your past and completed trips will appear here.';
+
+  @override
+  String get listingEmptyCancelledDesc =>
+      'Your cancelled trips will appear here.';
+
+  @override
+  String get listingEmptyAllDesc => 'No trips match your search.';
+
+  @override
+  String get listingHeroTripLabelCaps => 'TRIP';
+
+  @override
+  String get listingCapacityAvailableSuffix => 'available';
+
+  @override
+  String get listingPricingSuffixTarifaire => 'pricing';
+
+  @override
+  String get listingPricingSuffixPrix => 'price';
+
+  @override
+  String listingAcceptedParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'parcels accepted',
+      one: 'parcel accepted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingPendingParcelsLabel => 'pending';
+
+  @override
+  String get listingPaymentsAcceptedTitle => 'Accepted payment methods';
+
+  @override
+  String get listingCashOnlyNudgeMessage =>
+      'Cash-only trip. Many senders prefer to pay by card, so enabling this option increases your chances of receiving parcels.';
+
+  @override
+  String get listingActivateCardPaymentsButton => 'Enable card payments';
+
+  @override
+  String get listingAcceptedContentTitle => 'What I accept';
+
+  @override
+  String get listingRefusedContentTitle => 'What I refuse';
+
+  @override
+  String get listingSenderNoteTitle => 'Note to senders';
+
+  @override
+  String get listingBadgeActive => '● ACTIVE';
+
+  @override
+  String get listingBadgeDraft => '✎ DRAFT';
+
+  @override
+  String get listingBadgeFull => '● FULL';
+
+  @override
+  String get listingBadgeInProgress => '● IN PROGRESS';
+
+  @override
+  String get listingBadgeCompleted => '✓ COMPLETED';
+
+  @override
+  String get listingBadgeCancelled => '✕ CANCELLED';
+
+  @override
+  String listingReservedKgLabel(String kg) {
+    return '$kg kg reserved';
+  }
+
+  @override
+  String listingOpenKgLabel(String kg) {
+    return '$kg kg open';
+  }
+
+  @override
+  String get listingPickupParcelTitleShort => 'Parcel drop-off';
+
+  @override
+  String get listingDeliveryPickupTitle => 'Pickup';
+
+  @override
+  String get listingAlreadyHasParcelMessage =>
+      'You already have a parcel on this trip';
+
+  @override
+  String get listingSeeMyParcelButton => 'See my parcel';
+
+  @override
+  String get listingMakeRequestButton => 'Make a request';
+
+  @override
+  String get listingNegotiableTripPrefix => 'Negotiable trip · ';
+
+  @override
+  String get listingProposePriceLink => 'Propose a price';
+
+  @override
+  String get listingPricePerKiloLabel => 'per kilo';
+
+  @override
+  String listingApproxPricePerKg(String price) {
+    return 'approx. $price/kg';
+  }
+
+  @override
+  String listingApproxPrice(String price) {
+    return 'approx. $price';
+  }
+
+  @override
+  String get listingDepositDeadlineLabel => 'drop-off deadline';
+
+  @override
+  String get listingPriceGridLabel => 'Price grid';
+
+  @override
+  String listingItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '$count item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingPricePerItemTitle => 'Price per item';
+
+  @override
+  String listingSeeAllPricesButton(int count) {
+    return 'See all prices ($count)';
+  }
+
+  @override
+  String get listingPickupParcelTitle => 'Parcel drop-off';
+
+  @override
+  String get listingReportTripLink => 'Report this trip';
+
+  @override
+  String get listingBlockTravelerLink => 'Block this traveler';
+
+  @override
+  String get listingFavoriteAddedMessage => 'Trip added to favorites';
+
+  @override
+  String get listingFavoriteRemovedMessage => 'Trip removed from favorites';
+
+  @override
+  String get listingFavoriteToggleErrorMessage => 'Couldn\'t update favorites';
+
+  @override
+  String listingKgAvailableLabel(String kg) {
+    return '$kg kg available';
+  }
+
+  @override
+  String get listingIdentityBadge => 'Verified';
+
+  @override
+  String get listingCategoriesAcceptedTitle => 'Accepted parcel types';
+
+  @override
+  String get listingTravelerMessageTitle => 'Traveler\'s message';
+
+  @override
+  String get listingRouteLabel => 'Directions';
+
+  @override
+  String get listingCashOnlyWarningBold => 'Cash-only trip. ';
+
+  @override
+  String get listingCashOnlyWarningBody =>
+      'Payment is made directly to the traveler in person. Yadony does not hold your money in escrow and cannot refund it automatically in case of a dispute.';
+
+  @override
+  String get listingNewRatingLabel => 'New';
+
+  @override
+  String listingTravelerTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '· $count trips',
+      one: '· $count trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingPreviewTitle => 'Preview your listing';
+
+  @override
+  String get listingPublishButton => 'Post the listing';
+
+  @override
+  String get listingSaveDraftButton => 'Save as draft';
+
+  @override
+  String get listingPreviewDepartureLabel => 'Departure';
+
+  @override
+  String get listingRowLabelPickup => 'Drop-off';
+
+  @override
+  String get listingRowLabelCapacity => 'Capacity';
+
+  @override
+  String get listingRowLabelPayment => 'Payment';
+
+  @override
+  String get listingPaymentCardCash => 'Card + Cash';
+
+  @override
+  String get listingPaymentCardOnly => 'Card only';
+
+  @override
+  String get listingRowLabelAccept => 'Accepts';
+
+  @override
+  String get listingRowLabelRefuse => 'Refuses';
+
+  @override
+  String get listingRowLabelNote => 'Note';
+
+  @override
+  String get listingPriceTooLowWarning =>
+      'Low price. You\'ll be able to change it after posting.';
+
+  @override
+  String get listingPriceTooHighWarning =>
+      'High price. You\'ll be able to change it after posting.';
+
+  @override
+  String get listingStatusInProgress => 'In progress';
+
+  @override
+  String listingDateTodayLabel(String date) {
+    return 'Today · $date';
+  }
+
+  @override
+  String listingDateTomorrowLabel(String date) {
+    return 'Tomorrow · $date';
+  }
+
+  @override
+  String listingDateInDaysLabel(int days, String date) {
+    return 'Departs in $days days · $date';
+  }
+
+  @override
+  String get listingRetryActionMessage => 'Action failed, try again';
+
+  @override
+  String listingAcceptedBidsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count accepted',
+      one: '$count accepted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String listingPendingBidsCount(int count) {
+    return '$count pending';
+  }
+
+  @override
+  String listingSoldOfTotalLabel(String sold, String total) {
+    return '$sold sold of $total';
+  }
+
+  @override
+  String listingAvailableKgLabel(String kg) {
+    return '$kg available';
+  }
+
+  @override
+  String listingSoldLabel(String kg) {
+    return '$kg sold';
+  }
+
+  @override
+  String listingEarnedLabel(String price) {
+    return '$price earned';
+  }
+
+  @override
+  String get listingBidStatusAccepted => 'Request accepted';
+
+  @override
+  String get listingBidStatusOnTrip => 'Parcel on this trip';
+
+  @override
+  String get listingBidStatusArrived => 'Arrived';
+
+  @override
+  String get listingBidStatusPending => 'Request pending';
+
+  @override
+  String get listingYourTripPill => 'Your trip';
+
+  @override
+  String get listingProBadge => 'PRO';
+
+  @override
+  String get listingNoTravelersNearbyTitle => 'No travelers nearby';
+
+  @override
+  String get listingNoTravelersNearbyDesc =>
+      'Try widening the radius or changing the date.';
+
+  @override
+  String get listingSeeAnnouncementButton => 'See the listing';
+
+  @override
+  String listingSeeAnnouncementsCountButton(int count) {
+    return 'See the $count listings';
+  }
+
+  @override
+  String listingRouteDeparturesFrom(String city) {
+    return 'Departures from $city';
+  }
+
+  @override
+  String listingRouteArrivalsTo(String city) {
+    return 'Arrivals in $city';
+  }
+
+  @override
+  String listingRouteTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trips',
+      one: '$count trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingNoTripsOnRoute => 'No trips available on this route';
+
+  @override
+  String listingSameAddressTravelers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers available at this address',
+      one: '$count traveler available at this address',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingAddressFallback => 'Address';
+
+  @override
+  String get listingNearMeDeactivateTooltip => 'Turn off \"Near me\"';
+
+  @override
+  String get listingNearMeActivateTooltip => 'See travelers near me';
+
+  @override
+  String get listingFilterTripsTitle => 'Filter trips';
+
+  @override
+  String get listingResetFiltersButton => 'Reset';
+
+  @override
+  String get listingSearchButtonOneFilter => 'Search · 1 filter';
+
+  @override
+  String listingSearchButtonNFilters(int count) {
+    return 'Search · $count filters';
+  }
+
+  @override
+  String get listingSearchButton => 'Search';
+
+  @override
+  String get listingQuickFiltersTitle => 'QUICK FILTERS';
+
+  @override
+  String get listingKiloProChip => 'Kilo Pro';
+
+  @override
+  String get listingRatingChip => 'Rating ≥ 4.5';
+
+  @override
+  String get listingWeekendChip => 'Weekend';
+
+  @override
+  String get listingContentContainsTitle => 'MY PARCEL CONTAINS';
+
+  @override
+  String get listingDepartureUrgencyTitle => 'DEPARTURE URGENCY';
+
+  @override
+  String get listingDepartureUrgencyDesc =>
+      'Filter trips by how soon they depart';
+
+  @override
+  String get listingDeleteTripAssociatedRequestsMessage =>
+      'The cancelled trip and all related requests will be permanently removed from the platform.';
+
+  @override
+  String get listingDeadlineLabel => 'Deadline';
+
+  @override
+  String get listingInstructionsCardTitle => 'Traveler\'s instructions';
+
+  @override
+  String get listingRowLabelDate => 'Date';
+
+  @override
+  String get listingRowLabelPrice => 'Price';
+
+  @override
+  String listingPriceEstimateSuffix(String amount) {
+    return ' · estimate $amount net';
+  }
 }

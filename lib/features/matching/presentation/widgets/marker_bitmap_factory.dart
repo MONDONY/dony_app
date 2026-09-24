@@ -83,6 +83,7 @@ class MarkerBitmapFactory {
 
   static Future<BitmapDescriptor> pricePill({
     required double pricePerKg,
+    required String gridLabel,
     Color dotColor = Colors.transparent,
     bool isSelected = false,
     Brightness brightness = Brightness.light,
@@ -95,7 +96,8 @@ class MarkerBitmapFactory {
       isSelected: isSelected,
       isDark: brightness == Brightness.dark,
       prefix: prefix,
-      currencyCode: currencyCode ?? 'EUR',
+      currencyCode: currencyCode ?? 'EUR', // i18n-ignore — code devise ISO
+      gridLabel: gridLabel,
     );
     final cached = _pillCache[key];
     if (cached != null) {
@@ -103,6 +105,7 @@ class MarkerBitmapFactory {
     }
     final bitmap = await _renderPricePill(
       pricePerKg: pricePerKg,
+      gridLabel: gridLabel,
       dotColor: dotColor,
       isSelected: isSelected,
       brightness: brightness,
@@ -118,6 +121,7 @@ class MarkerBitmapFactory {
   static Future<BitmapDescriptor> stackedPricePill({
     required double pricePerKg,
     required int count,
+    required String gridLabel,
     Color dotColor = Colors.transparent,
     bool isSelected = false,
     Brightness brightness = Brightness.light,
@@ -131,7 +135,8 @@ class MarkerBitmapFactory {
       isSelected: isSelected,
       isDark: brightness == Brightness.dark,
       prefix: prefix,
-      currencyCode: currencyCode ?? 'EUR',
+      currencyCode: currencyCode ?? 'EUR', // i18n-ignore — code devise ISO
+      gridLabel: gridLabel,
     );
     final cached = _stackedPillCache[key];
     if (cached != null) {
@@ -140,6 +145,7 @@ class MarkerBitmapFactory {
     final bitmap = await _renderStackedPricePill(
       pricePerKg: pricePerKg,
       count: count,
+      gridLabel: gridLabel,
       dotColor: dotColor,
       isSelected: isSelected,
       brightness: brightness,
@@ -153,6 +159,7 @@ class MarkerBitmapFactory {
   static Future<BitmapDescriptor> _renderStackedPricePill({
     required double pricePerKg,
     required int count,
+    required String gridLabel,
     required Color dotColor,
     required bool isSelected,
     required Brightness brightness,
@@ -161,7 +168,7 @@ class MarkerBitmapFactory {
   }) async {
     final palette = _pillPalette(brightness);
     final price = pricePerKg <= 0
-        ? 'Grille'
+        ? gridLabel
         : formatPriceIn(pricePerKg, currencyCode);
     const fontSize = 12.0;
     const paddingH = 6.0;
@@ -370,6 +377,7 @@ class MarkerBitmapFactory {
 
   static Future<BitmapDescriptor> _renderPricePill({
     required double pricePerKg,
+    required String gridLabel,
     required Color dotColor,
     required bool isSelected,
     required Brightness brightness,
@@ -378,7 +386,7 @@ class MarkerBitmapFactory {
   }) async {
     final palette = _pillPalette(brightness);
     final label = pricePerKg <= 0
-        ? 'Grille'
+        ? gridLabel
         : formatPriceIn(pricePerKg, currencyCode);
 
     const fontSize = 12.0;
@@ -656,6 +664,7 @@ class _PricePillKey {
     required this.isDark,
     required this.prefix,
     required this.currencyCode,
+    required this.gridLabel,
   });
 
   final int priceCents;
@@ -664,6 +673,10 @@ class _PricePillKey {
   final bool isDark;
   final String prefix;
   final String currencyCode;
+  // Le libellé traduit de la grille tarifaire entre dans la clé de cache :
+  // sinon la même annonce afficherait le mot d'une langue précédente après
+  // un changement de langue en session.
+  final String gridLabel;
 
   @override
   bool operator ==(Object other) =>
@@ -674,7 +687,8 @@ class _PricePillKey {
           isSelected == other.isSelected &&
           isDark == other.isDark &&
           prefix == other.prefix &&
-          currencyCode == other.currencyCode;
+          currencyCode == other.currencyCode &&
+          gridLabel == other.gridLabel;
 
   @override
   int get hashCode => Object.hash(
@@ -684,6 +698,7 @@ class _PricePillKey {
     isDark,
     prefix,
     currencyCode,
+    gridLabel,
   );
 }
 
@@ -696,6 +711,7 @@ class _StackedPillKey {
     required this.isDark,
     required this.prefix,
     required this.currencyCode,
+    required this.gridLabel,
   });
 
   final int priceCents;
@@ -705,6 +721,7 @@ class _StackedPillKey {
   final bool isDark;
   final String prefix;
   final String currencyCode;
+  final String gridLabel;
 
   @override
   bool operator ==(Object other) =>
@@ -716,7 +733,8 @@ class _StackedPillKey {
           isSelected == other.isSelected &&
           isDark == other.isDark &&
           prefix == other.prefix &&
-          currencyCode == other.currencyCode;
+          currencyCode == other.currencyCode &&
+          gridLabel == other.gridLabel;
 
   @override
   int get hashCode => Object.hash(
@@ -727,5 +745,6 @@ class _StackedPillKey {
     isDark,
     prefix,
     currencyCode,
+    gridLabel,
   );
 }

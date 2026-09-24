@@ -10,6 +10,7 @@ import 'package:dony/features/home/presentation/widgets/search_filter_fields.dar
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -25,12 +26,13 @@ class SearchFormBottomSheet {
 
     final result = await DonyBottomSheet.show<SearchParams>(
       context,
-      title: 'Filtrer les trajets',
+      title: context.l10n.listingFilterTripsTitle,
       heightFraction: heightFraction,
       stickyBottom: ValueListenableBuilder<int>(
         valueListenable: filterCount,
         builder: (ctx, count, _) {
           final cs = Theme.of(ctx).colorScheme;
+          final l = ctx.l10n;
           return Row(
             children: [
               if (count > 0) ...[
@@ -46,7 +48,7 @@ class SearchFormBottomSheet {
                       ),
                       child: Center(
                         child: Text(
-                          'Réinitialiser',
+                          l.listingResetFiltersButton,
                           style: Theme.of(ctx).textTheme.labelLarge?.copyWith(
                             color: cs.onSurface,
                             fontWeight: FontWeight.w600,
@@ -62,10 +64,10 @@ class SearchFormBottomSheet {
                 flex: 2,
                 child: DonyButton(
                   label: count == 1
-                      ? 'Rechercher · 1 filtre'
+                      ? l.listingSearchButtonOneFilter
                       : count > 1
-                      ? 'Rechercher · $count filtres'
-                      : 'Rechercher',
+                      ? l.listingSearchButtonNFilters(count)
+                      : l.listingSearchButton,
                   onPressed: () => submitFn?.call(),
                 ),
               ),
@@ -250,6 +252,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return ListenableBuilder(
       listenable: Listenable.merge([
         _departureCityNotifier,
@@ -351,7 +354,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
 
             // ── Filtres rapides ──────────────────────────────────────────
             Text(
-              'FILTRES RAPIDES',
+              l.listingQuickFiltersTitle,
               style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.md),
@@ -360,25 +363,25 @@ class _SearchFormContentState extends State<_SearchFormContent> {
               runSpacing: DonySpacing.sm,
               children: [
                 QuickChip(
-                  label: 'Kilo Pro',
+                  label: l.listingKiloProChip,
                   iconAsset: 'award',
                   active: _kiloProOnlyNotifier.value,
                   onChanged: (v) => _kiloProOnlyNotifier.value = v,
                 ),
                 QuickChip(
-                  label: 'Note ≥ 4.5',
+                  label: l.listingRatingChip,
                   iconAsset: 'star',
                   active: _ratingFilterNotifier.value,
                   onChanged: (v) => _ratingFilterNotifier.value = v,
                 ),
                 QuickChip(
-                  label: 'Week-end',
+                  label: l.listingWeekendChip,
                   iconAsset: 'sofa',
                   active: _weekendFilterNotifier.value,
                   onChanged: (v) => _weekendFilterNotifier.value = v,
                 ),
                 QuickChip(
-                  label: 'Identité vérifiée',
+                  label: l.authOnboardingChipVerifiedIdentity,
                   iconAsset: 'shield-check',
                   active: _kycVerifiedOnlyNotifier.value,
                   onChanged: (v) => _kycVerifiedOnlyNotifier.value = v,
@@ -389,7 +392,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
 
             // ── Type de contenu ──────────────────────────────────────────
             Text(
-              'MON COLIS CONTIENT',
+              l.listingContentContainsTitle,
               style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.md),
@@ -400,7 +403,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
               repository: getIt<IContentCategoryRepository>(),
               keyPrefix: 'search-content',
               singleSelection: true,
-              hint: 'Rechercher un type de contenu…',
+              hint: l.homeComposerContentHint,
               selected: _contentTypeNotifier.value == null
                   ? const []
                   : [_contentTypeNotifier.value!],
@@ -411,12 +414,12 @@ class _SearchFormContentState extends State<_SearchFormContent> {
 
             // ── Urgence du départ ────────────────────────────────────────
             Text(
-              'URGENCE DU DÉPART',
+              l.listingDepartureUrgencyTitle,
               style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Filtrer les trajets selon leur proximité de départ',
+              l.listingDepartureUrgencyDesc,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.md),
