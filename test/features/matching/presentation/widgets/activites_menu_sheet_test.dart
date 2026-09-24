@@ -5,6 +5,8 @@ import 'package:dony/features/matching/presentation/widgets/activites_menu_sheet
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   /// Monte un écran minimal dont le seul bouton ouvre la feuille, et retient
   /// le choix rendu. La feuille ne navigue pas elle-même : c'est ce contrat
@@ -108,6 +110,24 @@ void main() {
       find.descendant(
         of: find.byKey(const Key('menu-tool-price-grid')),
         matching: find.text('Configurée'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('en anglais, la feuille affiche ses textes traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await pumpSheet(tester, tools: complete, onClosed: (_) {});
+
+    expect(find.text('Track a parcel'), findsOneWidget);
+    expect(find.text('5/5 ready'), findsOneWidget);
+    expect(find.text('My alerts'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('menu-tool-price-grid')),
+        matching: find.text('Set up'),
       ),
       findsOneWidget,
     );

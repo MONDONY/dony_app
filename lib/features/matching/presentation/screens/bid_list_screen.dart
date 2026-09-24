@@ -49,7 +49,8 @@ class BidListScreen extends StatelessWidget {
     this.arrivalCityCode,
     this.departureDate,
     this.initialTabIndex = 0,
-    this.title = 'Demandes',
+    this.title =
+        'Demandes', // i18n-ignore: repli const, le router fournit toujours un titre traduit
   });
 
   @override
@@ -89,7 +90,8 @@ class BidListScreenTesting extends StatelessWidget {
     this.departureCityCode,
     this.arrivalCityCode,
     this.departureDate,
-    this.title = 'Demandes',
+    this.title =
+        'Demandes', // i18n-ignore: repli const, le router fournit toujours un titre traduit
   });
 
   @override
@@ -121,20 +123,28 @@ class _BidListView extends StatelessWidget {
     this.departureCityCode,
     this.arrivalCityCode,
     this.departureDate,
-    this.title = 'Demandes',
+    this.title =
+        'Demandes', // i18n-ignore: repli const, le router fournit toujours un titre traduit
   });
 
-  String _buildSubtitle() {
+  String _buildSubtitle(BuildContext context) {
     final parts = <String>[];
     if (departureCityCode != null && arrivalCityCode != null) {
       parts.add('$departureCityCode → $arrivalCityCode');
     }
     if (departureDate != null) {
-      parts.add(
-        DateFormat('EEE d MMMM', AppL10n.localeName).format(departureDate!),
-      );
+      parts.add(_formatDepartureDate(context, departureDate!));
     }
     return parts.join(' · ');
+  }
+
+  // Aucun squelette intl ne rend « jour abrégé + jour + mois complet, sans
+  // année » (MMMMEEEEd s'en approche mais garde le jour de semaine en toutes
+  // lettres). Motif fixe conservé pour les deux langues (vérifié fr par
+  // test, non-régression sur le 5 mars), locale lue depuis le contexte
+  // (jamais AppL10n.localeName dans un widget).
+  String _formatDepartureDate(BuildContext context, DateTime date) {
+    return DateFormat('EEE d MMMM', context.l10n.localeName).format(date);
   }
 
   Future<void> _openPending(BuildContext context) async {
@@ -148,14 +158,14 @@ class _BidListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final subtitle = _buildSubtitle();
+    final subtitle = _buildSubtitle(context);
 
     return BlocConsumer<BidBloc, BidState>(
       listener: (context, state) {
         if (state is BidNotFound) {
           DonySnackbar.show(
             context,
-            message: 'Cette annonce n\'existe plus',
+            message: context.l10n.listingAnnouncementGoneMessage,
             type: DonySnackbarType.warning,
           );
           if (context.canPop()) {
@@ -278,9 +288,10 @@ class _PendingTodoButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Semantics(
       button: true,
-      label: '$count demande${count > 1 ? 's' : ''} à traiter',
+      label: l.bidListRequestsToReview(count),
       child: GestureDetector(
         onTap: onTap,
         child: Container(
@@ -298,7 +309,7 @@ class _PendingTodoButton extends StatelessWidget {
               DonyIcon('inbox', size: 16, color: cs.primary),
               const SizedBox(width: DonySpacing.xs),
               Text(
-                'À traiter',
+                l.bidListFilterToReview,
                 style: tt.labelMedium?.copyWith(
                   color: cs.primary,
                   fontWeight: FontWeight.w700,
@@ -357,10 +368,11 @@ class _AcceptedListState extends State<_AcceptedList> {
   @override
   Widget build(BuildContext context) {
     if (widget.acceptedBids.isEmpty) {
-      return const DonyEmptyState(
+      final l = context.l10n;
+      return DonyEmptyState(
         mascotte: DonyMascotteType.assis,
-        title: 'Aucune demande acceptée',
-        description: "Vous n'avez accepté aucune demande pour l'instant.",
+        title: l.bidListEmptyAcceptedTitle,
+        description: l.bidListEmptyAcceptedDescription,
       ).animate().fadeIn(duration: 300.ms);
     }
 
@@ -464,7 +476,7 @@ class _BidSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<BidListFilterCubit>();
     return DonySearchField(
-      hint: 'Nom ou n° de suivi…',
+      hint: context.l10n.bidListSearchHint,
       onChanged: cubit.setQuery,
       onClear: () => cubit.setQuery(''),
     );
@@ -491,22 +503,23 @@ class _StatusFilterChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<BidListFilterCubit>();
+    final l = context.l10n;
     return Wrap(
       spacing: DonySpacing.sm,
       runSpacing: DonySpacing.sm,
       children: [
         DonyChip(
-          label: 'Tous ($allCount)',
+          label: l.bidListChipAll(allCount),
           selected: active == AcceptedStatusFilter.all,
           onTap: () => cubit.setFilter(AcceptedStatusFilter.all),
         ),
         DonyChip(
-          label: 'Actifs ($activeCount)',
+          label: l.bidListChipActive(activeCount),
           selected: active == AcceptedStatusFilter.active,
           onTap: () => cubit.setFilter(AcceptedStatusFilter.active),
         ),
         DonyChip(
-          label: 'Clôturés ($closedCount)',
+          label: l.bidListChipClosed(closedCount),
           selected: active == AcceptedStatusFilter.closed,
           onTap: () => cubit.setFilter(AcceptedStatusFilter.closed),
         ),
@@ -527,6 +540,7 @@ class _SearchEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final hasQuery = query.trim().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: DonySpacing.xxl),
@@ -537,15 +551,15 @@ class _SearchEmptyState extends StatelessWidget {
               : const DonyEmoji.parcel(size: 44),
           const SizedBox(height: DonySpacing.md),
           Text(
-            hasQuery ? 'Aucun résultat' : 'Aucun envoi',
+            hasQuery ? l.bidListNoResultTitle : l.bidListEmptyShipmentsTitle,
             style: tt.titleLarge,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
             hasQuery
-                ? 'Aucun envoi ne correspond à « ${query.trim()} ».'
-                : 'Aucun envoi dans cette catégorie.',
+                ? l.bidListNoResultDescription(query.trim())
+                : l.bidListEmptyShipmentsDescription,
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
@@ -586,7 +600,7 @@ class _ScannerChipButton extends StatelessWidget {
             DonyIcon('scan-line', size: 16, color: cs.onSurface),
             const SizedBox(width: DonySpacing.xs),
             Text(
-              'Lire le QR',
+              context.l10n.bidListScanChipLabel,
               style: tt.labelMedium?.copyWith(color: cs.onSurface),
             ),
           ],

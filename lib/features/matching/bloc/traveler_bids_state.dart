@@ -16,12 +16,6 @@ enum TravelerBidFilter {
 }
 
 extension TravelerBidFilterX on TravelerBidFilter {
-  String get label => switch (this) {
-    TravelerBidFilter.aTraiter => 'À traiter',
-    TravelerBidFilter.acceptees => 'Acceptées',
-    TravelerBidFilter.terminees => 'Terminées',
-  };
-
   /// `true` si [bid] appartient à ce filtre.
   ///
   /// Réutilise les prédicats de `bid_list_filter_cubit.dart` pour rester

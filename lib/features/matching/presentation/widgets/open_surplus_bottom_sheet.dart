@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -31,11 +32,12 @@ abstract final class OpenSurplusBottomSheet {
     // Validité du formulaire — pilote l'activation du bouton sticky.
     final canSubmit = ValueNotifier<bool>(false);
     VoidCallback? submitFn;
+    final l = context.l10n;
 
     return DonyBottomSheet.show<bool>(
       context,
-      title: 'Ouvrir les kg restants',
-      subtitle: 'Mettez votre capacité libre à disposition du public',
+      title: l.tripOwnerSurplusTitle,
+      subtitle: l.tripOwnerSurplusSubtitle,
       wrapper: (child) =>
           BlocProvider(create: (_) => getIt<AnnouncementBloc>(), child: child),
       stickyBottom: BlocBuilder<AnnouncementBloc, AnnouncementState>(
@@ -44,7 +46,9 @@ abstract final class OpenSurplusBottomSheet {
           return ValueListenableBuilder<bool>(
             valueListenable: canSubmit,
             builder: (context, valid, _) => DonyButton(
-              label: loading ? 'Publication…' : 'Publier',
+              label: loading
+                  ? l.tripOwnerSurplusPublishingButton
+                  : l.tripOwnerPublishTile,
               iconAsset: loading ? null : 'globe',
               isLoading: loading,
               onPressed: (valid && !loading) ? () => submitFn?.call() : null,
@@ -141,6 +145,7 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final a = widget.announcement;
 
     return BlocListener<AnnouncementBloc, AnnouncementState>(
@@ -148,7 +153,7 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
         if (state is AnnouncementSurplusOpened) {
           DonySnackbar.show(
             context,
-            message: 'Capacité ouverte au public',
+            message: l.tripOwnerSurplusOpenedSnackbar,
             type: DonySnackbarType.success,
           );
           Navigator.of(context, rootNavigator: true).pop(true);
@@ -168,17 +173,20 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
             const SizedBox(height: DonySpacing.lg),
 
             // ── Capacité supplémentaire ────────────────────────────────────
-            const _SectionLabel(label: 'KG À OUVRIR', iconAsset: 'square-plus'),
+            _SectionLabel(
+              label: l.tripOwnerSurplusKgSectionLabel,
+              iconAsset: 'square-plus',
+            ),
             const SizedBox(height: DonySpacing.sm),
             _KgField(
               controller: _kgCtrl,
               validator: (v) {
                 final d = double.tryParse((v ?? '').replaceAll(',', '.'));
                 if (d == null) {
-                  return 'Entrez un nombre de kg';
+                  return l.tripOwnerSurplusKgValidatorEmpty;
                 }
                 if (d < 1) {
-                  return 'Minimum 1 kg';
+                  return l.tripOwnerSurplusKgValidatorMin;
                 }
                 return null;
               },
@@ -186,7 +194,10 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
             const SizedBox(height: DonySpacing.lg),
 
             // ── Prix par kg (chips preset + autre) ─────────────────────────
-            const _SectionLabel(label: 'PRIX PAR KG', iconAsset: 'tag'),
+            _SectionLabel(
+              label: l.tripOwnerSurplusPriceSectionLabel,
+              iconAsset: 'tag',
+            ),
             const SizedBox(height: DonySpacing.sm),
             ValueListenableBuilder<int>(
               valueListenable: _priceOptionNotifier,
@@ -218,7 +229,7 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
                         Expanded(
                           child: _PriceChip(
                             key: const Key('surplus-price-chip-custom'),
-                            label: 'Autre',
+                            label: l.tripOwnerSurplusOtherPriceChip,
                             selected: _isCustomPrice,
                             onTap: () =>
                                 _priceOptionNotifier.value = _presets.length,
@@ -255,8 +266,7 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
             ),
             const SizedBox(height: DonySpacing.sm),
             Text(
-              'Action définitive : une fois publiée, votre capacité libre '
-              'devient visible dans la recherche et ne peut plus être refermée.',
+              l.tripOwnerSurplusDisclaimerText,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
@@ -300,7 +310,7 @@ class _ReservedBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Réservé à votre expéditeur',
+                  context.l10n.tripOwnerSurplusReservedLabel,
                   style: tt.labelSmall?.copyWith(
                     color: cs.onSurfaceVariant,
                     letterSpacing: 0.4,
@@ -308,7 +318,9 @@ class _ReservedBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${reservedKg.toStringAsFixed(reservedKg % 1 == 0 ? 0 : 1)} kg verrouillés',
+                  context.l10n.tripOwnerSurplusReservedKgValue(
+                    reservedKg.toStringAsFixed(reservedKg % 1 == 0 ? 0 : 1),
+                  ),
                   style: tt.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: cs.primary,
@@ -379,7 +391,7 @@ class _KgField extends StatelessWidget {
           border: InputBorder.none,
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
-          hintText: 'Ex. 8',
+          hintText: context.l10n.tripOwnerSurplusKgHint,
           suffixText: 'kg',
           suffixStyle: tt.bodyMedium?.copyWith(
             color: cs.onSurfaceVariant,
@@ -416,7 +428,7 @@ class _CustomPriceField extends StatelessWidget {
         validator: (v) {
           final d = double.tryParse((v ?? '').replaceAll(',', '.'));
           if (d == null || d <= 0) {
-            return 'Prix invalide';
+            return context.l10n.tripOwnerSurplusCustomPriceInvalid;
           }
           return null;
         },
@@ -428,7 +440,7 @@ class _CustomPriceField extends StatelessWidget {
           border: InputBorder.none,
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
-          hintText: 'Votre prix',
+          hintText: context.l10n.tripOwnerSurplusCustomPriceHint,
           suffixText: '${SupportedCurrency.symbolOf(currency)}/kg',
           suffixStyle: tt.bodyMedium?.copyWith(
             color: cs.onSurfaceVariant,
@@ -513,7 +525,7 @@ class _PublicPricePreview extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              'Prix affiché aux expéditeurs',
+              context.l10n.tripOwnerSurplusPublicPriceLabel,
               style: tt.bodyMedium?.copyWith(color: cs.onSurface),
             ),
           ),

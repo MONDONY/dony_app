@@ -50,29 +50,26 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
 
   BidModel get bid => widget.bid;
 
-  String _formatHandoverDate(DateTime? d) {
+  String _formatHandoverDate(BuildContext context, DateTime? d) {
     if (d == null) {
       return '-';
     }
-    try {
-      return DateFormat('dd/MM/yyyy', AppL10n.localeName).format(d.toLocal());
-    } catch (_) {
-      return DateFormat('dd/MM/yyyy').format(d.toLocal());
-    }
+    return DateFormat.yMd(context.l10n.localeName).format(d.toLocal());
   }
 
-  String _formatDepartureDate(DateTime? d) {
+  // fr : garde le motif fixe d'origine ('EEE dd MMM yyyy') — le squelette
+  // yMMMEd rend « mar. 6 oct. 2026 » (sans le zéro de tête du jour) au lieu de
+  // « mar. 06 oct. 2026 ». en : squelette yMMMEd, seule langue concernée par
+  // ce motif jusqu'ici.
+  String _formatDepartureDate(BuildContext context, DateTime? d) {
     if (d == null) {
       return '-';
     }
-    try {
-      return DateFormat(
-        'EEE dd MMM yyyy',
-        AppL10n.localeName,
-      ).format(d.toLocal());
-    } catch (_) {
-      return DateFormat('dd/MM/yyyy').format(d.toLocal());
+    final locale = context.l10n.localeName;
+    if (locale == 'fr') {
+      return DateFormat('EEE dd MMM yyyy', 'fr_FR').format(d.toLocal());
     }
+    return DateFormat.yMMMEd(locale).format(d.toLocal());
   }
 
   void _toggle() {
@@ -84,6 +81,7 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -108,7 +106,7 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Plus de détails',
+                      l.bidDetailMoreDetails,
                       style: tt.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -144,17 +142,20 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                         Divider(color: cs.outline, height: 1),
                         const SizedBox(height: DonySpacing.md),
                         // Section 1 — DÉPÔT DU COLIS
-                        const _SectionLabel(label: 'DÉPÔT DU COLIS'),
+                        _SectionLabel(label: l.bidDetailSectionDropoff),
                         const SizedBox(height: DonySpacing.sm),
                         InfoRow(
-                          label: 'Lieu',
+                          label: l.bidDetailLocationLabel,
                           value: bid.handoverLocation ?? '-',
                         ),
                         if (bid.handoverDeadline != null) ...[
                           const SizedBox(height: DonySpacing.sm),
                           InfoRow(
-                            label: 'Date limite',
-                            value: _formatHandoverDate(bid.handoverDeadline),
+                            label: l.listingDeadlineLabel,
+                            value: _formatHandoverDate(
+                              context,
+                              bid.handoverDeadline,
+                            ),
                           ),
                         ],
                         const SizedBox(height: DonySpacing.sm),
@@ -163,30 +164,33 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                         // affiche l'état réel plutôt qu'un trompeur « Non encore ».
                         InfoRow(
                           label: _kRemisStatuses.contains(bid.status)
-                              ? 'Remise'
-                              : 'Présence confirmée',
+                              ? l.bidDetailHandoverStatusLabel
+                              : l.bidDetailPresenceConfirmedLabel,
                           value: _kRemisStatuses.contains(bid.status)
-                              ? 'Colis remis ✓'
+                              ? l.bidDetailParcelHandedOverValue
                               : (bid.voyageurConfirmed
-                                    ? 'Oui ✓'
-                                    : 'Non encore'),
+                                    ? l.bidDetailYesValue
+                                    : l.bidDetailNotYetValue),
                         ),
                         const SizedBox(height: DonySpacing.md),
                         Divider(color: cs.outline, height: 1),
                         const SizedBox(height: DonySpacing.md),
                         // Section 2 — TRAJET
-                        const _SectionLabel(label: 'TRAJET'),
+                        _SectionLabel(label: l.listingHeroTripLabelCaps),
                         const SizedBox(height: DonySpacing.sm),
                         InfoRow(
-                          label: 'Date de départ',
-                          value: _formatDepartureDate(bid.departureDate),
+                          label: l.tripPublishDepartureDateLabel,
+                          value: _formatDepartureDate(
+                            context,
+                            bid.departureDate,
+                          ),
                         ),
                         if (bid.senderPricePerKg != null &&
                             bid.senderPricePerKg! > 0) ...[
                           const SizedBox(height: DonySpacing.sm),
                           // Tarif BRUT affiché à l'expéditeur (jamais le net).
                           InfoRow(
-                            label: 'Tarif par kg',
+                            label: l.bidDetailPricePerKgLabel,
                             value: formatPriceIn(
                               bid.senderPricePerKg!,
                               bid.currency,
@@ -199,7 +203,7 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                           const SizedBox(height: DonySpacing.md),
                           Divider(color: cs.outline, height: 1),
                           const SizedBox(height: DonySpacing.md),
-                          const _SectionLabel(label: 'LIEN DE SUIVI'),
+                          _SectionLabel(label: l.bidDetailSectionTrackingLink),
                           const SizedBox(height: DonySpacing.sm),
                           _TrackingUrlRow(bid: bid),
                         ],
@@ -207,7 +211,7 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                         Divider(color: cs.outline, height: 1),
                         const SizedBox(height: DonySpacing.md),
                         // Section 4 — RESPONSABILITÉ LÉGALE
-                        const _SectionLabel(label: 'RESPONSABILITÉ LÉGALE'),
+                        _SectionLabel(label: l.bidDetailSectionLegal),
                         const SizedBox(height: DonySpacing.sm),
                         _DisclaimerRow(bid: bid),
                       ],
@@ -267,13 +271,13 @@ class _TrackingUrlRow extends StatelessWidget {
         ),
         IconButton(
           icon: DonyIcon('copy', size: 16, color: cs.primary),
-          tooltip: 'Copier le lien',
+          tooltip: context.l10n.bidDetailCopyTrackingLinkButton,
           color: cs.primary,
           onPressed: () {
             unawaited(Clipboard.setData(ClipboardData(text: url)));
             DonySnackbar.show(
               context,
-              message: 'Lien copié',
+              message: context.l10n.bidDetailTrackingLinkCopiedMessage,
               type: DonySnackbarType.success,
             );
           },
@@ -289,15 +293,26 @@ class _DisclaimerRow extends StatelessWidget {
   final BidModel bid;
   const _DisclaimerRow({required this.bid});
 
-  String _disclaimerLabel() {
+  String _disclaimerLabel(BuildContext context) {
+    final l = context.l10n;
     final signed = bid.disclaimerSignedAt;
     if (signed == null) {
-      return 'Disclaimer signé';
+      return l.bidDetailDisclaimerSignedNoDate;
     }
+    final locale = l.localeName;
     try {
-      return 'Disclaimer signé le ${DateFormat('dd/MM/yyyy à HH:mm', AppL10n.localeName).format(signed.toLocal())}';
+      final local = signed.toLocal();
+      final dateTime = l.commonDateAtTime(
+        DateFormat.yMd(locale).format(local),
+        DateFormat.jm(locale).format(local),
+      );
+      return l.bidCreateDisclaimerSigned(dateTime);
     } catch (_) {
-      return 'Disclaimer signé le ${DateFormat('dd/MM/yyyy HH:mm').format(signed.toLocal())}';
+      final local = signed.toLocal();
+      return l.bidDetailDisclaimerSignedCompact(
+        DateFormat.yMd(locale).format(local),
+        DateFormat.jm(locale).format(local),
+      );
     }
   }
 
@@ -311,7 +326,7 @@ class _DisclaimerRow extends StatelessWidget {
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(
-            _disclaimerLabel(),
+            _disclaimerLabel(context),
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ),

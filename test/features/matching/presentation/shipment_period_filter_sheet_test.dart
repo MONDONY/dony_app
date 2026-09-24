@@ -3,6 +3,8 @@ import 'package:dony/features/matching/presentation/widgets/shipment_period_filt
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 Widget _app({
   ShipmentPeriodBasis basis = ShipmentPeriodBasis.departure,
   ShipmentPeriodPreset preset = ShipmentPeriodPreset.all,
@@ -202,4 +204,30 @@ void main() {
       expect(result!.range, isNull);
     },
   );
+
+  group('traductions', () {
+    testWidgets('en anglais : titre, onglets et presets traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      ShipmentPeriodResult? result;
+      await tester.pumpWidget(_app(onResult: (r) => result = r));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Filter by period'), findsOneWidget);
+      expect(find.text('Departure date'), findsOneWidget);
+      expect(find.text('Creation date'), findsOneWidget);
+      expect(find.text('This year'), findsOneWidget);
+      expect(find.text('All time'), findsOneWidget);
+      expect(find.text('Custom'), findsOneWidget);
+
+      await tester.tap(find.text('This month'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Apply'));
+      await tester.pumpAndSettle();
+
+      expect(result!.preset, ShipmentPeriodPreset.thisMonth);
+    });
+  });
 }

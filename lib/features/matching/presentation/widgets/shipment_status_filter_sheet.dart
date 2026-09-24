@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 class _StatusOption {
@@ -7,25 +8,30 @@ class _StatusOption {
   final String label;
 }
 
-const _groups = <String, List<_StatusOption>>{
-  'En cours': [
-    _StatusOption('ACCEPTED', 'À remettre'),
-    _StatusOption('HANDED_OVER', 'Remis'),
-    _StatusOption('IN_TRANSIT', 'En transit'),
-    _StatusOption('ARRIVED', 'Arrivé'),
+/// Groupes de statuts affichés dans le sheet, calculés à partir des
+/// traductions courantes (les libellés de groupe et d'option dépendent de la
+/// langue, donc jamais de `const`/top-level figé).
+Map<String, List<_StatusOption>> _groups(AppLocalizations l) => {
+  l.shipmentGroupInProgress: [
+    _StatusOption('ACCEPTED', l.shipmentStatusToHandOverOption),
+    _StatusOption('HANDED_OVER', l.shipmentStatusHandedOverOption),
+    _StatusOption('IN_TRANSIT', l.shipmentStatusInTransitOption),
+    _StatusOption('ARRIVED', l.shipmentStatusArrivedOption),
   ],
-  'En attente': [
-    _StatusOption('PENDING', 'En attente'),
-    _StatusOption('AWAITING_PAYMENT', 'À payer'),
-    _StatusOption('PAYMENT_ESCROWED', 'Payé'),
+  l.shipmentGroupWaiting: [
+    _StatusOption('PENDING', l.shipmentGroupWaiting),
+    _StatusOption('AWAITING_PAYMENT', l.shipmentStatusAwaitingPaymentOption),
+    _StatusOption('PAYMENT_ESCROWED', l.shipmentStatusPaidOption),
   ],
-  'Livrés': [_StatusOption('COMPLETED', 'Livré')],
-  'Non aboutis': [
-    _StatusOption('CANCELLED', 'Annulé'),
-    _StatusOption('REJECTED', 'Refusé'),
-    _StatusOption('PARCEL_REFUSED', 'Colis refusé'),
-    _StatusOption('NO_SHOW', 'Absent'),
-    _StatusOption('EXPIRED', 'Expiré'),
+  l.shipmentGroupDelivered: [
+    _StatusOption('COMPLETED', l.shipmentStatusDeliveredOption),
+  ],
+  l.shipmentGroupNotCompleted: [
+    _StatusOption('CANCELLED', l.shipmentStatusCancelledOption),
+    _StatusOption('REJECTED', l.shipmentStatusRejectedOption),
+    _StatusOption('PARCEL_REFUSED', l.shipmentStatusParcelRefusedOption),
+    _StatusOption('NO_SHOW', l.shipmentStatusNoShowOption),
+    _StatusOption('EXPIRED', l.shipmentStatusExpiredOption),
   ],
 };
 
@@ -33,13 +39,17 @@ class ShipmentStatusFilterSheet {
   /// Retourne le Set de statuts choisi, ou null si annulé.
   static Future<Set<String>?> show(BuildContext context, Set<String> initial) {
     final selected = ValueNotifier<Set<String>>({...initial});
+    final l = context.l10n;
+    final groups = _groups(l);
     return DonyBottomSheet.show<Set<String>>(
       context,
-      title: 'Filtrer par statut',
+      title: l.shipmentStatusFilterTitle,
       stickyBottom: ValueListenableBuilder<Set<String>>(
         valueListenable: selected,
         builder: (context, value, _) => DonyButton(
-          label: value.isEmpty ? 'Appliquer' : 'Appliquer (${value.length})',
+          label: value.isEmpty
+              ? l.commonApply
+              : l.shipmentStatusFilterApplyWithCount(value.length),
           onPressed: () =>
               Navigator.of(context, rootNavigator: true).pop(value),
         ),
@@ -49,7 +59,7 @@ class ShipmentStatusFilterSheet {
         builder: (context, value, _) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final entry in _groups.entries) ...[
+            for (final entry in groups.entries) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   0,

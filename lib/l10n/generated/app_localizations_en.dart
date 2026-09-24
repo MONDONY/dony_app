@@ -6414,4 +6414,2070 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileSheetRatingLabel => 'Rating';
+
+  @override
+  String bidDetailUntil(String date) {
+    return 'until $date';
+  }
+
+  @override
+  String get bidDetailFallbackDestination => 'destination';
+
+  @override
+  String get bidDetailReportNoShowConfirmButton => 'Report the no-show';
+
+  @override
+  String get bidDetailContestButton => 'I contest';
+
+  @override
+  String get bidDetailNoShowReportedTitle => '⏳ No-show reported';
+
+  @override
+  String get bidDetailNoShowContestedTitle => '⚖ No-show contested';
+
+  @override
+  String get bidDetailDeliveryNoShowReporterContestedSubtitle =>
+      'The other party is contesting your report. Our team is reviewing the request and will keep you informed.';
+
+  @override
+  String get bidDetailDeliveryNoShowReporterPendingSubtitle =>
+      'Report sent. The other party has 24 hours to contest. Our team will then decide.';
+
+  @override
+  String get bidDetailDeliveryNoShowContestSentTitle => '⚖ Contest sent';
+
+  @override
+  String get bidDetailDeliveryNoShowAlertTitle =>
+      '⚠ A no-show has been reported';
+
+  @override
+  String get bidDetailDeliveryNoShowContestSentSubtitle =>
+      'Your contest has been sent. Our team is reviewing the request and will keep you informed.';
+
+  @override
+  String get bidDetailDeliveryNoShowAlertSubtitle =>
+      'A delivery no-show has been reported on this shipment. You can contest it if this report is wrong.';
+
+  @override
+  String get bidDetailDeliveryNoShowContestButton => 'Contest this report';
+
+  @override
+  String get bidDetailSenderPendingTitle => '⏳ Waiting for the traveler';
+
+  @override
+  String get bidDetailSenderPendingSubtitle =>
+      'You\'ll be notified as soon as they reply.';
+
+  @override
+  String get bidDetailSenderAwaitingPaymentTitle =>
+      'Pay to confirm the shipment';
+
+  @override
+  String bidDetailSenderAwaitingPaymentSubtitle(String amount) {
+    return 'Your payment of $amount will be held until delivery.';
+  }
+
+  @override
+  String get bidDetailSenderEscrowedTitle => '🔒 Payment secured';
+
+  @override
+  String bidDetailSenderEscrowedSubtitle(String amount) {
+    return '$amount on hold. Awaiting drop-off.';
+  }
+
+  @override
+  String get bidDetailSenderAcceptedTitle => '⚡ Parcel drop-off';
+
+  @override
+  String get bidDetailSenderAcceptedInstructions =>
+      'Show the QR code, or stick it on the parcel.';
+
+  @override
+  String get bidDetailSenderTravelerFallback => 'the traveler';
+
+  @override
+  String bidDetailSenderHandedOverTitle(String name) {
+    return '✓ Parcel handed to $name';
+  }
+
+  @override
+  String bidDetailSenderHandedOverSubtitleWithDate(String date) {
+    return 'Boarding scheduled for $date.';
+  }
+
+  @override
+  String get bidDetailSenderHandedOverSubtitleDefault => 'Parcel handed over.';
+
+  @override
+  String get bidDetailSenderInTransitTitle => '✈ Parcel in flight';
+
+  @override
+  String bidDetailSenderInTransitEta(String time, String city) {
+    return 'Arrival expected $time in $city.';
+  }
+
+  @override
+  String bidDetailSenderInTransitEnRoute(String city) {
+    return 'On the way to $city.';
+  }
+
+  @override
+  String get bidDetailSenderInTransitTicketNote =>
+      'The pickup code is on your ticket.';
+
+  @override
+  String get bidDetailSenderArrivedTitle => '📍 Parcel arrived at destination';
+
+  @override
+  String get bidDetailSenderArrivedSubtitleDefault =>
+      'The traveler has arrived, pickup instructions are coming soon.';
+
+  @override
+  String get bidDetailSenderRecipientFallback => 'your recipient';
+
+  @override
+  String bidDetailSenderDeliveredTitle(String recipient) {
+    return '✓ Delivered to $recipient';
+  }
+
+  @override
+  String get bidDetailSenderDeliveredSubtitle =>
+      'Payment released to the traveler.';
+
+  @override
+  String get bidDetailSenderWindowExpiredTitle => '⚠ Drop-off window expired';
+
+  @override
+  String bidDetailSenderWindowExpiredSubtitle(String window) {
+    return 'Drop-off was possible $window. Did the traveler not show up?';
+  }
+
+  @override
+  String get bidDetailSenderReportNoShowButton =>
+      'Report the traveler\'s no-show';
+
+  @override
+  String get bidDetailSenderNoShowSheetTitle => 'Did the traveler not show up?';
+
+  @override
+  String get bidDetailSenderNoShowSheetBody =>
+      'The traveler didn\'t show up at the drop-off point.';
+
+  @override
+  String get bidDetailSenderNoShowSheetHint =>
+      'The traveler will have 48 hours to contest. If they don\'t respond, the shipment will be canceled.';
+
+  @override
+  String get bidDetailSenderContestationExpired => 'Expired';
+
+  @override
+  String bidDetailSenderContestCountdown(String timeLeft) {
+    return '⏱ Time left to contest: $timeLeft';
+  }
+
+  @override
+  String get bidDetailSenderNoShowByTravelerTitle =>
+      '⚠ No-show reported by the traveler';
+
+  @override
+  String get bidDetailSenderNoShowByTravelerSubtitle =>
+      'They indicate you weren\'t at the drop-off point.';
+
+  @override
+  String get bidDetailSenderConfirmNoShowButton => 'I confirm';
+
+  @override
+  String get bidDetailSenderContestSheetTitle => 'Contest the no-show';
+
+  @override
+  String get bidDetailSenderContestConfirmButton => 'Confirm the contest';
+
+  @override
+  String get bidDetailSenderContestSheetBody =>
+      'You\'re contesting the no-show reported by the traveler.';
+
+  @override
+  String get bidDetailSenderContestSheetHint =>
+      'Our team will review your request and contact you within 24 hours.';
+
+  @override
+  String get bidDetailSenderConfirmSheetTitle => 'Confirm your no-show';
+
+  @override
+  String get bidDetailSenderConfirmSheetButton => 'Confirm my no-show';
+
+  @override
+  String get bidDetailSenderConfirmSheetBody =>
+      'By confirming your no-show, the shipment will be canceled and you won\'t be charged.';
+
+  @override
+  String get bidDetailTravelerPendingTitle => '📨 New shipment request';
+
+  @override
+  String bidDetailTravelerPendingSubtitle(String amount) {
+    return 'Potential earnings: $amount. Accept or decline the request.';
+  }
+
+  @override
+  String get bidDetailTravelerScanQrTitle => '📷 Scan the parcel\'s QR code';
+
+  @override
+  String get bidDetailTravelerScanQrSubtitle =>
+      'Scan the sender\'s QR code to confirm the drop-off.';
+
+  @override
+  String get bidDetailTravelerAcceptedTitle => '⚡ Collect the parcel';
+
+  @override
+  String get bidDetailTravelerAcceptedInstructions =>
+      'Be at the drop-off point.';
+
+  @override
+  String get bidDetailTravelerAcceptedInstructionsDefault =>
+      'Be at the drop-off point agreed with the sender.';
+
+  @override
+  String get bidDetailTravelerCollectedTitle => '✓ Parcel collected';
+
+  @override
+  String get bidDetailTravelerCollectedSubtitle =>
+      'You have the parcel. Have a safe trip!';
+
+  @override
+  String get bidDetailTravelerInTransitTitle => '✈ Parcel on its way';
+
+  @override
+  String bidDetailTravelerInTransitSubtitle(String city) {
+    return 'In transit to $city. Have a good delivery!';
+  }
+
+  @override
+  String get bidDetailTravelerArrivedTitle => '📍 Arrived at destination';
+
+  @override
+  String get bidDetailTravelerArrivedSubtitle =>
+      'Wait for the recipient to pick up the parcel, then confirm the drop-off.';
+
+  @override
+  String get bidDetailTravelerDeliveredTitle => '✓ Delivery confirmed';
+
+  @override
+  String get bidDetailTravelerDeliveredSubtitle =>
+      'The payment will be released to your account.';
+
+  @override
+  String get bidDetailTravelerWindowExpiredTitle =>
+      '⚠ Drop-off deadline passed';
+
+  @override
+  String bidDetailTravelerWindowExpiredSubtitleWithWindow(String window) {
+    return 'Drop-off was possible $window. Did the sender not show up?';
+  }
+
+  @override
+  String get bidDetailTravelerWindowExpiredSubtitleDefault =>
+      'Did the sender not show up at the drop-off point?';
+
+  @override
+  String get bidDetailTravelerReportNoShowButton =>
+      'Report the sender\'s no-show';
+
+  @override
+  String get bidDetailTravelerNoShowSheetTitle => 'Did the sender not show up?';
+
+  @override
+  String get bidDetailTravelerNoShowSheetBody =>
+      'The sender didn\'t show up at the drop-off point.';
+
+  @override
+  String get bidDetailTravelerNoShowSheetHint =>
+      'The sender will have 48 hours to contest. If they don\'t respond, the shipment will be canceled.';
+
+  @override
+  String get bidDetailTravelerNoShowContestedSubtitle =>
+      'The sender is contesting your report. Our team is reviewing the request and will keep you informed.';
+
+  @override
+  String get bidDetailTravelerNoShowPendingSubtitle =>
+      'Report sent. The sender has 48 hours to confirm or contest. If there\'s no response, the shipment will be canceled automatically.';
+
+  @override
+  String get bidDetailGainCashTopLabel => 'YOU COLLECT';
+
+  @override
+  String bidDetailGainCashAmount(String amount) {
+    return '$amount in cash';
+  }
+
+  @override
+  String get bidDetailGainCashNote => 'Yadony service fee charged separately.';
+
+  @override
+  String get bidDetailGainCashPill => 'CASH';
+
+  @override
+  String get bidDetailGainReceivedTopLabel => 'YOU RECEIVED';
+
+  @override
+  String get bidDetailGainMobileMoneyPaidNote =>
+      'Paid to your mobile money account.';
+
+  @override
+  String get bidDetailGainPaidPill => '● Paid';
+
+  @override
+  String get bidDetailGainReceivingTopLabel => 'YOU RECEIVE';
+
+  @override
+  String get bidDetailGainMobileMoneyPendingNote =>
+      'Paid to your mobile money account on delivery.';
+
+  @override
+  String get bidDetailGainMobileMoneyPill => '📱 mobile money';
+
+  @override
+  String get bidDetailGainReceivedPill => '● Received';
+
+  @override
+  String get bidDetailGainCancelledTopLabel => 'PAYMENT';
+
+  @override
+  String get bidDetailGainCancelledNote => 'Payment canceled.';
+
+  @override
+  String get bidDetailGainEscrowedNote => 'Released on delivery.';
+
+  @override
+  String get bidDetailGainEscrowedPill => '🔒 on hold';
+
+  @override
+  String get bidDetailCardDeclinedTitle => 'Payment declined';
+
+  @override
+  String get bidDetailCardDeclinedHint =>
+      'Change the card used for your service fee to accept this request.';
+
+  @override
+  String get bidDetailChangeCommissionCard => 'Change my service fee card';
+
+  @override
+  String get bidDetailInsufficientBalanceTitle => 'Insufficient balance';
+
+  @override
+  String get bidDetailInsufficientBalanceHint =>
+      'Top up your wallet or pay the service fee directly by card.';
+
+  @override
+  String get bidDetailTopupWallet => 'Top up my wallet';
+
+  @override
+  String get bidDetailPayByCard => 'Pay by card';
+
+  @override
+  String get bidDetailAddCard => 'Add a card';
+
+  @override
+  String get bidDetailAcceptedSetHandoverWindow =>
+      'Request accepted! Now set the drop-off window.';
+
+  @override
+  String get bidDetailNoShowReportedSnackbar =>
+      'No-show reported. The sender has 48 hours to contest.';
+
+  @override
+  String get bidDetailDeliveryNoShowReportedSnackbar =>
+      'No-show reported. The other party has 24 hours to contest.';
+
+  @override
+  String get bidDetailContestSentSnackbar =>
+      'Contest sent. Our team will review your request.';
+
+  @override
+  String get bidDetailNoShowConfirmedSnackbar =>
+      'No-show confirmed. The shipment has been canceled, you will not be charged.';
+
+  @override
+  String get bidDetailCancelledAfterHandoverSnackbar =>
+      'Trip canceled. Return the parcel within 3 days using the return code.';
+
+  @override
+  String get bidDetailReturnConfirmedSnackbar =>
+      'Return confirmed. The parcel has been returned.';
+
+  @override
+  String get bidDetailAcceptedSnackbar => 'Request accepted!';
+
+  @override
+  String get bidDetailRejectedSnackbar => 'Request declined.';
+
+  @override
+  String get bidDetailPresenceConfirmedSnackbar => 'Presence confirmed!';
+
+  @override
+  String get bidDetailCancelledSnackbar =>
+      'Request canceled. The sender will be refunded.';
+
+  @override
+  String get bidDetailDeletedSnackbar => 'Request deleted.';
+
+  @override
+  String get bidDetailNotFoundSnackbar => 'This parcel no longer exists';
+
+  @override
+  String get bidDetailShareTracking => 'Share tracking';
+
+  @override
+  String get bidDetailOptionsTitle => 'Options';
+
+  @override
+  String get bidDetailDeclineRequestTitle => 'Decline the request';
+
+  @override
+  String get bidDetailDeclineRequestSubtitle =>
+      'Would you like to give the sender a reason?';
+
+  @override
+  String get bidDetailConfirmDecline => 'Confirm the decline';
+
+  @override
+  String get bidDetailReasonHint => 'Reason (optional)';
+
+  @override
+  String get bidDetailConfirmPresence => 'Confirm my presence';
+
+  @override
+  String get bidDetailPayMyShipment => 'Pay for my shipment';
+
+  @override
+  String get bidDetailDeleteRequest => 'Delete this request';
+
+  @override
+  String get bidDetailDeleteRejectedBody =>
+      'This declined request will be permanently removed from your list.';
+
+  @override
+  String bidDetailEscrowReleasedLabel(String amount) {
+    return 'Traveler paid · $amount';
+  }
+
+  @override
+  String bidDetailEscrowRefundedLabel(String amount) {
+    return 'Refunded · $amount';
+  }
+
+  @override
+  String get bidDetailEscrowFailedLabel => 'Payment failed';
+
+  @override
+  String get bidDetailEscrowSecuredPendingLabel =>
+      'Payment secured · Awaiting the traveler';
+
+  @override
+  String bidDetailEscrowSecuredLabel(String amount) {
+    return 'Payment secured · $amount';
+  }
+
+  @override
+  String get bidDetailCashAtDropoffLabel => 'Cash payment at drop-off';
+
+  @override
+  String get bidDetailMobileMoneyPaymentLabel => 'Mobile money payment';
+
+  @override
+  String get bidDetailReportTripLabel => 'Report this trip';
+
+  @override
+  String get bidDetailReportSubtitle => 'Report a problem to Yadony support';
+
+  @override
+  String get bidDetailContactTravelerLabel => 'Contact the traveler';
+
+  @override
+  String get bidDetailContactTravelerSubtitle =>
+      'Send a message to the traveler';
+
+  @override
+  String get bidDetailShareTrackingSubtitle =>
+      'Send the tracking link to the recipient';
+
+  @override
+  String get bidDetailCancelRefundAutoSubtitle =>
+      'Your payment will be refunded automatically';
+
+  @override
+  String get bidDetailCancelAfterHandoverOptionSubtitle =>
+      'Full refund · you get your parcel back';
+
+  @override
+  String get bidDetailRemoveFromHistorySubtitle =>
+      'Permanently remove from your history';
+
+  @override
+  String get bidDetailCancelConfirmBody =>
+      'Are you sure you want to cancel your shipment request? This action is final.';
+
+  @override
+  String get bidDetailNo => 'No';
+
+  @override
+  String get bidDetailConfirmCancelButton => 'Yes, cancel';
+
+  @override
+  String get bidDetailCancelAfterHandoverTitle => 'Cancel after drop-off?';
+
+  @override
+  String get bidDetailCancelAfterHandoverBody =>
+      'The parcel is already with the traveler. You will be fully refunded and get your parcel back: the traveler will confirm the return by entering your return code.';
+
+  @override
+  String get bidDetailDeleteConfirmBody =>
+      'This request will be permanently deleted from your history.';
+
+  @override
+  String get bidDetailMoreDetails => 'More details';
+
+  @override
+  String get bidDetailSectionDropoff => 'PARCEL DROP-OFF';
+
+  @override
+  String get bidDetailLocationLabel => 'Location';
+
+  @override
+  String get bidDetailHandoverStatusLabel => 'Drop-off';
+
+  @override
+  String get bidDetailPresenceConfirmedLabel => 'Presence confirmed';
+
+  @override
+  String get bidDetailParcelHandedOverValue => 'Parcel handed over ✓';
+
+  @override
+  String get bidDetailYesValue => 'Yes ✓';
+
+  @override
+  String get bidDetailNotYetValue => 'Not yet';
+
+  @override
+  String get bidDetailPricePerKgLabel => 'Price per kg';
+
+  @override
+  String get bidDetailSectionTrackingLink => 'TRACKING LINK';
+
+  @override
+  String get bidDetailSectionLegal => 'LEGAL LIABILITY';
+
+  @override
+  String get bidDetailDisclaimerSignedNoDate => 'Disclaimer signed';
+
+  @override
+  String bidDetailDisclaimerSignedCompact(String date, String time) {
+    return 'Disclaimer signed on $date $time';
+  }
+
+  @override
+  String get bidDetailContactSenderLabel => 'Contact the sender';
+
+  @override
+  String get bidDetailContactSenderSubtitle => 'Send a message to the sender';
+
+  @override
+  String get bidDetailParcelDetailsLabel => 'Parcel details';
+
+  @override
+  String get bidDetailParcelDetailsSubtitle =>
+      'View the parcel and recipient information';
+
+  @override
+  String get bidDetailReportSenderLabel => 'Report the sender';
+
+  @override
+  String get bidDetailCancelTransportLabel => 'Cancel this transport';
+
+  @override
+  String get bidDetailCancelTransportHandedOverSubtitle =>
+      'You will need to return the parcel within 3 days';
+
+  @override
+  String get bidDetailCancelTransportAcceptedSubtitle =>
+      'The sender will be refunded automatically';
+
+  @override
+  String get bidDetailPayByMobileMoney => 'Pay by mobile money';
+
+  @override
+  String get bidDetailShowPickupQr => 'Show the drop-off QR';
+
+  @override
+  String get bidDetailTrackParcel => 'Track my parcel';
+
+  @override
+  String get bidDetailRateTraveler => 'Rate the traveler';
+
+  @override
+  String get bidDetailCancelTransportRequestTitle =>
+      'Cancel the transport request?';
+
+  @override
+  String get bidDetailCancelTransportRequestBody =>
+      'No payment has been made. The request will be withdrawn.';
+
+  @override
+  String get bidDetailDeleteRequestQuestionTitle => 'Delete this request?';
+
+  @override
+  String get bidDetailDeleteRequestDefaultBody =>
+      'It will be permanently removed from your history.';
+
+  @override
+  String get bidDetailAwaitingSenderMobileMoneyPayment =>
+      'Awaiting the sender\'s payment (mobile money).';
+
+  @override
+  String get bidDetailScanParcelQr => 'Scan the parcel QR';
+
+  @override
+  String get bidDetailScanTransitQr => 'Scan the transit QR';
+
+  @override
+  String get bidDetailConfirmHandover => 'Confirm the drop-off';
+
+  @override
+  String get bidDetailQrSheetTitle => 'Parcel QR';
+
+  @override
+  String get bidDetailQrSaveErrorSnackbar => 'Unable to save the image';
+
+  @override
+  String get bidDetailQrSavedSnackbar => 'QR code saved to your gallery';
+
+  @override
+  String get bidDetailQrShareSubject => 'Yadony parcel QR';
+
+  @override
+  String get bidDetailQrShareText => 'QR to show or stick on the parcel.';
+
+  @override
+  String get bidDetailQrShareErrorSnackbar => 'Unable to share the QR code';
+
+  @override
+  String get bidDetailQrInstructions =>
+      'Scanned by the traveler at drop-off, then at every step until pickup. You can also print it and stick it on the parcel.';
+
+  @override
+  String get bidDetailReturnCodeTitle => 'Return code';
+
+  @override
+  String get bidDetailReturnCodeSubtitle =>
+      'To share with the traveler when picking up your parcel';
+
+  @override
+  String get bidDetailReturnCodeCopiedSnackbar => 'Code copied';
+
+  @override
+  String get bidDetailReturnCopyCode => 'Copy the code';
+
+  @override
+  String bidDetailReturnDeadlineHint(String date) {
+    return 'The traveler must return the parcel to you before $date. Only give them this code when picking up your parcel.';
+  }
+
+  @override
+  String get bidDetailReturnNoDeadlineHint =>
+      'Only give this code to the traveler when picking up your parcel.';
+
+  @override
+  String get bidDetailReturnedTitle => 'Parcel returned';
+
+  @override
+  String get bidDetailReturnedSubtitle =>
+      'The traveler has confirmed returning the parcel to you.';
+
+  @override
+  String get bidDetailReturnEntryTitle => 'Confirm the return';
+
+  @override
+  String get bidDetailReturnEntrySubtitle =>
+      'Enter the return code provided by the sender';
+
+  @override
+  String get bidDetailReturnConfirmButton => 'Confirm the return';
+
+  @override
+  String get bidDetailReturnConfirmHint =>
+      'By confirming, you declare that you have returned the parcel to the sender.';
+
+  @override
+  String get ticketPickupCode => 'Pickup code';
+
+  @override
+  String get bidDetailPaymentCardTitle => 'Payment';
+
+  @override
+  String bidDetailMobileMoneySecuredLabel(String amount) {
+    return 'Mobile money payment, kept safe by Yadony until delivery: $amount';
+  }
+
+  @override
+  String get bidDetailMobileMoneyBadge => 'MOBILE MONEY';
+
+  @override
+  String bidDetailCashAtDropoffAmountLabel(String amount) {
+    return 'To pay in cash at drop-off: $amount';
+  }
+
+  @override
+  String get bidDetailCashBadge => 'CASH';
+
+  @override
+  String get bidDetailPaymentReleasedLabel => 'Payment released ✓';
+
+  @override
+  String bidDetailAmountRefundedLabel(String amount) {
+    return '$amount refunded';
+  }
+
+  @override
+  String bidDetailEscrowedUntilDeliveryLabel(String amount) {
+    return '$amount on hold: released at delivery';
+  }
+
+  @override
+  String bidDetailShareTrackingMessage(String url) {
+    return 'Track your Yadony parcel in real time:\n$url';
+  }
+
+  @override
+  String bidDetailTrackingShareSubject(String number) {
+    return 'Yadony parcel tracking · $number';
+  }
+
+  @override
+  String get bidSenderRoleTag => 'SENDER';
+
+  @override
+  String get bidDetailRatingSentBadge => 'Rating sent';
+
+  @override
+  String get bidDetailParcelRecipientTitle => 'Parcel & recipient';
+
+  @override
+  String get bidDetailCancelRequestLabel => 'Cancel the request';
+
+  @override
+  String get bidDetailParcelLabel => 'Parcel';
+
+  @override
+  String get bidDetailRecipientLabel => 'Recipient';
+
+  @override
+  String get bidDetailPhoneLabel => 'Phone';
+
+  @override
+  String get bidDetailDescriptionLabel => 'Description';
+
+  @override
+  String get bidDetailSenderCallSemanticLabel => 'Call';
+
+  @override
+  String get bidDetailSenderOpenChatSemanticLabel => 'Open the conversation';
+
+  @override
+  String get bidDetailCopyTrackingLinkButton => 'Copy the link';
+
+  @override
+  String get bidDetailTrackingLinkCopiedMessage => 'Link copied';
+
+  @override
+  String get bidDetailAcceptRequestButton => 'Accept';
+
+  @override
+  String get bidDetailDeclineRequestButton => 'Decline';
+
+  @override
+  String get ticketReturnCodeButton => 'Return code';
+
+  @override
+  String get ticketConfirmReturnButton => 'Confirm the return';
+
+  @override
+  String get ticketParcelReturnedLabel => 'Parcel returned';
+
+  @override
+  String get ticketViewAlternativeTripsButton => 'View alternative trips';
+
+  @override
+  String get ticketQrButtonCompact => 'Parcel QR';
+
+  @override
+  String get ticketQrButtonFull => 'Parcel QR (to show or stick on the parcel)';
+
+  @override
+  String get ticketScanStepsButton => 'Scan the step QR codes';
+
+  @override
+  String get ticketAwaitingTravelerConfirmation =>
+      'Waiting for the traveler\'s confirmation';
+
+  @override
+  String get ticketSenderAwaitingMobileMoneyHint =>
+      'The traveler has accepted: pay by mobile money from the button below to secure your shipment.';
+
+  @override
+  String get ticketTravelerAwaitingPayment =>
+      'Waiting for the sender\'s payment';
+
+  @override
+  String get ticketParcelDeliveredLabel => 'Parcel delivered';
+
+  @override
+  String get ticketRequestClosedMessage => 'This request is closed.';
+
+  @override
+  String get ticketMiniStatWeightLabel => 'WEIGHT';
+
+  @override
+  String get ticketMiniStatCategoryLabel => 'TYPE';
+
+  @override
+  String get ticketPickupCodeSectionLabel => 'PICKUP CODE';
+
+  @override
+  String get ticketCopyCodeButton => 'Copy the code';
+
+  @override
+  String get ticketCodeCopiedSnackbar => 'Code copied';
+
+  @override
+  String get ticketUpdatingLabel => 'Updating…';
+
+  @override
+  String get ticketHideCodeFromTrackingPageButton =>
+      'Remove the code from the tracking page';
+
+  @override
+  String get ticketShowCodeOnTrackingPageButton =>
+      'Show the code on the tracking page';
+
+  @override
+  String get ticketCodeVisibleOnTrackingPageLabel =>
+      'Code visible on the tracking page';
+
+  @override
+  String get ticketRegeneratingLabel => 'Regenerating…';
+
+  @override
+  String ticketRegenerateAvailableInLabel(String remaining) {
+    return 'Available in $remaining';
+  }
+
+  @override
+  String get ticketRegenerateCodeButton => 'Regenerate the code';
+
+  @override
+  String ticketRegenerateLimitReachedMessage(String remaining) {
+    return 'Limit of 5 regenerations reached. The button will reactivate automatically in $remaining.';
+  }
+
+  @override
+  String get ticketShareCodeManuallyHint =>
+      'Share this code with the traveler by your own means (SMS, WhatsApp…). They will need to enter it at delivery.';
+
+  @override
+  String get ticketStatusAwaitingPaymentSenderLabel => 'To pay';
+
+  @override
+  String get ticketStatusAwaitingPaymentTravelerLabel => 'Payment pending';
+
+  @override
+  String get ticketStatusPendingLabel => 'Pending';
+
+  @override
+  String get ticketStatusAcceptedLabel => 'Confirmed';
+
+  @override
+  String get ticketStatusHandedOverLabel => 'On the way';
+
+  @override
+  String get ticketStatusInTransitLabel => 'In transit';
+
+  @override
+  String get ticketStatusArrivedLabel => 'Arrived';
+
+  @override
+  String get ticketStatusDeliveredLabel => 'Delivered';
+
+  @override
+  String get ticketStatusRejectedLabel => 'Declined';
+
+  @override
+  String get ticketStatusCancelledLabel => 'Canceled';
+
+  @override
+  String get ticketStatusNoShowLabel => 'No-show';
+
+  @override
+  String get ticketStatusParcelRefusedLabel => 'Parcel refused';
+
+  @override
+  String get ticketStatusExpiredLabel => 'Expired';
+
+  @override
+  String get ticketScanQrActionLabel => 'Scan the parcel QR';
+
+  @override
+  String get ticketScanQrActionHint => 'At drop-off, scan the sender\'s QR.';
+
+  @override
+  String get ticketConfirmDeliveryActionLabel => 'Confirm the delivery';
+
+  @override
+  String get ticketConfirmDeliveryActionHint =>
+      'On arrival, enter the sender\'s pickup code.';
+
+  @override
+  String ticketShareTrackingMessage(String trackingNumber) {
+    return 'Track my Yadony parcel #$trackingNumber';
+  }
+
+  @override
+  String ticketShareTrackingMessageWithLink(
+    String trackingNumber,
+    String link,
+  ) {
+    return 'Track my Yadony parcel #$trackingNumber in real time:\n$link';
+  }
+
+  @override
+  String get ticketTrackingNumberSectionLabel => 'TRACKING NUMBER';
+
+  @override
+  String get ticketTrackingNumberCopiedSnackbar => 'Number copied';
+
+  @override
+  String get ticketHeaderTagline => 'YADONY · PARCEL TRANSPORT';
+
+  @override
+  String get ticketDepartureLabel => 'Departure';
+
+  @override
+  String get ticketArrivalLabel => 'Arrival';
+
+  @override
+  String get shipmentBadgeInTransit => 'IN TRANSIT';
+
+  @override
+  String get shipmentBadgeArrived => 'ARRIVED';
+
+  @override
+  String get shipmentBadgeHandedOver => 'HANDED OVER';
+
+  @override
+  String get shipmentBadgeToHandOver => 'DROP-OFF DUE';
+
+  @override
+  String get shipmentBadgeWaiting => 'PENDING';
+
+  @override
+  String get shipmentBadgeDelivered => 'DELIVERED';
+
+  @override
+  String get shipmentBadgeCancelled => 'CANCELED';
+
+  @override
+  String get shipmentBadgeRejected => 'DECLINED';
+
+  @override
+  String get shipmentBadgeNoShow => 'NO-SHOW';
+
+  @override
+  String get shipmentBadgeExpired => 'EXPIRED';
+
+  @override
+  String get shipmentBadgeParcelRefused => 'PARCEL REFUSED';
+
+  @override
+  String get shipmentStepAcceptedLabel =>
+      'Drop-off with the traveler coming up';
+
+  @override
+  String get shipmentStepHandedOverLabel =>
+      'Parcel handed over to the traveler';
+
+  @override
+  String shipmentStepInTransitLabel(String city) {
+    return 'In flight to $city';
+  }
+
+  @override
+  String get shipmentDestinationFallback => 'destination';
+
+  @override
+  String get shipmentStepArrivedLabel => 'Arrived, ready to be picked up';
+
+  @override
+  String get shipmentStepDeliveredLabel => 'Delivered to destination';
+
+  @override
+  String get shipmentCtaTrackParcel => 'Track the parcel →';
+
+  @override
+  String get shipmentCtaViewQr => 'View the QR →';
+
+  @override
+  String get shipmentCtaDetails => 'Details →';
+
+  @override
+  String shipmentParcelWeightLabel(String weight) {
+    return 'Parcel $weight';
+  }
+
+  @override
+  String shipmentParcelWeightForRecipientLabel(
+    String weight,
+    String recipient,
+  ) {
+    return 'Parcel $weight · for $recipient';
+  }
+
+  @override
+  String get shipmentStepperHandedOverLabel => 'Handed over';
+
+  @override
+  String get shipmentStepperEmbarkedLabel => 'Boarded';
+
+  @override
+  String get shipmentStepperInFlightLabel => 'In flight';
+
+  @override
+  String get shipmentStepperArrivedLabel => 'Arrived';
+
+  @override
+  String get shipmentStepperDeliveryLabel => 'Delivery';
+
+  @override
+  String get shipmentStatusFilterTitle => 'Filter by status';
+
+  @override
+  String shipmentStatusFilterApplyWithCount(int count) {
+    return 'Apply ($count)';
+  }
+
+  @override
+  String get shipmentGroupInProgress => 'In progress';
+
+  @override
+  String get shipmentGroupWaiting => 'Pending';
+
+  @override
+  String get shipmentGroupDelivered => 'Delivered';
+
+  @override
+  String get shipmentGroupNotCompleted => 'Not completed';
+
+  @override
+  String get shipmentStatusToHandOverOption => 'Drop-off due';
+
+  @override
+  String get shipmentStatusHandedOverOption => 'Handed over';
+
+  @override
+  String get shipmentStatusInTransitOption => 'In transit';
+
+  @override
+  String get shipmentStatusArrivedOption => 'Arrived';
+
+  @override
+  String get shipmentStatusAwaitingPaymentOption => 'To pay';
+
+  @override
+  String get shipmentStatusPaidOption => 'Paid';
+
+  @override
+  String get shipmentStatusDeliveredOption => 'Delivered';
+
+  @override
+  String get shipmentStatusCancelledOption => 'Canceled';
+
+  @override
+  String get shipmentStatusRejectedOption => 'Declined';
+
+  @override
+  String get shipmentStatusParcelRefusedOption => 'Parcel refused';
+
+  @override
+  String get shipmentStatusNoShowOption => 'No-show';
+
+  @override
+  String get shipmentStatusExpiredOption => 'Expired';
+
+  @override
+  String get shipmentPeriodFilterTitle => 'Filter by period';
+
+  @override
+  String get shipmentPeriodBasisDepartureLabel => 'Departure date';
+
+  @override
+  String get shipmentPeriodBasisCreationLabel => 'Creation date';
+
+  @override
+  String get shipmentPeriodLast3MonthsLabel => 'Last 3 months';
+
+  @override
+  String get shipmentPeriodThisYearLabel => 'This year';
+
+  @override
+  String get shipmentPeriodAllLabel => 'All time';
+
+  @override
+  String get shipmentPeriodCustomLabel => 'Custom';
+
+  @override
+  String get shipmentPeriodCustomSelectedLabel => 'Custom ✓';
+
+  @override
+  String shipmentReimbursementInfoMessage(String cap) {
+    return 'In case of confirmed loss after investigation, Yadony reimburses up to $cap € under conditions.';
+  }
+
+  @override
+  String get shipmentReimbursementSeeConditionsButton => 'See conditions';
+
+  @override
+  String get shipmentSearchFieldHint => 'City, recipient, traveler…';
+
+  @override
+  String shipmentResultCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count results',
+      one: '$count result',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shipmentClearAllFiltersLabel => 'Clear all';
+
+  @override
+  String get shipmentDeletedSnackbar => 'Shipment deleted';
+
+  @override
+  String get shipmentDeleteConfirmTitle => 'Delete this shipment?';
+
+  @override
+  String get shipmentDeleteConfirmMessage =>
+      'It will be removed from your history. This action is irreversible.';
+
+  @override
+  String get shipmentEmptyTitle => 'No shipments yet';
+
+  @override
+  String get shipmentEmptyDescription =>
+      'Find a traveler and send your parcel to Africa.';
+
+  @override
+  String get shipmentEmptySearchTripAction => 'Search for a trip';
+
+  @override
+  String get shipmentFilteredEmptyMessage => 'No shipment matches your filters';
+
+  @override
+  String get shipmentLoadErrorTitle => 'Loading error';
+
+  @override
+  String get shipmentMesColisHeaderTitle => 'My parcels';
+
+  @override
+  String get shipmentTabEnRouteLabel => 'On the way';
+
+  @override
+  String get shipmentTabPubliesLabel => 'Posted';
+
+  @override
+  String get bidListFilterToReview => 'To review';
+
+  @override
+  String get bidListFilterAccepted => 'Accepted';
+
+  @override
+  String get bidListFilterCompleted => 'Completed';
+
+  @override
+  String bidListRequestsToReview(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count requests to review',
+      one: '$count request to review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bidListEmptyAcceptedTitle => 'No accepted requests';
+
+  @override
+  String get bidListEmptyAcceptedDescription =>
+      'You haven\'t accepted any requests yet.';
+
+  @override
+  String get bidListSearchHint => 'Name or tracking number…';
+
+  @override
+  String bidListChipAll(int count) {
+    return 'All ($count)';
+  }
+
+  @override
+  String bidListChipActive(int count) {
+    return 'Active ($count)';
+  }
+
+  @override
+  String bidListChipClosed(int count) {
+    return 'Closed ($count)';
+  }
+
+  @override
+  String get bidListNoResultTitle => 'No results';
+
+  @override
+  String get bidListEmptyShipmentsTitle => 'No shipments';
+
+  @override
+  String bidListNoResultDescription(String query) {
+    return 'No shipment matches “$query”.';
+  }
+
+  @override
+  String get bidListEmptyShipmentsDescription =>
+      'No shipment in this category.';
+
+  @override
+  String get bidListScanChipLabel => 'Scan QR code';
+
+  @override
+  String bidListHiddenOffers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count offers hidden (minimum price on)',
+      one: '$count offer hidden (minimum price on)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bidListAcceptedSnackbar => 'Request accepted!';
+
+  @override
+  String get bidListRejectedSnackbar => 'Request declined.';
+
+  @override
+  String get bidListDeletedSnackbar => 'Request deleted.';
+
+  @override
+  String get bidListCardDeclinedSheetTitle => 'Payment declined';
+
+  @override
+  String get bidListCardDeclinedHint =>
+      'Change the card used for your service fee to accept this request.';
+
+  @override
+  String get bidListChangeCommissionCardButton => 'Change my service fee card';
+
+  @override
+  String get bidListWalletInsufficientTitle => 'Insufficient balance';
+
+  @override
+  String get bidListWalletInsufficientHint =>
+      'Top up your wallet or pay the service fee directly by card.';
+
+  @override
+  String get bidListWalletTopupButton => 'Top up my wallet';
+
+  @override
+  String get bidListPayByCardButton => 'Pay by card';
+
+  @override
+  String get bidListAddCardButton => 'Add a card';
+
+  @override
+  String get bidListDeclineDialogTitle => 'Decline this request?';
+
+  @override
+  String get bidListDeclineDialogMessage =>
+      'The sender will be notified. This action is irreversible.';
+
+  @override
+  String get bidListDeclineButton => 'Decline';
+
+  @override
+  String get bidListDeleteDialogTitle => 'Delete this request?';
+
+  @override
+  String get bidListDeleteDialogMessage =>
+      'This declined request will be permanently removed from your list.';
+
+  @override
+  String bidListPendingTitleWithCount(int count) {
+    return 'To review ($count)';
+  }
+
+  @override
+  String get bidListEmptyPendingTitle => 'No requests to review';
+
+  @override
+  String get bidListEmptyPendingDescription =>
+      'Share your listing to receive requests.';
+
+  @override
+  String get bidListDemandesTitle => 'Requests';
+
+  @override
+  String get bidListDemandesSearchHint => 'Sender, tracking number…';
+
+  @override
+  String get bidListNoSearchResultDescription =>
+      'No request matches your search.';
+
+  @override
+  String get bidListEmptyNoRequestsDescription =>
+      'Post a trip to receive requests from senders.';
+
+  @override
+  String get bidListEmptyAcceptedArchiveDescription =>
+      'Requests you accept will appear here.';
+
+  @override
+  String get bidListEmptyCompletedTitle => 'No completed requests';
+
+  @override
+  String get bidListEmptyCompletedDescription =>
+      'Your closed requests will be archived here.';
+
+  @override
+  String get tripOwnerDeletedSnackbar => 'Trip deleted';
+
+  @override
+  String get tripOwnerPublishedTitle => 'Trip posted!';
+
+  @override
+  String tripOwnerPublishedSubtitle(String dep, String arr) {
+    return 'Your trip $dep → $arr is live.';
+  }
+
+  @override
+  String get tripOwnerShareMyTrip => 'Share my trip';
+
+  @override
+  String tripOwnerShareMessage(
+    String dep,
+    String arr,
+    String date,
+    String url,
+  ) {
+    return '✈️ I\'m traveling $dep → $arr on $date with room in my luggage!\nBook your kilos on Yadony 📦\n$url';
+  }
+
+  @override
+  String get tripOwnerDraftBannerTitle => 'This trip is a draft';
+
+  @override
+  String get tripOwnerDraftBannerMessage =>
+      'It\'s invisible to senders until it\'s published.';
+
+  @override
+  String get tripOwnerMarkArrivedButton => 'Arrived at destination';
+
+  @override
+  String get tripOwnerEditInstructionsButton => 'Edit pickup instructions';
+
+  @override
+  String get tripOwnerDeleteBlockedTitle => 'Deletion not possible';
+
+  @override
+  String get tripOwnerDeleteBlockedMessage =>
+      'A parcel has already been accepted on this trip. To remove it, you must first cancel the trip: the sender will be automatically refunded.';
+
+  @override
+  String get tripOwnerCancelTripButton => 'Cancel the trip';
+
+  @override
+  String get tripOwnerProLimitTitle => 'Monthly limit reached';
+
+  @override
+  String get bidListCardAmountLabel => 'AMOUNT';
+
+  @override
+  String get bidListCardFlatRateLabel => 'Flat rate';
+
+  @override
+  String bidListCardTrackingNumberLabel(String number) {
+    return 'No. $number';
+  }
+
+  @override
+  String get bidListAcceptButton => 'Accept';
+
+  @override
+  String get bidListCashPaymentHint =>
+      '💵 Cash payment: awaiting your response';
+
+  @override
+  String get bidListEscrowPaymentHint =>
+      '💳 Payment received: awaiting your response';
+
+  @override
+  String get bidListStatusAccepted => 'Accepted';
+
+  @override
+  String get bidListStatusAwaitingPayment => 'Payment pending';
+
+  @override
+  String get bidListStatusHandedOver => 'On the way';
+
+  @override
+  String get bidListStatusInTransit => 'In transit';
+
+  @override
+  String get bidListStatusArrived => 'Arrived';
+
+  @override
+  String get bidListStatusDelivered => 'Delivered';
+
+  @override
+  String get bidListStatusNoShow => 'No-show';
+
+  @override
+  String get bidListStatusParcelRefused => 'Parcel refused';
+
+  @override
+  String get bidListStatusCancelled => 'Canceled';
+
+  @override
+  String get tripOwnerPublishTile => 'Post';
+
+  @override
+  String get tripOwnerPosterTile => 'Poster';
+
+  @override
+  String get tripOwnerUnpublishTile => 'Unpublish';
+
+  @override
+  String get tripOwnerUnpublishDialogTitle => 'Unpublish this trip?';
+
+  @override
+  String get tripOwnerUnpublishDialogMessage =>
+      'The trip will no longer be visible and will stay in your drafts.';
+
+  @override
+  String get tripOwnerRequestsTile => 'Requests';
+
+  @override
+  String get tripOwnerRequestsDisabledMessage => 'No requests to review';
+
+  @override
+  String get tripOwnerParcelsTile => 'Parcels';
+
+  @override
+  String get tripOwnerNoParcelsMessage => 'No parcels on board';
+
+  @override
+  String get tripOwnerEditDisabledMessage =>
+      'Editable only while there\'s no request';
+
+  @override
+  String get tripOwnerDeleteDialogTitle => 'Delete this trip?';
+
+  @override
+  String get tripOwnerDeleteCancelledMessage =>
+      'This action is irreversible. The canceled trip and all associated requests will be permanently removed from the platform.';
+
+  @override
+  String get tripOwnerDeleteActiveMessage =>
+      'This action is irreversible. The trip will no longer be visible to senders.';
+
+  @override
+  String get tripOwnerCancelTile => 'Cancel';
+
+  @override
+  String get tripOwnerParcelsSectionTitle => 'Parcels on this trip';
+
+  @override
+  String get tripOwnerParcelsEmptyDescription =>
+      'Accepted parcels will appear here.';
+
+  @override
+  String get tripOwnerParcelsFilterAll => 'All';
+
+  @override
+  String get tripOwnerParcelsStatusAccepted => 'Accepted';
+
+  @override
+  String get tripOwnerParcelsStatusAwaitingPayment => 'Payment pending';
+
+  @override
+  String get tripOwnerParcelsStatusHandedOver => 'Handed over';
+
+  @override
+  String get tripOwnerParcelsStatusInTransit => 'In transit';
+
+  @override
+  String get tripOwnerParcelsStatusArrived => 'Arrived';
+
+  @override
+  String get tripOwnerParcelsStatusDelivered => 'Delivered';
+
+  @override
+  String get tripOwnerParcelsStatusNoShow => 'No-show';
+
+  @override
+  String get tripOwnerParcelsStatusParcelRefused => 'Refused';
+
+  @override
+  String get tripOwnerParcelsStatusCancelled => 'Canceled';
+
+  @override
+  String get tripOwnerParcelsDefaultContent => 'Parcel';
+
+  @override
+  String get tripOwnerSurplusTitle => 'Open remaining kg';
+
+  @override
+  String get tripOwnerSurplusSubtitle =>
+      'Make your spare capacity available to the public';
+
+  @override
+  String get tripOwnerSurplusPublishingButton => 'Posting…';
+
+  @override
+  String get tripOwnerSurplusKgValidatorEmpty => 'Enter a number of kg';
+
+  @override
+  String get tripOwnerSurplusKgValidatorMin => 'Minimum 1 kg';
+
+  @override
+  String get tripOwnerSurplusOpenedSnackbar => 'Capacity opened to the public';
+
+  @override
+  String get tripOwnerSurplusReservedLabel => 'Reserved for your sender';
+
+  @override
+  String tripOwnerSurplusReservedKgValue(String kg) {
+    return '$kg kg locked';
+  }
+
+  @override
+  String get tripOwnerSurplusKgSectionLabel => 'KG TO OPEN';
+
+  @override
+  String get tripOwnerSurplusPriceSectionLabel => 'PRICE PER KG';
+
+  @override
+  String get tripOwnerSurplusKgHint => 'E.g. 8';
+
+  @override
+  String get tripOwnerSurplusOtherPriceChip => 'Other';
+
+  @override
+  String get tripOwnerSurplusCustomPriceHint => 'Your price';
+
+  @override
+  String get tripOwnerSurplusCustomPriceInvalid => 'Invalid price';
+
+  @override
+  String get tripOwnerSurplusDisclaimerText =>
+      'Final action: once published, your spare capacity becomes visible in search and can no longer be closed.';
+
+  @override
+  String get tripOwnerSurplusPublicPriceLabel => 'Price shown to senders';
+
+  @override
+  String get tripOwnerArrivalEditingTitle => 'Pickup instructions';
+
+  @override
+  String get tripOwnerArrivalSubtitle =>
+      'Tell us where and how to pick up the parcel';
+
+  @override
+  String get tripOwnerArrivalConfirmButton => 'Confirm arrival';
+
+  @override
+  String get tripOwnerArrivedSnackbar => 'Trip marked as arrived';
+
+  @override
+  String get tripOwnerArrivalUpdatedSnackbar => 'Instructions updated';
+
+  @override
+  String get tripOwnerArrivalFieldLabel => 'Instructions';
+
+  @override
+  String get tripOwnerArrivalFieldLabelOptional => 'Instructions (optional)';
+
+  @override
+  String get tripOwnerArrivalFieldHint =>
+      'E.g.: Châtelet metro station, exit 3';
+
+  @override
+  String get bidCancelDialogTitle => 'Cancel this request?';
+
+  @override
+  String get bidCancelAcceptedSubtitle =>
+      'The sender will be automatically refunded.';
+
+  @override
+  String get bidCancelWarningMessage =>
+      'The parcel has already been handed over. You\'ll need to return it to the sender within 3 days by entering the return code they\'ll give you.';
+
+  @override
+  String get bidCancelWarningRefundNote =>
+      'The sender will be fully refunded. If the payment was in cash, no money changes hands.';
+
+  @override
+  String get bidCancelReasonRequiredHint => 'Reason for cancellation *';
+
+  @override
+  String get bidCancelReasonOptionalHint => 'Reason (optional)';
+
+  @override
+  String get bidCancelReasonRequiredError => 'Reason required';
+
+  @override
+  String get bidCancelKeepButton => 'Keep';
+
+  @override
+  String get bidCancelConfirmButton => 'Cancel the request';
+
+  @override
+  String get activityPeriod7Days => '7 days';
+
+  @override
+  String get activityPeriod30Days => '30 days';
+
+  @override
+  String get activityPeriod12Months => '12 months';
+
+  @override
+  String get activityPeriodLast7Days => 'Last 7 days';
+
+  @override
+  String get activityPeriodLast30Days => 'Last 30 days';
+
+  @override
+  String get activityPeriodLast12Months => 'Last 12 months';
+
+  @override
+  String get activityRevenueCard => 'Card';
+
+  @override
+  String get activityRevenueMobileMoney => 'Mobile money';
+
+  @override
+  String get activityRevenueCash => 'Cash';
+
+  @override
+  String get activityRevenueOther => 'Payment';
+
+  @override
+  String get activityToolMissingAddress => 'an address';
+
+  @override
+  String get activityToolMissingRecipient => 'a recipient';
+
+  @override
+  String get activityToolMissingAlert => 'an alert';
+
+  @override
+  String get activityToolMissingTemplate => 'a trip template';
+
+  @override
+  String get activityToolMissingPriceGrid => 'a price grid';
+
+  @override
+  String get activityToolCtaAddresses => 'Add an address';
+
+  @override
+  String get activityToolCtaRecipients => 'Add a recipient';
+
+  @override
+  String get activityToolCtaAlerts => 'Create an alert';
+
+  @override
+  String get activityToolCtaTemplates => 'Create a trip template';
+
+  @override
+  String get activityToolCtaPriceGrid => 'Fill in my price grid';
+
+  @override
+  String activityToolBadgeAddresses(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count addresses',
+      one: '$count address',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityToolBadgeRecipients(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recipients',
+      one: '$count recipient',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityToolBadgeAlerts(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count alerts',
+      one: '$count alert',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityToolBadgeTemplates(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count templates',
+      one: '$count template',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activityToolBadgePriceGridReady => 'Set up';
+
+  @override
+  String activityToolsMissing(Object items) {
+    return 'You still need $items.';
+  }
+
+  @override
+  String get activityToolTitleAlerts => 'My alerts';
+
+  @override
+  String get activityToolTitleTemplates => 'Trip templates';
+
+  @override
+  String get activityToolTitlePriceGrid => 'My price grid';
+
+  @override
+  String get activityToolTitleAddresses => 'My addresses';
+
+  @override
+  String get activityToolTitleRecipients => 'My recipients';
+
+  @override
+  String get activityToolSubtitleTemplates => 'Republish your usual trips';
+
+  @override
+  String get activityToolSubtitlePriceGrid => 'Item pricing for your trips';
+
+  @override
+  String get activityToolSubtitleAddresses => 'Your saved sending locations';
+
+  @override
+  String get activityToolSubtitleRecipients => 'The people you send to';
+
+  @override
+  String get activityToolBadgeUnconfigured => 'Not set up';
+
+  @override
+  String activityToolHubSemanticsReady(Object label, Object title) {
+    return '$title, ready, $label';
+  }
+
+  @override
+  String activityToolHubSemanticsUnconfigured(Object title) {
+    return '$title, not set up';
+  }
+
+  @override
+  String activityToolMenuSemanticsReady(Object badge, Object label) {
+    return '$label: $badge';
+  }
+
+  @override
+  String activityToolMenuSemanticsUnconfigured(Object label) {
+    return '$label: not set up';
+  }
+
+  @override
+  String get activityHistoryTitle => 'History';
+
+  @override
+  String get activityHistorySubtitle => 'Everything that\'s done';
+
+  @override
+  String get activityHelpTitleHub => 'Help & support';
+
+  @override
+  String get activityHelpSubtitle => 'A question, a problem?';
+
+  @override
+  String get activityAlertsSubtitleUnconfigured => 'Be notified before others';
+
+  @override
+  String get activityAlertsSubtitleCaughtUp => 'Nothing new for now';
+
+  @override
+  String get activityAlertsSubtitleDefault => 'New trips and parcels';
+
+  @override
+  String get activityHubTitle => 'Activities';
+
+  @override
+  String get activityMenuButtonTooltip => 'Menu';
+
+  @override
+  String get activitySectionCurrent => 'Right now';
+
+  @override
+  String get activitySectionStats => 'Statistics';
+
+  @override
+  String get activitySectionTools => 'Tools';
+
+  @override
+  String get activityIntroTitle => 'Send or carry, you choose';
+
+  @override
+  String get activityIntroBody =>
+      'Send your parcels with trusted travelers, or carry parcels during your trips to earn money. Everything is tracked from this screen.';
+
+  @override
+  String get activityPublishParcelCta => 'Post a parcel';
+
+  @override
+  String get activityTileTripsLabel => 'Active trips';
+
+  @override
+  String get activityTileTripsSubtitle => 'Your upcoming trips';
+
+  @override
+  String get activityTileTripsEmptyHint => 'Post a trip';
+
+  @override
+  String get activityTileShipmentsLabel => 'My parcels';
+
+  @override
+  String get activityTileShipmentsSubtitle => 'Posted, negotiated, on the way';
+
+  @override
+  String get activityTileShipmentsEmptyHint => 'Send a parcel';
+
+  @override
+  String get activityTileRequestsLabel => 'Requests received';
+
+  @override
+  String get activityTileRequestsSubtitle => 'Parcels for you to carry';
+
+  @override
+  String get activityTileRequestsEmptyHint => 'None for now';
+
+  @override
+  String get activityTileNegotiationsLabel => 'Price discussions';
+
+  @override
+  String get activityTileNegotiationsSubtitle => 'Propose or accept a rate';
+
+  @override
+  String get activityTileNegotiationsEmptyHint => 'None in progress';
+
+  @override
+  String get activityRevenueTitle => 'Earnings';
+
+  @override
+  String get activityKgSoldTitle => 'Kg sold';
+
+  @override
+  String get activityStatTripsLabel => 'Trips';
+
+  @override
+  String activityStatTripsPublished(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count posted',
+      one: '$count posted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activityStatParcelsLabel => 'Shipments';
+
+  @override
+  String activityStatParcelsSent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sent',
+      one: '$count sent',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activityMenuTrackParcel => 'Track a parcel';
+
+  @override
+  String get activityMenuScanParcel => 'Scan a parcel';
+
+  @override
+  String get activityMenuSettings => 'Settings';
+
+  @override
+  String get activityMenuToolsSection => 'My tools';
+
+  @override
+  String activityMenuToolsReady(Object ready, Object total) {
+    return '$ready/$total ready';
+  }
+
+  @override
+  String get activityMenuAccountSection => 'My account';
+
+  @override
+  String get activityWalletTitle => 'Wallet';
+
+  @override
+  String get activityHelpTitleMenu => 'Help and support';
+
+  @override
+  String get activityDetailUnavailable => 'Details unavailable';
+
+  @override
+  String get activityKgSoldErrorBody =>
+      'We couldn\'t load your kg sold. Check your connection, then try again.';
+
+  @override
+  String get activityRevenueErrorBody =>
+      'We couldn\'t load your earnings. Check your connection, then try again.';
+
+  @override
+  String get activityEmptyPeriodTitle => 'No deliveries in this period';
+
+  @override
+  String get activityKgSoldEmptyBody =>
+      'Kg sold will appear here once your parcels are delivered.';
+
+  @override
+  String get activityRevenueEmptyBody =>
+      'Your earnings will appear here once your parcels are delivered and paid.';
+
+  @override
+  String activityKgSoldParcels(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels',
+      one: '$count parcel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityKgSoldTrips(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trips',
+      one: '$count trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityKgSoldParcelsDelivered(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels delivered',
+      one: '$count parcel delivered',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityKgSoldTripDeparture(Object date) {
+    return 'Departed $date';
+  }
+
+  @override
+  String activityDeliveries(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count deliveries',
+      one: '$count delivery',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityRevenueConversionNote(Object total) {
+    return 'On the tile, “$total” is a converted total at the day\'s rate, for reference. Here, each amount keeps its own currency.';
+  }
+
+  @override
+  String get activityToolsCompleteTitle => 'Your tools are ready';
+
+  @override
+  String get activityToolsCompleteBody => 'Post a parcel or a trip in 3 taps';
+
+  @override
+  String get activityToolsStartTitle => 'Set up your tools once';
+
+  @override
+  String get activityToolsProgressTitle => 'Post in 3 taps';
+
+  @override
+  String get activityToolsStartBody =>
+      'Addresses, recipients, templates, price grid, alerts: fill them in once, reuse them every time you post.';
+
+  @override
+  String activityToolsProgressBody(Object missing) {
+    return '$missing Once your tools are ready, nothing to re-enter.';
+  }
+
+  @override
+  String get activityToolsStartCta => 'Start with my addresses';
+
+  @override
+  String get activityToolsGaugeLabel => 'ready';
+
+  @override
+  String get activityToolsGaugeSemantics => 'Preparing your tools';
+
+  @override
+  String activityNewCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new',
+      one: '$count new',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityNewSinceLastVisit(Object label, Object title) {
+    return '$title, $label since your last visit';
+  }
+
+  @override
+  String bidCreateMaxWeightLabel(String maxKg) {
+    return 'max $maxKg kg';
+  }
 }

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 Future<void> _pump(WidgetTester tester) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -95,6 +97,28 @@ void main() {
 
       expect(shares, hasLength(1));
       expect(shares.single['text'], 'Suivez mon colis Yadony #DON-3TSTR9VH');
+    });
+
+    testWidgets('en anglais : sans jeton, texte partagé traduit', (
+      tester,
+    ) async {
+      useEnglish();
+      await _pump(tester);
+
+      await tester.tap(find.byKey(const Key('talon-share-button')));
+      await tester.pump();
+
+      expect(shares, hasLength(1));
+      expect(shares.single['text'], 'Track my Yadony parcel #DON-3TSTR9VH');
+    });
+  });
+
+  group('traductions', () {
+    testWidgets('en anglais : étiquette "TRACKING NUMBER"', (tester) async {
+      useEnglish();
+      await _pump(tester);
+      expect(find.text('TRACKING NUMBER'), findsOneWidget);
+      expect(find.text('N° DE SUIVI'), findsNothing);
     });
   });
 }

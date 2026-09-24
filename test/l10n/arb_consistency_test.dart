@@ -150,6 +150,19 @@ const _sameInBothLanguages = <String>{
   'negotiationMakeOfferMessageLabel', // « MESSAGE » se dit pareil
   'negotiationPriceBreakdownPromoBadge', // « Promo » se dit pareil
   'negotiationCounterOfferSubtitle', // gabarit identique, « Round » déjà utilisé tel quel en français
+  'bidDetailFallbackDestination', // « destination » se dit pareil
+  'bidDetailGainMobileMoneyPill', // « Mobile money » se dit pareil
+  'bidDetailOptionsTitle', // « Options » se dit pareil (tâche D2)
+  'bidDetailMobileMoneyBadge', // « MOBILE MONEY » se dit pareil (tâche D2)
+  'bidDetailCashBadge', // « CASH » se dit pareil (tâche D2)
+  'bidDetailDescriptionLabel', // « Description » se dit pareil (tâche D2, correction R40)
+  'ticketMiniStatCategoryLabel', // « TYPE » se dit pareil (tâche D3)
+  'shipmentDestinationFallback', // « destination » se dit pareil (tâche D3, clé dédiée : duplique bidDetailFallbackDestination d'un autre préfixe, R40)
+  'tripOwnerSurplusKgValidatorMin', // « Minimum 1 kg » : chiffre + unité, se dit pareil (tâche D4)
+  'tripOwnerArrivalFieldLabel', // « Instructions » se dit pareil (tâche D4)
+  'activityRevenueMobileMoney', // « Mobile money » se dit pareil (tâche D5)
+  'activityMenuButtonTooltip', // « Menu » se dit pareil (tâche D5)
+  'bidCreateMaxWeightLabel', // « max » se dit pareil (vague finale D, I5/M12)
 };
 
 void main() {

@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -22,19 +23,22 @@ class TalonTrackingStrip extends StatelessWidget {
     this.trackingToken,
   });
 
-  String get _shareText {
+  String _shareText(AppLocalizations l) {
     final token = trackingToken;
     if (token == null || token.isEmpty) {
-      return 'Suivez mon colis Yadony #$trackingNumber';
+      return l.ticketShareTrackingMessage(trackingNumber);
     }
-    return 'Suivez mon colis Yadony #$trackingNumber en temps réel :\n'
-        '${trackingPublicUrl(token)}';
+    return l.ticketShareTrackingMessageWithLink(
+      trackingNumber,
+      trackingPublicUrl(token),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Container(
       padding: const EdgeInsets.only(top: DonySpacing.md),
@@ -50,7 +54,7 @@ class TalonTrackingStrip extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'N° DE SUIVI',
+                  l.ticketTrackingNumberSectionLabel,
                   style: tt.bodySmall?.copyWith(
                     // bodySmall (12px) — plancher HIG ≥ 12px
                     color: cs.onSurfaceVariant,
@@ -72,12 +76,12 @@ class TalonTrackingStrip extends StatelessWidget {
           IconButton(
             key: const Key('talon-copy-button'),
             icon: DonyIcon('copy', color: cs.primary, size: 20),
-            tooltip: 'Copier',
+            tooltip: l.commonCopy,
             onPressed: () {
               Clipboard.setData(ClipboardData(text: trackingNumber));
               DonySnackbar.show(
                 context,
-                message: 'Numéro copié',
+                message: l.ticketTrackingNumberCopiedSnackbar,
                 type: DonySnackbarType.success,
               );
             },
@@ -85,9 +89,9 @@ class TalonTrackingStrip extends StatelessWidget {
           IconButton(
             key: const Key('talon-share-button'),
             icon: DonyIcon('share-2', color: cs.primary, size: 20),
-            tooltip: 'Partager',
+            tooltip: l.commonShare,
             onPressed: () => Share.share(
-              _shareText,
+              _shareText(l),
               sharePositionOrigin: sharePositionOriginFor(context),
             ),
           ),

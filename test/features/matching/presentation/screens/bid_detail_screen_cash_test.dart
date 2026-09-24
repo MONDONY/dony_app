@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -36,6 +37,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/l10n_test_helpers.dart';
 
 // ── Mocks ──────────────────────────────────────────────────────────────────────
 
@@ -875,5 +878,63 @@ void main() {
       expect(find.text('Solde insuffisant'), findsOneWidget);
       expect(find.textContaining('en couvre'), findsOneWidget);
     });
+  });
+
+  group('Anglais', () {
+    testWidgets(
+      'expéditeur, tap ⋮ → sheet Options en anglais (Report this trip)',
+      (tester) async {
+        useEnglish();
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
+
+        await _pump(tester, bid: _makeBid(), authBloc: authBloc);
+
+        await tester.tap(
+          find.byWidgetPredicate(
+            (w) => w is DonyIcon && w.name == 'ellipsis-vertical',
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Options'), findsOneWidget);
+        expect(find.text('Report this trip'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'DeliveryNoShowContested → snackbar "Contest sent" (glossaire D1 : contest)',
+      (tester) async {
+        useEnglish();
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
+
+        whenListen(
+          cancellationBloc,
+          Stream<CancellationState>.fromIterable([DeliveryNoShowContested()]),
+          initialState: CancellationInitial(),
+        );
+
+        await _pump(tester, bid: _makeBid(), authBloc: authBloc);
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining(
+            'Contest sent. Our team will review your request.',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

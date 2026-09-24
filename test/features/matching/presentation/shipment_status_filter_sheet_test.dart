@@ -2,6 +2,8 @@ import 'package:dony/features/matching/presentation/widgets/shipment_status_filt
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   // La feuille liste 13 statuts : sur une vue par défaut (600x800) les
   // derniers groupes passent sous le pli et ne sont plus tapables.
@@ -165,5 +167,36 @@ void main() {
     expect(find.text('À remettre'), findsOneWidget);
     expect(find.text('Remis'), findsOneWidget);
     expect(find.text('En route'), findsNothing);
+  });
+
+  group('traductions', () {
+    testWidgets('en anglais : titre, groupes et libellé Apply (n)', (
+      tester,
+    ) async {
+      useEnglish();
+      sizeView(tester);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => ShipmentStatusFilterSheet.show(context, const {
+                  'COMPLETED',
+                }),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Filter by status'), findsOneWidget);
+      expect(find.text('DELIVERED'), findsOneWidget);
+      expect(find.text('NOT COMPLETED'), findsOneWidget);
+      expect(find.text('Drop-off due'), findsOneWidget);
+      expect(find.text('Apply (1)'), findsOneWidget);
+    });
   });
 }

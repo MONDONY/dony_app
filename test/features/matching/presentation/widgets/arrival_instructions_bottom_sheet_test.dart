@@ -31,6 +31,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockAnnouncementBloc
     extends MockBloc<AnnouncementEvent, AnnouncementState>
     implements AnnouncementBloc {}
@@ -267,4 +269,29 @@ void main() {
       expect(find.text('Erreur réseau'), findsOneWidget);
     },
   );
+
+  group('traductions', () {
+    testWidgets('en anglais : titre de création et bouton traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await open(tester);
+
+      expect(find.text('Arrived at destination'), findsOneWidget);
+      expect(find.text('Confirm arrival'), findsOneWidget);
+      expect(find.text("Confirmer l'arrivée"), findsNothing);
+    });
+
+    testWidgets('en anglais : mode édition, titre et bouton Save', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(editHost());
+      await tester.tap(find.byKey(const Key('open-btn')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pickup instructions'), findsWidgets);
+      expect(find.text('Save'), findsOneWidget);
+    });
+  });
 }

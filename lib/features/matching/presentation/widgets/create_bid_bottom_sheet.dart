@@ -2055,7 +2055,9 @@ class _WeightSectionState extends State<_WeightSection> {
               child: Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  'max ${maxKg.toStringAsFixed(0)} kg',
+                  context.l10n.bidCreateMaxWeightLabel(
+                    maxKg.toStringAsFixed(0),
+                  ),
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ),

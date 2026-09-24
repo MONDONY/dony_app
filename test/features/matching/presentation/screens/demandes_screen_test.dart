@@ -24,6 +24,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 class _MockTravelerBidsBloc
@@ -312,4 +313,25 @@ void main() {
       verifyNever(() => acceptance.add(any()));
     },
   );
+
+  group('traductions', () {
+    testWidgets('en anglais : titre + chips de filtre traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await _pump(
+        tester,
+        travelerBidsState: loaded([
+          _bid('b1', 'PENDING'),
+          _bid('b2', 'ACCEPTED'),
+        ]),
+      );
+
+      expect(find.text('Requests'), findsOneWidget);
+      expect(find.text('To review (1)'), findsOneWidget);
+      expect(find.text('Accepted (1)'), findsOneWidget);
+      expect(find.text('Completed (0)'), findsOneWidget);
+      expect(find.text('Demandes'), findsNothing);
+    });
+  });
 }

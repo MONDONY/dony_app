@@ -18,6 +18,7 @@ import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
+import 'package:dony/features/matching/presentation/traveler_bids_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
@@ -84,7 +85,7 @@ class _DemandesView extends StatelessWidget {
         scrolledUnderElevation: 0,
         centerTitle: false,
         leading: const DonyAppBarBackButton(),
-        title: Text('Demandes', style: tt.headlineLarge),
+        title: Text(context.l10n.bidListDemandesTitle, style: tt.headlineLarge),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(color: cs.outline, height: 1),
@@ -189,11 +190,12 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
   }
 
   Future<void> _onReject(String bidId) async {
+    final l = context.l10n;
     final confirmed = await DonyDialog.show(
       context,
-      title: 'Refuser cette demande ?',
-      message: "L'expéditeur sera informé. Cette action est irréversible.",
-      confirmLabel: 'Refuser',
+      title: l.bidListDeclineDialogTitle,
+      message: l.bidListDeclineDialogMessage,
+      confirmLabel: l.bidListDeclineButton,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'circle-x',
     );
@@ -215,12 +217,12 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
       setState(() => _processingBidIds.remove(state.bid.id));
       DonySnackbar.show(
         context,
-        message: 'Demande acceptée !',
+        message: context.l10n.bidListAcceptedSnackbar,
         type: DonySnackbarType.success,
       );
       _reload();
     } else if (state is BidRejected) {
-      DonySnackbar.show(context, message: 'Demande refusée.');
+      DonySnackbar.show(context, message: context.l10n.bidListRejectedSnackbar);
       _reload();
     } else if (state is BidError) {
       if (_processingBidIds.isNotEmpty) {
@@ -238,7 +240,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
       setState(_processingBidIds.clear);
       DonySnackbar.show(
         context,
-        message: 'Demande acceptée !',
+        message: context.l10n.bidListAcceptedSnackbar,
         type: DonySnackbarType.success,
       );
       _reload();
@@ -264,9 +266,10 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
   ) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     DonyBottomSheet.show<void>(
       context,
-      title: 'Solde insuffisant',
+      title: l.bidListWalletInsufficientTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -286,7 +289,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
           ],
           const SizedBox(height: 8),
           Text(
-            'Recharge ton portefeuille ou paie la commission directement par carte.',
+            l.bidListWalletInsufficientHint,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
@@ -295,7 +298,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: 'Recharger mon portefeuille',
+            label: l.bidListWalletTopupButton,
             onPressed: () async {
               context.pop();
               final recharged = await context.push<bool>(
@@ -311,7 +314,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
           if (state.hasCard) ...[
             const SizedBox(height: 8),
             DonyButton(
-              label: 'Payer par carte',
+              label: l.bidListPayByCardButton,
               variant: DonyButtonVariant.secondary,
               onPressed: () {
                 context.pop();
@@ -323,7 +326,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
           ] else ...[
             const SizedBox(height: 8),
             DonyButton(
-              label: 'Ajouter une carte',
+              label: l.bidListAddCardButton,
               variant: DonyButtonVariant.secondary,
               onPressed: () async {
                 context.pop();
@@ -372,6 +375,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
 
   Widget _buildLoaded(BuildContext context, TravelerBidsLoaded state) {
     final hp = DonyLayout.hPadding(context);
+    final l = context.l10n;
     final searching = _query.trim().isNotEmpty;
     final visible = searching
         ? state.visibleBids
@@ -384,7 +388,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
         Padding(
           padding: EdgeInsets.fromLTRB(hp, DonySpacing.sm, hp, DonySpacing.sm),
           child: DonySearchField(
-            hint: 'Expéditeur, n° de suivi…',
+            hint: l.bidListDemandesSearchHint,
             onChanged: _onQueryChanged,
             onClear: () => setState(() => _query = ''),
           ),
@@ -396,7 +400,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
               for (final f in TravelerBidFilter.values) ...[
                 DonyChip(
                   key: Key('demandes-filter-${f.name}'),
-                  label: '${f.label} (${state.countFor(f)})',
+                  label: '${f.label(l)} (${state.countFor(f)})',
                   selected: f == state.filter,
                   onTap: () => context.read<TravelerBidsBloc>().add(
                     TravelerBidsFilterChanged(f),
@@ -454,15 +458,16 @@ class _NoSearchResult extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     // ListView pour garder le pull-to-refresh sur un écran sans résultat.
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      children: const [
-        SizedBox(height: DonySpacing.huge),
+      children: [
+        const SizedBox(height: DonySpacing.huge),
         DonyEmptyState(
           mascotte: DonyMascotteType.assis,
-          title: 'Aucun résultat',
-          description: 'Aucune demande ne correspond à votre recherche.',
+          title: l.bidListNoResultTitle,
+          description: l.bidListNoSearchResultDescription,
         ),
       ],
     );
@@ -476,18 +481,19 @@ class _EmptyForFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final (title, description) = switch (filter) {
       TravelerBidFilter.aTraiter => (
-        'Aucune demande à traiter',
-        "Publiez un trajet pour recevoir des demandes d'expéditeurs.",
+        l.bidListEmptyPendingTitle,
+        l.bidListEmptyNoRequestsDescription,
       ),
       TravelerBidFilter.acceptees => (
-        'Aucune demande acceptée',
-        'Les demandes que vous acceptez apparaîtront ici.',
+        l.bidListEmptyAcceptedTitle,
+        l.bidListEmptyAcceptedArchiveDescription,
       ),
       TravelerBidFilter.terminees => (
-        'Aucune demande terminée',
-        'Vos demandes clôturées seront archivées ici.',
+        l.bidListEmptyCompletedTitle,
+        l.bidListEmptyCompletedDescription,
       ),
     };
 
@@ -504,7 +510,7 @@ class _EmptyForFilter extends StatelessWidget {
           mascotte: DonyMascotteType.assis,
           title: title,
           description: description,
-          actionLabel: showAction ? 'Publier un trajet' : null,
+          actionLabel: showAction ? l.tripPublishTitle : null,
           onAction: showAction
               ? () {
                   unawaited(

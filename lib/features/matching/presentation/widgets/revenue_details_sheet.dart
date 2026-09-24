@@ -6,6 +6,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/revenue_details_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
+import 'package:dony/features/matching/presentation/activity_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,10 +36,11 @@ class RevenueDetailsSheet extends StatefulWidget {
     required StatsPeriod period,
     String? approximateTotal,
   }) {
+    final l = context.l10n;
     return DonyBottomSheet.show<void>(
       context,
-      title: 'Revenus',
-      subtitle: period.detailLabel,
+      title: l.activityRevenueTitle,
+      subtitle: period.detailLabel(l),
       wrapper: (child) => BlocProvider<RevenueDetailsCubit>(
         create: (_) => getIt<RevenueDetailsCubit>()..load(period),
         child: child,
@@ -109,21 +111,21 @@ class _ErrorBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Column(
       children: [
-        const DonyEmptyState(
+        DonyEmptyState(
           type: DonyEmptyStateType.error,
           iconAsset: 'circle-alert',
-          title: 'Détail indisponible',
-          description:
-              'Impossible de charger vos revenus. Vérifiez votre connexion, puis réessayez.',
-          padding: EdgeInsets.symmetric(vertical: DonySpacing.xl),
+          title: l.activityDetailUnavailable,
+          description: l.activityRevenueErrorBody,
+          padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),
         ),
         // Un DonyChip et non un DonyButton : un bouton n'a sa place que dans
         // le pied collant d'une feuille, et cet état-là n'en a pas besoin.
         DonyChip(
           key: const Key('revenue-retry'),
-          label: 'Réessayer',
+          label: l.commonRetry,
           selected: false,
           onTap: onRetry,
         ),
@@ -150,14 +152,14 @@ class _LoadedBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     if (details.groups.isEmpty) {
-      return const DonyEmptyState(
+      return DonyEmptyState(
         iconAsset: 'wallet',
-        title: 'Aucune livraison sur la période',
-        description:
-            'Vos revenus apparaissent ici une fois vos colis livrés et payés.',
-        padding: EdgeInsets.symmetric(vertical: DonySpacing.xl),
+        title: l.activityEmptyPeriodTitle,
+        description: l.activityRevenueEmptyBody,
+        padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),
       );
     }
 
@@ -172,7 +174,7 @@ class _LoadedBody extends StatelessWidget {
             DonySpacing.md,
           ),
           child: Text(
-            _deliveries(details.deliveries),
+            l.activityDeliveries(details.deliveries),
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ),
@@ -189,9 +191,6 @@ class _LoadedBody extends StatelessWidget {
     );
   }
 }
-
-String _deliveries(int count) =>
-    count == 1 ? '1 livraison' : '$count livraisons';
 
 String _kg(double v) {
   // Arrondir d'abord à une décimale, puis juger l'entier sur la valeur
@@ -220,6 +219,7 @@ class _CurrencyGroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     // `fromCode` (nullable) distingue une devise reconnue d'un code inconnu ;
     // `fromCodeOrDefault` reste réservé au seul formatage du montant, qui a
     // besoin d'un symbole et d'un nombre de décimales même par défaut. Sans
@@ -250,7 +250,7 @@ class _CurrencyGroupCard extends StatelessWidget {
             // sans celle-ci, VoiceOver/TalkBack ne peuvent ni plier ni déplier.
             onTap: onToggle,
             label:
-                '$displayName, ${_deliveries(group.deliveries)}, '
+                '$displayName, ${l.activityDeliveries(group.deliveries)}, '
                 '${CurrencyFormatter.format(group.total, currency)}',
             // Le label ci-dessus dit déjà tout : sans ça, un lecteur d'écran
             // annonce le label puis relit pastille, nom, compteur et montant
@@ -281,7 +281,7 @@ class _CurrencyGroupCard extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              _deliveries(group.deliveries),
+                              l.activityDeliveries(group.deliveries),
                               style: tt.bodySmall?.copyWith(
                                 color: cs.onSurfaceVariant,
                               ),
@@ -402,12 +402,13 @@ class _RevenueItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final date = DateFormat('d MMM', AppL10n.localeName).format(item.date);
+    final l = context.l10n;
+    final date = DateFormat.MMMd(l.localeName).format(item.date);
     final weight = item.weightKg;
     final meta = [
       date,
       if (weight != null) _kg(weight),
-      item.rail.label,
+      item.rail.label(l),
     ].join(' · ');
 
     return ConstrainedBox(
@@ -486,8 +487,7 @@ class _ConversionNote extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
           Expanded(
             child: Text(
-              'Sur la tuile, « $total » est un total converti au taux du jour, '
-              'indicatif. Ici, chaque montant garde sa devise.',
+              context.l10n.activityRevenueConversionNote(total),
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: cs.onPrimaryContainer),

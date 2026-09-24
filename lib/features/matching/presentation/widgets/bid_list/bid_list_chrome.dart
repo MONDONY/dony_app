@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -38,7 +39,7 @@ class BidListErrorView extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.base),
             DonyButton(
-              label: 'Réessayer',
+              label: context.l10n.commonRetry,
               onPressed: onRetry,
               variant: DonyButtonVariant.secondary,
               fullWidth: false,
@@ -78,11 +79,14 @@ class HiddenBidsBanner extends StatelessWidget {
           const SizedBox(width: DonySpacing.xs),
           Expanded(
             child: Text(
-              '$count offre${count > 1 ? 's' : ''} masquée${count > 1 ? 's' : ''} (prix minimum actif)',
+              context.l10n.bidListHiddenOffers(count),
               style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
             ),
           ),
-          TextButton(onPressed: onShowAll, child: const Text('Voir tout')),
+          TextButton(
+            onPressed: onShowAll,
+            child: Text(context.l10n.commonSeeAll),
+          ),
         ],
       ),
     );
@@ -109,7 +113,7 @@ class DismissBackground extends StatelessWidget {
           const DonyIcon('trash-2', color: DonyColors.neutral0, size: 28),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            'Supprimer',
+            context.l10n.commonDelete,
             style: Theme.of(
               context,
             ).textTheme.labelSmall?.copyWith(color: DonyColors.neutral0),

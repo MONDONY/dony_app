@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Net reçu par le voyageur (= [BidModel.totalAmountEur], fallback
@@ -31,6 +32,7 @@ class TravelerGainCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final amount = travelerAmountLabel(bid);
@@ -46,12 +48,12 @@ class TravelerGainCard extends StatelessWidget {
     _Pill? pill;
 
     if (isCash) {
-      topLabel = 'VOUS ENCAISSEZ';
-      amountText = '$amount en espèces';
+      topLabel = l.bidDetailGainCashTopLabel;
+      amountText = l.bidDetailGainCashAmount(amount);
       amountColor = cs.onSurface;
-      note = 'Commission Yadony prélevée séparément.';
+      note = l.bidDetailGainCashNote;
       pill = _Pill(
-        label: 'ESPÈCES',
+        label: l.bidDetailGainCashPill,
         fg: cs.onSurface,
         bg: cs.surfaceContainerHighest,
       );
@@ -59,41 +61,41 @@ class TravelerGainCard extends StatelessWidget {
       // Un paiement mobile money était présenté comme un encaissement en
       // espèces : le voyageur est versé sur son compte mobile money, la
       // commission déjà déduite.
-      topLabel = 'VOUS AVEZ REÇU';
+      topLabel = l.bidDetailGainReceivedTopLabel;
       amountColor = cs.success;
-      note = 'Versé sur ton compte mobile money.';
+      note = l.bidDetailGainMobileMoneyPaidNote;
       pill = _Pill(
-        label: '● Versé',
+        label: l.bidDetailGainPaidPill,
         fg: cs.success,
         bg: cs.success.withValues(alpha: 0.12),
       );
     } else if (isMobileMoney && !_cancelled.contains(bid.status)) {
-      topLabel = 'VOUS RECEVEZ';
+      topLabel = l.bidDetailGainReceivingTopLabel;
       amountColor = cs.onSurface;
-      note = 'Versé sur ton compte mobile money à la livraison.';
+      note = l.bidDetailGainMobileMoneyPendingNote;
       pill = _Pill(
-        label: '📱 mobile money',
+        label: l.bidDetailGainMobileMoneyPill,
         fg: cs.primary,
         bg: cs.primary.withValues(alpha: 0.10),
       );
     } else if (_terminal.contains(bid.status)) {
-      topLabel = 'VOUS AVEZ REÇU';
+      topLabel = l.bidDetailGainReceivedTopLabel;
       amountColor = cs.success;
       pill = _Pill(
-        label: '● Reçu',
+        label: l.bidDetailGainReceivedPill,
         fg: cs.success,
         bg: cs.success.withValues(alpha: 0.12),
       );
     } else if (_cancelled.contains(bid.status)) {
-      topLabel = 'PAIEMENT';
+      topLabel = l.bidDetailGainCancelledTopLabel;
       amountColor = cs.onSurfaceVariant;
-      note = 'Paiement annulé.';
+      note = l.bidDetailGainCancelledNote;
     } else {
-      topLabel = 'VOUS RECEVEZ';
+      topLabel = l.bidDetailGainReceivingTopLabel;
       amountColor = cs.onSurface;
-      note = 'Libéré à la livraison.';
+      note = l.bidDetailGainEscrowedNote;
       pill = _Pill(
-        label: '🔒 séquestré',
+        label: l.bidDetailGainEscrowedPill,
         fg: cs.primary,
         bg: cs.primary.withValues(alpha: 0.10),
       );

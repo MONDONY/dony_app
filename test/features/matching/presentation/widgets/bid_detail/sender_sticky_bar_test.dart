@@ -20,6 +20,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 // ── Mock ──────────────────────────────────────────────────────────────────────
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
@@ -932,6 +934,27 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Suivi du colis'), findsOneWidget);
+    });
+
+    testWidgets('anglais — ACCEPTED : "Show the drop-off QR" traduit', (
+      tester,
+    ) async {
+      final bid = _bid(
+        status: 'ACCEPTED',
+        paymentMethod: BidPaymentMethod.cash,
+      );
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
+
+      useEnglish();
+      await tester.pumpWidget(_host(bloc, bid, paymentLoaded: true));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Show the drop-off QR'), findsOneWidget);
     });
   });
 }

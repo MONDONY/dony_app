@@ -14,6 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _MockAcceptBloc extends MockBloc<BidAcceptanceEvent, BidAcceptanceState>
@@ -347,5 +349,14 @@ void main() {
     await tester.tap(find.text('Valider la remise'));
     await tester.pumpAndSettle();
     expect(pushedRoutes, contains('/tracking/scan/identify'));
+  });
+
+  testWidgets('anglais — HANDED_OVER : "Scan the transit QR" traduit', (
+    tester,
+  ) async {
+    useEnglish();
+    await _pump(tester, _bid(status: 'HANDED_OVER'));
+
+    expect(find.text('Scan the transit QR'), findsOneWidget);
   });
 }

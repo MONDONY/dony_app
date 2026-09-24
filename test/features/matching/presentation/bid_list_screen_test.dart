@@ -13,7 +13,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/l10n_test_helpers.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -575,6 +578,57 @@ void main() {
     expect(find.textContaining('juin'), findsOneWidget);
   });
 
+  // fr : garde le motif fixe d'origine ('EEE d MMMM') sur le 5 mars (révèle un
+  // zéro de tête absent) — non-régression après le passage à
+  // context.l10n.localeName (I6, review-finalD). en : squelette MMMMEd.
+  testWidgets(
+    'subtitle : date de départ fr non-régression (5 mars, motif EEE d MMMM)',
+    (tester) async {
+      final ctrl = _wireStates(bidBloc, tester);
+      addTearDown(ctrl.close);
+      final date = DateTime(2026, 3, 5);
+
+      await _pump(
+        tester,
+        bidBloc,
+        departureCityCode: 'CDG',
+        arrivalCityCode: 'DKR',
+        departureDate: date,
+      );
+      ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining(DateFormat('EEE d MMMM', 'fr').format(date)),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('subtitle : date de départ en anglais (motif fixe, locale en)', (
+    tester,
+  ) async {
+    useEnglish();
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+    final date = DateTime(2026, 3, 5);
+
+    await _pump(
+      tester,
+      bidBloc,
+      departureCityCode: 'CDG',
+      arrivalCityCode: 'DKR',
+      departureDate: date,
+    );
+    ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining(DateFormat('EEE d MMMM', 'en').format(date)),
+      findsOneWidget,
+    );
+  });
+
   // ── Empty state liste acceptées ─────────────────────────────────────────────
 
   testWidgets('liste acceptées vide → « Aucune demande acceptée »', (
@@ -737,5 +791,45 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('parent'), findsOneWidget);
+  });
+
+  group('traductions', () {
+    testWidgets(
+      'en anglais : bouton Try again (BidListErrorView, bid_list_chrome.dart)',
+      (tester) async {
+        useEnglish();
+        const error = NetworkException('Erreur réseau');
+        when(() => bidBloc.state).thenReturn(BidError(error));
+        whenListen(
+          bidBloc,
+          Stream<BidState>.fromIterable([BidError(error)]),
+          initialState: BidError(error),
+        );
+
+        await _pump(tester, bidBloc);
+        await tester.pump();
+
+        expect(find.text('Try again'), findsOneWidget);
+        expect(find.text('Réessayer'), findsNothing);
+      },
+    );
+
+    testWidgets('en anglais : chips de statut, recherche et scanner traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      final ctrl = _wireStates(bidBloc, tester);
+      addTearDown(ctrl.close);
+
+      await _pump(tester, bidBloc);
+      ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+      await tester.pumpAndSettle();
+
+      expect(find.text('All (1)'), findsOneWidget);
+      expect(find.text('Active (1)'), findsOneWidget);
+      expect(find.text('Closed (0)'), findsOneWidget);
+      expect(find.text('Name or tracking number…'), findsOneWidget);
+      expect(find.text('Scan QR code'), findsOneWidget);
+    });
   });
 }

@@ -14,6 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _MockConvBloc
@@ -250,5 +252,14 @@ void main() {
     verify(
       () => bidBloc.add(any(that: isA<BidTravelerDismissRequested>())),
     ).called(1);
+  });
+
+  testWidgets('anglais — tuiles traduites', (tester) async {
+    useEnglish();
+    await _open(tester, _bid());
+    expect(find.text('Contact the sender'), findsOneWidget);
+    expect(find.text('Parcel details'), findsOneWidget);
+    expect(find.text('Report the sender'), findsOneWidget);
+    expect(find.text('Cancel this transport'), findsOneWidget);
   });
 }

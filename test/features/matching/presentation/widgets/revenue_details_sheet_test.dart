@@ -11,6 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockRevenueDetailsCubit extends MockCubit<RevenueDetailsState>
     implements RevenueDetailsCubit {}
 
@@ -376,6 +378,32 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Aucune livraison sur la période'), findsOneWidget);
+  });
+
+  testWidgets('en anglais, les textes de la feuille sont traduits', (
+    tester,
+  ) async {
+    await initializeDateFormatting('en');
+    useEnglish();
+    whenListen(
+      cubit,
+      const Stream<RevenueDetailsState>.empty(),
+      initialState: RevenueDetailsState(
+        status: RevenueDetailsStatus.loaded,
+        details: _details,
+      ),
+    );
+
+    await tester.pumpWidget(_harness(cubit));
+    await tester.pumpAndSettle();
+
+    expect(find.text('3 deliveries'), findsOneWidget);
+    expect(find.text('2 deliveries'), findsOneWidget);
+    expect(find.textContaining('4 kg · Card'), findsOneWidget);
+    // `_kg` garde une virgule décimale quelle que soit la langue (même bug
+    // que `formatWeightKg`, confié au lot E des paiements par la Ruling R30
+    // de progress.md) : non corrigé ici, hors périmètre de cette tâche.
+    expect(find.textContaining('2,5 kg · Cash'), findsOneWidget);
   });
 
   testWidgets(

@@ -1,9 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_photo_viewer_modal.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Carte fusionnée « Colis & destinataire » (vue expéditeur).
@@ -16,36 +18,46 @@ class ColisDestinataireCard extends StatelessWidget {
 
   const ColisDestinataireCard({super.key, required this.bid});
 
-  String get _colisLabel {
+  String _colisLabel(AppLocalizations l) {
     final parts = <String>[];
     if (bid.weightKg != null) {
       parts.add('${bid.weightKg} kg');
     }
     if (bid.contentCategory != null && bid.contentCategory!.isNotEmpty) {
-      parts.add(bid.contentCategory!);
+      parts.add(contentCategoriesDisplayName(l, bid.contentCategory!));
     }
     return parts.isNotEmpty ? parts.join(' · ') : '-';
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return DetailCard(
-      title: 'Colis & destinataire',
+      title: l.bidDetailParcelRecipientTitle,
       child: Column(
         children: [
           if (bid.photos.isNotEmpty) ...[
             _PhotoGallery(photos: bid.photos),
             const SizedBox(height: DonySpacing.md),
           ],
-          InfoRow(label: 'Colis', value: _colisLabel),
+          InfoRow(label: l.bidDetailParcelLabel, value: _colisLabel(l)),
           if (bid.description != null && bid.description!.isNotEmpty) ...[
             const SizedBox(height: DonySpacing.sm),
-            InfoRow(label: 'Description', value: bid.description!),
+            InfoRow(
+              label: l.bidDetailDescriptionLabel,
+              value: bid.description!,
+            ),
           ],
           const SizedBox(height: DonySpacing.sm),
-          InfoRow(label: 'Destinataire', value: bid.recipientName ?? '-'),
+          InfoRow(
+            label: l.bidDetailRecipientLabel,
+            value: bid.recipientName ?? '-',
+          ),
           const SizedBox(height: DonySpacing.sm),
-          InfoRow(label: 'Téléphone', value: bid.recipientPhone ?? '-'),
+          InfoRow(
+            label: l.bidDetailPhoneLabel,
+            value: bid.recipientPhone ?? '-',
+          ),
         ],
       ),
     );

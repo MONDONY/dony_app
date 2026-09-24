@@ -3,6 +3,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Carte « Paiement » (vue expéditeur).
@@ -37,6 +38,7 @@ class PaiementCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     // senderLabel : ce que paie l'expéditeur (brut séquestré/remboursé, ou net
     // en cash). On n'affiche jamais le net du voyageur à l'expéditeur.
     final senderLabel = _fmt(
@@ -57,13 +59,12 @@ class PaiementCard extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              "Paiement mobile money, gardé en sécurité par Yadony jusqu'à "
-              'la livraison : $senderLabel',
+              l.bidDetailMobileMoneySecuredLabel(senderLabel),
               style: tt.bodySmall?.copyWith(color: cs.onSurface),
             ),
           ),
           const SizedBox(width: DonySpacing.sm),
-          const DonyBadge(label: 'MOBILE MONEY'),
+          DonyBadge(label: l.bidDetailMobileMoneyBadge),
         ],
       );
     } else {
@@ -74,17 +75,17 @@ class PaiementCard extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              'À régler en espèces à la remise : $senderLabel',
+              l.bidDetailCashAtDropoffAmountLabel(senderLabel),
               style: tt.bodySmall?.copyWith(color: cs.onSurface),
             ),
           ),
           const SizedBox(width: DonySpacing.sm),
-          const DonyBadge(label: 'CASH', type: DonyBadgeType.warning),
+          DonyBadge(label: l.bidDetailCashBadge, type: DonyBadgeType.warning),
         ],
       );
     }
 
-    return DetailCard(title: 'Paiement', child: body);
+    return DetailCard(title: l.bidDetailPaymentCardTitle, child: body);
   }
 
   Widget _stripeBody(
@@ -94,6 +95,7 @@ class PaiementCard extends StatelessWidget {
     String senderLabel,
   ) {
     final status = bid.status;
+    final l = context.l10n;
 
     if (_terminalStatuses.contains(status)) {
       // Affiché à l'expéditeur : son paiement (brut) a été libéré. On ne
@@ -104,7 +106,7 @@ class PaiementCard extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              'Paiement libéré ✓',
+              l.bidDetailPaymentReleasedLabel,
               style: tt.bodySmall?.copyWith(color: cs.success),
             ),
           ),
@@ -120,7 +122,7 @@ class PaiementCard extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              '$senderLabel remboursé',
+              l.bidDetailAmountRefundedLabel(senderLabel),
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
@@ -135,7 +137,7 @@ class PaiementCard extends StatelessWidget {
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(
-            '$senderLabel séquestré : libéré à la livraison',
+            l.bidDetailEscrowedUntilDeliveryLabel(senderLabel),
             style: tt.bodySmall?.copyWith(color: cs.onSurface),
           ),
         ),

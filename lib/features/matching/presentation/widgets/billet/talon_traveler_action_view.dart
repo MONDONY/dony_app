@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -26,6 +27,7 @@ class TalonTravelerActionView extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     final (
       String label,
@@ -34,14 +36,14 @@ class TalonTravelerActionView extends StatelessWidget {
       DonyButtonVariant variant,
     ) = switch (action) {
       TalonTravelerAction.scan => (
-        'Lire le QR du colis',
-        "À la remise, lisez le QR de l'expéditeur.",
+        l.ticketScanQrActionLabel,
+        l.ticketScanQrActionHint,
         'scan-line',
         DonyButtonVariant.primary,
       ),
       TalonTravelerAction.confirmDelivery => (
-        'Confirmer la livraison',
-        "À l'arrivée, saisissez le code de retrait de l'expéditeur.",
+        l.ticketConfirmDeliveryActionLabel,
+        l.ticketConfirmDeliveryActionHint,
         'badge-check',
         DonyButtonVariant.success,
       ),
@@ -66,7 +68,7 @@ class TalonTravelerActionView extends StatelessWidget {
               '/tracking/confirm',
               extra: <String, String>{
                 'bidId': bidId,
-                'travelerName': travelerName ?? 'Voyageur',
+                'travelerName': travelerName ?? l.tripTravelerFallbackName,
               },
             ),
           },

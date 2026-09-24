@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /// Builds a [GoRouter] that shows [CancellationDialog] as a dialog on the
@@ -293,6 +295,41 @@ void main() {
       );
 
       expect(find.text('Annuler cette demande ?'), findsOneWidget);
+    });
+  });
+
+  group('traductions', () {
+    testWidgets('en anglais : titre et boutons traduits', (tester) async {
+      useEnglish();
+      final result = ValueNotifier<String?>(null);
+      await _pumpAndOpenDialog(
+        tester,
+        kind: CancellationKind.accepted,
+        result: result,
+      );
+
+      expect(find.text('Cancel this request?'), findsOneWidget);
+      expect(find.text('Keep'), findsOneWidget);
+      expect(find.text('Cancel the request'), findsOneWidget);
+      expect(find.text('Annuler cette demande ?'), findsNothing);
+    });
+
+    testWidgets('en anglais : avertissement colis déjà remis traduit', (
+      tester,
+    ) async {
+      useEnglish();
+      final result = ValueNotifier<String?>(null);
+      await _pumpAndOpenDialog(
+        tester,
+        kind: CancellationKind.afterHandover,
+        result: result,
+      );
+
+      expect(find.text('Reason for cancellation *'), findsOneWidget);
+      expect(
+        find.textContaining('The parcel has already been handed over'),
+        findsOneWidget,
+      );
     });
   });
 }

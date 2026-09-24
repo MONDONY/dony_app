@@ -28,6 +28,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockPackageRequestBloc
     extends MockBloc<PackageRequestEvent, PackageRequestState>
     implements PackageRequestBloc {}
@@ -265,6 +267,19 @@ void main() {
       expect(find.text('En route'), findsOneWidget);
       expect(find.text('Publiés'), findsOneWidget);
     });
+
+    testWidgets(
+      'en anglais : titre « My parcels », pill « Send » et onglets traduits',
+      (tester) async {
+        useEnglish();
+        await pump(tester);
+
+        expect(find.text('My parcels'), findsOneWidget);
+        expect(find.text('On the way'), findsOneWidget);
+        expect(find.text('Posted'), findsOneWidget);
+        expect(find.text('Mes colis'), findsNothing);
+      },
+    );
   });
 
   group('MesColisScreen — volets', () {

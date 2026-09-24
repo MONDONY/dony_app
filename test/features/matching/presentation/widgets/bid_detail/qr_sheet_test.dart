@@ -14,6 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 // ── Mock ──────────────────────────────────────────────────────────────────────
 
 class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
@@ -427,4 +429,30 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('anglais — titre, instructions et boutons Save/Share traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    final bloc = _MockTrackingBloc();
+    const qr = QrCodeModel(
+      bidId: 'bid-1',
+      scanUrl: 'https://dony.app/track/bid-1',
+      qrCodeBase64: _tinyPngB64,
+    );
+    whenListen<TrackingState>(
+      bloc,
+      Stream<TrackingState>.fromIterable([TrackingQrLoaded(qr)]),
+      initialState: TrackingQrLoaded(qr),
+    );
+
+    await tester.pumpWidget(_host(bloc));
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Parcel QR'), findsOneWidget);
+    expect(find.textContaining('drop-off'), findsOneWidget);
+    expect(find.text('Save'), findsOneWidget);
+    expect(find.text('Share'), findsOneWidget);
+  });
 }

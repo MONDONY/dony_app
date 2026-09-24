@@ -13,13 +13,6 @@ enum RevenueRail {
     'CASH' => cash,
     _ => unknown,
   };
-
-  String get label => switch (this) {
-    card => 'Carte',
-    mobileMoney => 'Mobile money',
-    cash => 'Espèces',
-    unknown => 'Paiement',
-  };
 }
 
 /// Une livraison payée, dans la devise de son groupe. [date] est la date de

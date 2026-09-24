@@ -58,7 +58,8 @@ class ExpediteurContactCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final name = bid.senderDisplayName(context.l10n);
+    final l = context.l10n;
+    final name = bid.senderDisplayName(l);
     final canOpenProfile = bid.senderId.isNotEmpty;
 
     return InkWell(
@@ -80,7 +81,7 @@ class ExpediteurContactCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'EXPÉDITEUR',
+              l.bidSenderRoleTag,
               style: tt.labelSmall?.copyWith(
                 color: cs.onSurfaceVariant,
                 letterSpacing: 0.8,
@@ -120,13 +121,13 @@ class ExpediteurContactCard extends StatelessWidget {
                           ),
                           if (bid.senderKycVerified)
                             MiniChip(
-                              label: 'Identité',
+                              label: l.listingIdentityBadge,
                               color: cs.primary,
                               bg: cs.primaryContainer,
                             ),
                           if (bid.senderKiloPro)
-                            const MiniChip(
-                              label: 'Kilo Pro',
+                            MiniChip(
+                              label: l.listingKiloProChip,
                               color: DonyColors.amberDark,
                               bg: DonyColors.amberLight,
                             ),
@@ -135,7 +136,7 @@ class ExpediteurContactCard extends StatelessWidget {
                       // Nombre d'envois
                       if (bid.senderTotalShipments != null)
                         Text(
-                          '· ${bid.senderTotalShipments} envoi${bid.senderTotalShipments! > 1 ? 's' : ''}',
+                          '· ${senderShipmentsCount(l, bid.senderTotalShipments!)}',
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
                           ),
@@ -161,7 +162,7 @@ class ExpediteurContactCard extends StatelessWidget {
                       final isRevealing = state is ContactRevealLoading;
                       return _IconActionButton(
                         iconAsset: 'phone',
-                        semanticLabel: 'Appeler',
+                        semanticLabel: l.bidDetailSenderCallSemanticLabel,
                         isLoading: isRevealing,
                         onTap: isRevealing ? null : () => _requestCall(context),
                       );
@@ -175,7 +176,7 @@ class ExpediteurContactCard extends StatelessWidget {
                     final isOpening = openState is ConversationOpenLoading;
                     return _IconActionButton(
                       iconAsset: 'message-circle',
-                      semanticLabel: 'Ouvrir la discussion',
+                      semanticLabel: l.bidDetailSenderOpenChatSemanticLabel,
                       isLoading: isOpening,
                       onTap: isOpening
                           ? null

@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 void main() {
@@ -103,5 +105,17 @@ void main() {
     verify(
       () => analytics.logEvent(AnalyticsEvents.reimbursementConditionsOpened),
     ).called(1);
+  });
+
+  testWidgets('en anglais : message et bouton traduits', (tester) async {
+    useEnglish();
+    setDonyReimbursementCap(50);
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: ReimbursementInfoBanner())),
+    );
+
+    expect(find.textContaining('reimburses'), findsOneWidget);
+    expect(find.text('See conditions'), findsOneWidget);
+    expect(find.text('Voir conditions'), findsNothing);
   });
 }

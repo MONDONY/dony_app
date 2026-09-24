@@ -12,6 +12,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
 
@@ -248,4 +250,57 @@ void main() {
       expect(find.textContaining('Limite de 5 régénérations'), findsNothing);
     },
   );
+
+  group('traductions', () {
+    testWidgets(
+      'en anglais : titre PICKUP CODE, bouton Copy the code, Show on tracking page',
+      (tester) async {
+        useEnglish();
+        final t = _MockTrackingBloc();
+        final b = _MockBidBloc();
+        when(() => t.state).thenReturn(TrackingInitial());
+        when(
+          () => t.stream,
+        ).thenAnswer((_) => const Stream<TrackingState>.empty());
+        when(() => b.state).thenReturn(BidInitial());
+        when(() => b.stream).thenAnswer((_) => const Stream<BidState>.empty());
+        await _pump(tester, t, b);
+
+        expect(find.text('PICKUP CODE'), findsOneWidget);
+        expect(find.text('Copy the code'), findsOneWidget);
+        expect(find.text('Show the code on the tracking page'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'en anglais : rate-limit actif → "Limit of 5 regenerations reached." et "Available in"',
+      (tester) async {
+        useEnglish();
+        final t = _MockTrackingBloc();
+        final b = _MockBidBloc();
+        when(() => t.state).thenReturn(TrackingInitial());
+        when(
+          () => t.stream,
+        ).thenAnswer((_) => const Stream<TrackingState>.empty());
+        when(() => b.state).thenReturn(BidInitial());
+        when(() => b.stream).thenAnswer((_) => const Stream<BidState>.empty());
+        final recentWindow = DateTime.now().toUtc().subtract(
+          const Duration(hours: 1),
+        );
+        await _pump(
+          tester,
+          t,
+          b,
+          refreshCount: 5,
+          refreshWindowStart: recentWindow,
+        );
+
+        expect(
+          find.textContaining('Limit of 5 regenerations reached.'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Available in'), findsOneWidget);
+      },
+    );
+  });
 }

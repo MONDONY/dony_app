@@ -16,7 +16,7 @@ import 'package:intl/intl.dart';
 /// la ligne de perforation et le talon d'action.
 ///
 /// NOTE sur le format de date : [DateFormat] avec la locale de l'app
-/// (AppL10n.localeName) nécessite que les données de locale soient
+/// (`context.l10n.localeName`) nécessite que les données de locale soient
 /// initialisées ([intl.initializeDateFormatting]). Si elles ne le sont pas
 /// (ex : tests unitaires isolés), le widget retombe sur un format numérique
 /// non-localisé ("MM/dd") qui ne lève aucune exception.
@@ -82,7 +82,7 @@ class _BilletHeader extends StatelessWidget {
         children: [
           Flexible(
             child: Text(
-              'YADONY · TRANSPORT DE COLIS',
+              context.l10n.ticketHeaderTagline,
               style: tt.bodySmall?.copyWith(
                 color: cs.primary,
                 fontWeight: FontWeight.w800,
@@ -110,8 +110,8 @@ class _BilletCorridor extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final depCity = bid.departureCity ?? 'Paris';
-    final arrCity = bid.arrivalCity ?? 'Dakar';
+    final depCity = bid.departureCity ?? 'Paris'; // i18n-ignore: nom propre
+    final arrCity = bid.arrivalCity ?? 'Dakar'; // i18n-ignore: nom propre
     final depCode = cityAirportCode(depCity, departure: true);
     final arrCode = cityAirportCode(arrCity, departure: false);
 
@@ -230,8 +230,9 @@ class _BilletDates extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
-    final dateStr = _formatDate(bid.departureDate);
+    final dateStr = _formatDate(bid.departureDate, l.localeName);
     final depTime = _trimTime(bid.departureTime);
     final arrTime = _trimTime(bid.arrivalTime);
 
@@ -258,7 +259,7 @@ class _BilletDates extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Départ', style: labelStyle),
+                Text(l.ticketDepartureLabel, style: labelStyle),
                 Text(
                   dateStr != null ? '$dateStr · $depTime' : depTime,
                   maxLines: 1,
@@ -274,7 +275,7 @@ class _BilletDates extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('Arrivée', style: labelStyle),
+                Text(l.ticketArrivalLabel, style: labelStyle),
                 Text(
                   arrTime,
                   maxLines: 1,
@@ -295,18 +296,14 @@ class _BilletDates extends StatelessWidget {
     return t.length >= 5 ? t.substring(0, 5) : t;
   }
 
-  /// Formate [date] en "d MMM" avec la locale de l'app (AppL10n.localeName).
-  /// Si les données de locale ne sont pas initialisées, retombe sur "d/M"
-  /// (locale-independent) pour éviter une [LocaleDataException] en test.
-  String? _formatDate(DateTime? date) {
+  /// Formate [date] avec le squelette `MMMd` (équivalent localisé de
+  /// l'ancien motif fixe `'d MMM'` — rendu fr identique, ordre jour/mois
+  /// correct en anglais). Les données de locale sont toujours initialisées
+  /// (`flutter_test_config.dart` en test, `main.dart` en prod).
+  String? _formatDate(DateTime? date, String locale) {
     if (date == null) {
       return null;
     }
-    try {
-      return DateFormat('d MMM', AppL10n.localeName).format(date);
-    } catch (_) {
-      // Locale data not initialized — use numeric fallback.
-      return DateFormat('d/M').format(date);
-    }
+    return DateFormat.MMMd(locale).format(date);
   }
 }

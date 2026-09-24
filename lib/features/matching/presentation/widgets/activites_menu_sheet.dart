@@ -2,8 +2,10 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/tools_completion_model.dart';
+import 'package:dony/features/matching/presentation/activity_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_key_presentation.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Destination retenue dans la feuille de menu : l'événement à tracer et la
@@ -50,6 +52,7 @@ class _ActivitesMenuContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -67,7 +70,7 @@ class _ActivitesMenuContent extends StatelessWidget {
                 child: _QuickAction(
                   key: const Key('menu-quick-track'),
                   iconAsset: 'search',
-                  label: 'Suivre un colis',
+                  label: l.activityMenuTrackParcel,
                   color: cs.primary,
                   choice: const ActivitesMenuChoice(
                     AnalyticsEvents.activitesHubSearchOpened,
@@ -80,7 +83,7 @@ class _ActivitesMenuContent extends StatelessWidget {
                 child: _QuickAction(
                   key: const Key('menu-quick-scan'),
                   iconAsset: 'scan-line',
-                  label: 'Scanner un colis',
+                  label: l.activityMenuScanParcel,
                   color: cs.secondary,
                   choice: const ActivitesMenuChoice(
                     AnalyticsEvents.activitesHubScanOpened,
@@ -89,13 +92,13 @@ class _ActivitesMenuContent extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: DonySpacing.md),
-              const Expanded(
+              Expanded(
                 child: _QuickAction(
-                  key: Key('menu-quick-settings'),
+                  key: const Key('menu-quick-settings'),
                   iconAsset: 'sliders-horizontal',
-                  label: 'Paramètres',
+                  label: l.activityMenuSettings,
                   color: DonyColors.neutral600,
-                  choice: ActivitesMenuChoice(
+                  choice: const ActivitesMenuChoice(
                     AnalyticsEvents.activitesHubSettingsOpened,
                     '/settings',
                   ),
@@ -105,18 +108,18 @@ class _ActivitesMenuContent extends StatelessWidget {
           ),
         ),
         _SectionLabel(
-          label: 'Mes outils',
+          label: l.activityMenuToolsSection,
           // « 3/5 prêts » : le même décompte que la carte « Publiez en 3 taps »
           // du hub, pour que le menu ne raconte pas une autre histoire.
           trailing: tools == null
               ? null
-              : '${tools!.ready}/${tools!.total} prêts',
+              : l.activityMenuToolsReady(tools!.ready, tools!.total),
         ),
         _ToolTile(
           itemKey: const Key('menu-tool-alerts'),
           tool: ToolKey.alerts,
           iconAsset: 'bell',
-          label: 'Mes alertes',
+          label: l.activityToolTitleAlerts,
           color: cs.primary,
           event: AnalyticsEvents.activitesHubAlertsOpened,
           tools: tools,
@@ -125,7 +128,7 @@ class _ActivitesMenuContent extends StatelessWidget {
           itemKey: const Key('menu-tool-templates'),
           tool: ToolKey.tripTemplates,
           iconAsset: 'bookmark',
-          label: 'Modèles de trajet',
+          label: l.activityToolTitleTemplates,
           color: DonyColors.violet,
           event: AnalyticsEvents.activitesHubTemplatesOpened,
           tools: tools,
@@ -134,7 +137,7 @@ class _ActivitesMenuContent extends StatelessWidget {
           itemKey: const Key('menu-tool-price-grid'),
           tool: ToolKey.priceGrid,
           iconAsset: 'layout-grid',
-          label: 'Ma grille de prix',
+          label: l.activityToolTitlePriceGrid,
           color: cs.primary,
           event: AnalyticsEvents.activitesHubPriceGridOpened,
           tools: tools,
@@ -143,7 +146,7 @@ class _ActivitesMenuContent extends StatelessWidget {
           itemKey: const Key('menu-tool-addresses'),
           tool: ToolKey.addresses,
           iconAsset: 'map-pin',
-          label: 'Mes adresses',
+          label: l.activityToolTitleAddresses,
           color: cs.secondary,
           event: AnalyticsEvents.activitesHubAddressesOpened,
           tools: tools,
@@ -152,7 +155,7 @@ class _ActivitesMenuContent extends StatelessWidget {
           itemKey: const Key('menu-tool-recipients'),
           tool: ToolKey.recipients,
           iconAsset: 'contact',
-          label: 'Mes destinataires',
+          label: l.activityToolTitleRecipients,
           color: DonyColors.violet,
           event: AnalyticsEvents.activitesHubRecipientsOpened,
           tools: tools,
@@ -162,7 +165,7 @@ class _ActivitesMenuContent extends StatelessWidget {
         _MenuTile(
           itemKey: const Key('menu-item-history'),
           iconAsset: 'chart-line',
-          label: 'Historique',
+          label: l.activityHistoryTitle,
           color: cs.primary,
           choice: const ActivitesMenuChoice(
             AnalyticsEvents.activitesHubHistoryOpened,
@@ -170,23 +173,23 @@ class _ActivitesMenuContent extends StatelessWidget {
           ),
           showDivider: false,
         ),
-        const _SectionLabel(label: 'Mon compte'),
+        _SectionLabel(label: l.activityMenuAccountSection),
         _MenuTile(
           itemKey: const Key('menu-item-wallet'),
           iconAsset: 'wallet',
-          label: 'Portefeuille',
+          label: l.activityWalletTitle,
           color: cs.primary,
           choice: const ActivitesMenuChoice(
             AnalyticsEvents.activitesHubWalletOpened,
             '/payments/wallet',
           ),
         ),
-        const _MenuTile(
-          itemKey: Key('menu-item-help'),
+        _MenuTile(
+          itemKey: const Key('menu-item-help'),
           iconAsset: 'circle-help',
-          label: 'Aide et support',
+          label: l.activityHelpTitleMenu,
           color: DonyColors.amberDark,
-          choice: ActivitesMenuChoice(
+          choice: const ActivitesMenuChoice(
             AnalyticsEvents.activitesHubHelpOpened,
             '/profile/help/faq',
           ),
@@ -371,14 +374,18 @@ class _ToolTile extends StatelessWidget {
     if (model == null) {
       badge = null;
     } else {
+      final l = context.l10n;
       final count = model.countOf(tool);
       final ready = count > 0;
+      final badgeLabel = ready
+          ? tool.badgeLabel(l, count)
+          : l.activityToolBadgeUnconfigured;
       badge = ToolStatusBadge(
         ready: ready,
-        label: ready ? tool.badgeLabel(count) : 'À configurer',
+        label: badgeLabel,
         semanticsLabel: ready
-            ? '$label : ${tool.badgeLabel(count)}'
-            : '$label : à configurer',
+            ? l.activityToolMenuSemanticsReady(label, badgeLabel)
+            : l.activityToolMenuSemanticsUnconfigured(label),
       );
     }
 

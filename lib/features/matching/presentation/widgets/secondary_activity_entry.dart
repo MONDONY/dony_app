@@ -14,7 +14,10 @@ class SecondaryActivityEntry extends StatelessWidget {
     required this.onTap,
     this.icon,
     this.iconAsset,
-  }) : assert(icon != null || iconAsset != null, 'Fournir icon ou iconAsset.');
+  }) : assert(
+         icon != null || iconAsset != null,
+         'Fournir icon ou iconAsset.', // i18n-ignore
+       );
 
   final IconData? icon;
   final String label;

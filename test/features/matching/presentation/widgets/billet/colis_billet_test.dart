@@ -5,8 +5,15 @@ import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-BidModel _bid({String status = 'ACCEPTED'}) => BidModel(
+import '../../../../../helpers/l10n_test_helpers.dart';
+
+BidModel _bid({
+  String status = 'ACCEPTED',
+  DateTime? departureDate,
+  String? departureTime,
+}) => BidModel(
   id: 'bid-1',
   announcementId: 'a-1',
   senderId: 's-1',
@@ -17,6 +24,8 @@ BidModel _bid({String status = 'ACCEPTED'}) => BidModel(
   trackingNumber: 'DON-3TSTR9VH',
   departureCity: 'Paris',
   arrivalCity: 'Abidjan',
+  departureDate: departureDate,
+  departureTime: departureTime,
 );
 
 Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
@@ -96,5 +105,51 @@ void main() {
   ) async {
     await _pump(tester, _bid(status: 'AWAITING_PAYMENT'), true);
     expect(find.text('À payer'), findsOneWidget);
+  });
+
+  group('date de départ — non-régression du motif (DateFormat.MMMd)', () {
+    setUpAll(() async {
+      await initializeDateFormatting('fr');
+      await initializeDateFormatting('en');
+    });
+
+    testWidgets(
+      'fr : le 5 mars (zéro de tête) rend "5 mars", comme l\'ancien motif fixe',
+      (tester) async {
+        await _pump(
+          tester,
+          _bid(departureDate: DateTime(2026, 3, 5), departureTime: '09:05:00'),
+          false,
+        );
+        expect(find.textContaining('5 mars · 09:05'), findsOneWidget);
+      },
+    );
+
+    testWidgets('en : le 5 mars rend "Mar 5" (squelette MMMd anglais)', (
+      tester,
+    ) async {
+      useEnglish();
+      await _pump(
+        tester,
+        _bid(departureDate: DateTime(2026, 3, 5), departureTime: '09:05:00'),
+        false,
+      );
+      expect(find.textContaining('Mar 5 · 09:05'), findsOneWidget);
+    });
+  });
+
+  group('traductions', () {
+    testWidgets(
+      'en anglais : en-tête, labels Departure/Arrival, statut Delivered',
+      (tester) async {
+        useEnglish();
+        await _pump(tester, _bid(status: 'COMPLETED'), false);
+        expect(find.text('YADONY · PARCEL TRANSPORT'), findsOneWidget);
+        expect(find.text('Departure'), findsOneWidget);
+        expect(find.text('Arrival'), findsOneWidget);
+        expect(find.text('Delivered'), findsOneWidget);
+        expect(find.text('TRACKING NUMBER'), findsOneWidget);
+      },
+    );
   });
 }

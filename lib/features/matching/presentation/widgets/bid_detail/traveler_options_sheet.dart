@@ -10,6 +10,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_des
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -37,6 +38,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final bottomPad = MediaQuery.of(context).padding.bottom;
     final h = DonyLayout.hPadding(context);
 
@@ -64,7 +66,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
                 ),
               ),
             ),
-            Text('Options', style: tt.headlineMedium),
+            Text(l.bidDetailOptionsTitle, style: tt.headlineMedium),
             const SizedBox(height: DonySpacing.base),
 
             // ── Contacter l'expéditeur (always) ────────────────────────────
@@ -72,8 +74,8 @@ class _TravelerOptionsSheet extends StatelessWidget {
               iconAsset: 'message-circle',
               iconColor: cs.primary,
               iconBg: cs.primaryContainer,
-              label: "Contacter l'expéditeur",
-              subtitle: 'Envoyer un message à l\'expéditeur',
+              label: l.bidDetailContactSenderLabel,
+              subtitle: l.bidDetailContactSenderSubtitle,
               onTap: () {
                 context.pop();
                 outerContext.read<ConversationOpenBloc>().add(
@@ -88,8 +90,8 @@ class _TravelerOptionsSheet extends StatelessWidget {
               iconAsset: 'package',
               iconColor: cs.primary,
               iconBg: cs.primaryContainer,
-              label: 'Détails du colis',
-              subtitle: 'Voir les informations du colis et du destinataire',
+              label: l.bidDetailParcelDetailsLabel,
+              subtitle: l.bidDetailParcelDetailsSubtitle,
               onTap: () {
                 context.pop();
                 _showColisSheet(outerContext, bid);
@@ -102,8 +104,8 @@ class _TravelerOptionsSheet extends StatelessWidget {
               iconAsset: 'flag',
               iconColor: cs.error,
               iconBg: cs.errorLight,
-              label: "Signaler l'expéditeur",
-              subtitle: 'Signaler un problème au support Yadony',
+              label: l.bidDetailReportSenderLabel,
+              subtitle: l.bidDetailReportSubtitle,
               onTap: () {
                 context.pop();
                 _showReportSheet(outerContext);
@@ -118,10 +120,10 @@ class _TravelerOptionsSheet extends StatelessWidget {
                 iconAsset: 'ban',
                 iconColor: cs.error,
                 iconBg: cs.errorLight,
-                label: 'Annuler ce transport',
+                label: l.bidDetailCancelTransportLabel,
                 subtitle: bid.status == 'HANDED_OVER'
-                    ? 'Vous devrez restituer le colis sous 3 jours'
-                    : 'L\'expéditeur sera remboursé automatiquement',
+                    ? l.bidDetailCancelTransportHandedOverSubtitle
+                    : l.bidDetailCancelTransportAcceptedSubtitle,
                 onTap: () {
                   context.pop();
                   _showCancelDialog(outerContext, bid);
@@ -136,8 +138,8 @@ class _TravelerOptionsSheet extends StatelessWidget {
                 iconAsset: 'trash-2',
                 iconColor: cs.error,
                 iconBg: cs.errorLight,
-                label: 'Supprimer cette demande',
-                subtitle: 'Retirer définitivement de votre historique',
+                label: l.bidDetailDeleteRequest,
+                subtitle: l.bidDetailRemoveFromHistorySubtitle,
                 onTap: () {
                   context.pop();
                   outerContext.read<BidBloc>().add(
@@ -193,7 +195,10 @@ class _TravelerOptionsSheet extends StatelessWidget {
                 ),
               ),
             ),
-            Text('Détails du colis', style: tt.headlineMedium),
+            Text(
+              context.l10n.bidDetailParcelDetailsLabel,
+              style: tt.headlineMedium,
+            ),
             const SizedBox(height: DonySpacing.base),
             ColisDestinataireCard(bid: bid),
           ],

@@ -15,6 +15,7 @@ import 'package:dony/features/matching/presentation/widgets/activity_header_widg
 import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_period_filter_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -93,7 +94,7 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
     if (state is BidDeleted) {
       DonySnackbar.show(
         context,
-        message: 'Envoi supprimé',
+        message: context.l10n.shipmentDeletedSnackbar,
         type: DonySnackbarType.success,
       );
       context.read<BidBloc>().add(
@@ -194,25 +195,31 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
 
 // ── Filter bar ────────────────────────────────────────────────────────────────
 
-/// Quick-preset chips for the shipment list.
+/// Quick-preset chips for the shipment list. Libellés partagés avec
+/// [ShipmentStatusFilterSheet] (mêmes groupes de statuts, préfixe `shipment…`).
 List<StatusChipData<Set<String>>> _buildChips(
-  ColorScheme cs, {
+  ColorScheme cs,
+  AppLocalizations l, {
   int awaitingPaymentCount = 0,
 }) => [
-  const StatusChipData(label: 'Tous', value: <String>{}),
-  StatusChipData(label: 'En cours', value: kEnvoisEnCours, dotColor: cs.info),
+  StatusChipData(label: l.listingFilterAllChip, value: const <String>{}),
   StatusChipData(
-    label: 'En attente',
+    label: l.shipmentGroupInProgress,
+    value: kEnvoisEnCours,
+    dotColor: cs.info,
+  ),
+  StatusChipData(
+    label: l.shipmentGroupWaiting,
     value: kEnvoisAVenir,
     dotColor: cs.warning,
     hasNew: awaitingPaymentCount > 0,
   ),
   StatusChipData(
-    label: 'Livrés',
+    label: l.shipmentGroupDelivered,
     value: const {'COMPLETED'},
     dotColor: cs.success,
   ),
-  const StatusChipData(label: 'Non aboutis', value: kEnvoisNonAboutis),
+  StatusChipData(label: l.shipmentGroupNotCompleted, value: kEnvoisNonAboutis),
 ];
 
 class _ShipmentFilterBar extends StatelessWidget {
@@ -234,6 +241,7 @@ class _ShipmentFilterBar extends StatelessWidget {
     final cubit = context.read<ShipmentFilterCubit>();
     final filter = context.watch<ShipmentFilterCubit>().state;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Container(
       color: cs.surface,
@@ -247,7 +255,7 @@ class _ShipmentFilterBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DonySearchField(
-            hint: 'Ville, destinataire, voyageur…',
+            hint: l.shipmentSearchFieldHint,
             controller: controller,
             onChanged: onQueryChanged,
             onClear: () {
@@ -258,7 +266,11 @@ class _ShipmentFilterBar extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           // Status chips + period filter icon
           StatusChipsRow<Set<String>>(
-            chips: _buildChips(cs, awaitingPaymentCount: awaitingPaymentCount),
+            chips: _buildChips(
+              cs,
+              l,
+              awaitingPaymentCount: awaitingPaymentCount,
+            ),
             selected: filter.statuses,
             equals: setEquals,
             onSelected: (s) => cubit.applyQuickPreset(s),
@@ -270,7 +282,7 @@ class _ShipmentFilterBar extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
               constraints: const BoxConstraints(),
-              tooltip: 'Filtrer par période',
+              tooltip: l.shipmentPeriodFilterTitle,
               onPressed: () async {
                 final r = await ShipmentPeriodFilterSheet.show(
                   context,
@@ -293,9 +305,7 @@ class _ShipmentFilterBar extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  hasData
-                      ? '$resultCount résultat${resultCount > 1 ? 's' : ''}'
-                      : '',
+                  hasData ? l.shipmentResultCount(resultCount) : '',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: cs.onSurfaceVariant,
                     fontWeight: FontWeight.w700,
@@ -308,7 +318,7 @@ class _ShipmentFilterBar extends StatelessWidget {
                     cubit.reset();
                   },
                   child: Text(
-                    'Tout effacer',
+                    l.shipmentClearAllFiltersLabel,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: cs.primary,
                       fontWeight: FontWeight.w700,
@@ -393,12 +403,12 @@ class _ShipmentListView extends StatelessWidget {
 }
 
 Future<bool> _confirmDelete(BuildContext context) async {
+  final l = context.l10n;
   final confirmed = await DonyDialog.show(
     context,
-    title: 'Supprimer cet envoi ?',
-    message:
-        'Il sera retiré de votre historique. Cette action est irréversible.',
-    confirmLabel: 'Supprimer',
+    title: l.shipmentDeleteConfirmTitle,
+    message: l.shipmentDeleteConfirmMessage,
+    confirmLabel: l.commonDelete,
     variant: DonyDialogVariant.destructive,
     iconAsset: 'trash-2',
   );
@@ -423,7 +433,7 @@ class _DeleteBackground extends StatelessWidget {
           const DonyIcon('trash-2', color: DonyColors.white, size: 26),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            'Supprimer',
+            context.l10n.commonDelete,
             style: tt.labelSmall?.copyWith(color: DonyColors.white),
           ),
         ],
@@ -453,11 +463,10 @@ class _RawEmptyView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xxl),
               child:
                   DonyEmptyState(
-                        title: 'Aucun envoi pour l\'instant',
-                        description:
-                            'Trouvez un voyageur et envoyez votre colis vers l\'Afrique.',
+                        title: context.l10n.shipmentEmptyTitle,
+                        description: context.l10n.shipmentEmptyDescription,
                         mascotte: DonyMascotteType.assis,
-                        actionLabel: 'Rechercher un trajet',
+                        actionLabel: context.l10n.shipmentEmptySearchTripAction,
                         onAction: onSearchTrip,
                       )
                       .animate()
@@ -487,7 +496,7 @@ class _FilteredEmptyView extends StatelessWidget {
             DonyIcon('filter-x', size: 40, color: cs.outline),
             const SizedBox(height: DonySpacing.base),
             Text(
-              'Aucun envoi ne correspond à tes filtres',
+              context.l10n.shipmentFilteredEmptyMessage,
               textAlign: TextAlign.center,
               style: tt.bodyMedium?.copyWith(
                 color: cs.onSurfaceVariant,
@@ -496,7 +505,7 @@ class _FilteredEmptyView extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.md),
             DonyButton(
-              label: 'Réinitialiser',
+              label: context.l10n.listingResetFiltersButton,
               variant: DonyButtonVariant.secondary,
               fullWidth: false,
               onPressed: onReset,
@@ -554,7 +563,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.lg),
             Text(
-              'Erreur de chargement',
+              context.l10n.shipmentLoadErrorTitle,
               style: tt.titleLarge?.copyWith(color: cs.onSurface),
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -579,7 +588,7 @@ class _ErrorView extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  'Réessayer',
+                  context.l10n.commonRetry,
                   style: tt.labelLarge?.copyWith(color: cs.primary),
                 ),
               ),

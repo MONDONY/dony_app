@@ -17,6 +17,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class _MockConvBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
@@ -309,5 +311,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.textContaining('Numéro indisponible'), findsOneWidget);
+  });
+
+  testWidgets('anglais — rôle, nom et compteur d\'envois traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await _pump(tester, _bid(senderTotalShipments: 3));
+    expect(find.text('SENDER'), findsOneWidget);
+    expect(find.text('Mariama D.'), findsOneWidget);
+    expect(find.textContaining('3 shipments'), findsOneWidget);
   });
 }

@@ -1,7 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/tools_completion_model.dart';
-import 'package:dony/features/matching/presentation/widgets/tool_key_presentation.dart';
+import 'package:dony/features/matching/presentation/activity_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Carte de complétion des outils, en tête de la section « Outils » du hub
@@ -36,6 +37,7 @@ class _CompleteBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Container(
       key: const Key('tools-completion-complete'),
@@ -55,10 +57,10 @@ class _CompleteBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Vos outils sont prêts', style: tt.titleSmall),
+                Text(l.activityToolsCompleteTitle, style: tt.titleSmall),
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
-                  'Publiez un colis ou un trajet en 3 taps',
+                  l.activityToolsCompleteBody,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
@@ -80,18 +82,17 @@ class _ProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final next = model.nextMissing!;
     final isStart = model.ready == 0;
 
     final title = isStart
-        ? 'Préparez vos outils une fois'
-        : 'Publiez en 3 taps';
+        ? l.activityToolsStartTitle
+        : l.activityToolsProgressTitle;
     final body = isStart
-        ? 'Adresses, destinataires, modèles, grille de prix, alertes : '
-              'remplis une fois, réutilisés à chaque publication.'
-        : '${missingSentence(model.missing)} Une fois vos outils prêts, '
-              'plus rien à ressaisir.';
-    final cta = isStart ? 'Commencer par mes adresses' : next.ctaLabel;
+        ? l.activityToolsStartBody
+        : l.activityToolsProgressBody(missingSentence(l, model.missing));
+    final cta = isStart ? l.activityToolsStartCta : next.ctaLabel(l);
 
     return DonyCard(
       key: const Key('tools-completion-card'),
@@ -128,9 +129,9 @@ class _ProgressCard extends StatelessWidget {
               for (final tool in model.tools)
                 tool.ready ? DonyGaugeSegment.done : DonyGaugeSegment.todo,
             ],
-            label: 'prêts',
+            label: l.activityToolsGaugeLabel,
             showCounter: false,
-            semanticsLabel: 'Préparation de vos outils',
+            semanticsLabel: l.activityToolsGaugeSemantics,
           ),
           const SizedBox(height: DonySpacing.md),
           Text(body, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),

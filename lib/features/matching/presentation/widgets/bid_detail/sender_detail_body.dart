@@ -11,6 +11,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_act
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -177,7 +178,7 @@ class RatingDoneBadge extends StatelessWidget {
             const SizedBox(width: DonySpacing.xs),
             Flexible(
               child: Text(
-                'Évaluation envoyée',
+                context.l10n.bidDetailRatingSentBadge,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: tt.bodyMedium?.copyWith(

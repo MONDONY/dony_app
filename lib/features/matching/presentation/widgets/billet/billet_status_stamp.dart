@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Tampon de statut incliné affiché dans l'en-tête du billet.
@@ -22,25 +23,29 @@ class BilletStatusStamp extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     final (Color color, String label) = switch (status) {
       'AWAITING_PAYMENT' => (
         cs.warning,
-        isSender ? 'À payer' : 'Paiement en attente',
+        isSender
+            ? l.ticketStatusAwaitingPaymentSenderLabel
+            : l.ticketStatusAwaitingPaymentTravelerLabel,
       ),
-      'PENDING' || 'PAYMENT_ESCROWED' => (cs.warning, 'En attente'),
-      'ACCEPTED' => (cs.success, 'Confirmé'),
-      'HANDED_OVER' => (cs.primary, 'En route'),
-      'IN_TRANSIT' => (cs.primary, 'En transit'),
-      'ARRIVED' => (cs.primary, 'Arrivé'),
-      'COMPLETED' || 'DELIVERED' => (cs.success, 'Livré'),
-      'REJECTED' => (cs.error, 'Refusé'),
-      'CANCELLED' => (cs.onSurfaceVariant, 'Annulé'),
+      'PENDING' ||
+      'PAYMENT_ESCROWED' => (cs.warning, l.ticketStatusPendingLabel),
+      'ACCEPTED' => (cs.success, l.ticketStatusAcceptedLabel),
+      'HANDED_OVER' => (cs.primary, l.ticketStatusHandedOverLabel),
+      'IN_TRANSIT' => (cs.primary, l.ticketStatusInTransitLabel),
+      'ARRIVED' => (cs.primary, l.ticketStatusArrivedLabel),
+      'COMPLETED' || 'DELIVERED' => (cs.success, l.ticketStatusDeliveredLabel),
+      'REJECTED' => (cs.error, l.ticketStatusRejectedLabel),
+      'CANCELLED' => (cs.onSurfaceVariant, l.ticketStatusCancelledLabel),
       // Statuts terminaux back-end (BidStatus) — libellés alignés sur
       // bid_list_screen / shipment_status_filter_sheet.
-      'NO_SHOW' => (cs.warning, 'Absent'),
-      'PARCEL_REFUSED' => (cs.error, 'Colis refusé'),
-      'EXPIRED' => (cs.onSurfaceVariant, 'Expiré'),
+      'NO_SHOW' => (cs.warning, l.ticketStatusNoShowLabel),
+      'PARCEL_REFUSED' => (cs.error, l.ticketStatusParcelRefusedLabel),
+      'EXPIRED' => (cs.onSurfaceVariant, l.ticketStatusExpiredLabel),
       _ => (cs.onSurfaceVariant, status),
     };
 

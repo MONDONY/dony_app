@@ -53,35 +53,49 @@ class ShipmentCard extends StatelessWidget {
   final int index;
 
   /// Returns (bgColor, fgColor, label) for the status badge pill.
-  ({Color bg, Color fg, String label}) _badge(ColorScheme cs) =>
-      switch (bid.status) {
-        'IN_TRANSIT' => (bg: cs.infoLight, fg: cs.info, label: 'EN TRANSIT'),
-        'ARRIVED' => (bg: cs.infoLight, fg: cs.info, label: 'ARRIVÉ'),
-        'HANDED_OVER' => (bg: cs.infoLight, fg: cs.info, label: 'REMIS'),
-        'ACCEPTED' => (
-          bg: cs.warningLight,
-          fg: cs.warning,
-          label: 'À REMETTRE',
-        ),
-        'PENDING' || 'AWAITING_PAYMENT' || 'PAYMENT_ESCROWED' => (
-          bg: cs.warningLight,
-          fg: cs.warning,
-          label: 'EN ATTENTE',
-        ),
-        'COMPLETED' => (bg: cs.successLight, fg: cs.success, label: 'LIVRÉ'),
-        // Le motif réel plutôt qu'un « TERMINÉ » générique, qui ne disait pas
-        // ce qui s'était passé. Vocabulaire aligné sur la feuille de filtre.
-        'CANCELLED' => _closed(cs, 'ANNULÉ'),
-        'REJECTED' => _closed(cs, 'REFUSÉ'),
-        'NO_SHOW' => _closed(cs, 'ABSENT'),
-        'EXPIRED' => _closed(cs, 'EXPIRÉ'),
-        'PARCEL_REFUSED' => _closed(cs, 'COLIS REFUSÉ'),
-        _ => (
-          bg: DonyColors.neutral100,
-          fg: cs.onSurfaceVariant,
-          label: bid.status,
-        ),
-      };
+  ({Color bg, Color fg, String label}) _badge(
+    ColorScheme cs,
+    AppLocalizations l,
+  ) => switch (bid.status) {
+    'IN_TRANSIT' => (
+      bg: cs.infoLight,
+      fg: cs.info,
+      label: l.shipmentBadgeInTransit,
+    ),
+    'ARRIVED' => (bg: cs.infoLight, fg: cs.info, label: l.shipmentBadgeArrived),
+    'HANDED_OVER' => (
+      bg: cs.infoLight,
+      fg: cs.info,
+      label: l.shipmentBadgeHandedOver,
+    ),
+    'ACCEPTED' => (
+      bg: cs.warningLight,
+      fg: cs.warning,
+      label: l.shipmentBadgeToHandOver,
+    ),
+    'PENDING' || 'AWAITING_PAYMENT' || 'PAYMENT_ESCROWED' => (
+      bg: cs.warningLight,
+      fg: cs.warning,
+      label: l.shipmentBadgeWaiting,
+    ),
+    'COMPLETED' => (
+      bg: cs.successLight,
+      fg: cs.success,
+      label: l.shipmentBadgeDelivered,
+    ),
+    // Le motif réel plutôt qu'un « TERMINÉ » générique, qui ne disait pas
+    // ce qui s'était passé. Vocabulaire aligné sur la feuille de filtre.
+    'CANCELLED' => _closed(cs, l.shipmentBadgeCancelled),
+    'REJECTED' => _closed(cs, l.shipmentBadgeRejected),
+    'NO_SHOW' => _closed(cs, l.shipmentBadgeNoShow),
+    'EXPIRED' => _closed(cs, l.shipmentBadgeExpired),
+    'PARCEL_REFUSED' => _closed(cs, l.shipmentBadgeParcelRefused),
+    _ => (
+      bg: DonyColors.neutral100,
+      fg: cs.onSurfaceVariant,
+      label: bid.status,
+    ),
+  };
 
   static ({Color bg, Color fg, String label}) _closed(
     ColorScheme cs,
@@ -89,20 +103,22 @@ class ShipmentCard extends StatelessWidget {
   ) => (bg: DonyColors.neutral100, fg: cs.onSurfaceVariant, label: label);
 
   /// Label describing the current stepper step.
-  String _stepLabel() => switch (bid.status) {
-    'ACCEPTED' => 'Remise au voyageur à venir',
-    'HANDED_OVER' => 'Colis remis au voyageur',
-    'IN_TRANSIT' => 'En vol vers ${bid.arrivalCity ?? 'destination'}',
-    'ARRIVED' => 'Arrivé, prêt à être récupéré',
-    'COMPLETED' => 'Livré à destination',
+  String _stepLabel(AppLocalizations l) => switch (bid.status) {
+    'ACCEPTED' => l.shipmentStepAcceptedLabel,
+    'HANDED_OVER' => l.shipmentStepHandedOverLabel,
+    'IN_TRANSIT' => l.shipmentStepInTransitLabel(
+      bid.arrivalCity ?? l.shipmentDestinationFallback,
+    ),
+    'ARRIVED' => l.shipmentStepArrivedLabel,
+    'COMPLETED' => l.shipmentStepDeliveredLabel,
     _ => '',
   };
 
   /// CTA label for the footer action link.
-  String _ctaLabel() => switch (bid.status) {
-    'IN_TRANSIT' || 'HANDED_OVER' || 'ARRIVED' => 'Suivre le colis →',
-    'ACCEPTED' => 'Voir le QR →',
-    _ => 'Détails →',
+  String _ctaLabel(AppLocalizations l) => switch (bid.status) {
+    'IN_TRANSIT' || 'HANDED_OVER' || 'ARRIVED' => l.shipmentCtaTrackParcel,
+    'ACCEPTED' => l.shipmentCtaViewQr,
+    _ => l.shipmentCtaDetails,
   };
 
   /// Whether the CTA should be muted (disabled statuses).
@@ -116,8 +132,10 @@ class ShipmentCard extends StatelessWidget {
   };
 
   /// Date de départ du trajet, formatée relativement à aujourd'hui — même
-  /// vocabulaire que TripCard. `null` si l'info n'est pas disponible.
-  String? _dateLabel() {
+  /// vocabulaire que TripCard (`listingDateTodayLabel` / `Tomorrow` /
+  /// `InDaysLabel`, réutilisés tels quels : préfixe de domaine partagé
+  /// `listing…`, R40). `null` si l'info n'est pas disponible.
+  String? _dateLabel(AppLocalizations l) {
     final date = bid.resolvedDepartureAt ?? bid.departureDate;
     if (date == null) {
       return null;
@@ -125,17 +143,17 @@ class ShipmentCard extends StatelessWidget {
     final today = DateUtils.dateOnly(DateTime.now());
     final d = DateUtils.dateOnly(date);
     final diff = d.difference(today).inDays;
-    final dateStr = DateFormat('d MMM', AppL10n.localeName).format(date);
+    final dateStr = DateFormat.MMMd(l.localeName).format(date);
     if (diff == 0) {
-      return "Aujourd'hui · $dateStr";
+      return l.listingDateTodayLabel(dateStr);
     }
     if (diff == 1) {
-      return 'Demain · $dateStr';
+      return l.listingDateTomorrowLabel(dateStr);
     }
     if (diff > 1 && diff <= 6) {
-      return 'Départ dans $diff jours · $dateStr';
+      return l.listingDateInDaysLabel(diff, dateStr);
     }
-    return DateFormat('EEE d MMM yyyy', AppL10n.localeName).format(date);
+    return DateFormat.yMMMEd(l.localeName).format(date);
   }
 
   /// Format weight with comma decimal separator: '4,5 kg' or '5 kg'.
@@ -152,11 +170,12 @@ class ShipmentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
-    final badge = _badge(cs);
+    final badge = _badge(cs, l);
     final step = shipmentStepFor(bid.status);
     final hasStep = step != null;
-    final stepLabel = _stepLabel();
+    final stepLabel = _stepLabel(l);
 
     final card = GestureDetector(
       onTap: onTap,
@@ -191,15 +210,19 @@ class ShipmentCard extends StatelessWidget {
 
             // ── Meta: weight · recipient ──
             Text(
-              'Colis ${_weightLabel()}'
-              '${bid.recipientName != null ? ' · pour ${bid.recipientName}' : ''}',
+              bid.recipientName != null
+                  ? l.shipmentParcelWeightForRecipientLabel(
+                      _weightLabel(),
+                      bid.recipientName!,
+                    )
+                  : l.shipmentParcelWeightLabel(_weightLabel()),
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
 
             // ── Date du trajet ──
-            if (_dateLabel() case final dateLabel?) ...[
+            if (_dateLabel(l) case final dateLabel?) ...[
               const SizedBox(height: DonySpacing.xxs + 1),
               Row(
                 children: [
@@ -264,7 +287,7 @@ class ShipmentCard extends StatelessWidget {
                 ] else
                   const Spacer(),
                 Text(
-                  _ctaLabel(),
+                  _ctaLabel(l),
                   style: tt.titleSmall?.copyWith(
                     color: _isDisabled ? cs.onSurfaceVariant : cs.primary,
                     fontWeight: FontWeight.w700,
@@ -308,12 +331,18 @@ class ShipmentStepper extends StatelessWidget {
     'house', // step 5 — delivered
   ];
 
-  static const _labels = ['Remis', 'Embarqué', 'En vol', 'Arrivé', 'Livraison'];
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final labels = [
+      l.shipmentStepperHandedOverLabel,
+      l.shipmentStepperEmbarkedLabel,
+      l.shipmentStepperInFlightLabel,
+      l.shipmentStepperArrivedLabel,
+      l.shipmentStepperDeliveryLabel,
+    ];
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,7 +352,7 @@ class ShipmentStepper extends StatelessWidget {
             stepNumber: i + 1,
             currentStep: currentStep,
             iconAsset: _iconAssets[i],
-            label: _labels[i],
+            label: labels[i],
             cs: cs,
             tt: tt,
           ),

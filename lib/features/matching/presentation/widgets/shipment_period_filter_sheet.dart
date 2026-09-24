@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 class ShipmentPeriodResult {
@@ -9,12 +10,14 @@ class ShipmentPeriodResult {
   final DateTimeRange? range;
 }
 
-const _presetLabels = <ShipmentPeriodPreset, String>{
-  ShipmentPeriodPreset.thisWeek: 'Cette semaine',
-  ShipmentPeriodPreset.thisMonth: 'Ce mois-ci',
-  ShipmentPeriodPreset.last3Months: '3 derniers mois',
-  ShipmentPeriodPreset.thisYear: 'Cette année',
-  ShipmentPeriodPreset.all: 'Tout',
+/// Libellés des préréglages de période — dépendent de la langue, jamais de
+/// `const`/top-level figé.
+Map<ShipmentPeriodPreset, String> _presetLabels(AppLocalizations l) => {
+  ShipmentPeriodPreset.thisWeek: l.commonDateThisWeek,
+  ShipmentPeriodPreset.thisMonth: l.commonDateThisMonthLong,
+  ShipmentPeriodPreset.last3Months: l.shipmentPeriodLast3MonthsLabel,
+  ShipmentPeriodPreset.thisYear: l.shipmentPeriodThisYearLabel,
+  ShipmentPeriodPreset.all: l.shipmentPeriodAllLabel,
 };
 
 class ShipmentPeriodFilterSheet {
@@ -27,12 +30,14 @@ class ShipmentPeriodFilterSheet {
     final basisN = ValueNotifier(basis);
     final presetN = ValueNotifier(preset);
     final rangeN = ValueNotifier(range);
+    final l = context.l10n;
+    final presetLabels = _presetLabels(l);
 
     return DonyBottomSheet.show<ShipmentPeriodResult>(
       context,
-      title: 'Filtrer par période',
+      title: l.shipmentPeriodFilterTitle,
       stickyBottom: DonyButton(
-        label: 'Appliquer',
+        label: l.commonApply,
         onPressed: () => Navigator.of(
           context,
           rootNavigator: true,
@@ -54,12 +59,12 @@ class ShipmentPeriodFilterSheet {
                 child: Row(
                   children: [
                     _BasisTab(
-                      label: 'Date de départ',
+                      label: l.shipmentPeriodBasisDepartureLabel,
                       active: basisN.value == ShipmentPeriodBasis.departure,
                       onTap: () => basisN.value = ShipmentPeriodBasis.departure,
                     ),
                     _BasisTab(
-                      label: 'Date de création',
+                      label: l.shipmentPeriodBasisCreationLabel,
                       active: basisN.value == ShipmentPeriodBasis.creation,
                       onTap: () => basisN.value = ShipmentPeriodBasis.creation,
                     ),
@@ -71,7 +76,7 @@ class ShipmentPeriodFilterSheet {
                 spacing: DonySpacing.xs,
                 runSpacing: DonySpacing.xs,
                 children: [
-                  for (final e in _presetLabels.entries)
+                  for (final e in presetLabels.entries)
                     ChoiceChip(
                       label: Text(e.value),
                       selected: presetN.value == e.key,
@@ -86,8 +91,8 @@ class ShipmentPeriodFilterSheet {
                     label: Text(
                       rangeN.value != null &&
                               presetN.value == ShipmentPeriodPreset.custom
-                          ? 'Personnalisé ✓'
-                          : 'Personnalisé',
+                          ? l.shipmentPeriodCustomSelectedLabel
+                          : l.shipmentPeriodCustomLabel,
                     ),
                     selected: presetN.value == ShipmentPeriodPreset.custom,
                     onSelected: (_) async {

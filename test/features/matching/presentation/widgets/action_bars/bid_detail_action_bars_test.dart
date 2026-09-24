@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class MockBidAcceptanceBloc
@@ -130,6 +132,23 @@ void main() {
       await tester.pump();
 
       verify(() => bidBloc.add(any(that: isA<BidAcceptRequested>()))).called(1);
+    });
+
+    testWidgets('anglais — boutons Decline/Accept traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(_makeBid(BidPaymentMethod.stripe), bidBloc, accBloc),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(OutlinedButton, 'Decline'), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Accept'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Decline'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Decline the request'), findsOneWidget);
+      expect(find.text('Confirm the decline'), findsOneWidget);
     });
   });
 

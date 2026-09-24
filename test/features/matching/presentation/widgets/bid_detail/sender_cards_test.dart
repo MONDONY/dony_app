@@ -24,7 +24,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../../helpers/l10n_test_helpers.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -176,6 +179,7 @@ Widget _hostAccordion(BidModel bid) => MaterialApp(
 void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr');
+    await initializeDateFormatting('en');
     registerFallbackValue(const ConversationOpenRequested('bid-test'));
     registerFallbackValue(_FakeContactRevealEvent());
   });
@@ -409,6 +413,22 @@ void main() {
       expect(find.textContaining('Aminata'), findsWidgets);
       expect(find.textContaining('+221700000000'), findsWidgets);
     });
+
+    testWidgets('anglais — titre et libellés traduits', (tester) async {
+      useEnglish();
+      final bid = _bid(
+        weightKg: 5.0,
+        recipientName: 'Aminata Traoré',
+        recipientPhone: '+221700000000',
+      );
+
+      await tester.pumpWidget(_hostColis(bid));
+
+      expect(find.text('Parcel & recipient'), findsOneWidget);
+      expect(find.text('Parcel'), findsOneWidget);
+      expect(find.text('Recipient'), findsOneWidget);
+      expect(find.text('Phone'), findsOneWidget);
+    });
   });
 
   // ── PaiementCard ──────────────────────────────────────────────────────────
@@ -448,6 +468,16 @@ void main() {
 
       expect(find.textContaining('espèces'), findsOneWidget);
       expect(find.textContaining('CASH'), findsOneWidget);
+    });
+
+    testWidgets('anglais — titre et statut séquestre traduits', (tester) async {
+      useEnglish();
+      final bid = _bid(totalAmountEur: 56.0);
+
+      await tester.pumpWidget(_hostPaiement(bid));
+
+      expect(find.text('Payment'), findsOneWidget);
+      expect(find.textContaining('on hold'), findsOneWidget);
     });
   });
 
@@ -546,6 +576,77 @@ void main() {
       expect(find.text('Colis remis ✓'), findsOneWidget);
       expect(find.text('Non encore'), findsNothing);
     });
+
+    testWidgets(
+      'non-régression — Date limite (dd/MM/yyyy → DateFormat.yMd) : fr identique '
+      'à l\'ancien motif, avec zéros de tête (5 mars)',
+      (tester) async {
+        final bid = _bid(
+          handoverLocation: 'CDG',
+          handoverDeadline: DateTime(2026, 3, 5, 16),
+        );
+
+        await tester.pumpWidget(_hostAccordion(bid));
+        await tester.tap(find.textContaining('Plus de détails'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Ancien motif : DateFormat('dd/MM/yyyy').format(d) == '05/03/2026'.
+        // Locale explicite ('fr') dans l'assertion : un DateFormat sans locale
+        // pollue Intl.defaultLocale en test et casse les tests suivants.
+        expect(
+          find.text(
+            DateFormat('dd/MM/yyyy', 'fr').format(DateTime(2026, 3, 5, 16)),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'anglais — Date limite (DateFormat.yMd) rendue à l\'anglo-saxonne',
+      (tester) async {
+        useEnglish();
+        final bid = _bid(
+          handoverLocation: 'CDG',
+          handoverDeadline: DateTime(2026, 3, 5, 16),
+        );
+
+        await tester.pumpWidget(_hostAccordion(bid));
+        await tester.tap(find.textContaining('More details'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(
+          find.text(DateFormat.yMd('en').format(DateTime(2026, 3, 5, 16))),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'anglais — sections et date de départ (DateFormat.yMMMEd) traduites',
+      (tester) async {
+        useEnglish();
+        final bid = _bid(
+          handoverLocation: 'CDG Terminal 2F',
+          departureDate: DateTime(2026, 10, 6),
+        );
+
+        await tester.pumpWidget(_hostAccordion(bid));
+        await tester.tap(find.textContaining('More details'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(find.text('More details'), findsOneWidget);
+        expect(find.text('PARCEL DROP-OFF'), findsOneWidget);
+        expect(find.text('Location'), findsOneWidget);
+        expect(
+          find.text(DateFormat.yMMMEd('en').format(DateTime(2026, 10, 6))),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   // ── trackingPublicUrl ─────────────────────────────────────────────────────
@@ -673,6 +774,30 @@ void main() {
 
       expect(find.text('★ -'), findsOneWidget);
     });
+
+    testWidgets(
+      'anglais — nom de repli, appel et compteur de trajets traduits',
+      (tester) async {
+        useEnglish();
+        setSmsAuthEnabled(true);
+        addTearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
+        final bid = _bid(travelerTotalTrips: 3, travelerPhoneAvailable: true);
+
+        await tester.pumpWidget(_hostVoyageur(bid, bloc));
+
+        expect(find.text('Traveler'), findsOneWidget);
+        expect(find.textContaining('3 trips'), findsOneWidget);
+        expect(
+          find.byWidgetPredicate(
+            (w) =>
+                w is Semantics &&
+                w.properties.label == 'Call' &&
+                w.properties.button == true,
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   // ── QuickActionsRow ───────────────────────────────────────────────────────
@@ -823,6 +948,18 @@ void main() {
         expect(find.text('Partager le suivi'), findsOneWidget);
       },
     );
+
+    testWidgets('anglais — tuiles Track parcel / Share tracking traduites', (
+      tester,
+    ) async {
+      useEnglish();
+      final bid = _bid(trackingToken: 'tok-en');
+
+      await tester.pumpWidget(hostQuickActions(bid));
+
+      expect(find.text('Track my parcel'), findsOneWidget);
+      expect(find.text('Share tracking'), findsOneWidget);
+    });
   });
 
   // ── shareTrackingLink ─────────────────────────────────────────────────────

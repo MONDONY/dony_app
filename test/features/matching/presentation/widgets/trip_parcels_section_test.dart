@@ -15,6 +15,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
@@ -257,5 +259,31 @@ void main() {
     await tester.pump();
 
     expect(find.byType(StatusChipsRow<String?>), findsNothing);
+  });
+
+  group('traductions', () {
+    testWidgets('en anglais : titre, état vide et statut traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      stub(BidListLoaded(const []));
+
+      await _pump(tester, bidBloc);
+      await tester.pump();
+
+      expect(find.text('Parcels on this trip'), findsOneWidget);
+      expect(find.text('No parcels on board'), findsOneWidget);
+      expect(find.text('Colis dans le trajet'), findsNothing);
+    });
+
+    testWidgets('en anglais : statut « Payment pending »', (tester) async {
+      useEnglish();
+      stub(BidListLoaded([_makeBid(status: 'AWAITING_PAYMENT', id: 'b1')]));
+
+      await _pump(tester, bidBloc);
+      await tester.pump();
+
+      expect(find.text('Payment pending'), findsOneWidget);
+    });
   });
 }
