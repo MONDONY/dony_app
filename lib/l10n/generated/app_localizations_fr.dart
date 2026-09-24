@@ -5185,4 +5185,369 @@ class AppLocalizationsFr extends AppLocalizations {
   String listingPriceEstimateSuffix(String amount) {
     return ' · estimation $amount net';
   }
+
+  @override
+  String get bidCreateSendProposalButton => 'Envoyer ma proposition';
+
+  @override
+  String bidCreateConfirmCashButton(String amount) {
+    return 'Confirmer $amount en espèces';
+  }
+
+  @override
+  String bidCreateConfirmMobileMoneyButton(String amount) {
+    return 'Confirmer $amount par mobile money';
+  }
+
+  @override
+  String bidCreateLockAndPayButton(String amount) {
+    return 'Bloquer $amount & payer';
+  }
+
+  @override
+  String get bidCreateDescriptionRequiredError => 'Description obligatoire';
+
+  @override
+  String get bidCreateRecipientNameRequiredError =>
+      'Nom du destinataire obligatoire';
+
+  @override
+  String get bidCreateRecipientPhoneRequiredError =>
+      'Téléphone du destinataire obligatoire';
+
+  @override
+  String get bidCreatePriceRequiredError =>
+      'Indiquez le prix que vous proposez';
+
+  @override
+  String get bidCreateProposalSentMessage =>
+      'Proposition envoyée, le voyageur va vous répondre.';
+
+  @override
+  String get bidCreateOfferSentTitle => 'Offre envoyée !';
+
+  @override
+  String get bidCreateCashSuccessSubtitle =>
+      'Paiement en espèces : si le voyageur accepte, tu remets le montant en main propre à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.';
+
+  @override
+  String get bidCreateMobileMoneySuccessSubtitle =>
+      'Paiement mobile money : si le voyageur accepte, tu recevras une notification et auras 30 minutes pour valider le paiement sur ton téléphone. Le montant est gardé en sécurité par Yadony jusqu\'à la livraison.';
+
+  @override
+  String get bidCreateReviewPendingSubtitle =>
+      'Le voyageur va examiner ta demande.';
+
+  @override
+  String get bidCreateSeeMyShipmentButton => 'Voir mon envoi';
+
+  @override
+  String get bidCreateArticlesSectionLabel => 'ARTICLES';
+
+  @override
+  String bidCreateSelectedItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count articles sélectionnés',
+      one: '$count article sélectionné',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bidCreateSubtotalLabel(String amount) {
+    return 'Sous-total : $amount';
+  }
+
+  @override
+  String get bidCreateChooseItemsLabel => 'Choisir mes articles';
+
+  @override
+  String get bidCreateItemsRequiredHint => 'Requis : au moins 1 article';
+
+  @override
+  String get bidCreatePhotosSectionLabel => 'PHOTOS DU COLIS (OPTIONNEL)';
+
+  @override
+  String get bidCreateDescriptionSectionLabel => 'DESCRIPTION (AU VOYAGEUR)';
+
+  @override
+  String get bidCreateDescriptionHint =>
+      'Médicaments pour diabète + 2 tee-shirts enfants';
+
+  @override
+  String get bidCreateRecipientSectionLabel => 'DESTINATAIRE';
+
+  @override
+  String get bidCreateRecipientNameLabel => 'Prénom et nom du destinataire';
+
+  @override
+  String get bidCreateRecipientNameHint => 'ex: Amadou Diallo';
+
+  @override
+  String get bidCreateRecipientPhoneLabel => 'Téléphone du destinataire';
+
+  @override
+  String get bidCreateRecipientPhoneHint => 'ex: +221 77 000 00 00';
+
+  @override
+  String get bidCreatePromoSectionLabel => 'CODE PROMO (OPTIONNEL)';
+
+  @override
+  String get bidCreatePromoCodeHint => 'Ex: WELCOME10';
+
+  @override
+  String get bidCreatePromoAppliedDefaultLabel => 'Code appliqué';
+
+  @override
+  String get bidCreateYourProposalSectionLabel => 'VOTRE PROPOSITION';
+
+  @override
+  String bidCreateProposedPriceLabel(String symbol) {
+    return 'Prix proposé ($symbol)';
+  }
+
+  @override
+  String bidCreateSuggestedPriceLabel(String amount) {
+    return 'Suggéré : $amount';
+  }
+
+  @override
+  String get bidCreatePaymentMethodSectionLabel => 'MODE DE PAIEMENT';
+
+  @override
+  String get bidCreatePaymentMethodHint =>
+      'Si le voyageur accepte votre prix, vous réglerez de cette façon.';
+
+  @override
+  String get bidCreateContentSectionLabel => 'CONTENU DU COLIS';
+
+  @override
+  String get bidCreateContentHintText =>
+      'Ces suggestions sont les contenus acceptés par le voyageur. Si le contenu de votre colis n\'y figure pas, ajoutez-le : ce sera au voyageur de décider s\'il accepte votre colis ou non.';
+
+  @override
+  String get bidCreateRefusedByTravelerSectionLabel => 'REFUSÉ PAR LE VOYAGEUR';
+
+  @override
+  String get bidCreateHowToPayTitle => 'Comment veux-tu payer ?';
+
+  @override
+  String get bidCreateChoosePaymentSubtitle =>
+      'Choisis le mode de paiement pour cette demande.';
+
+  @override
+  String get bidCreatePaymentNotConfirmedError =>
+      'Paiement non confirmé, réessayez';
+
+  @override
+  String bidCreateShipmentToLabel(String city) {
+    return 'Envoi vers $city';
+  }
+
+  @override
+  String get bidCreateOfferPaidTitle => 'Offre payée !';
+
+  @override
+  String get bidCreateOfferPaidSubtitle =>
+      'Ton paiement est bloqué et sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de ta demande.';
+
+  @override
+  String get bidCreateWeightLabel => 'Poids du colis';
+
+  @override
+  String get bidCreateWeightLabelOptional => 'Poids du colis (optionnel)';
+
+  @override
+  String get bidCreateFreeKgHint => 'Kilo libre : choisissez votre poids';
+
+  @override
+  String get bidCreateNoCapacityAvailable => 'Aucune capacité disponible';
+
+  @override
+  String get bidCreateDisclaimerTitle => 'Disclaimer douane.';
+
+  @override
+  String get bidCreateDisclaimerBody =>
+      'Pas d\'armes, drogues, liquides inflammables ou espèces. Le voyageur peut refuser au contrôle douanier.';
+
+  @override
+  String get bidCreateDisclaimerAcceptLabel => 'Je signe & j\'accepte';
+
+  @override
+  String get bidCreateCardModeSubtitle => 'Bloqué jusqu\'à la livraison';
+
+  @override
+  String get bidCreateMobileMoneySubtitle => 'Orange Money, Wave, MTN';
+
+  @override
+  String get bidCreateCashModeSubtitle => 'En main propre, à la remise';
+
+  @override
+  String get bidCreateEscrowTag => 'Séquestre';
+
+  @override
+  String get bidCreateHandToHandTag => 'En main propre';
+
+  @override
+  String get bidCreateCardModeBody =>
+      'Bloqué par Yadony dès maintenant, versé au voyageur quand le destinataire confirme la livraison.';
+
+  @override
+  String get bidCreateMobileMoneyModeBody =>
+      'Après l\'accord du voyageur, tu reçois une demande de paiement sur ton téléphone. Le montant est bloqué par Yadony jusqu\'à la livraison.';
+
+  @override
+  String get bidCreateCashModeBody =>
+      'Tu remets la somme au voyageur le jour où tu lui confies le colis.';
+
+  @override
+  String get bidCreateRefundAssurance => 'Remboursé si le colis n\'arrive pas';
+
+  @override
+  String get bidCreateCashEscrowWarning =>
+      'Paiement en espèces : pas de séquestre, vous payez le voyageur directement, sans garantie de remboursement par Yadony.';
+
+  @override
+  String get bidCreateArticlesLineLabel => 'Articles';
+
+  @override
+  String get bidCreatePromoDiscountLabel => 'Réduction code promo';
+
+  @override
+  String get bidCreateTotalLabel => 'Total';
+
+  @override
+  String get bidCreatePromoBadge => 'Promo';
+
+  @override
+  String get bidCreateServiceFeeIncludedLabel => 'Commission Yadony incluse';
+
+  @override
+  String get bidCreatePhotosVisibleHint =>
+      'Visibles par le voyageur, elles rassurent sur le contenu.';
+
+  @override
+  String get bidCreatePayerPhoneLabel => 'Numéro qui paiera (facultatif)';
+
+  @override
+  String get bidCreatePayerPhoneHintWithProfile =>
+      'Par défaut, ton numéro Yadony. Tu recevras la demande de paiement sur ce numéro.';
+
+  @override
+  String get bidCreatePayerPhoneHintNoProfile =>
+      'Ton compte n\'a pas de numéro : indique celui qui paiera. Tu recevras la demande de paiement dessus.';
+
+  @override
+  String get bidCreateCustomItemsSectionTitle => 'Articles hors grille';
+
+  @override
+  String get bidCreateCustomItemsSectionHint =>
+      'Ajoutez ce que le voyageur n\'a pas tarifé, et proposez votre prix pour chaque article.';
+
+  @override
+  String get bidCreateCustomItemsEmpty => 'Aucun article pour le moment.';
+
+  @override
+  String get bidCreateCustomItemsTotalLabel => 'Total des articles hors grille';
+
+  @override
+  String get bidCreateAddItemButton => 'Ajouter un article';
+
+  @override
+  String get bidCreateRemoveItemTooltip => 'Retirer cet article';
+
+  @override
+  String get bidCreateAddItemSheetSubtitle =>
+      'Décrivez l\'article et indiquez le prix que vous proposez pour son transport.';
+
+  @override
+  String get bidCreateAddItemConfirmButton => 'Ajouter';
+
+  @override
+  String get bidCreateCustomItemLabelField => 'Article';
+
+  @override
+  String get bidCreateCustomItemLabelHint => 'Sac de riz, boubou, médicaments';
+
+  @override
+  String get bidCreateCustomItemQuantityField => 'Quantité';
+
+  @override
+  String bidCreateCustomItemPriceField(String symbol) {
+    return 'Prix ($symbol)';
+  }
+
+  @override
+  String get bidCreateGridSheetTitle => 'Articles disponibles';
+
+  @override
+  String get bidCreateGridSheetConfirmButton => 'Confirmer la sélection';
+
+  @override
+  String bidCreateGridItemSemanticSelected(
+    String label,
+    String price,
+    int quantity,
+  ) {
+    return '$label, $price l\'unité, $quantity sélectionné';
+  }
+
+  @override
+  String bidCreateGridItemSemanticUnit(String label, String price) {
+    return '$label, $price l\'unité';
+  }
+
+  @override
+  String bidCreateGridItemRemoveSemantic(String label) {
+    return 'Retirer un $label';
+  }
+
+  @override
+  String bidCreateGridItemAddSemantic(String label) {
+    return 'Ajouter un $label';
+  }
+
+  @override
+  String get bidCreatePriceTooLowHint =>
+      'Prix bas : risque de méfiance de l\'expéditeur';
+
+  @override
+  String get bidCreatePriceTooHighHint =>
+      'Prix élevé : peu de demandes attendues';
+
+  @override
+  String bidCreateMarketPriceCorridor(String corridor) {
+    return 'Marché $corridor : ';
+  }
+
+  @override
+  String get bidCreateMarketPriceLabel => 'Marché ';
+
+  @override
+  String get bidCreateCompetitivePriceSuffix => ' · Votre prix est compétitif.';
+
+  @override
+  String get bidCreateLegalResponsibilityTitle => 'Responsabilité légale';
+
+  @override
+  String get bidCreateDisclaimerSignedLabel => 'Disclaimer signé';
+
+  @override
+  String bidCreateDisclaimerSigned(String dateTime) {
+    return 'Disclaimer signé le $dateTime';
+  }
+
+  @override
+  String get tripPublishCashCommissionIntro =>
+      'Vous ne pourrez accepter un colis en espèces que si la commission Yadony peut être prélevée ';
+
+  @override
+  String get tripPublishCashCommissionHighlight =>
+      'sur votre portefeuille en priorité';
+
+  @override
+  String get tripPublishCashCommissionOutro =>
+      '. À défaut, il faudra le recharger ou enregistrer une carte valide au moment d’accepter.';
 }

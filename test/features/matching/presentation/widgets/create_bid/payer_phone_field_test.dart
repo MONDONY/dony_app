@@ -3,6 +3,8 @@ import 'package:dony/features/matching/presentation/widgets/create_bid/payer_pho
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   late TextEditingController controller;
 
@@ -49,4 +51,15 @@ void main() {
       );
     },
   );
+
+  testWidgets('en anglais : libellé et texte d\'aide traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(wrap(hasProfilePhone: true));
+
+    expect(find.text("Payer's number (optional)"), findsOneWidget);
+    expect(
+      find.textContaining('By default, your Yadony number'),
+      findsOneWidget,
+    );
+  });
 }

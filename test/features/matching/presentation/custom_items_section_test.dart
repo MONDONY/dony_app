@@ -2,6 +2,8 @@ import 'package:dony/features/matching/presentation/widgets/custom_items_section
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 Widget _wrap(
   ValueNotifier<List<BidCustomItemDraft>> notifier, {
   String currencyCode = 'EUR',
@@ -214,5 +216,20 @@ void main() {
 
   test('le total est nul sur une liste vide', () {
     expect(customItemsTotalEur(const []), 0);
+  });
+
+  testWidgets('en anglais : titre, invite vide et bouton traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    final notifier = ValueNotifier<List<BidCustomItemDraft>>([]);
+    addTearDown(notifier.dispose);
+
+    await tester.pumpWidget(_wrap(notifier));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Items outside the grid'), findsOneWidget);
+    expect(find.text('No items yet.'), findsOneWidget);
+    expect(find.text('Add an item'), findsOneWidget);
   });
 }

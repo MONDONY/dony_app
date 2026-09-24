@@ -8638,6 +8638,604 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **' · estimation {amount} net'**
   String listingPriceEstimateSuffix(String amount);
+
+  /// Bouton d'envoi de la première proposition en mode négociation (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer ma proposition'**
+  String get bidCreateSendProposalButton;
+
+  /// Bouton de confirmation du paiement en espèces (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer {amount} en espèces'**
+  String bidCreateConfirmCashButton(String amount);
+
+  /// Bouton de confirmation du paiement mobile money (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer {amount} par mobile money'**
+  String bidCreateConfirmMobileMoneyButton(String amount);
+
+  /// Bouton de confirmation du paiement par carte (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloquer {amount} & payer'**
+  String bidCreateLockAndPayButton(String amount);
+
+  /// Erreur de validation, description du colis manquante (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Description obligatoire'**
+  String get bidCreateDescriptionRequiredError;
+
+  /// Erreur de validation, nom du destinataire manquant (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom du destinataire obligatoire'**
+  String get bidCreateRecipientNameRequiredError;
+
+  /// Erreur de validation, téléphone du destinataire manquant (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone du destinataire obligatoire'**
+  String get bidCreateRecipientPhoneRequiredError;
+
+  /// Erreur de validation, prix proposé manquant en mode négociation (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez le prix que vous proposez'**
+  String get bidCreatePriceRequiredError;
+
+  /// Confirmation après envoi d'une première proposition (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposition envoyée, le voyageur va vous répondre.'**
+  String get bidCreateProposalSentMessage;
+
+  /// Titre de l'écran de succès après une offre en espèces ou mobile money (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre envoyée !'**
+  String get bidCreateOfferSentTitle;
+
+  /// Sous-titre de l'écran de succès pour une offre en espèces (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : si le voyageur accepte, tu remets le montant en main propre à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.'**
+  String get bidCreateCashSuccessSubtitle;
+
+  /// Sous-titre de l'écran de succès pour une offre en mobile money (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement mobile money : si le voyageur accepte, tu recevras une notification et auras 30 minutes pour valider le paiement sur ton téléphone. Le montant est gardé en sécurité par Yadony jusqu\'à la livraison.'**
+  String get bidCreateMobileMoneySuccessSubtitle;
+
+  /// Sous-titre de repli de l'écran de succès après une offre (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur va examiner ta demande.'**
+  String get bidCreateReviewPendingSubtitle;
+
+  /// CTA de l'écran de succès vers le détail de l'envoi (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mon envoi'**
+  String get bidCreateSeeMyShipmentButton;
+
+  /// Titre de la section articles de la grille tarifaire (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'ARTICLES'**
+  String get bidCreateArticlesSectionLabel;
+
+  /// Nombre d'articles sélectionnés dans la carte grille (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} article sélectionné} other{{count} articles sélectionnés}}'**
+  String bidCreateSelectedItems(int count);
+
+  /// Sous-total des articles sélectionnés (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sous-total : {amount}'**
+  String bidCreateSubtotalLabel(String amount);
+
+  /// Libellé du bouton d'ouverture de la sélection d'articles (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir mes articles'**
+  String get bidCreateChooseItemsLabel;
+
+  /// Rappel qu'au moins un article doit être sélectionné (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Requis : au moins 1 article'**
+  String get bidCreateItemsRequiredHint;
+
+  /// Titre de la section photos du formulaire d'offre (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PHOTOS DU COLIS (OPTIONNEL)'**
+  String get bidCreatePhotosSectionLabel;
+
+  /// Titre de la section description du formulaire d'offre (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DESCRIPTION (AU VOYAGEUR)'**
+  String get bidCreateDescriptionSectionLabel;
+
+  /// Exemple affiché dans le champ description (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Médicaments pour diabète + 2 tee-shirts enfants'**
+  String get bidCreateDescriptionHint;
+
+  /// Titre de la section destinataire du formulaire d'offre (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DESTINATAIRE'**
+  String get bidCreateRecipientSectionLabel;
+
+  /// Libellé du champ nom du destinataire (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prénom et nom du destinataire'**
+  String get bidCreateRecipientNameLabel;
+
+  /// Exemple affiché dans le champ nom du destinataire (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'ex: Amadou Diallo'**
+  String get bidCreateRecipientNameHint;
+
+  /// Libellé du champ téléphone du destinataire (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone du destinataire'**
+  String get bidCreateRecipientPhoneLabel;
+
+  /// Exemple affiché dans le champ téléphone du destinataire (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'ex: +221 77 000 00 00'**
+  String get bidCreateRecipientPhoneHint;
+
+  /// Titre de la section code promo du formulaire d'offre (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'CODE PROMO (OPTIONNEL)'**
+  String get bidCreatePromoSectionLabel;
+
+  /// Exemple affiché dans le champ code promo (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex: WELCOME10'**
+  String get bidCreatePromoCodeHint;
+
+  /// Confirmation de repli quand le devis n'a pas de libellé de promo (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code appliqué'**
+  String get bidCreatePromoAppliedDefaultLabel;
+
+  /// Titre de la section prix proposé en mode négociation (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'VOTRE PROPOSITION'**
+  String get bidCreateYourProposalSectionLabel;
+
+  /// Libellé du champ de prix proposé en mode négociation (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix proposé ({symbol})'**
+  String bidCreateProposedPriceLabel(String symbol);
+
+  /// Rappel du prix suggéré sous le champ de proposition (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suggéré : {amount}'**
+  String bidCreateSuggestedPriceLabel(String amount);
+
+  /// Titre de la section mode de paiement en mode négociation (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'MODE DE PAIEMENT'**
+  String get bidCreatePaymentMethodSectionLabel;
+
+  /// Explication du choix figé du mode de paiement en négociation (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Si le voyageur accepte votre prix, vous réglerez de cette façon.'**
+  String get bidCreatePaymentMethodHint;
+
+  /// Titre de la section contenu du colis (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'CONTENU DU COLIS'**
+  String get bidCreateContentSectionLabel;
+
+  /// Note explicative sous le sélecteur de contenu (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces suggestions sont les contenus acceptés par le voyageur. Si le contenu de votre colis n\'y figure pas, ajoutez-le : ce sera au voyageur de décider s\'il accepte votre colis ou non.'**
+  String get bidCreateContentHintText;
+
+  /// Titre de la section des contenus refusés par le voyageur (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'REFUSÉ PAR LE VOYAGEUR'**
+  String get bidCreateRefusedByTravelerSectionLabel;
+
+  /// Titre de l'étape de choix du mode de paiement (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment veux-tu payer ?'**
+  String get bidCreateHowToPayTitle;
+
+  /// Sous-titre de l'étape de choix du mode de paiement (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisis le mode de paiement pour cette demande.'**
+  String get bidCreateChoosePaymentSubtitle;
+
+  /// Erreur affichée si l'authentification avant paiement échoue (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement non confirmé, réessayez'**
+  String get bidCreatePaymentNotConfirmedError;
+
+  /// Libellé de contexte de la feuille de paiement Stripe (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi vers {city}'**
+  String bidCreateShipmentToLabel(String city);
+
+  /// Titre de l'écran de succès après un paiement carte (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre payée !'**
+  String get bidCreateOfferPaidTitle;
+
+  /// Sous-titre de l'écran de succès après un paiement carte (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton paiement est bloqué et sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de ta demande.'**
+  String get bidCreateOfferPaidSubtitle;
+
+  /// Libellé de la section poids, trajet kilo pur (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids du colis'**
+  String get bidCreateWeightLabel;
+
+  /// Libellé de la section poids, trajet mixte grille + kilo (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids du colis (optionnel)'**
+  String get bidCreateWeightLabelOptional;
+
+  /// Sous-titre du sélecteur de poids en kilo libre (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Kilo libre : choisissez votre poids'**
+  String get bidCreateFreeKgHint;
+
+  /// Message quand le trajet n'a plus de capacité kilo (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune capacité disponible'**
+  String get bidCreateNoCapacityAvailable;
+
+  /// Titre de l'encart disclaimer douanier (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Disclaimer douane.'**
+  String get bidCreateDisclaimerTitle;
+
+  /// Texte de l'encart disclaimer douanier (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas d\'armes, drogues, liquides inflammables ou espèces. Le voyageur peut refuser au contrôle douanier.'**
+  String get bidCreateDisclaimerBody;
+
+  /// Libellé de la case à cocher du disclaimer (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Je signe & j\'accepte'**
+  String get bidCreateDisclaimerAcceptLabel;
+
+  /// Sous-titre du choix de paiement par carte (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloqué jusqu\'à la livraison'**
+  String get bidCreateCardModeSubtitle;
+
+  /// Sous-titre du choix de paiement mobile money, noms de marque (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Orange Money, Wave, MTN'**
+  String get bidCreateMobileMoneySubtitle;
+
+  /// Sous-titre du choix de paiement en espèces (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En main propre, à la remise'**
+  String get bidCreateCashModeSubtitle;
+
+  /// Tag du montant bloqué chez Yadony (carte, mobile money) (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Séquestre'**
+  String get bidCreateEscrowTag;
+
+  /// Tag du montant remis directement au voyageur (espèces) (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En main propre'**
+  String get bidCreateHandToHandTag;
+
+  /// Explication du mode carte dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloqué par Yadony dès maintenant, versé au voyageur quand le destinataire confirme la livraison.'**
+  String get bidCreateCardModeBody;
+
+  /// Explication du mode mobile money dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Après l\'accord du voyageur, tu reçois une demande de paiement sur ton téléphone. Le montant est bloqué par Yadony jusqu\'à la livraison.'**
+  String get bidCreateMobileMoneyModeBody;
+
+  /// Explication du mode espèces dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu remets la somme au voyageur le jour où tu lui confies le colis.'**
+  String get bidCreateCashModeBody;
+
+  /// Rappel de garantie sous le mode carte et mobile money (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursé si le colis n\'arrive pas'**
+  String get bidCreateRefundAssurance;
+
+  /// Avertissement affiché sous le mode espèces (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : pas de séquestre, vous payez le voyageur directement, sans garantie de remboursement par Yadony.'**
+  String get bidCreateCashEscrowWarning;
+
+  /// Libellé de la ligne articles du récapitulatif de prix (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Articles'**
+  String get bidCreateArticlesLineLabel;
+
+  /// Libellé de la ligne de réduction dans le récapitulatif de prix (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réduction code promo'**
+  String get bidCreatePromoDiscountLabel;
+
+  /// Libellé de la ligne totale du récapitulatif de prix (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Total'**
+  String get bidCreateTotalLabel;
+
+  /// Badge affiché à côté du total quand un code promo réduit le prix (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Promo'**
+  String get bidCreatePromoBadge;
+
+  /// Mention sous le total du récapitulatif de prix (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission Yadony incluse'**
+  String get bidCreateServiceFeeIncludedLabel;
+
+  /// Explication de l'utilité des photos du colis (create_bid/photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Visibles par le voyageur, elles rassurent sur le contenu.'**
+  String get bidCreatePhotosVisibleHint;
+
+  /// Libellé du champ numéro payeur mobile money (create_bid/payer_phone_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro qui paiera (facultatif)'**
+  String get bidCreatePayerPhoneLabel;
+
+  /// Texte d'aide quand le compte a un numéro de téléphone (create_bid/payer_phone_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Par défaut, ton numéro Yadony. Tu recevras la demande de paiement sur ce numéro.'**
+  String get bidCreatePayerPhoneHintWithProfile;
+
+  /// Texte d'aide quand le compte n'a pas de numéro de téléphone (create_bid/payer_phone_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton compte n\'a pas de numéro : indique celui qui paiera. Tu recevras la demande de paiement dessus.'**
+  String get bidCreatePayerPhoneHintNoProfile;
+
+  /// Titre de la section articles hors grille en négociation (custom_items_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Articles hors grille'**
+  String get bidCreateCustomItemsSectionTitle;
+
+  /// Explication de la section articles hors grille (custom_items_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez ce que le voyageur n\'a pas tarifé, et proposez votre prix pour chaque article.'**
+  String get bidCreateCustomItemsSectionHint;
+
+  /// État vide de la liste d'articles hors grille (custom_items_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun article pour le moment.'**
+  String get bidCreateCustomItemsEmpty;
+
+  /// Libellé du total des articles hors grille (custom_items_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Total des articles hors grille'**
+  String get bidCreateCustomItemsTotalLabel;
+
+  /// Bouton et titre d'ajout d'un article hors grille (custom_items_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un article'**
+  String get bidCreateAddItemButton;
+
+  /// Tooltip du bouton de suppression d'un article hors grille (custom_items_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer cet article'**
+  String get bidCreateRemoveItemTooltip;
+
+  /// Sous-titre de la feuille d'ajout d'un article hors grille (custom_items_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez l\'article et indiquez le prix que vous proposez pour son transport.'**
+  String get bidCreateAddItemSheetSubtitle;
+
+  /// Bouton de validation de la feuille d'ajout d'un article hors grille (custom_items_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter'**
+  String get bidCreateAddItemConfirmButton;
+
+  /// Libellé du champ nom de l'article hors grille (custom_items_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Article'**
+  String get bidCreateCustomItemLabelField;
+
+  /// Exemple affiché dans le champ nom de l'article hors grille (custom_items_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sac de riz, boubou, médicaments'**
+  String get bidCreateCustomItemLabelHint;
+
+  /// Libellé du champ quantité de l'article hors grille (custom_items_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Quantité'**
+  String get bidCreateCustomItemQuantityField;
+
+  /// Libellé du champ prix de l'article hors grille (custom_items_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix ({symbol})'**
+  String bidCreateCustomItemPriceField(String symbol);
+
+  /// Titre de la feuille de sélection des articles de la grille (grid_item_selection_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Articles disponibles'**
+  String get bidCreateGridSheetTitle;
+
+  /// Bouton de confirmation de la feuille de sélection des articles (grid_item_selection_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la sélection'**
+  String get bidCreateGridSheetConfirmButton;
+
+  /// Libellé d'accessibilité d'un article de grille sélectionné (grid_item_selection_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, {price} l\'unité, {quantity} sélectionné'**
+  String bidCreateGridItemSemanticSelected(
+    String label,
+    String price,
+    int quantity,
+  );
+
+  /// Libellé d'accessibilité d'un article de grille non sélectionné (grid_item_selection_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, {price} l\'unité'**
+  String bidCreateGridItemSemanticUnit(String label, String price);
+
+  /// Libellé d'accessibilité du bouton moins d'un article de grille (grid_item_selection_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer un {label}'**
+  String bidCreateGridItemRemoveSemantic(String label);
+
+  /// Libellé d'accessibilité du bouton plus d'un article de grille (grid_item_selection_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un {label}'**
+  String bidCreateGridItemAddSemantic(String label);
+
+  /// Avertissement prix trop bas (price_hint_widget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix bas : risque de méfiance de l\'expéditeur'**
+  String get bidCreatePriceTooLowHint;
+
+  /// Avertissement prix trop élevé (price_hint_widget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix élevé : peu de demandes attendues'**
+  String get bidCreatePriceTooHighHint;
+
+  /// Préfixe du prix médian de marché avec corridor (price_hint_widget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Marché {corridor} : '**
+  String bidCreateMarketPriceCorridor(String corridor);
+
+  /// Préfixe du prix médian de marché sans corridor (price_hint_widget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Marché '**
+  String get bidCreateMarketPriceLabel;
+
+  /// Suffixe affiché après le prix médian de marché (price_hint_widget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **' · Votre prix est compétitif.'**
+  String get bidCreateCompetitivePriceSuffix;
+
+  /// Titre de la carte de statut du disclaimer (disclaimer_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Responsabilité légale'**
+  String get bidCreateLegalResponsibilityTitle;
+
+  /// Statut du disclaimer sans date connue (disclaimer_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Disclaimer signé'**
+  String get bidCreateDisclaimerSignedLabel;
+
+  /// Statut du disclaimer avec sa date de signature (disclaimer_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Disclaimer signé le {dateTime}'**
+  String bidCreateDisclaimerSigned(String dateTime);
+
+  /// Premier segment de l'avertissement commission espèces à la publication (cash_commission_notice.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne pourrez accepter un colis en espèces que si la commission Yadony peut être prélevée '**
+  String get tripPublishCashCommissionIntro;
+
+  /// Segment en gras de l'avertissement commission espèces (cash_commission_notice.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'sur votre portefeuille en priorité'**
+  String get tripPublishCashCommissionHighlight;
+
+  /// Dernier segment de l'avertissement commission espèces (cash_commission_notice.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'. À défaut, il faudra le recharger ou enregistrer une carte valide au moment d’accepter.'**
+  String get tripPublishCashCommissionOutro;
 }
 
 class _AppLocalizationsDelegate

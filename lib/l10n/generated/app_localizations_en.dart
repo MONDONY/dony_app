@@ -5159,4 +5159,368 @@ class AppLocalizationsEn extends AppLocalizations {
   String listingPriceEstimateSuffix(String amount) {
     return ' · estimate $amount net';
   }
+
+  @override
+  String get bidCreateSendProposalButton => 'Send my proposal';
+
+  @override
+  String bidCreateConfirmCashButton(String amount) {
+    return 'Confirm $amount in cash';
+  }
+
+  @override
+  String bidCreateConfirmMobileMoneyButton(String amount) {
+    return 'Confirm $amount by mobile money';
+  }
+
+  @override
+  String bidCreateLockAndPayButton(String amount) {
+    return 'Lock $amount & pay';
+  }
+
+  @override
+  String get bidCreateDescriptionRequiredError => 'Description required';
+
+  @override
+  String get bidCreateRecipientNameRequiredError => 'Recipient name required';
+
+  @override
+  String get bidCreateRecipientPhoneRequiredError => 'Recipient phone required';
+
+  @override
+  String get bidCreatePriceRequiredError => 'Enter the price you\'re proposing';
+
+  @override
+  String get bidCreateProposalSentMessage =>
+      'Proposal sent, the traveler will get back to you.';
+
+  @override
+  String get bidCreateOfferSentTitle => 'Offer sent!';
+
+  @override
+  String get bidCreateCashSuccessSubtitle =>
+      'Cash payment: if the traveler accepts, you hand over the amount in person at drop-off. If canceled after drop-off, Yadony can\'t refund you right away, but will make sure the traveler gives your money back.';
+
+  @override
+  String get bidCreateMobileMoneySuccessSubtitle =>
+      'Mobile money payment: if the traveler accepts, you\'ll get a notification and have 30 minutes to confirm the payment on your phone. The amount is kept safe by Yadony until delivery.';
+
+  @override
+  String get bidCreateReviewPendingSubtitle =>
+      'The traveler will review your request.';
+
+  @override
+  String get bidCreateSeeMyShipmentButton => 'See my shipment';
+
+  @override
+  String get bidCreateArticlesSectionLabel => 'ITEMS';
+
+  @override
+  String bidCreateSelectedItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items selected',
+      one: '$count item selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bidCreateSubtotalLabel(String amount) {
+    return 'Subtotal: $amount';
+  }
+
+  @override
+  String get bidCreateChooseItemsLabel => 'Choose my items';
+
+  @override
+  String get bidCreateItemsRequiredHint => 'Required: at least 1 item';
+
+  @override
+  String get bidCreatePhotosSectionLabel => 'PACKAGE PHOTOS (OPTIONAL)';
+
+  @override
+  String get bidCreateDescriptionSectionLabel =>
+      'DESCRIPTION (TO THE TRAVELER)';
+
+  @override
+  String get bidCreateDescriptionHint =>
+      'Diabetes medication + 2 children\'s t-shirts';
+
+  @override
+  String get bidCreateRecipientSectionLabel => 'RECIPIENT';
+
+  @override
+  String get bidCreateRecipientNameLabel => 'Recipient\'s first and last name';
+
+  @override
+  String get bidCreateRecipientNameHint => 'e.g.: Amadou Diallo';
+
+  @override
+  String get bidCreateRecipientPhoneLabel => 'Recipient\'s phone number';
+
+  @override
+  String get bidCreateRecipientPhoneHint => 'e.g.: +221 77 000 00 00';
+
+  @override
+  String get bidCreatePromoSectionLabel => 'PROMO CODE (OPTIONAL)';
+
+  @override
+  String get bidCreatePromoCodeHint => 'E.g.: WELCOME10';
+
+  @override
+  String get bidCreatePromoAppliedDefaultLabel => 'Code applied';
+
+  @override
+  String get bidCreateYourProposalSectionLabel => 'YOUR PROPOSAL';
+
+  @override
+  String bidCreateProposedPriceLabel(String symbol) {
+    return 'Proposed price ($symbol)';
+  }
+
+  @override
+  String bidCreateSuggestedPriceLabel(String amount) {
+    return 'Suggested: $amount';
+  }
+
+  @override
+  String get bidCreatePaymentMethodSectionLabel => 'PAYMENT METHOD';
+
+  @override
+  String get bidCreatePaymentMethodHint =>
+      'If the traveler accepts your price, you\'ll pay this way.';
+
+  @override
+  String get bidCreateContentSectionLabel => 'PACKAGE CONTENT';
+
+  @override
+  String get bidCreateContentHintText =>
+      'These suggestions are the contents accepted by the traveler. If your package\'s content isn\'t listed, add it: it\'ll be up to the traveler to decide whether to accept your package or not.';
+
+  @override
+  String get bidCreateRefusedByTravelerSectionLabel =>
+      'REFUSED BY THE TRAVELER';
+
+  @override
+  String get bidCreateHowToPayTitle => 'How do you want to pay?';
+
+  @override
+  String get bidCreateChoosePaymentSubtitle =>
+      'Choose the payment method for this request.';
+
+  @override
+  String get bidCreatePaymentNotConfirmedError =>
+      'Payment not confirmed, try again';
+
+  @override
+  String bidCreateShipmentToLabel(String city) {
+    return 'Shipment to $city';
+  }
+
+  @override
+  String get bidCreateOfferPaidTitle => 'Offer paid!';
+
+  @override
+  String get bidCreateOfferPaidSubtitle =>
+      'Your payment is locked and secured until delivery is confirmed. The traveler has been notified of your request.';
+
+  @override
+  String get bidCreateWeightLabel => 'Package weight';
+
+  @override
+  String get bidCreateWeightLabelOptional => 'Package weight (optional)';
+
+  @override
+  String get bidCreateFreeKgHint => 'Flexible kg: choose your weight';
+
+  @override
+  String get bidCreateNoCapacityAvailable => 'No capacity available';
+
+  @override
+  String get bidCreateDisclaimerTitle => 'Customs disclaimer.';
+
+  @override
+  String get bidCreateDisclaimerBody =>
+      'No weapons, drugs, flammable liquids or cash. The traveler can refuse at customs control.';
+
+  @override
+  String get bidCreateDisclaimerAcceptLabel => 'I sign & accept';
+
+  @override
+  String get bidCreateCardModeSubtitle => 'Locked until delivery';
+
+  @override
+  String get bidCreateMobileMoneySubtitle => 'Orange Money, Wave, MTN';
+
+  @override
+  String get bidCreateCashModeSubtitle => 'Hand to hand, at drop-off';
+
+  @override
+  String get bidCreateEscrowTag => 'Escrow';
+
+  @override
+  String get bidCreateHandToHandTag => 'Hand to hand';
+
+  @override
+  String get bidCreateCardModeBody =>
+      'Locked by Yadony right away, paid to the traveler once the recipient confirms delivery.';
+
+  @override
+  String get bidCreateMobileMoneyModeBody =>
+      'Once the traveler agrees, you\'ll get a payment request on your phone. The amount is locked by Yadony until delivery.';
+
+  @override
+  String get bidCreateCashModeBody =>
+      'You hand the amount to the traveler on the day you give them the package.';
+
+  @override
+  String get bidCreateRefundAssurance =>
+      'Refunded if the package doesn\'t arrive';
+
+  @override
+  String get bidCreateCashEscrowWarning =>
+      'Cash payment: no escrow, you pay the traveler directly, with no refund guarantee from Yadony.';
+
+  @override
+  String get bidCreateArticlesLineLabel => 'Items';
+
+  @override
+  String get bidCreatePromoDiscountLabel => 'Promo code discount';
+
+  @override
+  String get bidCreateTotalLabel => 'Total';
+
+  @override
+  String get bidCreatePromoBadge => 'Promo';
+
+  @override
+  String get bidCreateServiceFeeIncludedLabel => 'Yadony service fee included';
+
+  @override
+  String get bidCreatePhotosVisibleHint =>
+      'Visible to the traveler, they reassure about the content.';
+
+  @override
+  String get bidCreatePayerPhoneLabel => 'Payer\'s number (optional)';
+
+  @override
+  String get bidCreatePayerPhoneHintWithProfile =>
+      'By default, your Yadony number. You\'ll receive the payment request on this number.';
+
+  @override
+  String get bidCreatePayerPhoneHintNoProfile =>
+      'Your account has no number: enter the one that will pay. You\'ll receive the payment request on it.';
+
+  @override
+  String get bidCreateCustomItemsSectionTitle => 'Items outside the grid';
+
+  @override
+  String get bidCreateCustomItemsSectionHint =>
+      'Add what the traveler hasn\'t priced, and propose your price for each item.';
+
+  @override
+  String get bidCreateCustomItemsEmpty => 'No items yet.';
+
+  @override
+  String get bidCreateCustomItemsTotalLabel =>
+      'Total for items outside the grid';
+
+  @override
+  String get bidCreateAddItemButton => 'Add an item';
+
+  @override
+  String get bidCreateRemoveItemTooltip => 'Remove this item';
+
+  @override
+  String get bidCreateAddItemSheetSubtitle =>
+      'Describe the item and state the price you\'re proposing for its transport.';
+
+  @override
+  String get bidCreateAddItemConfirmButton => 'Add';
+
+  @override
+  String get bidCreateCustomItemLabelField => 'Item';
+
+  @override
+  String get bidCreateCustomItemLabelHint => 'Bag of rice, boubou, medication';
+
+  @override
+  String get bidCreateCustomItemQuantityField => 'Quantity';
+
+  @override
+  String bidCreateCustomItemPriceField(String symbol) {
+    return 'Price ($symbol)';
+  }
+
+  @override
+  String get bidCreateGridSheetTitle => 'Available items';
+
+  @override
+  String get bidCreateGridSheetConfirmButton => 'Confirm selection';
+
+  @override
+  String bidCreateGridItemSemanticSelected(
+    String label,
+    String price,
+    int quantity,
+  ) {
+    return '$label, $price per unit, $quantity selected';
+  }
+
+  @override
+  String bidCreateGridItemSemanticUnit(String label, String price) {
+    return '$label, $price per unit';
+  }
+
+  @override
+  String bidCreateGridItemRemoveSemantic(String label) {
+    return 'Remove one $label';
+  }
+
+  @override
+  String bidCreateGridItemAddSemantic(String label) {
+    return 'Add one $label';
+  }
+
+  @override
+  String get bidCreatePriceTooLowHint =>
+      'Low price: risk of distrust from the sender';
+
+  @override
+  String get bidCreatePriceTooHighHint => 'High price: few requests expected';
+
+  @override
+  String bidCreateMarketPriceCorridor(String corridor) {
+    return 'Market $corridor: ';
+  }
+
+  @override
+  String get bidCreateMarketPriceLabel => 'Market ';
+
+  @override
+  String get bidCreateCompetitivePriceSuffix => ' · Your price is competitive.';
+
+  @override
+  String get bidCreateLegalResponsibilityTitle => 'Legal liability';
+
+  @override
+  String get bidCreateDisclaimerSignedLabel => 'Disclaimer signed';
+
+  @override
+  String bidCreateDisclaimerSigned(String dateTime) {
+    return 'Disclaimer signed on $dateTime';
+  }
+
+  @override
+  String get tripPublishCashCommissionIntro =>
+      'You\'ll only be able to accept a cash package if the Yadony service fee can be collected ';
+
+  @override
+  String get tripPublishCashCommissionHighlight => 'from your wallet first';
+
+  @override
+  String get tripPublishCashCommissionOutro =>
+      '. Otherwise, you\'ll need to top it up or add a valid card when accepting.';
 }

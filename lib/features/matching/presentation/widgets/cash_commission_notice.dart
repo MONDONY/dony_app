@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Encart informatif affiché quand le voyageur active le paiement en espèces
@@ -38,21 +39,15 @@ class CashCommissionNotice extends StatelessWidget {
                   height: 1.45,
                 ),
                 children: [
-                  const TextSpan(
-                    text:
-                        'Vous ne pourrez accepter un colis en espèces que si la commission Yadony peut être prélevée ',
-                  ),
+                  TextSpan(text: context.l10n.tripPublishCashCommissionIntro),
                   TextSpan(
-                    text: 'sur votre portefeuille en priorité',
+                    text: context.l10n.tripPublishCashCommissionHighlight,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: cs.primary,
                     ),
                   ),
-                  const TextSpan(
-                    text:
-                        '. À défaut, il faudra le recharger ou enregistrer une carte valide au moment d’accepter.',
-                  ),
+                  TextSpan(text: context.l10n.tripPublishCashCommissionOutro),
                 ],
               ),
             ),

@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Article hors grille en cours de saisie.
@@ -72,12 +73,12 @@ class CustomItemsSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Articles hors grille',
+              context.l10n.bidCreateCustomItemsSectionTitle,
               style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Ajoutez ce que le voyageur n\'a pas tarifé, et proposez votre prix pour chaque article.',
+              context.l10n.bidCreateCustomItemsSectionHint,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.md),
@@ -92,7 +93,7 @@ class CustomItemsSection extends StatelessWidget {
                   border: Border.all(color: cs.outlineVariant),
                 ),
                 child: Text(
-                  'Aucun article pour le moment.',
+                  context.l10n.bidCreateCustomItemsEmpty,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               )
@@ -113,7 +114,7 @@ class CustomItemsSection extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Total des articles hors grille',
+                    context.l10n.bidCreateCustomItemsTotalLabel,
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   Text(
@@ -130,7 +131,7 @@ class CustomItemsSection extends StatelessWidget {
             const SizedBox(height: DonySpacing.md),
             DonyButton(
               key: const Key('custom-item-add'),
-              label: 'Ajouter un article',
+              label: context.l10n.bidCreateAddItemButton,
               variant: DonyButtonVariant.secondary,
               icon: Icons.add_rounded,
               onPressed: () => _showAddSheet(context),
@@ -207,7 +208,7 @@ class _CustomItemRow extends StatelessWidget {
           IconButton(
             key: Key('custom-item-remove-$index'),
             onPressed: onRemove,
-            tooltip: 'Retirer cet article',
+            tooltip: context.l10n.bidCreateRemoveItemTooltip,
             icon: Icon(
               Icons.close_rounded,
               size: 20,
@@ -233,17 +234,17 @@ abstract final class CustomItemFormSheet {
     required String currencyCode,
   }) {
     final submitNotifier = ValueNotifier<VoidCallback?>(null);
+    final l = context.l10n;
 
     return DonyBottomSheet.show<BidCustomItemDraft>(
       context,
-      title: 'Ajouter un article',
-      subtitle:
-          'Décrivez l\'article et indiquez le prix que vous proposez pour son transport.',
+      title: l.bidCreateAddItemButton,
+      subtitle: l.bidCreateAddItemSheetSubtitle,
       stickyBottom: ValueListenableBuilder<VoidCallback?>(
         valueListenable: submitNotifier,
         builder: (_, submit, _) => DonyButton(
           key: const Key('custom-item-submit'),
-          label: 'Ajouter',
+          label: l.bidCreateAddItemConfirmButton,
           onPressed: submit,
         ),
       ),
@@ -327,8 +328,8 @@ class _CustomItemFormState extends State<_CustomItemForm> {
         DonyTextField(
           key: const Key('custom-item-label'),
           controller: _labelCtrl,
-          label: 'Article',
-          hint: 'Sac de riz, boubou, médicaments',
+          label: context.l10n.bidCreateCustomItemLabelField,
+          hint: context.l10n.bidCreateCustomItemLabelHint,
           requiredLabel: true,
         ),
         const SizedBox(height: DonySpacing.base),
@@ -339,7 +340,7 @@ class _CustomItemFormState extends State<_CustomItemForm> {
               child: DonyTextField(
                 key: const Key('custom-item-quantity'),
                 controller: _quantityCtrl,
-                label: 'Quantité',
+                label: context.l10n.bidCreateCustomItemQuantityField,
                 keyboardType: TextInputType.number,
               ),
             ),
@@ -348,8 +349,9 @@ class _CustomItemFormState extends State<_CustomItemForm> {
               child: DonyTextField(
                 key: const Key('custom-item-amount'),
                 controller: _amountCtrl,
-                label:
-                    'Prix (${SupportedCurrency.symbolOf(widget.currencyCode)})',
+                label: context.l10n.bidCreateCustomItemPriceField(
+                  SupportedCurrency.symbolOf(widget.currencyCode),
+                ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),

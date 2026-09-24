@@ -1720,7 +1720,6 @@
   "@tripPublishLockedCapacityNote": {
     "description": "Note sous la capacité verrouillée (flux trajet dédié)"
   },
-
   "addressGpsPosition": "Position GPS ({lat}, {lng})",
   "@addressGpsPosition": {
     "description": "Libellé de repli utilisé comme adresse quand le géocodage inverse échoue : coordonnées brutes formatées (address_labels.dart)",
@@ -1873,7 +1872,6 @@
   "@addressSelectorDeliverySubtitle": {
     "description": "Sous-titre de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)"
   },
-
   "tripPosterTimePattern": "HH'h'mm",
   "@tripPosterTimePattern": {
     "description": "Motif intl DateFormat, pas un texte : heure de l'échéance de l'affiche du trajet (trip_poster_card.dart)"
@@ -2061,7 +2059,6 @@
   "@tripPosterSaveButton": {
     "description": "Bouton d'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)"
   },
-
   "errorAnnouncementUpdateBlockedTitle": "Modification impossible",
   "@errorAnnouncementUpdateBlockedTitle": {
     "description": "Titre du catalogue d'erreurs pour le code announcement-update-blocked : modification refusée car des colis sont déjà acceptés (error_catalog.dart, announcement_bloc.dart)"
@@ -2070,7 +2067,6 @@
   "@errorAnnouncementUpdateBlockedMessage": {
     "description": "Message du catalogue d'erreurs pour le code announcement-update-blocked (error_catalog.dart, announcement_bloc.dart)"
   },
-
   "tripTemplateListTitle": "Mes modèles de trajet",
   "@tripTemplateListTitle": {
     "description": "Titre de l'écran liste des modèles de trajet (trip_templates_screen.dart)"
@@ -2120,7 +2116,6 @@
   "@tripTemplateScheduleRecurrenceAction": {
     "description": "Entrée du menu d'une carte modèle pour programmer sa récurrence (trip_templates_screen.dart)"
   },
-
   "tripTemplateNameSectionLabel": "NOM DU MODÈLE",
   "@tripTemplateNameSectionLabel": {
     "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
@@ -2220,7 +2215,6 @@
   "@tripTemplateSavedMessage": {
     "description": "Confirmation après création d'un nouveau modèle (trip_template_edit_screen.dart)"
   },
-
   "tripTemplateRecurrenceActivatedMessage": "Récurrence activée. Tes trajets seront publiés automatiquement.",
   "@tripTemplateRecurrenceActivatedMessage": {
     "description": "Confirmation après activation d'une récurrence (trip_recurrence_edit_screen.dart)"
@@ -2330,7 +2324,6 @@
   "@contentCategoryRemove": {
     "description": "Libellé d'accessibilité du bouton de suppression d'un tag catégorie (content_category_selector.dart)"
   },
-
   "paymentMethodCard": "Carte",
   "@paymentMethodCard": {
     "description": "Libellé affiché du moyen de paiement STRIPE (package_request_labels.dart)"
@@ -2343,7 +2336,6 @@
   "@paymentMethodMobileMoney": {
     "description": "Libellé affiché du moyen de paiement MOBILE_MONEY (package_request_labels.dart) — identique dans les deux langues"
   },
-
   "requestThreadYouReceive": "Tu reçois {amount}",
   "@requestThreadYouReceive": {
     "description": "Prix net vu par le voyageur dans le fil de négociation (package_request_labels.dart)",
@@ -2382,7 +2374,6 @@
   "@requestBudgetRequired": {
     "description": "Erreur de soumission de l'étape 3 du wizard de demande sans budget saisi (package_request_form_bloc.dart)"
   },
-
   "requestTimeJustNow": "{verb, select, created{créée à l'instant} other{publiée à l'instant}}",
   "@requestTimeJustNow": {
     "description": "Libellé relatif : demande créée/publiée à l'instant (request_time_label.dart)",
@@ -2444,7 +2435,6 @@
   "@contentCategoryHintDefault": {
     "description": "Texte d'indication par défaut du champ de sélection de catégories, quand l'appelant ne le surcharge pas (content_category_selector.dart)"
   },
-
   "requestCreateEditWarningTitle": "Modifier votre demande ?",
   "@requestCreateEditWarningTitle": {
     "description": "Titre du dialogue de confirmation avant d'éditer une demande en négociation (package_request_create_screen.dart)"
@@ -2529,7 +2519,6 @@
   "@requestCreatePreviewButton": {
     "description": "Libellé du CTA sticky à la dernière étape, avant soumission (package_request_create_screen.dart)"
   },
-
   "requestCreateDepartureRequired": "Ville de départ obligatoire",
   "@requestCreateDepartureRequired": {
     "description": "Erreur de validation : ville de départ manquante (step_1_trajet_colis.dart)"
@@ -2617,7 +2606,6 @@
       }
     }
   },
-
   "requestCreateMaxCategories": "Maximum {max} catégories",
   "@requestCreateMaxCategories": {
     "description": "Erreur : nombre maximal de catégories dépassé (step_2_details.dart)",
@@ -2679,7 +2667,6 @@
   "@requestCreateWeightInvalid": {
     "description": "Erreur de validation : poids non numérique (step_2_details.dart)"
   },
-
   "requestCreateBudgetSubtitle": "Vérifiez votre demande, puis indiquez le budget à montrer aux voyageurs.",
   "@requestCreateBudgetSubtitle": {
     "description": "Sous-titre de l'étape 3 (step_3_recap_budget.dart)"
@@ -2805,7 +2792,6 @@
   "@requestCreateChangeCurrency": {
     "description": "Lien de modification de la devise, dans la ligne du sélecteur (step_3_recap_budget.dart)"
   },
-
   "requestCreatePhotoUnsupported": "Image non supportée ou trop volumineuse",
   "@requestCreatePhotoUnsupported": {
     "description": "Erreur affichée quand la photo choisie est refusée (package_request_photo_section.dart)"
@@ -2859,7 +2845,6 @@
   "@requestCreateRemovePhoto": {
     "description": "Libellé d'accessibilité du bouton de suppression d'une photo (package_request_photo_section.dart)"
   },
-
   "requestCreateCompleteDetailsTitle": "Vérifie & complète",
   "@requestCreateCompleteDetailsTitle": {
     "description": "Titre de l'app bar de l'écran de complétion avant paiement (complete_details_screen.dart)"
@@ -2932,7 +2917,6 @@
   "@requestCreateRecapPrice": {
     "description": "Libellé de la ligne prix de la carte récapitulative (complete_details_screen.dart)"
   },
-
   "requestDetailTitle": "Ma demande",
   "@requestDetailTitle": {
     "description": "Titre de l'écran et de la sheet « Ma demande » (package_request_detail_screen.dart)"
@@ -4668,5 +4652,485 @@
         "type": "String"
       }
     }
+  },
+  "bidCreateSendProposalButton": "Envoyer ma proposition",
+  "@bidCreateSendProposalButton": {
+    "description": "Bouton d'envoi de la première proposition en mode négociation (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateConfirmCashButton": "Confirmer {amount} en espèces",
+  "@bidCreateConfirmCashButton": {
+    "description": "Bouton de confirmation du paiement en espèces (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateConfirmMobileMoneyButton": "Confirmer {amount} par mobile money",
+  "@bidCreateConfirmMobileMoneyButton": {
+    "description": "Bouton de confirmation du paiement mobile money (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateLockAndPayButton": "Bloquer {amount} & payer",
+  "@bidCreateLockAndPayButton": {
+    "description": "Bouton de confirmation du paiement par carte (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateDescriptionRequiredError": "Description obligatoire",
+  "@bidCreateDescriptionRequiredError": {
+    "description": "Erreur de validation, description du colis manquante (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientNameRequiredError": "Nom du destinataire obligatoire",
+  "@bidCreateRecipientNameRequiredError": {
+    "description": "Erreur de validation, nom du destinataire manquant (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientPhoneRequiredError": "Téléphone du destinataire obligatoire",
+  "@bidCreateRecipientPhoneRequiredError": {
+    "description": "Erreur de validation, téléphone du destinataire manquant (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePriceRequiredError": "Indiquez le prix que vous proposez",
+  "@bidCreatePriceRequiredError": {
+    "description": "Erreur de validation, prix proposé manquant en mode négociation (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateProposalSentMessage": "Proposition envoyée, le voyageur va vous répondre.",
+  "@bidCreateProposalSentMessage": {
+    "description": "Confirmation après envoi d'une première proposition (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateOfferSentTitle": "Offre envoyée !",
+  "@bidCreateOfferSentTitle": {
+    "description": "Titre de l'écran de succès après une offre en espèces ou mobile money (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCashSuccessSubtitle": "Paiement en espèces : si le voyageur accepte, tu remets le montant en main propre à la remise du colis. En cas d'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s'assurera que le voyageur te restitue ton argent.",
+  "@bidCreateCashSuccessSubtitle": {
+    "description": "Sous-titre de l'écran de succès pour une offre en espèces (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateMobileMoneySuccessSubtitle": "Paiement mobile money : si le voyageur accepte, tu recevras une notification et auras 30 minutes pour valider le paiement sur ton téléphone. Le montant est gardé en sécurité par Yadony jusqu'à la livraison.",
+  "@bidCreateMobileMoneySuccessSubtitle": {
+    "description": "Sous-titre de l'écran de succès pour une offre en mobile money (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateReviewPendingSubtitle": "Le voyageur va examiner ta demande.",
+  "@bidCreateReviewPendingSubtitle": {
+    "description": "Sous-titre de repli de l'écran de succès après une offre (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateSeeMyShipmentButton": "Voir mon envoi",
+  "@bidCreateSeeMyShipmentButton": {
+    "description": "CTA de l'écran de succès vers le détail de l'envoi (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateArticlesSectionLabel": "ARTICLES",
+  "@bidCreateArticlesSectionLabel": {
+    "description": "Titre de la section articles de la grille tarifaire (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateSelectedItems": "{count, plural, =1{{count} article sélectionné} other{{count} articles sélectionnés}}",
+  "@bidCreateSelectedItems": {
+    "description": "Nombre d'articles sélectionnés dans la carte grille (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bidCreateSubtotalLabel": "Sous-total : {amount}",
+  "@bidCreateSubtotalLabel": {
+    "description": "Sous-total des articles sélectionnés (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateChooseItemsLabel": "Choisir mes articles",
+  "@bidCreateChooseItemsLabel": {
+    "description": "Libellé du bouton d'ouverture de la sélection d'articles (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateItemsRequiredHint": "Requis : au moins 1 article",
+  "@bidCreateItemsRequiredHint": {
+    "description": "Rappel qu'au moins un article doit être sélectionné (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePhotosSectionLabel": "PHOTOS DU COLIS (OPTIONNEL)",
+  "@bidCreatePhotosSectionLabel": {
+    "description": "Titre de la section photos du formulaire d'offre (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateDescriptionSectionLabel": "DESCRIPTION (AU VOYAGEUR)",
+  "@bidCreateDescriptionSectionLabel": {
+    "description": "Titre de la section description du formulaire d'offre (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateDescriptionHint": "Médicaments pour diabète + 2 tee-shirts enfants",
+  "@bidCreateDescriptionHint": {
+    "description": "Exemple affiché dans le champ description (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientSectionLabel": "DESTINATAIRE",
+  "@bidCreateRecipientSectionLabel": {
+    "description": "Titre de la section destinataire du formulaire d'offre (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientNameLabel": "Prénom et nom du destinataire",
+  "@bidCreateRecipientNameLabel": {
+    "description": "Libellé du champ nom du destinataire (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientNameHint": "ex: Amadou Diallo",
+  "@bidCreateRecipientNameHint": {
+    "description": "Exemple affiché dans le champ nom du destinataire (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientPhoneLabel": "Téléphone du destinataire",
+  "@bidCreateRecipientPhoneLabel": {
+    "description": "Libellé du champ téléphone du destinataire (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientPhoneHint": "ex: +221 77 000 00 00",
+  "@bidCreateRecipientPhoneHint": {
+    "description": "Exemple affiché dans le champ téléphone du destinataire (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePromoSectionLabel": "CODE PROMO (OPTIONNEL)",
+  "@bidCreatePromoSectionLabel": {
+    "description": "Titre de la section code promo du formulaire d'offre (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePromoCodeHint": "Ex: WELCOME10",
+  "@bidCreatePromoCodeHint": {
+    "description": "Exemple affiché dans le champ code promo (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePromoAppliedDefaultLabel": "Code appliqué",
+  "@bidCreatePromoAppliedDefaultLabel": {
+    "description": "Confirmation de repli quand le devis n'a pas de libellé de promo (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateYourProposalSectionLabel": "VOTRE PROPOSITION",
+  "@bidCreateYourProposalSectionLabel": {
+    "description": "Titre de la section prix proposé en mode négociation (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateProposedPriceLabel": "Prix proposé ({symbol})",
+  "@bidCreateProposedPriceLabel": {
+    "description": "Libellé du champ de prix proposé en mode négociation (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateSuggestedPriceLabel": "Suggéré : {amount}",
+  "@bidCreateSuggestedPriceLabel": {
+    "description": "Rappel du prix suggéré sous le champ de proposition (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreatePaymentMethodSectionLabel": "MODE DE PAIEMENT",
+  "@bidCreatePaymentMethodSectionLabel": {
+    "description": "Titre de la section mode de paiement en mode négociation (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePaymentMethodHint": "Si le voyageur accepte votre prix, vous réglerez de cette façon.",
+  "@bidCreatePaymentMethodHint": {
+    "description": "Explication du choix figé du mode de paiement en négociation (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateContentSectionLabel": "CONTENU DU COLIS",
+  "@bidCreateContentSectionLabel": {
+    "description": "Titre de la section contenu du colis (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateContentHintText": "Ces suggestions sont les contenus acceptés par le voyageur. Si le contenu de votre colis n'y figure pas, ajoutez-le : ce sera au voyageur de décider s'il accepte votre colis ou non.",
+  "@bidCreateContentHintText": {
+    "description": "Note explicative sous le sélecteur de contenu (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRefusedByTravelerSectionLabel": "REFUSÉ PAR LE VOYAGEUR",
+  "@bidCreateRefusedByTravelerSectionLabel": {
+    "description": "Titre de la section des contenus refusés par le voyageur (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateHowToPayTitle": "Comment veux-tu payer ?",
+  "@bidCreateHowToPayTitle": {
+    "description": "Titre de l'étape de choix du mode de paiement (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateChoosePaymentSubtitle": "Choisis le mode de paiement pour cette demande.",
+  "@bidCreateChoosePaymentSubtitle": {
+    "description": "Sous-titre de l'étape de choix du mode de paiement (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePaymentNotConfirmedError": "Paiement non confirmé, réessayez",
+  "@bidCreatePaymentNotConfirmedError": {
+    "description": "Erreur affichée si l'authentification avant paiement échoue (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateShipmentToLabel": "Envoi vers {city}",
+  "@bidCreateShipmentToLabel": {
+    "description": "Libellé de contexte de la feuille de paiement Stripe (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateOfferPaidTitle": "Offre payée !",
+  "@bidCreateOfferPaidTitle": {
+    "description": "Titre de l'écran de succès après un paiement carte (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateOfferPaidSubtitle": "Ton paiement est bloqué et sécurisé jusqu'à la livraison confirmée. Le voyageur est notifié de ta demande.",
+  "@bidCreateOfferPaidSubtitle": {
+    "description": "Sous-titre de l'écran de succès après un paiement carte (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateWeightLabel": "Poids du colis",
+  "@bidCreateWeightLabel": {
+    "description": "Libellé de la section poids, trajet kilo pur (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateWeightLabelOptional": "Poids du colis (optionnel)",
+  "@bidCreateWeightLabelOptional": {
+    "description": "Libellé de la section poids, trajet mixte grille + kilo (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateFreeKgHint": "Kilo libre : choisissez votre poids",
+  "@bidCreateFreeKgHint": {
+    "description": "Sous-titre du sélecteur de poids en kilo libre (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateNoCapacityAvailable": "Aucune capacité disponible",
+  "@bidCreateNoCapacityAvailable": {
+    "description": "Message quand le trajet n'a plus de capacité kilo (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateDisclaimerTitle": "Disclaimer douane.",
+  "@bidCreateDisclaimerTitle": {
+    "description": "Titre de l'encart disclaimer douanier (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateDisclaimerBody": "Pas d'armes, drogues, liquides inflammables ou espèces. Le voyageur peut refuser au contrôle douanier.",
+  "@bidCreateDisclaimerBody": {
+    "description": "Texte de l'encart disclaimer douanier (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateDisclaimerAcceptLabel": "Je signe & j'accepte",
+  "@bidCreateDisclaimerAcceptLabel": {
+    "description": "Libellé de la case à cocher du disclaimer (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCardModeSubtitle": "Bloqué jusqu'à la livraison",
+  "@bidCreateCardModeSubtitle": {
+    "description": "Sous-titre du choix de paiement par carte (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateMobileMoneySubtitle": "Orange Money, Wave, MTN",
+  "@bidCreateMobileMoneySubtitle": {
+    "description": "Sous-titre du choix de paiement mobile money, noms de marque (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCashModeSubtitle": "En main propre, à la remise",
+  "@bidCreateCashModeSubtitle": {
+    "description": "Sous-titre du choix de paiement en espèces (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateEscrowTag": "Séquestre",
+  "@bidCreateEscrowTag": {
+    "description": "Tag du montant bloqué chez Yadony (carte, mobile money) (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateHandToHandTag": "En main propre",
+  "@bidCreateHandToHandTag": {
+    "description": "Tag du montant remis directement au voyageur (espèces) (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCardModeBody": "Bloqué par Yadony dès maintenant, versé au voyageur quand le destinataire confirme la livraison.",
+  "@bidCreateCardModeBody": {
+    "description": "Explication du mode carte dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateMobileMoneyModeBody": "Après l'accord du voyageur, tu reçois une demande de paiement sur ton téléphone. Le montant est bloqué par Yadony jusqu'à la livraison.",
+  "@bidCreateMobileMoneyModeBody": {
+    "description": "Explication du mode mobile money dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCashModeBody": "Tu remets la somme au voyageur le jour où tu lui confies le colis.",
+  "@bidCreateCashModeBody": {
+    "description": "Explication du mode espèces dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRefundAssurance": "Remboursé si le colis n'arrive pas",
+  "@bidCreateRefundAssurance": {
+    "description": "Rappel de garantie sous le mode carte et mobile money (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCashEscrowWarning": "Paiement en espèces : pas de séquestre, vous payez le voyageur directement, sans garantie de remboursement par Yadony.",
+  "@bidCreateCashEscrowWarning": {
+    "description": "Avertissement affiché sous le mode espèces (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateArticlesLineLabel": "Articles",
+  "@bidCreateArticlesLineLabel": {
+    "description": "Libellé de la ligne articles du récapitulatif de prix (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePromoDiscountLabel": "Réduction code promo",
+  "@bidCreatePromoDiscountLabel": {
+    "description": "Libellé de la ligne de réduction dans le récapitulatif de prix (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateTotalLabel": "Total",
+  "@bidCreateTotalLabel": {
+    "description": "Libellé de la ligne totale du récapitulatif de prix (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePromoBadge": "Promo",
+  "@bidCreatePromoBadge": {
+    "description": "Badge affiché à côté du total quand un code promo réduit le prix (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateServiceFeeIncludedLabel": "Commission Yadony incluse",
+  "@bidCreateServiceFeeIncludedLabel": {
+    "description": "Mention sous le total du récapitulatif de prix (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePhotosVisibleHint": "Visibles par le voyageur, elles rassurent sur le contenu.",
+  "@bidCreatePhotosVisibleHint": {
+    "description": "Explication de l'utilité des photos du colis (create_bid/photo_section.dart)"
+  },
+  "bidCreatePayerPhoneLabel": "Numéro qui paiera (facultatif)",
+  "@bidCreatePayerPhoneLabel": {
+    "description": "Libellé du champ numéro payeur mobile money (create_bid/payer_phone_field.dart)"
+  },
+  "bidCreatePayerPhoneHintWithProfile": "Par défaut, ton numéro Yadony. Tu recevras la demande de paiement sur ce numéro.",
+  "@bidCreatePayerPhoneHintWithProfile": {
+    "description": "Texte d'aide quand le compte a un numéro de téléphone (create_bid/payer_phone_field.dart)"
+  },
+  "bidCreatePayerPhoneHintNoProfile": "Ton compte n'a pas de numéro : indique celui qui paiera. Tu recevras la demande de paiement dessus.",
+  "@bidCreatePayerPhoneHintNoProfile": {
+    "description": "Texte d'aide quand le compte n'a pas de numéro de téléphone (create_bid/payer_phone_field.dart)"
+  },
+  "bidCreateCustomItemsSectionTitle": "Articles hors grille",
+  "@bidCreateCustomItemsSectionTitle": {
+    "description": "Titre de la section articles hors grille en négociation (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemsSectionHint": "Ajoutez ce que le voyageur n'a pas tarifé, et proposez votre prix pour chaque article.",
+  "@bidCreateCustomItemsSectionHint": {
+    "description": "Explication de la section articles hors grille (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemsEmpty": "Aucun article pour le moment.",
+  "@bidCreateCustomItemsEmpty": {
+    "description": "État vide de la liste d'articles hors grille (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemsTotalLabel": "Total des articles hors grille",
+  "@bidCreateCustomItemsTotalLabel": {
+    "description": "Libellé du total des articles hors grille (custom_items_section.dart)"
+  },
+  "bidCreateAddItemButton": "Ajouter un article",
+  "@bidCreateAddItemButton": {
+    "description": "Bouton et titre d'ajout d'un article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateRemoveItemTooltip": "Retirer cet article",
+  "@bidCreateRemoveItemTooltip": {
+    "description": "Tooltip du bouton de suppression d'un article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateAddItemSheetSubtitle": "Décrivez l'article et indiquez le prix que vous proposez pour son transport.",
+  "@bidCreateAddItemSheetSubtitle": {
+    "description": "Sous-titre de la feuille d'ajout d'un article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateAddItemConfirmButton": "Ajouter",
+  "@bidCreateAddItemConfirmButton": {
+    "description": "Bouton de validation de la feuille d'ajout d'un article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemLabelField": "Article",
+  "@bidCreateCustomItemLabelField": {
+    "description": "Libellé du champ nom de l'article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemLabelHint": "Sac de riz, boubou, médicaments",
+  "@bidCreateCustomItemLabelHint": {
+    "description": "Exemple affiché dans le champ nom de l'article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemQuantityField": "Quantité",
+  "@bidCreateCustomItemQuantityField": {
+    "description": "Libellé du champ quantité de l'article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemPriceField": "Prix ({symbol})",
+  "@bidCreateCustomItemPriceField": {
+    "description": "Libellé du champ prix de l'article hors grille (custom_items_section.dart)",
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateGridSheetTitle": "Articles disponibles",
+  "@bidCreateGridSheetTitle": {
+    "description": "Titre de la feuille de sélection des articles de la grille (grid_item_selection_sheet.dart)"
+  },
+  "bidCreateGridSheetConfirmButton": "Confirmer la sélection",
+  "@bidCreateGridSheetConfirmButton": {
+    "description": "Bouton de confirmation de la feuille de sélection des articles (grid_item_selection_sheet.dart)"
+  },
+  "bidCreateGridItemSemanticSelected": "{label}, {price} l'unité, {quantity} sélectionné",
+  "@bidCreateGridItemSemanticSelected": {
+    "description": "Libellé d'accessibilité d'un article de grille sélectionné (grid_item_selection_sheet.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "bidCreateGridItemSemanticUnit": "{label}, {price} l'unité",
+  "@bidCreateGridItemSemanticUnit": {
+    "description": "Libellé d'accessibilité d'un article de grille non sélectionné (grid_item_selection_sheet.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateGridItemRemoveSemantic": "Retirer un {label}",
+  "@bidCreateGridItemRemoveSemantic": {
+    "description": "Libellé d'accessibilité du bouton moins d'un article de grille (grid_item_selection_sheet.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateGridItemAddSemantic": "Ajouter un {label}",
+  "@bidCreateGridItemAddSemantic": {
+    "description": "Libellé d'accessibilité du bouton plus d'un article de grille (grid_item_selection_sheet.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreatePriceTooLowHint": "Prix bas : risque de méfiance de l'expéditeur",
+  "@bidCreatePriceTooLowHint": {
+    "description": "Avertissement prix trop bas (price_hint_widget.dart)"
+  },
+  "bidCreatePriceTooHighHint": "Prix élevé : peu de demandes attendues",
+  "@bidCreatePriceTooHighHint": {
+    "description": "Avertissement prix trop élevé (price_hint_widget.dart)"
+  },
+  "bidCreateMarketPriceCorridor": "Marché {corridor} : ",
+  "@bidCreateMarketPriceCorridor": {
+    "description": "Préfixe du prix médian de marché avec corridor (price_hint_widget.dart)",
+    "placeholders": {
+      "corridor": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateMarketPriceLabel": "Marché ",
+  "@bidCreateMarketPriceLabel": {
+    "description": "Préfixe du prix médian de marché sans corridor (price_hint_widget.dart)"
+  },
+  "bidCreateCompetitivePriceSuffix": " · Votre prix est compétitif.",
+  "@bidCreateCompetitivePriceSuffix": {
+    "description": "Suffixe affiché après le prix médian de marché (price_hint_widget.dart)"
+  },
+  "bidCreateLegalResponsibilityTitle": "Responsabilité légale",
+  "@bidCreateLegalResponsibilityTitle": {
+    "description": "Titre de la carte de statut du disclaimer (disclaimer_card.dart)"
+  },
+  "bidCreateDisclaimerSignedLabel": "Disclaimer signé",
+  "@bidCreateDisclaimerSignedLabel": {
+    "description": "Statut du disclaimer sans date connue (disclaimer_card.dart)"
+  },
+  "bidCreateDisclaimerSigned": "Disclaimer signé le {dateTime}",
+  "@bidCreateDisclaimerSigned": {
+    "description": "Statut du disclaimer avec sa date de signature (disclaimer_card.dart)",
+    "placeholders": {
+      "dateTime": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishCashCommissionIntro": "Vous ne pourrez accepter un colis en espèces que si la commission Yadony peut être prélevée ",
+  "@tripPublishCashCommissionIntro": {
+    "description": "Premier segment de l'avertissement commission espèces à la publication (cash_commission_notice.dart)"
+  },
+  "tripPublishCashCommissionHighlight": "sur votre portefeuille en priorité",
+  "@tripPublishCashCommissionHighlight": {
+    "description": "Segment en gras de l'avertissement commission espèces (cash_commission_notice.dart)"
+  },
+  "tripPublishCashCommissionOutro": ". À défaut, il faudra le recharger ou enregistrer une carte valide au moment d’accepter.",
+  "@tripPublishCashCommissionOutro": {
+    "description": "Dernier segment de l'avertissement commission espèces (cash_commission_notice.dart)"
   }
 }
