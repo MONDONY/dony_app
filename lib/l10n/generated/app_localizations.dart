@@ -15782,7 +15782,7 @@ abstract class AppLocalizations {
   /// **'Vérifier mon identité'**
   String get stripeAccountIdentityRequiredCta;
 
-  /// Titre de connect_onboarding_intro_screen.dart, répété dans l'app bar et passé comme titre à ConnectUnavailableView/IdentityRequiredView ; nom de fonctionnalité, identique dans les deux langues (voir _sameInBothLanguages).
+  /// Titre de connect_onboarding_intro_screen.dart, répété dans l'app bar et passé comme titre à ConnectUnavailableView/IdentityRequiredView.
   ///
   /// In fr, this message translates to:
   /// **'Compte Stripe Connect'**

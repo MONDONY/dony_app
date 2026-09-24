@@ -75,7 +75,8 @@ class _ConnectOnboardingIntroScreenState
     // un par un serait vain : ils convergent tous sur cet écran, la garde y
     // vit donc une seule fois.
     final kycStatus = context.watch<AuthBloc>().state.currentUser?.kycStatus;
-    if (kycStatus != 'VERIFIED' /* i18n-ignore */ ) {
+    final identityNotVerified = kycStatus != 'VERIFIED'; // i18n-ignore
+    if (identityNotVerified) {
       return IdentityRequiredView(title: l.connectOnboardingTitle);
     }
 

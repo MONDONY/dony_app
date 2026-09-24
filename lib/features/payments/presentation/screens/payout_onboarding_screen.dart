@@ -102,7 +102,8 @@ class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen> {
             .state
             .currentUser
             ?.kycStatus;
-        if (kycStatus != 'VERIFIED' /* i18n-ignore */ ) {
+        final identityNotVerified = kycStatus != 'VERIFIED'; // i18n-ignore
+        if (identityNotVerified) {
           return IdentityRequiredView(title: l.payoutTitle);
         }
 

@@ -10321,7 +10321,7 @@
   },
   "connectOnboardingTitle": "Compte Stripe Connect",
   "@connectOnboardingTitle": {
-    "description": "Titre de connect_onboarding_intro_screen.dart, répété dans l'app bar et passé comme titre à ConnectUnavailableView/IdentityRequiredView ; nom de fonctionnalité, identique dans les deux langues (voir _sameInBothLanguages)."
+    "description": "Titre de connect_onboarding_intro_screen.dart, répété dans l'app bar et passé comme titre à ConnectUnavailableView/IdentityRequiredView."
   },
   "connectOnboardingBrowserLaunchFailed": "Impossible d'ouvrir le navigateur. Vérifie ta connexion.",
   "@connectOnboardingBrowserLaunchFailed": {
