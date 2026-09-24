@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -228,6 +229,15 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('+ Nouveau'), findsOneWidget);
+    });
+
+    testWidgets('l\'en-tête porte le scarabée de signalement', (tester) async {
+      // Header maison (pas de DonyAppBar) : le scarabée doit être posé à la
+      // main pour que les testeurs puissent remonter un bug d'ici.
+      await tester.pumpWidget(wrap());
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(DonyFeedbackButton), findsOneWidget);
     });
   });
 

@@ -1,8 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
-import 'package:dony/core/design/widgets/dony_skeleton.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -288,6 +287,18 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.byKey(const Key('activites-back')), findsOneWidget);
+    });
+
+    testWidgets('l\'en-tête porte le scarabée de signalement', (tester) async {
+      // Header maison (_HeaderBar, pas de DonyAppBar) : le scarabée doit être
+      // posé à la main pour que les testeurs puissent remonter un bug d'ici.
+      when(() => bloc.state).thenReturn(AnnouncementListLoaded([]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(DonyFeedbackButton), findsOneWidget);
     });
   });
 

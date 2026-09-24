@@ -92,22 +92,22 @@ class ApiClient {
       );
     }
 
-    // Added before retry interceptors: report only after their final attempt.
+    // dio 5 enchaîne les onError dans l'ORDRE D'AJOUT (dio_mixin.dart : « execute
+    // in FIFO order »), pas à l'envers. _AuthInterceptor, ajouté en premier,
+    // convertit donc l'erreur avant tout le monde ; les retries ci-dessous s'en
+    // accommodent parce que la conversion conserve `response` et `type`, qu'ils
+    // relisent (statusCode 429, timeouts, 5xx).
+    _dio.interceptors.add(RetryOnRateLimitInterceptor(_dio));
+    _dio.interceptors.add(RetryOnTransientErrorInterceptor(_dio));
+
+    // Ajouté EN DERNIER : ne voit que l'échec final. Placé avant les retries, il
+    // rapportait chaque tentative intermédiaire, y compris celles qu'un retry
+    // finissait par résoudre (une requête retentée trois fois puis réussie
+    // produisait trois événements Sentry).
     final errorReporter = _errorReporter;
     if (errorReporter != null) {
       _dio.interceptors.add(_SentryErrorReportingInterceptor(errorReporter));
     }
-    // Ajouté en dernier : dans le sens onError (inverse de l'ajout), c'est le
-    // premier à voir l'erreur brute — avant que _AuthInterceptor ne la
-    // convertisse en RateLimitException — donc le mieux placé pour retenter
-    // la requête d'origine avant que quiconque en aval ne l'affiche à l'utilisateur.
-    _dio.interceptors.add(RetryOnRateLimitInterceptor(_dio));
-
-    // Ajouté en tout dernier pour la même raison : voir l'erreur brute avant
-    // toute conversion, afin de retenter les GET sur timeout/erreur de
-    // connexion/5xx (cold-start backend) avant que _AuthInterceptor ne les
-    // transforme en AppException.
-    _dio.interceptors.add(RetryOnTransientErrorInterceptor(_dio));
   }
 
   late final Dio _dio;
@@ -258,18 +258,30 @@ class _AuthInterceptor extends Interceptor {
         handler.next(options);
         return;
       }
-      // Any other Firebase error should NOT silently proceed.
+      // Any other Firebase error should NOT silently proceed. Le rejet porte une
+      // AppException typée : avec une simple String, unwrapDioError tombait sur
+      // « Erreur réseau » et la file hors-ligne rejouait l'appel à l'infini
+      // comme une panne de connexion.
       handler.reject(
         DioException(
           requestOptions: options,
-          error: 'Authentication failed: ${e.message}',
+          error: const UnauthorizedException(
+            'Authentification impossible',
+            'auth-token-unavailable',
+          ),
         ),
       );
       return;
     } catch (e) {
       // Unexpected error — reject instead of silently proceeding.
       handler.reject(
-        DioException(requestOptions: options, error: 'Unexpected auth error'),
+        DioException(
+          requestOptions: options,
+          error: const UnauthorizedException(
+            'Authentification impossible',
+            'auth-token-unavailable',
+          ),
+        ),
       );
       return;
     }
@@ -281,7 +293,7 @@ class _AuthInterceptor extends Interceptor {
     handler.reject(
       DioException(
         requestOptions: err.requestOptions,
-        error: appExceptionFromDioError(err),
+        error: mapHttpError(err),
         response: err.response,
         type: err.type,
       ),
@@ -289,10 +301,11 @@ class _AuthInterceptor extends Interceptor {
   }
 }
 
-/// Traduit une erreur Dio en [AppException]. Le `detail` RFC 7807 du serveur
-/// l'emporte ; sinon un repli court dans la langue courante de l'app.
+/// Traduit une réponse HTTP d'erreur en [AppException] typée. Seule source de
+/// vérité pour le statut : `OfflineSyncService.isDefinitiveRejection` et le
+/// catalogue d'erreurs raisonnent ensuite sur le type, jamais sur le code HTTP.
 @visibleForTesting
-AppException appExceptionFromDioError(DioException err) {
+AppException mapHttpError(DioException err) {
   final l = AppL10n.current;
   final statusCode = err.response?.statusCode;
   final data = err.response?.data;
@@ -302,12 +315,26 @@ AppException appExceptionFromDioError(DioException err) {
   final apiCode = data is Map
       ? (data['code'] as String?) ?? (data['errorCode'] as String?)
       : null;
+  // ProblemDetail RFC 7807 : `violations` = { champ: message } (backend).
+  final rawViolations = data is Map ? data['violations'] : null;
+  final Map<String, List<String>>? violations = rawViolations is Map
+      ? rawViolations.map(
+          (key, value) => MapEntry(key.toString(), [value.toString()]),
+        )
+      : null;
 
-  if (statusCode == 401) {
-    return UnauthorizedException(
-      detail ?? l.networkFallbackSessionExpired,
-      apiCode,
+  if (statusCode == 400) {
+    // Requête malformée refusée pour de bon par le back (corps illisible,
+    // paramètre invalide) : même famille que le 422. Classé « réseau »
+    // auparavant, donc rejoué sans fin par la file hors-ligne.
+    return ValidationException(
+      detail ?? l.networkFallbackInvalidRequest,
+      code: apiCode,
+      errors: violations,
     );
+  }
+  if (statusCode == 401) {
+    return UnauthorizedException(detail ?? l.networkFallbackSessionExpired, apiCode);
   }
   if (statusCode == 403) {
     return ForbiddenException(detail ?? l.networkFallbackAccessDenied, apiCode);
@@ -319,19 +346,9 @@ AppException appExceptionFromDioError(DioException err) {
     );
   }
   if (statusCode == 409) {
-    return ConflictException(
-      detail ?? l.networkFallbackConflict,
-      code: apiCode,
-    );
+    return ConflictException(detail ?? l.networkFallbackConflict, code: apiCode);
   }
   if (statusCode == 422) {
-    // ProblemDetail RFC 7807 : `violations` = { champ: message } (backend).
-    final rawViolations = data is Map ? data['violations'] : null;
-    final Map<String, List<String>>? violations = rawViolations is Map
-        ? rawViolations.map(
-            (key, value) => MapEntry(key.toString(), [value.toString()]),
-          )
-        : null;
     return ValidationException(
       detail ?? l.networkFallbackInvalidData,
       code: apiCode,

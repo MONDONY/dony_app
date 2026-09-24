@@ -483,6 +483,11 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Header maison (pas de DonyAppBar) : le scarabée de
+                        // signalement se pose à la main, à gauche des
+                        // pastilles d'action.
+                        const DonyFeedbackButton(),
+                        const SizedBox(width: DonySpacing.xs),
                         if (onSendParcel != null) ...[
                           HeaderPill(
                             key: const Key('send-parcel-btn'),

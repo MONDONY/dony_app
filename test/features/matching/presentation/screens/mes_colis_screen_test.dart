@@ -1,5 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -245,6 +245,16 @@ void main() {
 
       expect(find.text('Mes colis'), findsOneWidget);
       expect(find.byKey(const Key('mes-colis-new-request')), findsOneWidget);
+    });
+
+    testWidgets('affiche le scarabée de signalement dans l\'en-tête', (
+      tester,
+    ) async {
+      // Header maison (pas de DonyAppBar) : le scarabée doit être posé à la
+      // main, sinon les testeurs n'ont aucun moyen de remonter un bug d'ici.
+      await pump(tester);
+
+      expect(find.byType(DonyFeedbackButton), findsOneWidget);
     });
 
     testWidgets('affiche les deux volets En route / Publiés', (tester) async {

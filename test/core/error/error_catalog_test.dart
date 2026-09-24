@@ -211,42 +211,49 @@ void main() {
     });
   });
 
-  group('ErrorCatalog — firebase-* (connexion par numéro)', () {
-    // RÉGRESSION : AuthBloc._friendlyFirebaseError générait des codes
-    // ('code-expired', 'code-incorrect', 'too-many-attempts') identiques à
-    // ceux déjà utilisés par la confirmation de livraison — un OTP expiré
-    // affichait « Demande à l'expéditeur d'en générer un nouveau », un
-    // message trompeur en plein flux de connexion. Les codes Firebase sont
-    // maintenant préfixés `firebase-` et n'entrent plus en collision.
-    test('firebase-code-expired reste distinct du code-expired livraison', () {
-      const firebaseError = NetworkException(
-        'peu importe',
-        code: 'firebase-code-expired',
-      );
-      const deliveryError = NetworkException(
-        'peu importe',
-        code: 'code-expired',
-      );
-
-      final firebasePresentation = ErrorCatalog.lookup(firebaseError);
-      final deliveryPresentation = ErrorCatalog.lookup(deliveryError);
-
-      expect(firebasePresentation.message, contains('nouveau code'));
-      expect(deliveryPresentation.message, contains('expéditeur'));
-      expect(firebasePresentation.message, isNot(contains('expéditeur')));
-    });
-
-    test('code Firebase générique inconnu → entrée dédiée, pas "Erreur '
-        'réseau"', () {
+  group('ErrorCatalog — codes émis par AuthBloc._friendlyError', () {
+    // `phone-already-registered` et `auth-generic-error` étaient fabriqués par
+    // le bloc sans entrée au catalogue : l'écran retombait sur « Erreur réseau »
+    // au lieu du vrai motif. Le bloc réutilise désormais `phone-already-exists`
+    // et le catalogue connaît le repli générique.
+    test('phone-already-exists (numéro déjà lié) → texte dédié', () {
       const error = NetworkException(
-        'peu importe',
-        code: 'firebase-auth-error',
+        'Ce numéro est déjà associé à un autre compte.',
+        code: 'phone-already-exists',
       );
 
       final p = ErrorCatalog.lookup(error);
 
-      expect(p.title, isNot('Erreur réseau'));
+      expect(p.title, 'Numéro déjà utilisé');
+      expect(p.title, isNot(contains('réseau')));
     });
+
+    test(
+      'auth-generic-error → connexion impossible, pas « Erreur réseau »',
+      () {
+        const error = NetworkException(
+          'peu importe',
+          code: 'auth-generic-error',
+        );
+
+        final p = ErrorCatalog.lookup(error);
+
+        expect(p.title, 'Connexion impossible');
+        expect(ErrorCatalog.isKnown(error), isTrue);
+      },
+    );
+
+    test(
+      'les anciens codes firebase-* n\'ont plus d\'entrée (émetteur disparu)',
+      () {
+        expect(
+          ErrorCatalog.isKnown(
+            const NetworkException('x', code: 'firebase-code-expired'),
+          ),
+          isFalse,
+        );
+      },
+    );
   });
 
   group('ErrorCatalog — parcours de connexion par email', () {
@@ -964,11 +971,11 @@ void main() {
   });
 
   group('ErrorCatalog — codes auth', () {
-    test('phone-already-registered en français et en anglais', () {
-      const error = NetworkException('x', code: 'phone-already-registered');
+    test('phone-already-exists en français et en anglais', () {
+      const error = NetworkException('x', code: 'phone-already-exists');
       expect(
         ErrorCatalog.lookup(error).message,
-        'Ce numéro est déjà associé à un compte',
+        'Ce numéro est déjà associé à un autre compte.',
       );
       expect(
         ErrorCatalog.lookup(
