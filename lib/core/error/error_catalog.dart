@@ -235,58 +235,13 @@ abstract final class ErrorCatalog {
       icon: Icons.gpp_bad_rounded,
     ),
 
-    // ─── Connexion par numéro (Firebase Auth) ──────────────────────────
-    // Codes propres à AuthBloc._friendlyFirebaseError, préfixés `firebase-`
-    // pour ne jamais collisionner avec les codes homonymes d'autres features
-    // (ex: `code-expired`/`code-incorrect` existent déjà plus bas pour les
-    // codes de confirmation de livraison).
-    'firebase-invalid-phone-number': ErrorPresentation(
-      title: 'Numéro invalide',
-      message: 'Vérifie le numéro saisi et réessaie.',
-      severity: ErrorSeverity.warning,
-      icon: Icons.phone_disabled_rounded,
-    ),
-    'firebase-code-incorrect': ErrorPresentation(
-      title: 'Code incorrect',
-      message: 'Le code de vérification saisi est incorrect.',
-      severity: ErrorSeverity.warning,
-      icon: Icons.password_rounded,
-    ),
-    'firebase-code-expired': ErrorPresentation(
-      title: 'Code expiré',
-      message: 'Ce code a expiré. Demande un nouveau code.',
-      severity: ErrorSeverity.warning,
-      icon: Icons.timer_off_rounded,
-    ),
-    'firebase-too-many-attempts': ErrorPresentation(
-      title: 'Trop de tentatives',
-      message: 'Trop de tentatives. Réessaie dans quelques minutes.',
-      severity: ErrorSeverity.warning,
-      icon: Icons.hourglass_top_rounded,
-    ),
-    'firebase-session-expired': ErrorPresentation(
-      title: 'Session expirée',
-      message: 'Ta session a expiré. Recommence la connexion.',
-      severity: ErrorSeverity.error,
-      icon: Icons.lock_reset_rounded,
-    ),
-    'firebase-network-request-failed': ErrorPresentation(
-      title: 'Erreur réseau',
-      message:
-          'Impossible de joindre les serveurs Google. Vérifie ta connexion.',
-      severity: ErrorSeverity.error,
-      icon: Icons.wifi_off_rounded,
-    ),
-    'firebase-app-verification-failed': ErrorPresentation(
-      title: 'Vérification impossible',
-      message:
-          'La vérification de l\'application a échoué. Réinstalle l\'app depuis TestFlight ou le Store puis réessaie.',
-      severity: ErrorSeverity.error,
-      icon: Icons.gpp_maybe_rounded,
-    ),
-    'firebase-auth-error': ErrorPresentation(
-      title: 'Erreur de connexion',
-      message: 'La connexion a échoué. Réessaie dans un instant.',
+    // ─── Connexion : repli générique d'AuthBloc._friendlyError ─────────
+    // Les huit entrées `firebase-*` qui vivaient ici référençaient une méthode
+    // disparue (`_friendlyFirebaseError`) : plus aucun émetteur, retirées. Le
+    // parcours téléphone passe par le back (`phone-otp-*` ci-dessous).
+    'auth-generic-error': ErrorPresentation(
+      title: 'Connexion impossible',
+      message: 'Une erreur est survenue pendant la connexion. Réessaie.',
       severity: ErrorSeverity.error,
       icon: Icons.error_outline_rounded,
     ),

@@ -90,6 +90,10 @@ class ErrorReportingService {
   /// regroupaient sous un même titre impossible à diagnostiquer.
   static String? _safeCode(Object error) => switch (error) {
     AppException(:final code) => code,
+    // L'intercepteur HTTP passe la DioException brute ; l'AppException produite
+    // par mapHttpError est dans `.error`. Sans ce cas, aucun code métier
+    // n'atteignait Sentry et tout se regroupait sous « http.POST, DioException ».
+    DioException(:final error) when error is AppException => error.code,
     FirebaseException(:final code) => code,
     _ => null,
   };
