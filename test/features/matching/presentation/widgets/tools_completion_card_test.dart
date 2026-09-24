@@ -4,6 +4,8 @@ import 'package:dony/features/matching/presentation/widgets/tools_completion_car
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 ToolsCompletionModel _model({
   int addresses = 0,
   int recipients = 0,
@@ -114,6 +116,26 @@ void main() {
 
     final size = tester.getSize(find.byKey(const Key('tools-completion-cta')));
     expect(size.height, greaterThanOrEqualTo(44));
+  });
+
+  testWidgets('en anglais, la carte partielle affiche ses textes traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    final taps = await _pump(
+      tester,
+      _model(addresses: 2, templates: 1, grid: 6),
+    );
+
+    expect(find.text('Post in 3 taps'), findsOneWidget);
+    expect(
+      find.textContaining('You still need a recipient and an alert.'),
+      findsOneWidget,
+    );
+    expect(find.text('Add a recipient'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('tools-completion-cta')));
+    expect(taps, [ToolKey.recipients]);
   });
 
   testWidgets('en sombre, le bandeau 5 / 5 prend le success du thème sombre', (

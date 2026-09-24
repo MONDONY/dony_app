@@ -13550,6 +13550,630 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Annuler la demande'**
   String get bidCancelConfirmButton;
+
+  /// Libellé court de la période 7 jours, chips du hub Activités (activity_labels.dart StatsPeriodL10n.label, stats_period_cubit.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'7 jours'**
+  String get activityPeriod7Days;
+
+  /// Libellé court de la période 30 jours (activity_labels.dart StatsPeriodL10n.label).
+  ///
+  /// In fr, this message translates to:
+  /// **'30 jours'**
+  String get activityPeriod30Days;
+
+  /// Libellé court de la période 12 mois (activity_labels.dart StatsPeriodL10n.label).
+  ///
+  /// In fr, this message translates to:
+  /// **'12 mois'**
+  String get activityPeriod12Months;
+
+  /// Sous-titre des feuilles de détail pour la période 7 jours (activity_labels.dart StatsPeriodL10n.detailLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'7 derniers jours'**
+  String get activityPeriodLast7Days;
+
+  /// Sous-titre des feuilles de détail pour la période 30 jours (activity_labels.dart StatsPeriodL10n.detailLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'30 derniers jours'**
+  String get activityPeriodLast30Days;
+
+  /// Sous-titre des feuilles de détail pour la période 12 mois (activity_labels.dart StatsPeriodL10n.detailLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'12 derniers mois'**
+  String get activityPeriodLast12Months;
+
+  /// Libellé du rail de paiement carte, feuille Revenus (activity_labels.dart RevenueRailL10n.label, revenue_details_model.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte'**
+  String get activityRevenueCard;
+
+  /// Libellé du rail de paiement mobile money, identique en anglais (activity_labels.dart RevenueRailL10n.label).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mobile money'**
+  String get activityRevenueMobileMoney;
+
+  /// Libellé du rail de paiement espèces (activity_labels.dart RevenueRailL10n.label).
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces'**
+  String get activityRevenueCash;
+
+  /// Libellé de repli pour un rail de paiement inconnu du serveur (activity_labels.dart RevenueRailL10n.label).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement'**
+  String get activityRevenueOther;
+
+  /// Groupe nominal de l'outil adresses dans la phrase des manquants (activity_labels.dart ToolKeyL10n.missingPhrase).
+  ///
+  /// In fr, this message translates to:
+  /// **'une adresse'**
+  String get activityToolMissingAddress;
+
+  /// Groupe nominal de l'outil destinataires (activity_labels.dart ToolKeyL10n.missingPhrase).
+  ///
+  /// In fr, this message translates to:
+  /// **'un destinataire'**
+  String get activityToolMissingRecipient;
+
+  /// Groupe nominal de l'outil alertes (activity_labels.dart ToolKeyL10n.missingPhrase).
+  ///
+  /// In fr, this message translates to:
+  /// **'une alerte'**
+  String get activityToolMissingAlert;
+
+  /// Groupe nominal de l'outil modèles de trajet (activity_labels.dart ToolKeyL10n.missingPhrase).
+  ///
+  /// In fr, this message translates to:
+  /// **'un modèle de trajet'**
+  String get activityToolMissingTemplate;
+
+  /// Groupe nominal de l'outil grille de prix (activity_labels.dart ToolKeyL10n.missingPhrase).
+  ///
+  /// In fr, this message translates to:
+  /// **'une grille de prix'**
+  String get activityToolMissingPriceGrid;
+
+  /// CTA de l'outil adresses (activity_labels.dart ToolKeyL10n.ctaLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une adresse'**
+  String get activityToolCtaAddresses;
+
+  /// CTA de l'outil destinataires (activity_labels.dart ToolKeyL10n.ctaLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un destinataire'**
+  String get activityToolCtaRecipients;
+
+  /// CTA de l'outil alertes (activity_labels.dart ToolKeyL10n.ctaLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer une alerte'**
+  String get activityToolCtaAlerts;
+
+  /// CTA de l'outil modèles de trajet (activity_labels.dart ToolKeyL10n.ctaLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un modèle de trajet'**
+  String get activityToolCtaTemplates;
+
+  /// CTA de l'outil grille de prix (activity_labels.dart ToolKeyL10n.ctaLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remplir ma grille de prix'**
+  String get activityToolCtaPriceGrid;
+
+  /// Texte du badge « prêt » de l'outil adresses (activity_labels.dart ToolKeyL10n.badgeLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, one{{count} adresse} other{{count} adresses}}'**
+  String activityToolBadgeAddresses(num count);
+
+  /// Texte du badge « prêt » de l'outil destinataires (activity_labels.dart ToolKeyL10n.badgeLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, one{{count} destinataire} other{{count} destinataires}}'**
+  String activityToolBadgeRecipients(num count);
+
+  /// Texte du badge « prêt » de l'outil alertes (activity_labels.dart ToolKeyL10n.badgeLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, one{{count} alerte} other{{count} alertes}}'**
+  String activityToolBadgeAlerts(num count);
+
+  /// Texte du badge « prêt » de l'outil modèles de trajet (activity_labels.dart ToolKeyL10n.badgeLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, one{{count} modèle} other{{count} modèles}}'**
+  String activityToolBadgeTemplates(num count);
+
+  /// Texte du badge « prêt » de la grille de prix, invariant : le nombre de lignes ne compte pas (activity_labels.dart ToolKeyL10n.badgeLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Configurée'**
+  String get activityToolBadgePriceGridReady;
+
+  /// Phrase des outils manquants, {items} déjà joints par joinList (activity_labels.dart missingSentence).
+  ///
+  /// In fr, this message translates to:
+  /// **'Il vous manque {items}.'**
+  String activityToolsMissing(Object items);
+
+  /// Titre de la tuile/ligne outil alertes, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes alertes'**
+  String get activityToolTitleAlerts;
+
+  /// Titre de la tuile/ligne outil modèles de trajet, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modèles de trajet'**
+  String get activityToolTitleTemplates;
+
+  /// Titre de la tuile/ligne outil grille de prix, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ma grille de prix'**
+  String get activityToolTitlePriceGrid;
+
+  /// Titre de la tuile/ligne outil adresses, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes adresses'**
+  String get activityToolTitleAddresses;
+
+  /// Titre de la tuile/ligne outil destinataires, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes destinataires'**
+  String get activityToolTitleRecipients;
+
+  /// Sous-titre de la tuile modèles de trajet du hub (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Republiez vos trajets habituels'**
+  String get activityToolSubtitleTemplates;
+
+  /// Sous-titre de la tuile grille de prix du hub (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tarifs par article pour vos trajets'**
+  String get activityToolSubtitlePriceGrid;
+
+  /// Sous-titre de la tuile adresses du hub (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos lieux d\'envoi enregistrés'**
+  String get activityToolSubtitleAddresses;
+
+  /// Sous-titre de la tuile destinataires du hub (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les personnes à qui vous envoyez'**
+  String get activityToolSubtitleRecipients;
+
+  /// Texte du badge d'un outil non configuré, partagé entre le hub et le menu burger.
+  ///
+  /// In fr, this message translates to:
+  /// **'À configurer'**
+  String get activityToolBadgeUnconfigured;
+
+  /// Semantics du badge d'outil prêt dans la grille du hub (activites_hub_screen.dart _toolBadge).
+  ///
+  /// In fr, this message translates to:
+  /// **'{title}, prêt, {label}'**
+  String activityToolHubSemanticsReady(Object label, Object title);
+
+  /// Semantics du badge d'outil non configuré dans la grille du hub (activites_hub_screen.dart _toolBadge).
+  ///
+  /// In fr, this message translates to:
+  /// **'{title}, à configurer'**
+  String activityToolHubSemanticsUnconfigured(Object title);
+
+  /// Semantics du badge d'outil prêt dans le menu burger (activites_menu_sheet.dart _ToolTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label} : {badge}'**
+  String activityToolMenuSemanticsReady(Object badge, Object label);
+
+  /// Semantics du badge d'outil non configuré dans le menu burger (activites_menu_sheet.dart _ToolTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label} : à configurer'**
+  String activityToolMenuSemanticsUnconfigured(Object label);
+
+  /// Titre de la tuile/ligne Historique, partagé entre le hub et le menu burger.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique'**
+  String get activityHistoryTitle;
+
+  /// Sous-titre de la tuile Historique du hub (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout ce qui est terminé'**
+  String get activityHistorySubtitle;
+
+  /// Titre de la tuile Aide & support du hub (activites_hub_screen.dart, avec l'esperluette).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aide & support'**
+  String get activityHelpTitleHub;
+
+  /// Sous-titre de la tuile Aide & support du hub (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une question, un souci ?'**
+  String get activityHelpSubtitle;
+
+  /// Sous-titre de la tuile alertes quand aucune alerte n'est configurée (activites_hub_screen.dart _alertsTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Soyez prévenu avant les autres'**
+  String get activityAlertsSubtitleUnconfigured;
+
+  /// Sous-titre de la tuile alertes configurée sans nouveauté (activites_hub_screen.dart _alertsTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien de neuf pour l\'instant'**
+  String get activityAlertsSubtitleCaughtUp;
+
+  /// Sous-titre de repli de la tuile alertes (résumé non chargé ou aucun corridor récent) (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveaux trajets et colis'**
+  String get activityAlertsSubtitleDefault;
+
+  /// Grand titre de l'écran, en-tête du hub Activités (activites_hub_screen.dart _Header) - clé dédiée, distincte de shellTabActivity (R40).
+  ///
+  /// In fr, this message translates to:
+  /// **'Activités'**
+  String get activityHubTitle;
+
+  /// Tooltip et semanticLabel du bouton burger de l'en-tête, identique en anglais (activites_hub_screen.dart _Header).
+  ///
+  /// In fr, this message translates to:
+  /// **'Menu'**
+  String get activityMenuButtonTooltip;
+
+  /// Titre de la section grille d'activité (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En ce moment'**
+  String get activitySectionCurrent;
+
+  /// Titre de la section statistiques (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Statistiques'**
+  String get activitySectionStats;
+
+  /// Titre de la section outils (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Outils'**
+  String get activitySectionTools;
+
+  /// Titre de la carte d'introduction du hub (activites_hub_screen.dart _IntroCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyez ou transportez, c\'est vous qui choisissez'**
+  String get activityIntroTitle;
+
+  /// Corps de la carte d'introduction du hub (activites_hub_screen.dart _IntroCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyez vos colis avec des voyageurs de confiance, ou transportez des colis pendant vos trajets pour gagner de l\'argent. Tout se suit depuis cet écran.'**
+  String get activityIntroBody;
+
+  /// Bouton Publier un colis de la rangée d'actions du hub (activites_hub_screen.dart _ActionRow) ; Publier un trajet réutilise tripPublishTitle (R40, préfixe partagé trip…).
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier un colis'**
+  String get activityPublishParcelCta;
+
+  /// Libellé de la tuile Trajets actifs de la grille d'activité (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets actifs'**
+  String get activityTileTripsLabel;
+
+  /// Sous-titre de la tuile Trajets actifs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos voyages à venir'**
+  String get activityTileTripsSubtitle;
+
+  /// Invite affichée quand le compteur de trajets actifs est à zéro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publiez un trajet'**
+  String get activityTileTripsEmptyHint;
+
+  /// Libellé de la tuile Mes colis de la grille d'activité (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes colis'**
+  String get activityTileShipmentsLabel;
+
+  /// Sous-titre de la tuile Mes colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publiés, négociés, en route'**
+  String get activityTileShipmentsSubtitle;
+
+  /// Invite affichée quand le compteur de la tuile Mes colis est à zéro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyez un colis'**
+  String get activityTileShipmentsEmptyHint;
+
+  /// Libellé de la tuile Demandes reçues de la grille d'activité (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes reçues'**
+  String get activityTileRequestsLabel;
+
+  /// Sous-titre de la tuile Demandes reçues.
+  ///
+  /// In fr, this message translates to:
+  /// **'Des colis à transporter pour vous'**
+  String get activityTileRequestsSubtitle;
+
+  /// Invite affichée quand le compteur de la tuile Demandes reçues est à zéro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune pour l\'instant'**
+  String get activityTileRequestsEmptyHint;
+
+  /// Libellé de la tuile Discussions de prix de la grille d'activité (activites_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Discussions de prix'**
+  String get activityTileNegotiationsLabel;
+
+  /// Sous-titre de la tuile Discussions de prix.
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposez ou acceptez un tarif'**
+  String get activityTileNegotiationsSubtitle;
+
+  /// Invite affichée quand le compteur de la tuile Discussions de prix est à zéro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune en cours'**
+  String get activityTileNegotiationsEmptyHint;
+
+  /// Titre partagé entre la tuile de stats du hub et la feuille de détail (activites_hub_screen.dart, revenue_details_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenus'**
+  String get activityRevenueTitle;
+
+  /// Titre partagé entre la tuile de stats du hub et la feuille de détail (activites_hub_screen.dart, kg_sold_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Kg vendus'**
+  String get activityKgSoldTitle;
+
+  /// Libellé de la tuile de statistiques Trajets (activites_hub_screen.dart _StatsRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets'**
+  String get activityStatTripsLabel;
+
+  /// Valeur de la tuile de statistiques Trajets (activites_hub_screen.dart _StatsRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} publiés'**
+  String activityStatTripsPublished(int count);
+
+  /// Libellé de la tuile de statistiques Envois (activites_hub_screen.dart _StatsRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envois'**
+  String get activityStatParcelsLabel;
+
+  /// Valeur de la tuile de statistiques Envois (activites_hub_screen.dart _StatsRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count} envoyés'**
+  String activityStatParcelsSent(int count);
+
+  /// Action rapide Suivre un colis de la feuille de menu burger (activites_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre un colis'**
+  String get activityMenuTrackParcel;
+
+  /// Action rapide Scanner un colis de la feuille de menu burger (activites_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Scanner un colis'**
+  String get activityMenuScanParcel;
+
+  /// Action rapide Paramètres de la feuille de menu burger (activites_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paramètres'**
+  String get activityMenuSettings;
+
+  /// Titre de la section outils de la feuille de menu burger (activites_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes outils'**
+  String get activityMenuToolsSection;
+
+  /// Décompte de complétion affiché à droite du titre de section outils (activites_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{ready}/{total} prêts'**
+  String activityMenuToolsReady(Object ready, Object total);
+
+  /// Titre de la section compte de la feuille de menu burger (activites_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon compte'**
+  String get activityMenuAccountSection;
+
+  /// Ligne Portefeuille de la feuille de menu burger (activites_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Portefeuille'**
+  String get activityWalletTitle;
+
+  /// Ligne Aide et support de la feuille de menu burger (activites_menu_sheet.dart, sans esperluette).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aide et support'**
+  String get activityHelpTitleMenu;
+
+  /// Titre de l'état d'erreur, partagé entre les feuilles Kg vendus et Revenus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Détail indisponible'**
+  String get activityDetailUnavailable;
+
+  /// Description de l'état d'erreur de la feuille Kg vendus (kg_sold_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger vos kg vendus. Vérifiez votre connexion, puis réessayez.'**
+  String get activityKgSoldErrorBody;
+
+  /// Description de l'état d'erreur de la feuille Revenus (revenue_details_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger vos revenus. Vérifiez votre connexion, puis réessayez.'**
+  String get activityRevenueErrorBody;
+
+  /// Titre de l'état vide, partagé entre les feuilles Kg vendus et Revenus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune livraison sur la période'**
+  String get activityEmptyPeriodTitle;
+
+  /// Description de l'état vide de la feuille Kg vendus (kg_sold_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les kg vendus apparaissent ici une fois vos colis livrés.'**
+  String get activityKgSoldEmptyBody;
+
+  /// Description de l'état vide de la feuille Revenus (revenue_details_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos revenus apparaissent ici une fois vos colis livrés et payés.'**
+  String get activityRevenueEmptyBody;
+
+  /// Compteur de colis de la feuille Kg vendus, colis invariant en français (kg_sold_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, one{{count} colis} other{{count} colis}}'**
+  String activityKgSoldParcels(num count);
+
+  /// Compteur de trajets de la feuille Kg vendus (kg_sold_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, one{{count} trajet} other{{count} trajets}}'**
+  String activityKgSoldTrips(num count);
+
+  /// Sous-titre du total (N colis livrés), branches fr identiques pour reproduire le texte d'origine (kg_sold_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, one{{count} colis livrés} other{{count} colis livrés}}'**
+  String activityKgSoldParcelsDelivered(num count);
+
+  /// Sous-titre d'une ligne de trajet, avant le séparateur et le compteur de colis (kg_sold_sheet.dart _TripRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ le {date}'**
+  String activityKgSoldTripDeparture(Object date);
+
+  /// Compteur de livraisons de la feuille Revenus ; 0 livraison corrige l'accord (revenue_details_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, one{{count} livraison} other{{count} livraisons}}'**
+  String activityDeliveries(num count);
+
+  /// Rappel de conversion en bas de la feuille Revenus quand la tuile affiche un total converti (revenue_details_sheet.dart _ConversionNote).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sur la tuile, « {total} » est un total converti au taux du jour, indicatif. Ici, chaque montant garde sa devise.'**
+  String activityRevenueConversionNote(Object total);
+
+  /// Titre du bandeau compact à 5/5 outils prêts (tools_completion_card.dart _CompleteBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos outils sont prêts'**
+  String get activityToolsCompleteTitle;
+
+  /// Corps du bandeau compact à 5/5 outils prêts (tools_completion_card.dart _CompleteBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Publiez un colis ou un trajet en 3 taps'**
+  String get activityToolsCompleteBody;
+
+  /// Titre de la carte de progression quand aucun outil n'est encore prêt (tools_completion_card.dart _ProgressCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Préparez vos outils une fois'**
+  String get activityToolsStartTitle;
+
+  /// Titre de la carte de progression dès qu'au moins un outil est prêt (tools_completion_card.dart _ProgressCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Publiez en 3 taps'**
+  String get activityToolsProgressTitle;
+
+  /// Corps de la carte de progression au tout départ, aucun outil prêt (tools_completion_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresses, destinataires, modèles, grille de prix, alertes : remplis une fois, réutilisés à chaque publication.'**
+  String get activityToolsStartBody;
+
+  /// Corps de la carte de progression une fois au moins un outil prêt ; {missing} est la phrase déjà localisée (activityToolsMissing) (tools_completion_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{missing} Une fois vos outils prêts, plus rien à ressaisir.'**
+  String activityToolsProgressBody(Object missing);
+
+  /// CTA de la carte de progression au tout départ, aucun outil prêt (tools_completion_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Commencer par mes adresses'**
+  String get activityToolsStartCta;
+
+  /// Libellé court affiché par la jauge de progression des outils (tools_completion_card.dart DonyOnboardingGauge.label).
+  ///
+  /// In fr, this message translates to:
+  /// **'prêts'**
+  String get activityToolsGaugeLabel;
+
+  /// Semantics de la jauge de progression des outils (tools_completion_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Préparation de vos outils'**
+  String get activityToolsGaugeSemantics;
+
+  /// Texte du badge de nouveauté de la tuile alertes, deux branches identiques en anglais (activites_hub_screen.dart _alertsTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, one{{count} nouveau} other{{count} nouveaux}}'**
+  String activityNewCount(num count);
+
+  /// Semantics du badge de nouveauté de la tuile alertes (activites_hub_screen.dart _alertsTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'{title}, {label} depuis votre dernière visite'**
+  String activityNewSinceLastVisit(Object label, Object title);
 }
 
 class _AppLocalizationsDelegate

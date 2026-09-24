@@ -8493,5 +8493,431 @@
   "bidCancelConfirmButton": "Annuler la demande",
   "@bidCancelConfirmButton": {
     "description": "Bouton de confirmation destructive (cancellation_dialog.dart)."
+  },
+  "activityPeriod7Days": "7 jours",
+  "@activityPeriod7Days": {
+    "description": "Libellé court de la période 7 jours, chips du hub Activités (activity_labels.dart StatsPeriodL10n.label, stats_period_cubit.dart)."
+  },
+  "activityPeriod30Days": "30 jours",
+  "@activityPeriod30Days": {
+    "description": "Libellé court de la période 30 jours (activity_labels.dart StatsPeriodL10n.label)."
+  },
+  "activityPeriod12Months": "12 mois",
+  "@activityPeriod12Months": {
+    "description": "Libellé court de la période 12 mois (activity_labels.dart StatsPeriodL10n.label)."
+  },
+  "activityPeriodLast7Days": "7 derniers jours",
+  "@activityPeriodLast7Days": {
+    "description": "Sous-titre des feuilles de détail pour la période 7 jours (activity_labels.dart StatsPeriodL10n.detailLabel)."
+  },
+  "activityPeriodLast30Days": "30 derniers jours",
+  "@activityPeriodLast30Days": {
+    "description": "Sous-titre des feuilles de détail pour la période 30 jours (activity_labels.dart StatsPeriodL10n.detailLabel)."
+  },
+  "activityPeriodLast12Months": "12 derniers mois",
+  "@activityPeriodLast12Months": {
+    "description": "Sous-titre des feuilles de détail pour la période 12 mois (activity_labels.dart StatsPeriodL10n.detailLabel)."
+  },
+  "activityRevenueCard": "Carte",
+  "@activityRevenueCard": {
+    "description": "Libellé du rail de paiement carte, feuille Revenus (activity_labels.dart RevenueRailL10n.label, revenue_details_model.dart)."
+  },
+  "activityRevenueMobileMoney": "Mobile money",
+  "@activityRevenueMobileMoney": {
+    "description": "Libellé du rail de paiement mobile money, identique en anglais (activity_labels.dart RevenueRailL10n.label)."
+  },
+  "activityRevenueCash": "Espèces",
+  "@activityRevenueCash": {
+    "description": "Libellé du rail de paiement espèces (activity_labels.dart RevenueRailL10n.label)."
+  },
+  "activityRevenueOther": "Paiement",
+  "@activityRevenueOther": {
+    "description": "Libellé de repli pour un rail de paiement inconnu du serveur (activity_labels.dart RevenueRailL10n.label)."
+  },
+  "activityToolMissingAddress": "une adresse",
+  "@activityToolMissingAddress": {
+    "description": "Groupe nominal de l'outil adresses dans la phrase des manquants (activity_labels.dart ToolKeyL10n.missingPhrase)."
+  },
+  "activityToolMissingRecipient": "un destinataire",
+  "@activityToolMissingRecipient": {
+    "description": "Groupe nominal de l'outil destinataires (activity_labels.dart ToolKeyL10n.missingPhrase)."
+  },
+  "activityToolMissingAlert": "une alerte",
+  "@activityToolMissingAlert": {
+    "description": "Groupe nominal de l'outil alertes (activity_labels.dart ToolKeyL10n.missingPhrase)."
+  },
+  "activityToolMissingTemplate": "un modèle de trajet",
+  "@activityToolMissingTemplate": {
+    "description": "Groupe nominal de l'outil modèles de trajet (activity_labels.dart ToolKeyL10n.missingPhrase)."
+  },
+  "activityToolMissingPriceGrid": "une grille de prix",
+  "@activityToolMissingPriceGrid": {
+    "description": "Groupe nominal de l'outil grille de prix (activity_labels.dart ToolKeyL10n.missingPhrase)."
+  },
+  "activityToolCtaAddresses": "Ajouter une adresse",
+  "@activityToolCtaAddresses": {
+    "description": "CTA de l'outil adresses (activity_labels.dart ToolKeyL10n.ctaLabel)."
+  },
+  "activityToolCtaRecipients": "Ajouter un destinataire",
+  "@activityToolCtaRecipients": {
+    "description": "CTA de l'outil destinataires (activity_labels.dart ToolKeyL10n.ctaLabel)."
+  },
+  "activityToolCtaAlerts": "Créer une alerte",
+  "@activityToolCtaAlerts": {
+    "description": "CTA de l'outil alertes (activity_labels.dart ToolKeyL10n.ctaLabel)."
+  },
+  "activityToolCtaTemplates": "Créer un modèle de trajet",
+  "@activityToolCtaTemplates": {
+    "description": "CTA de l'outil modèles de trajet (activity_labels.dart ToolKeyL10n.ctaLabel)."
+  },
+  "activityToolCtaPriceGrid": "Remplir ma grille de prix",
+  "@activityToolCtaPriceGrid": {
+    "description": "CTA de l'outil grille de prix (activity_labels.dart ToolKeyL10n.ctaLabel)."
+  },
+  "activityToolBadgeAddresses": "{count, plural, one{{count} adresse} other{{count} adresses}}",
+  "@activityToolBadgeAddresses": {
+    "description": "Texte du badge « prêt » de l'outil adresses (activity_labels.dart ToolKeyL10n.badgeLabel)."
+  },
+  "activityToolBadgeRecipients": "{count, plural, one{{count} destinataire} other{{count} destinataires}}",
+  "@activityToolBadgeRecipients": {
+    "description": "Texte du badge « prêt » de l'outil destinataires (activity_labels.dart ToolKeyL10n.badgeLabel)."
+  },
+  "activityToolBadgeAlerts": "{count, plural, one{{count} alerte} other{{count} alertes}}",
+  "@activityToolBadgeAlerts": {
+    "description": "Texte du badge « prêt » de l'outil alertes (activity_labels.dart ToolKeyL10n.badgeLabel)."
+  },
+  "activityToolBadgeTemplates": "{count, plural, one{{count} modèle} other{{count} modèles}}",
+  "@activityToolBadgeTemplates": {
+    "description": "Texte du badge « prêt » de l'outil modèles de trajet (activity_labels.dart ToolKeyL10n.badgeLabel)."
+  },
+  "activityToolBadgePriceGridReady": "Configurée",
+  "@activityToolBadgePriceGridReady": {
+    "description": "Texte du badge « prêt » de la grille de prix, invariant : le nombre de lignes ne compte pas (activity_labels.dart ToolKeyL10n.badgeLabel)."
+  },
+  "activityToolsMissing": "Il vous manque {items}.",
+  "@activityToolsMissing": {
+    "description": "Phrase des outils manquants, {items} déjà joints par joinList (activity_labels.dart missingSentence)."
+  },
+  "activityToolTitleAlerts": "Mes alertes",
+  "@activityToolTitleAlerts": {
+    "description": "Titre de la tuile/ligne outil alertes, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart."
+  },
+  "activityToolTitleTemplates": "Modèles de trajet",
+  "@activityToolTitleTemplates": {
+    "description": "Titre de la tuile/ligne outil modèles de trajet, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart."
+  },
+  "activityToolTitlePriceGrid": "Ma grille de prix",
+  "@activityToolTitlePriceGrid": {
+    "description": "Titre de la tuile/ligne outil grille de prix, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart."
+  },
+  "activityToolTitleAddresses": "Mes adresses",
+  "@activityToolTitleAddresses": {
+    "description": "Titre de la tuile/ligne outil adresses, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart."
+  },
+  "activityToolTitleRecipients": "Mes destinataires",
+  "@activityToolTitleRecipients": {
+    "description": "Titre de la tuile/ligne outil destinataires, partagé entre activites_hub_screen.dart et activites_menu_sheet.dart."
+  },
+  "activityToolSubtitleTemplates": "Republiez vos trajets habituels",
+  "@activityToolSubtitleTemplates": {
+    "description": "Sous-titre de la tuile modèles de trajet du hub (activites_hub_screen.dart)."
+  },
+  "activityToolSubtitlePriceGrid": "Tarifs par article pour vos trajets",
+  "@activityToolSubtitlePriceGrid": {
+    "description": "Sous-titre de la tuile grille de prix du hub (activites_hub_screen.dart)."
+  },
+  "activityToolSubtitleAddresses": "Vos lieux d'envoi enregistrés",
+  "@activityToolSubtitleAddresses": {
+    "description": "Sous-titre de la tuile adresses du hub (activites_hub_screen.dart)."
+  },
+  "activityToolSubtitleRecipients": "Les personnes à qui vous envoyez",
+  "@activityToolSubtitleRecipients": {
+    "description": "Sous-titre de la tuile destinataires du hub (activites_hub_screen.dart)."
+  },
+  "activityToolBadgeUnconfigured": "À configurer",
+  "@activityToolBadgeUnconfigured": {
+    "description": "Texte du badge d'un outil non configuré, partagé entre le hub et le menu burger."
+  },
+  "activityToolHubSemanticsReady": "{title}, prêt, {label}",
+  "@activityToolHubSemanticsReady": {
+    "description": "Semantics du badge d'outil prêt dans la grille du hub (activites_hub_screen.dart _toolBadge)."
+  },
+  "activityToolHubSemanticsUnconfigured": "{title}, à configurer",
+  "@activityToolHubSemanticsUnconfigured": {
+    "description": "Semantics du badge d'outil non configuré dans la grille du hub (activites_hub_screen.dart _toolBadge)."
+  },
+  "activityToolMenuSemanticsReady": "{label} : {badge}",
+  "@activityToolMenuSemanticsReady": {
+    "description": "Semantics du badge d'outil prêt dans le menu burger (activites_menu_sheet.dart _ToolTile)."
+  },
+  "activityToolMenuSemanticsUnconfigured": "{label} : à configurer",
+  "@activityToolMenuSemanticsUnconfigured": {
+    "description": "Semantics du badge d'outil non configuré dans le menu burger (activites_menu_sheet.dart _ToolTile)."
+  },
+  "activityHistoryTitle": "Historique",
+  "@activityHistoryTitle": {
+    "description": "Titre de la tuile/ligne Historique, partagé entre le hub et le menu burger."
+  },
+  "activityHistorySubtitle": "Tout ce qui est terminé",
+  "@activityHistorySubtitle": {
+    "description": "Sous-titre de la tuile Historique du hub (activites_hub_screen.dart)."
+  },
+  "activityHelpTitleHub": "Aide & support",
+  "@activityHelpTitleHub": {
+    "description": "Titre de la tuile Aide & support du hub (activites_hub_screen.dart, avec l'esperluette)."
+  },
+  "activityHelpSubtitle": "Une question, un souci ?",
+  "@activityHelpSubtitle": {
+    "description": "Sous-titre de la tuile Aide & support du hub (activites_hub_screen.dart)."
+  },
+  "activityAlertsSubtitleUnconfigured": "Soyez prévenu avant les autres",
+  "@activityAlertsSubtitleUnconfigured": {
+    "description": "Sous-titre de la tuile alertes quand aucune alerte n'est configurée (activites_hub_screen.dart _alertsTile)."
+  },
+  "activityAlertsSubtitleCaughtUp": "Rien de neuf pour l'instant",
+  "@activityAlertsSubtitleCaughtUp": {
+    "description": "Sous-titre de la tuile alertes configurée sans nouveauté (activites_hub_screen.dart _alertsTile)."
+  },
+  "activityAlertsSubtitleDefault": "Nouveaux trajets et colis",
+  "@activityAlertsSubtitleDefault": {
+    "description": "Sous-titre de repli de la tuile alertes (résumé non chargé ou aucun corridor récent) (activites_hub_screen.dart)."
+  },
+  "activityHubTitle": "Activités",
+  "@activityHubTitle": {
+    "description": "Grand titre de l'écran, en-tête du hub Activités (activites_hub_screen.dart _Header) - clé dédiée, distincte de shellTabActivity (R40)."
+  },
+  "activityMenuButtonTooltip": "Menu",
+  "@activityMenuButtonTooltip": {
+    "description": "Tooltip et semanticLabel du bouton burger de l'en-tête, identique en anglais (activites_hub_screen.dart _Header)."
+  },
+  "activitySectionCurrent": "En ce moment",
+  "@activitySectionCurrent": {
+    "description": "Titre de la section grille d'activité (activites_hub_screen.dart)."
+  },
+  "activitySectionStats": "Statistiques",
+  "@activitySectionStats": {
+    "description": "Titre de la section statistiques (activites_hub_screen.dart)."
+  },
+  "activitySectionTools": "Outils",
+  "@activitySectionTools": {
+    "description": "Titre de la section outils (activites_hub_screen.dart)."
+  },
+  "activityIntroTitle": "Envoyez ou transportez, c'est vous qui choisissez",
+  "@activityIntroTitle": {
+    "description": "Titre de la carte d'introduction du hub (activites_hub_screen.dart _IntroCard)."
+  },
+  "activityIntroBody": "Envoyez vos colis avec des voyageurs de confiance, ou transportez des colis pendant vos trajets pour gagner de l'argent. Tout se suit depuis cet écran.",
+  "@activityIntroBody": {
+    "description": "Corps de la carte d'introduction du hub (activites_hub_screen.dart _IntroCard)."
+  },
+  "activityPublishParcelCta": "Publier un colis",
+  "@activityPublishParcelCta": {
+    "description": "Bouton Publier un colis de la rangée d'actions du hub (activites_hub_screen.dart _ActionRow) ; Publier un trajet réutilise tripPublishTitle (R40, préfixe partagé trip…)."
+  },
+  "activityTileTripsLabel": "Trajets actifs",
+  "@activityTileTripsLabel": {
+    "description": "Libellé de la tuile Trajets actifs de la grille d'activité (activites_hub_screen.dart)."
+  },
+  "activityTileTripsSubtitle": "Vos voyages à venir",
+  "@activityTileTripsSubtitle": {
+    "description": "Sous-titre de la tuile Trajets actifs."
+  },
+  "activityTileTripsEmptyHint": "Publiez un trajet",
+  "@activityTileTripsEmptyHint": {
+    "description": "Invite affichée quand le compteur de trajets actifs est à zéro."
+  },
+  "activityTileShipmentsLabel": "Mes colis",
+  "@activityTileShipmentsLabel": {
+    "description": "Libellé de la tuile Mes colis de la grille d'activité (activites_hub_screen.dart)."
+  },
+  "activityTileShipmentsSubtitle": "Publiés, négociés, en route",
+  "@activityTileShipmentsSubtitle": {
+    "description": "Sous-titre de la tuile Mes colis."
+  },
+  "activityTileShipmentsEmptyHint": "Envoyez un colis",
+  "@activityTileShipmentsEmptyHint": {
+    "description": "Invite affichée quand le compteur de la tuile Mes colis est à zéro."
+  },
+  "activityTileRequestsLabel": "Demandes reçues",
+  "@activityTileRequestsLabel": {
+    "description": "Libellé de la tuile Demandes reçues de la grille d'activité (activites_hub_screen.dart)."
+  },
+  "activityTileRequestsSubtitle": "Des colis à transporter pour vous",
+  "@activityTileRequestsSubtitle": {
+    "description": "Sous-titre de la tuile Demandes reçues."
+  },
+  "activityTileRequestsEmptyHint": "Aucune pour l'instant",
+  "@activityTileRequestsEmptyHint": {
+    "description": "Invite affichée quand le compteur de la tuile Demandes reçues est à zéro."
+  },
+  "activityTileNegotiationsLabel": "Discussions de prix",
+  "@activityTileNegotiationsLabel": {
+    "description": "Libellé de la tuile Discussions de prix de la grille d'activité (activites_hub_screen.dart)."
+  },
+  "activityTileNegotiationsSubtitle": "Proposez ou acceptez un tarif",
+  "@activityTileNegotiationsSubtitle": {
+    "description": "Sous-titre de la tuile Discussions de prix."
+  },
+  "activityTileNegotiationsEmptyHint": "Aucune en cours",
+  "@activityTileNegotiationsEmptyHint": {
+    "description": "Invite affichée quand le compteur de la tuile Discussions de prix est à zéro."
+  },
+  "activityRevenueTitle": "Revenus",
+  "@activityRevenueTitle": {
+    "description": "Titre partagé entre la tuile de stats du hub et la feuille de détail (activites_hub_screen.dart, revenue_details_sheet.dart)."
+  },
+  "activityKgSoldTitle": "Kg vendus",
+  "@activityKgSoldTitle": {
+    "description": "Titre partagé entre la tuile de stats du hub et la feuille de détail (activites_hub_screen.dart, kg_sold_sheet.dart)."
+  },
+  "activityStatTripsLabel": "Trajets",
+  "@activityStatTripsLabel": {
+    "description": "Libellé de la tuile de statistiques Trajets (activites_hub_screen.dart _StatsRow)."
+  },
+  "activityStatTripsPublished": "{count} publiés",
+  "@activityStatTripsPublished": {
+    "description": "Valeur de la tuile de statistiques Trajets (activites_hub_screen.dart _StatsRow).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "activityStatParcelsLabel": "Envois",
+  "@activityStatParcelsLabel": {
+    "description": "Libellé de la tuile de statistiques Envois (activites_hub_screen.dart _StatsRow)."
+  },
+  "activityStatParcelsSent": "{count} envoyés",
+  "@activityStatParcelsSent": {
+    "description": "Valeur de la tuile de statistiques Envois (activites_hub_screen.dart _StatsRow).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "activityMenuTrackParcel": "Suivre un colis",
+  "@activityMenuTrackParcel": {
+    "description": "Action rapide Suivre un colis de la feuille de menu burger (activites_menu_sheet.dart)."
+  },
+  "activityMenuScanParcel": "Scanner un colis",
+  "@activityMenuScanParcel": {
+    "description": "Action rapide Scanner un colis de la feuille de menu burger (activites_menu_sheet.dart)."
+  },
+  "activityMenuSettings": "Paramètres",
+  "@activityMenuSettings": {
+    "description": "Action rapide Paramètres de la feuille de menu burger (activites_menu_sheet.dart)."
+  },
+  "activityMenuToolsSection": "Mes outils",
+  "@activityMenuToolsSection": {
+    "description": "Titre de la section outils de la feuille de menu burger (activites_menu_sheet.dart)."
+  },
+  "activityMenuToolsReady": "{ready}/{total} prêts",
+  "@activityMenuToolsReady": {
+    "description": "Décompte de complétion affiché à droite du titre de section outils (activites_menu_sheet.dart)."
+  },
+  "activityMenuAccountSection": "Mon compte",
+  "@activityMenuAccountSection": {
+    "description": "Titre de la section compte de la feuille de menu burger (activites_menu_sheet.dart)."
+  },
+  "activityWalletTitle": "Portefeuille",
+  "@activityWalletTitle": {
+    "description": "Ligne Portefeuille de la feuille de menu burger (activites_menu_sheet.dart)."
+  },
+  "activityHelpTitleMenu": "Aide et support",
+  "@activityHelpTitleMenu": {
+    "description": "Ligne Aide et support de la feuille de menu burger (activites_menu_sheet.dart, sans esperluette)."
+  },
+  "activityDetailUnavailable": "Détail indisponible",
+  "@activityDetailUnavailable": {
+    "description": "Titre de l'état d'erreur, partagé entre les feuilles Kg vendus et Revenus."
+  },
+  "activityKgSoldErrorBody": "Impossible de charger vos kg vendus. Vérifiez votre connexion, puis réessayez.",
+  "@activityKgSoldErrorBody": {
+    "description": "Description de l'état d'erreur de la feuille Kg vendus (kg_sold_sheet.dart)."
+  },
+  "activityRevenueErrorBody": "Impossible de charger vos revenus. Vérifiez votre connexion, puis réessayez.",
+  "@activityRevenueErrorBody": {
+    "description": "Description de l'état d'erreur de la feuille Revenus (revenue_details_sheet.dart)."
+  },
+  "activityEmptyPeriodTitle": "Aucune livraison sur la période",
+  "@activityEmptyPeriodTitle": {
+    "description": "Titre de l'état vide, partagé entre les feuilles Kg vendus et Revenus."
+  },
+  "activityKgSoldEmptyBody": "Les kg vendus apparaissent ici une fois vos colis livrés.",
+  "@activityKgSoldEmptyBody": {
+    "description": "Description de l'état vide de la feuille Kg vendus (kg_sold_sheet.dart)."
+  },
+  "activityRevenueEmptyBody": "Vos revenus apparaissent ici une fois vos colis livrés et payés.",
+  "@activityRevenueEmptyBody": {
+    "description": "Description de l'état vide de la feuille Revenus (revenue_details_sheet.dart)."
+  },
+  "activityKgSoldParcels": "{count, plural, one{{count} colis} other{{count} colis}}",
+  "@activityKgSoldParcels": {
+    "description": "Compteur de colis de la feuille Kg vendus, colis invariant en français (kg_sold_sheet.dart)."
+  },
+  "activityKgSoldTrips": "{count, plural, one{{count} trajet} other{{count} trajets}}",
+  "@activityKgSoldTrips": {
+    "description": "Compteur de trajets de la feuille Kg vendus (kg_sold_sheet.dart)."
+  },
+  "activityKgSoldParcelsDelivered": "{count, plural, one{{count} colis livrés} other{{count} colis livrés}}",
+  "@activityKgSoldParcelsDelivered": {
+    "description": "Sous-titre du total (N colis livrés), branches fr identiques pour reproduire le texte d'origine (kg_sold_sheet.dart)."
+  },
+  "activityKgSoldTripDeparture": "Départ le {date}",
+  "@activityKgSoldTripDeparture": {
+    "description": "Sous-titre d'une ligne de trajet, avant le séparateur et le compteur de colis (kg_sold_sheet.dart _TripRow)."
+  },
+  "activityDeliveries": "{count, plural, one{{count} livraison} other{{count} livraisons}}",
+  "@activityDeliveries": {
+    "description": "Compteur de livraisons de la feuille Revenus ; 0 livraison corrige l'accord (revenue_details_sheet.dart)."
+  },
+  "activityRevenueConversionNote": "Sur la tuile, « {total} » est un total converti au taux du jour, indicatif. Ici, chaque montant garde sa devise.",
+  "@activityRevenueConversionNote": {
+    "description": "Rappel de conversion en bas de la feuille Revenus quand la tuile affiche un total converti (revenue_details_sheet.dart _ConversionNote)."
+  },
+  "activityToolsCompleteTitle": "Vos outils sont prêts",
+  "@activityToolsCompleteTitle": {
+    "description": "Titre du bandeau compact à 5/5 outils prêts (tools_completion_card.dart _CompleteBanner)."
+  },
+  "activityToolsCompleteBody": "Publiez un colis ou un trajet en 3 taps",
+  "@activityToolsCompleteBody": {
+    "description": "Corps du bandeau compact à 5/5 outils prêts (tools_completion_card.dart _CompleteBanner)."
+  },
+  "activityToolsStartTitle": "Préparez vos outils une fois",
+  "@activityToolsStartTitle": {
+    "description": "Titre de la carte de progression quand aucun outil n'est encore prêt (tools_completion_card.dart _ProgressCard)."
+  },
+  "activityToolsProgressTitle": "Publiez en 3 taps",
+  "@activityToolsProgressTitle": {
+    "description": "Titre de la carte de progression dès qu'au moins un outil est prêt (tools_completion_card.dart _ProgressCard)."
+  },
+  "activityToolsStartBody": "Adresses, destinataires, modèles, grille de prix, alertes : remplis une fois, réutilisés à chaque publication.",
+  "@activityToolsStartBody": {
+    "description": "Corps de la carte de progression au tout départ, aucun outil prêt (tools_completion_card.dart)."
+  },
+  "activityToolsProgressBody": "{missing} Une fois vos outils prêts, plus rien à ressaisir.",
+  "@activityToolsProgressBody": {
+    "description": "Corps de la carte de progression une fois au moins un outil prêt ; {missing} est la phrase déjà localisée (activityToolsMissing) (tools_completion_card.dart)."
+  },
+  "activityToolsStartCta": "Commencer par mes adresses",
+  "@activityToolsStartCta": {
+    "description": "CTA de la carte de progression au tout départ, aucun outil prêt (tools_completion_card.dart)."
+  },
+  "activityToolsGaugeLabel": "prêts",
+  "@activityToolsGaugeLabel": {
+    "description": "Libellé court affiché par la jauge de progression des outils (tools_completion_card.dart DonyOnboardingGauge.label)."
+  },
+  "activityToolsGaugeSemantics": "Préparation de vos outils",
+  "@activityToolsGaugeSemantics": {
+    "description": "Semantics de la jauge de progression des outils (tools_completion_card.dart)."
+  },
+  "activityNewCount": "{count, plural, one{{count} nouveau} other{{count} nouveaux}}",
+  "@activityNewCount": {
+    "description": "Texte du badge de nouveauté de la tuile alertes, deux branches identiques en anglais (activites_hub_screen.dart _alertsTile)."
+  },
+  "activityNewSinceLastVisit": "{title}, {label} depuis votre dernière visite",
+  "@activityNewSinceLastVisit": {
+    "description": "Semantics du badge de nouveauté de la tuile alertes (activites_hub_screen.dart _alertsTile)."
   }
 }

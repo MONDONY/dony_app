@@ -8048,4 +8048,418 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidCancelConfirmButton => 'Cancel the request';
+
+  @override
+  String get activityPeriod7Days => '7 days';
+
+  @override
+  String get activityPeriod30Days => '30 days';
+
+  @override
+  String get activityPeriod12Months => '12 months';
+
+  @override
+  String get activityPeriodLast7Days => 'Last 7 days';
+
+  @override
+  String get activityPeriodLast30Days => 'Last 30 days';
+
+  @override
+  String get activityPeriodLast12Months => 'Last 12 months';
+
+  @override
+  String get activityRevenueCard => 'Card';
+
+  @override
+  String get activityRevenueMobileMoney => 'Mobile money';
+
+  @override
+  String get activityRevenueCash => 'Cash';
+
+  @override
+  String get activityRevenueOther => 'Payment';
+
+  @override
+  String get activityToolMissingAddress => 'an address';
+
+  @override
+  String get activityToolMissingRecipient => 'a recipient';
+
+  @override
+  String get activityToolMissingAlert => 'an alert';
+
+  @override
+  String get activityToolMissingTemplate => 'a trip template';
+
+  @override
+  String get activityToolMissingPriceGrid => 'a price grid';
+
+  @override
+  String get activityToolCtaAddresses => 'Add an address';
+
+  @override
+  String get activityToolCtaRecipients => 'Add a recipient';
+
+  @override
+  String get activityToolCtaAlerts => 'Create an alert';
+
+  @override
+  String get activityToolCtaTemplates => 'Create a trip template';
+
+  @override
+  String get activityToolCtaPriceGrid => 'Fill in my price grid';
+
+  @override
+  String activityToolBadgeAddresses(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count addresses',
+      one: '$count address',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityToolBadgeRecipients(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recipients',
+      one: '$count recipient',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityToolBadgeAlerts(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count alerts',
+      one: '$count alert',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityToolBadgeTemplates(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count templates',
+      one: '$count template',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activityToolBadgePriceGridReady => 'Set up';
+
+  @override
+  String activityToolsMissing(Object items) {
+    return 'You still need $items.';
+  }
+
+  @override
+  String get activityToolTitleAlerts => 'My alerts';
+
+  @override
+  String get activityToolTitleTemplates => 'Trip templates';
+
+  @override
+  String get activityToolTitlePriceGrid => 'My price grid';
+
+  @override
+  String get activityToolTitleAddresses => 'My addresses';
+
+  @override
+  String get activityToolTitleRecipients => 'My recipients';
+
+  @override
+  String get activityToolSubtitleTemplates => 'Republish your usual trips';
+
+  @override
+  String get activityToolSubtitlePriceGrid => 'Item pricing for your trips';
+
+  @override
+  String get activityToolSubtitleAddresses => 'Your saved sending locations';
+
+  @override
+  String get activityToolSubtitleRecipients => 'The people you send to';
+
+  @override
+  String get activityToolBadgeUnconfigured => 'Not set up';
+
+  @override
+  String activityToolHubSemanticsReady(Object label, Object title) {
+    return '$title, ready, $label';
+  }
+
+  @override
+  String activityToolHubSemanticsUnconfigured(Object title) {
+    return '$title, not set up';
+  }
+
+  @override
+  String activityToolMenuSemanticsReady(Object badge, Object label) {
+    return '$label: $badge';
+  }
+
+  @override
+  String activityToolMenuSemanticsUnconfigured(Object label) {
+    return '$label: not set up';
+  }
+
+  @override
+  String get activityHistoryTitle => 'History';
+
+  @override
+  String get activityHistorySubtitle => 'Everything that\'s done';
+
+  @override
+  String get activityHelpTitleHub => 'Help & support';
+
+  @override
+  String get activityHelpSubtitle => 'A question, a problem?';
+
+  @override
+  String get activityAlertsSubtitleUnconfigured => 'Be notified before others';
+
+  @override
+  String get activityAlertsSubtitleCaughtUp => 'Nothing new for now';
+
+  @override
+  String get activityAlertsSubtitleDefault => 'New trips and parcels';
+
+  @override
+  String get activityHubTitle => 'Activities';
+
+  @override
+  String get activityMenuButtonTooltip => 'Menu';
+
+  @override
+  String get activitySectionCurrent => 'Right now';
+
+  @override
+  String get activitySectionStats => 'Statistics';
+
+  @override
+  String get activitySectionTools => 'Tools';
+
+  @override
+  String get activityIntroTitle => 'Send or carry, you choose';
+
+  @override
+  String get activityIntroBody =>
+      'Send your parcels with trusted travelers, or carry parcels during your trips to earn money. Everything is tracked from this screen.';
+
+  @override
+  String get activityPublishParcelCta => 'Post a parcel';
+
+  @override
+  String get activityTileTripsLabel => 'Active trips';
+
+  @override
+  String get activityTileTripsSubtitle => 'Your upcoming trips';
+
+  @override
+  String get activityTileTripsEmptyHint => 'Post a trip';
+
+  @override
+  String get activityTileShipmentsLabel => 'My parcels';
+
+  @override
+  String get activityTileShipmentsSubtitle => 'Posted, negotiated, on the way';
+
+  @override
+  String get activityTileShipmentsEmptyHint => 'Send a parcel';
+
+  @override
+  String get activityTileRequestsLabel => 'Requests received';
+
+  @override
+  String get activityTileRequestsSubtitle => 'Parcels for you to carry';
+
+  @override
+  String get activityTileRequestsEmptyHint => 'None for now';
+
+  @override
+  String get activityTileNegotiationsLabel => 'Price discussions';
+
+  @override
+  String get activityTileNegotiationsSubtitle => 'Propose or accept a rate';
+
+  @override
+  String get activityTileNegotiationsEmptyHint => 'None in progress';
+
+  @override
+  String get activityRevenueTitle => 'Earnings';
+
+  @override
+  String get activityKgSoldTitle => 'Kg sold';
+
+  @override
+  String get activityStatTripsLabel => 'Trips';
+
+  @override
+  String activityStatTripsPublished(int count) {
+    return '$count published';
+  }
+
+  @override
+  String get activityStatParcelsLabel => 'Shipments';
+
+  @override
+  String activityStatParcelsSent(int count) {
+    return '$count sent';
+  }
+
+  @override
+  String get activityMenuTrackParcel => 'Track a parcel';
+
+  @override
+  String get activityMenuScanParcel => 'Scan a parcel';
+
+  @override
+  String get activityMenuSettings => 'Settings';
+
+  @override
+  String get activityMenuToolsSection => 'My tools';
+
+  @override
+  String activityMenuToolsReady(Object ready, Object total) {
+    return '$ready/$total ready';
+  }
+
+  @override
+  String get activityMenuAccountSection => 'My account';
+
+  @override
+  String get activityWalletTitle => 'Wallet';
+
+  @override
+  String get activityHelpTitleMenu => 'Help and support';
+
+  @override
+  String get activityDetailUnavailable => 'Details unavailable';
+
+  @override
+  String get activityKgSoldErrorBody =>
+      'We couldn\'t load your kg sold. Check your connection, then try again.';
+
+  @override
+  String get activityRevenueErrorBody =>
+      'We couldn\'t load your earnings. Check your connection, then try again.';
+
+  @override
+  String get activityEmptyPeriodTitle => 'No deliveries in this period';
+
+  @override
+  String get activityKgSoldEmptyBody =>
+      'Kg sold will appear here once your parcels are delivered.';
+
+  @override
+  String get activityRevenueEmptyBody =>
+      'Your earnings will appear here once your parcels are delivered and paid.';
+
+  @override
+  String activityKgSoldParcels(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels',
+      one: '$count parcel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityKgSoldTrips(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trips',
+      one: '$count trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityKgSoldParcelsDelivered(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels delivered',
+      one: '$count parcel delivered',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityKgSoldTripDeparture(Object date) {
+    return 'Departed $date';
+  }
+
+  @override
+  String activityDeliveries(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count deliveries',
+      one: '$count delivery',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityRevenueConversionNote(Object total) {
+    return 'On the tile, “$total” is a converted total at the day\'s rate, for reference. Here, each amount keeps its own currency.';
+  }
+
+  @override
+  String get activityToolsCompleteTitle => 'Your tools are ready';
+
+  @override
+  String get activityToolsCompleteBody => 'Post a parcel or a trip in 3 taps';
+
+  @override
+  String get activityToolsStartTitle => 'Set up your tools once';
+
+  @override
+  String get activityToolsProgressTitle => 'Post in 3 taps';
+
+  @override
+  String get activityToolsStartBody =>
+      'Addresses, recipients, templates, price grid, alerts: fill them in once, reuse them every time you post.';
+
+  @override
+  String activityToolsProgressBody(Object missing) {
+    return '$missing Once your tools are ready, nothing to re-enter.';
+  }
+
+  @override
+  String get activityToolsStartCta => 'Start with my addresses';
+
+  @override
+  String get activityToolsGaugeLabel => 'ready';
+
+  @override
+  String get activityToolsGaugeSemantics => 'Preparing your tools';
+
+  @override
+  String activityNewCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new',
+      one: '$count new',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String activityNewSinceLastVisit(Object label, Object title) {
+    return '$title, $label since your last visit';
+  }
 }

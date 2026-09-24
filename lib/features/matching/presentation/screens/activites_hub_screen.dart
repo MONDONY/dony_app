@@ -23,6 +23,7 @@ import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/tools_completion_model.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
+import 'package:dony/features/matching/presentation/activity_labels.dart';
 import 'package:dony/features/matching/presentation/screens/mes_colis_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/activites_menu_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_tile.dart';
@@ -36,6 +37,7 @@ import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -237,7 +239,8 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     ToolsCompletionState toolsState,
     CorridorAlertSummaryState summary,
   ) {
-    const title = 'Mes alertes';
+    final l = context.l10n;
+    final title = l.activityToolTitleAlerts;
     final configured =
         toolsState.status == ToolsCompletionStatus.loaded &&
         toolsState.model != null &&
@@ -248,21 +251,21 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     final String subtitle;
     if (hasNews) {
       final n = summary.newMatchCount;
-      final label = '$n nouveau${n > 1 ? 'x' : ''}';
+      final label = l.activityNewCount(n);
       badge = ToolStatusBadge(
         ready: true,
         tone: ToolStatusTone.news,
         label: label,
-        semanticsLabel: '$title, $label depuis votre dernière visite',
+        semanticsLabel: l.activityNewSinceLastVisit(title, label),
       );
-      subtitle = _corridorsSubtitle(summary.newCorridors);
+      subtitle = _corridorsSubtitle(l, summary.newCorridors);
     } else {
       badge = _toolBadge(toolsState, ToolKey.alerts, title);
       subtitle = !configured
-          ? 'Soyez prévenu avant les autres'
+          ? l.activityAlertsSubtitleUnconfigured
           : summary.isLoaded
-          ? 'Rien de neuf pour l\'instant'
-          : 'Nouveaux trajets et colis';
+          ? l.activityAlertsSubtitleCaughtUp
+          : l.activityAlertsSubtitleDefault;
     }
 
     return _OtherTile(
@@ -281,8 +284,8 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
   }
 
   /// « Paris → Dakar, Lyon → Abidjan » ; au-delà de deux corridors, « +n ».
-  static String _corridorsSubtitle(List<String> corridors) {
-    if (corridors.isEmpty) return 'Nouveaux trajets et colis';
+  static String _corridorsSubtitle(AppLocalizations l, List<String> corridors) {
+    if (corridors.isEmpty) return l.activityAlertsSubtitleDefault;
     final shown = corridors.take(2).join(', ');
     final rest = corridors.length - 2;
     return rest > 0 ? '$shown +$rest' : shown;
@@ -307,13 +310,18 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     if (state.status != ToolsCompletionStatus.loaded || model == null) {
       return null;
     }
+    final l = context.l10n;
     final count = model.countOf(tool);
     final ready = count > 0;
-    final label = ready ? tool.badgeLabel(count) : 'À configurer';
+    final label = ready
+        ? tool.badgeLabel(l, count)
+        : l.activityToolBadgeUnconfigured;
     return ToolStatusBadge(
       ready: ready,
       label: label,
-      semanticsLabel: ready ? '$title, prêt, $label' : '$title, à configurer',
+      semanticsLabel: ready
+          ? l.activityToolHubSemanticsReady(title, label)
+          : l.activityToolHubSemanticsUnconfigured(title),
     );
   }
 
@@ -351,6 +359,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final summaryState = context.watch<TripsSummaryCubit>().state;
     final period = context.watch<StatsPeriodCubit>().state;
     final toolsState = context.watch<ToolsCompletionCubit>().state;
@@ -406,12 +415,12 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                         onNewRequest: _onNewRequest,
                       ),
                       const SizedBox(height: DonySpacing.xl),
-                      Text('En ce moment', style: tt.titleMedium),
+                      Text(l.activitySectionCurrent, style: tt.titleMedium),
                       const SizedBox(height: DonySpacing.md),
                       const _ActivityGrid(),
                       if (showStats) ...[
                         const SizedBox(height: DonySpacing.xl),
-                        Text('Statistiques', style: tt.titleMedium),
+                        Text(l.activitySectionStats, style: tt.titleMedium),
                         const SizedBox(height: DonySpacing.md),
                         const _PeriodChips(),
                         const SizedBox(height: DonySpacing.md),
@@ -434,7 +443,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                   ),
                   sliver: SliverList.list(
                     children: [
-                      Text('Outils', style: tt.titleMedium),
+                      Text(l.activitySectionTools, style: tt.titleMedium),
                       const SizedBox(height: DonySpacing.md),
                       if (toolsState.status == ToolsCompletionStatus.loaded &&
                           toolsState.model != null) ...[
@@ -448,13 +457,13 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                         left: _alertsTile(cs, toolsState, alertsSummary),
                         right: _OtherTile(
                           iconName: 'bookmark',
-                          label: 'Modèles de trajet',
-                          subtitle: 'Republiez vos trajets habituels',
+                          label: l.activityToolTitleTemplates,
+                          subtitle: l.activityToolSubtitleTemplates,
                           color: DonyColors.violet,
                           badge: _toolBadge(
                             toolsState,
                             ToolKey.tripTemplates,
-                            'Modèles de trajet',
+                            l.activityToolTitleTemplates,
                           ),
                           onTap: () => _openTool(
                             AnalyticsEvents.activitesHubTemplatesOpened,
@@ -472,13 +481,13 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                         // mais de tarifs proposés.
                         left: _OtherTile(
                           iconName: 'layout-grid',
-                          label: 'Ma grille de prix',
-                          subtitle: 'Tarifs par article pour vos trajets',
+                          label: l.activityToolTitlePriceGrid,
+                          subtitle: l.activityToolSubtitlePriceGrid,
                           color: cs.primary,
                           badge: _toolBadge(
                             toolsState,
                             ToolKey.priceGrid,
-                            'Ma grille de prix',
+                            l.activityToolTitlePriceGrid,
                           ),
                           onTap: () => _openTool(
                             AnalyticsEvents.activitesHubPriceGridOpened,
@@ -487,13 +496,13 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                         ),
                         right: _OtherTile(
                           iconName: 'map-pin',
-                          label: 'Mes adresses',
-                          subtitle: 'Vos lieux d\'envoi enregistrés',
+                          label: l.activityToolTitleAddresses,
+                          subtitle: l.activityToolSubtitleAddresses,
                           color: cs.secondary,
                           badge: _toolBadge(
                             toolsState,
                             ToolKey.addresses,
-                            'Mes adresses',
+                            l.activityToolTitleAddresses,
                           ),
                           onTap: () => _openTool(
                             AnalyticsEvents.activitesHubAddressesOpened,
@@ -505,13 +514,13 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                       _TileRow(
                         left: _OtherTile(
                           iconName: 'contact',
-                          label: 'Mes destinataires',
-                          subtitle: 'Les personnes à qui vous envoyez',
+                          label: l.activityToolTitleRecipients,
+                          subtitle: l.activityToolSubtitleRecipients,
                           color: DonyColors.violet,
                           badge: _toolBadge(
                             toolsState,
                             ToolKey.recipients,
-                            'Mes destinataires',
+                            l.activityToolTitleRecipients,
                           ),
                           onTap: () => _openTool(
                             AnalyticsEvents.activitesHubRecipientsOpened,
@@ -520,8 +529,8 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                         ),
                         right: _OtherTile(
                           iconName: 'chart-line',
-                          label: 'Historique',
-                          subtitle: 'Tout ce qui est terminé',
+                          label: l.activityHistoryTitle,
+                          subtitle: l.activityHistorySubtitle,
                           color: cs.primary,
                           onTap: () => _open(
                             AnalyticsEvents.activitesHubHistoryOpened,
@@ -533,8 +542,8 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                       _TileRow(
                         left: _OtherTile(
                           iconName: 'circle-help',
-                          label: 'Aide & support',
-                          subtitle: 'Une question, un souci ?',
+                          label: l.activityHelpTitleHub,
+                          subtitle: l.activityHelpSubtitle,
                           color: DonyColors.amberDark,
                           onTap: () => _open(
                             AnalyticsEvents.activitesHubHelpOpened,
@@ -565,6 +574,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Row(
       children: [
@@ -579,12 +589,16 @@ class _Header extends StatelessWidget {
             key: const Key('hub-menu-button'),
             padding: EdgeInsets.zero,
             onPressed: onMenu,
-            tooltip: 'Menu',
-            icon: DonyIcon('menu', color: cs.onSurface, semanticLabel: 'Menu'),
+            tooltip: l.activityMenuButtonTooltip,
+            icon: DonyIcon(
+              'menu',
+              color: cs.onSurface,
+              semanticLabel: l.activityMenuButtonTooltip,
+            ),
           ),
         ),
         const SizedBox(width: DonySpacing.sm),
-        Expanded(child: Text('Activités', style: tt.headlineLarge)),
+        Expanded(child: Text(l.activityHubTitle, style: tt.headlineLarge)),
         const DonyFeedbackButton(),
       ],
     );
@@ -604,6 +618,7 @@ class _IntroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(
@@ -624,14 +639,12 @@ class _IntroCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Envoyez ou transportez, c\'est vous qui choisissez',
+                  l.activityIntroTitle,
                   style: tt.titleSmall?.copyWith(color: cs.onPrimaryContainer),
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Envoyez vos colis avec des voyageurs de confiance, ou '
-                  'transportez des colis pendant vos trajets pour gagner de '
-                  'l\'argent. Tout se suit depuis cet écran.',
+                  l.activityIntroBody,
                   style: tt.bodySmall?.copyWith(color: cs.onPrimaryContainer),
                 ),
               ],
@@ -640,7 +653,7 @@ class _IntroCard extends StatelessWidget {
           IconButton(
             key: const Key('hub-intro-dismiss'),
             onPressed: onDismiss,
-            tooltip: 'Fermer',
+            tooltip: l.commonClose,
             visualDensity: VisualDensity.compact,
             icon: DonyIcon('x', size: 16, color: cs.onPrimaryContainer),
           ),
@@ -661,6 +674,7 @@ class _ActionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Row(
       children: [
@@ -669,7 +683,7 @@ class _ActionRow extends StatelessWidget {
             key: const Key('hub-publish-trip'),
             onPressed: onPublishTrip,
             icon: DonyIcon('send', size: 16, color: cs.onPrimary),
-            label: const Text('Publier un trajet'),
+            label: Text(l.tripPublishTitle),
           ),
         ),
         const SizedBox(width: DonySpacing.md),
@@ -681,7 +695,7 @@ class _ActionRow extends StatelessWidget {
             key: const Key('hub-new-request'),
             onPressed: onNewRequest,
             icon: DonyIcon('package', size: 16, color: cs.secondary),
-            label: const Text('Publier un colis'),
+            label: Text(l.activityPublishParcelCta),
             style: OutlinedButton.styleFrom(
               foregroundColor: cs.secondary,
               backgroundColor: cs.secondaryContainer,
@@ -705,6 +719,7 @@ class _ActivityGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     // Un BlocBuilder par tuile, pas un global : une erreur sur les statistiques
     // ne doit pas vider les trois autres compteurs.
@@ -714,9 +729,9 @@ class _ActivityGrid extends StatelessWidget {
         iconName: 'plane',
         iconColor: cs.primary,
         value: state.summary?.activeTrips ?? 0,
-        label: 'Trajets actifs',
-        subtitle: 'Vos voyages à venir',
-        emptyHint: 'Publiez un trajet',
+        label: l.activityTileTripsLabel,
+        subtitle: l.activityTileTripsSubtitle,
+        emptyHint: l.activityTileTripsEmptyHint,
         isLoading: state.status == TripsSummaryStatus.loading,
         hasError: state.status == TripsSummaryStatus.hidden,
         onTap: () => _openRoute(
@@ -743,9 +758,9 @@ class _ActivityGrid extends StatelessWidget {
           iconName: 'package',
           iconColor: cs.secondary,
           value: count,
-          label: 'Mes colis',
-          subtitle: 'Publiés, négociés, en route',
-          emptyHint: 'Envoyez un colis',
+          label: l.activityTileShipmentsLabel,
+          subtitle: l.activityTileShipmentsSubtitle,
+          emptyHint: l.activityTileShipmentsEmptyHint,
           isLoading: state is BidLoading,
           hasError: state is BidError,
           // Une discussion de prix attend une décision de l'expéditeur : le
@@ -771,9 +786,9 @@ class _ActivityGrid extends StatelessWidget {
           // attend une réponse, pas une erreur — cs.error criait au problème.
           iconColor: DonyColors.amberDark,
           value: count,
-          label: 'Demandes reçues',
-          subtitle: 'Des colis à transporter pour vous',
-          emptyHint: 'Aucune pour l\'instant',
+          label: l.activityTileRequestsLabel,
+          subtitle: l.activityTileRequestsSubtitle,
+          emptyHint: l.activityTileRequestsEmptyHint,
           isLoading: state is TravelerBidsLoading,
           hasError: state is TravelerBidsError,
           showNotificationDot: count > 0,
@@ -796,9 +811,9 @@ class _ActivityGrid extends StatelessWidget {
           // séparer la négociation des trois domaines bleu/terracotta/rouge.
           iconColor: DonyColors.violet,
           value: count,
-          label: 'Discussions de prix',
-          subtitle: 'Proposez ou acceptez un tarif',
-          emptyHint: 'Aucune en cours',
+          label: l.activityTileNegotiationsLabel,
+          subtitle: l.activityTileNegotiationsSubtitle,
+          emptyHint: l.activityTileNegotiationsEmptyHint,
           isLoading: state.status == NegotiationListStatus.loading,
           hasError: state.status == NegotiationListStatus.error,
           showNotificationDot: count > 0,
@@ -856,13 +871,14 @@ class _PeriodChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return BlocBuilder<StatsPeriodCubit, StatsPeriod>(
       builder: (context, selected) => Row(
         children: [
           for (final p in StatsPeriod.values) ...[
             DonyChip(
               key: Key('hub-period-${p.apiValue}'),
-              label: p.label,
+              label: p.label(l),
               selected: p == selected,
               onTap: () => context.read<StatsPeriodCubit>().select(p),
             ),
@@ -899,6 +915,7 @@ class _StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return BlocBuilder<TripsSummaryCubit, TripsSummaryState>(
       builder: (context, state) {
         final summary = state.summary;
@@ -919,7 +936,7 @@ class _StatsRow extends StatelessWidget {
         final tiles = <Widget>[
           StatTile(
             iconName: 'euro',
-            label: 'Revenus',
+            label: l.activityRevenueTitle,
             value: _money(summary),
             color: cs.success,
             isLoading: loading,
@@ -938,7 +955,7 @@ class _StatsRow extends StatelessWidget {
           ),
           StatTile(
             iconName: 'scale',
-            label: 'Kg vendus',
+            label: l.activityKgSoldTitle,
             value: _weight(summary?.kgSold ?? 0),
             color: cs.primary,
             isLoading: loading,
@@ -949,10 +966,10 @@ class _StatsRow extends StatelessWidget {
           // comme les tuiles dont le compteur est indisponible.
           StatTile(
             iconName: 'plane',
-            label: 'Trajets',
+            label: l.activityStatTripsLabel,
             value: summary?.tripsPublished == null
                 ? '—'
-                : '${summary!.tripsPublished} publiés',
+                : l.activityStatTripsPublished(summary!.tripsPublished!),
             color: DonyColors.violet,
             isLoading: loading,
             onTap: () => _openRoute(
@@ -963,10 +980,10 @@ class _StatsRow extends StatelessWidget {
           ),
           StatTile(
             iconName: 'package',
-            label: 'Envois',
+            label: l.activityStatParcelsLabel,
             value: summary?.parcelsSent == null
                 ? '—'
-                : '${summary!.parcelsSent} envoyés',
+                : l.activityStatParcelsSent(summary!.parcelsSent!),
             color: cs.secondary,
             isLoading: loading,
             onTap: () => _openRoute(

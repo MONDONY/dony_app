@@ -1,7 +1,10 @@
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
+import 'package:dony/features/matching/presentation/activity_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  final l = lookupAppLocalizations(AppL10n.fr);
   final json = {
     'period': '30d',
     'deliveries': 2,
@@ -71,10 +74,10 @@ void main() {
     });
 
     test('les libellés de rail sont ceux de l\'app', () {
-      expect(RevenueRail.card.label, 'Carte');
-      expect(RevenueRail.mobileMoney.label, 'Mobile money');
-      expect(RevenueRail.cash.label, 'Espèces');
-      expect(RevenueRail.unknown.label, 'Paiement');
+      expect(RevenueRail.card.label(l), 'Carte');
+      expect(RevenueRail.mobileMoney.label(l), 'Mobile money');
+      expect(RevenueRail.cash.label(l), 'Espèces');
+      expect(RevenueRail.unknown.label(l), 'Paiement');
     });
 
     test('groupes absents → liste vide', () {

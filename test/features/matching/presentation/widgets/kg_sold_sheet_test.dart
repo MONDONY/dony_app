@@ -10,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockKgSoldCubit extends MockCubit<KgSoldState> implements KgSoldCubit {}
 
 final _model = KgSoldModel(
@@ -158,6 +160,25 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Aucune livraison sur la période'), findsOneWidget);
+  });
+
+  testWidgets('en anglais, les textes de la feuille sont traduits', (
+    tester,
+  ) async {
+    await initializeDateFormatting('en');
+    useEnglish();
+    whenListen(
+      cubit,
+      const Stream<KgSoldState>.empty(),
+      initialState: KgSoldState(status: KgSoldStatus.loaded, details: _model),
+    );
+
+    await tester.pumpWidget(_harness(cubit));
+    await tester.pumpAndSettle();
+
+    expect(find.text('6 parcels delivered'), findsOneWidget);
+    expect(find.text('2 trips'), findsOneWidget);
+    expect(find.textContaining('Sep 12'), findsOneWidget);
   });
 
   testWidgets('erreur : « Détail indisponible », « Réessayer » recharge', (

@@ -14,7 +14,6 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
-import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:flutter/material.dart';
@@ -172,8 +171,9 @@ void main() {
         await tester.pump(const Duration(milliseconds: 400));
 
         // Les stats (Trajets actifs / Kg / Revenus) vivent désormais dans le
-        // hub Activités : plus de doublon en tête de « Mes trajets ».
-        expect(find.byType(TripsStatsStrip), findsNothing);
+        // hub Activités : plus de doublon en tête de « Mes trajets ». Le
+        // widget TripsStatsStrip lui-même a été retiré (code mort, aucun
+        // appelant en production) au tour de correction de la tâche D5.
 
         // 2 TripCards rendered
         expect(find.byType(TripCard), findsNWidgets(2));

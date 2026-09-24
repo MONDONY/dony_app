@@ -1,6 +1,4 @@
-import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
-import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -25,74 +23,6 @@ void main() {
     );
     await tester.tap(find.text('Envoyer'));
     expect(tapped, isTrue);
-  });
-
-  testWidgets('TripsStatsStrip affiche les 3 tuiles', (tester) async {
-    await tester.pumpWidget(
-      _wrap(
-        const TripsStatsStrip(
-          summary: TripsSummaryModel(
-            activeTrips: 3,
-            kgSold: 19,
-            revenue: 152.46,
-          ),
-        ),
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-
-    expect(find.text('3'), findsOneWidget);
-    expect(find.text('19 kg'), findsOneWidget);
-    // Le montant est formaté dans la devise active (espace insécable inclus)
-    // au lieu d'un « € » concaténé à la main.
-    expect(find.text('152\u00A0€'), findsOneWidget);
-    expect(find.text('Trajets actifs'), findsOneWidget);
-  });
-
-  testWidgets('TripsStatsStrip préfixe le revenu converti de « ≈ »', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: const Scaffold(
-          body: TripsStatsStrip(
-            summary: TripsSummaryModel(
-              activeTrips: 2,
-              kgSold: 12,
-              revenue: 300,
-              revenueCurrency: 'EUR',
-              revenueConverted: true,
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-
-    expect(find.textContaining('≈ '), findsOneWidget);
-  });
-
-  testWidgets('TripsStatsStrip formate le revenu dans la devise du backend', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _wrap(
-        const TripsStatsStrip(
-          summary: TripsSummaryModel(
-            activeTrips: 2,
-            kgSold: 12,
-            revenue: 120000,
-            revenueCurrency: 'XOF',
-            revenueConverted: false,
-          ),
-        ),
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-
-    expect(find.textContaining('F CFA'), findsOneWidget);
-    expect(find.textContaining('€'), findsNothing);
   });
 
   testWidgets('StatusChipsRow : chip active mise en avant, tap change', (

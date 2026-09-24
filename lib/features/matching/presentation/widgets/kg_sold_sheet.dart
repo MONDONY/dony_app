@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/kg_sold_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
+import 'package:dony/features/matching/presentation/activity_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,10 +23,11 @@ class KgSoldSheet extends StatelessWidget {
     BuildContext context, {
     required StatsPeriod period,
   }) {
+    final l = context.l10n;
     return DonyBottomSheet.show<String>(
       context,
-      title: 'Kg vendus',
-      subtitle: period.detailLabel,
+      title: l.activityKgSoldTitle,
+      subtitle: period.detailLabel(l),
       wrapper: (child) => BlocProvider<KgSoldCubit>(
         create: (_) => getIt<KgSoldCubit>()..load(period),
         child: child,
@@ -36,6 +38,7 @@ class KgSoldSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return BlocBuilder<KgSoldCubit, KgSoldState>(
       builder: (context, state) => switch (state.status) {
         KgSoldStatus.initial || KgSoldStatus.loading => const Column(
@@ -47,20 +50,19 @@ class KgSoldSheet extends StatelessWidget {
         ),
         KgSoldStatus.error => Column(
           children: [
-            const DonyEmptyState(
+            DonyEmptyState(
               type: DonyEmptyStateType.error,
               iconAsset: 'circle-alert',
-              title: 'Détail indisponible',
-              description:
-                  'Impossible de charger vos kg vendus. Vérifiez votre connexion, puis réessayez.',
-              padding: EdgeInsets.symmetric(vertical: DonySpacing.xl),
+              title: l.activityDetailUnavailable,
+              description: l.activityKgSoldErrorBody,
+              padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),
             ),
             // Un DonyChip et non un DonyButton : un bouton n'a sa place que
             // dans le pied collant d'une feuille, et cet état-là n'en a pas
             // besoin.
             DonyChip(
               key: const Key('kg-retry'),
-              label: 'Réessayer',
+              label: l.commonRetry,
               selected: false,
               onTap: () => context.read<KgSoldCubit>().load(period),
             ),
@@ -84,10 +86,6 @@ String _kg(double v) {
   return '$text kg';
 }
 
-String _parcels(int count) => count == 1 ? '1 colis' : '$count colis';
-
-String _trips(int count) => count == 1 ? '1 trajet' : '$count trajets';
-
 class _LoadedBody extends StatelessWidget {
   const _LoadedBody({required this.model});
 
@@ -97,14 +95,14 @@ class _LoadedBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     if (model.trips.isEmpty) {
-      return const DonyEmptyState(
+      return DonyEmptyState(
         iconAsset: 'scale',
-        title: 'Aucune livraison sur la période',
-        description:
-            'Les kg vendus apparaissent ici une fois vos colis livrés.',
-        padding: EdgeInsets.symmetric(vertical: DonySpacing.xl),
+        title: l.activityEmptyPeriodTitle,
+        description: l.activityKgSoldEmptyBody,
+        padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),
       );
     }
 
@@ -135,13 +133,13 @@ class _LoadedBody extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${_parcels(model.parcels)} livrés',
+                      l.activityKgSoldParcelsDelivered(model.parcels),
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                     // Le sous-titre de la feuille est statique : le nombre de
                     // trajets (spec) se lit ici, à côté du total.
                     Text(
-                      _trips(model.trips.length),
+                      l.activityKgSoldTrips(model.trips.length),
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
@@ -182,12 +180,15 @@ class _TripRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final date = DateFormat('d MMM', AppL10n.localeName).format(trip.date);
+    final l = context.l10n;
+    final date = DateFormat.MMMd(l.localeName).format(trip.date);
 
     return DonyListTile(
       key: Key('kg-trip-${trip.tripId}'),
       label: '${trip.departureCity} → ${trip.arrivalCity}',
-      subtitle: 'Départ le $date · ${_parcels(trip.parcels)}',
+      subtitle:
+          '${l.activityKgSoldTripDeparture(date)} · '
+          '${l.activityKgSoldParcels(trip.parcels)}',
       showDivider: showDivider,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,

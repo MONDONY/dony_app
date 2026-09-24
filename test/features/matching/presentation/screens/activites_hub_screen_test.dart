@@ -46,6 +46,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 const _emptyHelpConfigJson = '''
@@ -735,6 +736,31 @@ void main() {
         ),
         findsOneWidget,
       );
+    });
+  });
+
+  group('anglais', () {
+    testWidgets('en anglais, l\'en-tête, les actions et les tuiles '
+        'sont traduits', (tester) async {
+      useEnglish();
+      await _pump(tester);
+
+      expect(find.text('Activities'), findsOneWidget);
+      expect(find.text('Post a trip'), findsOneWidget);
+      expect(find.text('Post a parcel'), findsOneWidget);
+      expect(find.text('Right now'), findsOneWidget);
+      expect(find.text('Active trips'), findsOneWidget);
+      expect(find.text('My parcels'), findsOneWidget);
+      expect(find.text('Requests received'), findsOneWidget);
+      expect(find.text('Price discussions'), findsOneWidget);
+      expect(find.text('Statistics'), findsOneWidget);
+      expect(find.text('Earnings'), findsOneWidget);
+      expect(find.text('Kg sold'), findsOneWidget);
+      expect(find.text('Tools'), findsOneWidget);
+      expect(find.text('My addresses'), findsOneWidget);
+      expect(find.text('My recipients'), findsOneWidget);
+      expect(find.text('History'), findsOneWidget);
+      expect(find.text('Help & support'), findsOneWidget);
     });
   });
 
