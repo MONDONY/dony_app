@@ -13,6 +13,7 @@ import 'package:dony/core/network/retry_on_transient_error_interceptor.dart';
 import 'package:dony/core/network/tls_pinned_ca.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -305,6 +306,7 @@ class _AuthInterceptor extends Interceptor {
 /// catalogue d'erreurs raisonnent ensuite sur le type, jamais sur le code HTTP.
 @visibleForTesting
 AppException mapHttpError(DioException err) {
+  final l = AppL10n.current;
   final statusCode = err.response?.statusCode;
   final data = err.response?.data;
   final detail = data is Map ? data['detail'] as String? : null;
@@ -326,41 +328,47 @@ AppException mapHttpError(DioException err) {
     // paramètre invalide) : même famille que le 422. Classé « réseau »
     // auparavant, donc rejoué sans fin par la file hors-ligne.
     return ValidationException(
-      detail ?? 'Requête invalide',
+      detail ?? l.networkFallbackInvalidRequest,
       code: apiCode,
       errors: violations,
     );
   }
   if (statusCode == 401) {
-    return UnauthorizedException(detail ?? 'Session expirée', apiCode);
+    return UnauthorizedException(
+      detail ?? l.networkFallbackSessionExpired,
+      apiCode,
+    );
   }
   if (statusCode == 403) {
-    return ForbiddenException(detail ?? 'Accès refusé', apiCode);
+    return ForbiddenException(detail ?? l.networkFallbackAccessDenied, apiCode);
   }
   if (statusCode == 404) {
     return NotFoundException(
-      message: detail ?? 'Ressource introuvable',
+      message: detail ?? l.networkFallbackNotFound,
       apiCode: apiCode,
     );
   }
   if (statusCode == 409) {
-    return ConflictException(detail ?? 'Conflit', code: apiCode);
+    return ConflictException(
+      detail ?? l.networkFallbackConflict,
+      code: apiCode,
+    );
   }
   if (statusCode == 422) {
     return ValidationException(
-      detail ?? 'Données invalides',
+      detail ?? l.networkFallbackInvalidData,
       code: apiCode,
       errors: violations,
     );
   }
   if (statusCode == 429) {
-    return RateLimitException(detail ?? 'Trop de tentatives');
+    return RateLimitException(detail ?? l.networkFallbackTooManyAttempts);
   }
   if (statusCode != null && statusCode >= 500) {
-    return ServerException(detail ?? 'Erreur serveur', apiCode);
+    return ServerException(detail ?? l.networkFallbackServerError, apiCode);
   }
   return NetworkException(
-    detail ?? err.message ?? 'Erreur réseau',
+    detail ?? err.message ?? l.networkFallbackNetworkError,
     code: apiCode ?? statusCode?.toString(),
   );
 }

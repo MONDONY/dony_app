@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/kg_sold_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -181,7 +182,7 @@ class _TripRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final date = DateFormat('d MMM', 'fr').format(trip.date);
+    final date = DateFormat('d MMM', AppL10n.localeName).format(trip.date);
 
     return DonyListTile(
       key: Key('kg-trip-${trip.tripId}'),

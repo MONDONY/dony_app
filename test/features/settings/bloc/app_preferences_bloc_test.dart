@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/data/models/user_preferences_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mocktail/mocktail.dart';
@@ -23,6 +24,30 @@ void main() {
     test('état initial lit depuis Hive', () {
       final bloc = AppPreferencesBloc(mockBox);
       expect(bloc.state.preferences.themeMode, equals('light'));
+      expect(bloc.state.preferences.languageCode, equals('system'));
+      bloc.close();
+    });
+
+    test('valeur Hive inconnue → system', () {
+      when(
+        () => mockBox.get(
+          HiveService.kLanguageCode,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn('de');
+      final bloc = AppPreferencesBloc(mockBox);
+      expect(bloc.state.preferences.languageCode, equals('system'));
+      bloc.close();
+    });
+
+    test('choix fr déjà stocké → conservé', () {
+      when(
+        () => mockBox.get(
+          HiveService.kLanguageCode,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn('fr');
+      final bloc = AppPreferencesBloc(mockBox);
       expect(bloc.state.preferences.languageCode, equals('fr'));
       bloc.close();
     });
@@ -89,6 +114,25 @@ void main() {
       ],
       verify: (_) =>
           verify(() => mockBox.put(HiveService.kLanguageCode, 'en')).called(1),
+    );
+
+    blocTest<AppPreferencesBloc, AppPreferencesState>(
+      'LanguageChanged(system) revient à la langue du téléphone',
+      build: () => AppPreferencesBloc(mockBox),
+      seed: () => const AppPreferencesState(
+        preferences: UserPreferencesModel(languageCode: 'en'),
+      ),
+      act: (bloc) => bloc.add(const LanguageChanged('system')),
+      expect: () => [
+        isA<AppPreferencesState>().having(
+          (s) => s.preferences.languageCode,
+          'languageCode',
+          'system',
+        ),
+      ],
+      verify: (_) => verify(
+        () => mockBox.put(HiveService.kLanguageCode, 'system'),
+      ).called(1),
     );
 
     blocTest<AppPreferencesBloc, AppPreferencesState>(

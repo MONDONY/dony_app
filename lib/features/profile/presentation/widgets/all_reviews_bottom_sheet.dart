@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_summary_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -184,7 +185,7 @@ class _ReviewRow extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final dateStr = DateFormat(
       'd MMM yyyy',
-      'fr_FR',
+      AppL10n.localeName,
     ).format(item.createdAt.toLocal());
     final authorName = item.authorName?.isNotEmpty == true
         ? item.authorName!

@@ -8,8 +8,10 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/presentation/widgets/evergreen_guidance_carousel.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/data/models/user_preferences_model.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -69,11 +71,11 @@ class SettingsScreen extends StatelessWidget {
                     iconAsset: 'languages',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
-                    label: 'Langue',
+                    label: context.l10n.settingsLanguageTitle,
                     showDivider: false,
                     trailing: _disclosure(
                       context,
-                      prefs.languageCode == 'fr' ? 'Français' : 'English',
+                      _languageLabel(context, prefs.languageCode),
                     ),
                     onTap: () =>
                         _showLanguagePicker(context, prefs.languageCode),
@@ -265,6 +267,13 @@ class SettingsScreen extends StatelessWidget {
     _ => 'Auto',
   };
 
+  String _languageLabel(BuildContext context, String stored) =>
+      switch (AppL10n.effectiveChoice(stored)) {
+        'fr' => 'Français',
+        'en' => 'English',
+        _ => context.l10n.settingsLanguagePhone,
+      };
+
   String _destinationsSummary(List<String> codes) {
     if (codes.isEmpty) {
       return 'Aucune';
@@ -363,43 +372,36 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showLanguagePicker(BuildContext context, String current) {
+    final bloc = context.read<AppPreferencesBloc>();
+    final selected = AppL10n.effectiveChoice(current);
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
-      builder: (_) => SafeArea(
+      builder: (sheetCtx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              title: const Text('Français'),
-              trailing: current == 'fr'
-                  ? DonyIcon(
-                      'check',
-                      color: Theme.of(context).colorScheme.primary,
-                    )
-                  : null,
-              onTap: () {
-                context.read<AppPreferencesBloc>().add(
-                  const LanguageChanged('fr'),
-                );
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('English'),
-              trailing: current == 'en'
-                  ? DonyIcon(
-                      'check',
-                      color: Theme.of(context).colorScheme.primary,
-                    )
-                  : null,
-              onTap: () {
-                context.read<AppPreferencesBloc>().add(
-                  const LanguageChanged('en'),
-                );
-                Navigator.pop(context);
-              },
-            ),
+            for (final opt in [
+              (
+                UserPreferencesModel.kLanguageSystem,
+                sheetCtx.l10n.settingsLanguagePhone,
+              ),
+              ('fr', 'Français'),
+              if (AppL10n.englishEnabled) ('en', 'English'),
+            ])
+              ListTile(
+                title: Text(opt.$2),
+                trailing: selected == opt.$1
+                    ? DonyIcon(
+                        'check',
+                        color: Theme.of(sheetCtx).colorScheme.primary,
+                      )
+                    : null,
+                onTap: () {
+                  bloc.add(LanguageChanged(opt.$1));
+                  Navigator.pop(sheetCtx);
+                },
+              ),
           ],
         ),
       ),

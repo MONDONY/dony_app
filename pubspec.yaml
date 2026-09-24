@@ -203,6 +203,7 @@ flutter_native_splash:
   android: true
 
 flutter:
+  generate: true
   config:
     enable-lldb-debugging: false
   uses-material-design: true

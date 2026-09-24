@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -33,7 +34,8 @@ class CorridorAlertCard extends StatelessWidget {
   /// Horloge injectable pour les tests ; `DateTime.now()` sinon.
   final DateTime? now;
 
-  static String _d(DateTime d) => DateFormat('d MMM', 'fr').format(d);
+  static String _d(DateTime d) =>
+      DateFormat('d MMM', AppL10n.localeName).format(d);
 
   /// « 15 au 30 sept », « À partir du 15 sept », « Jusqu'au 30 sept » ou
   /// « Toute date ».

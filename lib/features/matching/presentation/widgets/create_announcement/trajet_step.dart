@@ -10,6 +10,7 @@ import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -125,7 +126,10 @@ class TrajetStep extends StatelessWidget {
     if (departureDate == null) {
       return '';
     }
-    final date = DateFormat('EEE d MMM', 'fr').format(departureDate);
+    final date = DateFormat(
+      'EEE d MMM',
+      AppL10n.localeName,
+    ).format(departureDate);
     if (departureTime != null && arrivalTime != null) {
       return '$date · ${departureTime.hour}h–${arrivalTime.hour}h';
     } else if (departureTime != null) {
@@ -352,7 +356,7 @@ class TrajetStep extends StatelessWidget {
                 value: departureDateNotifier.value != null
                     ? DateFormat(
                         'EEE d MMM yyyy',
-                        'fr',
+                        AppL10n.localeName,
                       ).format(departureDateNotifier.value!)
                     : null,
                 prefixIcon: DonyIcons.date,

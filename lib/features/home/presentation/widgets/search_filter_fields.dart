@@ -15,6 +15,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -513,7 +514,7 @@ class DateField extends StatelessWidget {
                 const SizedBox(width: DonySpacing.xs),
                 Text(
                   date != null
-                      ? DateFormat('d MMM', 'fr').format(date!)
+                      ? DateFormat('d MMM', AppL10n.localeName).format(date!)
                       : 'Choisir',
                   style: tt.titleSmall?.copyWith(
                     color: date != null ? cs.primary : cs.onSurfaceVariant,

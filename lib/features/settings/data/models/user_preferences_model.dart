@@ -2,6 +2,10 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class UserPreferencesModel {
+  /// Langue de l'app : `'system'` suit le téléphone, `'fr'`/`'en'` forcent.
+  static const String kLanguageSystem = 'system';
+  static const Set<String> _languageCodes = {kLanguageSystem, 'fr', 'en'};
+
   final String themeMode;
   final String languageCode;
   final List<String> favDestinations;
@@ -17,7 +21,7 @@ class UserPreferencesModel {
     // Thème clair par défaut : le sombre reste accessible, mais il se choisit
     // explicitement dans Réglages (« Système » y compris).
     this.themeMode = 'light',
-    this.languageCode = 'fr',
+    this.languageCode = kLanguageSystem,
     this.favDestinations = const [],
     this.weightUnit = 'kg',
     this.currencyCode = 'EUR',
@@ -55,8 +59,7 @@ class UserPreferencesModel {
 
   factory UserPreferencesModel.fromHive(Box box) => UserPreferencesModel(
     themeMode: box.get(HiveService.kThemeMode, defaultValue: 'light') as String,
-    languageCode:
-        box.get(HiveService.kLanguageCode, defaultValue: 'fr') as String,
+    languageCode: _readLanguageCode(box),
     favDestinations: List<String>.from(
       box.get(HiveService.kFavDestinations, defaultValue: <String>[]) as List,
     ),
@@ -87,5 +90,15 @@ class UserPreferencesModel {
     box.put(HiveService.kHidePhoneNumber, hidePhoneNumber);
     box.put(HiveService.kBiometricEnabled, biometricEnabled);
     box.put(HiveService.kAppLockBiometric, appLockBiometricEnabled);
+  }
+
+  static String _readLanguageCode(Box box) {
+    final raw = box.get(
+      HiveService.kLanguageCode,
+      defaultValue: kLanguageSystem,
+    );
+    return raw is String && _languageCodes.contains(raw)
+        ? raw
+        : kLanguageSystem;
   }
 }

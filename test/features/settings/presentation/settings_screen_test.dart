@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockAppPreferencesBloc
@@ -247,18 +248,34 @@ void main() {
       expect(find.text('Auto'), findsOneWidget);
     });
 
-    testWidgets('language shows Français when languageCode is fr', (
-      tester,
-    ) async {
+    testWidgets('langue par défaut → Langue du téléphone', (tester) async {
       await tester.pumpWidget(_wrap(prefs: const UserPreferencesModel()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Langue du téléphone'), findsOneWidget);
+    });
+
+    testWidgets('languageCode fr → Français', (tester) async {
+      await tester.pumpWidget(
+        _wrap(prefs: const UserPreferencesModel(languageCode: 'fr')),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Français'), findsOneWidget);
     });
 
-    testWidgets('language shows English when languageCode is en', (
-      tester,
-    ) async {
+    testWidgets('languageCode en, anglais coupé → Français', (tester) async {
+      await tester.pumpWidget(
+        _wrap(prefs: const UserPreferencesModel(languageCode: 'en')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Français'), findsOneWidget);
+      expect(find.text('English'), findsNothing);
+    });
+
+    testWidgets('languageCode en, anglais activé → English', (tester) async {
+      enableEnglish();
       await tester.pumpWidget(
         _wrap(prefs: const UserPreferencesModel(languageCode: 'en')),
       );
@@ -326,8 +343,10 @@ void main() {
       await tester.tap(find.text('Langue'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Français'), findsAtLeastNWidgets(1));
-      expect(find.text('English'), findsOneWidget);
+      // Le sélecteur s'ouvre avec ses choix (« anglais coupé » : voir le
+      // test dédié ci-dessous pour la couverture précise de ce cas).
+      expect(find.byType(ListTile), findsWidgets);
+      expect(find.text('Français'), findsOneWidget);
     });
 
     testWidgets(
@@ -552,6 +571,7 @@ void main() {
     testWidgets(
       'language picker — tap English dispatches LanguageChanged(en)',
       (tester) async {
+        enableEnglish();
         final mockBloc = MockAppPreferencesBloc();
         const state = AppPreferencesState(preferences: UserPreferencesModel());
         when(() => mockBloc.state).thenReturn(state);
@@ -573,6 +593,43 @@ void main() {
         await tester.pump();
 
         verify(() => mockBloc.add(any(that: isA<LanguageChanged>()))).called(1);
+      },
+    );
+
+    testWidgets('language picker — anglais coupé : pas de choix English', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Langue'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('English'), findsNothing);
+      expect(find.text('Langue du téléphone'), findsNWidgets(2));
+    });
+
+    testWidgets(
+      'language picker — tap Langue du téléphone dispatches LanguageChanged(system)',
+      (tester) async {
+        final mockBloc = MockAppPreferencesBloc();
+        const state = AppPreferencesState(
+          preferences: UserPreferencesModel(languageCode: 'fr'),
+        );
+        when(() => mockBloc.state).thenReturn(state);
+        whenListen<AppPreferencesState>(
+          mockBloc,
+          const Stream.empty(),
+          initialState: state,
+        );
+
+        await tester.pumpWidget(_wrapWithBloc(mockBloc));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Langue'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Langue du téléphone'));
+        await tester.pump();
+
+        verify(() => mockBloc.add(const LanguageChanged('system'))).called(1);
       },
     );
   });

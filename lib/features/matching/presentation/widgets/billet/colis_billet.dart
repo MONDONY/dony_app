@@ -5,6 +5,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_status_stamp.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.dart';
 import 'package:dony/features/matching/presentation/widgets/billet_perforation.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -14,10 +15,10 @@ import 'package:intl/intl.dart';
 /// Assemble l'en-tête YADONY, le corridor départ→arrivée, la zone dates,
 /// la ligne de perforation et le talon d'action.
 ///
-/// NOTE sur le format de date : [DateFormat] avec locale 'fr' nécessite que
-/// les données de locale soient initialisées
-/// ([intl.initializeDateFormatting]). Si elles ne le sont pas (ex : tests
-/// unitaires isolés), le widget retombe sur un format numérique
+/// NOTE sur le format de date : [DateFormat] avec la locale de l'app
+/// (AppL10n.localeName) nécessite que les données de locale soient
+/// initialisées ([intl.initializeDateFormatting]). Si elles ne le sont pas
+/// (ex : tests unitaires isolés), le widget retombe sur un format numérique
 /// non-localisé ("MM/dd") qui ne lève aucune exception.
 class ColisBillet extends StatelessWidget {
   final BidModel bid;
@@ -294,7 +295,7 @@ class _BilletDates extends StatelessWidget {
     return t.length >= 5 ? t.substring(0, 5) : t;
   }
 
-  /// Formate [date] en "d MMM" avec locale 'fr'.
+  /// Formate [date] en "d MMM" avec la locale de l'app (AppL10n.localeName).
   /// Si les données de locale ne sont pas initialisées, retombe sur "d/M"
   /// (locale-independent) pour éviter une [LocaleDataException] en test.
   String? _formatDate(DateTime? date) {
@@ -302,7 +303,7 @@ class _BilletDates extends StatelessWidget {
       return null;
     }
     try {
-      return DateFormat('d MMM', 'fr').format(date);
+      return DateFormat('d MMM', AppL10n.localeName).format(date);
     } catch (_) {
       // Locale data not initialized — use numeric fallback.
       return DateFormat('d/M').format(date);

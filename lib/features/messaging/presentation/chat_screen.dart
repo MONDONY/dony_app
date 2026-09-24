@@ -24,6 +24,7 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/data/chat_message_validator.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -771,7 +772,7 @@ class _DateSeparator extends StatelessWidget {
     final isYesterday = now.difference(date).inDays == 1;
     if (isToday) return 'Aujourd\'hui';
     if (isYesterday) return 'Hier';
-    return DateFormat('d MMMM y', 'fr').format(date);
+    return DateFormat('d MMMM y', AppL10n.localeName).format(date);
   }
 
   @override

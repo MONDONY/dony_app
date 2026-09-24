@@ -3,6 +3,7 @@
 // Ca = préfixe CreateAnnouncement — widgets internes à la feature, ne pas importer ailleurs.
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -443,7 +444,10 @@ class CaDateRow extends StatelessWidget {
               child: Text(
                 date == null
                     ? 'Date de départ'
-                    : DateFormat('EEE d MMM yyyy', 'fr').format(date!),
+                    : DateFormat(
+                        'EEE d MMM yyyy',
+                        AppL10n.localeName,
+                      ).format(date!),
                 style: tt.bodyMedium?.copyWith(
                   fontWeight: date != null ? FontWeight.w600 : FontWeight.w400,
                   color: date != null ? cs.onSurface : cs.onSurfaceVariant,

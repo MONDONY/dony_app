@@ -10,6 +10,7 @@ import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -324,7 +325,10 @@ class _RecapCard extends StatelessWidget {
       if (thread != null)
         (
           'Date du voyage',
-          DateFormat('d MMM yyyy', 'fr').format(thread!.travelerTravelDate),
+          DateFormat(
+            'd MMM yyyy',
+            AppL10n.localeName,
+          ).format(thread!.travelerTravelDate),
         ),
       (
         'Poids',

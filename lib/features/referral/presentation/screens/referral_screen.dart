@@ -3,6 +3,7 @@ import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/data/models/referral_info.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,7 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 String _formatDate(DateTime date) =>
-    DateFormat('d MMMM yyyy', 'fr_FR').format(date);
+    DateFormat('d MMMM yyyy', AppL10n.localeName).format(date);
 
 class ReferralScreen extends StatefulWidget {
   const ReferralScreen({super.key});

@@ -10,6 +10,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -129,7 +130,9 @@ class _BidListView extends StatelessWidget {
       parts.add('$departureCityCode → $arrivalCityCode');
     }
     if (departureDate != null) {
-      parts.add(DateFormat('EEE d MMMM', 'fr').format(departureDate!));
+      parts.add(
+        DateFormat('EEE d MMMM', AppL10n.localeName).format(departureDate!),
+      );
     }
     return parts.join(' · ');
   }

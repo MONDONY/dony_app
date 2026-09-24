@@ -23,6 +23,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -531,7 +532,7 @@ class _HeroCorridorCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final dateStr = DateFormat(
       'EEE d MMM yyyy',
-      'fr',
+      AppL10n.localeName,
     ).format(announcement.departureDate);
     final kgLabel = announcement.isKgFree
         ? 'Kg libre'
@@ -663,7 +664,10 @@ class _StatCardsRow extends StatelessWidget {
             const SizedBox(width: DonySpacing.sm),
             Expanded(
               child: _StatCard(
-                value: DateFormat('EEE d MMM', 'fr').format(deadline),
+                value: DateFormat(
+                  'EEE d MMM',
+                  AppL10n.localeName,
+                ).format(deadline),
                 label: 'date limite de dépôt',
               ),
             ),

@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -340,7 +341,10 @@ class _InfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = DateFormat('d MMM', 'fr').format(item.desiredDate);
+    final dateStr = DateFormat(
+      'd MMM',
+      AppL10n.localeName,
+    ).format(item.desiredDate);
     final toleranceStr = item.dateToleranceDays > 0
         ? ' ±${item.dateToleranceDays}j'
         : '';

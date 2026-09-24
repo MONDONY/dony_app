@@ -11,6 +11,7 @@ import 'package:dony/features/cancellation/presentation/widgets/cancellation_bot
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -207,7 +208,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                       Text(
                         DateFormat(
                           'EEEE d MMMM yyyy',
-                          'fr',
+                          AppL10n.localeName,
                         ).format(a.departureDate),
                         style: tt.bodySmall?.copyWith(
                           color: cs.onPrimary.withValues(alpha: 0.85),
@@ -361,7 +362,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           ),
                           const SizedBox(height: DonySpacing.xs),
                           Text(
-                            'Jusqu\'au ${DateFormat('EEE d MMM', 'fr').format(a.handoverDeadline!.toLocal())}',
+                            'Jusqu\'au ${DateFormat('EEE d MMM', AppL10n.localeName).format(a.handoverDeadline!.toLocal())}',
                             style: tt.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w500,
                               color: cs.onSurface,

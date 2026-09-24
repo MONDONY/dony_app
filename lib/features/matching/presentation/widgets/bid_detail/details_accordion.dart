@@ -6,6 +6,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -54,7 +55,7 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
       return '-';
     }
     try {
-      return DateFormat('dd/MM/yyyy', 'fr').format(d.toLocal());
+      return DateFormat('dd/MM/yyyy', AppL10n.localeName).format(d.toLocal());
     } catch (_) {
       return DateFormat('dd/MM/yyyy').format(d.toLocal());
     }
@@ -65,7 +66,10 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
       return '-';
     }
     try {
-      return DateFormat('EEE dd MMM yyyy', 'fr').format(d.toLocal());
+      return DateFormat(
+        'EEE dd MMM yyyy',
+        AppL10n.localeName,
+      ).format(d.toLocal());
     } catch (_) {
       return DateFormat('dd/MM/yyyy').format(d.toLocal());
     }
@@ -291,7 +295,7 @@ class _DisclaimerRow extends StatelessWidget {
       return 'Disclaimer signé';
     }
     try {
-      return 'Disclaimer signé le ${DateFormat('dd/MM/yyyy à HH:mm', 'fr').format(signed.toLocal())}';
+      return 'Disclaimer signé le ${DateFormat('dd/MM/yyyy à HH:mm', AppL10n.localeName).format(signed.toLocal())}';
     } catch (_) {
       return 'Disclaimer signé le ${DateFormat('dd/MM/yyyy HH:mm').format(signed.toLocal())}';
     }

@@ -6,6 +6,7 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -203,7 +204,7 @@ String _formatDeadline(DateTime? deadline) {
     return '';
   }
   try {
-    return 'jusqu\'au ${DateFormat('EEE d MMM', 'fr').format(deadline)}';
+    return 'jusqu\'au ${DateFormat('EEE d MMM', AppL10n.localeName).format(deadline)}';
   } catch (_) {
     // Repli quand les données de locale manquent (tests isolés).
     return 'jusqu\'au ${DateFormat('dd/MM').format(deadline)}';
@@ -215,7 +216,7 @@ String _formatDepartureDate(DateTime? date) {
     return '';
   }
   try {
-    return DateFormat('EEE d MMM à HH:mm', 'fr').format(date);
+    return DateFormat('EEE d MMM à HH:mm', AppL10n.localeName).format(date);
   } catch (_) {
     return DateFormat('dd/MM HH:mm').format(date);
   }

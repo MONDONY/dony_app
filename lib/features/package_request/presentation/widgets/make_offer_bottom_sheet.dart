@@ -15,6 +15,7 @@ import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/models/price_estimate.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/package_request/presentation/widgets/trip_picker_section.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -467,7 +468,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                                   ? 'Sélectionner…'
                                   : DateFormat(
                                       'EEE d MMM yyyy',
-                                      'fr',
+                                      AppL10n.localeName,
                                     ).format(date),
                               style: _fieldTextStyle(context).copyWith(
                                 color: date == null

@@ -3,6 +3,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/corridor_alerts/data/models/trip_match_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -31,7 +32,7 @@ class TripMatchCard extends StatelessWidget {
 
     final dateStr = DateFormat(
       'd MMM',
-      'fr',
+      AppL10n.localeName,
     ).format(match.departureDate).toLowerCase();
 
     return Material(

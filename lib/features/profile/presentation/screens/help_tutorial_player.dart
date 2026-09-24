@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -126,8 +127,8 @@ HelpTutorialPlayerSession createYoutubeTutorialPlayerSession(
         showFullscreenButton: configuration.showFullscreenButton,
         enableCaption: configuration.enableCaption,
         strictRelatedVideos: configuration.strictRelatedVideos,
-        captionLanguage: 'fr',
-        interfaceLanguage: 'fr',
+        captionLanguage: AppL10n.localeName,
+        interfaceLanguage: AppL10n.localeName,
         privacyEnhancedMode: configuration.privacyEnhanced,
       ),
       onWebResourceError: (error) {

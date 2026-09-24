@@ -38,14 +38,15 @@ import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/settings/data/models/user_preferences_model.dart';
 import 'package:dony/features/settings/data/repositories/privacy_settings_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 class DonyApp extends StatefulWidget {
@@ -447,10 +448,22 @@ class _DonyAppState extends State<DonyApp> {
                     theme: AppTheme.light(a11y: themeOptions),
                     darkTheme: AppTheme.dark(a11y: themeOptions),
                     themeMode: themeMode,
-                    locale: Locale(prefsState.preferences.languageCode),
+                    // 'system' → null : la langue vient du téléphone, via
+                    // localeListResolutionCallback. Un choix manuel passe
+                    // par le même callback, qui applique l'interrupteur.
+                    // Intl.defaultLocale est synchronisé dans le builder.
+                    locale:
+                        prefsState.preferences.languageCode ==
+                            UserPreferencesModel.kLanguageSystem
+                        ? null
+                        : Locale(prefsState.preferences.languageCode),
+                    localeListResolutionCallback: AppL10n.localeListResolution,
                     routerConfig: appRouter,
                     debugShowCheckedModeBanner: false,
                     builder: (context, child) {
+                      // Sous Localizations, rebâti à chaque langue effective ;
+                      // le callback, lui, voit parfois une langue périmée.
+                      AppL10n.syncIntl(Localizations.localeOf(context));
                       final mq = MediaQuery.of(context);
                       return MediaQuery(
                         data: mq.copyWith(
@@ -500,15 +513,9 @@ class _DonyAppState extends State<DonyApp> {
                         ),
                       );
                     },
-                    localizationsDelegates: const [
-                      GlobalMaterialLocalizations.delegate,
-                      GlobalWidgetsLocalizations.delegate,
-                      GlobalCupertinoLocalizations.delegate,
-                    ],
-                    supportedLocales: const [
-                      Locale('fr', 'FR'),
-                      Locale('en', 'US'),
-                    ],
+                    localizationsDelegates:
+                        AppLocalizations.localizationsDelegates,
+                    supportedLocales: AppLocalizations.supportedLocales,
                   ),
                 ),
               ),

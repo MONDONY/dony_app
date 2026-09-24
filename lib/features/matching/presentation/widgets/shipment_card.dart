@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -124,7 +125,7 @@ class ShipmentCard extends StatelessWidget {
     final today = DateUtils.dateOnly(DateTime.now());
     final d = DateUtils.dateOnly(date);
     final diff = d.difference(today).inDays;
-    final dateStr = DateFormat('d MMM', 'fr').format(date);
+    final dateStr = DateFormat('d MMM', AppL10n.localeName).format(date);
     if (diff == 0) {
       return "Aujourd'hui · $dateStr";
     }
@@ -134,7 +135,7 @@ class ShipmentCard extends StatelessWidget {
     if (diff > 1 && diff <= 6) {
       return 'Départ dans $diff jours · $dateStr';
     }
-    return DateFormat('EEE d MMM yyyy', 'fr').format(date);
+    return DateFormat('EEE d MMM yyyy', AppL10n.localeName).format(date);
   }
 
   /// Format weight with comma decimal separator: '4,5 kg' or '5 kg'.

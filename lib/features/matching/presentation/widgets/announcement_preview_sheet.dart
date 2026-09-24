@@ -3,6 +3,7 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -74,7 +75,10 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     final dateStr = formState.departureDate != null
-        ? DateFormat('dd MMM yyyy', 'fr_FR').format(formState.departureDate!)
+        ? DateFormat(
+            'dd MMM yyyy',
+            AppL10n.localeName,
+          ).format(formState.departureDate!)
         : '-';
 
     // Le voyageur touche le prix net qu'il fixe ; la commission Yadony est en sus

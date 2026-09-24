@@ -3,6 +3,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -153,9 +154,9 @@ String formatConversationTime(DateTime dt) {
     return DateFormat('HH:mm').format(local);
   }
   if (diff.inDays < 7) {
-    return DateFormat('EEE', 'fr').format(local);
+    return DateFormat('EEE', AppL10n.localeName).format(local);
   }
-  return DateFormat('d MMM', 'fr').format(local);
+  return DateFormat('d MMM', AppL10n.localeName).format(local);
 }
 
 class _TripLabel extends StatelessWidget {

@@ -26,7 +26,10 @@ jobs:
         run: flutter analyze
 
       - name: Check formatting
-        run: dart format --set-exit-if-changed lib/ test/
+        run: dart format --set-exit-if-changed lib/ test/ tool/
+
+      - name: Check hardcoded French strings
+        run: dart run tool/check_hardcoded_strings.dart
 
   test:
     name: Tests & Coverage

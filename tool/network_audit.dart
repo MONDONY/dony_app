@@ -59,14 +59,16 @@ List<Finding> auditSource(String path, String content) {
 
     // Rule: image_network — Image.network( found.
     if (_imageNetworkRe.hasMatch(line)) {
-      findings.add(Finding(
-        file: path,
-        line: lineNum,
-        rule: 'image_network',
-        severity: 'warning',
-        message:
-            'Utiliser CachedNetworkImage à la place de Image.network() pour éviter les re-téléchargements inutiles.',
-      ));
+      findings.add(
+        Finding(
+          file: path,
+          line: lineNum,
+          rule: 'image_network',
+          severity: 'warning',
+          message:
+              'Utiliser CachedNetworkImage à la place de Image.network() pour éviter les re-téléchargements inutiles.',
+        ),
+      );
     }
 
     // Rule: loop_request — network call inside a loop construct.
@@ -78,15 +80,17 @@ List<Finding> auditSource(String path, String content) {
         final candidate = lines[j];
         if (_dioVerbRe.hasMatch(candidate)) {
           final callLineNum = j + 1;
-          findings.add(Finding(
-            file: path,
-            line: callLineNum,
-            rule: 'loop_request',
-            severity: 'warning',
-            message:
-                'Appel réseau Dio détecté dans une boucle — risque de N+1 requêtes. '
-                'Préférer un batch endpoint ou collecter les IDs puis appeler une seule fois.',
-          ));
+          findings.add(
+            Finding(
+              file: path,
+              line: callLineNum,
+              rule: 'loop_request',
+              severity: 'warning',
+              message:
+                  'Appel réseau Dio détecté dans une boucle — risque de N+1 requêtes. '
+                  'Préférer un batch endpoint ou collecter les IDs puis appeler une seule fois.',
+            ),
+          );
           break; // one finding per loop open
         }
       }
@@ -94,15 +98,17 @@ List<Finding> auditSource(String path, String content) {
 
     // Rule: boot_blocking — await on dio call inside initState.
     if (inInitState && line.contains('await') && _dioVerbRe.hasMatch(line)) {
-      findings.add(Finding(
-        file: path,
-        line: lineNum,
-        rule: 'boot_blocking',
-        severity: 'info',
-        message:
-            'Appel réseau bloquant dans initState — retarde le rendu initial. '
-            'Déclencher via un BLoC event ou FutureBuilder plutôt qu\'un await direct.',
-      ));
+      findings.add(
+        Finding(
+          file: path,
+          line: lineNum,
+          rule: 'boot_blocking',
+          severity: 'info',
+          message:
+              'Appel réseau bloquant dans initState — retarde le rendu initial. '
+              'Déclencher via un BLoC event ou FutureBuilder plutôt qu\'un await direct.',
+        ),
+      );
     }
   }
 
@@ -112,7 +118,9 @@ List<Finding> auditSource(String path, String content) {
 void main(List<String> args) {
   final libDir = Directory('lib');
   if (!libDir.existsSync()) {
-    stderr.writeln('ERROR: lib/ directory not found. Run from the project root.');
+    stderr.writeln(
+      'ERROR: lib/ directory not found. Run from the project root.',
+    );
     exit(1);
   }
 
@@ -146,7 +154,9 @@ void main(List<String> args) {
   sb.writeln('|---|---|---|---|');
   for (final f in allFindings) {
     final escaped = f.message.replaceAll('|', '\\|');
-    sb.writeln('| ${f.file}:${f.line} | ${f.rule} | ${f.severity} | $escaped |');
+    sb.writeln(
+      '| ${f.file}:${f.line} | ${f.rule} | ${f.severity} | $escaped |',
+    );
   }
   if (allFindings.isEmpty) {
     sb.writeln('| — | — | — | Aucun finding. |');
