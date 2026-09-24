@@ -22,6 +22,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/mock_analytics_backend.dart';
 
 const _hubConfigJson = '''
@@ -754,6 +755,86 @@ void main() {
 
       expect(find.byType(ContextualTutorialCard), findsOneWidget);
       expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
+    });
+
+    testWidgets('en anglais : titre de l\'écran traduit', (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(NegotiationListState());
+      await tester.pumpWidget(wrapScreen(_emptyHelpConfigJson));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Price discussions'), findsOneWidget);
+    });
+  });
+
+  group('en anglais', () {
+    testWidgets('état vide, filtres et pastille de statut traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationListState(status: NegotiationListStatus.loaded));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('No negotiations'), findsOneWidget);
+    });
+
+    testWidgets('filtres "All/In progress/Completed" traduits', (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        NegotiationListState(
+          status: NegotiationListStatus.loaded,
+          threads: [_thread()],
+        ),
+      );
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('All (1)'), findsOneWidget);
+      expect(find.text('In progress (1)'), findsOneWidget);
+      expect(find.text('Completed (0)'), findsOneWidget);
+    });
+
+    testWidgets('fallback voyageur "Traveler tr-1" traduit', (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        NegotiationListState(
+          status: NegotiationListStatus.loaded,
+          threads: [_thread(travelerName: null)],
+        ),
+      );
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Traveler tr-'), findsOneWidget);
+    });
+
+    testWidgets('pastille de statut "DEPOSIT" traduite', (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        NegotiationListState(
+          status: NegotiationListStatus.loaded,
+          threads: [_thread(status: NegotiationThreadStatus.awaitingDeposit)],
+        ),
+      );
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('DEPOSIT'), findsWidgets);
+      expect(find.text('deposit in progress'), findsOneWidget);
+    });
+
+    testWidgets('round abrégé "Rd. 2/5" traduit (jamais "R.2/5")', (
+      tester,
+    ) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        NegotiationListState(
+          status: NegotiationListStatus.loaded,
+          threads: [_thread()],
+        ),
+      );
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Rd. 2/5'), findsOneWidget);
+      expect(find.textContaining('R.2/5'), findsNothing);
     });
   });
 }

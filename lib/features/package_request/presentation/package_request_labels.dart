@@ -1,6 +1,7 @@
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/models/price_estimate.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:intl/intl.dart';
@@ -11,6 +12,18 @@ extension ParcelSizeL10n on ParcelSize {
     ParcelSize.small => l.parcelSizeSmall,
     ParcelSize.medium => l.parcelSizeMedium,
     ParcelSize.large => l.parcelSizeLarge,
+  };
+}
+
+/// Libellé affiché du badge de confiance d'une estimation de prix
+/// (`make_offer_bottom_sheet.dart`, `_EstimationBanner`). `wireName`
+/// (`HIGH`/`MEDIUM`/`LOW`) reste la valeur de donnée utilisée pour le mapping
+/// de couleur du badge — seul l'affichage passe par cette extension.
+extension PriceEstimateConfidenceL10n on PriceEstimateConfidence {
+  String confidenceLabel(AppLocalizations l) => switch (this) {
+    PriceEstimateConfidence.high => l.negotiationMakeOfferConfidenceHigh,
+    PriceEstimateConfidence.medium => l.negotiationMakeOfferConfidenceMedium,
+    PriceEstimateConfidence.low => l.negotiationMakeOfferConfidenceLow,
   };
 }
 

@@ -4,6 +4,8 @@ import 'package:dony/features/package_request/presentation/widgets/thread/linked
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 LinkedTripSummary _trip({
   String mode = 'PLANE',
   String? date,
@@ -129,6 +131,22 @@ void main() {
       await tester.pumpWidget(_wrap(LinkedTripCard(trip: trip, onTap: () {})));
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.textContaining('5 kg'), findsOneWidget);
+    });
+
+    testWidgets('en anglais : « Kg libre » devient « Flexible kg »', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          LinkedTripCard(
+            trip: _trip(capacityUnit: 'KG_FREE'),
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.textContaining('Flexible kg'), findsOneWidget);
     });
   });
 }

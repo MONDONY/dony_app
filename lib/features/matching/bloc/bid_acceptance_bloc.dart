@@ -27,8 +27,11 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
     try {
       final r = await _repo.acceptBidWithCommission(e.bidId);
       await _handleResponse(r, e.bidId, emit);
-    } catch (err) {
-      emit(BidFailed(err.toString()));
+    } catch (_) {
+      // AppException.message n'est jamais un texte affichable (voir sa doc) :
+      // serverMessage reste vide, displayMessage() rend alors la clé de
+      // BidFailureReason.refused.
+      emit(BidFailed(reason: BidFailureReason.refused));
     }
   }
 
@@ -43,8 +46,9 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
         commissionSource: 'CARD',
       );
       await _handleResponse(r, e.bidId, emit);
-    } catch (err) {
-      emit(BidFailed(err.toString()));
+    } catch (_) {
+      // Même raison qu'en haut : pas de message serveur affichable ici.
+      emit(BidFailed(reason: BidFailureReason.refused));
     }
   }
 
@@ -71,14 +75,15 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
             c.accepted
                 ? BidAccepted()
                 : BidFailed(
-                    c.error ?? 'Confirmation échouée',
+                    serverMessage: c.error,
+                    reason: BidFailureReason.confirmFailed,
                     cardDeclined: true,
                   ),
           );
         } on StripeException {
           emit(
             BidFailed(
-              'Authentification bancaire interrompue',
+              reason: BidFailureReason.bankAuthInterrupted,
               cardDeclined: true,
             ),
           );
@@ -97,7 +102,13 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
         );
         return;
       case AcceptanceStatus.failed:
-        emit(BidFailed(r.error ?? 'Acceptation refusée', cardDeclined: true));
+        emit(
+          BidFailed(
+            serverMessage: r.error,
+            reason: BidFailureReason.refused,
+            cardDeclined: true,
+          ),
+        );
         return;
     }
   }

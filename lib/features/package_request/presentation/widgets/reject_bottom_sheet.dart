@@ -1,6 +1,7 @@
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -16,7 +17,7 @@ class RejectBottomSheet {
 
     return DonyBottomSheet.show<void>(
       context,
-      title: 'Rejeter la négociation',
+      title: context.l10n.negotiationRejectTitle,
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       child: _RejectContent(
         bloc: bloc,
@@ -26,11 +27,14 @@ class RejectBottomSheet {
       stickyBottom: BlocBuilder<NegotiationBloc, NegotiationState>(
         bloc: bloc,
         builder: (ctx, state) {
+          final l = ctx.l10n;
           final loading =
               state is NegotiationActionInProgress ||
               state is NegotiationLoading;
           return DonyButton(
-            label: loading ? 'Envoi…' : 'Confirmer le rejet',
+            label: loading
+                ? l.requestCreateSendingLabel
+                : l.negotiationRejectConfirmLabel,
             variant: DonyButtonVariant.destructive,
             isLoading: loading,
             onPressed: loading ? null : () => submitFn?.call(),
@@ -88,7 +92,9 @@ class _RejectContentState extends State<_RejectContent> {
       controller: _reasonCtrl,
       maxLines: 3,
       maxLength: 280,
-      decoration: const InputDecoration(labelText: 'Raison (optionnel)'),
+      decoration: InputDecoration(
+        labelText: context.l10n.negotiationRejectReasonLabel,
+      ),
     );
   }
 }

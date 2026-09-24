@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -55,7 +56,7 @@ class LinkedTripCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     trip.isKgFree
-                        ? '$date · Kg libre'
+                        ? '$date · ${context.l10n.tripKgFree}'
                         : '$date · ${trip.availableKg} kg',
                     style: Theme.of(context).textTheme.bodySmall!.copyWith(
                       fontWeight: FontWeight.w500,

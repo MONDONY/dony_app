@@ -24,6 +24,7 @@ import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/error_reporting_test_doubles.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 
 /// Widget test for `PaymentRecapBottomSheet.show()` — the static sheet
 /// launcher itself, NOT `PaymentRecapContent` (already covered in depth by
@@ -390,6 +391,33 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
 
         expect(find.text('Fil de négociation thread-recap-1'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'anglais : titre, bouton, écran de succès et note cash traduits',
+      (tester) async {
+        useEnglish();
+        await tester.pumpWidget(buildRoutedApp());
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Confirm the agreement'), findsWidgets);
+        expect(
+          find.text('To hand over to the traveler (in cash)'),
+          findsOneWidget,
+        );
+        expect(find.text('The traveler keeps net'), findsOneWidget);
+
+        await tester.tap(
+          find.widgetWithText(DonyButton, 'Confirm the agreement'),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DonySuccessScreen), findsOneWidget);
+        expect(find.text('Agreement confirmed!'), findsOneWidget);
+        expect(find.textContaining('Cash payment'), findsOneWidget);
+        expect(find.text('Track your shipment'), findsOneWidget);
       },
     );
   });

@@ -22,6 +22,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/stripe_account_test_doubles.dart';
 
 class MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
@@ -577,5 +578,33 @@ void main() {
       expect(find.text('Aucun moyen de paiement disponible'), findsNothing);
       expect(find.text('Some unrelated business error'), findsOneWidget);
     });
+  });
+
+  group('en anglais', () {
+    testWidgets(
+      'titre de l\'écran, aperçu paiement et bouton de confirmation traduits',
+      (tester) async {
+        useEnglish();
+        when(() => packageRequestRepo.getById(any())).thenAnswer(
+          (_) async => _packageRequest(
+            methods: {PaymentMethod.stripe, PaymentMethod.cash},
+          ),
+        );
+        when(
+          () => announcementRepo.getMyAnnouncements(),
+        ).thenAnswer((_) async => (announcements: [_trip()], totalElements: 1));
+
+        await tester.pumpWidget(_harness(_fakeThread()));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Link a trip'), findsOneWidget);
+        expect(find.text('The sender will choose from'), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('trip-tile-select-inkwell')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Confirm this trip'), findsOneWidget);
+      },
+    );
   });
 }

@@ -4,11 +4,14 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/l10n_test_helpers.dart';
 
 class MockLocationService extends Mock implements LocationService {}
 
@@ -243,5 +246,47 @@ void main() {
 
     // Smoke check: widget mounted, no crash on building markers for any mode
     expect(find.byType(AnnouncementMapView), findsOneWidget);
+  });
+
+  testWidgets('en anglais : infobulle "Près de moi" traduite', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        AnnouncementMapView(
+          announcements: [
+            _ann(
+              's1',
+              'Paris',
+              'Dakar',
+              pickup: const AddressData(
+                label: 'Gare du Nord',
+                lat: 48.88,
+                lng: 2.35,
+              ),
+            ),
+          ],
+          locationService: _stubDeniedService(),
+          onNearMeToggle: () {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    // Infobulle du FAB "Près de moi" (listingNearMeActivateTooltip).
+    expect(find.byTooltip('See travelers near me'), findsOneWidget);
+  });
+
+  test('en anglais : repli d\'adresse traduit (listingAddressFallback)', () {
+    // `_onClusterTapped` (announcement_map_view.dart) affiche
+    // `addr?.label ?? context.l10n.listingAddressFallback` : ce repli n'est
+    // atteignable que si `pickupAddress` est nul, ce que `_pickupPoints()`
+    // exclut déjà en amont (announcements sans pickupAddress filtrées).
+    // Il n'y a donc pas de scénario widget qui déclenche ce repli
+    // aujourd'hui ; on fige ici la valeur anglaise de la clé pour garder
+    // la traduction sous test.
+    expect(
+      lookupAppLocalizations(AppL10n.en).listingAddressFallback,
+      'Address',
+    );
   });
 }

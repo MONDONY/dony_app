@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -45,11 +46,13 @@ class RouteBottomSheet extends StatelessWidget {
     required this.filter,
   });
 
-  String get _title => switch (filter) {
+  String _title(AppLocalizations l) => switch (filter) {
     ExactRouteFilter(from: final f, to: final t) =>
       '${f.displayName} → ${t.displayName}',
-    DepartureCityFilter(city: final c) => 'Départs depuis ${c.displayName}',
-    ArrivalCityFilter(city: final c) => 'Arrivées à ${c.displayName}',
+    DepartureCityFilter(city: final c) => l.listingRouteDeparturesFrom(
+      c.displayName,
+    ),
+    ArrivalCityFilter(city: final c) => l.listingRouteArrivalsTo(c.displayName),
   };
 
   List<AnnouncementModel> get _filtered => switch (filter) {
@@ -70,6 +73,7 @@ class RouteBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final items = _filtered;
     final auth = context.read<AuthBloc>().state;
     final currentUserId = auth.currentUserId;
@@ -105,9 +109,9 @@ class RouteBottomSheet extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
               child: Row(
                 children: [
-                  Expanded(child: Text(_title, style: tt.titleLarge)),
+                  Expanded(child: Text(_title(l), style: tt.titleLarge)),
                   Text(
-                    '${items.length} trajet${items.length != 1 ? 's' : ''}',
+                    l.listingRouteTrips(items.length),
                     style: tt.bodySmall?.copyWith(
                       color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                     ),
@@ -121,7 +125,7 @@ class RouteBottomSheet extends StatelessWidget {
               child: items.isEmpty
                   ? Center(
                       child: Text(
-                        'Aucun trajet disponible sur cette route',
+                        l.listingNoTripsOnRoute,
                         style: tt.bodyMedium?.copyWith(
                           color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                         ),

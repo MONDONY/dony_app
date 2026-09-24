@@ -19,6 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/mock_analytics_backend.dart';
 
 const _emptyHelpConfigJson = '''
@@ -255,6 +256,27 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('★4.9'), findsOneWidget);
       expect(find.textContaining('24 trajets'), findsOneWidget);
+    });
+
+    testWidgets('accorde "1 trajet" au singulier (correction d\'accord R39)', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationLoaded(_thread(travelerTripsCount: 1)));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.textContaining('★4.9 · 1 trajet'), findsOneWidget);
+      expect(find.textContaining('1 trajets'), findsNothing);
+    });
+
+    testWidgets('accorde "2 trajets" au pluriel', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationLoaded(_thread(travelerTripsCount: 2)));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.textContaining('★4.9 · 2 trajets'), findsOneWidget);
     });
 
     testWidgets('affiche "Voyageur" si travelerName est null', (tester) async {
@@ -534,4 +556,48 @@ void main() {
       );
     },
   );
+
+  group('en anglais', () {
+    testWidgets('titre de repli et nom du voyageur traduits', (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(const NegotiationInitial());
+      await tester.pumpWidget(wrap());
+      await tester.pump();
+      expect(find.text('Negotiation'), findsOneWidget);
+    });
+
+    testWidgets('fallback "Traveler" traduit', (tester) async {
+      useEnglish();
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationLoaded(_thread(travelerName: null)));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('Traveler'), findsOneWidget);
+    });
+
+    testWidgets('menu et dialog de fin de négociation traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        NegotiationLoaded(
+          _thread(status: NegotiationThreadStatus.awaitingTrip),
+        ),
+      );
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(PopupMenuButton<String>));
+      await tester.pumpAndSettle();
+      expect(find.text('End the negotiation'), findsOneWidget);
+
+      await tester.tap(find.text('End the negotiation'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('End this negotiation?'), findsOneWidget);
+      expect(find.text('This action is final.'), findsOneWidget);
+      expect(find.text('End it'), findsOneWidget);
+    });
+  });
 }

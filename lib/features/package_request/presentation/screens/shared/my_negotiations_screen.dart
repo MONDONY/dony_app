@@ -8,13 +8,16 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_list_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/data/models/nego_entry.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,8 +45,10 @@ class _MyNegotiationsScreenState extends State<MyNegotiationsScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // Aligné sur la tuile « Discussions de prix » du hub Activités : le
-      // libellé tapé doit être celui de l'écran qui s'ouvre.
-      appBar: const DonyAppBar(title: 'Discussions de prix'),
+      // libellé tapé doit être celui de l'écran qui s'ouvre. La tuile du hub
+      // (activites_hub_screen.dart) n'est pas encore migrée : même texte à
+      // reprendre quand elle le sera.
+      appBar: DonyAppBar(title: context.l10n.negotiationListTitle),
       body: Column(
         children: [
           const Padding(
@@ -151,7 +156,7 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
                           message:
                               state.errorMessage ??
                               tripState.errorMessage ??
-                              'Erreur',
+                              context.l10n.requestListErrorFallback,
                           onRetry: () {
                             context.read<NegotiationListBloc>().add(
                               const NegotiationListRefreshRequested(),
@@ -163,10 +168,9 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
                         );
                       }
                       if (bothEmpty) {
-                        return const DonyEmptyState(
-                          title: 'Aucune négociation',
-                          description:
-                              "Tes négociations actives apparaîtront ici dès qu'un voyageur fait une offre.",
+                        return DonyEmptyState(
+                          title: context.l10n.negotiationEmptyTitle,
+                          description: context.l10n.negotiationEmptyDescription,
                           mascotte: DonyMascotteType.assis,
                         );
                       }
@@ -190,7 +194,7 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
                               0,
                             ),
                             child: DonySearchField(
-                              hint: 'Voyageur, ville…',
+                              hint: context.l10n.negotiationSearchHint,
                               controller: _searchController,
                               onChanged: _onQuery,
                               onClear: () => _filterCubit.setQuery(''),
@@ -208,7 +212,10 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
                               children: [
                                 Expanded(
                                   child: _FilterChip(
-                                    label: 'Toutes (${all.length})',
+                                    label: context.l10n
+                                        .negotiationFilterAllCountLabel(
+                                          all.length,
+                                        ),
                                     active:
                                         filter.preset == NegoQuickFilter.all,
                                     onTap: () => _filterCubit.setPreset(
@@ -219,7 +226,10 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
                                 const SizedBox(width: DonySpacing.xs + 2),
                                 Expanded(
                                   child: _FilterChip(
-                                    label: 'En cours ($activeCount)',
+                                    label: context.l10n
+                                        .negotiationFilterActiveCountLabel(
+                                          activeCount,
+                                        ),
                                     active:
                                         filter.preset == NegoQuickFilter.active,
                                     onTap: () => _filterCubit.setPreset(
@@ -230,7 +240,10 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
                                 const SizedBox(width: DonySpacing.xs + 2),
                                 Expanded(
                                   child: _FilterChip(
-                                    label: 'Terminées ($terminalCount)',
+                                    label: context.l10n
+                                        .negotiationFilterTerminalCountLabel(
+                                          terminalCount,
+                                        ),
                                     active:
                                         filter.preset ==
                                         NegoQuickFilter.terminal,
@@ -348,14 +361,14 @@ class _FilterEmptyState extends StatelessWidget {
   final NegoQuickFilter preset;
   final bool hasQuery;
 
-  String get _msg {
+  String _msg(AppLocalizations l) {
     if (hasQuery) {
-      return 'Aucun résultat pour cette recherche';
+      return l.requestListEmptySearchResult;
     }
     return switch (preset) {
-      NegoQuickFilter.active => 'Aucune négociation en cours',
-      NegoQuickFilter.terminal => 'Aucune négociation terminée',
-      NegoQuickFilter.all => 'Aucune négociation',
+      NegoQuickFilter.active => l.negotiationEmptyActiveFilter,
+      NegoQuickFilter.terminal => l.negotiationEmptyTerminalFilter,
+      NegoQuickFilter.all => l.negotiationEmptyTitle,
     };
   }
 
@@ -371,7 +384,7 @@ class _FilterEmptyState extends StatelessWidget {
             const DonyEmoji.parcel(size: 48),
             const SizedBox(height: DonySpacing.sm + 4),
             Text(
-              _msg,
+              _msg(context.l10n),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: cs.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
@@ -412,33 +425,39 @@ class _NegoCard extends StatelessWidget {
     _ => DonyColors.neutral300,
   };
 
-  String get _priceLabel => switch (thread.status) {
-    NegotiationThreadStatus.open => 'proposition',
-    NegotiationThreadStatus.awaitingTrip => 'accord',
-    NegotiationThreadStatus.awaitingPayment => 'à payer',
-    NegotiationThreadStatus.awaitingDeposit => 'dépôt en cours',
-    NegotiationThreadStatus.awaitingCommission => 'commission due',
-    NegotiationThreadStatus.accepted => 'payé',
-    _ => 'terminé',
+  String _priceLabel(AppLocalizations l) => switch (thread.status) {
+    NegotiationThreadStatus.open => l.negotiationStageProposal,
+    NegotiationThreadStatus.awaitingTrip => l.negotiationStageDealPending,
+    NegotiationThreadStatus.awaitingPayment => l.negotiationStageToPay,
+    NegotiationThreadStatus.awaitingDeposit =>
+      l.negotiationStageDepositInProgress,
+    NegotiationThreadStatus.awaitingCommission =>
+      l.negotiationStageCommissionDue,
+    NegotiationThreadStatus.accepted => l.negotiationStagePaid,
+    _ => l.negotiationStageClosed,
   };
 
-  String _buildRoute() {
+  String _buildRoute(AppLocalizations l) {
     final dep = thread.departureCity;
     final arr = thread.arrivalCity;
     if (dep != null && arr != null) {
       return '$dep → $arr';
     }
     return thread.isTravelerKgFree
-        ? 'Kg libre'
-        : '${thread.travelerAvailableKg.toStringAsFixed(0)} kg dispo';
+        ? l.tripKgFree
+        : l.negotiationLinkTripKgAvailable(
+            thread.travelerAvailableKg.toStringAsFixed(0),
+          );
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final name =
-        thread.travelerName ?? 'Voyageur ${thread.travelerId.substring(0, 4)}';
+        thread.travelerName ??
+        l.negotiationTravelerFallbackWithId(thread.travelerId.substring(0, 4));
     final rounds = thread.roundsCount.clamp(0, 5);
 
     // L'expéditeur voit TOUJOURS le prix qu'il paie (net + commission = gross),
@@ -470,7 +489,7 @@ class _NegoCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  _buildRoute(),
+                  _buildRoute(l),
                   style: tt.titleLarge?.copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
@@ -494,7 +513,7 @@ class _NegoCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    _priceLabel,
+                    _priceLabel(l),
                     style: tt.bodySmall?.copyWith(
                       fontSize: 10,
                       color: cs.onSurfaceVariant,
@@ -554,7 +573,10 @@ class _NegoCard extends StatelessWidget {
               const SizedBox(width: 2),
               Expanded(
                 child: Text(
-                  'R.${thread.roundsCount}/5 · ${_timeAgo(thread.lastActivityAt)}',
+                  l.negotiationCardRoundShortLabel(
+                    thread.roundsCount,
+                    _timeAgo(l, thread.lastActivityAt),
+                  ),
                   overflow: TextOverflow.ellipsis,
                   style: tt.bodySmall?.copyWith(
                     fontSize: 11,
@@ -575,7 +597,7 @@ class _NegoCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(DonyRadius.full),
                   ),
                   child: Text(
-                    'NOUVEAU',
+                    l.negotiationMessageNewBadge,
                     style: tt.bodySmall?.copyWith(
                       fontSize: 9,
                       fontWeight: FontWeight.w800,
@@ -609,17 +631,18 @@ class _TripNegoCard extends StatelessWidget {
   /// montant qui n'est pas le sien : côté voyageur, le chiffre attend le fil.
   bool get _showsAmount => summary.role != 'TRAVELER';
 
-  String get _route {
+  String _route(AppLocalizations l) {
     final dep = summary.departureCity;
     final arr = summary.arrivalCity;
     if (dep != null && arr != null) return '$dep → $arr';
-    return 'Trajet';
+    return l.requestCreateRecapTrip;
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final isTerminal = summary.isClosed;
 
     return _NegoCardShell(
@@ -637,7 +660,7 @@ class _TripNegoCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  _route,
+                  _route(l),
                   style: tt.titleLarge?.copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
@@ -665,7 +688,7 @@ class _TripNegoCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      summary.stageLabel,
+                      summary.stageLabel(context.l10n),
                       style: tt.bodySmall?.copyWith(
                         fontSize: 10,
                         color: cs.onSurfaceVariant,
@@ -681,7 +704,8 @@ class _TripNegoCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  summary.counterpartyName ?? 'Interlocuteur',
+                  summary.counterpartyName ??
+                      l.negotiationTripCardCounterpartyFallback,
                   overflow: TextOverflow.ellipsis,
                   style: tt.bodySmall?.copyWith(
                     fontSize: 11,
@@ -696,7 +720,10 @@ class _TripNegoCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Tour ${summary.round} · ${_timeAgo(summary.updatedAt ?? DateTime.now())}',
+            l.negotiationTripCardRoundLabel(
+              summary.round,
+              _timeAgo(l, summary.updatedAt ?? DateTime.now()),
+            ),
             overflow: TextOverflow.ellipsis,
             style: tt.bodySmall?.copyWith(
               fontSize: 11,
@@ -810,6 +837,7 @@ class _SourcePill extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final isTrip = kind == NegoEntryKind.trip;
 
     return Container(
@@ -820,7 +848,7 @@ class _SourcePill extends StatelessWidget {
         border: Border.all(color: cs.outlineVariant),
       ),
       child: Text(
-        isTrip ? 'Trajet' : 'Demande',
+        isTrip ? l.requestCreateRecapTrip : l.negotiationSourcePillRequest,
         style: tt.bodySmall?.copyWith(
           fontSize: 9,
           fontWeight: FontWeight.w700,
@@ -840,41 +868,38 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (label, fg, bg) = switch (status) {
+    final (fg, bg) = switch (status) {
       NegotiationThreadStatus.open => (
-        'EN COURS',
         DonyColors.primary,
         const Color(0xFFEEF3FF),
       ),
       NegotiationThreadStatus.awaitingTrip => (
-        'ATT. TRAJET',
         DonyColors.threadPillAmberFg,
         const Color(0xFFFEF3C7),
       ),
       NegotiationThreadStatus.awaitingPayment => (
-        'PAIEMENT',
         DonyColors.threadStatusViolet,
         const Color(0xFFF5F3FF),
       ),
       NegotiationThreadStatus.awaitingCommission => (
-        'COMMISSION',
         DonyColors.threadPillOrangeFg,
         const Color(0xFFFFEDD5),
       ),
       // Dépôt mobile money en cours : même violet que le paiement, dont il
       // est une étape.
       NegotiationThreadStatus.awaitingDeposit => (
-        'DÉPÔT',
         DonyColors.threadStatusViolet,
         const Color(0xFFF5F3FF),
       ),
       NegotiationThreadStatus.accepted => (
-        'ACCEPTÉE',
         DonyColors.threadStatusGreen,
         const Color(0xFFDCFCE7),
       ),
-      _ => ('TERMINÉ', DonyColors.threadPillNeutralFg, const Color(0xFFF3F4F6)),
+      _ => (DonyColors.threadPillNeutralFg, const Color(0xFFF3F4F6)),
     };
+    // Même texte, même clé que la pastille du hero card (ThreadHeroCard) : la
+    // variante ne sert ici qu'à retrouver le libellé, pas la couleur.
+    final label = ThreadStatusVariant.fromThread(status).badge(context.l10n);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
@@ -923,7 +948,10 @@ class _ErrorState extends StatelessWidget {
               ),
             ),
             const SizedBox(height: DonySpacing.base),
-            TextButton(onPressed: onRetry, child: const Text('Réessayer')),
+            TextButton(
+              onPressed: onRetry,
+              child: Text(context.l10n.commonRetry),
+            ),
           ],
         ),
       ),
@@ -933,16 +961,19 @@ class _ErrorState extends StatelessWidget {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-String _timeAgo(DateTime dt) {
+/// Même mise en forme que `my_package_requests_screen.dart` (clés
+/// `requestListTime…`), reprise ici en privé faute d'un point d'entrée
+/// partagé : les deux écrans affichent le même « il y a N » relatif.
+String _timeAgo(AppLocalizations l, DateTime dt) {
   final diff = DateTime.now().difference(dt);
   if (diff.inSeconds < 60) {
-    return "à l'instant";
+    return l.requestListTimeJustNow;
   }
   if (diff.inMinutes < 60) {
-    return 'il y a ${diff.inMinutes} min';
+    return l.requestListTimeMinutesAgo(diff.inMinutes);
   }
   if (diff.inHours < 24) {
-    return 'il y a ${diff.inHours}h';
+    return l.requestListTimeHoursAgo(diff.inHours);
   }
-  return 'il y a ${diff.inDays}j';
+  return l.requestListTimeDaysAgo(diff.inDays);
 }

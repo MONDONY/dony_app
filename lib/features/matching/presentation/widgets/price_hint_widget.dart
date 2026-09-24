@@ -3,6 +3,7 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 class PriceHintWidget extends StatelessWidget {
@@ -31,7 +32,7 @@ class PriceHintWidget extends StatelessWidget {
         iconAsset: 'triangle-alert',
         iconColor: cs.warning,
         bgColor: cs.warningLight,
-        message: 'Prix bas : risque de méfiance de l\'expéditeur',
+        message: context.l10n.bidCreatePriceTooLowHint,
       );
     }
 
@@ -42,22 +43,24 @@ class PriceHintWidget extends StatelessWidget {
         iconAsset: 'triangle-alert',
         iconColor: cs.warning,
         bgColor: cs.warningLight,
-        message: 'Prix élevé : peu de demandes attendues',
+        message: context.l10n.bidCreatePriceTooHighHint,
       );
     }
 
     if (marketMedianPrice != null) {
-      final corridorStr = corridor != null ? '$corridor : ' : '';
+      final leading = corridor != null
+          ? context.l10n.bidCreateMarketPriceCorridor(corridor!)
+          : context.l10n.bidCreateMarketPriceLabel;
       return _buildHintCard(
         cs: cs,
         tt: tt,
         iconAsset: 'lightbulb',
         iconColor: cs.warning,
         bgColor: cs.warningLight,
-        leading: 'Marché $corridorStr',
+        leading: leading,
         highlight:
             '${CurrencyFormatter.formatOrPlain(marketMedianPrice!, currency)}/kg',
-        message: ' · Votre prix est compétitif.',
+        message: context.l10n.bidCreateCompetitivePriceSuffix,
       );
     }
 

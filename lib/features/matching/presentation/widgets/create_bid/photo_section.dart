@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -25,7 +26,7 @@ class PhotoSection extends StatelessWidget {
       if (context.mounted) {
         DonySnackbar.show(
           context,
-          message: 'Image non supportée ou trop volumineuse',
+          message: context.l10n.requestCreatePhotoUnsupported,
           type: DonySnackbarType.error,
         );
       }
@@ -38,13 +39,14 @@ class PhotoSection extends StatelessWidget {
       useRootNavigator: true,
       builder: (sheetCtx) {
         final cs = Theme.of(context).colorScheme;
+        final l = context.l10n;
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
                 leading: Icon(Icons.photo_camera_rounded, color: cs.primary),
-                title: const Text('Prendre une photo'),
+                title: Text(l.requestCreateTakePhoto),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
                   _pick(context, ImageSource.camera);
@@ -52,7 +54,7 @@ class PhotoSection extends StatelessWidget {
               ),
               ListTile(
                 leading: Icon(Icons.photo_library_rounded, color: cs.primary),
-                title: const Text('Choisir dans la galerie'),
+                title: Text(l.requestCreatePickFromGallery),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
                   _pick(context, ImageSource.gallery);
@@ -79,7 +81,7 @@ class PhotoSection extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Visibles par le voyageur, elles rassurent sur le contenu.',
+                    context.l10n.bidCreatePhotosVisibleHint,
                     style: tt.bodySmall?.copyWith(
                       color: cs.onSurfaceVariant,
                       height: 1.4,
@@ -117,7 +119,7 @@ class PhotoSection extends StatelessWidget {
                       button: true,
                       container: true,
                       excludeSemantics: true,
-                      label: 'Ajouter une photo du colis',
+                      label: context.l10n.requestCreateAddPhotoSemantic,
                       child: GestureDetector(
                         key: const Key('bid-add-photo'),
                         onTap: () => _showSourceSheet(context),
@@ -160,7 +162,7 @@ class _AddPhotoCta extends StatelessWidget {
       button: true,
       container: true,
       excludeSemantics: true,
-      label: 'Ajouter une photo du colis',
+      label: context.l10n.requestCreateAddPhotoSemantic,
       child: GestureDetector(
         key: const Key('bid-add-photo'),
         onTap: onTap,
@@ -177,7 +179,7 @@ class _AddPhotoCta extends StatelessWidget {
               Icon(Icons.add_a_photo_rounded, color: cs.primary, size: 30),
               const SizedBox(height: DonySpacing.xs),
               Text(
-                'Ajouter une photo',
+                context.l10n.requestCreateAddPhotoTitle,
                 style: tt.titleSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: cs.primary,
@@ -185,7 +187,7 @@ class _AddPhotoCta extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'Fortement recommandé, rassure le voyageur',
+                context.l10n.requestCreateAddPhotoSubtitle,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],
@@ -261,7 +263,7 @@ class _PhotoThumb extends StatelessWidget {
               button: true,
               container: true,
               excludeSemantics: true,
-              label: 'Supprimer cette photo',
+              label: context.l10n.requestCreateRemovePhoto,
               child: GestureDetector(
                 onTap: onRemove,
                 behavior: HitTestBehavior.opaque,

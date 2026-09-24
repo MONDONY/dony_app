@@ -15,6 +15,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -38,6 +39,7 @@ import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -284,9 +286,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   @override
   void initState() {
     super.initState();
-    _btnConfigNotifier = ValueNotifier<_BtnConfig?>(
-      const _BtnConfig(label: 'Envoyer', iconAsset: 'send'),
-    );
+    // Nul tant que `_syncFormButtonState` (postFrameCallback ci-dessous) n'a
+    // pas tourné : `context.l10n` est interdit dans `initState`. Le repli
+    // affiché entre-temps par `_StickyBottom` vient de `context.l10n`, lu
+    // dans son propre `build`.
+    _btnConfigNotifier = ValueNotifier<_BtnConfig?>(null);
     _bidBloc = getIt<BidBloc>();
     _paymentBloc = getIt<PaymentBloc>();
     _photosCubit = getIt<BidPhotosCubit>();
@@ -506,7 +510,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
     if (widget.negotiation) {
       _btnConfigNotifier.value = _BtnConfig(
-        label: 'Envoyer ma proposition',
+        label: context.l10n.bidCreateSendProposalButton,
         iconAsset: 'send',
         onPressed: canSubmit ? _submitNegotiation : null,
       );
@@ -514,7 +518,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     }
 
     _btnConfigNotifier.value = _BtnConfig(
-      label: 'Envoyer',
+      label: context.l10n.commonSend,
       iconAsset: 'send',
       onPressed: canSubmit ? _goToPicker : null,
     );
@@ -527,26 +531,24 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     final String label;
     final String iconAsset;
     final total = _computeStripeTotal();
+    final amount = formatPriceIn(total, widget.announcement.currency);
     if (method == BidPaymentMethod.cash) {
       // Le montant figure aussi sur le bouton espèces : c'est exactement la
       // somme à remettre en main propre, et la masquer laissait l'expéditeur
       // confirmer sans savoir combien il devra sortir. Même total qu'en carte —
       // en espèces le voyageur encaisse le brut, et Yadony prélève ensuite la
       // commission sur son solde.
-      label =
-          'Confirmer ${formatPriceIn(total, widget.announcement.currency)} en espèces';
+      label = context.l10n.bidCreateConfirmCashButton(amount);
       iconAsset = 'banknote';
     } else if (method == BidPaymentMethod.mobileMoney) {
       // Comme en espèces : cette étape ENVOIE seulement l'offre
       // (BidCreateRequested) — aucun paiement n'est bloqué avant que le
       // voyageur accepte. Le CTA ne doit donc jamais dire « Bloquer & payer »,
       // réservé au checkout Stripe immédiat.
-      label =
-          'Confirmer ${formatPriceIn(total, widget.announcement.currency)} par mobile money';
+      label = context.l10n.bidCreateConfirmMobileMoneyButton(amount);
       iconAsset = 'smartphone';
     } else {
-      label =
-          'Bloquer ${formatPriceIn(total, widget.announcement.currency)} & payer';
+      label = context.l10n.bidCreateLockAndPayButton(amount);
       iconAsset = 'lock';
     }
 
@@ -599,20 +601,20 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// colis complet avant d'accepter un prix.
   void _submitNegotiation() {
     if (_descCtrl.text.trim().isEmpty) {
-      _showError('Description obligatoire');
+      _showError(context.l10n.bidCreateDescriptionRequiredError);
       return;
     }
     if (_recipientNameCtrl.text.trim().isEmpty) {
-      _showError('Nom du destinataire obligatoire');
+      _showError(context.l10n.bidCreateRecipientNameRequiredError);
       return;
     }
     if (_recipientPhoneCtrl.text.trim().isEmpty) {
-      _showError('Téléphone du destinataire obligatoire');
+      _showError(context.l10n.bidCreateRecipientPhoneRequiredError);
       return;
     }
     final proposed = _readProposal();
     if (proposed == null) {
-      _showError('Indiquez le prix que vous proposez');
+      _showError(context.l10n.bidCreatePriceRequiredError);
       return;
     }
 
@@ -648,7 +650,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       context.pop();
       DonySnackbar.show(
         context,
-        message: 'Proposition envoyée, le voyageur va vous répondre.',
+        message: context.l10n.bidCreateProposalSentMessage,
         type: DonySnackbarType.success,
       );
     } else if (state is BidNegotiationError) {
@@ -723,15 +725,15 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   void _goToPicker() {
     if (_descCtrl.text.trim().isEmpty) {
-      _showError('Description obligatoire');
+      _showError(context.l10n.bidCreateDescriptionRequiredError);
       return;
     }
     if (_recipientNameCtrl.text.trim().isEmpty) {
-      _showError('Nom du destinataire obligatoire');
+      _showError(context.l10n.bidCreateRecipientNameRequiredError);
       return;
     }
     if (_recipientPhoneCtrl.text.trim().isEmpty) {
-      _showError('Téléphone du destinataire obligatoire');
+      _showError(context.l10n.bidCreateRecipientPhoneRequiredError);
       return;
     }
 
@@ -844,20 +846,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// Le message doit donc parler d'une offre ENVOYÉE, pas d'un paiement
   /// effectué, et expliquer ce qui se passera pour le moyen de paiement choisi.
   void _showOfflinePaymentSuccess(BuildContext context, BidModel bid) {
-    const title = 'Offre envoyée !';
+    final l = context.l10n;
+    final title = l.bidCreateOfferSentTitle;
     final subtitle = switch (bid.paymentMethod) {
-      BidPaymentMethod.cash =>
-        'Paiement en espèces : si le voyageur accepte, tu remets le montant '
-            'en main propre à la remise du colis. En cas d\'annulation après la '
-            'remise, Yadony ne peut pas te rembourser immédiatement mais '
-            's\'assurera que le voyageur te restitue ton argent.',
-      BidPaymentMethod.mobileMoney =>
-        'Paiement mobile money : si le voyageur accepte, tu recevras une '
-            'notification et auras 30 minutes pour valider le paiement sur '
-            'ton téléphone. Le montant est gardé en sécurité par Yadony '
-            'jusqu\'à la livraison.',
-      _ => 'Le voyageur va examiner ta demande.',
+      BidPaymentMethod.cash => l.bidCreateCashSuccessSubtitle,
+      BidPaymentMethod.mobileMoney => l.bidCreateMobileMoneySuccessSubtitle,
+      _ => l.bidCreateReviewPendingSubtitle,
     };
+    final ctaLabel = l.bidCreateSeeMyShipmentButton;
 
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -870,7 +866,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           mascotteType: DonyMascotteType.succes,
           title: title,
           subtitle: subtitle,
-          ctaLabel: 'Voir mon envoi',
+          ctaLabel: ctaLabel,
           onCta: () => routeContext.go('/bids/${bid.id}?from=payment'),
           analyticsContext: 'bid_created_offline_payment',
         ),
@@ -939,8 +935,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   // publication d'une demande publique, ouverte à tous les
                   // voyageurs — pas l'envoi d'une demande à celui-ci.
                   step == _FormStep.paymentPicker
-                      ? 'Paiement'
-                      : 'Faire une demande',
+                      ? context.l10n.listingRowLabelPayment
+                      : context.l10n.listingMakeRequestButton,
                   style: tt.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.3,
@@ -1039,7 +1035,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           children: [
             // ── Articles grille ───────────────────────────────────────────
             if (hasGridPricing) ...[
-              const _SectionLabel(label: 'ARTICLES'),
+              _SectionLabel(label: context.l10n.bidCreateArticlesSectionLabel),
               const SizedBox(height: DonySpacing.sm),
               ValueListenableBuilder<Map<String, int>>(
                 valueListenable: _gridQuantitiesNotifier,
@@ -1099,13 +1095,20 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '$totalSelected article${totalSelected > 1 ? 's' : ''} sélectionné${totalSelected > 1 ? 's' : ''}',
+                                        context.l10n.bidCreateSelectedItems(
+                                          totalSelected,
+                                        ),
                                         style: tt.bodyMedium?.copyWith(
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                       Text(
-                                        'Sous-total : ${formatPriceIn(subtotal, widget.announcement.currency)}',
+                                        context.l10n.bidCreateSubtotalLabel(
+                                          formatPriceIn(
+                                            subtotal,
+                                            widget.announcement.currency,
+                                          ),
+                                        ),
                                         style: tt.bodySmall?.copyWith(
                                           color: cs.success,
                                         ),
@@ -1114,7 +1117,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                   ),
                                 ),
                                 Text(
-                                  'Modifier',
+                                  context.l10n.commonEdit,
                                   style: tt.labelSmall?.copyWith(
                                     color: cs.primary,
                                   ),
@@ -1131,14 +1134,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Choisir mes articles',
+                                        context.l10n.bidCreateChooseItemsLabel,
                                         key: const Key('choose-articles-btn'),
                                         style: tt.bodyMedium?.copyWith(
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                       Text(
-                                        'Requis : au moins 1 article',
+                                        context.l10n.bidCreateItemsRequiredHint,
                                         style: tt.bodySmall?.copyWith(
                                           color: cs.onSurfaceVariant,
                                         ),
@@ -1188,17 +1191,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             ],
 
             // ── Photos ────────────────────────────────────────────────────
-            const _SectionLabel(label: 'PHOTOS DU COLIS (OPTIONNEL)'),
+            _SectionLabel(label: context.l10n.bidCreatePhotosSectionLabel),
             const SizedBox(height: DonySpacing.md),
             const PhotoSection(),
             const SizedBox(height: DonySpacing.xxl),
 
             // ── Description ───────────────────────────────────────────────
-            const _SectionLabel(label: 'DESCRIPTION (AU VOYAGEUR)'),
+            _SectionLabel(label: context.l10n.bidCreateDescriptionSectionLabel),
             const SizedBox(height: DonySpacing.sm),
             DonyTextField(
               controller: _descCtrl,
-              hint: 'Médicaments pour diabète + 2 tee-shirts enfants',
+              hint: context.l10n.bidCreateDescriptionHint,
               maxLines: 4,
               minLines: 2,
             ).animate().fadeIn(delay: 100.ms),
@@ -1209,7 +1212,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             const SizedBox(height: DonySpacing.xxl),
 
             // ── Destinataire ──────────────────────────────────────────────
-            const _SectionLabel(label: 'DESTINATAIRE'),
+            _SectionLabel(label: context.l10n.bidCreateRecipientSectionLabel),
             const SizedBox(height: DonySpacing.md),
             RecipientSection(
               controller: _recipientSection,
@@ -1220,14 +1223,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               children: [
                 DonyTextField(
                   controller: _recipientNameCtrl,
-                  label: 'Prénom et nom du destinataire',
-                  hint: 'ex: Amadou Diallo',
+                  label: context.l10n.bidCreateRecipientNameLabel,
+                  hint: context.l10n.bidCreateRecipientNameHint,
                 ).animate().fadeIn(delay: 160.ms),
                 const SizedBox(height: DonySpacing.md),
                 DonyTextField(
                   controller: _recipientPhoneCtrl,
-                  label: 'Téléphone du destinataire',
-                  hint: 'ex: +221 77 000 00 00',
+                  label: context.l10n.bidCreateRecipientPhoneLabel,
+                  hint: context.l10n.bidCreateRecipientPhoneHint,
                   keyboardType: TextInputType.phone,
                 ).animate().fadeIn(delay: 180.ms),
               ],
@@ -1242,7 +1245,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             const SizedBox(height: DonySpacing.xxl),
 
             // ── Code promo ────────────────────────────────────────────────
-            const _SectionLabel(label: 'CODE PROMO (OPTIONNEL)'),
+            _SectionLabel(label: context.l10n.bidCreatePromoSectionLabel),
             const SizedBox(height: DonySpacing.sm),
             BlocBuilder<BidBloc, BidState>(
               bloc: _bidBloc,
@@ -1266,7 +1269,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                 textCapitalization:
                                     TextCapitalization.characters,
                                 decoration: InputDecoration(
-                                  hintText: 'Ex: WELCOME10',
+                                  hintText: context.l10n.bidCreatePromoCodeHint,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: DonySpacing.base,
                                     vertical: DonySpacing.md,
@@ -1295,7 +1298,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                 onPressed: isQuoteLoading
                                     ? null
                                     : _applyPromoCode,
-                                child: const Text('Appliquer'),
+                                child: Text(context.l10n.commonApply),
                               ),
                             ),
                           ],
@@ -1312,7 +1315,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
-                                  quote.promoLabel ?? 'Code appliqué',
+                                  quote.promoLabel ??
+                                      context
+                                          .l10n
+                                          .bidCreatePromoAppliedDefaultLabel,
                                   style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         color: const Color(0xFF16A34A),
@@ -1448,13 +1454,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionLabel(label: 'VOTRE PROPOSITION'),
+        _SectionLabel(label: context.l10n.bidCreateYourProposalSectionLabel),
         const SizedBox(height: DonySpacing.sm),
         DonyTextField(
           key: const Key('negotiation-proposal-field'),
           controller: _proposalCtrl,
-          label:
-              'Prix proposé (${SupportedCurrency.symbolOf(widget.announcement.currency)})',
+          label: context.l10n.bidCreateProposedPriceLabel(
+            SupportedCurrency.symbolOf(widget.announcement.currency),
+          ),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
         ),
         const SizedBox(height: DonySpacing.xs),
@@ -1466,7 +1473,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             _quoteNotifier,
           ]),
           builder: (context, _) => Text(
-            'Suggéré : ${formatPriceIn(_suggestedTotalEur, widget.announcement.currency)}',
+            context.l10n.bidCreateSuggestedPriceLabel(
+              formatPriceIn(_suggestedTotalEur, widget.announcement.currency),
+            ),
             key: const Key('negotiation-suggested-hint'),
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
@@ -1488,10 +1497,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionLabel(label: 'MODE DE PAIEMENT'),
+        _SectionLabel(label: context.l10n.bidCreatePaymentMethodSectionLabel),
         const SizedBox(height: DonySpacing.xs),
         Text(
-          'Si le voyageur accepte votre prix, vous réglerez de cette façon.',
+          context.l10n.bidCreatePaymentMethodHint,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.sm),
@@ -1544,7 +1553,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionLabel(label: 'CONTENU DU COLIS'),
+        _SectionLabel(label: context.l10n.bidCreateContentSectionLabel),
         const SizedBox(height: DonySpacing.md),
         // Auto-suggestion (même composant que la feuille de filtres) : le
         // voyageur choisit le contenu de son colis avant la demande. Multi-
@@ -1553,28 +1562,31 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           catalog: acceptedCatalog,
           selected: categories.toList(),
           onChanged: _onCategoriesChanged,
-          hint: 'Rechercher un type de contenu…',
+          hint: context.l10n.homeComposerContentHint,
           keyPrefix: 'bid-content',
           // L'expéditeur peut toujours saisir un contenu hors de la liste
           // proposée par le voyageur (sauf types explicitement refusés).
           alwaysAllowCustom: true,
         ).animate().fadeIn(delay: 60.ms),
         const SizedBox(height: DonySpacing.sm),
-        const _ContentHint(
-          text:
-              'Ces suggestions sont les contenus acceptés par le '
-              'voyageur. Si le contenu de votre colis n\'y figure pas, '
-              'ajoutez-le : ce sera au voyageur de décider s\'il accepte '
-              'votre colis ou non.',
+        _ContentHint(
+          text: context.l10n.bidCreateContentHintText,
         ).animate().fadeIn(delay: 90.ms),
         if (refused.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.md),
-          const _SectionLabel(label: 'REFUSÉ PAR LE VOYAGEUR'),
+          _SectionLabel(
+            label: context.l10n.bidCreateRefusedByTravelerSectionLabel,
+          ),
           const SizedBox(height: DonySpacing.sm),
           Wrap(
             spacing: DonySpacing.sm,
             runSpacing: DonySpacing.sm,
-            children: [for (final cat in refused) _RefusedChip(label: cat)],
+            children: [
+              for (final cat in refused)
+                _RefusedChip(
+                  label: contentCategoryDisplayName(context.l10n, cat),
+                ),
+            ],
           ),
         ],
       ],
@@ -1595,12 +1607,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Comment veux-tu payer ?',
+          context.l10n.bidCreateHowToPayTitle,
           style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: DonySpacing.xs),
         Text(
-          'Choisis le mode de paiement pour cette demande.',
+          context.l10n.bidCreateChoosePaymentSubtitle,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.lg),
@@ -1640,7 +1652,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     );
     if (!context.mounted) return;
     if (!authenticated) {
-      _showError('Paiement non confirmé, réessayez');
+      _showError(context.l10n.bidCreatePaymentNotConfirmedError);
       return;
     }
 
@@ -1652,7 +1664,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         currencyCode: state.currencyCode,
         paymentMethodTypes: state.paymentMethodTypes,
       ),
-      contextLabel: 'Envoi vers ${widget.announcement.arrivalCity}',
+      contextLabel: context.l10n.bidCreateShipmentToLabel(
+        widget.announcement.arrivalCity,
+      ),
       onSuccess: () async {
         // AUCUNE garde `context.mounted` avant la confirmation : elle ne
         // dépend d'aucun BuildContext, et la subordonner au montage de l'écran
@@ -1663,6 +1677,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         if (!context.mounted) return;
         context.pop();
         if (context.mounted) {
+          final l = context.l10n;
           // unawaited : l'écran de succès vit sa propre vie, on ne bloque pas
           // la fermeture de la feuille de paiement sur sa durée d'affichage.
           unawaited(
@@ -1675,10 +1690,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 // toujours monté sous le Navigator racine.
                 builder: (routeContext) => DonySuccessScreen(
                   mascotteType: DonyMascotteType.securise,
-                  title: 'Offre payée !',
-                  subtitle:
-                      'Ton paiement est bloqué et sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de ta demande.',
-                  ctaLabel: 'Voir mon envoi',
+                  title: l.bidCreateOfferPaidTitle,
+                  subtitle: l.bidCreateOfferPaidSubtitle,
+                  ctaLabel: l.bidCreateSeeMyShipmentButton,
                   onCta: () =>
                       routeContext.go('/bids/${state.bidId}?from=payment'),
                   analyticsContext: 'bid_payment',
@@ -1731,7 +1745,7 @@ class _StickyBottom extends StatelessWidget {
             ),
             child: DonyButton(
               key: const Key('bid-submit-btn'),
-              label: config?.label ?? 'Envoyer',
+              label: config?.label ?? context.l10n.commonSend,
               iconAsset: config?.iconAsset ?? 'send',
               isLoading: isLoading,
               onPressed: isLoading ? null : config?.onPressed,
@@ -1901,12 +1915,14 @@ class _WeightSectionState extends State<_WeightSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
+          widget.isMixed
+              ? context.l10n.bidCreateWeightLabelOptional
+              : context.l10n.bidCreateWeightLabel,
           style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.xxs),
         Text(
-          'Kilo libre : choisissez votre poids',
+          context.l10n.bidCreateFreeKgHint,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),
@@ -1985,12 +2001,14 @@ class _WeightSectionState extends State<_WeightSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
+            isMixed
+                ? context.l10n.bidCreateWeightLabelOptional
+                : context.l10n.bidCreateWeightLabel,
             style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Aucune capacité disponible',
+            context.l10n.bidCreateNoCapacityAvailable,
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
@@ -2004,7 +2022,9 @@ class _WeightSectionState extends State<_WeightSection> {
         Row(
           children: [
             Text(
-              isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
+              isMixed
+                  ? context.l10n.bidCreateWeightLabelOptional
+                  : context.l10n.bidCreateWeightLabel,
               style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
@@ -2153,15 +2173,14 @@ class _DisclaimerCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Disclaimer douane.',
+                      context.l10n.bidCreateDisclaimerTitle,
                       style: tt.titleMedium?.copyWith(
                         color: cs.onSecondaryContainer,
                       ),
                     ),
                     const SizedBox(height: DonySpacing.xxs),
                     Text(
-                      'Pas d\'armes, drogues, liquides inflammables ou espèces. '
-                      'Le voyageur peut refuser au contrôle douanier.',
+                      context.l10n.bidCreateDisclaimerBody,
                       style: tt.bodySmall?.copyWith(
                         color: cs.onSecondaryContainer,
                         height: 1.5,
@@ -2186,7 +2205,7 @@ class _DisclaimerCard extends StatelessWidget {
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(
                   child: Text(
-                    'Je signe & j\'accepte',
+                    context.l10n.bidCreateDisclaimerAcceptLabel,
                     style: tt.bodySmall?.copyWith(
                       color: cs.onSurface,
                       fontWeight: FontWeight.w600,
@@ -2236,12 +2255,13 @@ class _PaymentMethodSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     // Du plus immédiat au plus manuel : carte, mobile money, espèces. Les
     // clés vivent sur les en-têtes : tests et accessibilité s'y attachent.
+    final l = context.l10n;
     final choices = <DonyChoice<BidPaymentMethod>>[
       if (isStripeAvailable)
         DonyChoice(
           value: BidPaymentMethod.stripe,
-          title: 'Carte',
-          subtitle: 'Bloqué jusqu\'à la livraison',
+          title: l.paymentMethodCard,
+          subtitle: l.bidCreateCardModeSubtitle,
           iconAsset: 'credit-card',
           key: const Key('payment-method-stripe'),
           expanded: (context) =>
@@ -2250,8 +2270,8 @@ class _PaymentMethodSelector extends StatelessWidget {
       if (isMobileMoneyAvailable)
         DonyChoice(
           value: BidPaymentMethod.mobileMoney,
-          title: 'Mobile money',
-          subtitle: 'Orange Money, Wave, MTN',
+          title: l.paymentMethodMobileMoney,
+          subtitle: l.bidCreateMobileMoneySubtitle,
           iconAsset: 'smartphone',
           key: const Key('payment-method-mobile-money'),
           expanded: (context) => _MobileMoneyModeContent(
@@ -2264,8 +2284,8 @@ class _PaymentMethodSelector extends StatelessWidget {
       if (isCashAvailable)
         DonyChoice(
           value: BidPaymentMethod.cash,
-          title: 'Espèces',
-          subtitle: 'En main propre, à la remise',
+          title: l.paymentMethodCash,
+          subtitle: l.bidCreateCashModeSubtitle,
           iconAsset: 'banknote',
           key: const Key('payment-method-cash'),
           expanded: (context) =>
@@ -2299,8 +2319,7 @@ class _CashEscrowWarning extends StatelessWidget {
         const SizedBox(width: DonySpacing.xs),
         Expanded(
           child: Text(
-            'Paiement en espèces : pas de séquestre, vous payez le voyageur '
-            'directement, sans garantie de remboursement par Yadony.',
+            context.l10n.bidCreateCashEscrowWarning,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ),
@@ -2329,18 +2348,21 @@ class _CardModeContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (total != null && currency != null) ...[
-          _ModeAmountRow(total: total!, currency: currency!, tag: 'Séquestre'),
+          _ModeAmountRow(
+            total: total!,
+            currency: currency!,
+            tag: context.l10n.bidCreateEscrowTag,
+          ),
           const SizedBox(height: DonySpacing.sm),
         ],
         Text(
-          'Bloqué par Yadony dès maintenant, versé au voyageur quand le '
-          'destinataire confirme la livraison.',
+          context.l10n.bidCreateCardModeBody,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),
         const PaymentMethodNames(compact: true),
         const SizedBox(height: DonySpacing.md),
-        const _PanelAssurance(text: 'Remboursé si le colis n\'arrive pas'),
+        _PanelAssurance(text: context.l10n.bidCreateRefundAssurance),
       ],
     );
   }
@@ -2367,13 +2389,15 @@ class _MobileMoneyModeContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (total != null && currency != null) ...[
-          _ModeAmountRow(total: total!, currency: currency!, tag: 'Séquestre'),
+          _ModeAmountRow(
+            total: total!,
+            currency: currency!,
+            tag: context.l10n.bidCreateEscrowTag,
+          ),
           const SizedBox(height: DonySpacing.sm),
         ],
         Text(
-          'Après l\'accord du voyageur, tu reçois une demande de paiement '
-          'sur ton téléphone. Le montant est bloqué par Yadony jusqu\'à la '
-          'livraison.',
+          context.l10n.bidCreateMobileMoneyModeBody,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),
@@ -2386,7 +2410,7 @@ class _MobileMoneyModeContent extends StatelessWidget {
           ),
         ],
         const SizedBox(height: DonySpacing.md),
-        const _PanelAssurance(text: 'Remboursé si le colis n\'arrive pas'),
+        _PanelAssurance(text: context.l10n.bidCreateRefundAssurance),
       ],
     );
   }
@@ -2409,13 +2433,13 @@ class _CashModeContent extends StatelessWidget {
           _ModeAmountRow(
             total: total!,
             currency: currency!,
-            tag: 'En main propre',
+            tag: context.l10n.bidCreateHandToHandTag,
             amber: true,
           ),
           const SizedBox(height: DonySpacing.sm),
         ],
         Text(
-          'Tu remets la somme au voyageur le jour où tu lui confies le colis.',
+          context.l10n.bidCreateCashModeBody,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),
@@ -2507,9 +2531,18 @@ class _OperatorChips extends StatelessWidget {
       spacing: DonySpacing.xs + 2,
       runSpacing: DonySpacing.xs + 2,
       children: [
-        _OperatorChip(label: 'Orange Money', brand: _orangeMoneyBrand),
-        _OperatorChip(label: 'Wave', brand: _waveBrand),
-        _OperatorChip(label: 'MTN', brand: _mtnBrand),
+        _OperatorChip(
+          label: 'Orange Money', // i18n-ignore — nom de marque
+          brand: _orangeMoneyBrand,
+        ),
+        _OperatorChip(
+          label: 'Wave', // i18n-ignore — nom de marque
+          brand: _waveBrand,
+        ),
+        _OperatorChip(
+          label: 'MTN', // i18n-ignore — nom de marque
+          brand: _mtnBrand,
+        ),
       ],
     );
   }
@@ -2645,7 +2678,9 @@ class _PriceBreakdown extends StatelessWidget {
       );
     }
     if (gridDisplay > 0) {
-      lines.add(_line(tt, 'Articles', fmt(gridDisplay)));
+      lines.add(
+        _line(tt, context.l10n.bidCreateArticlesLineLabel, fmt(gridDisplay)),
+      );
     }
     // Pas de ligne « Commission » en addition : elle est déjà comprise dans les
     // lignes ci-dessus, l'ajouter la compterait deux fois. Sa présence reste
@@ -2654,7 +2689,7 @@ class _PriceBreakdown extends StatelessWidget {
       lines.add(
         _line(
           tt,
-          'Réduction code promo',
+          context.l10n.bidCreatePromoDiscountLabel,
           '−${fmt(savings)}',
           valueColor: const Color(0xFF16A34A),
         ),
@@ -2696,7 +2731,10 @@ class _PriceBreakdown extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Total', style: tt.titleLarge),
+                    Text(
+                      context.l10n.bidCreateTotalLabel,
+                      style: tt.titleLarge,
+                    ),
                     // Le badge "Promo" ne s'affiche que si le code a
                     // réellement fait baisser le prix — sinon il
                     // annoncerait une remise qui n'existe pas.
@@ -2712,7 +2750,7 @@ class _PriceBreakdown extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          'Promo',
+                          context.l10n.bidCreatePromoBadge,
                           style: tt.labelSmall?.copyWith(
                             color: const Color(0xFF16A34A),
                             fontWeight: FontWeight.w700,
@@ -2748,7 +2786,7 @@ class _PriceBreakdown extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            'Commission Yadony incluse',
+            context.l10n.bidCreateServiceFeeIncludedLabel,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],

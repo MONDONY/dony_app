@@ -3,6 +3,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -62,6 +63,7 @@ class TravelerCard extends StatelessWidget {
 
   ({Color border, Color chipBg, Color chipFg, String label}) _bidStyle(
     ColorScheme cs,
+    AppLocalizations l,
   ) {
     switch (existingBidStatus) {
       case 'ACCEPTED':
@@ -69,7 +71,7 @@ class TravelerCard extends StatelessWidget {
           border: cs.success,
           chipBg: cs.successLight,
           chipFg: cs.success,
-          label: 'Demande acceptée',
+          label: l.listingBidStatusAccepted,
         );
       // Colis déjà en cours sur ce trajet (remis / en route / livré).
       case 'HANDED_OVER':
@@ -79,7 +81,7 @@ class TravelerCard extends StatelessWidget {
           border: cs.primary,
           chipBg: cs.primaryContainer,
           chipFg: cs.primary,
-          label: 'Colis sur ce trajet',
+          label: l.listingBidStatusOnTrip,
         );
       // Voyageur arrivé à destination, colis pas encore retiré. Même
       // libellé/couleur que le _StatusDot de bid_card.dart.
@@ -88,7 +90,7 @@ class TravelerCard extends StatelessWidget {
           border: cs.info,
           chipBg: cs.infoLight,
           chipFg: cs.info,
-          label: 'Arrivé',
+          label: l.listingBidStatusArrived,
         );
       case 'PENDING':
       case 'AWAITING_PAYMENT':
@@ -100,7 +102,7 @@ class TravelerCard extends StatelessWidget {
           border: cs.warning,
           chipBg: cs.warningLight,
           chipFg: DonyColors.amberDark,
-          label: 'Demande en attente',
+          label: l.listingBidStatusPending,
         );
     }
   }
@@ -109,6 +111,7 @@ class TravelerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final traveler = announcement.traveler;
     final rating = traveler?.averageRating;
     final totalTrips = traveler?.totalTrips;
@@ -116,11 +119,11 @@ class TravelerCard extends StatelessWidget {
     final isProAccount = traveler?.isProAccount ?? false;
     final dateStr = DateFormat(
       'EEE d MMM',
-      AppL10n.localeName,
+      l.localeName,
     ).format(announcement.departureDate);
     final categories = announcement.acceptedContentTypes ?? [];
     final hasExistingBid = existingBidStatus != null;
-    final bidStyle = _bidStyle(cs);
+    final bidStyle = _bidStyle(cs, l);
 
     // Bordure : un bid existant prime ; sinon, une annonce dont l'expéditeur
     // courant est le voyageur (« Votre trajet ») est surlignée en primaire pour
@@ -142,9 +145,9 @@ class TravelerCard extends StatelessWidget {
     // invité), c'est 0 la valeur trompeuse à écarter en mode MIXED.
     final senderPricePerKg = announcement.senderPricePerKg;
     final priceLabel = announcement.pricingMode == 'MIXED'
-        ? 'Grille tarifaire'
+        ? l.listingPriceGridLabel
         : !announcement.hasKgPrice
-        ? 'Prix indisponible'
+        ? l.tripPosterPriceUnavailable
         : '${formatPriceIn(senderPricePerKg!, announcement.currency)}/kg';
 
     return _PressableCard(
@@ -260,7 +263,7 @@ class TravelerCard extends StatelessWidget {
                               ),
                               if (totalTrips != null)
                                 Text(
-                                  '· $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
+                                  l.listingTravelerTrips(totalTrips),
                                   style: tt.bodySmall?.copyWith(
                                     color: cs.onSurfaceVariant,
                                   ),
@@ -328,8 +331,10 @@ class TravelerCard extends StatelessWidget {
                     const SizedBox(width: DonySpacing.xxs),
                     Text(
                       announcement.capacityUnit == 'KG_FREE'
-                          ? 'Kg libre'
-                          : '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
+                          ? l.tripKgFree
+                          : l.listingKgAvailableLabel(
+                              announcement.availableKg.toStringAsFixed(0),
+                            ),
                       style: tt.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                         fontFeatures: const [FontFeature.tabularFigures()],
@@ -385,7 +390,7 @@ Widget _buildFavoriteHeart(BuildContext context, String tripId) {
           if (ctx.mounted) {
             DonySnackbar.show(
               ctx,
-              message: 'Action impossible, réessaie',
+              message: ctx.l10n.listingRetryActionMessage,
               type: DonySnackbarType.error,
             );
           }
@@ -637,7 +642,7 @@ class _OwnTripPill extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.xxs),
           Text(
-            'Votre trajet',
+            context.l10n.listingYourTripPill,
             style: tt.labelSmall?.copyWith(
               color: cs.onPrimary,
               fontWeight: FontWeight.w700,
@@ -706,7 +711,7 @@ class _ProBadge extends StatelessWidget {
           DonyIcon('star', size: 10, color: cs.warning),
           const SizedBox(width: DonySpacing.xxs),
           Text(
-            'PRO',
+            context.l10n.listingProBadge,
             style: tt.labelSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: cs.warning,
@@ -748,7 +753,7 @@ class _KycBadge extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.xxs),
           Text(
-            'Identité',
+            context.l10n.listingIdentityBadge,
             style: tt.labelSmall?.copyWith(
               color: cs.success,
               fontWeight: FontWeight.w600,
@@ -767,13 +772,15 @@ class _CategoryChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final visible = categories.take(maxVisible).toList();
     final overflow = categories.length - maxVisible;
     return Wrap(
       spacing: DonySpacing.xs,
       runSpacing: DonySpacing.xs,
       children: [
-        for (final label in visible) _CategoryChip(label: label),
+        for (final label in visible)
+          _CategoryChip(label: contentCategoryDisplayName(l, label)),
         if (overflow > 0) _CategoryChip(label: '+$overflow'),
       ],
     );

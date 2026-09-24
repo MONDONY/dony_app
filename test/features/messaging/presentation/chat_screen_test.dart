@@ -22,6 +22,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
@@ -114,6 +115,12 @@ void main() {
   });
 
   setUp(() {
+    // L'écran de chat (pas encore traduit) formate des dates sans locale :
+    // intl fixe alors Intl.defaultLocale à en_US, et le dialogue de blocage,
+    // traduit, passerait en anglais. On fixe le français pour chaque test.
+    final previousLocale = Intl.defaultLocale;
+    Intl.defaultLocale = 'fr';
+    addTearDown(() => Intl.defaultLocale = previousLocale);
     bloc = MockChatBloc();
     when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
   });

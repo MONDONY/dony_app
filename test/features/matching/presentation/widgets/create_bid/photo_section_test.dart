@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements BidRepository {}
@@ -41,5 +42,16 @@ void main() {
     // de 64 px se ratait au défilement.
     final width = tester.getSize(find.byKey(const Key('bid-add-photo'))).width;
     expect(width, greaterThan(300));
+  });
+
+  testWidgets('en anglais : CTA et texte d\'aide traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(wrap());
+
+    expect(find.text('Add a photo'), findsOneWidget);
+    expect(
+      find.text('Visible to the traveler, they reassure about the content.'),
+      findsOneWidget,
+    );
   });
 }

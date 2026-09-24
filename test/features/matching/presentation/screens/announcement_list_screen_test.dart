@@ -24,6 +24,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _FakeAnnouncementDeleteRequested extends Fake
     implements AnnouncementDeleteRequested {}
 
@@ -397,6 +399,17 @@ void main() {
       // SliverAppBar renders the title in its FlexibleSpaceBar; at least one
       // instance must be visible (collapsed or expanded).
       expect(find.text('Mes trajets'), findsWidgets);
+    });
+
+    testWidgets('en anglais : titre "My trips" présent', (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(AnnouncementInitial());
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc);
+
+      expect(find.text('My trips'), findsWidgets);
+      expect(find.text('Mes trajets'), findsNothing);
     });
   });
 

@@ -146,9 +146,13 @@ void main() {
 
   group('MarkerBitmapFactory.pricePill brightness', () {
     test('light vs dark produce different bitmaps', () async {
-      final light = await MarkerBitmapFactory.pricePill(pricePerKg: 12);
+      final light = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12,
+        gridLabel: 'Grille',
+      );
       final dark = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
+        gridLabel: 'Grille',
         brightness: Brightness.dark,
       );
       expect(identical(light, dark), isFalse);
@@ -157,19 +161,25 @@ void main() {
     test('same brightness hits the cache', () async {
       final a = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
+        gridLabel: 'Grille',
         brightness: Brightness.dark,
       );
       final b = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
+        gridLabel: 'Grille',
         brightness: Brightness.dark,
       );
       expect(identical(a, b), isTrue);
     });
 
     test('selected vs not produce different bitmaps', () async {
-      final plain = await MarkerBitmapFactory.pricePill(pricePerKg: 12);
+      final plain = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12,
+        gridLabel: 'Grille',
+      );
       final selected = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
+        gridLabel: 'Grille',
         isSelected: true,
       );
       expect(identical(plain, selected), isFalse);
@@ -180,10 +190,12 @@ void main() {
       () async {
         final eur = await MarkerBitmapFactory.pricePill(
           pricePerKg: 12,
+          gridLabel: 'Grille',
           currencyCode: 'EUR',
         );
         final cad = await MarkerBitmapFactory.pricePill(
           pricePerKg: 12,
+          gridLabel: 'Grille',
           currencyCode: 'CAD',
         );
         expect(identical(eur, cad), isFalse);
@@ -193,24 +205,43 @@ void main() {
     test('same currency hits the cache', () async {
       final a = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
+        gridLabel: 'Grille',
         currencyCode: 'CAD',
       );
       final b = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
+        gridLabel: 'Grille',
         currencyCode: 'CAD',
       );
       expect(identical(a, b), isTrue);
     });
+
+    test(
+      'different grid labels produce different bitmaps in grid mode (pricePerKg <= 0)',
+      () async {
+        final fr = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 0,
+          gridLabel: 'Grille',
+        );
+        final en = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 0,
+          gridLabel: 'Grid',
+        );
+        expect(identical(fr, en), isFalse);
+      },
+    );
   });
 
   group('MarkerBitmapFactory.stackedPricePill brightness', () {
     test('light vs dark produce different stacked bitmaps', () async {
       final light = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,
+        gridLabel: 'Grille',
         count: 3,
       );
       final dark = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,
+        gridLabel: 'Grille',
         count: 3,
         brightness: Brightness.dark,
       );
@@ -220,11 +251,13 @@ void main() {
     test('same brightness hits the stacked cache', () async {
       final a = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,
+        gridLabel: 'Grille',
         count: 3,
         brightness: Brightness.dark,
       );
       final b = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,
+        gridLabel: 'Grille',
         count: 3,
         brightness: Brightness.dark,
       );
@@ -234,15 +267,34 @@ void main() {
     test('different currencies produce different stacked bitmaps', () async {
       final eur = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,
+        gridLabel: 'Grille',
         count: 3,
         currencyCode: 'EUR',
       );
       final cad = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,
+        gridLabel: 'Grille',
         count: 3,
         currencyCode: 'CAD',
       );
       expect(identical(eur, cad), isFalse);
     });
+
+    test(
+      'different grid labels produce different stacked bitmaps in grid mode (pricePerKg <= 0)',
+      () async {
+        final fr = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 0,
+          gridLabel: 'Grille',
+          count: 3,
+        );
+        final en = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 0,
+          gridLabel: 'Grid',
+          count: 3,
+        );
+        expect(identical(fr, en), isFalse);
+      },
+    );
   });
 }

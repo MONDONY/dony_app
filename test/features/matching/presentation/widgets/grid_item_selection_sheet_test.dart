@@ -4,6 +4,8 @@ import 'package:dony/features/matching/presentation/widgets/grid_item_selection_
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 Widget _wrap(Widget child) {
   return MaterialApp(home: Scaffold(body: child));
 }
@@ -306,6 +308,34 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('grid-sheet-total')), findsNothing);
+    });
+
+    testWidgets('en anglais : titre et bouton de confirmation traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () => GridItemSelectionSheet.show(
+                  context,
+                  items: _items,
+                  initialQuantities: {},
+                  corridor: 'Paris → Dakar',
+                ),
+                child: const Text('Ouvrir'),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Available items'), findsOneWidget);
+      expect(find.text('Confirm selection'), findsOneWidget);
     });
   });
 }

@@ -1,4 +1,6 @@
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final _fullJson = {
@@ -46,6 +48,9 @@ final _minimalJson = {
 };
 
 void main() {
+  final l = lookupAppLocalizations(AppL10n.fr);
+  final en = lookupAppLocalizations(AppL10n.en);
+
   group('BidModel.fromJson', () {
     test('parses all fields from full JSON', () {
       final model = BidModel.fromJson(_fullJson);
@@ -188,10 +193,10 @@ void main() {
     });
   });
 
-  group('BidModel.resolvedSenderName', () {
+  group('BidModel.senderDisplayName', () {
     test('returns senderName when set', () {
       final model = BidModel.fromJson(_fullJson);
-      expect(model.resolvedSenderName, 'Amadou Diallo');
+      expect(model.senderDisplayName(l), 'Amadou Diallo');
     });
 
     test(
@@ -201,13 +206,18 @@ void main() {
           ..._minimalJson,
           'senderPhoneAvailable': true,
         });
-        expect(model.resolvedSenderName, 'Expéditeur');
+        expect(model.senderDisplayName(l), 'Expéditeur');
       },
     );
 
     test('returns "Expéditeur" when both null', () {
       final model = BidModel.fromJson(_minimalJson);
-      expect(model.resolvedSenderName, 'Expéditeur');
+      expect(model.senderDisplayName(l), 'Expéditeur');
+    });
+
+    test('en anglais : repli "Sender" quand senderName est absent', () {
+      final model = BidModel.fromJson(_minimalJson);
+      expect(model.senderDisplayName(en), 'Sender');
     });
   });
 

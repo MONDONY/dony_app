@@ -2,6 +2,7 @@ import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -43,7 +44,7 @@ void showBlockMenu(
           ListTile(
             leading: const DonyIcon('ban', color: Color(0xFFE53935)),
             title: Text(
-              'Bloquer $displayName',
+              context.l10n.blockMenuEntryLabel(displayName),
               style: GoogleFonts.plusJakartaSans(
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFFE53935),
@@ -97,7 +98,10 @@ class _BlockConfirmDialog extends StatelessWidget {
       listener: (context, state) {
         if (state is BlockedUserBlockSuccess) {
           Navigator.of(context, rootNavigator: true).pop();
-          DonySnackbar.show(context, message: '$displayName a été bloqué(e)');
+          DonySnackbar.show(
+            context,
+            message: context.l10n.blockSuccessMessage(displayName),
+          );
         }
       },
       builder: (context, state) => _BlockConfirmDialogView(
@@ -137,7 +141,7 @@ class _BlockConfirmDialogView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Bloquer $firstName ?',
+              context.l10n.blockConfirmTitle(firstName),
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -146,9 +150,7 @@ class _BlockConfirmDialogView extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Il·elle ne pourra plus voir tes annonces ni t\'envoyer d\'offre. '
-              'Tu ne verras plus les siennes non plus. '
-              'Tu pourras le·la débloquer à tout moment dans Confidentialité.',
+              context.l10n.blockConfirmBody,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 color: const Color(0xFF6B7A8D),
@@ -189,7 +191,7 @@ class _BlockConfirmDialogView extends StatelessWidget {
                       side: const BorderSide(color: Color(0xFFE9ECEF)),
                     ),
                     child: Text(
-                      'Annuler',
+                      context.l10n.commonCancel,
                       style: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF0D1B2A),
@@ -224,7 +226,7 @@ class _BlockConfirmDialogView extends StatelessWidget {
                             ),
                           )
                         : Text(
-                            'Bloquer',
+                            context.l10n.blockConfirmButton,
                             style: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w600,
                             ),

@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
@@ -34,8 +35,10 @@ String? buildDistanceBadge(
       ? allMatches.last.group(1)!
       : pickup.label.split(' ').first;
 
-  final distanceLabel = distanceKm == 0 ? '< 1 km' : '$distanceKm km';
-  return '$locationCode · $distanceLabel';
+  final distanceLabel = distanceKm == 0
+      ? '< 1 km' // i18n-ignore — format sans mot (unité identique fr/en)
+      : '$distanceKm km'; // i18n-ignore — format sans mot
+  return '$locationCode · $distanceLabel'; // i18n-ignore — format, séparateur
 }
 
 class NearMeCarousel extends StatefulWidget {
@@ -106,6 +109,7 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     if (widget.announcements.isEmpty) {
       return Center(
@@ -131,14 +135,14 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
               ),
               const SizedBox(height: DonySpacing.md),
               Text(
-                'Aucun voyageur à proximité',
+                l.listingNoTravelersNearbyTitle,
                 style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: DonySpacing.xs),
               Builder(
                 builder: (context) => Text(
-                  "Essaie d'augmenter le rayon ou de changer de date.",
+                  l.listingNoTravelersNearbyDesc,
                   style: tt.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -231,8 +235,10 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
               ),
               child: Text(
                 widget.announcements.length == 1
-                    ? 'Voir l\'annonce'
-                    : 'Voir les ${widget.announcements.length} annonces',
+                    ? l.listingSeeAnnouncementButton
+                    : l.listingSeeAnnouncementsCountButton(
+                        widget.announcements.length,
+                      ),
                 style: tt.labelLarge?.copyWith(
                   color: cs.primary,
                   fontWeight: FontWeight.w700,

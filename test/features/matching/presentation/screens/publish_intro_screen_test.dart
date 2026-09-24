@@ -261,7 +261,7 @@ void main() {
         stripeStatus: 'NOT_CREATED',
       );
 
-      expect(find.text('Turn on card payments'), findsOneWidget);
+      expect(find.text('Activate card payments'), findsOneWidget);
     });
 
     testWidgets('colis, vérifié : titre traduit', (tester) async {

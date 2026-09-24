@@ -11,6 +11,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
@@ -260,6 +262,56 @@ void main() {
       expect(find.text('35,00 €'), findsOneWidget);
       expect(find.text('4,20 €'), findsOneWidget);
       expect(find.text('39,20 €'), findsOneWidget);
+    });
+  });
+
+  group('PaymentRecapContent — anglais', () {
+    testWidgets('grille et bannière STRIPE traduites', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrapContent(net: 35.0, gross: 39.20, fee: 4.20, isCash: false),
+      );
+
+      expect(find.text('The traveler receives'), findsOneWidget);
+      expect(find.text('Yadony service fee'), findsOneWidget);
+      expect(find.text('Total to pay'), findsOneWidget);
+      expect(find.textContaining('Secure · held until'), findsOneWidget);
+    });
+
+    testWidgets('grille et bannière CASH traduites', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrapContent(net: 35.0, gross: 39.20, fee: 4.20, isCash: true),
+      );
+
+      expect(
+        find.text('To hand over to the traveler (in cash)'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('including Yadony fees (paid by the traveler)'),
+        findsOneWidget,
+      );
+      expect(find.text('The traveler keeps net'), findsOneWidget);
+      expect(find.textContaining('Cash payment in person'), findsOneWidget);
+    });
+
+    testWidgets('bannière MOBILE MONEY traduite', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrapContent(
+          net: 35.0,
+          gross: 39.20,
+          fee: 4.20,
+          isCash: false,
+          isMobileMoney: true,
+        ),
+      );
+
+      expect(
+        find.textContaining('You confirm the payment on your phone'),
+        findsOneWidget,
+      );
     });
   });
 }

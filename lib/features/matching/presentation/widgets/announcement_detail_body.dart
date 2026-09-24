@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
@@ -25,6 +26,7 @@ class AnnouncementDetailBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -58,7 +60,7 @@ class AnnouncementDetailBody extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'TRAJET',
+                          l.listingHeroTripLabelCaps,
                           style: tt.labelSmall?.copyWith(
                             color: Colors.white38,
                             letterSpacing: 1.2,
@@ -92,7 +94,7 @@ class AnnouncementDetailBody extends StatelessWidget {
                   _HeroChip(
                     label: DateFormat(
                       'EEE d MMM yyyy',
-                      AppL10n.localeName,
+                      l.localeName,
                     ).format(a.departureDate),
                   ),
                   if (a.transportMode != null)
@@ -126,9 +128,9 @@ class AnnouncementDetailBody extends StatelessWidget {
               Expanded(
                 child: _InfoPill(
                   value: a.capacityUnit == 'KG_FREE'
-                      ? 'Kg libre'
+                      ? l.tripKgFree
                       : '${a.availableKg.toStringAsFixed(0)} kg',
-                  label: 'disponibles',
+                  label: l.listingCapacityAvailableSuffix,
                 ),
               ),
               const SizedBox(width: DonySpacing.sm),
@@ -139,11 +141,13 @@ class AnnouncementDetailBody extends StatelessWidget {
                   // même raisonnement (écran propriétaire, 0 est la valeur
                   // trompeuse à écarter, pas l'absence).
                   value: a.pricingMode == 'MIXED'
-                      ? 'Grille'
+                      ? l.listingPriceGridShort
                       : (a.hasKgPrice && a.pricePerKg != null)
                       ? '${formatPriceIn(a.pricePerKg!, a.currency)}/kg'
-                      : 'Indisponible',
-                  label: a.pricingMode == 'MIXED' ? 'tarifaire' : 'prix',
+                      : l.listingPriceUnavailableShort,
+                  label: a.pricingMode == 'MIXED'
+                      ? l.listingPricingSuffixTarifaire
+                      : l.listingPricingSuffixPrix,
                 ),
               ),
             ],
@@ -160,15 +164,15 @@ class AnnouncementDetailBody extends StatelessWidget {
 
         // ── Lieux de remise (orange) ─────────────────────────────────────────
         if (a.pickupAddress != null || a.deliveryAddress != null) ...[
-          const _BSectionTitle(
-            label: 'Lieux de remise',
-            color: Color(0xFFEA580C),
+          _BSectionTitle(
+            label: l.listingPickupLocationsTitle,
+            color: const Color(0xFFEA580C),
           ),
           const SizedBox(height: DonySpacing.xs),
           if (a.pickupAddress != null)
             _BSectionRow(
               iconAsset: 'upload',
-              label: 'Remise colis',
+              label: l.listingPickupParcelTitleShort,
               value: a.pickupAddress!.label,
               iconBg: const Color(0xFFFFF7ED),
               iconColor: const Color(0xFFF97316),
@@ -177,7 +181,7 @@ class AnnouncementDetailBody extends StatelessWidget {
             const SizedBox(height: DonySpacing.xs),
             _BSectionRow(
               iconAsset: 'download',
-              label: 'Récupération',
+              label: l.listingDeliveryPickupTitle,
               value: a.deliveryAddress!.label,
               iconBg: const Color(0xFFE0F2FE),
               iconColor: const Color(0xFF0284C7),
@@ -188,15 +192,15 @@ class AnnouncementDetailBody extends StatelessWidget {
 
         // ── Dépôt des colis (sky) — date limite ──────────────────────────────
         if (a.handoverDeadline != null) ...[
-          const _BSectionTitle(
-            label: 'Dépôt des colis',
-            color: Color(0xFF0284C7),
+          _BSectionTitle(
+            label: l.listingHandoverDeadlineTitle,
+            color: const Color(0xFF0284C7),
           ),
           const SizedBox(height: DonySpacing.xs),
           _BSectionRow(
             iconAsset: 'calendar',
-            label: 'Date limite',
-            value: _handoverDeadlineLabel(a.handoverDeadline!.toLocal()),
+            label: l.listingDeadlineLabel,
+            value: _handoverDeadlineLabel(l, a.handoverDeadline!.toLocal()),
             iconBg: const Color(0xFFFEF9C3),
             iconColor: const Color(0xFFB45309),
           ).animate().fadeIn(delay: 110.ms),
@@ -205,9 +209,9 @@ class AnnouncementDetailBody extends StatelessWidget {
 
         // ── Paiements (violet) ───────────────────────────────────────────────
         if (a.acceptedPaymentMethods.isNotEmpty) ...[
-          const _BSectionTitle(
-            label: 'Paiements acceptés',
-            color: Color(0xFF7C3AED),
+          _BSectionTitle(
+            label: l.listingPaymentsAcceptedTitle,
+            color: const Color(0xFF7C3AED),
           ),
           const SizedBox(height: DonySpacing.xs),
           Wrap(
@@ -215,11 +219,12 @@ class AnnouncementDetailBody extends StatelessWidget {
             runSpacing: DonySpacing.xs,
             children: a.acceptedPaymentMethods.map((m) {
               final label = switch (m.apiValue) {
-                'CASH' => '💵 Espèces',
-                'STRIPE' => '💳 Carte',
-                'MOBILE_MONEY' => '📱 Mobile money',
-                'WAVE' => '🌊 Wave',
-                'ORANGE_MONEY' => '🟠 Orange Money',
+                'CASH' => '💵 ${l.paymentMethodCash}',
+                'STRIPE' => '💳 ${l.paymentMethodCard}',
+                'MOBILE_MONEY' => '📱 ${l.paymentMethodMobileMoney}',
+                'WAVE' => '🌊 Wave', // i18n-ignore — nom de marque
+                'ORANGE_MONEY' =>
+                  '🟠 Orange Money', // i18n-ignore — nom de marque
                 _ => m.apiValue,
               };
               return _BChip(
@@ -251,15 +256,12 @@ class AnnouncementDetailBody extends StatelessWidget {
                   DonyStatusBanner(
                     type: DonyStatusBannerType.warning,
                     iconAsset: 'triangle-alert',
-                    message:
-                        'Trajet en espèces uniquement. Beaucoup d\'expéditeurs '
-                        'préfèrent payer par carte, activez cette option pour '
-                        'augmenter vos chances de recevoir des colis.',
+                    message: l.listingCashOnlyNudgeMessage,
                     action: TextButton(
                       key: const Key('activate-card-payments-cta'),
                       onPressed: () =>
                           context.push('/connect/onboarding/intro'),
-                      child: const Text('Activer les paiements par carte'),
+                      child: Text(l.listingActivateCardPaymentsButton),
                     ),
                   ).animate().fadeIn(delay: 120.ms),
                   const SizedBox(height: DonySpacing.md),
@@ -270,14 +272,21 @@ class AnnouncementDetailBody extends StatelessWidget {
 
         // ── Ce que j'accepte (vert) ──────────────────────────────────────────
         if (a.acceptedContentTypes?.isNotEmpty ?? false) ...[
-          _BSectionTitle(label: 'Ce que j\'accepte', color: cs.success),
+          _BSectionTitle(
+            label: l.listingAcceptedContentTitle,
+            color: cs.success,
+          ),
           const SizedBox(height: DonySpacing.xs),
           Wrap(
             spacing: DonySpacing.xs,
             runSpacing: DonySpacing.xs,
             children: (a.acceptedContentTypes ?? [])
                 .map(
-                  (t) => _BChip(label: t, bg: cs.successLight, fg: cs.success),
+                  (t) => _BChip(
+                    label: contentCategoryDisplayName(l, t),
+                    bg: cs.successLight,
+                    fg: cs.success,
+                  ),
                 )
                 .toList(),
           ),
@@ -286,14 +295,18 @@ class AnnouncementDetailBody extends StatelessWidget {
 
         // ── Ce que je refuse (rouge) ─────────────────────────────────────────
         if (a.refusedTypes?.isNotEmpty ?? false) ...[
-          _BSectionTitle(label: 'Ce que je refuse', color: cs.error),
+          _BSectionTitle(label: l.listingRefusedContentTitle, color: cs.error),
           const SizedBox(height: DonySpacing.xs),
           Wrap(
             spacing: DonySpacing.xs,
             runSpacing: DonySpacing.xs,
             children: (a.refusedTypes ?? [])
                 .map(
-                  (t) => _BChip(label: t, bg: cs.errorContainer, fg: cs.error),
+                  (t) => _BChip(
+                    label: contentCategoryDisplayName(l, t),
+                    bg: cs.errorContainer,
+                    fg: cs.error,
+                  ),
                 )
                 .toList(),
           ),
@@ -302,9 +315,9 @@ class AnnouncementDetailBody extends StatelessWidget {
 
         // ── Note expéditeurs ─────────────────────────────────────────────────
         if (a.description != null && a.description!.isNotEmpty) ...[
-          const _BSectionTitle(
-            label: 'Note aux expéditeurs',
-            color: Color(0xFFB45309),
+          _BSectionTitle(
+            label: l.listingSenderNoteTitle,
+            color: const Color(0xFFB45309),
           ),
           const SizedBox(height: DonySpacing.xs),
           Container(
@@ -339,13 +352,22 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final (label, bg, fg) = switch (status) {
-      'ACTIVE' => ('● ACTIF', const Color(0xFF16A34A), Colors.white),
-      'DRAFT' => ('✎ BROUILLON', const Color(0xFFB45309), Colors.white),
-      'FULL' => ('● COMPLET', const Color(0xFFF59E0B), Colors.white),
-      'IN_PROGRESS' => ('● EN COURS', const Color(0xFF16A34A), Colors.white),
-      'COMPLETED' => ('✓ TERMINÉ', Colors.white24, Colors.white),
-      'CANCELLED' => ('✕ ANNULÉ', const Color(0xFFE53935), Colors.white),
+      'ACTIVE' => (l.listingBadgeActive, const Color(0xFF16A34A), Colors.white),
+      'DRAFT' => (l.listingBadgeDraft, const Color(0xFFB45309), Colors.white),
+      'FULL' => (l.listingBadgeFull, const Color(0xFFF59E0B), Colors.white),
+      'IN_PROGRESS' => (
+        l.listingBadgeInProgress,
+        const Color(0xFF16A34A),
+        Colors.white,
+      ),
+      'COMPLETED' => (l.listingBadgeCompleted, Colors.white24, Colors.white),
+      'CANCELLED' => (
+        l.listingBadgeCancelled,
+        const Color(0xFFE53935),
+        Colors.white,
+      ),
       _ => (status.toUpperCase(), Colors.white24, Colors.white),
     };
     return Container(
@@ -375,6 +397,7 @@ class _SurplusSplitRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
@@ -391,7 +414,7 @@ class _SurplusSplitRow extends StatelessWidget {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: '${_fmt(reservedKg)} kg réservés',
+                    text: l.listingReservedKgLabel(_fmt(reservedKg)),
                     style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                   ),
                   TextSpan(
@@ -399,7 +422,7 @@ class _SurplusSplitRow extends StatelessWidget {
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   TextSpan(
-                    text: '${_fmt(openKg)} kg ouverts',
+                    text: l.listingOpenKgLabel(_fmt(openKg)),
                     style: tt.bodyMedium?.copyWith(
                       color: cs.success,
                       fontWeight: FontWeight.w700,
@@ -464,6 +487,7 @@ class _ParcelStatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return IntrinsicHeight(
       child: Row(
         children: [
@@ -471,7 +495,7 @@ class _ParcelStatsRow extends StatelessWidget {
             child: _ParcelStatCell(
               iconAsset: 'circle-check',
               value: accepted,
-              label: accepted > 1 ? 'colis acceptés' : 'colis accepté',
+              label: l.listingAcceptedParcels(accepted),
               tint: const Color(0xFFE7F6EC),
               accent: const Color(0xFF16A34A),
             ),
@@ -481,7 +505,7 @@ class _ParcelStatsRow extends StatelessWidget {
             child: _ParcelStatCell(
               iconAsset: 'hourglass',
               value: pending,
-              label: 'en attente',
+              label: l.listingPendingParcelsLabel,
               tint: const Color(0xFFFEF9C3),
               accent: const Color(0xFFB45309),
             ),
@@ -562,8 +586,10 @@ class _ParcelStatCell extends StatelessWidget {
 }
 
 /// Formate la plage de remise — toujours dates complètes début et fin.
-String _handoverDeadlineLabel(DateTime deadline) {
-  return 'Jusqu\'au ${DateFormat('EEE d MMM', AppL10n.localeName).format(deadline)}';
+String _handoverDeadlineLabel(AppLocalizations l, DateTime deadline) {
+  return l.listingHandoverUntil(
+    DateFormat.MMMEd(l.localeName).format(deadline),
+  );
 }
 
 class _HeroChip extends StatelessWidget {

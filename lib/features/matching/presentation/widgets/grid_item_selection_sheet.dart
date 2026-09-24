@@ -3,6 +3,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -36,7 +37,7 @@ class GridItemSelectionSheet {
 
     await DonyBottomSheet.show(
       context,
-      title: 'Articles disponibles',
+      title: context.l10n.bidCreateGridSheetTitle,
       subtitle: corridor,
       stickyBottom: ValueListenableBuilder<Map<String, int>>(
         valueListenable: quantitiesNotifier,
@@ -62,7 +63,7 @@ class GridItemSelectionSheet {
                   child: Row(
                     children: [
                       Text(
-                        '$totalSelected article${totalSelected > 1 ? 's' : ''}',
+                        ctx.l10n.listingItemCount(totalSelected),
                         style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                         ),
@@ -81,7 +82,7 @@ class GridItemSelectionSheet {
                 ),
               DonyButton(
                 key: const Key('grid-sheet-confirm'),
-                label: 'Confirmer la sélection',
+                label: ctx.l10n.bidCreateGridSheetConfirmButton,
                 onPressed: hasItems
                     ? () {
                         result = Map<String, int>.from(quantities);
@@ -184,6 +185,7 @@ class _GridItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isActive = quantity > 0;
     final unitPrice = formatPriceIn(item.unitPriceDisplay, currency);
+    final l = context.l10n;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: DonySpacing.sm + 2),
@@ -194,8 +196,12 @@ class _GridItemRow extends StatelessWidget {
         compact: true,
         highlighted: isActive,
         semanticLabel: isActive
-            ? '${item.label}, $unitPrice l\'unité, $quantity sélectionné'
-            : '${item.label}, $unitPrice l\'unité',
+            ? l.bidCreateGridItemSemanticSelected(
+                item.label,
+                unitPrice,
+                quantity,
+              )
+            : l.bidCreateGridItemSemanticUnit(item.label, unitPrice),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -203,7 +209,7 @@ class _GridItemRow extends StatelessWidget {
               key: Key('grid-item-remove-${item.id}'),
               iconAsset: 'minus',
               active: isActive,
-              semanticLabel: 'Retirer un ${item.label}',
+              semanticLabel: l.bidCreateGridItemRemoveSemantic(item.label),
               onTap: onDecrement,
             ),
             SizedBox(
@@ -221,7 +227,7 @@ class _GridItemRow extends StatelessWidget {
               key: Key('grid-item-add-${item.id}'),
               iconAsset: 'plus',
               active: true,
-              semanticLabel: 'Ajouter un ${item.label}',
+              semanticLabel: l.bidCreateGridItemAddSemantic(item.label),
               onTap: onIncrement,
             ),
           ],

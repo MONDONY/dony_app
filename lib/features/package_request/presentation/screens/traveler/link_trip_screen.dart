@@ -256,7 +256,9 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
             builder: (context, error, _) {
               return Scaffold(
                 backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                appBar: const DonyAppBar(title: 'Lier un trajet'),
+                appBar: DonyAppBar(
+                  title: context.l10n.negotiationLinkTripScreenTitle,
+                ),
                 body: loading
                     ? Center(
                         child: CircularProgressIndicator(color: cs.primary),
@@ -278,15 +280,17 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                                 DonySpacing.base,
                               ),
                               child: DonySelectBar(
-                                defaultLabel: 'Sélectionner un trajet',
-                                confirmedLabel: 'Confirmer ce trajet',
+                                defaultLabel:
+                                    context.l10n.negotiationSelectTripLabel,
+                                confirmedLabel:
+                                    context.l10n.negotiationConfirmTripLabel,
                                 selectedSummary: selectedTrip != null
                                     ? (selectedTrip.isKgFree
-                                          ? '${DateFormat('EEE d MMM', AppL10n.localeName).format(selectedTrip.departureDate)} · Kg libre'
-                                          : '${DateFormat('EEE d MMM', AppL10n.localeName).format(selectedTrip.departureDate)} · ${selectedTrip.availableKg} kg dispo')
+                                          ? '${DateFormat.MMMEd(context.l10n.localeName).format(selectedTrip.departureDate)} · ${context.l10n.tripKgFree}'
+                                          : '${DateFormat.MMMEd(context.l10n.localeName).format(selectedTrip.departureDate)} · ${context.l10n.negotiationLinkTripKgAvailable('${selectedTrip.availableKg}')}')
                                     : null,
                                 selectedCount: selectedTrip != null
-                                    ? '1 trajet'
+                                    ? context.l10n.negotiationSelectedTripCount
                                     : null,
                                 onConfirm: selectedTrip != null
                                     ? _confirmTrip
@@ -334,7 +338,12 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Demande acceptée à ${formatPriceIn(widget.thread.currentPriceEur, widget.thread.currency)}',
+                      context.l10n.negotiationAcceptedAtPriceBanner(
+                        formatPriceIn(
+                          widget.thread.currentPriceEur,
+                          widget.thread.currency,
+                        ),
+                      ),
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.85),
@@ -351,7 +360,11 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                       ),
                     ),
                     Text(
-                      'Date de voyage : ${DateFormat('d MMM yyyy', AppL10n.localeName).format(widget.thread.travelerTravelDate)}',
+                      context.l10n.negotiationLinkTripDate(
+                        DateFormat.yMMMd(
+                          context.l10n.localeName,
+                        ).format(widget.thread.travelerTravelDate),
+                      ),
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 13,
                         color: Colors.white.withValues(alpha: 0.85),
@@ -419,7 +432,7 @@ class _AvailablePaymentMethodsPreview extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'L\'expéditeur choisira parmi',
+          context.l10n.negotiationSenderChoosesAmong,
           style: tt.bodyMedium?.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w700,
@@ -493,7 +506,10 @@ class _ErrorView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: DonySpacing.base),
-            TextButton(onPressed: onRetry, child: const Text('Réessayer')),
+            TextButton(
+              onPressed: onRetry,
+              child: Text(context.l10n.commonRetry),
+            ),
           ],
         ),
       ),

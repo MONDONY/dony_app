@@ -69,6 +69,36 @@ void main() {
   );
 
   blocTest<BidAcceptanceBloc, BidAcceptanceState>(
+    'requires3ds → handleNextAction success → confirm rejected → BidFailed',
+    build: () {
+      when(() => repo.acceptBidWithCommission('bid_x')).thenAnswer(
+        (_) async => const AcceptanceResponse(
+          status: AcceptanceStatus.requires3ds,
+          clientSecret: 'pi_x',
+        ),
+      );
+      when(
+        () => stripe.handleNextAction('pi_x'),
+      ).thenAnswer((_) async => _fakePaymentIntent());
+      when(() => repo.confirmCommissionAcceptance('bid_x')).thenAnswer(
+        (_) async =>
+            const ConfirmResponse(accepted: false, error: 'Carte refusée'),
+      );
+      return BidAcceptanceBloc(repo, stripe);
+    },
+    act: (b) => b.add(BidAcceptRequested('bid_x')),
+    expect: () => [
+      isA<BidAccepting>(),
+      predicate<BidFailed>(
+        (s) =>
+            s.serverMessage == 'Carte refusée' &&
+            s.reason == BidFailureReason.confirmFailed &&
+            s.cardDeclined,
+      ),
+    ],
+  );
+
+  blocTest<BidAcceptanceBloc, BidAcceptanceState>(
     'requires3ds → stripe throws StripeException → BidFailed',
     build: () {
       when(() => repo.acceptBidWithCommission('bid_x')).thenAnswer(
@@ -85,7 +115,13 @@ void main() {
       return BidAcceptanceBloc(repo, stripe);
     },
     act: (b) => b.add(BidAcceptRequested('bid_x')),
-    expect: () => [isA<BidAccepting>(), isA<BidFailed>()],
+    expect: () => [
+      isA<BidAccepting>(),
+      predicate<BidFailed>(
+        (s) =>
+            s.reason == BidFailureReason.bankAuthInterrupted && s.cardDeclined,
+      ),
+    ],
   );
 
   blocTest<BidAcceptanceBloc, BidAcceptanceState>(
@@ -102,7 +138,11 @@ void main() {
     act: (b) => b.add(BidAcceptRequested('bid_x')),
     expect: () => [
       isA<BidAccepting>(),
-      predicate<BidFailed>((s) => s.message == 'Carte refusée'),
+      predicate<BidFailed>(
+        (s) =>
+            s.serverMessage == 'Carte refusée' &&
+            s.reason == BidFailureReason.refused,
+      ),
     ],
   );
 
@@ -115,7 +155,29 @@ void main() {
       return BidAcceptanceBloc(repo, stripe);
     },
     act: (b) => b.add(BidAcceptRequested('bid_x')),
-    expect: () => [isA<BidAccepting>(), isA<BidFailed>()],
+    expect: () => [
+      isA<BidAccepting>(),
+      predicate<BidFailed>(
+        (s) => s.reason == BidFailureReason.refused && s.serverMessage == null,
+      ),
+    ],
+  );
+
+  blocTest<BidAcceptanceBloc, BidAcceptanceState>(
+    'network error on card path emits BidFailed with no server message',
+    build: () {
+      when(
+        () => repo.acceptBidWithCommission('bid_x', commissionSource: 'CARD'),
+      ).thenThrow(Exception('timeout'));
+      return BidAcceptanceBloc(repo, stripe);
+    },
+    act: (b) => b.add(BidAcceptWithCardRequested('bid_x')),
+    expect: () => [
+      isA<BidAccepting>(),
+      predicate<BidFailed>(
+        (s) => s.reason == BidFailureReason.refused && s.serverMessage == null,
+      ),
+    ],
   );
 
   blocTest<BidAcceptanceBloc, BidAcceptanceState>(

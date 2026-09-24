@@ -2620,7 +2620,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tripPublishIntroStripeTitle => 'Turn on card payments';
+  String get tripPublishIntroStripeTitle => 'Activate card payments';
 
   @override
   String get tripPublishIntroStripeSubtitle =>
@@ -2714,7 +2714,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Card payment isn\'t available in your country yet. Your trips are posted in cash.';
 
   @override
-  String get tripPublishActivateCardPaymentsCta => 'Turn on card payments';
+  String get tripPublishActivateCardPaymentsCta => 'Activate card payments';
 
   @override
   String get tripPublishCardNotConfiguredSubtitle =>
@@ -4533,4 +4533,1885 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestCreateRecapPackage => 'Parcel';
+
+  @override
+  String get listingDeleteTripConfirmTitle => 'Delete this trip?';
+
+  @override
+  String get listingDeleteTripCancelledMessage =>
+      'This action is irreversible. The canceled trip and all related requests will be permanently removed from the platform.';
+
+  @override
+  String get listingDeleteTripActiveMessage =>
+      'This action is irreversible. The trip will no longer be visible to senders.';
+
+  @override
+  String get listingTripDetailTitle => 'Trip details';
+
+  @override
+  String get listingTripDeletedMessage => 'Trip deleted';
+
+  @override
+  String get listingAnnouncementGoneMessage => 'This listing no longer exists';
+
+  @override
+  String get listingHeroTripLabel => 'Trip';
+
+  @override
+  String get listingPickupLocationsTitle => 'Drop-off locations';
+
+  @override
+  String get listingHandoverDeadlineTitle => 'Parcel drop-off deadline';
+
+  @override
+  String get listingCapacityAvailableLabel => 'Available capacity';
+
+  @override
+  String get listingPricingModeLabel => 'Pricing';
+
+  @override
+  String get listingPricePerKgLabel => 'Price per kg';
+
+  @override
+  String get listingPriceGridShort => 'Grid';
+
+  @override
+  String get listingPriceUnavailableShort => 'Unavailable';
+
+  @override
+  String listingSeeRequestsButton(int count) {
+    return 'See requests ($count)';
+  }
+
+  @override
+  String get listingEditTripButton => 'Edit this trip';
+
+  @override
+  String get listingCancelTripButton => 'Cancel this trip';
+
+  @override
+  String get listingDeleteTripButton => 'Delete this trip';
+
+  @override
+  String get listingTripLockedMessage => 'This trip can no longer be edited.';
+
+  @override
+  String get listingStatusActive => 'Active';
+
+  @override
+  String get listingStatusFull => 'Full';
+
+  @override
+  String get listingStatusCompleted => 'Completed';
+
+  @override
+  String get listingStatusCancelled => 'Canceled';
+
+  @override
+  String listingHandoverUntil(String date) {
+    return 'Until $date';
+  }
+
+  @override
+  String get listingSearchDestinationHint => 'Search a destination…';
+
+  @override
+  String get listingFilterAllChip => 'All';
+
+  @override
+  String get listingFilterDraftsChip => 'Drafts';
+
+  @override
+  String get listingFilterActiveChip => 'Active';
+
+  @override
+  String get listingFilterCompletedChip => 'Completed';
+
+  @override
+  String get listingFilterCancelledChip => 'Canceled';
+
+  @override
+  String get listingHeaderTitle => 'My trips';
+
+  @override
+  String get listingNewTripPill => '+ New';
+
+  @override
+  String get listingLoadErrorTitle => 'We couldn\'t load your trips';
+
+  @override
+  String get listingEmptyNoTripsTitle => 'No upcoming trips';
+
+  @override
+  String get listingEmptyDraftTitle => 'No drafts';
+
+  @override
+  String get listingEmptyActiveTitle => 'No active trips';
+
+  @override
+  String get listingEmptyCompletedTitle => 'No history';
+
+  @override
+  String get listingEmptyCancelledTitle => 'No cancellations';
+
+  @override
+  String get listingEmptyAllTitle => 'No trips found';
+
+  @override
+  String get listingEmptyNoTripsDesc =>
+      'Post your first trip and start carrying parcels.';
+
+  @override
+  String get listingEmptyDraftDesc =>
+      'Your trips saved without publishing will appear here.';
+
+  @override
+  String get listingEmptyActiveDesc =>
+      'Your ongoing and upcoming trips will appear here.';
+
+  @override
+  String get listingEmptyCompletedDesc =>
+      'Your past and completed trips will appear here.';
+
+  @override
+  String get listingEmptyCancelledDesc =>
+      'Your canceled trips will appear here.';
+
+  @override
+  String get listingEmptyAllDesc => 'No trips match your search.';
+
+  @override
+  String get listingHeroTripLabelCaps => 'TRIP';
+
+  @override
+  String get listingCapacityAvailableSuffix => 'available';
+
+  @override
+  String get listingPricingSuffixTarifaire => 'pricing';
+
+  @override
+  String get listingPricingSuffixPrix => 'price';
+
+  @override
+  String listingAcceptedParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'parcels accepted',
+      one: 'parcel accepted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingPendingParcelsLabel => 'pending';
+
+  @override
+  String get listingPaymentsAcceptedTitle => 'Accepted payment methods';
+
+  @override
+  String get listingCashOnlyNudgeMessage =>
+      'Cash-only trip. Many senders prefer to pay by card, so enabling this option increases your chances of receiving parcels.';
+
+  @override
+  String get listingActivateCardPaymentsButton => 'Activate card payments';
+
+  @override
+  String get listingAcceptedContentTitle => 'What I accept';
+
+  @override
+  String get listingRefusedContentTitle => 'What I refuse';
+
+  @override
+  String get listingSenderNoteTitle => 'Note to senders';
+
+  @override
+  String get listingBadgeActive => '● ACTIVE';
+
+  @override
+  String get listingBadgeDraft => '✎ DRAFT';
+
+  @override
+  String get listingBadgeFull => '● FULL';
+
+  @override
+  String get listingBadgeInProgress => '● IN PROGRESS';
+
+  @override
+  String get listingBadgeCompleted => '✓ COMPLETED';
+
+  @override
+  String get listingBadgeCancelled => '✕ CANCELED';
+
+  @override
+  String listingReservedKgLabel(String kg) {
+    return '$kg kg reserved';
+  }
+
+  @override
+  String listingOpenKgLabel(String kg) {
+    return '$kg kg open';
+  }
+
+  @override
+  String get listingPickupParcelTitleShort => 'Parcel drop-off';
+
+  @override
+  String get listingDeliveryPickupTitle => 'Pickup';
+
+  @override
+  String get listingAlreadyHasParcelMessage =>
+      'You already have a parcel on this trip';
+
+  @override
+  String get listingSeeMyParcelButton => 'See my parcel';
+
+  @override
+  String get listingMakeRequestButton => 'Make a request';
+
+  @override
+  String get listingNegotiableTripPrefix => 'Negotiable trip · ';
+
+  @override
+  String get listingProposePriceLink => 'Propose a price';
+
+  @override
+  String get listingPricePerKiloLabel => 'per kilo';
+
+  @override
+  String listingApproxPricePerKg(String price) {
+    return 'approx. $price/kg';
+  }
+
+  @override
+  String listingApproxPrice(String price) {
+    return 'approx. $price';
+  }
+
+  @override
+  String get listingDepositDeadlineLabel => 'drop-off deadline';
+
+  @override
+  String get listingPriceGridLabel => 'Price grid';
+
+  @override
+  String listingItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '$count item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingPricePerItemTitle => 'Price per item';
+
+  @override
+  String listingSeeAllPricesButton(int count) {
+    return 'See all prices ($count)';
+  }
+
+  @override
+  String get listingPickupParcelTitle => 'Parcel drop-off';
+
+  @override
+  String get listingReportTripLink => 'Report this trip';
+
+  @override
+  String get listingBlockTravelerLink => 'Block this traveler';
+
+  @override
+  String get listingFavoriteAddedMessage => 'Trip added to favorites';
+
+  @override
+  String get listingFavoriteRemovedMessage => 'Trip removed from favorites';
+
+  @override
+  String get listingFavoriteToggleErrorMessage => 'Couldn\'t update favorites';
+
+  @override
+  String listingKgAvailableLabel(String kg) {
+    return '$kg kg available';
+  }
+
+  @override
+  String get listingIdentityBadge => 'Verified';
+
+  @override
+  String get listingCategoriesAcceptedTitle => 'Accepted parcel types';
+
+  @override
+  String get listingTravelerMessageTitle => 'Traveler\'s message';
+
+  @override
+  String get listingRouteLabel => 'Directions';
+
+  @override
+  String get listingCashOnlyWarningBold => 'Cash-only trip. ';
+
+  @override
+  String get listingCashOnlyWarningBody =>
+      'Payment is made directly to the traveler in person. Yadony does not put your money on hold and cannot refund it automatically in case of a dispute.';
+
+  @override
+  String get listingNewRatingLabel => 'New';
+
+  @override
+  String listingTravelerTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '· $count trips',
+      one: '· $count trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingPreviewTitle => 'Preview your listing';
+
+  @override
+  String get listingPublishButton => 'Post the listing';
+
+  @override
+  String get listingSaveDraftButton => 'Save as draft';
+
+  @override
+  String get listingPreviewDepartureLabel => 'Departure';
+
+  @override
+  String get listingRowLabelPickup => 'Drop-off';
+
+  @override
+  String get listingRowLabelCapacity => 'Capacity';
+
+  @override
+  String get listingRowLabelPayment => 'Payment';
+
+  @override
+  String get listingPaymentCardCash => 'Card + Cash';
+
+  @override
+  String get listingPaymentCardOnly => 'Card only';
+
+  @override
+  String get listingRowLabelAccept => 'Accepts';
+
+  @override
+  String get listingRowLabelRefuse => 'Refuses';
+
+  @override
+  String get listingRowLabelNote => 'Note';
+
+  @override
+  String get listingPriceTooLowWarning =>
+      'Low price. You\'ll be able to change it after posting.';
+
+  @override
+  String get listingPriceTooHighWarning =>
+      'High price. You\'ll be able to change it after posting.';
+
+  @override
+  String get listingStatusInProgress => 'In progress';
+
+  @override
+  String listingDateTodayLabel(String date) {
+    return 'Today · $date';
+  }
+
+  @override
+  String listingDateTomorrowLabel(String date) {
+    return 'Tomorrow · $date';
+  }
+
+  @override
+  String listingDateInDaysLabel(int days, String date) {
+    return 'Departs in $days days · $date';
+  }
+
+  @override
+  String get listingRetryActionMessage => 'Action failed, try again';
+
+  @override
+  String listingAcceptedBidsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count accepted',
+      one: '$count accepted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String listingPendingBidsCount(int count) {
+    return '$count pending';
+  }
+
+  @override
+  String listingSoldOfTotalLabel(String sold, String total) {
+    return '$sold sold of $total';
+  }
+
+  @override
+  String listingAvailableKgLabel(String kg) {
+    return '$kg available';
+  }
+
+  @override
+  String listingSoldLabel(String kg) {
+    return '$kg sold';
+  }
+
+  @override
+  String listingEarnedLabel(String price) {
+    return '$price earned';
+  }
+
+  @override
+  String get listingBidStatusAccepted => 'Request accepted';
+
+  @override
+  String get listingBidStatusOnTrip => 'Parcel on this trip';
+
+  @override
+  String get listingBidStatusArrived => 'Arrived';
+
+  @override
+  String get listingBidStatusPending => 'Request pending';
+
+  @override
+  String get listingYourTripPill => 'Your trip';
+
+  @override
+  String get listingProBadge => 'PRO';
+
+  @override
+  String get listingNoTravelersNearbyTitle => 'No travelers nearby';
+
+  @override
+  String get listingNoTravelersNearbyDesc =>
+      'Try widening the radius or changing the date.';
+
+  @override
+  String get listingSeeAnnouncementButton => 'See the listing';
+
+  @override
+  String listingSeeAnnouncementsCountButton(int count) {
+    return 'See the $count listings';
+  }
+
+  @override
+  String listingRouteDeparturesFrom(String city) {
+    return 'Departures from $city';
+  }
+
+  @override
+  String listingRouteArrivalsTo(String city) {
+    return 'Arrivals in $city';
+  }
+
+  @override
+  String listingRouteTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trips',
+      one: '$count trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingNoTripsOnRoute => 'No trips available on this route';
+
+  @override
+  String listingSameAddressTravelers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers available at this address',
+      one: '$count traveler available at this address',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingAddressFallback => 'Address';
+
+  @override
+  String get listingNearMeDeactivateTooltip => 'Turn off \"Near me\"';
+
+  @override
+  String get listingNearMeActivateTooltip => 'See travelers near me';
+
+  @override
+  String get listingFilterTripsTitle => 'Filter trips';
+
+  @override
+  String get listingResetFiltersButton => 'Reset';
+
+  @override
+  String listingSearchButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Search · $count filters',
+      one: 'Search · $count filter',
+      zero: 'Search',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get listingQuickFiltersTitle => 'QUICK FILTERS';
+
+  @override
+  String get listingKiloProChip => 'Kilo Pro';
+
+  @override
+  String get listingRatingChip => 'Rating ≥ 4.5';
+
+  @override
+  String get listingWeekendChip => 'Weekend';
+
+  @override
+  String get listingContentContainsTitle => 'MY PARCEL CONTAINS';
+
+  @override
+  String get listingDepartureUrgencyTitle => 'DEPARTURE URGENCY';
+
+  @override
+  String get listingDepartureUrgencyDesc =>
+      'Filter trips by how soon they depart';
+
+  @override
+  String get listingDeleteTripAssociatedRequestsMessage =>
+      'The canceled trip and all related requests will be permanently removed from the platform.';
+
+  @override
+  String get listingDeadlineLabel => 'Deadline';
+
+  @override
+  String get listingInstructionsCardTitle => 'Traveler\'s instructions';
+
+  @override
+  String get listingRowLabelDate => 'Date';
+
+  @override
+  String get listingRowLabelPrice => 'Price';
+
+  @override
+  String listingPriceEstimateSuffix(String amount) {
+    return ' · estimate $amount net';
+  }
+
+  @override
+  String get bidCreateSendProposalButton => 'Send my proposal';
+
+  @override
+  String bidCreateConfirmCashButton(String amount) {
+    return 'Confirm $amount in cash';
+  }
+
+  @override
+  String bidCreateConfirmMobileMoneyButton(String amount) {
+    return 'Confirm $amount by mobile money';
+  }
+
+  @override
+  String bidCreateLockAndPayButton(String amount) {
+    return 'Lock $amount & pay';
+  }
+
+  @override
+  String get bidCreateDescriptionRequiredError => 'Description required';
+
+  @override
+  String get bidCreateRecipientNameRequiredError => 'Recipient name required';
+
+  @override
+  String get bidCreateRecipientPhoneRequiredError => 'Recipient phone required';
+
+  @override
+  String get bidCreatePriceRequiredError => 'Enter the price you\'re proposing';
+
+  @override
+  String get bidCreateProposalSentMessage =>
+      'Proposal sent, the traveler will get back to you.';
+
+  @override
+  String get bidCreateOfferSentTitle => 'Offer sent!';
+
+  @override
+  String get bidCreateCashSuccessSubtitle =>
+      'Cash payment: if the traveler accepts, you hand over the amount in person at drop-off. If canceled after drop-off, Yadony can\'t refund you right away, but will make sure the traveler gives your money back.';
+
+  @override
+  String get bidCreateMobileMoneySuccessSubtitle =>
+      'Mobile money payment: if the traveler accepts, you\'ll get a notification and have 30 minutes to confirm the payment on your phone. The amount is kept safe by Yadony until delivery.';
+
+  @override
+  String get bidCreateReviewPendingSubtitle =>
+      'The traveler will review your request.';
+
+  @override
+  String get bidCreateSeeMyShipmentButton => 'View my shipment';
+
+  @override
+  String get bidCreateArticlesSectionLabel => 'ITEMS';
+
+  @override
+  String bidCreateSelectedItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items selected',
+      one: '$count item selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bidCreateSubtotalLabel(String amount) {
+    return 'Subtotal: $amount';
+  }
+
+  @override
+  String get bidCreateChooseItemsLabel => 'Choose my items';
+
+  @override
+  String get bidCreateItemsRequiredHint => 'Required: at least 1 item';
+
+  @override
+  String get bidCreatePhotosSectionLabel => 'PARCEL PHOTOS (OPTIONAL)';
+
+  @override
+  String get bidCreateDescriptionSectionLabel =>
+      'DESCRIPTION (TO THE TRAVELER)';
+
+  @override
+  String get bidCreateDescriptionHint =>
+      'Diabetes medication + 2 children\'s t-shirts';
+
+  @override
+  String get bidCreateRecipientSectionLabel => 'RECIPIENT';
+
+  @override
+  String get bidCreateRecipientNameLabel => 'Recipient\'s first and last name';
+
+  @override
+  String get bidCreateRecipientNameHint => 'e.g.: Amadou Diallo';
+
+  @override
+  String get bidCreateRecipientPhoneLabel => 'Recipient\'s phone number';
+
+  @override
+  String get bidCreateRecipientPhoneHint => 'e.g.: +221 77 000 00 00';
+
+  @override
+  String get bidCreatePromoSectionLabel => 'PROMO CODE (OPTIONAL)';
+
+  @override
+  String get bidCreatePromoCodeHint => 'E.g. WELCOME10';
+
+  @override
+  String get bidCreatePromoAppliedDefaultLabel => 'Code applied';
+
+  @override
+  String get bidCreateYourProposalSectionLabel => 'YOUR PROPOSAL';
+
+  @override
+  String bidCreateProposedPriceLabel(String symbol) {
+    return 'Proposed price ($symbol)';
+  }
+
+  @override
+  String bidCreateSuggestedPriceLabel(String amount) {
+    return 'Suggested: $amount';
+  }
+
+  @override
+  String get bidCreatePaymentMethodSectionLabel => 'PAYMENT METHOD';
+
+  @override
+  String get bidCreatePaymentMethodHint =>
+      'If the traveler accepts your price, you\'ll pay this way.';
+
+  @override
+  String get bidCreateContentSectionLabel => 'PARCEL CONTENT';
+
+  @override
+  String get bidCreateContentHintText =>
+      'These suggestions are the contents accepted by the traveler. If your parcel\'s content isn\'t listed, add it: it\'ll be up to the traveler to decide whether to accept your parcel or not.';
+
+  @override
+  String get bidCreateRefusedByTravelerSectionLabel =>
+      'REFUSED BY THE TRAVELER';
+
+  @override
+  String get bidCreateHowToPayTitle => 'How do you want to pay?';
+
+  @override
+  String get bidCreateChoosePaymentSubtitle =>
+      'Choose the payment method for this request.';
+
+  @override
+  String get bidCreatePaymentNotConfirmedError =>
+      'Payment not confirmed, try again';
+
+  @override
+  String bidCreateShipmentToLabel(String city) {
+    return 'Shipment to $city';
+  }
+
+  @override
+  String get bidCreateOfferPaidTitle => 'Offer paid!';
+
+  @override
+  String get bidCreateOfferPaidSubtitle =>
+      'Your payment is locked and secured until delivery is confirmed. The traveler has been notified of your request.';
+
+  @override
+  String get bidCreateWeightLabel => 'Parcel weight';
+
+  @override
+  String get bidCreateWeightLabelOptional => 'Parcel weight (optional)';
+
+  @override
+  String get bidCreateFreeKgHint => 'Flexible kg: choose your weight';
+
+  @override
+  String get bidCreateNoCapacityAvailable => 'No capacity available';
+
+  @override
+  String get bidCreateDisclaimerTitle => 'Customs disclaimer.';
+
+  @override
+  String get bidCreateDisclaimerBody =>
+      'No weapons, drugs, flammable liquids or cash. The traveler can refuse at customs control.';
+
+  @override
+  String get bidCreateDisclaimerAcceptLabel => 'I sign & accept';
+
+  @override
+  String get bidCreateCardModeSubtitle => 'Locked until delivery';
+
+  @override
+  String get bidCreateMobileMoneySubtitle => 'Orange Money, Wave, MTN';
+
+  @override
+  String get bidCreateCashModeSubtitle => 'Hand to hand, at drop-off';
+
+  @override
+  String get bidCreateEscrowTag => 'Payment on hold';
+
+  @override
+  String get bidCreateHandToHandTag => 'Hand to hand';
+
+  @override
+  String get bidCreateCardModeBody =>
+      'Locked by Yadony right away, paid to the traveler once the recipient confirms delivery.';
+
+  @override
+  String get bidCreateMobileMoneyModeBody =>
+      'Once the traveler agrees, you\'ll get a payment request on your phone. The amount is locked by Yadony until delivery.';
+
+  @override
+  String get bidCreateCashModeBody =>
+      'You hand the amount to the traveler on the day you give them the parcel.';
+
+  @override
+  String get bidCreateRefundAssurance =>
+      'Refunded if the parcel doesn\'t arrive';
+
+  @override
+  String get bidCreateCashEscrowWarning =>
+      'Cash payment: no payment on hold, you pay the traveler directly, with no refund guarantee from Yadony.';
+
+  @override
+  String get bidCreateArticlesLineLabel => 'Items';
+
+  @override
+  String get bidCreatePromoDiscountLabel => 'Promo code discount';
+
+  @override
+  String get bidCreateTotalLabel => 'Total';
+
+  @override
+  String get bidCreatePromoBadge => 'Promo';
+
+  @override
+  String get bidCreateServiceFeeIncludedLabel => 'Yadony service fee included';
+
+  @override
+  String get bidCreatePhotosVisibleHint =>
+      'Visible to the traveler, they reassure about the content.';
+
+  @override
+  String get bidCreatePayerPhoneLabel => 'Payer\'s number (optional)';
+
+  @override
+  String get bidCreatePayerPhoneHintWithProfile =>
+      'By default, your Yadony number. You\'ll receive the payment request on this number.';
+
+  @override
+  String get bidCreatePayerPhoneHintNoProfile =>
+      'Your account has no number: enter the one that will pay. You\'ll receive the payment request on it.';
+
+  @override
+  String get bidCreateCustomItemsSectionTitle => 'Items outside the grid';
+
+  @override
+  String get bidCreateCustomItemsSectionHint =>
+      'Add what the traveler hasn\'t priced, and propose your price for each item.';
+
+  @override
+  String get bidCreateCustomItemsEmpty => 'No items yet.';
+
+  @override
+  String get bidCreateCustomItemsTotalLabel =>
+      'Total for items outside the grid';
+
+  @override
+  String get bidCreateAddItemButton => 'Add an item';
+
+  @override
+  String get bidCreateRemoveItemTooltip => 'Remove this item';
+
+  @override
+  String get bidCreateAddItemSheetSubtitle =>
+      'Describe the item and state the price you\'re proposing for its transport.';
+
+  @override
+  String get bidCreateAddItemConfirmButton => 'Add';
+
+  @override
+  String get bidCreateCustomItemLabelField => 'Item';
+
+  @override
+  String get bidCreateCustomItemLabelHint => 'Bag of rice, boubou, medication';
+
+  @override
+  String get bidCreateCustomItemQuantityField => 'Quantity';
+
+  @override
+  String bidCreateCustomItemPriceField(String symbol) {
+    return 'Price ($symbol)';
+  }
+
+  @override
+  String get bidCreateGridSheetTitle => 'Available items';
+
+  @override
+  String get bidCreateGridSheetConfirmButton => 'Confirm selection';
+
+  @override
+  String bidCreateGridItemSemanticSelected(
+    String label,
+    String price,
+    int quantity,
+  ) {
+    return '$label, $price per unit, $quantity selected';
+  }
+
+  @override
+  String bidCreateGridItemSemanticUnit(String label, String price) {
+    return '$label, $price per unit';
+  }
+
+  @override
+  String bidCreateGridItemRemoveSemantic(String label) {
+    return 'Remove one $label';
+  }
+
+  @override
+  String bidCreateGridItemAddSemantic(String label) {
+    return 'Add one $label';
+  }
+
+  @override
+  String get bidCreatePriceTooLowHint =>
+      'Low price: risk of distrust from the sender';
+
+  @override
+  String get bidCreatePriceTooHighHint => 'High price: few requests expected';
+
+  @override
+  String bidCreateMarketPriceCorridor(String corridor) {
+    return 'Market $corridor: ';
+  }
+
+  @override
+  String get bidCreateMarketPriceLabel => 'Market ';
+
+  @override
+  String get bidCreateCompetitivePriceSuffix => ' · Your price is competitive.';
+
+  @override
+  String bidCreateDisclaimerSigned(String dateTime) {
+    return 'Disclaimer signed on $dateTime';
+  }
+
+  @override
+  String get tripPublishCashCommissionIntro =>
+      'You\'ll only be able to accept a cash-paid parcel if the Yadony service fee can be collected ';
+
+  @override
+  String get tripPublishCashCommissionHighlight => 'from your wallet first';
+
+  @override
+  String get tripPublishCashCommissionOutro =>
+      '. Otherwise, you\'ll need to top it up or add a valid card when accepting.';
+
+  @override
+  String get negotiationStageToPay => 'to pay';
+
+  @override
+  String get negotiationStageAwaitingPayment => 'awaiting payment';
+
+  @override
+  String get negotiationStageDealAgreed => 'deal agreed';
+
+  @override
+  String get negotiationStageClosed => 'closed';
+
+  @override
+  String get negotiationStageProposal => 'proposal';
+
+  @override
+  String get bidSenderFallbackName => 'Sender';
+
+  @override
+  String bidTravelerTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trips',
+      one: '$count trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bidSenderShipments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count shipments',
+      one: '$count shipment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bidSubmittedOn(String date) {
+    return 'Submitted on $date';
+  }
+
+  @override
+  String get negotiationThreadTitle => 'Price discussion';
+
+  @override
+  String get negotiationThreadErrorTitle => 'Discussion unavailable';
+
+  @override
+  String get negotiationThreadYouWouldReceive => 'You would receive';
+
+  @override
+  String get negotiationThreadYouWouldPay => 'You would pay';
+
+  @override
+  String negotiationThreadRoundLabel(int round, int maxRounds) {
+    return 'Round $round of $maxRounds';
+  }
+
+  @override
+  String get negotiationThreadParcelSectionTitle => 'The parcel';
+
+  @override
+  String get negotiationThreadExchangesTitle => 'Exchanges';
+
+  @override
+  String get negotiationThreadKindProposal => 'Proposal';
+
+  @override
+  String get negotiationThreadKindCounter => 'Counter-offer';
+
+  @override
+  String get negotiationThreadKindAccepted => 'Accepted';
+
+  @override
+  String get negotiationThreadKindRejected => 'Declined';
+
+  @override
+  String get negotiationThreadPayHint =>
+      'Price accepted. Pay now to secure your spot, the amount stays on hold until delivery.';
+
+  @override
+  String get negotiationThreadPayButton => 'Pay';
+
+  @override
+  String get negotiationThreadAwaitingSenderPaymentHint =>
+      'Price accepted. Awaiting the sender\'s payment.';
+
+  @override
+  String get negotiationThreadCashTravelerHint =>
+      'Price accepted. Cash payment, you still need to pay the Yadony service fee.';
+
+  @override
+  String get negotiationThreadCashSenderHint =>
+      'Price accepted. Cash payment, awaiting the traveler, you have nothing to pay here.';
+
+  @override
+  String get negotiationThreadClosedAccepted =>
+      'Price accepted. Head to your parcel for what\'s next.';
+
+  @override
+  String get negotiationThreadClosedRejected => 'Proposal declined.';
+
+  @override
+  String get negotiationThreadClosedExpired => 'Proposal expired.';
+
+  @override
+  String get negotiationThreadClosedDefault => 'Negotiation closed.';
+
+  @override
+  String negotiationThreadWaitingForReply(String name) {
+    return 'Waiting for $name\'s reply.';
+  }
+
+  @override
+  String get negotiationThreadCounterpartyFallback => 'the other party';
+
+  @override
+  String get negotiationThreadAcceptButton => 'Accept';
+
+  @override
+  String get negotiationThreadCounterButton => 'Counter-propose';
+
+  @override
+  String get negotiationThreadRejectButton => 'Decline';
+
+  @override
+  String get negotiationThreadCounterSubtitle =>
+      'Enter the total amount you\'re proposing. The other party can accept it or respond in turn.';
+
+  @override
+  String get negotiationThreadCounterSubmitButton => 'Send my counter-offer';
+
+  @override
+  String negotiationThreadCounterAmountLabel(String symbol) {
+    return 'Proposed amount ($symbol)';
+  }
+
+  @override
+  String get negotiationThreadCounterMessageLabel => 'Message (optional)';
+
+  @override
+  String get negotiationThreadCounterMessageHint => 'Explain your proposal';
+
+  @override
+  String get negotiationThreadPaymentNotConfirmed =>
+      'Payment not confirmed, try again';
+
+  @override
+  String get negotiationThreadPaymentContextLabel =>
+      'Negotiated price for your shipment';
+
+  @override
+  String get travelerProfileLoadErrorTitle => 'Loading error';
+
+  @override
+  String get travelerProfileLoadErrorDescription => 'Unable to load details';
+
+  @override
+  String get profileSheetMoreOptionsTooltip => 'More options';
+
+  @override
+  String get profileSheetReviewsTitle => 'Reviews';
+
+  @override
+  String get profileSheetNoReviewsYet => 'No reviews yet.';
+
+  @override
+  String get profileSheetSeeMoreReviews => 'See more';
+
+  @override
+  String get profileSheetProBadge => 'PRO account';
+
+  @override
+  String get profileSheetVerifiedBadge => 'Verified identity';
+
+  @override
+  String get travelerProfileTripsLabel => 'Trips';
+
+  @override
+  String get travelerProfileDeliveryLabel => 'Delivery';
+
+  @override
+  String get travelerProfilePhoneHiddenLabel =>
+      'Number revealed after acceptance';
+
+  @override
+  String get travelerProfileSubscribeLabel => 'Follow this traveler';
+
+  @override
+  String get senderProfilePhoneHiddenLabel =>
+      '📞 Number revealed after acceptance';
+
+  @override
+  String get senderProfilePhoneLoadingLabel => 'Retrieving number…';
+
+  @override
+  String get senderProfileShipmentsLabel => 'Shipments';
+
+  @override
+  String blockMenuEntryLabel(String name) {
+    return 'Block $name';
+  }
+
+  @override
+  String blockSuccessMessage(String name) {
+    return '$name has been blocked';
+  }
+
+  @override
+  String blockConfirmTitle(String name) {
+    return 'Block $name?';
+  }
+
+  @override
+  String get blockConfirmBody =>
+      'They won\'t be able to see your listings or send you offers anymore. You won\'t see theirs either. You can unblock them anytime in Privacy.';
+
+  @override
+  String get blockConfirmButton => 'Block';
+
+  @override
+  String get bidTravelerRoleTag => 'TRAVELER';
+
+  @override
+  String get voyageurCardCallSemanticLabel => 'Call';
+
+  @override
+  String get voyageurCardOpenChatSemanticLabel => 'Open the conversation';
+
+  @override
+  String get negotiationStatusBadgeOpen => 'IN PROGRESS';
+
+  @override
+  String get negotiationStatusBadgeAwaitingTrip => 'AWAITING TRIP';
+
+  @override
+  String get negotiationStatusBadgeAwaitingPayment => 'PAYMENT';
+
+  @override
+  String get negotiationStatusBadgeAwaitingCommission => 'FEE';
+
+  @override
+  String get negotiationStatusBadgeAwaitingDeposit => 'DEPOSIT';
+
+  @override
+  String get negotiationStatusBadgeAccepted => 'ACCEPTED';
+
+  @override
+  String get negotiationStatusBadgeTerminal => 'CLOSED';
+
+  @override
+  String get negotiationStatusPriceLabelOpen => 'CURRENT PRICE';
+
+  @override
+  String get negotiationStatusPriceLabelAwaitingTrip => 'DEAL AGREED';
+
+  @override
+  String get negotiationStatusPriceLabelAwaitingPayment => 'DUE';
+
+  @override
+  String get negotiationStatusPriceLabelAwaitingCommission => 'SERVICE FEE DUE';
+
+  @override
+  String get negotiationStatusPriceLabelAwaitingDeposit =>
+      'DEPOSIT IN PROGRESS';
+
+  @override
+  String get negotiationStatusPriceLabelAccepted => 'REQUEST ACCEPTED';
+
+  @override
+  String get negotiationStatusPriceLabelTerminal => 'FINAL PRICE';
+
+  @override
+  String get negotiationLastRoundWarning =>
+      '⚠ Last round: Accept or Decline only';
+
+  @override
+  String negotiationRoundCounter(int round, int max) {
+    return 'Round $round/$max';
+  }
+
+  @override
+  String get negotiationMessageNewBadge => 'NEW';
+
+  @override
+  String get negotiationMessageKindProposalBadge => 'PROPOSAL';
+
+  @override
+  String get negotiationMessageKindCounterBadge => 'COUNTER-OFFER';
+
+  @override
+  String get negotiationMessageKindRejectedBadge => 'DECLINED';
+
+  @override
+  String get negotiationNudgeSentMessage => 'Reminder sent';
+
+  @override
+  String get negotiationNudgeRateLimitedMessage =>
+      'Already sent a reminder recently';
+
+  @override
+  String get negotiationNudgeGenericErrorMessage =>
+      'Can\'t send a reminder right now, try again later';
+
+  @override
+  String get negotiationOpenAwaitingReplyTitle => 'Waiting for a reply';
+
+  @override
+  String get negotiationOpenAwaitingReplySubtitle =>
+      'You\'ll be notified as soon as the other party replies.';
+
+  @override
+  String get negotiationAwaitingTripSenderTitle =>
+      'The traveler is preparing their trip';
+
+  @override
+  String get negotiationAwaitingTripSenderSubtitle =>
+      'You\'ll be notified as soon as they\'ve confirmed it.';
+
+  @override
+  String get negotiationLinkTripButton => 'Link a trip to this offer';
+
+  @override
+  String get negotiationCreateDedicatedTripButton => 'Create a dedicated trip';
+
+  @override
+  String negotiationCompleteAndPayButton(String amount) {
+    return 'Complete & pay $amount';
+  }
+
+  @override
+  String get negotiationAwaitingPaymentTravelerTitle =>
+      'Waiting for the sender\'s payment';
+
+  @override
+  String get negotiationAwaitingPaymentTravelerSubtitle =>
+      'You\'ll be notified as soon as they\'ve paid.';
+
+  @override
+  String get negotiationAwaitingDepositTravelerTitle =>
+      'The sender is paying by mobile money';
+
+  @override
+  String get negotiationAwaitingDepositTravelerSubtitle =>
+      'You\'ll be notified as soon as the payment is confirmed.';
+
+  @override
+  String get negotiationDepositInProgressTitle =>
+      'Mobile money deposit in progress';
+
+  @override
+  String get negotiationDepositSubtitleDefault =>
+      'Confirm the payment on your phone.';
+
+  @override
+  String get negotiationDepositSubtitleExpired =>
+      'Time\'s up, the thread will go back to “awaiting payment”.';
+
+  @override
+  String negotiationDepositSubtitleExpiring(int minutes) {
+    return 'Confirm the payment on your phone. Expires in $minutes min.';
+  }
+
+  @override
+  String get negotiationResumePaymentButton => 'Resume payment';
+
+  @override
+  String get negotiationChangePaymentMethodButton => 'Change payment method';
+
+  @override
+  String get negotiationAwaitingCommissionSenderTitle =>
+      'Waiting for the traveler\'s confirmation';
+
+  @override
+  String get negotiationAwaitingCommissionSenderSubtitle =>
+      'Your request stays open: you can keep receiving and accepting other offers until they\'ve paid.';
+
+  @override
+  String get negotiationCommissionTravelerBannerTitle =>
+      'Confirm you\'re taking this parcel';
+
+  @override
+  String negotiationCommissionTravelerBannerSubtitle(String amount) {
+    return 'The sender picked your offer. Pay the Yadony service fee ($amount) before the deadline to get this parcel, or another traveler could beat you to it.';
+  }
+
+  @override
+  String get negotiationPayCommissionButton => 'Pay the service fee';
+
+  @override
+  String get negotiationDeclineParcelDialogTitle => 'Give up this parcel?';
+
+  @override
+  String get negotiationDeclineParcelDialogMessage =>
+      'The request will immediately become available to another traveler. This action is final.';
+
+  @override
+  String get negotiationDeclineParcelConfirmButton => 'Give up';
+
+  @override
+  String get negotiationDeclineParcelButton => 'Give up this parcel';
+
+  @override
+  String get negotiationAcceptedPaidTitle => 'Request accepted and paid';
+
+  @override
+  String get negotiationAcceptedTitle => 'Request accepted';
+
+  @override
+  String get negotiationAcceptedPaidSubtitle =>
+      'You can move on to the next tracking steps.';
+
+  @override
+  String get negotiationAcceptedCashSubtitle =>
+      'Payment is made in cash at parcel drop-off.';
+
+  @override
+  String get negotiationAcceptedOtherSubtitle =>
+      'Payment is made at parcel drop-off.';
+
+  @override
+  String get negotiationViewShipmentButton => 'View my shipment';
+
+  @override
+  String get negotiationEndedMessage => 'This negotiation has ended';
+
+  @override
+  String get negotiationNudgeButton => 'Send a reminder';
+
+  @override
+  String negotiationSenderAcceptButton(String amount) {
+    return 'Accept: You pay $amount';
+  }
+
+  @override
+  String get negotiationDeclineButton => 'Decline';
+
+  @override
+  String negotiationTravelerAcceptButton(String amount) {
+    return 'Accept: You receive $amount';
+  }
+
+  @override
+  String get negotiationCommissionCountdownExpired => 'Time\'s up';
+
+  @override
+  String negotiationCommissionCountdownHours(int hours, String minutes) {
+    return '${hours}h ${minutes}min left';
+  }
+
+  @override
+  String negotiationCommissionCountdownMinutes(String minutes, String seconds) {
+    return '$minutes:$seconds left';
+  }
+
+  @override
+  String get negotiationRefuseTripAction => 'Decline this trip';
+
+  @override
+  String get negotiationConfirmRefusalButton => 'Confirm the refusal';
+
+  @override
+  String get negotiationRefuseTripWarning =>
+      'The traveler will need to suggest another trip. This action cannot be undone.';
+
+  @override
+  String get negotiationRefusalReasonLabel => 'Reason for refusal (optional)';
+
+  @override
+  String get negotiationRefusalReasonHint => 'E.g.: wrong date, trip canceled…';
+
+  @override
+  String get negotiationLinkedTripSheetTitle => 'Linked trip';
+
+  @override
+  String get negotiationTripRouteLabel => 'Route';
+
+  @override
+  String get negotiationTripDepartureDateLabel => 'Departure date';
+
+  @override
+  String get negotiationTripDepartureTimeLabel => 'Departure time';
+
+  @override
+  String get negotiationTripAvailableWeightLabel => 'Available weight';
+
+  @override
+  String get negotiationTripPickupAddressLabel => 'Drop-off address';
+
+  @override
+  String get negotiationTripDeliveryAddressLabel => 'Delivery address';
+
+  @override
+  String get negotiationTripTravelerNoteLabel => 'Traveler\'s note';
+
+  @override
+  String get negotiationEndedSnackbar => 'Negotiation ended';
+
+  @override
+  String get negotiationRejectedSnackbar => 'Negotiation declined';
+
+  @override
+  String get negotiationCommissionSettledSnackbar =>
+      'Service fee paid: this parcel is yours!';
+
+  @override
+  String get negotiationGaveUpParcelSnackbar =>
+      'You\'ve given up this parcel, it\'s available to another traveler again.';
+
+  @override
+  String get negotiationFallbackTitle => 'Negotiation';
+
+  @override
+  String get negotiationEndMenuItem => 'End the negotiation';
+
+  @override
+  String get negotiationEndDialogTitle => 'End this negotiation?';
+
+  @override
+  String get negotiationEndDialogMessage => 'This action is final.';
+
+  @override
+  String get negotiationEndDialogConfirmButton => 'End it';
+
+  @override
+  String get negotiationListTitle => 'Price discussions';
+
+  @override
+  String get negotiationEmptyTitle => 'No negotiations';
+
+  @override
+  String get negotiationEmptyDescription =>
+      'Your active negotiations will show up here as soon as a traveler makes an offer.';
+
+  @override
+  String get negotiationSearchHint => 'Traveler, city…';
+
+  @override
+  String negotiationFilterAllCountLabel(int count) {
+    return 'All ($count)';
+  }
+
+  @override
+  String negotiationFilterActiveCountLabel(int count) {
+    return 'In progress ($count)';
+  }
+
+  @override
+  String negotiationFilterTerminalCountLabel(int count) {
+    return 'Completed ($count)';
+  }
+
+  @override
+  String get negotiationEmptyActiveFilter => 'No negotiations in progress';
+
+  @override
+  String get negotiationEmptyTerminalFilter => 'No completed negotiations';
+
+  @override
+  String get negotiationSourcePillRequest => 'Request';
+
+  @override
+  String negotiationTravelerFallbackWithId(String id) {
+    return 'Traveler $id';
+  }
+
+  @override
+  String get negotiationStageDealPending => 'deal';
+
+  @override
+  String get negotiationStageDepositInProgress => 'deposit in progress';
+
+  @override
+  String get negotiationStageCommissionDue => 'service fee due';
+
+  @override
+  String get negotiationStagePaid => 'paid';
+
+  @override
+  String get negotiationTripCardCounterpartyFallback => 'Counterpart';
+
+  @override
+  String negotiationTripCardRoundLabel(int round, String timeAgo) {
+    return 'Round $round · $timeAgo';
+  }
+
+  @override
+  String get negotiationLinkTripScreenTitle => 'Link a trip';
+
+  @override
+  String get negotiationSelectTripLabel => 'Select a trip';
+
+  @override
+  String get negotiationConfirmTripLabel => 'Confirm this trip';
+
+  @override
+  String get negotiationSelectedTripCount => '1 trip';
+
+  @override
+  String negotiationLinkTripDate(String date) {
+    return 'Travel date: $date';
+  }
+
+  @override
+  String negotiationLinkTripKgAvailable(String kg) {
+    return '$kg kg available';
+  }
+
+  @override
+  String negotiationAcceptedAtPriceBanner(String amount) {
+    return 'Request accepted at $amount';
+  }
+
+  @override
+  String get negotiationSenderChoosesAmong => 'The sender will choose from';
+
+  @override
+  String get errorCommissionConfirmFailedTitle => 'Payment not confirmed';
+
+  @override
+  String get errorCommissionConfirmFailedMessage =>
+      'We couldn\'t confirm the payment';
+
+  @override
+  String get errorCommission3dsInterruptedTitle => 'Authentication interrupted';
+
+  @override
+  String get errorCommission3dsInterruptedMessage =>
+      'Bank authentication was interrupted';
+
+  @override
+  String get errorCommissionFailedTitle => 'Payment declined';
+
+  @override
+  String get errorCommissionFailedMessage =>
+      'The service fee payment was declined';
+
+  @override
+  String get errorCommissionFailedNoCardMessage =>
+      'No card is registered to pay the service fee.';
+
+  @override
+  String get errorCommissionFailedCardDeclinedMessage =>
+      'Your card was declined.';
+
+  @override
+  String get errorCommissionFailedStripeErrorMessage =>
+      'Payment service error, please try again.';
+
+  @override
+  String get errorCommissionFailedCardStatusMessage =>
+      'The card payment didn\'t go through.';
+
+  @override
+  String get bidAcceptConfirmFailed => 'Confirmation failed';
+
+  @override
+  String get bidAcceptBankAuthInterrupted =>
+      'Bank authentication was interrupted';
+
+  @override
+  String get bidAcceptRefused => 'Acceptance declined';
+
+  @override
+  String get negotiationMakeOfferTitle => 'Make an offer';
+
+  @override
+  String negotiationMakeOfferTakeAtLabel(String amount) {
+    return 'Take for $amount';
+  }
+
+  @override
+  String get negotiationMakeOfferSendButtonLabel => 'Send offer';
+
+  @override
+  String get negotiationMakeOfferSelectTravelDate => 'Select your travel date';
+
+  @override
+  String get negotiationMakeOfferSelectTrip => 'Select or create a trip';
+
+  @override
+  String get negotiationMakeOfferYourPriceLabel => 'YOUR PRICE';
+
+  @override
+  String get negotiationMakeOfferCapacityLabel => 'CAPACITY';
+
+  @override
+  String get negotiationMakeOfferTravelDateLabel => 'TRAVEL DATE';
+
+  @override
+  String get negotiationMakeOfferSelectDatePlaceholder => 'Select…';
+
+  @override
+  String get negotiationMakeOfferMessageLabel => 'MESSAGE';
+
+  @override
+  String get negotiationMakeOfferMessageOptional => 'optional';
+
+  @override
+  String get negotiationMakeOfferMessageHint =>
+      'I\'m traveling on that exact day…';
+
+  @override
+  String get negotiationMakeOfferInvalidPrice => 'Invalid';
+
+  @override
+  String get negotiationMakeOfferOfferSentSnackbar => 'Offer sent';
+
+  @override
+  String get negotiationMakeOfferMarketPriceLabel => 'Market price';
+
+  @override
+  String get negotiationPaySecurelyTitle => 'Pay securely';
+
+  @override
+  String get negotiationAcceptOfferTitle => 'Accept the offer';
+
+  @override
+  String get negotiationProcessingLabel => 'Processing…';
+
+  @override
+  String negotiationAcceptOfferPayButtonLabel(String amount) {
+    return 'Pay ($amount)';
+  }
+
+  @override
+  String negotiationAcceptOfferConfirmButtonLabel(String amount) {
+    return 'Confirm ($amount)';
+  }
+
+  @override
+  String get negotiationAcceptOfferPaymentContextTraveler =>
+      'Payment for the accepted offer';
+
+  @override
+  String get negotiationAcceptOfferPaymentContextSender =>
+      'Payment for your offer';
+
+  @override
+  String get negotiationOfferAcceptedPaidTitle => 'Offer accepted and paid!';
+
+  @override
+  String get negotiationOfferAcceptedPaidSubtitle =>
+      'Your money is held and secured, the traveler only receives it once delivery is confirmed. Track your parcel from the thread.';
+
+  @override
+  String get negotiationTrackShipmentCta => 'Track your shipment';
+
+  @override
+  String get negotiationAcceptOfferAgreedSubtitleSender =>
+      'You\'ve agreed on the price. The traveler will confirm their trip, then you\'ll finalize the shipment details and payment from the thread.';
+
+  @override
+  String get negotiationAcceptOfferAgreedSubtitleTravelerLinked =>
+      'You\'ve agreed on the price. The sender will finalize the shipment details and payment, you\'ll be notified at every step.';
+
+  @override
+  String get negotiationAcceptOfferAgreedSubtitleTravelerUnlinked =>
+      'You\'ve agreed on the price. Next step: link or create a trip for this offer so the sender can finalize the payment.';
+
+  @override
+  String get negotiationAgreementConfirmedTitle => 'Agreement confirmed!';
+
+  @override
+  String get negotiationGenericErrorSnackbar =>
+      'Something went wrong. Please try again.';
+
+  @override
+  String get negotiationPriceBreakdownPaidBySender =>
+      'Price paid by the sender';
+
+  @override
+  String get negotiationPriceBreakdownNetTraveler => 'Traveler net';
+
+  @override
+  String get negotiationPriceBreakdownYouReceive => 'You receive';
+
+  @override
+  String get negotiationPriceBreakdownTotalToSettle => 'Total to settle';
+
+  @override
+  String get negotiationPriceBreakdownPromoBadge => 'Promo';
+
+  @override
+  String negotiationAcceptOfferInfoTraveler(String price) {
+    return 'By accepting, the sender will make the payment. You\'ll receive $price once delivery is confirmed, regardless of any promo code the sender uses.';
+  }
+
+  @override
+  String get negotiationAcceptOfferInfoSender =>
+      'By confirming, the payment is held and secured. The traveler receives the amount once delivery is confirmed.';
+
+  @override
+  String get negotiationCounterOfferTitle => 'Make a counter-offer';
+
+  @override
+  String negotiationCounterOfferSubtitle(String priceLabel, int round) {
+    return '$priceLabel · Round $round/5';
+  }
+
+  @override
+  String get negotiationCounterOfferYourPriceLabel => 'Your proposed price';
+
+  @override
+  String get negotiationCounterOfferMessageLabel => 'Message (optional)';
+
+  @override
+  String get negotiationCounterOfferMessageHint => 'Explain your offer…';
+
+  @override
+  String get negotiationRejectTitle => 'Decline the negotiation';
+
+  @override
+  String get negotiationRejectConfirmLabel => 'Confirm decline';
+
+  @override
+  String get negotiationRejectReasonLabel => 'Reason (optional)';
+
+  @override
+  String get negotiationPaymentRecapConfirmAgreementTitle =>
+      'Confirm the agreement';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyTitle => 'Pay by mobile money';
+
+  @override
+  String negotiationPaymentRecapPayButtonLabel(String amount) {
+    return 'Pay $amount';
+  }
+
+  @override
+  String negotiationPaymentRecapPayMobileMoneyButton(String amount) {
+    return 'Pay $amount by mobile money';
+  }
+
+  @override
+  String get negotiationPaymentRecapContextConfirm =>
+      'Confirming the agreement';
+
+  @override
+  String get negotiationPaymentRecapContextSecure => 'Secure payment';
+
+  @override
+  String get negotiationPaymentRecapCashSuccessSubtitle =>
+      'Cash payment: you hand the amount to the traveler in person, at parcel drop-off. If canceled after drop-off, Yadony can\'t refund you immediately but will make sure the traveler gives your money back.';
+
+  @override
+  String get negotiationPaymentRecapCashHandoverLabel =>
+      'To hand over to the traveler (in cash)';
+
+  @override
+  String get negotiationPaymentRecapCashFeeNote =>
+      'including Yadony fees (paid by the traveler)';
+
+  @override
+  String get negotiationPaymentRecapCashNetLabel => 'The traveler keeps net';
+
+  @override
+  String get negotiationPaymentRecapTravelerReceivesLabel =>
+      'The traveler receives';
+
+  @override
+  String get negotiationPaymentRecapServiceFeeLabel => 'Yadony service fee';
+
+  @override
+  String get negotiationPaymentRecapTotalToPayLabel => 'Total to pay';
+
+  @override
+  String get negotiationPaymentRecapCashNote =>
+      'Hand over the full amount in cash to the traveler at parcel drop-off. The traveler will deduct their Yadony fees from that amount.';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyNote =>
+      'A payment request arrives on the number shown below. The traveler receives the amount only after delivery is confirmed.';
+
+  @override
+  String get negotiationPaymentRecapSecureNote =>
+      'The amount is held and secured. The traveler receives it only after delivery is confirmed.';
+
+  @override
+  String get negotiationPaymentRecapCashBannerMessage =>
+      'Cash payment in person at drop-off';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyBannerMessage =>
+      'You confirm the payment on your phone. Yadony holds the money and only releases it to the traveler once delivery is confirmed.';
+
+  @override
+  String get negotiationPaymentRecapSecureBannerMessage =>
+      'Secure · held until delivery';
+
+  @override
+  String get negotiationCommissionSettlementTitle => 'Insufficient balance';
+
+  @override
+  String get negotiationCommissionSettlementHint =>
+      'Top up your wallet or pay the service fee directly by card.';
+
+  @override
+  String get negotiationCommissionSettlementTopupButton => 'Top up my wallet';
+
+  @override
+  String get negotiationCommissionSettlementPayCardButton => 'Pay by card';
+
+  @override
+  String get negotiationCommissionSettlementAddCardButton => 'Add a card';
+
+  @override
+  String get negotiationCardCapabilityRequiredTitle => 'Card payment required';
+
+  @override
+  String get negotiationCardCapabilityUnavailableTitle => 'Parcel unavailable';
+
+  @override
+  String get negotiationCardCapabilityRequiredBody =>
+      'The sender only accepts card payment for this parcel. Activate card payments to link this trip.';
+
+  @override
+  String get negotiationCardCapabilityUnavailableBody =>
+      'The sender only accepts card payment for this parcel, and Stripe doesn\'t yet support opening a payment account from your country. You can link parcels paid in cash.';
+
+  @override
+  String get negotiationCardCapabilityActivateButton =>
+      'Activate card payments';
+
+  @override
+  String get negotiationCardCapabilityUnderstoodButton => 'Got it';
+
+  @override
+  String negotiationCardRoundShortLabel(int round, String timeAgo) {
+    return 'Rd. $round/5 · $timeAgo';
+  }
+
+  @override
+  String get negotiationMakeOfferConfidenceHigh => 'high';
+
+  @override
+  String get negotiationMakeOfferConfidenceMedium => 'medium';
+
+  @override
+  String get negotiationMakeOfferConfidenceLow => 'low';
+
+  @override
+  String get profileSheetRatingLabel => 'Rating';
 }

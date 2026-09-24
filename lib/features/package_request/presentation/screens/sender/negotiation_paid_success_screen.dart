@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,12 +20,12 @@ class NegotiationPaidSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return DonySuccessScreen(
       mascotteType: DonyMascotteType.securise,
-      title: 'Offre acceptée et payée !',
-      subtitle:
-          'Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
-      ctaLabel: 'Voir le suivi',
+      title: l.negotiationOfferAcceptedPaidTitle,
+      subtitle: l.negotiationOfferAcceptedPaidSubtitle,
+      ctaLabel: l.negotiationTrackShipmentCta,
       onCta: () => context.go('/negotiations/$threadId'),
       analyticsContext: 'negotiation_payment',
     );

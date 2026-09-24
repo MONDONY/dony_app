@@ -37,13 +37,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
   }
 
   Future<bool> _confirmDelete({bool isCancelled = false}) async {
+    final l = context.l10n;
     final confirmed = await DonyDialog.show(
       context,
-      title: 'Supprimer ce trajet ?',
+      title: l.listingDeleteTripConfirmTitle,
       message: isCancelled
-          ? 'Cette action est irréversible. Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.'
-          : 'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.',
-      confirmLabel: 'Supprimer',
+          ? l.listingDeleteTripCancelledMessage
+          : l.listingDeleteTripActiveMessage,
+      confirmLabel: l.commonDelete,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'trash-2',
     );
@@ -56,13 +57,13 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Détail du trajet'),
+      appBar: DonyAppBar(title: context.l10n.listingTripDetailTitle),
       body: BlocConsumer<AnnouncementBloc, AnnouncementState>(
         listener: (context, state) {
           if (state is AnnouncementDeleted) {
             DonySnackbar.show(
               context,
-              message: 'Trajet supprimé',
+              message: context.l10n.listingTripDeletedMessage,
               type: DonySnackbarType.success,
             );
             // Toujours retourner explicitement sur "Mes trajets" pour éviter
@@ -73,7 +74,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           } else if (state is AnnouncementNotFound) {
             DonySnackbar.show(
               context,
-              message: 'Cette annonce n\'existe plus',
+              message: context.l10n.listingAnnouncementGoneMessage,
               type: DonySnackbarType.warning,
             );
             if (context.canPop()) {
@@ -117,6 +118,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
     TextTheme tt,
     AnnouncementDetailLoaded state,
   ) {
+    final l = context.l10n;
     final a = state.announcement;
     final canEdit = a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0;
     final isCancelled = a.status == 'CANCELLED';
@@ -157,7 +159,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                       DonyIcon('plane-takeoff', color: cs.onPrimary, size: 20),
                       const SizedBox(width: DonySpacing.sm),
                       Text(
-                        'Trajet',
+                        l.listingHeroTripLabel,
                         style: tt.bodySmall?.copyWith(
                           color: cs.onPrimary.withValues(alpha: 0.7),
                         ),
@@ -208,7 +210,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                       Text(
                         DateFormat(
                           'EEEE d MMMM yyyy',
-                          AppL10n.localeName,
+                          l.localeName,
                         ).format(a.departureDate),
                         style: tt.bodySmall?.copyWith(
                           color: cs.onPrimary.withValues(alpha: 0.85),
@@ -286,7 +288,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Lieux de remise',
+                      l.listingPickupLocationsTitle,
                       style: tt.labelMedium?.copyWith(
                         color: cs.onSurfaceVariant,
                         letterSpacing: 0.5,
@@ -354,7 +356,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Dépôt des colis',
+                            l.listingHandoverDeadlineTitle,
                             style: tt.labelMedium?.copyWith(
                               color: cs.onSurfaceVariant,
                               letterSpacing: 0.5,
@@ -362,7 +364,11 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           ),
                           const SizedBox(height: DonySpacing.xs),
                           Text(
-                            'Jusqu\'au ${DateFormat('EEE d MMM', AppL10n.localeName).format(a.handoverDeadline!.toLocal())}',
+                            l.listingHandoverUntil(
+                              DateFormat.MMMEd(
+                                l.localeName,
+                              ).format(a.handoverDeadline!.toLocal()),
+                            ),
                             style: tt.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w500,
                               color: cs.onSurface,
@@ -384,9 +390,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                 Expanded(
                   child: _StatCard(
                     iconName: 'scale',
-                    label: 'Capacité dispo.',
+                    label: l.listingCapacityAvailableLabel,
                     value: a.capacityUnit == 'KG_FREE'
-                        ? 'Kg libre'
+                        ? l.tripKgFree
                         : '${a.availableKg.toStringAsFixed(0)} kg',
                     color: DonyColors.blue800,
                     cs: cs,
@@ -398,17 +404,17 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   child: _StatCard(
                     iconName: 'euro',
                     label: a.pricingMode == 'MIXED'
-                        ? 'Tarification'
-                        : 'Prix par kg',
+                        ? l.listingPricingModeLabel
+                        : l.listingPricePerKgLabel,
                     // Garde sur hasKgPrice (valeur > 0), pas sur la seule
                     // nullité de pricePerKg : en mode KG celui-ci n'est en
                     // pratique jamais null (écran propriétaire, authentifié),
                     // c'est bien 0 qui serait la valeur trompeuse à écarter.
                     value: a.pricingMode == 'MIXED'
-                        ? 'Grille'
+                        ? l.listingPriceGridShort
                         : (a.hasKgPrice && a.pricePerKg != null)
                         ? '${formatPriceIn(a.pricePerKg!, a.currency)}/kg'
-                        : 'Indisponible',
+                        : l.listingPriceUnavailableShort,
                     color: cs.primary,
                     cs: cs,
                     tt: tt,
@@ -418,7 +424,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                 Expanded(
                   child: _StatCard(
                     iconName: 'inbox',
-                    label: 'Demandes',
+                    label: l.shellRequestsTitle,
                     value: '${a.bidsCount ?? 0}',
                     color: DonyColors.violet,
                     cs: cs,
@@ -433,7 +439,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
             // Voir les demandes — toujours visible si le statut est ACTIVE
             if (a.status == 'ACTIVE') ...[
               DonyButton(
-                label: 'Voir les demandes (${a.bidsCount ?? 0})',
+                label: l.listingSeeRequestsButton(a.bidsCount ?? 0),
                 iconAsset: 'inbox',
                 onPressed: () => context.push('/announcements/${a.id}/bids'),
               ).animate().fadeIn(delay: 150.ms),
@@ -442,7 +448,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
 
             if (canEdit) ...[
               DonyButton(
-                label: 'Modifier ce trajet',
+                label: l.listingEditTripButton,
                 iconAsset: 'square-pen',
                 variant: DonyButtonVariant.secondary,
                 onPressed: () =>
@@ -453,7 +459,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
 
             if (!canDelete && a.status == 'ACTIVE') ...[
               DonyButton(
-                label: 'Annuler ce trajet',
+                label: l.listingCancelTripButton,
                 iconAsset: 'circle-x',
                 variant: DonyButtonVariant.destructive,
                 onPressed: () =>
@@ -464,7 +470,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
 
             if (canDelete)
               DonyButton(
-                label: 'Supprimer ce trajet',
+                label: l.listingDeleteTripButton,
                 iconAsset: 'trash-2',
                 variant: DonyButtonVariant.destructive,
                 onPressed: () async {
@@ -493,7 +499,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     const SizedBox(width: DonySpacing.sm),
                     Expanded(
                       child: Text(
-                        'Ce trajet ne peut plus être modifié.',
+                        l.listingTripLockedMessage,
                         style: tt.bodySmall?.copyWith(
                           color: DonyColors.amberDark,
                         ),
@@ -521,11 +527,12 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final (color, label) = switch (status) {
-      'ACTIVE' => (cs.success, 'Actif'),
-      'FULL' => (cs.warning, 'Complet'),
-      'COMPLETED' => (DonyColors.blue700, 'Terminé'),
-      'CANCELLED' => (cs.error, 'Annulé'),
+      'ACTIVE' => (cs.success, l.listingStatusActive),
+      'FULL' => (cs.warning, l.listingStatusFull),
+      'COMPLETED' => (DonyColors.blue700, l.listingStatusCompleted),
+      'CANCELLED' => (cs.error, l.listingStatusCancelled),
       _ => (cs.onSurfaceVariant, status),
     };
     return Container(

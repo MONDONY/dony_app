@@ -11,8 +11,95 @@ Map<String, String> _messages(String path) {
   };
 }
 
-Set<String> _placeholders(String message) =>
-    RegExp(r'\{(\w+)[,}]').allMatches(message).map((m) => m.group(1)!).toSet();
+/// Extrait les paramètres ICU d'un message : les `{nom}` simples — y compris
+/// ceux imbriqués dans une branche de pluriel/select — et le nom de variable
+/// d'un `{nom, plural, ...}` / `{nom, select, ...}` / `{nom, selectordinal,
+/// ...}`.
+///
+/// Exclusion structurelle (pas une heuristique sur la casse) : le texte
+/// d'une branche (`=0{…}`, `zero{…}`, `one{…}`, `few{…}`, `many{…}`,
+/// `other{…}`, ou un cas de `select`) n'est jamais un paramètre — seul son
+/// contenu est réanalysé pour d'éventuels paramètres imbriqués. Avant cette
+/// exclusion structurelle, une branche à un seul mot sans espace
+/// (`=0{Rechercher}`) était prise pour un placeholder nommé "Rechercher".
+Set<String> _placeholders(String message) {
+  final result = <String>{};
+  _scanIcuMessage(message, result);
+  return result;
+}
+
+/// Repère chaque `{...}` de plus haut niveau dans [text] : son contenu est
+/// soit `nom`, soit `nom, type, style`. Le nom est ajouté ; si le type est
+/// `plural`, `select` ou `selectordinal`, le style est délégué à
+/// [_scanIcuBranches] plutôt que traité comme un message ordinaire.
+void _scanIcuMessage(String text, Set<String> result) {
+  var i = 0;
+  while (i < text.length) {
+    if (text[i] != '{') {
+      i++;
+      continue;
+    }
+    final end = _matchingBrace(text, i);
+    if (end == -1) break;
+    final body = text.substring(i + 1, end);
+    final commaIndex = body.indexOf(',');
+    if (commaIndex == -1) {
+      final name = body.trim();
+      if (RegExp(r'^\w+$').hasMatch(name)) result.add(name);
+    } else {
+      final name = body.substring(0, commaIndex).trim();
+      if (RegExp(r'^\w+$').hasMatch(name)) result.add(name);
+      final rest = body.substring(commaIndex + 1);
+      final typeMatch = RegExp(
+        r'^\s*(plural|select|selectordinal)\s*,(.*)$',
+        dotAll: true,
+      ).firstMatch(rest);
+      if (typeMatch != null) {
+        _scanIcuBranches(typeMatch.group(2)!, result);
+      } else {
+        // Format number/date avec un skeleton : pas de branches à parcourir,
+        // mais un skeleton ne contient normalement pas de paramètre imbriqué.
+        _scanIcuMessage(rest, result);
+      }
+    }
+    i = end + 1;
+  }
+}
+
+/// Parcourt une suite de branches `selecteur{message}` (`=0{…}`, `zero{…}`,
+/// `one{…}`, `few{…}`, `many{…}`, `other{…}`, ou un cas de `select`). Le
+/// sélecteur lui-même n'est jamais un paramètre ; seul le contenu de chaque
+/// `{message}` est réanalysé via [_scanIcuMessage] pour ses éventuels
+/// paramètres imbriqués.
+void _scanIcuBranches(String text, Set<String> result) {
+  var i = 0;
+  while (i < text.length) {
+    if (text[i].trim().isEmpty) {
+      i++;
+      continue;
+    }
+    final braceIdx = text.indexOf('{', i);
+    if (braceIdx == -1) break;
+    final end = _matchingBrace(text, braceIdx);
+    if (end == -1) break;
+    _scanIcuMessage(text.substring(braceIdx + 1, end), result);
+    i = end + 1;
+  }
+}
+
+/// Index de la `}` qui referme la `{` à [openIndex], en tenant compte des
+/// accolades imbriquées. `-1` si le message est malformé.
+int _matchingBrace(String text, int openIndex) {
+  var depth = 0;
+  for (var i = openIndex; i < text.length; i++) {
+    if (text[i] == '{') depth++;
+    if (text[i] == '}') {
+      depth--;
+      if (depth == 0) return i;
+    }
+  }
+  return -1;
+}
 
 /// Clés dont l'anglais est volontairement identique au français.
 /// Toute nouvelle entrée doit être justifiée en commentaire.
@@ -52,6 +139,17 @@ const _sameInBothLanguages = <String>{
   'requestPreviewPhotos', // gabarit identique, seul le pluriel ICU varie
   'requestPreviewPhotosLabel', // « Photos » se dit pareil
   'requestCreateRecapTransport', // « Transport » se dit pareil
+  'listingProBadge', // « PRO » se dit pareil
+  'listingRowLabelNote', // « Note » se dit pareil
+  'listingKiloProChip', // nom de fonctionnalité, identique en anglais
+  'listingRowLabelDate', // « Date » se dit pareil
+  'bidCreateMobileMoneySubtitle', // « Orange Money, Wave, MTN » : noms de marque
+  'bidCreateTotalLabel', // « Total » se dit pareil
+  'bidCreatePromoBadge', // « Promo » se dit pareil
+  'negotiationRoundCounter', // « Round » déjà utilisé tel quel en français
+  'negotiationMakeOfferMessageLabel', // « MESSAGE » se dit pareil
+  'negotiationPriceBreakdownPromoBadge', // « Promo » se dit pareil
+  'negotiationCounterOfferSubtitle', // gabarit identique, « Round » déjà utilisé tel quel en français
 };
 
 void main() {
@@ -92,5 +190,40 @@ void main() {
       if (_sameInBothLanguages.contains(key)) continue;
       expect(en[key], isNot(fr[key]), reason: key);
     }
+  });
+
+  group('_placeholders (extraction ICU)', () {
+    test('pluriel : le texte des branches n\'est pas un paramètre', () {
+      expect(
+        _placeholders(
+          '{count, plural, =0{aucun} =1{{count} colis} other{{count} colis}}',
+        ),
+        {'count'},
+      );
+    });
+
+    test('placeholder simple imbriqué dans du texte', () {
+      expect(_placeholders('Bonjour {name}'), {'name'});
+    });
+
+    test('select : seule sa variable est un paramètre, jamais ses cas', () {
+      expect(
+        _placeholders('{gender, select, male{He} female{She} other{They}}'),
+        {'gender'},
+      );
+    });
+
+    test('aucun placeholder dans un texte fixe', () {
+      expect(_placeholders('Faire une demande'), isEmpty);
+    });
+
+    test('plusieurs paramètres distincts, y compris imbriqués', () {
+      expect(
+        _placeholders(
+          '{first} et {rest, plural, =1{{rest} autre} other{{rest} autres}}',
+        ),
+        {'first', 'rest'},
+      );
+    });
   });
 }

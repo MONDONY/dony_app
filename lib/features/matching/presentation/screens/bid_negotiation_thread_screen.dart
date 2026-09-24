@@ -16,6 +16,7 @@ import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -126,7 +127,7 @@ class _BidNegotiationThreadScreenState
     if (!authenticated) {
       DonySnackbar.show(
         context,
-        message: 'Paiement non confirmé, réessayez',
+        message: context.l10n.negotiationThreadPaymentNotConfirmed,
         type: DonySnackbarType.error,
       );
       return;
@@ -140,7 +141,7 @@ class _BidNegotiationThreadScreenState
         currencyCode: state.currencyCode,
         paymentMethodTypes: state.paymentMethodTypes,
       ),
-      contextLabel: 'Prix négocié de votre colis',
+      contextLabel: context.l10n.negotiationThreadPaymentContextLabel,
       onSuccess: () async {
         // AUCUNE garde `context.mounted` avant la confirmation : elle ne
         // dépend d'aucun BuildContext, et la subordonner au montage de l'écran
@@ -184,7 +185,7 @@ class _BidNegotiationThreadScreenState
           builder: (context, state) {
             final negotiation = _threadOf(state);
             return DonyPageScaffold(
-              title: 'Discussion de prix',
+              title: context.l10n.negotiationThreadTitle,
               onBack: () => context.pop(),
               // Le fil défile et garde l'inset clavier ; un chargement ou une
               // erreur, eux, doivent occuper toute la hauteur pour rester
@@ -201,10 +202,10 @@ class _BidNegotiationThreadScreenState
                   : switch (state) {
                       BidNegotiationError(:final error) => DonyEmptyState(
                         key: const Key('nego-error'),
-                        title: 'Discussion indisponible',
+                        title: context.l10n.negotiationThreadErrorTitle,
                         description: ErrorPresenter.resolve(error).message,
                         type: DonyEmptyStateType.error,
-                        actionLabel: 'Réessayer',
+                        actionLabel: context.l10n.commonRetry,
                         onAction: () => context.read<BidNegotiationBloc>().add(
                           BidNegotiationFetchRequested(widget.bidId),
                         ),
@@ -266,7 +267,9 @@ class _AmountHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isTraveler ? 'Vous recevriez' : 'Vous paieriez',
+            isTraveler
+                ? context.l10n.negotiationThreadYouWouldReceive
+                : context.l10n.negotiationThreadYouWouldPay,
             style: tt.bodySmall?.copyWith(color: cs.onPrimaryContainer),
           ),
           const SizedBox(height: DonySpacing.xxs),
@@ -280,7 +283,10 @@ class _AmountHeader extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            'Tour ${negotiation.round} sur ${negotiation.maxRounds}',
+            context.l10n.negotiationThreadRoundLabel(
+              negotiation.round,
+              negotiation.maxRounds,
+            ),
             style: tt.bodySmall?.copyWith(color: cs.onPrimaryContainer),
           ),
         ],
@@ -304,7 +310,7 @@ class _ParcelSummary extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Le colis',
+          context.l10n.negotiationThreadParcelSectionTitle,
           style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: DonySpacing.md),
@@ -405,7 +411,7 @@ class _MessagesTimeline extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Échanges',
+          context.l10n.negotiationThreadExchangesTitle,
           style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: DonySpacing.md),
@@ -421,7 +427,7 @@ class _MessagesTimeline extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _kindLabel(message.kind),
+                  _kindLabel(context.l10n, message.kind),
                   style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 if (message.proposedGrossEur != null) ...[
@@ -445,11 +451,14 @@ class _MessagesTimeline extends StatelessWidget {
     );
   }
 
-  static String _kindLabel(BidNegotiationMessageKind kind) => switch (kind) {
-    BidNegotiationMessageKind.proposal => 'Proposition',
-    BidNegotiationMessageKind.counter => 'Contre-offre',
-    BidNegotiationMessageKind.accept => 'Acceptée',
-    BidNegotiationMessageKind.reject => 'Refusée',
+  static String _kindLabel(
+    AppLocalizations l,
+    BidNegotiationMessageKind kind,
+  ) => switch (kind) {
+    BidNegotiationMessageKind.proposal => l.negotiationThreadKindProposal,
+    BidNegotiationMessageKind.counter => l.negotiationThreadKindCounter,
+    BidNegotiationMessageKind.accept => l.negotiationThreadKindAccepted,
+    BidNegotiationMessageKind.reject => l.negotiationThreadKindRejected,
   };
 }
 
@@ -475,28 +484,26 @@ class _ThreadActions extends StatelessWidget {
     // Le `status` distingue les deux aval, et lui seul : `AWAITING_PAYMENT`
     // pour un accord réglé par carte, `PENDING` pour un accord en espèces où
     // c'est le voyageur qui règle la commission Yadony.
+    final l = context.l10n;
+
     if (negotiation.isAwaitingCardPayment) {
       if (negotiation.needsMyPayment) {
         final bloc = context.read<BidNegotiationBloc>();
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            hint(
-              'Prix accepté. Réglez maintenant pour réserver votre place, '
-                  'le montant reste bloqué jusqu\'à la livraison.',
-              'nego-pay-hint',
-            ),
+            hint(l.negotiationThreadPayHint, 'nego-pay-hint'),
             const SizedBox(height: DonySpacing.sm),
             DonyButton(
               key: const Key('nego-pay-btn'),
-              label: 'Payer',
+              label: l.negotiationThreadPayButton,
               onPressed: () => bloc.add(BidNegotiationCheckoutRequested(bidId)),
             ),
           ],
         );
       }
       return hint(
-        'Prix accepté. En attente du paiement de l\'expéditeur.',
+        l.negotiationThreadAwaitingSenderPaymentHint,
         'nego-awaiting-payment-hint',
       );
     }
@@ -504,21 +511,22 @@ class _ThreadActions extends StatelessWidget {
     if (negotiation.isAwaitingCashSettlement) {
       return hint(
         negotiation.isTravelerView
-            ? 'Prix accepté. Paiement en espèces, il vous reste à régler la '
-                  'commission Yadony.'
-            : 'Prix accepté. Paiement en espèces, en attente du voyageur, '
-                  'vous n\'avez rien à régler ici.',
+            ? l.negotiationThreadCashTravelerHint
+            : l.negotiationThreadCashSenderHint,
         'nego-awaiting-traveler-hint',
       );
     }
 
     if (negotiation.isClosed) {
-      return hint(_closedLabel(negotiation), 'nego-closed-hint');
+      return hint(_closedLabel(l, negotiation), 'nego-closed-hint');
     }
 
     if (!negotiation.myTurn) {
       return hint(
-        'En attente de la réponse de ${negotiation.counterpartyName ?? 'votre interlocuteur'}.',
+        l.negotiationThreadWaitingForReply(
+          negotiation.counterpartyName ??
+              l.negotiationThreadCounterpartyFallback,
+        ),
         'nego-waiting-hint',
       );
     }
@@ -529,13 +537,13 @@ class _ThreadActions extends StatelessWidget {
       children: [
         DonyButton(
           key: const Key('nego-accept-btn'),
-          label: 'Accepter',
+          label: l.negotiationThreadAcceptButton,
           onPressed: () => bloc.add(BidNegotiationAcceptRequested(bidId)),
         ),
         const SizedBox(height: DonySpacing.sm),
         DonyButton(
           key: const Key('nego-counter-btn'),
-          label: 'Contre-proposer',
+          label: l.negotiationThreadCounterButton,
           variant: DonyButtonVariant.secondary,
           // Au plafond de tours, seules l'acceptation et le refus restent
           // ouverts : le serveur refuserait toute nouvelle contre-offre.
@@ -553,7 +561,7 @@ class _ThreadActions extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         DonyButton(
           key: const Key('nego-reject-btn'),
-          label: 'Refuser',
+          label: l.negotiationThreadRejectButton,
           variant: DonyButtonVariant.ghost,
           onPressed: () => bloc.add(BidNegotiationRejectRequested(bidId)),
         ),
@@ -569,17 +577,16 @@ class _ThreadActions extends StatelessWidget {
   /// n'est posé que lorsqu'une des deux parties ferme, jamais par le balayage
   /// d'expiration. Son absence signe donc une péremption. On teste sa présence
   /// plutôt que le dernier message, pour ne dépendre d'aucun ordre de tri.
-  static String _closedLabel(BidNegotiation negotiation) =>
+  static String _closedLabel(AppLocalizations l, BidNegotiation negotiation) =>
       switch (negotiation.status) {
-        'ACCEPTED' =>
-          'Prix accepté. Rendez-vous sur votre colis pour la suite.',
+        'ACCEPTED' => l.negotiationThreadClosedAccepted,
         'NEGOTIATION_CLOSED' =>
           negotiation.messages.any(
                 (m) => m.kind == BidNegotiationMessageKind.reject,
               )
-              ? 'Proposition refusée.'
-              : 'Proposition expirée.',
-        _ => 'Négociation terminée.',
+              ? l.negotiationThreadClosedRejected
+              : l.negotiationThreadClosedExpired,
+        _ => l.negotiationThreadClosedDefault,
       };
 }
 
@@ -593,20 +600,20 @@ abstract final class CounterProposalSheet {
     required String bidId,
     required BidNegotiation negotiation,
   }) {
+    final l = context.l10n;
     final submitNotifier = ValueNotifier<VoidCallback?>(null);
 
     return DonyBottomSheet.show<void>(
       context,
-      title: 'Contre-proposer',
+      title: l.negotiationThreadCounterButton,
       // Jamais « en euros » : la devise est celle du trajet, figée à sa
       // publication, et le champ la porte déjà dans son libellé.
-      subtitle:
-          'Indiquez le montant total que vous proposez. Votre interlocuteur pourra l\'accepter ou répondre à son tour.',
+      subtitle: l.negotiationThreadCounterSubtitle,
       stickyBottom: ValueListenableBuilder<VoidCallback?>(
         valueListenable: submitNotifier,
         builder: (_, submit, _) => DonyButton(
           key: const Key('nego-counter-submit'),
-          label: 'Envoyer ma contre-offre',
+          label: l.negotiationThreadCounterSubmitButton,
           onPressed: submit,
         ),
       ),
@@ -689,14 +696,16 @@ class _CounterProposalFormState extends State<_CounterProposalForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         DonyTextField(
           key: const Key('nego-counter-amount'),
           controller: _amountCtrl,
-          label:
-              'Montant proposé (${SupportedCurrency.symbolOf(widget.currencyCode)})',
+          label: l.negotiationThreadCounterAmountLabel(
+            SupportedCurrency.symbolOf(widget.currencyCode),
+          ),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           requiredLabel: true,
         ),
@@ -704,8 +713,8 @@ class _CounterProposalFormState extends State<_CounterProposalForm> {
         DonyTextField(
           key: const Key('nego-counter-body'),
           controller: _bodyCtrl,
-          label: 'Message (facultatif)',
-          hint: 'Expliquez votre proposition',
+          label: l.negotiationThreadCounterMessageLabel,
+          hint: l.negotiationThreadCounterMessageHint,
           maxLines: 3,
           minLines: 2,
         ),

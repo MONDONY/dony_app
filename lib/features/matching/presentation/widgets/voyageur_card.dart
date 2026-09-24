@@ -1,11 +1,13 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -23,14 +25,15 @@ class VoyageurCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final name = bid.travelerName ?? 'Voyageur';
+    final l = context.l10n;
+    final name = bid.travelerName ?? l.tripTravelerFallbackName;
     final canOpenProfile = bid.travelerId != null;
 
     final ratingLabel = bid.travelerAverageRating != null
         ? '★ ${bid.travelerAverageRating!.toStringAsFixed(1)}'
         : '★ -';
     final tripsLabel = bid.travelerTotalTrips != null
-        ? '· ${bid.travelerTotalTrips} trajet${bid.travelerTotalTrips! > 1 ? 's' : ''}'
+        ? '· ${travelerTripsCount(l, bid.travelerTotalTrips!)}'
         : '';
 
     return InkWell(
@@ -55,7 +58,7 @@ class VoyageurCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'VOYAGEUR',
+              l.bidTravelerRoleTag,
               style: tt.labelSmall?.copyWith(
                 color: cs.onSurfaceVariant,
                 letterSpacing: 0.8,
@@ -91,15 +94,15 @@ class VoyageurCard extends StatelessWidget {
                           if (bid.travelerKycVerified) ...[
                             const SizedBox(width: DonySpacing.xs),
                             MiniChip(
-                              label: 'Identité',
+                              label: l.listingIdentityBadge,
                               color: cs.primary,
                               bg: cs.primaryContainer,
                             ),
                           ],
                           if (bid.travelerKiloPro) ...[
                             const SizedBox(width: DonySpacing.xs),
-                            const MiniChip(
-                              label: 'Kilo Pro',
+                            MiniChip(
+                              label: l.listingKiloProChip,
                               color: DonyColors.amberDark,
                               bg: DonyColors.amberLight,
                             ),
@@ -119,7 +122,7 @@ class VoyageurCard extends StatelessWidget {
                 // Actions
                 _IconActionButton(
                   iconAsset: 'phone',
-                  semanticLabel: 'Appeler',
+                  semanticLabel: l.voyageurCardCallSemanticLabel,
                   onTap: () {},
                 ),
                 const SizedBox(width: DonySpacing.sm),
@@ -128,7 +131,7 @@ class VoyageurCard extends StatelessWidget {
                     final isOpening = openState is ConversationOpenLoading;
                     return _IconActionButton(
                       iconAsset: 'message-circle',
-                      semanticLabel: 'Ouvrir la discussion',
+                      semanticLabel: l.voyageurCardOpenChatSemanticLabel,
                       isLoading: isOpening,
                       onTap: isOpening
                           ? null

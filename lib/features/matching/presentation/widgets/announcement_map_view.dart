@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
@@ -14,6 +15,7 @@ import 'package:dony/features/matching/presentation/widgets/marker_clustering.da
 import 'package:dony/features/matching/presentation/widgets/marker_urgency.dart';
 import 'package:dony/features/matching/presentation/widgets/same_address_announcements_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -104,22 +106,37 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   bool _awaitingFirstLocation = false;
   // Cached brightness — updated in didChangeDependencies (safe to read in initState-triggered async work).
   Brightness _brightness = Brightness.light;
+  // Cached langue — le libellé de grille tarifaire dessiné sur les marqueurs
+  // (gridLabel) dépend de la langue ; sans ce suivi, un changement de langue
+  // en session laisserait les marqueurs déjà construits dans l'ancienne
+  // langue jusqu'au prochain critère de rebuild (zoom, sélection...).
+  String _localeName = 'fr';
   // Improvement A: signature guard to skip redundant re-clustering.
   String? _lastMarkerSignature;
 
   @override
   void initState() {
     super.initState();
-    _prewarmCommonIcons();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initLocationOnOpen());
+    // `_prewarmCommonIcons` construit des marqueurs via `_buildMarker`, qui
+    // lit `context.l10n` (le libellé de grille tarifaire) : un `Localizations`
+    // ne peut pas être consulté avant la fin de `initState`, d'où le report
+    // en post-frame, comme `_initLocationOnOpen` juste en dessous.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_prewarmCommonIcons());
+      _initLocationOnOpen();
+    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final newBrightness = Theme.of(context).brightness;
-    if (newBrightness != _brightness) {
+    final newLocaleName = context.l10n.localeName;
+    final brightnessChanged = newBrightness != _brightness;
+    final localeChanged = newLocaleName != _localeName;
+    if (brightnessChanged || localeChanged) {
       _brightness = newBrightness;
+      _localeName = newLocaleName;
       _rebuildMarkers();
     }
   }
@@ -239,6 +256,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       ..write(widget.selectedAnnouncementId)
       ..write('|b=')
       ..write(_brightness.index)
+      ..write('|l=')
+      ..write(_localeName)
       ..write('|c=')
       ..write(cellDegForZoom(_currentZoom));
     return buf.toString();
@@ -315,6 +334,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           brightness: _brightness,
           prefix: '✈️',
           currencyCode: cheapestItem.announcement.currency,
+          gridLabel: context.l10n.listingPriceGridShort,
         );
         return Marker(
           markerId: MarkerId(
@@ -354,6 +374,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       brightness: _brightness,
       prefix: '✈️',
       currencyCode: item.announcement.currency,
+      gridLabel: context.l10n.listingPriceGridShort,
     );
     return Marker(
       markerId: MarkerId('${item.side.name}_${item.announcement.id}'),
@@ -396,7 +417,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
         builder: (_) => SameAddressAnnouncementsSheet(
-          addressLabel: addr?.label ?? 'Adresse',
+          addressLabel: addr?.label ?? context.l10n.listingAddressFallback,
           announcements: cluster.items.map((it) => it.announcement).toList(),
           currentUserId: currentUserId,
           onTap: (a) {
@@ -549,10 +570,11 @@ class _NearMeFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Tooltip(
       message: isActive
-          ? 'Désactiver « Près de moi »'
-          : 'Voir les voyageurs près de moi',
+          ? l.listingNearMeDeactivateTooltip
+          : l.listingNearMeActivateTooltip,
       child: GestureDetector(
         onTap: isLoading ? null : onTap,
         child: AnimatedContainer(

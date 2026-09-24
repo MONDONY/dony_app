@@ -377,11 +377,4 @@ class BidModel {
       deliveryNoShowStatus == null &&
       resolvedDepartureAt != null &&
       DateTime.now().isAfter(resolvedDepartureAt!);
-
-  /// Nom à afficher pour l'expéditeur. Le téléphone ne sert plus de repli : il
-  /// n'est plus dans la réponse, et un numéro affiché en guise de nom se lisait mal.
-  String get resolvedSenderName {
-    if (senderName != null && senderName!.isNotEmpty) return senderName!;
-    return 'Expéditeur';
-  }
 }

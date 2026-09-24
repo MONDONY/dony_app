@@ -2,8 +2,10 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 /// Opens a confirmation bottom sheet asking the sender for a refusal reason.
 /// Calls [onConfirm] with the (optional) reason when confirmed.
@@ -20,13 +22,14 @@ class _RefuseTripConfirmSheet extends StatefulWidget {
     required void Function(String? reason) onConfirm,
   }) {
     final reasonNotifier = ValueNotifier<String>('');
+    final l = context.l10n;
     return DonyBottomSheet.show(
       context,
-      title: 'Refuser ce trajet',
+      title: l.negotiationRefuseTripAction,
       stickyBottom: ValueListenableBuilder<String>(
         valueListenable: reasonNotifier,
         builder: (_, reason, _) => DonyButton(
-          label: 'Confirmer le refus',
+          label: l.negotiationConfirmRefusalButton,
           variant: DonyButtonVariant.destructive,
           onPressed: () {
             Navigator.of(context, rootNavigator: true).pop();
@@ -58,6 +61,7 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -77,7 +81,7 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Text(
-                  'Le voyageur devra proposer un autre trajet. Cette action est irréversible.',
+                  l.negotiationRefuseTripWarning,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     color: kError,
@@ -90,7 +94,7 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
         ),
         const SizedBox(height: DonySpacing.lg),
         Text(
-          'Raison du refus (optionnel)',
+          l.negotiationRefusalReasonLabel,
           style: GoogleFonts.plusJakartaSans(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -104,7 +108,7 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
           maxLength: 280,
           maxLines: 3,
           decoration: InputDecoration(
-            hintText: 'Ex : date incorrecte, trajet annulé…',
+            hintText: l.negotiationRefusalReasonHint,
             hintStyle: GoogleFonts.plusJakartaSans(
               fontSize: 14,
               color: kTextHint,
@@ -154,12 +158,13 @@ class TripDetailBottomSheet extends StatelessWidget {
     required bool isSender,
     void Function(String? reason)? onRefuse,
   }) {
+    final l = context.l10n;
     DonyBottomSheet.show(
       context,
-      title: 'Trajet lié',
+      title: l.negotiationLinkedTripSheetTitle,
       stickyBottom: isSender
           ? DonyButton(
-              label: 'Refuser ce trajet',
+              label: l.negotiationRefuseTripAction,
               variant: DonyButtonVariant.destructive,
               onPressed: () {
                 // Close details sheet first, then open confirmation.
@@ -183,6 +188,7 @@ class TripDetailBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,42 +196,42 @@ class TripDetailBottomSheet extends StatelessWidget {
       children: [
         _InfoRow(
           icon: _iconForMode(trip.transportMode),
-          label: 'Itinéraire',
+          label: l.negotiationTripRouteLabel,
           value: '${trip.departureCity} → ${trip.arrivalCity}',
         ),
         if (trip.departureDate != null)
           _InfoRow(
             icon: '📅',
-            label: 'Date de départ',
-            value: _formatDate(trip.departureDate!),
+            label: l.negotiationTripDepartureDateLabel,
+            value: _formatDate(l, trip.departureDate!),
           ),
         if (trip.departureTime != null)
           _InfoRow(
             icon: '🕐',
-            label: 'Heure de départ',
+            label: l.negotiationTripDepartureTimeLabel,
             value: trip.departureTime!,
           ),
         _InfoRow(
           icon: '⚖️',
-          label: 'Poids disponible',
-          value: trip.isKgFree ? 'Kg libre' : '${trip.availableKg} kg',
+          label: l.negotiationTripAvailableWeightLabel,
+          value: trip.isKgFree ? l.tripKgFree : '${trip.availableKg} kg',
         ),
         if (trip.pickupAddressLabel != null)
           _InfoRow(
             icon: '📍',
-            label: 'Adresse de remise',
+            label: l.negotiationTripPickupAddressLabel,
             value: trip.pickupAddressLabel!,
           ),
         if (trip.deliveryAddressLabel != null)
           _InfoRow(
             icon: '🏠',
-            label: 'Adresse de livraison',
+            label: l.negotiationTripDeliveryAddressLabel,
             value: trip.deliveryAddressLabel!,
           ),
         if (trip.description != null && trip.description!.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Note du voyageur',
+            l.negotiationTripTravelerNoteLabel,
             style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.xs),
@@ -248,28 +254,33 @@ class TripDetailBottomSheet extends StatelessWidget {
     }
   }
 
-  String _formatDate(String isoDate) {
-    try {
-      final d = DateTime.parse(isoDate);
-      const months = [
-        '',
-        'jan',
-        'fév',
-        'mar',
-        'avr',
-        'mai',
-        'juin',
-        'juil',
-        'août',
-        'sep',
-        'oct',
-        'nov',
-        'déc',
-      ];
-      return '${d.day} ${months[d.month]} ${d.year}';
-    } catch (_) {
-      return isoDate;
+  /// Rendu historique sans point après le mois abrégé (« 6 oct 2026 »).
+  /// Le squelette intl `yMMMd` rend « 6 oct. 2026 » en français (point
+  /// compris dans les données de locale) : remplacer changerait le texte
+  /// affiché, donc le français garde cette liste manuelle. L'anglais n'a pas
+  /// de rendu antérieur à préserver et utilise directement le squelette.
+  String _formatDate(AppLocalizations l, String isoDate) {
+    final d = DateTime.tryParse(isoDate);
+    if (d == null) return isoDate;
+    if (l.localeName != 'fr') {
+      return DateFormat.yMMMd(l.localeName).format(d);
     }
+    const months = [
+      '',
+      'jan',
+      'fév',
+      'mar',
+      'avr',
+      'mai',
+      'juin',
+      'juil',
+      'août',
+      'sep',
+      'oct',
+      'nov',
+      'déc',
+    ];
+    return '${d.day} ${months[d.month]} ${d.year}';
   }
 }
 

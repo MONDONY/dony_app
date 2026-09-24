@@ -5,6 +5,8 @@ import 'package:dony/features/matching/presentation/widgets/announcement_preview
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 Widget _app({required VoidCallback onConfirm, VoidCallback? onSaveDraft}) =>
     MaterialApp(
       home: Scaffold(
@@ -80,5 +82,18 @@ void main() {
 
     expect(find.text('Publier l\'annonce'), findsOneWidget);
     expect(find.text('Enregistrer comme brouillon'), findsNothing);
+  });
+
+  testWidgets('en anglais : boutons Publier/Enregistrer traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(_app(onConfirm: () {}, onSaveDraft: () {}));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Post the listing'), findsOneWidget);
+    expect(find.text('Save as draft'), findsOneWidget);
+    expect(find.text('Publier l\'annonce'), findsNothing);
   });
 }

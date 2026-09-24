@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -25,9 +26,10 @@ Future<void> showCommissionSettlementSheet(
   CommissionShortfall? breakdown,
 }) {
   final cs = Theme.of(context).colorScheme;
+  final l = context.l10n;
   return DonyBottomSheet.show<void>(
     context,
-    title: 'Solde insuffisant',
+    title: l.negotiationCommissionSettlementTitle,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -51,7 +53,7 @@ Future<void> showCommissionSettlementSheet(
         ],
         const SizedBox(height: 8),
         Text(
-          'Recharge ton portefeuille ou paie la commission directement par carte.',
+          l.negotiationCommissionSettlementHint,
           style: Theme.of(
             context,
           ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -62,7 +64,7 @@ Future<void> showCommissionSettlementSheet(
       mainAxisSize: MainAxisSize.min,
       children: [
         DonyButton(
-          label: 'Recharger mon portefeuille',
+          label: l.negotiationCommissionSettlementTopupButton,
           onPressed: () async {
             context.pop();
             // /topup/method est le point d'entrée correct : il compose le
@@ -79,7 +81,7 @@ Future<void> showCommissionSettlementSheet(
         if (hasCard) ...[
           const SizedBox(height: 8),
           DonyButton(
-            label: 'Payer par carte',
+            label: l.negotiationCommissionSettlementPayCardButton,
             variant: DonyButtonVariant.secondary,
             onPressed: () {
               context.pop();
@@ -89,7 +91,7 @@ Future<void> showCommissionSettlementSheet(
         ] else ...[
           const SizedBox(height: 8),
           DonyButton(
-            label: 'Ajouter une carte',
+            label: l.negotiationCommissionSettlementAddCardButton,
             variant: DonyButtonVariant.secondary,
             onPressed: () async {
               context.pop();

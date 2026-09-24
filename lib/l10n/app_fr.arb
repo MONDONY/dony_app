@@ -1705,7 +1705,6 @@
   "@tripPublishLockedCapacityNote": {
     "description": "Note sous la capacité verrouillée (flux trajet dédié)"
   },
-
   "addressGpsPosition": "Position GPS ({lat}, {lng})",
   "@addressGpsPosition": {
     "description": "Libellé de repli utilisé comme adresse quand le géocodage inverse échoue : coordonnées brutes formatées (address_labels.dart)",
@@ -1858,7 +1857,6 @@
   "@addressSelectorDeliverySubtitle": {
     "description": "Sous-titre de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)"
   },
-
   "tripPosterTimePattern": "HH'h'mm",
   "@tripPosterTimePattern": {
     "description": "Motif intl DateFormat, pas un texte : heure de l'échéance de l'affiche du trajet (trip_poster_card.dart)"
@@ -2046,7 +2044,6 @@
   "@tripPosterSaveButton": {
     "description": "Bouton d'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)"
   },
-
   "errorAnnouncementUpdateBlockedTitle": "Modification impossible",
   "@errorAnnouncementUpdateBlockedTitle": {
     "description": "Titre du catalogue d'erreurs pour le code announcement-update-blocked : modification refusée car des colis sont déjà acceptés (error_catalog.dart, announcement_bloc.dart)"
@@ -2055,7 +2052,6 @@
   "@errorAnnouncementUpdateBlockedMessage": {
     "description": "Message du catalogue d'erreurs pour le code announcement-update-blocked (error_catalog.dart, announcement_bloc.dart)"
   },
-
   "tripTemplateListTitle": "Mes modèles de trajet",
   "@tripTemplateListTitle": {
     "description": "Titre de l'écran liste des modèles de trajet (trip_templates_screen.dart)"
@@ -2105,7 +2101,6 @@
   "@tripTemplateScheduleRecurrenceAction": {
     "description": "Entrée du menu d'une carte modèle pour programmer sa récurrence (trip_templates_screen.dart)"
   },
-
   "tripTemplateNameSectionLabel": "NOM DU MODÈLE",
   "@tripTemplateNameSectionLabel": {
     "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
@@ -2205,7 +2200,6 @@
   "@tripTemplateSavedMessage": {
     "description": "Confirmation après création d'un nouveau modèle (trip_template_edit_screen.dart)"
   },
-
   "tripTemplateRecurrenceActivatedMessage": "Récurrence activée. Tes trajets seront publiés automatiquement.",
   "@tripTemplateRecurrenceActivatedMessage": {
     "description": "Confirmation après activation d'une récurrence (trip_recurrence_edit_screen.dart)"
@@ -2315,7 +2309,6 @@
   "@contentCategoryRemove": {
     "description": "Libellé d'accessibilité du bouton de suppression d'un tag catégorie (content_category_selector.dart)"
   },
-
   "paymentMethodCard": "Carte",
   "@paymentMethodCard": {
     "description": "Libellé affiché du moyen de paiement STRIPE (package_request_labels.dart)"
@@ -2328,7 +2321,6 @@
   "@paymentMethodMobileMoney": {
     "description": "Libellé affiché du moyen de paiement MOBILE_MONEY (package_request_labels.dart) — identique dans les deux langues"
   },
-
   "requestThreadYouReceive": "Tu reçois {amount}",
   "@requestThreadYouReceive": {
     "description": "Prix net vu par le voyageur dans le fil de négociation (package_request_labels.dart)",
@@ -2367,7 +2359,6 @@
   "@requestBudgetRequired": {
     "description": "Erreur de soumission de l'étape 3 du wizard de demande sans budget saisi (package_request_form_bloc.dart)"
   },
-
   "requestTimeJustNow": "{verb, select, created{créée à l'instant} other{publiée à l'instant}}",
   "@requestTimeJustNow": {
     "description": "Libellé relatif : demande créée/publiée à l'instant (request_time_label.dart)",
@@ -2429,7 +2420,6 @@
   "@contentCategoryHintDefault": {
     "description": "Texte d'indication par défaut du champ de sélection de catégories, quand l'appelant ne le surcharge pas (content_category_selector.dart)"
   },
-
   "requestCreateEditWarningTitle": "Modifier votre demande ?",
   "@requestCreateEditWarningTitle": {
     "description": "Titre du dialogue de confirmation avant d'éditer une demande en négociation (package_request_create_screen.dart)"
@@ -2514,7 +2504,6 @@
   "@requestCreatePreviewButton": {
     "description": "Libellé du CTA sticky à la dernière étape, avant soumission (package_request_create_screen.dart)"
   },
-
   "requestCreateDepartureRequired": "Ville de départ obligatoire",
   "@requestCreateDepartureRequired": {
     "description": "Erreur de validation : ville de départ manquante (step_1_trajet_colis.dart)"
@@ -2602,7 +2591,6 @@
       }
     }
   },
-
   "requestCreateMaxCategories": "Maximum {max} catégories",
   "@requestCreateMaxCategories": {
     "description": "Erreur : nombre maximal de catégories dépassé (step_2_details.dart)",
@@ -2664,7 +2652,6 @@
   "@requestCreateWeightInvalid": {
     "description": "Erreur de validation : poids non numérique (step_2_details.dart)"
   },
-
   "requestCreateBudgetSubtitle": "Vérifiez votre demande, puis indiquez le budget à montrer aux voyageurs.",
   "@requestCreateBudgetSubtitle": {
     "description": "Sous-titre de l'étape 3 (step_3_recap_budget.dart)"
@@ -2790,7 +2777,6 @@
   "@requestCreateChangeCurrency": {
     "description": "Lien de modification de la devise, dans la ligne du sélecteur (step_3_recap_budget.dart)"
   },
-
   "requestCreatePhotoUnsupported": "Image non supportée ou trop volumineuse",
   "@requestCreatePhotoUnsupported": {
     "description": "Erreur affichée quand la photo choisie est refusée (package_request_photo_section.dart)"
@@ -2844,7 +2830,6 @@
   "@requestCreateRemovePhoto": {
     "description": "Libellé d'accessibilité du bouton de suppression d'une photo (package_request_photo_section.dart)"
   },
-
   "requestCreateCompleteDetailsTitle": "Vérifie & complète",
   "@requestCreateCompleteDetailsTitle": {
     "description": "Titre de l'app bar de l'écran de complétion avant paiement (complete_details_screen.dart)"
@@ -2917,7 +2902,6 @@
   "@requestCreateRecapPrice": {
     "description": "Libellé de la ligne prix de la carte récapitulative (complete_details_screen.dart)"
   },
-
   "requestDetailTitle": "Ma demande",
   "@requestDetailTitle": {
     "description": "Titre de l'écran et de la sheet « Ma demande » (package_request_detail_screen.dart)"
@@ -3896,5 +3880,2488 @@
   "requestCreateRecapPackage": "Colis",
   "@requestCreateRecapPackage": {
     "description": "Libellé de la ligne colis (poids) de la carte récapitulative de l'étape 3 (wizard_summary_card.dart)"
+  },
+  "listingDeleteTripConfirmTitle": "Supprimer ce trajet ?",
+  "@listingDeleteTripConfirmTitle": {
+    "description": "Titre de la confirmation de suppression d'un trajet (announcement_detail_screen.dart, announcement_list_screen.dart)"
+  },
+  "listingDeleteTripCancelledMessage": "Cette action est irréversible. Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.",
+  "@listingDeleteTripCancelledMessage": {
+    "description": "Message de confirmation de suppression d'un trajet annulé (announcement_detail_screen.dart, announcement_list_screen.dart)"
+  },
+  "listingDeleteTripActiveMessage": "Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.",
+  "@listingDeleteTripActiveMessage": {
+    "description": "Message de confirmation de suppression d'un trajet actif (announcement_detail_screen.dart)"
+  },
+  "listingTripDetailTitle": "Détail du trajet",
+  "@listingTripDetailTitle": {
+    "description": "Titre de l'écran/feuille détail du trajet (announcement_detail_screen.dart, traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingTripDeletedMessage": "Trajet supprimé",
+  "@listingTripDeletedMessage": {
+    "description": "Confirmation après suppression d'un trajet (announcement_detail_screen.dart)"
+  },
+  "listingAnnouncementGoneMessage": "Cette annonce n'existe plus",
+  "@listingAnnouncementGoneMessage": {
+    "description": "Message affiché quand l'annonce a disparu (announcement_detail_screen.dart)"
+  },
+  "listingHeroTripLabel": "Trajet",
+  "@listingHeroTripLabel": {
+    "description": "Petit libellé au-dessus du corridor dans la carte héro (announcement_detail_screen.dart), et libellé de ligne « Trajet » de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingPickupLocationsTitle": "Lieux de remise",
+  "@listingPickupLocationsTitle": {
+    "description": "Titre de la section adresses de remise/récupération (announcement_detail_screen.dart, announcement_detail_body.dart)"
+  },
+  "listingHandoverDeadlineTitle": "Dépôt des colis",
+  "@listingHandoverDeadlineTitle": {
+    "description": "Titre de la section date limite de dépôt (announcement_detail_screen.dart, announcement_detail_body.dart)"
+  },
+  "listingCapacityAvailableLabel": "Capacité dispo.",
+  "@listingCapacityAvailableLabel": {
+    "description": "Libellé de la carte statistique capacité disponible (announcement_detail_screen.dart)"
+  },
+  "listingPricingModeLabel": "Tarification",
+  "@listingPricingModeLabel": {
+    "description": "Libellé de la carte statistique en mode grille (announcement_detail_screen.dart)"
+  },
+  "listingPricePerKgLabel": "Prix par kg",
+  "@listingPricePerKgLabel": {
+    "description": "Libellé de la carte statistique prix au kg (announcement_detail_screen.dart)"
+  },
+  "listingPriceGridShort": "Grille",
+  "@listingPriceGridShort": {
+    "description": "Valeur compacte affichée en mode grille tarifaire (announcement_detail_screen.dart, announcement_detail_body.dart, marker_bitmap_factory.dart via announcement_map_view.dart)"
+  },
+  "listingPriceUnavailableShort": "Indisponible",
+  "@listingPriceUnavailableShort": {
+    "description": "Valeur compacte quand le prix au kg est indisponible (announcement_detail_screen.dart)"
+  },
+  "listingSeeRequestsButton": "Voir les demandes ({count})",
+  "@listingSeeRequestsButton": {
+    "description": "Bouton d'accès aux demandes reçues, avec leur nombre (announcement_detail_screen.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingEditTripButton": "Modifier ce trajet",
+  "@listingEditTripButton": {
+    "description": "Bouton de modification d'un trajet (announcement_detail_screen.dart)"
+  },
+  "listingCancelTripButton": "Annuler ce trajet",
+  "@listingCancelTripButton": {
+    "description": "Bouton d'annulation d'un trajet (announcement_detail_screen.dart)"
+  },
+  "listingDeleteTripButton": "Supprimer ce trajet",
+  "@listingDeleteTripButton": {
+    "description": "Bouton de suppression d'un trajet (announcement_detail_screen.dart)"
+  },
+  "listingTripLockedMessage": "Ce trajet ne peut plus être modifié.",
+  "@listingTripLockedMessage": {
+    "description": "Message quand un trajet passé n'est plus modifiable (announcement_detail_screen.dart)"
+  },
+  "listingStatusActive": "Actif",
+  "@listingStatusActive": {
+    "description": "Badge de statut ACTIVE d'un trajet (announcement_detail_screen.dart, trip_card.dart)"
+  },
+  "listingStatusFull": "Complet",
+  "@listingStatusFull": {
+    "description": "Badge de statut FULL d'un trajet (announcement_detail_screen.dart, trip_card.dart)"
+  },
+  "listingStatusCompleted": "Terminé",
+  "@listingStatusCompleted": {
+    "description": "Badge de statut COMPLETED d'un trajet (announcement_detail_screen.dart, trip_card.dart)"
+  },
+  "listingStatusCancelled": "Annulé",
+  "@listingStatusCancelled": {
+    "description": "Badge de statut CANCELLED d'un trajet (announcement_detail_screen.dart, trip_card.dart)"
+  },
+  "listingHandoverUntil": "Jusqu'au {date}",
+  "@listingHandoverUntil": {
+    "description": "Date limite de dépôt affichée en toutes lettres (announcement_detail_screen.dart, announcement_detail_body.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "listingSearchDestinationHint": "Rechercher une destination…",
+  "@listingSearchDestinationHint": {
+    "description": "Placeholder du champ de recherche de « Mes trajets » (announcement_list_screen.dart)"
+  },
+  "listingFilterAllChip": "Tous",
+  "@listingFilterAllChip": {
+    "description": "Chip de filtre statut « Tous » (announcement_list_screen.dart)"
+  },
+  "listingFilterDraftsChip": "Brouillons",
+  "@listingFilterDraftsChip": {
+    "description": "Chip de filtre statut « Brouillons » (announcement_list_screen.dart)"
+  },
+  "listingFilterActiveChip": "Actifs",
+  "@listingFilterActiveChip": {
+    "description": "Chip de filtre statut « Actifs » (announcement_list_screen.dart)"
+  },
+  "listingFilterCompletedChip": "Terminés",
+  "@listingFilterCompletedChip": {
+    "description": "Chip de filtre statut « Terminés » (announcement_list_screen.dart)"
+  },
+  "listingFilterCancelledChip": "Annulés",
+  "@listingFilterCancelledChip": {
+    "description": "Chip de filtre statut « Annulés » (announcement_list_screen.dart)"
+  },
+  "listingHeaderTitle": "Mes trajets",
+  "@listingHeaderTitle": {
+    "description": "Titre de l'en-tête de l'écran « Mes trajets » (announcement_list_screen.dart)"
+  },
+  "listingNewTripPill": "+ Nouveau",
+  "@listingNewTripPill": {
+    "description": "Pill de création d'un nouveau trajet (announcement_list_screen.dart)"
+  },
+  "listingLoadErrorTitle": "Impossible de charger vos trajets",
+  "@listingLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur de chargement (announcement_list_screen.dart)"
+  },
+  "listingEmptyNoTripsTitle": "Aucun trajet à venir",
+  "@listingEmptyNoTripsTitle": {
+    "description": "Titre de l'état vide sans aucun trajet (announcement_list_screen.dart)"
+  },
+  "listingEmptyDraftTitle": "Aucun brouillon",
+  "@listingEmptyDraftTitle": {
+    "description": "Titre de l'état vide filtré sur les brouillons (announcement_list_screen.dart)"
+  },
+  "listingEmptyActiveTitle": "Aucun trajet actif",
+  "@listingEmptyActiveTitle": {
+    "description": "Titre de l'état vide filtré sur les trajets actifs (announcement_list_screen.dart)"
+  },
+  "listingEmptyCompletedTitle": "Aucun historique",
+  "@listingEmptyCompletedTitle": {
+    "description": "Titre de l'état vide filtré sur les trajets terminés (announcement_list_screen.dart)"
+  },
+  "listingEmptyCancelledTitle": "Aucune annulation",
+  "@listingEmptyCancelledTitle": {
+    "description": "Titre de l'état vide filtré sur les trajets annulés (announcement_list_screen.dart)"
+  },
+  "listingEmptyAllTitle": "Aucun trajet trouvé",
+  "@listingEmptyAllTitle": {
+    "description": "Titre de l'état vide sans résultat de recherche (announcement_list_screen.dart)"
+  },
+  "listingEmptyNoTripsDesc": "Publiez votre premier trajet et commencez à transporter des colis.",
+  "@listingEmptyNoTripsDesc": {
+    "description": "Description de l'état vide sans aucun trajet (announcement_list_screen.dart)"
+  },
+  "listingEmptyDraftDesc": "Vos trajets enregistrés sans publication apparaîtront ici.",
+  "@listingEmptyDraftDesc": {
+    "description": "Description de l'état vide filtré sur les brouillons (announcement_list_screen.dart)"
+  },
+  "listingEmptyActiveDesc": "Vos trajets en cours et à venir apparaîtront ici.",
+  "@listingEmptyActiveDesc": {
+    "description": "Description de l'état vide filtré sur les trajets actifs (announcement_list_screen.dart)"
+  },
+  "listingEmptyCompletedDesc": "Vos trajets passés et terminés apparaîtront ici.",
+  "@listingEmptyCompletedDesc": {
+    "description": "Description de l'état vide filtré sur les trajets terminés (announcement_list_screen.dart)"
+  },
+  "listingEmptyCancelledDesc": "Vos trajets annulés apparaîtront ici.",
+  "@listingEmptyCancelledDesc": {
+    "description": "Description de l'état vide filtré sur les trajets annulés (announcement_list_screen.dart)"
+  },
+  "listingEmptyAllDesc": "Aucun trajet ne correspond à votre recherche.",
+  "@listingEmptyAllDesc": {
+    "description": "Description de l'état vide sans résultat de recherche (announcement_list_screen.dart)"
+  },
+  "listingHeroTripLabelCaps": "TRAJET",
+  "@listingHeroTripLabelCaps": {
+    "description": "Petit libellé capitalisé au-dessus du corridor (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingCapacityAvailableSuffix": "disponibles",
+  "@listingCapacityAvailableSuffix": {
+    "description": "Libellé secondaire de la pastille capacité disponible (announcement_detail_body.dart)"
+  },
+  "listingPricingSuffixTarifaire": "tarifaire",
+  "@listingPricingSuffixTarifaire": {
+    "description": "Libellé secondaire de la pastille prix en mode grille (announcement_detail_body.dart)"
+  },
+  "listingPricingSuffixPrix": "prix",
+  "@listingPricingSuffixPrix": {
+    "description": "Libellé secondaire de la pastille prix au kilo (announcement_detail_body.dart)"
+  },
+  "listingAcceptedParcels": "{count, plural, =1{colis accepté} other{colis acceptés}}",
+  "@listingAcceptedParcels": {
+    "description": "Nombre de colis acceptés sur le trajet (announcement_detail_body.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingPendingParcelsLabel": "en attente",
+  "@listingPendingParcelsLabel": {
+    "description": "Libellé secondaire du compteur de demandes en attente (announcement_detail_body.dart)"
+  },
+  "listingPaymentsAcceptedTitle": "Paiements acceptés",
+  "@listingPaymentsAcceptedTitle": {
+    "description": "Titre de la section moyens de paiement acceptés (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingCashOnlyNudgeMessage": "Trajet en espèces uniquement. Beaucoup d'expéditeurs préfèrent payer par carte, activez cette option pour augmenter vos chances de recevoir des colis.",
+  "@listingCashOnlyNudgeMessage": {
+    "description": "Message incitant le voyageur à activer la carte quand seul le cash est accepté (announcement_detail_body.dart)"
+  },
+  "listingActivateCardPaymentsButton": "Activer les paiements par carte",
+  "@listingActivateCardPaymentsButton": {
+    "description": "Bouton d'activation des paiements par carte (announcement_detail_body.dart)"
+  },
+  "listingAcceptedContentTitle": "Ce que j'accepte",
+  "@listingAcceptedContentTitle": {
+    "description": "Titre de la section contenus acceptés (announcement_detail_body.dart)"
+  },
+  "listingRefusedContentTitle": "Ce que je refuse",
+  "@listingRefusedContentTitle": {
+    "description": "Titre de la section contenus refusés (announcement_detail_body.dart)"
+  },
+  "listingSenderNoteTitle": "Note aux expéditeurs",
+  "@listingSenderNoteTitle": {
+    "description": "Titre de la note libre du voyageur à destination des expéditeurs (announcement_detail_body.dart)"
+  },
+  "listingBadgeActive": "● ACTIF",
+  "@listingBadgeActive": {
+    "description": "Badge de statut compact ACTIVE (announcement_detail_body.dart)"
+  },
+  "listingBadgeDraft": "✎ BROUILLON",
+  "@listingBadgeDraft": {
+    "description": "Badge de statut compact DRAFT (announcement_detail_body.dart)"
+  },
+  "listingBadgeFull": "● COMPLET",
+  "@listingBadgeFull": {
+    "description": "Badge de statut compact FULL (announcement_detail_body.dart)"
+  },
+  "listingBadgeInProgress": "● EN COURS",
+  "@listingBadgeInProgress": {
+    "description": "Badge de statut compact IN_PROGRESS (announcement_detail_body.dart)"
+  },
+  "listingBadgeCompleted": "✓ TERMINÉ",
+  "@listingBadgeCompleted": {
+    "description": "Badge de statut compact COMPLETED (announcement_detail_body.dart)"
+  },
+  "listingBadgeCancelled": "✕ ANNULÉ",
+  "@listingBadgeCancelled": {
+    "description": "Badge de statut compact CANCELLED (announcement_detail_body.dart)"
+  },
+  "listingReservedKgLabel": "{kg} kg réservés",
+  "@listingReservedKgLabel": {
+    "description": "Répartition kg réservés d'un trajet dédié au surplus (announcement_detail_body.dart)",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "listingOpenKgLabel": "{kg} kg ouverts",
+  "@listingOpenKgLabel": {
+    "description": "Répartition kg ouverts au public d'un trajet dédié au surplus (announcement_detail_body.dart)",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "listingPickupParcelTitleShort": "Remise colis",
+  "@listingPickupParcelTitleShort": {
+    "description": "Libellé court de la ligne remise du colis (announcement_detail_body.dart)"
+  },
+  "listingDeliveryPickupTitle": "Récupération",
+  "@listingDeliveryPickupTitle": {
+    "description": "Libellé de la ligne récupération du colis (announcement_detail_body.dart, traveler_announcement_bottom_sheet.dart, announcement_preview_sheet.dart)"
+  },
+  "listingAlreadyHasParcelMessage": "Vous avez déjà un colis sur ce trajet",
+  "@listingAlreadyHasParcelMessage": {
+    "description": "Message quand l'expéditeur a déjà un colis actif sur ce trajet (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingSeeMyParcelButton": "Voir mon colis",
+  "@listingSeeMyParcelButton": {
+    "description": "Bouton vers le colis déjà en cours sur ce trajet (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingMakeRequestButton": "Faire une demande",
+  "@listingMakeRequestButton": {
+    "description": "Bouton principal de demande de transport (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingNegotiableTripPrefix": "Trajet négociable · ",
+  "@listingNegotiableTripPrefix": {
+    "description": "Préfixe avant le lien de négociation de prix (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingProposePriceLink": "Proposer un prix",
+  "@listingProposePriceLink": {
+    "description": "Lien d'entrée en négociation de prix (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingPricePerKiloLabel": "par kilo",
+  "@listingPricePerKiloLabel": {
+    "description": "Libellé secondaire de la carte prix au kilo (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingApproxPricePerKg": "environ {price}/kg",
+  "@listingApproxPricePerKg": {
+    "description": "Équivalent converti « environ » du prix au kilo (traveler_announcement_bottom_sheet.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "listingApproxPrice": "environ {price}",
+  "@listingApproxPrice": {
+    "description": "Équivalent converti « environ » d'un article de la grille (traveler_announcement_bottom_sheet.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "listingDepositDeadlineLabel": "date limite de dépôt",
+  "@listingDepositDeadlineLabel": {
+    "description": "Libellé secondaire de la carte date limite de dépôt (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingPriceGridLabel": "Grille tarifaire",
+  "@listingPriceGridLabel": {
+    "description": "Titre de la carte grille tarifaire (traveler_announcement_bottom_sheet.dart, trip_card.dart, traveler_card.dart)"
+  },
+  "listingItemCount": "{count, plural, =1{{count} article} other{{count} articles}}",
+  "@listingItemCount": {
+    "description": "Nombre d'articles de la grille tarifaire (traveler_announcement_bottom_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingPricePerItemTitle": "Tarif par article",
+  "@listingPricePerItemTitle": {
+    "description": "Titre de la liste des tarifs à l'article (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingSeeAllPricesButton": "Voir tous les tarifs ({count})",
+  "@listingSeeAllPricesButton": {
+    "description": "Bouton de dépliage de la liste des tarifs (traveler_announcement_bottom_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingPickupParcelTitle": "Remise du colis",
+  "@listingPickupParcelTitle": {
+    "description": "Titre de la ligne remise du colis (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingReportTripLink": "Signaler ce trajet",
+  "@listingReportTripLink": {
+    "description": "Lien de signalement du trajet (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingBlockTravelerLink": "Bloquer ce voyageur",
+  "@listingBlockTravelerLink": {
+    "description": "Lien de blocage du voyageur (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingFavoriteAddedMessage": "Trajet ajouté aux favoris",
+  "@listingFavoriteAddedMessage": {
+    "description": "Confirmation d'ajout aux favoris (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingFavoriteRemovedMessage": "Trajet retiré des favoris",
+  "@listingFavoriteRemovedMessage": {
+    "description": "Confirmation de retrait des favoris (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingFavoriteToggleErrorMessage": "Impossible de modifier les favoris",
+  "@listingFavoriteToggleErrorMessage": {
+    "description": "Erreur lors du basculement d'un favori (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingKgAvailableLabel": "{kg} kg dispo",
+  "@listingKgAvailableLabel": {
+    "description": "Capacité disponible compacte (traveler_announcement_bottom_sheet.dart, traveler_card.dart)",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "listingIdentityBadge": "Identité",
+  "@listingIdentityBadge": {
+    "description": "Badge compact identité vérifiée du voyageur (traveler_announcement_bottom_sheet.dart, traveler_card.dart)"
+  },
+  "listingCategoriesAcceptedTitle": "Types de colis acceptés",
+  "@listingCategoriesAcceptedTitle": {
+    "description": "Titre de la section types de colis acceptés (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingTravelerMessageTitle": "Message du voyageur",
+  "@listingTravelerMessageTitle": {
+    "description": "Titre du message libre du voyageur (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingRouteLabel": "Itinéraire",
+  "@listingRouteLabel": {
+    "description": "Badge d'ouverture de l'app de cartes sur une adresse (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingCashOnlyWarningBold": "Trajet en espèces uniquement. ",
+  "@listingCashOnlyWarningBold": {
+    "description": "Amorce en gras de l'avertissement paiement cash uniquement (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingCashOnlyWarningBody": "Le paiement se fait en main propre au voyageur, Yadony ne séquestre pas votre argent et ne peut pas le rembourser automatiquement en cas de litige.",
+  "@listingCashOnlyWarningBody": {
+    "description": "Corps de l'avertissement paiement cash uniquement (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingNewRatingLabel": "Nouveau",
+  "@listingNewRatingLabel": {
+    "description": "Repli affiché quand le voyageur n'a pas encore de note (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingTravelerTrips": "{count, plural, =1{· {count} trajet} other{· {count} trajets}}",
+  "@listingTravelerTrips": {
+    "description": "Nombre de trajets déjà effectués par le voyageur (traveler_announcement_bottom_sheet.dart, traveler_card.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingPreviewTitle": "Aperçu de votre annonce",
+  "@listingPreviewTitle": {
+    "description": "Titre de la feuille d'aperçu avant publication (announcement_preview_sheet.dart)"
+  },
+  "listingPublishButton": "Publier l'annonce",
+  "@listingPublishButton": {
+    "description": "Bouton de publication de l'annonce (announcement_preview_sheet.dart)"
+  },
+  "listingSaveDraftButton": "Enregistrer comme brouillon",
+  "@listingSaveDraftButton": {
+    "description": "Bouton d'enregistrement en brouillon (announcement_preview_sheet.dart)"
+  },
+  "listingPreviewDepartureLabel": "Départ",
+  "@listingPreviewDepartureLabel": {
+    "description": "Libellé de la ligne heure de départ de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelPickup": "Remise",
+  "@listingRowLabelPickup": {
+    "description": "Libellé de la ligne adresse de remise de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelCapacity": "Capacité",
+  "@listingRowLabelCapacity": {
+    "description": "Libellé de la ligne capacité de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelPayment": "Paiement",
+  "@listingRowLabelPayment": {
+    "description": "Libellé de la ligne mode de paiement de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingPaymentCardCash": "Carte + Espèces",
+  "@listingPaymentCardCash": {
+    "description": "Valeur de la ligne paiement quand carte et espèces sont acceptées (announcement_preview_sheet.dart)"
+  },
+  "listingPaymentCardOnly": "Carte uniquement",
+  "@listingPaymentCardOnly": {
+    "description": "Valeur de la ligne paiement quand seule la carte est acceptée (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelAccept": "Accepte",
+  "@listingRowLabelAccept": {
+    "description": "Libellé de la ligne contenus acceptés de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelRefuse": "Refuse",
+  "@listingRowLabelRefuse": {
+    "description": "Libellé de la ligne contenus refusés de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelNote": "Note",
+  "@listingRowLabelNote": {
+    "description": "Libellé de la ligne note libre de l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingPriceTooLowWarning": "Prix bas. Vous pourrez le modifier après publication.",
+  "@listingPriceTooLowWarning": {
+    "description": "Avertissement prix jugé bas dans l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingPriceTooHighWarning": "Prix élevé. Vous pourrez le modifier après publication.",
+  "@listingPriceTooHighWarning": {
+    "description": "Avertissement prix jugé élevé dans l'aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingStatusInProgress": "En cours",
+  "@listingStatusInProgress": {
+    "description": "Badge de statut IN_PROGRESS d'une carte de trajet (trip_card.dart)"
+  },
+  "listingDateTodayLabel": "Aujourd'hui · {date}",
+  "@listingDateTodayLabel": {
+    "description": "Date de départ relative — aujourd'hui (trip_card.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "listingDateTomorrowLabel": "Demain · {date}",
+  "@listingDateTomorrowLabel": {
+    "description": "Date de départ relative — demain (trip_card.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "listingDateInDaysLabel": "Départ dans {days} jours · {date}",
+  "@listingDateInDaysLabel": {
+    "description": "Date de départ relative — dans N jours (trip_card.dart)",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "listingRetryActionMessage": "Action impossible, réessaie",
+  "@listingRetryActionMessage": {
+    "description": "Erreur du bouton favori sur une carte de trajet (trip_card.dart, traveler_card.dart)"
+  },
+  "listingAcceptedBidsCount": "{count, plural, =1{{count} acceptée} other{{count} acceptées}}",
+  "@listingAcceptedBidsCount": {
+    "description": "Compteur de demandes acceptées sur une carte de trajet (trip_card.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingPendingBidsCount": "{count} en attente",
+  "@listingPendingBidsCount": {
+    "description": "Compteur de demandes en attente sur une carte de trajet (trip_card.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingSoldOfTotalLabel": "{sold} vendus sur {total}",
+  "@listingSoldOfTotalLabel": {
+    "description": "Progression kg vendus / total sur une carte de trajet (trip_card.dart)",
+    "placeholders": {
+      "sold": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "listingAvailableKgLabel": "{kg} disponibles",
+  "@listingAvailableKgLabel": {
+    "description": "Capacité disponible du footer d'une carte de trajet active (trip_card.dart)",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "listingSoldLabel": "{kg} vendus",
+  "@listingSoldLabel": {
+    "description": "Kg vendus condensé d'une carte de trajet passée (trip_card.dart)",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "listingEarnedLabel": "{price} gagnés",
+  "@listingEarnedLabel": {
+    "description": "Montant gagné condensé d'une carte de trajet terminée (trip_card.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "listingBidStatusAccepted": "Demande acceptée",
+  "@listingBidStatusAccepted": {
+    "description": "Chip de statut d'une demande acceptée sur une carte voyageur (traveler_card.dart)"
+  },
+  "listingBidStatusOnTrip": "Colis sur ce trajet",
+  "@listingBidStatusOnTrip": {
+    "description": "Chip de statut d'un colis déjà en cours sur ce trajet (traveler_card.dart)"
+  },
+  "listingBidStatusArrived": "Arrivé",
+  "@listingBidStatusArrived": {
+    "description": "Chip de statut voyageur arrivé à destination (traveler_card.dart)"
+  },
+  "listingBidStatusPending": "Demande en attente",
+  "@listingBidStatusPending": {
+    "description": "Chip de statut d'une demande en attente sur une carte voyageur (traveler_card.dart)"
+  },
+  "listingYourTripPill": "Votre trajet",
+  "@listingYourTripPill": {
+    "description": "Pill signalant que l'annonce appartient au voyageur courant (traveler_card.dart)"
+  },
+  "listingProBadge": "PRO",
+  "@listingProBadge": {
+    "description": "Badge compte PRO sur une carte voyageur (traveler_card.dart)"
+  },
+  "listingNoTravelersNearbyTitle": "Aucun voyageur à proximité",
+  "@listingNoTravelersNearbyTitle": {
+    "description": "Titre de l'état vide du carousel « près de moi » (near_me_carousel.dart)"
+  },
+  "listingNoTravelersNearbyDesc": "Essaie d'augmenter le rayon ou de changer de date.",
+  "@listingNoTravelersNearbyDesc": {
+    "description": "Description de l'état vide du carousel « près de moi » (near_me_carousel.dart)"
+  },
+  "listingSeeAnnouncementButton": "Voir l'annonce",
+  "@listingSeeAnnouncementButton": {
+    "description": "Bouton « voir tout » quand une seule annonce est disponible (near_me_carousel.dart)"
+  },
+  "listingSeeAnnouncementsCountButton": "Voir les {count} annonces",
+  "@listingSeeAnnouncementsCountButton": {
+    "description": "Bouton « voir tout » avec le nombre d'annonces (near_me_carousel.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingRouteDeparturesFrom": "Départs depuis {city}",
+  "@listingRouteDeparturesFrom": {
+    "description": "Titre de la feuille filtrée sur une ville de départ (route_bottom_sheet.dart)",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "listingRouteArrivalsTo": "Arrivées à {city}",
+  "@listingRouteArrivalsTo": {
+    "description": "Titre de la feuille filtrée sur une ville d'arrivée (route_bottom_sheet.dart)",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "listingRouteTrips": "{count, plural, =1{{count} trajet} other{{count} trajets}}",
+  "@listingRouteTrips": {
+    "description": "Nombre de trajets sur la route filtrée (route_bottom_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingNoTripsOnRoute": "Aucun trajet disponible sur cette route",
+  "@listingNoTripsOnRoute": {
+    "description": "État vide de la feuille route filtrée (route_bottom_sheet.dart)"
+  },
+  "listingSameAddressTravelers": "{count, plural, =1{{count} voyageur disponible à cette adresse} other{{count} voyageurs disponibles à cette adresse}}",
+  "@listingSameAddressTravelers": {
+    "description": "Nombre de voyageurs disponibles à la même adresse (same_address_announcements_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingAddressFallback": "Adresse",
+  "@listingAddressFallback": {
+    "description": "Repli affiché quand l'adresse d'un cluster n'a pas de libellé (announcement_map_view.dart)"
+  },
+  "listingNearMeDeactivateTooltip": "Désactiver « Près de moi »",
+  "@listingNearMeDeactivateTooltip": {
+    "description": "Infobulle du bouton « Près de moi » actif (announcement_map_view.dart)"
+  },
+  "listingNearMeActivateTooltip": "Voir les voyageurs près de moi",
+  "@listingNearMeActivateTooltip": {
+    "description": "Infobulle du bouton « Près de moi » inactif (announcement_map_view.dart)"
+  },
+  "listingFilterTripsTitle": "Filtrer les trajets",
+  "@listingFilterTripsTitle": {
+    "description": "Titre de la feuille de filtres de recherche de trajets (search_form_bottom_sheet.dart)"
+  },
+  "listingResetFiltersButton": "Réinitialiser",
+  "@listingResetFiltersButton": {
+    "description": "Bouton de réinitialisation des filtres (search_form_bottom_sheet.dart)"
+  },
+  "listingSearchButton": "{count, plural, =0{Rechercher} =1{Rechercher · {count} filtre} other{Rechercher · {count} filtres}}",
+  "@listingSearchButton": {
+    "description": "Bouton de recherche de la feuille de filtres, avec le nombre de filtres actifs (search_form_bottom_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listingQuickFiltersTitle": "FILTRES RAPIDES",
+  "@listingQuickFiltersTitle": {
+    "description": "Titre de section des chips de filtres rapides (search_form_bottom_sheet.dart)"
+  },
+  "listingKiloProChip": "Kilo Pro",
+  "@listingKiloProChip": {
+    "description": "Chip de filtre voyageur Kilo Pro (search_form_bottom_sheet.dart)"
+  },
+  "listingRatingChip": "Note ≥ 4.5",
+  "@listingRatingChip": {
+    "description": "Chip de filtre note minimale (search_form_bottom_sheet.dart)"
+  },
+  "listingWeekendChip": "Week-end",
+  "@listingWeekendChip": {
+    "description": "Chip de filtre départ le week-end (search_form_bottom_sheet.dart)"
+  },
+  "listingContentContainsTitle": "MON COLIS CONTIENT",
+  "@listingContentContainsTitle": {
+    "description": "Titre de section du filtre type de contenu (search_form_bottom_sheet.dart)"
+  },
+  "listingDepartureUrgencyTitle": "URGENCE DU DÉPART",
+  "@listingDepartureUrgencyTitle": {
+    "description": "Titre de section du filtre urgence du départ (search_form_bottom_sheet.dart)"
+  },
+  "listingDepartureUrgencyDesc": "Filtrer les trajets selon leur proximité de départ",
+  "@listingDepartureUrgencyDesc": {
+    "description": "Description du filtre urgence du départ (search_form_bottom_sheet.dart)"
+  },
+  "listingDeleteTripAssociatedRequestsMessage": "Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.",
+  "@listingDeleteTripAssociatedRequestsMessage": {
+    "description": "Message de confirmation de suppression, sans la phrase d irréversibilité (announcement_list_screen.dart)"
+  },
+  "listingDeadlineLabel": "Date limite",
+  "@listingDeadlineLabel": {
+    "description": "Libellé de la ligne date limite de dépôt (announcement_detail_body.dart)"
+  },
+  "listingInstructionsCardTitle": "Instructions du voyageur",
+  "@listingInstructionsCardTitle": {
+    "description": "Titre de l encart instructions de retrait laissees par le voyageur (traveler_announcement_bottom_sheet.dart)"
+  },
+  "listingRowLabelDate": "Date",
+  "@listingRowLabelDate": {
+    "description": "Libellé de la ligne date de départ de l aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingRowLabelPrice": "Prix",
+  "@listingRowLabelPrice": {
+    "description": "Libellé de la ligne prix de l aperçu (announcement_preview_sheet.dart)"
+  },
+  "listingPriceEstimateSuffix": " · estimation {amount} net",
+  "@listingPriceEstimateSuffix": {
+    "description": "Suffixe estimation du revenu net affiché après le prix au kg de l aperçu (announcement_preview_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateSendProposalButton": "Envoyer ma proposition",
+  "@bidCreateSendProposalButton": {
+    "description": "Bouton d'envoi de la première proposition en mode négociation (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateConfirmCashButton": "Confirmer {amount} en espèces",
+  "@bidCreateConfirmCashButton": {
+    "description": "Bouton de confirmation du paiement en espèces (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateConfirmMobileMoneyButton": "Confirmer {amount} par mobile money",
+  "@bidCreateConfirmMobileMoneyButton": {
+    "description": "Bouton de confirmation du paiement mobile money (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateLockAndPayButton": "Bloquer {amount} & payer",
+  "@bidCreateLockAndPayButton": {
+    "description": "Bouton de confirmation du paiement par carte (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateDescriptionRequiredError": "Description obligatoire",
+  "@bidCreateDescriptionRequiredError": {
+    "description": "Erreur de validation, description du colis manquante (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientNameRequiredError": "Nom du destinataire obligatoire",
+  "@bidCreateRecipientNameRequiredError": {
+    "description": "Erreur de validation, nom du destinataire manquant (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientPhoneRequiredError": "Téléphone du destinataire obligatoire",
+  "@bidCreateRecipientPhoneRequiredError": {
+    "description": "Erreur de validation, téléphone du destinataire manquant (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePriceRequiredError": "Indiquez le prix que vous proposez",
+  "@bidCreatePriceRequiredError": {
+    "description": "Erreur de validation, prix proposé manquant en mode négociation (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateProposalSentMessage": "Proposition envoyée, le voyageur va vous répondre.",
+  "@bidCreateProposalSentMessage": {
+    "description": "Confirmation après envoi d'une première proposition (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateOfferSentTitle": "Offre envoyée !",
+  "@bidCreateOfferSentTitle": {
+    "description": "Titre de l'écran de succès après une offre en espèces ou mobile money (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCashSuccessSubtitle": "Paiement en espèces : si le voyageur accepte, tu remets le montant en main propre à la remise du colis. En cas d'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s'assurera que le voyageur te restitue ton argent.",
+  "@bidCreateCashSuccessSubtitle": {
+    "description": "Sous-titre de l'écran de succès pour une offre en espèces (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateMobileMoneySuccessSubtitle": "Paiement mobile money : si le voyageur accepte, tu recevras une notification et auras 30 minutes pour valider le paiement sur ton téléphone. Le montant est gardé en sécurité par Yadony jusqu'à la livraison.",
+  "@bidCreateMobileMoneySuccessSubtitle": {
+    "description": "Sous-titre de l'écran de succès pour une offre en mobile money (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateReviewPendingSubtitle": "Le voyageur va examiner ta demande.",
+  "@bidCreateReviewPendingSubtitle": {
+    "description": "Sous-titre de repli de l'écran de succès après une offre (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateSeeMyShipmentButton": "Voir mon envoi",
+  "@bidCreateSeeMyShipmentButton": {
+    "description": "CTA de l'écran de succès vers le détail de l'envoi (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateArticlesSectionLabel": "ARTICLES",
+  "@bidCreateArticlesSectionLabel": {
+    "description": "Titre de la section articles de la grille tarifaire (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateSelectedItems": "{count, plural, =1{{count} article sélectionné} other{{count} articles sélectionnés}}",
+  "@bidCreateSelectedItems": {
+    "description": "Nombre d'articles sélectionnés dans la carte grille (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bidCreateSubtotalLabel": "Sous-total : {amount}",
+  "@bidCreateSubtotalLabel": {
+    "description": "Sous-total des articles sélectionnés (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateChooseItemsLabel": "Choisir mes articles",
+  "@bidCreateChooseItemsLabel": {
+    "description": "Libellé du bouton d'ouverture de la sélection d'articles (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateItemsRequiredHint": "Requis : au moins 1 article",
+  "@bidCreateItemsRequiredHint": {
+    "description": "Rappel qu'au moins un article doit être sélectionné (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePhotosSectionLabel": "PHOTOS DU COLIS (OPTIONNEL)",
+  "@bidCreatePhotosSectionLabel": {
+    "description": "Titre de la section photos du formulaire d'offre (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateDescriptionSectionLabel": "DESCRIPTION (AU VOYAGEUR)",
+  "@bidCreateDescriptionSectionLabel": {
+    "description": "Titre de la section description du formulaire d'offre (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateDescriptionHint": "Médicaments pour diabète + 2 tee-shirts enfants",
+  "@bidCreateDescriptionHint": {
+    "description": "Exemple affiché dans le champ description (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientSectionLabel": "DESTINATAIRE",
+  "@bidCreateRecipientSectionLabel": {
+    "description": "Titre de la section destinataire du formulaire d'offre (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientNameLabel": "Prénom et nom du destinataire",
+  "@bidCreateRecipientNameLabel": {
+    "description": "Libellé du champ nom du destinataire (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientNameHint": "ex: Amadou Diallo",
+  "@bidCreateRecipientNameHint": {
+    "description": "Exemple affiché dans le champ nom du destinataire (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientPhoneLabel": "Téléphone du destinataire",
+  "@bidCreateRecipientPhoneLabel": {
+    "description": "Libellé du champ téléphone du destinataire (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRecipientPhoneHint": "ex: +221 77 000 00 00",
+  "@bidCreateRecipientPhoneHint": {
+    "description": "Exemple affiché dans le champ téléphone du destinataire (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePromoSectionLabel": "CODE PROMO (OPTIONNEL)",
+  "@bidCreatePromoSectionLabel": {
+    "description": "Titre de la section code promo du formulaire d'offre (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePromoCodeHint": "Ex: WELCOME10",
+  "@bidCreatePromoCodeHint": {
+    "description": "Exemple affiché dans le champ code promo (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePromoAppliedDefaultLabel": "Code appliqué",
+  "@bidCreatePromoAppliedDefaultLabel": {
+    "description": "Confirmation de repli quand le devis n'a pas de libellé de promo (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateYourProposalSectionLabel": "VOTRE PROPOSITION",
+  "@bidCreateYourProposalSectionLabel": {
+    "description": "Titre de la section prix proposé en mode négociation (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateProposedPriceLabel": "Prix proposé ({symbol})",
+  "@bidCreateProposedPriceLabel": {
+    "description": "Libellé du champ de prix proposé en mode négociation (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateSuggestedPriceLabel": "Suggéré : {amount}",
+  "@bidCreateSuggestedPriceLabel": {
+    "description": "Rappel du prix suggéré sous le champ de proposition (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreatePaymentMethodSectionLabel": "MODE DE PAIEMENT",
+  "@bidCreatePaymentMethodSectionLabel": {
+    "description": "Titre de la section mode de paiement en mode négociation (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePaymentMethodHint": "Si le voyageur accepte votre prix, vous réglerez de cette façon.",
+  "@bidCreatePaymentMethodHint": {
+    "description": "Explication du choix figé du mode de paiement en négociation (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateContentSectionLabel": "CONTENU DU COLIS",
+  "@bidCreateContentSectionLabel": {
+    "description": "Titre de la section contenu du colis (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateContentHintText": "Ces suggestions sont les contenus acceptés par le voyageur. Si le contenu de votre colis n'y figure pas, ajoutez-le : ce sera au voyageur de décider s'il accepte votre colis ou non.",
+  "@bidCreateContentHintText": {
+    "description": "Note explicative sous le sélecteur de contenu (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRefusedByTravelerSectionLabel": "REFUSÉ PAR LE VOYAGEUR",
+  "@bidCreateRefusedByTravelerSectionLabel": {
+    "description": "Titre de la section des contenus refusés par le voyageur (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateHowToPayTitle": "Comment veux-tu payer ?",
+  "@bidCreateHowToPayTitle": {
+    "description": "Titre de l'étape de choix du mode de paiement (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateChoosePaymentSubtitle": "Choisis le mode de paiement pour cette demande.",
+  "@bidCreateChoosePaymentSubtitle": {
+    "description": "Sous-titre de l'étape de choix du mode de paiement (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePaymentNotConfirmedError": "Paiement non confirmé, réessayez",
+  "@bidCreatePaymentNotConfirmedError": {
+    "description": "Erreur affichée si l'authentification avant paiement échoue (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateShipmentToLabel": "Envoi vers {city}",
+  "@bidCreateShipmentToLabel": {
+    "description": "Libellé de contexte de la feuille de paiement Stripe (create_bid_bottom_sheet.dart)",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateOfferPaidTitle": "Offre payée !",
+  "@bidCreateOfferPaidTitle": {
+    "description": "Titre de l'écran de succès après un paiement carte (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateOfferPaidSubtitle": "Ton paiement est bloqué et sécurisé jusqu'à la livraison confirmée. Le voyageur est notifié de ta demande.",
+  "@bidCreateOfferPaidSubtitle": {
+    "description": "Sous-titre de l'écran de succès après un paiement carte (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateWeightLabel": "Poids du colis",
+  "@bidCreateWeightLabel": {
+    "description": "Libellé de la section poids, trajet kilo pur (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateWeightLabelOptional": "Poids du colis (optionnel)",
+  "@bidCreateWeightLabelOptional": {
+    "description": "Libellé de la section poids, trajet mixte grille + kilo (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateFreeKgHint": "Kilo libre : choisissez votre poids",
+  "@bidCreateFreeKgHint": {
+    "description": "Sous-titre du sélecteur de poids en kilo libre (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateNoCapacityAvailable": "Aucune capacité disponible",
+  "@bidCreateNoCapacityAvailable": {
+    "description": "Message quand le trajet n'a plus de capacité kilo (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateDisclaimerTitle": "Disclaimer douane.",
+  "@bidCreateDisclaimerTitle": {
+    "description": "Titre de l'encart disclaimer douanier (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateDisclaimerBody": "Pas d'armes, drogues, liquides inflammables ou espèces. Le voyageur peut refuser au contrôle douanier.",
+  "@bidCreateDisclaimerBody": {
+    "description": "Texte de l'encart disclaimer douanier (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateDisclaimerAcceptLabel": "Je signe & j'accepte",
+  "@bidCreateDisclaimerAcceptLabel": {
+    "description": "Libellé de la case à cocher du disclaimer (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCardModeSubtitle": "Bloqué jusqu'à la livraison",
+  "@bidCreateCardModeSubtitle": {
+    "description": "Sous-titre du choix de paiement par carte (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateMobileMoneySubtitle": "Orange Money, Wave, MTN",
+  "@bidCreateMobileMoneySubtitle": {
+    "description": "Sous-titre du choix de paiement mobile money, noms de marque (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCashModeSubtitle": "En main propre, à la remise",
+  "@bidCreateCashModeSubtitle": {
+    "description": "Sous-titre du choix de paiement en espèces (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateEscrowTag": "Séquestre",
+  "@bidCreateEscrowTag": {
+    "description": "Tag du montant bloqué chez Yadony (carte, mobile money) (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateHandToHandTag": "En main propre",
+  "@bidCreateHandToHandTag": {
+    "description": "Tag du montant remis directement au voyageur (espèces) (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCardModeBody": "Bloqué par Yadony dès maintenant, versé au voyageur quand le destinataire confirme la livraison.",
+  "@bidCreateCardModeBody": {
+    "description": "Explication du mode carte dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateMobileMoneyModeBody": "Après l'accord du voyageur, tu reçois une demande de paiement sur ton téléphone. Le montant est bloqué par Yadony jusqu'à la livraison.",
+  "@bidCreateMobileMoneyModeBody": {
+    "description": "Explication du mode mobile money dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCashModeBody": "Tu remets la somme au voyageur le jour où tu lui confies le colis.",
+  "@bidCreateCashModeBody": {
+    "description": "Explication du mode espèces dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateRefundAssurance": "Remboursé si le colis n'arrive pas",
+  "@bidCreateRefundAssurance": {
+    "description": "Rappel de garantie sous le mode carte et mobile money (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateCashEscrowWarning": "Paiement en espèces : pas de séquestre, vous payez le voyageur directement, sans garantie de remboursement par Yadony.",
+  "@bidCreateCashEscrowWarning": {
+    "description": "Avertissement affiché sous le mode espèces (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateArticlesLineLabel": "Articles",
+  "@bidCreateArticlesLineLabel": {
+    "description": "Libellé de la ligne articles du récapitulatif de prix (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePromoDiscountLabel": "Réduction code promo",
+  "@bidCreatePromoDiscountLabel": {
+    "description": "Libellé de la ligne de réduction dans le récapitulatif de prix (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateTotalLabel": "Total",
+  "@bidCreateTotalLabel": {
+    "description": "Libellé de la ligne totale du récapitulatif de prix (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePromoBadge": "Promo",
+  "@bidCreatePromoBadge": {
+    "description": "Badge affiché à côté du total quand un code promo réduit le prix (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreateServiceFeeIncludedLabel": "Commission Yadony incluse",
+  "@bidCreateServiceFeeIncludedLabel": {
+    "description": "Mention sous le total du récapitulatif de prix (create_bid_bottom_sheet.dart)"
+  },
+  "bidCreatePhotosVisibleHint": "Visibles par le voyageur, elles rassurent sur le contenu.",
+  "@bidCreatePhotosVisibleHint": {
+    "description": "Explication de l'utilité des photos du colis (create_bid/photo_section.dart)"
+  },
+  "bidCreatePayerPhoneLabel": "Numéro qui paiera (facultatif)",
+  "@bidCreatePayerPhoneLabel": {
+    "description": "Libellé du champ numéro payeur mobile money (create_bid/payer_phone_field.dart)"
+  },
+  "bidCreatePayerPhoneHintWithProfile": "Par défaut, ton numéro Yadony. Tu recevras la demande de paiement sur ce numéro.",
+  "@bidCreatePayerPhoneHintWithProfile": {
+    "description": "Texte d'aide quand le compte a un numéro de téléphone (create_bid/payer_phone_field.dart)"
+  },
+  "bidCreatePayerPhoneHintNoProfile": "Ton compte n'a pas de numéro : indique celui qui paiera. Tu recevras la demande de paiement dessus.",
+  "@bidCreatePayerPhoneHintNoProfile": {
+    "description": "Texte d'aide quand le compte n'a pas de numéro de téléphone (create_bid/payer_phone_field.dart)"
+  },
+  "bidCreateCustomItemsSectionTitle": "Articles hors grille",
+  "@bidCreateCustomItemsSectionTitle": {
+    "description": "Titre de la section articles hors grille en négociation (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemsSectionHint": "Ajoutez ce que le voyageur n'a pas tarifé, et proposez votre prix pour chaque article.",
+  "@bidCreateCustomItemsSectionHint": {
+    "description": "Explication de la section articles hors grille (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemsEmpty": "Aucun article pour le moment.",
+  "@bidCreateCustomItemsEmpty": {
+    "description": "État vide de la liste d'articles hors grille (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemsTotalLabel": "Total des articles hors grille",
+  "@bidCreateCustomItemsTotalLabel": {
+    "description": "Libellé du total des articles hors grille (custom_items_section.dart)"
+  },
+  "bidCreateAddItemButton": "Ajouter un article",
+  "@bidCreateAddItemButton": {
+    "description": "Bouton et titre d'ajout d'un article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateRemoveItemTooltip": "Retirer cet article",
+  "@bidCreateRemoveItemTooltip": {
+    "description": "Tooltip du bouton de suppression d'un article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateAddItemSheetSubtitle": "Décrivez l'article et indiquez le prix que vous proposez pour son transport.",
+  "@bidCreateAddItemSheetSubtitle": {
+    "description": "Sous-titre de la feuille d'ajout d'un article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateAddItemConfirmButton": "Ajouter",
+  "@bidCreateAddItemConfirmButton": {
+    "description": "Bouton de validation de la feuille d'ajout d'un article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemLabelField": "Article",
+  "@bidCreateCustomItemLabelField": {
+    "description": "Libellé du champ nom de l'article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemLabelHint": "Sac de riz, boubou, médicaments",
+  "@bidCreateCustomItemLabelHint": {
+    "description": "Exemple affiché dans le champ nom de l'article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemQuantityField": "Quantité",
+  "@bidCreateCustomItemQuantityField": {
+    "description": "Libellé du champ quantité de l'article hors grille (custom_items_section.dart)"
+  },
+  "bidCreateCustomItemPriceField": "Prix ({symbol})",
+  "@bidCreateCustomItemPriceField": {
+    "description": "Libellé du champ prix de l'article hors grille (custom_items_section.dart)",
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateGridSheetTitle": "Articles disponibles",
+  "@bidCreateGridSheetTitle": {
+    "description": "Titre de la feuille de sélection des articles de la grille (grid_item_selection_sheet.dart)"
+  },
+  "bidCreateGridSheetConfirmButton": "Confirmer la sélection",
+  "@bidCreateGridSheetConfirmButton": {
+    "description": "Bouton de confirmation de la feuille de sélection des articles (grid_item_selection_sheet.dart)"
+  },
+  "bidCreateGridItemSemanticSelected": "{label}, {price} l'unité, {quantity} sélectionné",
+  "@bidCreateGridItemSemanticSelected": {
+    "description": "Libellé d'accessibilité d'un article de grille sélectionné (grid_item_selection_sheet.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "bidCreateGridItemSemanticUnit": "{label}, {price} l'unité",
+  "@bidCreateGridItemSemanticUnit": {
+    "description": "Libellé d'accessibilité d'un article de grille non sélectionné (grid_item_selection_sheet.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateGridItemRemoveSemantic": "Retirer un {label}",
+  "@bidCreateGridItemRemoveSemantic": {
+    "description": "Libellé d'accessibilité du bouton moins d'un article de grille (grid_item_selection_sheet.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateGridItemAddSemantic": "Ajouter un {label}",
+  "@bidCreateGridItemAddSemantic": {
+    "description": "Libellé d'accessibilité du bouton plus d'un article de grille (grid_item_selection_sheet.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreatePriceTooLowHint": "Prix bas : risque de méfiance de l'expéditeur",
+  "@bidCreatePriceTooLowHint": {
+    "description": "Avertissement prix trop bas (price_hint_widget.dart)"
+  },
+  "bidCreatePriceTooHighHint": "Prix élevé : peu de demandes attendues",
+  "@bidCreatePriceTooHighHint": {
+    "description": "Avertissement prix trop élevé (price_hint_widget.dart)"
+  },
+  "bidCreateMarketPriceCorridor": "Marché {corridor} : ",
+  "@bidCreateMarketPriceCorridor": {
+    "description": "Préfixe du prix médian de marché avec corridor (price_hint_widget.dart)",
+    "placeholders": {
+      "corridor": {
+        "type": "String"
+      }
+    }
+  },
+  "bidCreateMarketPriceLabel": "Marché ",
+  "@bidCreateMarketPriceLabel": {
+    "description": "Préfixe du prix médian de marché sans corridor (price_hint_widget.dart)"
+  },
+  "bidCreateCompetitivePriceSuffix": " · Votre prix est compétitif.",
+  "@bidCreateCompetitivePriceSuffix": {
+    "description": "Suffixe affiché après le prix médian de marché (price_hint_widget.dart)"
+  },
+  "bidCreateDisclaimerSigned": "Disclaimer signé le {dateTime}",
+  "@bidCreateDisclaimerSigned": {
+    "description": "Statut du disclaimer avec sa date de signature (details_accordion, tâche D2)",
+    "placeholders": {
+      "dateTime": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishCashCommissionIntro": "Vous ne pourrez accepter un colis en espèces que si la commission Yadony peut être prélevée ",
+  "@tripPublishCashCommissionIntro": {
+    "description": "Premier segment de l'avertissement commission espèces à la publication (cash_commission_notice.dart)"
+  },
+  "tripPublishCashCommissionHighlight": "sur votre portefeuille en priorité",
+  "@tripPublishCashCommissionHighlight": {
+    "description": "Segment en gras de l'avertissement commission espèces (cash_commission_notice.dart)"
+  },
+  "tripPublishCashCommissionOutro": ". À défaut, il faudra le recharger ou enregistrer une carte valide au moment d’accepter.",
+  "@tripPublishCashCommissionOutro": {
+    "description": "Dernier segment de l'avertissement commission espèces (cash_commission_notice.dart)"
+  },
+  "negotiationStageToPay": "à payer",
+  "@negotiationStageToPay": {
+    "description": "Libellé de stage : accord carte, c'est à moi de payer (bid_labels.dart, ex-BidNegotiationSummary.stageLabel)"
+  },
+  "negotiationStageAwaitingPayment": "attente paiement",
+  "@negotiationStageAwaitingPayment": {
+    "description": "Libellé de stage : accord carte, en attente du paiement de l'autre partie (bid_labels.dart)"
+  },
+  "negotiationStageDealAgreed": "accord conclu",
+  "@negotiationStageDealAgreed": {
+    "description": "Libellé de stage : accord en espèces, pas encore réglé (bid_labels.dart)"
+  },
+  "negotiationStageClosed": "terminé",
+  "@negotiationStageClosed": {
+    "description": "Libellé de stage : fil clos, quel que soit le motif (bid_labels.dart)"
+  },
+  "negotiationStageProposal": "proposition",
+  "@negotiationStageProposal": {
+    "description": "Libellé de stage par défaut : négociation en cours (bid_labels.dart)"
+  },
+  "bidSenderFallbackName": "Expéditeur",
+  "@bidSenderFallbackName": {
+    "description": "Nom de repli affiché pour l'expéditeur sans nom (bid_labels.dart, ex-BidModel.resolvedSenderName). Réutilisé comme intitulé de section « Expéditeur » sur expediteur_card.dart : même texte, même clé."
+  },
+  "bidTravelerTrips": "{count, plural, =1{{count} trajet} other{{count} trajets}}",
+  "@bidTravelerTrips": {
+    "description": "Nombre de trajets du voyageur, composable dans une ligne compacte « · N trajets » (bid_labels.dart, voyageur_card.dart, et partie D pour voyageur_contact_card.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bidSenderShipments": "{count, plural, =1{{count} envoi} other{{count} envois}}",
+  "@bidSenderShipments": {
+    "description": "Nombre d'envois de l'expéditeur, composable dans une ligne compacte (bid_labels.dart, expediteur_card.dart, et partie D pour expediteur_contact_card.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bidSubmittedOn": "Soumis le {date}",
+  "@bidSubmittedOn": {
+    "description": "Date de soumission d'une offre, date déjà formatée par DateFormat.yMd(locale) (expediteur_card.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationThreadTitle": "Discussion de prix",
+  "@negotiationThreadTitle": {
+    "description": "Titre de l'écran du fil de négociation (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadErrorTitle": "Discussion indisponible",
+  "@negotiationThreadErrorTitle": {
+    "description": "Titre de l'état d'erreur du fil de négociation (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadYouWouldReceive": "Vous recevriez",
+  "@negotiationThreadYouWouldReceive": {
+    "description": "Amorce du montant en tête, vue voyageur (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadYouWouldPay": "Vous paieriez",
+  "@negotiationThreadYouWouldPay": {
+    "description": "Amorce du montant en tête, vue expéditeur (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadRoundLabel": "Tour {round} sur {maxRounds}",
+  "@negotiationThreadRoundLabel": {
+    "description": "Compteur de tours de négociation (bid_negotiation_thread_screen.dart)",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "maxRounds": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationThreadParcelSectionTitle": "Le colis",
+  "@negotiationThreadParcelSectionTitle": {
+    "description": "Titre de la section récapitulatif du colis (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadExchangesTitle": "Échanges",
+  "@negotiationThreadExchangesTitle": {
+    "description": "Titre de la section des messages du fil (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadKindProposal": "Proposition",
+  "@negotiationThreadKindProposal": {
+    "description": "Libellé d'un message de type proposition initiale (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadKindCounter": "Contre-offre",
+  "@negotiationThreadKindCounter": {
+    "description": "Libellé d'un message de type contre-offre (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadKindAccepted": "Acceptée",
+  "@negotiationThreadKindAccepted": {
+    "description": "Libellé d'un message d'acceptation (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadKindRejected": "Refusée",
+  "@negotiationThreadKindRejected": {
+    "description": "Libellé d'un message de refus (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadPayHint": "Prix accepté. Réglez maintenant pour réserver votre place, le montant reste bloqué jusqu'à la livraison.",
+  "@negotiationThreadPayHint": {
+    "description": "Consigne de paiement, accord carte côté expéditeur (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadPayButton": "Payer",
+  "@negotiationThreadPayButton": {
+    "description": "Bouton de paiement d'un accord carte (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadAwaitingSenderPaymentHint": "Prix accepté. En attente du paiement de l'expéditeur.",
+  "@negotiationThreadAwaitingSenderPaymentHint": {
+    "description": "Accord carte, vue voyageur en attente du paiement (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCashTravelerHint": "Prix accepté. Paiement en espèces, il vous reste à régler la commission Yadony.",
+  "@negotiationThreadCashTravelerHint": {
+    "description": "Accord en espèces, vue voyageur (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCashSenderHint": "Prix accepté. Paiement en espèces, en attente du voyageur, vous n'avez rien à régler ici.",
+  "@negotiationThreadCashSenderHint": {
+    "description": "Accord en espèces, vue expéditeur (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadClosedAccepted": "Prix accepté. Rendez-vous sur votre colis pour la suite.",
+  "@negotiationThreadClosedAccepted": {
+    "description": "Fil clos, statut ACCEPTED (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadClosedRejected": "Proposition refusée.",
+  "@negotiationThreadClosedRejected": {
+    "description": "Fil clos par un refus explicite, message REJECT présent (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadClosedExpired": "Proposition expirée.",
+  "@negotiationThreadClosedExpired": {
+    "description": "Fil clos par péremption, aucun message REJECT (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadClosedDefault": "Négociation terminée.",
+  "@negotiationThreadClosedDefault": {
+    "description": "Fil clos, statut générique (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadWaitingForReply": "En attente de la réponse de {name}.",
+  "@negotiationThreadWaitingForReply": {
+    "description": "Attente du tour de l'interlocuteur, nom ou repli traduit (bid_negotiation_thread_screen.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationThreadCounterpartyFallback": "votre interlocuteur",
+  "@negotiationThreadCounterpartyFallback": {
+    "description": "Repli quand l'interlocuteur n'a pas de nom (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadAcceptButton": "Accepter",
+  "@negotiationThreadAcceptButton": {
+    "description": "Bouton d'acceptation d'une proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCounterButton": "Contre-proposer",
+  "@negotiationThreadCounterButton": {
+    "description": "Bouton et titre de la feuille de contre-proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadRejectButton": "Refuser",
+  "@negotiationThreadRejectButton": {
+    "description": "Bouton de refus d'une proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCounterSubtitle": "Indiquez le montant total que vous proposez. Votre interlocuteur pourra l'accepter ou répondre à son tour.",
+  "@negotiationThreadCounterSubtitle": {
+    "description": "Sous-titre de la feuille de contre-proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCounterSubmitButton": "Envoyer ma contre-offre",
+  "@negotiationThreadCounterSubmitButton": {
+    "description": "Bouton d'envoi de la feuille de contre-proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCounterAmountLabel": "Montant proposé ({symbol})",
+  "@negotiationThreadCounterAmountLabel": {
+    "description": "Label du champ montant de la contre-proposition (bid_negotiation_thread_screen.dart)",
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationThreadCounterMessageLabel": "Message (facultatif)",
+  "@negotiationThreadCounterMessageLabel": {
+    "description": "Label du champ message de la contre-proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCounterMessageHint": "Expliquez votre proposition",
+  "@negotiationThreadCounterMessageHint": {
+    "description": "Indice du champ message de la contre-proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadPaymentNotConfirmed": "Paiement non confirmé, réessayez",
+  "@negotiationThreadPaymentNotConfirmed": {
+    "description": "Message d'échec d'authentification avant paiement (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadPaymentContextLabel": "Prix négocié de votre colis",
+  "@negotiationThreadPaymentContextLabel": {
+    "description": "Libellé de contexte affiché dans la feuille de paiement (bid_negotiation_thread_screen.dart)"
+  },
+  "travelerProfileLoadErrorTitle": "Erreur de chargement",
+  "@travelerProfileLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur du chargeur de détail (traveler_profile_screen.dart)"
+  },
+  "travelerProfileLoadErrorDescription": "Impossible de charger le détail",
+  "@travelerProfileLoadErrorDescription": {
+    "description": "Description de repli d'un état de chargement inattendu (traveler_profile_screen.dart)"
+  },
+  "profileSheetMoreOptionsTooltip": "Plus d'options",
+  "@profileSheetMoreOptionsTooltip": {
+    "description": "Tooltip du bouton menu ⋯ des fiches profil (traveler_profile_sheet.dart, sender_profile_sheet.dart)"
+  },
+  "profileSheetReviewsTitle": "Évaluations",
+  "@profileSheetReviewsTitle": {
+    "description": "Titre de la section avis des fiches profil (traveler_profile_sheet.dart, sender_profile_sheet.dart)"
+  },
+  "profileSheetNoReviewsYet": "Aucune évaluation pour l'instant.",
+  "@profileSheetNoReviewsYet": {
+    "description": "État vide de la section avis (traveler_profile_sheet.dart, sender_profile_sheet.dart)"
+  },
+  "profileSheetSeeMoreReviews": "Voir plus",
+  "@profileSheetSeeMoreReviews": {
+    "description": "Bouton de pagination des avis (traveler_profile_sheet.dart, sender_profile_sheet.dart)"
+  },
+  "profileSheetProBadge": "Compte PRO",
+  "@profileSheetProBadge": {
+    "description": "Badge compte PRO des fiches profil (traveler_profile_sheet.dart, sender_profile_sheet.dart)"
+  },
+  "profileSheetVerifiedBadge": "Identité vérifiée",
+  "@profileSheetVerifiedBadge": {
+    "description": "Badge identité vérifiée des fiches profil (traveler_profile_sheet.dart, sender_profile_sheet.dart)"
+  },
+  "travelerProfileTripsLabel": "Trajets",
+  "@travelerProfileTripsLabel": {
+    "description": "Libellé de la stat card « Trajets » (traveler_profile_sheet.dart)"
+  },
+  "travelerProfileDeliveryLabel": "Livraison",
+  "@travelerProfileDeliveryLabel": {
+    "description": "Libellé de la stat card « Livraison » (traveler_profile_sheet.dart)"
+  },
+  "travelerProfilePhoneHiddenLabel": "Numéro révélé après acceptation",
+  "@travelerProfilePhoneHiddenLabel": {
+    "description": "Numéro masqué avant acceptation (traveler_profile_sheet.dart)"
+  },
+  "travelerProfileSubscribeLabel": "S'abonner à ce voyageur",
+  "@travelerProfileSubscribeLabel": {
+    "description": "Libellé de la barre d'abonnement (traveler_profile_sheet.dart)"
+  },
+  "senderProfilePhoneHiddenLabel": "📞 Numéro révélé après acceptation",
+  "@senderProfilePhoneHiddenLabel": {
+    "description": "Numéro masqué avant acceptation, expéditeur non joignable (sender_profile_sheet.dart)"
+  },
+  "senderProfilePhoneLoadingLabel": "Numéro en cours de récupération…",
+  "@senderProfilePhoneLoadingLabel": {
+    "description": "Numéro en cours de révélation (sender_profile_sheet.dart)"
+  },
+  "senderProfileShipmentsLabel": "Envois",
+  "@senderProfileShipmentsLabel": {
+    "description": "Libellé de la stat « Envois » (sender_profile_sheet.dart)"
+  },
+  "blockMenuEntryLabel": "Bloquer {name}",
+  "@blockMenuEntryLabel": {
+    "description": "Entrée du menu ⋯ de blocage (block_user_action.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockSuccessMessage": "{name} a été bloqué(e)",
+  "@blockSuccessMessage": {
+    "description": "Snackbar de confirmation de blocage (block_user_action.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockConfirmTitle": "Bloquer {name} ?",
+  "@blockConfirmTitle": {
+    "description": "Titre du dialog de confirmation de blocage (block_user_action.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockConfirmBody": "Il·elle ne pourra plus voir tes annonces ni t'envoyer d'offre. Tu ne verras plus les siennes non plus. Tu pourras le·la débloquer à tout moment dans Confidentialité.",
+  "@blockConfirmBody": {
+    "description": "Corps du dialog de confirmation de blocage (block_user_action.dart)"
+  },
+  "blockConfirmButton": "Bloquer",
+  "@blockConfirmButton": {
+    "description": "Bouton de confirmation du blocage (block_user_action.dart)"
+  },
+  "bidTravelerRoleTag": "VOYAGEUR",
+  "@bidTravelerRoleTag": {
+    "description": "Étiquette de rôle en tête de la carte voyageur (voyageur_card.dart, et partie D pour voyageur_contact_card.dart)"
+  },
+  "voyageurCardCallSemanticLabel": "Appeler",
+  "@voyageurCardCallSemanticLabel": {
+    "description": "Libellé d'accessibilité du bouton d'appel (voyageur_card.dart)"
+  },
+  "voyageurCardOpenChatSemanticLabel": "Ouvrir la discussion",
+  "@voyageurCardOpenChatSemanticLabel": {
+    "description": "Libellé d'accessibilité du bouton de messagerie (voyageur_card.dart)"
+  },
+  "negotiationStatusBadgeOpen": "EN COURS",
+    "@negotiationStatusBadgeOpen": {
+    "description": "Pastille de statut OPEN (thread_hero_card.dart, réutilisée par _StatusPill de my_negotiations_screen.dart)"
+  },
+  "negotiationStatusBadgeAwaitingTrip": "ATT. TRAJET",
+    "@negotiationStatusBadgeAwaitingTrip": {
+    "description": "Pastille de statut AWAITING_TRIP (thread_hero_card.dart)"
+  },
+  "negotiationStatusBadgeAwaitingPayment": "PAIEMENT",
+    "@negotiationStatusBadgeAwaitingPayment": {
+    "description": "Pastille de statut AWAITING_PAYMENT (thread_hero_card.dart)"
+  },
+  "negotiationStatusBadgeAwaitingCommission": "COMMISSION",
+    "@negotiationStatusBadgeAwaitingCommission": {
+    "description": "Pastille de statut AWAITING_COMMISSION (thread_hero_card.dart)"
+  },
+  "negotiationStatusBadgeAwaitingDeposit": "DÉPÔT",
+    "@negotiationStatusBadgeAwaitingDeposit": {
+    "description": "Pastille de statut AWAITING_DEPOSIT (thread_hero_card.dart)"
+  },
+  "negotiationStatusBadgeAccepted": "ACCEPTÉE",
+    "@negotiationStatusBadgeAccepted": {
+    "description": "Pastille de statut ACCEPTED (thread_hero_card.dart) — aussi le libellé du message système « acceptée » dans thread_message_bubble.dart, texte identique"
+  },
+  "negotiationStatusBadgeTerminal": "TERMINÉ",
+    "@negotiationStatusBadgeTerminal": {
+    "description": "Pastille de statut terminal (rejected/autoRejected/expired/cancelled) (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelOpen": "PRIX ACTUEL",
+    "@negotiationStatusPriceLabelOpen": {
+    "description": "Libellé au-dessus du prix pour OPEN (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelAwaitingTrip": "ACCORD TROUVÉ",
+    "@negotiationStatusPriceLabelAwaitingTrip": {
+    "description": "Libellé au-dessus du prix pour AWAITING_TRIP (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelAwaitingPayment": "À RÉGLER",
+    "@negotiationStatusPriceLabelAwaitingPayment": {
+    "description": "Libellé au-dessus du prix pour AWAITING_PAYMENT (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelAwaitingCommission": "COMMISSION DUE",
+    "@negotiationStatusPriceLabelAwaitingCommission": {
+    "description": "Libellé au-dessus du prix pour AWAITING_COMMISSION (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelAwaitingDeposit": "DÉPÔT EN COURS",
+    "@negotiationStatusPriceLabelAwaitingDeposit": {
+    "description": "Libellé au-dessus du prix pour AWAITING_DEPOSIT (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelAccepted": "DEMANDE ACCEPTÉE",
+    "@negotiationStatusPriceLabelAccepted": {
+    "description": "Libellé au-dessus du prix pour ACCEPTED (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelTerminal": "PRIX FINAL",
+    "@negotiationStatusPriceLabelTerminal": {
+    "description": "Libellé au-dessus du prix pour un statut terminal (thread_hero_card.dart)"
+  },
+  "negotiationLastRoundWarning": "⚠ Dernier round : Accepter ou Refuser uniquement",
+    "@negotiationLastRoundWarning": {
+    "description": "Alerte dernier round sans contre-offre possible (thread_hero_card.dart)"
+  },
+  "negotiationRoundCounter": "Round {round}/{max}",
+    "@negotiationRoundCounter": {
+    "description": "Compteur de round du hero card, identique en fr/en (« Round » est déjà utilisé tel quel en français dans ce contexte) (thread_hero_card.dart)",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationMessageNewBadge": "NOUVEAU",
+    "@negotiationMessageNewBadge": {
+    "description": "Badge « nouveau message » (thread_message_bubble.dart, réutilisé par la carte de liste my_negotiations_screen.dart)"
+  },
+  "negotiationMessageKindProposalBadge": "PROPOSITION",
+    "@negotiationMessageKindProposalBadge": {
+    "description": "Libellé capitales du type de message « proposition » (thread_message_bubble.dart)"
+  },
+  "negotiationMessageKindCounterBadge": "CONTRE-OFFRE",
+    "@negotiationMessageKindCounterBadge": {
+    "description": "Libellé capitales du type de message « contre-offre » (thread_message_bubble.dart)"
+  },
+  "negotiationMessageKindRejectedBadge": "REJETÉE",
+    "@negotiationMessageKindRejectedBadge": {
+    "description": "Libellé capitales du type de message « rejetée » (thread_message_bubble.dart)"
+  },
+  "negotiationNudgeSentMessage": "Relance envoyée",
+    "@negotiationNudgeSentMessage": {
+    "description": "Snackbar de succès après relance (thread_state_cta_bar.dart)"
+  },
+  "negotiationNudgeRateLimitedMessage": "Déjà relancé récemment",
+    "@negotiationNudgeRateLimitedMessage": {
+    "description": "Snackbar d'erreur de relance, code nudge/rate-limited (thread_state_cta_bar.dart)"
+  },
+  "negotiationNudgeGenericErrorMessage": "Impossible de relancer pour le moment, réessaie plus tard",
+    "@negotiationNudgeGenericErrorMessage": {
+    "description": "Snackbar d'erreur de relance générique (thread_state_cta_bar.dart)"
+  },
+  "negotiationOpenAwaitingReplyTitle": "En attente de la réponse",
+    "@negotiationOpenAwaitingReplyTitle": {
+    "description": "Bandeau OPEN quand le dernier message est du viewer (thread_state_cta_bar.dart)"
+  },
+  "negotiationOpenAwaitingReplySubtitle": "Tu seras notifié dès que la partie adverse répondra.",
+    "@negotiationOpenAwaitingReplySubtitle": {
+    "description": "Sous-titre du bandeau « en attente de la réponse » (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingTripSenderTitle": "Le voyageur prépare son trajet",
+    "@negotiationAwaitingTripSenderTitle": {
+    "description": "Bandeau AWAITING_TRIP côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingTripSenderSubtitle": "Tu seras notifié dès qu'il l'aura confirmé.",
+    "@negotiationAwaitingTripSenderSubtitle": {
+    "description": "Sous-titre du bandeau AWAITING_TRIP côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationLinkTripButton": "Lier un trajet à cette offre",
+    "@negotiationLinkTripButton": {
+    "description": "Bouton AWAITING_TRIP côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationCreateDedicatedTripButton": "Créer un trajet dédié",
+    "@negotiationCreateDedicatedTripButton": {
+    "description": "Bouton AWAITING_TRIP côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationCompleteAndPayButton": "Compléter & payer {amount}",
+    "@negotiationCompleteAndPayButton": {
+    "description": "Bouton AWAITING_PAYMENT côté expéditeur (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationAwaitingPaymentTravelerTitle": "En attente du paiement de l'expéditeur",
+    "@negotiationAwaitingPaymentTravelerTitle": {
+    "description": "Bandeau AWAITING_PAYMENT côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingPaymentTravelerSubtitle": "Tu seras notifié dès qu'il aura réglé.",
+    "@negotiationAwaitingPaymentTravelerSubtitle": {
+    "description": "Sous-titre du bandeau AWAITING_PAYMENT côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingDepositTravelerTitle": "L'expéditeur règle par mobile money",
+    "@negotiationAwaitingDepositTravelerTitle": {
+    "description": "Bandeau AWAITING_DEPOSIT côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingDepositTravelerSubtitle": "Tu seras notifié dès que le paiement sera confirmé.",
+    "@negotiationAwaitingDepositTravelerSubtitle": {
+    "description": "Sous-titre du bandeau AWAITING_DEPOSIT côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationDepositInProgressTitle": "Dépôt mobile money en cours",
+    "@negotiationDepositInProgressTitle": {
+    "description": "Bandeau AWAITING_DEPOSIT côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationDepositSubtitleDefault": "Valide le paiement sur ton téléphone.",
+    "@negotiationDepositSubtitleDefault": {
+    "description": "Sous-titre du dépôt en cours, échéance inconnue (thread_state_cta_bar.dart)"
+  },
+  "negotiationDepositSubtitleExpired": "Le délai est écoulé, le fil va revenir à « à payer ».",
+    "@negotiationDepositSubtitleExpired": {
+    "description": "Sous-titre du dépôt en cours, échéance dépassée (thread_state_cta_bar.dart)"
+  },
+  "negotiationDepositSubtitleExpiring": "Valide le paiement sur ton téléphone. Expire dans {minutes} min.",
+    "@negotiationDepositSubtitleExpiring": {
+    "description": "Sous-titre du dépôt en cours, échéance future (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationResumePaymentButton": "Reprendre le paiement",
+    "@negotiationResumePaymentButton": {
+    "description": "Bouton AWAITING_DEPOSIT côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationChangePaymentMethodButton": "Changer de moyen de paiement",
+    "@negotiationChangePaymentMethodButton": {
+    "description": "Bouton AWAITING_DEPOSIT côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingCommissionSenderTitle": "En attente de la confirmation du voyageur",
+    "@negotiationAwaitingCommissionSenderTitle": {
+    "description": "Bandeau AWAITING_COMMISSION côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingCommissionSenderSubtitle": "Ta demande reste ouverte : tu peux continuer à recevoir et accepter d'autres offres tant qu'il n'a pas réglé.",
+    "@negotiationAwaitingCommissionSenderSubtitle": {
+    "description": "Sous-titre du bandeau AWAITING_COMMISSION côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationCommissionTravelerBannerTitle": "Confirme ta prise en charge",
+    "@negotiationCommissionTravelerBannerTitle": {
+    "description": "Bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationCommissionTravelerBannerSubtitle": "L'expéditeur a retenu ton offre. Règle la commission Yadony ({amount}) avant l'échéance pour emporter ce colis, sinon un autre voyageur peut te doubler.",
+    "@negotiationCommissionTravelerBannerSubtitle": {
+    "description": "Sous-titre du bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationPayCommissionButton": "Régler la commission",
+    "@negotiationPayCommissionButton": {
+    "description": "Bouton de règlement de la commission (thread_state_cta_bar.dart)"
+  },
+  "negotiationDeclineParcelDialogTitle": "Renoncer à ce colis ?",
+    "@negotiationDeclineParcelDialogTitle": {
+    "description": "Titre du dialog de renoncement à la commission (thread_state_cta_bar.dart)"
+  },
+  "negotiationDeclineParcelDialogMessage": "La demande sera aussitôt disponible pour un autre voyageur. Cette action est définitive.",
+    "@negotiationDeclineParcelDialogMessage": {
+    "description": "Message du dialog de renoncement à la commission (thread_state_cta_bar.dart)"
+  },
+  "negotiationDeclineParcelConfirmButton": "Renoncer",
+    "@negotiationDeclineParcelConfirmButton": {
+    "description": "Bouton de confirmation du dialog de renoncement (thread_state_cta_bar.dart)"
+  },
+  "negotiationDeclineParcelButton": "Renoncer à ce colis",
+    "@negotiationDeclineParcelButton": {
+    "description": "Lien discret d'ouverture du dialog de renoncement (thread_state_cta_bar.dart)"
+  },
+  "negotiationAcceptedPaidTitle": "Demande acceptée et payée",
+    "@negotiationAcceptedPaidTitle": {
+    "description": "Bandeau ACCEPTED, paiement en ligne (thread_state_cta_bar.dart)"
+  },
+  "negotiationAcceptedTitle": "Demande acceptée",
+    "@negotiationAcceptedTitle": {
+    "description": "Bandeau ACCEPTED, paiement hors ligne (thread_state_cta_bar.dart)"
+  },
+  "negotiationAcceptedPaidSubtitle": "Tu peux passer aux étapes suivantes du suivi.",
+    "@negotiationAcceptedPaidSubtitle": {
+    "description": "Sous-titre du bandeau ACCEPTED payé en ligne (thread_state_cta_bar.dart)"
+  },
+  "negotiationAcceptedCashSubtitle": "Le paiement se fait en espèces à la remise du colis.",
+    "@negotiationAcceptedCashSubtitle": {
+    "description": "Sous-titre du bandeau ACCEPTED, paiement cash (thread_state_cta_bar.dart)"
+  },
+  "negotiationAcceptedOtherSubtitle": "Le paiement se fait à la remise du colis.",
+    "@negotiationAcceptedOtherSubtitle": {
+    "description": "Sous-titre du bandeau ACCEPTED, autre moyen hors ligne (thread_state_cta_bar.dart)"
+  },
+  "negotiationViewShipmentButton": "Voir mon envoi",
+    "@negotiationViewShipmentButton": {
+    "description": "Bouton vers le détail de l'envoi matérialisé (thread_state_cta_bar.dart)"
+  },
+  "negotiationEndedMessage": "Cette négociation est terminée",
+    "@negotiationEndedMessage": {
+    "description": "Message centré pour les statuts terminaux (thread_state_cta_bar.dart)"
+  },
+  "negotiationNudgeButton": "Relancer",
+    "@negotiationNudgeButton": {
+    "description": "Bouton secondaire de relance (thread_state_cta_bar.dart)"
+  },
+  "negotiationSenderAcceptButton": "Accepter : Tu paies {amount}",
+    "@negotiationSenderAcceptButton": {
+    "description": "Bouton d'acceptation côté expéditeur, montant brut (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationDeclineButton": "Rejeter",
+    "@negotiationDeclineButton": {
+    "description": "Bouton de refus, expéditeur et voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationTravelerAcceptButton": "Accepter : Tu reçois {amount}",
+    "@negotiationTravelerAcceptButton": {
+    "description": "Bouton d'acceptation côté voyageur, montant net (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationCommissionCountdownExpired": "Délai écoulé",
+    "@negotiationCommissionCountdownExpired": {
+    "description": "Compte à rebours de la commission, échéance dépassée (thread_state_cta_bar.dart)"
+  },
+  "negotiationCommissionCountdownHours": "Il te reste {hours}h {minutes}min",
+    "@negotiationCommissionCountdownHours": {
+    "description": "Compte à rebours de la commission, au moins une heure restante ; `minutes` déjà mis en forme sur deux chiffres (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationCommissionCountdownMinutes": "Il te reste {minutes}:{seconds}",
+    "@negotiationCommissionCountdownMinutes": {
+    "description": "Compte à rebours de la commission, moins d'une heure restante ; `minutes`/`seconds` déjà mis en forme sur deux chiffres (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationRefuseTripAction": "Refuser ce trajet",
+    "@negotiationRefuseTripAction": {
+    "description": "Bouton et titre de confirmation du refus d'un trajet lié (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationConfirmRefusalButton": "Confirmer le refus",
+    "@negotiationConfirmRefusalButton": {
+    "description": "Bouton de confirmation du refus (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationRefuseTripWarning": "Le voyageur devra proposer un autre trajet. Cette action est irréversible.",
+    "@negotiationRefuseTripWarning": {
+    "description": "Bandeau d'avertissement de la confirmation de refus (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationRefusalReasonLabel": "Raison du refus (optionnel)",
+    "@negotiationRefusalReasonLabel": {
+    "description": "Label du champ de raison du refus (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationRefusalReasonHint": "Ex : date incorrecte, trajet annulé…",
+    "@negotiationRefusalReasonHint": {
+    "description": "Placeholder du champ de raison du refus (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationLinkedTripSheetTitle": "Trajet lié",
+    "@negotiationLinkedTripSheetTitle": {
+    "description": "Titre de la feuille de détail du trajet lié (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripRouteLabel": "Itinéraire",
+    "@negotiationTripRouteLabel": {
+    "description": "Libellé de la ligne itinéraire (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripDepartureDateLabel": "Date de départ",
+    "@negotiationTripDepartureDateLabel": {
+    "description": "Libellé de la ligne date de départ (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripDepartureTimeLabel": "Heure de départ",
+    "@negotiationTripDepartureTimeLabel": {
+    "description": "Libellé de la ligne heure de départ (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripAvailableWeightLabel": "Poids disponible",
+    "@negotiationTripAvailableWeightLabel": {
+    "description": "Libellé de la ligne poids disponible (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripPickupAddressLabel": "Adresse de remise",
+    "@negotiationTripPickupAddressLabel": {
+    "description": "Libellé de la ligne adresse de remise (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripDeliveryAddressLabel": "Adresse de livraison",
+    "@negotiationTripDeliveryAddressLabel": {
+    "description": "Libellé de la ligne adresse de livraison (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripTravelerNoteLabel": "Note du voyageur",
+    "@negotiationTripTravelerNoteLabel": {
+    "description": "Libellé de la note du voyageur (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationEndedSnackbar": "Négociation terminée",
+    "@negotiationEndedSnackbar": {
+    "description": "Snackbar de fin de négociation via le menu (negotiation_thread_screen.dart)"
+  },
+  "negotiationRejectedSnackbar": "Négociation rejetée",
+    "@negotiationRejectedSnackbar": {
+    "description": "Snackbar de rejet via reject_bottom_sheet (negotiation_thread_screen.dart)"
+  },
+  "negotiationCommissionSettledSnackbar": "Commission réglée : ce colis est à toi !",
+    "@negotiationCommissionSettledSnackbar": {
+    "description": "Snackbar de succès du règlement de la commission (negotiation_thread_screen.dart)"
+  },
+  "negotiationGaveUpParcelSnackbar": "Tu as renoncé à ce colis, il reste disponible pour un autre voyageur.",
+    "@negotiationGaveUpParcelSnackbar": {
+    "description": "Snackbar de confirmation du renoncement (negotiation_thread_screen.dart)"
+  },
+  "negotiationFallbackTitle": "Négociation",
+    "@negotiationFallbackTitle": {
+    "description": "Titre de l'AppBar tant que le fil n'est pas chargé (negotiation_thread_screen.dart)"
+  },
+  "negotiationEndMenuItem": "Mettre fin à la négociation",
+    "@negotiationEndMenuItem": {
+    "description": "Entrée du menu ⋯ pour mettre fin à la négociation (negotiation_thread_screen.dart)"
+  },
+  "negotiationEndDialogTitle": "Mettre fin à cette négociation ?",
+    "@negotiationEndDialogTitle": {
+    "description": "Titre du dialog de confirmation de fin de négociation (negotiation_thread_screen.dart)"
+  },
+  "negotiationEndDialogMessage": "Cette action est définitive.",
+    "@negotiationEndDialogMessage": {
+    "description": "Message du dialog de confirmation de fin de négociation (negotiation_thread_screen.dart)"
+  },
+  "negotiationEndDialogConfirmButton": "Mettre fin",
+    "@negotiationEndDialogConfirmButton": {
+    "description": "Bouton de confirmation du dialog de fin de négociation (negotiation_thread_screen.dart)"
+  },
+  "negotiationListTitle": "Discussions de prix",
+    "@negotiationListTitle": {
+    "description": "Titre de l'écran « Discussions de prix » (my_negotiations_screen.dart)"
+  },
+  "negotiationEmptyTitle": "Aucune négociation",
+    "@negotiationEmptyTitle": {
+    "description": "Titre de l'état vide global et du filtre « Toutes » sans résultat (my_negotiations_screen.dart)"
+  },
+  "negotiationEmptyDescription": "Tes négociations actives apparaîtront ici dès qu'un voyageur fait une offre.",
+    "@negotiationEmptyDescription": {
+    "description": "Description de l'état vide global (my_negotiations_screen.dart)"
+  },
+  "negotiationSearchHint": "Voyageur, ville…",
+    "@negotiationSearchHint": {
+    "description": "Placeholder du champ de recherche (my_negotiations_screen.dart)"
+  },
+  "negotiationFilterAllCountLabel": "Toutes ({count})",
+    "@negotiationFilterAllCountLabel": {
+    "description": "Chip de filtre « Toutes » avec le total (my_negotiations_screen.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationFilterActiveCountLabel": "En cours ({count})",
+    "@negotiationFilterActiveCountLabel": {
+    "description": "Chip de filtre « En cours » avec le total (my_negotiations_screen.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationFilterTerminalCountLabel": "Terminées ({count})",
+    "@negotiationFilterTerminalCountLabel": {
+    "description": "Chip de filtre « Terminées » avec le total (my_negotiations_screen.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationEmptyActiveFilter": "Aucune négociation en cours",
+    "@negotiationEmptyActiveFilter": {
+    "description": "État vide du filtre « En cours » (my_negotiations_screen.dart)"
+  },
+  "negotiationEmptyTerminalFilter": "Aucune négociation terminée",
+    "@negotiationEmptyTerminalFilter": {
+    "description": "État vide du filtre « Terminées » (my_negotiations_screen.dart)"
+  },
+  "negotiationSourcePillRequest": "Demande",
+    "@negotiationSourcePillRequest": {
+    "description": "Pastille de source « Demande » sur une carte de négociation colis (my_negotiations_screen.dart)"
+  },
+  "negotiationTravelerFallbackWithId": "Voyageur {id}",
+    "@negotiationTravelerFallbackWithId": {
+    "description": "Nom de repli du voyageur avec les 4 premiers caractères de son id (my_negotiations_screen.dart)",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationStageDealPending": "accord",
+    "@negotiationStageDealPending": {
+    "description": "Libellé compact sous le prix, statut AWAITING_TRIP (my_negotiations_screen.dart, _NegoCard)"
+  },
+  "negotiationStageDepositInProgress": "dépôt en cours",
+    "@negotiationStageDepositInProgress": {
+    "description": "Libellé compact sous le prix, statut AWAITING_DEPOSIT (my_negotiations_screen.dart, _NegoCard)"
+  },
+  "negotiationStageCommissionDue": "commission due",
+    "@negotiationStageCommissionDue": {
+    "description": "Libellé compact sous le prix, statut AWAITING_COMMISSION (my_negotiations_screen.dart, _NegoCard)"
+  },
+  "negotiationStagePaid": "payé",
+    "@negotiationStagePaid": {
+    "description": "Libellé compact sous le prix, statut ACCEPTED (my_negotiations_screen.dart, _NegoCard)"
+  },
+  "negotiationTripCardCounterpartyFallback": "Interlocuteur",
+    "@negotiationTripCardCounterpartyFallback": {
+    "description": "Nom de repli de l'interlocuteur sur une carte de négociation de trajet (my_negotiations_screen.dart, _TripNegoCard)"
+  },
+  "negotiationTripCardRoundLabel": "Tour {round} · {timeAgo}",
+    "@negotiationTripCardRoundLabel": {
+    "description": "Ligne round + horodatage relatif d'une carte de négociation de trajet ; `timeAgo` déjà traduit (my_negotiations_screen.dart, _TripNegoCard)",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "timeAgo": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationLinkTripScreenTitle": "Lier un trajet",
+    "@negotiationLinkTripScreenTitle": {
+    "description": "Titre de l'AppBar de l'écran de liaison de trajet (link_trip_screen.dart)"
+  },
+  "negotiationSelectTripLabel": "Sélectionner un trajet",
+    "@negotiationSelectTripLabel": {
+    "description": "Label par défaut de la barre de sélection (link_trip_screen.dart)"
+  },
+  "negotiationConfirmTripLabel": "Confirmer ce trajet",
+    "@negotiationConfirmTripLabel": {
+    "description": "Label confirmé de la barre de sélection (link_trip_screen.dart)"
+  },
+  "negotiationSelectedTripCount": "1 trajet",
+    "@negotiationSelectedTripCount": {
+    "description": "Décompte affiché quand un trajet est sélectionné, toujours exactement un (link_trip_screen.dart)"
+  },
+  "negotiationLinkTripDate": "Date de voyage : {date}",
+    "@negotiationLinkTripDate": {
+    "description": "Date de voyage affichée sur le récapitulatif de l'écran de liaison (link_trip_screen.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationLinkTripKgAvailable": "{kg} kg dispo",
+    "@negotiationLinkTripKgAvailable": {
+    "description": "Kg disponibles du trajet sélectionné, utilisé aussi par my_negotiations_screen.dart (link_trip_screen.dart)",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationAcceptedAtPriceBanner": "Demande acceptée à {amount}",
+    "@negotiationAcceptedAtPriceBanner": {
+    "description": "Bandeau de récapitulatif du prix accepté (link_trip_screen.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationSenderChoosesAmong": "L'expéditeur choisira parmi",
+    "@negotiationSenderChoosesAmong": {
+    "description": "Titre de l'aperçu des moyens de paiement acceptés (link_trip_screen.dart)"
+  },
+  "errorCommissionConfirmFailedTitle": "Règlement non confirmé",
+    "@errorCommissionConfirmFailedTitle": {
+    "description": "Titre : la confirmation du règlement de commission d'une négociation a échoué (negotiation_bloc.dart, code commission/confirm-failed)"
+  },
+  "errorCommissionConfirmFailedMessage": "Confirmation du règlement échouée",
+    "@errorCommissionConfirmFailedMessage": {
+    "description": "Message de repli du constructeur (le detail serveur, ex. \"PaymentIntent status: ...\", reste affiché quand il existe — code dans _serverDetailCodes)"
+  },
+  "errorCommission3dsInterruptedTitle": "Authentification interrompue",
+    "@errorCommission3dsInterruptedTitle": {
+    "description": "Titre : la 3DS du règlement de commission a été interrompue (negotiation_bloc.dart, code commission/3ds-interrupted)"
+  },
+  "errorCommission3dsInterruptedMessage": "Authentification bancaire interrompue",
+    "@errorCommission3dsInterruptedMessage": {
+    "description": "Message affiché quand StripeException interrompt la 3DS du règlement de commission (negotiation_bloc.dart)"
+  },
+  "errorCommissionFailedTitle": "Règlement refusé",
+    "@errorCommissionFailedTitle": {
+    "description": "Titre : le règlement de la commission d'une négociation a été refusé (negotiation_bloc.dart, code commission/failed)"
+  },
+  "errorCommissionFailedMessage": "Règlement de la commission refusé",
+    "@errorCommissionFailedMessage": {
+    "description": "Repli quand le detail machine (r.error) n'est reconnu ni comme un des trois codes connus ni comme card-status-* — Ruling R35 : jamais le code brut"
+  },
+  "errorCommissionFailedNoCardMessage": "Aucune carte enregistrée pour régler la commission.",
+    "@errorCommissionFailedNoCardMessage": {
+    "description": "Traduction du code machine backend no-commission-card (settleNegotiationCommission) — Ruling R35"
+  },
+  "errorCommissionFailedCardDeclinedMessage": "Ta carte a été refusée.",
+    "@errorCommissionFailedCardDeclinedMessage": {
+    "description": "Traduction du code machine backend card-declined (settleNegotiationCommission) — Ruling R35"
+  },
+  "errorCommissionFailedStripeErrorMessage": "Erreur du service de paiement, réessaie.",
+    "@errorCommissionFailedStripeErrorMessage": {
+    "description": "Traduction du code machine backend stripe-error (settleNegotiationCommission) — Ruling R35"
+  },
+  "errorCommissionFailedCardStatusMessage": "Le règlement par carte n'a pas abouti.",
+    "@errorCommissionFailedCardStatusMessage": {
+    "description": "Repli générique pour tout code machine backend card-status-<statut Stripe> (settleNegotiationCommission) — Ruling R35, jamais le statut Stripe brut"
+  },
+  "bidAcceptConfirmFailed": "Confirmation échouée",
+    "@bidAcceptConfirmFailed": {
+    "description": "BidFailed, reason confirmFailed : repli quand la confirmation post-3DS échoue sans message serveur (bid_acceptance_bloc.dart)"
+  },
+  "bidAcceptBankAuthInterrupted": "Authentification bancaire interrompue",
+    "@bidAcceptBankAuthInterrupted": {
+    "description": "BidFailed, reason bankAuthInterrupted : la 3DS de l'acceptation d'un bid est interrompue (StripeException, bid_acceptance_bloc.dart)"
+  },
+  "bidAcceptRefused": "Acceptation refusée",
+    "@bidAcceptRefused": {
+    "description": "BidFailed, reason refused : repli quand l'acceptation échoue sans message serveur (bid_acceptance_bloc.dart)"
+  },
+  "negotiationMakeOfferTitle": "Faire une offre",
+    "@negotiationMakeOfferTitle": {
+    "description": "Titre de la feuille quand le prix n'est pas ferme (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferTakeAtLabel": "Prendre à {amount}",
+    "@negotiationMakeOfferTakeAtLabel": {
+    "description": "Bouton de la feuille, prix ferme avec montant connu (make_offer_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationMakeOfferSendButtonLabel": "Envoyer l'offre",
+    "@negotiationMakeOfferSendButtonLabel": {
+    "description": "Bouton de la feuille, offre négociable (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferSelectTravelDate": "Sélectionnez votre date de voyage",
+    "@negotiationMakeOfferSelectTravelDate": {
+    "description": "Snackbar d'avertissement si la date de voyage n'est pas choisie (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferSelectTrip": "Sélectionnez ou créez un trajet",
+    "@negotiationMakeOfferSelectTrip": {
+    "description": "Snackbar d'avertissement si aucun trajet n'est sélectionné (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferYourPriceLabel": "VOTRE PRIX",
+    "@negotiationMakeOfferYourPriceLabel": {
+    "description": "Label majuscule du champ prix, offre négociable (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferCapacityLabel": "CAPACITÉ",
+    "@negotiationMakeOfferCapacityLabel": {
+    "description": "Label majuscule du champ capacité (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferTravelDateLabel": "DATE DE VOYAGE",
+    "@negotiationMakeOfferTravelDateLabel": {
+    "description": "Label majuscule du champ date (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferSelectDatePlaceholder": "Sélectionner…",
+    "@negotiationMakeOfferSelectDatePlaceholder": {
+    "description": "Texte du champ date tant qu'aucune date n'est choisie (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferMessageLabel": "MESSAGE",
+    "@negotiationMakeOfferMessageLabel": {
+    "description": "Label majuscule du champ message, identique dans les deux langues (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferMessageOptional": "optionnel",
+    "@negotiationMakeOfferMessageOptional": {
+    "description": "Sous-label du champ message (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferMessageHint": "Je voyage exactement ce jour-là…",
+    "@negotiationMakeOfferMessageHint": {
+    "description": "Texte d'indication du champ message (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferInvalidPrice": "Invalide",
+    "@negotiationMakeOfferInvalidPrice": {
+    "description": "Erreur de validation du champ prix (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferOfferSentSnackbar": "Offre envoyée",
+    "@negotiationMakeOfferOfferSentSnackbar": {
+    "description": "Snackbar de succès à l'envoi de l'offre (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferMarketPriceLabel": "Prix du marché",
+    "@negotiationMakeOfferMarketPriceLabel": {
+    "description": "Label de la bannière d'estimation de prix (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationPaySecurelyTitle": "Payer en toute sécurité",
+    "@negotiationPaySecurelyTitle": {
+    "description": "Titre de la feuille en étape de paiement final (accept_offer_bottom_sheet.dart, aussi payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationAcceptOfferTitle": "Accepter l'offre",
+    "@negotiationAcceptOfferTitle": {
+    "description": "Titre de la feuille hors étape de paiement final (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationProcessingLabel": "Traitement…",
+    "@negotiationProcessingLabel": {
+    "description": "Libellé du bouton pendant le traitement (accept_offer_bottom_sheet.dart, aussi payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationAcceptOfferPayButtonLabel": "Payer ({amount})",
+    "@negotiationAcceptOfferPayButtonLabel": {
+    "description": "Bouton de paiement final (accept_offer_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationAcceptOfferConfirmButtonLabel": "Confirmer ({amount})",
+    "@negotiationAcceptOfferConfirmButtonLabel": {
+    "description": "Bouton d'acceptation du prix, hors paiement final (accept_offer_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationAcceptOfferPaymentContextTraveler": "Paiement de l'offre acceptée",
+    "@negotiationAcceptOfferPaymentContextTraveler": {
+    "description": "contextLabel de la feuille Stripe, vu par le voyageur (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationAcceptOfferPaymentContextSender": "Paiement de votre offre",
+    "@negotiationAcceptOfferPaymentContextSender": {
+    "description": "contextLabel de la feuille Stripe, vu par l'expéditeur (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationOfferAcceptedPaidTitle": "Offre acceptée et payée !",
+    "@negotiationOfferAcceptedPaidTitle": {
+    "description": "Titre de l'écran de succès après paiement carte (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_paid_success_screen.dart)"
+  },
+  "negotiationOfferAcceptedPaidSubtitle": "Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu'après confirmation de la livraison. Suis ton colis depuis le fil.",
+    "@negotiationOfferAcceptedPaidSubtitle": {
+    "description": "Sous-titre de l'écran de succès après paiement carte (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_paid_success_screen.dart)"
+  },
+  "negotiationTrackShipmentCta": "Voir le suivi",
+    "@negotiationTrackShipmentCta": {
+    "description": "CTA des écrans de succès de négociation (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_paid_success_screen.dart)"
+  },
+  "negotiationAcceptOfferAgreedSubtitleSender": "Vous êtes d'accord sur le prix. Le voyageur va confirmer son trajet, puis tu finaliseras les détails de l'envoi et le règlement depuis le fil.",
+    "@negotiationAcceptOfferAgreedSubtitleSender": {
+    "description": "Sous-titre de l'écran de succès (accord de prix, vu par l'expéditeur) (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationAcceptOfferAgreedSubtitleTravelerLinked": "Vous êtes d'accord sur le prix. L'expéditeur va finaliser les détails de l'envoi et le règlement, tu seras notifié à chaque étape.",
+    "@negotiationAcceptOfferAgreedSubtitleTravelerLinked": {
+    "description": "Sous-titre de l'écran de succès (accord de prix, voyageur avec trajet déjà lié) (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationAcceptOfferAgreedSubtitleTravelerUnlinked": "Vous êtes d'accord sur le prix. Prochaine étape : lie ou crée un trajet pour cette offre afin que l'expéditeur puisse finaliser le règlement.",
+    "@negotiationAcceptOfferAgreedSubtitleTravelerUnlinked": {
+    "description": "Sous-titre de l'écran de succès (accord de prix, voyageur sans trajet lié) (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationAgreementConfirmedTitle": "Accord confirmé !",
+    "@negotiationAgreementConfirmedTitle": {
+    "description": "Titre de l'écran de succès après accord de prix ou accord cash (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationGenericErrorSnackbar": "Une erreur est survenue. Veuillez réessayer.",
+    "@negotiationGenericErrorSnackbar": {
+    "description": "Snackbar d'erreur générique du flux de paiement (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationPriceBreakdownPaidBySender": "Prix payé par l'expéditeur",
+    "@negotiationPriceBreakdownPaidBySender": {
+    "description": "Ligne de décomposition de prix, vue voyageur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
+  },
+  "negotiationPriceBreakdownNetTraveler": "Net voyageur",
+    "@negotiationPriceBreakdownNetTraveler": {
+    "description": "Ligne de décomposition de prix, vue expéditeur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
+  },
+  "negotiationPriceBreakdownYouReceive": "Tu reçois",
+    "@negotiationPriceBreakdownYouReceive": {
+    "description": "Label du total, vue voyageur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
+  },
+  "negotiationPriceBreakdownTotalToSettle": "Total à régler",
+    "@negotiationPriceBreakdownTotalToSettle": {
+    "description": "Label du total, vue expéditeur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
+  },
+  "negotiationPriceBreakdownPromoBadge": "Promo",
+    "@negotiationPriceBreakdownPromoBadge": {
+    "description": "Badge affiché quand une remise promo réelle s'applique, identique dans les deux langues (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
+  },
+  "negotiationAcceptOfferInfoTraveler": "En acceptant, l'expéditeur effectuera le paiement. Tu recevras {price} à la livraison validée, quel que soit un éventuel code promo utilisé par l'expéditeur.",
+    "@negotiationAcceptOfferInfoTraveler": {
+    "description": "Texte d'explication sous la décomposition de prix, vu voyageur (accept_offer_bottom_sheet.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationAcceptOfferInfoSender": "En confirmant, le paiement est bloqué et sécurisé. Le voyageur reçoit le montant à la livraison validée.",
+    "@negotiationAcceptOfferInfoSender": {
+    "description": "Texte d'explication sous la décomposition de prix, vu expéditeur (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationCounterOfferTitle": "Faire une contre-offre",
+    "@negotiationCounterOfferTitle": {
+    "description": "Titre de la feuille de contre-offre (counter_offer_bottom_sheet.dart)"
+  },
+  "negotiationCounterOfferSubtitle": "{priceLabel} · Round {round}/5",
+    "@negotiationCounterOfferSubtitle": {
+    "description": "Sous-titre : prix actuel (déjà traduit) + round courant (counter_offer_bottom_sheet.dart)",
+    "placeholders": {
+      "priceLabel": {
+        "type": "String"
+      },
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationCounterOfferYourPriceLabel": "Ton prix proposé",
+    "@negotiationCounterOfferYourPriceLabel": {
+    "description": "Label du champ prix (counter_offer_bottom_sheet.dart)"
+  },
+  "negotiationCounterOfferMessageLabel": "Message (optionnel)",
+    "@negotiationCounterOfferMessageLabel": {
+    "description": "Label du champ message (counter_offer_bottom_sheet.dart)"
+  },
+  "negotiationCounterOfferMessageHint": "Explique ta proposition…",
+    "@negotiationCounterOfferMessageHint": {
+    "description": "Texte d'indication du champ message (counter_offer_bottom_sheet.dart)"
+  },
+  "negotiationRejectTitle": "Rejeter la négociation",
+    "@negotiationRejectTitle": {
+    "description": "Titre de la feuille de rejet (reject_bottom_sheet.dart)"
+  },
+  "negotiationRejectConfirmLabel": "Confirmer le rejet",
+    "@negotiationRejectConfirmLabel": {
+    "description": "Bouton de confirmation du rejet (reject_bottom_sheet.dart)"
+  },
+  "negotiationRejectReasonLabel": "Raison (optionnel)",
+    "@negotiationRejectReasonLabel": {
+    "description": "Label du champ raison (reject_bottom_sheet.dart)"
+  },
+  "negotiationPaymentRecapConfirmAgreementTitle": "Confirmer l'accord",
+    "@negotiationPaymentRecapConfirmAgreementTitle": {
+    "description": "Titre et bouton de la feuille en mode cash (payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationPaymentRecapMobileMoneyTitle": "Payer par mobile money",
+    "@negotiationPaymentRecapMobileMoneyTitle": {
+    "description": "Titre de la feuille en mode mobile money (payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationPaymentRecapPayButtonLabel": "Payer {amount}",
+    "@negotiationPaymentRecapPayButtonLabel": {
+    "description": "Bouton de paiement en mode carte (payment_recap_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationPaymentRecapPayMobileMoneyButton": "Payer {amount} par mobile money",
+    "@negotiationPaymentRecapPayMobileMoneyButton": {
+    "description": "Bouton de paiement en mode mobile money (payment_recap_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationPaymentRecapContextConfirm": "Confirmation de l'accord",
+    "@negotiationPaymentRecapContextConfirm": {
+    "description": "contextLabel de la feuille Stripe quand le mode est cash (payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationPaymentRecapContextSecure": "Paiement sécurisé",
+    "@negotiationPaymentRecapContextSecure": {
+    "description": "contextLabel de la feuille Stripe quand le mode est carte (payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationPaymentRecapCashSuccessSubtitle": "Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s'assurera que le voyageur te restitue ton argent.",
+    "@negotiationPaymentRecapCashSuccessSubtitle": {
+    "description": "Sous-titre de l'écran de succès en mode cash (payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationPaymentRecapCashHandoverLabel": "À remettre au voyageur (en espèces)",
+    "@negotiationPaymentRecapCashHandoverLabel": {
+    "description": "Ligne du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapCashFeeNote": "dont frais Yadony (réglés par le voyageur)",
+    "@negotiationPaymentRecapCashFeeNote": {
+    "description": "Sous-ligne du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapCashNetLabel": "Le voyageur garde net",
+    "@negotiationPaymentRecapCashNetLabel": {
+    "description": "Ligne totale du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapTravelerReceivesLabel": "Le voyageur touche",
+    "@negotiationPaymentRecapTravelerReceivesLabel": {
+    "description": "Ligne du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapServiceFeeLabel": "Frais de service Yadony",
+    "@negotiationPaymentRecapServiceFeeLabel": {
+    "description": "Ligne du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapTotalToPayLabel": "Total à payer",
+    "@negotiationPaymentRecapTotalToPayLabel": {
+    "description": "Ligne totale du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapCashNote": "Remettez le montant total en espèces au voyageur lors de la remise du colis. Le voyageur déduira ses frais Yadony de ce montant.",
+    "@negotiationPaymentRecapCashNote": {
+    "description": "Note explicative sous le récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapMobileMoneyNote": "Une demande de paiement arrive sur le numéro indiqué ci-dessous. Le voyageur reçoit le montant uniquement après confirmation de la livraison.",
+    "@negotiationPaymentRecapMobileMoneyNote": {
+    "description": "Note explicative sous le récapitulatif de frais, mode mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapSecureNote": "Le montant est bloqué et sécurisé. Le voyageur le reçoit uniquement après confirmation de la livraison.",
+    "@negotiationPaymentRecapSecureNote": {
+    "description": "Note explicative sous le récapitulatif de frais, mode carte (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapCashBannerMessage": "Paiement en main propre à la remise",
+    "@negotiationPaymentRecapCashBannerMessage": {
+    "description": "Bannière de confiance, mode cash (payment_recap_bottom_sheet.dart, _TrustBanner)"
+  },
+  "negotiationPaymentRecapMobileMoneyBannerMessage": "Tu valides le paiement sur ton téléphone. Yadony garde l'argent et ne le verse au voyageur qu'après confirmation de la livraison.",
+    "@negotiationPaymentRecapMobileMoneyBannerMessage": {
+    "description": "Bannière de confiance, mode mobile money (payment_recap_bottom_sheet.dart, _TrustBanner)"
+  },
+  "negotiationPaymentRecapSecureBannerMessage": "Sécurisé · bloqué jusqu'à la livraison",
+    "@negotiationPaymentRecapSecureBannerMessage": {
+    "description": "Bannière de confiance, mode carte (payment_recap_bottom_sheet.dart, _TrustBanner)"
+  },
+  "negotiationCommissionSettlementTitle": "Solde insuffisant",
+    "@negotiationCommissionSettlementTitle": {
+    "description": "Titre de la feuille de règlement de commission en solde insuffisant (commission_settlement_sheet.dart)"
+  },
+  "negotiationCommissionSettlementHint": "Recharge ton portefeuille ou paie la commission directement par carte.",
+    "@negotiationCommissionSettlementHint": {
+    "description": "Texte d'aide de la feuille de règlement de commission (commission_settlement_sheet.dart)"
+  },
+  "negotiationCommissionSettlementTopupButton": "Recharger mon portefeuille",
+    "@negotiationCommissionSettlementTopupButton": {
+    "description": "Bouton de recharge du portefeuille (commission_settlement_sheet.dart)"
+  },
+  "negotiationCommissionSettlementPayCardButton": "Payer par carte",
+    "@negotiationCommissionSettlementPayCardButton": {
+    "description": "Bouton de règlement direct par carte (commission_settlement_sheet.dart)"
+  },
+  "negotiationCommissionSettlementAddCardButton": "Ajouter une carte",
+    "@negotiationCommissionSettlementAddCardButton": {
+    "description": "Bouton d'ajout de carte quand le voyageur n'en a pas encore (commission_settlement_sheet.dart)"
+  },
+  "negotiationCardCapabilityRequiredTitle": "Paiement carte requis",
+    "@negotiationCardCapabilityRequiredTitle": {
+    "description": "Titre de la feuille quand Stripe Connect est disponible dans le pays (payment_capability_block_sheets.dart)"
+  },
+  "negotiationCardCapabilityUnavailableTitle": "Colis indisponible",
+    "@negotiationCardCapabilityUnavailableTitle": {
+    "description": "Titre de la feuille quand Stripe Connect n'est pas disponible dans le pays (payment_capability_block_sheets.dart)"
+  },
+  "negotiationCardCapabilityRequiredBody": "L'expéditeur n'accepte que le paiement par carte pour ce colis. Active les paiements par carte pour pouvoir lier ce trajet.",
+    "@negotiationCardCapabilityRequiredBody": {
+    "description": "Corps de la feuille quand Stripe Connect est disponible dans le pays (payment_capability_block_sheets.dart)"
+  },
+  "negotiationCardCapabilityUnavailableBody": "L'expéditeur n'accepte que le paiement par carte pour ce colis, et Stripe ne permet pas encore d'ouvrir un compte de paiement depuis ton pays. Tu peux lier les colis payés en espèces.",
+    "@negotiationCardCapabilityUnavailableBody": {
+    "description": "Corps de la feuille quand Stripe Connect n'est pas disponible dans le pays (payment_capability_block_sheets.dart)"
+  },
+  "negotiationCardCapabilityActivateButton": "Activer le paiement carte",
+    "@negotiationCardCapabilityActivateButton": {
+    "description": "Bouton vers l'onboarding Stripe Connect (payment_capability_block_sheets.dart)"
+  },
+  "negotiationCardCapabilityUnderstoodButton": "J'ai compris",
+    "@negotiationCardCapabilityUnderstoodButton": {
+    "description": "Bouton de fermeture quand aucune action n'est possible (payment_capability_block_sheets.dart)"
+  },
+  "negotiationCardRoundShortLabel": "R.{round}/5 · {timeAgo}",
+    "@negotiationCardRoundShortLabel": {
+    "description": "Ligne round abrégé + horodatage relatif d'une carte de négociation colis ; `timeAgo` déjà traduit (my_negotiations_screen.dart, _NegoCard)",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "timeAgo": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationMakeOfferConfidenceHigh": "élevée",
+    "@negotiationMakeOfferConfidenceHigh": {
+    "description": "Badge de confiance de l'estimation de prix, valeur HIGH (make_offer_bottom_sheet.dart, _EstimationBanner) — correction relecture C5, remplace l'ancien affichage brut de wireName"
+  },
+  "negotiationMakeOfferConfidenceMedium": "moyenne",
+    "@negotiationMakeOfferConfidenceMedium": {
+    "description": "Badge de confiance de l'estimation de prix, valeur MEDIUM (make_offer_bottom_sheet.dart, _EstimationBanner) — correction relecture C5"
+  },
+  "negotiationMakeOfferConfidenceLow": "faible",
+    "@negotiationMakeOfferConfidenceLow": {
+    "description": "Badge de confiance de l'estimation de prix, valeur LOW/repli (make_offer_bottom_sheet.dart, _EstimationBanner) — correction relecture C5"
+  },
+  "profileSheetRatingLabel": "Note",
+    "@profileSheetRatingLabel": {
+    "description": "Libellé de la note moyenne (★) dans les fiches de profil (sender_profile_sheet.dart, traveler_profile_sheet.dart) — correction relecture finale C, remplace listingRowLabelNote qui désignait une note écrite"
   }
 }

@@ -8,10 +8,20 @@ class BidAccepting extends BidAcceptanceState {}
 
 class BidAccepted extends BidAcceptanceState {}
 
+/// Raison d'un échec d'acceptation quand le serveur ne fournit pas de detail
+/// exploitable (`serverMessage` vide ou absent) : `display()` choisit alors la
+/// clé ARB correspondante — jamais de texte transporté par le bloc.
+enum BidFailureReason { confirmFailed, bankAuthInterrupted, refused }
+
 class BidFailed extends BidAcceptanceState {
-  final String message;
+  final String? serverMessage;
+  final BidFailureReason reason;
   final bool cardDeclined;
-  BidFailed(this.message, {this.cardDeclined = false});
+  BidFailed({
+    this.serverMessage,
+    required this.reason,
+    this.cardDeclined = false,
+  });
 }
 
 class BidWalletInsufficient extends BidAcceptanceState {

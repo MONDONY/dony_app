@@ -1,8 +1,11 @@
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../../../helpers/l10n_test_helpers.dart';
 
 NegotiationThread _thread({
   required NegotiationThreadStatus status,
@@ -86,8 +89,12 @@ void main() {
     });
 
     test('libellés : pastille « DÉPÔT », prix « DÉPÔT EN COURS »', () {
-      expect(ThreadStatusVariant.awaitingDeposit.badge, 'DÉPÔT');
-      expect(ThreadStatusVariant.awaitingDeposit.priceLabel, 'DÉPÔT EN COURS');
+      final l = lookupAppLocalizations(AppL10n.fr);
+      expect(ThreadStatusVariant.awaitingDeposit.badge(l), 'DÉPÔT');
+      expect(
+        ThreadStatusVariant.awaitingDeposit.priceLabel(l),
+        'DÉPÔT EN COURS',
+      );
       expect(ThreadStatusVariant.awaitingDeposit.iconAsset, 'smartphone');
     });
 
@@ -260,6 +267,56 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('TERMINÉ'), findsOneWidget);
       expect(find.text('PRIX FINAL'), findsOneWidget);
+    });
+  });
+
+  group('en anglais', () {
+    testWidgets(
+      'label "IN PROGRESS" + "CURRENT PRICE" + "Round 1/5" pour OPEN',
+      (tester) async {
+        useEnglish();
+        await tester.pumpWidget(
+          wrap(
+            ThreadHeroCard(
+              thread: _thread(status: NegotiationThreadStatus.open),
+              statusVariant: ThreadStatusVariant.open,
+              isTraveler: true,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('IN PROGRESS'), findsOneWidget);
+        expect(find.text('CURRENT PRICE'), findsOneWidget);
+        expect(find.text('Round 1/5'), findsOneWidget);
+      },
+    );
+
+    testWidgets('alerte dernier round traduite', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(
+          ThreadHeroCard(
+            thread: _thread(
+              status: NegotiationThreadStatus.open,
+              rounds: 5,
+              roundsRemaining: 0,
+            ),
+            statusVariant: ThreadStatusVariant.open,
+            isTraveler: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('⚠ Last round: Accept or Decline only'), findsOneWidget);
+    });
+
+    test('libellés DÉPÔT traduits', () {
+      final l = lookupAppLocalizations(AppL10n.en);
+      expect(ThreadStatusVariant.awaitingDeposit.badge(l), 'DEPOSIT');
+      expect(
+        ThreadStatusVariant.awaitingDeposit.priceLabel(l),
+        'DEPOSIT IN PROGRESS',
+      );
     });
   });
 }

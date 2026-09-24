@@ -17,12 +17,14 @@ import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -247,7 +249,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
       setState(_processingBidIds.clear);
       DonySnackbar.show(
         context,
-        message: state.message,
+        message: state.displayMessage(context.l10n),
         type: DonySnackbarType.error,
       );
     }

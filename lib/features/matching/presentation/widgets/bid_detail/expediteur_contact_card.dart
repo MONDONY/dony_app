@@ -11,11 +11,13 @@ import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.d
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -56,7 +58,7 @@ class ExpediteurContactCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final name = bid.resolvedSenderName;
+    final name = bid.senderDisplayName(context.l10n);
     final canOpenProfile = bid.senderId.isNotEmpty;
 
     return InkWell(

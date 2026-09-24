@@ -1037,7 +1037,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
             emit(
               NegotiationError(
                 ValidationException(
-                  c.error ?? 'Confirmation du règlement échouée',
+                  c.error ?? 'Confirmation du règlement échouée', // i18n-ignore
                   code: 'commission/confirm-failed',
                 ),
               ),
@@ -1047,7 +1047,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
           emit(
             const NegotiationError(
               ValidationException(
-                'Authentification bancaire interrompue',
+                'Authentification bancaire interrompue', // i18n-ignore
                 code: 'commission/3ds-interrupted',
               ),
             ),
@@ -1070,7 +1070,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         emit(
           NegotiationError(
             ValidationException(
-              r.error ?? 'Règlement de la commission refusé',
+              r.error ?? 'Règlement de la commission refusé', // i18n-ignore
               code: 'commission/failed',
             ),
           ),

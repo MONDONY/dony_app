@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -48,16 +49,16 @@ class TravelerProfileLoaderScreen extends StatelessWidget {
 
           final description = state is AnnouncementError
               ? ErrorPresenter.resolve(state.error).message
-              : 'Impossible de charger le détail';
+              : context.l10n.travelerProfileLoadErrorDescription;
           return Scaffold(
             appBar: const DonyAppBar(title: ''),
             body: DonyEmptyState(
               iconAsset: 'circle-alert',
               type: DonyEmptyStateType.error,
               mascotte: DonyMascotteType.erreurLegere,
-              title: 'Erreur de chargement',
+              title: context.l10n.travelerProfileLoadErrorTitle,
               description: description,
-              actionLabel: 'Réessayer',
+              actionLabel: context.l10n.commonRetry,
               onAction: () => context.read<AnnouncementBloc>().add(
                 AnnouncementDetailRequested(announcementId),
               ),

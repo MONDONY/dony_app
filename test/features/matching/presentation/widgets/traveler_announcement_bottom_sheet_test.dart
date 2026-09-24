@@ -36,6 +36,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
@@ -94,6 +96,7 @@ AnnouncementModel _buildAnnouncement({
   String? departureTime,
   String? arrivalTime,
   String? arrivalInstructions,
+  String? capacityUnit,
   Set<BidPaymentMethod> acceptedPaymentMethods = const {
     BidPaymentMethod.stripe,
   },
@@ -110,6 +113,7 @@ AnnouncementModel _buildAnnouncement({
     availableKg: 12,
     totalKg: 20,
     pricePerKg: 8,
+    capacityUnit: capacityUnit,
     currency: currency,
     status: 'ACTIVE',
     negotiable: negotiable,
@@ -1186,5 +1190,19 @@ void main() {
 
       expect(find.byKey(const Key('block-traveler-link')), findsNothing);
     });
+  });
+
+  testWidgets('en anglais : titre de la feuille et Kg libre traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    final a = _buildAnnouncement(kycVerified: true, capacityUnit: 'KG_FREE');
+    await tester.pumpWidget(_harness(announcement: a));
+    await tester.tap(find.text('Ouvrir'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Trip details'), findsOneWidget);
+    expect(find.text('Flexible kg'), findsOneWidget);
+    expect(find.text('Détail du trajet'), findsNothing);
   });
 }

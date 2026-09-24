@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 AnnouncementModel _announcement({
   String status = 'ACTIVE',
   double totalKg = 20,
@@ -371,5 +373,25 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     await tester.tap(find.byType(TripCard));
     expect(tapped, isTrue);
+  });
+
+  testWidgets('en anglais : « Flexible kg » plutôt que « Kg libre »', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        TripCard(
+          announcement: _announcement(capacityUnit: 'KG_FREE'),
+          onTap: () {},
+          index: 0,
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Flexible kg'), findsOneWidget);
+    expect(find.text('Kg libre'), findsNothing);
+    expect(find.text('Active'), findsOneWidget);
   });
 }

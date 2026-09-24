@@ -1,5 +1,7 @@
 import 'package:dony/core/utils/text_search.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 export 'package:dony/core/utils/text_search.dart' show normalizeSearch;
@@ -51,10 +53,13 @@ bool isPendingBid(BidModel bid) =>
     bid.status == 'PENDING' || bid.status == 'PAYMENT_ESCROWED';
 
 /// `true` si le bid correspond à la requête (nom de l'expéditeur ou n° de suivi).
+///
+/// Pas de `BuildContext` ici (filtre pur) : le nom de repli traduit passe par
+/// [AppL10n.current], la langue courante hors contexte.
 bool bidMatchesQuery(BidModel bid, String query) {
   final q = normalizeSearch(query.trim());
   if (q.isEmpty) return true;
-  final name = normalizeSearch(bid.resolvedSenderName);
+  final name = normalizeSearch(bid.senderDisplayName(AppL10n.current));
   final track = normalizeSearch(bid.trackingNumber ?? '');
   return name.contains(q) || track.contains(q);
 }

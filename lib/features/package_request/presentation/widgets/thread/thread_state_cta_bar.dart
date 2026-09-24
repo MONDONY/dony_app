@@ -13,6 +13,7 @@ import 'package:dony/features/package_request/presentation/widgets/counter_offer
 import 'package:dony/features/package_request/presentation/widgets/payment_recap_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/reject_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_state_banner.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -69,18 +70,19 @@ class ThreadStateCtaBar extends StatelessWidget {
       listenWhen: (previous, current) =>
           current is NegotiationNudgeSent || current is NegotiationNudgeError,
       listener: (ctx, state) {
+        final l = ctx.l10n;
         if (state is NegotiationNudgeSent) {
           DonySnackbar.show(
             ctx,
-            message: 'Relance envoyée',
+            message: l.negotiationNudgeSentMessage,
             type: DonySnackbarType.success,
           );
         } else if (state is NegotiationNudgeError) {
           DonySnackbar.show(
             ctx,
             message: state.error.code == 'nudge/rate-limited'
-                ? 'Déjà relancé récemment'
-                : 'Impossible de relancer pour le moment, réessaie plus tard',
+                ? l.negotiationNudgeRateLimitedMessage
+                : l.negotiationNudgeGenericErrorMessage,
             type: DonySnackbarType.warning,
           );
         }
@@ -117,14 +119,15 @@ class ThreadStateCtaBar extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     switch (thread.status) {
       case NegotiationThreadStatus.open:
         if (_lastFromMe) {
-          return const ThreadStateBanner(
+          return ThreadStateBanner(
             iconAsset: 'hourglass',
             tint: kWarning,
-            message: 'En attente de la réponse',
-            subtitle: 'Tu seras notifié dès que la partie adverse répondra.',
+            message: l.negotiationOpenAwaitingReplyTitle,
+            subtitle: l.negotiationOpenAwaitingReplySubtitle,
           );
         }
         return _isSender
@@ -139,18 +142,18 @@ class ThreadStateCtaBar extends StatelessWidget {
 
       case NegotiationThreadStatus.awaitingTrip:
         if (_isSender) {
-          return const ThreadStateBanner(
+          return ThreadStateBanner(
             iconAsset: 'hourglass',
             tint: kWarning,
-            message: 'Le voyageur prépare son trajet',
-            subtitle: "Tu seras notifié dès qu'il l'aura confirmé.",
+            message: l.negotiationAwaitingTripSenderTitle,
+            subtitle: l.negotiationAwaitingTripSenderSubtitle,
           );
         }
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             DonyButton(
-              label: 'Lier un trajet à cette offre',
+              label: l.negotiationLinkTripButton,
               onPressed: actionInProgress
                   ? null
                   : () => context.push(
@@ -160,7 +163,7 @@ class ThreadStateCtaBar extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             DonyButton(
-              label: 'Créer un trajet dédié',
+              label: l.negotiationCreateDedicatedTripButton,
               variant: DonyButtonVariant.secondary,
               onPressed: actionInProgress
                   ? null
@@ -175,17 +178,22 @@ class ThreadStateCtaBar extends StatelessWidget {
       case NegotiationThreadStatus.awaitingPayment:
         return _isSender
             ? DonyButton(
-                label:
-                    'Compléter & payer ${PriceDisplay.money(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur), thread.currency)}',
+                label: l.negotiationCompleteAndPayButton(
+                  PriceDisplay.money(
+                    thread.grossPriceEur ??
+                        PriceDisplay.grossFromNet(thread.currentPriceEur),
+                    thread.currency,
+                  ),
+                ),
                 onPressed: actionInProgress
                     ? null
                     : () => _completeDetailsThenPay(context, thread),
               )
-            : const ThreadStateBanner(
+            : ThreadStateBanner(
                 iconAsset: 'banknote',
                 tint: kGreenPrimary,
-                message: "En attente du paiement de l'expéditeur",
-                subtitle: "Tu seras notifié dès qu'il aura réglé.",
+                message: l.negotiationAwaitingPaymentTravelerTitle,
+                subtitle: l.negotiationAwaitingPaymentTravelerSubtitle,
               );
 
       case NegotiationThreadStatus.awaitingDeposit:
@@ -194,11 +202,11 @@ class ThreadStateCtaBar extends StatelessWidget {
         // voyageur n'a rien à faire ; l'expéditeur peut rouvrir l'écran
         // d'attente ou renoncer pour changer de moyen de paiement.
         if (!_isSender) {
-          return const ThreadStateBanner(
+          return ThreadStateBanner(
             iconAsset: 'smartphone',
             tint: kGreenPrimary,
-            message: "L'expéditeur règle par mobile money",
-            subtitle: 'Tu seras notifié dès que le paiement sera confirmé.',
+            message: l.negotiationAwaitingDepositTravelerTitle,
+            subtitle: l.negotiationAwaitingDepositTravelerSubtitle,
           );
         }
         return _SenderDepositActions(
@@ -216,10 +224,8 @@ class ThreadStateCtaBar extends StatelessWidget {
             ? ThreadStateBanner(
                 iconAsset: 'clock',
                 tint: cs.warning,
-                message: 'En attente de la confirmation du voyageur',
-                subtitle:
-                    'Ta demande reste ouverte : tu peux continuer à recevoir '
-                    "et accepter d'autres offres tant qu'il n'a pas réglé.",
+                message: l.negotiationAwaitingCommissionSenderTitle,
+                subtitle: l.negotiationAwaitingCommissionSenderSubtitle,
               )
             : _TravelerCommissionActions(
                 thread: thread,
@@ -241,20 +247,20 @@ class ThreadStateCtaBar extends StatelessWidget {
               iconAsset: 'circle-check',
               tint: kSuccess,
               message: paidOnline
-                  ? 'Demande acceptée et payée'
-                  : 'Demande acceptée',
+                  ? l.negotiationAcceptedPaidTitle
+                  : l.negotiationAcceptedTitle,
               subtitle: paidOnline
-                  ? 'Tu peux passer aux étapes suivantes du suivi.'
+                  ? l.negotiationAcceptedPaidSubtitle
                   : thread.paymentMethod == PaymentMethod.cash
-                  ? 'Le paiement se fait en espèces à la remise du colis.'
-                  : 'Le paiement se fait à la remise du colis.',
+                  ? l.negotiationAcceptedCashSubtitle
+                  : l.negotiationAcceptedOtherSubtitle,
             ),
             // Entrée vers le détail de l'envoi (boutons no-show, suivi…) une fois
             // le bid matérialisé côté back.
             if (thread.materializedBidId != null) ...[
               const SizedBox(height: DonySpacing.sm),
               DonyButton(
-                label: 'Voir mon envoi',
+                label: l.negotiationViewShipmentButton,
                 variant: DonyButtonVariant.secondary,
                 onPressed: () =>
                     context.push('/bids/${thread.materializedBidId}'),
@@ -269,7 +275,7 @@ class ThreadStateCtaBar extends StatelessWidget {
       case NegotiationThreadStatus.cancelled:
         return Center(
           child: Text(
-            'Cette négociation est terminée',
+            l.negotiationEndedMessage,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -291,7 +297,7 @@ class _NudgeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DonyButton(
-      label: 'Relancer',
+      label: context.l10n.negotiationNudgeButton,
       variant: DonyButtonVariant.secondary,
       icon: Icons.notifications_active_rounded,
       onPressed: disabled
@@ -331,11 +337,10 @@ class _SenderDepositActions extends StatelessWidget {
     return remaining.inMinutes + 1;
   }
 
-  String get _subtitle => switch (_remainingMinutes) {
-    null => 'Valide le paiement sur ton téléphone.',
-    0 => 'Le délai est écoulé, le fil va revenir à « à payer ».',
-    final minutes =>
-      'Valide le paiement sur ton téléphone. Expire dans $minutes min.',
+  String _subtitle(AppLocalizations l) => switch (_remainingMinutes) {
+    null => l.negotiationDepositSubtitleDefault,
+    0 => l.negotiationDepositSubtitleExpired,
+    final minutes => l.negotiationDepositSubtitleExpiring(minutes),
   };
 
   Future<void> _resume(BuildContext context) async {
@@ -356,23 +361,24 @@ class _SenderDepositActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         ThreadStateBanner(
           iconAsset: 'smartphone',
           tint: DonyColors.threadStatusViolet,
-          message: 'Dépôt mobile money en cours',
-          subtitle: _subtitle,
+          message: l.negotiationDepositInProgressTitle,
+          subtitle: _subtitle(l),
         ),
         const SizedBox(height: DonySpacing.sm),
         DonyButton(
-          label: 'Reprendre le paiement',
+          label: l.negotiationResumePaymentButton,
           onPressed: actionInProgress ? null : () => _resume(context),
         ),
         const SizedBox(height: DonySpacing.sm),
         DonyButton(
-          label: 'Changer de moyen de paiement',
+          label: l.negotiationChangePaymentMethodButton,
           variant: DonyButtonVariant.secondary,
           onPressed: actionInProgress
               ? null
@@ -396,12 +402,18 @@ class _SenderOpenActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         DonyButton(
-          label:
-              'Accepter : Tu paies ${PriceDisplay.money(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur), thread.currency)}',
+          label: l.negotiationSenderAcceptButton(
+            PriceDisplay.money(
+              thread.grossPriceEur ??
+                  PriceDisplay.grossFromNet(thread.currentPriceEur),
+              thread.currency,
+            ),
+          ),
           onPressed: actionInProgress
               ? null
               : () => AcceptOfferBottomSheet.show(
@@ -420,7 +432,7 @@ class _SenderOpenActions extends StatelessWidget {
             if (thread.canCounter) ...[
               Expanded(
                 child: DonyButton(
-                  label: 'Contre-offre',
+                  label: l.negotiationThreadKindCounter,
                   variant: DonyButtonVariant.secondary,
                   onPressed: actionInProgress
                       ? null
@@ -439,7 +451,7 @@ class _SenderOpenActions extends StatelessWidget {
             ],
             Expanded(
               child: DonyButton(
-                label: 'Rejeter',
+                label: l.negotiationDeclineButton,
                 variant: DonyButtonVariant.ghost,
                 onPressed: actionInProgress
                     ? null
@@ -468,14 +480,16 @@ class _TravelerOpenActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         // Accept button — visible only when backend says canAccept
         if (thread.canAccept) ...[
           DonyButton(
-            label:
-                'Accepter : Tu reçois ${formatPriceIn(thread.currentPriceEur, thread.currency)}',
+            label: l.negotiationTravelerAcceptButton(
+              formatPriceIn(thread.currentPriceEur, thread.currency),
+            ),
             onPressed: actionInProgress
                 ? null
                 : () => AcceptOfferBottomSheet.show(
@@ -495,7 +509,7 @@ class _TravelerOpenActions extends StatelessWidget {
           children: [
             Expanded(
               child: DonyButton(
-                label: 'Rejeter',
+                label: l.negotiationDeclineButton,
                 variant: DonyButtonVariant.ghost,
                 onPressed: actionInProgress
                     ? null
@@ -510,7 +524,7 @@ class _TravelerOpenActions extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: DonyButton(
-                  label: 'Contre-offre',
+                  label: l.negotiationThreadKindCounter,
                   onPressed: actionInProgress
                       ? null
                       : () => CounterOfferBottomSheet.show(
@@ -548,13 +562,12 @@ class _TravelerCommissionActions extends StatelessWidget {
   final bool actionInProgress;
 
   Future<void> _confirmDecline(BuildContext context) async {
+    final l = context.l10n;
     final confirmed = await DonyDialog.show(
       context,
-      title: 'Renoncer à ce colis ?',
-      message:
-          'La demande sera aussitôt disponible pour un autre voyageur. '
-          'Cette action est définitive.',
-      confirmLabel: 'Renoncer',
+      title: l.negotiationDeclineParcelDialogTitle,
+      message: l.negotiationDeclineParcelDialogMessage,
+      confirmLabel: l.negotiationDeclineParcelConfirmButton,
       variant: DonyDialogVariant.destructive,
     );
     if (confirmed == true && context.mounted) {
@@ -567,6 +580,7 @@ class _TravelerCommissionActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     // Estimation locale (mêmes bases que _NegotiationPriceBreakdown /
     // AcceptOfferBottomSheet) : le montant exact éventuellement ajusté par
     // un promo n'est recalculé côté serveur qu'au règlement lui-même.
@@ -579,12 +593,10 @@ class _TravelerCommissionActions extends StatelessWidget {
         ThreadStateBanner(
           iconAsset: 'clock',
           tint: cs.warning,
-          message: 'Confirme ta prise en charge',
-          subtitle:
-              "L'expéditeur a retenu ton offre. Règle la commission Yadony "
-              '(${PriceDisplay.money(commissionEur, thread.currency)}) avant '
-              "l'échéance pour emporter ce colis, sinon un autre voyageur "
-              'peut te doubler.',
+          message: l.negotiationCommissionTravelerBannerTitle,
+          subtitle: l.negotiationCommissionTravelerBannerSubtitle(
+            PriceDisplay.money(commissionEur, thread.currency),
+          ),
         ),
         if (deadline != null) ...[
           const SizedBox(height: DonySpacing.sm),
@@ -592,7 +604,7 @@ class _TravelerCommissionActions extends StatelessWidget {
         ],
         const SizedBox(height: DonySpacing.sm),
         DonyButton(
-          label: 'Régler la commission',
+          label: l.negotiationPayCommissionButton,
           onPressed: actionInProgress
               ? null
               : () => context.read<NegotiationBloc>().add(
@@ -604,7 +616,7 @@ class _TravelerCommissionActions extends StatelessWidget {
           child: TextButton(
             onPressed: actionInProgress ? null : () => _confirmDecline(context),
             child: Text(
-              'Renoncer à ce colis',
+              l.negotiationDeclineParcelButton,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: cs.error,
                 fontWeight: FontWeight.w600,
@@ -681,17 +693,23 @@ class _CommissionCountdownState extends State<_CommissionCountdown> {
     super.dispose();
   }
 
-  static String _labelFor(Duration remaining) {
+  static String _labelFor(AppLocalizations l, Duration remaining) {
     if (remaining == Duration.zero) {
-      return 'Délai écoulé';
+      return l.negotiationCommissionCountdownExpired;
     }
     final h = remaining.inHours;
     final m = remaining.inMinutes.remainder(60);
     final s = remaining.inSeconds.remainder(60);
     if (h > 0) {
-      return 'Il te reste ${h}h ${m.toString().padLeft(2, '0')}min';
+      return l.negotiationCommissionCountdownHours(
+        h,
+        m.toString().padLeft(2, '0'),
+      );
     }
-    return 'Il te reste ${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    return l.negotiationCommissionCountdownMinutes(
+      m.toString().padLeft(2, '0'),
+      s.toString().padLeft(2, '0'),
+    );
   }
 
   @override
@@ -705,7 +723,7 @@ class _CommissionCountdownState extends State<_CommissionCountdown> {
         ValueListenableBuilder<Duration>(
           valueListenable: _remaining,
           builder: (context, remaining, _) => Text(
-            _labelFor(remaining),
+            _labelFor(context.l10n, remaining),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: cs.warning,
               fontWeight: FontWeight.w700,

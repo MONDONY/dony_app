@@ -8,13 +8,17 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/price_estimate.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/l10n_test_helpers.dart';
 
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
@@ -67,6 +71,7 @@ void main() {
 
   setUpAll(() async {
     await initializeDateFormatting('fr');
+    await initializeDateFormatting('en');
     registerFallbackValue(
       NegotiationStartRequested(
         packageRequestId: 'x',
@@ -298,6 +303,20 @@ void main() {
       expect(find.text('Sélectionner…'), findsNothing);
     });
 
+    testWidgets('non-régression motif de date : DateFormat.yMMMEd(fr) rend '
+        'exactement comme l\'ancien motif \'EEE d MMM yyyy\'', (tester) async {
+      final date = DateTime(2026, 10, 6);
+      await tester.pumpWidget(wrap(initialDate: date));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      final oldPatternRendering = DateFormat(
+        'EEE d MMM yyyy',
+        'fr',
+      ).format(date);
+      expect(find.text(oldPatternRendering), findsOneWidget);
+    });
+
     testWidgets('sans initialDate → champ date affiche Sélectionner', (
       tester,
     ) async {
@@ -501,5 +520,115 @@ void main() {
         expect(find.text('Faire une offre'), findsNothing);
       },
     );
+  });
+
+  group('MakeOfferBottomSheet — anglais', () {
+    testWidgets('prix ferme, sans montant connu → texte traduit', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(initialDate: DateTime(2026, 6, 12), isFirmPrice: true),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Take this parcel'), findsWidgets);
+      expect(find.text('FIXED PRICE'), findsOneWidget);
+      expect(find.text('Faire une offre'), findsNothing);
+    });
+
+    testWidgets('offre négociable → labels et snackbars en anglais', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(wrap(initialDate: DateTime(2026, 6, 12)));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Make an offer'), findsOneWidget);
+      expect(find.text('YOUR PRICE'), findsOneWidget);
+      expect(find.text('CAPACITY'), findsOneWidget);
+      expect(find.text('TRAVEL DATE'), findsOneWidget);
+      expect(find.text('MESSAGE'), findsOneWidget);
+      expect(find.textContaining('optional'), findsOneWidget);
+
+      final sendButton = find.widgetWithText(DonyButton, 'Send offer');
+      expect(sendButton, findsOneWidget);
+    });
+
+    testWidgets('non-régression motif de date : DateFormat.yMMMEd(en)', (
+      tester,
+    ) async {
+      useEnglish();
+      final date = DateTime(2026, 10, 6);
+      await tester.pumpWidget(wrap(initialDate: date));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      final expected = DateFormat.yMMMEd('en').format(date);
+      expect(find.text(expected), findsOneWidget);
+    });
+  });
+
+  group('MakeOfferBottomSheet — badge de confiance de l\'estimation', () {
+    Widget wrapWithEstimate(PriceEstimateConfidence confidence) {
+      when(
+        () => priceRepo.estimate(
+          from: any(named: 'from'),
+          to: any(named: 'to'),
+          weight: any(named: 'weight'),
+          currency: any(named: 'currency'),
+        ),
+      ).thenAnswer(
+        (_) async => PriceEstimate(
+          lowEur: 30,
+          highEur: 45,
+          confidence: confidence,
+          sampleSize: 12,
+        ),
+      );
+      return wrap(initialDate: DateTime(2026, 6, 12));
+    }
+
+    testWidgets(
+      'français : "élevée", jamais le mot anglais "high" affiché brut',
+      (tester) async {
+        await tester.pumpWidget(wrapWithEstimate(PriceEstimateConfidence.high));
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('élevée'), findsOneWidget);
+        expect(find.text('high'), findsNothing);
+      },
+    );
+
+    testWidgets('français : "moyenne"', (tester) async {
+      await tester.pumpWidget(wrapWithEstimate(PriceEstimateConfidence.medium));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('moyenne'), findsOneWidget);
+    });
+
+    testWidgets('français : "faible"', (tester) async {
+      await tester.pumpWidget(wrapWithEstimate(PriceEstimateConfidence.low));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('faible'), findsOneWidget);
+    });
+
+    testWidgets('anglais : "high"/"medium"/"low" traduits via clé ARB', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(wrapWithEstimate(PriceEstimateConfidence.high));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('high'), findsOneWidget);
+      expect(find.text('élevée'), findsNothing);
+    });
   });
 }

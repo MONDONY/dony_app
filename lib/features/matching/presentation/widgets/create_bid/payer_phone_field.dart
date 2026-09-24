@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 // ── Numéro payeur mobile money ──────────────────────────────────────────────
@@ -37,7 +38,7 @@ class PayerPhoneField extends StatelessWidget {
         DonyTextField(
           key: const Key('payer-phone-field'),
           controller: controller,
-          label: 'Numéro qui paiera (facultatif)',
+          label: context.l10n.bidCreatePayerPhoneLabel,
           keyboardType: TextInputType.phone,
         ),
         const SizedBox(height: DonySpacing.xs),
@@ -49,11 +50,8 @@ class PayerPhoneField extends StatelessWidget {
             Expanded(
               child: Text(
                 hasProfilePhone
-                    ? 'Par défaut, ton numéro Yadony. Tu recevras la '
-                          'demande de paiement sur ce numéro.'
-                    : "Ton compte n'a pas de numéro : indique celui qui "
-                          'paiera. Tu recevras la demande de paiement '
-                          'dessus.',
+                    ? context.l10n.bidCreatePayerPhoneHintWithProfile
+                    : context.l10n.bidCreatePayerPhoneHintNoProfile,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),

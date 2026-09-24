@@ -14,6 +14,7 @@ import 'package:dony/features/package_request/data/models/locked_trip_context.da
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/models/price_estimate.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/widgets/trip_picker_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -72,9 +73,12 @@ class MakeOfferBottomSheet {
     final selectedTripNotifier = ValueNotifier<AnnouncementModel?>(null);
 
     try {
+      final l = context.l10n;
       await DonyBottomSheet.show<void>(
         context,
-        title: isFirmPrice ? 'Prendre ce colis' : 'Faire une offre',
+        title: isFirmPrice
+            ? l.requestPublicTakePackageCta
+            : l.negotiationMakeOfferTitle,
         // Le glissement vers le bas appelle `Navigator.pop()` sans consulter
         // `PopScope` (vérifié sur Flutter 3.44) : il contournerait la
         // confirmation. La barrière et la croix, elles, passent par
@@ -104,17 +108,20 @@ class MakeOfferBottomSheet {
           builder: (_, selectedTrip, _) =>
               BlocBuilder<NegotiationBloc, NegotiationState>(
                 builder: (ctx, state) {
+                  final l = ctx.l10n;
                   final loading = state is NegotiationLoading;
                   final disabled = loading || selectedTrip == null;
                   final String label;
                   if (loading) {
-                    label = 'Envoi…';
+                    label = l.requestCreateSendingLabel;
                   } else if (isFirmPrice) {
                     label = targetPriceEur != null
-                        ? 'Prendre à ${PriceDisplay.money(targetPriceEur, currency)}'
-                        : 'Prendre ce colis';
+                        ? l.negotiationMakeOfferTakeAtLabel(
+                            PriceDisplay.money(targetPriceEur, currency),
+                          )
+                        : l.requestPublicTakePackageCta;
                   } else {
-                    label = 'Envoyer l\'offre';
+                    label = l.negotiationMakeOfferSendButtonLabel;
                   }
                   return DonyButton(
                     label: label,
@@ -295,7 +302,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
     if (_dateNotifier.value == null) {
       DonySnackbar.show(
         context,
-        message: 'Sélectionnez votre date de voyage',
+        message: context.l10n.negotiationMakeOfferSelectTravelDate,
         type: DonySnackbarType.warning,
       );
       return;
@@ -303,7 +310,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
     if (widget.selectedTripNotifier.value == null) {
       DonySnackbar.show(
         context,
-        message: 'Sélectionnez ou créez un trajet',
+        message: context.l10n.negotiationMakeOfferSelectTrip,
         type: DonySnackbarType.warning,
       );
       return;
@@ -328,6 +335,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
   @override
   Widget build(BuildContext context) {
     final estimate = widget.estimate;
+    final l = context.l10n;
     return ValueListenableBuilder<bool>(
       valueListenable: _isDirtyNotifier,
       builder: (context, isDirty, child) => PopScope(
@@ -345,7 +353,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
           if (state is NegotiationLoaded) {
             DonySnackbar.show(
               ctx,
-              message: 'Offre envoyée',
+              message: ctx.l10n.negotiationMakeOfferOfferSentSnackbar,
               type: DonySnackbarType.success,
             );
             Navigator.of(ctx, rootNavigator: true).pop();
@@ -372,7 +380,9 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                   children: [
                     Expanded(
                       child: _FieldTile(
-                        label: widget.isFirmPrice ? 'PRIX FERME' : 'VOTRE PRIX',
+                        label: widget.isFirmPrice
+                            ? l.requestPublicFirmPriceBadge
+                            : l.negotiationMakeOfferYourPriceLabel,
                         iconAsset: widget.isFirmPrice ? 'lock' : 'banknote',
                         iconBgKey: _TileColor.blue,
                         suffix: SupportedCurrency.symbolOf(widget.currency),
@@ -396,7 +406,9 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                             );
                             // Aucun plafond métier : seul le garde-fou
                             // technique du serveur (1 000 000) subsiste.
-                            if (d == null || d <= 0) return 'Invalide';
+                            if (d == null || d <= 0) {
+                              return l.negotiationMakeOfferInvalidPrice;
+                            }
                             return null;
                           },
                         ),
@@ -405,7 +417,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                     const SizedBox(width: DonySpacing.sm),
                     Expanded(
                       child: _FieldTile(
-                        label: 'CAPACITÉ',
+                        label: l.negotiationMakeOfferCapacityLabel,
                         iconAsset: 'scale',
                         iconBgKey: _TileColor.green,
                         suffix: 'kg',
@@ -440,7 +452,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
               ValueListenableBuilder<DateTime?>(
                 valueListenable: _dateNotifier,
                 builder: (ctx, date, _) => _FieldTile(
-                  label: 'DATE DE VOYAGE',
+                  label: l.negotiationMakeOfferTravelDateLabel,
                   iconAsset: 'calendar',
                   iconBgKey: _TileColor.amber,
                   child: InkWell(
@@ -465,10 +477,9 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                           Expanded(
                             child: Text(
                               date == null
-                                  ? 'Sélectionner…'
-                                  : DateFormat(
-                                      'EEE d MMM yyyy',
-                                      AppL10n.localeName,
+                                  ? l.negotiationMakeOfferSelectDatePlaceholder
+                                  : DateFormat.yMMMEd(
+                                      l.localeName,
                                     ).format(date),
                               style: _fieldTextStyle(context).copyWith(
                                 color: date == null
@@ -519,7 +530,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                       if (travelDate == null) {
                         DonySnackbar.show(
                           context,
-                          message: 'Sélectionnez votre date de voyage',
+                          message: l.negotiationMakeOfferSelectTravelDate,
                           type: DonySnackbarType.warning,
                         );
                         return;
@@ -579,10 +590,10 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
 
               // ── Message ───────────────────────────────────────────────────
               _FieldTile(
-                label: 'MESSAGE',
+                label: l.negotiationMakeOfferMessageLabel,
                 iconAsset: 'message-circle',
                 iconBgKey: _TileColor.violet,
-                sublabel: 'optionnel',
+                sublabel: l.negotiationMakeOfferMessageOptional,
                 alignIconTop: true,
                 child: TextFormField(
                   controller: _bodyCtrl,
@@ -590,7 +601,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                   maxLength: 280,
                   style: _fieldTextStyle(context),
                   decoration: _fieldDecoration(context).copyWith(
-                    hintText: 'Je voyage exactement ce jour-là…',
+                    hintText: l.negotiationMakeOfferMessageHint,
                     counterStyle: Theme.of(context).textTheme.labelSmall
                         ?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -671,7 +682,7 @@ class _EstimationBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Prix du marché',
+                  context.l10n.negotiationMakeOfferMarketPriceLabel,
                   style: tt.labelSmall?.copyWith(
                     color: cs.onSurfaceVariant,
                     letterSpacing: 0.4,
@@ -698,7 +709,7 @@ class _EstimationBanner extends StatelessWidget {
               borderRadius: BorderRadius.circular(DonyRadius.full),
             ),
             child: Text(
-              estimate.confidence.wireName.toLowerCase(),
+              estimate.confidence.confidenceLabel(context.l10n),
               style: tt.labelSmall?.copyWith(
                 color: confidenceColor,
                 fontWeight: FontWeight.w700,

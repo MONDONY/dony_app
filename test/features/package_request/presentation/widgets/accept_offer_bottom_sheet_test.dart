@@ -17,6 +17,7 @@ import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/error_reporting_test_doubles.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
@@ -598,5 +599,37 @@ void main() {
         verify(() => negotiationRepository.initiatePayment('t-1')).called(1);
       },
     );
+  });
+
+  group('AcceptOfferBottomSheet — anglais', () {
+    testWidgets('titre, décomposition de prix et bouton traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _buildApp(bloc: bloc, isTraveler: true, grossPriceEur: 39.20),
+      );
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Accept the offer'), findsOneWidget);
+      expect(find.text('You receive'), findsOneWidget);
+      expect(find.text('Price paid by the sender'), findsOneWidget);
+      expect(find.textContaining('Yadony service fee'), findsOneWidget);
+      expect(find.textContaining('Confirm'), findsOneWidget);
+    });
+
+    testWidgets('mode paiement final → titre et bouton "Pay" traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(_buildApp(bloc: bloc, isCheckout: true));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pay securely'), findsOneWidget);
+      expect(find.text('Total to settle'), findsOneWidget);
+      expect(find.textContaining('Pay ('), findsOneWidget);
+    });
   });
 }

@@ -535,6 +535,33 @@ abstract final class ErrorCatalog {
     ),
 
     // ─── Négociation ─────────────────────────────────────────────────
+    // Trois codes déjà portés par `negotiation_bloc._handleCommissionResponse`
+    // pour le règlement (par le voyageur) de la commission d'un accord cash.
+    // `commission/failed` NE va PAS dans `_serverDetailCodes` : contrairement
+    // à `commission/confirm-failed` (detail rédigé en prose côté serveur),
+    // `r.error` y porte un code machine kebab-case
+    // (`CashCommissionService.settleNegotiationCommission` : no-commission-card,
+    // card-status-<statut Stripe>, card-declined, stripe-error) qui ne doit
+    // jamais atteindre l'utilisateur brut (Ruling R35) — `lookup()` le traduit
+    // via `_commissionFailureMessage` avant affichage.
+    'commission/confirm-failed': _Entry(
+      title: (l) => l.errorCommissionConfirmFailedTitle,
+      message: (l) => l.errorCommissionConfirmFailedMessage,
+      severity: ErrorSeverity.error,
+      icon: Icons.error_outline_rounded,
+    ),
+    'commission/3ds-interrupted': _Entry(
+      title: (l) => l.errorCommission3dsInterruptedTitle,
+      message: (l) => l.errorCommission3dsInterruptedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.gpp_maybe_rounded,
+    ),
+    'commission/failed': _Entry(
+      title: (l) => l.errorCommissionFailedTitle,
+      message: (l) => l.errorCommissionFailedMessage,
+      severity: ErrorSeverity.critical,
+      icon: Icons.credit_card_off_rounded,
+    ),
     'negotiation/commission-charge-failed': _Entry(
       title: (l) => l.errorNegotiationCommissionChargeFailedTitle,
       message: (l) => l.errorNegotiationCommissionChargeFailedMessage,
@@ -916,6 +943,11 @@ abstract final class ErrorCatalog {
     'mobile-money-account-unsupported',
     'topup-amount-out-of-range',
     'topup-phone-unsupported',
+    // `ConfirmAcceptanceResponse.fail(...)` (confirmNegotiationCommissionAcceptance)
+    // rédige une phrase ("PaymentIntent status: ...", "Erreur Stripe : ..."),
+    // jamais un code machine — contrairement à `commission/failed` ci-dessous,
+    // traité à part dans `lookup()`.
+    'commission/confirm-failed',
   };
 
   /// Codes connus du catalogue, pour les tests de traduction.
@@ -932,6 +964,21 @@ abstract final class ErrorCatalog {
       final entry = _byCode[error.code];
       if (entry != null) {
         final p = entry.resolve(l);
+        // Ruling R35 : `r.error` de `commission/failed` est un code machine
+        // kebab-case (jamais une phrase) — le traduire avant affichage plutôt
+        // que de le relayer via `_serverDetailCodes` comme les autres codes.
+        if (error.code == 'commission/failed') {
+          return ErrorPresentation(
+            title: p.title,
+            message: _commissionFailureMessage(
+              error.message.trim(),
+              l,
+              p.message,
+            ),
+            severity: p.severity,
+            icon: p.icon,
+          );
+        }
         // Précédent : `_validationPresentation` construit déjà le message
         // depuis les violations du back plutôt que depuis un texte fixe.
         if (_serverDetailCodes.contains(error.code) &&
@@ -948,6 +995,33 @@ abstract final class ErrorCatalog {
       return _byType(error, l);
     }
     return _generic.resolve(l);
+  }
+
+  /// Traduit le code machine kebab-case renvoyé par
+  /// `CashCommissionService.settleNegotiationCommission` (`r.error`) dans le
+  /// cas `commission/failed`. Ruling R35 : ce code ne doit jamais atteindre
+  /// l'utilisateur brut — trois codes connus ont chacun leur texte, tout
+  /// `card-status-<statut Stripe>` (l'un des statuts terminaux inattendus de
+  /// PaymentIntent) partage un repli générique, et [fallback] (le message de
+  /// base du catalogue) couvre tout autre code, connu ou non, y compris un
+  /// message vide.
+  static String _commissionFailureMessage(
+    String raw,
+    AppLocalizations l,
+    String fallback,
+  ) {
+    switch (raw) {
+      case 'no-commission-card':
+        return l.errorCommissionFailedNoCardMessage;
+      case 'card-declined':
+        return l.errorCommissionFailedCardDeclinedMessage;
+      case 'stripe-error':
+        return l.errorCommissionFailedStripeErrorMessage;
+    }
+    if (raw.startsWith('card-status-')) {
+      return l.errorCommissionFailedCardStatusMessage;
+    }
+    return fallback;
   }
 
   /// Garde simple : un detail rédigé pour l'utilisateur est court, tient sur

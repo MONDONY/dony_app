@@ -797,6 +797,127 @@ void main() {
     }
   });
 
+  // Task C5 : règlement de la commission d'un accord cash côté voyageur
+  // (negotiation_bloc._handleCommissionResponse / bid_acceptance_bloc).
+  group(
+    'ErrorCatalog — commission/confirm-failed et commission/3ds-interrupted',
+    () {
+      test(
+        'commission/3ds-interrupted rend le titre et le message français',
+        () {
+          const error = ValidationException(
+            'x',
+            code: 'commission/3ds-interrupted',
+          );
+
+          final p = ErrorCatalog.lookup(error);
+
+          expect(p.title, 'Authentification interrompue');
+          expect(p.message, 'Authentification bancaire interrompue');
+          expect(p.severity, ErrorSeverity.warning);
+        },
+      );
+
+      test(
+        'commission/confirm-failed relaie un detail serveur court exploitable',
+        () {
+          const error = ValidationException(
+            'PaymentIntent status: requires_payment_method',
+            code: 'commission/confirm-failed',
+          );
+
+          final p = ErrorCatalog.lookup(error);
+
+          expect(p.title, 'Règlement non confirmé');
+          expect(p.message, 'PaymentIntent status: requires_payment_method');
+        },
+      );
+
+      test(
+        'commission/confirm-failed sans detail exploitable → texte du catalogue',
+        () {
+          const error = ValidationException(
+            '',
+            code: 'commission/confirm-failed',
+          );
+
+          final p = ErrorCatalog.lookup(error);
+
+          expect(p.message, 'Confirmation du règlement échouée');
+        },
+      );
+    },
+  );
+
+  // Ruling R35 : `settleNegotiationCommission` renvoie un code machine
+  // kebab-case dans `r.error` (jamais une phrase) pour `commission/failed` —
+  // contrairement à `commission/confirm-failed` ci-dessus, ce code ne doit
+  // jamais atteindre l'utilisateur brut.
+  group('ErrorCatalog — commission/failed (Ruling R35, jamais le code brut)', () {
+    const attendus = <String, String>{
+      'no-commission-card':
+          'Aucune carte enregistrée pour régler la commission.',
+      'card-declined': 'Ta carte a été refusée.',
+      'stripe-error': 'Erreur du service de paiement, réessaie.',
+      // Repli générique : tout suffixe de statut Stripe, jamais montré brut.
+      'card-status-requires_payment_method':
+          "Le règlement par carte n'a pas abouti.",
+      'card-status-canceled': "Le règlement par carte n'a pas abouti.",
+    };
+
+    attendus.forEach((raw, expected) {
+      test('$raw est traduit, jamais affiché brut', () {
+        final error = ValidationException(raw, code: 'commission/failed');
+
+        final p = ErrorCatalog.lookup(error);
+
+        expect(p.title, 'Règlement refusé');
+        expect(p.message, expected);
+        expect(p.message, isNot(contains(raw)));
+        expect(p.severity, ErrorSeverity.critical);
+      });
+    });
+
+    test(
+      'code inconnu, hors des quatre codes machine connus → repli générique du catalogue',
+      () {
+        const error = ValidationException(
+          'some-future-machine-code',
+          code: 'commission/failed',
+        );
+
+        final p = ErrorCatalog.lookup(error);
+
+        expect(p.message, 'Règlement de la commission refusé');
+        expect(p.message, isNot(contains('some-future-machine-code')));
+      },
+    );
+
+    test('message vide → repli générique du catalogue', () {
+      const error = ValidationException('', code: 'commission/failed');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.message, 'Règlement de la commission refusé');
+    });
+
+    test('en anglais aussi, jamais le code brut', () {
+      const error = ValidationException(
+        'card-declined',
+        code: 'commission/failed',
+      );
+
+      final p = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+
+      expect(p.title, 'Payment declined');
+      expect(p.message, 'Your card was declined.');
+      expect(p.message, isNot(contains('card-declined')));
+    });
+  });
+
   group('ErrorCatalog — anglais', () {
     final en = lookupAppLocalizations(AppL10n.en);
     final fr = lookupAppLocalizations(AppL10n.fr);

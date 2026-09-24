@@ -53,73 +53,75 @@ class TripCard extends StatelessWidget {
       announcement.status == 'COMPLETED' || announcement.status == 'CANCELLED';
 
   /// Returns (bgColor, fgColor, label, shouldPulse) for the status badge.
-  ({Color bg, Color fg, String label, bool pulse}) _badge(ColorScheme cs) =>
-      switch (announcement.status) {
-        'DRAFT' => (
-          bg: DonyColors.neutral100,
-          fg: cs.warning,
-          label: 'Brouillon',
-          pulse: false,
-        ),
-        'ACTIVE' => (
-          bg: cs.successLight,
-          fg: cs.success,
-          label: 'Actif',
-          pulse: true,
-        ),
-        'IN_PROGRESS' => (
-          bg: cs.infoLight,
-          fg: cs.info,
-          label: 'En cours',
-          pulse: true,
-        ),
-        'FULL' => (
-          bg: cs.warningLight,
-          fg: cs.warning,
-          label: 'Complet',
-          pulse: false,
-        ),
-        'COMPLETED' => (
-          bg: DonyColors.neutral100,
-          fg: cs.onSurfaceVariant,
-          label: 'Terminé',
-          pulse: false,
-        ),
-        'CANCELLED' => (
-          bg: cs.errorLight,
-          fg: cs.error,
-          label: 'Annulé',
-          pulse: false,
-        ),
-        _ => (
-          bg: DonyColors.neutral100,
-          fg: cs.onSurfaceVariant,
-          label: announcement.status,
-          pulse: false,
-        ),
-      };
+  ({Color bg, Color fg, String label, bool pulse}) _badge(
+    ColorScheme cs,
+    AppLocalizations l,
+  ) => switch (announcement.status) {
+    'DRAFT' => (
+      bg: DonyColors.neutral100,
+      fg: cs.warning,
+      label: l.requestStatusDraft,
+      pulse: false,
+    ),
+    'ACTIVE' => (
+      bg: cs.successLight,
+      fg: cs.success,
+      label: l.listingStatusActive,
+      pulse: true,
+    ),
+    'IN_PROGRESS' => (
+      bg: cs.infoLight,
+      fg: cs.info,
+      label: l.listingStatusInProgress,
+      pulse: true,
+    ),
+    'FULL' => (
+      bg: cs.warningLight,
+      fg: cs.warning,
+      label: l.listingStatusFull,
+      pulse: false,
+    ),
+    'COMPLETED' => (
+      bg: DonyColors.neutral100,
+      fg: cs.onSurfaceVariant,
+      label: l.listingStatusCompleted,
+      pulse: false,
+    ),
+    'CANCELLED' => (
+      bg: cs.errorLight,
+      fg: cs.error,
+      label: l.listingStatusCancelled,
+      pulse: false,
+    ),
+    _ => (
+      bg: DonyColors.neutral100,
+      fg: cs.onSurfaceVariant,
+      label: announcement.status,
+      pulse: false,
+    ),
+  };
 
   /// Human-readable date label relative to today.
-  String _dateLabel() {
+  String _dateLabel(AppLocalizations l) {
     final today = DateUtils.dateOnly(DateTime.now());
     final d = DateUtils.dateOnly(announcement.departureDate);
     final diff = d.difference(today).inDays;
     final dateStr = DateFormat(
       'd MMM',
-      AppL10n.localeName,
+      l.localeName,
     ).format(announcement.departureDate);
     if (diff == 0) {
-      return "Aujourd'hui · $dateStr";
+      return l.listingDateTodayLabel(dateStr);
     }
     if (diff == 1) {
-      return 'Demain · $dateStr';
+      return l.listingDateTomorrowLabel(dateStr);
     }
     if (diff > 1 && diff <= 6) {
-      return 'Départ dans $diff jours · $dateStr';
+      return l.listingDateInDaysLabel(diff, dateStr);
     }
     return DateFormat(
       'EEE d MMM yyyy',
-      AppL10n.localeName,
+      l.localeName,
     ).format(announcement.departureDate);
   }
 
@@ -132,8 +134,9 @@ class TripCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
-    final badge = _badge(cs);
+    final badge = _badge(cs, l);
     final totalKg = announcement.totalKg;
     final availableKg = announcement.availableKg;
     final soldKg = (totalKg - availableKg).clamp(0, totalKg).toDouble();
@@ -169,7 +172,7 @@ class TripCard extends StatelessWidget {
                 soldKg: soldKg,
                 kg: _kg,
                 price: _price,
-                dateLabel: _dateLabel(),
+                dateLabel: _dateLabel(l),
                 showFavorite: showFavorite,
               )
             : _ActiveCardContent(
@@ -181,7 +184,7 @@ class TripCard extends StatelessWidget {
                 progress: progress,
                 depFlag: depFlag,
                 arrFlag: arrFlag,
-                dateLabel: _dateLabel(),
+                dateLabel: _dateLabel(l),
                 kg: _kg,
                 price: _price,
                 showFavorite: showFavorite,
@@ -227,7 +230,7 @@ Widget _buildFavoriteHeart(BuildContext context, String tripId) {
           if (ctx.mounted) {
             DonySnackbar.show(
               ctx,
-              message: 'Action impossible, réessaie',
+              message: ctx.l10n.listingRetryActionMessage,
               type: DonySnackbarType.error,
             );
           }
@@ -274,14 +277,12 @@ class _ActiveCardContent extends StatelessWidget {
   /// Returns an empty list when both counts are 0 so the card stays clean and
   /// no extra spacing is emitted; otherwise prepends its own top spacing and
   /// the chip row (the trailing rhythm is handled by the caller's SizedBox).
-  List<Widget> _buildBidStatsRow(ColorScheme cs) {
+  List<Widget> _buildBidStatsRow(ColorScheme cs, AppLocalizations l) {
     final accepted = announcement.confirmedParcelCount;
     final pending = announcement.pendingBidCount;
     if (accepted <= 0 && pending <= 0) {
       return const [];
     }
-
-    String plural(int n, String one, String many) => n == 1 ? one : many;
 
     return [
       const SizedBox(height: DonySpacing.sm),
@@ -294,14 +295,14 @@ class _ActiveCardContent extends StatelessWidget {
               iconAsset: 'circle-check',
               fg: cs.success,
               bg: cs.successLight,
-              label: '$accepted ${plural(accepted, 'acceptée', 'acceptées')}',
+              label: l.listingAcceptedBidsCount(accepted),
             ),
           if (pending > 0)
             _BidStatChip(
               iconAsset: 'clock',
               fg: cs.warning,
               bg: cs.warningLight,
-              label: '$pending en attente',
+              label: l.listingPendingBidsCount(pending),
             ),
         ],
       ),
@@ -312,6 +313,7 @@ class _ActiveCardContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Padding(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -348,7 +350,7 @@ class _ActiveCardContent extends StatelessWidget {
           // ── Demandes stats row (acceptées / en attente) ──
           // Rendered only when at least one count > 0 — keeps demand-free
           // cards visually clean. Emits its own trailing spacing.
-          ..._buildBidStatsRow(cs),
+          ..._buildBidStatsRow(cs, l),
 
           const SizedBox(height: DonySpacing.md),
 
@@ -364,7 +366,7 @@ class _ActiveCardContent extends StatelessWidget {
             const SizedBox(height: DonySpacing.xs),
 
             Text(
-              '${kg(soldKg)} vendus sur ${kg(totalKg)}',
+              l.listingSoldOfTotalLabel(kg(soldKg), kg(totalKg)),
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
 
@@ -389,8 +391,8 @@ class _ActiveCardContent extends StatelessWidget {
                     Flexible(
                       child: Text(
                         announcement.isKgFree
-                            ? 'Kg libre'
-                            : '${kg(availableKg)} disponibles',
+                            ? l.tripKgFree
+                            : l.listingAvailableKgLabel(kg(availableKg)),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: tt.titleSmall?.copyWith(
@@ -405,7 +407,7 @@ class _ActiveCardContent extends StatelessWidget {
               const SizedBox(width: DonySpacing.sm),
               Flexible(
                 child: Text(
-                  _activePriceLabel(announcement, price),
+                  _activePriceLabel(announcement, price, l),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.right,
@@ -427,7 +429,11 @@ class _ActiveCardContent extends StatelessWidget {
 /// En mode grille (MIXED) ou si le prix au kilo est absent, on n'affiche jamais
 /// « 0 € / kg » : on montre « dès X € » (item de grille le moins cher) ou
 /// « Grille tarifaire » à défaut.
-String _activePriceLabel(AnnouncementModel a, String Function(double) price) {
+String _activePriceLabel(
+  AnnouncementModel a,
+  String Function(double) price,
+  AppLocalizations l,
+) {
   final kgPrice = a.pricePerKg;
   final usesGrid = a.pricingMode == 'MIXED' || kgPrice == null || kgPrice <= 0;
   if (usesGrid && a.priceGridItems.isNotEmpty) {
@@ -440,11 +446,11 @@ String _activePriceLabel(AnnouncementModel a, String Function(double) price) {
         .toList();
     if (nets.isNotEmpty) {
       final minNet = nets.reduce((x, y) => x < y ? x : y);
-      return 'dès ${price(minNet)}';
+      return l.tripPosterFromPrice(price(minNet));
     }
   }
   if (usesGrid) {
-    return 'Grille tarifaire';
+    return l.listingPriceGridLabel;
   }
   return '${price(kgPrice)} / kg';
 }
@@ -476,6 +482,7 @@ class _PastCardContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     final isCompleted = announcement.status == 'COMPLETED';
     final kgPrice = announcement.pricePerKg;
@@ -508,8 +515,8 @@ class _PastCardContent extends StatelessWidget {
                   children: [
                     Text(
                       announcement.isKgFree
-                          ? 'Kg libre'
-                          : '${kg(soldKg)} vendus',
+                          ? l.tripKgFree
+                          : l.listingSoldLabel(kg(soldKg)),
                       style: tt.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
@@ -526,7 +533,7 @@ class _PastCardContent extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${price(earned)} gagnés',
+                        l.listingEarnedLabel(price(earned)),
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
