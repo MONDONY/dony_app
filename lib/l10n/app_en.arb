@@ -5520,5 +5520,424 @@
   "conversationTimeJustNow": "just now",
   "@conversationTimeJustNow": {
     "description": "Repli de formatConversationTime (conversation_tile.dart) pour un message envoyé il y a moins d'une minute."
+  },
+  "trackingStepDeparture": "Departure",
+  "@trackingStepDeparture": {
+    "description": "Libellé de l'étape de suivi DEPART (tracking_labels.dart, trackingStepLabel)."
+  },
+  "trackingStepTransit": "Transit",
+  "@trackingStepTransit": {
+    "description": "Libellé de l'étape de suivi TRANSIT (tracking_labels.dart, trackingStepLabel), identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "trackingStepArrival": "Arrival",
+  "@trackingStepArrival": {
+    "description": "Libellé de l'étape de suivi ARRIVEE (tracking_labels.dart, trackingStepLabel)."
+  },
+  "scanStepRecorded": "{step, select, DEPART{Departure recorded} TRANSIT{Transit recorded} other{Arrival recorded}}",
+  "@scanStepRecorded": {
+    "description": "Chip de confirmation d'une lecture QR (scan_confirm_screen.dart) : step reçoit le code brut (DEPART/TRANSIT/ARRIVEE), pas le libellé.",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "scanStepLabel": "Step: {step}",
+  "@scanStepLabel": {
+    "description": "Badge étape sur la photo d'une lecture (scan_photo_screen.dart) : step reçoit le libellé déjà traduit via trackingStepLabel.",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "scanPendingSync": "{count, plural, =1{{count} scan waiting to sync} other{{count} scans waiting to sync}}",
+  "@scanPendingSync": {
+    "description": "Bandeau de synchro du hub Scan & Suivi (scan_hub_screen.dart, _SyncBanner).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanOfflineCount": "{count, plural, =1{{count} offline scan} other{{count} offline scans}}",
+  "@scanOfflineCount": {
+    "description": "Titre de la feuille de file d'attente hors-ligne (offline_queue_bottom_sheet.dart).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanQueueSafe": "{count, plural, =1{{count} scan pending. We'll send it as soon as you're back online.} other{{count} scans pending. We'll send them as soon as you're back online.}}",
+  "@scanQueueSafe": {
+    "description": "Bandeau d'alerte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _AlertBanner) : corrige l'accord faux à 1 (\"1 lectures\").",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanAgoUnderMinute": "< 1 min ago",
+  "@scanAgoUnderMinute": {
+    "description": "Ancienneté d'une lecture hors-ligne de moins d'une minute (tracking_labels.dart, scanRelativeTime)."
+  },
+  "scanAgoMinutes": "{minutes} min ago",
+  "@scanAgoMinutes": {
+    "description": "Ancienneté d'une lecture hors-ligne en minutes (tracking_labels.dart, scanRelativeTime).",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "scanAgoHours": "{hours}h ago",
+  "@scanAgoHours": {
+    "description": "Ancienneté d'une lecture hors-ligne en heures (tracking_labels.dart, scanRelativeTime).",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "scanPhotoTooLarge": "Photo too large (max {mb} MB). Try again.",
+  "@scanPhotoTooLarge": {
+    "description": "Erreur de photo trop volumineuse à la lecture d'un QR (tracking_labels.dart, qr_scanner_screen.dart, scan_photo_screen.dart), mb dynamique.",
+    "placeholders": {
+      "mb": {
+        "type": "int"
+      }
+    }
+  },
+  "scanDepartureTitle": "Departure scan",
+  "@scanDepartureTitle": {
+    "description": "Titre de l'écran de lecture QR au départ (qr_scanner_screen.dart)."
+  },
+  "scanTorchTooltip": "Flashlight",
+  "@scanTorchTooltip": {
+    "description": "Tooltip du bouton lampe torche de qr_scanner_screen.dart."
+  },
+  "scanQrReadTitle": "QR scanned",
+  "@scanQrReadTitle": {
+    "description": "Titre de la feuille de confirmation après lecture d'un QR (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanStepIndicatorStatic": "STEP 1 OF 3",
+  "@scanStepIndicatorStatic": {
+    "description": "Indicateur de progression de l'écran de lecture au départ (qr_scanner_screen.dart), toujours étape 1 sur 3 : c'est le premier des trois scans du parcours."
+  },
+  "scanConfirmedInSuitcase": "Parcel loaded in the suitcase",
+  "@scanConfirmedInSuitcase": {
+    "description": "Sous-titre de l'indicateur de progression de qr_scanner_screen.dart."
+  },
+  "scanPhotoWordLabel": "Photo",
+  "@scanPhotoWordLabel": {
+    "description": "Mot « Photo » seul, identique dans les deux langues (voir _sameInBothLanguages) : bouton de qr_scanner_screen.dart, badge de scan_hub_screen.dart."
+  },
+  "scanConfirmAndContinue": "Confirm & continue",
+  "@scanConfirmAndContinue": {
+    "description": "Bouton principal de qr_scanner_screen.dart."
+  },
+  "scanTrackingNumberDialogTitle": "Tracking number",
+  "@scanTrackingNumberDialogTitle": {
+    "description": "Titre du dialogue de saisie manuelle du numéro de suivi (qr_scanner_screen.dart)."
+  },
+  "scanTrackingNumberDialogBody": "Enter the parcel's DON-XXXXXX number to scan.",
+  "@scanTrackingNumberDialogBody": {
+    "description": "Corps du dialogue de saisie manuelle du numéro de suivi (qr_scanner_screen.dart)."
+  },
+  "scanNumberNotFound": "Number not found. Check and try again.",
+  "@scanNumberNotFound": {
+    "description": "Erreur de numéro de suivi introuvable (qr_scanner_screen.dart, scan_identify_screen.dart)."
+  },
+  "scanQueuedTitle": "Scan pending",
+  "@scanQueuedTitle": {
+    "description": "Titre du dialogue de lecture mise en file d'attente hors-ligne (qr_scanner_screen.dart, scan_confirm_screen.dart)."
+  },
+  "scanQueuedNoConnectionBodyLong": "No internet connection. The scan will sync automatically once you're back online.",
+  "@scanQueuedNoConnectionBodyLong": {
+    "description": "Corps du dialogue hors-ligne de qr_scanner_screen.dart."
+  },
+  "scanUnderstoodButton": "Got it",
+  "@scanUnderstoodButton": {
+    "description": "Bouton de fermeture des dialogues hors-ligne (qr_scanner_screen.dart, scan_confirm_screen.dart)."
+  },
+  "scanParcelDeliveredTitle": "Parcel delivered!",
+  "@scanParcelDeliveredTitle": {
+    "description": "Titre affiché quand la lecture confirme une livraison finale (qr_scanner_screen.dart, scan_confirm_screen.dart)."
+  },
+  "scanRecordedTitle": "Scan recorded!",
+  "@scanRecordedTitle": {
+    "description": "Titre affiché après une lecture QR réussie non finale (qr_scanner_screen.dart, scan_confirm_screen.dart)."
+  },
+  "scanEventTypeSectionLabel": "Step type",
+  "@scanEventTypeSectionLabel": {
+    "description": "Libellé du sélecteur d'étape de la feuille de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanConfirmationCodeLabel": "Confirmation code",
+  "@scanConfirmationCodeLabel": {
+    "description": "Libellé du champ code de confirmation à l'arrivée (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanConfirmationCodeHintLong": "Ask the recipient for the 6-digit code. They received it from the sender.",
+  "@scanConfirmationCodeHintLong": {
+    "description": "Texte d'aide du champ code de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanPhotoOfParcelLabel": "Parcel photo",
+  "@scanPhotoOfParcelLabel": {
+    "description": "Libellé/titre de la section photo (qr_scanner_screen.dart, scan_photo_screen.dart)."
+  },
+  "scanRemovePhotoSemantics": "Remove the photo",
+  "@scanRemovePhotoSemantics": {
+    "description": "Libellé Semantics du bouton de suppression de la photo prise (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanGpsLocationSaved": "GPS location saved",
+  "@scanGpsLocationSaved": {
+    "description": "Repli affiché quand une position GPS est enregistrée sans libellé de lieu résolu (qr_scanner_screen.dart, scan_confirm_screen.dart)."
+  },
+  "scanPhotoTooLargeFixed": "Photo too large (max 10 MB). Try again.",
+  "@scanPhotoTooLargeFixed": {
+    "description": "Message d'erreur photo trop lourde à taille fixe (qr_scanner_screen.dart:1141), distinct de scanPhotoTooLarge (« MB » au lieu de « Mo », taille non dynamique)."
+  },
+  "scanSubmittingConfirmation": "Confirming...",
+  "@scanSubmittingConfirmation": {
+    "description": "Libellé du bouton pendant la confirmation d'une livraison (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanSubmittingRecording": "Saving...",
+  "@scanSubmittingRecording": {
+    "description": "Libellé du bouton pendant l'enregistrement d'une lecture DEPART/TRANSIT (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanConfirmDeliveryButton": "Confirm delivery",
+  "@scanConfirmDeliveryButton": {
+    "description": "Bouton de confirmation d'une livraison ARRIVEE (qr_scanner_screen.dart, scan_confirm_screen.dart)."
+  },
+  "scanConfirmReadingLabel": "Confirm scan",
+  "@scanConfirmReadingLabel": {
+    "description": "Bouton de confirmation d'une lecture DEPART/TRANSIT (qr_scanner_screen.dart) et titre d'appbar de scan_confirm_screen.dart, même texte."
+  },
+  "scanConfirmParcelLabel": "Parcel",
+  "@scanConfirmParcelLabel": {
+    "description": "Libellé de la ligne colis du récapitulatif (scan_confirm_screen.dart, _MetaRow)."
+  },
+  "scanConfirmStepLabel": "Step",
+  "@scanConfirmStepLabel": {
+    "description": "Libellé de la ligne étape du récapitulatif (scan_confirm_screen.dart, _MetaRow)."
+  },
+  "scanConfirmConfirmationCodeHint": "Ask the recipient for the 6-digit code.",
+  "@scanConfirmConfirmationCodeHint": {
+    "description": "Texte d'aide du champ code de confirmation de scan_confirm_screen.dart (version courte, distincte de scanConfirmationCodeHintLong)."
+  },
+  "scanValidateReadingButton": "Validate scan",
+  "@scanValidateReadingButton": {
+    "description": "Bouton de validation d'une lecture DEPART/TRANSIT (scan_confirm_screen.dart)."
+  },
+  "scanRetakePhotoButton": "Retake the photo",
+  "@scanRetakePhotoButton": {
+    "description": "Bouton pour revenir reprendre la photo (scan_confirm_screen.dart)."
+  },
+  "scanConfirmQueuedNoConnectionBody": "No connection. The scan will sync once you're back online.",
+  "@scanConfirmQueuedNoConnectionBody": {
+    "description": "Corps du dialogue hors-ligne de scan_confirm_screen.dart (version courte, distincte de scanQueuedNoConnectionBodyLong)."
+  },
+  "scanTerminateButton": "Finish",
+  "@scanTerminateButton": {
+    "description": "CTA de l'écran de succès livraison (scan_confirm_screen.dart, DonySuccessScreen)."
+  },
+  "scanHubTitle": "Scan & Tracking",
+  "@scanHubTitle": {
+    "description": "Titre du hub Scan & Suivi (scan_hub_screen.dart)."
+  },
+  "scanTrackParcelEntry": "Track a parcel",
+  "@scanTrackParcelEntry": {
+    "description": "Entrée additive « Suivre un colis » du hub Scan & Suivi (scan_hub_screen.dart)."
+  },
+  "scanChooseTripTitle": "Choose a trip",
+  "@scanChooseTripTitle": {
+    "description": "Titre de la feuille de sélection de trajet (scan_hub_screen.dart, _TripPicker)."
+  },
+  "scanChangeTripLabel": "Change trip",
+  "@scanChangeTripLabel": {
+    "description": "Bandeau du hero trajet quand plusieurs trajets sont actifs (scan_hub_screen.dart, _TripHeroCompact)."
+  },
+  "scanNoTripTitle": "No trip to handle",
+  "@scanNoTripTitle": {
+    "description": "Titre de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState)."
+  },
+  "scanNoTripDescription": "You'll be able to scan parcel QR codes once a request is accepted on one of your trips.",
+  "@scanNoTripDescription": {
+    "description": "Description de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState)."
+  },
+  "scanViewMyTripsAction": "See my trips",
+  "@scanViewMyTripsAction": {
+    "description": "Action de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState)."
+  },
+  "scanLoadTripsErrorTitle": "Couldn't load your trips",
+  "@scanLoadTripsErrorTitle": {
+    "description": "Titre de l'état d'erreur du hub Scan & Suivi (scan_hub_screen.dart, _ErrorState)."
+  },
+  "scanQuickReadSectionTitle": "QUICK SCAN",
+  "@scanQuickReadSectionTitle": {
+    "description": "Titre de la section des 3 boutons de scan rapide (scan_hub_screen.dart, _EtapesSection)."
+  },
+  "scanColisSectionTitle": "PARCELS ({count})",
+  "@scanColisSectionTitle": {
+    "description": "Titre de la section liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanNoColisConfirmed": "No parcel confirmed on this trip yet.",
+  "@scanNoColisConfirmed": {
+    "description": "Message vide de la liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection)."
+  },
+  "scanColisRowScanBadge": "Scan",
+  "@scanColisRowScanBadge": {
+    "description": "Pastille d'action d'une ligne colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisRow), identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "scanHistorySectionTitle": "SCAN HISTORY",
+  "@scanHistorySectionTitle": {
+    "description": "Titre de la section historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection)."
+  },
+  "scanNoHistoryYet": "No scan yet",
+  "@scanNoHistoryYet": {
+    "description": "Message vide de l'historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection)."
+  },
+  "scanIdentifyTitle": "Identify the parcel",
+  "@scanIdentifyTitle": {
+    "description": "Titre de l'écran d'identification du colis (scan_identify_screen.dart)."
+  },
+  "scanOpenQrReaderTitle": "Open QR reader",
+  "@scanOpenQrReaderTitle": {
+    "description": "Bouton d'ouverture du lecteur QR (scan_identify_screen.dart)."
+  },
+  "scanPointQrHint": "Point at the parcel's QR code",
+  "@scanPointQrHint": {
+    "description": "Sous-titre du bouton d'ouverture du lecteur QR (scan_identify_screen.dart)."
+  },
+  "scanOrDivider": "OR",
+  "@scanOrDivider": {
+    "description": "Séparateur « OU » entre le lecteur QR et la saisie manuelle (scan_identify_screen.dart)."
+  },
+  "scanIdentifySubmit": "Identify →",
+  "@scanIdentifySubmit": {
+    "description": "Bouton de soumission du numéro saisi manuellement (scan_identify_screen.dart)."
+  },
+  "scanWhichStepTitle": "Which step?",
+  "@scanWhichStepTitle": {
+    "description": "Titre de la feuille de sélection d'étape (scan_identify_screen.dart, _EtapePickerSheet)."
+  },
+  "scanPhotoMandatoryBadge": "Photo required",
+  "@scanPhotoMandatoryBadge": {
+    "description": "Badge photo obligatoire pour DEPART/ARRIVEE (scan_photo_screen.dart)."
+  },
+  "scanPhotoOptionalBadge": "Photo optional",
+  "@scanPhotoOptionalBadge": {
+    "description": "Badge photo optionnelle pour TRANSIT (scan_photo_screen.dart)."
+  },
+  "scanPhotoOpeningLoading": "Opening...",
+  "@scanPhotoOpeningLoading": {
+    "description": "Libellé du bouton pendant l'ouverture de la caméra (scan_photo_screen.dart)."
+  },
+  "scanTakePhotoButton": "Take the photo",
+  "@scanTakePhotoButton": {
+    "description": "Bouton principal de prise de photo (scan_photo_screen.dart), distinct de commonTakePhoto (« une » vs « la »)."
+  },
+  "scanSkipPhotoButton": "Skip: continue without a photo",
+  "@scanSkipPhotoButton": {
+    "description": "Bouton pour ignorer la photo optionnelle (scan_photo_screen.dart)."
+  },
+  "scanAutoGeolocation": "Automatic geolocation",
+  "@scanAutoGeolocation": {
+    "description": "Mention de géolocalisation automatique (scan_photo_screen.dart)."
+  },
+  "scanQrPickerTitle": "Scan the QR code",
+  "@scanQrPickerTitle": {
+    "description": "Titre de l'écran de lecture QR générique (qr_picker_screen.dart)."
+  },
+  "scanTorchToggleTooltip": "Turn the flashlight on or off",
+  "@scanTorchToggleTooltip": {
+    "description": "Tooltip du bouton lampe torche de qr_picker_screen.dart, distinct de scanTorchTooltip."
+  },
+  "scanQrPickerHint": "Point at the parcel's QR code",
+  "@scanQrPickerHint": {
+    "description": "Texte d'aide de l'écran de lecture QR générique (qr_picker_screen.dart)."
+  },
+  "scanOfflineEventPickupLabel": "pickup",
+  "@scanOfflineEventPickupLabel": {
+    "description": "Libellé court de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineEventTransitLabel": "transit",
+  "@scanOfflineEventTransitLabel": {
+    "description": "Libellé court de l'événement IN_TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart), identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "scanOfflineEventDeliveredLabel": "delivered",
+  "@scanOfflineEventDeliveredLabel": {
+    "description": "Libellé court de l'événement DELIVERED dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineEventDefaultLabel": "queued",
+  "@scanOfflineEventDefaultLabel": {
+    "description": "Libellé court de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineDescPickup": "Pickup recorded",
+  "@scanOfflineDescPickup": {
+    "description": "Description de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineDescTransit": "Transit saved",
+  "@scanOfflineDescTransit": {
+    "description": "Description de l'événement IN_TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineDescDelivered": "Delivery saved",
+  "@scanOfflineDescDelivered": {
+    "description": "Description de l'événement DELIVERED dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineDescDefault": "Scan saved",
+  "@scanOfflineDescDefault": {
+    "description": "Description de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineQueueTitle": "Offline scans",
+  "@scanOfflineQueueTitle": {
+    "description": "Titre de l'écran de file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineBadge": "Offline",
+  "@scanOfflineBadge": {
+    "description": "Pastille « Hors-ligne » de l'appbar (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineQueueSectionTitle": "QUEUE ({count})",
+  "@scanOfflineQueueSectionTitle": {
+    "description": "Titre de section de la file d'attente hors-ligne (offline_scan_queue_screen.dart).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanOfflineQueueEmpty": "No scan pending.",
+  "@scanOfflineQueueEmpty": {
+    "description": "Message vide de la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineFooterHint": "Keep scanning even without a network connection.",
+  "@scanOfflineFooterHint": {
+    "description": "Message de pied de page de la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanQueueSafeTitle": "Your scans are safe",
+  "@scanQueueSafeTitle": {
+    "description": "Titre du bandeau d'alerte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _AlertBanner)."
+  },
+  "scanOfflineParcelCode": "parcel {code}",
+  "@scanOfflineParcelCode": {
+    "description": "Code court d'un colis dans une carte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _QueueItemCard).",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "scanOfflineSyncingSubtitle": "Waiting to sync",
+  "@scanOfflineSyncingSubtitle": {
+    "description": "Sous-titre de la feuille de file d'attente hors-ligne (offline_queue_bottom_sheet.dart)."
+  },
+  "scanSyncButton": "Sync",
+  "@scanSyncButton": {
+    "description": "Bouton de synchronisation de la feuille de file d'attente hors-ligne (offline_queue_bottom_sheet.dart)."
   }
 }

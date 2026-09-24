@@ -16225,6 +16225,552 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'maintenant'**
   String get conversationTimeJustNow;
+
+  /// Libellé de l'étape de suivi DEPART (tracking_labels.dart, trackingStepLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get trackingStepDeparture;
+
+  /// Libellé de l'étape de suivi TRANSIT (tracking_labels.dart, trackingStepLabel), identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Transit'**
+  String get trackingStepTransit;
+
+  /// Libellé de l'étape de suivi ARRIVEE (tracking_labels.dart, trackingStepLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get trackingStepArrival;
+
+  /// Chip de confirmation d'une lecture QR (scan_confirm_screen.dart) : step reçoit le code brut (DEPART/TRANSIT/ARRIVEE), pas le libellé.
+  ///
+  /// In fr, this message translates to:
+  /// **'{step, select, DEPART{Départ enregistrée} TRANSIT{Transit enregistrée} other{Arrivée enregistrée}}'**
+  String scanStepRecorded(String step);
+
+  /// Badge étape sur la photo d'une lecture (scan_photo_screen.dart) : step reçoit le libellé déjà traduit via trackingStepLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape : {step}'**
+  String scanStepLabel(String step);
+
+  /// Bandeau de synchro du hub Scan & Suivi (scan_hub_screen.dart, _SyncBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} lecture en attente de synchro} other{{count} lectures en attente de synchro}}'**
+  String scanPendingSync(int count);
+
+  /// Titre de la feuille de file d'attente hors-ligne (offline_queue_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} lecture hors-ligne} other{{count} lectures hors-ligne}}'**
+  String scanOfflineCount(int count);
+
+  /// Bandeau d'alerte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _AlertBanner) : corrige l'accord faux à 1 ("1 lectures").
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} lecture en attente. On l\'enverra dès que vous récupérez du réseau.} other{{count} lectures en attente. On les enverra dès que vous récupérez du réseau.}}'**
+  String scanQueueSafe(int count);
+
+  /// Ancienneté d'une lecture hors-ligne de moins d'une minute (tracking_labels.dart, scanRelativeTime).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a < 1 min'**
+  String get scanAgoUnderMinute;
+
+  /// Ancienneté d'une lecture hors-ligne en minutes (tracking_labels.dart, scanRelativeTime).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {minutes} min'**
+  String scanAgoMinutes(int minutes);
+
+  /// Ancienneté d'une lecture hors-ligne en heures (tracking_labels.dart, scanRelativeTime).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {hours}h'**
+  String scanAgoHours(int hours);
+
+  /// Erreur de photo trop volumineuse à la lecture d'un QR (tracking_labels.dart, qr_scanner_screen.dart, scan_photo_screen.dart), mb dynamique.
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo trop lourde (max {mb} Mo). Réessayez.'**
+  String scanPhotoTooLarge(int mb);
+
+  /// Titre de l'écran de lecture QR au départ (qr_scanner_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture au départ'**
+  String get scanDepartureTitle;
+
+  /// Tooltip du bouton lampe torche de qr_scanner_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lampe torche'**
+  String get scanTorchTooltip;
+
+  /// Titre de la feuille de confirmation après lecture d'un QR (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'QR lu'**
+  String get scanQrReadTitle;
+
+  /// Indicateur de progression de l'écran de lecture au départ (qr_scanner_screen.dart), toujours étape 1 sur 3 : c'est le premier des trois scans du parcours.
+  ///
+  /// In fr, this message translates to:
+  /// **'ÉTAPE 1 SUR 3'**
+  String get scanStepIndicatorStatic;
+
+  /// Sous-titre de l'indicateur de progression de qr_scanner_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis confirmé en valise'**
+  String get scanConfirmedInSuitcase;
+
+  /// Mot « Photo » seul, identique dans les deux langues (voir _sameInBothLanguages) : bouton de qr_scanner_screen.dart, badge de scan_hub_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo'**
+  String get scanPhotoWordLabel;
+
+  /// Bouton principal de qr_scanner_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer & continuer'**
+  String get scanConfirmAndContinue;
+
+  /// Titre du dialogue de saisie manuelle du numéro de suivi (qr_scanner_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de suivi'**
+  String get scanTrackingNumberDialogTitle;
+
+  /// Corps du dialogue de saisie manuelle du numéro de suivi (qr_scanner_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez le numéro DON-XXXXXX du colis à lire.'**
+  String get scanTrackingNumberDialogBody;
+
+  /// Erreur de numéro de suivi introuvable (qr_scanner_screen.dart, scan_identify_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro introuvable. Vérifiez et réessayez.'**
+  String get scanNumberNotFound;
+
+  /// Titre du dialogue de lecture mise en file d'attente hors-ligne (qr_scanner_screen.dart, scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture en attente'**
+  String get scanQueuedTitle;
+
+  /// Corps du dialogue hors-ligne de qr_scanner_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de connexion internet. La lecture sera synchronisée automatiquement dès que vous serez en ligne.'**
+  String get scanQueuedNoConnectionBodyLong;
+
+  /// Bouton de fermeture des dialogues hors-ligne (qr_scanner_screen.dart, scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compris'**
+  String get scanUnderstoodButton;
+
+  /// Titre affiché quand la lecture confirme une livraison finale (qr_scanner_screen.dart, scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis livré !'**
+  String get scanParcelDeliveredTitle;
+
+  /// Titre affiché après une lecture QR réussie non finale (qr_scanner_screen.dart, scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture enregistrée !'**
+  String get scanRecordedTitle;
+
+  /// Libellé du sélecteur d'étape de la feuille de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Type d\'étape'**
+  String get scanEventTypeSectionLabel;
+
+  /// Libellé du champ code de confirmation à l'arrivée (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de confirmation'**
+  String get scanConfirmationCodeLabel;
+
+  /// Texte d'aide du champ code de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez le code à 6 chiffres au destinataire. Il l\'a reçu de l\'expéditeur.'**
+  String get scanConfirmationCodeHintLong;
+
+  /// Libellé/titre de la section photo (qr_scanner_screen.dart, scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo du colis'**
+  String get scanPhotoOfParcelLabel;
+
+  /// Libellé Semantics du bouton de suppression de la photo prise (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la photo'**
+  String get scanRemovePhotoSemantics;
+
+  /// Repli affiché quand une position GPS est enregistrée sans libellé de lieu résolu (qr_scanner_screen.dart, scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu GPS enregistré'**
+  String get scanGpsLocationSaved;
+
+  /// Message d'erreur photo trop lourde à taille fixe (qr_scanner_screen.dart:1141), distinct de scanPhotoTooLarge (« MB » au lieu de « Mo », taille non dynamique).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo trop lourde (max 10 MB). Réessayez.'**
+  String get scanPhotoTooLargeFixed;
+
+  /// Libellé du bouton pendant la confirmation d'une livraison (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmation...'**
+  String get scanSubmittingConfirmation;
+
+  /// Libellé du bouton pendant l'enregistrement d'une lecture DEPART/TRANSIT (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrement...'**
+  String get scanSubmittingRecording;
+
+  /// Bouton de confirmation d'une livraison ARRIVEE (qr_scanner_screen.dart, scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la livraison'**
+  String get scanConfirmDeliveryButton;
+
+  /// Bouton de confirmation d'une lecture DEPART/TRANSIT (qr_scanner_screen.dart) et titre d'appbar de scan_confirm_screen.dart, même texte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la lecture'**
+  String get scanConfirmReadingLabel;
+
+  /// Libellé de la ligne colis du récapitulatif (scan_confirm_screen.dart, _MetaRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get scanConfirmParcelLabel;
+
+  /// Libellé de la ligne étape du récapitulatif (scan_confirm_screen.dart, _MetaRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape'**
+  String get scanConfirmStepLabel;
+
+  /// Texte d'aide du champ code de confirmation de scan_confirm_screen.dart (version courte, distincte de scanConfirmationCodeHintLong).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez le code à 6 chiffres au destinataire.'**
+  String get scanConfirmConfirmationCodeHint;
+
+  /// Bouton de validation d'une lecture DEPART/TRANSIT (scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider la lecture'**
+  String get scanValidateReadingButton;
+
+  /// Bouton pour revenir reprendre la photo (scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre la photo'**
+  String get scanRetakePhotoButton;
+
+  /// Corps du dialogue hors-ligne de scan_confirm_screen.dart (version courte, distincte de scanQueuedNoConnectionBodyLong).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de connexion. La lecture sera synchronisée dès que vous serez en ligne.'**
+  String get scanConfirmQueuedNoConnectionBody;
+
+  /// CTA de l'écran de succès livraison (scan_confirm_screen.dart, DonySuccessScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminer'**
+  String get scanTerminateButton;
+
+  /// Titre du hub Scan & Suivi (scan_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture & Suivi'**
+  String get scanHubTitle;
+
+  /// Entrée additive « Suivre un colis » du hub Scan & Suivi (scan_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre un colis'**
+  String get scanTrackParcelEntry;
+
+  /// Titre de la feuille de sélection de trajet (scan_hub_screen.dart, _TripPicker).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir un trajet'**
+  String get scanChooseTripTitle;
+
+  /// Bandeau du hero trajet quand plusieurs trajets sont actifs (scan_hub_screen.dart, _TripHeroCompact).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de trajet'**
+  String get scanChangeTripLabel;
+
+  /// Titre de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet à traiter'**
+  String get scanNoTripTitle;
+
+  /// Description de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu pourras lire les QR des colis dès qu\'une demande sera acceptée sur l\'un de tes trajets.'**
+  String get scanNoTripDescription;
+
+  /// Action de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mes trajets'**
+  String get scanViewMyTripsAction;
+
+  /// Titre de l'état d'erreur du hub Scan & Suivi (scan_hub_screen.dart, _ErrorState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les trajets'**
+  String get scanLoadTripsErrorTitle;
+
+  /// Titre de la section des 3 boutons de scan rapide (scan_hub_screen.dart, _EtapesSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'LECTURE RAPIDE'**
+  String get scanQuickReadSectionTitle;
+
+  /// Titre de la section liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'COLIS ({count})'**
+  String scanColisSectionTitle(int count);
+
+  /// Message vide de la liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun colis confirmé sur ce trajet pour l\'instant.'**
+  String get scanNoColisConfirmed;
+
+  /// Pastille d'action d'une ligne colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisRow), identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Scan'**
+  String get scanColisRowScanBadge;
+
+  /// Titre de la section historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection).
+  ///
+  /// In fr, this message translates to:
+  /// **'HISTORIQUE DES LECTURES'**
+  String get scanHistorySectionTitle;
+
+  /// Message vide de l'historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune lecture pour l\'instant'**
+  String get scanNoHistoryYet;
+
+  /// Titre de l'écran d'identification du colis (scan_identify_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifier le colis'**
+  String get scanIdentifyTitle;
+
+  /// Bouton d'ouverture du lecteur QR (scan_identify_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir le lecteur QR'**
+  String get scanOpenQrReaderTitle;
+
+  /// Sous-titre du bouton d'ouverture du lecteur QR (scan_identify_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pointez vers le QR du colis'**
+  String get scanPointQrHint;
+
+  /// Séparateur « OU » entre le lecteur QR et la saisie manuelle (scan_identify_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'OU'**
+  String get scanOrDivider;
+
+  /// Bouton de soumission du numéro saisi manuellement (scan_identify_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifier →'**
+  String get scanIdentifySubmit;
+
+  /// Titre de la feuille de sélection d'étape (scan_identify_screen.dart, _EtapePickerSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Quelle étape ?'**
+  String get scanWhichStepTitle;
+
+  /// Badge photo obligatoire pour DEPART/ARRIVEE (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo obligatoire'**
+  String get scanPhotoMandatoryBadge;
+
+  /// Badge photo optionnelle pour TRANSIT (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo optionnelle'**
+  String get scanPhotoOptionalBadge;
+
+  /// Libellé du bouton pendant l'ouverture de la caméra (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouverture...'**
+  String get scanPhotoOpeningLoading;
+
+  /// Bouton principal de prise de photo (scan_photo_screen.dart), distinct de commonTakePhoto (« une » vs « la »).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre la photo'**
+  String get scanTakePhotoButton;
+
+  /// Bouton pour ignorer la photo optionnelle (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer : continuer sans photo'**
+  String get scanSkipPhotoButton;
+
+  /// Mention de géolocalisation automatique (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Géolocalisation automatique'**
+  String get scanAutoGeolocation;
+
+  /// Titre de l'écran de lecture QR générique (qr_picker_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire le QR code'**
+  String get scanQrPickerTitle;
+
+  /// Tooltip du bouton lampe torche de qr_picker_screen.dart, distinct de scanTorchTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer ou couper la lampe'**
+  String get scanTorchToggleTooltip;
+
+  /// Texte d'aide de l'écran de lecture QR générique (qr_picker_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pointez vers le QR code du colis'**
+  String get scanQrPickerHint;
+
+  /// Libellé court de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'collecte'**
+  String get scanOfflineEventPickupLabel;
+
+  /// Libellé court de l'événement IN_TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart), identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'transit'**
+  String get scanOfflineEventTransitLabel;
+
+  /// Libellé court de l'événement DELIVERED dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'livré'**
+  String get scanOfflineEventDeliveredLabel;
+
+  /// Libellé court de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'file'**
+  String get scanOfflineEventDefaultLabel;
+
+  /// Description de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Collecte enregistrée'**
+  String get scanOfflineDescPickup;
+
+  /// Description de l'événement IN_TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En transit sauvegardé'**
+  String get scanOfflineDescTransit;
+
+  /// Description de l'événement DELIVERED dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison sauvegardée'**
+  String get scanOfflineDescDelivered;
+
+  /// Description de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture sauvegardée'**
+  String get scanOfflineDescDefault;
+
+  /// Titre de l'écran de file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lectures hors-ligne'**
+  String get scanOfflineQueueTitle;
+
+  /// Pastille « Hors-ligne » de l'appbar (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Hors-ligne'**
+  String get scanOfflineBadge;
+
+  /// Titre de section de la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'FILE D\'ATTENTE ({count})'**
+  String scanOfflineQueueSectionTitle(int count);
+
+  /// Message vide de la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune lecture en attente.'**
+  String get scanOfflineQueueEmpty;
+
+  /// Message de pied de page de la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuez les lectures même sans réseau.'**
+  String get scanOfflineFooterHint;
+
+  /// Titre du bandeau d'alerte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _AlertBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos lectures sont en sécurité'**
+  String get scanQueueSafeTitle;
+
+  /// Code court d'un colis dans une carte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _QueueItemCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'colis {code}'**
+  String scanOfflineParcelCode(String code);
+
+  /// Sous-titre de la feuille de file d'attente hors-ligne (offline_queue_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de synchronisation'**
+  String get scanOfflineSyncingSubtitle;
+
+  /// Bouton de synchronisation de la feuille de file d'attente hors-ligne (offline_queue_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchroniser'**
+  String get scanSyncButton;
 }
 
 class _AppLocalizationsDelegate

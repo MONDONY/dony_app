@@ -4,14 +4,17 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-const _etapeLabels = <String, (String, String?, String?)>{
-  'DEPART': ('Départ', null, 'plane-takeoff'),
-  'TRANSIT': ('Transit', 'arrow-left-right', null),
-  'ARRIVEE': ('Arrivée', null, 'plane-landing'),
+// Icônes uniquement : le libellé se calcule via trackingStepLabel.
+const _etapeIcons = <String, (String?, String?)>{
+  'DEPART': (null, 'plane-takeoff'),
+  'TRANSIT': ('arrow-left-right', null),
+  'ARRIVEE': (null, 'plane-landing'),
 };
 
 class ScanIdentifyScreen extends StatefulWidget {
@@ -113,8 +116,9 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final etapeLabel = _selectedEtape != null
-        ? _etapeLabels[_selectedEtape!]
+    final l = context.l10n;
+    final etapeIcons = _selectedEtape != null
+        ? _etapeIcons[_selectedEtape!]
         : null;
 
     return BlocConsumer<TrackingBloc, TrackingState>(
@@ -134,26 +138,26 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
             elevation: 0,
             scrolledUnderElevation: 0,
             centerTitle: false,
-            title: Text('Identifier le colis', style: tt.headlineLarge),
+            title: Text(l.scanIdentifyTitle, style: tt.headlineLarge),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(1),
               child: Divider(height: 1, color: cs.outline),
             ),
             actions: [
-              if (etapeLabel != null)
+              if (etapeIcons != null)
                 Padding(
                   padding: const EdgeInsets.only(right: DonySpacing.base),
                   child: Chip(
-                    avatar: switch (etapeLabel.$3) {
+                    avatar: switch (etapeIcons.$2) {
                       'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 14),
                       'plane-landing' => const DonyEmoji.planeLanding(size: 14),
                       _ => DonyIcon(
-                        etapeLabel.$2!,
+                        etapeIcons.$1!,
                         size: 14,
                         color: cs.primary,
                       ),
                     },
-                    label: Text(etapeLabel.$1),
+                    label: Text(trackingStepLabel(l, _selectedEtape!)),
                     labelStyle: tt.labelSmall?.copyWith(
                       color: cs.primary,
                       fontWeight: FontWeight.w700,
@@ -197,7 +201,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                         DonyIcon('scan-line', size: 36, color: cs.onPrimary),
                         const SizedBox(height: DonySpacing.sm),
                         Text(
-                          'Ouvrir le lecteur QR',
+                          l.scanOpenQrReaderTitle,
                           style: tt.titleMedium?.copyWith(
                             color: cs.onPrimary,
                             fontWeight: FontWeight.w800,
@@ -205,7 +209,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                         ),
                         const SizedBox(height: DonySpacing.xs),
                         Text(
-                          'Pointez vers le QR du colis',
+                          l.scanPointQrHint,
                           style: tt.bodySmall?.copyWith(
                             color: cs.onPrimary.withValues(alpha: 0.75),
                           ),
@@ -226,7 +230,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                         horizontal: DonySpacing.sm,
                       ),
                       child: Text(
-                        'OU',
+                        l.scanOrDivider,
                         style: tt.labelSmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -247,7 +251,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                   keyboardType: TextInputType.visiblePassword,
                   style: tt.titleLarge?.copyWith(letterSpacing: 1.5),
                   decoration: InputDecoration(
-                    hintText: 'DON-XXXXXX',
+                    hintText: 'DON-XXXXXX', // i18n-ignore: format de numéro
                     hintStyle: tt.titleLarge?.copyWith(
                       letterSpacing: 1.5,
                       color: cs.onSurfaceVariant,
@@ -299,14 +303,14 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                               color: cs.onPrimary,
                             ),
                           )
-                        : Text('Identifier →', style: tt.labelLarge),
+                        : Text(l.scanIdentifySubmit, style: tt.labelLarge),
                   ),
                 ),
 
                 if (state is TrackingSearchError) ...[
                   const SizedBox(height: DonySpacing.md),
                   Text(
-                    'Numéro introuvable. Vérifiez et réessayez.',
+                    l.scanNumberNotFound,
                     style: tt.bodySmall?.copyWith(color: cs.error),
                     textAlign: TextAlign.center,
                   ),
@@ -327,6 +331,7 @@ class _EtapePickerSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -355,19 +360,19 @@ class _EtapePickerSheet extends StatelessWidget {
               ),
             ),
           ),
-          Text('Quelle étape ?', style: tt.headlineMedium),
+          Text(l.scanWhichStepTitle, style: tt.headlineMedium),
           const SizedBox(height: DonySpacing.base),
-          for (final entry in _etapeLabels.entries)
+          for (final entry in _etapeIcons.entries)
             Material(
               type: MaterialType.transparency,
               child: ListTile(
-                leading: switch (entry.value.$3) {
+                leading: switch (entry.value.$2) {
                   'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 24),
                   'plane-landing' => const DonyEmoji.planeLanding(size: 24),
-                  _ => DonyIcon(entry.value.$2!, color: cs.primary),
+                  _ => DonyIcon(entry.value.$1!, color: cs.primary),
                 },
                 title: Text(
-                  entry.value.$1,
+                  trackingStepLabel(l, entry.key),
                   style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 onTap: () => context.pop(entry.key),

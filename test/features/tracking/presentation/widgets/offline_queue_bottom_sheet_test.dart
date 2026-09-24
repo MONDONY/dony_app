@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockTrackingBloc extends Mock implements TrackingBloc {}
 
 void main() {
@@ -122,5 +124,37 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('2 lectures hors-ligne'), findsOneWidget);
+  });
+
+  testWidgets('anglais — titre, sous-titre et bouton traduits', (tester) async {
+    useEnglish();
+    final items = [
+      OfflineScanItem(
+        donNumber: 'DON-0001',
+        eventType: 'Collecte',
+        timestamp: DateTime.now(),
+      ),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlocProvider<TrackingBloc>.value(
+          value: bloc,
+          child: Builder(
+            builder: (ctx) => TextButton(
+              onPressed: () => OfflineQueueBottomSheet.show(ctx, items: items),
+              child: const Text('Ouvrir'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Ouvrir'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 offline scan'), findsOneWidget);
+    expect(find.text('Waiting to sync'), findsOneWidget);
+    expect(find.text('Sync'), findsOneWidget);
   });
 }

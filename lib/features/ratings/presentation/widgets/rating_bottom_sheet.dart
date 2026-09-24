@@ -12,14 +12,16 @@ class RatingBottomSheet extends StatefulWidget {
   const RatingBottomSheet({
     super.key,
     required this.bidId,
-    required this.travelerName,
+    this.travelerName,
     this.starsNotifier,
     this.onSubmitReady,
     this.isTravelerRating = false,
   });
 
   final String bidId;
-  final String travelerName;
+  // Nullable : un appelant qui évalue l'expéditeur (isTravelerRating: true)
+  // n'a pas besoin de fournir de nom, le titre complet vient de F3.
+  final String? travelerName;
   final ValueNotifier<int>? starsNotifier;
   final void Function(VoidCallback)? onSubmitReady;
   final bool isTravelerRating;
@@ -27,7 +29,7 @@ class RatingBottomSheet extends StatefulWidget {
   static Future<void> show(
     BuildContext context, {
     required String bidId,
-    required String travelerName,
+    String? travelerName,
     bool isTravelerRating = false,
   }) {
     final ratingBloc = context.read<RatingBloc>();

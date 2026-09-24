@@ -17,6 +17,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 const _emptyHelpConfigJson = '''
@@ -226,6 +227,17 @@ void main() {
     expect(find.text('Départ'), findsOneWidget);
     expect(find.text('Transit'), findsOneWidget);
     expect(find.text('Arrivée'), findsOneWidget);
+  });
+
+  testWidgets('anglais — titre et étapes traduits', (tester) async {
+    useEnglish();
+    when(() => cubit.state).thenReturn(loadedState());
+    await tester.pumpWidget(_wrap(cubit));
+    await tester.pumpAndSettle();
+    expect(find.text('Scan & Tracking'), findsOneWidget);
+    expect(find.text('Departure'), findsOneWidget);
+    expect(find.text('Transit'), findsOneWidget);
+    expect(find.text('Arrival'), findsOneWidget);
   });
 
   testWidgets('affiche corridor du trajet réel', (tester) async {

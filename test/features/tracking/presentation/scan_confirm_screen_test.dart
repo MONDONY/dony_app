@@ -19,6 +19,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
 
@@ -319,6 +321,19 @@ void main() {
     await tester.pumpWidget(_wrap('TRANSIT', bloc));
     await tester.pump();
     expect(find.textContaining('Transit'), findsWidgets);
+  });
+
+  // ─── anglais — titre, chip et bouton traduits ────────────────────────────
+  testWidgets('anglais — titre, chip et bouton traduits', (tester) async {
+    useEnglish();
+    final bloc = MockTrackingBloc();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+    whenListen(bloc, const Stream<TrackingState>.empty());
+    await tester.pumpWidget(_wrap('DEPART', bloc));
+    await tester.pump();
+    expect(find.text('Confirm scan'), findsOneWidget);
+    expect(find.text('Departure recorded'), findsOneWidget);
+    expect(find.text('Validate scan'), findsOneWidget);
   });
 
   // ─── DeliveryConfirmSuccess — RatingBottomSheet non simultané ────────────

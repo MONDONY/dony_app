@@ -174,6 +174,10 @@ const _sameInBothLanguages = <String>{
   'chatUnknownConversationLabel', // « Conversation » se dit pareil (tâche F1)
   'conversationListTitle', // « Messages » se dit pareil (tâche F1)
   'archivedConversationsTitle', // « Archives » se dit pareil (tâche F1)
+  'trackingStepTransit', // « Transit » se dit pareil (tâche F2)
+  'scanPhotoWordLabel', // « Photo » se dit pareil (tâche F2)
+  'scanColisRowScanBadge', // « Scan » se dit pareil (tâche F2)
+  'scanOfflineEventTransitLabel', // « transit » se dit pareil (tâche F2)
 };
 
 void main() {

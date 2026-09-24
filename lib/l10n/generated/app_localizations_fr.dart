@@ -9765,4 +9765,333 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get conversationTimeJustNow => 'maintenant';
+
+  @override
+  String get trackingStepDeparture => 'Départ';
+
+  @override
+  String get trackingStepTransit => 'Transit';
+
+  @override
+  String get trackingStepArrival => 'Arrivée';
+
+  @override
+  String scanStepRecorded(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Départ enregistrée',
+      'TRANSIT': 'Transit enregistrée',
+      'other': 'Arrivée enregistrée',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String scanStepLabel(String step) {
+    return 'Étape : $step';
+  }
+
+  @override
+  String scanPendingSync(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lectures en attente de synchro',
+      one: '$count lecture en attente de synchro',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String scanOfflineCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lectures hors-ligne',
+      one: '$count lecture hors-ligne',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String scanQueueSafe(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count lectures en attente. On les enverra dès que vous récupérez du réseau.',
+      one:
+          '$count lecture en attente. On l\'enverra dès que vous récupérez du réseau.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get scanAgoUnderMinute => 'il y a < 1 min';
+
+  @override
+  String scanAgoMinutes(int minutes) {
+    return 'il y a $minutes min';
+  }
+
+  @override
+  String scanAgoHours(int hours) {
+    return 'il y a ${hours}h';
+  }
+
+  @override
+  String scanPhotoTooLarge(int mb) {
+    return 'Photo trop lourde (max $mb Mo). Réessayez.';
+  }
+
+  @override
+  String get scanDepartureTitle => 'Lecture au départ';
+
+  @override
+  String get scanTorchTooltip => 'Lampe torche';
+
+  @override
+  String get scanQrReadTitle => 'QR lu';
+
+  @override
+  String get scanStepIndicatorStatic => 'ÉTAPE 1 SUR 3';
+
+  @override
+  String get scanConfirmedInSuitcase => 'Colis confirmé en valise';
+
+  @override
+  String get scanPhotoWordLabel => 'Photo';
+
+  @override
+  String get scanConfirmAndContinue => 'Confirmer & continuer';
+
+  @override
+  String get scanTrackingNumberDialogTitle => 'Numéro de suivi';
+
+  @override
+  String get scanTrackingNumberDialogBody =>
+      'Entrez le numéro DON-XXXXXX du colis à lire.';
+
+  @override
+  String get scanNumberNotFound => 'Numéro introuvable. Vérifiez et réessayez.';
+
+  @override
+  String get scanQueuedTitle => 'Lecture en attente';
+
+  @override
+  String get scanQueuedNoConnectionBodyLong =>
+      'Pas de connexion internet. La lecture sera synchronisée automatiquement dès que vous serez en ligne.';
+
+  @override
+  String get scanUnderstoodButton => 'Compris';
+
+  @override
+  String get scanParcelDeliveredTitle => 'Colis livré !';
+
+  @override
+  String get scanRecordedTitle => 'Lecture enregistrée !';
+
+  @override
+  String get scanEventTypeSectionLabel => 'Type d\'étape';
+
+  @override
+  String get scanConfirmationCodeLabel => 'Code de confirmation';
+
+  @override
+  String get scanConfirmationCodeHintLong =>
+      'Demandez le code à 6 chiffres au destinataire. Il l\'a reçu de l\'expéditeur.';
+
+  @override
+  String get scanPhotoOfParcelLabel => 'Photo du colis';
+
+  @override
+  String get scanRemovePhotoSemantics => 'Supprimer la photo';
+
+  @override
+  String get scanGpsLocationSaved => 'Lieu GPS enregistré';
+
+  @override
+  String get scanPhotoTooLargeFixed =>
+      'Photo trop lourde (max 10 MB). Réessayez.';
+
+  @override
+  String get scanSubmittingConfirmation => 'Confirmation...';
+
+  @override
+  String get scanSubmittingRecording => 'Enregistrement...';
+
+  @override
+  String get scanConfirmDeliveryButton => 'Confirmer la livraison';
+
+  @override
+  String get scanConfirmReadingLabel => 'Confirmer la lecture';
+
+  @override
+  String get scanConfirmParcelLabel => 'Colis';
+
+  @override
+  String get scanConfirmStepLabel => 'Étape';
+
+  @override
+  String get scanConfirmConfirmationCodeHint =>
+      'Demandez le code à 6 chiffres au destinataire.';
+
+  @override
+  String get scanValidateReadingButton => 'Valider la lecture';
+
+  @override
+  String get scanRetakePhotoButton => 'Reprendre la photo';
+
+  @override
+  String get scanConfirmQueuedNoConnectionBody =>
+      'Pas de connexion. La lecture sera synchronisée dès que vous serez en ligne.';
+
+  @override
+  String get scanTerminateButton => 'Terminer';
+
+  @override
+  String get scanHubTitle => 'Lecture & Suivi';
+
+  @override
+  String get scanTrackParcelEntry => 'Suivre un colis';
+
+  @override
+  String get scanChooseTripTitle => 'Choisir un trajet';
+
+  @override
+  String get scanChangeTripLabel => 'Changer de trajet';
+
+  @override
+  String get scanNoTripTitle => 'Aucun trajet à traiter';
+
+  @override
+  String get scanNoTripDescription =>
+      'Tu pourras lire les QR des colis dès qu\'une demande sera acceptée sur l\'un de tes trajets.';
+
+  @override
+  String get scanViewMyTripsAction => 'Voir mes trajets';
+
+  @override
+  String get scanLoadTripsErrorTitle => 'Impossible de charger les trajets';
+
+  @override
+  String get scanQuickReadSectionTitle => 'LECTURE RAPIDE';
+
+  @override
+  String scanColisSectionTitle(int count) {
+    return 'COLIS ($count)';
+  }
+
+  @override
+  String get scanNoColisConfirmed =>
+      'Aucun colis confirmé sur ce trajet pour l\'instant.';
+
+  @override
+  String get scanColisRowScanBadge => 'Scan';
+
+  @override
+  String get scanHistorySectionTitle => 'HISTORIQUE DES LECTURES';
+
+  @override
+  String get scanNoHistoryYet => 'Aucune lecture pour l\'instant';
+
+  @override
+  String get scanIdentifyTitle => 'Identifier le colis';
+
+  @override
+  String get scanOpenQrReaderTitle => 'Ouvrir le lecteur QR';
+
+  @override
+  String get scanPointQrHint => 'Pointez vers le QR du colis';
+
+  @override
+  String get scanOrDivider => 'OU';
+
+  @override
+  String get scanIdentifySubmit => 'Identifier →';
+
+  @override
+  String get scanWhichStepTitle => 'Quelle étape ?';
+
+  @override
+  String get scanPhotoMandatoryBadge => 'Photo obligatoire';
+
+  @override
+  String get scanPhotoOptionalBadge => 'Photo optionnelle';
+
+  @override
+  String get scanPhotoOpeningLoading => 'Ouverture...';
+
+  @override
+  String get scanTakePhotoButton => 'Prendre la photo';
+
+  @override
+  String get scanSkipPhotoButton => 'Passer : continuer sans photo';
+
+  @override
+  String get scanAutoGeolocation => 'Géolocalisation automatique';
+
+  @override
+  String get scanQrPickerTitle => 'Lire le QR code';
+
+  @override
+  String get scanTorchToggleTooltip => 'Activer ou couper la lampe';
+
+  @override
+  String get scanQrPickerHint => 'Pointez vers le QR code du colis';
+
+  @override
+  String get scanOfflineEventPickupLabel => 'collecte';
+
+  @override
+  String get scanOfflineEventTransitLabel => 'transit';
+
+  @override
+  String get scanOfflineEventDeliveredLabel => 'livré';
+
+  @override
+  String get scanOfflineEventDefaultLabel => 'file';
+
+  @override
+  String get scanOfflineDescPickup => 'Collecte enregistrée';
+
+  @override
+  String get scanOfflineDescTransit => 'En transit sauvegardé';
+
+  @override
+  String get scanOfflineDescDelivered => 'Livraison sauvegardée';
+
+  @override
+  String get scanOfflineDescDefault => 'Lecture sauvegardée';
+
+  @override
+  String get scanOfflineQueueTitle => 'Lectures hors-ligne';
+
+  @override
+  String get scanOfflineBadge => 'Hors-ligne';
+
+  @override
+  String scanOfflineQueueSectionTitle(int count) {
+    return 'FILE D\'ATTENTE ($count)';
+  }
+
+  @override
+  String get scanOfflineQueueEmpty => 'Aucune lecture en attente.';
+
+  @override
+  String get scanOfflineFooterHint =>
+      'Continuez les lectures même sans réseau.';
+
+  @override
+  String get scanQueueSafeTitle => 'Vos lectures sont en sécurité';
+
+  @override
+  String scanOfflineParcelCode(String code) {
+    return 'colis $code';
+  }
+
+  @override
+  String get scanOfflineSyncingSubtitle => 'En attente de synchronisation';
+
+  @override
+  String get scanSyncButton => 'Synchroniser';
 }

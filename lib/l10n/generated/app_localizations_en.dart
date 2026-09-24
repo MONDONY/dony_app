@@ -9703,4 +9703,332 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get conversationTimeJustNow => 'just now';
+
+  @override
+  String get trackingStepDeparture => 'Departure';
+
+  @override
+  String get trackingStepTransit => 'Transit';
+
+  @override
+  String get trackingStepArrival => 'Arrival';
+
+  @override
+  String scanStepRecorded(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Departure recorded',
+      'TRANSIT': 'Transit recorded',
+      'other': 'Arrival recorded',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String scanStepLabel(String step) {
+    return 'Step: $step';
+  }
+
+  @override
+  String scanPendingSync(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count scans waiting to sync',
+      one: '$count scan waiting to sync',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String scanOfflineCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count offline scans',
+      one: '$count offline scan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String scanQueueSafe(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count scans pending. We\'ll send them as soon as you\'re back online.',
+      one:
+          '$count scan pending. We\'ll send it as soon as you\'re back online.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get scanAgoUnderMinute => '< 1 min ago';
+
+  @override
+  String scanAgoMinutes(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String scanAgoHours(int hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String scanPhotoTooLarge(int mb) {
+    return 'Photo too large (max $mb MB). Try again.';
+  }
+
+  @override
+  String get scanDepartureTitle => 'Departure scan';
+
+  @override
+  String get scanTorchTooltip => 'Flashlight';
+
+  @override
+  String get scanQrReadTitle => 'QR scanned';
+
+  @override
+  String get scanStepIndicatorStatic => 'STEP 1 OF 3';
+
+  @override
+  String get scanConfirmedInSuitcase => 'Parcel loaded in the suitcase';
+
+  @override
+  String get scanPhotoWordLabel => 'Photo';
+
+  @override
+  String get scanConfirmAndContinue => 'Confirm & continue';
+
+  @override
+  String get scanTrackingNumberDialogTitle => 'Tracking number';
+
+  @override
+  String get scanTrackingNumberDialogBody =>
+      'Enter the parcel\'s DON-XXXXXX number to scan.';
+
+  @override
+  String get scanNumberNotFound => 'Number not found. Check and try again.';
+
+  @override
+  String get scanQueuedTitle => 'Scan pending';
+
+  @override
+  String get scanQueuedNoConnectionBodyLong =>
+      'No internet connection. The scan will sync automatically once you\'re back online.';
+
+  @override
+  String get scanUnderstoodButton => 'Got it';
+
+  @override
+  String get scanParcelDeliveredTitle => 'Parcel delivered!';
+
+  @override
+  String get scanRecordedTitle => 'Scan recorded!';
+
+  @override
+  String get scanEventTypeSectionLabel => 'Step type';
+
+  @override
+  String get scanConfirmationCodeLabel => 'Confirmation code';
+
+  @override
+  String get scanConfirmationCodeHintLong =>
+      'Ask the recipient for the 6-digit code. They received it from the sender.';
+
+  @override
+  String get scanPhotoOfParcelLabel => 'Parcel photo';
+
+  @override
+  String get scanRemovePhotoSemantics => 'Remove the photo';
+
+  @override
+  String get scanGpsLocationSaved => 'GPS location saved';
+
+  @override
+  String get scanPhotoTooLargeFixed =>
+      'Photo too large (max 10 MB). Try again.';
+
+  @override
+  String get scanSubmittingConfirmation => 'Confirming...';
+
+  @override
+  String get scanSubmittingRecording => 'Saving...';
+
+  @override
+  String get scanConfirmDeliveryButton => 'Confirm delivery';
+
+  @override
+  String get scanConfirmReadingLabel => 'Confirm scan';
+
+  @override
+  String get scanConfirmParcelLabel => 'Parcel';
+
+  @override
+  String get scanConfirmStepLabel => 'Step';
+
+  @override
+  String get scanConfirmConfirmationCodeHint =>
+      'Ask the recipient for the 6-digit code.';
+
+  @override
+  String get scanValidateReadingButton => 'Validate scan';
+
+  @override
+  String get scanRetakePhotoButton => 'Retake the photo';
+
+  @override
+  String get scanConfirmQueuedNoConnectionBody =>
+      'No connection. The scan will sync once you\'re back online.';
+
+  @override
+  String get scanTerminateButton => 'Finish';
+
+  @override
+  String get scanHubTitle => 'Scan & Tracking';
+
+  @override
+  String get scanTrackParcelEntry => 'Track a parcel';
+
+  @override
+  String get scanChooseTripTitle => 'Choose a trip';
+
+  @override
+  String get scanChangeTripLabel => 'Change trip';
+
+  @override
+  String get scanNoTripTitle => 'No trip to handle';
+
+  @override
+  String get scanNoTripDescription =>
+      'You\'ll be able to scan parcel QR codes once a request is accepted on one of your trips.';
+
+  @override
+  String get scanViewMyTripsAction => 'See my trips';
+
+  @override
+  String get scanLoadTripsErrorTitle => 'Couldn\'t load your trips';
+
+  @override
+  String get scanQuickReadSectionTitle => 'QUICK SCAN';
+
+  @override
+  String scanColisSectionTitle(int count) {
+    return 'PARCELS ($count)';
+  }
+
+  @override
+  String get scanNoColisConfirmed => 'No parcel confirmed on this trip yet.';
+
+  @override
+  String get scanColisRowScanBadge => 'Scan';
+
+  @override
+  String get scanHistorySectionTitle => 'SCAN HISTORY';
+
+  @override
+  String get scanNoHistoryYet => 'No scan yet';
+
+  @override
+  String get scanIdentifyTitle => 'Identify the parcel';
+
+  @override
+  String get scanOpenQrReaderTitle => 'Open QR reader';
+
+  @override
+  String get scanPointQrHint => 'Point at the parcel\'s QR code';
+
+  @override
+  String get scanOrDivider => 'OR';
+
+  @override
+  String get scanIdentifySubmit => 'Identify →';
+
+  @override
+  String get scanWhichStepTitle => 'Which step?';
+
+  @override
+  String get scanPhotoMandatoryBadge => 'Photo required';
+
+  @override
+  String get scanPhotoOptionalBadge => 'Photo optional';
+
+  @override
+  String get scanPhotoOpeningLoading => 'Opening...';
+
+  @override
+  String get scanTakePhotoButton => 'Take the photo';
+
+  @override
+  String get scanSkipPhotoButton => 'Skip: continue without a photo';
+
+  @override
+  String get scanAutoGeolocation => 'Automatic geolocation';
+
+  @override
+  String get scanQrPickerTitle => 'Scan the QR code';
+
+  @override
+  String get scanTorchToggleTooltip => 'Turn the flashlight on or off';
+
+  @override
+  String get scanQrPickerHint => 'Point at the parcel\'s QR code';
+
+  @override
+  String get scanOfflineEventPickupLabel => 'pickup';
+
+  @override
+  String get scanOfflineEventTransitLabel => 'transit';
+
+  @override
+  String get scanOfflineEventDeliveredLabel => 'delivered';
+
+  @override
+  String get scanOfflineEventDefaultLabel => 'queued';
+
+  @override
+  String get scanOfflineDescPickup => 'Pickup recorded';
+
+  @override
+  String get scanOfflineDescTransit => 'Transit saved';
+
+  @override
+  String get scanOfflineDescDelivered => 'Delivery saved';
+
+  @override
+  String get scanOfflineDescDefault => 'Scan saved';
+
+  @override
+  String get scanOfflineQueueTitle => 'Offline scans';
+
+  @override
+  String get scanOfflineBadge => 'Offline';
+
+  @override
+  String scanOfflineQueueSectionTitle(int count) {
+    return 'QUEUE ($count)';
+  }
+
+  @override
+  String get scanOfflineQueueEmpty => 'No scan pending.';
+
+  @override
+  String get scanOfflineFooterHint =>
+      'Keep scanning even without a network connection.';
+
+  @override
+  String get scanQueueSafeTitle => 'Your scans are safe';
+
+  @override
+  String scanOfflineParcelCode(String code) {
+    return 'parcel $code';
+  }
+
+  @override
+  String get scanOfflineSyncingSubtitle => 'Waiting to sync';
+
+  @override
+  String get scanSyncButton => 'Sync';
 }

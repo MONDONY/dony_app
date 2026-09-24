@@ -2,6 +2,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
+import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -27,13 +29,14 @@ class OfflineQueueBottomSheet extends StatelessWidget {
     required List<OfflineScanItem> items,
   }) {
     final trackingBloc = context.read<TrackingBloc>();
+    final l = context.l10n;
     return DonyBottomSheet.show(
       context,
-      title: '${items.length} lecture${items.length > 1 ? 's' : ''} hors-ligne',
-      subtitle: 'En attente de synchronisation',
+      title: l.scanOfflineCount(items.length),
+      subtitle: l.scanOfflineSyncingSubtitle,
       wrapper: (child) => BlocProvider.value(value: trackingBloc, child: child),
       stickyBottom: DonyButton(
-        label: 'Synchroniser',
+        label: l.scanSyncButton,
         iconAsset: 'refresh-cw',
         onPressed: () {
           trackingBloc.add(OfflineSyncRequested());
@@ -48,6 +51,7 @@ class OfflineQueueBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -91,7 +95,10 @@ class OfflineQueueBottomSheet extends StatelessWidget {
                   const SizedBox(width: DonySpacing.xs),
                   Flexible(
                     child: Text(
-                      _relativeTime(item.timestamp),
+                      scanRelativeTime(
+                        l,
+                        DateTime.now().difference(item.timestamp),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.right,
@@ -105,13 +112,6 @@ class OfflineQueueBottomSheet extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _relativeTime(DateTime ts) {
-    final diff = DateTime.now().difference(ts);
-    if (diff.inMinutes < 1) return 'il y a < 1 min';
-    if (diff.inMinutes < 60) return 'il y a ${diff.inMinutes} min';
-    return 'il y a ${diff.inHours}h';
   }
 }
 
