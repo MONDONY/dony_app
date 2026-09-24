@@ -71,15 +71,27 @@ class WalletTopupMobileMoneyConfirmed extends WalletTopupMobileMoneyState {
   List<Object?> get props => [status];
 }
 
-/// Recharge refusée par l'opérateur, ou sondage expiré (15 min) sans
-/// confirmation. [message] est déjà prêt à afficher à l'utilisateur.
-class WalletTopupMobileMoneyFailed extends WalletTopupMobileMoneyState {
-  const WalletTopupMobileMoneyFailed(this.message);
+/// Cause d'un [WalletTopupMobileMoneyFailed] : sondage expiré (15 min) sans
+/// confirmation, ou dépôt refusé par l'opérateur. L'écran choisit le message
+/// affiché à partir de cette valeur (spec i18n : jamais de texte traduit
+/// gardé dans l'état).
+enum WalletTopupFailureReason { expired, refused }
 
-  final String message;
+/// Recharge refusée par l'opérateur, ou sondage expiré (15 min) sans
+/// confirmation. [operatorMessage], quand présent, est le motif renvoyé par
+/// l'opérateur (déjà nettoyé, jamais vide) ; sinon l'écran affiche un message
+/// générique déterminé par [reason].
+class WalletTopupMobileMoneyFailed extends WalletTopupMobileMoneyState {
+  const WalletTopupMobileMoneyFailed({
+    required this.reason,
+    this.operatorMessage,
+  });
+
+  final WalletTopupFailureReason reason;
+  final String? operatorMessage;
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [reason, operatorMessage];
 }
 
 /// Erreur technique (réseau, serveur) sur `loadProviders` ou `initiate`.

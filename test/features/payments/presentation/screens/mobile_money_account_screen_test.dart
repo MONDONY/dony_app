@@ -20,6 +20,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockBloc extends Mock implements MobileMoneyAccountBloc {}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
@@ -1447,6 +1449,42 @@ void main() {
       // l'échec : pas de retour furtif à la vue active.
       expect(find.byKey(const Key('payout-phone-field')), findsOneWidget);
       expect(find.text('Annuler'), findsOneWidget);
+    });
+  });
+
+  group('anglais', () {
+    testWidgets('vue active : titre, badge et bouton Désactiver traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      stub(const MobileMoneyAccountLoaded(activeAccount));
+
+      await pumpScreen(tester);
+
+      // Le titre apparaît deux fois (AppBar et carte de résumé), même clé
+      // que le français ('Versement mobile money' partagé aux deux mêmes
+      // endroits).
+      expect(find.text('Mobile money payout'), findsNWidgets(2));
+      expect(find.text('ACTIVE'), findsOneWidget);
+      expect(find.text('Turn off'), findsOneWidget);
+      expect(find.text('Change number'), findsOneWidget);
+    });
+
+    testWidgets('vue désactivée : rappel du numéro précédent traduit avec le '
+        'paramètre', (tester) async {
+      useEnglish();
+      stub(const MobileMoneyAccountLoaded(disabledAccountWithNumber));
+
+      await pumpScreen(tester);
+
+      expect(
+        find.text(
+          'Your payout is turned off. Enter the mobile money number to '
+          'turn it back on (previous: +225 07 ** ** 67).',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Turn back on'), findsOneWidget);
     });
   });
 }

@@ -25,10 +25,6 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
   static const pollInterval = Duration(seconds: 3);
   static const expiry = Duration(minutes: 15);
 
-  static const _expiredMessage = "Le paiement n'a pas été validé à temps.";
-  static const _genericFailureMessage =
-      "Le paiement a été refusé par l'opérateur.";
-
   final WalletRepository _repository;
   final AnalyticsService _analytics;
   final DateTime Function() _now;
@@ -186,7 +182,13 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
     }
     if (_now().difference(current.startedAt) >= expiry) {
       stopPolling();
-      if (!isClosed) emit(const WalletTopupMobileMoneyFailed(_expiredMessage));
+      if (!isClosed) {
+        emit(
+          const WalletTopupMobileMoneyFailed(
+            reason: WalletTopupFailureReason.expired,
+          ),
+        );
+      }
       return;
     }
     _inFlightGeneration = generation;
@@ -214,7 +216,8 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
           stopPolling();
           emit(
             WalletTopupMobileMoneyFailed(
-              _presentableFailure(status.failureReason),
+              reason: WalletTopupFailureReason.refused,
+              operatorMessage: _presentableFailure(status.failureReason),
             ),
           );
         default:
@@ -233,11 +236,12 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
     }
   }
 
-  String _presentableFailure(String? reason) {
+  /// Motif renvoyé par l'opérateur, nettoyé, ou `null` s'il est absent ou
+  /// vide : l'écran affiche alors un message générique déterminé par
+  /// [WalletTopupMobileMoneyFailed.reason].
+  String? _presentableFailure(String? reason) {
     final trimmed = reason?.trim();
-    return (trimmed == null || trimmed.isEmpty)
-        ? _genericFailureMessage
-        : trimmed;
+    return (trimmed == null || trimmed.isEmpty) ? null : trimmed;
   }
 
   @override

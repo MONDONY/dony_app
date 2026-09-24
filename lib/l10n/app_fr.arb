@@ -9205,5 +9205,314 @@
   "paymentSheetSecureFooter": "Paiement sécurisé par Stripe",
   "@paymentSheetSecureFooter": {
     "description": "Pied de la feuille de paiement, hors vue succès (dony_payment_sheet.dart _StickyBottom)."
+  },
+
+  "mobileMoneyAccountTitle": "Versement mobile money",
+  "@mobileMoneyAccountTitle": {
+    "description": "Titre de l'AppBar et de la carte de résumé de l'écran de compte de versement mobile money (mobile_money_account_screen.dart)."
+  },
+  "mobileMoneyAccountLoadError": "Impossible de charger ton compte",
+  "@mobileMoneyAccountLoadError": {
+    "description": "Titre du DonyEmptyState quand le compte de versement mobile money ne peut pas être chargé (mobile_money_account_screen.dart)."
+  },
+  "mobileMoneyExplanationActivate": "Indique le numéro mobile money qui recevra tes versements. Il peut être différent de ton numéro Yadony.",
+  "@mobileMoneyExplanationActivate": {
+    "description": "Explication du formulaire de versement mobile money, première activation (mobile_money_account_screen.dart _PayoutNumberForm)."
+  },
+  "mobileMoneyExplanationReactivateNoPrevious": "Ton versement est désactivé. Indique le numéro mobile money pour le réactiver.",
+  "@mobileMoneyExplanationReactivateNoPrevious": {
+    "description": "Explication du formulaire de versement mobile money, réactivation sans numéro précédent connu (mobile_money_account_screen.dart _PayoutNumberForm)."
+  },
+  "mobileMoneyReactivateWithPrevious": "Ton versement est désactivé. Indique le numéro mobile money pour le réactiver (précédent : {masked}).",
+  "@mobileMoneyReactivateWithPrevious": {
+    "description": "Explication du formulaire de versement mobile money, réactivation avec un numéro précédent masqué connu (mobile_money_account_screen.dart _PayoutNumberForm).",
+    "placeholders": {
+      "masked": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMoneyExplanationChangeNumber": "Indique le nouveau numéro de versement. Les réseaux seront à cocher de nouveau pour ce numéro.",
+  "@mobileMoneyExplanationChangeNumber": {
+    "description": "Explication du formulaire de versement mobile money, changement de numéro (mobile_money_account_screen.dart _PayoutNumberForm)."
+  },
+  "mobileMoneyButtonActivate": "Activer le versement mobile money",
+  "@mobileMoneyButtonActivate": {
+    "description": "Bouton du formulaire de versement mobile money, première activation (mobile_money_account_screen.dart _PayoutNumberForm)."
+  },
+  "mobileMoneyButtonReactivate": "Réactiver",
+  "@mobileMoneyButtonReactivate": {
+    "description": "Bouton du formulaire de versement mobile money, réactivation (mobile_money_account_screen.dart _PayoutNumberForm)."
+  },
+  "mobileMoneyButtonChangeNumber": "Enregistrer le nouveau numéro",
+  "@mobileMoneyButtonChangeNumber": {
+    "description": "Bouton du formulaire de versement mobile money, changement de numéro (mobile_money_account_screen.dart _PayoutNumberForm)."
+  },
+  "mobileMoneyPayoutNumberLabel": "Numéro de versement",
+  "@mobileMoneyPayoutNumberLabel": {
+    "description": "Libellé du premier champ du formulaire de versement mobile money (mobile_money_account_screen.dart _PayoutNumberForm)."
+  },
+  "mobileMoneyConfirmNumberLabel": "Confirme le numéro",
+  "@mobileMoneyConfirmNumberLabel": {
+    "description": "Libellé du champ de confirmation du formulaire de versement mobile money (mobile_money_account_screen.dart _PayoutNumberForm)."
+  },
+  "mobileMoneyNetworksSectionTitle": "Réseaux sur ce numéro",
+  "@mobileMoneyNetworksSectionTitle": {
+    "description": "Titre de la section réseaux du formulaire de versement mobile money (mobile_money_account_screen.dart _NetworksSection)."
+  },
+  "mobileMoneyNetworksUnavailable": "Le choix des réseaux n'est pas encore disponible. Ton opérateur sera détecté automatiquement.",
+  "@mobileMoneyNetworksUnavailable": {
+    "description": "Bandeau info quand l'ancien contrat backend ne fournit pas de catalogue de réseaux (mobile_money_account_screen.dart _NetworksSection et _ProvidersSheetContent)."
+  },
+  "mobileMoneyNoNetworksAvailable": "Aucun réseau disponible sur ce numéro.",
+  "@mobileMoneyNoNetworksAvailable": {
+    "description": "Message quand le catalogue de réseaux mobile money est vide pour le numéro confirmé (mobile_money_account_screen.dart _NetworksSection et _ProvidersSheetContent)."
+  },
+  "mobileMoneyPayerChoosesNetwork": "L'expéditeur paie avec l'un des réseaux cochés. Tu reçois sur ce même réseau.",
+  "@mobileMoneyPayerChoosesNetwork": {
+    "description": "Rappel de la règle de couplage sous la checklist du formulaire de versement mobile money (mobile_money_account_screen.dart _NetworksSection)."
+  },
+  "mobileMoneyConfirmToSeeNetworks": "Confirme ton numéro pour voir les réseaux disponibles.",
+  "@mobileMoneyConfirmToSeeNetworks": {
+    "description": "Invite affichée tant qu'aucun numéro n'est confirmé dans le formulaire de versement mobile money (mobile_money_account_screen.dart _NetworksSection)."
+  },
+  "mobileMoneyAcceptedNetworksTitle": "Réseaux acceptés",
+  "@mobileMoneyAcceptedNetworksTitle": {
+    "description": "Titre de la carte et de la feuille « Réseaux acceptés » de la vue active du compte de versement mobile money (mobile_money_account_screen.dart)."
+  },
+  "mobileMoneyActiveBadge": "ACTIF",
+  "@mobileMoneyActiveBadge": {
+    "description": "Badge de statut de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
+  },
+  "mobileMoneyNumberLabel": "Numéro",
+  "@mobileMoneyNumberLabel": {
+    "description": "Libellé de la ligne numéro de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
+  },
+  "mobileMoneyNotProvided": "Non renseigné",
+  "@mobileMoneyNotProvided": {
+    "description": "Valeur de repli des lignes numéro, pays et devise de la vue active du compte de versement mobile money, quand la donnée est absente (mobile_money_account_screen.dart _ActiveView)."
+  },
+  "mobileMoneyCountryLabel": "Pays",
+  "@mobileMoneyCountryLabel": {
+    "description": "Libellé de la ligne pays de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
+  },
+  "mobileMoneyCurrencyLabel": "Devise",
+  "@mobileMoneyCurrencyLabel": {
+    "description": "Libellé de la ligne devise de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
+  },
+  "mobileMoneyPayerChoosesOneNetwork": "L'expéditeur choisit l'un de ces réseaux pour payer. Tu reçois sur le même.",
+  "@mobileMoneyPayerChoosesOneNetwork": {
+    "description": "Note sous les pastilles de réseaux acceptés de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
+  },
+  "mobileMoneyChangeNumberButton": "Changer de numéro",
+  "@mobileMoneyChangeNumberButton": {
+    "description": "Bouton de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
+  },
+  "mobileMoneyDisableButton": "Désactiver",
+  "@mobileMoneyDisableButton": {
+    "description": "Bouton de la vue active du compte de versement mobile money (mobile_money_account_screen.dart _ActiveView)."
+  },
+
+  "mobileMoneyAllNetworks": "Tous les réseaux",
+  "@mobileMoneyAllNetworks": {
+    "description": "Ligne « tout cocher / tout décocher » de la checklist des réseaux mobile money (mobile_money_networks_checklist.dart)."
+  },
+  "mobileMoneyDetectedForNumber": "Détecté pour ce numéro",
+  "@mobileMoneyDetectedForNumber": {
+    "description": "Sous-titre du réseau détecté par pawaPay pour le numéro confirmé, partagé par la checklist des réseaux (mobile_money_networks_checklist.dart) et l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody)."
+  },
+
+  "mobileMoneyAwaitingTitle": "Paiement mobile money",
+  "@mobileMoneyAwaitingTitle": {
+    "description": "Titre de l'AppBar de l'écran d'attente du paiement mobile money d'un bid ou d'un fil de négociation (mobile_money_awaiting_screen.dart)."
+  },
+  "mobileMoneyPaymentConfirmedSecured": "Paiement confirmé, ton envoi est sécurisé",
+  "@mobileMoneyPaymentConfirmedSecured": {
+    "description": "Snackbar de succès à la mise en séquestre du paiement mobile money (mobile_money_awaiting_screen.dart)."
+  },
+  "mobileMoneyTimeLeft": "Temps restant {time}",
+  "@mobileMoneyTimeLeft": {
+    "description": "Compte à rebours du paiement mobile money (mobile_money_awaiting_screen.dart _CountdownLabel). {time} déjà formaté en mm:ss.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMoneyTravelerFallback": "Le voyageur",
+  "@mobileMoneyTravelerFallback": {
+    "description": "Repli du prénom du voyageur quand le catalogue mobile money ne le porte pas (mobile_money_awaiting_screen.dart _ChooseOperatorBody)."
+  },
+  "mobileMoneyChooseOperatorTitle": "Avec quel opérateur ?",
+  "@mobileMoneyChooseOperatorTitle": {
+    "description": "Titre de l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody)."
+  },
+  "mobileMoneyPayingNumberLabel": "Numéro qui paie",
+  "@mobileMoneyPayingNumberLabel": {
+    "description": "Libellé du numéro payeur de l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody)."
+  },
+  "mobileMoneyPayWithAnotherNumberOptional": "Payer avec un autre numéro (facultatif)",
+  "@mobileMoneyPayWithAnotherNumberOptional": {
+    "description": "Libellé du champ de saisie d'un numéro payeur alternatif, partagé par l'étape de choix de l'opérateur et le dépôt refusé du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody et _FailedBody)."
+  },
+  "mobileMoneyConfirmInWaveApp": "Tu confirmes dans l'application Wave",
+  "@mobileMoneyConfirmInWaveApp": {
+    "description": "Sous-titre de l'opérateur Wave dans la liste des opérateurs du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody)."
+  },
+  "mobileMoneyAcceptsAndReceives": "{name} accepte {networks}, et reçoit sur le réseau que tu choisis.",
+  "@mobileMoneyAcceptsAndReceives": {
+    "description": "Note sous la liste des opérateurs de l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody). {networks} déjà joint (joinList).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "networks": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMoneyNoNetworkForPayment": "Aucun réseau mobile money disponible pour ce paiement.",
+  "@mobileMoneyNoNetworkForPayment": {
+    "description": "Bandeau quand le voyageur n'accepte aucun réseau pour ce paiement (mobile_money_awaiting_screen.dart _ChooseOperatorBody, garde défensive)."
+  },
+  "mobileMoneyNoCommonNetwork": "{name} accepte {networks}, qui n'existent pas pour ton numéro ({country}). Change de numéro payeur ou écris-lui depuis la conversation.",
+  "@mobileMoneyNoCommonNetwork": {
+    "description": "Bandeau quand aucun réseau accepté par le voyageur n'est disponible pour le numéro payeur (mobile_money_awaiting_screen.dart _ChooseOperatorBody). {networks} déjà joint (joinList).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "networks": {
+        "type": "String"
+      },
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMoneyPay": "Payer {amount}",
+  "@mobileMoneyPay": {
+    "description": "Bouton de paiement de l'étape de choix de l'opérateur du paiement mobile money (mobile_money_awaiting_screen.dart _ChooseOperatorBody). {amount} déjà formaté dans sa devise (formatPriceIn).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMoneyFinishInWaveApp": "Termine le paiement dans l'application Wave",
+  "@mobileMoneyFinishInWaveApp": {
+    "description": "Texte du dépôt en cours, redirection Wave (mobile_money_awaiting_screen.dart _AwaitingBody)."
+  },
+  "mobileMoneyOpenWave": "Ouvrir Wave",
+  "@mobileMoneyOpenWave": {
+    "description": "Bouton d'ouverture de la redirection Wave du dépôt en cours (mobile_money_awaiting_screen.dart _AwaitingBody)."
+  },
+  "mobileMoneyPinSent": "Valide le paiement sur ton téléphone : une demande de code PIN vient de t'être envoyée par {provider}.",
+  "@mobileMoneyPinSent": {
+    "description": "Texte du dépôt en cours quand l'opérateur est connu, PIN opérateur (mobile_money_awaiting_screen.dart _AwaitingBody).",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMoneyPinSentUnknownProvider": "Valide le paiement sur ton téléphone : une demande de code PIN vient de t'être envoyée par ton opérateur.",
+  "@mobileMoneyPinSentUnknownProvider": {
+    "description": "Texte du dépôt en cours quand l'opérateur n'est pas connu, PIN opérateur (mobile_money_awaiting_screen.dart _AwaitingBody)."
+  },
+  "mobileMoneyConfirmationAutomatic": "La confirmation est automatique, garde cet écran ouvert.",
+  "@mobileMoneyConfirmationAutomatic": {
+    "description": "Note de bas de l'écran d'attente du paiement mobile money d'un bid ou d'un fil de négociation (mobile_money_awaiting_screen.dart _AwaitingBody)."
+  },
+  "mobileMoneyDepositRefusedFallback": "Le paiement a été refusé par l'opérateur",
+  "@mobileMoneyDepositRefusedFallback": {
+    "description": "Repli du message de dépôt refusé quand le backend n'en fournit aucun (mobile_money_awaiting_screen.dart _FailedBody)."
+  },
+  "mobileMoneyPhoneRequiredExplanation": "Ton compte Yadony n'a pas de numéro de téléphone : indique le numéro mobile money qui paiera.",
+  "@mobileMoneyPhoneRequiredExplanation": {
+    "description": "Explication du corps dédié quand l'expéditeur n'a aucun numéro de téléphone (mobile_money_awaiting_screen.dart _PhoneRequiredBody)."
+  },
+  "mobileMoneyPhoneThatWillPayLabel": "Numéro qui paiera",
+  "@mobileMoneyPhoneThatWillPayLabel": {
+    "description": "Libellé du champ de saisie obligatoire du corps dédié « numéro manquant » (mobile_money_awaiting_screen.dart _PhoneRequiredBody)."
+  },
+  "mobileMoneyExpiredBid": "Délai dépassé. La demande a été annulée, refais une offre au voyageur.",
+  "@mobileMoneyExpiredBid": {
+    "description": "Texte de la fenêtre expirée quand la portée est un bid (mobile_money_awaiting_screen.dart _ExpiredBody)."
+  },
+  "mobileMoneyExpiredNegotiation": "Délai dépassé. Le fil est revenu à « à payer » : tu peux relancer le paiement ou changer de moyen de paiement depuis le fil.",
+  "@mobileMoneyExpiredNegotiation": {
+    "description": "Texte de la fenêtre expirée quand la portée est un fil de négociation (mobile_money_awaiting_screen.dart _ExpiredBody)."
+  },
+  "mobileMoneyPaymentConfirmedTitle": "Paiement confirmé",
+  "@mobileMoneyPaymentConfirmedTitle": {
+    "description": "Titre de l'écran séquestré, affiché brièvement avant la fermeture automatique (mobile_money_awaiting_screen.dart _EscrowedBody)."
+  },
+
+  "walletTopupMmAwaitingTitle": "Recharge mobile money",
+  "@walletTopupMmAwaitingTitle": {
+    "description": "Titre de l'AppBar de l'écran d'attente de la recharge du portefeuille par mobile money (wallet_topup_mobile_money_awaiting_screen.dart)."
+  },
+  "walletTopupMmPayWithAnotherNumber": "Payer avec un autre numéro",
+  "@walletTopupMmPayWithAnotherNumber": {
+    "description": "Bouton d'abandon de la recharge en cours, pour repartir avec un autre numéro (wallet_topup_mobile_money_awaiting_screen.dart)."
+  },
+  "walletTopupMmValidateTitle": "Valide le paiement sur ton téléphone",
+  "@walletTopupMmValidateTitle": {
+    "description": "Titre du corps d'attente de la recharge du portefeuille par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody)."
+  },
+  "walletTopupMmRequestSent": "Une demande de paiement a été envoyée à {number} via {provider}.",
+  "@walletTopupMmRequestSent": {
+    "description": "Sous-titre du corps d'attente de la recharge du portefeuille par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "walletTopupMmConfirmationAutomatic": "La confirmation est automatique, garde cet écran ouvert.",
+  "@walletTopupMmConfirmationAutomatic": {
+    "description": "Note de bas du corps d'attente de la recharge du portefeuille par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody)."
+  },
+  "walletTopupMmAmountLabel": "Montant",
+  "@walletTopupMmAmountLabel": {
+    "description": "Libellé de la ligne montant de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody)."
+  },
+  "walletTopupMmCreditedToLabel": "Crédité sur",
+  "@walletTopupMmCreditedToLabel": {
+    "description": "Libellé de la ligne « crédité sur » de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody)."
+  },
+  "walletTopupMmCreditedTo": "Solde Yadony ({code})",
+  "@walletTopupMmCreditedTo": {
+    "description": "Valeur de la ligne « crédité sur » de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "walletTopupMmExpiresInLabel": "Expire dans",
+  "@walletTopupMmExpiresInLabel": {
+    "description": "Libellé de la ligne compte à rebours de la carte de détails de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody)."
+  },
+  "walletTopupMmOpenProvider": "Ouvrir {provider}",
+  "@walletTopupMmOpenProvider": {
+    "description": "Bouton d'ouverture de la page de redirection de l'opérateur (Wave) de la recharge par mobile money (wallet_topup_mobile_money_awaiting_screen.dart _AwaitingBody).",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "walletTopupMmExpired": "Le paiement n'a pas été validé à temps.",
+  "@walletTopupMmExpired": {
+    "description": "Message générique de la recharge par mobile money quand le sondage expire sans confirmation (wallet_topup_mobile_money_awaiting_screen.dart, WalletTopupFailureReason.expired)."
+  },
+  "walletTopupMmRefused": "Le paiement a été refusé par l'opérateur.",
+  "@walletTopupMmRefused": {
+    "description": "Message générique de la recharge par mobile money quand l'opérateur refuse le dépôt sans motif exploitable (wallet_topup_mobile_money_awaiting_screen.dart, WalletTopupFailureReason.refused)."
   }
 }

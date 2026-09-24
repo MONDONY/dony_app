@@ -8674,4 +8674,231 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentSheetSecureFooter => 'Payment secured by Stripe';
+
+  @override
+  String get mobileMoneyAccountTitle => 'Mobile money payout';
+
+  @override
+  String get mobileMoneyAccountLoadError => 'Couldn\'t load your account';
+
+  @override
+  String get mobileMoneyExplanationActivate =>
+      'Enter the mobile money number that will receive your payouts. It can be different from your Yadony number.';
+
+  @override
+  String get mobileMoneyExplanationReactivateNoPrevious =>
+      'Your payout is turned off. Enter the mobile money number to turn it back on.';
+
+  @override
+  String mobileMoneyReactivateWithPrevious(String masked) {
+    return 'Your payout is turned off. Enter the mobile money number to turn it back on (previous: $masked).';
+  }
+
+  @override
+  String get mobileMoneyExplanationChangeNumber =>
+      'Enter the new payout number. You\'ll need to check the networks again for this number.';
+
+  @override
+  String get mobileMoneyButtonActivate => 'Activate mobile money payout';
+
+  @override
+  String get mobileMoneyButtonReactivate => 'Turn back on';
+
+  @override
+  String get mobileMoneyButtonChangeNumber => 'Save the new number';
+
+  @override
+  String get mobileMoneyPayoutNumberLabel => 'Payout number';
+
+  @override
+  String get mobileMoneyConfirmNumberLabel => 'Confirm the number';
+
+  @override
+  String get mobileMoneyNetworksSectionTitle => 'Networks on this number';
+
+  @override
+  String get mobileMoneyNetworksUnavailable =>
+      'Choosing networks isn\'t available yet. Your operator will be detected automatically.';
+
+  @override
+  String get mobileMoneyNoNetworksAvailable =>
+      'No network is available for this number.';
+
+  @override
+  String get mobileMoneyPayerChoosesNetwork =>
+      'The sender pays with one of the checked networks. You receive on that same network.';
+
+  @override
+  String get mobileMoneyConfirmToSeeNetworks =>
+      'Confirm your number to see the available networks.';
+
+  @override
+  String get mobileMoneyAcceptedNetworksTitle => 'Accepted networks';
+
+  @override
+  String get mobileMoneyActiveBadge => 'ACTIVE';
+
+  @override
+  String get mobileMoneyNumberLabel => 'Number';
+
+  @override
+  String get mobileMoneyNotProvided => 'Not provided';
+
+  @override
+  String get mobileMoneyCountryLabel => 'Country';
+
+  @override
+  String get mobileMoneyCurrencyLabel => 'Currency';
+
+  @override
+  String get mobileMoneyPayerChoosesOneNetwork =>
+      'The sender picks one of these networks to pay. You receive on the same one.';
+
+  @override
+  String get mobileMoneyChangeNumberButton => 'Change number';
+
+  @override
+  String get mobileMoneyDisableButton => 'Turn off';
+
+  @override
+  String get mobileMoneyAllNetworks => 'All networks';
+
+  @override
+  String get mobileMoneyDetectedForNumber => 'Detected for this number';
+
+  @override
+  String get mobileMoneyAwaitingTitle => 'Mobile money payment';
+
+  @override
+  String get mobileMoneyPaymentConfirmedSecured =>
+      'Payment confirmed, your shipment is secured';
+
+  @override
+  String mobileMoneyTimeLeft(String time) {
+    return 'Time left $time';
+  }
+
+  @override
+  String get mobileMoneyTravelerFallback => 'The traveler';
+
+  @override
+  String get mobileMoneyChooseOperatorTitle => 'Which operator?';
+
+  @override
+  String get mobileMoneyPayingNumberLabel => 'Paying number';
+
+  @override
+  String get mobileMoneyPayWithAnotherNumberOptional =>
+      'Pay with a different number (optional)';
+
+  @override
+  String get mobileMoneyConfirmInWaveApp => 'You confirm in the Wave app';
+
+  @override
+  String mobileMoneyAcceptsAndReceives(String name, String networks) {
+    return '$name accepts $networks and receives on the network you choose.';
+  }
+
+  @override
+  String get mobileMoneyNoNetworkForPayment =>
+      'No mobile money network is available for this payment.';
+
+  @override
+  String mobileMoneyNoCommonNetwork(
+    String name,
+    String networks,
+    String country,
+  ) {
+    return '$name accepts $networks, which aren\'t available for your number ($country). Change the paying number or message them from the conversation.';
+  }
+
+  @override
+  String mobileMoneyPay(String amount) {
+    return 'Pay $amount';
+  }
+
+  @override
+  String get mobileMoneyFinishInWaveApp => 'Finish the payment in the Wave app';
+
+  @override
+  String get mobileMoneyOpenWave => 'Open Wave';
+
+  @override
+  String mobileMoneyPinSent(String provider) {
+    return 'Approve the payment on your phone: $provider just sent you a PIN request.';
+  }
+
+  @override
+  String get mobileMoneyPinSentUnknownProvider =>
+      'Approve the payment on your phone: your mobile operator just sent you a PIN request.';
+
+  @override
+  String get mobileMoneyConfirmationAutomatic =>
+      'Confirmation is automatic, keep this screen open.';
+
+  @override
+  String get mobileMoneyDepositRefusedFallback =>
+      'The payment was declined by the mobile operator';
+
+  @override
+  String get mobileMoneyPhoneRequiredExplanation =>
+      'Your Yadony account has no phone number: enter the mobile money number that will pay.';
+
+  @override
+  String get mobileMoneyPhoneThatWillPayLabel => 'Number that will pay';
+
+  @override
+  String get mobileMoneyExpiredBid =>
+      'Time\'s up. The request was canceled. Make a new offer to the traveler.';
+
+  @override
+  String get mobileMoneyExpiredNegotiation =>
+      'Time\'s up. The thread is back to \"to pay\": you can retry the payment or change the payment method from the thread.';
+
+  @override
+  String get mobileMoneyPaymentConfirmedTitle => 'Payment confirmed';
+
+  @override
+  String get walletTopupMmAwaitingTitle => 'Mobile money top-up';
+
+  @override
+  String get walletTopupMmPayWithAnotherNumber => 'Pay with a different number';
+
+  @override
+  String get walletTopupMmValidateTitle => 'Approve the payment on your phone';
+
+  @override
+  String walletTopupMmRequestSent(String number, String provider) {
+    return 'A payment request was sent to $number via $provider.';
+  }
+
+  @override
+  String get walletTopupMmConfirmationAutomatic =>
+      'Confirmation is automatic, keep this screen open.';
+
+  @override
+  String get walletTopupMmAmountLabel => 'Amount';
+
+  @override
+  String get walletTopupMmCreditedToLabel => 'Credited to';
+
+  @override
+  String walletTopupMmCreditedTo(String code) {
+    return 'Yadony balance ($code)';
+  }
+
+  @override
+  String get walletTopupMmExpiresInLabel => 'Expires in';
+
+  @override
+  String walletTopupMmOpenProvider(String provider) {
+    return 'Open $provider';
+  }
+
+  @override
+  String get walletTopupMmExpired => 'The payment wasn\'t approved in time.';
+
+  @override
+  String get walletTopupMmRefused =>
+      'The payment was declined by the mobile operator.';
 }

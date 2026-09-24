@@ -4255,5 +4255,146 @@
   "paymentSheetTitle": "Payment",
   "paymentSheetConfirmedTitle": "Payment confirmed",
   "paymentSheetEscrowNote": "Funds are on hold until the parcel is delivered, then paid to the traveler.",
-  "paymentSheetSecureFooter": "Payment secured by Stripe"
+  "paymentSheetSecureFooter": "Payment secured by Stripe",
+
+  "mobileMoneyAccountTitle": "Mobile money payout",
+  "mobileMoneyAccountLoadError": "Couldn't load your account",
+  "mobileMoneyExplanationActivate": "Enter the mobile money number that will receive your payouts. It can be different from your Yadony number.",
+  "mobileMoneyExplanationReactivateNoPrevious": "Your payout is turned off. Enter the mobile money number to turn it back on.",
+  "mobileMoneyReactivateWithPrevious": "Your payout is turned off. Enter the mobile money number to turn it back on (previous: {masked}).",
+  "@mobileMoneyReactivateWithPrevious": {
+    "placeholders": {
+      "masked": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMoneyExplanationChangeNumber": "Enter the new payout number. You'll need to check the networks again for this number.",
+  "mobileMoneyButtonActivate": "Activate mobile money payout",
+  "mobileMoneyButtonReactivate": "Turn back on",
+  "mobileMoneyButtonChangeNumber": "Save the new number",
+  "mobileMoneyPayoutNumberLabel": "Payout number",
+  "mobileMoneyConfirmNumberLabel": "Confirm the number",
+  "mobileMoneyNetworksSectionTitle": "Networks on this number",
+  "mobileMoneyNetworksUnavailable": "Choosing networks isn't available yet. Your operator will be detected automatically.",
+  "mobileMoneyNoNetworksAvailable": "No network is available for this number.",
+  "mobileMoneyPayerChoosesNetwork": "The sender pays with one of the checked networks. You receive on that same network.",
+  "mobileMoneyConfirmToSeeNetworks": "Confirm your number to see the available networks.",
+  "mobileMoneyAcceptedNetworksTitle": "Accepted networks",
+  "mobileMoneyActiveBadge": "ACTIVE",
+  "mobileMoneyNumberLabel": "Number",
+  "mobileMoneyNotProvided": "Not provided",
+  "mobileMoneyCountryLabel": "Country",
+  "mobileMoneyCurrencyLabel": "Currency",
+  "mobileMoneyPayerChoosesOneNetwork": "The sender picks one of these networks to pay. You receive on the same one.",
+  "mobileMoneyChangeNumberButton": "Change number",
+  "mobileMoneyDisableButton": "Turn off",
+
+  "mobileMoneyAllNetworks": "All networks",
+  "mobileMoneyDetectedForNumber": "Detected for this number",
+
+  "mobileMoneyAwaitingTitle": "Mobile money payment",
+  "mobileMoneyPaymentConfirmedSecured": "Payment confirmed, your shipment is secured",
+  "mobileMoneyTimeLeft": "Time left {time}",
+  "@mobileMoneyTimeLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMoneyTravelerFallback": "The traveler",
+  "mobileMoneyChooseOperatorTitle": "Which operator?",
+  "mobileMoneyPayingNumberLabel": "Paying number",
+  "mobileMoneyPayWithAnotherNumberOptional": "Pay with a different number (optional)",
+  "mobileMoneyConfirmInWaveApp": "You confirm in the Wave app",
+  "mobileMoneyAcceptsAndReceives": "{name} accepts {networks} and receives on the network you choose.",
+  "@mobileMoneyAcceptsAndReceives": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "networks": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMoneyNoNetworkForPayment": "No mobile money network is available for this payment.",
+  "mobileMoneyNoCommonNetwork": "{name} accepts {networks}, which aren't available for your number ({country}). Change the paying number or message them from the conversation.",
+  "@mobileMoneyNoCommonNetwork": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "networks": {
+        "type": "String"
+      },
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMoneyPay": "Pay {amount}",
+  "@mobileMoneyPay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMoneyFinishInWaveApp": "Finish the payment in the Wave app",
+  "mobileMoneyOpenWave": "Open Wave",
+  "mobileMoneyPinSent": "Approve the payment on your phone: {provider} just sent you a PIN request.",
+  "@mobileMoneyPinSent": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMoneyPinSentUnknownProvider": "Approve the payment on your phone: your mobile operator just sent you a PIN request.",
+  "mobileMoneyConfirmationAutomatic": "Confirmation is automatic, keep this screen open.",
+  "mobileMoneyDepositRefusedFallback": "The payment was declined by the mobile operator",
+  "mobileMoneyPhoneRequiredExplanation": "Your Yadony account has no phone number: enter the mobile money number that will pay.",
+  "mobileMoneyPhoneThatWillPayLabel": "Number that will pay",
+  "mobileMoneyExpiredBid": "Time's up. The request was canceled. Make a new offer to the traveler.",
+  "mobileMoneyExpiredNegotiation": "Time's up. The thread is back to \"to pay\": you can retry the payment or change the payment method from the thread.",
+  "mobileMoneyPaymentConfirmedTitle": "Payment confirmed",
+
+  "walletTopupMmAwaitingTitle": "Mobile money top-up",
+  "walletTopupMmPayWithAnotherNumber": "Pay with a different number",
+  "walletTopupMmValidateTitle": "Approve the payment on your phone",
+  "walletTopupMmRequestSent": "A payment request was sent to {number} via {provider}.",
+  "@walletTopupMmRequestSent": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "walletTopupMmConfirmationAutomatic": "Confirmation is automatic, keep this screen open.",
+  "walletTopupMmAmountLabel": "Amount",
+  "walletTopupMmCreditedToLabel": "Credited to",
+  "walletTopupMmCreditedTo": "Yadony balance ({code})",
+  "@walletTopupMmCreditedTo": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "walletTopupMmExpiresInLabel": "Expires in",
+  "walletTopupMmOpenProvider": "Open {provider}",
+  "@walletTopupMmOpenProvider": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "walletTopupMmExpired": "The payment wasn't approved in time.",
+  "walletTopupMmRefused": "The payment was declined by the mobile operator."
 }
