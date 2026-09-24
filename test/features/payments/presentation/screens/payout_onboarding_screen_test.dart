@@ -22,6 +22,7 @@ import 'package:mocktail/mocktail.dart';
 // que la constante d'état pour éviter la collision de noms.
 import '../../../../helpers/stripe_account_test_doubles.dart'
     show stripeCountryUnavailableState;
+import '../../../../helpers/l10n_test_helpers.dart';
 
 class MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
@@ -403,6 +404,14 @@ void main() {
         findsOneWidget,
       );
       verifyNever(() => mockAuthRepository.markOnboardingSeen());
+    });
+
+    testWidgets('en anglais : titre traduit', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap(mockBloc));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Get paid'), findsOneWidget);
+      expect(find.text('Connect my bank account'), findsOneWidget);
     });
   });
 }

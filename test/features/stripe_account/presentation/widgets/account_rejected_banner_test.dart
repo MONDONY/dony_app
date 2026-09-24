@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockStripeAccountBloc
     extends MockBloc<StripeAccountEvent, StripeAccountState>
     implements StripeAccountBloc {}
@@ -39,6 +41,13 @@ void main() {
     testWidgets('shows "Reconfigurer" button', (tester) async {
       await tester.pumpWidget(buildWidget(const AccountRejectedBanner()));
       expect(find.text('Reconfigurer'), findsOneWidget);
+    });
+
+    testWidgets('en anglais : message et bouton traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(buildWidget(const AccountRejectedBanner()));
+      expect(find.text('Your Stripe account was rejected'), findsOneWidget);
+      expect(find.text('Reconfigure'), findsOneWidget);
     });
   });
 }

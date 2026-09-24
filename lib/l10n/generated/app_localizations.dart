@@ -15505,6 +15505,390 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{gross} remboursables, {fee} de frais retenus, vous recevez {net}'**
   String walletRefundFeeDetail(String gross, String fee, String net);
+
+  /// Titre de l'app bar « Recevoir mes paiements », répété dans les trois vues de l'écran (payout_onboarding_screen.dart) et passé comme titre à ConnectUnavailableView/IdentityRequiredView quand l'écran est atteint hors onboarding.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevoir mes paiements'**
+  String get payoutTitle;
+
+  /// Libellé de la jauge d'onboarding « Paiements », répété dans les trois vues de payout_onboarding_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiements'**
+  String get payoutGaugeLabel;
+
+  /// Snackbar d'erreur quand le navigateur système ne s'ouvre pas sur l'URL d'onboarding Stripe (payout_onboarding_screen.dart _PayoutOnboardingScreenState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'ouvrir la page de configuration. Vérifie qu\'un navigateur est installé.'**
+  String get payoutBrowserLaunchFailed;
+
+  /// Bandeau warning quand une inscription Stripe est entamée mais incomplète (payout_onboarding_screen.dart _OnboardingView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Inscription commencée mais pas terminée. Reprenez-la pour pouvoir être payé, vous retrouverez vos informations déjà saisies.'**
+  String get payoutPendingBanner;
+
+  /// Bouton secondaire sous le bandeau d'inscription en attente (payout_onboarding_screen.dart _OnboardingView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rafraîchir le statut'**
+  String get payoutRefreshStatus;
+
+  /// Bouton principal quand l'inscription Stripe est déjà entamée côté serveur (payout_onboarding_screen.dart _OnboardingView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre mon inscription'**
+  String get payoutResumeSignup;
+
+  /// Bouton principal quand aucune inscription Stripe n'a encore été entamée (payout_onboarding_screen.dart _OnboardingView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Connecter mon compte bancaire'**
+  String get payoutConnectBankAccount;
+
+  /// Titre sur deux lignes du hero de payout_onboarding_screen.dart _HeroSection ; le saut de ligne fait partie de la valeur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connectez votre\ncompte bancaire'**
+  String get payoutHeroTitle;
+
+  /// Sous-titre du hero de payout_onboarding_screen.dart _HeroSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevez automatiquement votre paiement dans les 24h après chaque livraison confirmée.'**
+  String get payoutHeroSubtitle;
+
+  /// Titre du premier avantage de payout_onboarding_screen.dart _BenefitsSection, réutilisé pour la ligne d'info identique de _ActiveAccountView (même feature, même texte).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé'**
+  String get payoutBenefitSecureTitle;
+
+  /// Sous-titre du premier avantage de payout_onboarding_screen.dart _BenefitsSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'argent est bloqué et sécurisé jusqu\'à confirmation de livraison.'**
+  String get payoutBenefitSecureSubtitle;
+
+  /// Titre du deuxième avantage de payout_onboarding_screen.dart _BenefitsSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Virement rapide'**
+  String get payoutBenefitFastTransferTitle;
+
+  /// Sous-titre du deuxième avantage de payout_onboarding_screen.dart _BenefitsSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reçu sur votre compte dans les 24h après confirmation.'**
+  String get payoutBenefitFastTransferSubtitle;
+
+  /// Titre du troisième avantage de payout_onboarding_screen.dart _BenefitsSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Géré par Stripe'**
+  String get payoutBenefitStripeManagedTitle;
+
+  /// Sous-titre du troisième avantage de payout_onboarding_screen.dart _BenefitsSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'La vérification d\'identité et la conformité sont gérées par Stripe.'**
+  String get payoutBenefitStripeManagedSubtitle;
+
+  /// Titre de payout_onboarding_screen.dart _ActiveAccountView, une fois le compte Stripe complet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte bancaire connecté'**
+  String get payoutActiveTitle;
+
+  /// Sous-titre de payout_onboarding_screen.dart _ActiveAccountView.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte Stripe est actif. Après chaque livraison confirmée, le paiement est automatiquement viré sur votre compte bancaire sous 1 à 2 jours ouvrés.'**
+  String get payoutActiveSubtitle;
+
+  /// Sous-titre de la ligne « Paiement sécurisé » de payout_onboarding_screen.dart _ActiveAccountView (texte distinct de payoutBenefitSecureSubtitle).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'argent est retenu jusqu\'à confirmation de livraison.'**
+  String get payoutActiveInfoSecureSubtitle;
+
+  /// Titre de la deuxième ligne d'info de payout_onboarding_screen.dart _ActiveAccountView.
+  ///
+  /// In fr, this message translates to:
+  /// **'Virement automatique'**
+  String get payoutActiveInfoAutoTransferTitle;
+
+  /// Sous-titre de la deuxième ligne d'info de payout_onboarding_screen.dart _ActiveAccountView.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune action requise, Stripe vire directement sur votre RIB.'**
+  String get payoutActiveInfoAutoTransferSubtitle;
+
+  /// Titre de la troisième ligne d'info de payout_onboarding_screen.dart _ActiveAccountView.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sur votre compte bancaire'**
+  String get payoutActiveInfoBankAccountTitle;
+
+  /// Sous-titre de la troisième ligne d'info de payout_onboarding_screen.dart _ActiveAccountView.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous recevez l\'argent sur le compte lié à votre RIB/IBAN, pas dans un portefeuille Stripe.'**
+  String get payoutActiveInfoBankAccountSubtitle;
+
+  /// Bouton de sortie de l'étape paiements de l'onboarding, répété dans _ActiveAccountView et _SuccessView (payout_onboarding_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer vers l\'accueil'**
+  String get payoutContinueToHome;
+
+  /// Titre de payout_onboarding_screen.dart _SuccessView, la coche fait partie de la valeur dans les deux langues.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiements activés ✓'**
+  String get payoutSuccessTitle;
+
+  /// Sous-titre de payout_onboarding_screen.dart _SuccessView.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte bancaire est connecté. Vous recevrez vos paiements automatiquement après chaque livraison.'**
+  String get payoutSuccessSubtitle;
+
+  /// Titre de l'app bar de account_disabled_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiements à activer'**
+  String get stripeAccountDisabledTitle;
+
+  /// Titre du corps de account_disabled_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminez la configuration de vos paiements'**
+  String get stripeAccountDisabledHeading;
+
+  /// Paragraphe d'explication de account_disabled_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il manque des informations à votre compte de paiement, il ne peut donc pas encore recevoir d\'argent. La publication d\'un trajet reste bloquée le temps de les compléter.'**
+  String get stripeAccountDisabledBody;
+
+  /// Sous-titre de la liste des pièces à fournir (account_disabled_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce qui vous sera demandé'**
+  String get stripeAccountDisabledRequirementsHeading;
+
+  /// Première pièce demandée dans account_disabled_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre identité, nom, date de naissance et adresse'**
+  String get stripeAccountDisabledRequirementIdentity;
+
+  /// Deuxième pièce demandée dans account_disabled_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un moyen de recevoir vos gains, IBAN ou compte bancaire'**
+  String get stripeAccountDisabledRequirementPayout;
+
+  /// Troisième pièce demandée dans account_disabled_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'acceptation des conditions de notre prestataire de paiement'**
+  String get stripeAccountDisabledRequirementTerms;
+
+  /// Estimation de durée en bas de account_disabled_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Comptez deux à trois minutes. Vous pourrez reprendre là où vous vous êtes arrêté.'**
+  String get stripeAccountDisabledEta;
+
+  /// Bouton principal de account_disabled_screen.dart, vers l'onboarding Connect.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compléter mes informations'**
+  String get stripeAccountDisabledCta;
+
+  /// Bouton de recours support, partagé par account_disabled_screen.dart et account_rejected_screen.dart (même feature stripe_account).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter le support Yadony'**
+  String get stripeAccountContactSupport;
+
+  /// Titre de account_rejected_screen.dart, répété dans l'app bar et le corps (même texte, même style headlineSmall).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte rejeté'**
+  String get stripeAccountRejectedTitle;
+
+  /// Paragraphe d'explication de account_rejected_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte Stripe a été rejeté. Vous devez reconfigurer un nouveau compte pour continuer.'**
+  String get stripeAccountRejectedBody;
+
+  /// Raison de rejet renvoyée par Stripe, affichée telle quelle (account_rejected_screen.dart) ; reason n'est jamais traduite.
+  ///
+  /// In fr, this message translates to:
+  /// **'Raison : {reason}'**
+  String stripeAccountRejectedReason(String reason);
+
+  /// Bouton principal de account_rejected_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reconfigurer mon compte'**
+  String get stripeAccountRejectedCta;
+
+  /// Message du bandeau global account_rejected_banner.dart (texte distinct de stripeAccountRejectedBody).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte Stripe a été rejeté'**
+  String get stripeAccountRejectedBannerMessage;
+
+  /// Bouton du bandeau global account_rejected_banner.dart (texte distinct de stripeAccountRejectedCta).
+  ///
+  /// In fr, this message translates to:
+  /// **'Reconfigurer'**
+  String get stripeAccountRejectedBannerCta;
+
+  /// Titre sur deux lignes de connect_unavailable_view.dart ; le saut de ligne fait partie de la valeur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore disponible\ndans votre pays'**
+  String get stripeAccountUnavailableHeading;
+
+  /// Paragraphe d'explication de connect_unavailable_view.dart, partagé par PayoutOnboardingScreen et ConnectOnboardingIntroScreen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Stripe ne permet pas encore d\'ouvrir un compte de paiement depuis votre pays. Vous pouvez continuer à transporter des colis et à être payé en espèces, à la remise.'**
+  String get stripeAccountUnavailableBody;
+
+  /// Titre sur deux lignes de identity_required_view.dart ; le saut de ligne fait partie de la valeur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre identité\nd\'abord'**
+  String get stripeAccountIdentityRequiredHeading;
+
+  /// Paragraphe d'explication de identity_required_view.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour recevoir de l\'argent, Stripe doit pouvoir rattacher votre compte de paiement à une identité vérifiée. C\'est une pièce d\'identité à photographier, rien de plus.'**
+  String get stripeAccountIdentityRequiredBody;
+
+  /// Bouton principal de identity_required_view.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier mon identité'**
+  String get stripeAccountIdentityRequiredCta;
+
+  /// Titre de connect_onboarding_intro_screen.dart, répété dans l'app bar et passé comme titre à ConnectUnavailableView/IdentityRequiredView ; nom de fonctionnalité, identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte Stripe Connect'**
+  String get connectOnboardingTitle;
+
+  /// Clé conservée pour cohérence documentaire : le message d'origine n'est jamais affiché (code 'launch-failed' absent d'ErrorCatalog, résolu en générique réseau) et reste marqué i18n-ignore dans connect_onboarding_intro_screen.dart._openExternalBrowser.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'ouvrir le navigateur. Vérifie ta connexion.'**
+  String get connectOnboardingBrowserLaunchFailed;
+
+  /// Titre sur deux lignes de connect_onboarding_intro_screen.dart _IntroView ; le saut de ligne fait partie de la valeur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Complète ton\ncompte Stripe'**
+  String get connectOnboardingHeroTitle;
+
+  /// Sous-titre de connect_onboarding_intro_screen.dart _IntroView.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour publier ton trajet et recevoir des paiements, complète ton compte Stripe. Cela prend environ 5 minutes.'**
+  String get connectOnboardingHeroSubtitle;
+
+  /// Bandeau info de connect_onboarding_intro_screen.dart _IntroView.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tes données sont chiffrées et gérées directement par Stripe : Yadony n\'a jamais accès à tes informations bancaires.'**
+  String get connectOnboardingSecurityNotice;
+
+  /// Bouton principal ancré en bas de connect_onboarding_intro_screen.dart _IntroView.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compléter mon compte'**
+  String get connectOnboardingCta;
+
+  /// Titre du premier avantage de connect_onboarding_intro_screen.dart _BenefitsList, identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'5 minutes'**
+  String get connectOnboardingBenefitTimeTitle;
+
+  /// Sous-titre du premier avantage de connect_onboarding_intro_screen.dart _BenefitsList.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rapide et guidé pas à pas'**
+  String get connectOnboardingBenefitTimeSubtitle;
+
+  /// Titre du deuxième avantage de connect_onboarding_intro_screen.dart _BenefitsList (clé dédiée : même texte que payoutActiveInfoAutoTransferTitle mais autre feature, R40).
+  ///
+  /// In fr, this message translates to:
+  /// **'Virement automatique'**
+  String get connectOnboardingBenefitTransferTitle;
+
+  /// Sous-titre du deuxième avantage de connect_onboarding_intro_screen.dart _BenefitsList.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reçu sur ton compte après chaque livraison confirmée'**
+  String get connectOnboardingBenefitTransferSubtitle;
+
+  /// Titre du troisième avantage de connect_onboarding_intro_screen.dart _BenefitsList.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sécurisé par Stripe'**
+  String get connectOnboardingBenefitSecureTitle;
+
+  /// Sous-titre du troisième avantage de connect_onboarding_intro_screen.dart _BenefitsList.
+  ///
+  /// In fr, this message translates to:
+  /// **'Leader mondial des paiements en ligne'**
+  String get connectOnboardingBenefitSecureSubtitle;
+
+  /// Bouton principal (stickyBottom) de ConnectPendingBottomSheet.show, connect_pending_bottom_sheet.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ai complété le formulaire'**
+  String get connectPendingCompleteCta;
+
+  /// Bouton secondaire (stickyBottom) de ConnectPendingBottomSheet.show, connect_pending_bottom_sheet.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenir plus tard'**
+  String get connectPendingLaterCta;
+
+  /// Snackbar de succès quand ConnectOnboardingComplete est émis (connect_pending_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte bancaire configuré !'**
+  String get connectPendingConfigured;
+
+  /// Snackbar quand ConnectOnboardingPending est émis après confirmation utilisateur (connect_pending_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Stripe n\'a pas encore reçu toutes vos informations. Reprenez le formulaire pour le terminer.'**
+  String get connectPendingNotReceived;
+
+  /// Titre de connect_pending_bottom_sheet.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de Stripe'**
+  String get connectPendingTitle;
+
+  /// Sous-titre de connect_pending_bottom_sheet.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenez ici après avoir complété le formulaire Stripe dans votre navigateur.'**
+  String get connectPendingSubtitle;
 }
 
 class _AppLocalizationsDelegate

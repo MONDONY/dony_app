@@ -5010,5 +5010,267 @@
         "type": "String"
       }
     }
+  },
+
+  "payoutTitle": "Get paid",
+  "@payoutTitle": {
+    "description": "Titre de l'app bar « Recevoir mes paiements », répété dans les trois vues de l'écran (payout_onboarding_screen.dart) et passé comme titre à ConnectUnavailableView/IdentityRequiredView quand l'écran est atteint hors onboarding."
+  },
+  "payoutGaugeLabel": "Payments",
+  "@payoutGaugeLabel": {
+    "description": "Libellé de la jauge d'onboarding « Paiements », répété dans les trois vues de payout_onboarding_screen.dart."
+  },
+  "payoutBrowserLaunchFailed": "Unable to open the setup page. Check that a browser is installed.",
+  "@payoutBrowserLaunchFailed": {
+    "description": "Snackbar d'erreur quand le navigateur système ne s'ouvre pas sur l'URL d'onboarding Stripe (payout_onboarding_screen.dart _PayoutOnboardingScreenState)."
+  },
+  "payoutPendingBanner": "Sign-up started but not finished. Resume it to get paid, you'll find the information you already entered.",
+  "@payoutPendingBanner": {
+    "description": "Bandeau warning quand une inscription Stripe est entamée mais incomplète (payout_onboarding_screen.dart _OnboardingView)."
+  },
+  "payoutRefreshStatus": "Refresh status",
+  "@payoutRefreshStatus": {
+    "description": "Bouton secondaire sous le bandeau d'inscription en attente (payout_onboarding_screen.dart _OnboardingView)."
+  },
+  "payoutResumeSignup": "Resume my sign-up",
+  "@payoutResumeSignup": {
+    "description": "Bouton principal quand l'inscription Stripe est déjà entamée côté serveur (payout_onboarding_screen.dart _OnboardingView)."
+  },
+  "payoutConnectBankAccount": "Connect my bank account",
+  "@payoutConnectBankAccount": {
+    "description": "Bouton principal quand aucune inscription Stripe n'a encore été entamée (payout_onboarding_screen.dart _OnboardingView)."
+  },
+  "payoutHeroTitle": "Connect your\nbank account",
+  "@payoutHeroTitle": {
+    "description": "Titre sur deux lignes du hero de payout_onboarding_screen.dart _HeroSection ; le saut de ligne fait partie de la valeur."
+  },
+  "payoutHeroSubtitle": "Automatically receive your payment within 24h of each confirmed delivery.",
+  "@payoutHeroSubtitle": {
+    "description": "Sous-titre du hero de payout_onboarding_screen.dart _HeroSection."
+  },
+  "payoutBenefitSecureTitle": "Secure payment",
+  "@payoutBenefitSecureTitle": {
+    "description": "Titre du premier avantage de payout_onboarding_screen.dart _BenefitsSection, réutilisé pour la ligne d'info identique de _ActiveAccountView (même feature, même texte)."
+  },
+  "payoutBenefitSecureSubtitle": "The money is held and secured until delivery is confirmed.",
+  "@payoutBenefitSecureSubtitle": {
+    "description": "Sous-titre du premier avantage de payout_onboarding_screen.dart _BenefitsSection."
+  },
+  "payoutBenefitFastTransferTitle": "Fast transfer",
+  "@payoutBenefitFastTransferTitle": {
+    "description": "Titre du deuxième avantage de payout_onboarding_screen.dart _BenefitsSection."
+  },
+  "payoutBenefitFastTransferSubtitle": "Received in your account within 24h of confirmation.",
+  "@payoutBenefitFastTransferSubtitle": {
+    "description": "Sous-titre du deuxième avantage de payout_onboarding_screen.dart _BenefitsSection."
+  },
+  "payoutBenefitStripeManagedTitle": "Managed by Stripe",
+  "@payoutBenefitStripeManagedTitle": {
+    "description": "Titre du troisième avantage de payout_onboarding_screen.dart _BenefitsSection."
+  },
+  "payoutBenefitStripeManagedSubtitle": "Identity verification and compliance are handled by Stripe.",
+  "@payoutBenefitStripeManagedSubtitle": {
+    "description": "Sous-titre du troisième avantage de payout_onboarding_screen.dart _BenefitsSection."
+  },
+  "payoutActiveTitle": "Bank account connected",
+  "@payoutActiveTitle": {
+    "description": "Titre de payout_onboarding_screen.dart _ActiveAccountView, une fois le compte Stripe complet."
+  },
+  "payoutActiveSubtitle": "Your Stripe account is active. After each confirmed delivery, the payment is automatically transferred to your bank account within 1 to 2 business days.",
+  "@payoutActiveSubtitle": {
+    "description": "Sous-titre de payout_onboarding_screen.dart _ActiveAccountView."
+  },
+  "payoutActiveInfoSecureSubtitle": "The money is held until delivery is confirmed.",
+  "@payoutActiveInfoSecureSubtitle": {
+    "description": "Sous-titre de la ligne « Paiement sécurisé » de payout_onboarding_screen.dart _ActiveAccountView (texte distinct de payoutBenefitSecureSubtitle)."
+  },
+  "payoutActiveInfoAutoTransferTitle": "Automatic transfer",
+  "@payoutActiveInfoAutoTransferTitle": {
+    "description": "Titre de la deuxième ligne d'info de payout_onboarding_screen.dart _ActiveAccountView."
+  },
+  "payoutActiveInfoAutoTransferSubtitle": "No action needed, Stripe transfers directly to your bank details.",
+  "@payoutActiveInfoAutoTransferSubtitle": {
+    "description": "Sous-titre de la deuxième ligne d'info de payout_onboarding_screen.dart _ActiveAccountView."
+  },
+  "payoutActiveInfoBankAccountTitle": "To your bank account",
+  "@payoutActiveInfoBankAccountTitle": {
+    "description": "Titre de la troisième ligne d'info de payout_onboarding_screen.dart _ActiveAccountView."
+  },
+  "payoutActiveInfoBankAccountSubtitle": "You receive the money in the account linked to your bank details/IBAN, not in a Stripe wallet.",
+  "@payoutActiveInfoBankAccountSubtitle": {
+    "description": "Sous-titre de la troisième ligne d'info de payout_onboarding_screen.dart _ActiveAccountView."
+  },
+  "payoutContinueToHome": "Continue to home",
+  "@payoutContinueToHome": {
+    "description": "Bouton de sortie de l'étape paiements de l'onboarding, répété dans _ActiveAccountView et _SuccessView (payout_onboarding_screen.dart)."
+  },
+  "payoutSuccessTitle": "Payments enabled ✓",
+  "@payoutSuccessTitle": {
+    "description": "Titre de payout_onboarding_screen.dart _SuccessView, la coche fait partie de la valeur dans les deux langues."
+  },
+  "payoutSuccessSubtitle": "Your bank account is connected. You'll automatically receive your payments after each delivery.",
+  "@payoutSuccessSubtitle": {
+    "description": "Sous-titre de payout_onboarding_screen.dart _SuccessView."
+  },
+  "stripeAccountDisabledTitle": "Payments to activate",
+  "@stripeAccountDisabledTitle": {
+    "description": "Titre de l'app bar de account_disabled_screen.dart."
+  },
+  "stripeAccountDisabledHeading": "Finish setting up your payments",
+  "@stripeAccountDisabledHeading": {
+    "description": "Titre du corps de account_disabled_screen.dart."
+  },
+  "stripeAccountDisabledBody": "Your payment account is missing some information, so it can't receive money yet. Publishing a trip stays blocked until you complete it.",
+  "@stripeAccountDisabledBody": {
+    "description": "Paragraphe d'explication de account_disabled_screen.dart."
+  },
+  "stripeAccountDisabledRequirementsHeading": "What you'll be asked for",
+  "@stripeAccountDisabledRequirementsHeading": {
+    "description": "Sous-titre de la liste des pièces à fournir (account_disabled_screen.dart)."
+  },
+  "stripeAccountDisabledRequirementIdentity": "Your identity, name, date of birth and address",
+  "@stripeAccountDisabledRequirementIdentity": {
+    "description": "Première pièce demandée dans account_disabled_screen.dart."
+  },
+  "stripeAccountDisabledRequirementPayout": "A way to receive your earnings, IBAN or bank account",
+  "@stripeAccountDisabledRequirementPayout": {
+    "description": "Deuxième pièce demandée dans account_disabled_screen.dart."
+  },
+  "stripeAccountDisabledRequirementTerms": "Acceptance of our payment provider's terms",
+  "@stripeAccountDisabledRequirementTerms": {
+    "description": "Troisième pièce demandée dans account_disabled_screen.dart."
+  },
+  "stripeAccountDisabledEta": "It takes about two to three minutes. You'll be able to pick up where you left off.",
+  "@stripeAccountDisabledEta": {
+    "description": "Estimation de durée en bas de account_disabled_screen.dart."
+  },
+  "stripeAccountDisabledCta": "Complete my information",
+  "@stripeAccountDisabledCta": {
+    "description": "Bouton principal de account_disabled_screen.dart, vers l'onboarding Connect."
+  },
+  "stripeAccountContactSupport": "Contact Yadony support",
+  "@stripeAccountContactSupport": {
+    "description": "Bouton de recours support, partagé par account_disabled_screen.dart et account_rejected_screen.dart (même feature stripe_account)."
+  },
+  "stripeAccountRejectedTitle": "Account rejected",
+  "@stripeAccountRejectedTitle": {
+    "description": "Titre de account_rejected_screen.dart, répété dans l'app bar et le corps (même texte, même style headlineSmall)."
+  },
+  "stripeAccountRejectedBody": "Your Stripe account was rejected. You need to set up a new account to continue.",
+  "@stripeAccountRejectedBody": {
+    "description": "Paragraphe d'explication de account_rejected_screen.dart."
+  },
+  "stripeAccountRejectedReason": "Reason: {reason}",
+  "@stripeAccountRejectedReason": {
+    "description": "Raison de rejet renvoyée par Stripe, affichée telle quelle (account_rejected_screen.dart) ; reason n'est jamais traduite.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "stripeAccountRejectedCta": "Set up my account again",
+  "@stripeAccountRejectedCta": {
+    "description": "Bouton principal de account_rejected_screen.dart."
+  },
+  "stripeAccountRejectedBannerMessage": "Your Stripe account was rejected",
+  "@stripeAccountRejectedBannerMessage": {
+    "description": "Message du bandeau global account_rejected_banner.dart (texte distinct de stripeAccountRejectedBody)."
+  },
+  "stripeAccountRejectedBannerCta": "Reconfigure",
+  "@stripeAccountRejectedBannerCta": {
+    "description": "Bouton du bandeau global account_rejected_banner.dart (texte distinct de stripeAccountRejectedCta)."
+  },
+  "stripeAccountUnavailableHeading": "Not available yet\nin your country",
+  "@stripeAccountUnavailableHeading": {
+    "description": "Titre sur deux lignes de connect_unavailable_view.dart ; le saut de ligne fait partie de la valeur."
+  },
+  "stripeAccountUnavailableBody": "Stripe doesn't yet allow opening a payment account from your country. You can keep carrying parcels and get paid in cash, at drop-off.",
+  "@stripeAccountUnavailableBody": {
+    "description": "Paragraphe d'explication de connect_unavailable_view.dart, partagé par PayoutOnboardingScreen et ConnectOnboardingIntroScreen."
+  },
+  "stripeAccountIdentityRequiredHeading": "Verify your identity\nfirst",
+  "@stripeAccountIdentityRequiredHeading": {
+    "description": "Titre sur deux lignes de identity_required_view.dart ; le saut de ligne fait partie de la valeur."
+  },
+  "stripeAccountIdentityRequiredBody": "To receive money, Stripe needs to link your payment account to a verified identity. It's just an ID document to photograph, nothing more.",
+  "@stripeAccountIdentityRequiredBody": {
+    "description": "Paragraphe d'explication de identity_required_view.dart."
+  },
+  "stripeAccountIdentityRequiredCta": "Verify my identity",
+  "@stripeAccountIdentityRequiredCta": {
+    "description": "Bouton principal de identity_required_view.dart."
+  },
+  "connectOnboardingTitle": "Compte Stripe Connect",
+  "@connectOnboardingTitle": {
+    "description": "Titre de connect_onboarding_intro_screen.dart, répété dans l'app bar et passé comme titre à ConnectUnavailableView/IdentityRequiredView ; nom de fonctionnalité, identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "connectOnboardingBrowserLaunchFailed": "Unable to open the browser. Check your connection.",
+  "@connectOnboardingBrowserLaunchFailed": {
+    "description": "Clé conservée pour cohérence documentaire : le message d'origine n'est jamais affiché (code 'launch-failed' absent d'ErrorCatalog, résolu en générique réseau) et reste marqué i18n-ignore dans connect_onboarding_intro_screen.dart._openExternalBrowser."
+  },
+  "connectOnboardingHeroTitle": "Complete your\nStripe account",
+  "@connectOnboardingHeroTitle": {
+    "description": "Titre sur deux lignes de connect_onboarding_intro_screen.dart _IntroView ; le saut de ligne fait partie de la valeur."
+  },
+  "connectOnboardingHeroSubtitle": "To publish your trip and receive payments, complete your Stripe account. It takes about 5 minutes.",
+  "@connectOnboardingHeroSubtitle": {
+    "description": "Sous-titre de connect_onboarding_intro_screen.dart _IntroView."
+  },
+  "connectOnboardingSecurityNotice": "Your data is encrypted and managed directly by Stripe: Yadony never has access to your banking information.",
+  "@connectOnboardingSecurityNotice": {
+    "description": "Bandeau info de connect_onboarding_intro_screen.dart _IntroView."
+  },
+  "connectOnboardingCta": "Complete my account",
+  "@connectOnboardingCta": {
+    "description": "Bouton principal ancré en bas de connect_onboarding_intro_screen.dart _IntroView."
+  },
+  "connectOnboardingBenefitTimeTitle": "5 minutes",
+  "@connectOnboardingBenefitTimeTitle": {
+    "description": "Titre du premier avantage de connect_onboarding_intro_screen.dart _BenefitsList, identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "connectOnboardingBenefitTimeSubtitle": "Fast and guided step by step",
+  "@connectOnboardingBenefitTimeSubtitle": {
+    "description": "Sous-titre du premier avantage de connect_onboarding_intro_screen.dart _BenefitsList."
+  },
+  "connectOnboardingBenefitTransferTitle": "Automatic transfer",
+  "@connectOnboardingBenefitTransferTitle": {
+    "description": "Titre du deuxième avantage de connect_onboarding_intro_screen.dart _BenefitsList (clé dédiée : même texte que payoutActiveInfoAutoTransferTitle mais autre feature, R40)."
+  },
+  "connectOnboardingBenefitTransferSubtitle": "Received in your account after each confirmed delivery",
+  "@connectOnboardingBenefitTransferSubtitle": {
+    "description": "Sous-titre du deuxième avantage de connect_onboarding_intro_screen.dart _BenefitsList."
+  },
+  "connectOnboardingBenefitSecureTitle": "Secured by Stripe",
+  "@connectOnboardingBenefitSecureTitle": {
+    "description": "Titre du troisième avantage de connect_onboarding_intro_screen.dart _BenefitsList."
+  },
+  "connectOnboardingBenefitSecureSubtitle": "World leader in online payments",
+  "@connectOnboardingBenefitSecureSubtitle": {
+    "description": "Sous-titre du troisième avantage de connect_onboarding_intro_screen.dart _BenefitsList."
+  },
+  "connectPendingCompleteCta": "I completed the form",
+  "@connectPendingCompleteCta": {
+    "description": "Bouton principal (stickyBottom) de ConnectPendingBottomSheet.show, connect_pending_bottom_sheet.dart."
+  },
+  "connectPendingLaterCta": "Come back later",
+  "@connectPendingLaterCta": {
+    "description": "Bouton secondaire (stickyBottom) de ConnectPendingBottomSheet.show, connect_pending_bottom_sheet.dart."
+  },
+  "connectPendingConfigured": "Bank account set up!",
+  "@connectPendingConfigured": {
+    "description": "Snackbar de succès quand ConnectOnboardingComplete est émis (connect_pending_bottom_sheet.dart)."
+  },
+  "connectPendingNotReceived": "Stripe hasn't received all your information yet. Resume the form to finish it.",
+  "@connectPendingNotReceived": {
+    "description": "Snackbar quand ConnectOnboardingPending est émis après confirmation utilisateur (connect_pending_bottom_sheet.dart)."
+  },
+  "connectPendingTitle": "Waiting for Stripe",
+  "@connectPendingTitle": {
+    "description": "Titre de connect_pending_bottom_sheet.dart."
+  },
+  "connectPendingSubtitle": "Come back here after completing the Stripe form in your browser.",
+  "@connectPendingSubtitle": {
+    "description": "Sous-titre de connect_pending_bottom_sheet.dart."
   }
 }

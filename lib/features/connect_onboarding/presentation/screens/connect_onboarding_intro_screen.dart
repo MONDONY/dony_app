@@ -8,6 +8,7 @@ import 'package:dony/features/connect_onboarding/presentation/widgets/connect_pe
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/connect_unavailable_view.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/identity_required_view.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -59,11 +60,12 @@ class _ConnectOnboardingIntroScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     // Stripe n'ouvre pas de compte connecté dans tous les pays desservis par
     // yadony. Laisser l'utilisateur dérouler l'onboarding pour finir sur un
     // refus serveur n'apporte rien : on l'annonce ici.
     if (!context.watch<StripeAccountBloc>().state.connectAvailableInCountry) {
-      return const ConnectUnavailableView(title: 'Compte Stripe Connect');
+      return ConnectUnavailableView(title: l.connectOnboardingTitle);
     }
 
     // Stripe Connect exige une identité vérifiée : le serveur refuse sinon
@@ -72,8 +74,9 @@ class _ConnectOnboardingIntroScreenState
     // compte désactivé, notification push, retour de lien Stripe. Les fermer
     // un par un serait vain : ils convergent tous sur cet écran, la garde y
     // vit donc une seule fois.
-    if (context.watch<AuthBloc>().state.currentUser?.kycStatus != 'VERIFIED') {
-      return const IdentityRequiredView(title: 'Compte Stripe Connect');
+    final kycStatus = context.watch<AuthBloc>().state.currentUser?.kycStatus;
+    if (kycStatus != 'VERIFIED' /* i18n-ignore */ ) {
+      return IdentityRequiredView(title: l.connectOnboardingTitle);
     }
 
     return BlocConsumer<ConnectOnboardingBloc, ConnectOnboardingState>(
@@ -107,9 +110,14 @@ class _ConnectOnboardingIntroScreenState
       }
     } else {
       if (context.mounted) {
+        // Le message n'est jamais affiché tel quel : code 'launch-failed'
+        // absent d'ErrorCatalog._byCode, résolu en générique réseau
+        // (ErrorCatalog._byType, NetworkException -> _networkGeneric). Il
+        // passe quand même par l10n pour rester traduit si ce comportement
+        // change un jour.
         context.read<ConnectOnboardingBloc>().add(
-          const ConnectOnboardingLaunchFailed(
-            "Impossible d'ouvrir le navigateur. Vérifie ta connexion.",
+          ConnectOnboardingLaunchFailed(
+            context.l10n.connectOnboardingBrowserLaunchFailed,
           ),
         );
       }
@@ -123,6 +131,7 @@ class _IntroView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final isLoading = state is ConnectOnboardingLoading;
@@ -133,7 +142,7 @@ class _IntroView extends StatelessWidget {
         : null;
 
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Compte Stripe Connect'),
+      appBar: DonyAppBar(title: l.connectOnboardingTitle),
       body: Builder(
         builder: (context) {
           final h = DonyLayout.hPadding(context);
@@ -158,14 +167,14 @@ class _IntroView extends StatelessWidget {
 
                   // Title
                   Text(
-                    'Complète ton\ncompte Stripe',
+                    l.connectOnboardingHeroTitle,
                     style: tt.displayLarge?.copyWith(height: 1.2),
                   ).animate().fadeIn(delay: 60.ms),
                   const SizedBox(height: DonySpacing.md),
 
                   // Description
                   Text(
-                    'Pour publier ton trajet et recevoir des paiements, complète ton compte Stripe. Cela prend environ 5 minutes.',
+                    l.connectOnboardingHeroSubtitle,
                     style: tt.bodyLarge?.copyWith(
                       color: cs.onSurfaceVariant,
                       height: 1.55,
@@ -178,11 +187,10 @@ class _IntroView extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xxl),
 
                   // Info banner
-                  const DonyStatusBanner(
+                  DonyStatusBanner(
                     type: DonyStatusBannerType.info,
                     iconAsset: 'shield',
-                    message:
-                        'Tes données sont chiffrées et gérées directement par Stripe : Yadony n\'a jamais accès à tes informations bancaires.',
+                    message: l.connectOnboardingSecurityNotice,
                   ).animate().fadeIn(delay: 180.ms),
                   const SizedBox(height: DonySpacing.xl),
 
@@ -209,7 +217,7 @@ class _IntroView extends StatelessWidget {
             DonySpacing.base,
           ),
           child: DonyButton(
-            label: 'Compléter mon compte',
+            label: l.connectOnboardingCta,
             iconAsset: 'arrow-right',
             onPressed: isLoading
                 ? null
@@ -227,20 +235,25 @@ class _IntroView extends StatelessWidget {
 class _BenefitsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
-    const items = [
-      ('timer', '5 minutes', 'Rapide et guidé pas à pas'),
+    final items = [
+      (
+        'timer',
+        l.connectOnboardingBenefitTimeTitle,
+        l.connectOnboardingBenefitTimeSubtitle,
+      ),
       (
         'zap',
-        'Virement automatique',
-        'Reçu sur ton compte après chaque livraison confirmée',
+        l.connectOnboardingBenefitTransferTitle,
+        l.connectOnboardingBenefitTransferSubtitle,
       ),
       (
         'shield-check',
-        'Sécurisé par Stripe',
-        'Leader mondial des paiements en ligne',
+        l.connectOnboardingBenefitSecureTitle,
+        l.connectOnboardingBenefitSecureSubtitle,
       ),
     ];
 

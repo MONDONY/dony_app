@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   late GoRouter router;
 
@@ -62,5 +64,12 @@ void main() {
     // Le bouton principal quitte l'écran : un support révélé après plusieurs
     // taps ne serait jamais atteignable.
     expect(find.text('Contacter le support Yadony'), findsOneWidget);
+  });
+
+  testWidgets('en anglais : titre traduit', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(buildWidget());
+    expect(find.text('Payments to activate'), findsOneWidget);
+    expect(find.text('Contact Yadony support'), findsOneWidget);
   });
 }

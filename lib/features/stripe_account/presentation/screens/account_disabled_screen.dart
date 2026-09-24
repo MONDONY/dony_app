@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -15,13 +16,14 @@ class AccountDisabledScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(
         actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(leadingIconAsset: 'x'),
-        title: const Text('Paiements à activer'),
+        title: Text(l.stripeAccountDisabledTitle),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -47,34 +49,25 @@ class AccountDisabledScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Terminez la configuration de vos paiements',
+                          l.stripeAccountDisabledHeading,
                           style: tt.headlineSmall,
                         ),
                         const SizedBox(height: 12),
-                        const Text(
-                          'Il manque des informations à votre compte de '
-                          'paiement, il ne peut donc pas encore recevoir '
-                          "d'argent. La publication d'un trajet reste bloquée "
-                          'le temps de les compléter.',
-                        ),
+                        Text(l.stripeAccountDisabledBody),
                         const SizedBox(height: 20),
-                        Text('Ce qui vous sera demandé', style: tt.titleSmall),
+                        Text(
+                          l.stripeAccountDisabledRequirementsHeading,
+                          style: tt.titleSmall,
+                        ),
                         const SizedBox(height: 8),
-                        const _Requirement(
-                          'Votre identité, nom, date de naissance et adresse',
+                        _Requirement(
+                          l.stripeAccountDisabledRequirementIdentity,
                         ),
-                        const _Requirement(
-                          'Un moyen de recevoir vos gains, IBAN ou compte '
-                          'bancaire',
-                        ),
-                        const _Requirement(
-                          "L'acceptation des conditions de notre prestataire "
-                          'de paiement',
-                        ),
+                        _Requirement(l.stripeAccountDisabledRequirementPayout),
+                        _Requirement(l.stripeAccountDisabledRequirementTerms),
                         const SizedBox(height: 16),
                         Text(
-                          'Comptez deux à trois minutes. Vous pourrez '
-                          'reprendre là où vous vous êtes arrêté.',
+                          l.stripeAccountDisabledEta,
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
                           ),
@@ -90,7 +83,7 @@ class AccountDisabledScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () => context.go('/connect/onboarding/intro'),
-                child: const Text('Compléter mes informations'),
+                child: Text(l.stripeAccountDisabledCta),
               ),
             ),
             const SizedBox(height: 8),
@@ -106,7 +99,7 @@ class AccountDisabledScreen extends StatelessWidget {
                     await launchUrl(uri);
                   }
                 },
-                child: const Text('Contacter le support Yadony'),
+                child: Text(l.stripeAccountContactSupport),
               ),
             ),
           ],

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Écran plein pour un pays que Stripe ne couvre pas.
@@ -20,6 +21,7 @@ class ConnectUnavailableView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final h = DonyLayout.hPadding(context);
@@ -35,15 +37,10 @@ class ConnectUnavailableView extends StatelessWidget {
             size: DonyMascotteSize.lg,
           ),
           const SizedBox(height: DonySpacing.xl),
-          Text(
-            'Pas encore disponible\ndans votre pays',
-            style: tt.headlineSmall,
-          ),
+          Text(l.stripeAccountUnavailableHeading, style: tt.headlineSmall),
           const SizedBox(height: DonySpacing.md),
           Text(
-            'Stripe ne permet pas encore d\'ouvrir un compte de paiement '
-            'depuis votre pays. Vous pouvez continuer à transporter des '
-            'colis et à être payé en espèces, à la remise.',
+            l.stripeAccountUnavailableBody,
             style: tt.bodyMedium?.copyWith(
               color: cs.onSurfaceVariant,
               height: 1.5,

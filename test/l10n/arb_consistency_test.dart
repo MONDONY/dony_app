@@ -168,6 +168,8 @@ const _sameInBothLanguages = <String>{
   'walletTopupMethodCardSubtitle', // « Via Stripe · Visa, Mastercard » : noms de marques (tâche E3)
   'walletTopupMethodMobileMoneySubtitle', // « Orange Money, Wave, MTN MoMo » : noms de marques (tâche E3)
   'walletTopupBelowMinimum', // « Minimum » se dit pareil (tâche E3)
+  'connectOnboardingTitle', // « Compte Stripe Connect » : nom de fonctionnalité, identique en anglais (tâche E4)
+  'connectOnboardingBenefitTimeTitle', // « 5 minutes » se dit pareil (tâche E4)
 };
 
 void main() {

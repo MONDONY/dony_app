@@ -9294,4 +9294,229 @@ class AppLocalizationsEn extends AppLocalizations {
   String walletRefundFeeDetail(String gross, String fee, String net) {
     return '$gross refundable, $fee in fees withheld, you receive $net';
   }
+
+  @override
+  String get payoutTitle => 'Get paid';
+
+  @override
+  String get payoutGaugeLabel => 'Payments';
+
+  @override
+  String get payoutBrowserLaunchFailed =>
+      'Unable to open the setup page. Check that a browser is installed.';
+
+  @override
+  String get payoutPendingBanner =>
+      'Sign-up started but not finished. Resume it to get paid, you\'ll find the information you already entered.';
+
+  @override
+  String get payoutRefreshStatus => 'Refresh status';
+
+  @override
+  String get payoutResumeSignup => 'Resume my sign-up';
+
+  @override
+  String get payoutConnectBankAccount => 'Connect my bank account';
+
+  @override
+  String get payoutHeroTitle => 'Connect your\nbank account';
+
+  @override
+  String get payoutHeroSubtitle =>
+      'Automatically receive your payment within 24h of each confirmed delivery.';
+
+  @override
+  String get payoutBenefitSecureTitle => 'Secure payment';
+
+  @override
+  String get payoutBenefitSecureSubtitle =>
+      'The money is held and secured until delivery is confirmed.';
+
+  @override
+  String get payoutBenefitFastTransferTitle => 'Fast transfer';
+
+  @override
+  String get payoutBenefitFastTransferSubtitle =>
+      'Received in your account within 24h of confirmation.';
+
+  @override
+  String get payoutBenefitStripeManagedTitle => 'Managed by Stripe';
+
+  @override
+  String get payoutBenefitStripeManagedSubtitle =>
+      'Identity verification and compliance are handled by Stripe.';
+
+  @override
+  String get payoutActiveTitle => 'Bank account connected';
+
+  @override
+  String get payoutActiveSubtitle =>
+      'Your Stripe account is active. After each confirmed delivery, the payment is automatically transferred to your bank account within 1 to 2 business days.';
+
+  @override
+  String get payoutActiveInfoSecureSubtitle =>
+      'The money is held until delivery is confirmed.';
+
+  @override
+  String get payoutActiveInfoAutoTransferTitle => 'Automatic transfer';
+
+  @override
+  String get payoutActiveInfoAutoTransferSubtitle =>
+      'No action needed, Stripe transfers directly to your bank details.';
+
+  @override
+  String get payoutActiveInfoBankAccountTitle => 'To your bank account';
+
+  @override
+  String get payoutActiveInfoBankAccountSubtitle =>
+      'You receive the money in the account linked to your bank details/IBAN, not in a Stripe wallet.';
+
+  @override
+  String get payoutContinueToHome => 'Continue to home';
+
+  @override
+  String get payoutSuccessTitle => 'Payments enabled ✓';
+
+  @override
+  String get payoutSuccessSubtitle =>
+      'Your bank account is connected. You\'ll automatically receive your payments after each delivery.';
+
+  @override
+  String get stripeAccountDisabledTitle => 'Payments to activate';
+
+  @override
+  String get stripeAccountDisabledHeading => 'Finish setting up your payments';
+
+  @override
+  String get stripeAccountDisabledBody =>
+      'Your payment account is missing some information, so it can\'t receive money yet. Publishing a trip stays blocked until you complete it.';
+
+  @override
+  String get stripeAccountDisabledRequirementsHeading =>
+      'What you\'ll be asked for';
+
+  @override
+  String get stripeAccountDisabledRequirementIdentity =>
+      'Your identity, name, date of birth and address';
+
+  @override
+  String get stripeAccountDisabledRequirementPayout =>
+      'A way to receive your earnings, IBAN or bank account';
+
+  @override
+  String get stripeAccountDisabledRequirementTerms =>
+      'Acceptance of our payment provider\'s terms';
+
+  @override
+  String get stripeAccountDisabledEta =>
+      'It takes about two to three minutes. You\'ll be able to pick up where you left off.';
+
+  @override
+  String get stripeAccountDisabledCta => 'Complete my information';
+
+  @override
+  String get stripeAccountContactSupport => 'Contact Yadony support';
+
+  @override
+  String get stripeAccountRejectedTitle => 'Account rejected';
+
+  @override
+  String get stripeAccountRejectedBody =>
+      'Your Stripe account was rejected. You need to set up a new account to continue.';
+
+  @override
+  String stripeAccountRejectedReason(String reason) {
+    return 'Reason: $reason';
+  }
+
+  @override
+  String get stripeAccountRejectedCta => 'Set up my account again';
+
+  @override
+  String get stripeAccountRejectedBannerMessage =>
+      'Your Stripe account was rejected';
+
+  @override
+  String get stripeAccountRejectedBannerCta => 'Reconfigure';
+
+  @override
+  String get stripeAccountUnavailableHeading =>
+      'Not available yet\nin your country';
+
+  @override
+  String get stripeAccountUnavailableBody =>
+      'Stripe doesn\'t yet allow opening a payment account from your country. You can keep carrying parcels and get paid in cash, at drop-off.';
+
+  @override
+  String get stripeAccountIdentityRequiredHeading =>
+      'Verify your identity\nfirst';
+
+  @override
+  String get stripeAccountIdentityRequiredBody =>
+      'To receive money, Stripe needs to link your payment account to a verified identity. It\'s just an ID document to photograph, nothing more.';
+
+  @override
+  String get stripeAccountIdentityRequiredCta => 'Verify my identity';
+
+  @override
+  String get connectOnboardingTitle => 'Compte Stripe Connect';
+
+  @override
+  String get connectOnboardingBrowserLaunchFailed =>
+      'Unable to open the browser. Check your connection.';
+
+  @override
+  String get connectOnboardingHeroTitle => 'Complete your\nStripe account';
+
+  @override
+  String get connectOnboardingHeroSubtitle =>
+      'To publish your trip and receive payments, complete your Stripe account. It takes about 5 minutes.';
+
+  @override
+  String get connectOnboardingSecurityNotice =>
+      'Your data is encrypted and managed directly by Stripe: Yadony never has access to your banking information.';
+
+  @override
+  String get connectOnboardingCta => 'Complete my account';
+
+  @override
+  String get connectOnboardingBenefitTimeTitle => '5 minutes';
+
+  @override
+  String get connectOnboardingBenefitTimeSubtitle =>
+      'Fast and guided step by step';
+
+  @override
+  String get connectOnboardingBenefitTransferTitle => 'Automatic transfer';
+
+  @override
+  String get connectOnboardingBenefitTransferSubtitle =>
+      'Received in your account after each confirmed delivery';
+
+  @override
+  String get connectOnboardingBenefitSecureTitle => 'Secured by Stripe';
+
+  @override
+  String get connectOnboardingBenefitSecureSubtitle =>
+      'World leader in online payments';
+
+  @override
+  String get connectPendingCompleteCta => 'I completed the form';
+
+  @override
+  String get connectPendingLaterCta => 'Come back later';
+
+  @override
+  String get connectPendingConfigured => 'Bank account set up!';
+
+  @override
+  String get connectPendingNotReceived =>
+      'Stripe hasn\'t received all your information yet. Resume the form to finish it.';
+
+  @override
+  String get connectPendingTitle => 'Waiting for Stripe';
+
+  @override
+  String get connectPendingSubtitle =>
+      'Come back here after completing the Stripe form in your browser.';
 }

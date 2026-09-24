@@ -15,6 +15,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockConnectOnboardingBloc
     extends MockBloc<ConnectOnboardingEvent, ConnectOnboardingState>
     implements ConnectOnboardingBloc {}
@@ -207,6 +209,15 @@ void main() {
 
       expect(find.text('Compléter mon compte'), findsOneWidget);
       expect(find.text('Pas encore disponible\ndans votre pays'), findsNothing);
+    });
+
+    testWidgets('en anglais : titre et CTA traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap(mockBloc));
+      await tester.pump(_kSettle);
+
+      expect(find.text('Compte Stripe Connect'), findsOneWidget);
+      expect(find.text('Complete my account'), findsOneWidget);
     });
   });
 

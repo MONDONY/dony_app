@@ -10,6 +10,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockConnectOnboardingBloc
     extends MockBloc<ConnectOnboardingEvent, ConnectOnboardingState>
     implements ConnectOnboardingBloc {}
@@ -96,5 +98,13 @@ void main() {
     await tester.pumpWidget(buildWidget());
     await tester.pump();
     expect(find.text(errorMessage), findsOneWidget);
+  });
+
+  testWidgets('en anglais : titre et raison traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(buildWidget());
+    expect(find.text('Account rejected'), findsWidgets);
+    expect(find.text('Reason: Documents invalides'), findsOneWidget);
+    expect(find.text('Set up my account again'), findsOneWidget);
   });
 }
