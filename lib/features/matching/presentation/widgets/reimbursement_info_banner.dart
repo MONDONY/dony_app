@@ -4,6 +4,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -44,6 +45,7 @@ class ReimbursementInfoBanner extends StatelessWidget {
       builder: (context, _, _) {
         final cs = Theme.of(context).colorScheme;
         final textTheme = Theme.of(context).textTheme;
+        final l = context.l10n;
         return Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -61,8 +63,9 @@ class ReimbursementInfoBanner extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'En cas de perte confirmée après recherche, Yadony rembourse '
-                      "jusqu'à $donyReimbursementCapLabel € sous conditions.",
+                      l.shipmentReimbursementInfoMessage(
+                        donyReimbursementCapLabel,
+                      ),
                       style: textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),
@@ -82,7 +85,7 @@ class ReimbursementInfoBanner extends StatelessWidget {
                             decoration: TextDecoration.underline,
                           ),
                         ),
-                        child: const Text('Voir conditions'),
+                        child: Text(l.shipmentReimbursementSeeConditionsButton),
                       ),
                     ),
                   ],

@@ -19,6 +19,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
@@ -597,5 +599,117 @@ void main() {
     expect(find.text('Abidjan'), findsNothing);
     expect(find.text('ANNULÉ'), findsOneWidget);
     expect(find.text('COLIS REFUSÉ'), findsOneWidget);
+  });
+
+  group('shipmentResultCount', () {
+    testWidgets('1 résultat filtré → « 1 résultat » (singulier)', (
+      tester,
+    ) async {
+      final bids = [_bid('ACCEPTED', 'Dakar'), _bid('PENDING', 'Abidjan')];
+      whenListen(
+        bidBloc,
+        Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+        initialState: BidListLoaded(bids),
+      );
+      await tester.pumpWidget(subject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('En cours'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 résultat'), findsOneWidget);
+    });
+
+    testWidgets('4 résultats filtrés → « 4 résultats » (pluriel)', (
+      tester,
+    ) async {
+      final bids = [
+        _bid('ACCEPTED', 'Ouaga1'),
+        _bid('HANDED_OVER', 'Ouaga2'),
+        _bid('IN_TRANSIT', 'Ouaga3'),
+        _bid('ACCEPTED', 'Ouaga4'),
+      ];
+      whenListen(
+        bidBloc,
+        Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+        initialState: BidListLoaded(bids),
+      );
+      await tester.pumpWidget(subject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('En cours'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('4 résultats'), findsOneWidget);
+    });
+
+    testWidgets('en anglais : « 1 result » et « 4 results »', (tester) async {
+      useEnglish();
+      final bids = [
+        _bid('ACCEPTED', 'Ouaga1'),
+        _bid('HANDED_OVER', 'Ouaga2'),
+        _bid('IN_TRANSIT', 'Ouaga3'),
+        _bid('ACCEPTED', 'Ouaga4'),
+      ];
+      whenListen(
+        bidBloc,
+        Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+        initialState: BidListLoaded(bids),
+      );
+      await tester.pumpWidget(subject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('In progress'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('4 results'), findsOneWidget);
+      expect(find.text('4 résultats'), findsNothing);
+    });
+  });
+
+  group('traductions', () {
+    testWidgets(
+      'en anglais : état vide total, chips et bouton effacer traduits',
+      (tester) async {
+        useEnglish();
+        whenListen(
+          bidBloc,
+          const Stream<BidState>.empty(),
+          initialState: BidListLoaded(const []),
+        );
+        await tester.pumpWidget(subject());
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.text('No shipments yet'), findsOneWidget);
+        expect(find.text('Search for a trip'), findsOneWidget);
+        expect(find.textContaining('Aucun envoi'), findsNothing);
+      },
+    );
+
+    testWidgets('en anglais : chips de statut et « Clear all » traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      final bids = [_bid('ACCEPTED', 'Dakar')];
+      whenListen(
+        bidBloc,
+        Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+        initialState: BidListLoaded(bids),
+      );
+      await tester.pumpWidget(subject());
+      await tester.pumpAndSettle();
+
+      expect(find.text('All'), findsOneWidget);
+      expect(find.text('In progress'), findsOneWidget);
+      expect(find.text('Pending'), findsOneWidget);
+      expect(find.text('Delivered'), findsOneWidget);
+      expect(find.text('Not completed'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField).first, 'dakar');
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Clear all'), findsOneWidget);
+    });
   });
 }

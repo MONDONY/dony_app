@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -112,6 +113,7 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return BlocConsumer<TrackingBloc, TrackingState>(
       listenWhen: (_, c) =>
@@ -151,7 +153,7 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'CODE DE RETRAIT',
+                l.ticketPickupCodeSectionLabel,
                 style: tt.bodySmall?.copyWith(
                   color: cs.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
@@ -211,7 +213,7 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                   Clipboard.setData(ClipboardData(text: displayCode));
                   DonySnackbar.show(
                     ctx,
-                    message: 'Code copié',
+                    message: l.ticketCodeCopiedSnackbar,
                     type: DonySnackbarType.success,
                   );
                 },
@@ -228,7 +230,7 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                         DonyIcon('copy', size: 16, color: cs.primary),
                         const SizedBox(width: DonySpacing.sm),
                         Text(
-                          'Copier le code',
+                          l.ticketCopyCodeButton,
                           style: tt.titleSmall?.copyWith(color: cs.primary),
                         ),
                       ],
@@ -288,10 +290,10 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                           Flexible(
                             child: Text(
                               isVisibilityLoading
-                                  ? 'Mise à jour…'
+                                  ? l.ticketUpdatingLabel
                                   : isPublicPageVisible
-                                  ? 'Retirer le code de la page de suivi'
-                                  : 'Mettre le code sur la page de suivi',
+                                  ? l.ticketHideCodeFromTrackingPageButton
+                                  : l.ticketShowCodeOnTrackingPageButton,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: tt.titleSmall?.copyWith(
@@ -311,7 +313,7 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                 const SizedBox(height: DonySpacing.xs),
                 Center(
                   child: Text(
-                    'Code visible sur la page de suivi',
+                    l.ticketCodeVisibleOnTrackingPageLabel,
                     style: tt.bodySmall?.copyWith(
                       color: cs.success,
                       fontWeight: FontWeight.w700,
@@ -363,21 +365,23 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                           const SizedBox(width: DonySpacing.sm),
                           if (isApiLoading)
                             Text(
-                              'Régénération…',
+                              l.ticketRegeneratingLabel,
                               style: tt.titleSmall?.copyWith(
                                 color: cs.onSecondaryContainer,
                               ),
                             )
                           else if (_isRateLimited)
                             Text(
-                              'Disponible dans ${_formatRemaining()}',
+                              l.ticketRegenerateAvailableInLabel(
+                                _formatRemaining(),
+                              ),
                               style: tt.titleSmall?.copyWith(
                                 color: cs.onSecondaryContainer,
                               ),
                             )
                           else
                             Text(
-                              'Régénérer le code',
+                              l.ticketRegenerateCodeButton,
                               style: tt.titleSmall?.copyWith(
                                 color: cs.onSecondaryContainer,
                               ),
@@ -404,7 +408,9 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: Text(
-                          'Limite de 5 régénérations atteinte. Le bouton se réactivera automatiquement dans ${_formatRemaining()}.',
+                          l.ticketRegenerateLimitReachedMessage(
+                            _formatRemaining(),
+                          ),
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
                             height: 1.4,
@@ -432,7 +438,7 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: Text(
-                          'Transmettez ce code au voyageur par vos propres moyens (SMS, WhatsApp…). Il devra le saisir à la livraison.',
+                          l.ticketShareCodeManuallyHint,
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
                             height: 1.4,

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 Future<GoRouter> _pump(
   WidgetTester tester,
   TalonTravelerAction action, {
@@ -72,5 +74,37 @@ void main() {
     await tester.tap(find.text('Confirmer la livraison'));
     await tester.pumpAndSettle();
     expect(find.text('RECEPTION'), findsOneWidget);
+  });
+
+  group('traductions', () {
+    testWidgets(
+      'en anglais : mode scan → "Scan the parcel QR" et son indication',
+      (tester) async {
+        useEnglish();
+        await _pump(tester, TalonTravelerAction.scan);
+        expect(find.text('Scan the parcel QR'), findsOneWidget);
+        expect(
+          find.text('At drop-off, scan the sender\'s QR.'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'en anglais : mode confirmDelivery → "Confirm the delivery" et son indication',
+      (tester) async {
+        useEnglish();
+        await _pump(
+          tester,
+          TalonTravelerAction.confirmDelivery,
+          travelerName: 'Abou D.',
+        );
+        expect(find.text('Confirm the delivery'), findsOneWidget);
+        expect(
+          find.text("On arrival, enter the sender's pickup code."),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

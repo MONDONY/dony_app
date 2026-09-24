@@ -7192,4 +7192,404 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailDeclineRequestButton => 'Decline';
+
+  @override
+  String get ticketReturnCodeButton => 'Return code';
+
+  @override
+  String get ticketConfirmReturnButton => 'Confirm the return';
+
+  @override
+  String get ticketParcelReturnedLabel => 'Parcel returned';
+
+  @override
+  String get ticketViewAlternativeTripsButton => 'View alternative trips';
+
+  @override
+  String get ticketQrButtonCompact => 'Parcel QR';
+
+  @override
+  String get ticketQrButtonFull => 'Parcel QR (to show or stick on the parcel)';
+
+  @override
+  String get ticketScanStepsButton => 'Scan the step QR codes';
+
+  @override
+  String get ticketAwaitingTravelerConfirmation =>
+      'Waiting for the traveler\'s confirmation';
+
+  @override
+  String get ticketSenderAwaitingMobileMoneyHint =>
+      'The traveler has accepted: pay by mobile money from the button below to secure your shipment.';
+
+  @override
+  String get ticketTravelerAwaitingPayment =>
+      'Waiting for the sender\'s payment';
+
+  @override
+  String get ticketParcelDeliveredLabel => 'Parcel delivered';
+
+  @override
+  String get ticketRequestClosedMessage => 'This request is closed.';
+
+  @override
+  String get ticketMiniStatWeightLabel => 'WEIGHT';
+
+  @override
+  String get ticketMiniStatCategoryLabel => 'TYPE';
+
+  @override
+  String get ticketPickupCodeSectionLabel => 'PICKUP CODE';
+
+  @override
+  String get ticketCopyCodeButton => 'Copy the code';
+
+  @override
+  String get ticketCodeCopiedSnackbar => 'Code copied';
+
+  @override
+  String get ticketUpdatingLabel => 'Updating…';
+
+  @override
+  String get ticketHideCodeFromTrackingPageButton =>
+      'Remove the code from the tracking page';
+
+  @override
+  String get ticketShowCodeOnTrackingPageButton =>
+      'Show the code on the tracking page';
+
+  @override
+  String get ticketCodeVisibleOnTrackingPageLabel =>
+      'Code visible on the tracking page';
+
+  @override
+  String get ticketRegeneratingLabel => 'Regenerating…';
+
+  @override
+  String ticketRegenerateAvailableInLabel(String remaining) {
+    return 'Available in $remaining';
+  }
+
+  @override
+  String get ticketRegenerateCodeButton => 'Regenerate the code';
+
+  @override
+  String ticketRegenerateLimitReachedMessage(String remaining) {
+    return 'Limit of 5 regenerations reached. The button will reactivate automatically in $remaining.';
+  }
+
+  @override
+  String get ticketShareCodeManuallyHint =>
+      'Share this code with the traveler by your own means (SMS, WhatsApp…). They will need to enter it at delivery.';
+
+  @override
+  String get ticketStatusAwaitingPaymentSenderLabel => 'To pay';
+
+  @override
+  String get ticketStatusAwaitingPaymentTravelerLabel => 'Payment pending';
+
+  @override
+  String get ticketStatusPendingLabel => 'Pending';
+
+  @override
+  String get ticketStatusAcceptedLabel => 'Confirmed';
+
+  @override
+  String get ticketStatusHandedOverLabel => 'On the way';
+
+  @override
+  String get ticketStatusInTransitLabel => 'In transit';
+
+  @override
+  String get ticketStatusArrivedLabel => 'Arrived';
+
+  @override
+  String get ticketStatusDeliveredLabel => 'Delivered';
+
+  @override
+  String get ticketStatusRejectedLabel => 'Declined';
+
+  @override
+  String get ticketStatusCancelledLabel => 'Canceled';
+
+  @override
+  String get ticketStatusNoShowLabel => 'No-show';
+
+  @override
+  String get ticketStatusParcelRefusedLabel => 'Parcel refused';
+
+  @override
+  String get ticketStatusExpiredLabel => 'Expired';
+
+  @override
+  String get ticketScanQrActionLabel => 'Scan the parcel QR';
+
+  @override
+  String get ticketScanQrActionHint => 'At drop-off, scan the sender\'s QR.';
+
+  @override
+  String get ticketConfirmDeliveryActionLabel => 'Confirm the delivery';
+
+  @override
+  String get ticketConfirmDeliveryActionHint =>
+      'On arrival, enter the sender\'s pickup code.';
+
+  @override
+  String ticketShareTrackingMessage(String trackingNumber) {
+    return 'Track my Yadony parcel #$trackingNumber';
+  }
+
+  @override
+  String ticketShareTrackingMessageWithLink(
+    String trackingNumber,
+    String link,
+  ) {
+    return 'Track my Yadony parcel #$trackingNumber in real time:\n$link';
+  }
+
+  @override
+  String get ticketTrackingNumberSectionLabel => 'TRACKING NUMBER';
+
+  @override
+  String get ticketTrackingNumberCopiedSnackbar => 'Number copied';
+
+  @override
+  String get ticketHeaderTagline => 'YADONY · PARCEL TRANSPORT';
+
+  @override
+  String get ticketDepartureLabel => 'Departure';
+
+  @override
+  String get ticketArrivalLabel => 'Arrival';
+
+  @override
+  String get shipmentBadgeInTransit => 'IN TRANSIT';
+
+  @override
+  String get shipmentBadgeArrived => 'ARRIVED';
+
+  @override
+  String get shipmentBadgeHandedOver => 'HANDED OVER';
+
+  @override
+  String get shipmentBadgeToHandOver => 'TO HAND OVER';
+
+  @override
+  String get shipmentBadgeWaiting => 'WAITING';
+
+  @override
+  String get shipmentBadgeDelivered => 'DELIVERED';
+
+  @override
+  String get shipmentBadgeCancelled => 'CANCELED';
+
+  @override
+  String get shipmentBadgeRejected => 'REJECTED';
+
+  @override
+  String get shipmentBadgeNoShow => 'NO-SHOW';
+
+  @override
+  String get shipmentBadgeExpired => 'EXPIRED';
+
+  @override
+  String get shipmentBadgeParcelRefused => 'PARCEL REFUSED';
+
+  @override
+  String get shipmentStepAcceptedLabel => 'Handover to the traveler upcoming';
+
+  @override
+  String get shipmentStepHandedOverLabel =>
+      'Parcel handed over to the traveler';
+
+  @override
+  String shipmentStepInTransitLabel(String city) {
+    return 'In flight to $city';
+  }
+
+  @override
+  String get shipmentDestinationFallback => 'destination';
+
+  @override
+  String get shipmentStepArrivedLabel => 'Arrived, ready to be picked up';
+
+  @override
+  String get shipmentStepDeliveredLabel => 'Delivered to destination';
+
+  @override
+  String get shipmentCtaTrackParcel => 'Track the parcel →';
+
+  @override
+  String get shipmentCtaViewQr => 'View the QR →';
+
+  @override
+  String get shipmentCtaDetails => 'Details →';
+
+  @override
+  String shipmentParcelWeightLabel(String weight) {
+    return 'Parcel $weight';
+  }
+
+  @override
+  String shipmentParcelWeightForRecipientLabel(
+    String weight,
+    String recipient,
+  ) {
+    return 'Parcel $weight · for $recipient';
+  }
+
+  @override
+  String get shipmentStepperHandedOverLabel => 'Handed over';
+
+  @override
+  String get shipmentStepperEmbarkedLabel => 'Boarded';
+
+  @override
+  String get shipmentStepperInFlightLabel => 'In flight';
+
+  @override
+  String get shipmentStepperArrivedLabel => 'Arrived';
+
+  @override
+  String get shipmentStepperDeliveryLabel => 'Delivery';
+
+  @override
+  String get shipmentStatusFilterTitle => 'Filter by status';
+
+  @override
+  String shipmentStatusFilterApplyWithCount(int count) {
+    return 'Apply ($count)';
+  }
+
+  @override
+  String get shipmentGroupInProgress => 'In progress';
+
+  @override
+  String get shipmentGroupWaiting => 'Pending';
+
+  @override
+  String get shipmentGroupDelivered => 'Delivered';
+
+  @override
+  String get shipmentGroupNotCompleted => 'Not completed';
+
+  @override
+  String get shipmentStatusToHandOverOption => 'To hand over';
+
+  @override
+  String get shipmentStatusHandedOverOption => 'Handed over';
+
+  @override
+  String get shipmentStatusInTransitOption => 'In transit';
+
+  @override
+  String get shipmentStatusArrivedOption => 'Arrived';
+
+  @override
+  String get shipmentStatusAwaitingPaymentOption => 'To pay';
+
+  @override
+  String get shipmentStatusPaidOption => 'Paid';
+
+  @override
+  String get shipmentStatusDeliveredOption => 'Delivered';
+
+  @override
+  String get shipmentStatusCancelledOption => 'Canceled';
+
+  @override
+  String get shipmentStatusRejectedOption => 'Declined';
+
+  @override
+  String get shipmentStatusParcelRefusedOption => 'Parcel refused';
+
+  @override
+  String get shipmentStatusNoShowOption => 'No-show';
+
+  @override
+  String get shipmentStatusExpiredOption => 'Expired';
+
+  @override
+  String get shipmentPeriodFilterTitle => 'Filter by period';
+
+  @override
+  String get shipmentPeriodBasisDepartureLabel => 'Departure date';
+
+  @override
+  String get shipmentPeriodBasisCreationLabel => 'Creation date';
+
+  @override
+  String get shipmentPeriodLast3MonthsLabel => 'Last 3 months';
+
+  @override
+  String get shipmentPeriodThisYearLabel => 'This year';
+
+  @override
+  String get shipmentPeriodAllLabel => 'All time';
+
+  @override
+  String get shipmentPeriodCustomLabel => 'Custom';
+
+  @override
+  String get shipmentPeriodCustomSelectedLabel => 'Custom ✓';
+
+  @override
+  String shipmentReimbursementInfoMessage(String cap) {
+    return 'In case of confirmed loss after investigation, Yadony reimburses up to $cap € under conditions.';
+  }
+
+  @override
+  String get shipmentReimbursementSeeConditionsButton => 'See conditions';
+
+  @override
+  String get shipmentSearchFieldHint => 'City, recipient, traveler…';
+
+  @override
+  String shipmentResultCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count results',
+      one: '$count result',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shipmentClearAllFiltersLabel => 'Clear all';
+
+  @override
+  String get shipmentDeletedSnackbar => 'Shipment deleted';
+
+  @override
+  String get shipmentDeleteConfirmTitle => 'Delete this shipment?';
+
+  @override
+  String get shipmentDeleteConfirmMessage =>
+      'It will be removed from your history. This action is irreversible.';
+
+  @override
+  String get shipmentEmptyTitle => 'No shipments yet';
+
+  @override
+  String get shipmentEmptyDescription =>
+      'Find a traveler and send your parcel to Africa.';
+
+  @override
+  String get shipmentEmptySearchTripAction => 'Search for a trip';
+
+  @override
+  String get shipmentFilteredEmptyMessage => 'No shipment matches your filters';
+
+  @override
+  String get shipmentLoadErrorTitle => 'Loading error';
+
+  @override
+  String get shipmentMesColisHeaderTitle => 'My parcels';
+
+  @override
+  String get shipmentTabEnRouteLabel => 'On the way';
+
+  @override
+  String get shipmentTabPubliesLabel => 'Published';
 }

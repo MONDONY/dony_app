@@ -7374,5 +7374,537 @@
   "bidDetailDeclineRequestButton": "Refuser",
   "@bidDetailDeclineRequestButton": {
     "description": "Clé dédiée (Ruling R40) — remplace negotiationThreadRejectButton dans TravelerPendingBar (bid_detail_action_bars.dart), refuser une demande de transport"
+  },
+  "ticketReturnCodeButton": "Code de retour",
+  "@ticketReturnCodeButton": {
+    "description": "Bouton talon annulation avec restitution en attente, vue expéditeur (billet_talon.dart)"
+  },
+  "ticketConfirmReturnButton": "Confirmer le retour",
+  "@ticketConfirmReturnButton": {
+    "description": "Bouton talon annulation avec restitution en attente, vue voyageur (billet_talon.dart)"
+  },
+  "ticketParcelReturnedLabel": "Colis restitué",
+  "@ticketParcelReturnedLabel": {
+    "description": "Bloc restitution confirmée du talon (billet_talon.dart, clé dédiée : duplique bidDetailReturnedTitle d'un autre préfixe, R40)"
+  },
+  "ticketViewAlternativeTripsButton": "Voir les trajets alternatifs",
+  "@ticketViewAlternativeTripsButton": {
+    "description": "CTA rematch du talon (billet_talon.dart)"
+  },
+  "ticketQrButtonCompact": "QR du colis",
+  "@ticketQrButtonCompact": {
+    "description": "Bouton QR du talon, variante compacte (billet_talon.dart)"
+  },
+  "ticketQrButtonFull": "QR du colis (à présenter ou coller sur le colis)",
+  "@ticketQrButtonFull": {
+    "description": "Bouton QR du talon, variante pleine largeur (billet_talon.dart)"
+  },
+  "ticketScanStepsButton": "Lire les QR des étapes",
+  "@ticketScanStepsButton": {
+    "description": "Bouton voyageur vers les étapes de scan du talon (billet_talon.dart)"
+  },
+  "ticketAwaitingTravelerConfirmation": "En attente de confirmation du voyageur",
+  "@ticketAwaitingTravelerConfirmation": {
+    "description": "Placeholder sender / PENDING du talon (billet_talon.dart)"
+  },
+  "ticketSenderAwaitingMobileMoneyHint": "Le voyageur a accepté : paie par mobile money depuis le bouton en bas pour sécuriser ton envoi.",
+  "@ticketSenderAwaitingMobileMoneyHint": {
+    "description": "Bloc expéditeur en attente de paiement mobile money du talon (billet_talon.dart)"
+  },
+  "ticketTravelerAwaitingPayment": "En attente du paiement de l'expéditeur",
+  "@ticketTravelerAwaitingPayment": {
+    "description": "Bloc voyageur en attente de paiement du talon (billet_talon.dart)"
+  },
+  "ticketParcelDeliveredLabel": "Colis livré",
+  "@ticketParcelDeliveredLabel": {
+    "description": "Bloc terminal COMPLETED/DELIVERED du talon (billet_talon.dart)"
+  },
+  "ticketRequestClosedMessage": "Cette demande est terminée.",
+  "@ticketRequestClosedMessage": {
+    "description": "Message terminal REJECTED/CANCELLED du talon (billet_talon.dart)"
+  },
+  "ticketMiniStatWeightLabel": "POIDS",
+  "@ticketMiniStatWeightLabel": {
+    "description": "Libellé de la mini-stat poids du talon voyageur, casse conservée telle quelle dans le code source (billet_talon.dart)"
+  },
+  "ticketMiniStatCategoryLabel": "TYPE",
+  "@ticketMiniStatCategoryLabel": {
+    "description": "Libellé de la mini-stat catégorie du talon voyageur, mot identique dans les deux langues, casse conservée telle quelle (billet_talon.dart)"
+  },
+  "ticketPickupCodeSectionLabel": "CODE DE RETRAIT",
+  "@ticketPickupCodeSectionLabel": {
+    "description": "Étiquette de section au-dessus des chiffres du code, casse conservée telle quelle (talon_retrait_code_view.dart)"
+  },
+  "ticketCopyCodeButton": "Copier le code",
+  "@ticketCopyCodeButton": {
+    "description": "Bouton copier le code de retrait (talon_retrait_code_view.dart)"
+  },
+  "ticketCodeCopiedSnackbar": "Code copié",
+  "@ticketCodeCopiedSnackbar": {
+    "description": "Snackbar après copie du code de retrait (talon_retrait_code_view.dart, clé dédiée : duplique bidDetailReturnCodeCopiedSnackbar d'un autre préfixe, R40)"
+  },
+  "ticketUpdatingLabel": "Mise à jour…",
+  "@ticketUpdatingLabel": {
+    "description": "État de chargement du bouton visibilité publique du code (talon_retrait_code_view.dart)"
+  },
+  "ticketHideCodeFromTrackingPageButton": "Retirer le code de la page de suivi",
+  "@ticketHideCodeFromTrackingPageButton": {
+    "description": "Bouton visibilité publique active du code (talon_retrait_code_view.dart)"
+  },
+  "ticketShowCodeOnTrackingPageButton": "Mettre le code sur la page de suivi",
+  "@ticketShowCodeOnTrackingPageButton": {
+    "description": "Bouton visibilité publique inactive du code (talon_retrait_code_view.dart)"
+  },
+  "ticketCodeVisibleOnTrackingPageLabel": "Code visible sur la page de suivi",
+  "@ticketCodeVisibleOnTrackingPageLabel": {
+    "description": "Confirmation sous le bouton visibilité publique (talon_retrait_code_view.dart)"
+  },
+  "ticketRegeneratingLabel": "Régénération…",
+  "@ticketRegeneratingLabel": {
+    "description": "État de chargement du bouton régénérer (talon_retrait_code_view.dart)"
+  },
+  "ticketRegenerateAvailableInLabel": "Disponible dans {remaining}",
+  "@ticketRegenerateAvailableInLabel": {
+    "description": "Bouton régénérer bloqué par le rate-limit, {remaining} déjà formaté en heures/minutes/secondes (talon_retrait_code_view.dart)",
+    "placeholders": {
+      "remaining": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketRegenerateCodeButton": "Régénérer le code",
+  "@ticketRegenerateCodeButton": {
+    "description": "Bouton régénérer disponible (talon_retrait_code_view.dart)"
+  },
+  "ticketRegenerateLimitReachedMessage": "Limite de 5 régénérations atteinte. Le bouton se réactivera automatiquement dans {remaining}.",
+  "@ticketRegenerateLimitReachedMessage": {
+    "description": "Message d'alerte rate-limit atteint, {remaining} déjà formaté (talon_retrait_code_view.dart)",
+    "placeholders": {
+      "remaining": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketShareCodeManuallyHint": "Transmettez ce code au voyageur par vos propres moyens (SMS, WhatsApp…). Il devra le saisir à la livraison.",
+  "@ticketShareCodeManuallyHint": {
+    "description": "Message d'information hors rate-limit (talon_retrait_code_view.dart)"
+  },
+  "ticketStatusAwaitingPaymentSenderLabel": "À payer",
+  "@ticketStatusAwaitingPaymentSenderLabel": {
+    "description": "Tampon de statut AWAITING_PAYMENT, vue expéditeur (billet_status_stamp.dart)"
+  },
+  "ticketStatusAwaitingPaymentTravelerLabel": "Paiement en attente",
+  "@ticketStatusAwaitingPaymentTravelerLabel": {
+    "description": "Tampon de statut AWAITING_PAYMENT, vue voyageur (billet_status_stamp.dart)"
+  },
+  "ticketStatusPendingLabel": "En attente",
+  "@ticketStatusPendingLabel": {
+    "description": "Tampon de statut PENDING/PAYMENT_ESCROWED (billet_status_stamp.dart)"
+  },
+  "ticketStatusAcceptedLabel": "Confirmé",
+  "@ticketStatusAcceptedLabel": {
+    "description": "Tampon de statut ACCEPTED (billet_status_stamp.dart)"
+  },
+  "ticketStatusHandedOverLabel": "En route",
+  "@ticketStatusHandedOverLabel": {
+    "description": "Tampon de statut HANDED_OVER (billet_status_stamp.dart)"
+  },
+  "ticketStatusInTransitLabel": "En transit",
+  "@ticketStatusInTransitLabel": {
+    "description": "Tampon de statut IN_TRANSIT (billet_status_stamp.dart)"
+  },
+  "ticketStatusArrivedLabel": "Arrivé",
+  "@ticketStatusArrivedLabel": {
+    "description": "Tampon de statut ARRIVED (billet_status_stamp.dart)"
+  },
+  "ticketStatusDeliveredLabel": "Livré",
+  "@ticketStatusDeliveredLabel": {
+    "description": "Tampon de statut COMPLETED/DELIVERED (billet_status_stamp.dart)"
+  },
+  "ticketStatusRejectedLabel": "Refusé",
+  "@ticketStatusRejectedLabel": {
+    "description": "Tampon de statut REJECTED (billet_status_stamp.dart)"
+  },
+  "ticketStatusCancelledLabel": "Annulé",
+  "@ticketStatusCancelledLabel": {
+    "description": "Tampon de statut CANCELLED, orthographe américaine (R38) (billet_status_stamp.dart)"
+  },
+  "ticketStatusNoShowLabel": "Absent",
+  "@ticketStatusNoShowLabel": {
+    "description": "Tampon de statut NO_SHOW (billet_status_stamp.dart)"
+  },
+  "ticketStatusParcelRefusedLabel": "Colis refusé",
+  "@ticketStatusParcelRefusedLabel": {
+    "description": "Tampon de statut PARCEL_REFUSED (billet_status_stamp.dart)"
+  },
+  "ticketStatusExpiredLabel": "Expiré",
+  "@ticketStatusExpiredLabel": {
+    "description": "Tampon de statut EXPIRED (billet_status_stamp.dart)"
+  },
+  "ticketScanQrActionLabel": "Lire le QR du colis",
+  "@ticketScanQrActionLabel": {
+    "description": "Bouton talon voyageur, action scan (talon_traveler_action_view.dart)"
+  },
+  "ticketScanQrActionHint": "À la remise, lisez le QR de l'expéditeur.",
+  "@ticketScanQrActionHint": {
+    "description": "Indication au-dessus du bouton scan (talon_traveler_action_view.dart)"
+  },
+  "ticketConfirmDeliveryActionLabel": "Confirmer la livraison",
+  "@ticketConfirmDeliveryActionLabel": {
+    "description": "Bouton talon voyageur, action confirmation de livraison (talon_traveler_action_view.dart)"
+  },
+  "ticketConfirmDeliveryActionHint": "À l'arrivée, saisissez le code de retrait de l'expéditeur.",
+  "@ticketConfirmDeliveryActionHint": {
+    "description": "Indication au-dessus du bouton confirmation de livraison (talon_traveler_action_view.dart)"
+  },
+  "ticketShareTrackingMessage": "Suivez mon colis Yadony #{trackingNumber}",
+  "@ticketShareTrackingMessage": {
+    "description": "Texte de partage sans lien de suivi (talon_tracking_strip.dart)",
+    "placeholders": {
+      "trackingNumber": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketShareTrackingMessageWithLink": "Suivez mon colis Yadony #{trackingNumber} en temps réel :\n{link}",
+  "@ticketShareTrackingMessageWithLink": {
+    "description": "Texte de partage avec lien de suivi (talon_tracking_strip.dart)",
+    "placeholders": {
+      "trackingNumber": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketTrackingNumberSectionLabel": "N° DE SUIVI",
+  "@ticketTrackingNumberSectionLabel": {
+    "description": "Étiquette de section au-dessus du numéro de suivi, casse conservée telle quelle (talon_tracking_strip.dart)"
+  },
+  "ticketTrackingNumberCopiedSnackbar": "Numéro copié",
+  "@ticketTrackingNumberCopiedSnackbar": {
+    "description": "Snackbar après copie du numéro de suivi (talon_tracking_strip.dart)"
+  },
+  "ticketHeaderTagline": "YADONY · TRANSPORT DE COLIS",
+  "@ticketHeaderTagline": {
+    "description": "Bandeau d'en-tête du billet, la marque Yadony reste inchangée (colis_billet.dart)"
+  },
+  "ticketDepartureLabel": "Départ",
+  "@ticketDepartureLabel": {
+    "description": "Libellé de la colonne départ de la zone dates du billet (colis_billet.dart, clé dédiée : hors préfixes de domaine partagés, R40)"
+  },
+  "ticketArrivalLabel": "Arrivée",
+  "@ticketArrivalLabel": {
+    "description": "Libellé de la colonne arrivée de la zone dates du billet (colis_billet.dart, clé dédiée : hors préfixes de domaine partagés, R40)"
+  },
+  "shipmentBadgeInTransit": "EN TRANSIT",
+  "@shipmentBadgeInTransit": {
+    "description": "Badge pill de statut IN_TRANSIT, casse conservée telle quelle (shipment_card.dart)"
+  },
+  "shipmentBadgeArrived": "ARRIVÉ",
+  "@shipmentBadgeArrived": {
+    "description": "Badge pill de statut ARRIVED (shipment_card.dart)"
+  },
+  "shipmentBadgeHandedOver": "REMIS",
+  "@shipmentBadgeHandedOver": {
+    "description": "Badge pill de statut HANDED_OVER (shipment_card.dart)"
+  },
+  "shipmentBadgeToHandOver": "À REMETTRE",
+  "@shipmentBadgeToHandOver": {
+    "description": "Badge pill de statut ACCEPTED (shipment_card.dart)"
+  },
+  "shipmentBadgeWaiting": "EN ATTENTE",
+  "@shipmentBadgeWaiting": {
+    "description": "Badge pill de statut PENDING/AWAITING_PAYMENT/PAYMENT_ESCROWED (shipment_card.dart)"
+  },
+  "shipmentBadgeDelivered": "LIVRÉ",
+  "@shipmentBadgeDelivered": {
+    "description": "Badge pill de statut COMPLETED (shipment_card.dart)"
+  },
+  "shipmentBadgeCancelled": "ANNULÉ",
+  "@shipmentBadgeCancelled": {
+    "description": "Badge pill de statut CANCELLED, orthographe américaine (R38) (shipment_card.dart)"
+  },
+  "shipmentBadgeRejected": "REFUSÉ",
+  "@shipmentBadgeRejected": {
+    "description": "Badge pill de statut REJECTED (shipment_card.dart)"
+  },
+  "shipmentBadgeNoShow": "ABSENT",
+  "@shipmentBadgeNoShow": {
+    "description": "Badge pill de statut NO_SHOW (shipment_card.dart)"
+  },
+  "shipmentBadgeExpired": "EXPIRÉ",
+  "@shipmentBadgeExpired": {
+    "description": "Badge pill de statut EXPIRED (shipment_card.dart)"
+  },
+  "shipmentBadgeParcelRefused": "COLIS REFUSÉ",
+  "@shipmentBadgeParcelRefused": {
+    "description": "Badge pill de statut PARCEL_REFUSED (shipment_card.dart)"
+  },
+  "shipmentStepAcceptedLabel": "Remise au voyageur à venir",
+  "@shipmentStepAcceptedLabel": {
+    "description": "Libellé d'étape ACCEPTED sous le stepper (shipment_card.dart)"
+  },
+  "shipmentStepHandedOverLabel": "Colis remis au voyageur",
+  "@shipmentStepHandedOverLabel": {
+    "description": "Libellé d'étape HANDED_OVER sous le stepper (shipment_card.dart)"
+  },
+  "shipmentStepInTransitLabel": "En vol vers {city}",
+  "@shipmentStepInTransitLabel": {
+    "description": "Libellé d'étape IN_TRANSIT sous le stepper (shipment_card.dart)",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "shipmentDestinationFallback": "destination",
+  "@shipmentDestinationFallback": {
+    "description": "Repli de {city} quand la ville d'arrivée est inconnue, mot identique dans les deux langues (shipment_card.dart)"
+  },
+  "shipmentStepArrivedLabel": "Arrivé, prêt à être récupéré",
+  "@shipmentStepArrivedLabel": {
+    "description": "Libellé d'étape ARRIVED sous le stepper (shipment_card.dart)"
+  },
+  "shipmentStepDeliveredLabel": "Livré à destination",
+  "@shipmentStepDeliveredLabel": {
+    "description": "Libellé d'étape COMPLETED sous le stepper (shipment_card.dart)"
+  },
+  "shipmentCtaTrackParcel": "Suivre le colis →",
+  "@shipmentCtaTrackParcel": {
+    "description": "CTA pied de carte, statuts en transit (shipment_card.dart)"
+  },
+  "shipmentCtaViewQr": "Voir le QR →",
+  "@shipmentCtaViewQr": {
+    "description": "CTA pied de carte, statut ACCEPTED (shipment_card.dart)"
+  },
+  "shipmentCtaDetails": "Détails →",
+  "@shipmentCtaDetails": {
+    "description": "CTA pied de carte, autres statuts (shipment_card.dart)"
+  },
+  "shipmentParcelWeightLabel": "Colis {weight}",
+  "@shipmentParcelWeightLabel": {
+    "description": "Ligne meta poids sans destinataire, {weight} déjà formaté avec son unité (shipment_card.dart)",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "shipmentParcelWeightForRecipientLabel": "Colis {weight} · pour {recipient}",
+  "@shipmentParcelWeightForRecipientLabel": {
+    "description": "Ligne meta poids avec destinataire, {weight} déjà formaté avec son unité (shipment_card.dart)",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "recipient": {
+        "type": "String"
+      }
+    }
+  },
+  "shipmentStepperHandedOverLabel": "Remis",
+  "@shipmentStepperHandedOverLabel": {
+    "description": "Libellé de pastille 1/5 du stepper (shipment_card.dart, clé dédiée : casse différente du badge REMIS, R40)"
+  },
+  "shipmentStepperEmbarkedLabel": "Embarqué",
+  "@shipmentStepperEmbarkedLabel": {
+    "description": "Libellé de pastille 2/5 du stepper (shipment_card.dart)"
+  },
+  "shipmentStepperInFlightLabel": "En vol",
+  "@shipmentStepperInFlightLabel": {
+    "description": "Libellé de pastille 3/5 du stepper (shipment_card.dart)"
+  },
+  "shipmentStepperArrivedLabel": "Arrivé",
+  "@shipmentStepperArrivedLabel": {
+    "description": "Libellé de pastille 4/5 du stepper (shipment_card.dart, clé dédiée : casse différente du badge ARRIVÉ, R40)"
+  },
+  "shipmentStepperDeliveryLabel": "Livraison",
+  "@shipmentStepperDeliveryLabel": {
+    "description": "Libellé de pastille 5/5 du stepper (shipment_card.dart)"
+  },
+  "shipmentStatusFilterTitle": "Filtrer par statut",
+  "@shipmentStatusFilterTitle": {
+    "description": "Titre du sheet de filtre par statut (shipment_status_filter_sheet.dart)"
+  },
+  "shipmentStatusFilterApplyWithCount": "Appliquer ({count})",
+  "@shipmentStatusFilterApplyWithCount": {
+    "description": "Bouton appliquer du sheet de filtre par statut, avec le nombre de statuts choisis (shipment_status_filter_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shipmentGroupInProgress": "En cours",
+  "@shipmentGroupInProgress": {
+    "description": "Groupe de statuts « en cours », réutilisé comme chip rapide de la liste d'envois (shipment_status_filter_sheet.dart, shipment_list_screen.dart)"
+  },
+  "shipmentGroupWaiting": "En attente",
+  "@shipmentGroupWaiting": {
+    "description": "Groupe de statuts « en attente », réutilisé comme chip rapide et comme libellé du statut PENDING (shipment_status_filter_sheet.dart, shipment_list_screen.dart)"
+  },
+  "shipmentGroupDelivered": "Livrés",
+  "@shipmentGroupDelivered": {
+    "description": "Groupe de statuts « livrés », réutilisé comme chip rapide de la liste d'envois (shipment_status_filter_sheet.dart, shipment_list_screen.dart)"
+  },
+  "shipmentGroupNotCompleted": "Non aboutis",
+  "@shipmentGroupNotCompleted": {
+    "description": "Groupe de statuts « non aboutis », réutilisé comme chip rapide de la liste d'envois (shipment_status_filter_sheet.dart, shipment_list_screen.dart)"
+  },
+  "shipmentStatusToHandOverOption": "À remettre",
+  "@shipmentStatusToHandOverOption": {
+    "description": "Option de statut ACCEPTED du sheet de filtre (shipment_status_filter_sheet.dart)"
+  },
+  "shipmentStatusHandedOverOption": "Remis",
+  "@shipmentStatusHandedOverOption": {
+    "description": "Option de statut HANDED_OVER du sheet de filtre (shipment_status_filter_sheet.dart)"
+  },
+  "shipmentStatusInTransitOption": "En transit",
+  "@shipmentStatusInTransitOption": {
+    "description": "Option de statut IN_TRANSIT du sheet de filtre (shipment_status_filter_sheet.dart)"
+  },
+  "shipmentStatusArrivedOption": "Arrivé",
+  "@shipmentStatusArrivedOption": {
+    "description": "Option de statut ARRIVED du sheet de filtre (shipment_status_filter_sheet.dart)"
+  },
+  "shipmentStatusAwaitingPaymentOption": "À payer",
+  "@shipmentStatusAwaitingPaymentOption": {
+    "description": "Option de statut AWAITING_PAYMENT du sheet de filtre (shipment_status_filter_sheet.dart)"
+  },
+  "shipmentStatusPaidOption": "Payé",
+  "@shipmentStatusPaidOption": {
+    "description": "Option de statut PAYMENT_ESCROWED du sheet de filtre (shipment_status_filter_sheet.dart)"
+  },
+  "shipmentStatusDeliveredOption": "Livré",
+  "@shipmentStatusDeliveredOption": {
+    "description": "Option de statut COMPLETED du sheet de filtre (shipment_status_filter_sheet.dart)"
+  },
+  "shipmentStatusCancelledOption": "Annulé",
+  "@shipmentStatusCancelledOption": {
+    "description": "Option de statut CANCELLED du sheet de filtre, orthographe américaine (R38) (shipment_status_filter_sheet.dart)"
+  },
+  "shipmentStatusRejectedOption": "Refusé",
+  "@shipmentStatusRejectedOption": {
+    "description": "Option de statut REJECTED du sheet de filtre (shipment_status_filter_sheet.dart)"
+  },
+  "shipmentStatusParcelRefusedOption": "Colis refusé",
+  "@shipmentStatusParcelRefusedOption": {
+    "description": "Option de statut PARCEL_REFUSED du sheet de filtre (shipment_status_filter_sheet.dart)"
+  },
+  "shipmentStatusNoShowOption": "Absent",
+  "@shipmentStatusNoShowOption": {
+    "description": "Option de statut NO_SHOW du sheet de filtre (shipment_status_filter_sheet.dart)"
+  },
+  "shipmentStatusExpiredOption": "Expiré",
+  "@shipmentStatusExpiredOption": {
+    "description": "Option de statut EXPIRED du sheet de filtre (shipment_status_filter_sheet.dart)"
+  },
+  "shipmentPeriodFilterTitle": "Filtrer par période",
+  "@shipmentPeriodFilterTitle": {
+    "description": "Titre du sheet de filtre par période, réutilisé comme tooltip du bouton dans la liste d'envois (shipment_period_filter_sheet.dart, shipment_list_screen.dart)"
+  },
+  "shipmentPeriodBasisDepartureLabel": "Date de départ",
+  "@shipmentPeriodBasisDepartureLabel": {
+    "description": "Onglet base de période « date de départ » (shipment_period_filter_sheet.dart)"
+  },
+  "shipmentPeriodBasisCreationLabel": "Date de création",
+  "@shipmentPeriodBasisCreationLabel": {
+    "description": "Onglet base de période « date de création » (shipment_period_filter_sheet.dart)"
+  },
+  "shipmentPeriodLast3MonthsLabel": "3 derniers mois",
+  "@shipmentPeriodLast3MonthsLabel": {
+    "description": "Chip de préréglage de période (shipment_period_filter_sheet.dart)"
+  },
+  "shipmentPeriodThisYearLabel": "Cette année",
+  "@shipmentPeriodThisYearLabel": {
+    "description": "Chip de préréglage de période (shipment_period_filter_sheet.dart)"
+  },
+  "shipmentPeriodAllLabel": "Tout",
+  "@shipmentPeriodAllLabel": {
+    "description": "Chip de préréglage de période « tout » (shipment_period_filter_sheet.dart)"
+  },
+  "shipmentPeriodCustomLabel": "Personnalisé",
+  "@shipmentPeriodCustomLabel": {
+    "description": "Chip de préréglage de période personnalisée, non sélectionnée (shipment_period_filter_sheet.dart)"
+  },
+  "shipmentPeriodCustomSelectedLabel": "Personnalisé ✓",
+  "@shipmentPeriodCustomSelectedLabel": {
+    "description": "Chip de préréglage de période personnalisée, sélectionnée (shipment_period_filter_sheet.dart)"
+  },
+  "shipmentReimbursementInfoMessage": "En cas de perte confirmée après recherche, Yadony rembourse jusqu'à {cap} € sous conditions.",
+  "@shipmentReimbursementInfoMessage": {
+    "description": "Bandeau d'information remboursement, {cap} déjà formaté (reimbursement_info_banner.dart)",
+    "placeholders": {
+      "cap": {
+        "type": "String"
+      }
+    }
+  },
+  "shipmentReimbursementSeeConditionsButton": "Voir conditions",
+  "@shipmentReimbursementSeeConditionsButton": {
+    "description": "Bouton vers la FAQ remboursement (reimbursement_info_banner.dart)"
+  },
+  "shipmentSearchFieldHint": "Ville, destinataire, voyageur…",
+  "@shipmentSearchFieldHint": {
+    "description": "Placeholder du champ de recherche de la liste d'envois (shipment_list_screen.dart)"
+  },
+  "shipmentResultCount": "{count, plural, =1{{count} résultat} other{{count} résultats}}",
+  "@shipmentResultCount": {
+    "description": "Compteur de résultats filtrés de la liste d'envois, remplace shipment_list_screen.dart:297 (shipment_list_screen.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shipmentClearAllFiltersLabel": "Tout effacer",
+  "@shipmentClearAllFiltersLabel": {
+    "description": "Lien d'effacement de tous les filtres actifs (shipment_list_screen.dart)"
+  },
+  "shipmentDeletedSnackbar": "Envoi supprimé",
+  "@shipmentDeletedSnackbar": {
+    "description": "Snackbar après suppression d'un envoi (shipment_list_screen.dart)"
+  },
+  "shipmentDeleteConfirmTitle": "Supprimer cet envoi ?",
+  "@shipmentDeleteConfirmTitle": {
+    "description": "Titre du dialogue de confirmation de suppression (shipment_list_screen.dart)"
+  },
+  "shipmentDeleteConfirmMessage": "Il sera retiré de votre historique. Cette action est irréversible.",
+  "@shipmentDeleteConfirmMessage": {
+    "description": "Message du dialogue de confirmation de suppression (shipment_list_screen.dart)"
+  },
+  "shipmentEmptyTitle": "Aucun envoi pour l'instant",
+  "@shipmentEmptyTitle": {
+    "description": "Titre de l'état vide liste brute (shipment_list_screen.dart)"
+  },
+  "shipmentEmptyDescription": "Trouvez un voyageur et envoyez votre colis vers l'Afrique.",
+  "@shipmentEmptyDescription": {
+    "description": "Description de l'état vide liste brute (shipment_list_screen.dart)"
+  },
+  "shipmentEmptySearchTripAction": "Rechercher un trajet",
+  "@shipmentEmptySearchTripAction": {
+    "description": "CTA de l'état vide liste brute (shipment_list_screen.dart)"
+  },
+  "shipmentFilteredEmptyMessage": "Aucun envoi ne correspond à tes filtres",
+  "@shipmentFilteredEmptyMessage": {
+    "description": "Message de l'état vide filtré (shipment_list_screen.dart)"
+  },
+  "shipmentLoadErrorTitle": "Erreur de chargement",
+  "@shipmentLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur de chargement (shipment_list_screen.dart)"
+  },
+  "shipmentMesColisHeaderTitle": "Mes colis",
+  "@shipmentMesColisHeaderTitle": {
+    "description": "Titre du header de l'écran Mes colis (mes_colis_screen.dart)"
+  },
+  "shipmentTabEnRouteLabel": "En route",
+  "@shipmentTabEnRouteLabel": {
+    "description": "Onglet segmenté « En route » de Mes colis (mes_colis_screen.dart, clé dédiée : hors préfixes de domaine partagés, R40)"
+  },
+  "shipmentTabPubliesLabel": "Publiés",
+  "@shipmentTabPubliesLabel": {
+    "description": "Onglet segmenté « Publiés » de Mes colis (mes_colis_screen.dart)"
   }
 }

@@ -156,6 +156,8 @@ const _sameInBothLanguages = <String>{
   'bidDetailMobileMoneyBadge', // « MOBILE MONEY » se dit pareil (tâche D2)
   'bidDetailCashBadge', // « CASH » se dit pareil (tâche D2)
   'bidDetailDescriptionLabel', // « Description » se dit pareil (tâche D2, correction R40)
+  'ticketMiniStatCategoryLabel', // « TYPE » se dit pareil (tâche D3)
+  'shipmentDestinationFallback', // « destination » se dit pareil (tâche D3, clé dédiée : duplique bidDetailFallbackDestination d'un autre préfixe, R40)
 };
 
 void main() {

@@ -3,6 +3,8 @@ import 'package:dony/features/matching/presentation/widgets/billet/billet_status
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 /// [isSender] par défaut à `false` (voyageur) : seuls les tests dédiés au
 /// libellé AWAITING_PAYMENT selon le rôle le font varier, les autres statuts
 /// étant identiques pour les deux rôles.
@@ -81,5 +83,29 @@ void main() {
       expect(find.text('Paiement en attente'), findsOneWidget);
       expect(find.text('À payer'), findsNothing);
     });
+  });
+
+  group('traductions', () {
+    testWidgets('en anglais : COMPLETED → "Delivered"', (tester) async {
+      useEnglish();
+      await _pump(tester, 'COMPLETED');
+      expect(find.text('Delivered'), findsOneWidget);
+      expect(find.text('Livré'), findsNothing);
+    });
+
+    testWidgets('en anglais : NO_SHOW → "No-show"', (tester) async {
+      useEnglish();
+      await _pump(tester, 'NO_SHOW');
+      expect(find.text('No-show'), findsOneWidget);
+    });
+
+    testWidgets(
+      'en anglais : AWAITING_PAYMENT expéditeur → "To pay", voyageur → "Payment pending"',
+      (tester) async {
+        useEnglish();
+        await _pump(tester, 'AWAITING_PAYMENT', isSender: true);
+        expect(find.text('To pay'), findsOneWidget);
+      },
+    );
   });
 }

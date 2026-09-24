@@ -14,6 +14,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
 
@@ -606,5 +608,70 @@ void main() {
   testWidgets('sans trackingNumber → pas de bande de suivi', (tester) async {
     await _pump(tester, _bid(status: 'PENDING'), true);
     expect(find.text('N° DE SUIVI'), findsNothing);
+  });
+
+  group('traductions', () {
+    testWidgets('en anglais : sender + COMPLETED → "Parcel delivered"', (
+      tester,
+    ) async {
+      useEnglish();
+      await _pump(tester, _bid(status: 'COMPLETED'), true);
+      expect(find.text('Parcel delivered'), findsOneWidget);
+      expect(find.text('Colis livré'), findsNothing);
+    });
+
+    testWidgets('en anglais : sender + REJECTED → "This request is closed."', (
+      tester,
+    ) async {
+      useEnglish();
+      await _pump(tester, _bid(status: 'REJECTED'), true);
+      expect(find.text('This request is closed.'), findsOneWidget);
+    });
+
+    testWidgets(
+      'en anglais : voyageur + PENDING → "WEIGHT" / "TYPE" (mini-stats)',
+      (tester) async {
+        useEnglish();
+        await _pump(
+          tester,
+          _bid(status: 'PENDING', contentCategory: 'Vêtements', weightKg: 3.5),
+          false,
+        );
+        expect(find.text('WEIGHT'), findsOneWidget);
+        expect(find.text('TYPE'), findsOneWidget);
+        expect(find.text('POIDS'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'en anglais : sender + CANCELLED + rematch → "View alternative trips"',
+      (tester) async {
+        useEnglish();
+        await _pump(
+          tester,
+          _bid(
+            status: 'CANCELLED',
+            tripCancellationId: 'cancel-001',
+            tripCancellationRematchStatus: 'SUGGESTED',
+          ),
+          true,
+        );
+        expect(find.text('View alternative trips'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'en anglais : voyageur + ACCEPTED → "Scan the step QR codes" et "TRACKING NUMBER"',
+      (tester) async {
+        useEnglish();
+        await _pump(
+          tester,
+          _bid(status: 'ACCEPTED', trackingNumber: 'DON-1'),
+          false,
+        );
+        expect(find.text('Scan the step QR codes'), findsOneWidget);
+        expect(find.text('TRACKING NUMBER'), findsOneWidget);
+      },
+    );
   });
 }

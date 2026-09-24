@@ -11,6 +11,7 @@ import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -247,7 +248,7 @@ class _MesColisHeader extends StatelessWidget {
                   const SizedBox(width: DonySpacing.xs),
                   Expanded(
                     child: Text(
-                      'Mes colis',
+                      context.l10n.shipmentMesColisHeaderTitle,
                       style: tt.titleLarge?.copyWith(
                         color: cs.onSurface,
                         fontSize: 18,
@@ -262,7 +263,7 @@ class _MesColisHeader extends StatelessWidget {
                   const SizedBox(width: DonySpacing.xs),
                   HeaderPill(
                     key: const Key('mes-colis-new-request'),
-                    label: 'Envoyer',
+                    label: context.l10n.commonSend,
                     iconAsset: 'package',
                     style: HeaderPillStyle.warm,
                     onTap: onNewRequest,
@@ -296,6 +297,7 @@ class _VoletSegmented extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Container(
       height: 46,
@@ -333,7 +335,7 @@ class _VoletSegmented extends StatelessWidget {
                     Expanded(
                       child: _VoletSegLabel(
                         key: const Key('mes-colis-tab-en-route'),
-                        label: 'En route',
+                        label: l.shipmentTabEnRouteLabel,
                         badge: 0,
                         selected: selected == MesColisTab.enRoute,
                         onTap: () => onSelect(MesColisTab.enRoute),
@@ -342,7 +344,7 @@ class _VoletSegmented extends StatelessWidget {
                     Expanded(
                       child: _VoletSegLabel(
                         key: const Key('mes-colis-tab-publies'),
-                        label: 'Publiés',
+                        label: l.shipmentTabPubliesLabel,
                         badge: publiesBadge,
                         selected: selected == MesColisTab.publies,
                         onTap: () => onSelect(MesColisTab.publies),

@@ -5,6 +5,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/return_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_tracking_strip.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -136,6 +137,7 @@ class _CancelledBlock extends StatelessWidget {
     if (bid.isParcelReturned) {
       return const _ReturnedBlock();
     }
+    final l = context.l10n;
     if (!bid.isAwaitingReturn) {
       // Annulation classique (pré-remise) : cas terminal simple. Le voyageur a
       // annulé son trajet (jamais no-show ni après-remise, cf.
@@ -166,7 +168,7 @@ class _CancelledBlock extends StatelessWidget {
         color: cs.primary,
       ),
       label: Text(
-        isSender ? 'Code de retour' : 'Confirmer le retour',
+        isSender ? l.ticketReturnCodeButton : l.ticketConfirmReturnButton,
         textAlign: TextAlign.center,
       ),
       style: OutlinedButton.styleFrom(
@@ -227,8 +229,8 @@ class _RematchCta extends StatelessWidget {
       onPressed: () =>
           context.push('/cancellations/$tripCancellationId/rematch'),
       icon: DonyIcon('route', size: 20, color: cs.primary),
-      label: const Text(
-        'Voir les trajets alternatifs',
+      label: Text(
+        context.l10n.ticketViewAlternativeTripsButton,
         textAlign: TextAlign.center,
       ),
       style: OutlinedButton.styleFrom(
@@ -258,7 +260,7 @@ class _ReturnedBlock extends StatelessWidget {
         DonyIcon('circle-check', size: 40, color: cs.success),
         const SizedBox(height: DonySpacing.sm),
         Text(
-          'Colis restitué',
+          context.l10n.ticketParcelReturnedLabel,
           textAlign: TextAlign.center,
           style: tt.bodyMedium?.copyWith(
             color: cs.success,
@@ -292,8 +294,8 @@ class _QrTalonButton extends StatelessWidget {
       icon: DonyIcon('qr-code', size: 20, color: cs.primary),
       label: Text(
         compact
-            ? 'QR du colis'
-            : 'QR du colis (à présenter ou coller sur le colis)',
+            ? context.l10n.ticketQrButtonCompact
+            : context.l10n.ticketQrButtonFull,
         textAlign: TextAlign.center,
       ),
       style: OutlinedButton.styleFrom(
@@ -323,7 +325,7 @@ class _RetraitTalonButton extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: () => RetraitCodeSheet.show(context, bid: bid),
       icon: DonyIcon('key-round', size: 20, color: cs.primary),
-      label: const Text('Code de retrait', textAlign: TextAlign.center),
+      label: Text(context.l10n.ticketPickupCode, textAlign: TextAlign.center),
       style: OutlinedButton.styleFrom(
         foregroundColor: cs.primary,
         side: BorderSide(color: cs.primary),
@@ -348,7 +350,10 @@ class _TravelerScanStepsButton extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: () => context.push('/tracking/scan-hub'),
       icon: DonyIcon('scan-line', size: 20, color: cs.primary),
-      label: const Text('Lire les QR des étapes', textAlign: TextAlign.center),
+      label: Text(
+        context.l10n.ticketScanStepsButton,
+        textAlign: TextAlign.center,
+      ),
       style: OutlinedButton.styleFrom(
         foregroundColor: cs.primary,
         side: BorderSide(color: cs.primary),
@@ -376,7 +381,7 @@ class _PendingPlaceholder extends StatelessWidget {
         DonyIcon('hourglass', size: 32, color: cs.onSurfaceVariant),
         const SizedBox(height: DonySpacing.sm),
         Text(
-          'En attente de confirmation du voyageur',
+          context.l10n.ticketAwaitingTravelerConfirmation,
           textAlign: TextAlign.center,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
@@ -407,8 +412,7 @@ class _SenderAwaitingPaymentBlock extends StatelessWidget {
         DonyIcon('smartphone', size: 32, color: cs.primary),
         const SizedBox(height: DonySpacing.sm),
         Text(
-          'Le voyageur a accepté : paie par mobile money depuis le bouton en '
-          'bas pour sécuriser ton envoi.',
+          context.l10n.ticketSenderAwaitingMobileMoneyHint,
           textAlign: TextAlign.center,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
@@ -432,7 +436,7 @@ class _TravelerAwaitingPaymentBlock extends StatelessWidget {
         DonyIcon('hourglass', size: 32, color: cs.onSurfaceVariant),
         const SizedBox(height: DonySpacing.sm),
         Text(
-          "En attente du paiement de l'expéditeur",
+          context.l10n.ticketTravelerAwaitingPayment,
           textAlign: TextAlign.center,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
@@ -457,7 +461,7 @@ class _DoneBlock extends StatelessWidget {
         DonyIcon('circle-check', size: 40, color: cs.success),
         const SizedBox(height: DonySpacing.sm),
         Text(
-          'Colis livré',
+          context.l10n.ticketParcelDeliveredLabel,
           textAlign: TextAlign.center,
           style: tt.bodyMedium?.copyWith(
             color: cs.success,
@@ -481,7 +485,7 @@ class _TerminalBlock extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
       child: Text(
-        'Cette demande est terminée.',
+        context.l10n.ticketRequestClosedMessage,
         textAlign: TextAlign.center,
         style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
       ),
@@ -497,6 +501,7 @@ class _TravelerDecisionSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     final weight = bid.weightKg != null
         ? '${bid.weightKg!.toStringAsFixed(1)} kg'
@@ -505,8 +510,12 @@ class _TravelerDecisionSummary extends StatelessWidget {
 
     return Row(
       children: [
-        _MiniStat(value: weight, label: 'POIDS', tt: tt),
-        _MiniStat(value: category, label: 'TYPE', tt: tt),
+        _MiniStat(value: weight, label: l.ticketMiniStatWeightLabel, tt: tt),
+        _MiniStat(
+          value: category,
+          label: l.ticketMiniStatCategoryLabel,
+          tt: tt,
+        ),
       ],
     );
   }
