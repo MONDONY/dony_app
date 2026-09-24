@@ -2,7 +2,7 @@ import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
@@ -12,6 +12,7 @@ import 'package:dony/features/payments/cash/presentation/widgets/commission_card
 import 'package:dony/features/payments/cash/presentation/widgets/commission_card_expiration_banner.dart';
 import 'package:dony/features/payments/cash/presentation/widgets/commission_card_preview.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -46,11 +47,12 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
       appBar: AppBar(
         actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
-        title: const Text('Carte commission'),
+        title: Text(l.commissionCardScreenTitle),
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -80,13 +82,13 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Une erreur est survenue. Veuillez réessayer.',
+                      l.commissionCardLoadError,
                       textAlign: TextAlign.center,
                       style: Theme.of(ctx).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: DonySpacing.lg),
                     DonyButton(
-                      label: 'Réessayer',
+                      label: l.commonRetry,
                       onPressed: () => ctx.read<CommissionMethodBloc>().add(
                         CommissionMethodLoadRequested(),
                       ),
@@ -112,20 +114,22 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
                   // dans une autre devise.
                   (ActiveCurrency.current ?? SupportedCurrency.eur) ==
                           SupportedCurrency.eur
-                      ? 'Cette carte sera débitée de la commission ($donyCommissionPercentLabel %, min. 1 €) à chaque colis en espèces accepté.'
-                      : 'Cette carte sera débitée de la commission ($donyCommissionPercentLabel %) à chaque colis en espèces accepté.',
+                      ? l.commissionCardDebitNoticeMin(
+                          commissionPercentLabel(l),
+                        )
+                      : l.commissionCardDebitNotice(commissionPercentLabel(l)),
                   style: Theme.of(ctx).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: DonySpacing.xl),
                 DonyButton(
-                  label: 'Remplacer la carte',
+                  label: l.commissionCardReplaceButton,
                   onPressed: () => ctx.read<CommissionMethodBloc>().add(
                     CommissionMethodSetupRequested(),
                   ),
                 ),
                 const SizedBox(height: DonySpacing.md),
                 DonyButton(
-                  label: 'Supprimer la carte',
+                  label: l.commissionCardDeleteButton,
                   variant: DonyButtonVariant.secondary,
                   onPressed: () => _confirmDelete(ctx),
                 ),
@@ -151,7 +155,7 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
     if (!authenticated) {
       DonySnackbar.show(
         context,
-        message: 'Paiement non confirmé, réessayez',
+        message: context.l10n.paymentNotConfirmedSnackbar,
         type: DonySnackbarType.warning,
       );
       context.read<CommissionMethodBloc>().add(
@@ -164,7 +168,7 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
           setupIntentClientSecret: clientSecret,
-          merchantDisplayName: 'Yadony',
+          merchantDisplayName: 'Yadony', // i18n-ignore : nom de marque
           style: ThemeMode.system,
         ),
       );
@@ -185,7 +189,7 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
           context,
           message:
               e.error.localizedMessage ??
-              'Erreur lors de l\'ajout de la carte.',
+              context.l10n.commissionCardAddErrorMessage,
           type: DonySnackbarType.error,
         );
       }
@@ -196,13 +200,14 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
   }
 
   void _confirmDelete(BuildContext context) {
+    final l = context.l10n;
     DonyBottomSheet.show(
       context,
       stickyBottom: Row(
         children: [
           Expanded(
             child: DonyButton(
-              label: 'Annuler',
+              label: l.commonCancel,
               variant: DonyButtonVariant.secondary,
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -210,7 +215,7 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
           const SizedBox(width: DonySpacing.md),
           Expanded(
             child: DonyButton(
-              label: 'Supprimer',
+              label: l.commonDelete,
               variant: DonyButtonVariant.destructive,
               onPressed: () {
                 context.read<CommissionMethodBloc>().add(
@@ -222,11 +227,9 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
           ),
         ],
       ),
-      child: const Padding(
-        padding: EdgeInsets.all(DonySpacing.xl),
-        child: Text(
-          'Supprimer cette carte ? Vous ne pourrez plus accepter de colis en espèces tant que vous n\'aurez pas enregistré une nouvelle carte.',
-        ),
+      child: Padding(
+        padding: const EdgeInsets.all(DonySpacing.xl),
+        child: Text(l.commissionCardDeleteConfirmMessage),
       ),
     );
   }

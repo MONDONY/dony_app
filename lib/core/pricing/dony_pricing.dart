@@ -29,16 +29,6 @@ double _donyCommissionRate = kDonyCommissionRateDefault;
 /// Taux de commission Yadony courant (ex. 0,05 = 5 %).
 double get donyCommissionRate => _donyCommissionRate;
 
-/// Libellé du taux courant en pourcentage, virgule française si décimal
-/// (ex. « 5 », « 12,5 »). À interpoler dans les textes UI :
-/// `'$donyCommissionPercentLabel %'`.
-String get donyCommissionPercentLabel {
-  final pct = _donyCommissionRate * 100;
-  return pct % 1 == 0
-      ? pct.toStringAsFixed(0)
-      : pct.toStringAsFixed(1).replaceFirst('.', ',');
-}
-
 /// Multiplicateur net → prix affiché à l'expéditeur (= 1 + commission).
 double get donyCommissionMultiplier => 1 + _donyCommissionRate;
 
@@ -211,18 +201,6 @@ double get donyReimbursementCapEur => _donyReimbursementCapNotifier.value;
 /// Écoute les changements du plafond chargé depuis le backend.
 ValueListenable<double> get donyReimbursementCapListenable =>
     _donyReimbursementCapNotifier;
-
-/// Libellé du plafond (entier si rond, sinon 2 décimales max, virgule FR).
-/// À interpoler dans les textes UI : `'$donyReimbursementCapLabel €'`.
-String get donyReimbursementCapLabel {
-  final v = donyReimbursementCapEur;
-  return v % 1 == 0
-      ? v.toStringAsFixed(0)
-      : v
-            .toStringAsFixed(2)
-            .replaceFirst(RegExp(r'0+$'), '')
-            .replaceFirst('.', ',');
-}
 
 /// Met à jour le plafond au démarrage avec la valeur backend. Ignore les
 /// valeurs non strictement positives (repli sur le défaut).

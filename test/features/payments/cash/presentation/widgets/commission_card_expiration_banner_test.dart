@@ -4,6 +4,8 @@ import 'package:dony/features/payments/cash/presentation/widgets/commission_card
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   testWidgets('hidden when status is valid', (tester) async {
     await tester.pumpWidget(
@@ -53,6 +55,46 @@ void main() {
     expect(find.textContaining('expiré'), findsOneWidget);
     expect(
       find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'circle-alert'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('en anglais : carte expirée', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: CommissionCardExpirationBanner(
+            status: ExpirationStatus.expired,
+            formattedExpiry: '01/2024',
+          ),
+        ),
+      ),
+    );
+    expect(
+      find.text(
+        'Your card has expired. Replace it to reactivate cash payments.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('en anglais : carte bientôt expirée, date interpolée', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: CommissionCardExpirationBanner(
+            status: ExpirationStatus.expiresSoon,
+            formattedExpiry: '01/2025',
+          ),
+        ),
+      ),
+    );
+    expect(
+      find.text('Your card expires on 01/2025. Remember to replace it.'),
       findsOneWidget,
     );
   });

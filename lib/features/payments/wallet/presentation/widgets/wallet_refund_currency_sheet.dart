@@ -1,7 +1,9 @@
 import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Choix de la devise à rembourser quand plusieurs portefeuilles sont
@@ -89,8 +91,8 @@ class WalletRefundCurrencySheet extends StatelessWidget {
       iconAsset: b.active ? 'wallet' : 'globe',
       expanded: (context) => Text(
         feeText == null
-            ? '${currency.displayName}.'
-            : '$feeText. ${currency.displayName}.',
+            ? '${currency.name(context.l10n)}.'
+            : '$feeText. ${currency.name(context.l10n)}.',
         style: Theme.of(context).textTheme.bodySmall,
       ),
     );

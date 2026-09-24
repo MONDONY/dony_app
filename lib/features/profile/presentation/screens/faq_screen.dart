@@ -1,9 +1,11 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -86,7 +88,9 @@ class _FaqScreenState extends State<FaqScreen> {
         ),
         _FaqItem(
           id: 'commission',
-          q: 'Pourquoi une commission de $donyCommissionPercentLabel % ?',
+          q:
+              'Pourquoi une commission de '
+              '${commissionPercentLabel(AppL10n.current)} % ?',
           a: 'La commission contribue aux frais de paiement, au support, à la prévention de la fraude et au développement de la plateforme.',
         ),
         const _FaqItem(
@@ -126,7 +130,10 @@ class _FaqScreenState extends State<FaqScreen> {
         _FaqItem(
           id: 'lost_parcel',
           q: 'Que se passe-t-il si mon colis est perdu ?',
-          a: 'Yadony ne couvre pas automatiquement la perte d\'un colis. Après investigation, un remboursement jusqu\'à $donyReimbursementCapLabel € peut être accordé si toutes les conditions sont respectées :\n\n• paiement par carte effectué dans Yadony ;\n• aucun paiement ou accord conclu hors plateforme ;\n• QR codes de dépôt et de remise utilisés ;\n• litige ouvert dans les 15 jours suivant la date prévue ;\n• contenu conforme aux objets autorisés.\n\nToute décision reste soumise à la validation de l\'équipe Yadony.',
+          a:
+              'Yadony ne couvre pas automatiquement la perte d\'un colis. Après investigation, un remboursement jusqu\'à '
+              '${reimbursementCapLabel(AppL10n.current)}'
+              ' € peut être accordé si toutes les conditions sont respectées :\n\n• paiement par carte effectué dans Yadony ;\n• aucun paiement ou accord conclu hors plateforme ;\n• QR codes de dépôt et de remise utilisés ;\n• litige ouvert dans les 15 jours suivant la date prévue ;\n• contenu conforme aux objets autorisés.\n\nToute décision reste soumise à la validation de l\'équipe Yadony.',
         ),
         const _FaqItem(
           id: 'dispute',

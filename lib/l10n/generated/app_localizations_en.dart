@@ -8480,4 +8480,198 @@ class AppLocalizationsEn extends AppLocalizations {
   String bidCreateMaxWeightLabel(String maxKg) {
     return 'max $maxKg kg';
   }
+
+  @override
+  String get commonDone => 'Done';
+
+  @override
+  String get commonLater => 'Later';
+
+  @override
+  String get commonLoadError => 'Couldn\'t load';
+
+  @override
+  String get commonSomethingWentWrong => 'Something went wrong';
+
+  @override
+  String get commonSomethingWentWrongDot => 'Something went wrong.';
+
+  @override
+  String get commonTakePhoto => 'Take a photo';
+
+  @override
+  String get commonPickFromGallery => 'Choose from gallery';
+
+  @override
+  String get commonImageUnsupported => 'Unsupported or too large image';
+
+  @override
+  String get commonDefault => 'Default';
+
+  @override
+  String get commonDateYesterday => 'Yesterday';
+
+  @override
+  String get currencyNameEur => 'Euro';
+
+  @override
+  String get currencyNameUsd => 'US dollar';
+
+  @override
+  String get currencyNameCad => 'Canadian dollar';
+
+  @override
+  String get currencyNameGbp => 'Pound sterling';
+
+  @override
+  String get currencyNameChf => 'Swiss franc';
+
+  @override
+  String get currencyNameXof => 'West African CFA franc';
+
+  @override
+  String get currencyNameXaf => 'Central African CFA franc';
+
+  @override
+  String get paymentCardUnavailable =>
+      'Card payment is unavailable right now. Try again in a moment.';
+
+  @override
+  String get paymentFailedGeneric =>
+      'The payment failed. Try again in a moment.';
+
+  @override
+  String get paymentDeclined => 'Payment declined';
+
+  @override
+  String paymentMethodsSemantics(String wallet) {
+    return 'Card, $wallet, PayPal';
+  }
+
+  @override
+  String paymentContextRecipient(String name) {
+    return 'Shipment for $name';
+  }
+
+  @override
+  String get paymentContextDefault => 'Your parcel shipment';
+
+  @override
+  String commissionCardDebitNoticeMin(String percent) {
+    return 'This card will be charged the service fee ($percent%, min. €1) for each cash parcel you accept.';
+  }
+
+  @override
+  String commissionCardDebitNotice(String percent) {
+    return 'This card will be charged the service fee ($percent%) for each cash parcel you accept.';
+  }
+
+  @override
+  String get commissionCardScreenTitle => 'Service fee card';
+
+  @override
+  String get commissionCardLoadError =>
+      'Something went wrong. Please try again.';
+
+  @override
+  String get paymentNotConfirmedSnackbar => 'Payment not confirmed, try again';
+
+  @override
+  String get commissionCardReplaceButton => 'Replace card';
+
+  @override
+  String get commissionCardDeleteButton => 'Delete card';
+
+  @override
+  String get commissionCardAddErrorMessage => 'Error adding the card.';
+
+  @override
+  String get commissionCardDeleteConfirmMessage =>
+      'Delete this card? You won\'t be able to accept cash parcels until you register a new one.';
+
+  @override
+  String get commissionCardEmptyTitle => 'No card registered';
+
+  @override
+  String commissionCardEmptyBody(String percent) {
+    return 'To accept cash payments, register a card we\'ll charge our service fee ($percent%) on for each parcel you accept.';
+  }
+
+  @override
+  String get commissionCardAddButton => 'Add a card';
+
+  @override
+  String get commissionCardExpiredMessage =>
+      'Your card has expired. Replace it to reactivate cash payments.';
+
+  @override
+  String commissionCardExpiringMessage(String date) {
+    return 'Your card expires on $date. Remember to replace it.';
+  }
+
+  @override
+  String commissionCardExpiryLabel(String date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String get paymentAuthConfirmTitle => 'Confirm payment';
+
+  @override
+  String get paymentAuthConfirmMessage =>
+      'The amount will be held until delivery, then paid to the traveler.';
+
+  @override
+  String get paymentScreenTitle => 'Pay for my shipment';
+
+  @override
+  String get paymentSecureNotice =>
+      'Your payment is secure, released only once the recipient confirms delivery.';
+
+  @override
+  String paymentPayButtonLabel(String price) {
+    return 'Pay $price';
+  }
+
+  @override
+  String get paymentSummaryTitle => 'Summary';
+
+  @override
+  String get paymentSummaryWeightLabel => 'Weight';
+
+  @override
+  String get paymentSummaryPricePerKgLabel => 'Price/kg';
+
+  @override
+  String get paymentSummaryTypeLabel => 'Type';
+
+  @override
+  String get paymentSummaryFlatRateValue => 'Flat rate for items';
+
+  @override
+  String get paymentSummaryTotalLabel => 'You pay';
+
+  @override
+  String get paymentEscrowTitle => 'Shipment reserved!';
+
+  @override
+  String paymentEscrowSubtitle(String amount) {
+    return '$amount is held securely, then released once the recipient confirms delivery.';
+  }
+
+  @override
+  String get paymentEscrowCta => 'View my shipments';
+
+  @override
+  String get paymentSheetTitle => 'Payment';
+
+  @override
+  String get paymentSheetConfirmedTitle => 'Payment confirmed';
+
+  @override
+  String get paymentSheetEscrowNote =>
+      'Funds are held in escrow, the traveler will be paid once the parcel is delivered.';
+
+  @override
+  String get paymentSheetSecureFooter => 'Payment secured by Stripe';
 }

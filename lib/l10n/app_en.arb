@@ -4128,5 +4128,132 @@
   "activityToolsGaugeSemantics": "Preparing your tools",
   "activityNewCount": "{count, plural, one{{count} new} other{{count} new}}",
   "activityNewSinceLastVisit": "{title}, {label} since your last visit",
-  "bidCreateMaxWeightLabel": "max {maxKg} kg"
+  "bidCreateMaxWeightLabel": "max {maxKg} kg",
+
+  "commonDone": "Done",
+  "commonLater": "Later",
+  "commonLoadError": "Couldn't load",
+  "commonSomethingWentWrong": "Something went wrong",
+  "commonSomethingWentWrongDot": "Something went wrong.",
+  "commonTakePhoto": "Take a photo",
+  "commonPickFromGallery": "Choose from gallery",
+  "commonImageUnsupported": "Unsupported or too large image",
+  "commonDefault": "Default",
+  "commonDateYesterday": "Yesterday",
+  "currencyNameEur": "Euro",
+  "currencyNameUsd": "US dollar",
+  "currencyNameCad": "Canadian dollar",
+  "currencyNameGbp": "Pound sterling",
+  "currencyNameChf": "Swiss franc",
+  "currencyNameXof": "West African CFA franc",
+  "currencyNameXaf": "Central African CFA franc",
+  "paymentCardUnavailable": "Card payment is unavailable right now. Try again in a moment.",
+  "paymentFailedGeneric": "The payment failed. Try again in a moment.",
+  "paymentDeclined": "Payment declined",
+  "paymentMethodsSemantics": "Card, {wallet}, PayPal",
+  "@paymentMethodsSemantics": {
+    "placeholders": {
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentContextRecipient": "Shipment for {name}",
+  "@paymentContextRecipient": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentContextDefault": "Your parcel shipment",
+  "commissionCardDebitNoticeMin": "This card will be charged the service fee ({percent}%, min. €1) for each cash parcel you accept.",
+  "@commissionCardDebitNoticeMin": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "commissionCardDebitNotice": "This card will be charged the service fee ({percent}%) for each cash parcel you accept.",
+  "@commissionCardDebitNotice": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+
+  "commissionCardScreenTitle": "Service fee card",
+  "commissionCardLoadError": "Something went wrong. Please try again.",
+  "paymentNotConfirmedSnackbar": "Payment not confirmed, try again",
+  "commissionCardReplaceButton": "Replace card",
+  "commissionCardDeleteButton": "Delete card",
+  "commissionCardAddErrorMessage": "Error adding the card.",
+  "commissionCardDeleteConfirmMessage": "Delete this card? You won't be able to accept cash parcels until you register a new one.",
+
+  "commissionCardEmptyTitle": "No card registered",
+  "commissionCardEmptyBody": "To accept cash payments, register a card we'll charge our service fee ({percent}%) on for each parcel you accept.",
+  "@commissionCardEmptyBody": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "commissionCardAddButton": "Add a card",
+
+  "commissionCardExpiredMessage": "Your card has expired. Replace it to reactivate cash payments.",
+  "commissionCardExpiringMessage": "Your card expires on {date}. Remember to replace it.",
+  "@commissionCardExpiringMessage": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "commissionCardExpiryLabel": "Expires {date}",
+  "@commissionCardExpiryLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "paymentAuthConfirmTitle": "Confirm payment",
+  "paymentAuthConfirmMessage": "The amount will be held until delivery, then paid to the traveler.",
+
+  "paymentScreenTitle": "Pay for my shipment",
+  "paymentSecureNotice": "Your payment is secure, released only once the recipient confirms delivery.",
+  "paymentPayButtonLabel": "Pay {price}",
+  "@paymentPayButtonLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentSummaryTitle": "Summary",
+  "paymentSummaryWeightLabel": "Weight",
+  "paymentSummaryPricePerKgLabel": "Price/kg",
+  "paymentSummaryTypeLabel": "Type",
+  "paymentSummaryFlatRateValue": "Flat rate for items",
+  "paymentSummaryTotalLabel": "You pay",
+  "paymentEscrowTitle": "Shipment reserved!",
+  "paymentEscrowSubtitle": "{amount} is held securely, then released once the recipient confirms delivery.",
+  "@paymentEscrowSubtitle": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentEscrowCta": "View my shipments",
+
+  "paymentSheetTitle": "Payment",
+  "paymentSheetConfirmedTitle": "Payment confirmed",
+  "paymentSheetEscrowNote": "Funds are held in escrow, the traveler will be paid once the parcel is delivered.",
+  "paymentSheetSecureFooter": "Payment secured by Stripe"
 }

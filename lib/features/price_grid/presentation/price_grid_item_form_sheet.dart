@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
@@ -520,7 +521,7 @@ class _Echo extends StatelessWidget {
         ink = cs.primary;
         message =
             'L\'expéditeur paiera ${formatPriceActive(netToSenderPrice(price!))}, '
-            'commission Yadony de $donyCommissionPercentLabel % comprise.';
+            'commission Yadony de ${commissionPercentLabel(context.l10n)} % comprise.';
     }
 
     return AnimatedSwitcher(

@@ -163,6 +163,8 @@ const _sameInBothLanguages = <String>{
   'activityRevenueMobileMoney', // « Mobile money » se dit pareil (tâche D5)
   'activityMenuButtonTooltip', // « Menu » se dit pareil (tâche D5)
   'bidCreateMaxWeightLabel', // « max » se dit pareil (vague finale D, I5/M12)
+  'currencyNameEur', // « Euro » se dit pareil (tâche E1)
+  'paymentSummaryTypeLabel', // « Type » se dit pareil (tâche E1)
 };
 
 void main() {

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -288,7 +289,7 @@ class _LoadedView extends StatelessWidget {
                     iconAsset: 'circle-check',
                     message:
                         '+${CurrencyFormatter.format(status.amount, topupCurrency)} '
-                        'sur ton portefeuille ${topupCurrency.displayName}, '
+                        'sur ton portefeuille ${topupCurrency.name(context.l10n)}, '
                         'confirmé par ${status.providerLabel}.',
                     onDismiss: () => topupBanner.value = null,
                   ),
@@ -988,7 +989,7 @@ class _CurrencyBalanceRow extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                currency.displayName,
+                currency.name(context.l10n),
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],
@@ -1036,7 +1037,7 @@ class _LockedBalanceTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: DonySpacing.sm),
       child: Semantics(
         label:
-            'Devise verrouillée ${currency.displayName}, ce solde reste '
+            'Devise verrouillée ${currency.name(context.l10n)}, ce solde reste '
             'disponible dans sa propre devise',
         child: DonyCard(
           child: Row(
@@ -1089,7 +1090,7 @@ class _LockedBalanceTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Reste dans sa devise d\'origine (${currency.displayName}).',
+                      'Reste dans sa devise d\'origine (${currency.name(context.l10n)}).',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),

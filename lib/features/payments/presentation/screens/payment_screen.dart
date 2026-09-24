@@ -17,6 +17,7 @@ import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -75,6 +76,12 @@ class PaymentScreen extends StatelessWidget {
     PaymentSheetReady state,
   ) async {
     final total = state.amount + state.commissionAmount;
+    final recipientName = bid.recipientName;
+    final l = context.l10n;
+    final contextLabel =
+        (recipientName != null && recipientName.trim().isNotEmpty)
+        ? l.paymentContextRecipient(recipientName)
+        : l.paymentContextDefault;
     await DonyPaymentSheet.show(
       context,
       config: PaymentSheetConfig(
@@ -83,7 +90,7 @@ class PaymentScreen extends StatelessWidget {
         currencyCode: state.currencyCode,
         paymentMethodTypes: state.paymentMethodTypes,
       ),
-      contextLabel: 'Envoi de ${bid.recipientName ?? 'votre colis'}',
+      contextLabel: contextLabel,
       onSuccess: () async {
         // Filet client de la promotion AWAITING_PAYMENT → PAYMENT_ESCROWED,
         // comme sur le fil de négociation : attendu AVANT de changer d'état,
@@ -133,7 +140,7 @@ class _PaymentSummaryView extends StatelessWidget {
     if (!authenticated) {
       DonySnackbar.show(
         context,
-        message: 'Paiement non confirmé, réessayez',
+        message: context.l10n.paymentNotConfirmedSnackbar,
         type: DonySnackbarType.error,
       );
       return;
@@ -149,13 +156,14 @@ class _PaymentSummaryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final isLoading = state is PaymentLoading;
     final error = state is PaymentError
         ? ErrorPresenter.resolve((state as PaymentError).error).message
         : null;
 
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Payer mon envoi'),
+      appBar: DonyAppBar(title: l.paymentScreenTitle),
       body: Builder(
         builder: (context) {
           final h = DonyLayout.hPadding(context);
@@ -183,11 +191,10 @@ class _PaymentSummaryView extends StatelessWidget {
                         commissionRate: commissionRate,
                       ),
                       const SizedBox(height: DonySpacing.lg),
-                      const DonyStatusBanner(
+                      DonyStatusBanner(
                         type: DonyStatusBannerType.info,
                         iconAsset: 'lock',
-                        message:
-                            'Votre paiement est sécurisé, libéré uniquement après confirmation de livraison par le destinataire.',
+                        message: l.paymentSecureNotice,
                       ),
                       const SizedBox(height: DonySpacing.xl),
                       if (error != null) ...[
@@ -198,7 +205,9 @@ class _PaymentSummaryView extends StatelessWidget {
                         const SizedBox(height: DonySpacing.lg),
                       ],
                       DonyButton(
-                        label: 'Payer ${formatPriceIn(_total, bid.currency)}',
+                        label: l.paymentPayButtonLabel(
+                          formatPriceIn(_total, bid.currency),
+                        ),
                         onPressed: isLoading ? null : () => _pay(context),
                         isLoading: isLoading,
                         iconAsset: 'lock',
@@ -235,6 +244,7 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return DonyCard(
       padding: EdgeInsets.zero,
@@ -248,7 +258,7 @@ class _SummaryCard extends StatelessWidget {
               DonySpacing.base,
               DonySpacing.md,
             ),
-            child: Text('Récapitulatif', style: tt.titleLarge),
+            child: Text(l.paymentSummaryTitle, style: tt.titleLarge),
           ),
           const Divider(height: 1),
           Padding(
@@ -261,14 +271,14 @@ class _SummaryCard extends StatelessWidget {
                 if (bid.pricingMode == BidPricingMode.kg ||
                     bid.pricingMode == BidPricingMode.mixed) ...[
                   DonyInfoRow(
-                    label: 'Poids',
+                    label: l.paymentSummaryWeightLabel,
                     value: bid.weightKg != null
                         ? '${bid.weightKg!.toStringAsFixed(1)} kg'
                         : '-',
                   ),
                   const DonyInfoRow.divider(),
                   DonyInfoRow(
-                    label: 'Prix/kg',
+                    label: l.paymentSummaryPricePerKgLabel,
                     // Tarif BRUT (net + commission). Le backend ne renvoie
                     // jamais le tarif net à l'expéditeur.
                     value: bid.senderPricePerKg != null
@@ -276,7 +286,10 @@ class _SummaryCard extends StatelessWidget {
                         : '-',
                   ),
                 ] else if (bid.pricingMode == BidPricingMode.grid) ...[
-                  const DonyInfoRow(label: 'Type', value: 'Forfait articles'),
+                  DonyInfoRow(
+                    label: l.paymentSummaryTypeLabel,
+                    value: l.paymentSummaryFlatRateValue,
+                  ),
                 ],
               ],
             ),
@@ -287,7 +300,7 @@ class _SummaryCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Vous payez', style: tt.titleMedium),
+                Text(l.paymentSummaryTotalLabel, style: tt.titleMedium),
                 Text(
                   formatPriceIn(total, bid.currency),
                   style: tt.headlineMedium?.copyWith(color: cs.primary),
@@ -310,12 +323,12 @@ class _EscrowConfirmedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return DonySuccessScreen(
       mascotteType: DonyMascotteType.securise,
-      title: 'Envoi réservé !',
-      subtitle:
-          '${formatPriceIn(amount, currency)} sont bloqués et sécurisés, puis libérés après confirmation de livraison par le destinataire.',
-      ctaLabel: 'Voir mes envois',
+      title: l.paymentEscrowTitle,
+      subtitle: l.paymentEscrowSubtitle(formatPriceIn(amount, currency)),
+      ctaLabel: l.paymentEscrowCta,
       onCta: () => context.go('/home'),
       analyticsContext: 'escrow_payment',
     );

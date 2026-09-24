@@ -8928,5 +8928,282 @@
         "type": "String"
       }
     }
+  },
+
+  "commonDone": "Terminé",
+  "@commonDone": {
+    "description": "Bouton générique de fin d'action (ex. bouton Terminé de la vue succès de DonyPaymentSheet)."
+  },
+  "commonLater": "Plus tard",
+  "@commonLater": {
+    "description": "Bouton générique de report d'action."
+  },
+  "commonLoadError": "Erreur de chargement",
+  "@commonLoadError": {
+    "description": "Titre générique court d'un état d'erreur de chargement."
+  },
+  "commonSomethingWentWrong": "Une erreur est survenue",
+  "@commonSomethingWentWrong": {
+    "description": "Message générique court d'erreur, sans point final."
+  },
+  "commonSomethingWentWrongDot": "Une erreur est survenue.",
+  "@commonSomethingWentWrongDot": {
+    "description": "Message générique court d'erreur, avec point final."
+  },
+  "commonTakePhoto": "Prendre une photo",
+  "@commonTakePhoto": {
+    "description": "Action générique de capture photo (choix appareil photo vs galerie)."
+  },
+  "commonPickFromGallery": "Choisir dans la galerie",
+  "@commonPickFromGallery": {
+    "description": "Action générique de sélection depuis la galerie (choix appareil photo vs galerie)."
+  },
+  "commonImageUnsupported": "Image non supportée ou trop volumineuse",
+  "@commonImageUnsupported": {
+    "description": "Message générique d'erreur d'upload d'image."
+  },
+  "commonDefault": "Par défaut",
+  "@commonDefault": {
+    "description": "Badge générique « par défaut » (ex. adresse ou destinataire par défaut)."
+  },
+  "commonDateYesterday": "Hier",
+  "@commonDateYesterday": {
+    "description": "Famille commonDate… : date relative « hier »."
+  },
+  "currencyNameEur": "Euro",
+  "@currencyNameEur": {
+    "description": "Nom affichable de la devise EUR (SupportedCurrencyL10n.name), identique fr/en."
+  },
+  "currencyNameUsd": "Dollar américain",
+  "@currencyNameUsd": {
+    "description": "Nom affichable de la devise USD (SupportedCurrencyL10n.name)."
+  },
+  "currencyNameCad": "Dollar canadien",
+  "@currencyNameCad": {
+    "description": "Nom affichable de la devise CAD (SupportedCurrencyL10n.name)."
+  },
+  "currencyNameGbp": "Livre sterling",
+  "@currencyNameGbp": {
+    "description": "Nom affichable de la devise GBP (SupportedCurrencyL10n.name)."
+  },
+  "currencyNameChf": "Franc suisse",
+  "@currencyNameChf": {
+    "description": "Nom affichable de la devise CHF (SupportedCurrencyL10n.name)."
+  },
+  "currencyNameXof": "Franc CFA Ouest",
+  "@currencyNameXof": {
+    "description": "Nom affichable de la devise XOF (SupportedCurrencyL10n.name)."
+  },
+  "currencyNameXaf": "Franc CFA Centre",
+  "@currencyNameXaf": {
+    "description": "Nom affichable de la devise XAF (SupportedCurrencyL10n.name)."
+  },
+  "paymentCardUnavailable": "Le paiement par carte est indisponible pour le moment. Réessaie dans un instant.",
+  "@paymentCardUnavailable": {
+    "description": "Libellé générique de PaymentSheetFailureReason.cardUnavailable (dony_payment_sheet.dart), affiché quand providerMessage est absent."
+  },
+  "paymentFailedGeneric": "Le paiement a échoué. Réessaie dans un instant.",
+  "@paymentFailedGeneric": {
+    "description": "Libellé générique de PaymentSheetFailureReason.generic (dony_payment_sheet.dart), affiché quand providerMessage est absent."
+  },
+  "paymentDeclined": "Paiement refusé",
+  "@paymentDeclined": {
+    "description": "Libellé générique de PaymentSheetFailureReason.declined (dony_payment_sheet.dart), affiché quand providerMessage est absent."
+  },
+  "paymentMethodsSemantics": "Carte, {wallet}, PayPal",
+  "@paymentMethodsSemantics": {
+    "description": "Semantics regroupée des moyens de paiement (payment_method_names.dart, mode compact). {wallet} = Apple Pay ou Google Pay, nom de marque non traduit.",
+    "placeholders": {
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentContextRecipient": "Envoi de {name}",
+  "@paymentContextRecipient": {
+    "description": "Libellé de contexte de la feuille de paiement quand le destinataire est connu (payment_screen.dart).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentContextDefault": "Envoi de votre colis",
+  "@paymentContextDefault": {
+    "description": "Libellé de contexte de la feuille de paiement quand aucun destinataire n'est connu (payment_screen.dart)."
+  },
+  "commissionCardDebitNoticeMin": "Cette carte sera débitée de la commission ({percent} %, min. 1 €) à chaque colis en espèces accepté.",
+  "@commissionCardDebitNoticeMin": {
+    "description": "Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart) : le plancher de 1 € est un montant serveur en euros, fixe quelle que soit la langue.",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "commissionCardDebitNotice": "Cette carte sera débitée de la commission ({percent} %) à chaque colis en espèces accepté.",
+  "@commissionCardDebitNotice": {
+    "description": "Notice de débit de la carte commission, cas devise active différente de l'EUR (commission_method_screen.dart), sans le plancher en euros.",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+
+  "commissionCardScreenTitle": "Carte commission",
+  "@commissionCardScreenTitle": {
+    "description": "Titre de l'AppBar de l'écran Carte commission (commission_method_screen.dart)."
+  },
+  "commissionCardLoadError": "Une erreur est survenue. Veuillez réessayer.",
+  "@commissionCardLoadError": {
+    "description": "Message de l'état d'erreur de chargement de la carte commission (commission_method_screen.dart)."
+  },
+  "paymentNotConfirmedSnackbar": "Paiement non confirmé, réessayez",
+  "@paymentNotConfirmedSnackbar": {
+    "description": "Snackbar affichée quand requirePaymentAuth échoue, partagée entre commission_method_screen.dart et payment_screen.dart (même feature payments)."
+  },
+  "commissionCardReplaceButton": "Remplacer la carte",
+  "@commissionCardReplaceButton": {
+    "description": "Bouton de remplacement de la carte commission (commission_method_screen.dart)."
+  },
+  "commissionCardDeleteButton": "Supprimer la carte",
+  "@commissionCardDeleteButton": {
+    "description": "Bouton de suppression de la carte commission (commission_method_screen.dart)."
+  },
+  "commissionCardAddErrorMessage": "Erreur lors de l'ajout de la carte.",
+  "@commissionCardAddErrorMessage": {
+    "description": "Message de repli quand le SDK Stripe ne fournit pas de localizedMessage (commission_method_screen.dart)."
+  },
+  "commissionCardDeleteConfirmMessage": "Supprimer cette carte ? Vous ne pourrez plus accepter de colis en espèces tant que vous n'aurez pas enregistré une nouvelle carte.",
+  "@commissionCardDeleteConfirmMessage": {
+    "description": "Corps de la bottom sheet de confirmation de suppression de la carte commission (commission_method_screen.dart)."
+  },
+
+  "commissionCardEmptyTitle": "Aucune carte enregistrée",
+  "@commissionCardEmptyTitle": {
+    "description": "Titre de l'état vide de la carte commission (commission_card_empty_state.dart)."
+  },
+  "commissionCardEmptyBody": "Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission ({percent} %) à chaque colis accepté.",
+  "@commissionCardEmptyBody": {
+    "description": "Corps de l'état vide de la carte commission (commission_card_empty_state.dart).",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "commissionCardAddButton": "Ajouter une carte",
+  "@commissionCardAddButton": {
+    "description": "Bouton d'ajout de la carte commission (commission_card_empty_state.dart)."
+  },
+
+  "commissionCardExpiredMessage": "Votre carte a expiré. Remplacez-la pour réactiver le paiement en espèces.",
+  "@commissionCardExpiredMessage": {
+    "description": "Bandeau d'expiration de la carte commission, carte déjà expirée (commission_card_expiration_banner.dart)."
+  },
+  "commissionCardExpiringMessage": "Votre carte expire le {date}. Pensez à la remplacer.",
+  "@commissionCardExpiringMessage": {
+    "description": "Bandeau d'expiration de la carte commission, carte bientôt expirée (commission_card_expiration_banner.dart). {date} = formattedExpiry (MM/AA), un format, pas une date localisée.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "commissionCardExpiryLabel": "Expire le {date}",
+  "@commissionCardExpiryLabel": {
+    "description": "Date d'expiration affichée sur l'aperçu de la carte commission (commission_card_preview.dart). {date} = formattedExpiry (MM/AA), un format, pas une date localisée.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "paymentAuthConfirmTitle": "Confirmer le paiement",
+  "@paymentAuthConfirmTitle": {
+    "description": "Titre du dialogue de confirmation d'action importante avant paiement (payment_auth.dart, requirePaymentAuth)."
+  },
+  "paymentAuthConfirmMessage": "Le montant sera bloqué jusqu'à la livraison, puis versé au voyageur.",
+  "@paymentAuthConfirmMessage": {
+    "description": "Message du dialogue de confirmation d'action importante avant paiement (payment_auth.dart, requirePaymentAuth)."
+  },
+
+  "paymentScreenTitle": "Payer mon envoi",
+  "@paymentScreenTitle": {
+    "description": "Titre de l'AppBar de l'écran de paiement (payment_screen.dart)."
+  },
+  "paymentSecureNotice": "Votre paiement est sécurisé, libéré uniquement après confirmation de livraison par le destinataire.",
+  "@paymentSecureNotice": {
+    "description": "Bandeau info de l'écran de paiement (payment_screen.dart)."
+  },
+  "paymentPayButtonLabel": "Payer {price}",
+  "@paymentPayButtonLabel": {
+    "description": "Bouton de paiement de l'écran de paiement (payment_screen.dart). {price} déjà formaté dans sa devise (formatPriceIn).",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentSummaryTitle": "Récapitulatif",
+  "@paymentSummaryTitle": {
+    "description": "Titre de la carte récapitulatif de l'écran de paiement (payment_screen.dart _SummaryCard)."
+  },
+  "paymentSummaryWeightLabel": "Poids",
+  "@paymentSummaryWeightLabel": {
+    "description": "Libellé de la ligne poids du récapitulatif de paiement (payment_screen.dart _SummaryCard)."
+  },
+  "paymentSummaryPricePerKgLabel": "Prix/kg",
+  "@paymentSummaryPricePerKgLabel": {
+    "description": "Libellé de la ligne prix au kilo du récapitulatif de paiement (payment_screen.dart _SummaryCard)."
+  },
+  "paymentSummaryTypeLabel": "Type",
+  "@paymentSummaryTypeLabel": {
+    "description": "Libellé de la ligne type (mode grille d'articles) du récapitulatif de paiement, identique fr/en (payment_screen.dart _SummaryCard)."
+  },
+  "paymentSummaryFlatRateValue": "Forfait articles",
+  "@paymentSummaryFlatRateValue": {
+    "description": "Valeur de la ligne type en mode grille d'articles du récapitulatif de paiement (payment_screen.dart _SummaryCard)."
+  },
+  "paymentSummaryTotalLabel": "Vous payez",
+  "@paymentSummaryTotalLabel": {
+    "description": "Libellé du total du récapitulatif de paiement (payment_screen.dart _SummaryCard)."
+  },
+  "paymentEscrowTitle": "Envoi réservé !",
+  "@paymentEscrowTitle": {
+    "description": "Titre de la vue de confirmation escrow de l'écran de paiement (payment_screen.dart _EscrowConfirmedView)."
+  },
+  "paymentEscrowSubtitle": "{amount} sont bloqués et sécurisés, puis libérés après confirmation de livraison par le destinataire.",
+  "@paymentEscrowSubtitle": {
+    "description": "Sous-titre de la vue de confirmation escrow de l'écran de paiement (payment_screen.dart _EscrowConfirmedView). {amount} déjà formaté dans sa devise (formatPriceIn).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentEscrowCta": "Voir mes envois",
+  "@paymentEscrowCta": {
+    "description": "CTA de la vue de confirmation escrow de l'écran de paiement (payment_screen.dart _EscrowConfirmedView)."
+  },
+
+  "paymentSheetTitle": "Paiement",
+  "@paymentSheetTitle": {
+    "description": "Titre de la feuille de paiement custom Yadony (dony_payment_sheet.dart _MainView)."
+  },
+  "paymentSheetConfirmedTitle": "Paiement confirmé",
+  "@paymentSheetConfirmedTitle": {
+    "description": "Titre de la vue succès de la feuille de paiement (dony_payment_sheet.dart _SuccessView)."
+  },
+  "paymentSheetEscrowNote": "Les fonds sont conservés en séquestre, le voyageur sera payé après la remise du colis.",
+  "@paymentSheetEscrowNote": {
+    "description": "Note d'explication du séquestre dans la vue succès de la feuille de paiement (dony_payment_sheet.dart _SuccessView)."
+  },
+  "paymentSheetSecureFooter": "Paiement sécurisé par Stripe",
+  "@paymentSheetSecureFooter": {
+    "description": "Pied de la feuille de paiement, hors vue succès (dony_payment_sheet.dart _StickyBottom)."
   }
 }

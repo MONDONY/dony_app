@@ -5,6 +5,7 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
@@ -473,7 +474,7 @@ class PrixConditionsStep extends StatelessWidget {
                     ),
                     child: Text(
                       l.tripPublishGridCommissionNotice(
-                        donyCommissionPercentLabel,
+                        commissionPercentLabel(l),
                       ),
                       style: tt.bodySmall?.copyWith(color: cs.primary),
                     ),

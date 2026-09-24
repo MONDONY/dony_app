@@ -21,6 +21,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 class MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
@@ -509,5 +510,29 @@ void main() {
         expect(find.text('Envoi réservé !'), findsOneWidget);
       },
     );
+  });
+
+  group('PaymentScreen en anglais', () {
+    testWidgets('titre et bouton de paiement traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: _testBid,
+            localAuthService: mockLocalAuth,
+            userPrefs: _mockUserPrefs(biometricEnabled: true),
+          ),
+          mockBloc,
+          configBloc: mockConfigBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pay for my shipment'), findsOneWidget);
+      expect(
+        tester.widget<DonyButton>(find.byType(DonyButton)).label,
+        startsWith('Pay '),
+      );
+    });
   });
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -16,6 +17,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cub
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_mobile_money_awaiting_args.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -444,9 +446,9 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
                         iconAsset: 'wallet',
                         // Avant toute saisie, pas de « crédité de 0 F CFA ».
                         message:
-                            'Ton portefeuille ${currency.displayName} sera '
+                            'Ton portefeuille ${currency.name(context.l10n)} sera '
                             'crédité ${_amount > 0 ? 'de ${CurrencyFormatter.format(_amount, currency)}' : 'du montant que tu saisis'}. '
-                            'Ton portefeuille ${activeCurrency.displayName} '
+                            'Ton portefeuille ${activeCurrency.name(context.l10n)} '
                             'ne bouge pas.',
                       ),
                     ],

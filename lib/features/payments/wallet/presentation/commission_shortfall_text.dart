@@ -1,6 +1,8 @@
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/commission_shortfall.dart';
+import 'package:dony/l10n/l10n.dart';
 
 /// Lignes du sheet « Solde insuffisant ». Première ligne : titre (bodyMedium),
 /// suivantes : détails (bodySmall). Sans [breakdown] (ancien back ou même
@@ -19,12 +21,16 @@ List<String> commissionShortfallLines({
       'Solde du portefeuille : ${formatPriceIn(availableBalance, currency)}',
     ];
   }
+  // Fonction pure sans BuildContext (appelée depuis plusieurs écrans) :
+  // AppL10n.current lit la langue effective hors contexte, comme ailleurs
+  // dans le code sans widget (ErrorCatalog, validateurs de champ).
+  final l = AppL10n.current;
   final bidName = SupportedCurrency.fromCodeOrDefault(
     breakdown.bidCurrency,
-  ).displayName;
+  ).name(l);
   final activeName = SupportedCurrency.fromCodeOrDefault(
     breakdown.activeCurrency,
-  ).displayName;
+  ).name(l);
   final bidSymbol = SupportedCurrency.fromCodeOrDefault(
     breakdown.bidCurrency,
   ).symbol;

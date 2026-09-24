@@ -197,7 +197,7 @@ void main() {
     );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
-      'échec → failure transitoire puis ready ré-armé',
+      'échec → failure transitoire (reason declined, providerMessage du gateway) puis ready ré-armé',
       build: () {
         when(
           () => gateway.confirmPayPal(any()),
@@ -211,7 +211,11 @@ void main() {
           ready: ready,
           method: PaymentMethodKind.paypal,
         ),
-        const PaymentSheetFailure(message: 'refusé', ready: ready),
+        const PaymentSheetFailure(
+          reason: PaymentSheetFailureReason.declined,
+          providerMessage: 'refusé',
+          ready: ready,
+        ),
         ready,
       ],
     );
@@ -315,7 +319,7 @@ void main() {
     );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
-      'échec de confirmation → le message Stripe localisé remonte tel quel, '
+      'échec de confirmation → reason declined, providerMessage = message Stripe localisé, '
       'comme pour wallet/PayPal, puis ready ré-armé',
       build: () {
         when(
@@ -342,14 +346,18 @@ void main() {
           ready: ready,
           method: PaymentMethodKind.card,
         ),
-        const PaymentSheetFailure(message: 'carte refusée', ready: ready),
+        const PaymentSheetFailure(
+          reason: PaymentSheetFailureReason.declined,
+          providerMessage: 'carte refusée',
+          ready: ready,
+        ),
         ready,
       ],
     );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
-      'erreur inattendue (non mappée par le gateway) → message générique, '
-      'jamais le toString brut',
+      'erreur inattendue (non mappée par le gateway) → reason generic, '
+      'jamais le toString brut ni un providerMessage',
       build: () {
         when(
           () => repository.createEphemeralKey(),
@@ -376,7 +384,7 @@ void main() {
           method: PaymentMethodKind.card,
         ),
         const PaymentSheetFailure(
-          message: PaymentSheetBloc.genericFailureMessage,
+          reason: PaymentSheetFailureReason.generic,
           ready: ready,
         ),
         ready,
@@ -384,7 +392,7 @@ void main() {
     );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
-      'échec réseau sur la clé éphémère → failure avec message carte lisible '
+      'échec réseau sur la clé éphémère → reason cardUnavailable '
       'puis ready ré-armé (jamais le toString brut)',
       build: () {
         when(
@@ -400,7 +408,7 @@ void main() {
           method: PaymentMethodKind.card,
         ),
         const PaymentSheetFailure(
-          message: PaymentSheetBloc.cardUnavailableMessage,
+          reason: PaymentSheetFailureReason.cardUnavailable,
           ready: ready,
         ),
         ready,
@@ -534,7 +542,7 @@ void main() {
           method: PaymentMethodKind.card,
         ),
         const PaymentSheetFailure(
-          message: PaymentSheetBloc.cardUnavailableMessage,
+          reason: PaymentSheetFailureReason.cardUnavailable,
           ready: ready,
         ),
         ready,

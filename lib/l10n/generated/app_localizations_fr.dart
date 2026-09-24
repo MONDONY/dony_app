@@ -8530,4 +8530,200 @@ class AppLocalizationsFr extends AppLocalizations {
   String bidCreateMaxWeightLabel(String maxKg) {
     return 'max $maxKg kg';
   }
+
+  @override
+  String get commonDone => 'Terminé';
+
+  @override
+  String get commonLater => 'Plus tard';
+
+  @override
+  String get commonLoadError => 'Erreur de chargement';
+
+  @override
+  String get commonSomethingWentWrong => 'Une erreur est survenue';
+
+  @override
+  String get commonSomethingWentWrongDot => 'Une erreur est survenue.';
+
+  @override
+  String get commonTakePhoto => 'Prendre une photo';
+
+  @override
+  String get commonPickFromGallery => 'Choisir dans la galerie';
+
+  @override
+  String get commonImageUnsupported =>
+      'Image non supportée ou trop volumineuse';
+
+  @override
+  String get commonDefault => 'Par défaut';
+
+  @override
+  String get commonDateYesterday => 'Hier';
+
+  @override
+  String get currencyNameEur => 'Euro';
+
+  @override
+  String get currencyNameUsd => 'Dollar américain';
+
+  @override
+  String get currencyNameCad => 'Dollar canadien';
+
+  @override
+  String get currencyNameGbp => 'Livre sterling';
+
+  @override
+  String get currencyNameChf => 'Franc suisse';
+
+  @override
+  String get currencyNameXof => 'Franc CFA Ouest';
+
+  @override
+  String get currencyNameXaf => 'Franc CFA Centre';
+
+  @override
+  String get paymentCardUnavailable =>
+      'Le paiement par carte est indisponible pour le moment. Réessaie dans un instant.';
+
+  @override
+  String get paymentFailedGeneric =>
+      'Le paiement a échoué. Réessaie dans un instant.';
+
+  @override
+  String get paymentDeclined => 'Paiement refusé';
+
+  @override
+  String paymentMethodsSemantics(String wallet) {
+    return 'Carte, $wallet, PayPal';
+  }
+
+  @override
+  String paymentContextRecipient(String name) {
+    return 'Envoi de $name';
+  }
+
+  @override
+  String get paymentContextDefault => 'Envoi de votre colis';
+
+  @override
+  String commissionCardDebitNoticeMin(String percent) {
+    return 'Cette carte sera débitée de la commission ($percent %, min. 1 €) à chaque colis en espèces accepté.';
+  }
+
+  @override
+  String commissionCardDebitNotice(String percent) {
+    return 'Cette carte sera débitée de la commission ($percent %) à chaque colis en espèces accepté.';
+  }
+
+  @override
+  String get commissionCardScreenTitle => 'Carte commission';
+
+  @override
+  String get commissionCardLoadError =>
+      'Une erreur est survenue. Veuillez réessayer.';
+
+  @override
+  String get paymentNotConfirmedSnackbar => 'Paiement non confirmé, réessayez';
+
+  @override
+  String get commissionCardReplaceButton => 'Remplacer la carte';
+
+  @override
+  String get commissionCardDeleteButton => 'Supprimer la carte';
+
+  @override
+  String get commissionCardAddErrorMessage =>
+      'Erreur lors de l\'ajout de la carte.';
+
+  @override
+  String get commissionCardDeleteConfirmMessage =>
+      'Supprimer cette carte ? Vous ne pourrez plus accepter de colis en espèces tant que vous n\'aurez pas enregistré une nouvelle carte.';
+
+  @override
+  String get commissionCardEmptyTitle => 'Aucune carte enregistrée';
+
+  @override
+  String commissionCardEmptyBody(String percent) {
+    return 'Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission ($percent %) à chaque colis accepté.';
+  }
+
+  @override
+  String get commissionCardAddButton => 'Ajouter une carte';
+
+  @override
+  String get commissionCardExpiredMessage =>
+      'Votre carte a expiré. Remplacez-la pour réactiver le paiement en espèces.';
+
+  @override
+  String commissionCardExpiringMessage(String date) {
+    return 'Votre carte expire le $date. Pensez à la remplacer.';
+  }
+
+  @override
+  String commissionCardExpiryLabel(String date) {
+    return 'Expire le $date';
+  }
+
+  @override
+  String get paymentAuthConfirmTitle => 'Confirmer le paiement';
+
+  @override
+  String get paymentAuthConfirmMessage =>
+      'Le montant sera bloqué jusqu\'à la livraison, puis versé au voyageur.';
+
+  @override
+  String get paymentScreenTitle => 'Payer mon envoi';
+
+  @override
+  String get paymentSecureNotice =>
+      'Votre paiement est sécurisé, libéré uniquement après confirmation de livraison par le destinataire.';
+
+  @override
+  String paymentPayButtonLabel(String price) {
+    return 'Payer $price';
+  }
+
+  @override
+  String get paymentSummaryTitle => 'Récapitulatif';
+
+  @override
+  String get paymentSummaryWeightLabel => 'Poids';
+
+  @override
+  String get paymentSummaryPricePerKgLabel => 'Prix/kg';
+
+  @override
+  String get paymentSummaryTypeLabel => 'Type';
+
+  @override
+  String get paymentSummaryFlatRateValue => 'Forfait articles';
+
+  @override
+  String get paymentSummaryTotalLabel => 'Vous payez';
+
+  @override
+  String get paymentEscrowTitle => 'Envoi réservé !';
+
+  @override
+  String paymentEscrowSubtitle(String amount) {
+    return '$amount sont bloqués et sécurisés, puis libérés après confirmation de livraison par le destinataire.';
+  }
+
+  @override
+  String get paymentEscrowCta => 'Voir mes envois';
+
+  @override
+  String get paymentSheetTitle => 'Paiement';
+
+  @override
+  String get paymentSheetConfirmedTitle => 'Paiement confirmé';
+
+  @override
+  String get paymentSheetEscrowNote =>
+      'Les fonds sont conservés en séquestre, le voyageur sera payé après la remise du colis.';
+
+  @override
+  String get paymentSheetSecureFooter => 'Paiement sécurisé par Stripe';
 }

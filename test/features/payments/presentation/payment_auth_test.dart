@@ -1,3 +1,4 @@
+import 'package:dony/core/design/accessibility_scope.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -6,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/l10n_test_helpers.dart';
 
 class MockLocalAuthService extends Mock implements LocalAuthService {}
 
@@ -398,6 +401,71 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(captured, isTrue);
+      },
+    );
+  });
+
+  group('requirePaymentAuth — dialogue de confirmation (en anglais)', () {
+    testWidgets(
+      'confirmImportantActions actif → dialogue traduit avant toute vérification',
+      (tester) async {
+        useEnglish();
+        when(
+          () => userPrefs.get(
+            HiveService.kBiometricEnabled,
+            defaultValue: any(named: 'defaultValue'),
+          ),
+        ).thenReturn(false);
+
+        bool? captured;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: AccessibilityScope(
+              underlineLinks: false,
+              reinforceLabels: false,
+              persistentMessages: false,
+              confirmImportantActions: true,
+              child: Scaffold(
+                body: Builder(
+                  builder: (context) => ElevatedButton(
+                    key: const Key('trigger'),
+                    onPressed: () async {
+                      final result = await requirePaymentAuth(
+                        context,
+                        authService: authService,
+                        userPrefs: userPrefs,
+                      );
+                      captured = result;
+                    },
+                    child: const Text('Pay'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        await tester.tap(find.byKey(const Key('trigger')));
+        await tester.pump();
+
+        expect(find.text('Confirm payment'), findsOneWidget);
+        expect(
+          find.text(
+            'The amount will be held until delivery, then paid to the traveler.',
+          ),
+          findsOneWidget,
+        );
+
+        // Refuse la confirmation : le paiement s'arrête avant toute vérification.
+        // Les boutons du dialogue restent ceux, non traduits, de DonyDialog
+        // (lot design system) : seuls le titre et le message viennent d'ici.
+        await tester.tap(find.text('Annuler'));
+        await tester.pumpAndSettle();
+
+        expect(captured, isFalse);
+        verifyNever(() => authService.isBiometricAvailable());
       },
     );
   });

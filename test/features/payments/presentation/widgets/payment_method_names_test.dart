@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 // Reset de debugDefaultTargetPlatformOverride EN FIN DE CORPS (pas en tearDown) :
 // le binding exécute debugAssertAllFoundationVarsUnset avant les tearDowns.
 void main() {
@@ -49,6 +51,34 @@ void main() {
     expect(find.text('Carte'), findsNothing);
     expect(find.text('PayPal'), findsNothing);
     expect(find.bySemanticsLabel('Carte, Google Pay, PayPal'), findsOneWidget);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('en anglais : libellé Carte traduit, semantics traduite', (
+    tester,
+  ) async {
+    useEnglish();
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: PaymentMethodNames())),
+    );
+    expect(find.text('Card'), findsOneWidget);
+    expect(find.text('Google Pay'), findsOneWidget);
+    expect(find.text('PayPal'), findsOneWidget);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('en anglais : mode compact, semantics regroupée traduite', (
+    tester,
+  ) async {
+    useEnglish();
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: PaymentMethodNames(compact: true)),
+      ),
+    );
+    expect(find.bySemanticsLabel('Card, Google Pay, PayPal'), findsOneWidget);
     debugDefaultTargetPlatformOverride = null;
   });
 }

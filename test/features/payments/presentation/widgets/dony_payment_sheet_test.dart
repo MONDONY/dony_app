@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockPaymentSheetBloc
     extends MockBloc<PaymentSheetEvent, PaymentSheetState>
     implements PaymentSheetBloc {
@@ -229,7 +231,10 @@ void main() {
       whenListen<PaymentSheetState>(
         bloc,
         Stream.fromIterable([
-          const PaymentSheetFailure(message: 'Paiement refusé', ready: ready),
+          const PaymentSheetFailure(
+            reason: PaymentSheetFailureReason.declined,
+            ready: ready,
+          ),
         ]),
         initialState: ready,
       );
@@ -260,6 +265,42 @@ void main() {
       await tester.pump();
 
       expect(find.text('Paiement refusé'), findsOneWidget);
+    });
+  });
+
+  group('en anglais', () {
+    testWidgets('titre, moyen carte et pied de page traduits', (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        const PaymentSheetResolved(
+          walletAvailable: false,
+          paypalAvailable: false,
+        ),
+      );
+
+      await openSheet(tester);
+
+      expect(find.text('Payment'), findsOneWidget);
+      expect(find.text('Card'), findsOneWidget);
+      expect(find.text('Payment secured by Stripe'), findsOneWidget);
+    });
+
+    testWidgets('vue succès traduite', (tester) async {
+      useEnglish();
+      when(
+        () => bloc.state,
+      ).thenReturn(const PaymentSheetSuccess(method: PaymentMethodKind.card));
+
+      await openSheet(tester);
+
+      expect(find.text('Payment confirmed'), findsOneWidget);
+      expect(
+        find.text(
+          'Funds are held in escrow, the traveler will be paid once the parcel is delivered.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Done'), findsOneWidget);
     });
   });
 }

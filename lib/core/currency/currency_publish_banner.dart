@@ -1,6 +1,8 @@
 import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Explique la devise immuable appliquée par le serveur à une publication.
@@ -20,16 +22,17 @@ class CurrencyPublishBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final hasCurrency = currency != null;
     final title = hasCurrency
-        ? 'Publié en ${currency!.displayName} (${currency!.code})'
+        ? 'Publié en ${currency!.name(l)} (${currency!.code})'
         : 'Devise à confirmer';
     final description = hasCurrency
         ? 'Les utilisateurs dans une autre devise voient un prix converti. '
               'Le paiement reste dans cette devise.'
         : 'La devise de publication est vérifiée par Yadony avant publication.';
     final semantics = hasCurrency
-        ? 'Publication en ${currency!.displayName}, devise ${currency!.code}. '
+        ? 'Publication en ${currency!.name(l)}, devise ${currency!.code}. '
               'Les utilisateurs dans une autre devise voient un prix converti. '
               'Le paiement reste dans cette devise.'
         : 'Devise de publication à confirmer par Yadony avant publication.';

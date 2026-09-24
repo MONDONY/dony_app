@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
@@ -7,6 +8,7 @@ import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_state.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
 import 'package:dony/features/price_grid/presentation/price_grid_item_form_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -248,7 +250,7 @@ class _LoadedViewState extends State<_LoadedView> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Yadony ajoute $donyCommissionPercentLabel % au prix que '
+                    'Yadony ajoute ${commissionPercentLabel(context.l10n)} % au prix que '
                     'vous saisissez. Vous encaissez exactement votre montant.',
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     textAlign: TextAlign.center,

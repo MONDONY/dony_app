@@ -3,6 +3,8 @@ import 'package:dony/features/payments/cash/presentation/widgets/commission_card
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   testWidgets('renders masked number and expiry date', (tester) async {
     await tester.pumpWidget(
@@ -41,5 +43,25 @@ void main() {
       ),
     );
     expect(find.byKey(const Key('brand-logo-mastercard')), findsOneWidget);
+  });
+
+  testWidgets('en anglais : libellé d\'expiration traduit', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: CommissionCardPreview(
+            card: CommissionMethod(
+              brand: 'visa',
+              last4: '4242',
+              expMonth: 3,
+              expYear: 2027,
+              expirationStatus: ExpirationStatus.valid,
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Expires 03/2027'), findsOneWidget);
   });
 }

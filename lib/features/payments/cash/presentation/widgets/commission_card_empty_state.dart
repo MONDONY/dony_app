@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/pricing/pricing_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 class CommissionCardEmptyState extends StatelessWidget {
@@ -9,6 +10,7 @@ class CommissionCardEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Padding(
       padding: const EdgeInsets.all(DonySpacing.xl),
       child: Column(
@@ -20,18 +22,18 @@ class CommissionCardEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.base),
           Text(
-            'Aucune carte enregistrée',
+            l.commissionCardEmptyTitle,
             style: Theme.of(context).textTheme.headlineMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DonySpacing.md),
           Text(
-            'Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission ($donyCommissionPercentLabel %) à chaque colis accepté.',
+            l.commissionCardEmptyBody(commissionPercentLabel(l)),
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DonySpacing.xl),
-          DonyButton(label: 'Ajouter une carte', onPressed: onAdd),
+          DonyButton(label: l.commissionCardAddButton, onPressed: onAdd),
         ],
       ),
     );

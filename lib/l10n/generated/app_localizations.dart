@@ -14180,6 +14180,342 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'max {maxKg} kg'**
   String bidCreateMaxWeightLabel(String maxKg);
+
+  /// Bouton générique de fin d'action (ex. bouton Terminé de la vue succès de DonyPaymentSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminé'**
+  String get commonDone;
+
+  /// Bouton générique de report d'action.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get commonLater;
+
+  /// Titre générique court d'un état d'erreur de chargement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur de chargement'**
+  String get commonLoadError;
+
+  /// Message générique court d'erreur, sans point final.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue'**
+  String get commonSomethingWentWrong;
+
+  /// Message générique court d'erreur, avec point final.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue.'**
+  String get commonSomethingWentWrongDot;
+
+  /// Action générique de capture photo (choix appareil photo vs galerie).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre une photo'**
+  String get commonTakePhoto;
+
+  /// Action générique de sélection depuis la galerie (choix appareil photo vs galerie).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir dans la galerie'**
+  String get commonPickFromGallery;
+
+  /// Message générique d'erreur d'upload d'image.
+  ///
+  /// In fr, this message translates to:
+  /// **'Image non supportée ou trop volumineuse'**
+  String get commonImageUnsupported;
+
+  /// Badge générique « par défaut » (ex. adresse ou destinataire par défaut).
+  ///
+  /// In fr, this message translates to:
+  /// **'Par défaut'**
+  String get commonDefault;
+
+  /// Famille commonDate… : date relative « hier ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Hier'**
+  String get commonDateYesterday;
+
+  /// Nom affichable de la devise EUR (SupportedCurrencyL10n.name), identique fr/en.
+  ///
+  /// In fr, this message translates to:
+  /// **'Euro'**
+  String get currencyNameEur;
+
+  /// Nom affichable de la devise USD (SupportedCurrencyL10n.name).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dollar américain'**
+  String get currencyNameUsd;
+
+  /// Nom affichable de la devise CAD (SupportedCurrencyL10n.name).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dollar canadien'**
+  String get currencyNameCad;
+
+  /// Nom affichable de la devise GBP (SupportedCurrencyL10n.name).
+  ///
+  /// In fr, this message translates to:
+  /// **'Livre sterling'**
+  String get currencyNameGbp;
+
+  /// Nom affichable de la devise CHF (SupportedCurrencyL10n.name).
+  ///
+  /// In fr, this message translates to:
+  /// **'Franc suisse'**
+  String get currencyNameChf;
+
+  /// Nom affichable de la devise XOF (SupportedCurrencyL10n.name).
+  ///
+  /// In fr, this message translates to:
+  /// **'Franc CFA Ouest'**
+  String get currencyNameXof;
+
+  /// Nom affichable de la devise XAF (SupportedCurrencyL10n.name).
+  ///
+  /// In fr, this message translates to:
+  /// **'Franc CFA Centre'**
+  String get currencyNameXaf;
+
+  /// Libellé générique de PaymentSheetFailureReason.cardUnavailable (dony_payment_sheet.dart), affiché quand providerMessage est absent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement par carte est indisponible pour le moment. Réessaie dans un instant.'**
+  String get paymentCardUnavailable;
+
+  /// Libellé générique de PaymentSheetFailureReason.generic (dony_payment_sheet.dart), affiché quand providerMessage est absent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement a échoué. Réessaie dans un instant.'**
+  String get paymentFailedGeneric;
+
+  /// Libellé générique de PaymentSheetFailureReason.declined (dony_payment_sheet.dart), affiché quand providerMessage est absent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement refusé'**
+  String get paymentDeclined;
+
+  /// Semantics regroupée des moyens de paiement (payment_method_names.dart, mode compact). {wallet} = Apple Pay ou Google Pay, nom de marque non traduit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte, {wallet}, PayPal'**
+  String paymentMethodsSemantics(String wallet);
+
+  /// Libellé de contexte de la feuille de paiement quand le destinataire est connu (payment_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi de {name}'**
+  String paymentContextRecipient(String name);
+
+  /// Libellé de contexte de la feuille de paiement quand aucun destinataire n'est connu (payment_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi de votre colis'**
+  String get paymentContextDefault;
+
+  /// Notice de débit de la carte commission, cas devise active = EUR (commission_method_screen.dart) : le plancher de 1 € est un montant serveur en euros, fixe quelle que soit la langue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette carte sera débitée de la commission ({percent} %, min. 1 €) à chaque colis en espèces accepté.'**
+  String commissionCardDebitNoticeMin(String percent);
+
+  /// Notice de débit de la carte commission, cas devise active différente de l'EUR (commission_method_screen.dart), sans le plancher en euros.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette carte sera débitée de la commission ({percent} %) à chaque colis en espèces accepté.'**
+  String commissionCardDebitNotice(String percent);
+
+  /// Titre de l'AppBar de l'écran Carte commission (commission_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte commission'**
+  String get commissionCardScreenTitle;
+
+  /// Message de l'état d'erreur de chargement de la carte commission (commission_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue. Veuillez réessayer.'**
+  String get commissionCardLoadError;
+
+  /// Snackbar affichée quand requirePaymentAuth échoue, partagée entre commission_method_screen.dart et payment_screen.dart (même feature payments).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement non confirmé, réessayez'**
+  String get paymentNotConfirmedSnackbar;
+
+  /// Bouton de remplacement de la carte commission (commission_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remplacer la carte'**
+  String get commissionCardReplaceButton;
+
+  /// Bouton de suppression de la carte commission (commission_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la carte'**
+  String get commissionCardDeleteButton;
+
+  /// Message de repli quand le SDK Stripe ne fournit pas de localizedMessage (commission_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur lors de l\'ajout de la carte.'**
+  String get commissionCardAddErrorMessage;
+
+  /// Corps de la bottom sheet de confirmation de suppression de la carte commission (commission_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer cette carte ? Vous ne pourrez plus accepter de colis en espèces tant que vous n\'aurez pas enregistré une nouvelle carte.'**
+  String get commissionCardDeleteConfirmMessage;
+
+  /// Titre de l'état vide de la carte commission (commission_card_empty_state.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune carte enregistrée'**
+  String get commissionCardEmptyTitle;
+
+  /// Corps de l'état vide de la carte commission (commission_card_empty_state.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission ({percent} %) à chaque colis accepté.'**
+  String commissionCardEmptyBody(String percent);
+
+  /// Bouton d'ajout de la carte commission (commission_card_empty_state.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une carte'**
+  String get commissionCardAddButton;
+
+  /// Bandeau d'expiration de la carte commission, carte déjà expirée (commission_card_expiration_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre carte a expiré. Remplacez-la pour réactiver le paiement en espèces.'**
+  String get commissionCardExpiredMessage;
+
+  /// Bandeau d'expiration de la carte commission, carte bientôt expirée (commission_card_expiration_banner.dart). {date} = formattedExpiry (MM/AA), un format, pas une date localisée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre carte expire le {date}. Pensez à la remplacer.'**
+  String commissionCardExpiringMessage(String date);
+
+  /// Date d'expiration affichée sur l'aperçu de la carte commission (commission_card_preview.dart). {date} = formattedExpiry (MM/AA), un format, pas une date localisée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Expire le {date}'**
+  String commissionCardExpiryLabel(String date);
+
+  /// Titre du dialogue de confirmation d'action importante avant paiement (payment_auth.dart, requirePaymentAuth).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer le paiement'**
+  String get paymentAuthConfirmTitle;
+
+  /// Message du dialogue de confirmation d'action importante avant paiement (payment_auth.dart, requirePaymentAuth).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant sera bloqué jusqu\'à la livraison, puis versé au voyageur.'**
+  String get paymentAuthConfirmMessage;
+
+  /// Titre de l'AppBar de l'écran de paiement (payment_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer mon envoi'**
+  String get paymentScreenTitle;
+
+  /// Bandeau info de l'écran de paiement (payment_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre paiement est sécurisé, libéré uniquement après confirmation de livraison par le destinataire.'**
+  String get paymentSecureNotice;
+
+  /// Bouton de paiement de l'écran de paiement (payment_screen.dart). {price} déjà formaté dans sa devise (formatPriceIn).
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer {price}'**
+  String paymentPayButtonLabel(String price);
+
+  /// Titre de la carte récapitulatif de l'écran de paiement (payment_screen.dart _SummaryCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Récapitulatif'**
+  String get paymentSummaryTitle;
+
+  /// Libellé de la ligne poids du récapitulatif de paiement (payment_screen.dart _SummaryCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids'**
+  String get paymentSummaryWeightLabel;
+
+  /// Libellé de la ligne prix au kilo du récapitulatif de paiement (payment_screen.dart _SummaryCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix/kg'**
+  String get paymentSummaryPricePerKgLabel;
+
+  /// Libellé de la ligne type (mode grille d'articles) du récapitulatif de paiement, identique fr/en (payment_screen.dart _SummaryCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Type'**
+  String get paymentSummaryTypeLabel;
+
+  /// Valeur de la ligne type en mode grille d'articles du récapitulatif de paiement (payment_screen.dart _SummaryCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Forfait articles'**
+  String get paymentSummaryFlatRateValue;
+
+  /// Libellé du total du récapitulatif de paiement (payment_screen.dart _SummaryCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous payez'**
+  String get paymentSummaryTotalLabel;
+
+  /// Titre de la vue de confirmation escrow de l'écran de paiement (payment_screen.dart _EscrowConfirmedView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi réservé !'**
+  String get paymentEscrowTitle;
+
+  /// Sous-titre de la vue de confirmation escrow de l'écran de paiement (payment_screen.dart _EscrowConfirmedView). {amount} déjà formaté dans sa devise (formatPriceIn).
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} sont bloqués et sécurisés, puis libérés après confirmation de livraison par le destinataire.'**
+  String paymentEscrowSubtitle(String amount);
+
+  /// CTA de la vue de confirmation escrow de l'écran de paiement (payment_screen.dart _EscrowConfirmedView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mes envois'**
+  String get paymentEscrowCta;
+
+  /// Titre de la feuille de paiement custom Yadony (dony_payment_sheet.dart _MainView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement'**
+  String get paymentSheetTitle;
+
+  /// Titre de la vue succès de la feuille de paiement (dony_payment_sheet.dart _SuccessView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement confirmé'**
+  String get paymentSheetConfirmedTitle;
+
+  /// Note d'explication du séquestre dans la vue succès de la feuille de paiement (dony_payment_sheet.dart _SuccessView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les fonds sont conservés en séquestre, le voyageur sera payé après la remise du colis.'**
+  String get paymentSheetEscrowNote;
+
+  /// Pied de la feuille de paiement, hors vue succès (dony_payment_sheet.dart _StickyBottom).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé par Stripe'**
+  String get paymentSheetSecureFooter;
 }
 
 class _AppLocalizationsDelegate

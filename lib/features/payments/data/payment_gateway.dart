@@ -19,9 +19,14 @@ class PaymentCancelledException implements Exception {
 }
 
 /// Échec de confirmation Stripe (carte refusée, PayPal en échec…).
+///
+/// [message] est nullable : le SDK Stripe ne garantit ni `localizedMessage`
+/// ni `message` sur son erreur. Quand présent, c'est déjà le message localisé
+/// par Stripe dans la langue du téléphone (`localizedMessage`) — affiché tel
+/// quel. `null` retombe sur le libellé générique de la raison côté UI.
 class PaymentConfirmationException implements Exception {
-  final String message;
-  const PaymentConfirmationException(this.message);
+  final String? message;
+  const PaymentConfirmationException([this.message]);
 }
 
 /// Abstraction testable du SDK flutter_stripe pour la DonyPaymentSheet.
@@ -74,7 +79,7 @@ class StripePaymentGateway implements PaymentGateway {
                 currencyCode: currencyCode.toUpperCase(),
                 cartItems: [
                   ApplePayCartSummaryItem.immediate(
-                    label: 'Yadony',
+                    label: 'Yadony', // i18n-ignore : nom de marque
                     amount: amountEur.toStringAsFixed(2),
                   ),
                 ],
@@ -84,7 +89,7 @@ class StripePaymentGateway implements PaymentGateway {
               googlePay: GooglePayParams(
                 merchantCountryCode: 'FR',
                 currencyCode: currencyCode.toUpperCase(),
-                merchantName: 'Yadony',
+                merchantName: 'Yadony', // i18n-ignore : nom de marque
               ),
             ),
     ),
@@ -111,7 +116,7 @@ class StripePaymentGateway implements PaymentGateway {
         paymentIntentClientSecret: clientSecret,
         customerId: customerId,
         customerEphemeralKeySecret: customerEphemeralKeySecret,
-        merchantDisplayName: 'Yadony',
+        merchantDisplayName: 'Yadony', // i18n-ignore : nom de marque
         style: ThemeMode.system,
       ),
     ),
@@ -128,8 +133,11 @@ class StripePaymentGateway implements PaymentGateway {
       if (e.error.code == FailureCode.Canceled) {
         throw const PaymentCancelledException();
       }
+      // Pas de repli français ici : `providerMessage` reste `null` quand le
+      // SDK ne fournit rien, et c'est l'UI qui affiche alors le libellé
+      // générique de la raison (`PaymentSheetFailureReason.declined`).
       throw PaymentConfirmationException(
-        e.error.localizedMessage ?? e.error.message ?? 'Paiement refusé',
+        e.error.localizedMessage ?? e.error.message,
       );
     }
   }
