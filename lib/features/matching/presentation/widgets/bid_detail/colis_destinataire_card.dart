@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_photo_viewer_modal.dart';
@@ -17,13 +18,13 @@ class ColisDestinataireCard extends StatelessWidget {
 
   const ColisDestinataireCard({super.key, required this.bid});
 
-  String get _colisLabel {
+  String _colisLabel(AppLocalizations l) {
     final parts = <String>[];
     if (bid.weightKg != null) {
       parts.add('${bid.weightKg} kg');
     }
     if (bid.contentCategory != null && bid.contentCategory!.isNotEmpty) {
-      parts.add(bid.contentCategory!);
+      parts.add(contentCategoriesDisplayName(l, bid.contentCategory!));
     }
     return parts.isNotEmpty ? parts.join(' · ') : '-';
   }
@@ -39,7 +40,7 @@ class ColisDestinataireCard extends StatelessWidget {
             _PhotoGallery(photos: bid.photos),
             const SizedBox(height: DonySpacing.md),
           ],
-          InfoRow(label: l.bidDetailParcelLabel, value: _colisLabel),
+          InfoRow(label: l.bidDetailParcelLabel, value: _colisLabel(l)),
           if (bid.description != null && bid.description!.isNotEmpty) ...[
             const SizedBox(height: DonySpacing.sm),
             InfoRow(

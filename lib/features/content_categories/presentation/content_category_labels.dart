@@ -21,6 +21,21 @@ String contentCategoryDisplayName(AppLocalizations l, String label) {
   return label;
 }
 
+/// Résout le libellé AFFICHÉ d'une liste de catégories jointes par « , »
+/// (`bid.contentCategory`, ex. `create_bid_bottom_sheet.dart`).
+///
+/// [raw] reste la valeur envoyée/stockée par le backend : cette fonction ne
+/// sert que l'affichage, en traduisant chaque catégorie via
+/// [contentCategoryDisplayName].
+String contentCategoriesDisplayName(AppLocalizations l, String raw) {
+  final categories = raw
+      .split(',')
+      .map((c) => c.trim())
+      .where((c) => c.isNotEmpty)
+      .map((c) => contentCategoryDisplayName(l, c));
+  return categories.join(', ');
+}
+
 String _translate(AppLocalizations l, String code) {
   switch (code) {
     case 'DOCUMENTS':

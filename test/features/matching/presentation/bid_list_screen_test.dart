@@ -13,6 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
@@ -575,6 +576,57 @@ void main() {
 
     expect(find.textContaining('CDG → DKR'), findsOneWidget);
     expect(find.textContaining('juin'), findsOneWidget);
+  });
+
+  // fr : garde le motif fixe d'origine ('EEE d MMMM') sur le 5 mars (révèle un
+  // zéro de tête absent) — non-régression après le passage à
+  // context.l10n.localeName (I6, review-finalD). en : squelette MMMMEd.
+  testWidgets(
+    'subtitle : date de départ fr non-régression (5 mars, motif EEE d MMMM)',
+    (tester) async {
+      final ctrl = _wireStates(bidBloc, tester);
+      addTearDown(ctrl.close);
+      final date = DateTime(2026, 3, 5);
+
+      await _pump(
+        tester,
+        bidBloc,
+        departureCityCode: 'CDG',
+        arrivalCityCode: 'DKR',
+        departureDate: date,
+      );
+      ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining(DateFormat('EEE d MMMM', 'fr').format(date)),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('subtitle : date de départ en anglais (motif fixe, locale en)', (
+    tester,
+  ) async {
+    useEnglish();
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+    final date = DateTime(2026, 3, 5);
+
+    await _pump(
+      tester,
+      bidBloc,
+      departureCityCode: 'CDG',
+      arrivalCityCode: 'DKR',
+      departureDate: date,
+    );
+    ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining(DateFormat('EEE d MMMM', 'en').format(date)),
+      findsOneWidget,
+    );
   });
 
   // ── Empty state liste acceptées ─────────────────────────────────────────────

@@ -127,17 +127,24 @@ class _BidListView extends StatelessWidget {
         'Demandes', // i18n-ignore: repli const, le router fournit toujours un titre traduit
   });
 
-  String _buildSubtitle() {
+  String _buildSubtitle(BuildContext context) {
     final parts = <String>[];
     if (departureCityCode != null && arrivalCityCode != null) {
       parts.add('$departureCityCode → $arrivalCityCode');
     }
     if (departureDate != null) {
-      parts.add(
-        DateFormat('EEE d MMMM', AppL10n.localeName).format(departureDate!),
-      );
+      parts.add(_formatDepartureDate(context, departureDate!));
     }
     return parts.join(' · ');
+  }
+
+  // Aucun squelette intl ne rend « jour abrégé + jour + mois complet, sans
+  // année » (MMMMEEEEd s'en approche mais garde le jour de semaine en toutes
+  // lettres). Motif fixe conservé pour les deux langues (vérifié fr par
+  // test, non-régression sur le 5 mars), locale lue depuis le contexte
+  // (jamais AppL10n.localeName dans un widget).
+  String _formatDepartureDate(BuildContext context, DateTime date) {
+    return DateFormat('EEE d MMMM', context.l10n.localeName).format(date);
   }
 
   Future<void> _openPending(BuildContext context) async {
@@ -151,7 +158,7 @@ class _BidListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final subtitle = _buildSubtitle();
+    final subtitle = _buildSubtitle(context);
 
     return BlocConsumer<BidBloc, BidState>(
       listener: (context, state) {

@@ -6755,10 +6755,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailCardDeclinedHint =>
-      'Change your commission card to accept this request.';
+      'Change the card used for your service fee to accept this request.';
 
   @override
-  String get bidDetailChangeCommissionCard => 'Change my commission card';
+  String get bidDetailChangeCommissionCard => 'Change my service fee card';
 
   @override
   String get bidDetailInsufficientBalanceTitle => 'Insufficient balance';
@@ -6782,11 +6782,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailNoShowReportedSnackbar =>
-      'Absence reported. The sender has 48 hours to contest.';
+      'No-show reported. The sender has 48 hours to contest.';
 
   @override
   String get bidDetailDeliveryNoShowReportedSnackbar =>
-      'Absence reported. The other party has 24 hours to contest.';
+      'No-show reported. The other party has 24 hours to contest.';
 
   @override
   String get bidDetailContestSentSnackbar =>
@@ -6794,7 +6794,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailNoShowConfirmedSnackbar =>
-      'Absence confirmed. The shipment has been canceled, you will not be charged.';
+      'No-show confirmed. The shipment has been canceled, you will not be charged.';
 
   @override
   String get bidDetailCancelledAfterHandoverSnackbar =>
@@ -7372,10 +7372,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shipmentBadgeHandedOver => 'HANDED OVER';
 
   @override
-  String get shipmentBadgeToHandOver => 'TO HAND OVER';
+  String get shipmentBadgeToHandOver => 'DROP-OFF DUE';
 
   @override
-  String get shipmentBadgeWaiting => 'WAITING';
+  String get shipmentBadgeWaiting => 'PENDING';
 
   @override
   String get shipmentBadgeDelivered => 'DELIVERED';
@@ -7384,7 +7384,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shipmentBadgeCancelled => 'CANCELED';
 
   @override
-  String get shipmentBadgeRejected => 'REJECTED';
+  String get shipmentBadgeRejected => 'DECLINED';
 
   @override
   String get shipmentBadgeNoShow => 'NO-SHOW';
@@ -7396,7 +7396,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shipmentBadgeParcelRefused => 'PARCEL REFUSED';
 
   @override
-  String get shipmentStepAcceptedLabel => 'Handover to the traveler upcoming';
+  String get shipmentStepAcceptedLabel =>
+      'Drop-off with the traveler coming up';
 
   @override
   String get shipmentStepHandedOverLabel =>
@@ -7474,7 +7475,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shipmentGroupNotCompleted => 'Not completed';
 
   @override
-  String get shipmentStatusToHandOverOption => 'To hand over';
+  String get shipmentStatusToHandOverOption => 'Drop-off due';
 
   @override
   String get shipmentStatusHandedOverOption => 'Handed over';
@@ -7591,7 +7592,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shipmentTabEnRouteLabel => 'On the way';
 
   @override
-  String get shipmentTabPubliesLabel => 'Published';
+  String get shipmentTabPubliesLabel => 'Posted';
 
   @override
   String get bidListFilterToReview => 'To review';
@@ -7681,17 +7682,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidListCardDeclinedHint =>
-      'Change your commission card to accept this request.';
+      'Change the card used for your service fee to accept this request.';
 
   @override
-  String get bidListChangeCommissionCardButton => 'Change my commission card';
+  String get bidListChangeCommissionCardButton => 'Change my service fee card';
 
   @override
   String get bidListWalletInsufficientTitle => 'Insufficient balance';
 
   @override
   String get bidListWalletInsufficientHint =>
-      'Top up your wallet or pay the fee directly by card.';
+      'Top up your wallet or pay the service fee directly by card.';
 
   @override
   String get bidListWalletTopupButton => 'Top up my wallet';
@@ -7760,7 +7761,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripOwnerDeletedSnackbar => 'Trip deleted';
 
   @override
-  String get tripOwnerPublishedTitle => 'Trip published!';
+  String get tripOwnerPublishedTitle => 'Trip posted!';
 
   @override
   String tripOwnerPublishedSubtitle(String dep, String arr) {
@@ -7856,7 +7857,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidListStatusCancelled => 'Canceled';
 
   @override
-  String get tripOwnerPublishTile => 'Publish';
+  String get tripOwnerPublishTile => 'Post';
 
   @override
   String get tripOwnerPosterTile => 'Poster';
@@ -7949,7 +7950,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Make your spare capacity available to the public';
 
   @override
-  String get tripOwnerSurplusPublishingButton => 'Publishing…';
+  String get tripOwnerSurplusPublishingButton => 'Posting…';
 
   @override
   String get tripOwnerSurplusKgValidatorEmpty => 'Enter a number of kg';
@@ -8307,8 +8308,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count published',
-      one: '$count published',
+      other: '$count posted',
+      one: '$count posted',
     );
     return '$_temp0';
   }
@@ -8473,5 +8474,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String activityNewSinceLastVisit(Object label, Object title) {
     return '$title, $label since your last visit';
+  }
+
+  @override
+  String bidCreateMaxWeightLabel(String maxKg) {
+    return 'max $maxKg kg';
   }
 }

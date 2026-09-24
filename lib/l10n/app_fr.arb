@@ -8919,5 +8919,14 @@
   "activityNewSinceLastVisit": "{title}, {label} depuis votre dernière visite",
   "@activityNewSinceLastVisit": {
     "description": "Semantics du badge de nouveauté de la tuile alertes (activites_hub_screen.dart _alertsTile)."
+  },
+  "bidCreateMaxWeightLabel": "max {maxKg} kg",
+  "@bidCreateMaxWeightLabel": {
+    "description": "Libellé du poids maximum au-dessus du slider (create_bid_bottom_sheet.dart _buildSlider). {maxKg} déjà formaté (toStringAsFixed(0)).",
+    "placeholders": {
+      "maxKg": {
+        "type": "String"
+      }
+    }
   }
 }

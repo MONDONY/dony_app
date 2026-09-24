@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/text_search.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -67,6 +68,7 @@ class BidCard extends StatelessWidget {
             ?.split(',')
             .map((c) => c.trim())
             .where((c) => c.isNotEmpty)
+            .map((c) => contentCategoryDisplayName(l, c))
             .toList() ??
         const <String>[];
     final hasTracking =

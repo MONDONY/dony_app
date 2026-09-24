@@ -162,6 +162,7 @@ const _sameInBothLanguages = <String>{
   'tripOwnerArrivalFieldLabel', // « Instructions » se dit pareil (tâche D4)
   'activityRevenueMobileMoney', // « Mobile money » se dit pareil (tâche D5)
   'activityMenuButtonTooltip', // « Menu » se dit pareil (tâche D5)
+  'bidCreateMaxWeightLabel', // « max » se dit pareil (vague finale D, I5/M12)
 };
 
 void main() {

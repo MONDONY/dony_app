@@ -276,7 +276,7 @@ void main() {
 
         expect(find.text('My parcels'), findsOneWidget);
         expect(find.text('On the way'), findsOneWidget);
-        expect(find.text('Published'), findsOneWidget);
+        expect(find.text('Posted'), findsOneWidget);
         expect(find.text('Mes colis'), findsNothing);
       },
     );

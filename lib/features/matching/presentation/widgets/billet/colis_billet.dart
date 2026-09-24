@@ -298,18 +298,12 @@ class _BilletDates extends StatelessWidget {
 
   /// Formate [date] avec le squelette `MMMd` (équivalent localisé de
   /// l'ancien motif fixe `'d MMM'` — rendu fr identique, ordre jour/mois
-  /// correct en anglais). Si les données de locale ne sont pas initialisées,
-  /// retombe sur "d/M" (locale-independent) pour éviter une
-  /// [LocaleDataException] en test.
+  /// correct en anglais). Les données de locale sont toujours initialisées
+  /// (`flutter_test_config.dart` en test, `main.dart` en prod).
   String? _formatDate(DateTime? date, String locale) {
     if (date == null) {
       return null;
     }
-    try {
-      return DateFormat.MMMd(locale).format(date);
-    } catch (_) {
-      // Locale data not initialized — use numeric fallback.
-      return DateFormat('d/M').format(date);
-    }
+    return DateFormat.MMMd(locale).format(date);
   }
 }

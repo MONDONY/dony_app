@@ -5,6 +5,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -205,7 +206,9 @@ class _ColisRow extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     final content =
-        bid.contentCategory ??
+        (bid.contentCategory != null
+            ? contentCategoriesDisplayName(context.l10n, bid.contentCategory!)
+            : null) ??
         bid.description ??
         context.l10n.tripOwnerParcelsDefaultContent;
     final sender = bid.senderDisplayName(context.l10n);

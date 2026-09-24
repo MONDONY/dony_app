@@ -778,7 +778,7 @@ void main() {
           ),
         );
 
-        expect(find.text('1 published'), findsOneWidget);
+        expect(find.text('1 posted'), findsOneWidget);
         expect(find.text('1 sent'), findsOneWidget);
       },
     );

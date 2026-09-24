@@ -245,7 +245,7 @@ void main() {
 
       expect(find.text('Open remaining kg'), findsOneWidget);
       expect(find.text('12 kg locked'), findsOneWidget);
-      expect(find.text('Publish'), findsOneWidget);
+      expect(find.text('Post'), findsOneWidget);
       expect(find.text('Ouvrir les kg restants'), findsNothing);
     });
   });

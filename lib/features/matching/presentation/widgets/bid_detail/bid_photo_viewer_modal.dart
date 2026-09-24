@@ -6,6 +6,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Visionneuse modale (carte arrondie, pas plein écran) des photos d'un colis.
@@ -103,7 +104,7 @@ class _BidPhotoViewerModalState extends State<BidPhotoViewerModal> {
                         button: true,
                         container: true,
                         excludeSemantics: true,
-                        label: 'Fermer',
+                        label: context.l10n.commonClose,
                         child: GestureDetector(
                           onTap: () => Navigator.of(context).pop(),
                           behavior: HitTestBehavior.opaque,

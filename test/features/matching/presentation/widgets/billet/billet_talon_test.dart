@@ -634,12 +634,19 @@ void main() {
         useEnglish();
         await _pump(
           tester,
-          _bid(status: 'PENDING', contentCategory: 'Vêtements', weightKg: 3.5),
+          _bid(
+            status: 'PENDING',
+            contentCategory: 'Vêtements & tissus',
+            weightKg: 3.5,
+          ),
           false,
         );
         expect(find.text('WEIGHT'), findsOneWidget);
         expect(find.text('TYPE'), findsOneWidget);
         expect(find.text('POIDS'), findsNothing);
+        // Catégorie du catalogue traduite, jamais le français brut.
+        expect(find.text('Clothing & fabrics'), findsOneWidget);
+        expect(find.textContaining('Vêtements'), findsNothing);
       },
     );
 

@@ -14174,6 +14174,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{title}, {label} depuis votre dernière visite'**
   String activityNewSinceLastVisit(Object label, Object title);
+
+  /// Libellé du poids maximum au-dessus du slider (create_bid_bottom_sheet.dart _buildSlider). {maxKg} déjà formaté (toStringAsFixed(0)).
+  ///
+  /// In fr, this message translates to:
+  /// **'max {maxKg} kg'**
+  String bidCreateMaxWeightLabel(String maxKg);
 }
 
 class _AppLocalizationsDelegate

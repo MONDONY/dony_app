@@ -192,6 +192,28 @@ void main() {
     },
   );
 
+  testWidgets(
+    'en anglais : catégorie affichée traduite, jamais le français brut',
+    (tester) async {
+      useEnglish();
+      await _pumpCard(
+        tester,
+        BidCard(
+          bid: _makeBid(
+            status: 'ACCEPTED',
+            contentCategory:
+                'Vêtements & tissus, Documents & administratif, Alimentaire',
+          ),
+          isProcessing: false,
+        ),
+      );
+
+      expect(find.text('Clothing & fabrics'), findsOneWidget);
+      expect(find.text('+2'), findsOneWidget);
+      expect(find.textContaining('Vêtements'), findsNothing);
+    },
+  );
+
   testWidgets('ARRIVED sans callbacks → badge « Arrivé »', (tester) async {
     await _pumpCard(
       tester,

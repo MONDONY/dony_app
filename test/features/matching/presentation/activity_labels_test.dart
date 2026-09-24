@@ -251,9 +251,9 @@ void main() {
     );
 
     test('activityStatTripsPublished — en', () {
-      expect(en.activityStatTripsPublished(0), '0 published');
-      expect(en.activityStatTripsPublished(1), '1 published');
-      expect(en.activityStatTripsPublished(3), '3 published');
+      expect(en.activityStatTripsPublished(0), '0 posted');
+      expect(en.activityStatTripsPublished(1), '1 posted');
+      expect(en.activityStatTripsPublished(3), '3 posted');
     });
 
     test('activityStatParcelsSent — fr : accord 0/1 corrigé (Ruling R44)', () {

@@ -310,8 +310,8 @@ class _DisclaimerRow extends StatelessWidget {
     } catch (_) {
       final local = signed.toLocal();
       return l.bidDetailDisclaimerSignedCompact(
-        DateFormat.yMd().format(local),
-        DateFormat.jm().format(local),
+        DateFormat.yMd(locale).format(local),
+        DateFormat.jm(locale).format(local),
       );
     }
   }

@@ -154,7 +154,7 @@ void main() {
       expect(find.text('Delivery'), findsOneWidget);
     });
 
-    testWidgets('en anglais : ACCEPTED → "TO HAND OVER" et "View the QR →"', (
+    testWidgets('en anglais : ACCEPTED → "DROP-OFF DUE" et "View the QR →"', (
       tester,
     ) async {
       useEnglish();
@@ -163,8 +163,29 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.text('TO HAND OVER'), findsOneWidget);
+      expect(find.text('DROP-OFF DUE'), findsOneWidget);
       expect(find.text('View the QR →'), findsOneWidget);
+      expect(find.text('Drop-off with the traveler coming up'), findsOneWidget);
+    });
+
+    testWidgets('en anglais : REJECTED → badge "DECLINED"', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(ShipmentCard(bid: _bid('REJECTED'), onTap: () {}, index: 0)),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('DECLINED'), findsOneWidget);
+    });
+
+    testWidgets('en anglais : PENDING → badge "PENDING"', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(ShipmentCard(bid: _bid('PENDING'), onTap: () {}, index: 0)),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('PENDING'), findsOneWidget);
     });
   });
 }

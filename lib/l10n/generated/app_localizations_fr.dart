@@ -8525,4 +8525,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String activityNewSinceLastVisit(Object label, Object title) {
     return '$title, $label depuis votre dernière visite';
   }
+
+  @override
+  String bidCreateMaxWeightLabel(String maxKg) {
+    return 'max $maxKg kg';
+  }
 }

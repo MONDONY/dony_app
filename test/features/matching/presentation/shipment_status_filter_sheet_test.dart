@@ -195,7 +195,7 @@ void main() {
       expect(find.text('Filter by status'), findsOneWidget);
       expect(find.text('DELIVERED'), findsOneWidget);
       expect(find.text('NOT COMPLETED'), findsOneWidget);
-      expect(find.text('To hand over'), findsOneWidget);
+      expect(find.text('Drop-off due'), findsOneWidget);
       expect(find.text('Apply (1)'), findsOneWidget);
     });
   });

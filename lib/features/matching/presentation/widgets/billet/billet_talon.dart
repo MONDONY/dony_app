@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
@@ -506,7 +507,9 @@ class _TravelerDecisionSummary extends StatelessWidget {
     final weight = bid.weightKg != null
         ? '${bid.weightKg!.toStringAsFixed(1)} kg'
         : '-';
-    final category = bid.contentCategory ?? '-';
+    final category = bid.contentCategory != null
+        ? contentCategoriesDisplayName(l, bid.contentCategory!)
+        : '-';
 
     return Row(
       children: [
