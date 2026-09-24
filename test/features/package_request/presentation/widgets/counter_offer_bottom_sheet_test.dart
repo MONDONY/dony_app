@@ -8,6 +8,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
@@ -193,6 +195,19 @@ void main() {
       await tester.enterText(msgField, 'Bonjour');
       await tester.pump();
       expect(find.textContaining('7/280'), findsOneWidget);
+    });
+  });
+
+  group('CounterOfferBottomSheet — anglais', () {
+    testWidgets('titre, labels et bouton traduits', (tester) async {
+      useEnglish();
+      await openSheet(tester);
+
+      expect(find.text('Make a counter-offer'), findsOneWidget);
+      expect(find.text('Your proposed price'), findsOneWidget);
+      expect(find.text('Message (optional)'), findsOneWidget);
+      expect(find.text('Send my counter-offer'), findsOneWidget);
+      expect(find.textContaining('· Round 2/5'), findsOneWidget);
     });
   });
 }

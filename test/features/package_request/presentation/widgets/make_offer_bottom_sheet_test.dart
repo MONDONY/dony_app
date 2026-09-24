@@ -16,6 +16,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
@@ -501,5 +503,41 @@ void main() {
         expect(find.text('Faire une offre'), findsNothing);
       },
     );
+  });
+
+  group('MakeOfferBottomSheet — anglais', () {
+    testWidgets('prix ferme, sans montant connu → texte traduit', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(initialDate: DateTime(2026, 6, 12), isFirmPrice: true),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Take this parcel'), findsWidgets);
+      expect(find.text('FIXED PRICE'), findsOneWidget);
+      expect(find.text('Faire une offre'), findsNothing);
+    });
+
+    testWidgets('offre négociable → labels et snackbars en anglais', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(wrap(initialDate: DateTime(2026, 6, 12)));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Make an offer'), findsOneWidget);
+      expect(find.text('YOUR PRICE'), findsOneWidget);
+      expect(find.text('CAPACITY'), findsOneWidget);
+      expect(find.text('TRAVEL DATE'), findsOneWidget);
+      expect(find.text('MESSAGE'), findsOneWidget);
+      expect(find.textContaining('optional'), findsOneWidget);
+
+      final sendButton = find.widgetWithText(DonyButton, 'Send offer');
+      expect(sendButton, findsOneWidget);
+    });
   });
 }

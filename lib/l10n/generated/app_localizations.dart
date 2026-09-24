@@ -10268,6 +10268,540 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'L\'expéditeur choisira parmi'**
   String get negotiationSenderChoosesAmong;
+
+  /// Titre : la confirmation du règlement de commission d'une négociation a échoué (negotiation_bloc.dart, code commission/confirm-failed)
+  ///
+  /// In fr, this message translates to:
+  /// **'Règlement non confirmé'**
+  String get errorCommissionConfirmFailedTitle;
+
+  /// Message de repli du constructeur (le detail serveur, ex. "PaymentIntent status: ...", reste affiché quand il existe — code dans _serverDetailCodes)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmation du règlement échouée'**
+  String get errorCommissionConfirmFailedMessage;
+
+  /// Titre : la 3DS du règlement de commission a été interrompue (negotiation_bloc.dart, code commission/3ds-interrupted)
+  ///
+  /// In fr, this message translates to:
+  /// **'Authentification interrompue'**
+  String get errorCommission3dsInterruptedTitle;
+
+  /// Message affiché quand StripeException interrompt la 3DS du règlement de commission (negotiation_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Authentification bancaire interrompue'**
+  String get errorCommission3dsInterruptedMessage;
+
+  /// Titre : le règlement de la commission d'une négociation a été refusé (negotiation_bloc.dart, code commission/failed)
+  ///
+  /// In fr, this message translates to:
+  /// **'Règlement refusé'**
+  String get errorCommissionFailedTitle;
+
+  /// Repli quand le detail machine (r.error) n'est reconnu ni comme un des trois codes connus ni comme card-status-* — Ruling R35 : jamais le code brut
+  ///
+  /// In fr, this message translates to:
+  /// **'Règlement de la commission refusé'**
+  String get errorCommissionFailedMessage;
+
+  /// Traduction du code machine backend no-commission-card (settleNegotiationCommission) — Ruling R35
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune carte enregistrée pour régler la commission.'**
+  String get errorCommissionFailedNoCardMessage;
+
+  /// Traduction du code machine backend card-declined (settleNegotiationCommission) — Ruling R35
+  ///
+  /// In fr, this message translates to:
+  /// **'Ta carte a été refusée.'**
+  String get errorCommissionFailedCardDeclinedMessage;
+
+  /// Traduction du code machine backend stripe-error (settleNegotiationCommission) — Ruling R35
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur du service de paiement, réessaie.'**
+  String get errorCommissionFailedStripeErrorMessage;
+
+  /// Repli générique pour tout code machine backend card-status-<statut Stripe> (settleNegotiationCommission) — Ruling R35, jamais le statut Stripe brut
+  ///
+  /// In fr, this message translates to:
+  /// **'Le règlement par carte n\'a pas abouti.'**
+  String get errorCommissionFailedCardStatusMessage;
+
+  /// BidFailed, reason confirmFailed : repli quand la confirmation post-3DS échoue sans message serveur (bid_acceptance_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmation échouée'**
+  String get bidAcceptConfirmFailed;
+
+  /// BidFailed, reason bankAuthInterrupted : la 3DS de l'acceptation d'un bid est interrompue (StripeException, bid_acceptance_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Authentification bancaire interrompue'**
+  String get bidAcceptBankAuthInterrupted;
+
+  /// BidFailed, reason refused : repli quand l'acceptation échoue sans message serveur (bid_acceptance_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Acceptation refusée'**
+  String get bidAcceptRefused;
+
+  /// Titre de la feuille quand le prix n'est pas ferme (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Faire une offre'**
+  String get negotiationMakeOfferTitle;
+
+  /// Bouton de la feuille, prix ferme avec montant connu (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre à {amount}'**
+  String negotiationMakeOfferTakeAtLabel(String amount);
+
+  /// Bouton de la feuille, offre négociable (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer l\'offre'**
+  String get negotiationMakeOfferSendButtonLabel;
+
+  /// Snackbar d'avertissement si la date de voyage n'est pas choisie (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionnez votre date de voyage'**
+  String get negotiationMakeOfferSelectTravelDate;
+
+  /// Snackbar d'avertissement si aucun trajet n'est sélectionné (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionnez ou créez un trajet'**
+  String get negotiationMakeOfferSelectTrip;
+
+  /// Label majuscule du champ prix, offre négociable (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'VOTRE PRIX'**
+  String get negotiationMakeOfferYourPriceLabel;
+
+  /// Label majuscule du champ capacité (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'CAPACITÉ'**
+  String get negotiationMakeOfferCapacityLabel;
+
+  /// Label majuscule du champ date (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DATE DE VOYAGE'**
+  String get negotiationMakeOfferTravelDateLabel;
+
+  /// Texte du champ date tant qu'aucune date n'est choisie (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionner…'**
+  String get negotiationMakeOfferSelectDatePlaceholder;
+
+  /// Label majuscule du champ message, identique dans les deux langues (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'MESSAGE'**
+  String get negotiationMakeOfferMessageLabel;
+
+  /// Sous-label du champ message (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'optionnel'**
+  String get negotiationMakeOfferMessageOptional;
+
+  /// Texte d'indication du champ message (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Je voyage exactement ce jour-là…'**
+  String get negotiationMakeOfferMessageHint;
+
+  /// Erreur de validation du champ prix (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Invalide'**
+  String get negotiationMakeOfferInvalidPrice;
+
+  /// Snackbar de succès à l'envoi de l'offre (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre envoyée'**
+  String get negotiationMakeOfferOfferSentSnackbar;
+
+  /// Label de la bannière d'estimation de prix (make_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix du marché'**
+  String get negotiationMakeOfferMarketPriceLabel;
+
+  /// Titre de la feuille en étape de paiement final (accept_offer_bottom_sheet.dart, aussi payment_recap_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer en toute sécurité'**
+  String get negotiationPaySecurelyTitle;
+
+  /// Titre de la feuille hors étape de paiement final (accept_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter l\'offre'**
+  String get negotiationAcceptOfferTitle;
+
+  /// Libellé du bouton pendant le traitement (accept_offer_bottom_sheet.dart, aussi payment_recap_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Traitement…'**
+  String get negotiationProcessingLabel;
+
+  /// Bouton de paiement final (accept_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer ({amount})'**
+  String negotiationAcceptOfferPayButtonLabel(String amount);
+
+  /// Bouton d'acceptation du prix, hors paiement final (accept_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer ({amount})'**
+  String negotiationAcceptOfferConfirmButtonLabel(String amount);
+
+  /// contextLabel de la feuille Stripe, vu par le voyageur (accept_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement de l\'offre acceptée'**
+  String get negotiationAcceptOfferPaymentContextTraveler;
+
+  /// contextLabel de la feuille Stripe, vu par l'expéditeur (accept_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement de votre offre'**
+  String get negotiationAcceptOfferPaymentContextSender;
+
+  /// Titre de l'écran de succès après paiement carte (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_paid_success_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre acceptée et payée !'**
+  String get negotiationOfferAcceptedPaidTitle;
+
+  /// Sous-titre de l'écran de succès après paiement carte (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_paid_success_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.'**
+  String get negotiationOfferAcceptedPaidSubtitle;
+
+  /// CTA des écrans de succès de négociation (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_paid_success_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le suivi'**
+  String get negotiationTrackShipmentCta;
+
+  /// Sous-titre de l'écran de succès (accord de prix, vu par l'expéditeur) (accept_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes d\'accord sur le prix. Le voyageur va confirmer son trajet, puis tu finaliseras les détails de l\'envoi et le règlement depuis le fil.'**
+  String get negotiationAcceptOfferAgreedSubtitleSender;
+
+  /// Sous-titre de l'écran de succès (accord de prix, voyageur avec trajet déjà lié) (accept_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes d\'accord sur le prix. L\'expéditeur va finaliser les détails de l\'envoi et le règlement, tu seras notifié à chaque étape.'**
+  String get negotiationAcceptOfferAgreedSubtitleTravelerLinked;
+
+  /// Sous-titre de l'écran de succès (accord de prix, voyageur sans trajet lié) (accept_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes d\'accord sur le prix. Prochaine étape : lie ou crée un trajet pour cette offre afin que l\'expéditeur puisse finaliser le règlement.'**
+  String get negotiationAcceptOfferAgreedSubtitleTravelerUnlinked;
+
+  /// Titre de l'écran de succès après accord de prix ou accord cash (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accord confirmé !'**
+  String get negotiationAgreementConfirmedTitle;
+
+  /// Snackbar d'erreur générique du flux de paiement (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue. Veuillez réessayer.'**
+  String get negotiationGenericErrorSnackbar;
+
+  /// Ligne de décomposition de prix, vue voyageur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix payé par l\'expéditeur'**
+  String get negotiationPriceBreakdownPaidBySender;
+
+  /// Ligne de décomposition de prix, vue expéditeur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)
+  ///
+  /// In fr, this message translates to:
+  /// **'Net voyageur'**
+  String get negotiationPriceBreakdownNetTraveler;
+
+  /// Label du total, vue voyageur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu reçois'**
+  String get negotiationPriceBreakdownYouReceive;
+
+  /// Label du total, vue expéditeur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)
+  ///
+  /// In fr, this message translates to:
+  /// **'Total à régler'**
+  String get negotiationPriceBreakdownTotalToSettle;
+
+  /// Badge affiché quand une remise promo réelle s'applique, identique dans les deux langues (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)
+  ///
+  /// In fr, this message translates to:
+  /// **'Promo'**
+  String get negotiationPriceBreakdownPromoBadge;
+
+  /// Texte d'explication sous la décomposition de prix, vu voyageur (accept_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En acceptant, l\'expéditeur effectuera le paiement. Tu recevras {price} à la livraison validée, quel que soit un éventuel code promo utilisé par l\'expéditeur.'**
+  String negotiationAcceptOfferInfoTraveler(String price);
+
+  /// Texte d'explication sous la décomposition de prix, vu expéditeur (accept_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En confirmant, le paiement est bloqué et sécurisé. Le voyageur reçoit le montant à la livraison validée.'**
+  String get negotiationAcceptOfferInfoSender;
+
+  /// Titre de la feuille de contre-offre (counter_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Faire une contre-offre'**
+  String get negotiationCounterOfferTitle;
+
+  /// Sous-titre : prix actuel (déjà traduit) + round courant (counter_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{priceLabel} · Round {round}/5'**
+  String negotiationCounterOfferSubtitle(String priceLabel, int round);
+
+  /// Label du champ prix (counter_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton prix proposé'**
+  String get negotiationCounterOfferYourPriceLabel;
+
+  /// Label du champ message (counter_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Message (optionnel)'**
+  String get negotiationCounterOfferMessageLabel;
+
+  /// Texte d'indication du champ message (counter_offer_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Explique ta proposition…'**
+  String get negotiationCounterOfferMessageHint;
+
+  /// Titre de la feuille de rejet (reject_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Rejeter la négociation'**
+  String get negotiationRejectTitle;
+
+  /// Bouton de confirmation du rejet (reject_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer le rejet'**
+  String get negotiationRejectConfirmLabel;
+
+  /// Label du champ raison (reject_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Raison (optionnel)'**
+  String get negotiationRejectReasonLabel;
+
+  /// Titre et bouton de la feuille en mode cash (payment_recap_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer l\'accord'**
+  String get negotiationPaymentRecapConfirmAgreementTitle;
+
+  /// Titre de la feuille en mode mobile money (payment_recap_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer par mobile money'**
+  String get negotiationPaymentRecapMobileMoneyTitle;
+
+  /// Bouton de paiement en mode carte (payment_recap_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer {amount}'**
+  String negotiationPaymentRecapPayButtonLabel(String amount);
+
+  /// Bouton de paiement en mode mobile money (payment_recap_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer {amount} par mobile money'**
+  String negotiationPaymentRecapPayMobileMoneyButton(String amount);
+
+  /// contextLabel de la feuille Stripe quand le mode est cash (payment_recap_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmation de l\'accord'**
+  String get negotiationPaymentRecapContextConfirm;
+
+  /// contextLabel de la feuille Stripe quand le mode est carte (payment_recap_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé'**
+  String get negotiationPaymentRecapContextSecure;
+
+  /// Sous-titre de l'écran de succès en mode cash (payment_recap_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.'**
+  String get negotiationPaymentRecapCashSuccessSubtitle;
+
+  /// Ligne du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)
+  ///
+  /// In fr, this message translates to:
+  /// **'À remettre au voyageur (en espèces)'**
+  String get negotiationPaymentRecapCashHandoverLabel;
+
+  /// Sous-ligne du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)
+  ///
+  /// In fr, this message translates to:
+  /// **'dont frais Yadony (réglés par le voyageur)'**
+  String get negotiationPaymentRecapCashFeeNote;
+
+  /// Ligne totale du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur garde net'**
+  String get negotiationPaymentRecapCashNetLabel;
+
+  /// Ligne du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur touche'**
+  String get negotiationPaymentRecapTravelerReceivesLabel;
+
+  /// Ligne du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais de service Yadony'**
+  String get negotiationPaymentRecapServiceFeeLabel;
+
+  /// Ligne totale du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)
+  ///
+  /// In fr, this message translates to:
+  /// **'Total à payer'**
+  String get negotiationPaymentRecapTotalToPayLabel;
+
+  /// Note explicative sous le récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remettez le montant total en espèces au voyageur lors de la remise du colis. Le voyageur déduira ses frais Yadony de ce montant.'**
+  String get negotiationPaymentRecapCashNote;
+
+  /// Note explicative sous le récapitulatif de frais, mode mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)
+  ///
+  /// In fr, this message translates to:
+  /// **'Une demande de paiement arrive sur le numéro indiqué ci-dessous. Le voyageur reçoit le montant uniquement après confirmation de la livraison.'**
+  String get negotiationPaymentRecapMobileMoneyNote;
+
+  /// Note explicative sous le récapitulatif de frais, mode carte (payment_recap_bottom_sheet.dart, PaymentRecapContent)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant est bloqué et sécurisé. Le voyageur le reçoit uniquement après confirmation de la livraison.'**
+  String get negotiationPaymentRecapSecureNote;
+
+  /// Bannière de confiance, mode cash (payment_recap_bottom_sheet.dart, _TrustBanner)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en main propre à la remise'**
+  String get negotiationPaymentRecapCashBannerMessage;
+
+  /// Bannière de confiance, mode mobile money (payment_recap_bottom_sheet.dart, _TrustBanner)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu valides le paiement sur ton téléphone. Yadony garde l\'argent et ne le verse au voyageur qu\'après confirmation de la livraison.'**
+  String get negotiationPaymentRecapMobileMoneyBannerMessage;
+
+  /// Bannière de confiance, mode carte (payment_recap_bottom_sheet.dart, _TrustBanner)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sécurisé · bloqué jusqu\'à la livraison'**
+  String get negotiationPaymentRecapSecureBannerMessage;
+
+  /// Titre de la feuille de règlement de commission en solde insuffisant (commission_settlement_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde insuffisant'**
+  String get negotiationCommissionSettlementTitle;
+
+  /// Texte d'aide de la feuille de règlement de commission (commission_settlement_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharge ton portefeuille ou paie la commission directement par carte.'**
+  String get negotiationCommissionSettlementHint;
+
+  /// Bouton de recharge du portefeuille (commission_settlement_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharger mon portefeuille'**
+  String get negotiationCommissionSettlementTopupButton;
+
+  /// Bouton de règlement direct par carte (commission_settlement_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer par carte'**
+  String get negotiationCommissionSettlementPayCardButton;
+
+  /// Bouton d'ajout de carte quand le voyageur n'en a pas encore (commission_settlement_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une carte'**
+  String get negotiationCommissionSettlementAddCardButton;
+
+  /// Titre de la feuille quand Stripe Connect est disponible dans le pays (payment_capability_block_sheets.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement carte requis'**
+  String get negotiationCardCapabilityRequiredTitle;
+
+  /// Titre de la feuille quand Stripe Connect n'est pas disponible dans le pays (payment_capability_block_sheets.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis indisponible'**
+  String get negotiationCardCapabilityUnavailableTitle;
+
+  /// Corps de la feuille quand Stripe Connect est disponible dans le pays (payment_capability_block_sheets.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. Active les paiements par carte pour pouvoir lier ce trajet.'**
+  String get negotiationCardCapabilityRequiredBody;
+
+  /// Corps de la feuille quand Stripe Connect n'est pas disponible dans le pays (payment_capability_block_sheets.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur n\'accepte que le paiement par carte pour ce colis, et Stripe ne permet pas encore d\'ouvrir un compte de paiement depuis ton pays. Tu peux lier les colis payés en espèces.'**
+  String get negotiationCardCapabilityUnavailableBody;
+
+  /// Bouton vers l'onboarding Stripe Connect (payment_capability_block_sheets.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer le paiement carte'**
+  String get negotiationCardCapabilityActivateButton;
+
+  /// Bouton de fermeture quand aucune action n'est possible (payment_capability_block_sheets.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ai compris'**
+  String get negotiationCardCapabilityUnderstoodButton;
+
+  /// Ligne round abrégé + horodatage relatif d'une carte de négociation colis ; `timeAgo` déjà traduit (my_negotiations_screen.dart, _NegoCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'R.{round}/5 · {timeAgo}'**
+  String negotiationCardRoundShortLabel(int round, String timeAgo);
 }
 
 class _AppLocalizationsDelegate

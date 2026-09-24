@@ -6138,4 +6138,321 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get negotiationSenderChoosesAmong => 'The sender will choose from';
+
+  @override
+  String get errorCommissionConfirmFailedTitle => 'Payment not confirmed';
+
+  @override
+  String get errorCommissionConfirmFailedMessage =>
+      'We couldn\'t confirm the payment';
+
+  @override
+  String get errorCommission3dsInterruptedTitle => 'Authentication interrupted';
+
+  @override
+  String get errorCommission3dsInterruptedMessage =>
+      'Bank authentication was interrupted';
+
+  @override
+  String get errorCommissionFailedTitle => 'Payment declined';
+
+  @override
+  String get errorCommissionFailedMessage =>
+      'The service fee payment was declined';
+
+  @override
+  String get errorCommissionFailedNoCardMessage =>
+      'No card is registered to pay the service fee.';
+
+  @override
+  String get errorCommissionFailedCardDeclinedMessage =>
+      'Your card was declined.';
+
+  @override
+  String get errorCommissionFailedStripeErrorMessage =>
+      'Payment service error, please try again.';
+
+  @override
+  String get errorCommissionFailedCardStatusMessage =>
+      'The card payment didn\'t go through.';
+
+  @override
+  String get bidAcceptConfirmFailed => 'Confirmation failed';
+
+  @override
+  String get bidAcceptBankAuthInterrupted =>
+      'Bank authentication was interrupted';
+
+  @override
+  String get bidAcceptRefused => 'Acceptance declined';
+
+  @override
+  String get negotiationMakeOfferTitle => 'Make an offer';
+
+  @override
+  String negotiationMakeOfferTakeAtLabel(String amount) {
+    return 'Take for $amount';
+  }
+
+  @override
+  String get negotiationMakeOfferSendButtonLabel => 'Send offer';
+
+  @override
+  String get negotiationMakeOfferSelectTravelDate => 'Select your travel date';
+
+  @override
+  String get negotiationMakeOfferSelectTrip => 'Select or create a trip';
+
+  @override
+  String get negotiationMakeOfferYourPriceLabel => 'YOUR PRICE';
+
+  @override
+  String get negotiationMakeOfferCapacityLabel => 'CAPACITY';
+
+  @override
+  String get negotiationMakeOfferTravelDateLabel => 'TRAVEL DATE';
+
+  @override
+  String get negotiationMakeOfferSelectDatePlaceholder => 'Select…';
+
+  @override
+  String get negotiationMakeOfferMessageLabel => 'MESSAGE';
+
+  @override
+  String get negotiationMakeOfferMessageOptional => 'optional';
+
+  @override
+  String get negotiationMakeOfferMessageHint =>
+      'I\'m traveling on that exact day…';
+
+  @override
+  String get negotiationMakeOfferInvalidPrice => 'Invalid';
+
+  @override
+  String get negotiationMakeOfferOfferSentSnackbar => 'Offer sent';
+
+  @override
+  String get negotiationMakeOfferMarketPriceLabel => 'Market price';
+
+  @override
+  String get negotiationPaySecurelyTitle => 'Pay securely';
+
+  @override
+  String get negotiationAcceptOfferTitle => 'Accept the offer';
+
+  @override
+  String get negotiationProcessingLabel => 'Processing…';
+
+  @override
+  String negotiationAcceptOfferPayButtonLabel(String amount) {
+    return 'Pay ($amount)';
+  }
+
+  @override
+  String negotiationAcceptOfferConfirmButtonLabel(String amount) {
+    return 'Confirm ($amount)';
+  }
+
+  @override
+  String get negotiationAcceptOfferPaymentContextTraveler =>
+      'Payment for the accepted offer';
+
+  @override
+  String get negotiationAcceptOfferPaymentContextSender =>
+      'Payment for your offer';
+
+  @override
+  String get negotiationOfferAcceptedPaidTitle => 'Offer accepted and paid!';
+
+  @override
+  String get negotiationOfferAcceptedPaidSubtitle =>
+      'Your money is held and secured, the traveler only receives it once delivery is confirmed. Track your parcel from the thread.';
+
+  @override
+  String get negotiationTrackShipmentCta => 'Track your shipment';
+
+  @override
+  String get negotiationAcceptOfferAgreedSubtitleSender =>
+      'You\'ve agreed on the price. The traveler will confirm their trip, then you\'ll finalize the shipment details and payment from the thread.';
+
+  @override
+  String get negotiationAcceptOfferAgreedSubtitleTravelerLinked =>
+      'You\'ve agreed on the price. The sender will finalize the shipment details and payment, you\'ll be notified at every step.';
+
+  @override
+  String get negotiationAcceptOfferAgreedSubtitleTravelerUnlinked =>
+      'You\'ve agreed on the price. Next step: link or create a trip for this offer so the sender can finalize the payment.';
+
+  @override
+  String get negotiationAgreementConfirmedTitle => 'Agreement confirmed!';
+
+  @override
+  String get negotiationGenericErrorSnackbar =>
+      'Something went wrong. Please try again.';
+
+  @override
+  String get negotiationPriceBreakdownPaidBySender =>
+      'Price paid by the sender';
+
+  @override
+  String get negotiationPriceBreakdownNetTraveler => 'Traveler net';
+
+  @override
+  String get negotiationPriceBreakdownYouReceive => 'You receive';
+
+  @override
+  String get negotiationPriceBreakdownTotalToSettle => 'Total to settle';
+
+  @override
+  String get negotiationPriceBreakdownPromoBadge => 'Promo';
+
+  @override
+  String negotiationAcceptOfferInfoTraveler(String price) {
+    return 'By accepting, the sender will make the payment. You\'ll receive $price once delivery is confirmed, regardless of any promo code the sender uses.';
+  }
+
+  @override
+  String get negotiationAcceptOfferInfoSender =>
+      'By confirming, the payment is held and secured. The traveler receives the amount once delivery is confirmed.';
+
+  @override
+  String get negotiationCounterOfferTitle => 'Make a counter-offer';
+
+  @override
+  String negotiationCounterOfferSubtitle(String priceLabel, int round) {
+    return '$priceLabel · Round $round/5';
+  }
+
+  @override
+  String get negotiationCounterOfferYourPriceLabel => 'Your proposed price';
+
+  @override
+  String get negotiationCounterOfferMessageLabel => 'Message (optional)';
+
+  @override
+  String get negotiationCounterOfferMessageHint => 'Explain your offer…';
+
+  @override
+  String get negotiationRejectTitle => 'Decline the negotiation';
+
+  @override
+  String get negotiationRejectConfirmLabel => 'Confirm decline';
+
+  @override
+  String get negotiationRejectReasonLabel => 'Reason (optional)';
+
+  @override
+  String get negotiationPaymentRecapConfirmAgreementTitle =>
+      'Confirm the agreement';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyTitle => 'Pay by mobile money';
+
+  @override
+  String negotiationPaymentRecapPayButtonLabel(String amount) {
+    return 'Pay $amount';
+  }
+
+  @override
+  String negotiationPaymentRecapPayMobileMoneyButton(String amount) {
+    return 'Pay $amount by mobile money';
+  }
+
+  @override
+  String get negotiationPaymentRecapContextConfirm =>
+      'Confirming the agreement';
+
+  @override
+  String get negotiationPaymentRecapContextSecure => 'Secure payment';
+
+  @override
+  String get negotiationPaymentRecapCashSuccessSubtitle =>
+      'Cash payment: you hand the amount to the traveler in person, at parcel drop-off. If canceled after drop-off, Yadony can\'t refund you immediately but will make sure the traveler gives your money back.';
+
+  @override
+  String get negotiationPaymentRecapCashHandoverLabel =>
+      'To hand over to the traveler (in cash)';
+
+  @override
+  String get negotiationPaymentRecapCashFeeNote =>
+      'including Yadony fees (paid by the traveler)';
+
+  @override
+  String get negotiationPaymentRecapCashNetLabel => 'The traveler keeps net';
+
+  @override
+  String get negotiationPaymentRecapTravelerReceivesLabel =>
+      'The traveler receives';
+
+  @override
+  String get negotiationPaymentRecapServiceFeeLabel => 'Yadony service fee';
+
+  @override
+  String get negotiationPaymentRecapTotalToPayLabel => 'Total to pay';
+
+  @override
+  String get negotiationPaymentRecapCashNote =>
+      'Hand over the full amount in cash to the traveler at parcel drop-off. The traveler will deduct their Yadony fees from that amount.';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyNote =>
+      'A payment request arrives on the number shown below. The traveler receives the amount only after delivery is confirmed.';
+
+  @override
+  String get negotiationPaymentRecapSecureNote =>
+      'The amount is held and secured. The traveler receives it only after delivery is confirmed.';
+
+  @override
+  String get negotiationPaymentRecapCashBannerMessage =>
+      'Cash payment in person at drop-off';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyBannerMessage =>
+      'You confirm the payment on your phone. Yadony holds the money and only releases it to the traveler once delivery is confirmed.';
+
+  @override
+  String get negotiationPaymentRecapSecureBannerMessage =>
+      'Secure · held until delivery';
+
+  @override
+  String get negotiationCommissionSettlementTitle => 'Insufficient balance';
+
+  @override
+  String get negotiationCommissionSettlementHint =>
+      'Top up your wallet or pay the service fee directly by card.';
+
+  @override
+  String get negotiationCommissionSettlementTopupButton => 'Top up my wallet';
+
+  @override
+  String get negotiationCommissionSettlementPayCardButton => 'Pay by card';
+
+  @override
+  String get negotiationCommissionSettlementAddCardButton => 'Add a card';
+
+  @override
+  String get negotiationCardCapabilityRequiredTitle => 'Card payment required';
+
+  @override
+  String get negotiationCardCapabilityUnavailableTitle => 'Parcel unavailable';
+
+  @override
+  String get negotiationCardCapabilityRequiredBody =>
+      'The sender only accepts card payment for this parcel. Activate card payments to link this trip.';
+
+  @override
+  String get negotiationCardCapabilityUnavailableBody =>
+      'The sender only accepts card payment for this parcel, and Stripe doesn\'t yet support opening a payment account from your country. You can link parcels paid in cash.';
+
+  @override
+  String get negotiationCardCapabilityActivateButton =>
+      'Activate card payments';
+
+  @override
+  String get negotiationCardCapabilityUnderstoodButton => 'Got it';
+
+  @override
+  String negotiationCardRoundShortLabel(int round, String timeAgo) {
+    return 'Rd. $round/5 · $timeAgo';
+  }
 }

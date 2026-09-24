@@ -5960,5 +5960,407 @@
   "negotiationSenderChoosesAmong": "L'expéditeur choisira parmi",
     "@negotiationSenderChoosesAmong": {
     "description": "Titre de l'aperçu des moyens de paiement acceptés (link_trip_screen.dart)"
+  },
+  "errorCommissionConfirmFailedTitle": "Règlement non confirmé",
+    "@errorCommissionConfirmFailedTitle": {
+    "description": "Titre : la confirmation du règlement de commission d'une négociation a échoué (negotiation_bloc.dart, code commission/confirm-failed)"
+  },
+  "errorCommissionConfirmFailedMessage": "Confirmation du règlement échouée",
+    "@errorCommissionConfirmFailedMessage": {
+    "description": "Message de repli du constructeur (le detail serveur, ex. \"PaymentIntent status: ...\", reste affiché quand il existe — code dans _serverDetailCodes)"
+  },
+  "errorCommission3dsInterruptedTitle": "Authentification interrompue",
+    "@errorCommission3dsInterruptedTitle": {
+    "description": "Titre : la 3DS du règlement de commission a été interrompue (negotiation_bloc.dart, code commission/3ds-interrupted)"
+  },
+  "errorCommission3dsInterruptedMessage": "Authentification bancaire interrompue",
+    "@errorCommission3dsInterruptedMessage": {
+    "description": "Message affiché quand StripeException interrompt la 3DS du règlement de commission (negotiation_bloc.dart)"
+  },
+  "errorCommissionFailedTitle": "Règlement refusé",
+    "@errorCommissionFailedTitle": {
+    "description": "Titre : le règlement de la commission d'une négociation a été refusé (negotiation_bloc.dart, code commission/failed)"
+  },
+  "errorCommissionFailedMessage": "Règlement de la commission refusé",
+    "@errorCommissionFailedMessage": {
+    "description": "Repli quand le detail machine (r.error) n'est reconnu ni comme un des trois codes connus ni comme card-status-* — Ruling R35 : jamais le code brut"
+  },
+  "errorCommissionFailedNoCardMessage": "Aucune carte enregistrée pour régler la commission.",
+    "@errorCommissionFailedNoCardMessage": {
+    "description": "Traduction du code machine backend no-commission-card (settleNegotiationCommission) — Ruling R35"
+  },
+  "errorCommissionFailedCardDeclinedMessage": "Ta carte a été refusée.",
+    "@errorCommissionFailedCardDeclinedMessage": {
+    "description": "Traduction du code machine backend card-declined (settleNegotiationCommission) — Ruling R35"
+  },
+  "errorCommissionFailedStripeErrorMessage": "Erreur du service de paiement, réessaie.",
+    "@errorCommissionFailedStripeErrorMessage": {
+    "description": "Traduction du code machine backend stripe-error (settleNegotiationCommission) — Ruling R35"
+  },
+  "errorCommissionFailedCardStatusMessage": "Le règlement par carte n'a pas abouti.",
+    "@errorCommissionFailedCardStatusMessage": {
+    "description": "Repli générique pour tout code machine backend card-status-<statut Stripe> (settleNegotiationCommission) — Ruling R35, jamais le statut Stripe brut"
+  },
+  "bidAcceptConfirmFailed": "Confirmation échouée",
+    "@bidAcceptConfirmFailed": {
+    "description": "BidFailed, reason confirmFailed : repli quand la confirmation post-3DS échoue sans message serveur (bid_acceptance_bloc.dart)"
+  },
+  "bidAcceptBankAuthInterrupted": "Authentification bancaire interrompue",
+    "@bidAcceptBankAuthInterrupted": {
+    "description": "BidFailed, reason bankAuthInterrupted : la 3DS de l'acceptation d'un bid est interrompue (StripeException, bid_acceptance_bloc.dart)"
+  },
+  "bidAcceptRefused": "Acceptation refusée",
+    "@bidAcceptRefused": {
+    "description": "BidFailed, reason refused : repli quand l'acceptation échoue sans message serveur (bid_acceptance_bloc.dart)"
+  },
+  "negotiationMakeOfferTitle": "Faire une offre",
+    "@negotiationMakeOfferTitle": {
+    "description": "Titre de la feuille quand le prix n'est pas ferme (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferTakeAtLabel": "Prendre à {amount}",
+    "@negotiationMakeOfferTakeAtLabel": {
+    "description": "Bouton de la feuille, prix ferme avec montant connu (make_offer_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationMakeOfferSendButtonLabel": "Envoyer l'offre",
+    "@negotiationMakeOfferSendButtonLabel": {
+    "description": "Bouton de la feuille, offre négociable (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferSelectTravelDate": "Sélectionnez votre date de voyage",
+    "@negotiationMakeOfferSelectTravelDate": {
+    "description": "Snackbar d'avertissement si la date de voyage n'est pas choisie (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferSelectTrip": "Sélectionnez ou créez un trajet",
+    "@negotiationMakeOfferSelectTrip": {
+    "description": "Snackbar d'avertissement si aucun trajet n'est sélectionné (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferYourPriceLabel": "VOTRE PRIX",
+    "@negotiationMakeOfferYourPriceLabel": {
+    "description": "Label majuscule du champ prix, offre négociable (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferCapacityLabel": "CAPACITÉ",
+    "@negotiationMakeOfferCapacityLabel": {
+    "description": "Label majuscule du champ capacité (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferTravelDateLabel": "DATE DE VOYAGE",
+    "@negotiationMakeOfferTravelDateLabel": {
+    "description": "Label majuscule du champ date (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferSelectDatePlaceholder": "Sélectionner…",
+    "@negotiationMakeOfferSelectDatePlaceholder": {
+    "description": "Texte du champ date tant qu'aucune date n'est choisie (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferMessageLabel": "MESSAGE",
+    "@negotiationMakeOfferMessageLabel": {
+    "description": "Label majuscule du champ message, identique dans les deux langues (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferMessageOptional": "optionnel",
+    "@negotiationMakeOfferMessageOptional": {
+    "description": "Sous-label du champ message (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferMessageHint": "Je voyage exactement ce jour-là…",
+    "@negotiationMakeOfferMessageHint": {
+    "description": "Texte d'indication du champ message (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferInvalidPrice": "Invalide",
+    "@negotiationMakeOfferInvalidPrice": {
+    "description": "Erreur de validation du champ prix (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferOfferSentSnackbar": "Offre envoyée",
+    "@negotiationMakeOfferOfferSentSnackbar": {
+    "description": "Snackbar de succès à l'envoi de l'offre (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationMakeOfferMarketPriceLabel": "Prix du marché",
+    "@negotiationMakeOfferMarketPriceLabel": {
+    "description": "Label de la bannière d'estimation de prix (make_offer_bottom_sheet.dart)"
+  },
+  "negotiationPaySecurelyTitle": "Payer en toute sécurité",
+    "@negotiationPaySecurelyTitle": {
+    "description": "Titre de la feuille en étape de paiement final (accept_offer_bottom_sheet.dart, aussi payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationAcceptOfferTitle": "Accepter l'offre",
+    "@negotiationAcceptOfferTitle": {
+    "description": "Titre de la feuille hors étape de paiement final (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationProcessingLabel": "Traitement…",
+    "@negotiationProcessingLabel": {
+    "description": "Libellé du bouton pendant le traitement (accept_offer_bottom_sheet.dart, aussi payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationAcceptOfferPayButtonLabel": "Payer ({amount})",
+    "@negotiationAcceptOfferPayButtonLabel": {
+    "description": "Bouton de paiement final (accept_offer_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationAcceptOfferConfirmButtonLabel": "Confirmer ({amount})",
+    "@negotiationAcceptOfferConfirmButtonLabel": {
+    "description": "Bouton d'acceptation du prix, hors paiement final (accept_offer_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationAcceptOfferPaymentContextTraveler": "Paiement de l'offre acceptée",
+    "@negotiationAcceptOfferPaymentContextTraveler": {
+    "description": "contextLabel de la feuille Stripe, vu par le voyageur (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationAcceptOfferPaymentContextSender": "Paiement de votre offre",
+    "@negotiationAcceptOfferPaymentContextSender": {
+    "description": "contextLabel de la feuille Stripe, vu par l'expéditeur (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationOfferAcceptedPaidTitle": "Offre acceptée et payée !",
+    "@negotiationOfferAcceptedPaidTitle": {
+    "description": "Titre de l'écran de succès après paiement carte (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_paid_success_screen.dart)"
+  },
+  "negotiationOfferAcceptedPaidSubtitle": "Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu'après confirmation de la livraison. Suis ton colis depuis le fil.",
+    "@negotiationOfferAcceptedPaidSubtitle": {
+    "description": "Sous-titre de l'écran de succès après paiement carte (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_paid_success_screen.dart)"
+  },
+  "negotiationTrackShipmentCta": "Voir le suivi",
+    "@negotiationTrackShipmentCta": {
+    "description": "CTA des écrans de succès de négociation (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_paid_success_screen.dart)"
+  },
+  "negotiationAcceptOfferAgreedSubtitleSender": "Vous êtes d'accord sur le prix. Le voyageur va confirmer son trajet, puis tu finaliseras les détails de l'envoi et le règlement depuis le fil.",
+    "@negotiationAcceptOfferAgreedSubtitleSender": {
+    "description": "Sous-titre de l'écran de succès (accord de prix, vu par l'expéditeur) (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationAcceptOfferAgreedSubtitleTravelerLinked": "Vous êtes d'accord sur le prix. L'expéditeur va finaliser les détails de l'envoi et le règlement, tu seras notifié à chaque étape.",
+    "@negotiationAcceptOfferAgreedSubtitleTravelerLinked": {
+    "description": "Sous-titre de l'écran de succès (accord de prix, voyageur avec trajet déjà lié) (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationAcceptOfferAgreedSubtitleTravelerUnlinked": "Vous êtes d'accord sur le prix. Prochaine étape : lie ou crée un trajet pour cette offre afin que l'expéditeur puisse finaliser le règlement.",
+    "@negotiationAcceptOfferAgreedSubtitleTravelerUnlinked": {
+    "description": "Sous-titre de l'écran de succès (accord de prix, voyageur sans trajet lié) (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationAgreementConfirmedTitle": "Accord confirmé !",
+    "@negotiationAgreementConfirmedTitle": {
+    "description": "Titre de l'écran de succès après accord de prix ou accord cash (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationGenericErrorSnackbar": "Une erreur est survenue. Veuillez réessayer.",
+    "@negotiationGenericErrorSnackbar": {
+    "description": "Snackbar d'erreur générique du flux de paiement (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationPriceBreakdownPaidBySender": "Prix payé par l'expéditeur",
+    "@negotiationPriceBreakdownPaidBySender": {
+    "description": "Ligne de décomposition de prix, vue voyageur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
+  },
+  "negotiationPriceBreakdownNetTraveler": "Net voyageur",
+    "@negotiationPriceBreakdownNetTraveler": {
+    "description": "Ligne de décomposition de prix, vue expéditeur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
+  },
+  "negotiationPriceBreakdownYouReceive": "Tu reçois",
+    "@negotiationPriceBreakdownYouReceive": {
+    "description": "Label du total, vue voyageur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
+  },
+  "negotiationPriceBreakdownTotalToSettle": "Total à régler",
+    "@negotiationPriceBreakdownTotalToSettle": {
+    "description": "Label du total, vue expéditeur (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
+  },
+  "negotiationPriceBreakdownPromoBadge": "Promo",
+    "@negotiationPriceBreakdownPromoBadge": {
+    "description": "Badge affiché quand une remise promo réelle s'applique, identique dans les deux langues (accept_offer_bottom_sheet.dart, _NegotiationPriceBreakdown)"
+  },
+  "negotiationAcceptOfferInfoTraveler": "En acceptant, l'expéditeur effectuera le paiement. Tu recevras {price} à la livraison validée, quel que soit un éventuel code promo utilisé par l'expéditeur.",
+    "@negotiationAcceptOfferInfoTraveler": {
+    "description": "Texte d'explication sous la décomposition de prix, vu voyageur (accept_offer_bottom_sheet.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationAcceptOfferInfoSender": "En confirmant, le paiement est bloqué et sécurisé. Le voyageur reçoit le montant à la livraison validée.",
+    "@negotiationAcceptOfferInfoSender": {
+    "description": "Texte d'explication sous la décomposition de prix, vu expéditeur (accept_offer_bottom_sheet.dart)"
+  },
+  "negotiationCounterOfferTitle": "Faire une contre-offre",
+    "@negotiationCounterOfferTitle": {
+    "description": "Titre de la feuille de contre-offre (counter_offer_bottom_sheet.dart)"
+  },
+  "negotiationCounterOfferSubtitle": "{priceLabel} · Round {round}/5",
+    "@negotiationCounterOfferSubtitle": {
+    "description": "Sous-titre : prix actuel (déjà traduit) + round courant (counter_offer_bottom_sheet.dart)",
+    "placeholders": {
+      "priceLabel": {
+        "type": "String"
+      },
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationCounterOfferYourPriceLabel": "Ton prix proposé",
+    "@negotiationCounterOfferYourPriceLabel": {
+    "description": "Label du champ prix (counter_offer_bottom_sheet.dart)"
+  },
+  "negotiationCounterOfferMessageLabel": "Message (optionnel)",
+    "@negotiationCounterOfferMessageLabel": {
+    "description": "Label du champ message (counter_offer_bottom_sheet.dart)"
+  },
+  "negotiationCounterOfferMessageHint": "Explique ta proposition…",
+    "@negotiationCounterOfferMessageHint": {
+    "description": "Texte d'indication du champ message (counter_offer_bottom_sheet.dart)"
+  },
+  "negotiationRejectTitle": "Rejeter la négociation",
+    "@negotiationRejectTitle": {
+    "description": "Titre de la feuille de rejet (reject_bottom_sheet.dart)"
+  },
+  "negotiationRejectConfirmLabel": "Confirmer le rejet",
+    "@negotiationRejectConfirmLabel": {
+    "description": "Bouton de confirmation du rejet (reject_bottom_sheet.dart)"
+  },
+  "negotiationRejectReasonLabel": "Raison (optionnel)",
+    "@negotiationRejectReasonLabel": {
+    "description": "Label du champ raison (reject_bottom_sheet.dart)"
+  },
+  "negotiationPaymentRecapConfirmAgreementTitle": "Confirmer l'accord",
+    "@negotiationPaymentRecapConfirmAgreementTitle": {
+    "description": "Titre et bouton de la feuille en mode cash (payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationPaymentRecapMobileMoneyTitle": "Payer par mobile money",
+    "@negotiationPaymentRecapMobileMoneyTitle": {
+    "description": "Titre de la feuille en mode mobile money (payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationPaymentRecapPayButtonLabel": "Payer {amount}",
+    "@negotiationPaymentRecapPayButtonLabel": {
+    "description": "Bouton de paiement en mode carte (payment_recap_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationPaymentRecapPayMobileMoneyButton": "Payer {amount} par mobile money",
+    "@negotiationPaymentRecapPayMobileMoneyButton": {
+    "description": "Bouton de paiement en mode mobile money (payment_recap_bottom_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationPaymentRecapContextConfirm": "Confirmation de l'accord",
+    "@negotiationPaymentRecapContextConfirm": {
+    "description": "contextLabel de la feuille Stripe quand le mode est cash (payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationPaymentRecapContextSecure": "Paiement sécurisé",
+    "@negotiationPaymentRecapContextSecure": {
+    "description": "contextLabel de la feuille Stripe quand le mode est carte (payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationPaymentRecapCashSuccessSubtitle": "Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s'assurera que le voyageur te restitue ton argent.",
+    "@negotiationPaymentRecapCashSuccessSubtitle": {
+    "description": "Sous-titre de l'écran de succès en mode cash (payment_recap_bottom_sheet.dart)"
+  },
+  "negotiationPaymentRecapCashHandoverLabel": "À remettre au voyageur (en espèces)",
+    "@negotiationPaymentRecapCashHandoverLabel": {
+    "description": "Ligne du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapCashFeeNote": "dont frais Yadony (réglés par le voyageur)",
+    "@negotiationPaymentRecapCashFeeNote": {
+    "description": "Sous-ligne du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapCashNetLabel": "Le voyageur garde net",
+    "@negotiationPaymentRecapCashNetLabel": {
+    "description": "Ligne totale du récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapTravelerReceivesLabel": "Le voyageur touche",
+    "@negotiationPaymentRecapTravelerReceivesLabel": {
+    "description": "Ligne du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapServiceFeeLabel": "Frais de service Yadony",
+    "@negotiationPaymentRecapServiceFeeLabel": {
+    "description": "Ligne du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapTotalToPayLabel": "Total à payer",
+    "@negotiationPaymentRecapTotalToPayLabel": {
+    "description": "Ligne totale du récapitulatif de frais, mode carte/mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapCashNote": "Remettez le montant total en espèces au voyageur lors de la remise du colis. Le voyageur déduira ses frais Yadony de ce montant.",
+    "@negotiationPaymentRecapCashNote": {
+    "description": "Note explicative sous le récapitulatif de frais, mode cash (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapMobileMoneyNote": "Une demande de paiement arrive sur le numéro indiqué ci-dessous. Le voyageur reçoit le montant uniquement après confirmation de la livraison.",
+    "@negotiationPaymentRecapMobileMoneyNote": {
+    "description": "Note explicative sous le récapitulatif de frais, mode mobile money (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapSecureNote": "Le montant est bloqué et sécurisé. Le voyageur le reçoit uniquement après confirmation de la livraison.",
+    "@negotiationPaymentRecapSecureNote": {
+    "description": "Note explicative sous le récapitulatif de frais, mode carte (payment_recap_bottom_sheet.dart, PaymentRecapContent)"
+  },
+  "negotiationPaymentRecapCashBannerMessage": "Paiement en main propre à la remise",
+    "@negotiationPaymentRecapCashBannerMessage": {
+    "description": "Bannière de confiance, mode cash (payment_recap_bottom_sheet.dart, _TrustBanner)"
+  },
+  "negotiationPaymentRecapMobileMoneyBannerMessage": "Tu valides le paiement sur ton téléphone. Yadony garde l'argent et ne le verse au voyageur qu'après confirmation de la livraison.",
+    "@negotiationPaymentRecapMobileMoneyBannerMessage": {
+    "description": "Bannière de confiance, mode mobile money (payment_recap_bottom_sheet.dart, _TrustBanner)"
+  },
+  "negotiationPaymentRecapSecureBannerMessage": "Sécurisé · bloqué jusqu'à la livraison",
+    "@negotiationPaymentRecapSecureBannerMessage": {
+    "description": "Bannière de confiance, mode carte (payment_recap_bottom_sheet.dart, _TrustBanner)"
+  },
+  "negotiationCommissionSettlementTitle": "Solde insuffisant",
+    "@negotiationCommissionSettlementTitle": {
+    "description": "Titre de la feuille de règlement de commission en solde insuffisant (commission_settlement_sheet.dart)"
+  },
+  "negotiationCommissionSettlementHint": "Recharge ton portefeuille ou paie la commission directement par carte.",
+    "@negotiationCommissionSettlementHint": {
+    "description": "Texte d'aide de la feuille de règlement de commission (commission_settlement_sheet.dart)"
+  },
+  "negotiationCommissionSettlementTopupButton": "Recharger mon portefeuille",
+    "@negotiationCommissionSettlementTopupButton": {
+    "description": "Bouton de recharge du portefeuille (commission_settlement_sheet.dart)"
+  },
+  "negotiationCommissionSettlementPayCardButton": "Payer par carte",
+    "@negotiationCommissionSettlementPayCardButton": {
+    "description": "Bouton de règlement direct par carte (commission_settlement_sheet.dart)"
+  },
+  "negotiationCommissionSettlementAddCardButton": "Ajouter une carte",
+    "@negotiationCommissionSettlementAddCardButton": {
+    "description": "Bouton d'ajout de carte quand le voyageur n'en a pas encore (commission_settlement_sheet.dart)"
+  },
+  "negotiationCardCapabilityRequiredTitle": "Paiement carte requis",
+    "@negotiationCardCapabilityRequiredTitle": {
+    "description": "Titre de la feuille quand Stripe Connect est disponible dans le pays (payment_capability_block_sheets.dart)"
+  },
+  "negotiationCardCapabilityUnavailableTitle": "Colis indisponible",
+    "@negotiationCardCapabilityUnavailableTitle": {
+    "description": "Titre de la feuille quand Stripe Connect n'est pas disponible dans le pays (payment_capability_block_sheets.dart)"
+  },
+  "negotiationCardCapabilityRequiredBody": "L'expéditeur n'accepte que le paiement par carte pour ce colis. Active les paiements par carte pour pouvoir lier ce trajet.",
+    "@negotiationCardCapabilityRequiredBody": {
+    "description": "Corps de la feuille quand Stripe Connect est disponible dans le pays (payment_capability_block_sheets.dart)"
+  },
+  "negotiationCardCapabilityUnavailableBody": "L'expéditeur n'accepte que le paiement par carte pour ce colis, et Stripe ne permet pas encore d'ouvrir un compte de paiement depuis ton pays. Tu peux lier les colis payés en espèces.",
+    "@negotiationCardCapabilityUnavailableBody": {
+    "description": "Corps de la feuille quand Stripe Connect n'est pas disponible dans le pays (payment_capability_block_sheets.dart)"
+  },
+  "negotiationCardCapabilityActivateButton": "Activer le paiement carte",
+    "@negotiationCardCapabilityActivateButton": {
+    "description": "Bouton vers l'onboarding Stripe Connect (payment_capability_block_sheets.dart)"
+  },
+  "negotiationCardCapabilityUnderstoodButton": "J'ai compris",
+    "@negotiationCardCapabilityUnderstoodButton": {
+    "description": "Bouton de fermeture quand aucune action n'est possible (payment_capability_block_sheets.dart)"
+  },
+  "negotiationCardRoundShortLabel": "R.{round}/5 · {timeAgo}",
+    "@negotiationCardRoundShortLabel": {
+    "description": "Ligne round abrégé + horodatage relatif d'une carte de négociation colis ; `timeAgo` déjà traduit (my_negotiations_screen.dart, _NegoCard)",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "timeAgo": {
+        "type": "String"
+      }
+    }
   }
 }

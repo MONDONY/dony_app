@@ -12,6 +12,7 @@ import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -74,9 +75,12 @@ class AcceptOfferBottomSheet {
       unawaited(loadQuote());
     }
 
+    final l = context.l10n;
     await DonyBottomSheet.show<void>(
       context,
-      title: isCheckout ? 'Payer en toute sécurité' : 'Accepter l\'offre',
+      title: isCheckout
+          ? l.negotiationPaySecurelyTitle
+          : l.negotiationAcceptOfferTitle,
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       stickyBottom: ListenableBuilder(
         // `quoteNotifier` doit aussi déclencher ce rebuild : sans lui, le
@@ -97,12 +101,17 @@ class AcceptOfferBottomSheet {
                 ? priceEur
                 : (quote?.totalEur ??
                       (grossPriceEur ?? PriceDisplay.grossFromNet(priceEur)));
+            final lb = ctx.l10n;
             return DonyButton(
               label: loading
-                  ? 'Traitement…'
+                  ? lb.negotiationProcessingLabel
                   : isCheckout
-                  ? 'Payer (${PriceDisplay.money(displayPrice, currency)})'
-                  : 'Confirmer (${PriceDisplay.money(displayPrice, currency)})',
+                  ? lb.negotiationAcceptOfferPayButtonLabel(
+                      PriceDisplay.money(displayPrice, currency),
+                    )
+                  : lb.negotiationAcceptOfferConfirmButtonLabel(
+                      PriceDisplay.money(displayPrice, currency),
+                    ),
               isLoading: loading,
               onPressed: loading
                   ? null
@@ -119,7 +128,7 @@ class AcceptOfferBottomSheet {
                         processing.value = false;
                         DonySnackbar.show(
                           ctx,
-                          message: 'Paiement non confirmé, réessayez',
+                          message: lb.bidCreatePaymentNotConfirmedError,
                           type: DonySnackbarType.warning,
                         );
                         return;
@@ -153,8 +162,8 @@ class AcceptOfferBottomSheet {
                               paymentMethodTypes: init.paymentMethodTypes,
                             ),
                             contextLabel: isTraveler
-                                ? 'Paiement de l\'offre acceptée'
-                                : 'Paiement de votre offre',
+                                ? lb.negotiationAcceptOfferPaymentContextTraveler
+                                : lb.negotiationAcceptOfferPaymentContextSender,
                             onSuccess: () {
                               bloc.add(
                                 NegotiationCheckoutRequested(
@@ -168,10 +177,11 @@ class AcceptOfferBottomSheet {
                                   MaterialPageRoute(
                                     builder: (routeContext) => DonySuccessScreen(
                                       mascotteType: DonyMascotteType.securise,
-                                      title: 'Offre acceptée et payée !',
-                                      subtitle:
-                                          'Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
-                                      ctaLabel: 'Voir le suivi',
+                                      title:
+                                          lb.negotiationOfferAcceptedPaidTitle,
+                                      subtitle: lb
+                                          .negotiationOfferAcceptedPaidSubtitle,
+                                      ctaLabel: lb.negotiationTrackShipmentCta,
                                       onCta: () => routeContext.go(
                                         '/negotiations/$threadId',
                                       ),
@@ -195,13 +205,13 @@ class AcceptOfferBottomSheet {
                           final String subtitle;
                           if (!isTraveler) {
                             subtitle =
-                                'Vous êtes d\'accord sur le prix. Le voyageur va confirmer son trajet, puis tu finaliseras les détails de l\'envoi et le règlement depuis le fil.';
+                                lb.negotiationAcceptOfferAgreedSubtitleSender;
                           } else if (hasLinkedTrip) {
-                            subtitle =
-                                'Vous êtes d\'accord sur le prix. L\'expéditeur va finaliser les détails de l\'envoi et le règlement, tu seras notifié à chaque étape.';
+                            subtitle = lb
+                                .negotiationAcceptOfferAgreedSubtitleTravelerLinked;
                           } else {
-                            subtitle =
-                                'Vous êtes d\'accord sur le prix. Prochaine étape : lie ou crée un trajet pour cette offre afin que l\'expéditeur puisse finaliser le règlement.';
+                            subtitle = lb
+                                .negotiationAcceptOfferAgreedSubtitleTravelerUnlinked;
                           }
                           if (ctx.mounted) {
                             Navigator.of(ctx, rootNavigator: true).pop();
@@ -210,9 +220,10 @@ class AcceptOfferBottomSheet {
                                 MaterialPageRoute(
                                   builder: (routeContext) => DonySuccessScreen(
                                     mascotteType: DonyMascotteType.succes,
-                                    title: 'Accord confirmé !',
+                                    title:
+                                        lb.negotiationAgreementConfirmedTitle,
                                     subtitle: subtitle,
-                                    ctaLabel: 'Voir le suivi',
+                                    ctaLabel: lb.negotiationTrackShipmentCta,
                                     onCta: () => routeContext.go(
                                       '/negotiations/$threadId',
                                     ),
@@ -228,8 +239,7 @@ class AcceptOfferBottomSheet {
                         if (ctx.mounted) {
                           DonySnackbar.show(
                             ctx,
-                            message:
-                                'Une erreur est survenue. Veuillez réessayer.',
+                            message: lb.negotiationGenericErrorSnackbar,
                             type: DonySnackbarType.error,
                           );
                         }
@@ -271,8 +281,10 @@ class AcceptOfferBottomSheet {
               const SizedBox(height: DonySpacing.base),
               Text(
                 isTraveler
-                    ? 'En acceptant, l\'expéditeur effectuera le paiement. Tu recevras ${PriceDisplay.money(priceEur, currency)} à la livraison validée, quel que soit un éventuel code promo utilisé par l\'expéditeur.'
-                    : 'En confirmant, le paiement est bloqué et sécurisé. Le voyageur reçoit le montant à la livraison validée.',
+                    ? context.l10n.negotiationAcceptOfferInfoTraveler(
+                        PriceDisplay.money(priceEur, currency),
+                      )
+                    : context.l10n.negotiationAcceptOfferInfoSender,
                 style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 13,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -319,6 +331,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     // Une remise n'est réelle que si le total avec promo est strictement
@@ -336,7 +349,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
         _line(
           tt,
           cs,
-          'Prix payé par l\'expéditeur',
+          l.negotiationPriceBreakdownPaidBySender,
           PriceDisplay.money(totalEur, currency),
         ),
       );
@@ -344,19 +357,24 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
         _line(
           tt,
           cs,
-          'Commission Yadony ($ratePct %)',
+          l.requestCreateCommissionLabel(ratePct),
           '−${PriceDisplay.money(commissionEur, currency)}',
         ),
       );
     } else {
       rows.add(
-        _line(tt, cs, 'Net voyageur', PriceDisplay.money(netEur, currency)),
+        _line(
+          tt,
+          cs,
+          l.negotiationPriceBreakdownNetTraveler,
+          PriceDisplay.money(netEur, currency),
+        ),
       );
       rows.add(
         _line(
           tt,
           cs,
-          'Commission Yadony ($ratePct %)',
+          l.requestCreateCommissionLabel(ratePct),
           PriceDisplay.money(commissionEur, currency),
         ),
       );
@@ -365,7 +383,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
           _line(
             tt,
             cs,
-            'Réduction code promo',
+            l.bidCreatePromoDiscountLabel,
             '−${PriceDisplay.money(savings, currency)}',
             valueColor: const Color(0xFF16A34A),
           ),
@@ -373,7 +391,9 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
       }
     }
 
-    final totalLabel = isTraveler ? 'Tu reçois' : 'Total à régler';
+    final totalLabel = isTraveler
+        ? l.negotiationPriceBreakdownYouReceive
+        : l.negotiationPriceBreakdownTotalToSettle;
     final totalValue = isTraveler ? netEur : totalEur;
 
     return Container(
@@ -418,7 +438,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          'Promo',
+                          l.negotiationPriceBreakdownPromoBadge,
                           style: tt.labelSmall?.copyWith(
                             color: const Color(0xFF16A34A),
                             fontWeight: FontWeight.w700,

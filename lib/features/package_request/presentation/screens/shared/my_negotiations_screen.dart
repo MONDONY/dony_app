@@ -573,7 +573,10 @@ class _NegoCard extends StatelessWidget {
               const SizedBox(width: 2),
               Expanded(
                 child: Text(
-                  'R.${thread.roundsCount}/5 · ${_timeAgo(l, thread.lastActivityAt)}',
+                  l.negotiationCardRoundShortLabel(
+                    thread.roundsCount,
+                    _timeAgo(l, thread.lastActivityAt),
+                  ),
                   overflow: TextOverflow.ellipsis,
                   style: tt.bodySmall?.copyWith(
                     fontSize: 11,

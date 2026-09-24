@@ -820,5 +820,21 @@ void main() {
       expect(find.text('DEPOSIT'), findsWidgets);
       expect(find.text('deposit in progress'), findsOneWidget);
     });
+
+    testWidgets('round abrégé "Rd. 2/5" traduit (jamais "R.2/5")', (
+      tester,
+    ) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        NegotiationListState(
+          status: NegotiationListStatus.loaded,
+          threads: [_thread()],
+        ),
+      );
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Rd. 2/5'), findsOneWidget);
+      expect(find.textContaining('R.2/5'), findsNothing);
+    });
   });
 }

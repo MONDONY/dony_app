@@ -28,6 +28,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 const _emptyHelpConfigJson = '''
@@ -457,6 +458,21 @@ void main() {
         expect(retryCalled, isFalse);
       },
     );
+
+    testWidgets('anglais : titre, hint et boutons traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(wrapSheet(hasCard: true));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Insufficient balance'), findsOneWidget);
+      expect(
+        find.textContaining('Top up your wallet or pay the service fee'),
+        findsOneWidget,
+      );
+      expect(find.text('Top up my wallet'), findsOneWidget);
+      expect(find.text('Pay by card'), findsOneWidget);
+    });
   });
 
   group('NegotiationThreadScreen · listener commission', () {

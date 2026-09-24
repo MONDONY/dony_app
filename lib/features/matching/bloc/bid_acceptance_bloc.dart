@@ -28,7 +28,12 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
       final r = await _repo.acceptBidWithCommission(e.bidId);
       await _handleResponse(r, e.bidId, emit);
     } catch (err) {
-      emit(BidFailed(err.toString()));
+      emit(
+        BidFailed(
+          serverMessage: err.toString(),
+          reason: BidFailureReason.refused,
+        ),
+      );
     }
   }
 
@@ -44,7 +49,12 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
       );
       await _handleResponse(r, e.bidId, emit);
     } catch (err) {
-      emit(BidFailed(err.toString()));
+      emit(
+        BidFailed(
+          serverMessage: err.toString(),
+          reason: BidFailureReason.refused,
+        ),
+      );
     }
   }
 
@@ -71,14 +81,15 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
             c.accepted
                 ? BidAccepted()
                 : BidFailed(
-                    c.error ?? 'Confirmation échouée',
+                    serverMessage: c.error,
+                    reason: BidFailureReason.confirmFailed,
                     cardDeclined: true,
                   ),
           );
         } on StripeException {
           emit(
             BidFailed(
-              'Authentification bancaire interrompue',
+              reason: BidFailureReason.bankAuthInterrupted,
               cardDeclined: true,
             ),
           );
@@ -97,7 +108,13 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
         );
         return;
       case AcceptanceStatus.failed:
-        emit(BidFailed(r.error ?? 'Acceptation refusée', cardDeclined: true));
+        emit(
+          BidFailed(
+            serverMessage: r.error,
+            reason: BidFailureReason.refused,
+            cardDeclined: true,
+          ),
+        );
         return;
     }
   }

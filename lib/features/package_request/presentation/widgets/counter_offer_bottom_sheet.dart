@@ -24,12 +24,14 @@ class CounterOfferBottomSheet {
 
     return DonyBottomSheet.show<void>(
       context,
-      title: 'Faire une contre-offre',
+      title: context.l10n.negotiationCounterOfferTitle,
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       stickyBottom: ValueListenableBuilder<VoidCallback?>(
         valueListenable: submitNotifier,
-        builder: (_, fn, _) =>
-            DonyButton(label: 'Envoyer ma contre-offre', onPressed: fn),
+        builder: (ctx, fn, _) => DonyButton(
+          label: ctx.l10n.negotiationThreadCounterSubmitButton,
+          onPressed: fn,
+        ),
       ),
       child: _CounterOfferContent(
         bloc: bloc,
@@ -116,6 +118,7 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Form(
@@ -125,14 +128,23 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
         children: [
           // Sous-titre : prix actuel (rôle-aware) + round
           Text(
-            '${threadPriceLabel(context.l10n, widget.currentPriceEur, widget.grossPriceEur, widget.isTraveler, widget.currency)} · Round ${widget.roundsCount}/5',
+            l.negotiationCounterOfferSubtitle(
+              threadPriceLabel(
+                l,
+                widget.currentPriceEur,
+                widget.grossPriceEur,
+                widget.isTraveler,
+                widget.currency,
+              ),
+              widget.roundsCount,
+            ),
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.xl),
 
           // Label prix
           Text(
-            'Ton prix proposé',
+            l.negotiationCounterOfferYourPriceLabel,
             style: tt.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: cs.onSurface,
@@ -190,7 +202,7 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
             ),
             validator: (v) {
               final d = double.tryParse((v ?? '').replaceAll(',', '.'));
-              if (d == null || d <= 0) return 'Valeur invalide';
+              if (d == null || d <= 0) return l.requestCreateWeightInvalid;
               return null;
             },
           ),
@@ -198,7 +210,7 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
 
           // Label message
           Text(
-            'Message (optionnel)',
+            l.negotiationCounterOfferMessageLabel,
             style: tt.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: cs.onSurface,
@@ -224,7 +236,7 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
                     ),
             style: tt.bodyLarge,
             decoration: InputDecoration(
-              hintText: 'Explique ta proposition…',
+              hintText: l.negotiationCounterOfferMessageHint,
               hintStyle: tt.bodyLarge?.copyWith(
                 color: cs.onSurfaceVariant.withValues(alpha: 0.6),
               ),

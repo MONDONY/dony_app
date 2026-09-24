@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
@@ -99,4 +101,18 @@ void main() {
     // The destructive confirm button should always be present
     expect(find.text('Confirmer le rejet'), findsOneWidget);
   });
+
+  testWidgets(
+    'anglais : titre, label et bouton traduits (decline, pas reject)',
+    (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_buildApp(bloc));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Decline the negotiation'), findsOneWidget);
+      expect(find.text('Confirm decline'), findsOneWidget);
+      expect(find.text('Reason (optional)'), findsOneWidget);
+    },
+  );
 }

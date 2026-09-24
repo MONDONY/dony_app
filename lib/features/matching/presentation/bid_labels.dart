@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -40,3 +41,21 @@ String travelerTripsCount(AppLocalizations l, int count) =>
 /// [travelerTripsCount].
 String senderShipmentsCount(AppLocalizations l, int count) =>
     l.bidSenderShipments(count);
+
+/// Texte à afficher pour un [BidFailed] : le detail serveur (`serverMessage`)
+/// prime quand il existe, sinon la clé de la raison — le bloc ne transporte
+/// jamais de texte traduit.
+extension BidFailedDisplay on BidFailed {
+  String displayMessage(AppLocalizations l) {
+    final sm = serverMessage;
+    if (sm != null && sm.trim().isNotEmpty) return sm;
+    switch (reason) {
+      case BidFailureReason.confirmFailed:
+        return l.bidAcceptConfirmFailed;
+      case BidFailureReason.bankAuthInterrupted:
+        return l.bidAcceptBankAuthInterrupted;
+      case BidFailureReason.refused:
+        return l.bidAcceptRefused;
+    }
+  }
+}

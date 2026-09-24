@@ -147,6 +147,9 @@ const _sameInBothLanguages = <String>{
   'bidCreateTotalLabel', // « Total » se dit pareil
   'bidCreatePromoBadge', // « Promo » se dit pareil
   'negotiationRoundCounter', // « Round » déjà utilisé tel quel en français
+  'negotiationMakeOfferMessageLabel', // « MESSAGE » se dit pareil
+  'negotiationPriceBreakdownPromoBadge', // « Promo » se dit pareil
+  'negotiationCounterOfferSubtitle', // gabarit identique, « Round » déjà utilisé tel quel en français
 };
 
 void main() {

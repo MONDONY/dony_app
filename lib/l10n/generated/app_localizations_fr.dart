@@ -6166,4 +6166,328 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationSenderChoosesAmong => 'L\'expéditeur choisira parmi';
+
+  @override
+  String get errorCommissionConfirmFailedTitle => 'Règlement non confirmé';
+
+  @override
+  String get errorCommissionConfirmFailedMessage =>
+      'Confirmation du règlement échouée';
+
+  @override
+  String get errorCommission3dsInterruptedTitle =>
+      'Authentification interrompue';
+
+  @override
+  String get errorCommission3dsInterruptedMessage =>
+      'Authentification bancaire interrompue';
+
+  @override
+  String get errorCommissionFailedTitle => 'Règlement refusé';
+
+  @override
+  String get errorCommissionFailedMessage =>
+      'Règlement de la commission refusé';
+
+  @override
+  String get errorCommissionFailedNoCardMessage =>
+      'Aucune carte enregistrée pour régler la commission.';
+
+  @override
+  String get errorCommissionFailedCardDeclinedMessage =>
+      'Ta carte a été refusée.';
+
+  @override
+  String get errorCommissionFailedStripeErrorMessage =>
+      'Erreur du service de paiement, réessaie.';
+
+  @override
+  String get errorCommissionFailedCardStatusMessage =>
+      'Le règlement par carte n\'a pas abouti.';
+
+  @override
+  String get bidAcceptConfirmFailed => 'Confirmation échouée';
+
+  @override
+  String get bidAcceptBankAuthInterrupted =>
+      'Authentification bancaire interrompue';
+
+  @override
+  String get bidAcceptRefused => 'Acceptation refusée';
+
+  @override
+  String get negotiationMakeOfferTitle => 'Faire une offre';
+
+  @override
+  String negotiationMakeOfferTakeAtLabel(String amount) {
+    return 'Prendre à $amount';
+  }
+
+  @override
+  String get negotiationMakeOfferSendButtonLabel => 'Envoyer l\'offre';
+
+  @override
+  String get negotiationMakeOfferSelectTravelDate =>
+      'Sélectionnez votre date de voyage';
+
+  @override
+  String get negotiationMakeOfferSelectTrip =>
+      'Sélectionnez ou créez un trajet';
+
+  @override
+  String get negotiationMakeOfferYourPriceLabel => 'VOTRE PRIX';
+
+  @override
+  String get negotiationMakeOfferCapacityLabel => 'CAPACITÉ';
+
+  @override
+  String get negotiationMakeOfferTravelDateLabel => 'DATE DE VOYAGE';
+
+  @override
+  String get negotiationMakeOfferSelectDatePlaceholder => 'Sélectionner…';
+
+  @override
+  String get negotiationMakeOfferMessageLabel => 'MESSAGE';
+
+  @override
+  String get negotiationMakeOfferMessageOptional => 'optionnel';
+
+  @override
+  String get negotiationMakeOfferMessageHint =>
+      'Je voyage exactement ce jour-là…';
+
+  @override
+  String get negotiationMakeOfferInvalidPrice => 'Invalide';
+
+  @override
+  String get negotiationMakeOfferOfferSentSnackbar => 'Offre envoyée';
+
+  @override
+  String get negotiationMakeOfferMarketPriceLabel => 'Prix du marché';
+
+  @override
+  String get negotiationPaySecurelyTitle => 'Payer en toute sécurité';
+
+  @override
+  String get negotiationAcceptOfferTitle => 'Accepter l\'offre';
+
+  @override
+  String get negotiationProcessingLabel => 'Traitement…';
+
+  @override
+  String negotiationAcceptOfferPayButtonLabel(String amount) {
+    return 'Payer ($amount)';
+  }
+
+  @override
+  String negotiationAcceptOfferConfirmButtonLabel(String amount) {
+    return 'Confirmer ($amount)';
+  }
+
+  @override
+  String get negotiationAcceptOfferPaymentContextTraveler =>
+      'Paiement de l\'offre acceptée';
+
+  @override
+  String get negotiationAcceptOfferPaymentContextSender =>
+      'Paiement de votre offre';
+
+  @override
+  String get negotiationOfferAcceptedPaidTitle => 'Offre acceptée et payée !';
+
+  @override
+  String get negotiationOfferAcceptedPaidSubtitle =>
+      'Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.';
+
+  @override
+  String get negotiationTrackShipmentCta => 'Voir le suivi';
+
+  @override
+  String get negotiationAcceptOfferAgreedSubtitleSender =>
+      'Vous êtes d\'accord sur le prix. Le voyageur va confirmer son trajet, puis tu finaliseras les détails de l\'envoi et le règlement depuis le fil.';
+
+  @override
+  String get negotiationAcceptOfferAgreedSubtitleTravelerLinked =>
+      'Vous êtes d\'accord sur le prix. L\'expéditeur va finaliser les détails de l\'envoi et le règlement, tu seras notifié à chaque étape.';
+
+  @override
+  String get negotiationAcceptOfferAgreedSubtitleTravelerUnlinked =>
+      'Vous êtes d\'accord sur le prix. Prochaine étape : lie ou crée un trajet pour cette offre afin que l\'expéditeur puisse finaliser le règlement.';
+
+  @override
+  String get negotiationAgreementConfirmedTitle => 'Accord confirmé !';
+
+  @override
+  String get negotiationGenericErrorSnackbar =>
+      'Une erreur est survenue. Veuillez réessayer.';
+
+  @override
+  String get negotiationPriceBreakdownPaidBySender =>
+      'Prix payé par l\'expéditeur';
+
+  @override
+  String get negotiationPriceBreakdownNetTraveler => 'Net voyageur';
+
+  @override
+  String get negotiationPriceBreakdownYouReceive => 'Tu reçois';
+
+  @override
+  String get negotiationPriceBreakdownTotalToSettle => 'Total à régler';
+
+  @override
+  String get negotiationPriceBreakdownPromoBadge => 'Promo';
+
+  @override
+  String negotiationAcceptOfferInfoTraveler(String price) {
+    return 'En acceptant, l\'expéditeur effectuera le paiement. Tu recevras $price à la livraison validée, quel que soit un éventuel code promo utilisé par l\'expéditeur.';
+  }
+
+  @override
+  String get negotiationAcceptOfferInfoSender =>
+      'En confirmant, le paiement est bloqué et sécurisé. Le voyageur reçoit le montant à la livraison validée.';
+
+  @override
+  String get negotiationCounterOfferTitle => 'Faire une contre-offre';
+
+  @override
+  String negotiationCounterOfferSubtitle(String priceLabel, int round) {
+    return '$priceLabel · Round $round/5';
+  }
+
+  @override
+  String get negotiationCounterOfferYourPriceLabel => 'Ton prix proposé';
+
+  @override
+  String get negotiationCounterOfferMessageLabel => 'Message (optionnel)';
+
+  @override
+  String get negotiationCounterOfferMessageHint => 'Explique ta proposition…';
+
+  @override
+  String get negotiationRejectTitle => 'Rejeter la négociation';
+
+  @override
+  String get negotiationRejectConfirmLabel => 'Confirmer le rejet';
+
+  @override
+  String get negotiationRejectReasonLabel => 'Raison (optionnel)';
+
+  @override
+  String get negotiationPaymentRecapConfirmAgreementTitle =>
+      'Confirmer l\'accord';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyTitle =>
+      'Payer par mobile money';
+
+  @override
+  String negotiationPaymentRecapPayButtonLabel(String amount) {
+    return 'Payer $amount';
+  }
+
+  @override
+  String negotiationPaymentRecapPayMobileMoneyButton(String amount) {
+    return 'Payer $amount par mobile money';
+  }
+
+  @override
+  String get negotiationPaymentRecapContextConfirm =>
+      'Confirmation de l\'accord';
+
+  @override
+  String get negotiationPaymentRecapContextSecure => 'Paiement sécurisé';
+
+  @override
+  String get negotiationPaymentRecapCashSuccessSubtitle =>
+      'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.';
+
+  @override
+  String get negotiationPaymentRecapCashHandoverLabel =>
+      'À remettre au voyageur (en espèces)';
+
+  @override
+  String get negotiationPaymentRecapCashFeeNote =>
+      'dont frais Yadony (réglés par le voyageur)';
+
+  @override
+  String get negotiationPaymentRecapCashNetLabel => 'Le voyageur garde net';
+
+  @override
+  String get negotiationPaymentRecapTravelerReceivesLabel =>
+      'Le voyageur touche';
+
+  @override
+  String get negotiationPaymentRecapServiceFeeLabel =>
+      'Frais de service Yadony';
+
+  @override
+  String get negotiationPaymentRecapTotalToPayLabel => 'Total à payer';
+
+  @override
+  String get negotiationPaymentRecapCashNote =>
+      'Remettez le montant total en espèces au voyageur lors de la remise du colis. Le voyageur déduira ses frais Yadony de ce montant.';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyNote =>
+      'Une demande de paiement arrive sur le numéro indiqué ci-dessous. Le voyageur reçoit le montant uniquement après confirmation de la livraison.';
+
+  @override
+  String get negotiationPaymentRecapSecureNote =>
+      'Le montant est bloqué et sécurisé. Le voyageur le reçoit uniquement après confirmation de la livraison.';
+
+  @override
+  String get negotiationPaymentRecapCashBannerMessage =>
+      'Paiement en main propre à la remise';
+
+  @override
+  String get negotiationPaymentRecapMobileMoneyBannerMessage =>
+      'Tu valides le paiement sur ton téléphone. Yadony garde l\'argent et ne le verse au voyageur qu\'après confirmation de la livraison.';
+
+  @override
+  String get negotiationPaymentRecapSecureBannerMessage =>
+      'Sécurisé · bloqué jusqu\'à la livraison';
+
+  @override
+  String get negotiationCommissionSettlementTitle => 'Solde insuffisant';
+
+  @override
+  String get negotiationCommissionSettlementHint =>
+      'Recharge ton portefeuille ou paie la commission directement par carte.';
+
+  @override
+  String get negotiationCommissionSettlementTopupButton =>
+      'Recharger mon portefeuille';
+
+  @override
+  String get negotiationCommissionSettlementPayCardButton => 'Payer par carte';
+
+  @override
+  String get negotiationCommissionSettlementAddCardButton =>
+      'Ajouter une carte';
+
+  @override
+  String get negotiationCardCapabilityRequiredTitle => 'Paiement carte requis';
+
+  @override
+  String get negotiationCardCapabilityUnavailableTitle => 'Colis indisponible';
+
+  @override
+  String get negotiationCardCapabilityRequiredBody =>
+      'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. Active les paiements par carte pour pouvoir lier ce trajet.';
+
+  @override
+  String get negotiationCardCapabilityUnavailableBody =>
+      'L\'expéditeur n\'accepte que le paiement par carte pour ce colis, et Stripe ne permet pas encore d\'ouvrir un compte de paiement depuis ton pays. Tu peux lier les colis payés en espèces.';
+
+  @override
+  String get negotiationCardCapabilityActivateButton =>
+      'Activer le paiement carte';
+
+  @override
+  String get negotiationCardCapabilityUnderstoodButton => 'J\'ai compris';
+
+  @override
+  String negotiationCardRoundShortLabel(int round, String timeAgo) {
+    return 'R.$round/5 · $timeAgo';
+  }
 }

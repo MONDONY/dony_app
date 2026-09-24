@@ -17,6 +17,7 @@ import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -68,31 +69,37 @@ class PaymentRecapBottomSheet {
     // via `onSubmitReady` (motif « Bouton dépend d'état local »).
     String Function()? readPhone;
 
+    final l = context.l10n;
     await DonyBottomSheet.show<void>(
       context,
       title: isCash
-          ? 'Confirmer l\'accord'
+          ? l.negotiationPaymentRecapConfirmAgreementTitle
           : isMobileMoney
-          ? 'Payer par mobile money'
-          : 'Payer en toute sécurité',
+          ? l.negotiationPaymentRecapMobileMoneyTitle
+          : l.negotiationPaySecurelyTitle,
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       stickyBottom: ValueListenableBuilder<bool>(
         valueListenable: processing,
         builder: (ctx0, busy, _) => BlocBuilder<NegotiationBloc, NegotiationState>(
           bloc: bloc,
           builder: (ctx, state) {
+            final lb = ctx.l10n;
             final isLoading =
                 busy ||
                 state is NegotiationActionInProgress ||
                 state is NegotiationLoading;
             return DonyButton(
               label: isLoading
-                  ? 'Traitement…'
+                  ? lb.negotiationProcessingLabel
                   : isCash
-                  ? 'Confirmer l\'accord'
+                  ? lb.negotiationPaymentRecapConfirmAgreementTitle
                   : isMobileMoney
-                  ? 'Payer ${PriceDisplay.money(gross, thread.currency)} par mobile money'
-                  : 'Payer ${PriceDisplay.money(gross, thread.currency)}',
+                  ? lb.negotiationPaymentRecapPayMobileMoneyButton(
+                      PriceDisplay.money(gross, thread.currency),
+                    )
+                  : lb.negotiationPaymentRecapPayButtonLabel(
+                      PriceDisplay.money(gross, thread.currency),
+                    ),
               isLoading: isLoading,
               onPressed: isLoading
                   ? null
@@ -121,7 +128,7 @@ class PaymentRecapBottomSheet {
                           processing.value = false;
                           DonySnackbar.show(
                             ctx,
-                            message: 'Paiement non confirmé, réessayez',
+                            message: lb.bidCreatePaymentNotConfirmedError,
                             type: DonySnackbarType.warning,
                           );
                           return;
@@ -139,8 +146,8 @@ class PaymentRecapBottomSheet {
                               paymentMethodTypes: init.paymentMethodTypes,
                             ),
                             contextLabel: isCash
-                                ? 'Confirmation de l\'accord'
-                                : 'Paiement sécurisé',
+                                ? lb.negotiationPaymentRecapContextConfirm
+                                : lb.negotiationPaymentRecapContextSecure,
                             onSuccess: () {
                               bloc.add(
                                 NegotiationCheckoutRequested(
@@ -155,10 +162,11 @@ class PaymentRecapBottomSheet {
                                   MaterialPageRoute(
                                     builder: (routeContext) => DonySuccessScreen(
                                       mascotteType: DonyMascotteType.securise,
-                                      title: 'Offre acceptée et payée !',
-                                      subtitle:
-                                          'Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
-                                      ctaLabel: 'Voir le suivi',
+                                      title:
+                                          lb.negotiationOfferAcceptedPaidTitle,
+                                      subtitle: lb
+                                          .negotiationOfferAcceptedPaidSubtitle,
+                                      ctaLabel: lb.negotiationTrackShipmentCta,
                                       onCta: () => routeContext.go(
                                         '/negotiations/${thread.id}',
                                       ),
@@ -176,8 +184,7 @@ class PaymentRecapBottomSheet {
                           if (ctx.mounted) {
                             DonySnackbar.show(
                               ctx,
-                              message:
-                                  'Une erreur est survenue. Veuillez réessayer.',
+                              message: lb.negotiationGenericErrorSnackbar,
                               type: DonySnackbarType.error,
                             );
                           }
@@ -203,10 +210,10 @@ class PaymentRecapBottomSheet {
                               MaterialPageRoute(
                                 builder: (routeContext) => DonySuccessScreen(
                                   mascotteType: DonyMascotteType.succes,
-                                  title: 'Accord confirmé !',
-                                  subtitle:
-                                      'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.',
-                                  ctaLabel: 'Voir le suivi',
+                                  title: lb.negotiationAgreementConfirmedTitle,
+                                  subtitle: lb
+                                      .negotiationPaymentRecapCashSuccessSubtitle,
+                                  ctaLabel: lb.negotiationTrackShipmentCta,
                                   onCta: () => routeContext.go(
                                     '/negotiations/${thread.id}',
                                   ),
@@ -270,7 +277,7 @@ class PaymentRecapBottomSheet {
       processing.value = false;
       DonySnackbar.show(
         sheetContext,
-        message: 'Paiement non confirmé, réessayez',
+        message: sheetContext.l10n.bidCreatePaymentNotConfirmedError,
         type: DonySnackbarType.warning,
       );
       return;
@@ -401,6 +408,7 @@ class PaymentRecapContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -422,39 +430,39 @@ class PaymentRecapContent extends StatelessWidget {
             children: isCash
                 ? [
                     _FeeRow(
-                      label: 'À remettre au voyageur (en espèces)',
+                      label: l.negotiationPaymentRecapCashHandoverLabel,
                       amount: PriceDisplay.money(gross, currency),
                       isTotal: false,
                     ),
                     const _Divider(),
                     _FeeRow(
-                      label: 'dont frais Yadony (réglés par le voyageur)',
+                      label: l.negotiationPaymentRecapCashFeeNote,
                       amount: PriceDisplay.money(fee, currency),
                       isTotal: false,
                       isSubNote: true,
                     ),
                     const _Divider(),
                     _FeeRow(
-                      label: 'Le voyageur garde net',
+                      label: l.negotiationPaymentRecapCashNetLabel,
                       amount: PriceDisplay.money(net, currency),
                       isTotal: true,
                     ),
                   ]
                 : [
                     _FeeRow(
-                      label: 'Le voyageur touche',
+                      label: l.negotiationPaymentRecapTravelerReceivesLabel,
                       amount: PriceDisplay.money(net, currency),
                       isTotal: false,
                     ),
                     const _Divider(),
                     _FeeRow(
-                      label: 'Frais de service Yadony',
+                      label: l.negotiationPaymentRecapServiceFeeLabel,
                       amount: PriceDisplay.money(fee, currency),
                       isTotal: false,
                     ),
                     const _Divider(isTotal: true),
                     _FeeRow(
-                      label: 'Total à payer',
+                      label: l.negotiationPaymentRecapTotalToPayLabel,
                       amount: PriceDisplay.money(gross, currency),
                       isTotal: true,
                     ),
@@ -466,10 +474,10 @@ class PaymentRecapContent extends StatelessWidget {
         // Explanatory note
         Text(
           isCash
-              ? 'Remettez le montant total en espèces au voyageur lors de la remise du colis. Le voyageur déduira ses frais Yadony de ce montant.'
+              ? l.negotiationPaymentRecapCashNote
               : isMobileMoney
-              ? 'Une demande de paiement arrive sur le numéro indiqué ci-dessous. Le voyageur reçoit le montant uniquement après confirmation de la livraison.'
-              : 'Le montant est bloqué et sécurisé. Le voyageur le reçoit uniquement après confirmation de la livraison.',
+              ? l.negotiationPaymentRecapMobileMoneyNote
+              : l.negotiationPaymentRecapSecureNote,
           style: tt.bodySmall?.copyWith(
             color: cs.onSurfaceVariant,
             height: 1.5,
@@ -498,11 +506,12 @@ class _TrustBanner extends StatelessWidget {
         : isMobileMoney
         ? 'smartphone'
         : 'lock';
+    final l = context.l10n;
     final String message = isCash
-        ? 'Paiement en main propre à la remise'
+        ? l.negotiationPaymentRecapCashBannerMessage
         : isMobileMoney
-        ? 'Tu valides le paiement sur ton téléphone. Yadony garde l\'argent et ne le verse au voyageur qu\'après confirmation de la livraison.'
-        : 'Sécurisé · bloqué jusqu\'à la livraison';
+        ? l.negotiationPaymentRecapMobileMoneyBannerMessage
+        : l.negotiationPaymentRecapSecureBannerMessage;
 
     return Container(
       padding: const EdgeInsets.symmetric(
