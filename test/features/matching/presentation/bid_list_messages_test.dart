@@ -4,6 +4,8 @@ import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/presentation/traveler_bids_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   group('bidListRequestsToReview — fr', () {
@@ -76,6 +78,66 @@ void main() {
       expect(TravelerBidFilter.terminees.label(l), 'Terminées');
     });
   });
+
+  group(
+    'tripOwnerShareMessage — non-régression (trip_owner_detail_screen.dart)',
+    () {
+      // Ancien code (avant migration, HEAD ca8e1754) :
+      //   '✈️ Je voyage $dep → $arr le '
+      //   '${DateFormat('d MMMM', AppL10n.localeName).format(date)} '
+      //   'avec de la place dans mes bagages !\n'
+      //   'Réserve tes kilos sur Yadony 📦\n'
+      //   '$url'
+      // Migré vers l.tripOwnerShareMessage(dep, arr, date, url) avec
+      // date formatée en DateFormat.MMMMd(locale) — ce test fige le rendu fr
+      // exactement égal à l'ancienne chaîne concaténée, et couvre le cas en.
+      const dep = 'Paris';
+      const arr = 'Dakar';
+      final departureDate = DateTime(2026, 10, 6);
+      const url = 'https://yadony.app/annonce/ann-1';
+
+      setUpAll(() async {
+        await initializeDateFormatting('fr');
+        await initializeDateFormatting('en');
+      });
+
+      test('fr — égal caractère près à l\'ancienne chaîne concaténée', () {
+        final l = lookupAppLocalizations(AppL10n.fr);
+        final oldDate = DateFormat('d MMMM', 'fr').format(departureDate);
+        final oldMessage =
+            '✈️ Je voyage $dep → $arr le '
+            '$oldDate '
+            'avec de la place dans mes bagages !\n'
+            'Réserve tes kilos sur Yadony 📦\n'
+            '$url';
+
+        final newDate = DateFormat.MMMMd('fr').format(departureDate);
+        final newMessage = l.tripOwnerShareMessage(dep, arr, newDate, url);
+
+        expect(newDate, oldDate);
+        expect(newMessage, oldMessage);
+        expect(
+          newMessage,
+          '✈️ Je voyage Paris → Dakar le 6 octobre avec de la place dans mes '
+          'bagages !\nRéserve tes kilos sur Yadony 📦\n'
+          'https://yadony.app/annonce/ann-1',
+        );
+      });
+
+      test('en — rendu anglais', () {
+        final l = lookupAppLocalizations(AppL10n.en);
+        final date = DateFormat.MMMMd('en').format(departureDate);
+        final message = l.tripOwnerShareMessage(dep, arr, date, url);
+
+        expect(
+          message,
+          "✈️ I'm traveling Paris → Dakar on $date with room in my luggage!\n"
+          'Book your kilos on Yadony 📦\n'
+          'https://yadony.app/annonce/ann-1',
+        );
+      });
+    },
+  );
 
   group('TravelerBidFilterL10n.label — en', () {
     final l = lookupAppLocalizations(AppL10n.en);
