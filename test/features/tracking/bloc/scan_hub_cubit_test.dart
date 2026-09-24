@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -135,6 +137,30 @@ void main() {
     },
     act: (c) => c.load(),
     expect: () => [isA<ScanHubLoading>(), isA<ScanHubError>()],
+  );
+
+  blocTest<ScanHubCubit, ScanHubState>(
+    'DioException du back → ScanHubError porte l\'AppException typée, pas un toString()',
+    build: () {
+      final options = RequestOptions(path: '/announcements/mine');
+      when(() => annRepo.getMyAnnouncements()).thenThrow(
+        DioException(
+          requestOptions: options,
+          error: const ForbiddenException('Accès refusé', 'forbidden'),
+          response: Response(requestOptions: options, statusCode: 403),
+        ),
+      );
+      return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+    },
+    act: (c) => c.load(),
+    expect: () => [
+      isA<ScanHubLoading>(),
+      isA<ScanHubError>().having(
+        (s) => s.error,
+        'error',
+        isA<ForbiddenException>().having((e) => e.code, 'code', 'forbidden'),
+      ),
+    ],
   );
 
   blocTest<ScanHubCubit, ScanHubState>(

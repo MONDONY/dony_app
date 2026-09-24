@@ -228,57 +228,25 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.critical,
       icon: Icons.gpp_bad_rounded,
     ),
+    // Émis par `_AuthInterceptor.onRequest` (api_client.dart) quand
+    // `FirebaseAuth.currentUser.getIdToken()` échoue : sans entrée dédiée,
+    // le code retombait sur le type `UnauthorizedException` générique
+    // (`unauthorized`), qui pousse à se reconnecter alors que la session
+    // Firebase est valide — seul le rafraîchissement du jeton a échoué.
+    'auth-token-unavailable': _Entry(
+      title: (l) => l.errorAuthTokenUnavailableTitle,
+      message: (l) => l.errorAuthTokenUnavailableMessage,
+      severity: ErrorSeverity.error,
+      icon: Icons.lock_outline_rounded,
+    ),
 
-    // ─── Connexion par numéro (Firebase Auth) ──────────────────────────
-    // Codes propres à AuthBloc._friendlyFirebaseError, préfixés `firebase-`
-    // pour ne jamais collisionner avec les codes homonymes d'autres features
-    // (ex: `code-expired`/`code-incorrect` existent déjà plus bas pour les
-    // codes de confirmation de livraison).
-    'firebase-invalid-phone-number': _Entry(
-      title: (l) => l.errorFirebaseInvalidPhoneNumberTitle,
-      message: (l) => l.errorFirebaseInvalidPhoneNumberMessage,
-      severity: ErrorSeverity.warning,
-      icon: Icons.phone_disabled_rounded,
-    ),
-    'firebase-code-incorrect': _Entry(
-      title: (l) => l.errorFirebaseCodeIncorrectTitle,
-      message: (l) => l.errorFirebaseCodeIncorrectMessage,
-      severity: ErrorSeverity.warning,
-      icon: Icons.password_rounded,
-    ),
-    'firebase-code-expired': _Entry(
-      title: (l) => l.errorFirebaseCodeExpiredTitle,
-      message: (l) => l.errorFirebaseCodeExpiredMessage,
-      severity: ErrorSeverity.warning,
-      icon: Icons.timer_off_rounded,
-    ),
-    'firebase-too-many-attempts': _Entry(
-      title: (l) => l.errorFirebaseTooManyAttemptsTitle,
-      message: (l) => l.errorFirebaseTooManyAttemptsMessage,
-      severity: ErrorSeverity.warning,
-      icon: Icons.hourglass_top_rounded,
-    ),
-    'firebase-session-expired': _Entry(
-      title: (l) => l.errorFirebaseSessionExpiredTitle,
-      message: (l) => l.errorFirebaseSessionExpiredMessage,
-      severity: ErrorSeverity.error,
-      icon: Icons.lock_reset_rounded,
-    ),
-    'firebase-network-request-failed': _Entry(
-      title: (l) => l.errorFirebaseNetworkRequestFailedTitle,
-      message: (l) => l.errorFirebaseNetworkRequestFailedMessage,
-      severity: ErrorSeverity.error,
-      icon: Icons.wifi_off_rounded,
-    ),
-    'firebase-app-verification-failed': _Entry(
-      title: (l) => l.errorFirebaseAppVerificationFailedTitle,
-      message: (l) => l.errorFirebaseAppVerificationFailedMessage,
-      severity: ErrorSeverity.error,
-      icon: Icons.gpp_maybe_rounded,
-    ),
-    'firebase-auth-error': _Entry(
-      title: (l) => l.errorFirebaseAuthErrorTitle,
-      message: (l) => l.errorFirebaseAuthErrorMessage,
+    // ─── Connexion : repli générique d'AuthBloc._friendlyError ─────────
+    // Les huit entrées `firebase-*` qui vivaient ici référençaient une méthode
+    // disparue (`_friendlyFirebaseError`) : plus aucun émetteur, retirées. Le
+    // parcours téléphone passe par le back (`phone-otp-*` ci-dessous).
+    'auth-generic-error': _Entry(
+      title: (l) => l.errorAuthGenericErrorTitle,
+      message: (l) => l.errorAuthGenericErrorMessage,
       severity: ErrorSeverity.error,
       icon: Icons.error_outline_rounded,
     ),

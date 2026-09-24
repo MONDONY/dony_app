@@ -174,60 +174,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your account has been suspended. Contact support for more information.';
 
   @override
-  String get errorFirebaseInvalidPhoneNumberTitle => 'Invalid number';
+  String get errorAuthTokenUnavailableTitle => 'Authentication failed';
 
   @override
-  String get errorFirebaseInvalidPhoneNumberMessage =>
-      'Check the number you entered and try again.';
+  String get errorAuthTokenUnavailableMessage =>
+      'We couldn\'t verify your identity. Try again in a moment.';
 
   @override
-  String get errorFirebaseCodeIncorrectTitle => 'Incorrect code';
+  String get errorAuthGenericErrorTitle => 'Sign-in failed';
 
   @override
-  String get errorFirebaseCodeIncorrectMessage =>
-      'The verification code you entered is incorrect.';
-
-  @override
-  String get errorFirebaseCodeExpiredTitle => 'Code expired';
-
-  @override
-  String get errorFirebaseCodeExpiredMessage =>
-      'This code has expired. Request a new one.';
-
-  @override
-  String get errorFirebaseTooManyAttemptsTitle => 'Too many attempts';
-
-  @override
-  String get errorFirebaseTooManyAttemptsMessage =>
-      'Too many attempts. Try again in a few minutes.';
-
-  @override
-  String get errorFirebaseSessionExpiredTitle => 'Session expired';
-
-  @override
-  String get errorFirebaseSessionExpiredMessage =>
-      'Your session has expired. Sign in again from the start.';
-
-  @override
-  String get errorFirebaseNetworkRequestFailedTitle => 'Network error';
-
-  @override
-  String get errorFirebaseNetworkRequestFailedMessage =>
-      'Can\'t reach Google\'s servers. Check your connection.';
-
-  @override
-  String get errorFirebaseAppVerificationFailedTitle => 'Verification failed';
-
-  @override
-  String get errorFirebaseAppVerificationFailedMessage =>
-      'App verification failed. Reinstall the app from TestFlight or the store, then try again.';
-
-  @override
-  String get errorFirebaseAuthErrorTitle => 'Sign-in error';
-
-  @override
-  String get errorFirebaseAuthErrorMessage =>
-      'Sign-in failed. Try again in a moment.';
+  String get errorAuthGenericErrorMessage =>
+      'Something went wrong while signing in. Try again.';
 
   @override
   String get errorPhoneOtpInvalidTitle => 'Incorrect code';
@@ -894,6 +852,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get networkFallbackInvalidData => 'Invalid information';
+
+  @override
+  String get networkFallbackInvalidRequest => 'Invalid request';
 
   @override
   String get networkFallbackTooManyAttempts => 'Too many attempts';

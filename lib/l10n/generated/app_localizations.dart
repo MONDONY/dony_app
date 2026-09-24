@@ -386,101 +386,29 @@ abstract class AppLocalizations {
   /// **'Ton compte a été suspendu. Contacte le support pour plus d\'informations.'**
   String get errorAccountBannedMessage;
 
-  /// No description provided for @errorFirebaseInvalidPhoneNumberTitle.
+  /// No description provided for @errorAuthTokenUnavailableTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Numéro invalide'**
-  String get errorFirebaseInvalidPhoneNumberTitle;
+  /// **'Authentification impossible'**
+  String get errorAuthTokenUnavailableTitle;
 
-  /// No description provided for @errorFirebaseInvalidPhoneNumberMessage.
+  /// No description provided for @errorAuthTokenUnavailableMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Vérifie le numéro saisi et réessaie.'**
-  String get errorFirebaseInvalidPhoneNumberMessage;
+  /// **'Impossible de vérifier ton identité. Réessaie dans un instant.'**
+  String get errorAuthTokenUnavailableMessage;
 
-  /// No description provided for @errorFirebaseCodeIncorrectTitle.
+  /// No description provided for @errorAuthGenericErrorTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Code incorrect'**
-  String get errorFirebaseCodeIncorrectTitle;
+  /// **'Connexion impossible'**
+  String get errorAuthGenericErrorTitle;
 
-  /// No description provided for @errorFirebaseCodeIncorrectMessage.
+  /// No description provided for @errorAuthGenericErrorMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Le code de vérification saisi est incorrect.'**
-  String get errorFirebaseCodeIncorrectMessage;
-
-  /// No description provided for @errorFirebaseCodeExpiredTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Code expiré'**
-  String get errorFirebaseCodeExpiredTitle;
-
-  /// No description provided for @errorFirebaseCodeExpiredMessage.
-  ///
-  /// In fr, this message translates to:
-  /// **'Ce code a expiré. Demande un nouveau code.'**
-  String get errorFirebaseCodeExpiredMessage;
-
-  /// No description provided for @errorFirebaseTooManyAttemptsTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Trop de tentatives'**
-  String get errorFirebaseTooManyAttemptsTitle;
-
-  /// No description provided for @errorFirebaseTooManyAttemptsMessage.
-  ///
-  /// In fr, this message translates to:
-  /// **'Trop de tentatives. Réessaie dans quelques minutes.'**
-  String get errorFirebaseTooManyAttemptsMessage;
-
-  /// No description provided for @errorFirebaseSessionExpiredTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Session expirée'**
-  String get errorFirebaseSessionExpiredTitle;
-
-  /// No description provided for @errorFirebaseSessionExpiredMessage.
-  ///
-  /// In fr, this message translates to:
-  /// **'Ta session a expiré. Recommence la connexion.'**
-  String get errorFirebaseSessionExpiredMessage;
-
-  /// No description provided for @errorFirebaseNetworkRequestFailedTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Erreur réseau'**
-  String get errorFirebaseNetworkRequestFailedTitle;
-
-  /// No description provided for @errorFirebaseNetworkRequestFailedMessage.
-  ///
-  /// In fr, this message translates to:
-  /// **'Impossible de joindre les serveurs Google. Vérifie ta connexion.'**
-  String get errorFirebaseNetworkRequestFailedMessage;
-
-  /// No description provided for @errorFirebaseAppVerificationFailedTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Vérification impossible'**
-  String get errorFirebaseAppVerificationFailedTitle;
-
-  /// No description provided for @errorFirebaseAppVerificationFailedMessage.
-  ///
-  /// In fr, this message translates to:
-  /// **'La vérification de l\'application a échoué. Réinstalle l\'app depuis TestFlight ou le Store puis réessaie.'**
-  String get errorFirebaseAppVerificationFailedMessage;
-
-  /// No description provided for @errorFirebaseAuthErrorTitle.
-  ///
-  /// In fr, this message translates to:
-  /// **'Erreur de connexion'**
-  String get errorFirebaseAuthErrorTitle;
-
-  /// No description provided for @errorFirebaseAuthErrorMessage.
-  ///
-  /// In fr, this message translates to:
-  /// **'La connexion a échoué. Réessaie dans un instant.'**
-  String get errorFirebaseAuthErrorMessage;
+  /// **'Une erreur est survenue pendant la connexion. Réessaie.'**
+  String get errorAuthGenericErrorMessage;
 
   /// No description provided for @errorPhoneOtpInvalidTitle.
   ///
@@ -1627,6 +1555,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Données invalides'**
   String get networkFallbackInvalidData;
+
+  /// No description provided for @networkFallbackInvalidRequest.
+  ///
+  /// In fr, this message translates to:
+  /// **'Requête invalide'**
+  String get networkFallbackInvalidRequest;
 
   /// No description provided for @networkFallbackTooManyAttempts.
   ///
