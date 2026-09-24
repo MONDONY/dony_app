@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -114,9 +115,9 @@ class ScanHubView extends StatelessWidget {
               return Center(
                 child: CircularProgressIndicator(color: cs.primary),
               );
-            case ScanHubError(:final message):
+            case ScanHubError(:final error):
               return _ErrorState(
-                message: message,
+                message: ErrorPresenter.resolve(error).message,
                 onRetry: () => context.read<ScanHubCubit>().load(),
               );
             case ScanHubEmpty():

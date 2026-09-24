@@ -91,22 +91,22 @@ class ApiClient {
       );
     }
 
-    // Added before retry interceptors: report only after their final attempt.
+    // dio 5 enchaîne les onError dans l'ORDRE D'AJOUT (dio_mixin.dart : « execute
+    // in FIFO order »), pas à l'envers. _AuthInterceptor, ajouté en premier,
+    // convertit donc l'erreur avant tout le monde ; les retries ci-dessous s'en
+    // accommodent parce que la conversion conserve `response` et `type`, qu'ils
+    // relisent (statusCode 429, timeouts, 5xx).
+    _dio.interceptors.add(RetryOnRateLimitInterceptor(_dio));
+    _dio.interceptors.add(RetryOnTransientErrorInterceptor(_dio));
+
+    // Ajouté EN DERNIER : ne voit que l'échec final. Placé avant les retries, il
+    // rapportait chaque tentative intermédiaire, y compris celles qu'un retry
+    // finissait par résoudre (une requête retentée trois fois puis réussie
+    // produisait trois événements Sentry).
     final errorReporter = _errorReporter;
     if (errorReporter != null) {
       _dio.interceptors.add(_SentryErrorReportingInterceptor(errorReporter));
     }
-    // Ajouté en dernier : dans le sens onError (inverse de l'ajout), c'est le
-    // premier à voir l'erreur brute — avant que _AuthInterceptor ne la
-    // convertisse en RateLimitException — donc le mieux placé pour retenter
-    // la requête d'origine avant que quiconque en aval ne l'affiche à l'utilisateur.
-    _dio.interceptors.add(RetryOnRateLimitInterceptor(_dio));
-
-    // Ajouté en tout dernier pour la même raison : voir l'erreur brute avant
-    // toute conversion, afin de retenter les GET sur timeout/erreur de
-    // connexion/5xx (cold-start backend) avant que _AuthInterceptor ne les
-    // transforme en AppException.
-    _dio.interceptors.add(RetryOnTransientErrorInterceptor(_dio));
   }
 
   late final Dio _dio;
@@ -257,18 +257,30 @@ class _AuthInterceptor extends Interceptor {
         handler.next(options);
         return;
       }
-      // Any other Firebase error should NOT silently proceed.
+      // Any other Firebase error should NOT silently proceed. Le rejet porte une
+      // AppException typée : avec une simple String, unwrapDioError tombait sur
+      // « Erreur réseau » et la file hors-ligne rejouait l'appel à l'infini
+      // comme une panne de connexion.
       handler.reject(
         DioException(
           requestOptions: options,
-          error: 'Authentication failed: ${e.message}',
+          error: const UnauthorizedException(
+            'Authentification impossible',
+            'auth-token-unavailable',
+          ),
         ),
       );
       return;
     } catch (e) {
       // Unexpected error — reject instead of silently proceeding.
       handler.reject(
-        DioException(requestOptions: options, error: 'Unexpected auth error'),
+        DioException(
+          requestOptions: options,
+          error: const UnauthorizedException(
+            'Authentification impossible',
+            'auth-token-unavailable',
+          ),
+        ),
       );
       return;
     }
@@ -277,61 +289,78 @@ class _AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    final statusCode = err.response?.statusCode;
-    final data = err.response?.data;
-    final detail = data is Map ? data['detail'] as String? : null;
-    // Back-end RFC 7807 ProblemDetail uses `code` (set via problem.setProperty("code", ...)).
-    // We keep `errorCode` as a legacy fallback for any older endpoint.
-    final apiCode = data is Map
-        ? (data['code'] as String?) ?? (data['errorCode'] as String?)
-        : null;
-
-    final AppException appException;
-    if (statusCode == 401) {
-      appException = UnauthorizedException(
-        detail ?? 'Session expirée',
-        apiCode,
-      );
-    } else if (statusCode == 403) {
-      appException = ForbiddenException(detail ?? 'Accès refusé', apiCode);
-    } else if (statusCode == 404) {
-      appException = NotFoundException(
-        message: detail ?? 'Ressource introuvable',
-        apiCode: apiCode,
-      );
-    } else if (statusCode == 409) {
-      appException = ConflictException(detail ?? 'Conflit', code: apiCode);
-    } else if (statusCode == 422) {
-      // ProblemDetail RFC 7807 : `violations` = { champ: message } (backend).
-      final rawViolations = data is Map ? data['violations'] : null;
-      final Map<String, List<String>>? violations = rawViolations is Map
-          ? rawViolations.map(
-              (key, value) => MapEntry(key.toString(), [value.toString()]),
-            )
-          : null;
-      appException = ValidationException(
-        detail ?? 'Données invalides',
-        code: apiCode,
-        errors: violations,
-      );
-    } else if (statusCode == 429) {
-      appException = RateLimitException(detail ?? 'Trop de tentatives');
-    } else if (statusCode != null && statusCode >= 500) {
-      appException = ServerException(detail ?? 'Erreur serveur', apiCode);
-    } else {
-      appException = NetworkException(
-        detail ?? err.message ?? 'Erreur réseau',
-        code: apiCode ?? statusCode?.toString(),
-      );
-    }
-
     handler.reject(
       DioException(
         requestOptions: err.requestOptions,
-        error: appException,
+        error: mapHttpError(err),
         response: err.response,
         type: err.type,
       ),
     );
   }
+}
+
+/// Traduit une réponse HTTP d'erreur en [AppException] typée. Seule source de
+/// vérité pour le statut : `OfflineSyncService.isDefinitiveRejection` et le
+/// catalogue d'erreurs raisonnent ensuite sur le type, jamais sur le code HTTP.
+@visibleForTesting
+AppException mapHttpError(DioException err) {
+  final statusCode = err.response?.statusCode;
+  final data = err.response?.data;
+  final detail = data is Map ? data['detail'] as String? : null;
+  // Back-end RFC 7807 ProblemDetail uses `code` (set via problem.setProperty("code", ...)).
+  // We keep `errorCode` as a legacy fallback for any older endpoint.
+  final apiCode = data is Map
+      ? (data['code'] as String?) ?? (data['errorCode'] as String?)
+      : null;
+  // ProblemDetail RFC 7807 : `violations` = { champ: message } (backend).
+  final rawViolations = data is Map ? data['violations'] : null;
+  final Map<String, List<String>>? violations = rawViolations is Map
+      ? rawViolations.map(
+          (key, value) => MapEntry(key.toString(), [value.toString()]),
+        )
+      : null;
+
+  if (statusCode == 400) {
+    // Requête malformée refusée pour de bon par le back (corps illisible,
+    // paramètre invalide) : même famille que le 422. Classé « réseau »
+    // auparavant, donc rejoué sans fin par la file hors-ligne.
+    return ValidationException(
+      detail ?? 'Requête invalide',
+      code: apiCode,
+      errors: violations,
+    );
+  }
+  if (statusCode == 401) {
+    return UnauthorizedException(detail ?? 'Session expirée', apiCode);
+  }
+  if (statusCode == 403) {
+    return ForbiddenException(detail ?? 'Accès refusé', apiCode);
+  }
+  if (statusCode == 404) {
+    return NotFoundException(
+      message: detail ?? 'Ressource introuvable',
+      apiCode: apiCode,
+    );
+  }
+  if (statusCode == 409) {
+    return ConflictException(detail ?? 'Conflit', code: apiCode);
+  }
+  if (statusCode == 422) {
+    return ValidationException(
+      detail ?? 'Données invalides',
+      code: apiCode,
+      errors: violations,
+    );
+  }
+  if (statusCode == 429) {
+    return RateLimitException(detail ?? 'Trop de tentatives');
+  }
+  if (statusCode != null && statusCode >= 500) {
+    return ServerException(detail ?? 'Erreur serveur', apiCode);
+  }
+  return NetworkException(
+    detail ?? err.message ?? 'Erreur réseau',
+    code: apiCode ?? statusCode?.toString(),
+  );
 }
