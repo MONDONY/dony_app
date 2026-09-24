@@ -1,56 +1,60 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/presentation/request_screen_case.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 ({String label, String icon, bool enabled}) primaryButtonFor(
+  AppLocalizations l,
   RequestPrimaryAction action, {
   String? travelerName,
   String? amount,
 }) {
-  final name = travelerName ?? 'le voyageur';
+  final name = travelerName ?? l.requestTravelerFallbackNameLower;
   return switch (action) {
     RequestPrimaryAction.publish => (
-      label: 'Publier',
+      label: l.requestDetailPublishCta,
       icon: 'send',
       enabled: true,
     ),
     RequestPrimaryAction.share => (
-      label: 'Partager',
+      label: l.commonShare,
       icon: 'share-2',
       enabled: true,
     ),
     RequestPrimaryAction.openThread => (
-      label: 'Ouvrir la discussion',
+      label: l.requestDetailOpenThreadCta,
       icon: 'message-circle',
       enabled: true,
     ),
     RequestPrimaryAction.pay => (
-      label: amount == null ? 'Payer' : 'Payer $amount',
+      label: amount == null
+          ? l.requestDetailPayCta
+          : l.requestDetailPayCtaWithAmount(amount),
       icon: 'credit-card',
       enabled: true,
     ),
     RequestPrimaryAction.waitTrip => (
-      label: '$name ajoute son trajet',
+      label: l.requestTravelerAddingTrip(name),
       icon: 'clock',
       enabled: false,
     ),
     RequestPrimaryAction.trackParcel => (
-      label: 'Suivre mon colis',
+      label: l.requestDetailTrackParcelCta,
       icon: 'package',
       enabled: true,
     ),
     RequestPrimaryAction.rate => (
-      label: 'Noter $name',
+      label: l.requestDetailRateCta(name),
       icon: 'star',
       enabled: true,
     ),
     RequestPrimaryAction.republish => (
-      label: 'Republier avec de nouvelles dates',
+      label: l.requestDetailRepublishCta,
       icon: 'refresh-cw',
       enabled: true,
     ),
     RequestPrimaryAction.publishSimilar => (
-      label: 'Publier une demande similaire',
+      label: l.requestDetailPublishSimilarCta,
       icon: 'copy',
       enabled: true,
     ),
@@ -87,7 +91,9 @@ class RequestDetailBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final rawPrimary = primaryButtonFor(
+      l,
       actions.primary,
       travelerName: travelerName,
       amount: amount,
@@ -98,9 +104,13 @@ class RequestDetailBottomBar extends StatelessWidget {
       enabled: rawPrimary.enabled && primaryEnabled,
     );
     final secondary = actions.showEdit
-        ? (label: 'Modifier', icon: 'square-pen', onTap: onEdit)
+        ? (label: l.commonEdit, icon: 'square-pen', onTap: onEdit)
         : actions.showMessage
-        ? (label: 'Message', icon: 'message-circle', onTap: onMessage)
+        ? (
+            label: l.requestDetailMessageCta,
+            icon: 'message-circle',
+            onTap: onMessage,
+          )
         : null;
 
     return Container(

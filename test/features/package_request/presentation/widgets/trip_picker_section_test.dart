@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
 
@@ -350,4 +352,62 @@ void main() {
       expect(find.byKey(const Key('trip-tile-1')), findsNothing);
     },
   );
+
+  testWidgets('en anglais : état vide, création et erreur traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    when(() => announcementRepo.getMyAnnouncements()).thenAnswer(
+      (_) async => (announcements: <AnnouncementModel>[], totalElements: 0),
+    );
+
+    await tester.pumpWidget(
+      _harness(
+        TripPickerSection(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 9),
+          dateToleranceDays: 3,
+          weightKg: 10,
+          onSelected: (_) {},
+          onCreateDedicated: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('None of your trips match'), findsOneWidget);
+    expect(
+      find.text('Create a trip that matches this request'),
+      findsOneWidget,
+    );
+    expect(find.text('Create a new trip'), findsOneWidget);
+  });
+
+  testWidgets('en anglais : erreur réseau → message et bouton traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    when(
+      () => announcementRepo.getMyAnnouncements(),
+    ).thenThrow(Exception('network down'));
+
+    await tester.pumpWidget(
+      _harness(
+        TripPickerSection(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 9),
+          dateToleranceDays: 3,
+          weightKg: 10,
+          onSelected: (_) {},
+          onCreateDedicated: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text("Can't load your trips"), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
+  });
 }

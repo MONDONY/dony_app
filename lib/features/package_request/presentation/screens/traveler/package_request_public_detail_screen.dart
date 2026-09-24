@@ -12,6 +12,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
@@ -20,10 +21,12 @@ import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_status_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -152,7 +155,7 @@ class _PackageRequestPublicDetailScreenState
       if (mounted) {
         DonySnackbar.show(
           context,
-          message: 'Demande signalée. Merci.',
+          message: context.l10n.requestPublicReportSuccess,
           type: DonySnackbarType.success,
         );
       }
@@ -160,7 +163,7 @@ class _PackageRequestPublicDetailScreenState
       if (mounted) {
         DonySnackbar.show(
           context,
-          message: 'Impossible de signaler pour le moment',
+          message: context.l10n.requestPublicReportError,
           type: DonySnackbarType.error,
         );
       }
@@ -178,6 +181,7 @@ class _PackageRequestPublicDetailScreenState
       return;
     }
 
+    final l = context.l10n;
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -187,11 +191,11 @@ class _PackageRequestPublicDetailScreenState
         ),
       ),
       builder: (sheetCtx) {
-        const reasons = <(String, String)>[
-          ('PROHIBITED', 'Contenu interdit'),
-          ('SCAM', 'Arnaque / fraude'),
-          ('INAPPROPRIATE', 'Contenu inapproprié'),
-          ('OTHER', 'Autre raison'),
+        final reasons = <(String, String)>[
+          ('PROHIBITED', l.requestPublicReportReasonProhibited),
+          ('SCAM', l.requestPublicReportReasonScam),
+          ('INAPPROPRIATE', l.requestPublicReportReasonInappropriate),
+          ('OTHER', l.requestPublicReportReasonOther),
         ];
         return SafeArea(
           child: Column(
@@ -199,7 +203,7 @@ class _PackageRequestPublicDetailScreenState
             children: [
               const SizedBox(height: DonySpacing.md),
               Text(
-                'Signaler la demande',
+                l.requestPublicReportSheetTitle,
                 style: Theme.of(sheetCtx).textTheme.titleLarge,
               ),
               const SizedBox(height: DonySpacing.sm),
@@ -235,10 +239,10 @@ class _PackageRequestPublicDetailScreenState
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: DonyAppBar(
-          title: 'Demande d\'envoi',
+          title: context.l10n.requestPublicTitle,
           actions: [
             IconButton(
-              tooltip: 'Signaler',
+              tooltip: context.l10n.requestPublicReportTooltip,
               icon: const DonyIcon('flag', size: 20),
               onPressed: _showReportSheet,
             ),
@@ -304,12 +308,13 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     _ => request.parcelSize.name.toUpperCase(),
   };
 
-  String get _parcelHint => switch (request.parcelSize.name.toUpperCase()) {
-    'SMALL' => 'Sac',
-    'MEDIUM' => 'Carton',
-    'LARGE' => 'Valise',
-    _ => 'Taille',
-  };
+  String _parcelHint(AppLocalizations l) =>
+      switch (request.parcelSize.name.toUpperCase()) {
+        'SMALL' => l.requestPublicParcelHintBag,
+        'MEDIUM' => l.requestPublicParcelHintBox,
+        'LARGE' => l.requestPublicParcelHintSuitcase,
+        _ => l.requestCreateRecapSize,
+      };
 
   /// Prix réellement payé par l'expéditeur. `targetPriceEur` seul est un
   /// NET (PR #219) : jamais afficher les deux montants côte à côte, ça
@@ -320,6 +325,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = request;
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final depFlag = cityFlag(r.departureCity);
@@ -354,7 +360,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                   const SizedBox(width: DonySpacing.xxs),
                   Flexible(
                     child: Text(
-                      'DEMANDE D\'ENVOI',
+                      l.requestPublicBadge,
                       overflow: TextOverflow.ellipsis,
                       style: tt.labelSmall?.copyWith(
                         fontWeight: FontWeight.w800,
@@ -384,7 +390,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                           ),
                           const SizedBox(width: DonySpacing.xxs),
                           Text(
-                            'PRIX FERME',
+                            l.requestPublicFirmPriceBadge,
                             style: tt.labelSmall?.copyWith(
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.4,
@@ -426,8 +432,10 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                   const SizedBox(width: DonySpacing.xs),
                   Expanded(
                     child: Text(
-                      'le ${r.desiredDate.day}/${r.desiredDate.month}/${r.desiredDate.year} '
-                      '(±${r.dateToleranceDays}j)',
+                      l.requestPublicDesiredDate(
+                        shortDayMonthYear(l, r.desiredDate),
+                        toleranceCompactLabel(l, r.dateToleranceDays),
+                      ),
                       style: tt.bodyMedium?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),
@@ -445,7 +453,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                       icon: 'scale',
                       value:
                           '${r.weightKg.toStringAsFixed(r.weightKg % 1 == 0 ? 0 : 1)} kg',
-                      label: 'Poids',
+                      label: l.requestCreateRecapWeight,
                     ),
                   ),
                   const SizedBox(width: DonySpacing.md),
@@ -453,7 +461,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                     child: _StatTile(
                       icon: 'package',
                       value: _sizeLabel,
-                      label: _parcelHint,
+                      label: _parcelHint(l),
                     ),
                   ),
                 ],
@@ -463,7 +471,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
               if (r.categories.isNotEmpty) ...[
                 const SizedBox(height: DonySpacing.md),
                 Text(
-                  'CATÉGORIES',
+                  l.requestPublicCategoriesLabel,
                   style: tt.labelSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: cs.onSurfaceVariant,
@@ -483,7 +491,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
               // ── Description ──────────────────────────────────────────────
               if (r.description != null && r.description!.isNotEmpty) ...[
                 const SizedBox(height: DonySpacing.md),
-                _detailCard(context, 'Description', [
+                _detailCard(context, l.requestDescriptionLabel, [
                   Text(
                     r.description!,
                     style: tt.bodyMedium?.copyWith(
@@ -496,11 +504,11 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
 
               if (_displayPrice != null) ...[
                 const SizedBox(height: DonySpacing.md),
-                _detailCard(context, 'Budget', [
+                _detailCard(context, l.requestPublicBudget, [
                   _kv(
                     context,
                     'banknote',
-                    r.negotiable ? 'Budget' : 'Prix ferme',
+                    r.negotiable ? l.requestPublicBudget : l.tripFixedPrice,
                     PriceDisplay.money(_displayPrice!, r.currency),
                   ),
                   // Repère « environ » dans la devise du lecteur (serveur, lot 5).
@@ -522,14 +530,19 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
               if (r.pickupNeighborhood != null ||
                   r.deliveryNeighborhood != null) ...[
                 const SizedBox(height: DonySpacing.md),
-                _detailCard(context, 'Zones', [
+                _detailCard(context, l.requestPublicZonesLabel, [
                   if (r.pickupNeighborhood != null)
-                    _kv(context, 'map-pin', 'Pickup', r.pickupNeighborhood!),
+                    _kv(
+                      context,
+                      'map-pin',
+                      l.requestPublicPickupLabel,
+                      r.pickupNeighborhood!,
+                    ),
                   if (r.deliveryNeighborhood != null)
                     _kv(
                       context,
                       'map-pin',
-                      'Livraison',
+                      l.requestPublicDeliveryLabel,
                       r.deliveryNeighborhood!,
                     ),
                 ]),
@@ -544,10 +557,12 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
           child: isGuest
               ? _GuestLockedCta(
                   label: r.negotiable
-                      ? 'Proposer mon trajet'
+                      ? l.requestPublicProposeTripCta
                       : _displayPrice != null
-                      ? 'Prendre à ${PriceDisplay.money(_displayPrice!, r.currency)} · Prix ferme'
-                      : 'Prendre ce colis',
+                      ? l.requestPublicTakeAt(
+                          PriceDisplay.money(_displayPrice!, r.currency),
+                        )
+                      : l.requestPublicTakePackageCta,
                 )
               : currentUserId == r.senderId
               ? _OwnerCta(request: r, onChanged: onChanged)
@@ -556,13 +571,13 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                   // Le voyageur a déjà une offre en cours → on bascule vers sa
                   // négociation (négociable) / proposition de trajet (prix ferme).
                   label: r.negotiable
-                      ? 'Voir ma négociation'
-                      : 'Voir ma proposition',
+                      ? l.requestPublicViewNegotiationCta
+                      : l.requestPublicViewProposalCta,
                   onPressed: () => _openThread(context, r.viewerThreadId!),
                 )
               : r.negotiable
               ? DonyButton(
-                  label: 'Proposer mon trajet',
+                  label: l.requestPublicProposeTripCta,
                   onPressed: () => _makeOffer(context),
                 )
               : _FirmPriceCta(
@@ -760,7 +775,7 @@ class _CategoryChip extends StatelessWidget {
           Text(emojiForLabel(label), style: const TextStyle(fontSize: 13)),
           const SizedBox(width: 5),
           Text(
-            label,
+            contentCategoryDisplayName(context.l10n, label),
             style: tt.labelMedium?.copyWith(
               color: cs.primary,
               fontWeight: FontWeight.w600,
@@ -919,9 +934,10 @@ class _OwnerCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final offers = DonyButton(
       key: const Key('owner-offers'),
-      label: 'Offres reçues',
+      label: l.requestDetailOffersReceivedTitle,
       onPressed: () => _openOffers(context),
     );
     if (!_editable) {
@@ -932,7 +948,7 @@ class _OwnerCta extends StatelessWidget {
         Expanded(
           child: DonyButton(
             key: const Key('owner-edit'),
-            label: 'Modifier',
+            label: l.commonEdit,
             variant: DonyButtonVariant.secondary,
             onPressed: () => _edit(context),
           ),
@@ -981,10 +997,11 @@ class _FirmPriceCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final price = request.targetPriceEur;
     final label = price != null
-        ? 'Prendre à ${PriceDisplay.money(price, request.currency)} · Prix ferme'
-        : 'Prendre ce colis';
+        ? l.requestPublicTakeAt(PriceDisplay.money(price, request.currency))
+        : l.requestPublicTakePackageCta;
 
     return BlocProvider(
       create: (_) => getIt<NegotiationBloc>(),
@@ -994,7 +1011,7 @@ class _FirmPriceCta extends StatelessWidget {
             if (state is NegotiationLoaded) {
               DonySnackbar.show(
                 ctx,
-                message: 'Offre confirmée',
+                message: l.requestPublicOfferConfirmed,
                 type: DonySnackbarType.success,
               );
             } else if (state is NegotiationError) {
@@ -1009,7 +1026,7 @@ class _FirmPriceCta extends StatelessWidget {
             final isLoading = state is NegotiationLoading;
             return DonyButton(
               key: const Key('take-firm-price'),
-              label: isLoading ? 'Envoi…' : label,
+              label: isLoading ? l.requestCreateSendingLabel : label,
               isLoading: isLoading,
               onPressed: isLoading || price == null
                   ? null
@@ -1046,7 +1063,7 @@ class _PaymentMethodsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Mode de paiement souhaité',
+            context.l10n.requestPublicPaymentTitle,
             style: tt.bodyMedium!.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -1056,7 +1073,7 @@ class _PaymentMethodsCard extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            'Accepté par l\'expéditeur',
+            context.l10n.requestPublicPaymentSubtitle,
             style: tt.bodyMedium!.copyWith(fontSize: 12, color: kTextHint),
           ),
           const SizedBox(height: DonySpacing.md),

@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/compatible_traveler_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 class RequestSectionTitle extends StatelessWidget {
@@ -44,7 +45,7 @@ class RequestTravelersList extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      const RequestSectionTitle('Voyageurs sur ton axe'),
+      RequestSectionTitle(context.l10n.requestTravelersOnRouteTitle),
       const SizedBox(height: DonySpacing.sm),
       for (final trip in trips) ...[
         CompatibleTravelerCard(
@@ -81,7 +82,9 @@ class RequestTravelersFold extends StatelessWidget {
           Transform.translate(
             offset: Offset(-8.0 * i, 0),
             child: DonyAvatar(
-              name: trip.traveler?.displayName ?? 'Voyageur',
+              name:
+                  trip.traveler?.displayName ??
+                  context.l10n.tripTravelerFallbackName,
               imageUrl: trip.traveler?.avatarUrl,
               size: DonyAvatarSize.sm,
             ),
@@ -141,6 +144,7 @@ class RequestNoTravelersEmpty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     Widget action(String icon, String label, VoidCallback onTap) => Material(
       // sand100 ↔ sandDark100 via l'extension DonyStatusColors : équivalent
       // theme-aware exact de la primitive DonyColors.sand100 de la fiche.
@@ -196,13 +200,13 @@ class RequestNoTravelersEmpty extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Aucun voyageur sur $corridor pour l\'instant',
+            l.requestNoTravelersTitle(corridor),
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
-            'Les trajets arrivent souvent la semaine du départ. On te prévient dès qu\'un voyageur publie.',
+            l.requestNoTravelersMessage,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
@@ -211,9 +215,9 @@ class RequestNoTravelersEmpty extends StatelessWidget {
             ),
           ),
           const SizedBox(height: DonySpacing.md),
-          action('bell', 'Être alerté des nouveaux trajets', onCreateAlert),
+          action('bell', l.requestNoTravelersAlertCta, onCreateAlert),
           const SizedBox(height: DonySpacing.sm),
-          action('calendar', 'Élargir mes dates', onWidenDates),
+          action('calendar', l.requestNoTravelersWidenDatesCta, onWidenDates),
         ],
       ),
     );

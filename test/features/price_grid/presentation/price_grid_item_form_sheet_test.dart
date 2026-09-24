@@ -13,6 +13,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class _MockPriceGridBloc extends MockBloc<PriceGridEvent, PriceGridState>
     implements PriceGridBloc {}
 
@@ -156,6 +158,17 @@ void main() {
       expect(find.byKey(const Key('price-grid-create-custom')), findsOneWidget);
       expect(find.text('Ajouter « Pagne 6 yards »'), findsOneWidget);
     });
+
+    testWidgets(
+      'en anglais : une catégorie canonique s\'affiche traduite (Livres → Books)',
+      (tester) async {
+        useEnglish();
+        await _open(tester);
+
+        expect(find.text('Books'), findsOneWidget);
+        expect(find.text('Livres'), findsNothing);
+      },
+    );
 
     testWidgets('un libellé qui existe déjà ne propose pas de doublon', (
       tester,

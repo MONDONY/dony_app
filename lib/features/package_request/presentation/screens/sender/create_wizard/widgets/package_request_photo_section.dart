@@ -6,6 +6,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/package_request/bloc/package_request_photo_upload.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -27,7 +28,7 @@ class PackageRequestPhotoSection extends StatelessWidget {
       if (context.mounted) {
         DonySnackbar.show(
           context,
-          message: 'Image non supportée ou trop volumineuse',
+          message: context.l10n.requestCreatePhotoUnsupported,
           type: DonySnackbarType.error,
         );
       }
@@ -35,6 +36,7 @@ class PackageRequestPhotoSection extends StatelessWidget {
   }
 
   void _showSourceSheet(BuildContext context) {
+    final l10n = context.l10n;
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -46,7 +48,7 @@ class PackageRequestPhotoSection extends StatelessWidget {
             children: [
               ListTile(
                 leading: Icon(Icons.photo_camera_rounded, color: cs.primary),
-                title: const Text('Prendre une photo'),
+                title: Text(l10n.requestCreateTakePhoto),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
                   _pick(context, ImageSource.camera);
@@ -54,7 +56,7 @@ class PackageRequestPhotoSection extends StatelessWidget {
               ),
               ListTile(
                 leading: Icon(Icons.photo_library_rounded, color: cs.primary),
-                title: const Text('Choisir dans la galerie'),
+                title: Text(l10n.requestCreatePickFromGallery),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
                   _pick(context, ImageSource.gallery);
@@ -71,6 +73,7 @@ class PackageRequestPhotoSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     return BlocBuilder<
       PackageRequestPhotosCubit,
       List<PackageRequestPhotoUpload>
@@ -84,7 +87,7 @@ class PackageRequestPhotoSection extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Photos du colis',
+                    l10n.requestCreatePhotosLabel,
                     style: tt.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: cs.onSurface,
@@ -103,7 +106,7 @@ class PackageRequestPhotoSection extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Visibles par les voyageurs. Ajoutées à l\'offre quand un trajet est lié.',
+              l10n.requestCreatePhotosHint,
               style: tt.bodySmall?.copyWith(
                 color: cs.onSurfaceVariant,
                 height: 1.4,
@@ -129,8 +132,10 @@ class PackageRequestPhotoSection extends StatelessWidget {
                       onTapFailed: () => DonySnackbar.show(
                         context,
                         message: p.error == null
-                            ? 'Échec de l\'upload de la photo'
-                            : 'Échec : ${p.error}',
+                            ? l10n.requestCreatePhotoUploadFailed
+                            : l10n.requestCreatePhotoUploadFailedWithReason(
+                                p.error!,
+                              ),
                         type: DonySnackbarType.error,
                       ),
                     ),
@@ -139,7 +144,7 @@ class PackageRequestPhotoSection extends StatelessWidget {
                       button: true,
                       container: true,
                       excludeSemantics: true,
-                      label: 'Ajouter une photo du colis',
+                      label: l10n.requestCreateAddPhotoSemantic,
                       child: GestureDetector(
                         key: const Key('pr-add-photo'),
                         onTap: () => _showSourceSheet(context),
@@ -178,11 +183,12 @@ class _AddPhotoCta extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     return Semantics(
       button: true,
       container: true,
       excludeSemantics: true,
-      label: 'Ajouter une photo du colis',
+      label: l10n.requestCreateAddPhotoSemantic,
       child: GestureDetector(
         key: const Key('pr-add-photo'),
         onTap: onTap,
@@ -199,7 +205,7 @@ class _AddPhotoCta extends StatelessWidget {
               Icon(Icons.add_a_photo_rounded, color: cs.primary, size: 30),
               const SizedBox(height: DonySpacing.xs),
               Text(
-                'Ajouter une photo',
+                l10n.requestCreateAddPhotoTitle,
                 style: tt.titleSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: cs.primary,
@@ -207,7 +213,7 @@ class _AddPhotoCta extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'Fortement recommandé, rassure le voyageur',
+                l10n.requestCreateAddPhotoSubtitle,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],
@@ -231,6 +237,7 @@ class _PhotoThumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return SizedBox(
       width: 64,
       height: 64,
@@ -289,7 +296,7 @@ class _PhotoThumb extends StatelessWidget {
                 button: true,
                 container: true,
                 excludeSemantics: true,
-                label: "Réessayer l'envoi de la photo",
+                label: l10n.requestCreateRetryPhotoUpload,
                 child: GestureDetector(
                   onTap: onTapFailed,
                   child: DecoratedBox(
@@ -313,7 +320,7 @@ class _PhotoThumb extends StatelessWidget {
               button: true,
               container: true,
               excludeSemantics: true,
-              label: 'Supprimer cette photo',
+              label: l10n.requestCreateRemovePhoto,
               child: GestureDetector(
                 onTap: onRemove,
                 behavior: HitTestBehavior.opaque,

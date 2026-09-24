@@ -18,6 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements PackageRequestRepository {}
@@ -104,6 +105,53 @@ void main() {
       // La ligne "Colis" contient la catégorie en suffixe (ex: "MEDIUM · 5 kg · Vêtements.")
       expect(find.textContaining('Vêtements'), findsOneWidget);
     });
+
+    testWidgets(
+      'le récap traduit une catégorie du catalogue (Vêtements & tissus)',
+      (tester) async {
+        final seed = PackageRequestFormState(
+          currentStep: 2,
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 6, 15),
+          dateToleranceDays: 2,
+          transportMode: TransportMode.plane,
+          weightKg: 5,
+          parcelSize: ParcelSize.medium,
+          categories: const ['Vêtements & tissus'],
+        );
+        await tester.pumpWidget(
+          wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+        );
+
+        expect(find.text('Vêtements & tissus'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'le récap traduit une catégorie du catalogue en anglais (Clothing & '
+      'fabrics)',
+      (tester) async {
+        useEnglish();
+        final seed = PackageRequestFormState(
+          currentStep: 2,
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 6, 15),
+          dateToleranceDays: 2,
+          transportMode: TransportMode.plane,
+          weightKg: 5,
+          parcelSize: ParcelSize.medium,
+          categories: const ['Vêtements & tissus'],
+        );
+        await tester.pumpWidget(
+          wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+        );
+
+        expect(find.text('Clothing & fabrics'), findsOneWidget);
+        expect(find.text('Vêtements & tissus'), findsNothing);
+      },
+    );
 
     testWidgets('validation budget — accepte vide', (tester) async {
       final key = GlobalKey<Step3RecapBudgetState>();
@@ -259,6 +307,28 @@ void main() {
       expect(find.text('Espèces'), findsOneWidget);
       expect(find.text('Mobile money'), findsNothing);
     });
+
+    testWidgets(
+      'en EUR, les puces de paiement et le titre sont traduits en anglais',
+      (tester) async {
+        useEnglish();
+        await tester.pumpWidget(
+          wrap(
+            const Step3RecapBudget(currency: SupportedCurrency.eur),
+            seed: const PackageRequestFormState(
+              currency: SupportedCurrency.eur,
+            ),
+            useMock: true,
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('Card'), findsOneWidget);
+        expect(find.text('Cash'), findsOneWidget);
+        expect(find.text('Carte'), findsNothing);
+        expect(find.text('Espèces'), findsNothing);
+      },
+    );
 
     testWidgets('affiche le suffixe et le détail du budget en CAD', (
       tester,

@@ -27,7 +27,7 @@ class ContentCategoryRepository implements IContentCategoryRepository {
       return categories;
     } catch (e) {
       debugPrint(
-        '[ContentCategoryRepository] fallback to embedded catalog: $e',
+        '[ContentCategoryRepository] fallback to embedded catalog: $e', // i18n-ignore
       );
       return fallbackCatalog;
     }

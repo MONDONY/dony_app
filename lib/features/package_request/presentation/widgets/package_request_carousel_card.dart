@@ -2,8 +2,10 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -200,7 +202,7 @@ class _PhotoHero extends StatelessWidget {
                   ] else ...[
                     const SizedBox(width: 6),
                     Text(
-                      'Libre',
+                      context.l10n.requestCarouselCardPriceFree,
                       style: tt.bodySmall?.copyWith(
                         color: Colors.white70,
                         fontWeight: FontWeight.w600,
@@ -271,7 +273,7 @@ class _OwnRequestBadge extends StatelessWidget {
           const DonyIcon('user', size: 10, color: Colors.white),
           const SizedBox(width: 3),
           Text(
-            'Ma demande',
+            context.l10n.requestDetailTitle,
             style: tt.labelSmall?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w700,
@@ -341,13 +343,15 @@ class _InfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = DateFormat(
-      'd MMM',
-      AppL10n.localeName,
-    ).format(item.desiredDate);
+    final l = context.l10n;
+    final dateStr = DateFormat.MMMd(l.localeName).format(item.desiredDate);
     final toleranceStr = item.dateToleranceDays > 0
-        ? ' ±${item.dateToleranceDays}j'
+        ? ' ${toleranceCompactLabel(l, item.dateToleranceDays)}'
         : '';
+    final rawName = item.sender.displayName;
+    final senderName = (rawName == null || rawName.isEmpty)
+        ? senderFallbackName(l)
+        : rawName;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
@@ -360,7 +364,7 @@ class _InfoSection extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  item.sender.displayName,
+                  senderName,
                   style: tt.bodySmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
@@ -413,7 +417,7 @@ class _InfoSection extends StatelessWidget {
                 const SizedBox(width: 3),
                 Expanded(
                   child: Text(
-                    item.primaryCategory!,
+                    contentCategoryDisplayName(l, item.primaryCategory!),
                     style: tt.labelSmall?.copyWith(
                       color: cs.onSurfaceVariant,
                       fontSize: 11,

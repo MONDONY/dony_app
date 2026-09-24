@@ -4,6 +4,8 @@ import 'package:dony/features/content_categories/presentation/content_category_s
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 class _FakeRepository implements IContentCategoryRepository {
   _FakeRepository(this._categories);
   final List<ContentCategory> _categories;
@@ -335,4 +337,72 @@ void main() {
 
     expect(find.byKey(const Key('content-combo-dropdown')), findsOneWidget);
   });
+
+  testWidgets(
+    'en anglais : « Books » s\'affiche et reste visible en tapant « book »',
+    (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          ContentCategorySelector(
+            repository: repository,
+            selected: const [],
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(fieldFinder());
+      await tester.pumpAndSettle();
+
+      // Le libellé brut (clé, wire) reste français : seul l'affichage change.
+      expect(
+        find.byKey(const Key('content-combo-item-Livres')),
+        findsOneWidget,
+      );
+      expect(find.text('Books'), findsOneWidget);
+
+      await tester.enterText(fieldFinder(), 'book');
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('content-combo-item-Livres')),
+        findsOneWidget,
+      );
+      expect(find.text('Books'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'hint par défaut : français puis anglais quand hint n\'est pas surchargé',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          ContentCategorySelector(
+            repository: repository,
+            selected: const [],
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ajouter un type de contenu…'), findsOneWidget);
+
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          ContentCategorySelector(
+            repository: repository,
+            selected: const [],
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Add a content type…'), findsOneWidget);
+    },
+  );
 }

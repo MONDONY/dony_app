@@ -1,9 +1,12 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_offer_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
+import '../../../../../helpers/l10n_test_helpers.dart';
 
 NegotiationThread _t(NegotiationThreadStatus s, {bool myTurn = false}) =>
     NegotiationThread(
@@ -27,25 +30,30 @@ NegotiationThread _t(NegotiationThreadStatus s, {bool myTurn = false}) =>
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));
 
+  final fr = lookupAppLocalizations(AppL10n.fr);
+  final en = lookupAppLocalizations(AppL10n.en);
+
   test('offerTagFor', () {
     expect(
       offerTagFor(
+        fr,
         _t(NegotiationThreadStatus.open, myTurn: true),
         firmPrice: false,
       ),
       (label: 'À toi de répondre', tone: OfferTagTone.info, cta: 'Répondre'),
     );
     expect(
-      offerTagFor(_t(NegotiationThreadStatus.open), firmPrice: false).label,
+      offerTagFor(fr, _t(NegotiationThreadStatus.open), firmPrice: false).label,
       'En attente de Awa K.',
     );
-    expect(offerTagFor(_t(NegotiationThreadStatus.open), firmPrice: true), (
+    expect(offerTagFor(fr, _t(NegotiationThreadStatus.open), firmPrice: true), (
       label: 'Disponible pour ton colis',
       tone: OfferTagTone.success,
       cta: 'Choisir',
     ));
     expect(
       offerTagFor(
+        fr,
         _t(NegotiationThreadStatus.awaitingTrip),
         firmPrice: false,
       ).label,
@@ -53,6 +61,7 @@ void main() {
     );
     expect(
       offerTagFor(
+        fr,
         _t(NegotiationThreadStatus.awaitingPayment),
         firmPrice: false,
       ).tone,
@@ -60,10 +69,30 @@ void main() {
     );
     expect(
       offerTagFor(
+        fr,
         _t(NegotiationThreadStatus.awaitingCommission),
         firmPrice: false,
       ).tone,
       OfferTagTone.warning,
+    );
+  });
+
+  test('offerTagFor en anglais', () {
+    expect(
+      offerTagFor(
+        en,
+        _t(NegotiationThreadStatus.open, myTurn: true),
+        firmPrice: false,
+      ),
+      (label: 'Your turn to respond', tone: OfferTagTone.info, cta: 'Respond'),
+    );
+    expect(
+      offerTagFor(
+        en,
+        _t(NegotiationThreadStatus.awaitingTrip),
+        firmPrice: false,
+      ).label,
+      'Awa K. is adding their trip',
     );
   });
 
@@ -87,5 +116,25 @@ void main() {
     expect(find.text('Répondre'), findsOneWidget);
     await tester.tap(find.byType(RequestOfferCard));
     expect(taps, 1);
+  });
+
+  testWidgets('écran traduit en anglais : CTA et légende de prix', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: RequestOfferCard(
+            thread: _t(NegotiationThreadStatus.open, myTurn: true),
+            firmPrice: false,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Respond'), findsOneWidget);
+    expect(find.text('you pay'), findsOneWidget);
+    expect(find.text('Répondre'), findsNothing);
   });
 }

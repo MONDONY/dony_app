@@ -9,7 +9,9 @@ import 'package:dony/features/package_request/bloc/package_request_form_bloc.dar
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/package_request_photo_section.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,9 +48,11 @@ class Step2DetailsState extends State<Step2Details> {
   /// Catégories libres ajoutées par l'utilisateur (ordonnées).
   final List<String> _customCats = [];
 
-  /// Message d'erreur si aucune catégorie n'est choisie (ou si la limite de
-  /// sélection est atteinte).
-  String? _catError;
+  /// Motif d'erreur si aucune catégorie n'est choisie (ou si la limite de
+  /// sélection est atteinte). Un indicateur, pas un texte déjà traduit : le
+  /// message ne serait plus à jour si la langue change pendant que l'état
+  /// reste affiché.
+  _CategoryError? _catError;
 
   /// Les messages rouges n'apparaissent qu'après une première interaction.
   bool _touched = false;
@@ -72,7 +76,7 @@ class Step2DetailsState extends State<Step2Details> {
   void _onCategoriesChanged(List<String> labels) {
     final catalogLabels = _predefined.map((c) => c.label).toSet();
     if (labels.length > _kMaxCategories) {
-      setState(() => _catError = 'Maximum $_kMaxCategories catégories');
+      setState(() => _catError = _CategoryError.maxExceeded);
       return;
     }
     final autreJustAdded =
@@ -83,9 +87,7 @@ class Step2DetailsState extends State<Step2Details> {
     _customCats
       ..clear()
       ..addAll(labels.where((l) => !catalogLabels.contains(l)));
-    _catError = _allCategories.isEmpty
-        ? 'Choisissez au moins une catégorie'
-        : null;
+    _catError = _allCategories.isEmpty ? _CategoryError.required : null;
     _sync(markTouched: true);
     // « Autre » seul ne dit rien au voyageur : on propose tout de suite une
     // précision libre, sans l'imposer (bottom sheet annulable).
@@ -98,14 +100,15 @@ class Step2DetailsState extends State<Step2Details> {
   /// Si l'expéditeur renseigne un texte, il remplace « Autre » dans la
   /// sélection (catégorie libre) ; sinon « Autre » reste tel quel.
   Future<void> _promptAutreDetail() async {
+    final l10n = context.l10n;
     VoidCallback? submitFn;
     final result = await DonyBottomSheet.show<String>(
       context,
-      title: 'Précisez le contenu (optionnel)',
-      subtitle: 'Ça aide le voyageur à savoir ce qu\'il transporte.',
+      title: l10n.requestCreateAutrePrecisionTitle,
+      subtitle: l10n.requestCreateAutrePrecisionSubtitle,
       child: _AutrePrecisionField(onSubmitReady: (fn) => submitFn = fn),
       stickyBottom: DonyButton(
-        label: 'Valider',
+        label: l10n.requestCreateAutrePrecisionValidate,
         onPressed: () => submitFn?.call(),
       ),
     );
@@ -177,12 +180,23 @@ class Step2DetailsState extends State<Step2Details> {
 
   List<String> get _allCategories => [..._selectedCats, ..._customCats];
 
+  /// Traduit [_catError] au moment de l'affichage (jamais mis en cache dans
+  /// l'état) : le message reste correct si la langue change pendant que
+  /// l'erreur est visible.
+  String? _catErrorText(AppLocalizations l10n) => switch (_catError) {
+    null => null,
+    _CategoryError.required => l10n.requestCreateCategoryRequired,
+    _CategoryError.maxExceeded => l10n.requestCreateMaxCategories(
+      _kMaxCategories,
+    ),
+  };
+
   void submit() {
     // Backstop : « Continuer » est déjà grisé tant que l'étape est incomplète.
     final formOk = _formKey.currentState!.validate();
     final cats = _allCategories;
     if (cats.isEmpty) {
-      _catError = 'Choisissez au moins une catégorie';
+      _catError = _CategoryError.required;
     }
     if (!formOk || cats.isEmpty) {
       _sync(markTouched: true);
@@ -213,6 +227,7 @@ class Step2DetailsState extends State<Step2Details> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(
@@ -227,7 +242,7 @@ class Step2DetailsState extends State<Step2Details> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Décrivez votre colis',
+              l10n.requestCreateStep2Title,
               style: tt.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: cs.onSurface,
@@ -236,8 +251,7 @@ class Step2DetailsState extends State<Step2Details> {
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Ces infos aident les voyageurs à savoir s\'ils peuvent '
-              'transporter votre envoi.',
+              l10n.requestCreateStep2Subtitle,
               style: tt.bodyMedium?.copyWith(
                 color: cs.onSurfaceVariant,
                 height: 1.4,
@@ -250,13 +264,13 @@ class Step2DetailsState extends State<Step2Details> {
             const SizedBox(height: DonySpacing.base),
 
             // ── Poids ──────────────────────────────────────────────────────
-            const _FieldLabel('Poids approximatif'),
+            _FieldLabel(l10n.requestCreateWeightLabel),
             const SizedBox(height: DonySpacing.xs),
             _WeightInput(controller: _weightCtrl),
             Padding(
               padding: const EdgeInsets.only(top: DonySpacing.xs),
               child: Text(
-                '${PackageRequestLimits.weightRangeLabel}.',
+                '${weightRangeLabel(context.l10n)}.',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
@@ -267,10 +281,10 @@ class Step2DetailsState extends State<Step2Details> {
             // occupaient ~900 px et repoussaient la description hors écran.
             // Même composant que la création de trajet. « Autre » fait partie
             // du catalogue : sa sélection déclenche une précision libre.
-            const _FieldLabel('Contenu'),
+            _FieldLabel(l10n.requestCreateContentLabel),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Tapez pour chercher, ou écrivez votre propre catégorie.',
+              l10n.requestCreateContentHint,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -281,13 +295,13 @@ class Step2DetailsState extends State<Step2Details> {
               onChanged: _onCategoriesChanged,
             ),
             DonyFieldError(
-              message: _touched ? _catError : null,
+              message: _touched ? _catErrorText(l10n) : null,
               textKey: const Key('categories-error'),
             ),
             const SizedBox(height: DonySpacing.base),
 
             // ── Description (optionnel) ────────────────────────────────────
-            const _FieldLabel('Description (optionnel)'),
+            _FieldLabel(l10n.requestCreateDescriptionLabel),
             const SizedBox(height: DonySpacing.xs),
             _DescriptionInput(controller: _descriptionCtrl),
           ],
@@ -335,7 +349,7 @@ class _AutrePrecisionFieldState extends State<_AutrePrecisionField> {
     return DonyTextField(
       key: const Key('autre-detail-input'),
       controller: _ctrl,
-      hint: 'Ex. Instruments de musique',
+      hint: context.l10n.requestCreateAutrePrecisionHint,
       autofocus: true,
     );
   }
@@ -356,8 +370,7 @@ class _DescriptionInput extends StatelessWidget {
       maxLength: 500,
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
-        hintText:
-            'Précisions utiles : fragile, contenu exact, instructions de remise…',
+        hintText: context.l10n.requestCreateDescriptionHint,
         filled: true,
         fillColor: cs.surface,
         alignLabelWithHint: true,
@@ -441,12 +454,22 @@ class _WeightInput extends StatelessWidget {
       ),
       validator: (v) {
         final d = double.tryParse(v?.replaceAll(',', '.') ?? '');
-        if (d == null) return 'Valeur invalide';
+        if (d == null) return context.l10n.requestCreateWeightInvalid;
         if (!PackageRequestLimits.isWeightValid(d)) {
-          return PackageRequestLimits.weightRangeLabel;
+          return weightRangeLabel(context.l10n);
         }
         return null;
       },
     );
   }
+}
+
+/// Motif de l'erreur de sélection des catégories — traduit uniquement dans
+/// `build()`, jamais stocké déjà traduit dans l'état.
+enum _CategoryError {
+  /// Aucune catégorie sélectionnée.
+  required,
+
+  /// Plus de [Step2DetailsState._kMaxCategories] catégories sélectionnées.
+  maxExceeded,
 }

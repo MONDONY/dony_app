@@ -1,51 +1,53 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/presentation/request_screen_case.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 enum RequestPillTone { live, neutral, info, warning, success, danger }
 
 ({String label, RequestPillTone tone}) requestPillFor(
+  AppLocalizations l,
   RequestScreenCase c, {
   int count = 0,
 }) => switch (c) {
   RequestScreenCase.draft => (
-    label: 'Brouillon',
+    label: l.requestStatusDraft,
     tone: RequestPillTone.neutral,
   ),
   RequestScreenCase.noOffers || RequestScreenCase.noTravelers => (
-    label: 'En ligne',
+    label: l.requestStatusLive,
     tone: RequestPillTone.live,
   ),
   RequestScreenCase.offersReceived => (
-    label: '$count offre${count > 1 ? 's' : ''}',
+    label: l.requestStatusOffers(count),
     tone: RequestPillTone.info,
   ),
   RequestScreenCase.firmCandidates => (
-    label: '$count candidat${count > 1 ? 's' : ''}',
+    label: l.requestStatusCandidates(count),
     tone: RequestPillTone.info,
   ),
   RequestScreenCase.cashCommissionPending => (
-    label: 'En attente',
+    label: l.requestStatusPendingCommission,
     tone: RequestPillTone.warning,
   ),
   RequestScreenCase.toFinalize => (
-    label: 'À finaliser',
+    label: l.requestStatusToFinalize,
     tone: RequestPillTone.info,
   ),
   RequestScreenCase.accepted => (
-    label: 'Confirmée',
+    label: l.requestStatusConfirmed,
     tone: RequestPillTone.success,
   ),
   RequestScreenCase.delivered => (
-    label: 'Livrée',
+    label: l.requestStatusDelivered,
     tone: RequestPillTone.success,
   ),
   RequestScreenCase.expired => (
-    label: 'Expirée',
+    label: l.requestStatusExpired,
     tone: RequestPillTone.neutral,
   ),
   RequestScreenCase.cancelled => (
-    label: 'Annulée',
+    label: l.requestStatusCancelled,
     tone: RequestPillTone.danger,
   ),
 };
@@ -63,7 +65,7 @@ class RequestStatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final pill = requestPillFor(screenCase, count: count);
+    final pill = requestPillFor(context.l10n, screenCase, count: count);
     final (fg, bg) = switch (pill.tone) {
       RequestPillTone.live ||
       RequestPillTone.success => (cs.success, cs.successLight),

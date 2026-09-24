@@ -11,6 +11,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 SenderPublicProfile _sender({
@@ -146,6 +148,36 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byTooltip("Plus d'options"), findsNothing);
+    });
+  });
+
+  group('SenderPublicProfileSheet — anglais', () {
+    testWidgets('titre, identité vérifiée et avis traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_buildApp(_sender()));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('Sender profile'), findsOneWidget);
+      expect(find.text('Verified identity'), findsOneWidget);
+      expect(find.text('· 12 reviews'), findsOneWidget);
+    });
+
+    testWidgets('« Nouveau membre » devient « New member »', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_buildApp(_sender(totalRatings: 0)));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('New member'), findsOneWidget);
+    });
+
+    testWidgets('nom de repli « Yadony user » sans displayName', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(_buildApp(SenderPublicProfile.guest(null)));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('Yadony user'), findsWidgets);
     });
   });
 }

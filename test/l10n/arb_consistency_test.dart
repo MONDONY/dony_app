@@ -41,6 +41,17 @@ const _sameInBothLanguages = <String>{
   'homeFilterFieldsDate', // « DATE » se dit pareil
   'tripTransportTrain', // « Train » se dit pareil
   'tripTransportBus', // « Bus » se dit pareil
+  'paymentMethodMobileMoney', // « Mobile money » se dit pareil
+  'requestCreateDateFieldLabel', // « Date » se dit pareil
+  'requestDetailMessageCta', // « Message » se dit pareil
+  'requestDescriptionLabel', // « Description » se dit pareil
+  'requestPublicBudget', // « Budget » se dit pareil
+  'requestPublicZonesLabel', // « Zones » se dit pareil
+  'requestSearchBudgetLine', // gabarit identique, seul {amount} varie
+  'requestMatchingBudgetPerKg', // gabarit identique, seul {amount} varie
+  'requestPreviewPhotos', // gabarit identique, seul le pluriel ICU varie
+  'requestPreviewPhotosLabel', // « Photos » se dit pareil
+  'requestCreateRecapTransport', // « Transport » se dit pareil
 };
 
 void main() {

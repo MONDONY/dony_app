@@ -7,6 +7,13 @@ import 'package:equatable/equatable.dart';
 
 enum FormSubmissionStatus { idle, submitting, success, error }
 
+/// Erreur de soumission connue de l'app elle-même (pas du serveur) — l'état
+/// ne porte alors aucun texte, seule cette valeur, dans le champ dédié
+/// [PackageRequestFormState.formError] : l'écran choisit sa traduction
+/// (`l10n.requestBudgetRequired`). Distinct de [PackageRequestFormState
+/// .error], réservé à l'exception serveur typée.
+enum PackageRequestFormError { budgetRequired }
+
 class PackageRequestFormState extends Equatable {
   const PackageRequestFormState({
     this.currentStep = 0,
@@ -30,6 +37,7 @@ class PackageRequestFormState extends Equatable {
     this.submissionStatus = FormSubmissionStatus.idle,
     this.errorMessage,
     this.error,
+    this.formError,
     this.draftLimitMessage,
     this.createdRequest,
     this.editingRequestId,
@@ -68,6 +76,10 @@ class PackageRequestFormState extends Equatable {
   /// y est reclassé en erreur réseau, et un 422 du serveur (budget hors
   /// bornes, données invalides) s'affichait « Erreur réseau ».
   final Object? error;
+
+  /// Erreur de soumission connue de l'app elle-même (pas du serveur) — voir
+  /// [PackageRequestFormError]. Jamais mêlée à [error] (réservé au serveur).
+  final PackageRequestFormError? formError;
   final String? draftLimitMessage;
   final PackageRequest? createdRequest;
 
@@ -107,6 +119,11 @@ class PackageRequestFormState extends Equatable {
     FormSubmissionStatus? submissionStatus,
     String? errorMessage,
     Object? error,
+    PackageRequestFormError? formError,
+    // Même pattern que clearTotalBudgetEur : une erreur affichée une fois
+    // doit pouvoir être effacée avant une nouvelle tentative de soumission,
+    // pas seulement remplacée par une autre valeur non nulle.
+    bool clearFormError = false,
     String? draftLimitMessage,
     // Même pattern que clearTotalBudgetEur : un message de limite affiché
     // une fois doit pouvoir être effacé, pas seulement remplacé.
@@ -139,6 +156,7 @@ class PackageRequestFormState extends Equatable {
     submissionStatus: submissionStatus ?? this.submissionStatus,
     errorMessage: errorMessage ?? this.errorMessage,
     error: error ?? this.error,
+    formError: clearFormError ? null : (formError ?? this.formError),
     draftLimitMessage: clearDraftLimitMessage
         ? null
         : (draftLimitMessage ?? this.draftLimitMessage),
@@ -170,6 +188,7 @@ class PackageRequestFormState extends Equatable {
     submissionStatus,
     errorMessage,
     error,
+    formError,
     draftLimitMessage,
     createdRequest,
     editingRequestId,

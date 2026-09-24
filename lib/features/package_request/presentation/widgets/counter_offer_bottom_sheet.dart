@@ -1,7 +1,8 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
-import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -124,7 +125,7 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
         children: [
           // Sous-titre : prix actuel (rôle-aware) + round
           Text(
-            '${PriceDisplay.threadPriceLabel(widget.currentPriceEur, widget.grossPriceEur, widget.isTraveler, widget.currency)} · Round ${widget.roundsCount}/5',
+            '${threadPriceLabel(context.l10n, widget.currentPriceEur, widget.grossPriceEur, widget.isTraveler, widget.currency)} · Round ${widget.roundsCount}/5',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.xl),

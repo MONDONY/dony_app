@@ -18,7 +18,9 @@ import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -205,6 +207,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
         // le cas "prix tapé après avoir choisi le mode ferme".
         WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
         final currency = _resolveCurrency(state);
+        final l10n = context.l10n;
         return SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(
@@ -219,7 +222,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Budget',
+                  l10n.requestPublicBudget,
                   style: tt.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: cs.onSurface,
@@ -228,7 +231,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Vérifiez votre demande, puis indiquez le budget à montrer aux voyageurs.',
+                  l10n.requestCreateBudgetSubtitle,
                   style: tt.bodyMedium?.copyWith(
                     color: cs.onSurfaceVariant,
                     height: 1.4,
@@ -245,7 +248,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 // conséquence, et c'est le choix qui porte la règle du budget
                 // obligatoire. Auparavant le champ était annoncé « optionnel »
                 // puis refusé à la publication.
-                const _FieldLabel('Comment fixer le prix ?'),
+                _FieldLabel(l10n.requestCreatePriceModeLabel),
                 const SizedBox(height: DonySpacing.sm),
                 _PriceModeChoice(
                   negotiable: state.negotiable,
@@ -264,7 +267,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 // Figée une fois la demande créée : elle ne se change plus en
                 // édition, exactement comme côté trajet.
                 if (!state.isEditing) ...[
-                  const _FieldLabel('Devise'),
+                  _FieldLabel(l10n.requestCreateCurrencyLabel),
                   const SizedBox(height: DonySpacing.sm),
                   _CurrencySelectionRow(currency: currency),
                   const SizedBox(height: DonySpacing.base),
@@ -272,7 +275,9 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
 
                 // ── Budget ─────────────────────────────────────────────────
                 _FieldLabel(
-                  state.negotiable ? 'Budget indicatif' : 'Votre prix',
+                  state.negotiable
+                      ? l10n.requestCreateBudgetLabelNegotiable
+                      : l10n.requestCreateBudgetLabelFixed,
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 _BudgetTotalInput(
@@ -285,8 +290,8 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                   padding: const EdgeInsets.only(top: DonySpacing.xs),
                   child: Text(
                     state.negotiable
-                        ? 'Donnez un ordre d\'idée pour attirer plus d\'offres, sans vous engager.'
-                        : 'Les voyageurs verront ce montant et pourront l\'accepter tel quel.',
+                        ? l10n.requestCreateBudgetHintNegotiable
+                        : l10n.requestCreateBudgetHintFixed,
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
@@ -311,7 +316,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                   const SizedBox(height: DonySpacing.base),
 
                   // ── Code promo ────────────────────────────────────────────
-                  const _FieldLabel('Code promo (optionnel)'),
+                  _FieldLabel(l10n.requestCreatePromoLabel),
                   const SizedBox(height: DonySpacing.sm),
                   ListenableBuilder(
                     listenable: Listenable.merge([
@@ -338,7 +343,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                                   textCapitalization:
                                       TextCapitalization.characters,
                                   decoration: InputDecoration(
-                                    hintText: 'Ex: WELCOME10',
+                                    hintText: l10n.requestCreatePromoHint,
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal: DonySpacing.base,
                                       vertical: DonySpacing.md,
@@ -366,7 +371,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                                 child: FilledButton(
                                   key: const Key('apply-promo-code-btn'),
                                   onPressed: loading ? null : _applyPromoCode,
-                                  child: const Text('Appliquer'),
+                                  child: Text(l10n.commonApply),
                                 ),
                               ),
                             ],
@@ -383,7 +388,8 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    quote.promoLabel ?? 'Code appliqué',
+                                    quote.promoLabel ??
+                                        l10n.requestCreatePromoAppliedFallback,
                                     style: tt.bodySmall?.copyWith(
                                       color: cs.success,
                                       fontWeight: FontWeight.w600,
@@ -422,10 +428,10 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 const SizedBox(height: DonySpacing.base),
 
                 // ── Modes de paiement ──────────────────────────────────────
-                const _FieldLabel('Paiement accepté'),
+                _FieldLabel(l10n.requestCreatePaymentAcceptedLabel),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Choisissez comment vous paierez le voyageur.',
+                  l10n.requestCreatePaymentHint,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: DonySpacing.sm),
@@ -450,9 +456,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: Text(
-                          'Une fois publiée, les voyageurs sur ce trajet sont '
-                          'prévenus. Vous recevrez une notification à la '
-                          'première offre.',
+                          l10n.requestCreatePublishInfoBanner,
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurface,
                             height: 1.4,
@@ -515,11 +519,13 @@ class _CurrencySelectionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     return Semantics(
       button: true,
-      label:
-          'Devise de la demande : ${currency.displayName}, ${currency.code}. '
-          'Bouton, modifier la devise.',
+      label: l10n.requestCreateCurrencySemanticLabel(
+        currency.displayName,
+        currency.code,
+      ),
       child: ExcludeSemantics(
         child: InkWell(
           key: const Key('package-request-currency-selector-row'),
@@ -549,7 +555,7 @@ class _CurrencySelectionRow extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Changer',
+                  l10n.requestCreateChangeCurrency,
                   style: tt.labelLarge?.copyWith(
                     color: cs.primary,
                     fontWeight: FontWeight.w700,
@@ -602,6 +608,7 @@ class _BudgetTotalInput extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return TextFormField(
       key: const Key('total-budget-input'),
       controller: controller,
@@ -623,7 +630,7 @@ class _BudgetTotalInput extends StatelessWidget {
           horizontal: DonySpacing.base,
           vertical: DonySpacing.md + 2,
         ),
-        hintText: 'Ex. 40,00',
+        hintText: l10n.requestCreateBudgetInputHint,
         hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         suffixText: currency?.symbol,
         suffixStyle: tt.titleSmall?.copyWith(
@@ -656,7 +663,7 @@ class _BudgetTotalInput extends StatelessWidget {
       },
       validator: (v) {
         if (v == null || v.trim().isEmpty) {
-          return 'Indiquez un budget';
+          return l10n.requestCreateBudgetEmpty;
         }
         final d = double.tryParse(v.replaceAll(',', '.'));
         final effectiveCurrency = currency ?? SupportedCurrency.eur;
@@ -669,7 +676,7 @@ class _BudgetTotalInput extends StatelessWidget {
             PackageRequestLimits.maxBudgetFor(effectiveCurrency),
             currency,
           );
-          return 'Entre $min et $max';
+          return l10n.requestCreateBudgetRange(min, max);
         }
         return null;
       },
@@ -700,6 +707,7 @@ class _BudgetBreakdown extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
 
     final rate = quote?.rate ?? PriceDisplay.previewRate;
     final netBase = PriceDisplay.netFromGross(budgetEur);
@@ -723,14 +731,14 @@ class _BudgetBreakdown extends StatelessWidget {
           _line(
             tt,
             cs,
-            'Budget',
+            l10n.requestPublicBudget,
             CurrencyFormatter.formatOrPlain(budgetEur, currency),
           ),
           const SizedBox(height: DonySpacing.xs),
           _line(
             tt,
             cs,
-            'Commission Yadony ($ratePct %)',
+            l10n.requestCreateCommissionLabel(ratePct),
             CurrencyFormatter.formatOrPlain(commissionEur, currency),
           ),
           if (hasRealBoost) ...[
@@ -738,7 +746,7 @@ class _BudgetBreakdown extends StatelessWidget {
             _line(
               tt,
               cs,
-              'Grâce au code promo, le voyageur touche',
+              l10n.requestCreatePromoBoostLabel,
               '+${CurrencyFormatter.formatOrPlain(boost, currency)}',
               valueColor: cs.success,
             ),
@@ -751,7 +759,7 @@ class _BudgetBreakdown extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'Le voyageur touchera',
+                l10n.requestCreateTravelerReceivesLabel,
                 style: tt.bodyMedium?.copyWith(fontSize: 13, color: cs.success),
               ),
               Text(
@@ -847,7 +855,7 @@ class _PaymentMethodChips extends StatelessWidget {
               if (isLastSelected) {
                 DonySnackbar.show(
                   context,
-                  message: 'Gardez au moins un mode de paiement.',
+                  message: context.l10n.requestCreateKeepOnePaymentMethod,
                 );
                 return;
               }
@@ -881,7 +889,7 @@ class _PaymentMethodChips extends StatelessWidget {
                   ),
                   const SizedBox(width: DonySpacing.xs + 2),
                   Text(
-                    method.displayLabel,
+                    method.label(context.l10n),
                     style: tt.bodyMedium?.copyWith(
                       color: isSelected ? cs.primary : cs.onSurface,
                       fontWeight: isSelected
@@ -916,13 +924,14 @@ class _PriceModeChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Column(
       children: [
         _PriceModeCard(
           key: const Key('price-mode-open'),
           emoji: '💬',
-          title: "J'ouvre aux offres",
-          subtitle: 'Les voyageurs proposent leur prix, vous choisissez.',
+          title: l10n.requestCreatePriceModeOpenTitle,
+          subtitle: l10n.requestCreatePriceModeOpenSubtitle,
           selected: negotiable,
           onTap: () => onChanged(true),
         ),
@@ -930,8 +939,8 @@ class _PriceModeChoice extends StatelessWidget {
         _PriceModeCard(
           key: const Key('price-mode-fixed'),
           emoji: '🏷️',
-          title: 'Je fixe mon prix',
-          subtitle: 'Un montant ferme, sans négociation.',
+          title: l10n.requestCreatePriceModeFixedTitle,
+          subtitle: l10n.requestCreatePriceModeFixedSubtitle,
           selected: !negotiable,
           onTap: () => onChanged(false),
         ),

@@ -9,13 +9,17 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/complete_details_screen.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../../helpers/l10n_test_helpers.dart';
 
 /// Task 10 — wiring test for `RecipientSection` inside `CompleteDetailsScreen`.
 ///
@@ -326,8 +330,18 @@ void main() {
 
         // Request accepted both STRIPE and CASH, but the server-computed SET
         // for this thread only carries CASH — the picker must follow the SET.
-        expect(find.text(PaymentMethod.cash.displayLabel), findsOneWidget);
-        expect(find.text(PaymentMethod.stripe.displayLabel), findsNothing);
+        expect(
+          find.text(
+            PaymentMethod.cash.label(lookupAppLocalizations(AppL10n.fr)),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            PaymentMethod.stripe.label(lookupAppLocalizations(AppL10n.fr)),
+          ),
+          findsNothing,
+        );
         expect(find.byKey(const Key('complete-pay-cash')), findsOneWidget);
         expect(find.byKey(const Key('complete-pay-stripe')), findsNothing);
       },
@@ -363,8 +377,16 @@ void main() {
       // No server-computed SET on this thread — the picker falls back to
       // the request's acceptedPaymentMethods (single method here, so it
       // renders as the collapsed, preselected choice).
-      expect(find.text(PaymentMethod.cash.displayLabel), findsOneWidget);
-      expect(find.text(PaymentMethod.stripe.displayLabel), findsNothing);
+      expect(
+        find.text(PaymentMethod.cash.label(lookupAppLocalizations(AppL10n.fr))),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          PaymentMethod.stripe.label(lookupAppLocalizations(AppL10n.fr)),
+        ),
+        findsNothing,
+      );
     });
   });
 
@@ -439,6 +461,32 @@ void main() {
 
         expect(find.text('En attente du voyageur'), findsNothing);
         expect(find.byKey(const Key('complete-pay-cash')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'écran traduit en anglais : titre et moyens de paiement (Card, Cash)',
+      (tester) async {
+        useEnglish();
+        await pumpLoadedWithThread(
+          tester,
+          thread: _fakeThread(
+            availablePaymentMethods: const {
+              PaymentMethod.stripe,
+              PaymentMethod.cash,
+            },
+          ),
+          acceptedPaymentMethods: const {
+            PaymentMethod.stripe,
+            PaymentMethod.cash,
+          },
+        );
+
+        expect(find.text('Check & complete'), findsOneWidget);
+        expect(find.text('Card'), findsOneWidget);
+        expect(find.text('Cash'), findsOneWidget);
+        expect(find.text('Carte'), findsNothing);
+        expect(find.text('Espèces'), findsNothing);
       },
     );
   });

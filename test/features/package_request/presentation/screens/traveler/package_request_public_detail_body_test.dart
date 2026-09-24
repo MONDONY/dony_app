@@ -15,6 +15,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
@@ -32,6 +34,7 @@ PackageRequest _req({
   DateTime? desiredDate,
   double? targetPriceEur = 35,
   double? grossPriceEur,
+  List<String> categories = const ['Vêtements'],
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 'sender-1',
@@ -42,7 +45,7 @@ PackageRequest _req({
   weightKg: 5,
   parcelSize: ParcelSize.medium,
   transportMode: TransportMode.plane,
-  categories: const ['Vêtements'],
+  categories: categories,
   status: status,
   createdAt: DateTime(2026, 6),
   negotiable: negotiable,
@@ -467,5 +470,33 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('🔥 Urgent'), findsNothing);
+  });
+
+  // ── Anglais ──────────────────────────────────────────────────────────────
+
+  testWidgets('en anglais : identité, catégorie et CTA traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      wrap(_req(categories: const ['Vêtements & tissus'])),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('SHIPPING REQUEST'), findsOneWidget);
+    expect(find.text('Open'), findsOneWidget);
+    expect(find.text('Clothing & fabrics'), findsOneWidget);
+    expect(find.text('Propose my trip'), findsOneWidget);
+    expect(find.text('DEMANDE D\'ENVOI'), findsNothing);
+  });
+
+  testWidgets('en anglais : prix ferme avec montant → « Take it for »', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(wrap(_req(negotiable: false, targetPriceEur: 40)));
+    await tester.pumpAndSettle();
+    // Espace insécable (U+00A0) entre le montant et « € », posé par
+    // NumberFormat.currency('fr_FR') — jamais une espace normale.
+    expect(find.text('Take it for 40,00\u{a0}€ · Fixed price'), findsOneWidget);
   });
 }

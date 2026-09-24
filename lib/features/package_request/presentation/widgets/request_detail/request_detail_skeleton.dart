@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Squelette à la forme du billet et de deux cartes : rien ne saute à l'arrivée.
@@ -17,7 +18,7 @@ class RequestDetailSkeleton extends StatelessWidget {
       ),
     );
     return Semantics(
-      label: 'Chargement de ta demande',
+      label: context.l10n.requestDetailLoadingSemantic,
       child: ExcludeSemantics(
         child: Padding(
           padding: const EdgeInsets.all(DonySpacing.lg),

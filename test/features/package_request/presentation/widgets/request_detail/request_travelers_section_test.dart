@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 AnnouncementModel _trip(String id) => AnnouncementModel(
   id: id,
   travelerId: 'tr-$id',
@@ -103,5 +105,38 @@ void main() {
     await tester.tap(find.text('Être alerté des nouveaux trajets'));
     await tester.tap(find.text('Élargir mes dates'));
     expect((alert, widen), (1, 1));
+  });
+
+  testWidgets('écran traduit en anglais : titre et état vide', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        RequestTravelersList(
+          trips: [_trip('a')],
+          requestWeightKg: 2,
+          inviteStateFor: (_) => TravelerInviteState.idle,
+          onInvite: (_) {},
+          onOpenTrip: (_) {},
+        ),
+      ),
+    );
+    expect(find.text('Travelers on your route'), findsOneWidget);
+    expect(find.text('Invite'), findsOneWidget);
+  });
+
+  testWidgets('état vide en anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        RequestNoTravelersEmpty(
+          corridor: 'Divo → Annemasse',
+          onCreateAlert: () {},
+          onWidenDates: () {},
+        ),
+      ),
+    );
+    expect(find.text('No traveler on Divo → Annemasse yet'), findsOneWidget);
+    expect(find.text('Get alerted about new trips'), findsOneWidget);
+    expect(find.text('Widen my dates'), findsOneWidget);
   });
 }

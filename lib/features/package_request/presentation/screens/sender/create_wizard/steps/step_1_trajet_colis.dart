@@ -3,6 +3,7 @@ import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -40,18 +41,20 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
   /// reproches sur des champs qu'il n'a pas encore eu l'occasion de remplir.
   bool _touched = false;
 
-  String? get _departureError =>
-      _departureCity == null ? 'Ville de départ obligatoire' : null;
+  String? get _departureError => _departureCity == null
+      ? context.l10n.requestCreateDepartureRequired
+      : null;
 
   String? get _arrivalError {
-    if (_arrivalCity == null) return "Ville d'arrivée obligatoire";
+    if (_arrivalCity == null) return context.l10n.requestCreateArrivalRequired;
     if (_arrivalCity == _departureCity) {
-      return 'Choisissez une ville différente du départ';
+      return context.l10n.requestCreateArrivalSameAsDeparture;
     }
     return null;
   }
 
-  String? get _dateError => _date == null ? 'Date de départ obligatoire' : null;
+  String? get _dateError =>
+      _date == null ? context.l10n.requestCreateDateRequired : null;
 
   bool get _isComplete =>
       _departureError == null && _arrivalError == null && _dateError == null;
@@ -95,17 +98,17 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
 
   /// Formule la tolérance en dates concrètes plutôt qu'en nombre de jours.
   String _toleranceHint() {
+    final l10n = context.l10n;
     if (_tolerance == 0) {
-      return 'Seuls les voyageurs partant exactement ce jour-là pourront répondre.';
+      return l10n.requestCreateToleranceExactHint;
     }
     if (_date == null) {
-      return '± $_tolerance jours autour de votre date. Plus de souplesse, '
-          'plus de voyageurs.';
+      return l10n.requestCreateToleranceGenericHint(_tolerance);
     }
-    final f = DateFormat('d MMM', AppL10n.localeName);
+    final f = DateFormat.MMMd(l10n.localeName);
     final from = f.format(_date!.subtract(Duration(days: _tolerance)));
     final to = f.format(_date!.add(Duration(days: _tolerance)));
-    return 'Les voyageurs partant du $from au $to pourront répondre.';
+    return l10n.requestCreateToleranceRangeHint(from, to);
   }
 
   void _setDeparture(String? city) {
@@ -148,6 +151,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(
@@ -168,7 +172,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
 
             // ── Section label ──────────────────────────────────────────────
             Text(
-              'TRAJET',
+              l10n.requestCreateTrajetSectionLabel,
               style: tt.labelMedium?.copyWith(
                 color: cs.primary,
                 fontWeight: FontWeight.w800,
@@ -177,7 +181,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              "D'où vers où ?",
+              l10n.requestCreateTrajetQuestion,
               style: tt.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: cs.onSurface,
@@ -212,7 +216,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const _FieldLabel('Date'),
+                      _FieldLabel(l10n.requestCreateDateFieldLabel),
                       const SizedBox(height: DonySpacing.xs),
                       _DatePickerField(
                         date: _date,
@@ -228,7 +232,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                         Padding(
                           padding: const EdgeInsets.only(top: DonySpacing.xs),
                           child: Text(
-                            '🔥 Date proche, cette demande sera signalée urgente',
+                            l10n.requestCreateUrgentDateHint,
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.error,
@@ -243,7 +247,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const _FieldLabel('Souplesse'),
+                      _FieldLabel(l10n.requestCreateToleranceFieldLabel),
                       const SizedBox(height: DonySpacing.xs),
                       _ToleranceField(
                         tolerance: _tolerance,
@@ -286,6 +290,7 @@ class _LockedAirplaneBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return Container(
       constraints: const BoxConstraints(minHeight: 56),
       padding: const EdgeInsets.symmetric(
@@ -306,14 +311,14 @@ class _LockedAirplaneBlock extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Avion',
+                  TransportMode.plane.label(l10n),
                   style: tt.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
                   ),
                 ),
                 Text(
-                  'seul mode disponible',
+                  l10n.requestCreateAirplaneOnlyMode,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
@@ -345,6 +350,16 @@ class _FieldLabel extends StatelessWidget {
   }
 }
 
+/// Formate la date choisie dans le champ. `'d MMM. y'` n'est pas dans la
+/// table de motifs communs : son rendu français (avec le point de
+/// l'abréviation du mois, ex. « 6 oct.. 2026 ») n'est reproduit par aucun
+/// squelette intl (`yMMMd` donne « 6 oct. 2026 », un point de moins). Le motif
+/// fixe est donc conservé pour le français, et le squelette `yMMMd` — qui
+/// rend correctement — est utilisé pour l'anglais.
+String _formatPickedDate(DateTime date, String locale) => locale == 'en'
+    ? DateFormat.yMMMd(locale).format(date)
+    : DateFormat('d MMM. y', locale).format(date);
+
 class _DatePickerField extends StatelessWidget {
   const _DatePickerField({
     required this.date,
@@ -359,9 +374,10 @@ class _DatePickerField extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     final dateText = date == null
-        ? 'Date'
-        : DateFormat('d MMM. y', AppL10n.localeName).format(date!);
+        ? l10n.requestCreateDateFieldLabel
+        : _formatPickedDate(date!, l10n.localeName);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -437,7 +453,7 @@ class _ToleranceField extends StatelessWidget {
           border: Border.all(color: cs.outline),
         ),
         child: Text(
-          '± $tolerance j',
+          context.l10n.requestCreateToleranceShort(tolerance),
           style: tt.bodyMedium?.copyWith(
             color: cs.onSurface,
             fontWeight: FontWeight.w700,
@@ -448,6 +464,7 @@ class _ToleranceField extends StatelessWidget {
   }
 
   void _openSheet(BuildContext context) {
+    final l10n = context.l10n;
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -459,7 +476,9 @@ class _ToleranceField extends StatelessWidget {
               for (final t in [0, 1, 2, 3, 5, 7])
                 ListTile(
                   title: Text(
-                    t == 0 ? 'Date exacte' : '± $t ${t > 1 ? "jours" : "jour"}',
+                    t == 0
+                        ? l10n.requestCreateDateExact
+                        : l10n.requestCreateDateFlex(t),
                   ),
                   trailing: t == tolerance
                       ? DonyIcon(

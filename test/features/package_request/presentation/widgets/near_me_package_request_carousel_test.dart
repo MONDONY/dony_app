@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 PackageRequestSearchItem _item(String id, String city) =>
     PackageRequestSearchItem(
       id: id,
@@ -96,6 +98,39 @@ void main() {
       await tester.tap(find.text('Voir la demande'));
       await tester.pumpAndSettle();
       expect(called, isTrue);
+    });
+  });
+
+  group('NearMePackageRequestCarousel – anglais', () {
+    testWidgets('état vide traduit', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(
+          NearMePackageRequestCarousel(
+            items: const [],
+            userPosition: null,
+            onSeeAll: () {},
+          ),
+        ),
+      );
+      expect(find.text('No requests nearby'), findsOneWidget);
+      expect(find.text('Widen the area'), findsOneWidget);
+    });
+
+    testWidgets('bouton « Voir les N demandes » traduit', (tester) async {
+      useEnglish();
+      final items = [_item('1', 'Paris'), _item('2', 'Lyon')];
+      await tester.pumpWidget(
+        wrap(
+          NearMePackageRequestCarousel(
+            items: items,
+            userPosition: null,
+            onSeeAll: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('See 2 requests'), findsOneWidget);
     });
   });
 }

@@ -8,11 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 PackageRequest _req({
   List<String> photos = const [],
   String? description = '3 flacons de parfum emballés',
   Set<PaymentMethod> methods = const {PaymentMethod.stripe, PaymentMethod.cash},
   bool negotiable = true,
+  List<String> categories = const ['Cosmétiques & parfums'],
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 's',
@@ -23,7 +26,7 @@ PackageRequest _req({
   weightKg: 2,
   parcelSize: ParcelSize.small,
   transportMode: TransportMode.plane,
-  categories: const ['Cosmétiques & parfums'],
+  categories: categories,
   description: description,
   targetPriceEur: 29,
   status: PackageRequestStatus.open,
@@ -138,4 +141,54 @@ void main() {
       expect(find.text('talon'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'catégorie du catalogue traduite en anglais (contentCategoryDisplayName)',
+    (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          RequestTicketCard(
+            request: _req(categories: const ['Vêtements & tissus']),
+            statusPill: const Text('Live'),
+            metaLabel: '',
+          ),
+        ),
+      );
+      expect(find.text('2 kg · Clothing & fabrics'), findsOneWidget);
+      expect(find.textContaining('Vêtements'), findsNothing);
+    },
+  );
+
+  testWidgets('écran traduit en anglais : prix ferme et prix à définir', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        RequestTicketCard(
+          request: _req(negotiable: false, description: null),
+          statusPill: const SizedBox(),
+          metaLabel: '',
+        ),
+      ),
+    );
+    expect(find.text('fixed price'), findsOneWidget);
+    expect(find.text('prix ferme'), findsNothing);
+  });
+
+  testWidgets('anglais : tolérance de date sans « j »', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        RequestTicketCard(
+          request: _req(),
+          statusPill: const Text('Live'),
+          metaLabel: '',
+        ),
+      ),
+    );
+    expect(find.text('Sep 27 ± 2 d'), findsOneWidget);
+    expect(find.textContaining('± 2 j'), findsNothing);
+  });
 }

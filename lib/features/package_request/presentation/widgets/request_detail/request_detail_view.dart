@@ -13,6 +13,7 @@ import 'package:dony/features/package_request/presentation/widgets/request_detai
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_status_pill.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_ticket_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_travelers_section.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Gestes de la vue, câblés par l'écran (navigation, sheets, cubit).
@@ -73,13 +74,17 @@ class RequestDetailView extends StatelessWidget {
     final focus = focusThreadFor(c, s.threads);
     final trips = s.compatibleTrips ?? const <AnnouncementModel>[];
 
+    final l = context.l10n;
     final meta = [
       if (s.insights != null && s.insights!.viewCount > 0)
-        '${s.insights!.viewCount} vue${s.insights!.viewCount > 1 ? 's' : ''}',
+        l.requestDetailViews(s.insights!.viewCount),
       requestTimeLabel(
         r.createdAt,
         now: now ?? DateTime.now(),
-        verb: c == RequestScreenCase.draft ? 'créée' : 'publiée',
+        l10n: context.l10n,
+        verb: c == RequestScreenCase.draft
+            ? RequestTimeVerb.created
+            : RequestTimeVerb.posted,
       ),
     ].join(' · ');
 
@@ -100,8 +105,8 @@ class RequestDetailView extends StatelessWidget {
               )
             : null,
       ),
-      ..._banner(c, focus),
-      ..._zones(c, s, active, focus, trips),
+      ..._banner(l, c, focus),
+      ..._zones(l, c, s, active, focus, trips),
     ];
 
     return Column(
@@ -115,42 +120,42 @@ class RequestDetailView extends StatelessWidget {
     );
   }
 
-  List<Widget> _banner(RequestScreenCase c, NegotiationThread? focus) {
-    final name = focus?.travelerName ?? 'Le voyageur';
+  List<Widget> _banner(
+    AppLocalizations l,
+    RequestScreenCase c,
+    NegotiationThread? focus,
+  ) {
+    final name = focus?.travelerName ?? l.requestTravelerFallbackName;
     final banner = switch (c) {
-      RequestScreenCase.draft => const RequestStateBanner(
+      RequestScreenCase.draft => RequestStateBanner(
         tone: RequestBannerTone.neutral,
         icon: 'eye-off',
-        title: 'Pas encore visible',
-        message:
-            'Publie ta demande pour que les voyageurs puissent te proposer un prix.',
+        title: l.requestDetailNotVisibleTitle,
+        message: l.requestDetailNotVisibleMessage,
       ),
       RequestScreenCase.cashCommissionPending => RequestStateBanner(
         tone: RequestBannerTone.warning,
         icon: 'clock',
-        title: '$name règle sa commission Yadony',
-        message:
-            'Accord en espèces trouvé. Tant que ce n\'est pas fait, tu peux encore choisir quelqu\'un d\'autre.',
+        title: l.requestDetailCashCommissionTitle(name),
+        message: l.requestDetailCashCommissionMessage,
       ),
-      RequestScreenCase.toFinalize => const RequestStateBanner(
+      RequestScreenCase.toFinalize => RequestStateBanner(
         tone: RequestBannerTone.info,
         icon: 'credit-card',
-        title: 'Finalise pour réserver sa place',
-        message:
-            'Ton argent reste bloqué chez Yadony jusqu\'à la remise du colis.',
+        title: l.requestDetailFinalizeTitle,
+        message: l.requestDetailFinalizeMessage,
       ),
-      RequestScreenCase.expired => const RequestStateBanner(
+      RequestScreenCase.expired => RequestStateBanner(
         tone: RequestBannerTone.neutral,
         icon: 'clock',
-        title: 'Date dépassée sans accord',
-        message:
-            'Aucun voyageur n\'a été retenu à temps. Tes infos sont gardées, il suffit de choisir de nouvelles dates.',
+        title: l.requestDetailExpiredTitle,
+        message: l.requestDetailExpiredMessage,
       ),
-      RequestScreenCase.cancelled => const RequestStateBanner(
+      RequestScreenCase.cancelled => RequestStateBanner(
         tone: RequestBannerTone.neutral,
         icon: 'circle-x',
-        title: 'Tu as annulé cette demande',
-        message: 'Les voyageurs ne peuvent plus y répondre.',
+        title: l.requestDetailCancelledTitle,
+        message: l.requestDetailCancelledMessage,
       ),
       _ => null,
     };
@@ -158,6 +163,7 @@ class RequestDetailView extends StatelessWidget {
   }
 
   List<Widget> _zones(
+    AppLocalizations l,
     RequestScreenCase c,
     PackageRequestDetailLoaded s,
     List<NegotiationThread> active,
@@ -174,27 +180,21 @@ class RequestDetailView extends StatelessWidget {
         );
     Widget? fold(String label) =>
         trips.isEmpty ? null : RequestTravelersFold(trips: trips, label: label);
-    final plural = trips.length > 1 ? 's' : '';
 
     switch (c) {
       case RequestScreenCase.draft:
-        return [
-          ?fold(
-            '${trips.length} voyageur$plural la verr${trips.length > 1 ? 'ont' : 'a'}',
-          ),
-        ];
+        return [?fold(l.requestDetailTravelersWillSee(trips.length))];
       case RequestScreenCase.noOffers:
         // `trips` fusionne `null` (recherche en échec) et `[]` (aucun
         // voyageur) : distinguer explicitement via `s.compatibleTrips` pour
         // ne pas afficher un silence identique à une vraie absence.
         if (s.compatibleTrips == null) {
-          return const [
+          return [
             RequestStateBanner(
               tone: RequestBannerTone.neutral,
               icon: 'wifi-off',
-              title: 'Impossible de charger les voyageurs pour le moment',
-              message:
-                  'Réessaie plus tard, ou partage directement ta demande en attendant.',
+              title: l.requestDetailNoSearchTitle,
+              message: l.requestDetailNoSearchMessage,
             ),
           ];
         }
@@ -226,32 +226,38 @@ class RequestDetailView extends StatelessWidget {
         final sorted = [...active]
           ..sort((a, b) => (b.isMyTurn ? 1 : 0) - (a.isMyTurn ? 1 : 0));
         return [
-          RequestSectionTitle('Offres reçues', count: sorted.length),
+          RequestSectionTitle(
+            l.requestDetailOffersReceivedTitle,
+            count: sorted.length,
+          ),
           for (final t in sorted) offer(t, highlighted: t.isMyTurn),
-          ?fold('${trips.length} voyageur$plural sur ton axe'),
+          ?fold(l.requestDetailTravelersOnRouteCount(trips.length)),
         ];
       case RequestScreenCase.firmCandidates:
         return [
-          RequestSectionTitle('Voyageurs intéressés', count: active.length),
+          RequestSectionTitle(
+            l.requestDetailInterestedTravelersTitle,
+            count: active.length,
+          ),
           for (final t in active) offer(t),
-          const RequestStateBanner(
+          RequestStateBanner(
             tone: RequestBannerTone.warning,
             icon: 'info',
-            title: 'Un seul choix',
-            message: 'Les autres candidats seront déclinés automatiquement.',
+            title: l.requestDetailSingleChoiceTitle,
+            message: l.requestDetailSingleChoiceMessage,
           ),
-          ?fold('${trips.length} voyageur$plural sur ton axe'),
+          ?fold(l.requestDetailTravelersOnRouteCount(trips.length)),
         ];
       case RequestScreenCase.cashCommissionPending:
         final others = active.where((t) => t.id != focus?.id);
         return [
-          RequestSectionTitle('Offres', count: active.length),
+          RequestSectionTitle(l.requestDetailOffersTitle, count: active.length),
           if (focus != null) offer(focus, highlighted: true),
           for (final t in others) offer(t),
         ];
       case RequestScreenCase.toFinalize:
         return [
-          const RequestSectionTitle('Offre retenue'),
+          RequestSectionTitle(l.requestDetailSelectedOfferTitle),
           if (focus != null) offer(focus, highlighted: true),
         ];
       case RequestScreenCase.accepted:
@@ -261,19 +267,19 @@ class RequestDetailView extends StatelessWidget {
         // les rails » (CANCELLED, NO_SHOW, PARCEL_REFUSED…) : le trajet n'a
         // pas abouti, la frise de progression n'a plus de sens.
         if (bidStatus != null && !isBidOnTrack(bidStatus)) {
-          return const [
+          return [
             RequestStateBanner(
               tone: RequestBannerTone.neutral,
               icon: 'circle-x',
-              title: 'Ce trajet n\'a pas abouti',
-              message:
-                  'Le voyageur n\'a pas pu assurer la livraison. Publie une demande similaire pour retrouver quelqu\'un.',
+              title: l.requestDetailTripNotCompletedTitle,
+              message: l.requestDetailTripNotCompletedMessage,
             ),
           ];
         }
         return [
           RequestProgressTimeline(
-            travelerName: focus?.travelerName ?? 'ton voyageur',
+            travelerName:
+                focus?.travelerName ?? l.requestDetailYourTravelerFallback,
             arrivalCity: r.arrivalCity,
             currentStep: progressStepForBid(s.materializedBid?.status),
           ),
@@ -294,7 +300,8 @@ class _TravelerStub extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final name = thread.travelerName ?? 'Voyageur';
+    final l = context.l10n;
+    final name = thread.travelerName ?? l.tripTravelerFallbackName;
     final price = PriceDisplay.money(
       thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur),
       thread.currency,
@@ -305,9 +312,11 @@ class _TravelerStub extends StatelessWidget {
     final isCash = thread.paymentMethod == PaymentMethod.cash;
     final statusLabel = isCash
         ? (delivered
-              ? 'réglé en main propre'
-              : 'à régler en main propre à la remise')
-        : (delivered ? 'versé au voyageur' : 'payé, bloqué chez Yadony');
+              ? l.requestDetailStubCashPaid
+              : l.requestDetailStubCashPending)
+        : (delivered
+              ? l.requestDetailStubPaidToTraveler
+              : l.requestDetailStubHeldByYadony);
     return Container(
       key: const Key('request-ticket-traveler-stub'),
       padding: const EdgeInsets.all(DonySpacing.base),

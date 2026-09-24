@@ -3,9 +3,12 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,6 +56,7 @@ class _SearchViewState extends State<_SearchView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -62,7 +66,7 @@ class _SearchViewState extends State<_SearchView> {
         backgroundColor: cs.surface,
         elevation: 0,
         title: Text(
-          'Demandes ouvertes',
+          l.requestSearchTitle,
           style: Theme.of(context).textTheme.bodyMedium!.copyWith(
             fontWeight: FontWeight.w700,
             fontSize: 18,
@@ -84,9 +88,9 @@ class _SearchViewState extends State<_SearchView> {
                 Expanded(
                   child: TextField(
                     controller: _depCtrl,
-                    decoration: const InputDecoration(
-                      hintText: 'Départ',
-                      prefixIcon: DonyEmoji.planeTakeoff(size: 18),
+                    decoration: InputDecoration(
+                      hintText: l.cityDepartureLabel,
+                      prefixIcon: const DonyEmoji.planeTakeoff(size: 18),
                     ),
                     onSubmitted: (_) => _applyFilters(),
                   ),
@@ -95,9 +99,9 @@ class _SearchViewState extends State<_SearchView> {
                 Expanded(
                   child: TextField(
                     controller: _arrCtrl,
-                    decoration: const InputDecoration(
-                      hintText: 'Arrivée',
-                      prefixIcon: DonyEmoji.planeLanding(size: 18),
+                    decoration: InputDecoration(
+                      hintText: l.cityArrivalLabel,
+                      prefixIcon: const DonyEmoji.planeLanding(size: 18),
                     ),
                     onSubmitted: (_) => _applyFilters(),
                   ),
@@ -138,7 +142,7 @@ class _SearchViewState extends State<_SearchView> {
                         child: Padding(
                           padding: const EdgeInsets.all(40),
                           child: Text(
-                            state.errorMessage ?? 'Erreur',
+                            state.errorMessage ?? l.requestListErrorFallback,
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyMedium!
                                 .copyWith(fontSize: 14, color: kError),
@@ -159,7 +163,7 @@ class _SearchViewState extends State<_SearchView> {
                               ),
                               const SizedBox(height: DonySpacing.base),
                               Text(
-                                'Aucune demande ne correspond à votre filtre',
+                                l.requestSearchEmptyMessage,
                                 textAlign: TextAlign.center,
                                 style: Theme.of(context).textTheme.bodyMedium!
                                     .copyWith(
@@ -239,6 +243,7 @@ class _PublicRequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     return Material(
       color: cs.surface,
@@ -276,7 +281,7 @@ class _PublicRequestCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      request.parcelSize.name.toUpperCase(),
+                      request.parcelSize.label(l).toUpperCase(),
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -294,17 +299,26 @@ class _PublicRequestCard extends StatelessWidget {
                   _Pill(
                     iconAsset: 'calendar',
                     label:
-                        '${request.desiredDate.day}/${request.desiredDate.month} ±${request.dateToleranceDays}j',
+                        '${shortDayMonth(l, request.desiredDate)} '
+                        '${toleranceCompactLabel(l, request.dateToleranceDays)}',
                   ),
                   _Pill(iconAsset: 'scale', label: '${request.weightKg} kg'),
                   if (request.categories.isNotEmpty)
-                    _Pill(iconAsset: 'tag', label: request.categories.first),
+                    _Pill(
+                      iconAsset: 'tag',
+                      label: contentCategoryDisplayName(
+                        l,
+                        request.categories.first,
+                      ),
+                    ),
                 ],
               ),
               if (_displayPrice != null) ...[
                 const SizedBox(height: DonySpacing.md),
                 Text(
-                  'Budget: ${formatPriceIn(_displayPrice!, request.currency)}',
+                  l.requestSearchBudgetLine(
+                    formatPriceIn(_displayPrice!, request.currency),
+                  ),
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,

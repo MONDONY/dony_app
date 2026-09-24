@@ -32,6 +32,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class _MockPackageRequestRepository extends Mock
     implements PackageRequestRepository {}
 
@@ -825,6 +827,31 @@ void main() {
       expect(prefill.dateTo, DateTime(2026, 9, 29));
       expect(prefill.minWeightKg, isNull);
       expect(prefill.contentCategories, anyOf(isNull, isEmpty));
+    });
+  });
+
+  group('anglais', () {
+    testWidgets('écran traduit en anglais : titre, menu et bouton principal', (
+      tester,
+    ) async {
+      useEnglish();
+      when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
+      when(
+        () => repo.listThreadsForRequest('pr-1'),
+      ).thenAnswer((_) async => []);
+
+      await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('My request'), findsOneWidget);
+      expect(find.text('Share'), findsOneWidget);
+      expect(find.text('Ma demande'), findsNothing);
+
+      await tester.tap(find.byTooltip('More actions'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unpublish'), findsOneWidget);
+      expect(find.text('Duplicate the request'), findsOneWidget);
     });
   });
 }

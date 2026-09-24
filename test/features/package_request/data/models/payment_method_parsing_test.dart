@@ -1,4 +1,6 @@
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// L'énumération plantait sur `MOBILE_MONEY`, que le backend renvoie sur les
@@ -11,7 +13,9 @@ void main() {
         PaymentMethod.mobileMoney,
       );
       expect(
-        PaymentMethod.fromWire('MOBILE_MONEY').displayLabel,
+        PaymentMethod.fromWire(
+          'MOBILE_MONEY',
+        ).label(lookupAppLocalizations(AppL10n.fr)),
         'Mobile money',
       );
     });

@@ -165,7 +165,7 @@ class PackageRequestFormBloc
       emit(
         state.copyWith(
           submissionStatus: FormSubmissionStatus.error,
-          errorMessage: 'Indiquez un budget pour continuer',
+          formError: PackageRequestFormError.budgetRequired,
           clearDraftLimitMessage: true,
         ),
       );
@@ -179,8 +179,11 @@ class PackageRequestFormBloc
         // Chaque nouvelle tentative repart d'un message de limite propre :
         // sinon un draftLimitMessage périmé d'une tentative précédente peut
         // survivre à côté d'un nouvel errorMessage générique posé par le
-        // catch ci-dessous.
+        // catch ci-dessous. Idem pour formError : sans ce clear, un
+        // budgetRequired affiché une fois resterait lu par l'écran à la
+        // tentative suivante, même après un succès serveur.
         clearDraftLimitMessage: true,
+        clearFormError: true,
       ),
     );
     try {

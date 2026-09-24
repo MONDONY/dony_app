@@ -2,6 +2,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -98,7 +100,8 @@ class ThreadMessageBubble extends StatelessWidget {
                   if (message.proposedPriceEur != null) ...[
                     const SizedBox(height: 2),
                     Text(
-                      PriceDisplay.threadPriceLabel(
+                      threadPriceLabel(
+                        context.l10n,
                         message.proposedPriceEur!,
                         null,
                         isTraveler,
@@ -126,7 +129,9 @@ class ThreadMessageBubble extends StatelessWidget {
                   ],
                   const SizedBox(height: DonySpacing.xs),
                   Text(
-                    DateFormat('HH:mm').format(message.createdAt),
+                    DateFormat.jm(
+                      context.l10n.localeName,
+                    ).format(message.createdAt),
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w500,

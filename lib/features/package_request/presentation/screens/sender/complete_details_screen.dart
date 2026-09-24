@@ -2,13 +2,14 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/reimbursement_info_banner.dart';
 import 'package:dony/features/package_request/bloc/complete_details_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
-import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -138,7 +139,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
         if (state.status == CompleteDetailsStatus.success) {
           DonySnackbar.show(
             context,
-            message: 'Détails enregistrés',
+            message: context.l10n.requestCreateDetailsSaved,
             type: DonySnackbarType.success,
           );
           _recipientSection.maybeSaveManualEntry();
@@ -151,15 +152,17 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
         } else if (state.status == CompleteDetailsStatus.error) {
           DonySnackbar.show(
             context,
-            message: state.errorMessage ?? 'Erreur',
+            message:
+                state.errorMessage ?? context.l10n.requestListErrorFallback,
             type: DonySnackbarType.error,
           );
         }
       },
       builder: (context, state) {
+        final l10n = context.l10n;
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: const DonyAppBar(title: 'Vérifie & complète'),
+          appBar: DonyAppBar(title: l10n.requestCreateCompleteDetailsTitle),
           body: !state.loaded
               ? Center(
                   child: CircularProgressIndicator(
@@ -189,7 +192,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                               ),
                               const SizedBox(height: DonySpacing.xl),
                             ],
-                            _section('Destinataire'),
+                            _section(l10n.requestCreateRecipientSection),
                             RecipientSection(
                               controller: _recipientSection,
                               nameCtrl: _recipientNameCtrl,
@@ -200,8 +203,9 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                                 TextFormField(
                                   textInputAction: TextInputAction.next,
                                   controller: _recipientNameCtrl,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Nom complet',
+                                  decoration: InputDecoration(
+                                    labelText:
+                                        l10n.requestCreateRecipientNameLabel,
                                   ),
                                   validator: _required,
                                 ),
@@ -210,18 +214,20 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                                   textInputAction: TextInputAction.next,
                                   controller: _recipientPhoneCtrl,
                                   keyboardType: TextInputType.phone,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Téléphone',
+                                  decoration: InputDecoration(
+                                    labelText:
+                                        l10n.requestCreateRecipientPhoneLabel,
                                     hintText: '+221771234567',
                                   ),
                                   validator: (v) {
                                     if (v == null || v.trim().isEmpty) {
-                                      return 'Requis';
+                                      return l10n.requestCreateRequiredField;
                                     }
                                     if (!RegExp(
                                       r'^\+[1-9]\d{6,14}$',
                                     ).hasMatch(v.trim())) {
-                                      return 'Format E.164 (+221…)';
+                                      return l10n
+                                          .requestCreateRecipientPhoneFormat;
                                     }
                                     return null;
                                   },
@@ -230,9 +236,11 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                                 TextFormField(
                                   textInputAction: TextInputAction.done,
                                   controller: _recipientCityCtrl,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Ville / commune',
-                                    hintText: 'Ex. Dakar (optionnel)',
+                                  decoration: InputDecoration(
+                                    labelText:
+                                        l10n.requestCreateRecipientCityLabel,
+                                    hintText:
+                                        l10n.requestCreateRecipientCityHint,
                                   ),
                                 ),
                               ],
@@ -244,7 +252,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                                   state.request!,
                                 ).isNotEmpty) ...[
                               const SizedBox(height: DonySpacing.xl),
-                              _section('Mode de paiement'),
+                              _section(l10n.requestCreatePaymentMethodSection),
                               ValueListenableBuilder<PaymentMethod?>(
                                 valueListenable: _selectedMethod,
                                 builder: (context, selected, _) =>
@@ -268,8 +276,8 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                       bottom: MediaQuery.of(context).padding.bottom + 20,
                       child: DonyButton(
                         label: state.isLoading
-                            ? 'Envoi…'
-                            : 'Continuer vers le paiement',
+                            ? l10n.requestCreateSendingLabel
+                            : l10n.requestCreateContinueToPayment,
                         isLoading: state.isLoading,
                         onPressed: state.isLoading ? null : _submit,
                       ),
@@ -294,15 +302,10 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
     ),
   );
 
-  String? _required(String? v) =>
-      (v == null || v.trim().isEmpty) ? 'Requis' : null;
+  String? _required(String? v) => (v == null || v.trim().isEmpty)
+      ? context.l10n.requestCreateRequiredField
+      : null;
 }
-
-String _sizeLabel(ParcelSize s) => switch (s) {
-  ParcelSize.small => 'Petit',
-  ParcelSize.medium => 'Moyen',
-  ParcelSize.large => 'Grand',
-};
 
 /// Read-only recap of everything already known about the shipment + trip.
 class _RecapCard extends StatelessWidget {
@@ -314,6 +317,7 @@ class _RecapCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
 
     final double? gross = thread != null
         ? (thread!.grossPriceEur ??
@@ -321,24 +325,32 @@ class _RecapCard extends StatelessWidget {
         : request.targetPriceEur;
 
     final rows = <(String, String)>[
-      ('Trajet', '${request.departureCity} → ${request.arrivalCity}'),
+      (
+        l10n.requestCreateRecapTrip,
+        '${request.departureCity} → ${request.arrivalCity}',
+      ),
       if (thread != null)
         (
-          'Date du voyage',
-          DateFormat(
-            'd MMM yyyy',
-            AppL10n.localeName,
-          ).format(thread!.travelerTravelDate),
+          l10n.requestCreateRecapTravelDate,
+          DateFormat.yMMMd(l10n.localeName).format(thread!.travelerTravelDate),
         ),
       (
-        'Poids',
+        l10n.requestCreateRecapWeight,
         '${request.weightKg.toStringAsFixed(request.weightKg % 1 == 0 ? 0 : 1)} kg',
       ),
-      ('Taille', _sizeLabel(request.parcelSize)),
+      (l10n.requestCreateRecapSize, request.parcelSize.label(l10n)),
       if (request.categories.isNotEmpty)
-        ('Contenu', request.categories.join(', ')),
+        (
+          l10n.requestCreateContentLabel,
+          request.categories
+              .map((c) => contentCategoryDisplayName(l10n, c))
+              .join(', '),
+        ),
       if (gross != null)
-        ('Prix à payer', PriceDisplay.money(gross, request.currency)),
+        (
+          l10n.requestCreateRecapPrice,
+          PriceDisplay.money(gross, request.currency),
+        ),
     ];
 
     return Container(
@@ -356,7 +368,7 @@ class _RecapCard extends StatelessWidget {
               const DonyEmoji.parcel(),
               const SizedBox(width: DonySpacing.xs),
               Text(
-                'Récapitulatif',
+                l10n.requestCreateRecapTitle,
                 style: tt.bodyMedium!.copyWith(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -473,7 +485,7 @@ class _PaymentMethodChoice extends StatelessWidget {
                 ),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
-                  method.displayLabel,
+                  method.label(context.l10n),
                   style: tt.labelMedium?.copyWith(
                     color: isSelected ? cs.primary : cs.onSurfaceVariant,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,

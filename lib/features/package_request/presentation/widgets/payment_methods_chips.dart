@@ -1,5 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Affichage lecture-seule des moyens de paiement acceptés par l'expéditeur.
@@ -51,7 +53,7 @@ class _PaymentMethodChip extends StatelessWidget {
           Icon(method.icon, size: 14, color: cs.primary),
           const SizedBox(width: DonySpacing.xs),
           Text(
-            method.displayLabel,
+            method.label(context.l10n),
             style: tt.labelMedium!.copyWith(
               color: cs.primary,
               fontWeight: FontWeight.w700,

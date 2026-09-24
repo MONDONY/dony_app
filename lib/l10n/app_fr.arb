@@ -2257,5 +2257,1644 @@
   "tripTemplateActiveDescription": "Publie automatiquement les trajets à venir",
   "@tripTemplateActiveDescription": {
     "description": "Sous-titre du bloc bascule d'activation de la récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "contentCategoryDocuments": "Documents & administratif",
+  "@contentCategoryDocuments": {
+    "description": "Traduction affichée du code catalogue DOCUMENTS — ContentCategory.label reste la valeur envoyée/stockée, en français (content_category_labels.dart)"
+  },
+  "contentCategoryDryFood": "Alimentation sèche",
+  "@contentCategoryDryFood": {
+    "description": "Traduction affichée du code catalogue ALIMENTATION_SECHE (content_category_labels.dart)"
+  },
+  "contentCategoryFreshFood": "Produits frais / périssables",
+  "@contentCategoryFreshFood": {
+    "description": "Traduction affichée du code catalogue PRODUITS_FRAIS (content_category_labels.dart)"
+  },
+  "contentCategoryCosmetics": "Cosmétiques & parfums",
+  "@contentCategoryCosmetics": {
+    "description": "Traduction affichée du code catalogue COSMETIQUES (content_category_labels.dart)"
+  },
+  "contentCategoryClothing": "Vêtements & tissus",
+  "@contentCategoryClothing": {
+    "description": "Traduction affichée du code catalogue VETEMENTS (content_category_labels.dart)"
+  },
+  "contentCategoryShoes": "Chaussures",
+  "@contentCategoryShoes": {
+    "description": "Traduction affichée du code catalogue CHAUSSURES (content_category_labels.dart)"
+  },
+  "contentCategoryTraditionalMedicine": "Médicaments traditionnels",
+  "@contentCategoryTraditionalMedicine": {
+    "description": "Traduction affichée du code catalogue MEDICAMENTS_TRADITIONNELS (content_category_labels.dart)"
+  },
+  "contentCategoryElectronics": "Téléphone & électronique",
+  "@contentCategoryElectronics": {
+    "description": "Traduction affichée du code catalogue ELECTRONIQUE (content_category_labels.dart)"
+  },
+  "contentCategoryBooks": "Livres",
+  "@contentCategoryBooks": {
+    "description": "Traduction affichée du code catalogue LIVRES (content_category_labels.dart)"
+  },
+  "contentCategoryGifts": "Cadeaux & jouets",
+  "@contentCategoryGifts": {
+    "description": "Traduction affichée du code catalogue CADEAUX (content_category_labels.dart)"
+  },
+  "contentCategoryOther": "Autre",
+  "@contentCategoryOther": {
+    "description": "Traduction affichée du code catalogue AUTRE (content_category_labels.dart)"
+  },
+  "contentCategoryAdd": "Ajouter « {label} »",
+  "@contentCategoryAdd": {
+    "description": "Ligne « Ajouter … » du sélecteur de catégories pour un libellé libre (content_category_selector.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "contentCategoryRemove": "Retirer cette catégorie",
+  "@contentCategoryRemove": {
+    "description": "Libellé d'accessibilité du bouton de suppression d'un tag catégorie (content_category_selector.dart)"
+  },
+
+  "paymentMethodCard": "Carte",
+  "@paymentMethodCard": {
+    "description": "Libellé affiché du moyen de paiement STRIPE (package_request_labels.dart)"
+  },
+  "paymentMethodCash": "Espèces",
+  "@paymentMethodCash": {
+    "description": "Libellé affiché du moyen de paiement CASH (package_request_labels.dart)"
+  },
+  "paymentMethodMobileMoney": "Mobile money",
+  "@paymentMethodMobileMoney": {
+    "description": "Libellé affiché du moyen de paiement MOBILE_MONEY (package_request_labels.dart) — identique dans les deux langues"
+  },
+
+  "requestThreadYouReceive": "Tu reçois {amount}",
+  "@requestThreadYouReceive": {
+    "description": "Prix net vu par le voyageur dans le fil de négociation (package_request_labels.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "requestThreadYouPay": "Tu paies {amount}",
+  "@requestThreadYouPay": {
+    "description": "Prix brut vu par l'expéditeur dans le fil de négociation (package_request_labels.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "requestWeightRange": "Entre {min} et {max} kg",
+  "@requestWeightRange": {
+    "description": "Fourchette de poids autorisée pour une demande d'envoi (package_request_labels.dart)",
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "requestSenderFallbackName": "Utilisateur Yadony",
+  "@requestSenderFallbackName": {
+    "description": "Nom de repli d'un profil expéditeur sans nom (package_request_labels.dart, package_request_search_item.dart)"
+  },
+  "requestBudgetRequired": "Indiquez un budget pour continuer",
+  "@requestBudgetRequired": {
+    "description": "Erreur de soumission de l'étape 3 du wizard de demande sans budget saisi (package_request_form_bloc.dart)"
+  },
+
+  "requestTimeJustNow": "{verb, select, created{créée à l'instant} other{publiée à l'instant}}",
+  "@requestTimeJustNow": {
+    "description": "Libellé relatif : demande créée/publiée à l'instant (request_time_label.dart)",
+    "placeholders": {
+      "verb": {
+        "type": "String"
+      }
+    }
+  },
+  "requestTimeMinutesAgo": "{verb, select, created{créée il y a {minutes} min} other{publiée il y a {minutes} min}}",
+  "@requestTimeMinutesAgo": {
+    "description": "Libellé relatif : il y a N minutes (request_time_label.dart)",
+    "placeholders": {
+      "verb": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "requestTimeHoursAgo": "{verb, select, created{créée il y a {hours} h} other{publiée il y a {hours} h}}",
+  "@requestTimeHoursAgo": {
+    "description": "Libellé relatif : il y a N heures, même jour (request_time_label.dart)",
+    "placeholders": {
+      "verb": {
+        "type": "String"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "requestTimeYesterday": "{verb, select, created{créée hier, {time}} other{publiée hier, {time}}}",
+  "@requestTimeYesterday": {
+    "description": "Libellé relatif : hier à telle heure (request_time_label.dart)",
+    "placeholders": {
+      "verb": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "requestTimeOn": "{verb, select, created{créée le {date}} other{publiée le {date}}}",
+  "@requestTimeOn": {
+    "description": "Libellé relatif : à telle date, plus ancien qu'hier (request_time_label.dart)",
+    "placeholders": {
+      "verb": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "contentCategoryHintDefault": "Ajouter un type de contenu…",
+  "@contentCategoryHintDefault": {
+    "description": "Texte d'indication par défaut du champ de sélection de catégories, quand l'appelant ne le surcharge pas (content_category_selector.dart)"
+  },
+
+  "requestCreateEditWarningTitle": "Modifier votre demande ?",
+  "@requestCreateEditWarningTitle": {
+    "description": "Titre du dialogue de confirmation avant d'éditer une demande en négociation (package_request_create_screen.dart)"
+  },
+  "requestCreateEditWarningMessage": "Des voyageurs négocient actuellement cette demande. La modifier annulera toutes les offres en cours. Ils devront vous reproposer un trajet.",
+  "@requestCreateEditWarningMessage": {
+    "description": "Message du dialogue de confirmation avant d'éditer une demande en négociation (package_request_create_screen.dart)"
+  },
+  "requestCreateEditWarningConfirm": "Modifier quand même",
+  "@requestCreateEditWarningConfirm": {
+    "description": "Bouton de confirmation du dialogue d'édition d'une demande en négociation (package_request_create_screen.dart)"
+  },
+  "requestCreateStepTitleEdit": "Modifier la demande",
+  "@requestCreateStepTitleEdit": {
+    "description": "Titre de l'app bar, étape 1 en mode édition (package_request_create_screen.dart)"
+  },
+  "requestCreateStepTitleTrip": "Le trajet",
+  "@requestCreateStepTitleTrip": {
+    "description": "Titre de l'app bar, étape 1 en création (package_request_create_screen.dart)"
+  },
+  "requestCreateStepTitlePackage": "Le colis",
+  "@requestCreateStepTitlePackage": {
+    "description": "Titre de l'app bar, étape 2 (package_request_create_screen.dart)"
+  },
+  "requestCreateStepTitleBudget": "Le budget",
+  "@requestCreateStepTitleBudget": {
+    "description": "Titre de l'app bar, étape 3 (package_request_create_screen.dart)"
+  },
+  "requestCreateDraftSavedTitle": "Brouillon enregistré !",
+  "@requestCreateDraftSavedTitle": {
+    "description": "Titre de l'écran succès après enregistrement d'un brouillon (package_request_create_screen.dart)"
+  },
+  "requestCreateEditedTitle": "Demande modifiée !",
+  "@requestCreateEditedTitle": {
+    "description": "Titre de l'écran succès après édition d'une demande (package_request_create_screen.dart)"
+  },
+  "requestCreatePublishedTitle": "Demande publiée !",
+  "@requestCreatePublishedTitle": {
+    "description": "Titre de l'écran succès après publication d'une demande (package_request_create_screen.dart)"
+  },
+  "requestCreateDraftSavedSubtitle": "Vous pourrez la publier quand vous le souhaitez.",
+  "@requestCreateDraftSavedSubtitle": {
+    "description": "Sous-titre de l'écran succès après enregistrement d'un brouillon (package_request_create_screen.dart)"
+  },
+  "requestCreateEditedSubtitle": "Vos modifications sont en ligne.",
+  "@requestCreateEditedSubtitle": {
+    "description": "Sous-titre de l'écran succès après édition d'une demande (package_request_create_screen.dart)"
+  },
+  "requestCreatePublishedSubtitle": "Les voyageurs sont notifiés. Vous recevrez des offres très vite.",
+  "@requestCreatePublishedSubtitle": {
+    "description": "Sous-titre de l'écran succès après publication d'une demande (package_request_create_screen.dart)"
+  },
+  "requestCreateViewDraftCta": "Voir mon brouillon",
+  "@requestCreateViewDraftCta": {
+    "description": "CTA de l'écran succès, brouillon (package_request_create_screen.dart)"
+  },
+  "requestCreateViewRequestCta": "Voir ma demande",
+  "@requestCreateViewRequestCta": {
+    "description": "CTA de l'écran succès, demande publiée/modifiée (package_request_create_screen.dart)"
+  },
+  "requestCreateGenericError": "Erreur lors de la création",
+  "@requestCreateGenericError": {
+    "description": "Message d'erreur de repli si la soumission échoue sans exception typée (package_request_create_screen.dart)"
+  },
+  "requestCreateDraftLimitTitle": "Limite de brouillons atteinte",
+  "@requestCreateDraftLimitTitle": {
+    "description": "Titre du dialogue quand la limite de brouillons (compte gratuit) est atteinte (package_request_create_screen.dart)"
+  },
+  "requestCreateCguPrefix": "En publiant, vous acceptez les ",
+  "@requestCreateCguPrefix": {
+    "description": "Préfixe de la mention légale au-dessus du CTA de publication (package_request_create_screen.dart)"
+  },
+  "requestCreateCguLink": "CGU",
+  "@requestCreateCguLink": {
+    "description": "Lien tappable vers les CGU, dans la mention légale de publication (package_request_create_screen.dart)"
+  },
+  "requestCreatePublishingLabel": "Publication…",
+  "@requestCreatePublishingLabel": {
+    "description": "Libellé du CTA sticky pendant la soumission (package_request_create_screen.dart)"
+  },
+  "requestCreatePreviewButton": "Aperçu",
+  "@requestCreatePreviewButton": {
+    "description": "Libellé du CTA sticky à la dernière étape, avant soumission (package_request_create_screen.dart)"
+  },
+
+  "requestCreateDepartureRequired": "Ville de départ obligatoire",
+  "@requestCreateDepartureRequired": {
+    "description": "Erreur de validation : ville de départ manquante (step_1_trajet_colis.dart)"
+  },
+  "requestCreateArrivalRequired": "Ville d'arrivée obligatoire",
+  "@requestCreateArrivalRequired": {
+    "description": "Erreur de validation : ville d'arrivée manquante (step_1_trajet_colis.dart)"
+  },
+  "requestCreateArrivalSameAsDeparture": "Choisissez une ville différente du départ",
+  "@requestCreateArrivalSameAsDeparture": {
+    "description": "Erreur de validation : ville d'arrivée identique au départ (step_1_trajet_colis.dart)"
+  },
+  "requestCreateDateRequired": "Date de départ obligatoire",
+  "@requestCreateDateRequired": {
+    "description": "Erreur de validation : date de départ manquante (step_1_trajet_colis.dart)"
+  },
+  "requestCreateToleranceExactHint": "Seuls les voyageurs partant exactement ce jour-là pourront répondre.",
+  "@requestCreateToleranceExactHint": {
+    "description": "Explication de la tolérance de date quand elle vaut 0 (step_1_trajet_colis.dart)"
+  },
+  "requestCreateToleranceGenericHint": "{count, plural, =1{± {count} jour autour de votre date. Plus de souplesse, plus de voyageurs.} other{± {count} jours autour de votre date. Plus de souplesse, plus de voyageurs.}}",
+  "@requestCreateToleranceGenericHint": {
+    "description": "Explication de la tolérance de date avant sélection d'une date de départ (step_1_trajet_colis.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "requestCreateToleranceRangeHint": "Les voyageurs partant du {from} au {to} pourront répondre.",
+  "@requestCreateToleranceRangeHint": {
+    "description": "Explication de la tolérance de date une fois une date de départ choisie (step_1_trajet_colis.dart)",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "requestCreateAirplaneOnlyMode": "seul mode disponible",
+  "@requestCreateAirplaneOnlyMode": {
+    "description": "Sous-texte du bloc mode de transport verrouillé sur avion (step_1_trajet_colis.dart)"
+  },
+  "requestCreateTrajetSectionLabel": "TRAJET",
+  "@requestCreateTrajetSectionLabel": {
+    "description": "Libellé de section en tête de l'étape 1 (step_1_trajet_colis.dart)"
+  },
+  "requestCreateTrajetQuestion": "D'où vers où ?",
+  "@requestCreateTrajetQuestion": {
+    "description": "Titre de l'étape 1 (step_1_trajet_colis.dart)"
+  },
+  "requestCreateDateFieldLabel": "Date",
+  "@requestCreateDateFieldLabel": {
+    "description": "Libellé du champ date et texte de repli tant qu'aucune date n'est choisie (step_1_trajet_colis.dart)"
+  },
+  "requestCreateToleranceFieldLabel": "Souplesse",
+  "@requestCreateToleranceFieldLabel": {
+    "description": "Libellé du champ de tolérance de date (step_1_trajet_colis.dart)"
+  },
+  "requestCreateUrgentDateHint": "🔥 Date proche, cette demande sera signalée urgente",
+  "@requestCreateUrgentDateHint": {
+    "description": "Feedback informatif sous la date quand elle est proche (step_1_trajet_colis.dart)"
+  },
+  "requestCreateToleranceShort": "± {count} j",
+  "@requestCreateToleranceShort": {
+    "description": "Libellé compact du pill de tolérance de date sélectionnée (step_1_trajet_colis.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "requestCreateDateExact": "Date exacte",
+  "@requestCreateDateExact": {
+    "description": "Option \"tolérance 0\" de la feuille de sélection de tolérance de date (step_1_trajet_colis.dart)"
+  },
+  "requestCreateDateFlex": "{count, plural, =1{± {count} jour} other{± {count} jours}}",
+  "@requestCreateDateFlex": {
+    "description": "Options de tolérance de date non nulles de la feuille de sélection (step_1_trajet_colis.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "requestCreateMaxCategories": "Maximum {max} catégories",
+  "@requestCreateMaxCategories": {
+    "description": "Erreur : nombre maximal de catégories dépassé (step_2_details.dart)",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "requestCreateCategoryRequired": "Choisissez au moins une catégorie",
+  "@requestCreateCategoryRequired": {
+    "description": "Erreur de validation : aucune catégorie de contenu choisie (step_2_details.dart)"
+  },
+  "requestCreateAutrePrecisionTitle": "Précisez le contenu (optionnel)",
+  "@requestCreateAutrePrecisionTitle": {
+    "description": "Titre de la feuille de précision libre après sélection de \"Autre\" (step_2_details.dart)"
+  },
+  "requestCreateAutrePrecisionSubtitle": "Ça aide le voyageur à savoir ce qu'il transporte.",
+  "@requestCreateAutrePrecisionSubtitle": {
+    "description": "Sous-titre de la feuille de précision libre après sélection de \"Autre\" (step_2_details.dart)"
+  },
+  "requestCreateAutrePrecisionValidate": "Valider",
+  "@requestCreateAutrePrecisionValidate": {
+    "description": "Bouton de la feuille de précision libre après sélection de \"Autre\" (step_2_details.dart)"
+  },
+  "requestCreateAutrePrecisionHint": "Ex. Instruments de musique",
+  "@requestCreateAutrePrecisionHint": {
+    "description": "Texte d'indication du champ de précision libre (step_2_details.dart)"
+  },
+  "requestCreateStep2Title": "Décrivez votre colis",
+  "@requestCreateStep2Title": {
+    "description": "Titre de l'étape 2 (step_2_details.dart)"
+  },
+  "requestCreateStep2Subtitle": "Ces infos aident les voyageurs à savoir s'ils peuvent transporter votre envoi.",
+  "@requestCreateStep2Subtitle": {
+    "description": "Sous-titre de l'étape 2 (step_2_details.dart)"
+  },
+  "requestCreateWeightLabel": "Poids approximatif",
+  "@requestCreateWeightLabel": {
+    "description": "Libellé du champ poids (step_2_details.dart)"
+  },
+  "requestCreateContentLabel": "Contenu",
+  "@requestCreateContentLabel": {
+    "description": "Libellé du champ de sélection des catégories de contenu (step_2_details.dart) ; réutilisé pour la ligne contenu de l'aperçu et des cartes récapitulatives (package_request_preview_sheet.dart, wizard_summary_card.dart, complete_details_screen.dart)"
+  },
+  "requestCreateContentHint": "Tapez pour chercher, ou écrivez votre propre catégorie.",
+  "@requestCreateContentHint": {
+    "description": "Texte d'aide sous le libellé \"Contenu\" (step_2_details.dart)"
+  },
+  "requestCreateDescriptionLabel": "Description (optionnel)",
+  "@requestCreateDescriptionLabel": {
+    "description": "Libellé du champ description (step_2_details.dart)"
+  },
+  "requestCreateDescriptionHint": "Précisions utiles : fragile, contenu exact, instructions de remise…",
+  "@requestCreateDescriptionHint": {
+    "description": "Texte d'indication du champ description (step_2_details.dart)"
+  },
+  "requestCreateWeightInvalid": "Valeur invalide",
+  "@requestCreateWeightInvalid": {
+    "description": "Erreur de validation : poids non numérique (step_2_details.dart)"
+  },
+
+  "requestCreateBudgetSubtitle": "Vérifiez votre demande, puis indiquez le budget à montrer aux voyageurs.",
+  "@requestCreateBudgetSubtitle": {
+    "description": "Sous-titre de l'étape 3 (step_3_recap_budget.dart)"
+  },
+  "requestCreatePriceModeLabel": "Comment fixer le prix ?",
+  "@requestCreatePriceModeLabel": {
+    "description": "Libellé du choix du mode de prix (step_3_recap_budget.dart)"
+  },
+  "requestCreatePriceModeOpenTitle": "J'ouvre aux offres",
+  "@requestCreatePriceModeOpenTitle": {
+    "description": "Titre de la carte \"prix négociable\" (step_3_recap_budget.dart)"
+  },
+  "requestCreatePriceModeOpenSubtitle": "Les voyageurs proposent leur prix, vous choisissez.",
+  "@requestCreatePriceModeOpenSubtitle": {
+    "description": "Sous-titre de la carte \"prix négociable\" (step_3_recap_budget.dart)"
+  },
+  "requestCreatePriceModeFixedTitle": "Je fixe mon prix",
+  "@requestCreatePriceModeFixedTitle": {
+    "description": "Titre de la carte \"prix ferme\" (step_3_recap_budget.dart)"
+  },
+  "requestCreatePriceModeFixedSubtitle": "Un montant ferme, sans négociation.",
+  "@requestCreatePriceModeFixedSubtitle": {
+    "description": "Sous-titre de la carte \"prix ferme\" (step_3_recap_budget.dart)"
+  },
+  "requestCreateCurrencyLabel": "Devise",
+  "@requestCreateCurrencyLabel": {
+    "description": "Libellé du sélecteur de devise (step_3_recap_budget.dart)"
+  },
+  "requestCreateBudgetLabelNegotiable": "Budget indicatif",
+  "@requestCreateBudgetLabelNegotiable": {
+    "description": "Libellé du champ budget en mode négociable (step_3_recap_budget.dart)"
+  },
+  "requestCreateBudgetLabelFixed": "Votre prix",
+  "@requestCreateBudgetLabelFixed": {
+    "description": "Libellé du champ budget en mode prix ferme (step_3_recap_budget.dart)"
+  },
+  "requestCreateBudgetHintNegotiable": "Donnez un ordre d'idée pour attirer plus d'offres, sans vous engager.",
+  "@requestCreateBudgetHintNegotiable": {
+    "description": "Texte d'aide sous le champ budget en mode négociable (step_3_recap_budget.dart)"
+  },
+  "requestCreateBudgetHintFixed": "Les voyageurs verront ce montant et pourront l'accepter tel quel.",
+  "@requestCreateBudgetHintFixed": {
+    "description": "Texte d'aide sous le champ budget en mode prix ferme (step_3_recap_budget.dart)"
+  },
+  "requestCreatePromoLabel": "Code promo (optionnel)",
+  "@requestCreatePromoLabel": {
+    "description": "Libellé du champ code promo (step_3_recap_budget.dart)"
+  },
+  "requestCreatePromoHint": "Ex: WELCOME10",
+  "@requestCreatePromoHint": {
+    "description": "Texte d'indication du champ code promo (step_3_recap_budget.dart)"
+  },
+  "requestCreatePromoAppliedFallback": "Code appliqué",
+  "@requestCreatePromoAppliedFallback": {
+    "description": "Message de repli quand le serveur confirme un code promo sans libellé (step_3_recap_budget.dart)"
+  },
+  "requestCreatePaymentAcceptedLabel": "Paiement accepté",
+  "@requestCreatePaymentAcceptedLabel": {
+    "description": "Libellé de la section des moyens de paiement acceptés (step_3_recap_budget.dart)"
+  },
+  "requestCreatePaymentHint": "Choisissez comment vous paierez le voyageur.",
+  "@requestCreatePaymentHint": {
+    "description": "Texte d'aide sous le libellé des moyens de paiement (step_3_recap_budget.dart)"
+  },
+  "requestCreateKeepOnePaymentMethod": "Gardez au moins un mode de paiement.",
+  "@requestCreateKeepOnePaymentMethod": {
+    "description": "Message quand l'expéditeur tente de décocher le dernier mode de paiement (step_3_recap_budget.dart)"
+  },
+  "requestCreatePublishInfoBanner": "Une fois publiée, les voyageurs sur ce trajet sont prévenus. Vous recevrez une notification à la première offre.",
+  "@requestCreatePublishInfoBanner": {
+    "description": "Bandeau informatif en fin d'étape 3 (step_3_recap_budget.dart)"
+  },
+  "requestCreateBudgetInputHint": "Ex. 40,00",
+  "@requestCreateBudgetInputHint": {
+    "description": "Texte d'indication du champ budget total (step_3_recap_budget.dart)"
+  },
+  "requestCreateBudgetEmpty": "Indiquez un budget",
+  "@requestCreateBudgetEmpty": {
+    "description": "Erreur de validation : champ budget vide (step_3_recap_budget.dart)"
+  },
+  "requestCreateBudgetRange": "Entre {min} et {max}",
+  "@requestCreateBudgetRange": {
+    "description": "Erreur de validation : budget hors bornes (step_3_recap_budget.dart)",
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "requestCreateCommissionLabel": "Commission Yadony ({rate} %)",
+  "@requestCreateCommissionLabel": {
+    "description": "Libellé de la ligne commission de la décomposition du budget (step_3_recap_budget.dart)",
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "requestCreatePromoBoostLabel": "Grâce au code promo, le voyageur touche",
+  "@requestCreatePromoBoostLabel": {
+    "description": "Libellé de la ligne de bonus promo dans la décomposition du budget (step_3_recap_budget.dart)"
+  },
+  "requestCreateTravelerReceivesLabel": "Le voyageur touchera",
+  "@requestCreateTravelerReceivesLabel": {
+    "description": "Libellé de la ligne du net voyageur dans la décomposition du budget (step_3_recap_budget.dart)"
+  },
+  "requestCreateCurrencySemanticLabel": "Devise de la demande : {name}, {code}. Bouton, modifier la devise.",
+  "@requestCreateCurrencySemanticLabel": {
+    "description": "Libellé d'accessibilité du sélecteur de devise (step_3_recap_budget.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "requestCreateChangeCurrency": "Changer",
+  "@requestCreateChangeCurrency": {
+    "description": "Lien de modification de la devise, dans la ligne du sélecteur (step_3_recap_budget.dart)"
+  },
+
+  "requestCreatePhotoUnsupported": "Image non supportée ou trop volumineuse",
+  "@requestCreatePhotoUnsupported": {
+    "description": "Erreur affichée quand la photo choisie est refusée (package_request_photo_section.dart)"
+  },
+  "requestCreateTakePhoto": "Prendre une photo",
+  "@requestCreateTakePhoto": {
+    "description": "Option caméra de la feuille de choix de source photo (package_request_photo_section.dart)"
+  },
+  "requestCreatePickFromGallery": "Choisir dans la galerie",
+  "@requestCreatePickFromGallery": {
+    "description": "Option galerie de la feuille de choix de source photo (package_request_photo_section.dart)"
+  },
+  "requestCreatePhotosLabel": "Photos du colis",
+  "@requestCreatePhotosLabel": {
+    "description": "Titre de la section photos de l'étape 2 (package_request_photo_section.dart)"
+  },
+  "requestCreatePhotosHint": "Visibles par les voyageurs. Ajoutées à l'offre quand un trajet est lié.",
+  "@requestCreatePhotosHint": {
+    "description": "Texte d'aide sous le titre de la section photos (package_request_photo_section.dart)"
+  },
+  "requestCreateAddPhotoSemantic": "Ajouter une photo du colis",
+  "@requestCreateAddPhotoSemantic": {
+    "description": "Libellé d'accessibilité du bouton d'ajout de photo (package_request_photo_section.dart)"
+  },
+  "requestCreatePhotoUploadFailed": "Échec de l'upload de la photo",
+  "@requestCreatePhotoUploadFailed": {
+    "description": "Message d'échec d'upload sans raison connue (package_request_photo_section.dart)"
+  },
+  "requestCreatePhotoUploadFailedWithReason": "Échec : {reason}",
+  "@requestCreatePhotoUploadFailedWithReason": {
+    "description": "Message d'échec d'upload avec raison connue (package_request_photo_section.dart)",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "requestCreateRetryPhotoUpload": "Réessayer l'envoi de la photo",
+  "@requestCreateRetryPhotoUpload": {
+    "description": "Libellé d'accessibilité du bouton de réessai d'une photo en échec (package_request_photo_section.dart)"
+  },
+  "requestCreateAddPhotoTitle": "Ajouter une photo",
+  "@requestCreateAddPhotoTitle": {
+    "description": "Titre du CTA plein largeur d'ajout de photo, aucune photo encore ajoutée (package_request_photo_section.dart)"
+  },
+  "requestCreateAddPhotoSubtitle": "Fortement recommandé, rassure le voyageur",
+  "@requestCreateAddPhotoSubtitle": {
+    "description": "Sous-texte du CTA plein largeur d'ajout de photo (package_request_photo_section.dart)"
+  },
+  "requestCreateRemovePhoto": "Supprimer cette photo",
+  "@requestCreateRemovePhoto": {
+    "description": "Libellé d'accessibilité du bouton de suppression d'une photo (package_request_photo_section.dart)"
+  },
+
+  "requestCreateCompleteDetailsTitle": "Vérifie & complète",
+  "@requestCreateCompleteDetailsTitle": {
+    "description": "Titre de l'app bar de l'écran de complétion avant paiement (complete_details_screen.dart)"
+  },
+  "requestCreateDetailsSaved": "Détails enregistrés",
+  "@requestCreateDetailsSaved": {
+    "description": "Message de succès après soumission des détails destinataire/paiement (complete_details_screen.dart)"
+  },
+  "requestCreateRecipientSection": "Destinataire",
+  "@requestCreateRecipientSection": {
+    "description": "Titre de la section destinataire (complete_details_screen.dart)"
+  },
+  "requestCreateRecipientNameLabel": "Nom complet",
+  "@requestCreateRecipientNameLabel": {
+    "description": "Libellé du champ nom du destinataire (complete_details_screen.dart)"
+  },
+  "requestCreateRequiredField": "Requis",
+  "@requestCreateRequiredField": {
+    "description": "Erreur de validation générique : champ obligatoire vide (complete_details_screen.dart)"
+  },
+  "requestCreateRecipientPhoneLabel": "Téléphone",
+  "@requestCreateRecipientPhoneLabel": {
+    "description": "Libellé du champ téléphone du destinataire (complete_details_screen.dart)"
+  },
+  "requestCreateRecipientPhoneFormat": "Format E.164 (+221…)",
+  "@requestCreateRecipientPhoneFormat": {
+    "description": "Erreur de validation : téléphone du destinataire hors format E.164 (complete_details_screen.dart)"
+  },
+  "requestCreateRecipientCityLabel": "Ville / commune",
+  "@requestCreateRecipientCityLabel": {
+    "description": "Libellé du champ ville du destinataire (complete_details_screen.dart)"
+  },
+  "requestCreateRecipientCityHint": "Ex. Dakar (optionnel)",
+  "@requestCreateRecipientCityHint": {
+    "description": "Texte d'indication du champ ville du destinataire (complete_details_screen.dart)"
+  },
+  "requestCreatePaymentMethodSection": "Mode de paiement",
+  "@requestCreatePaymentMethodSection": {
+    "description": "Titre de la section moyen de paiement (complete_details_screen.dart)"
+  },
+  "requestCreateSendingLabel": "Envoi…",
+  "@requestCreateSendingLabel": {
+    "description": "Libellé du CTA pendant la soumission (complete_details_screen.dart)"
+  },
+  "requestCreateContinueToPayment": "Continuer vers le paiement",
+  "@requestCreateContinueToPayment": {
+    "description": "Libellé du CTA de soumission (complete_details_screen.dart)"
+  },
+  "requestCreateRecapTitle": "Récapitulatif",
+  "@requestCreateRecapTitle": {
+    "description": "Titre de la carte récapitulative (complete_details_screen.dart)"
+  },
+  "requestCreateRecapTrip": "Trajet",
+  "@requestCreateRecapTrip": {
+    "description": "Libellé de la ligne trajet de la carte récapitulative (complete_details_screen.dart)"
+  },
+  "requestCreateRecapTravelDate": "Date du voyage",
+  "@requestCreateRecapTravelDate": {
+    "description": "Libellé de la ligne date de voyage de la carte récapitulative (complete_details_screen.dart)"
+  },
+  "requestCreateRecapWeight": "Poids",
+  "@requestCreateRecapWeight": {
+    "description": "Libellé de la ligne poids de la carte récapitulative (complete_details_screen.dart)"
+  },
+  "requestCreateRecapSize": "Taille",
+  "@requestCreateRecapSize": {
+    "description": "Libellé de la ligne taille de la carte récapitulative (complete_details_screen.dart)"
+  },
+  "requestCreateRecapPrice": "Prix à payer",
+  "@requestCreateRecapPrice": {
+    "description": "Libellé de la ligne prix de la carte récapitulative (complete_details_screen.dart)"
+  },
+
+  "requestDetailTitle": "Ma demande",
+  "@requestDetailTitle": {
+    "description": "Titre de l'écran et de la sheet « Ma demande » (package_request_detail_screen.dart)"
+  },
+  "requestDetailNoticeActionFailed": "Une erreur est survenue. Réessaie dans un instant.",
+  "@requestDetailNoticeActionFailed": {
+    "description": "Snackbar d'échec générique d'une action du détail de demande (package_request_detail_screen.dart)"
+  },
+  "requestDetailNoticeInvitationSent": "Invitation envoyée. Le voyageur est prévenu.",
+  "@requestDetailNoticeInvitationSent": {
+    "description": "Snackbar de succès après invitation d'un voyageur (package_request_detail_screen.dart)"
+  },
+  "requestDetailNoticeInvitationRefused": "Ce voyageur ne peut pas être invité.",
+  "@requestDetailNoticeInvitationRefused": {
+    "description": "Snackbar d'échec : invitation refusée par le serveur (package_request_detail_screen.dart)"
+  },
+  "requestDetailNoticeInvitationNotInvitable": "Cette demande n'accepte plus d'invitations.",
+  "@requestDetailNoticeInvitationNotInvitable": {
+    "description": "Snackbar d'échec : demande qui n'accepte plus d'invitations (package_request_detail_screen.dart)"
+  },
+  "requestDetailNoticeInvitationLimitReached": "Limite d'invitations atteinte pour cette demande.",
+  "@requestDetailNoticeInvitationLimitReached": {
+    "description": "Snackbar d'échec : limite d'invitations atteinte (package_request_detail_screen.dart)"
+  },
+  "requestDetailShareMessage": "J'envoie un colis de {weight} kg {departure} → {arrival} autour du {date}. Tu voyages sur cet axe ? Réponds à ma demande sur Yadony.",
+  "@requestDetailShareMessage": {
+    "description": "Corps du message de partage d'une demande, avant le lien (package_request_detail_screen.dart)",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "departure": {
+        "type": "String"
+      },
+      "arrival": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "requestDetailMoreActionsTooltip": "Plus d'actions",
+  "@requestDetailMoreActionsTooltip": {
+    "description": "Tooltip du bouton menu « … » du détail de demande (package_request_detail_screen.dart)"
+  },
+  "requestDetailCancelDialogTitle": "Annuler cette demande ?",
+  "@requestDetailCancelDialogTitle": {
+    "description": "Titre du dialogue de confirmation d'annulation (package_request_detail_screen.dart)"
+  },
+  "requestDetailCancelDialogMessage": "Cette action est irréversible. Les voyageurs ne pourront plus y répondre.",
+  "@requestDetailCancelDialogMessage": {
+    "description": "Message du dialogue de confirmation d'annulation (package_request_detail_screen.dart)"
+  },
+  "requestDetailErrorNotFoundTitle": "Cette demande n'existe plus",
+  "@requestDetailErrorNotFoundTitle": {
+    "description": "Titre d'erreur 404 (demande annulée/supprimée) (package_request_detail_screen.dart)"
+  },
+  "requestDetailErrorNotFoundMessage": "Elle a peut-être été annulée ou supprimée.",
+  "@requestDetailErrorNotFoundMessage": {
+    "description": "Message d'erreur 404 (package_request_detail_screen.dart)"
+  },
+  "requestDetailErrorLoadTitle": "Impossible de charger ta demande",
+  "@requestDetailErrorLoadTitle": {
+    "description": "Titre d'erreur générique de chargement (package_request_detail_screen.dart)"
+  },
+  "requestDetailErrorLoadMessage": "Vérifie ta connexion, puis réessaie. Ta demande n'a pas été modifiée.",
+  "@requestDetailErrorLoadMessage": {
+    "description": "Message d'erreur générique de chargement (package_request_detail_screen.dart)"
+  },
+  "requestTravelerFallbackNameLower": "le voyageur",
+  "@requestTravelerFallbackNameLower": {
+    "description": "Nom de repli du voyageur, en milieu de phrase (package_request_detail_screen.dart, request_detail_bottom_bar.dart)"
+  },
+  "requestListTitle": "Mes demandes",
+  "@requestListTitle": {
+    "description": "Titre de l'écran « Mes demandes » (my_package_requests_screen.dart)"
+  },
+  "requestListErrorFallback": "Erreur",
+  "@requestListErrorFallback": {
+    "description": "Message d'erreur de repli, sans détail serveur (my_package_requests_screen.dart, package_request_search_screen.dart, complete_details_screen.dart)"
+  },
+  "requestListEmptyTitle": "Tu n'as encore rien envoyé",
+  "@requestListEmptyTitle": {
+    "description": "Titre de l'état vide global de « Mes demandes » (my_package_requests_screen.dart)"
+  },
+  "requestListEmptyDescription": "Publie ta première demande et reçois des offres de voyageurs en quelques heures.",
+  "@requestListEmptyDescription": {
+    "description": "Description de l'état vide global de « Mes demandes » (my_package_requests_screen.dart)"
+  },
+  "requestListEmptyCta": "+ Publier ma première demande",
+  "@requestListEmptyCta": {
+    "description": "CTA de l'état vide global de « Mes demandes » (my_package_requests_screen.dart)"
+  },
+  "requestListSearchHint": "Ville, catégorie…",
+  "@requestListSearchHint": {
+    "description": "Indication du champ de recherche de « Mes demandes » (my_package_requests_screen.dart)"
+  },
+  "requestListFilterAllLabel": "Toutes",
+  "@requestListFilterAllLabel": {
+    "description": "Libellé du chip de filtre « Toutes », suivi du compte entre parenthèses (my_package_requests_screen.dart)"
+  },
+  "requestListFilterOpenLabel": "Ouvertes",
+  "@requestListFilterOpenLabel": {
+    "description": "Libellé du chip de filtre « Ouvertes » (my_package_requests_screen.dart)"
+  },
+  "requestListFilterClosedLabel": "Non abouties",
+  "@requestListFilterClosedLabel": {
+    "description": "Libellé du chip de filtre « Non abouties » (my_package_requests_screen.dart)"
+  },
+  "requestListFilterDraftLabel": "Brouillons",
+  "@requestListFilterDraftLabel": {
+    "description": "Libellé du chip de filtre « Brouillons » (my_package_requests_screen.dart)"
+  },
+  "requestListEmptySearchResult": "Aucun résultat pour cette recherche",
+  "@requestListEmptySearchResult": {
+    "description": "État vide du filtre : recherche sans correspondance (my_package_requests_screen.dart)"
+  },
+  "requestListEmptyOpen": "Aucune demande ouverte",
+  "@requestListEmptyOpen": {
+    "description": "État vide du filtre « Ouvertes » (my_package_requests_screen.dart)"
+  },
+  "requestListEmptyClosed": "Aucune demande non aboutie",
+  "@requestListEmptyClosed": {
+    "description": "État vide du filtre « Non abouties » (my_package_requests_screen.dart)"
+  },
+  "requestListEmptyDraft": "Aucun brouillon",
+  "@requestListEmptyDraft": {
+    "description": "État vide du filtre « Brouillons » (my_package_requests_screen.dart)"
+  },
+  "requestListEmptyAll": "Aucune demande",
+  "@requestListEmptyAll": {
+    "description": "État vide du filtre « Toutes » (my_package_requests_screen.dart)"
+  },
+  "requestListNewFab": "Nouvelle demande",
+  "@requestListNewFab": {
+    "description": "Libellé du bouton flottant de création (my_package_requests_screen.dart)"
+  },
+  "requestListEditCta": "Modifier →",
+  "@requestListEditCta": {
+    "description": "CTA d'édition dans le pied d'une carte de la liste (my_package_requests_screen.dart)"
+  },
+  "requestListStatusDraft": "BROUILLON",
+  "@requestListStatusDraft": {
+    "description": "Badge de statut, tout en majuscules (my_package_requests_screen.dart)"
+  },
+  "requestListStatusOpen": "OUVERTE",
+  "@requestListStatusOpen": {
+    "description": "Badge de statut, tout en majuscules (my_package_requests_screen.dart)"
+  },
+  "requestListStatusNegotiating": "NÉGOCIATION",
+  "@requestListStatusNegotiating": {
+    "description": "Badge de statut, tout en majuscules (my_package_requests_screen.dart)"
+  },
+  "requestListStatusAccepted": "ACCEPTÉE",
+  "@requestListStatusAccepted": {
+    "description": "Badge de statut, tout en majuscules (my_package_requests_screen.dart)"
+  },
+  "requestListStatusCompleted": "LIVRÉE",
+  "@requestListStatusCompleted": {
+    "description": "Badge de statut, tout en majuscules (my_package_requests_screen.dart)"
+  },
+  "requestListStatusExpired": "EXPIRÉE",
+  "@requestListStatusExpired": {
+    "description": "Badge de statut, tout en majuscules (my_package_requests_screen.dart)"
+  },
+  "requestListStatusCancelled": "ANNULÉE",
+  "@requestListStatusCancelled": {
+    "description": "Badge de statut, tout en majuscules (my_package_requests_screen.dart)"
+  },
+  "requestListTimeJustNow": "à l'instant",
+  "@requestListTimeJustNow": {
+    "description": "Horodatage relatif d'une carte de la liste (my_package_requests_screen.dart)"
+  },
+  "requestListTimeMinutesAgo": "il y a {minutes} min",
+  "@requestListTimeMinutesAgo": {
+    "description": "Horodatage relatif d'une carte de la liste (my_package_requests_screen.dart)",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "requestListTimeHoursAgo": "il y a {hours}h",
+  "@requestListTimeHoursAgo": {
+    "description": "Horodatage relatif d'une carte de la liste (my_package_requests_screen.dart)",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "requestListTimeDaysAgo": "il y a {days}j",
+  "@requestListTimeDaysAgo": {
+    "description": "Horodatage relatif d'une carte de la liste (my_package_requests_screen.dart)",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "requestEnvoyerHubTitle": "Envoyer",
+  "@requestEnvoyerHubTitle": {
+    "description": "Titre du hub « Envoyer » (envoyer_hub_screen.dart)"
+  },
+  "requestEnvoyerHubNewButton": "+ Nouveau",
+  "@requestEnvoyerHubNewButton": {
+    "description": "Pill d'action « + Nouveau » du hub « Envoyer » (envoyer_hub_screen.dart)"
+  },
+  "requestDetailViews": "{count, plural, =1{{count} vue} other{{count} vues}}",
+  "@requestDetailViews": {
+    "description": "Compteur de vues affiché dans le méta du billet (request_detail_view.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "requestDetailTravelersWillSee": "{count, plural, =1{{count} voyageur la verra} other{{count} voyageurs la verront}}",
+  "@requestDetailTravelersWillSee": {
+    "description": "Pli replié « N voyageurs la verront » sur un brouillon (request_detail_view.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "requestDetailTravelersOnRouteCount": "{count, plural, =1{{count} voyageur sur ton axe} other{{count} voyageurs sur ton axe}}",
+  "@requestDetailTravelersOnRouteCount": {
+    "description": "Pli replié « N voyageurs sur ton axe » (offres reçues / prix ferme) (request_detail_view.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "requestDetailNotVisibleTitle": "Pas encore visible",
+  "@requestDetailNotVisibleTitle": {
+    "description": "Titre du bandeau brouillon (request_detail_view.dart)"
+  },
+  "requestDetailNotVisibleMessage": "Publie ta demande pour que les voyageurs puissent te proposer un prix.",
+  "@requestDetailNotVisibleMessage": {
+    "description": "Message du bandeau brouillon (request_detail_view.dart)"
+  },
+  "requestDetailCashCommissionTitle": "{name} règle sa commission Yadony",
+  "@requestDetailCashCommissionTitle": {
+    "description": "Titre du bandeau accord en espèces, commission en attente (request_detail_view.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "requestDetailCashCommissionMessage": "Accord en espèces trouvé. Tant que ce n'est pas fait, tu peux encore choisir quelqu'un d'autre.",
+  "@requestDetailCashCommissionMessage": {
+    "description": "Message du bandeau accord en espèces, commission en attente (request_detail_view.dart)"
+  },
+  "requestDetailFinalizeTitle": "Finalise pour réserver sa place",
+  "@requestDetailFinalizeTitle": {
+    "description": "Titre du bandeau à finaliser (request_detail_view.dart)"
+  },
+  "requestDetailFinalizeMessage": "Ton argent reste bloqué chez Yadony jusqu'à la remise du colis.",
+  "@requestDetailFinalizeMessage": {
+    "description": "Message du bandeau à finaliser (request_detail_view.dart)"
+  },
+  "requestDetailExpiredTitle": "Date dépassée sans accord",
+  "@requestDetailExpiredTitle": {
+    "description": "Titre du bandeau expirée (request_detail_view.dart)"
+  },
+  "requestDetailExpiredMessage": "Aucun voyageur n'a été retenu à temps. Tes infos sont gardées, il suffit de choisir de nouvelles dates.",
+  "@requestDetailExpiredMessage": {
+    "description": "Message du bandeau expirée (request_detail_view.dart)"
+  },
+  "requestDetailCancelledTitle": "Tu as annulé cette demande",
+  "@requestDetailCancelledTitle": {
+    "description": "Titre du bandeau annulée (request_detail_view.dart)"
+  },
+  "requestDetailCancelledMessage": "Les voyageurs ne peuvent plus y répondre.",
+  "@requestDetailCancelledMessage": {
+    "description": "Message du bandeau annulée (request_detail_view.dart)"
+  },
+  "requestDetailNoSearchTitle": "Impossible de charger les voyageurs pour le moment",
+  "@requestDetailNoSearchTitle": {
+    "description": "Titre du bandeau : recherche de voyageurs compatibles en échec (request_detail_view.dart)"
+  },
+  "requestDetailNoSearchMessage": "Réessaie plus tard, ou partage directement ta demande en attendant.",
+  "@requestDetailNoSearchMessage": {
+    "description": "Message du bandeau : recherche de voyageurs compatibles en échec (request_detail_view.dart)"
+  },
+  "requestDetailOffersReceivedTitle": "Offres reçues",
+  "@requestDetailOffersReceivedTitle": {
+    "description": "Titre de section : offres reçues (request_detail_view.dart)"
+  },
+  "requestDetailSingleChoiceTitle": "Un seul choix",
+  "@requestDetailSingleChoiceTitle": {
+    "description": "Titre du bandeau prix ferme, un seul candidat retenu (request_detail_view.dart)"
+  },
+  "requestDetailSingleChoiceMessage": "Les autres candidats seront déclinés automatiquement.",
+  "@requestDetailSingleChoiceMessage": {
+    "description": "Message du bandeau prix ferme, un seul candidat retenu (request_detail_view.dart)"
+  },
+  "requestDetailInterestedTravelersTitle": "Voyageurs intéressés",
+  "@requestDetailInterestedTravelersTitle": {
+    "description": "Titre de section : candidats sur un prix ferme (request_detail_view.dart)"
+  },
+  "requestDetailOffersTitle": "Offres",
+  "@requestDetailOffersTitle": {
+    "description": "Titre de section : offres, cas commission en attente (request_detail_view.dart)"
+  },
+  "requestDetailSelectedOfferTitle": "Offre retenue",
+  "@requestDetailSelectedOfferTitle": {
+    "description": "Titre de section : offre à finaliser (request_detail_view.dart)"
+  },
+  "requestDetailTripNotCompletedTitle": "Ce trajet n'a pas abouti",
+  "@requestDetailTripNotCompletedTitle": {
+    "description": "Titre du bandeau : bid accepté mais hors des rails (request_detail_view.dart)"
+  },
+  "requestDetailTripNotCompletedMessage": "Le voyageur n'a pas pu assurer la livraison. Publie une demande similaire pour retrouver quelqu'un.",
+  "@requestDetailTripNotCompletedMessage": {
+    "description": "Message du bandeau : bid accepté mais hors des rails (request_detail_view.dart)"
+  },
+  "requestDetailYourTravelerFallback": "ton voyageur",
+  "@requestDetailYourTravelerFallback": {
+    "description": "Nom de repli du voyageur dans la frise de progression (request_detail_view.dart)"
+  },
+  "requestDetailStubCashPaid": "réglé en main propre",
+  "@requestDetailStubCashPaid": {
+    "description": "Statut du talon voyageur : espèces déjà réglées (request_detail_view.dart)"
+  },
+  "requestDetailStubCashPending": "à régler en main propre à la remise",
+  "@requestDetailStubCashPending": {
+    "description": "Statut du talon voyageur : espèces à régler (request_detail_view.dart)"
+  },
+  "requestDetailStubPaidToTraveler": "versé au voyageur",
+  "@requestDetailStubPaidToTraveler": {
+    "description": "Statut du talon voyageur : paiement carte déjà versé (request_detail_view.dart)"
+  },
+  "requestDetailStubHeldByYadony": "payé, bloqué chez Yadony",
+  "@requestDetailStubHeldByYadony": {
+    "description": "Statut du talon voyageur : paiement carte en séquestre (request_detail_view.dart)"
+  },
+  "requestTravelerFallbackName": "Le voyageur",
+  "@requestTravelerFallbackName": {
+    "description": "Nom de repli du voyageur, en début de phrase (request_offer_card.dart, request_detail_view.dart)"
+  },
+  "requestTravelerAddingTrip": "{name} ajoute son trajet",
+  "@requestTravelerAddingTrip": {
+    "description": "Étiquette d'offre en attente de trajet, partagée avec le bouton principal (request_offer_card.dart, request_detail_bottom_bar.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "requestOfferDealFound": "Accord trouvé",
+  "@requestOfferDealFound": {
+    "description": "Étiquette d'offre : accord trouvé, en attente de paiement (request_offer_card.dart)"
+  },
+  "requestOfferCashDealCommissionPending": "Accord en espèces, commission en attente",
+  "@requestOfferCashDealCommissionPending": {
+    "description": "Étiquette d'offre : accord espèces, commission voyageur en attente (request_offer_card.dart)"
+  },
+  "requestOfferAvailableForParcel": "Disponible pour ton colis",
+  "@requestOfferAvailableForParcel": {
+    "description": "Étiquette d'offre sur un prix ferme (request_offer_card.dart)"
+  },
+  "requestOfferChooseCta": "Choisir",
+  "@requestOfferChooseCta": {
+    "description": "CTA de l'étiquette d'offre sur un prix ferme (request_offer_card.dart)"
+  },
+  "requestOfferYourTurn": "À toi de répondre",
+  "@requestOfferYourTurn": {
+    "description": "Étiquette d'offre : c'est à l'expéditeur de répondre (request_offer_card.dart)"
+  },
+  "requestOfferRespondCta": "Répondre",
+  "@requestOfferRespondCta": {
+    "description": "CTA de l'étiquette d'offre quand c'est à l'expéditeur de répondre (request_offer_card.dart)"
+  },
+  "requestOfferWaitingFor": "En attente de {name}",
+  "@requestOfferWaitingFor": {
+    "description": "Étiquette d'offre de repli : en attente du voyageur (request_offer_card.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "requestOfferYouPayCaption": "tu paies",
+  "@requestOfferYouPayCaption": {
+    "description": "Légende sous le prix brut d'une carte d'offre (request_offer_card.dart)"
+  },
+  "requestAvailableKg": "{weight} kg libres",
+  "@requestAvailableKg": {
+    "description": "Poids encore disponible chez un voyageur (request_offer_card.dart, compatible_traveler_card.dart)",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "requestDetailMenuUnpublishLabel": "Dépublier",
+  "@requestDetailMenuUnpublishLabel": {
+    "description": "Entrée du menu « … » de « Ma demande » (request_owner_menu_sheet.dart)"
+  },
+  "requestDetailMenuUnpublishConsequence": "Redevient un brouillon, invisible des voyageurs",
+  "@requestDetailMenuUnpublishConsequence": {
+    "description": "Conséquence de « Dépublier » dans le menu « … » (request_owner_menu_sheet.dart)"
+  },
+  "requestDetailMenuDuplicateLabel": "Dupliquer la demande",
+  "@requestDetailMenuDuplicateLabel": {
+    "description": "Entrée du menu « … » de « Ma demande » (request_owner_menu_sheet.dart)"
+  },
+  "requestDetailMenuDuplicateConsequence": "Même colis, nouvelles dates ou nouveau trajet",
+  "@requestDetailMenuDuplicateConsequence": {
+    "description": "Conséquence de « Dupliquer la demande » dans le menu « … » (request_owner_menu_sheet.dart)"
+  },
+  "requestDetailMenuCancelLabel": "Annuler la demande",
+  "@requestDetailMenuCancelLabel": {
+    "description": "Entrée du menu « … » de « Ma demande », réutilisée comme confirmLabel du dialogue (request_owner_menu_sheet.dart, package_request_detail_screen.dart)"
+  },
+  "requestDetailMenuCancelConsequence": "Irréversible",
+  "@requestDetailMenuCancelConsequence": {
+    "description": "Conséquence de « Annuler la demande » dans le menu « … » (request_owner_menu_sheet.dart)"
+  },
+  "requestTravelersOnRouteTitle": "Voyageurs sur ton axe",
+  "@requestTravelersOnRouteTitle": {
+    "description": "Titre de la liste des voyageurs compatibles (request_travelers_section.dart)"
+  },
+  "requestNoTravelersTitle": "Aucun voyageur sur {corridor} pour l'instant",
+  "@requestNoTravelersTitle": {
+    "description": "Titre de l'état vide : aucun voyageur compatible (request_travelers_section.dart)",
+    "placeholders": {
+      "corridor": {
+        "type": "String"
+      }
+    }
+  },
+  "requestNoTravelersMessage": "Les trajets arrivent souvent la semaine du départ. On te prévient dès qu'un voyageur publie.",
+  "@requestNoTravelersMessage": {
+    "description": "Message de l'état vide : aucun voyageur compatible (request_travelers_section.dart)"
+  },
+  "requestNoTravelersAlertCta": "Être alerté des nouveaux trajets",
+  "@requestNoTravelersAlertCta": {
+    "description": "Action de l'état vide : créer une alerte (request_travelers_section.dart)"
+  },
+  "requestNoTravelersWidenDatesCta": "Élargir mes dates",
+  "@requestNoTravelersWidenDatesCta": {
+    "description": "Action de l'état vide : élargir la fenêtre de dates (request_travelers_section.dart)"
+  },
+  "requestStatusOffers": "{count, plural, =1{{count} offre} other{{count} offres}}",
+  "@requestStatusOffers": {
+    "description": "Pastille de statut : nombre d'offres reçues (request_status_pill.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "requestStatusCandidates": "{count, plural, =1{{count} candidat} other{{count} candidats}}",
+  "@requestStatusCandidates": {
+    "description": "Pastille de statut : nombre de candidats sur un prix ferme (request_status_pill.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "requestStatusDraft": "Brouillon",
+  "@requestStatusDraft": {
+    "description": "Pastille de statut d'une demande (request_status_pill.dart)"
+  },
+  "requestStatusLive": "En ligne",
+  "@requestStatusLive": {
+    "description": "Pastille de statut d'une demande publiée sans offre (request_status_pill.dart)"
+  },
+  "requestStatusPendingCommission": "En attente",
+  "@requestStatusPendingCommission": {
+    "description": "Pastille de statut : accord espèces, commission en attente (request_status_pill.dart)"
+  },
+  "requestStatusToFinalize": "À finaliser",
+  "@requestStatusToFinalize": {
+    "description": "Pastille de statut : offre à finaliser (request_status_pill.dart)"
+  },
+  "requestStatusConfirmed": "Confirmée",
+  "@requestStatusConfirmed": {
+    "description": "Pastille de statut : demande acceptée (request_status_pill.dart)"
+  },
+  "requestStatusDelivered": "Livrée",
+  "@requestStatusDelivered": {
+    "description": "Pastille de statut : demande livrée (request_status_pill.dart)"
+  },
+  "requestStatusExpired": "Expirée",
+  "@requestStatusExpired": {
+    "description": "Pastille de statut : demande expirée (request_status_pill.dart)"
+  },
+  "requestStatusCancelled": "Annulée",
+  "@requestStatusCancelled": {
+    "description": "Pastille de statut : demande annulée (request_status_pill.dart)"
+  },
+  "requestDetailPublishCta": "Publier",
+  "@requestDetailPublishCta": {
+    "description": "Bouton principal : publier la demande brouillon (request_detail_bottom_bar.dart)"
+  },
+  "requestDetailOpenThreadCta": "Ouvrir la discussion",
+  "@requestDetailOpenThreadCta": {
+    "description": "Bouton principal : ouvrir un fil de négociation (request_detail_bottom_bar.dart)"
+  },
+  "requestDetailPayCta": "Payer",
+  "@requestDetailPayCta": {
+    "description": "Bouton principal : payer, sans montant connu (request_detail_bottom_bar.dart)"
+  },
+  "requestDetailPayCtaWithAmount": "Payer {amount}",
+  "@requestDetailPayCtaWithAmount": {
+    "description": "Bouton principal : payer un montant donné (request_detail_bottom_bar.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "requestDetailTrackParcelCta": "Suivre mon colis",
+  "@requestDetailTrackParcelCta": {
+    "description": "Bouton principal : suivre le colis accepté (request_detail_bottom_bar.dart)"
+  },
+  "requestDetailRateCta": "Noter {name}",
+  "@requestDetailRateCta": {
+    "description": "Bouton principal : noter le voyageur après livraison (request_detail_bottom_bar.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "requestDetailRepublishCta": "Republier avec de nouvelles dates",
+  "@requestDetailRepublishCta": {
+    "description": "Bouton principal : republier une demande expirée (request_detail_bottom_bar.dart)"
+  },
+  "requestDetailPublishSimilarCta": "Publier une demande similaire",
+  "@requestDetailPublishSimilarCta": {
+    "description": "Bouton principal : publier une demande similaire après annulation (request_detail_bottom_bar.dart)"
+  },
+  "requestDetailMessageCta": "Message",
+  "@requestDetailMessageCta": {
+    "description": "Bouton secondaire : ouvrir le message (request_detail_bottom_bar.dart)"
+  },
+  "requestTicketRouteSemantic": "{departure} vers {arrival}, {date}",
+  "@requestTicketRouteSemantic": {
+    "description": "Libellé d'accessibilité du billet (route + date) (request_ticket_card.dart)",
+    "placeholders": {
+      "departure": {
+        "type": "String"
+      },
+      "arrival": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "requestTicketPriceUndefined": "Prix à définir",
+  "@requestTicketPriceUndefined": {
+    "description": "Prix du billet quand aucun montant n'est encore fixé (request_ticket_card.dart)"
+  },
+  "requestTicketNegotiable": "négociable",
+  "@requestTicketNegotiable": {
+    "description": "Légende sous le prix du billet, prix ouvert aux offres (request_ticket_card.dart)"
+  },
+  "requestTicketFixedPrice": "prix ferme",
+  "@requestTicketFixedPrice": {
+    "description": "Légende sous le prix du billet, prix ferme (request_ticket_card.dart)"
+  },
+  "requestTicketViewPhotosSemantic": "Voir les photos du colis",
+  "@requestTicketViewPhotosSemantic": {
+    "description": "Libellé d'accessibilité de la vignette photo du billet (request_ticket_card.dart)"
+  },
+  "requestProgressDealAndPayment": "Accord et paiement",
+  "@requestProgressDealAndPayment": {
+    "description": "Étape 1 de la frise de progression (request_progress_timeline.dart)"
+  },
+  "requestProgressHandoverTo": "Remise du colis à {name}",
+  "@requestProgressHandoverTo": {
+    "description": "Étape 2 de la frise de progression (request_progress_timeline.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "requestProgressInTransit": "En voyage",
+  "@requestProgressInTransit": {
+    "description": "Étape 3 de la frise de progression (request_progress_timeline.dart)"
+  },
+  "requestProgressDeliveryTo": "Livraison à {city}",
+  "@requestProgressDeliveryTo": {
+    "description": "Étape 4 de la frise de progression (request_progress_timeline.dart)",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "requestYourParcelWeight": "ton colis : {weight} kg",
+  "@requestYourParcelWeight": {
+    "description": "Jauge de poids : poids de la demande de l'expéditeur (compatible_traveler_card.dart)",
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "requestTravelerInvited": "Invité",
+  "@requestTravelerInvited": {
+    "description": "État du bouton d'invitation d'un voyageur compatible, déjà invité (compatible_traveler_card.dart)"
+  },
+  "requestTravelerInviteCta": "Inviter",
+  "@requestTravelerInviteCta": {
+    "description": "Bouton d'invitation d'un voyageur compatible (compatible_traveler_card.dart)"
+  },
+  "requestDetailLoadingSemantic": "Chargement de ta demande",
+  "@requestDetailLoadingSemantic": {
+    "description": "Libellé d'accessibilité du squelette de chargement (request_detail_skeleton.dart)"
+  },
+  "requestToleranceDays": "±{days}j",
+  "@requestToleranceDays": {
+    "description": "Tolérance compacte en jours, format ±Nj, réutilisée par package_request_public_detail_screen.dart, package_request_list_card.dart, package_request_search_screen.dart et package_request_carousel_card.dart",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "requestReviewCount": "{count, plural, =1{{count} avis} other{{count} avis}}",
+  "@requestReviewCount": {
+    "description": "Nombre d'avis reçus affiché près de la note (package_request_list_card.dart, sender_public_profile_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "requestPublicTitle": "Demande d'envoi",
+  "@requestPublicTitle": {
+    "description": "Identité « demande d'envoi » — titre d'écran et micro-label des cartes (package_request_public_detail_screen.dart, package_request_list_card.dart)"
+  },
+  "requestDescriptionLabel": "Description",
+  "@requestDescriptionLabel": {
+    "description": "Libellé générique « Description » (package_request_public_detail_screen.dart, package_request_preview_sheet.dart)"
+  },
+  "requestPublicReportTooltip": "Signaler",
+  "@requestPublicReportTooltip": {
+    "description": "Tooltip du bouton de signalement (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicReportSheetTitle": "Signaler la demande",
+  "@requestPublicReportSheetTitle": {
+    "description": "Titre de la feuille de signalement (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicReportReasonProhibited": "Contenu interdit",
+  "@requestPublicReportReasonProhibited": {
+    "description": "Motif de signalement (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicReportReasonScam": "Arnaque / fraude",
+  "@requestPublicReportReasonScam": {
+    "description": "Motif de signalement (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicReportReasonInappropriate": "Contenu inapproprié",
+  "@requestPublicReportReasonInappropriate": {
+    "description": "Motif de signalement (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicReportReasonOther": "Autre raison",
+  "@requestPublicReportReasonOther": {
+    "description": "Motif de signalement (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicReportSuccess": "Demande signalée. Merci.",
+  "@requestPublicReportSuccess": {
+    "description": "Snackbar de succès du signalement (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicReportError": "Impossible de signaler pour le moment",
+  "@requestPublicReportError": {
+    "description": "Snackbar d'échec du signalement (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicBadge": "DEMANDE D'ENVOI",
+  "@requestPublicBadge": {
+    "description": "Micro-label majuscule du corridor (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicFirmPriceBadge": "PRIX FERME",
+  "@requestPublicFirmPriceBadge": {
+    "description": "Badge majuscule affiché quand la demande n'est pas négociable (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicDesiredDate": "le {date} ({tolerance})",
+  "@requestPublicDesiredDate": {
+    "description": "Date souhaitée + tolérance compacte entre parenthèses (package_request_public_detail_screen.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "tolerance": {
+        "type": "String"
+      }
+    }
+  },
+  "requestPublicParcelHintBag": "Sac",
+  "@requestPublicParcelHintBag": {
+    "description": "Indice de taille de colis « petit » (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicParcelHintBox": "Carton",
+  "@requestPublicParcelHintBox": {
+    "description": "Indice de taille de colis « moyen » (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicParcelHintSuitcase": "Valise",
+  "@requestPublicParcelHintSuitcase": {
+    "description": "Indice de taille de colis « grand » (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicCategoriesLabel": "CATÉGORIES",
+  "@requestPublicCategoriesLabel": {
+    "description": "Titre de la section catégories (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicBudget": "Budget",
+  "@requestPublicBudget": {
+    "description": "Titre de la carte budget et libellé quand la demande est négociable (package_request_public_detail_screen.dart) ; réutilisé pour le titre de l'étape 3 et la ligne budget de la décomposition (step_3_recap_budget.dart)"
+  },
+  "requestPublicZonesLabel": "Zones",
+  "@requestPublicZonesLabel": {
+    "description": "Titre de la carte pickup/livraison (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicPickupLabel": "Pickup",
+  "@requestPublicPickupLabel": {
+    "description": "Libellé de la zone de pickup, déjà en anglais côté français (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicDeliveryLabel": "Livraison",
+  "@requestPublicDeliveryLabel": {
+    "description": "Libellé de la zone de livraison (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicPaymentTitle": "Mode de paiement souhaité",
+  "@requestPublicPaymentTitle": {
+    "description": "Titre de la carte moyens de paiement (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicPaymentSubtitle": "Accepté par l'expéditeur",
+  "@requestPublicPaymentSubtitle": {
+    "description": "Sous-titre de la carte moyens de paiement (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicProposeTripCta": "Proposer mon trajet",
+  "@requestPublicProposeTripCta": {
+    "description": "CTA voyageur sur une demande négociable (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicViewNegotiationCta": "Voir ma négociation",
+  "@requestPublicViewNegotiationCta": {
+    "description": "CTA quand le voyageur a déjà une offre en cours, négociable (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicViewProposalCta": "Voir ma proposition",
+  "@requestPublicViewProposalCta": {
+    "description": "CTA quand le voyageur a déjà une offre en cours, prix ferme (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicTakePackageCta": "Prendre ce colis",
+  "@requestPublicTakePackageCta": {
+    "description": "CTA prix ferme sans montant connu (package_request_public_detail_screen.dart)"
+  },
+  "requestPublicTakeAt": "Prendre à {price} · Prix ferme",
+  "@requestPublicTakeAt": {
+    "description": "CTA prix ferme avec montant connu (package_request_public_detail_screen.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "requestPublicOfferConfirmed": "Offre confirmée",
+  "@requestPublicOfferConfirmed": {
+    "description": "Snackbar de succès après prise d'un prix ferme (package_request_public_detail_screen.dart)"
+  },
+  "requestSearchTitle": "Demandes ouvertes",
+  "@requestSearchTitle": {
+    "description": "Titre de l'écran de recherche publique des demandes (package_request_search_screen.dart)"
+  },
+  "requestSearchEmptyMessage": "Aucune demande ne correspond à votre filtre",
+  "@requestSearchEmptyMessage": {
+    "description": "État vide de la recherche (package_request_search_screen.dart)"
+  },
+  "requestSearchBudgetLine": "Budget: {amount}",
+  "@requestSearchBudgetLine": {
+    "description": "Ligne budget d'une carte de recherche (package_request_search_screen.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "requestListYourTripOn": "Ton trajet du {date}",
+  "@requestListYourTripOn": {
+    "description": "Score de compatibilité « Pour mes trajets » (package_request_list_card.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "requestBudgetFreeLabel": "Budget libre",
+  "@requestBudgetFreeLabel": {
+    "description": "Budget non renseigné (package_request_list_card.dart)"
+  },
+  "requestFavoriteToggleError": "Action impossible, réessaie",
+  "@requestFavoriteToggleError": {
+    "description": "Snackbar d'échec du cœur favori (package_request_list_card.dart)"
+  },
+  "requestSenderShipmentCount": "{count, plural, =1{{count} envoi} other{{count} envois}}",
+  "@requestSenderShipmentCount": {
+    "description": "Nombre d'envois de l'expéditeur (package_request_list_card.dart, MatchingRequestCard)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "requestMatchingBudgetPerKg": "Budget {amount}/kg",
+  "@requestMatchingBudgetPerKg": {
+    "description": "Budget par kg d'une carte de matching (package_request_list_card.dart, MatchingRequestCard)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "requestPreviewTitle": "Aperçu de votre demande",
+  "@requestPreviewTitle": {
+    "description": "Titre de la sheet d'aperçu étape 3 (package_request_preview_sheet.dart)"
+  },
+  "requestPreviewPublishCta": "Publier ma demande",
+  "@requestPreviewPublishCta": {
+    "description": "Bouton de publication immédiate (package_request_preview_sheet.dart)"
+  },
+  "requestPreviewSaveDraftCta": "Enregistrer en brouillon",
+  "@requestPreviewSaveDraftCta": {
+    "description": "Bouton d'enregistrement en brouillon (package_request_preview_sheet.dart)"
+  },
+  "requestPreviewPhotos": "{count, plural, =1{{count} photo} other{{count} photos}}",
+  "@requestPreviewPhotos": {
+    "description": "Nombre de photos affiché dans l'aperçu (package_request_preview_sheet.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "requestPreviewDropoffLabel": "Remise",
+  "@requestPreviewDropoffLabel": {
+    "description": "Libellé de la ligne lieu de remise (package_request_preview_sheet.dart)"
+  },
+  "requestPreviewPaymentLabel": "Paiement",
+  "@requestPreviewPaymentLabel": {
+    "description": "Libellé de la ligne moyens de paiement (package_request_preview_sheet.dart)"
+  },
+  "requestPreviewOpenToOffers": "Ouvert aux offres",
+  "@requestPreviewOpenToOffers": {
+    "description": "Prix indicatif non renseigné, négociable (package_request_preview_sheet.dart)"
+  },
+  "requestPreviewBudgetIndicative": "Budget indicatif : {amount}",
+  "@requestPreviewBudgetIndicative": {
+    "description": "Prix indicatif renseigné, négociable (package_request_preview_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "requestPreviewFixedPrice": "Prix ferme : {amount}",
+  "@requestPreviewFixedPrice": {
+    "description": "Prix ferme renseigné (package_request_preview_sheet.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "requestCarouselSeeAll": "{count, plural, =1{Voir la demande} other{Voir les {count} demandes}}",
+  "@requestCarouselSeeAll": {
+    "description": "Bouton « voir tout » du carousel near-me (near_me_package_request_carousel.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "requestCarouselEmptyTitle": "Aucune demande à proximité",
+  "@requestCarouselEmptyTitle": {
+    "description": "État vide du carousel near-me (near_me_package_request_carousel.dart)"
+  },
+  "requestCarouselWidenZoneCta": "Élargir la zone",
+  "@requestCarouselWidenZoneCta": {
+    "description": "CTA de l'état vide du carousel near-me (near_me_package_request_carousel.dart)"
+  },
+  "requestStatusChipOpen": "Ouverte",
+  "@requestStatusChipOpen": {
+    "description": "Chip statut OPEN (package_status_chip.dart)"
+  },
+  "requestStatusChipNegotiating": "En négociation",
+  "@requestStatusChipNegotiating": {
+    "description": "Chip statut NEGOTIATING (package_status_chip.dart)"
+  },
+  "requestStatusChipAccepted": "Acceptée",
+  "@requestStatusChipAccepted": {
+    "description": "Chip statut ACCEPTED (package_status_chip.dart)"
+  },
+  "requestSenderProfileTitle": "Profil expéditeur",
+  "@requestSenderProfileTitle": {
+    "description": "Titre de la sheet profil expéditeur (sender_public_profile_sheet.dart)"
+  },
+  "requestSenderMoreOptionsTooltip": "Plus d'options",
+  "@requestSenderMoreOptionsTooltip": {
+    "description": "Tooltip du bouton … (sender_public_profile_sheet.dart)"
+  },
+  "requestSenderVerifiedIdentity": "Identité vérifiée",
+  "@requestSenderVerifiedIdentity": {
+    "description": "Badge KYC vérifié (sender_public_profile_sheet.dart)"
+  },
+  "requestSenderNewMember": "Nouveau membre",
+  "@requestSenderNewMember": {
+    "description": "Repli quand l'expéditeur n'a aucun avis (sender_public_profile_sheet.dart)"
+  },
+  "requestPickerModifyTripCta": "Modifier le trajet",
+  "@requestPickerModifyTripCta": {
+    "description": "Bouton de modification d'un trajet proposé (traveler/trip_tile.dart)"
+  },
+  "requestPickerPriceUnavailable": "Indisponible",
+  "@requestPickerPriceUnavailable": {
+    "description": "Prix au kg indisponible (traveler/trip_tile.dart)"
+  },
+  "requestPickerCashEnabled": "Liquide activé",
+  "@requestPickerCashEnabled": {
+    "description": "Chip espèces activées (traveler/trip_tile.dart)"
+  },
+  "requestPickerCashDisabled": "Liquide désactivé",
+  "@requestPickerCashDisabled": {
+    "description": "Chip espèces désactivées (traveler/trip_tile.dart)"
+  },
+  "requestPickerKgAvailable": "{kg} kg dispo",
+  "@requestPickerKgAvailable": {
+    "description": "Capacité disponible d'un trajet non Kg libre (traveler/trip_tile.dart)",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "requestPickerLoadErrorMessage": "Impossible de charger tes trajets",
+  "@requestPickerLoadErrorMessage": {
+    "description": "Erreur de chargement des trajets du voyageur (trip_picker_section.dart)"
+  },
+  "requestPickerNoMatchTitle": "Aucun de tes trajets ne correspond",
+  "@requestPickerNoMatchTitle": {
+    "description": "Titre quand aucun trajet ne correspond (trip_picker_section.dart)"
+  },
+  "requestPickerMatchingTitle": "Tes trajets compatibles",
+  "@requestPickerMatchingTitle": {
+    "description": "Titre quand au moins un trajet correspond (trip_picker_section.dart)"
+  },
+  "requestPickerEmptyCreateHint": "Crée un trajet correspondant à cette demande",
+  "@requestPickerEmptyCreateHint": {
+    "description": "Message de l'état vide invitant à créer un trajet (trip_picker_section.dart)"
+  },
+  "requestPickerCreateTripCta": "Créer un nouveau trajet",
+  "@requestPickerCreateTripCta": {
+    "description": "Bouton de création d'un nouveau trajet dédié (trip_picker_section.dart)"
+  },
+  "requestCarouselCardPriceFree": "Libre",
+  "@requestCarouselCardPriceFree": {
+    "description": "Prix non renseigné sur la carte carousel (package_request_carousel_card.dart)"
+  },
+  "requestPreviewPhotosLabel": "Photos",
+  "@requestPreviewPhotosLabel": {
+    "description": "Libellé de la ligne nombre de photos dans l'aperçu (package_request_preview_sheet.dart)"
+  },
+  "requestCreateRecapTransport": "Transport",
+  "@requestCreateRecapTransport": {
+    "description": "Libellé de la ligne transport de la carte récapitulative de l'étape 3 (wizard_summary_card.dart)"
+  },
+  "requestCreateRecapPackage": "Colis",
+  "@requestCreateRecapPackage": {
+    "description": "Libellé de la ligne colis (poids) de la carte récapitulative de l'étape 3 (wizard_summary_card.dart)"
   }
 }

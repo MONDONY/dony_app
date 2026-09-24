@@ -4,6 +4,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -13,7 +15,7 @@ void showSenderPublicProfileSheet(
 ) {
   DonyBottomSheet.show<void>(
     context,
-    title: 'Profil expéditeur',
+    title: context.l10n.requestSenderProfileTitle,
     child: _SenderPublicProfileContent(sender: sender),
   );
 }
@@ -37,8 +39,13 @@ class _SenderPublicProfileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final rawName = sender.displayName;
+    final name = (rawName == null || rawName.isEmpty)
+        ? senderFallbackName(l)
+        : rawName;
 
     // `SenderPublicProfile.guest` ne porte pas d'identifiant : sans cible, pas
     // de blocage possible. Et on ne se bloque pas soi-même.
@@ -58,24 +65,24 @@ class _SenderPublicProfileContent extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: IconButton(
-                tooltip: 'Plus d\'options',
+                tooltip: l.requestSenderMoreOptionsTooltip,
                 icon: DonyIcon('ellipsis', color: cs.onSurfaceVariant),
                 onPressed: () => showBlockMenu(
                   context,
                   userId: sender.id,
-                  displayName: sender.displayName,
+                  displayName: name,
                 ),
               ),
             ),
           DonyAvatar(
-            name: sender.displayName,
+            name: name,
             imageUrl: sender.avatarUrl,
             size: DonyAvatarSize.xl,
             verified: sender.kycVerified,
           ),
           const SizedBox(height: DonySpacing.md),
           Text(
-            sender.displayName,
+            name,
             style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
@@ -87,7 +94,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
                 DonyIcon('badge-check', color: cs.primary, size: 16),
                 const SizedBox(width: 4),
                 Text(
-                  'Identité vérifiée',
+                  l.requestSenderVerifiedIdentity,
                   style: tt.bodySmall?.copyWith(
                     color: cs.primary,
                     fontWeight: FontWeight.w600,
@@ -121,7 +128,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
                       ),
                       const SizedBox(width: DonySpacing.sm),
                       Text(
-                        '· ${sender.totalRatings} avis',
+                        '· ${reviewCountLabel(l, sender.totalRatings)}',
                         style: tt.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -134,7 +141,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
                       DonyIcon('user', color: cs.onSurfaceVariant, size: 18),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
-                        'Nouveau membre',
+                        l.requestSenderNewMember,
                         style: tt.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),

@@ -5,9 +5,11 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -39,7 +41,7 @@ class _MyPackageRequestsScreenState extends State<MyPackageRequestsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: const DonyAppBar(title: 'Mes demandes'),
+      appBar: DonyAppBar(title: context.l10n.requestListTitle),
       body: const MyPackageRequestsBody(showFab: true),
     );
   }
@@ -107,148 +109,153 @@ class _ListContentState extends State<_ListContent> {
     final body = BlocProvider.value(
       value: _filterCubit,
       child: BlocBuilder<RequestFilterCubit, RequestFilterState>(
-        builder: (context, filter) => BlocBuilder<PackageRequestBloc, PackageRequestState>(
-          builder: (context, state) {
-            if (state.status == PackageRequestListStatus.loading) {
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.lg,
-                  DonySpacing.lg,
-                  DonySpacing.lg,
-                  DonySpacing.huge,
-                ),
-                itemCount: 4,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(height: DonySpacing.md),
-                itemBuilder: (_, _) => const DonyTicketCardSkeleton(),
-              );
-            }
-            if (state.status == PackageRequestListStatus.error) {
-              return _ErrorView(
-                message: state.errorMessage ?? 'Erreur',
-                onRetry: () => context.read<PackageRequestBloc>().add(
-                  const FetchMyRequests(),
-                ),
-              );
-            }
-            // Demandes = uniquement celles « en recherche » (ouvertes / en négo
-            // / terminées). Les demandes payées (accepted/completed) vivent dans
-            // l'onglet Envois.
-            final visible = state.requests.where(isSearchRequest).toList();
-            if (visible.isEmpty) {
-              return DonyEmptyState(
-                title: 'Tu n\'as encore rien envoyé',
-                description:
-                    'Publie ta première demande et reçois des offres de voyageurs en quelques heures.',
-                mascotte: DonyMascotteType.assis,
-                actionLabel: '+ Publier ma première demande',
-                onAction: () async {
-                  await PackageRequestCreateWizard.show(context);
-                  if (context.mounted) {
-                    context.read<PackageRequestBloc>().add(
-                      const RefreshMyRequests(),
-                    );
-                  }
-                },
-              );
-            }
-
-            final openCount = visible
-                .where(
-                  (r) =>
-                      r.status == PackageRequestStatus.open ||
-                      r.status == PackageRequestStatus.negotiating,
-                )
-                .length;
-            final negotiatingCount = visible
-                .where((r) => r.status == PackageRequestStatus.negotiating)
-                .length;
-            final closedCount = visible
-                .where(
-                  (r) =>
-                      r.status == PackageRequestStatus.expired ||
-                      r.status == PackageRequestStatus.cancelled,
-                )
-                .length;
-            final draftCount = visible
-                .where((r) => r.status == PackageRequestStatus.draft)
-                .length;
-            final filtered = applyRequestFilters(state.requests, filter)
-              ..sort(
-                (a, b) => _statusPriority(
-                  a.status,
-                ).compareTo(_statusPriority(b.status)),
-              );
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.lg,
-                    DonySpacing.sm,
-                    DonySpacing.lg,
-                    0,
-                  ),
-                  child: DonySearchField(
-                    hint: 'Ville, catégorie…',
-                    controller: _searchController,
-                    onChanged: _onQuery,
-                    onClear: () {
-                      _searchController.clear();
-                      context.read<RequestFilterCubit>().setQuery('');
+        builder: (context, filter) =>
+            BlocBuilder<PackageRequestBloc, PackageRequestState>(
+              builder: (context, state) {
+                if (state.status == PackageRequestListStatus.loading) {
+                  return ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.lg,
+                      DonySpacing.lg,
+                      DonySpacing.lg,
+                      DonySpacing.huge,
+                    ),
+                    itemCount: 4,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: DonySpacing.md),
+                    itemBuilder: (_, _) => const DonyTicketCardSkeleton(),
+                  );
+                }
+                if (state.status == PackageRequestListStatus.error) {
+                  return _ErrorView(
+                    message:
+                        state.errorMessage ??
+                        context.l10n.requestListErrorFallback,
+                    onRetry: () => context.read<PackageRequestBloc>().add(
+                      const FetchMyRequests(),
+                    ),
+                  );
+                }
+                // Demandes = uniquement celles « en recherche » (ouvertes / en négo
+                // / terminées). Les demandes payées (accepted/completed) vivent dans
+                // l'onglet Envois.
+                final visible = state.requests.where(isSearchRequest).toList();
+                if (visible.isEmpty) {
+                  return DonyEmptyState(
+                    title: context.l10n.requestListEmptyTitle,
+                    description: context.l10n.requestListEmptyDescription,
+                    mascotte: DonyMascotteType.assis,
+                    actionLabel: context.l10n.requestListEmptyCta,
+                    onAction: () async {
+                      await PackageRequestCreateWizard.show(context);
+                      if (context.mounted) {
+                        context.read<PackageRequestBloc>().add(
+                          const RefreshMyRequests(),
+                        );
+                      }
                     },
-                  ),
-                ),
-                _FilterRow(
-                  current: filter.preset,
-                  total: visible.length,
-                  openCount: openCount,
-                  closedCount: closedCount,
-                  negotiatingCount: negotiatingCount,
-                  draftCount: draftCount,
-                  onChanged: (p) =>
-                      context.read<RequestFilterCubit>().setPreset(p),
-                ),
-                Expanded(
-                  child: filtered.isEmpty
-                      ? _FilterEmptyState(
-                          preset: filter.preset,
-                          hasQuery: filter.query.isNotEmpty,
-                        )
-                      : RefreshIndicator(
-                          color: Theme.of(context).colorScheme.primary,
-                          onRefresh: () async {
-                            context.read<PackageRequestBloc>().add(
-                              const RefreshMyRequests(),
-                            );
-                          },
-                          child: ListView.separated(
-                            padding: EdgeInsets.fromLTRB(
-                              DonySpacing.lg,
-                              DonySpacing.base,
-                              DonySpacing.lg,
-                              MediaQuery.of(context).padding.bottom + 100,
+                  );
+                }
+
+                final openCount = visible
+                    .where(
+                      (r) =>
+                          r.status == PackageRequestStatus.open ||
+                          r.status == PackageRequestStatus.negotiating,
+                    )
+                    .length;
+                final negotiatingCount = visible
+                    .where((r) => r.status == PackageRequestStatus.negotiating)
+                    .length;
+                final closedCount = visible
+                    .where(
+                      (r) =>
+                          r.status == PackageRequestStatus.expired ||
+                          r.status == PackageRequestStatus.cancelled,
+                    )
+                    .length;
+                final draftCount = visible
+                    .where((r) => r.status == PackageRequestStatus.draft)
+                    .length;
+                final filtered = applyRequestFilters(state.requests, filter)
+                  ..sort(
+                    (a, b) => _statusPriority(
+                      a.status,
+                    ).compareTo(_statusPriority(b.status)),
+                  );
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.lg,
+                        DonySpacing.sm,
+                        DonySpacing.lg,
+                        0,
+                      ),
+                      child: DonySearchField(
+                        hint: context.l10n.requestListSearchHint,
+                        controller: _searchController,
+                        onChanged: _onQuery,
+                        onClear: () {
+                          _searchController.clear();
+                          context.read<RequestFilterCubit>().setQuery('');
+                        },
+                      ),
+                    ),
+                    _FilterRow(
+                      current: filter.preset,
+                      total: visible.length,
+                      openCount: openCount,
+                      closedCount: closedCount,
+                      negotiatingCount: negotiatingCount,
+                      draftCount: draftCount,
+                      onChanged: (p) =>
+                          context.read<RequestFilterCubit>().setPreset(p),
+                    ),
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? _FilterEmptyState(
+                              preset: filter.preset,
+                              hasQuery: filter.query.isNotEmpty,
+                            )
+                          : RefreshIndicator(
+                              color: Theme.of(context).colorScheme.primary,
+                              onRefresh: () async {
+                                context.read<PackageRequestBloc>().add(
+                                  const RefreshMyRequests(),
+                                );
+                              },
+                              child: ListView.separated(
+                                padding: EdgeInsets.fromLTRB(
+                                  DonySpacing.lg,
+                                  DonySpacing.base,
+                                  DonySpacing.lg,
+                                  MediaQuery.of(context).padding.bottom + 100,
+                                ),
+                                itemCount: filtered.length,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(height: DonySpacing.sm),
+                                itemBuilder: (context, i) {
+                                  return _RequestCard(request: filtered[i])
+                                      .animate()
+                                      .fadeIn(
+                                        duration: 200.ms,
+                                        delay: (50 * i).ms,
+                                      )
+                                      .slideY(
+                                        begin: 0.03,
+                                        curve: Curves.easeOutCubic,
+                                      );
+                                },
+                              ),
                             ),
-                            itemCount: filtered.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: DonySpacing.sm),
-                            itemBuilder: (context, i) {
-                              return _RequestCard(request: filtered[i])
-                                  .animate()
-                                  .fadeIn(duration: 200.ms, delay: (50 * i).ms)
-                                  .slideY(
-                                    begin: 0.03,
-                                    curve: Curves.easeOutCubic,
-                                  );
-                            },
-                          ),
-                        ),
-                ),
-              ],
-            );
-          },
-        ),
+                    ),
+                  ],
+                );
+              },
+            ),
       ),
     );
 
@@ -268,7 +275,7 @@ class _ListContentState extends State<_ListContent> {
             backgroundColor: Theme.of(context).colorScheme.primary,
             icon: const DonyIcon('plus', color: Colors.white),
             label: Text(
-              'Nouvelle demande',
+              context.l10n.requestListNewFab,
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
@@ -303,6 +310,7 @@ class _FilterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Container(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.base,
@@ -321,7 +329,7 @@ class _FilterRow extends StatelessWidget {
             SizedBox(
               width: 112,
               child: _FilterChip(
-                label: 'Toutes ($total)',
+                label: '${l.requestListFilterAllLabel} ($total)',
                 active: current == RequestQuickFilter.all,
                 onTap: () => onChanged(RequestQuickFilter.all),
               ),
@@ -330,7 +338,7 @@ class _FilterRow extends StatelessWidget {
             SizedBox(
               width: 120,
               child: _FilterChip(
-                label: 'Ouvertes ($openCount)',
+                label: '${l.requestListFilterOpenLabel} ($openCount)',
                 active: current == RequestQuickFilter.open,
                 hasNew:
                     negotiatingCount > 0 && current != RequestQuickFilter.open,
@@ -341,7 +349,7 @@ class _FilterRow extends StatelessWidget {
             SizedBox(
               width: 140,
               child: _FilterChip(
-                label: 'Non abouties ($closedCount)',
+                label: '${l.requestListFilterClosedLabel} ($closedCount)',
                 active: current == RequestQuickFilter.closed,
                 onTap: () => onChanged(RequestQuickFilter.closed),
               ),
@@ -351,7 +359,7 @@ class _FilterRow extends StatelessWidget {
               SizedBox(
                 width: 132,
                 child: _FilterChip(
-                  label: 'Brouillons ($draftCount)',
+                  label: '${l.requestListFilterDraftLabel} ($draftCount)',
                   active: current == RequestQuickFilter.draft,
                   onTap: () => onChanged(RequestQuickFilter.draft),
                 ),
@@ -435,15 +443,16 @@ class _FilterEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final String label;
     if (hasQuery) {
-      label = 'Aucun résultat pour cette recherche';
+      label = l.requestListEmptySearchResult;
     } else {
       label = switch (preset) {
-        RequestQuickFilter.open => 'Aucune demande ouverte',
-        RequestQuickFilter.closed => 'Aucune demande non aboutie',
-        RequestQuickFilter.draft => 'Aucun brouillon',
-        RequestQuickFilter.all => 'Aucune demande',
+        RequestQuickFilter.open => l.requestListEmptyOpen,
+        RequestQuickFilter.closed => l.requestListEmptyClosed,
+        RequestQuickFilter.draft => l.requestListEmptyDraft,
+        RequestQuickFilter.all => l.requestListEmptyAll,
       };
     }
     return Center(
@@ -545,7 +554,7 @@ class _RequestCard extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            _timeAgo(request.createdAt),
+                            _timeAgo(context.l10n, request.createdAt),
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                               fontSize: 11,
@@ -557,7 +566,7 @@ class _RequestCard extends StatelessWidget {
                     const SizedBox(height: DonySpacing.xs),
                     // Row 2 : méta
                     Text(
-                      _buildDetails(request),
+                      _buildDetails(context.l10n, request),
                       style: tt.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                         height: 1.4,
@@ -603,7 +612,7 @@ class _CardAction extends StatelessWidget {
           bloc.add(const RefreshMyRequests());
         },
         child: Text(
-          'Modifier →',
+          context.l10n.requestListEditCta,
           style: tt.labelSmall?.copyWith(
             color: cs.primary,
             fontWeight: FontWeight.w700,
@@ -620,47 +629,48 @@ class _StatusBadge extends StatelessWidget {
   const _StatusBadge({required this.status});
   final PackageRequestStatus status;
 
-  ({Color bg, Color fg, String label}) get _config => switch (status) {
-    PackageRequestStatus.draft => (
-      bg: DonyColors.neutral100,
-      fg: DonyColors.neutral500,
-      label: 'BROUILLON',
-    ),
-    PackageRequestStatus.open => (
-      bg: DonyColors.success50,
-      fg: DonyColors.success500,
-      label: 'OUVERTE',
-    ),
-    PackageRequestStatus.negotiating => (
-      bg: DonyColors.warning50,
-      fg: DonyColors.warning500,
-      label: 'NÉGOCIATION',
-    ),
-    PackageRequestStatus.accepted => (
-      bg: DonyColors.success50,
-      fg: DonyColors.success500,
-      label: 'ACCEPTÉE',
-    ),
-    PackageRequestStatus.completed => (
-      bg: DonyColors.success50,
-      fg: DonyColors.success500,
-      label: 'LIVRÉE',
-    ),
-    PackageRequestStatus.expired => (
-      bg: DonyColors.neutral100,
-      fg: DonyColors.neutral500,
-      label: 'EXPIRÉE',
-    ),
-    PackageRequestStatus.cancelled => (
-      bg: DonyColors.danger50,
-      fg: DonyColors.danger500,
-      label: 'ANNULÉE',
-    ),
-  };
+  ({Color bg, Color fg, String label}) _config(AppLocalizations l) =>
+      switch (status) {
+        PackageRequestStatus.draft => (
+          bg: DonyColors.neutral100,
+          fg: DonyColors.neutral500,
+          label: l.requestListStatusDraft,
+        ),
+        PackageRequestStatus.open => (
+          bg: DonyColors.success50,
+          fg: DonyColors.success500,
+          label: l.requestListStatusOpen,
+        ),
+        PackageRequestStatus.negotiating => (
+          bg: DonyColors.warning50,
+          fg: DonyColors.warning500,
+          label: l.requestListStatusNegotiating,
+        ),
+        PackageRequestStatus.accepted => (
+          bg: DonyColors.success50,
+          fg: DonyColors.success500,
+          label: l.requestListStatusAccepted,
+        ),
+        PackageRequestStatus.completed => (
+          bg: DonyColors.success50,
+          fg: DonyColors.success500,
+          label: l.requestListStatusCompleted,
+        ),
+        PackageRequestStatus.expired => (
+          bg: DonyColors.neutral100,
+          fg: DonyColors.neutral500,
+          label: l.requestListStatusExpired,
+        ),
+        PackageRequestStatus.cancelled => (
+          bg: DonyColors.danger50,
+          fg: DonyColors.danger500,
+          label: l.requestListStatusCancelled,
+        ),
+      };
 
   @override
   Widget build(BuildContext context) {
-    final cfg = _config;
+    final cfg = _config(context.l10n);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.sm,
@@ -723,7 +733,7 @@ class _ErrorView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: DonySpacing.base),
-            DonyButton(label: 'Réessayer', onPressed: onRetry),
+            DonyButton(label: context.l10n.commonRetry, onPressed: onRetry),
           ],
         ),
       ),
@@ -733,20 +743,21 @@ class _ErrorView extends StatelessWidget {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-String _timeAgo(DateTime dt) {
+String _timeAgo(AppLocalizations l, DateTime dt) {
   final diff = DateTime.now().difference(dt);
-  if (diff.inSeconds < 60) return 'à l\'instant';
-  if (diff.inMinutes < 60) return 'il y a ${diff.inMinutes} min';
-  if (diff.inHours < 24) return 'il y a ${diff.inHours}h';
-  return 'il y a ${diff.inDays}j';
+  if (diff.inSeconds < 60) return l.requestListTimeJustNow;
+  if (diff.inMinutes < 60) return l.requestListTimeMinutesAgo(diff.inMinutes);
+  if (diff.inHours < 24) return l.requestListTimeHoursAgo(diff.inHours);
+  return l.requestListTimeDaysAgo(diff.inDays);
 }
 
-String _buildDetails(PackageRequest r) {
-  final date = DateFormat('d MMM', AppL10n.localeName).format(r.desiredDate);
+String _buildDetails(AppLocalizations l, PackageRequest r) {
+  final date = DateFormat.MMMd(l.localeName).format(r.desiredDate);
   final parts = [
-    '$date ±${r.dateToleranceDays}j',
+    '$date ${toleranceCompactLabel(l, r.dateToleranceDays)}',
     '${r.weightKg.toStringAsFixed(0)} kg',
-    if (r.categories.isNotEmpty) _shortCat(r.categories.first),
+    if (r.categories.isNotEmpty)
+      _shortCat(contentCategoryDisplayName(l, r.categories.first)),
     if (r.targetPriceEur != null)
       '≈${formatPriceIn(r.targetPriceEur!, r.currency)}',
   ];

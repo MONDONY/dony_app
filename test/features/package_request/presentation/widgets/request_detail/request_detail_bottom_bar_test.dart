@@ -1,46 +1,58 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/presentation/request_screen_case.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_detail_bottom_bar.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 void main() {
+  final fr = lookupAppLocalizations(AppL10n.fr);
+  final en = lookupAppLocalizations(AppL10n.en);
+
   test('primaryButtonFor', () {
-    expect(primaryButtonFor(RequestPrimaryAction.publish).label, 'Publier');
-    expect(primaryButtonFor(RequestPrimaryAction.share).icon, 'share-2');
+    expect(primaryButtonFor(fr, RequestPrimaryAction.publish).label, 'Publier');
+    expect(primaryButtonFor(fr, RequestPrimaryAction.share).icon, 'share-2');
     expect(
-      primaryButtonFor(RequestPrimaryAction.pay, amount: '28,00 €').label,
+      primaryButtonFor(fr, RequestPrimaryAction.pay, amount: '28,00 €').label,
       'Payer 28,00 €',
     );
     final wait = primaryButtonFor(
+      fr,
       RequestPrimaryAction.waitTrip,
       travelerName: 'Awa K.',
     );
     expect(wait.label, 'Awa K. ajoute son trajet');
     expect(wait.enabled, isFalse);
     expect(
-      primaryButtonFor(RequestPrimaryAction.rate, travelerName: 'Awa K.').label,
+      primaryButtonFor(
+        fr,
+        RequestPrimaryAction.rate,
+        travelerName: 'Awa K.',
+      ).label,
       'Noter Awa K.',
     );
     expect(
-      primaryButtonFor(RequestPrimaryAction.republish).label,
+      primaryButtonFor(fr, RequestPrimaryAction.republish).label,
       'Republier avec de nouvelles dates',
     );
     expect(
-      primaryButtonFor(RequestPrimaryAction.publishSimilar).label,
+      primaryButtonFor(fr, RequestPrimaryAction.publishSimilar).label,
       'Publier une demande similaire',
     );
     expect(
-      primaryButtonFor(RequestPrimaryAction.trackParcel).label,
+      primaryButtonFor(fr, RequestPrimaryAction.trackParcel).label,
       'Suivre mon colis',
     );
     expect(
-      primaryButtonFor(RequestPrimaryAction.openThread).label,
+      primaryButtonFor(fr, RequestPrimaryAction.openThread).label,
       'Ouvrir la discussion',
     );
     for (final a in RequestPrimaryAction.values) {
       expect(
         primaryButtonFor(
+          fr,
           a,
           travelerName: 'A',
           amount: '1 €',
@@ -48,6 +60,22 @@ void main() {
         isFalse,
       );
     }
+  });
+
+  test('primaryButtonFor en anglais', () {
+    expect(primaryButtonFor(en, RequestPrimaryAction.publish).label, 'Post');
+    expect(
+      primaryButtonFor(en, RequestPrimaryAction.pay, amount: '€28.00').label,
+      'Pay €28.00',
+    );
+    expect(
+      primaryButtonFor(en, RequestPrimaryAction.waitTrip).label,
+      'the traveler is adding their trip',
+    );
+    expect(
+      primaryButtonFor(en, RequestPrimaryAction.trackParcel).label,
+      'Track my parcel',
+    );
   });
 
   testWidgets('Modifier + principal ; taps', (tester) async {
@@ -150,4 +178,29 @@ void main() {
       );
     },
   );
+
+  testWidgets('écran traduit en anglais : bouton principal et Modifier', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          bottomNavigationBar: RequestDetailBottomBar(
+            actions: const RequestScreenActions(
+              primary: RequestPrimaryAction.trackParcel,
+              showEdit: true,
+            ),
+            busy: false,
+            onPrimary: () {},
+            onEdit: () {},
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Track my parcel'), findsOneWidget);
+    expect(find.text('Edit'), findsOneWidget);
+    expect(find.text('Suivre mon colis'), findsNothing);
+  });
 }

@@ -17,6 +17,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements PackageRequestRepository {}
@@ -162,6 +163,24 @@ void main() {
       key.currentState!.submit();
       await tester.pump();
       expect(find.text('Entre 0,5 et 32 kg'), findsOneWidget);
+    });
+
+    testWidgets('écran traduit en anglais : titre, poids et plage de poids', (
+      tester,
+    ) async {
+      useEnglish();
+      final key = GlobalKey<Step2DetailsState>();
+      await tester.pumpWidget(wrap(Step2Details(key: key)));
+
+      expect(find.text('Describe your parcel'), findsOneWidget);
+      expect(find.text('Approximate weight'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextFormField).first, '35');
+      key.currentState!.submit();
+      await tester.pump();
+
+      expect(find.text('Between 0.5 and 32 kg'), findsOneWidget);
+      expect(find.text('Entre 0,5 et 32 kg'), findsNothing);
     });
 
     testWidgets('rend le champ Description (optionnel)', (tester) async {

@@ -9,6 +9,7 @@ import 'package:dony/features/matching/presentation/screens/shipment_list_screen
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/presentation/package_request_actions.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -106,7 +107,7 @@ class _EnvoyerHeader extends StatelessWidget {
           if (showBackButton)
             const DonyAppBarBackButton(key: Key('envoyer-back')),
           Text(
-            'Envoyer',
+            context.l10n.requestEnvoyerHubTitle,
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
               color: cs.onSurface,
               height: 1.1,
@@ -117,7 +118,10 @@ class _EnvoyerHeader extends StatelessWidget {
           // se pose à la main, à gauche de la pastille d'action.
           const DonyFeedbackButton(),
           const SizedBox(width: DonySpacing.xs),
-          HeaderPill(label: '+ Nouveau', onTap: onNew),
+          HeaderPill(
+            label: context.l10n.requestEnvoyerHubNewButton,
+            onTap: onNew,
+          ),
         ],
       ),
     );
