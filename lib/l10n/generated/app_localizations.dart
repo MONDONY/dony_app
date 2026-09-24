@@ -10820,6 +10820,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'faible'**
   String get negotiationMakeOfferConfidenceLow;
+
+  /// Libellé de la note moyenne (★) dans les fiches de profil (sender_profile_sheet.dart, traveler_profile_sheet.dart) — correction relecture finale C, remplace listingRowLabelNote qui désignait une note écrite
+  ///
+  /// In fr, this message translates to:
+  /// **'Note'**
+  String get profileSheetRatingLabel;
 }
 
 class _AppLocalizationsDelegate

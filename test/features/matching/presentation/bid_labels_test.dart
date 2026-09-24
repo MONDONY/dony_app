@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
@@ -109,6 +110,56 @@ void main() {
     test('singulier et pluriel en anglais', () {
       expect(senderShipmentsCount(en, 1), '1 shipment');
       expect(senderShipmentsCount(en, 4), '4 shipments');
+    });
+  });
+
+  group('BidFailedDisplay.displayMessage', () {
+    test('serverMessage non vide prime sur la raison', () {
+      final state = BidFailed(
+        serverMessage: 'Carte refusée',
+        reason: BidFailureReason.refused,
+      );
+      expect(state.displayMessage(l), 'Carte refusée');
+      expect(state.displayMessage(en), 'Carte refusée');
+    });
+
+    test('serverMessage composé uniquement d\'espaces est ignoré', () {
+      final state = BidFailed(
+        serverMessage: '   ',
+        reason: BidFailureReason.refused,
+      );
+      expect(state.displayMessage(l), 'Acceptation refusée');
+      expect(state.displayMessage(en), 'Acceptance declined');
+    });
+
+    test('serverMessage vide donne la clé de la raison', () {
+      final state = BidFailed(
+        serverMessage: '',
+        reason: BidFailureReason.confirmFailed,
+      );
+      expect(state.displayMessage(l), 'Confirmation échouée');
+      expect(state.displayMessage(en), 'Confirmation failed');
+    });
+
+    test('serverMessage null : clé confirmFailed', () {
+      final state = BidFailed(reason: BidFailureReason.confirmFailed);
+      expect(state.displayMessage(l), 'Confirmation échouée');
+      expect(state.displayMessage(en), 'Confirmation failed');
+    });
+
+    test('serverMessage null : clé bankAuthInterrupted', () {
+      final state = BidFailed(reason: BidFailureReason.bankAuthInterrupted);
+      expect(state.displayMessage(l), 'Authentification bancaire interrompue');
+      expect(
+        state.displayMessage(en),
+        'Bank authentication was interrupted',
+      );
+    });
+
+    test('serverMessage null : clé refused', () {
+      final state = BidFailed(reason: BidFailureReason.refused);
+      expect(state.displayMessage(l), 'Acceptation refusée');
+      expect(state.displayMessage(en), 'Acceptance declined');
     });
   });
 }

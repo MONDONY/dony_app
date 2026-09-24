@@ -2672,7 +2672,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tripPublishIntroStripeTitle => 'Turn on card payments';
+  String get tripPublishIntroStripeTitle => 'Activate card payments';
 
   @override
   String get tripPublishIntroStripeSubtitle =>
@@ -2766,7 +2766,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Card payment isn\'t available in your country yet. Your trips are posted in cash.';
 
   @override
-  String get tripPublishActivateCardPaymentsCta => 'Turn on card payments';
+  String get tripPublishActivateCardPaymentsCta => 'Activate card payments';
 
   @override
   String get tripPublishCardNotConfiguredSubtitle =>
@@ -4591,7 +4591,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listingDeleteTripCancelledMessage =>
-      'This action is irreversible. The cancelled trip and all related requests will be permanently removed from the platform.';
+      'This action is irreversible. The canceled trip and all related requests will be permanently removed from the platform.';
 
   @override
   String get listingDeleteTripActiveMessage =>
@@ -4657,7 +4657,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingStatusCompleted => 'Completed';
 
   @override
-  String get listingStatusCancelled => 'Cancelled';
+  String get listingStatusCancelled => 'Canceled';
 
   @override
   String listingHandoverUntil(String date) {
@@ -4680,7 +4680,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingFilterCompletedChip => 'Completed';
 
   @override
-  String get listingFilterCancelledChip => 'Cancelled';
+  String get listingFilterCancelledChip => 'Canceled';
 
   @override
   String get listingHeaderTitle => 'My trips';
@@ -4727,7 +4727,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listingEmptyCancelledDesc =>
-      'Your cancelled trips will appear here.';
+      'Your canceled trips will appear here.';
 
   @override
   String get listingEmptyAllDesc => 'No trips match your search.';
@@ -4766,7 +4766,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Cash-only trip. Many senders prefer to pay by card, so enabling this option increases your chances of receiving parcels.';
 
   @override
-  String get listingActivateCardPaymentsButton => 'Enable card payments';
+  String get listingActivateCardPaymentsButton => 'Activate card payments';
 
   @override
   String get listingAcceptedContentTitle => 'What I accept';
@@ -4793,7 +4793,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingBadgeCompleted => '✓ COMPLETED';
 
   @override
-  String get listingBadgeCancelled => '✕ CANCELLED';
+  String get listingBadgeCancelled => '✕ CANCELED';
 
   @override
   String listingReservedKgLabel(String kg) {
@@ -5141,7 +5141,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listingDeleteTripAssociatedRequestsMessage =>
-      'The cancelled trip and all related requests will be permanently removed from the platform.';
+      'The canceled trip and all related requests will be permanently removed from the platform.';
 
   @override
   String get listingDeadlineLabel => 'Deadline';
@@ -5210,7 +5210,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The traveler will review your request.';
 
   @override
-  String get bidCreateSeeMyShipmentButton => 'See my shipment';
+  String get bidCreateSeeMyShipmentButton => 'View my shipment';
 
   @override
   String get bidCreateArticlesSectionLabel => 'ITEMS';
@@ -5238,7 +5238,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidCreateItemsRequiredHint => 'Required: at least 1 item';
 
   @override
-  String get bidCreatePhotosSectionLabel => 'PACKAGE PHOTOS (OPTIONAL)';
+  String get bidCreatePhotosSectionLabel => 'PARCEL PHOTOS (OPTIONAL)';
 
   @override
   String get bidCreateDescriptionSectionLabel =>
@@ -5267,7 +5267,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidCreatePromoSectionLabel => 'PROMO CODE (OPTIONAL)';
 
   @override
-  String get bidCreatePromoCodeHint => 'E.g.: WELCOME10';
+  String get bidCreatePromoCodeHint => 'E.g. WELCOME10';
 
   @override
   String get bidCreatePromoAppliedDefaultLabel => 'Code applied';
@@ -5293,11 +5293,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'If the traveler accepts your price, you\'ll pay this way.';
 
   @override
-  String get bidCreateContentSectionLabel => 'PACKAGE CONTENT';
+  String get bidCreateContentSectionLabel => 'PARCEL CONTENT';
 
   @override
   String get bidCreateContentHintText =>
-      'These suggestions are the contents accepted by the traveler. If your package\'s content isn\'t listed, add it: it\'ll be up to the traveler to decide whether to accept your package or not.';
+      'These suggestions are the contents accepted by the traveler. If your parcel\'s content isn\'t listed, add it: it\'ll be up to the traveler to decide whether to accept your parcel or not.';
 
   @override
   String get bidCreateRefusedByTravelerSectionLabel =>
@@ -5327,10 +5327,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your payment is locked and secured until delivery is confirmed. The traveler has been notified of your request.';
 
   @override
-  String get bidCreateWeightLabel => 'Package weight';
+  String get bidCreateWeightLabel => 'Parcel weight';
 
   @override
-  String get bidCreateWeightLabelOptional => 'Package weight (optional)';
+  String get bidCreateWeightLabelOptional => 'Parcel weight (optional)';
 
   @override
   String get bidCreateFreeKgHint => 'Flexible kg: choose your weight';
@@ -5373,11 +5373,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidCreateCashModeBody =>
-      'You hand the amount to the traveler on the day you give them the package.';
+      'You hand the amount to the traveler on the day you give them the parcel.';
 
   @override
   String get bidCreateRefundAssurance =>
-      'Refunded if the package doesn\'t arrive';
+      'Refunded if the parcel doesn\'t arrive';
 
   @override
   String get bidCreateCashEscrowWarning =>
@@ -5509,7 +5509,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishCashCommissionIntro =>
-      'You\'ll only be able to accept a cash package if the Yadony service fee can be collected ';
+      'You\'ll only be able to accept a cash-paid parcel if the Yadony service fee can be collected ';
 
   @override
   String get tripPublishCashCommissionHighlight => 'from your wallet first';
@@ -5667,7 +5667,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get negotiationThreadPaymentNotConfirmed =>
-      'Payment not confirmed, please try again';
+      'Payment not confirmed, try again';
 
   @override
   String get negotiationThreadPaymentContextLabel =>
@@ -5991,8 +5991,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get negotiationRefusalReasonLabel => 'Reason for refusal (optional)';
 
   @override
-  String get negotiationRefusalReasonHint =>
-      'E.g.: wrong date, trip cancelled…';
+  String get negotiationRefusalReasonHint => 'E.g.: wrong date, trip canceled…';
 
   @override
   String get negotiationLinkedTripSheetTitle => 'Linked trip';
@@ -6464,4 +6463,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get negotiationMakeOfferConfidenceLow => 'low';
+
+  @override
+  String get profileSheetRatingLabel => 'Rating';
 }

@@ -252,7 +252,7 @@ class _SenderProfileSheet extends StatelessWidget {
                         children: [
                           _SheetStat(
                             value: noteValue,
-                            label: context.l10n.listingRowLabelNote,
+                            label: context.l10n.profileSheetRatingLabel,
                             iconAsset: 'star',
                             iconColor: cs.warning,
                           ),

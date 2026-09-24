@@ -151,6 +151,7 @@ void main() {
 
       expect(find.text('PRO account'), findsOneWidget);
       expect(find.text('Verified identity'), findsOneWidget);
+      expect(find.text('Rating'), findsOneWidget);
       expect(find.text('Trips'), findsOneWidget);
       expect(find.text('Delivery'), findsOneWidget);
     });

@@ -6499,4 +6499,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get negotiationMakeOfferConfidenceLow => 'faible';
+
+  @override
+  String get profileSheetRatingLabel => 'Note';
 }

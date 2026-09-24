@@ -157,7 +157,29 @@ void main() {
     act: (b) => b.add(BidAcceptRequested('bid_x')),
     expect: () => [
       isA<BidAccepting>(),
-      predicate<BidFailed>((s) => s.reason == BidFailureReason.refused),
+      predicate<BidFailed>(
+        (s) => s.reason == BidFailureReason.refused && s.serverMessage == null,
+      ),
+    ],
+  );
+
+  blocTest<BidAcceptanceBloc, BidAcceptanceState>(
+    'network error on card path emits BidFailed with no server message',
+    build: () {
+      when(
+        () => repo.acceptBidWithCommission(
+          'bid_x',
+          commissionSource: 'CARD',
+        ),
+      ).thenThrow(Exception('timeout'));
+      return BidAcceptanceBloc(repo, stripe);
+    },
+    act: (b) => b.add(BidAcceptWithCardRequested('bid_x')),
+    expect: () => [
+      isA<BidAccepting>(),
+      predicate<BidFailed>(
+        (s) => s.reason == BidFailureReason.refused && s.serverMessage == null,
+      ),
     ],
   );
 

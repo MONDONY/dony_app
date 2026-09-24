@@ -6374,5 +6374,9 @@
   "negotiationMakeOfferConfidenceLow": "faible",
     "@negotiationMakeOfferConfidenceLow": {
     "description": "Badge de confiance de l'estimation de prix, valeur LOW/repli (make_offer_bottom_sheet.dart, _EstimationBanner) — correction relecture C5"
+  },
+  "profileSheetRatingLabel": "Note",
+    "@profileSheetRatingLabel": {
+    "description": "Libellé de la note moyenne (★) dans les fiches de profil (sender_profile_sheet.dart, traveler_profile_sheet.dart) — correction relecture finale C, remplace listingRowLabelNote qui désignait une note écrite"
   }
 }

@@ -745,7 +745,7 @@
   "tripPublishIntroVerifyPath": "Profile › Verifications",
   "tripPublishIntroVerifyButton": "Verify my identity",
   "tripPublishIntroVerifyHint": "The button becomes “{continueLabel}” once your identity is verified.",
-  "tripPublishIntroStripeTitle": "Turn on card payments",
+  "tripPublishIntroStripeTitle": "Activate card payments",
   "tripPublishIntroStripeSubtitle": "Set up your Stripe account so your senders can pay by card, and get more parcels.",
   "tripPublishPricingModeKg": "By the kilo",
   "tripPublishPricingModeMixed": "Price grid + kilo",
@@ -772,7 +772,7 @@
   "tripPublishNoteToSendersHint": "E.g. I prefer well-packed parcels. Contact me before departure.",
   "tripPublishCashOnlyBannerWithConnect": "Post in cash right now. Connect Stripe to also accept card payments.",
   "tripPublishCashOnlyBannerNoConnect": "Card payment isn't available in your country yet. Your trips are posted in cash.",
-  "tripPublishActivateCardPaymentsCta": "Turn on card payments",
+  "tripPublishActivateCardPaymentsCta": "Activate card payments",
   "tripPublishCardNotConfiguredSubtitle": "Not set up, turn it on to offer secure payment",
   "tripPublishActivatePayoutCta": "Turn on payout",
   "tripPublishMobileMoneyIneligibleSubtitle": "Available for trips in XOF or XAF",
@@ -1268,7 +1268,7 @@
   "requestCreateRecapTransport": "Transport",
   "requestCreateRecapPackage": "Parcel",
   "listingDeleteTripConfirmTitle": "Delete this trip?",
-  "listingDeleteTripCancelledMessage": "This action is irreversible. The cancelled trip and all related requests will be permanently removed from the platform.",
+  "listingDeleteTripCancelledMessage": "This action is irreversible. The canceled trip and all related requests will be permanently removed from the platform.",
   "listingDeleteTripActiveMessage": "This action is irreversible. The trip will no longer be visible to senders.",
   "listingTripDetailTitle": "Trip details",
   "listingTripDeletedMessage": "Trip deleted",
@@ -1289,14 +1289,14 @@
   "listingStatusActive": "Active",
   "listingStatusFull": "Full",
   "listingStatusCompleted": "Completed",
-  "listingStatusCancelled": "Cancelled",
+  "listingStatusCancelled": "Canceled",
   "listingHandoverUntil": "Until {date}",
   "listingSearchDestinationHint": "Search a destination…",
   "listingFilterAllChip": "All",
   "listingFilterDraftsChip": "Drafts",
   "listingFilterActiveChip": "Active",
   "listingFilterCompletedChip": "Completed",
-  "listingFilterCancelledChip": "Cancelled",
+  "listingFilterCancelledChip": "Canceled",
   "listingHeaderTitle": "My trips",
   "listingNewTripPill": "+ New",
   "listingLoadErrorTitle": "We couldn't load your trips",
@@ -1310,7 +1310,7 @@
   "listingEmptyDraftDesc": "Your trips saved without publishing will appear here.",
   "listingEmptyActiveDesc": "Your ongoing and upcoming trips will appear here.",
   "listingEmptyCompletedDesc": "Your past and completed trips will appear here.",
-  "listingEmptyCancelledDesc": "Your cancelled trips will appear here.",
+  "listingEmptyCancelledDesc": "Your canceled trips will appear here.",
   "listingEmptyAllDesc": "No trips match your search.",
   "listingHeroTripLabelCaps": "TRIP",
   "listingCapacityAvailableSuffix": "available",
@@ -1320,7 +1320,7 @@
   "listingPendingParcelsLabel": "pending",
   "listingPaymentsAcceptedTitle": "Accepted payment methods",
   "listingCashOnlyNudgeMessage": "Cash-only trip. Many senders prefer to pay by card, so enabling this option increases your chances of receiving parcels.",
-  "listingActivateCardPaymentsButton": "Enable card payments",
+  "listingActivateCardPaymentsButton": "Activate card payments",
   "listingAcceptedContentTitle": "What I accept",
   "listingRefusedContentTitle": "What I refuse",
   "listingSenderNoteTitle": "Note to senders",
@@ -1329,7 +1329,7 @@
   "listingBadgeFull": "● FULL",
   "listingBadgeInProgress": "● IN PROGRESS",
   "listingBadgeCompleted": "✓ COMPLETED",
-  "listingBadgeCancelled": "✕ CANCELLED",
+  "listingBadgeCancelled": "✕ CANCELED",
   "listingReservedKgLabel": "{kg} kg reserved",
   "listingOpenKgLabel": "{kg} kg open",
   "listingPickupParcelTitleShort": "Parcel drop-off",
@@ -1415,7 +1415,7 @@
   "listingContentContainsTitle": "MY PARCEL CONTAINS",
   "listingDepartureUrgencyTitle": "DEPARTURE URGENCY",
   "listingDepartureUrgencyDesc": "Filter trips by how soon they depart",
-  "listingDeleteTripAssociatedRequestsMessage": "The cancelled trip and all related requests will be permanently removed from the platform.",
+  "listingDeleteTripAssociatedRequestsMessage": "The canceled trip and all related requests will be permanently removed from the platform.",
   "listingDeadlineLabel": "Deadline",
   "listingInstructionsCardTitle": "Traveler's instructions",
   "listingRowLabelDate": "Date",
@@ -1488,7 +1488,7 @@
   "@bidCreateReviewPendingSubtitle": {
     "description": "Sous-titre de repli de l'écran de succès après une offre (create_bid_bottom_sheet.dart)"
   },
-  "bidCreateSeeMyShipmentButton": "See my shipment",
+  "bidCreateSeeMyShipmentButton": "View my shipment",
   "@bidCreateSeeMyShipmentButton": {
     "description": "CTA de l'écran de succès vers le détail de l'envoi (create_bid_bottom_sheet.dart)"
   },
@@ -1522,7 +1522,7 @@
   "@bidCreateItemsRequiredHint": {
     "description": "Rappel qu'au moins un article doit être sélectionné (create_bid_bottom_sheet.dart)"
   },
-  "bidCreatePhotosSectionLabel": "PACKAGE PHOTOS (OPTIONAL)",
+  "bidCreatePhotosSectionLabel": "PARCEL PHOTOS (OPTIONAL)",
   "@bidCreatePhotosSectionLabel": {
     "description": "Titre de la section photos du formulaire d'offre (create_bid_bottom_sheet.dart)"
   },
@@ -1558,7 +1558,7 @@
   "@bidCreatePromoSectionLabel": {
     "description": "Titre de la section code promo du formulaire d'offre (create_bid_bottom_sheet.dart)"
   },
-  "bidCreatePromoCodeHint": "E.g.: WELCOME10",
+  "bidCreatePromoCodeHint": "E.g. WELCOME10",
   "@bidCreatePromoCodeHint": {
     "description": "Exemple affiché dans le champ code promo (create_bid_bottom_sheet.dart)"
   },
@@ -1596,11 +1596,11 @@
   "@bidCreatePaymentMethodHint": {
     "description": "Explication du choix figé du mode de paiement en négociation (create_bid_bottom_sheet.dart)"
   },
-  "bidCreateContentSectionLabel": "PACKAGE CONTENT",
+  "bidCreateContentSectionLabel": "PARCEL CONTENT",
   "@bidCreateContentSectionLabel": {
     "description": "Titre de la section contenu du colis (create_bid_bottom_sheet.dart)"
   },
-  "bidCreateContentHintText": "These suggestions are the contents accepted by the traveler. If your package's content isn't listed, add it: it'll be up to the traveler to decide whether to accept your package or not.",
+  "bidCreateContentHintText": "These suggestions are the contents accepted by the traveler. If your parcel's content isn't listed, add it: it'll be up to the traveler to decide whether to accept your parcel or not.",
   "@bidCreateContentHintText": {
     "description": "Note explicative sous le sélecteur de contenu (create_bid_bottom_sheet.dart)"
   },
@@ -1637,11 +1637,11 @@
   "@bidCreateOfferPaidSubtitle": {
     "description": "Sous-titre de l'écran de succès après un paiement carte (create_bid_bottom_sheet.dart)"
   },
-  "bidCreateWeightLabel": "Package weight",
+  "bidCreateWeightLabel": "Parcel weight",
   "@bidCreateWeightLabel": {
     "description": "Libellé de la section poids, trajet kilo pur (create_bid_bottom_sheet.dart)"
   },
-  "bidCreateWeightLabelOptional": "Package weight (optional)",
+  "bidCreateWeightLabelOptional": "Parcel weight (optional)",
   "@bidCreateWeightLabelOptional": {
     "description": "Libellé de la section poids, trajet mixte grille + kilo (create_bid_bottom_sheet.dart)"
   },
@@ -1693,11 +1693,11 @@
   "@bidCreateMobileMoneyModeBody": {
     "description": "Explication du mode mobile money dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)"
   },
-  "bidCreateCashModeBody": "You hand the amount to the traveler on the day you give them the package.",
+  "bidCreateCashModeBody": "You hand the amount to the traveler on the day you give them the parcel.",
   "@bidCreateCashModeBody": {
     "description": "Explication du mode espèces dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)"
   },
-  "bidCreateRefundAssurance": "Refunded if the package doesn't arrive",
+  "bidCreateRefundAssurance": "Refunded if the parcel doesn't arrive",
   "@bidCreateRefundAssurance": {
     "description": "Rappel de garantie sous le mode carte et mobile money (create_bid_bottom_sheet.dart)"
   },
@@ -1881,7 +1881,7 @@
       }
     }
   },
-  "tripPublishCashCommissionIntro": "You'll only be able to accept a cash package if the Yadony service fee can be collected ",
+  "tripPublishCashCommissionIntro": "You'll only be able to accept a cash-paid parcel if the Yadony service fee can be collected ",
   "@tripPublishCashCommissionIntro": {
     "description": "Premier segment de l'avertissement commission espèces à la publication (cash_commission_notice.dart)"
   },
@@ -2082,7 +2082,7 @@
   "@negotiationThreadCounterMessageHint": {
     "description": "Indice du champ message de la contre-proposition (bid_negotiation_thread_screen.dart)"
   },
-  "negotiationThreadPaymentNotConfirmed": "Payment not confirmed, please try again",
+  "negotiationThreadPaymentNotConfirmed": "Payment not confirmed, try again",
   "@negotiationThreadPaymentNotConfirmed": {
     "description": "Message d'échec d'authentification avant paiement (bid_negotiation_thread_screen.dart)"
   },
@@ -2514,7 +2514,7 @@
     "@negotiationRefusalReasonLabel": {
     "description": "Label du champ de raison du refus (trip_detail_bottom_sheet.dart)"
   },
-  "negotiationRefusalReasonHint": "E.g.: wrong date, trip cancelled…",
+  "negotiationRefusalReasonHint": "E.g.: wrong date, trip canceled…",
     "@negotiationRefusalReasonHint": {
     "description": "Placeholder du champ de raison du refus (trip_detail_bottom_sheet.dart)"
   },
@@ -3142,5 +3142,6 @@
   "negotiationMakeOfferConfidenceLow": "low",
     "@negotiationMakeOfferConfidenceLow": {
     "description": "Badge de confiance de l'estimation de prix, valeur LOW/repli (make_offer_bottom_sheet.dart, _EstimationBanner) — correction relecture C5"
-  }
+  },
+  "profileSheetRatingLabel": "Rating"
 }

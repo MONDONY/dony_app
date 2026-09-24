@@ -18,6 +18,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 class _MockAnnouncementBloc
@@ -253,4 +255,34 @@ void main() {
     expect(find.textContaining('Jusqu\'au'), findsOneWidget);
     expect(find.textContaining('→'), findsNothing);
   });
+
+  // ── en anglais ─────────────────────────────────────────────────────────────
+
+  testWidgets(
+    'en anglais : titre, statut, bouton supprimer et dialogue traduits',
+    (tester) async {
+      useEnglish();
+      final announcement = _makeAnnouncement(
+        handoverDeadline: DateTime(2026, 6, 14, 18),
+      );
+
+      await _pump(
+        tester,
+        announcement: announcement,
+        annBloc: annBloc,
+        cancelBloc: cancelBloc,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Trip details'), findsOneWidget);
+      expect(find.text('Active'), findsOneWidget);
+      expect(find.text('Delete this trip'), findsOneWidget);
+      expect(find.textContaining('Until'), findsOneWidget);
+
+      await tester.tap(find.text('Delete this trip'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Delete this trip?'), findsOneWidget);
+    },
+  );
 }

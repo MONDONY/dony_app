@@ -140,5 +140,6 @@ void main() {
     expect(find.text('📞 Number revealed after acceptance'), findsOneWidget);
     expect(find.text('PRO account'), findsOneWidget);
     expect(find.text('Verified identity'), findsOneWidget);
+    expect(find.text('Rating'), findsOneWidget);
   });
 }

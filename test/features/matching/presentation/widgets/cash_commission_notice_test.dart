@@ -44,7 +44,7 @@ void main() {
 
     expect(
       find.textContaining(
-        "You'll only be able to accept a cash package if the Yadony "
+        "You'll only be able to accept a cash-paid parcel if the Yadony "
         'service fee can be collected ',
         findRichText: true,
       ),
