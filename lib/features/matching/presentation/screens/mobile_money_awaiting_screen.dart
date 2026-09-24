@@ -649,7 +649,8 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
                               title: catalog.providers[i].label,
                               subtitle: catalog.providers[i].detected
                                   ? l.mobileMoneyDetectedForNumber
-                                  : catalog.providers[i].brand == 'WAVE'
+                                  : catalog.providers[i].brand ==
+                                        'WAVE' // i18n-ignore
                                   ? l.mobileMoneyConfirmInWaveApp
                                   : null,
                               control: DonyOperatorControl.radio,

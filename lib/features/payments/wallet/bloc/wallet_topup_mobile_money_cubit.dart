@@ -200,7 +200,7 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
       // session), simplement sortir.
       if (isClosed || generation != _generation) return;
       switch (status.status) {
-        case 'CONFIRMED':
+        case 'CONFIRMED': // i18n-ignore
           stopPolling();
           emit(WalletTopupMobileMoneyConfirmed(status));
           unawaited(
@@ -212,7 +212,7 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
               },
             ),
           );
-        case 'FAILED':
+        case 'FAILED': // i18n-ignore
           stopPolling();
           emit(
             WalletTopupMobileMoneyFailed(
