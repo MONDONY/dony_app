@@ -3,6 +3,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
+import 'package:dony/features/messaging/presentation/chat_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +18,7 @@ class ConversationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final participant = conversation.otherParticipant;
     final unread = conversation.hasUnread;
 
@@ -60,7 +62,7 @@ class ConversationTile extends StatelessWidget {
                           child: Text(
                             participant.name.isNotEmpty
                                 ? participant.name
-                                : 'Utilisateur',
+                                : l.conversationUserFallback,
                             style: tt.titleLarge?.copyWith(
                               fontWeight: unread
                                   ? FontWeight.w800
@@ -74,7 +76,10 @@ class ConversationTile extends StatelessWidget {
                         if (conversation.lastMessageAt != null) ...[
                           const SizedBox(width: DonySpacing.xs),
                           Text(
-                            formatConversationTime(conversation.lastMessageAt!),
+                            formatConversationTime(
+                              l,
+                              conversation.lastMessageAt!,
+                            ),
                             style: tt.labelSmall?.copyWith(
                               color: unread ? cs.primary : cs.onSurfaceVariant,
                               fontWeight: unread
@@ -98,7 +103,7 @@ class ConversationTile extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            _previewText(conversation),
+                            _previewText(l, conversation),
                             style: tt.bodySmall?.copyWith(
                               color: unread
                                   ? cs.onSurface
@@ -131,32 +136,32 @@ class ConversationTile extends StatelessWidget {
   }
 }
 
-String _previewText(ConversationModel c) {
+String _previewText(AppLocalizations l, ConversationModel c) {
   final preview = c.lastMessagePreview;
   if (preview == null || preview.isEmpty) {
-    return 'Conversation démarrée';
+    return l.conversationStartedFallback;
   }
-  return preview;
+  return chatPreviewLabel(l, preview);
 }
 
-String formatConversationTime(DateTime dt) {
+String formatConversationTime(AppLocalizations l, DateTime dt) {
   final local = dt.isUtc ? dt.toLocal() : dt;
   final now = DateTime.now();
   final diff = now.difference(local);
   if (diff.inMinutes < 1) {
-    return 'maintenant';
+    return l.conversationTimeJustNow;
   }
   final isToday =
       now.year == local.year &&
       now.month == local.month &&
       now.day == local.day;
   if (isToday) {
-    return DateFormat('HH:mm').format(local);
+    return DateFormat.jm(l.localeName).format(local);
   }
   if (diff.inDays < 7) {
-    return DateFormat('EEE', AppL10n.localeName).format(local);
+    return DateFormat.E(l.localeName).format(local);
   }
-  return DateFormat('d MMM', AppL10n.localeName).format(local);
+  return DateFormat.MMMd(l.localeName).format(local);
 }
 
 class _TripLabel extends StatelessWidget {

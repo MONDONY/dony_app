@@ -14,10 +14,9 @@ void main() {
       expect(r, isA<ChatValidationOk>());
       expect((r as ChatValidationOk).text, 'Bonjour Kadi');
     });
-    test('vide → blocked empty (message vide)', () {
+    test('vide → blocked empty', () {
       final r = v.validate('   ', now: now);
       expect(blockReason(r), 'empty');
-      expect((r as ChatValidationBlocked).message, '');
     });
     test('500 caractères → ok ; 501 → length', () {
       expect(v.validate('a' * 500, now: now), isA<ChatValidationOk>());

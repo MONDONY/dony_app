@@ -5,6 +5,7 @@ import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/chat_screen.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -63,6 +64,7 @@ class _ConversationLoaderScreenState extends State<ConversationLoaderScreen> {
         }
 
         if (snapshot.hasError) {
+          final l = context.l10n;
           return Scaffold(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             appBar: AppBar(
@@ -74,9 +76,9 @@ class _ConversationLoaderScreenState extends State<ConversationLoaderScreen> {
               mascotte: DonyMascotteType.erreurLegere,
               type: DonyEmptyStateType.error,
               iconAsset: 'wifi-off',
-              title: 'Conversation introuvable',
-              description: 'Impossible de charger cette conversation.',
-              actionLabel: 'Réessayer',
+              title: l.conversationLoaderNotFoundTitle,
+              description: l.conversationLoaderNotFoundDescription,
+              actionLabel: l.commonRetry,
               onAction: _retry,
             ),
           );

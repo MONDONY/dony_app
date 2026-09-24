@@ -1,6 +1,7 @@
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 
 void main() {
   group('MessageModel.fromFirestore', () {
@@ -192,6 +193,40 @@ void main() {
       );
       final same = c.copyWith();
       expect(same.hasUnread, true);
+    });
+
+    // Régression F1 : 'd MMM' fixe → DateFormat.MMMd(AppL10n.localeName).
+    // Modèle sans BuildContext : la langue vient de Intl.defaultLocale.
+    test(
+      'tripLabel formate la date en français (rendu identique à l\'ancien motif)',
+      () {
+        final c = ConversationModel(
+          id: 'conv-trip',
+          bidId: 'bid-trip',
+          firestoreConversationId: 'conv_bid_trip',
+          otherParticipant: const ParticipantModel(id: 'uid-t', name: 'Trip'),
+          tripOrigin: 'Paris',
+          tripDestination: 'Dakar',
+          tripDate: DateTime(2026, 10, 6, 14, 5),
+          tripWeightKg: 5,
+        );
+        expect(c.tripLabel, 'Paris → Dakar · 6 oct. · 5 kg');
+      },
+    );
+
+    test('tripLabel formate la date en anglais', () {
+      useEnglish();
+      final c = ConversationModel(
+        id: 'conv-trip-en',
+        bidId: 'bid-trip-en',
+        firestoreConversationId: 'conv_bid_trip_en',
+        otherParticipant: const ParticipantModel(id: 'uid-t', name: 'Trip'),
+        tripOrigin: 'Paris',
+        tripDestination: 'Dakar',
+        tripDate: DateTime(2026, 10, 6, 14, 5),
+        tripWeightKg: 5,
+      );
+      expect(c.tripLabel, 'Paris → Dakar · Oct 6 · 5 kg');
     });
   });
 }

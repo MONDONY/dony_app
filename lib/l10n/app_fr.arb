@@ -10393,5 +10393,249 @@
   "walletActiveCurrencyBadge": "active",
   "@walletActiveCurrencyBadge": {
     "description": "Badge de la devise active de l'utilisateur, dans la liste des soldes (wallet_screen.dart _CurrencyBalanceRow). Relevé en E3, corrigé en vague finale E."
+  },
+  "chatPreviewPhoto": "📷 Photo",
+  "@chatPreviewPhoto": {
+    "description": "Affichage traduit du marqueur d'aperçu kChatPreviewPhoto (chat_labels.dart), identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "chatPreviewLocation": "📍 Localisation partagée",
+  "@chatPreviewLocation": {
+    "description": "Affichage traduit du marqueur d'aperçu kChatPreviewLocation (chat_labels.dart)."
+  },
+  "chatBlockedLength": "Message trop long ({max} caractères max).",
+  "@chatBlockedLength": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'length' de ChatMessageValidator.",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "chatBlockedDuplicate": "Tu viens d'envoyer ce message.",
+  "@chatBlockedDuplicate": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'duplicate' de ChatMessageValidator."
+  },
+  "chatBlockedRate": "Tu envoies trop de messages, patiente un instant.",
+  "@chatBlockedRate": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'rate' de ChatMessageValidator."
+  },
+  "chatBlockedContact": "Pour ta sécurité, garde les échanges et le paiement sur Yadony. Le partage de coordonnées est interdit.",
+  "@chatBlockedContact": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'contact' de ChatMessageValidator."
+  },
+  "chatBlockedIban": "Le partage de coordonnées bancaires est interdit.",
+  "@chatBlockedIban": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'banking' de ChatMessageValidator."
+  },
+  "chatBlockedLink": "Les liens externes ne sont pas autorisés dans la messagerie.",
+  "@chatBlockedLink": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'url' de ChatMessageValidator."
+  },
+  "chatBlockedProfanity": "Reste courtois : ce message contient des termes interdits.",
+  "@chatBlockedProfanity": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'profanity' de ChatMessageValidator."
+  },
+  "chatDeleteConversationTitle": "Supprimer la conversation",
+  "@chatDeleteConversationTitle": {
+    "description": "Titre du dialogue de confirmation et libellé du menu ⋯ de chat_screen.dart (même texte aux deux endroits)."
+  },
+  "chatDeleteConversationMessage": "Cette conversation sera définitivement supprimée pour vous et votre interlocuteur. Impossible de la recréer.",
+  "@chatDeleteConversationMessage": {
+    "description": "Contenu du dialogue de confirmation de suppression de chat_screen.dart."
+  },
+  "chatUnknownConversationLabel": "Conversation",
+  "@chatUnknownConversationLabel": {
+    "description": "Repli du titre de l'app bar de chat_screen.dart quand le participant n'a pas de nom, identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "chatCallTooltip": "Appeler",
+  "@chatCallTooltip": {
+    "description": "Tooltip du bouton d'appel de chat_screen.dart."
+  },
+  "chatReportUser": "Signaler {name}",
+  "@chatReportUser": {
+    "description": "Entrée du menu ⋯ de chat_screen.dart pour signaler l'interlocuteur.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBlockUser": "Bloquer {name}",
+  "@chatBlockUser": {
+    "description": "Entrée du menu ⋯ de chat_screen.dart pour bloquer l'interlocuteur.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatConversationDeletedSnackbar": "Conversation supprimée",
+  "@chatConversationDeletedSnackbar": {
+    "description": "Snackbar affichée après ChatConversationDeleted (chat_screen.dart)."
+  },
+  "chatConnectionLostTitle": "Connexion interrompue",
+  "@chatConnectionLostTitle": {
+    "description": "Titre du DonyEmptyState affiché sur ChatError (chat_screen.dart) ; pas d'entrée ErrorCatalog dédiée pour le code chat-stream-error, ce titre est hors catalogue."
+  },
+  "chatEmptyStateTitle": "Démarrez la conversation !",
+  "@chatEmptyStateTitle": {
+    "description": "Texte de l'état vide d'une conversation sans message (chat_screen.dart)."
+  },
+  "chatReadOnlyBannerMessage": "Votre interlocuteur a quitté cette conversation. Vous êtes en lecture seule.",
+  "@chatReadOnlyBannerMessage": {
+    "description": "Bandeau affiché en lecture seule de chat_screen.dart (_ReadOnlyBanner)."
+  },
+  "chatLinkedTripLabel": "Trajet lié",
+  "@chatLinkedTripLabel": {
+    "description": "Sur-titre du bandeau de trajet lié de chat_screen.dart (_TripBanner)."
+  },
+  "chatBidStatusAccepted": "Offre acceptée",
+  "@chatBidStatusAccepted": {
+    "description": "Libellé du bandeau de statut BID_ACCEPTED de chat_screen.dart (_BidStatusBanner)."
+  },
+  "chatBidStatusDeliveryConfirmed": "Livraison confirmée",
+  "@chatBidStatusDeliveryConfirmed": {
+    "description": "Libellé du bandeau de statut DELIVERY_CONFIRMED de chat_screen.dart (_BidStatusBanner)."
+  },
+  "chatBidStatusTripCancelled": "Trajet annulé",
+  "@chatBidStatusTripCancelled": {
+    "description": "Libellé du bandeau de statut TRIP_CANCELLED de chat_screen.dart (_BidStatusBanner)."
+  },
+  "chatMessageDeleted": "Message supprimé",
+  "@chatMessageDeleted": {
+    "description": "Texte d'un message supprimé, dans la bulle système et dans _DeletedContent (chat_screen.dart, même texte aux deux endroits)."
+  },
+  "chatLocationMessageLabel": "Localisation partagée",
+  "@chatLocationMessageLabel": {
+    "description": "Libellé affiché dans la bulle d'un message de localisation (chat_screen.dart _LocationContent)."
+  },
+  "chatSendingDisabled": "Envoi de messages désactivé",
+  "@chatSendingDisabled": {
+    "description": "Barre de saisie désactivée (lecture seule) de chat_screen.dart (_InputBar)."
+  },
+  "chatMessageHint": "Votre message…",
+  "@chatMessageHint": {
+    "description": "Texte indicatif du champ de saisie de chat_screen.dart (_InputBar)."
+  },
+  "chatSendMessageSemantics": "Envoyer le message",
+  "@chatSendMessageSemantics": {
+    "description": "Libellé d'accessibilité du bouton d'envoi de chat_screen.dart (_InputBar)."
+  },
+  "conversationListTitle": "Messages",
+  "@conversationListTitle": {
+    "description": "Titre de l'en-tête de conversation_list_screen.dart, identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "conversationListArchivedTooltip": "Voir les conversations archivées",
+  "@conversationListArchivedTooltip": {
+    "description": "Tooltip du bouton d'accès aux archives de conversation_list_screen.dart."
+  },
+  "conversationListSearchHint": "Rechercher une conversation…",
+  "@conversationListSearchHint": {
+    "description": "Texte indicatif de la barre de recherche de conversation_list_screen.dart."
+  },
+  "conversationListEmptyResultsTitle": "Aucun résultat",
+  "@conversationListEmptyResultsTitle": {
+    "description": "Titre de l'état vide quand la recherche ne trouve rien (conversation_list_screen.dart)."
+  },
+  "conversationListEmptyTitle": "Aucun message",
+  "@conversationListEmptyTitle": {
+    "description": "Titre de l'état vide sans conversation (conversation_list_screen.dart)."
+  },
+  "conversationListEmptySearchDescription": "Aucune conversation ne correspond à « {query} ».",
+  "@conversationListEmptySearchDescription": {
+    "description": "Description de l'état vide de recherche de conversation_list_screen.dart.",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "conversationListEmptyDescription": "Vos conversations apparaîtront ici\naprès l'acceptation d'une offre.",
+  "@conversationListEmptyDescription": {
+    "description": "Description de l'état vide sans conversation de conversation_list_screen.dart (le saut de ligne fait partie de la valeur)."
+  },
+  "conversationFilterAll": "Tous",
+  "@conversationFilterAll": {
+    "description": "Pastille de filtre « Tous » de conversation_list_screen.dart."
+  },
+  "conversationFilterUnread": "Non lus",
+  "@conversationFilterUnread": {
+    "description": "Pastille de filtre « Non lus » de conversation_list_screen.dart."
+  },
+  "conversationFilterActive": "En cours",
+  "@conversationFilterActive": {
+    "description": "Pastille de filtre « En cours » de conversation_list_screen.dart."
+  },
+  "conversationFilterDone": "Terminés",
+  "@conversationFilterDone": {
+    "description": "Pastille de filtre « Terminés » de conversation_list_screen.dart."
+  },
+  "conversationSectionToday": "AUJOURD'HUI",
+  "@conversationSectionToday": {
+    "description": "Titre de section (en majuscules) du regroupement temporel du jour, conversation_list_screen.dart."
+  },
+  "conversationSectionThisWeek": "CETTE SEMAINE",
+  "@conversationSectionThisWeek": {
+    "description": "Titre de section (en majuscules) du regroupement temporel de la semaine, conversation_list_screen.dart."
+  },
+  "conversationSectionOlder": "PLUS ANCIEN",
+  "@conversationSectionOlder": {
+    "description": "Titre de section (en majuscules) du regroupement temporel plus ancien, conversation_list_screen.dart."
+  },
+  "conversationArchiveAction": "Archiver",
+  "@conversationArchiveAction": {
+    "description": "Libellé du SlidableAction d'archivage de conversation_list_screen.dart."
+  },
+  "conversationArchivedSnackbar": "Conversation archivée",
+  "@conversationArchivedSnackbar": {
+    "description": "Snackbar affichée après archivage d'une conversation (conversation_list_screen.dart)."
+  },
+  "conversationDeleteConfirmTitle": "Supprimer la conversation ?",
+  "@conversationDeleteConfirmTitle": {
+    "description": "Titre du dialogue de confirmation de suppression depuis le swipe de conversation_list_screen.dart (_SlidableTile, distinct de chatDeleteConversationTitle : point d'interrogation)."
+  },
+  "conversationDeleteConfirmMessage": "Cette action est irréversible.",
+  "@conversationDeleteConfirmMessage": {
+    "description": "Contenu du dialogue de confirmation de suppression de conversation_list_screen.dart (_SlidableTile)."
+  },
+  "archivedConversationsTitle": "Archives",
+  "@archivedConversationsTitle": {
+    "description": "Titre de archived_conversations_screen.dart, identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "archivedConversationsEmptyTitle": "Aucune archive",
+  "@archivedConversationsEmptyTitle": {
+    "description": "Titre de l'état vide de archived_conversations_screen.dart."
+  },
+  "archivedConversationsEmptyDescription": "Les conversations que vous archivez apparaîtront ici.",
+  "@archivedConversationsEmptyDescription": {
+    "description": "Description de l'état vide de archived_conversations_screen.dart."
+  },
+  "conversationUnarchivedSnackbar": "Conversation désarchivée",
+  "@conversationUnarchivedSnackbar": {
+    "description": "Snackbar affichée après désarchivage d'une conversation (archived_conversations_screen.dart)."
+  },
+  "conversationUnarchiveAction": "Désarchiver",
+  "@conversationUnarchiveAction": {
+    "description": "Libellé du SlidableAction de désarchivage de archived_conversations_screen.dart."
+  },
+  "conversationLoaderNotFoundTitle": "Conversation introuvable",
+  "@conversationLoaderNotFoundTitle": {
+    "description": "Titre de l'état d'erreur de conversation_loader_screen.dart."
+  },
+  "conversationLoaderNotFoundDescription": "Impossible de charger cette conversation.",
+  "@conversationLoaderNotFoundDescription": {
+    "description": "Description de l'état d'erreur de conversation_loader_screen.dart."
+  },
+  "conversationUserFallback": "Utilisateur",
+  "@conversationUserFallback": {
+    "description": "Repli du nom du participant dans conversation_tile.dart quand il est vide."
+  },
+  "conversationStartedFallback": "Conversation démarrée",
+  "@conversationStartedFallback": {
+    "description": "Repli de l'aperçu de dernier message dans conversation_tile.dart quand la conversation n'a encore aucun message."
+  },
+  "conversationTimeJustNow": "maintenant",
+  "@conversationTimeJustNow": {
+    "description": "Repli de formatConversationTime (conversation_tile.dart) pour un message envoyé il y a moins d'une minute."
   }
 }

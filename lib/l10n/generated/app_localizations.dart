@@ -15889,6 +15889,342 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'active'**
   String get walletActiveCurrencyBadge;
+
+  /// Affichage traduit du marqueur d'aperçu kChatPreviewPhoto (chat_labels.dart), identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'📷 Photo'**
+  String get chatPreviewPhoto;
+
+  /// Affichage traduit du marqueur d'aperçu kChatPreviewLocation (chat_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'📍 Localisation partagée'**
+  String get chatPreviewLocation;
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'length' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Message trop long ({max} caractères max).'**
+  String chatBlockedLength(int max);
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'duplicate' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu viens d\'envoyer ce message.'**
+  String get chatBlockedDuplicate;
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'rate' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu envoies trop de messages, patiente un instant.'**
+  String get chatBlockedRate;
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'contact' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour ta sécurité, garde les échanges et le paiement sur Yadony. Le partage de coordonnées est interdit.'**
+  String get chatBlockedContact;
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'banking' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le partage de coordonnées bancaires est interdit.'**
+  String get chatBlockedIban;
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'url' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les liens externes ne sont pas autorisés dans la messagerie.'**
+  String get chatBlockedLink;
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'profanity' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reste courtois : ce message contient des termes interdits.'**
+  String get chatBlockedProfanity;
+
+  /// Titre du dialogue de confirmation et libellé du menu ⋯ de chat_screen.dart (même texte aux deux endroits).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la conversation'**
+  String get chatDeleteConversationTitle;
+
+  /// Contenu du dialogue de confirmation de suppression de chat_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette conversation sera définitivement supprimée pour vous et votre interlocuteur. Impossible de la recréer.'**
+  String get chatDeleteConversationMessage;
+
+  /// Repli du titre de l'app bar de chat_screen.dart quand le participant n'a pas de nom, identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation'**
+  String get chatUnknownConversationLabel;
+
+  /// Tooltip du bouton d'appel de chat_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler'**
+  String get chatCallTooltip;
+
+  /// Entrée du menu ⋯ de chat_screen.dart pour signaler l'interlocuteur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler {name}'**
+  String chatReportUser(String name);
+
+  /// Entrée du menu ⋯ de chat_screen.dart pour bloquer l'interlocuteur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloquer {name}'**
+  String chatBlockUser(String name);
+
+  /// Snackbar affichée après ChatConversationDeleted (chat_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation supprimée'**
+  String get chatConversationDeletedSnackbar;
+
+  /// Titre du DonyEmptyState affiché sur ChatError (chat_screen.dart) ; pas d'entrée ErrorCatalog dédiée pour le code chat-stream-error, ce titre est hors catalogue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion interrompue'**
+  String get chatConnectionLostTitle;
+
+  /// Texte de l'état vide d'une conversation sans message (chat_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Démarrez la conversation !'**
+  String get chatEmptyStateTitle;
+
+  /// Bandeau affiché en lecture seule de chat_screen.dart (_ReadOnlyBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre interlocuteur a quitté cette conversation. Vous êtes en lecture seule.'**
+  String get chatReadOnlyBannerMessage;
+
+  /// Sur-titre du bandeau de trajet lié de chat_screen.dart (_TripBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet lié'**
+  String get chatLinkedTripLabel;
+
+  /// Libellé du bandeau de statut BID_ACCEPTED de chat_screen.dart (_BidStatusBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre acceptée'**
+  String get chatBidStatusAccepted;
+
+  /// Libellé du bandeau de statut DELIVERY_CONFIRMED de chat_screen.dart (_BidStatusBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison confirmée'**
+  String get chatBidStatusDeliveryConfirmed;
+
+  /// Libellé du bandeau de statut TRIP_CANCELLED de chat_screen.dart (_BidStatusBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet annulé'**
+  String get chatBidStatusTripCancelled;
+
+  /// Texte d'un message supprimé, dans la bulle système et dans _DeletedContent (chat_screen.dart, même texte aux deux endroits).
+  ///
+  /// In fr, this message translates to:
+  /// **'Message supprimé'**
+  String get chatMessageDeleted;
+
+  /// Libellé affiché dans la bulle d'un message de localisation (chat_screen.dart _LocationContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Localisation partagée'**
+  String get chatLocationMessageLabel;
+
+  /// Barre de saisie désactivée (lecture seule) de chat_screen.dart (_InputBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi de messages désactivé'**
+  String get chatSendingDisabled;
+
+  /// Texte indicatif du champ de saisie de chat_screen.dart (_InputBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre message…'**
+  String get chatMessageHint;
+
+  /// Libellé d'accessibilité du bouton d'envoi de chat_screen.dart (_InputBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le message'**
+  String get chatSendMessageSemantics;
+
+  /// Titre de l'en-tête de conversation_list_screen.dart, identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Messages'**
+  String get conversationListTitle;
+
+  /// Tooltip du bouton d'accès aux archives de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les conversations archivées'**
+  String get conversationListArchivedTooltip;
+
+  /// Texte indicatif de la barre de recherche de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher une conversation…'**
+  String get conversationListSearchHint;
+
+  /// Titre de l'état vide quand la recherche ne trouve rien (conversation_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun résultat'**
+  String get conversationListEmptyResultsTitle;
+
+  /// Titre de l'état vide sans conversation (conversation_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun message'**
+  String get conversationListEmptyTitle;
+
+  /// Description de l'état vide de recherche de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune conversation ne correspond à « {query} ».'**
+  String conversationListEmptySearchDescription(String query);
+
+  /// Description de l'état vide sans conversation de conversation_list_screen.dart (le saut de ligne fait partie de la valeur).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos conversations apparaîtront ici\naprès l\'acceptation d\'une offre.'**
+  String get conversationListEmptyDescription;
+
+  /// Pastille de filtre « Tous » de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous'**
+  String get conversationFilterAll;
+
+  /// Pastille de filtre « Non lus » de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non lus'**
+  String get conversationFilterUnread;
+
+  /// Pastille de filtre « En cours » de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours'**
+  String get conversationFilterActive;
+
+  /// Pastille de filtre « Terminés » de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminés'**
+  String get conversationFilterDone;
+
+  /// Titre de section (en majuscules) du regroupement temporel du jour, conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'AUJOURD\'HUI'**
+  String get conversationSectionToday;
+
+  /// Titre de section (en majuscules) du regroupement temporel de la semaine, conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'CETTE SEMAINE'**
+  String get conversationSectionThisWeek;
+
+  /// Titre de section (en majuscules) du regroupement temporel plus ancien, conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'PLUS ANCIEN'**
+  String get conversationSectionOlder;
+
+  /// Libellé du SlidableAction d'archivage de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Archiver'**
+  String get conversationArchiveAction;
+
+  /// Snackbar affichée après archivage d'une conversation (conversation_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation archivée'**
+  String get conversationArchivedSnackbar;
+
+  /// Titre du dialogue de confirmation de suppression depuis le swipe de conversation_list_screen.dart (_SlidableTile, distinct de chatDeleteConversationTitle : point d'interrogation).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la conversation ?'**
+  String get conversationDeleteConfirmTitle;
+
+  /// Contenu du dialogue de confirmation de suppression de conversation_list_screen.dart (_SlidableTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette action est irréversible.'**
+  String get conversationDeleteConfirmMessage;
+
+  /// Titre de archived_conversations_screen.dart, identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Archives'**
+  String get archivedConversationsTitle;
+
+  /// Titre de l'état vide de archived_conversations_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune archive'**
+  String get archivedConversationsEmptyTitle;
+
+  /// Description de l'état vide de archived_conversations_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les conversations que vous archivez apparaîtront ici.'**
+  String get archivedConversationsEmptyDescription;
+
+  /// Snackbar affichée après désarchivage d'une conversation (archived_conversations_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation désarchivée'**
+  String get conversationUnarchivedSnackbar;
+
+  /// Libellé du SlidableAction de désarchivage de archived_conversations_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désarchiver'**
+  String get conversationUnarchiveAction;
+
+  /// Titre de l'état d'erreur de conversation_loader_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation introuvable'**
+  String get conversationLoaderNotFoundTitle;
+
+  /// Description de l'état d'erreur de conversation_loader_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger cette conversation.'**
+  String get conversationLoaderNotFoundDescription;
+
+  /// Repli du nom du participant dans conversation_tile.dart quand il est vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateur'**
+  String get conversationUserFallback;
+
+  /// Repli de l'aperçu de dernier message dans conversation_tile.dart quand la conversation n'a encore aucun message.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation démarrée'**
+  String get conversationStartedFallback;
+
+  /// Repli de formatConversationTime (conversation_tile.dart) pour un message envoyé il y a moins d'une minute.
+  ///
+  /// In fr, this message translates to:
+  /// **'maintenant'**
+  String get conversationTimeJustNow;
 }
 
 class _AppLocalizationsDelegate

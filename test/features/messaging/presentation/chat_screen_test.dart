@@ -24,6 +24,7 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockChatBloc extends MockBloc<ChatEvent, ChatState> implements ChatBloc {}
@@ -169,6 +170,28 @@ void main() {
       await _pump(tester, bloc);
 
       expect(find.text('Connexion interrompue'), findsOneWidget);
+    });
+
+    testWidgets(
+      'en anglais : état vide et titre de la barre de saisie traduits',
+      (tester) async {
+        useEnglish();
+        when(() => bloc.state).thenReturn(const ChatLoaded([]));
+        await _pump(tester, bloc);
+
+        expect(find.text('Start the conversation!'), findsOneWidget);
+        expect(find.text('Démarrez la conversation !'), findsNothing);
+      },
+    );
+
+    testWidgets('en anglais : état d\'erreur traduit', (tester) async {
+      useEnglish();
+      when(
+        () => bloc.state,
+      ).thenReturn(const ChatError(NetworkException('Erreur de connexion')));
+      await _pump(tester, bloc);
+
+      expect(find.text('Connection lost'), findsOneWidget);
     });
 
     testWidgets('footer texte : envoi présent, plus de bouton image/position', (

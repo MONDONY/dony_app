@@ -9577,4 +9577,192 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletActiveCurrencyBadge => 'active';
+
+  @override
+  String get chatPreviewPhoto => '📷 Photo';
+
+  @override
+  String get chatPreviewLocation => '📍 Localisation partagée';
+
+  @override
+  String chatBlockedLength(int max) {
+    return 'Message trop long ($max caractères max).';
+  }
+
+  @override
+  String get chatBlockedDuplicate => 'Tu viens d\'envoyer ce message.';
+
+  @override
+  String get chatBlockedRate =>
+      'Tu envoies trop de messages, patiente un instant.';
+
+  @override
+  String get chatBlockedContact =>
+      'Pour ta sécurité, garde les échanges et le paiement sur Yadony. Le partage de coordonnées est interdit.';
+
+  @override
+  String get chatBlockedIban =>
+      'Le partage de coordonnées bancaires est interdit.';
+
+  @override
+  String get chatBlockedLink =>
+      'Les liens externes ne sont pas autorisés dans la messagerie.';
+
+  @override
+  String get chatBlockedProfanity =>
+      'Reste courtois : ce message contient des termes interdits.';
+
+  @override
+  String get chatDeleteConversationTitle => 'Supprimer la conversation';
+
+  @override
+  String get chatDeleteConversationMessage =>
+      'Cette conversation sera définitivement supprimée pour vous et votre interlocuteur. Impossible de la recréer.';
+
+  @override
+  String get chatUnknownConversationLabel => 'Conversation';
+
+  @override
+  String get chatCallTooltip => 'Appeler';
+
+  @override
+  String chatReportUser(String name) {
+    return 'Signaler $name';
+  }
+
+  @override
+  String chatBlockUser(String name) {
+    return 'Bloquer $name';
+  }
+
+  @override
+  String get chatConversationDeletedSnackbar => 'Conversation supprimée';
+
+  @override
+  String get chatConnectionLostTitle => 'Connexion interrompue';
+
+  @override
+  String get chatEmptyStateTitle => 'Démarrez la conversation !';
+
+  @override
+  String get chatReadOnlyBannerMessage =>
+      'Votre interlocuteur a quitté cette conversation. Vous êtes en lecture seule.';
+
+  @override
+  String get chatLinkedTripLabel => 'Trajet lié';
+
+  @override
+  String get chatBidStatusAccepted => 'Offre acceptée';
+
+  @override
+  String get chatBidStatusDeliveryConfirmed => 'Livraison confirmée';
+
+  @override
+  String get chatBidStatusTripCancelled => 'Trajet annulé';
+
+  @override
+  String get chatMessageDeleted => 'Message supprimé';
+
+  @override
+  String get chatLocationMessageLabel => 'Localisation partagée';
+
+  @override
+  String get chatSendingDisabled => 'Envoi de messages désactivé';
+
+  @override
+  String get chatMessageHint => 'Votre message…';
+
+  @override
+  String get chatSendMessageSemantics => 'Envoyer le message';
+
+  @override
+  String get conversationListTitle => 'Messages';
+
+  @override
+  String get conversationListArchivedTooltip =>
+      'Voir les conversations archivées';
+
+  @override
+  String get conversationListSearchHint => 'Rechercher une conversation…';
+
+  @override
+  String get conversationListEmptyResultsTitle => 'Aucun résultat';
+
+  @override
+  String get conversationListEmptyTitle => 'Aucun message';
+
+  @override
+  String conversationListEmptySearchDescription(String query) {
+    return 'Aucune conversation ne correspond à « $query ».';
+  }
+
+  @override
+  String get conversationListEmptyDescription =>
+      'Vos conversations apparaîtront ici\naprès l\'acceptation d\'une offre.';
+
+  @override
+  String get conversationFilterAll => 'Tous';
+
+  @override
+  String get conversationFilterUnread => 'Non lus';
+
+  @override
+  String get conversationFilterActive => 'En cours';
+
+  @override
+  String get conversationFilterDone => 'Terminés';
+
+  @override
+  String get conversationSectionToday => 'AUJOURD\'HUI';
+
+  @override
+  String get conversationSectionThisWeek => 'CETTE SEMAINE';
+
+  @override
+  String get conversationSectionOlder => 'PLUS ANCIEN';
+
+  @override
+  String get conversationArchiveAction => 'Archiver';
+
+  @override
+  String get conversationArchivedSnackbar => 'Conversation archivée';
+
+  @override
+  String get conversationDeleteConfirmTitle => 'Supprimer la conversation ?';
+
+  @override
+  String get conversationDeleteConfirmMessage =>
+      'Cette action est irréversible.';
+
+  @override
+  String get archivedConversationsTitle => 'Archives';
+
+  @override
+  String get archivedConversationsEmptyTitle => 'Aucune archive';
+
+  @override
+  String get archivedConversationsEmptyDescription =>
+      'Les conversations que vous archivez apparaîtront ici.';
+
+  @override
+  String get conversationUnarchivedSnackbar => 'Conversation désarchivée';
+
+  @override
+  String get conversationUnarchiveAction => 'Désarchiver';
+
+  @override
+  String get conversationLoaderNotFoundTitle => 'Conversation introuvable';
+
+  @override
+  String get conversationLoaderNotFoundDescription =>
+      'Impossible de charger cette conversation.';
+
+  @override
+  String get conversationUserFallback => 'Utilisateur';
+
+  @override
+  String get conversationStartedFallback => 'Conversation démarrée';
+
+  @override
+  String get conversationTimeJustNow => 'maintenant';
 }
