@@ -6490,4 +6490,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String negotiationCardRoundShortLabel(int round, String timeAgo) {
     return 'R.$round/5 · $timeAgo';
   }
+
+  @override
+  String get negotiationMakeOfferConfidenceHigh => 'élevée';
+
+  @override
+  String get negotiationMakeOfferConfidenceMedium => 'moyenne';
+
+  @override
+  String get negotiationMakeOfferConfidenceLow => 'faible';
 }

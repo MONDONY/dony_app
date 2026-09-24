@@ -10802,6 +10802,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'R.{round}/5 · {timeAgo}'**
   String negotiationCardRoundShortLabel(int round, String timeAgo);
+
+  /// Badge de confiance de l'estimation de prix, valeur HIGH (make_offer_bottom_sheet.dart, _EstimationBanner) — correction relecture C5, remplace l'ancien affichage brut de wireName
+  ///
+  /// In fr, this message translates to:
+  /// **'élevée'**
+  String get negotiationMakeOfferConfidenceHigh;
+
+  /// Badge de confiance de l'estimation de prix, valeur MEDIUM (make_offer_bottom_sheet.dart, _EstimationBanner) — correction relecture C5
+  ///
+  /// In fr, this message translates to:
+  /// **'moyenne'**
+  String get negotiationMakeOfferConfidenceMedium;
+
+  /// Badge de confiance de l'estimation de prix, valeur LOW/repli (make_offer_bottom_sheet.dart, _EstimationBanner) — correction relecture C5
+  ///
+  /// In fr, this message translates to:
+  /// **'faible'**
+  String get negotiationMakeOfferConfidenceLow;
 }
 
 class _AppLocalizationsDelegate

@@ -3130,5 +3130,17 @@
         "type": "String"
       }
     }
+  },
+  "negotiationMakeOfferConfidenceHigh": "high",
+    "@negotiationMakeOfferConfidenceHigh": {
+    "description": "Badge de confiance de l'estimation de prix, valeur HIGH (make_offer_bottom_sheet.dart, _EstimationBanner) — correction relecture C5, remplace l'ancien affichage brut de wireName"
+  },
+  "negotiationMakeOfferConfidenceMedium": "medium",
+    "@negotiationMakeOfferConfidenceMedium": {
+    "description": "Badge de confiance de l'estimation de prix, valeur MEDIUM (make_offer_bottom_sheet.dart, _EstimationBanner) — correction relecture C5"
+  },
+  "negotiationMakeOfferConfidenceLow": "low",
+    "@negotiationMakeOfferConfidenceLow": {
+    "description": "Badge de confiance de l'estimation de prix, valeur LOW/repli (make_offer_bottom_sheet.dart, _EstimationBanner) — correction relecture C5"
   }
 }

@@ -14,6 +14,7 @@ import 'package:dony/features/package_request/data/models/locked_trip_context.da
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/models/price_estimate.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/widgets/trip_picker_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -708,7 +709,7 @@ class _EstimationBanner extends StatelessWidget {
               borderRadius: BorderRadius.circular(DonyRadius.full),
             ),
             child: Text(
-              estimate.confidence.wireName.toLowerCase(),
+              estimate.confidence.confidenceLabel(context.l10n),
               style: tt.labelSmall?.copyWith(
                 color: confidenceColor,
                 fontWeight: FontWeight.w700,
