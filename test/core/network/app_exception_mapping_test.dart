@@ -15,18 +15,29 @@ DioException _err(int status, {Object? data}) {
 
 void main() {
   test('401 sans detail → repli français', () {
-    final e = appExceptionFromDioError(_err(401));
+    final e = mapHttpError(_err(401));
     expect(e, isA<UnauthorizedException>());
     expect(e.message, 'Session expirée');
   });
 
   test('401 sans detail, langue anglaise → repli anglais', () {
     useEnglish();
-    expect(appExceptionFromDioError(_err(401)).message, 'Session expired');
+    expect(mapHttpError(_err(401)).message, 'Session expired');
+  });
+
+  test('400 sans detail → repli français', () {
+    final e = mapHttpError(_err(400));
+    expect(e, isA<ValidationException>());
+    expect(e.message, 'Requête invalide');
+  });
+
+  test('400 sans detail, langue anglaise → repli anglais', () {
+    useEnglish();
+    expect(mapHttpError(_err(400)).message, 'Invalid request');
   });
 
   test('detail du serveur prioritaire sur le repli', () {
-    final e = appExceptionFromDioError(
+    final e = mapHttpError(
       _err(409, data: {'detail': 'Déjà pris', 'code': 'already-taken'}),
     );
     expect(e, isA<ConflictException>());
@@ -35,7 +46,7 @@ void main() {
   });
 
   test('422 : violations reprises', () {
-    final e = appExceptionFromDioError(
+    final e = mapHttpError(
       _err(
         422,
         data: {
@@ -51,10 +62,10 @@ void main() {
   });
 
   test('429, 500 et autres statuts', () {
-    expect(appExceptionFromDioError(_err(429)), isA<RateLimitException>());
-    expect(appExceptionFromDioError(_err(503)), isA<ServerException>());
-    expect(appExceptionFromDioError(_err(403)), isA<ForbiddenException>());
-    expect(appExceptionFromDioError(_err(404)), isA<NotFoundException>());
-    expect(appExceptionFromDioError(_err(418)), isA<NetworkException>());
+    expect(mapHttpError(_err(429)), isA<RateLimitException>());
+    expect(mapHttpError(_err(503)), isA<ServerException>());
+    expect(mapHttpError(_err(403)), isA<ForbiddenException>());
+    expect(mapHttpError(_err(404)), isA<NotFoundException>());
+    expect(mapHttpError(_err(418)), isA<NetworkException>());
   });
 }
