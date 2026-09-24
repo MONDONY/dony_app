@@ -5358,7 +5358,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidCreateCashModeSubtitle => 'Hand to hand, at drop-off';
 
   @override
-  String get bidCreateEscrowTag => 'Escrow';
+  String get bidCreateEscrowTag => 'Payment on hold';
 
   @override
   String get bidCreateHandToHandTag => 'Hand to hand';
@@ -5381,7 +5381,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidCreateCashEscrowWarning =>
-      'Cash payment: no escrow, you pay the traveler directly, with no refund guarantee from Yadony.';
+      'Cash payment: no payment on hold, you pay the traveler directly, with no refund guarantee from Yadony.';
 
   @override
   String get bidCreateArticlesLineLabel => 'Items';
@@ -5501,12 +5501,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidCreateCompetitivePriceSuffix => ' · Your price is competitive.';
-
-  @override
-  String get bidCreateLegalResponsibilityTitle => 'Legal liability';
-
-  @override
-  String get bidCreateDisclaimerSignedLabel => 'Disclaimer signed';
 
   @override
   String bidCreateDisclaimerSigned(String dateTime) {

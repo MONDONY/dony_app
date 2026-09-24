@@ -2271,8 +2271,7 @@ class _PaymentMethodSelector extends StatelessWidget {
         DonyChoice(
           value: BidPaymentMethod.mobileMoney,
           title: l.paymentMethodMobileMoney,
-          subtitle:
-              l.bidCreateMobileMoneySubtitle, // i18n-ignore — noms de marque
+          subtitle: l.bidCreateMobileMoneySubtitle,
           iconAsset: 'smartphone',
           key: const Key('payment-method-mobile-money'),
           expanded: (context) => _MobileMoneyModeContent(

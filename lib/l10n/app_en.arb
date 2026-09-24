@@ -1677,7 +1677,7 @@
   "@bidCreateCashModeSubtitle": {
     "description": "Sous-titre du choix de paiement en espèces (create_bid_bottom_sheet.dart)"
   },
-  "bidCreateEscrowTag": "Escrow",
+  "bidCreateEscrowTag": "Payment on hold",
   "@bidCreateEscrowTag": {
     "description": "Tag du montant bloqué chez Yadony (carte, mobile money) (create_bid_bottom_sheet.dart)"
   },
@@ -1701,7 +1701,7 @@
   "@bidCreateRefundAssurance": {
     "description": "Rappel de garantie sous le mode carte et mobile money (create_bid_bottom_sheet.dart)"
   },
-  "bidCreateCashEscrowWarning": "Cash payment: no escrow, you pay the traveler directly, with no refund guarantee from Yadony.",
+  "bidCreateCashEscrowWarning": "Cash payment: no payment on hold, you pay the traveler directly, with no refund guarantee from Yadony.",
   "@bidCreateCashEscrowWarning": {
     "description": "Avertissement affiché sous le mode espèces (create_bid_bottom_sheet.dart)"
   },
@@ -1872,17 +1872,9 @@
   "@bidCreateCompetitivePriceSuffix": {
     "description": "Suffixe affiché après le prix médian de marché (price_hint_widget.dart)"
   },
-  "bidCreateLegalResponsibilityTitle": "Legal liability",
-  "@bidCreateLegalResponsibilityTitle": {
-    "description": "Titre de la carte de statut du disclaimer (disclaimer_card.dart)"
-  },
-  "bidCreateDisclaimerSignedLabel": "Disclaimer signed",
-  "@bidCreateDisclaimerSignedLabel": {
-    "description": "Statut du disclaimer sans date connue (disclaimer_card.dart)"
-  },
   "bidCreateDisclaimerSigned": "Disclaimer signed on {dateTime}",
   "@bidCreateDisclaimerSigned": {
-    "description": "Statut du disclaimer avec sa date de signature (disclaimer_card.dart)",
+    "description": "Statut du disclaimer avec sa date de signature (details_accordion, tâche D2)",
     "placeholders": {
       "dateTime": {
         "type": "String"

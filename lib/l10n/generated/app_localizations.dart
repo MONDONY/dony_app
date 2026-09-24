@@ -9201,19 +9201,7 @@ abstract class AppLocalizations {
   /// **' · Votre prix est compétitif.'**
   String get bidCreateCompetitivePriceSuffix;
 
-  /// Titre de la carte de statut du disclaimer (disclaimer_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Responsabilité légale'**
-  String get bidCreateLegalResponsibilityTitle;
-
-  /// Statut du disclaimer sans date connue (disclaimer_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Disclaimer signé'**
-  String get bidCreateDisclaimerSignedLabel;
-
-  /// Statut du disclaimer avec sa date de signature (disclaimer_card.dart)
+  /// Statut du disclaimer avec sa date de signature (details_accordion, tâche D2)
   ///
   /// In fr, this message translates to:
   /// **'Disclaimer signé le {dateTime}'**

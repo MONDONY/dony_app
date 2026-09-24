@@ -3,6 +3,12 @@
 // — vérifiés en français (identiques à l'ancien rendu) et en anglais — plus
 // un test anglais qui ouvre la feuille de création d'offre et vérifie son
 // titre.
+//
+// `bidCreateDisclaimerSigned` n'a plus de widget appelant dans ce lot :
+// `DisclaimerCard` (`disclaimer_card.dart`) était du code mort (aucun
+// appelant en production) et a été supprimé au tour de correction 1. La clé
+// reste — réservée à la tâche D2 (`details_accordion`) — donc seul son
+// rendu au niveau message est vérifié ici, sans widget.
 
 import 'dart:async';
 
@@ -16,9 +22,7 @@ import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/disclaimer_card.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -107,36 +111,6 @@ void main() {
         en.bidCreateDisclaimerSigned(dateTime),
         'Disclaimer signed on $dateTime',
       );
-    });
-
-    testWidgets('DisclaimerCard affiche la date dans la langue courante', (
-      tester,
-    ) async {
-      useEnglish();
-      final bid = BidModel(
-        id: 'bid-1',
-        announcementId: 'ann-1',
-        senderId: 'sender-1',
-        weightKg: 5,
-        status: 'ACCEPTED',
-        createdAt: DateTime(2026),
-        updatedAt: DateTime(2026),
-        disclaimerSignedAt: signedAt,
-      );
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: DisclaimerCard(bid: bid)),
-        ),
-      );
-
-      final expected = en.bidCreateDisclaimerSigned(
-        en.commonDateAtTime(
-          DateFormat.yMd('en').format(signedAt.toLocal()),
-          DateFormat.jm('en').format(signedAt.toLocal()),
-        ),
-      );
-      expect(find.text(expected), findsOneWidget);
     });
   });
 

@@ -5529,12 +5529,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidCreateCompetitivePriceSuffix => ' · Votre prix est compétitif.';
 
   @override
-  String get bidCreateLegalResponsibilityTitle => 'Responsabilité légale';
-
-  @override
-  String get bidCreateDisclaimerSignedLabel => 'Disclaimer signé';
-
-  @override
   String bidCreateDisclaimerSigned(String dateTime) {
     return 'Disclaimer signé le $dateTime';
   }

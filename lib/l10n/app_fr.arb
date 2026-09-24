@@ -5104,17 +5104,9 @@
   "@bidCreateCompetitivePriceSuffix": {
     "description": "Suffixe affiché après le prix médian de marché (price_hint_widget.dart)"
   },
-  "bidCreateLegalResponsibilityTitle": "Responsabilité légale",
-  "@bidCreateLegalResponsibilityTitle": {
-    "description": "Titre de la carte de statut du disclaimer (disclaimer_card.dart)"
-  },
-  "bidCreateDisclaimerSignedLabel": "Disclaimer signé",
-  "@bidCreateDisclaimerSignedLabel": {
-    "description": "Statut du disclaimer sans date connue (disclaimer_card.dart)"
-  },
   "bidCreateDisclaimerSigned": "Disclaimer signé le {dateTime}",
   "@bidCreateDisclaimerSigned": {
-    "description": "Statut du disclaimer avec sa date de signature (disclaimer_card.dart)",
+    "description": "Statut du disclaimer avec sa date de signature (details_accordion, tâche D2)",
     "placeholders": {
       "dateTime": {
         "type": "String"
