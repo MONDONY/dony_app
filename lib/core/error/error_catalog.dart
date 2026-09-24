@@ -316,6 +316,14 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.search_off_rounded,
     ),
+    // Le voyageur tente de modifier un trajet (dates, capacité, prix…) sur
+    // lequel des colis sont déjà acceptés (announcement_bloc.dart, 409).
+    'announcement-update-blocked': _Entry(
+      title: (l) => l.errorAnnouncementUpdateBlockedTitle,
+      message: (l) => l.errorAnnouncementUpdateBlockedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
     'currency-mismatch': _Entry(
       title: (l) => l.errorCurrencyMismatchTitle,
       message: (l) => l.errorCurrencyMismatchMessage,

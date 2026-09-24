@@ -76,12 +76,9 @@ void main() {
       );
     });
 
-    test('each filter has non-empty label and tooltip', () {
-      for (final filter in UrgencyFilter.values) {
-        expect(filter.label, isNotEmpty);
-        expect(filter.tooltip, isNotEmpty);
-      }
-    });
+    // Libellé : voir UrgencyFilterL10n dans trip_domain_labels_test.dart (le
+    // champ `label` de l'enum a été retiré au profit de cette extension
+    // traduite).
 
     test('each filter has a non-null color', () {
       for (final filter in UrgencyFilter.values) {

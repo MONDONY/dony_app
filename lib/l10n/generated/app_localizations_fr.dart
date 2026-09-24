@@ -2300,4 +2300,1008 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get shellTermsTitle => 'CGU';
+
+  @override
+  String get commonSave => 'Enregistrer';
+
+  @override
+  String get commonDelete => 'Supprimer';
+
+  @override
+  String get commonEdit => 'Modifier';
+
+  @override
+  String get commonBack => 'Retour';
+
+  @override
+  String get commonSend => 'Envoyer';
+
+  @override
+  String get commonShare => 'Partager';
+
+  @override
+  String get commonCopy => 'Copier';
+
+  @override
+  String get commonSeeAll => 'Voir tout';
+
+  @override
+  String commonDateAtTime(String date, String time) {
+    return '$date à $time';
+  }
+
+  @override
+  String commonListPair(String first, String second) {
+    return '$first et $second';
+  }
+
+  @override
+  String commonListLast(String head, String last) {
+    return '$head et $last';
+  }
+
+  @override
+  String get tripKgFree => 'Kg libre';
+
+  @override
+  String get tripFixedPrice => 'Prix ferme';
+
+  @override
+  String get tripTravelerFallbackName => 'Voyageur';
+
+  @override
+  String get tripTransportPlane => 'Avion';
+
+  @override
+  String get tripTransportCar => 'Voiture';
+
+  @override
+  String get tripTransportTrain => 'Train';
+
+  @override
+  String get tripTransportBus => 'Bus';
+
+  @override
+  String get tripTransportBoat => 'Bateau';
+
+  @override
+  String get tripTransportOther => 'Autre';
+
+  @override
+  String get tripUrgencyVeryUrgent => '< 3j';
+
+  @override
+  String get tripUrgencyUrgent => '3–7j';
+
+  @override
+  String get tripUrgencySoon => '7–14j';
+
+  @override
+  String get tripUrgencyLater => '14j+';
+
+  @override
+  String get tripCapacitySuitcase23 => '1 valise 23 kg';
+
+  @override
+  String get tripCapacitySuitcase32 => '1 valise 32 kg';
+
+  @override
+  String get tripCapacityCustom => 'Personnalisé';
+
+  @override
+  String get tripPublishTitle => 'Publier un trajet';
+
+  @override
+  String get tripPublishEditTitle => 'Modifier le trajet';
+
+  @override
+  String get tripPublishDedicatedTitle => 'Créer le trajet pour cette demande';
+
+  @override
+  String get tripPublishSubmitDedicated => 'Confirmer le trajet';
+
+  @override
+  String get tripPublishPreviewButton => 'Aperçu';
+
+  @override
+  String get tripPublishFieldDepartureCityRequired =>
+      'Ville de départ obligatoire';
+
+  @override
+  String get tripPublishFieldArrivalCityRequired =>
+      'Ville d\'arrivée obligatoire';
+
+  @override
+  String get tripPublishFieldDepartureDateRequired =>
+      'Date de départ obligatoire';
+
+  @override
+  String get tripPublishFieldDepartureTimeRequired =>
+      'Heure de départ obligatoire';
+
+  @override
+  String get tripPublishFieldTransportModeRequired =>
+      'Mode de transport obligatoire';
+
+  @override
+  String get tripPublishFieldHandoverDeadlineRequired =>
+      'Date limite de dépôt obligatoire';
+
+  @override
+  String get tripPublishFieldPickupAddressRequired =>
+      'Lieu de remise du colis obligatoire';
+
+  @override
+  String get tripPublishFieldDeliveryAddressRequired =>
+      'Lieu de récupération obligatoire';
+
+  @override
+  String get tripPublishHandoverDeadlineInvalid =>
+      'La date limite doit précéder le départ.';
+
+  @override
+  String get tripPublishHandoverDeadlineBeforeDeparture =>
+      'La date limite de dépôt doit précéder le départ';
+
+  @override
+  String get tripPublishOfferSentWithTrip =>
+      'Offre envoyée avec le trajet associé.';
+
+  @override
+  String get tripPublishTripLinked =>
+      'Trajet lié. L\'expéditeur peut désormais payer.';
+
+  @override
+  String get tripPublishSuccessTitleEdit => 'Trajet modifié !';
+
+  @override
+  String get tripPublishSuccessTitleCreate => 'Trajet publié !';
+
+  @override
+  String tripPublishSuccessSubtitle(String departureCity, String arrivalCity) {
+    return 'Ton trajet $departureCity → $arrivalCity est en ligne.';
+  }
+
+  @override
+  String get tripPublishSuccessCta => 'Voir mon trajet';
+
+  @override
+  String get tripPublishSuccessShareCta => 'Partager mon affiche';
+
+  @override
+  String get tripPublishMonthlyLimitTitle => 'Limite mensuelle atteinte';
+
+  @override
+  String get tripPublishDraftLimitTitle => 'Limite de brouillons atteinte';
+
+  @override
+  String get tripPublishTemplatesLabel => 'Mes modèles';
+
+  @override
+  String get tripPublishTemplatesHint =>
+      'Applique un modèle pour pré-remplir le trajet';
+
+  @override
+  String tripPublishTemplateAppliedMessage(String label) {
+    return 'Modèle « $label » appliqué';
+  }
+
+  @override
+  String tripPublishTemplateChipGrid(String label) {
+    return '$label · grille';
+  }
+
+  @override
+  String get tripPublishDropoffSectionLabel => 'DÉPÔT DES COLIS';
+
+  @override
+  String get tripPublishHandoverDeadlineLabel => 'Date limite de dépôt';
+
+  @override
+  String get tripPublishHandoverDeadlineSubtitle =>
+      'Jusqu\'à quand les expéditeurs peuvent te remettre leurs colis';
+
+  @override
+  String get tripPublishHandoverDeadlineChoose => 'Choisir';
+
+  @override
+  String get tripPublishLockedBannerTitle => 'Trajet dédié à la demande';
+
+  @override
+  String get tripPublishLockedBannerSubtitle =>
+      'Corridor, capacité et prix sont verrouillés. La date doit rester dans la fenêtre de tolérance de l\'expéditeur.';
+
+  @override
+  String get requestPublishIntroTitle => 'Publier un colis';
+
+  @override
+  String get tripPublishIntroVerifiedTextTrip =>
+      'Identité vérifiée. Vous pouvez publier votre trajet en toute sécurité.';
+
+  @override
+  String get requestPublishIntroVerifiedText =>
+      'Identité vérifiée. Vous pouvez publier votre demande d\'envoi en toute sécurité.';
+
+  @override
+  String get tripPublishIntroEngagementsTitleTrip =>
+      'Vos engagements de voyageur';
+
+  @override
+  String get tripPublishIntroEngagementsIntroTrip =>
+      'En publiant, vous vous engagez à :';
+
+  @override
+  String get tripPublishIntroRuleTripCarry =>
+      'Transporter le colis **vous-même**, sans le confier à un tiers.';
+
+  @override
+  String get tripPublishIntroRuleTripSchedule =>
+      'Respecter la **date** et l\'**itinéraire** annoncés.';
+
+  @override
+  String get tripPublishIntroRuleTripScan =>
+      '**Lire le QR** à la remise et à la livraison.';
+
+  @override
+  String get tripPublishIntroRuleTripContent =>
+      'N\'accepter que des **contenus autorisés**, jamais d\'objet illicite.';
+
+  @override
+  String get tripPublishIntroRuleTripHandover =>
+      'Remettre le colis **au bon destinataire**, en main propre.';
+
+  @override
+  String get tripPublishIntroWhyTitleTrip => 'Pourquoi publier';
+
+  @override
+  String get tripPublishIntroWhyBulletTripVisibility =>
+      'Visible par des milliers d\'expéditeurs de la diaspora.';
+
+  @override
+  String get tripPublishIntroWhyBulletTripEarnings =>
+      'Rentabilisez vos kilos libres à chaque voyage.';
+
+  @override
+  String get tripPublishIntroWhyBulletTripReputation =>
+      'Bâtissez une réputation avec les avis reçus.';
+
+  @override
+  String get requestPublishIntroEngagementsTitle =>
+      'Vos engagements d\'expéditeur';
+
+  @override
+  String get requestPublishIntroEngagementsIntro =>
+      'En envoyant un colis, vous certifiez :';
+
+  @override
+  String get requestPublishIntroRuleLicit =>
+      'N\'envoyer que des **contenus licites** et autorisés.';
+
+  @override
+  String get requestPublishIntroRuleForbidden =>
+      'Aucun **objet interdit** (espèces, armes, produits dangereux…).';
+
+  @override
+  String get requestPublishIntroRuleHonest =>
+      'Décrire **honnêtement** le contenu et sa valeur si le voyageur la demande.';
+
+  @override
+  String get requestPublishIntroRulePackaging =>
+      '**Emballer soigneusement** et décrire précisément le contenu.';
+
+  @override
+  String get requestPublishIntroRuleHandover =>
+      'Être présent à la **remise** et indiquer le bon destinataire.';
+
+  @override
+  String get requestPublishIntroWhyTitle => 'Comment ça marche';
+
+  @override
+  String get requestPublishIntroWhyBulletCarried =>
+      'Un voyageur transporte votre colis dans ses bagages.';
+
+  @override
+  String get requestPublishIntroWhyBulletPayment =>
+      'Paiement sécurisé, libéré à la livraison confirmée.';
+
+  @override
+  String get requestPublishIntroWhyBulletTracking =>
+      'Suivi par QR de la remise jusqu\'à la réception.';
+
+  @override
+  String tripPublishIntroVerifyCallout(String identity, String path) {
+    return 'Avant de publier, votre **$identity**. Rendez-vous dans $path pour la valider (2 min).';
+  }
+
+  @override
+  String get tripPublishIntroVerifyIdentity => 'identité doit être vérifiée';
+
+  @override
+  String get tripPublishIntroVerifyPath => 'Profil › Vérifications';
+
+  @override
+  String get tripPublishIntroVerifyButton => 'Vérifier mon identité';
+
+  @override
+  String tripPublishIntroVerifyHint(String continueLabel) {
+    return 'Le bouton devient « $continueLabel » une fois l\'identité vérifiée.';
+  }
+
+  @override
+  String get tripPublishIntroStripeTitle => 'Activez les paiements par carte';
+
+  @override
+  String get tripPublishIntroStripeSubtitle =>
+      'Configurez votre compte Stripe pour que vos expéditeurs paient par carte, et recevez plus de colis.';
+
+  @override
+  String get tripPublishPricingModeKg => 'Au kilo';
+
+  @override
+  String get tripPublishPricingModeMixed => 'Grille + kilo';
+
+  @override
+  String get tripPublishPricePerKgSectionLabel => 'Prix par kg';
+
+  @override
+  String get tripPublishKgPriceToggleTitle => 'Tarif au kilo';
+
+  @override
+  String get tripPublishKgPriceToggleSubtitle => 'Optionnel en mode grille';
+
+  @override
+  String get tripPublishCustomPriceChipLabel => 'Autre prix';
+
+  @override
+  String get tripPublishCustomPriceFieldHint => 'ex: 12';
+
+  @override
+  String get tripPublishPriceSelectPrompt =>
+      'Sélectionnez un prix pour voir l\'estimation';
+
+  @override
+  String get tripPublishUnlimitedCapacityEstimateNote =>
+      'Capacité illimitée : estimation selon la demande';
+
+  @override
+  String tripPublishPriceEstimateLine(String travelerNet, String senderTotal) {
+    return 'Vous touchez $travelerNet · l\'expéditeur paie $senderTotal';
+  }
+
+  @override
+  String tripPublishGridCommissionNotice(String percent) {
+    return 'Yadony ajoute $percent % sur chaque article et sur le prix au kilo';
+  }
+
+  @override
+  String get tripPublishNegotiableToggleTitle =>
+      'J\'accepte les propositions de prix';
+
+  @override
+  String get tripPublishNegotiableToggleSubtitle =>
+      'Les expéditeurs pourront vous proposer un montant, vous restez libre de refuser';
+
+  @override
+  String get tripPublishPaymentMethodsSectionLabel =>
+      'Modes de paiement acceptés';
+
+  @override
+  String get tripPublishCardPaymentTitle => 'Carte bancaire (Stripe)';
+
+  @override
+  String get tripPublishCardPaymentSubtitle => 'Paiement sécurisé par défaut';
+
+  @override
+  String get tripPublishCashLabel => 'Espèces';
+
+  @override
+  String get tripPublishCashSubtitle =>
+      'Commission prélevée au voyageur à la remise';
+
+  @override
+  String get tripPublishAcceptedContentSectionLabel => 'Ce que j\'accepte';
+
+  @override
+  String get tripPublishRefusedContentSectionLabel => 'Ce que je refuse';
+
+  @override
+  String get tripPublishRefusedContentHint =>
+      'Ex: Liquides, Denrées périssables…';
+
+  @override
+  String get tripPublishNoteToSendersSectionLabel => 'Note aux expéditeurs';
+
+  @override
+  String get tripPublishNoteToSendersHint =>
+      'Ex: Je préfère les colis bien emballés. Contactez-moi avant le départ.';
+
+  @override
+  String get tripPublishCashOnlyBannerWithConnect =>
+      'Publiez en espèces dès maintenant. Connectez Stripe pour accepter aussi la carte.';
+
+  @override
+  String get tripPublishCashOnlyBannerNoConnect =>
+      'Le paiement par carte n\'est pas encore disponible dans votre pays. Vos trajets sont publiés en espèces.';
+
+  @override
+  String get tripPublishActivateCardPaymentsCta =>
+      'Activer les paiements par carte';
+
+  @override
+  String get tripPublishCardNotConfiguredSubtitle =>
+      'Non configuré, activez pour proposer le paiement sécurisé';
+
+  @override
+  String get tripPublishActivatePayoutCta => 'Activer le versement';
+
+  @override
+  String get tripPublishMobileMoneyIneligibleSubtitle =>
+      'Disponible pour les trajets en XOF ou XAF';
+
+  @override
+  String get tripPublishMobileMoneyInactiveSubtitle =>
+      'Active d\'abord ton versement mobile money';
+
+  @override
+  String get tripPublishLockedPriceNoteTitle => 'Prix fixé par la négociation';
+
+  @override
+  String get tripPublishLockedPriceNoteSubtitle =>
+      'Le montant de ce colis a été convenu avec l\'expéditeur, non modifiable ici.';
+
+  @override
+  String get tripPublishAgreedPriceLabel => 'Prix total convenu';
+
+  @override
+  String get tripPublishGridPreviewLabel => 'Votre grille';
+
+  @override
+  String tripPublishGridPreviewSeeAll(int count) {
+    return 'Voir les $count articles';
+  }
+
+  @override
+  String get tripPublishGridPreviewNote =>
+      'Ces prix viennent de votre profil. Les modifier les change sur tous vos trajets.';
+
+  @override
+  String get tripPublishGridSheetTitle => 'Votre grille de prix';
+
+  @override
+  String get tripPublishGridSheetSubtitle => 'Valable sur tous vos trajets';
+
+  @override
+  String get tripPublishGridSheetEditCta => 'Modifier ma grille';
+
+  @override
+  String tripPublishGridSheetCommissionNote(String percent) {
+    return 'Prix payés par l\'expéditeur, commission Yadony de $percent % comprise.';
+  }
+
+  @override
+  String get tripPublishGridEmptyTitle => 'Votre grille est vide';
+
+  @override
+  String get tripPublishGridEmptySubtitle =>
+      'Ajoutez au moins une étiquette pour que les expéditeurs réservent article par article.';
+
+  @override
+  String get tripPublishGridComposeCta => 'Composer ma grille';
+
+  @override
+  String get tripPublishCorridorConfirmedBadge => 'Confirmé';
+
+  @override
+  String get tripPublishRouteSectionLabel => 'Trajet';
+
+  @override
+  String get tripPublishDepartureCityLabel => 'Ville de départ';
+
+  @override
+  String get tripPublishArrivalCityLabel => 'Ville d\'arrivée';
+
+  @override
+  String get tripPublishDepartureTimeLabel => 'Heure de départ';
+
+  @override
+  String get tripPublishArrivalTimeOptionalLabel =>
+      'Heure d\'arrivée (optionnel)';
+
+  @override
+  String get tripPublishClearArrivalTimeTooltip =>
+      'Effacer l\'heure d\'arrivée';
+
+  @override
+  String get tripPublishDepartureDateLabel => 'Date de départ';
+
+  @override
+  String get tripPublishUrgentDepartureWarning =>
+      '🔥 Départ proche · ce trajet sera signalé urgent';
+
+  @override
+  String get tripPublishCapacityAvailableLabel => 'Capacité disponible';
+
+  @override
+  String tripPublishSuitcaseCount(int count, int kg) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count valises de $kg kg',
+      one: '$count valise de $kg kg',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripPublishYouOfferKg(int kg) {
+    return 'Vous offrez $kg kg';
+  }
+
+  @override
+  String get tripPublishDecreaseQuantityTooltip => 'Diminuer la quantité';
+
+  @override
+  String get tripPublishIncreaseQuantityTooltip => 'Augmenter la quantité';
+
+  @override
+  String get tripPublishUnlimitedCapacityTitle => 'Capacité illimitée';
+
+  @override
+  String get tripPublishUnlimitedCapacitySubtitle =>
+      'Vendu au kilo · l\'expéditeur choisit son poids';
+
+  @override
+  String get tripPublishCapacityKgFieldLabel => 'Capacité (kg)';
+
+  @override
+  String get tripPublishCapacityKgFieldHint =>
+      'Indiquez la capacité totale que vous offrez';
+
+  @override
+  String tripPublishCurrencySemanticsLabel(
+    String currencyName,
+    String currencyCode,
+  ) {
+    return 'Devise de publication : $currencyName, $currencyCode. Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise. Bouton, modifier la devise.';
+  }
+
+  @override
+  String tripPublishCurrencyBannerTitle(
+    String currencyName,
+    String currencyCode,
+  ) {
+    return 'Publié en $currencyName ($currencyCode)';
+  }
+
+  @override
+  String get tripPublishCurrencyBannerSubtitle =>
+      'Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.';
+
+  @override
+  String get tripPublishCurrencyChangeCta => 'Changer';
+
+  @override
+  String get tripPublishPlacesCapacityStepLabel => 'Lieux & capacité';
+
+  @override
+  String get tripPublishPriceConditionsStepLabel => 'Prix & conditions';
+
+  @override
+  String get tripPublishHandoverLocationsLabel => 'Lieux de remise';
+
+  @override
+  String get tripPublishHandoverLocationsSubtitle =>
+      'Précisez l\'endroit exact de remise et récupération';
+
+  @override
+  String get tripPublishLockedCapacityNote => 'Capacité fixée par la demande';
+
+  @override
+  String addressGpsPosition(String lat, String lng) {
+    return 'Position GPS ($lat, $lng)';
+  }
+
+  @override
+  String get addressGpsDisabledTitle => 'GPS désactivé';
+
+  @override
+  String get addressLocationDeniedTitle => 'Localisation refusée';
+
+  @override
+  String get addressLocationDeniedForeverTitle =>
+      'Localisation définitivement refusée';
+
+  @override
+  String get addressGpsDisabledMessage =>
+      'Activez la géolocalisation dans vos paramètres système.';
+
+  @override
+  String get addressLocationDeniedMessage =>
+      'Activez la localisation dans vos paramètres pour utiliser cette fonctionnalité.';
+
+  @override
+  String get addressOpenSettingsButton => 'Ouvrir les paramètres';
+
+  @override
+  String get addressPositionUnavailableTitle => 'Position indisponible';
+
+  @override
+  String get addressPositionUnavailableMessage =>
+      'Impossible de récupérer votre position pour le moment. Réessayez.';
+
+  @override
+  String get addressReverseGeocodeFailedTitle => 'Adresse introuvable';
+
+  @override
+  String get addressReverseGeocodeFailedMessage =>
+      'Impossible de convertir votre position en adresse. Réessayez.';
+
+  @override
+  String get addressSelectFailedMessage =>
+      'Impossible de sélectionner cette adresse. Réessayez.';
+
+  @override
+  String get addressSearchHint => 'Rechercher une adresse…';
+
+  @override
+  String get addressConfirmButton => 'Confirmer cette adresse';
+
+  @override
+  String get addressOfflineTitle => 'Connexion requise';
+
+  @override
+  String get addressOfflineSubtitle =>
+      'Vérifiez votre connexion pour rechercher une adresse.';
+
+  @override
+  String get addressSearchErrorTitle => 'Erreur';
+
+  @override
+  String get addressSearchErrorSubtitle =>
+      'Impossible de rechercher une adresse. Réessayez.';
+
+  @override
+  String get addressNoResultsTitle => 'Aucun résultat';
+
+  @override
+  String get addressNoResultsSubtitle =>
+      'Essayez « Utiliser ma position actuelle ».';
+
+  @override
+  String get addressUseCurrentLocation => 'Utiliser ma position actuelle';
+
+  @override
+  String get addressRecentSearchesHeader => 'RECHERCHES RÉCENTES';
+
+  @override
+  String get addressSavedAddressesHeader => 'MES ADRESSES ENREGISTRÉES';
+
+  @override
+  String get addressAddNewTitle => 'Ajouter une adresse';
+
+  @override
+  String get addressAddNewSubtitle => 'Enregistrer pour la prochaine fois';
+
+  @override
+  String get addressDefaultBadge => 'Par défaut';
+
+  @override
+  String get addressPickupSheetTitle => '📦  Adresse de remise';
+
+  @override
+  String get addressDeliverySheetTitle => '🗺️  Adresse de livraison';
+
+  @override
+  String get addressFieldRequiredError => 'Adresse obligatoire';
+
+  @override
+  String get addressFieldSearchHint => 'Tapez pour rechercher une adresse…';
+
+  @override
+  String get addressFieldNoResultsHint =>
+      'Aucun résultat, essayez \"Ma position actuelle\"';
+
+  @override
+  String get addressOfflineInlineMessage =>
+      'Connexion requise pour la recherche d\'adresse';
+
+  @override
+  String get addressSelectorDropoffLabel => 'Choisir une adresse de remise';
+
+  @override
+  String get addressSelectorDropoffSubtitle =>
+      'Où tu récupères les colis des expéditeurs';
+
+  @override
+  String get addressSelectorDeliveryLabel => 'Choisir une adresse de livraison';
+
+  @override
+  String get addressSelectorDeliverySubtitle =>
+      'Où tu déposes les colis à destination';
+
+  @override
+  String get tripPosterTimePattern => 'HH\'h\'mm';
+
+  @override
+  String get tripPosterDepartureLabel => 'Départ';
+
+  @override
+  String get tripPosterDeadlineLabel => 'Dernier dépôt';
+
+  @override
+  String get tripPosterCapacityLabel => 'Place disponible';
+
+  @override
+  String get tripPosterHandoverLabel => 'Remise';
+
+  @override
+  String get tripPosterPickupLabel => 'Récupération';
+
+  @override
+  String tripPosterFromPrice(String price) {
+    return 'dès $price';
+  }
+
+  @override
+  String get tripPosterUnitPerItem => 'l\'article';
+
+  @override
+  String get tripPosterUnitPerKg => 'le kilo';
+
+  @override
+  String get tripPosterPriceUnavailable => 'Prix indisponible';
+
+  @override
+  String tripPosterPricePerKg(String price) {
+    return '$price le kilo';
+  }
+
+  @override
+  String tripPosterPriceFromItem(String price) {
+    return 'dès $price l\'article';
+  }
+
+  @override
+  String get tripPosterTagline =>
+      'Paiement sécurisé, suivi du colis, voyageurs vérifiés';
+
+  @override
+  String get tripPosterTitle => 'Mon affiche';
+
+  @override
+  String get tripPosterNotFoundTitle => 'Trajet introuvable';
+
+  @override
+  String get tripPosterNotFoundDescription =>
+      'Impossible de charger ce trajet pour le moment.';
+
+  @override
+  String tripPosterCaptionCorridor(String departure, String arrival) {
+    return '$departure vers $arrival';
+  }
+
+  @override
+  String tripPosterCaptionDeparture(String day) {
+    return 'Départ le $day';
+  }
+
+  @override
+  String tripPosterCaptionDeadline(String deadline) {
+    return 'Dernier dépôt le $deadline';
+  }
+
+  @override
+  String tripPosterCaptionHandover(String address) {
+    return 'Remise : $address';
+  }
+
+  @override
+  String tripPosterCaptionPickup(String address) {
+    return 'Récupération : $address';
+  }
+
+  @override
+  String get tripPosterCaptionCta => 'Réservez vos kilos ici :';
+
+  @override
+  String get tripPosterCaptionFooter =>
+      'Paiement sécurisé, suivi du colis, voyageur vérifié.';
+
+  @override
+  String tripPosterShareSubject(String departure, String arrival) {
+    return 'Trajet $departure vers $arrival';
+  }
+
+  @override
+  String get tripPosterShareError => 'Impossible de partager l\'affiche';
+
+  @override
+  String get tripPosterSaveError => 'Impossible d\'enregistrer l\'affiche';
+
+  @override
+  String get tripPosterSaveSuccess => 'Affiche enregistrée dans votre galerie';
+
+  @override
+  String get tripPosterCaptionCopied => 'Légende copiée';
+
+  @override
+  String get tripPosterLinkCopiedMessage => 'Lien copié';
+
+  @override
+  String get tripPosterInstructions =>
+      'Postez cette affiche comme d\'habitude, puis collez la légende dans le texte de votre publication. Le lien y devient cliquable, ce qui n\'est pas le cas d\'une adresse écrite sur l\'image.';
+
+  @override
+  String get tripPosterShareButton => 'Partager l\'affiche';
+
+  @override
+  String get tripPosterCopyCaptionButton => 'Copier la légende';
+
+  @override
+  String get tripPosterCopyLinkButton => 'Copier le lien';
+
+  @override
+  String get tripPosterSaveButton => 'Enregistrer dans la galerie';
+
+  @override
+  String get errorAnnouncementUpdateBlockedTitle => 'Modification impossible';
+
+  @override
+  String get errorAnnouncementUpdateBlockedMessage =>
+      'Des colis sont déjà acceptés pour ce trajet';
+
+  @override
+  String get tripTemplateListTitle => 'Mes modèles de trajet';
+
+  @override
+  String get tripTemplateNewLabel => 'Nouveau modèle';
+
+  @override
+  String get tripTemplateLoadErrorTitle => 'Erreur de chargement';
+
+  @override
+  String get tripTemplateLoadErrorFallback => 'Une erreur est survenue.';
+
+  @override
+  String get tripTemplateEmptyTitle => 'Aucun modèle';
+
+  @override
+  String get tripTemplateEmptyDescription =>
+      'Crée des modèles de trajet réutilisables pour publier tes annonces en quelques secondes.';
+
+  @override
+  String get tripTemplateCreateAction => 'Créer un modèle';
+
+  @override
+  String get tripTemplateGridPriceLabel => 'prix à la grille';
+
+  @override
+  String get tripTemplateDeleteDialogTitle => 'Supprimer le modèle';
+
+  @override
+  String tripTemplateDeleteDialogMessage(String label) {
+    return 'Es-tu sûr de vouloir supprimer \"$label\" ? Cette action est irréversible.';
+  }
+
+  @override
+  String get tripTemplateScheduleRecurrenceAction => 'Programmer la récurrence';
+
+  @override
+  String get tripTemplateNameSectionLabel => 'NOM DU MODÈLE';
+
+  @override
+  String get tripTemplateNameFieldLabel => 'Nom';
+
+  @override
+  String get tripTemplateNameFieldHint => 'Ex : Mon Paris → Dakar';
+
+  @override
+  String get tripTemplateTripSectionLabel => 'TRAJET';
+
+  @override
+  String get tripTemplateTransportSectionLabel => 'MODE DE TRANSPORT';
+
+  @override
+  String get tripTemplateScheduleSectionLabel => 'HORAIRES';
+
+  @override
+  String get tripTemplateDepartureTimeFieldLabel => 'Heure de départ';
+
+  @override
+  String get tripTemplateDepartureShortLabel => 'Départ';
+
+  @override
+  String get tripTemplateArrivalTimeFieldLabel => 'Heure d\'arrivée';
+
+  @override
+  String get tripTemplateArrivalShortLabel => 'Arrivée';
+
+  @override
+  String get tripTemplateHandoverDeadlineSectionLabel => 'DÉLAI DE REMISE';
+
+  @override
+  String get tripTemplateHandoverDeadlineHint =>
+      'Au plus tard combien de jours avant le départ le colis doit être remis ?';
+
+  @override
+  String get tripTemplateHandoverNone => 'Aucun';
+
+  @override
+  String get tripTemplateHandoverSameDay => 'Le jour même';
+
+  @override
+  String tripTemplateHandoverDaysBefore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count jours avant',
+      one: '$count jour avant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripTemplateOptionalSuffix(String label) {
+    return '$label (optionnel)';
+  }
+
+  @override
+  String tripTemplateClearFieldSemantic(String label) {
+    return 'Effacer $label';
+  }
+
+  @override
+  String get tripTemplateEditTitle => 'Modifier le modèle';
+
+  @override
+  String get tripTemplateSaveButton => 'Enregistrer le modèle';
+
+  @override
+  String get tripTemplateUpdatedMessage => 'Modèle mis à jour';
+
+  @override
+  String get tripTemplateSavedMessage => 'Modèle enregistré';
+
+  @override
+  String get tripTemplateRecurrenceActivatedMessage =>
+      'Récurrence activée. Tes trajets seront publiés automatiquement.';
+
+  @override
+  String get tripTemplateRecurrenceTitle => 'Trajet récurrent';
+
+  @override
+  String get tripTemplateActivateRecurrenceButton => 'Activer la récurrence';
+
+  @override
+  String get tripTemplateNoPricePerKgWarning =>
+      'Ce modèle n\'a pas de prix au kilo';
+
+  @override
+  String get tripTemplateRepeatDaysSectionLabel => 'JOURS DE RÉPÉTITION';
+
+  @override
+  String get tripTemplateRecurrenceDepartureTimeSectionLabel =>
+      'HEURE DE DÉPART';
+
+  @override
+  String get tripTemplateOptionalTimeHint => 'Optionnel : choisir une heure';
+
+  @override
+  String get tripTemplateClearTimeSemantic => 'Effacer l\'heure de départ';
+
+  @override
+  String get tripTemplateLocationsSectionLabel => 'LIEUX';
+
+  @override
+  String get tripTemplatePickupFieldLabel => 'Lieu de remise du colis *';
+
+  @override
+  String get tripTemplateDeliveryFieldLabel => 'Lieu de récupération *';
+
+  @override
+  String get tripTemplateActiveLabel => 'Récurrence active';
+
+  @override
+  String get tripTemplateActiveDescription =>
+      'Publie automatiquement les trajets à venir';
 }

@@ -13,7 +13,9 @@ import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dar
 import 'package:dony/features/delivery_addresses/data/models/delivery_address.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/address_suggestion.dart';
+import 'package:dony/features/matching/presentation/address_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_empty_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
@@ -208,9 +210,7 @@ class _DeliveryAddressPickerSheetState
       if (!mounted) return;
       setState(() => _resolving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Impossible de sélectionner cette adresse. Réessayez.'),
-        ),
+        SnackBar(content: Text(context.l10n.addressSelectFailedMessage)),
       );
     }
   }
@@ -290,8 +290,11 @@ class _DeliveryAddressPickerSheetState
     final resolved =
         addr ??
         AddressData(
-          label:
-              'Position GPS (${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)})',
+          label: gpsPositionLabel(
+            context.l10n,
+            position.latitude,
+            position.longitude,
+          ),
           lat: position.latitude,
           lng: position.longitude,
         );
@@ -314,6 +317,7 @@ class _DeliveryAddressPickerSheetState
   }) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -344,26 +348,26 @@ class _DeliveryAddressPickerSheetState
             const SizedBox(height: DonySpacing.base),
             Text(
               gpsDisabled
-                  ? 'GPS désactivé'
+                  ? l10n.addressGpsDisabledTitle
                   : positionUnavailable
-                  ? 'Position indisponible'
+                  ? l10n.addressPositionUnavailableTitle
                   : reverseGeocodeFailed
-                  ? 'Adresse introuvable'
+                  ? l10n.addressReverseGeocodeFailedTitle
                   : permanent
-                  ? 'Localisation définitivement refusée'
-                  : 'Localisation refusée',
+                  ? l10n.addressLocationDeniedForeverTitle
+                  : l10n.addressLocationDeniedTitle,
               style: tt.titleLarge,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DonySpacing.sm),
             Text(
               gpsDisabled
-                  ? 'Activez la géolocalisation dans vos paramètres système.'
+                  ? l10n.addressGpsDisabledMessage
                   : positionUnavailable
-                  ? 'Impossible de récupérer votre position pour le moment. Réessayez.'
+                  ? l10n.addressPositionUnavailableMessage
                   : reverseGeocodeFailed
-                  ? 'Impossible de convertir votre position en adresse. Réessayez.'
-                  : 'Activez la localisation dans vos paramètres pour utiliser cette fonctionnalité.',
+                  ? l10n.addressReverseGeocodeFailedMessage
+                  : l10n.addressLocationDeniedMessage,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
@@ -381,8 +385,8 @@ class _DeliveryAddressPickerSheetState
                 },
                 child: Text(
                   positionUnavailable || reverseGeocodeFailed
-                      ? 'Réessayer'
-                      : 'Ouvrir les paramètres',
+                      ? l10n.commonRetry
+                      : l10n.addressOpenSettingsButton,
                 ),
               ),
             ),
@@ -425,6 +429,7 @@ class _DeliveryAddressPickerSheetState
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final keyboard = MediaQuery.of(context).viewInsets.bottom;
 
     return DraggableScrollableSheet(
@@ -468,7 +473,7 @@ class _DeliveryAddressPickerSheetState
                         children: [
                           Expanded(
                             child: Text(
-                              '🗺️  Adresse de livraison',
+                              l10n.addressDeliverySheetTitle,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: tt.titleMedium?.copyWith(
@@ -477,7 +482,7 @@ class _DeliveryAddressPickerSheetState
                             ),
                           ),
                           IconButton(
-                            tooltip: 'Fermer',
+                            tooltip: l10n.commonClose,
                             icon: const DonyIcon('x'),
                             onPressed: () => Navigator.of(context).pop(),
                             style: IconButton.styleFrom(
@@ -526,7 +531,7 @@ class _DeliveryAddressPickerSheetState
                             DonySpacing.md,
                           ),
                           child: DonyButton(
-                            label: 'Confirmer cette adresse',
+                            label: l10n.addressConfirmButton,
                             onPressed:
                                 (effectiveAdHoc == null &&
                                     state.addresses.isEmpty)
@@ -570,28 +575,29 @@ class _DeliveryAddressPickerSheetState
     if (_searching && _suggestions.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
+    final l10n = context.l10n;
     if (_offline) {
       return AddressPickerEmptyState(
         icon: 'wifi-off',
         color: cs.warning,
-        title: 'Connexion requise',
-        subtitle: 'Vérifiez votre connexion pour rechercher une adresse.',
+        title: l10n.addressOfflineTitle,
+        subtitle: l10n.addressOfflineSubtitle,
       );
     }
     if (_error) {
       return AddressPickerEmptyState(
         icon: 'circle-alert',
         color: cs.error,
-        title: 'Erreur',
-        subtitle: 'Impossible de rechercher une adresse. Réessayez.',
+        title: l10n.addressSearchErrorTitle,
+        subtitle: l10n.addressSearchErrorSubtitle,
       );
     }
     if (_suggestions.isEmpty) {
       return AddressPickerEmptyState(
         icon: 'map-pin-off',
         color: cs.onSurfaceVariant,
-        title: 'Aucun résultat',
-        subtitle: 'Essayez « Utiliser ma position actuelle ».',
+        title: l10n.addressNoResultsTitle,
+        subtitle: l10n.addressNoResultsSubtitle,
         action: _GpsTile(onTap: _onGps),
       );
     }
@@ -648,6 +654,7 @@ class _DeliveryAddressPickerSheetState
     if (state.status == DeliveryAddressStatus.loading) {
       return const Center(child: CircularProgressIndicator());
     }
+    final l10n = context.l10n;
     final recents = _recents.getAll();
     // Sélection sans correspondance (position GPS brute, ou adresse récente
     // évincée du cache 3 places) : ni enregistrée ni dans les récentes, il
@@ -665,7 +672,7 @@ class _DeliveryAddressPickerSheetState
           _RecentAddressRow(
             address: effectiveAdHoc,
             color: cs.secondary,
-            icon: effectiveAdHoc.label.startsWith('Position GPS (')
+            icon: isGpsPositionLabel(effectiveAdHoc.label)
                 ? 'locate-fixed'
                 : 'map-pin',
             selected: true,
@@ -682,7 +689,7 @@ class _DeliveryAddressPickerSheetState
               4,
             ),
             child: Text(
-              'RECHERCHES RÉCENTES',
+              l10n.addressRecentSearchesHeader,
               style: tt.labelSmall?.copyWith(
                 color: cs.onSurfaceVariant,
                 letterSpacing: 0.08,
@@ -714,7 +721,7 @@ class _DeliveryAddressPickerSheetState
               4,
             ),
             child: Text(
-              'MES ADRESSES ENREGISTRÉES',
+              l10n.addressSavedAddressesHeader,
               style: tt.labelSmall?.copyWith(
                 color: cs.onSurfaceVariant,
                 letterSpacing: 0.08,
@@ -748,11 +755,11 @@ class _DeliveryAddressPickerSheetState
             child: const DonyIcon('plus'),
           ),
           title: Text(
-            'Ajouter une adresse',
+            l10n.addressAddNewTitle,
             style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           subtitle: Text(
-            'Enregistrer pour la prochaine fois',
+            l10n.addressAddNewSubtitle,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           onTap: () async {
@@ -782,13 +789,14 @@ class _SearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     return TextField(
       controller: controller,
       focusNode: focusNode,
       style: tt.bodyMedium?.copyWith(color: cs.onSurface),
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: 'Rechercher une adresse…',
+        hintText: l10n.addressSearchHint,
         hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         filled: true,
         fillColor: cs.surfaceContainerHighest,
@@ -814,7 +822,7 @@ class _SearchField extends StatelessWidget {
               )
             : controller.text.isNotEmpty
             ? IconButton(
-                tooltip: 'Fermer',
+                tooltip: l10n.commonClose,
                 icon: const DonyIcon('x', size: 16),
                 onPressed: () => controller.clear(),
               )
@@ -858,7 +866,7 @@ class _GpsTile extends StatelessWidget {
         child: DonyIcon('locate-fixed', size: 18, color: cs.secondary),
       ),
       title: Text(
-        'Utiliser ma position actuelle',
+        context.l10n.addressUseCurrentLocation,
         style: tt.bodyMedium?.copyWith(
           fontWeight: FontWeight.w600,
           color: cs.secondary,
@@ -989,7 +997,7 @@ class _DeliveryAddressRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(99),
               ),
               child: Text(
-                'Par défaut',
+                context.l10n.addressDefaultBadge,
                 style: tt.labelSmall?.copyWith(
                   color: activeColor,
                   fontWeight: FontWeight.w600,

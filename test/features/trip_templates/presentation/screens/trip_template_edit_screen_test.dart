@@ -44,6 +44,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/mock_recent_city_store.dart';
 
@@ -789,6 +790,23 @@ void main() {
         find.widgetWithText(DonyButton, 'Enregistrer le modèle'),
       );
       expect(button.onPressed, isNull);
+    });
+  });
+
+  group('anglais', () {
+    testWidgets('titre de création et bouton Continuer traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('New template'), findsOneWidget);
+      expect(find.text('Continue'), findsOneWidget);
     });
   });
 }

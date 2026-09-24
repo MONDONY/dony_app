@@ -5,41 +5,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-
-// ─── Field card (thin white container for a single field) ─────────────────────
-
-class CaFieldCard extends StatelessWidget {
-  final Widget child;
-  const CaFieldCard({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      // Material ancestor so any ListTile in the card paints ink above the
-      // colored Container (Flutter 3.44 ListTile-in-ColoredBox assertion).
-      child: Container(
-        color: cs.surface,
-        child: Material(type: MaterialType.transparency, child: child),
-      ),
-    );
-  }
-}
-
-// ─── Field icon (styled prefix icon for form fields) ─────────────────────────
-
-class CaFieldIcon extends StatelessWidget {
-  final IconData icon;
-  const CaFieldIcon({super.key, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Icon(icon, size: 20, color: cs.primary);
-  }
-}
 
 // ─── Section card (white, no border, clip) ───────────────────────────────────
 
@@ -112,201 +77,6 @@ class CaSectionLabel extends StatelessWidget {
   }
 }
 
-// ─── Inline add row (no wrapper) ─────────────────────────────────────────────
-
-class CaInlineAddRow extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final VoidCallback onAdd;
-  final Color accentColor;
-
-  const CaInlineAddRow({
-    super.key,
-    required this.controller,
-    required this.hint,
-    required this.onAdd,
-    this.accentColor = DonyColors.primary,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.base,
-        vertical: DonySpacing.xs,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-              onSubmitted: (_) => onAdd(),
-              textInputAction: TextInputAction.done,
-              scrollPadding: const EdgeInsets.only(bottom: 120),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: DonySpacing.md,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: DonySpacing.sm),
-          Semantics(
-            label: 'Ajouter un article',
-            button: true,
-            child: Tooltip(
-              message: 'Ajouter',
-              child: GestureDetector(
-                onTap: onAdd,
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: accentColor,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const DonyIcon(
-                    'plus',
-                    size: 18,
-                    color: DonyColors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Removable chip ──────────────────────────────────────────────────────────
-
-class CaRemovableChip extends StatelessWidget {
-  final String label;
-  final Color accentColor;
-  final VoidCallback onRemove;
-
-  const CaRemovableChip({
-    super.key,
-    required this.label,
-    required this.accentColor,
-    required this.onRemove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.only(
-        left: DonySpacing.md,
-        right: DonySpacing.xs,
-        top: DonySpacing.xs,
-        bottom: DonySpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: tt.bodySmall?.copyWith(
-              color: accentColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          Semantics(
-            button: true,
-            container: true,
-            excludeSemantics: true,
-            label: 'Retirer \$label',
-            child: GestureDetector(
-              onTap: onRemove,
-              child: DonyIcon('x', size: 14, color: accentColor),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Rangée heure ─────────────────────────────────────────────────────────────
-
-class CaTimeRow extends StatelessWidget {
-  final bool isDeparture;
-  final TimeOfDay? time;
-  final VoidCallback onTap;
-  final VoidCallback? onClear;
-
-  const CaTimeRow({
-    super.key,
-    required this.isDeparture,
-    required this.time,
-    required this.onTap,
-    this.onClear,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final color = isDeparture ? cs.primary : DonyColors.accent;
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.md,
-        ),
-        child: Row(
-          children: [
-            DonyIcon('clock', size: 14, color: color.withValues(alpha: 0.7)),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: Text(
-                time == null
-                    ? isDeparture
-                          ? 'Heure de départ (optionnel)'
-                          : 'Heure d\'arrivée (optionnel)'
-                    : '${time!.hour.toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')}',
-                style: tt.bodyMedium?.copyWith(
-                  fontWeight: time != null ? FontWeight.w600 : FontWeight.w400,
-                  color: time != null ? cs.onSurface : cs.onSurfaceVariant,
-                ),
-              ),
-            ),
-            if (time != null && onClear != null)
-              Semantics(
-                button: true,
-                container: true,
-                excludeSemantics: true,
-                label: "Effacer l'heure",
-                child: GestureDetector(
-                  onTap: onClear,
-                  child: DonyIcon('x', size: 16, color: cs.onSurfaceVariant),
-                ),
-              )
-            else
-              DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ─── Stepper header ───────────────────────────────────────────────────────────
 
 class CaStepperHeader extends StatelessWidget {
@@ -319,12 +89,17 @@ class CaStepperHeader extends StatelessWidget {
     required this.totalSteps,
   });
 
-  static const _labels = ['Trajet', 'Lieux & capacité', 'Prix & conditions'];
+  static List<String> _labels(AppLocalizations l) => [
+    l.tripPublishRouteSectionLabel,
+    l.tripPublishPlacesCapacityStepLabel,
+    l.tripPublishPriceConditionsStepLabel,
+  ];
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final labels = _labels(context.l10n);
     return Column(
       children: [
         Padding(
@@ -350,7 +125,7 @@ class CaStepperHeader extends StatelessWidget {
           children: List.generate(totalSteps, (i) {
             return Expanded(
               child: Text(
-                i < currentStep ? '${_labels[i]} ✓' : _labels[i],
+                i < currentStep ? '${labels[i]} ✓' : labels[i],
                 textAlign: TextAlign.center,
                 style: tt.labelSmall?.copyWith(
                   color: i == currentStep
@@ -412,51 +187,6 @@ class CaStepNode extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-      ),
-    );
-  }
-}
-
-// ─── Rangée date ──────────────────────────────────────────────────────────────
-
-class CaDateRow extends StatelessWidget {
-  final DateTime? date;
-  final VoidCallback onTap;
-
-  const CaDateRow({super.key, required this.date, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.md,
-        ),
-        child: Row(
-          children: [
-            DonyIcon('calendar', size: 14, color: cs.onSurfaceVariant),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: Text(
-                date == null
-                    ? 'Date de départ'
-                    : DateFormat(
-                        'EEE d MMM yyyy',
-                        AppL10n.localeName,
-                      ).format(date!),
-                style: tt.bodyMedium?.copyWith(
-                  fontWeight: date != null ? FontWeight.w600 : FontWeight.w400,
-                  color: date != null ? cs.onSurface : cs.onSurfaceVariant,
-                ),
-              ),
-            ),
-            DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
-          ],
-        ),
       ),
     );
   }

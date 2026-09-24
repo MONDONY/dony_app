@@ -15,6 +15,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -252,7 +253,9 @@ class TransportModeField extends StatelessWidget {
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(
                   child: Text(
-                    active ? mode!.label : context.l10n.homeFilterFieldsAll,
+                    active
+                        ? mode!.label(context.l10n)
+                        : context.l10n.homeFilterFieldsAll,
                     style: tt.titleSmall?.copyWith(
                       color: active ? cs.primary : cs.onSurfaceVariant,
                       fontWeight: active ? FontWeight.w700 : FontWeight.w400,
@@ -440,7 +443,7 @@ class UrgencyFilterChips extends StatelessWidget {
                 ),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
-                  f.label,
+                  f.label(context.l10n),
                   style: tt.labelSmall?.copyWith(
                     color: isSelected ? f.color : cs.onSurface,
                     fontWeight: FontWeight.w600,
@@ -820,7 +823,7 @@ Future<void> showTransportPicker(
                         const SizedBox(width: DonySpacing.md),
                         Expanded(
                           child: Text(
-                            m.label,
+                            m.label(ctx.l10n),
                             style: tt.bodyMedium?.copyWith(
                               color: selected ? cs.primary : cs.onSurface,
                               fontWeight: selected

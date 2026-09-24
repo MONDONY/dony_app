@@ -15,6 +15,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
 
@@ -144,6 +146,24 @@ void main() {
       );
     });
 
+    testWidgets('non vérifié : phrase complète en français (gras + chemin '
+        'reconstitués depuis une clé unique paramétrée)', (tester) async {
+      await _pump(
+        tester,
+        role: PublishIntroRole.trip,
+        kycStatus: 'NOT_STARTED',
+      );
+
+      expect(
+        find.text(
+          'Avant de publier, votre identité doit être vérifiée. '
+          'Rendez-vous dans Profil › Vérifications pour la valider '
+          '(2 min).',
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('vérifié : Continuer ouvre le formulaire de trajet', (
       tester,
     ) async {
@@ -220,6 +240,54 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(visited, contains('/package-requests/new'));
+    });
+  });
+
+  group('PublishIntroScreen — English', () {
+    testWidgets('trajet, vérifié : titre et bouton traduits', (tester) async {
+      useEnglish();
+      await _pump(tester, role: PublishIntroRole.trip, kycStatus: 'VERIFIED');
+
+      expect(find.text('Post a trip'), findsOneWidget);
+      expect(find.text('Continue'), findsOneWidget);
+    });
+
+    testWidgets('trajet, rappel Stripe traduit', (tester) async {
+      useEnglish();
+      await _pump(
+        tester,
+        role: PublishIntroRole.trip,
+        kycStatus: 'VERIFIED',
+        stripeStatus: 'NOT_CREATED',
+      );
+
+      expect(find.text('Turn on card payments'), findsOneWidget);
+    });
+
+    testWidgets('colis, vérifié : titre traduit', (tester) async {
+      useEnglish();
+      await _pump(tester, role: PublishIntroRole.parcel, kycStatus: 'VERIFIED');
+
+      expect(find.text('Post a parcel'), findsOneWidget);
+    });
+
+    testWidgets('trajet, non vérifié : phrase complète en anglais', (
+      tester,
+    ) async {
+      useEnglish();
+      await _pump(
+        tester,
+        role: PublishIntroRole.trip,
+        kycStatus: 'NOT_STARTED',
+      );
+
+      expect(
+        find.text(
+          'Before you post, your identity must be verified. Go to '
+          'Profile › Verifications to verify it (2 min).',
+        ),
+        findsOneWidget,
+      );
     });
   });
 }

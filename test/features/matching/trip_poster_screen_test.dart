@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 AnnouncementModel _announcement({
   double pricePerKg = 6.0,
   double? pricePerKgDisplay = 8.0,
@@ -68,7 +70,10 @@ Future<void> _tapAction(WidgetTester tester, String label) async {
 }
 
 void main() {
-  setUpAll(() async => initializeDateFormatting('fr'));
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
+    await initializeDateFormatting('en');
+  });
 
   late List<String> copied;
 
@@ -206,5 +211,22 @@ void main() {
 
     expect(copied.single, contains('Kg libre'));
     expect(copied.single, isNot(contains('12 kg')));
+  });
+
+  testWidgets('anglais : actions et légende traduites', (tester) async {
+    useEnglish();
+    await _pump(tester);
+
+    expect(find.text('Share the poster'), findsOneWidget);
+    expect(find.text('Copy the caption'), findsOneWidget);
+    expect(find.text('Copy the link'), findsOneWidget);
+    expect(find.text('Save to gallery'), findsOneWidget);
+
+    await _tapAction(tester, 'Copy the caption');
+
+    final caption = copied.single;
+    expect(caption, contains('Paris to Dakar'));
+    expect(caption, contains('Last drop-off'));
+    expect(caption, contains(formatPriceIn(8, 'EUR')));
   });
 }

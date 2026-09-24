@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/mock_analytics_backend.dart';
 
 /// Construit le widget sous test à l'intérieur d'un arbre minimal valide.
@@ -194,5 +195,17 @@ void main() {
         expect(fields.last.value, equals(address));
       },
     );
+  });
+
+  // ── Group: English (i18n) ─────────────────────────────────────────────────
+
+  group('LieuxCapaciteStep — English', () {
+    testWidgets('libellé de section "Drop-off locations" traduit', (
+      tester,
+    ) async {
+      useEnglish();
+      await _pumpHost(tester);
+      expect(find.text('Drop-off locations'), findsOneWidget);
+    });
   });
 }

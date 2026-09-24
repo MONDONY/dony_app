@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 AnnouncementModel _announcement({
   double pricePerKg = 5,
   double? pricePerKgDisplay = 7,
@@ -18,12 +20,13 @@ AnnouncementModel _announcement({
   String? deliveryLabel,
   String departureCity = 'Paris',
   String arrivalCity = 'Dakar',
+  DateTime? departureDate,
 }) => AnnouncementModel.fromJson({
   'id': 'a1',
   'travelerId': 't1',
   'departureCity': departureCity,
   'arrivalCity': arrivalCity,
-  'departureDate': DateTime(2026, 8, 20).toIso8601String(),
+  'departureDate': (departureDate ?? DateTime(2026, 8, 20)).toIso8601String(),
   'availableKg': 12.0,
   'totalKg': 23.0,
   'pricePerKg': pricePerKg,
@@ -57,7 +60,10 @@ Future<void> _pump(WidgetTester tester, AnnouncementModel a) =>
     );
 
 void main() {
-  setUpAll(() async => initializeDateFormatting('fr'));
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
+    await initializeDateFormatting('en');
+  });
 
   testWidgets('affiche le corridor en capitales', (tester) async {
     await _pump(tester, _announcement());
@@ -329,5 +335,51 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+  });
+
+  /// `tripPosterTimePattern` (fr `HH'h'mm`, en `h:mm a`) : « 14h05 » est une
+  /// typographie française que le squelette intl `jm` ne produit pas.
+  testWidgets('rend l\'échéance en français : "6 octobre à 14h05"', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _announcement(
+        handoverDeadline: DateTime(2026, 10, 6, 14, 5).toIso8601String(),
+      ),
+    );
+
+    expect(find.text('6 octobre à 14h05'), findsOneWidget);
+  });
+
+  testWidgets('rend l\'échéance en anglais : "October 6 at 2:05 PM"', (
+    tester,
+  ) async {
+    useEnglish();
+    await _pump(
+      tester,
+      _announcement(
+        handoverDeadline: DateTime(2026, 10, 6, 14, 5).toIso8601String(),
+      ),
+    );
+
+    expect(find.text('October 6 at 2:05 PM'), findsOneWidget);
+  });
+
+  testWidgets('rend le jour de départ en français : "mardi 6 octobre"', (
+    tester,
+  ) async {
+    await _pump(tester, _announcement(departureDate: DateTime(2026, 10, 6)));
+
+    expect(find.text('mardi 6 octobre'), findsOneWidget);
+  });
+
+  testWidgets('rend le jour de départ en anglais : "Tuesday, October 6"', (
+    tester,
+  ) async {
+    useEnglish();
+    await _pump(tester, _announcement(departureDate: DateTime(2026, 10, 6)));
+
+    expect(find.text('Tuesday, October 6'), findsOneWidget);
   });
 }

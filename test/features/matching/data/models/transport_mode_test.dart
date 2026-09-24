@@ -1,4 +1,6 @@
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -27,8 +29,9 @@ void main() {
 
   group('TransportMode UI', () {
     test('label is non-empty for every value', () {
+      final l = lookupAppLocalizations(AppL10n.fr);
       for (final mode in TransportMode.values) {
-        expect(mode.label, isNotEmpty);
+        expect(mode.label(l), isNotEmpty);
       }
     });
 

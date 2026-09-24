@@ -58,6 +58,7 @@ import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -67,6 +68,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/currency_test_doubles.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/mock_recent_city_store.dart';
 
@@ -202,10 +204,20 @@ _MockKycBloc _makeKycBloc() {
 /// not create its own `AuthBloc` — mirrors production, where `AuthBloc` is
 /// provided ambient at the app root). [authState] lets tests opt into a
 /// non-verified user to exercise the KYC publish gate (Task 5).
+///
+/// [locale] is left `null` by default: no `AppLocalizations` delegate is
+/// mounted, and `context.l10n` falls back to `AppL10n.current` (driven by
+/// `Intl.defaultLocale`, see `useEnglish()`) — the existing behavior of every
+/// test in this file. Passing a [locale] mounts the real
+/// `AppLocalizations.localizationsDelegates` instead, so `Localizations.of`
+/// resolves for real: used by the language-reactivity test below, which
+/// rebuilds with a different [locale] to prove the UI actually reacts to a
+/// live language change, not just to the `Intl.defaultLocale` shortcut.
 Widget _wrapWithRouter(
   Widget child, {
   AuthState? authState,
   String helpConfigJson = _emptyHelpConfigJson,
+  Locale? locale,
 }) {
   final router = GoRouter(
     initialLocation: '/trips/create',
@@ -273,7 +285,15 @@ Widget _wrapWithRouter(
     ],
   );
 
-  return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
+  return locale == null
+      ? MaterialApp.router(routerConfig: router, theme: AppTheme.light())
+      : MaterialApp.router(
+          routerConfig: router,
+          theme: AppTheme.light(),
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        );
 }
 
 /// Returns a minimal `AnnouncementModel` suitable for edit-mode tests.
@@ -1420,7 +1440,7 @@ void main() {
     ) async {
       setupViewport(tester);
 
-      // date limite (2 août) > date de départ (1er août) → _handoverDeadlineError non-null
+      // date limite (2 août) > date de départ (1er août) → _isHandoverDeadlineInvalid() vrai
       final ann = AnnouncementModel(
         id: 'ann-handover-err',
         travelerId: 'trav-1',
@@ -3289,6 +3309,60 @@ void main() {
       );
     },
   );
+
+  // ── Group: English (i18n) ─────────────────────────────────────────────────
+
+  group('CreateTripScreen — English', () {
+    testWidgets('mode création : titre et bouton "Continue" traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      setupViewport(tester);
+
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+      expect(find.text('Post a trip'), findsOneWidget);
+      expect(find.text('Continue'), findsOneWidget);
+    });
+
+    testWidgets('mode édition : titre traduit', (tester) async {
+      useEnglish();
+      setupViewport(tester);
+
+      final args = CreateTripArgs(announcement: _makeAnnouncement());
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
+
+      expect(find.text('Edit trip'), findsOneWidget);
+    });
+  });
+
+  // ── Group: réactivité à la langue (délégués réellement montés) ──────────
+
+  group('CreateTripScreen — réactivité à la langue', () {
+    testWidgets(
+      'le titre suit un changement de langue en direct, sans redémarrer '
+      'l\'app',
+      (tester) async {
+        setupViewport(tester);
+
+        await pumpAndDrain(
+          tester,
+          _wrapWithRouter(const CreateTripScreen(), locale: AppL10n.fr),
+        );
+        expect(find.text('Publier un trajet'), findsOneWidget);
+        expect(find.text('Post a trip'), findsNothing);
+
+        await tester.pumpWidget(
+          _wrapWithRouter(const CreateTripScreen(), locale: AppL10n.en),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.text('Post a trip'), findsOneWidget);
+        expect(find.text('Publier un trajet'), findsNothing);
+      },
+    );
+  });
 }
 
 // ── Route observer for navigation tests ──────────────────────────────────────

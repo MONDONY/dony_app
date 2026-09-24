@@ -6,7 +6,10 @@ String? cityFlag(String city) {
 }
 
 String _normalize(String city) {
-  const accents = 'àâäéèêëîïôöùûüç';
+  // Table de translittération technique (retire les accents pour la clé de
+  // recherche `_cityToFlag`), jamais affichée à l'utilisateur.
+  const accents =
+      'àâäéèêëîïôöùûüç'; // i18n-ignore : table technique, non affichée
   const plain = 'aaaeeeeiioouuuc';
   var s = city.trim().toLowerCase();
   for (var i = 0; i < accents.length; i++) {
@@ -15,6 +18,9 @@ String _normalize(String city) {
   return s;
 }
 
+// i18n-ignore : clés de recherche (noms de ville normalisés, jamais affichés
+// tels quels — le nom affiché vient de `departureCity`/`arrivalCity`) et
+// drapeaux emoji (pictogrammes, pas des mots à traduire).
 const _cityToFlag = <String, String>{
   // France
   'paris': '🇫🇷',

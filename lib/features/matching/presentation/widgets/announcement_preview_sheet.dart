@@ -3,6 +3,7 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -126,7 +127,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
           _PreviewRow(
             iconAsset: 'luggage',
             label: 'Capacité',
-            value: formState.capacityUnit.label,
+            value: formState.capacityUnit.label(context.l10n),
           ),
           _PreviewRow(iconAsset: 'banknote', label: 'Prix', value: prixStr),
           _PreviewRow(

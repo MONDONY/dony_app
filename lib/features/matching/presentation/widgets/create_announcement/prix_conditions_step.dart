@@ -16,6 +16,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/grid_preview_card.dart';
 import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -126,6 +127,7 @@ class PrixConditionsStep extends StatelessWidget {
     // TODO(refactor): décomposer en _PriceSection / _PaymentSection / _ContentSection / _NoteSection
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +158,7 @@ class PrixConditionsStep extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _ModeToggleOption(
-                        label: 'Au kilo',
+                        label: l.tripPublishPricingModeKg,
                         active: formState.pricingMode == PricingMode.kg,
                         onTap: () => context.read<AnnouncementFormBloc>().add(
                           const AnnouncementPricingModeSetRequested(
@@ -167,7 +169,7 @@ class PrixConditionsStep extends StatelessWidget {
                     ),
                     Expanded(
                       child: _ModeToggleOption(
-                        label: 'Grille + kilo',
+                        label: l.tripPublishPricingModeMixed,
                         active: formState.pricingMode == PricingMode.mixed,
                         onTap: () => context.read<AnnouncementFormBloc>().add(
                           const AnnouncementPricingModeSetRequested(
@@ -191,7 +193,10 @@ class PrixConditionsStep extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const CaSectionLabel(label: 'Prix par kg', iconAsset: 'tag'),
+                  CaSectionLabel(
+                    label: l.tripPublishPricePerKgSectionLabel,
+                    iconAsset: 'tag',
+                  ),
                   const SizedBox(height: DonySpacing.md),
                   // ── Toggle "Tarif au kilo" (MIXED uniquement) ─────────────
                   if (isMixed)
@@ -205,13 +210,13 @@ class PrixConditionsStep extends StatelessWidget {
                           activeThumbColor: cs.primary,
                           contentPadding: EdgeInsets.zero,
                           title: Text(
-                            'Tarif au kilo',
+                            l.tripPublishKgPriceToggleTitle,
                             style: tt.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           subtitle: Text(
-                            'Optionnel en mode grille',
+                            l.tripPublishKgPriceToggleSubtitle,
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
@@ -335,7 +340,7 @@ class PrixConditionsStep extends StatelessWidget {
                                       const SizedBox(width: DonySpacing.xs),
                                       Flexible(
                                         child: Text(
-                                          'Autre prix',
+                                          l.tripPublishCustomPriceChipLabel,
                                           style: tt.bodyMedium?.copyWith(
                                             color: isCustom
                                                 ? cs.success
@@ -354,8 +359,8 @@ class PrixConditionsStep extends StatelessWidget {
                               if (isCustom) ...[
                                 const SizedBox(height: DonySpacing.sm),
                                 DonyTextField(
-                                  label: 'Prix par kg',
-                                  hint: 'ex: 12',
+                                  label: l.tripPublishPricePerKgSectionLabel,
+                                  hint: l.tripPublishCustomPriceFieldHint,
                                   controller: customPriceCtrl,
                                   keyboardType:
                                       const TextInputType.numberWithOptions(
@@ -385,10 +390,19 @@ class PrixConditionsStep extends StatelessWidget {
                               const SizedBox(height: DonySpacing.sm),
                               Text(
                                 selectedIdx == -1
-                                    ? 'Sélectionnez un prix pour voir l\'estimation'
+                                    ? l.tripPublishPriceSelectPrompt
                                     : kg == 0
-                                    ? 'Capacité illimitée : estimation selon la demande'
-                                    : 'Vous touchez ${CurrencyFormatter.formatOrPlain(travelerNet, currency)} · l\'expéditeur paie ${CurrencyFormatter.formatOrPlain(senderTotal, currency)}',
+                                    ? l.tripPublishUnlimitedCapacityEstimateNote
+                                    : l.tripPublishPriceEstimateLine(
+                                        CurrencyFormatter.formatOrPlain(
+                                          travelerNet,
+                                          currency,
+                                        ),
+                                        CurrencyFormatter.formatOrPlain(
+                                          senderTotal,
+                                          currency,
+                                        ),
+                                      ),
                                 style: tt.bodySmall?.copyWith(
                                   color: selectedIdx == -1
                                       ? cs.error.withValues(alpha: 0.7)
@@ -458,7 +472,9 @@ class PrixConditionsStep extends StatelessWidget {
                       borderRadius: BorderRadius.circular(DonyRadius.sm),
                     ),
                     child: Text(
-                      'Yadony ajoute $donyCommissionPercentLabel % sur chaque article et sur le prix au kilo',
+                      l.tripPublishGridCommissionNotice(
+                        donyCommissionPercentLabel,
+                      ),
                       style: tt.bodySmall?.copyWith(color: cs.primary),
                     ),
                   ),
@@ -483,12 +499,11 @@ class PrixConditionsStep extends StatelessWidget {
                 activeThumbColor: cs.primary,
                 contentPadding: EdgeInsets.zero,
                 title: Text(
-                  'J\'accepte les propositions de prix',
+                  l.tripPublishNegotiableToggleTitle,
                   style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 subtitle: Text(
-                  'Les expéditeurs pourront vous proposer un montant, vous '
-                  'restez libre de refuser',
+                  l.tripPublishNegotiableToggleSubtitle,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               );
@@ -501,8 +516,8 @@ class PrixConditionsStep extends StatelessWidget {
         // Masqué dans le flux trajet dédié : le mode de paiement est déjà fixé
         // par la négociation (lockContext.paymentMethod).
         if (showPaymentMethods) ...[
-          const CaSectionLabel(
-            label: 'Modes de paiement acceptés',
+          CaSectionLabel(
+            label: l.tripPublishPaymentMethodsSectionLabel,
             iconAsset: 'banknote',
           ),
           const SizedBox(height: DonySpacing.sm),
@@ -528,6 +543,7 @@ class PrixConditionsStep extends StatelessWidget {
                   tt,
                   cs,
                   ctx,
+                  l,
                   connectAvailable: stripeState.connectAvailableInCountry,
                 );
               }
@@ -546,7 +562,7 @@ class PrixConditionsStep extends StatelessWidget {
                           const SizedBox(width: DonySpacing.sm),
                           Flexible(
                             child: Text(
-                              'Carte bancaire (Stripe)',
+                              l.tripPublishCardPaymentTitle,
                               style: tt.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: cs.onSurface,
@@ -562,7 +578,7 @@ class PrixConditionsStep extends StatelessWidget {
                         ],
                       ),
                       subtitle: Text(
-                        'Paiement sécurisé par défaut',
+                        l.tripPublishCardPaymentSubtitle,
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -592,7 +608,7 @@ class PrixConditionsStep extends StatelessWidget {
                                   const SizedBox(width: DonySpacing.sm),
                                   Flexible(
                                     child: Text(
-                                      'Espèces',
+                                      l.tripPublishCashLabel,
                                       style: tt.bodyMedium?.copyWith(
                                         fontWeight: FontWeight.w600,
                                         color: cs.onSurface,
@@ -602,7 +618,7 @@ class PrixConditionsStep extends StatelessWidget {
                                 ],
                               ),
                               subtitle: Text(
-                                'Commission prélevée au voyageur à la remise',
+                                l.tripPublishCashSubtitle,
                                 style: tt.bodySmall?.copyWith(
                                   color: cs.onSurfaceVariant,
                                 ),
@@ -635,7 +651,7 @@ class PrixConditionsStep extends StatelessWidget {
                       },
                     ),
                     const CaRowDivider(),
-                    _buildMobileMoneySection(tt, cs),
+                    _buildMobileMoneySection(tt, cs, l),
                   ],
                 ),
               );
@@ -644,8 +660,8 @@ class PrixConditionsStep extends StatelessWidget {
           const SizedBox(height: DonySpacing.xxl),
         ], // fin de la section paiement (masquée quand !showPaymentMethods)
         // ── CE QUE J'ACCEPTE ──────────────────────────────────────────────────
-        const CaSectionLabel(
-          label: 'Ce que j\'accepte',
+        CaSectionLabel(
+          label: l.tripPublishAcceptedContentSectionLabel,
           iconAsset: 'circle-check',
         ),
         const SizedBox(height: DonySpacing.sm),
@@ -696,7 +712,10 @@ class PrixConditionsStep extends StatelessWidget {
         const SizedBox(height: DonySpacing.xxl),
 
         // ── CE QUE JE REFUSE ──────────────────────────────────────────────────
-        const CaSectionLabel(label: 'Ce que je refuse', iconAsset: 'ban'),
+        CaSectionLabel(
+          label: l.tripPublishRefusedContentSectionLabel,
+          iconAsset: 'ban',
+        ),
         const SizedBox(height: DonySpacing.sm),
         ListenableBuilder(
           listenable: Listenable.merge([
@@ -722,7 +741,7 @@ class PrixConditionsStep extends StatelessWidget {
                   keyPrefix: 'refused-content',
                   catalog: catalog,
                   selected: refusedTypesNotifier.value.toList(),
-                  hint: 'Ex: Liquides, Denrées périssables…',
+                  hint: l.tripPublishRefusedContentHint,
                   onChanged: (labels) =>
                       refusedTypesNotifier.value = labels.toSet(),
                 ),
@@ -733,8 +752,8 @@ class PrixConditionsStep extends StatelessWidget {
         const SizedBox(height: DonySpacing.xxl),
 
         // ── NOTE AUX EXPÉDITEURS ──────────────────────────────────────────────
-        const CaSectionLabel(
-          label: 'Note aux expéditeurs',
+        CaSectionLabel(
+          label: l.tripPublishNoteToSendersSectionLabel,
           iconAsset: 'notebook-pen',
         ),
         const SizedBox(height: DonySpacing.sm),
@@ -764,8 +783,7 @@ class PrixConditionsStep extends StatelessWidget {
                           }) => null,
                       style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                       decoration: InputDecoration(
-                        hintText:
-                            'Ex: Je préfère les colis bien emballés. Contactez-moi avant le départ.',
+                        hintText: l.tripPublishNoteToSendersHint,
                         hintStyle: tt.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -802,7 +820,8 @@ class PrixConditionsStep extends StatelessWidget {
   Widget _buildStripeNotConfiguredPaymentSection(
     TextTheme tt,
     ColorScheme cs,
-    BuildContext ctx, {
+    BuildContext ctx,
+    AppLocalizations l, {
     required bool connectAvailable,
   }) {
     return CaSectionCard(
@@ -866,11 +885,8 @@ class PrixConditionsStep extends StatelessWidget {
                 final explanation = Expanded(
                   child: Text(
                     connectAvailable
-                        ? 'Publiez en espèces dès maintenant. Connectez Stripe '
-                              'pour accepter aussi la carte.'
-                        : 'Le paiement par carte n\'est pas encore disponible '
-                              'dans votre pays. Vos trajets sont publiés en '
-                              'espèces.',
+                        ? l.tripPublishCashOnlyBannerWithConnect
+                        : l.tripPublishCashOnlyBannerNoConnect,
                     style: tt.bodySmall?.copyWith(color: cs.onSurface),
                   ),
                 );
@@ -919,7 +935,7 @@ class PrixConditionsStep extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            'Activer les paiements par carte',
+                            l.tripPublishActivateCardPaymentsCta,
                             style: tt.labelSmall?.copyWith(
                               color: cs.onPrimary,
                               fontWeight: FontWeight.w600,
@@ -963,7 +979,7 @@ class PrixConditionsStep extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 Flexible(
                   child: Text(
-                    'Carte bancaire (Stripe)',
+                    l.tripPublishCardPaymentTitle,
                     style: tt.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: cs.onSurfaceVariant,
@@ -975,7 +991,7 @@ class PrixConditionsStep extends StatelessWidget {
               ],
             ),
             subtitle: Text(
-              'Non configuré, activez pour proposer le paiement sécurisé',
+              l.tripPublishCardNotConfiguredSubtitle,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             contentPadding: const EdgeInsets.symmetric(
@@ -996,7 +1012,7 @@ class PrixConditionsStep extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 Flexible(
                   child: Text(
-                    'Espèces',
+                    l.tripPublishCashLabel,
                     style: tt.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: cs.onSurface,
@@ -1006,7 +1022,7 @@ class PrixConditionsStep extends StatelessWidget {
               ],
             ),
             subtitle: Text(
-              'Commission prélevée au voyageur à la remise',
+              l.tripPublishCashSubtitle,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             contentPadding: const EdgeInsets.symmetric(
@@ -1026,7 +1042,7 @@ class PrixConditionsStep extends StatelessWidget {
             ),
           ),
           const CaRowDivider(),
-          _buildMobileMoneySection(tt, cs),
+          _buildMobileMoneySection(tt, cs, l),
         ],
       ),
     );
@@ -1037,7 +1053,11 @@ class PrixConditionsStep extends StatelessWidget {
   /// production selon que le voyageur a terminé l'onboarding Stripe Connect,
   /// indépendant du rail mobile money. Visible même hors zone CFA (bascule
   /// désactivée) et tant que le compte de versement n'est pas actif.
-  Widget _buildMobileMoneySection(TextTheme tt, ColorScheme cs) {
+  Widget _buildMobileMoneySection(
+    TextTheme tt,
+    ColorScheme cs,
+    AppLocalizations l,
+  ) {
     return ValueListenableBuilder<SupportedCurrency>(
       valueListenable: currencyNotifier,
       builder: (context, currencyValue, _) {
@@ -1050,7 +1070,7 @@ class PrixConditionsStep extends StatelessWidget {
                 child: TextButton(
                   onPressed: () =>
                       context.push('/payments/mobile-money/account'),
-                  child: const Text('Activer le versement'),
+                  child: Text(l.tripPublishActivatePayoutCta),
                 ),
               ),
             ValueListenableBuilder<bool>(
@@ -1069,7 +1089,7 @@ class PrixConditionsStep extends StatelessWidget {
                       const SizedBox(width: DonySpacing.sm),
                       Flexible(
                         child: Text(
-                          'Mobile money',
+                          'Mobile money', // i18n-ignore : mot identique en anglais (glossaire commun)
                           style: tt.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: cs.onSurface,
@@ -1080,10 +1100,10 @@ class PrixConditionsStep extends StatelessWidget {
                   ),
                   subtitle: Text(
                     !eligible
-                        ? 'Disponible pour les trajets en XOF ou XAF'
+                        ? l.tripPublishMobileMoneyIneligibleSubtitle
                         : !mobileMoneyAccountActive
-                        ? 'Active d\'abord ton versement mobile money'
-                        : 'Orange Money, Wave, MTN',
+                        ? l.tripPublishMobileMoneyInactiveSubtitle
+                        : 'Orange Money, Wave, MTN', // i18n-ignore : noms de marques
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
@@ -1157,6 +1177,7 @@ class _LockedPriceNote extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Container(
       key: const Key('locked-price-note'),
       width: double.infinity,
@@ -1176,7 +1197,7 @@ class _LockedPriceNote extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Prix fixé par la négociation',
+                  l.tripPublishLockedPriceNoteTitle,
                   style: tt.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
@@ -1184,8 +1205,7 @@ class _LockedPriceNote extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  "Le montant de ce colis a été convenu avec l'expéditeur, "
-                  'non modifiable ici.',
+                  l.tripPublishLockedPriceNoteSubtitle,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
@@ -1208,6 +1228,7 @@ class _LockedAgreedPriceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Container(
       key: const Key('locked-agreed-price-card'),
       width: double.infinity,
@@ -1226,7 +1247,7 @@ class _LockedAgreedPriceCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Prix total convenu',
+                  l.tripPublishAgreedPriceLabel,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 Text(

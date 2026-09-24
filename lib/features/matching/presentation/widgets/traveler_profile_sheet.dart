@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
@@ -12,6 +13,7 @@ import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
 import 'package:dony/features/subscriptions/presentation/widgets/subscribe_bar.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -61,8 +63,8 @@ class _TravelerProfileSheet extends StatelessWidget {
   final TravelerProfile traveler;
   final ScrollController scrollController;
 
-  String get _abbreviatedName {
-    final name = traveler.resolvedName;
+  String _abbreviatedName(BuildContext context) {
+    final name = traveler.travelerName(context.l10n);
     final parts = name.trim().split(' ');
     if (parts.length >= 2) {
       return '${parts[0]} ${parts[1][0]}.';
@@ -106,7 +108,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                     onPressed: () => showBlockMenu(
                       context,
                       userId: traveler.id,
-                      displayName: _abbreviatedName,
+                      displayName: _abbreviatedName(context),
                     ),
                   ),
                 ),
@@ -115,7 +117,10 @@ class _TravelerProfileSheet extends StatelessWidget {
           ),
 
           // ── En-tête tintée ────────────────────────────────────────────────
-          _ProfileHeader(traveler: traveler, abbreviatedName: _abbreviatedName),
+          _ProfileHeader(
+            traveler: traveler,
+            abbreviatedName: _abbreviatedName(context),
+          ),
 
           Divider(height: 1, thickness: 1, color: cs.outline),
 
@@ -315,7 +320,7 @@ class _ProfileHeader extends StatelessWidget {
               ],
             ),
             child: DonyAvatar(
-              name: traveler.resolvedName,
+              name: traveler.travelerName(context.l10n),
               size: DonyAvatarSize.lg,
               verified: traveler.kycVerified,
               pro: traveler.isProAccount,

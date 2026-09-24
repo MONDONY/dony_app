@@ -3931,6 +3931,1692 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'CGU'**
   String get shellTermsTitle;
+
+  /// Bouton générique qui enregistre une modification
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer'**
+  String get commonSave;
+
+  /// Bouton générique qui supprime un élément
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer'**
+  String get commonDelete;
+
+  /// Bouton générique qui ouvre l'édition d'un élément
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier'**
+  String get commonEdit;
+
+  /// Bouton générique de retour en arrière
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour'**
+  String get commonBack;
+
+  /// Bouton générique d'envoi
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get commonSend;
+
+  /// Bouton générique de partage
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager'**
+  String get commonShare;
+
+  /// Bouton générique de copie (presse-papiers)
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier'**
+  String get commonCopy;
+
+  /// Bouton générique qui déplie une liste tronquée
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir tout'**
+  String get commonSeeAll;
+
+  /// Date et heure accolées, sans mot en dur dans un motif de formatage
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} à {time}'**
+  String commonDateAtTime(String date, String time);
+
+  /// Liste de deux éléments jointe pour l'affichage
+  ///
+  /// In fr, this message translates to:
+  /// **'{first} et {second}'**
+  String commonListPair(String first, String second);
+
+  /// Liste de trois éléments ou plus : tête déjà jointe par des virgules, et dernier élément
+  ///
+  /// In fr, this message translates to:
+  /// **'{head} et {last}'**
+  String commonListLast(String head, String last);
+
+  /// Trajet sans capacité fixée : le voyageur accepte le kilo au fil de l'eau
+  ///
+  /// In fr, this message translates to:
+  /// **'Kg libre'**
+  String get tripKgFree;
+
+  /// Trajet dont le prix n'est pas négociable
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix ferme'**
+  String get tripFixedPrice;
+
+  /// Nom affiché quand le voyageur n'a pas de displayName exploitable
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur'**
+  String get tripTravelerFallbackName;
+
+  /// No description provided for @tripTransportPlane.
+  ///
+  /// In fr, this message translates to:
+  /// **'Avion'**
+  String get tripTransportPlane;
+
+  /// No description provided for @tripTransportCar.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voiture'**
+  String get tripTransportCar;
+
+  /// No description provided for @tripTransportTrain.
+  ///
+  /// In fr, this message translates to:
+  /// **'Train'**
+  String get tripTransportTrain;
+
+  /// No description provided for @tripTransportBus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bus'**
+  String get tripTransportBus;
+
+  /// No description provided for @tripTransportBoat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bateau'**
+  String get tripTransportBoat;
+
+  /// No description provided for @tripTransportOther.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get tripTransportOther;
+
+  /// No description provided for @tripUrgencyVeryUrgent.
+  ///
+  /// In fr, this message translates to:
+  /// **'< 3j'**
+  String get tripUrgencyVeryUrgent;
+
+  /// No description provided for @tripUrgencyUrgent.
+  ///
+  /// In fr, this message translates to:
+  /// **'3–7j'**
+  String get tripUrgencyUrgent;
+
+  /// No description provided for @tripUrgencySoon.
+  ///
+  /// In fr, this message translates to:
+  /// **'7–14j'**
+  String get tripUrgencySoon;
+
+  /// No description provided for @tripUrgencyLater.
+  ///
+  /// In fr, this message translates to:
+  /// **'14j+'**
+  String get tripUrgencyLater;
+
+  /// No description provided for @tripCapacitySuitcase23.
+  ///
+  /// In fr, this message translates to:
+  /// **'1 valise 23 kg'**
+  String get tripCapacitySuitcase23;
+
+  /// No description provided for @tripCapacitySuitcase32.
+  ///
+  /// In fr, this message translates to:
+  /// **'1 valise 32 kg'**
+  String get tripCapacitySuitcase32;
+
+  /// No description provided for @tripCapacityCustom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Personnalisé'**
+  String get tripCapacityCustom;
+
+  /// Titre de l'écran de publication d'un trajet (AppBar en création, et intro voyageur)
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier un trajet'**
+  String get tripPublishTitle;
+
+  /// Titre de l'AppBar en mode édition d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le trajet'**
+  String get tripPublishEditTitle;
+
+  /// Titre de l'AppBar quand le trajet est créé pour une demande de colis verrouillée
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer le trajet pour cette demande'**
+  String get tripPublishDedicatedTitle;
+
+  /// Bouton de soumission du trajet dédié à une demande de colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer le trajet'**
+  String get tripPublishSubmitDedicated;
+
+  /// Bouton qui ouvre l'aperçu du trajet avant publication
+  ///
+  /// In fr, this message translates to:
+  /// **'Aperçu'**
+  String get tripPublishPreviewButton;
+
+  /// Erreur de validation : ville de départ manquante à l'étape Trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville de départ obligatoire'**
+  String get tripPublishFieldDepartureCityRequired;
+
+  /// Erreur de validation : ville d'arrivée manquante à l'étape Trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville d\'arrivée obligatoire'**
+  String get tripPublishFieldArrivalCityRequired;
+
+  /// Erreur de validation : date de départ manquante à l'étape Trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de départ obligatoire'**
+  String get tripPublishFieldDepartureDateRequired;
+
+  /// Erreur de validation : heure de départ manquante à l'étape Trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure de départ obligatoire'**
+  String get tripPublishFieldDepartureTimeRequired;
+
+  /// Erreur de validation : mode de transport manquant à l'étape Trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode de transport obligatoire'**
+  String get tripPublishFieldTransportModeRequired;
+
+  /// Erreur de validation : date limite de dépôt des colis manquante à l'étape Trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Date limite de dépôt obligatoire'**
+  String get tripPublishFieldHandoverDeadlineRequired;
+
+  /// Erreur de validation : lieu de remise du colis manquant à l'étape Lieux & Capacité
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu de remise du colis obligatoire'**
+  String get tripPublishFieldPickupAddressRequired;
+
+  /// Erreur de validation : lieu de récupération du colis manquant à l'étape Lieux & Capacité
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu de récupération obligatoire'**
+  String get tripPublishFieldDeliveryAddressRequired;
+
+  /// Erreur affichée sous la ligne date limite de dépôt quand elle est postérieure au départ
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite doit précéder le départ.'**
+  String get tripPublishHandoverDeadlineInvalid;
+
+  /// Snackbar d'erreur à la soumission quand la date limite de dépôt est postérieure au départ
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt doit précéder le départ'**
+  String get tripPublishHandoverDeadlineBeforeDeparture;
+
+  /// Confirmation quand un trajet dédié est créé avec une nouvelle offre, sans fil de négociation existant
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre envoyée avec le trajet associé.'**
+  String get tripPublishOfferSentWithTrip;
+
+  /// Confirmation quand un trajet dédié est lié à un fil de négociation existant
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet lié. L\'expéditeur peut désormais payer.'**
+  String get tripPublishTripLinked;
+
+  /// Titre de l'écran de succès après modification d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet modifié !'**
+  String get tripPublishSuccessTitleEdit;
+
+  /// Titre de l'écran de succès après publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet publié !'**
+  String get tripPublishSuccessTitleCreate;
+
+  /// Sous-titre de l'écran de succès, avec le corridor du trajet publié
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton trajet {departureCity} → {arrivalCity} est en ligne.'**
+  String tripPublishSuccessSubtitle(String departureCity, String arrivalCity);
+
+  /// CTA principal de l'écran de succès de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mon trajet'**
+  String get tripPublishSuccessCta;
+
+  /// CTA secondaire de l'écran de succès (partager l'affiche du trajet), absent en mode édition
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager mon affiche'**
+  String get tripPublishSuccessShareCta;
+
+  /// Titre du dialogue quand la limite mensuelle de publications PRO est atteinte
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite mensuelle atteinte'**
+  String get tripPublishMonthlyLimitTitle;
+
+  /// Titre du dialogue quand la limite de brouillons est atteinte
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite de brouillons atteinte'**
+  String get tripPublishDraftLimitTitle;
+
+  /// Titre de la barre de suggestion des modèles de trajet enregistrés
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes modèles'**
+  String get tripPublishTemplatesLabel;
+
+  /// Texte d'aide sous le titre de la barre de suggestion des modèles de trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Applique un modèle pour pré-remplir le trajet'**
+  String get tripPublishTemplatesHint;
+
+  /// Confirmation après application d'un modèle de trajet, avec son nom
+  ///
+  /// In fr, this message translates to:
+  /// **'Modèle « {label} » appliqué'**
+  String tripPublishTemplateAppliedMessage(String label);
+
+  /// Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom
+  ///
+  /// In fr, this message translates to:
+  /// **'{label} · grille'**
+  String tripPublishTemplateChipGrid(String label);
+
+  /// Titre de section (étape Trajet) pour la date limite de dépôt des colis
+  ///
+  /// In fr, this message translates to:
+  /// **'DÉPÔT DES COLIS'**
+  String get tripPublishDropoffSectionLabel;
+
+  /// Libellé de la ligne date limite de dépôt des colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Date limite de dépôt'**
+  String get tripPublishHandoverDeadlineLabel;
+
+  /// Sous-titre de la ligne date limite de dépôt des colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Jusqu\'à quand les expéditeurs peuvent te remettre leurs colis'**
+  String get tripPublishHandoverDeadlineSubtitle;
+
+  /// Valeur affichée sur la ligne date limite de dépôt tant qu'aucune date n'est choisie
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir'**
+  String get tripPublishHandoverDeadlineChoose;
+
+  /// Titre du bandeau affiché quand le trajet est créé pour une demande de colis verrouillée
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet dédié à la demande'**
+  String get tripPublishLockedBannerTitle;
+
+  /// Texte du bandeau affiché quand le trajet est créé pour une demande de colis verrouillée
+  ///
+  /// In fr, this message translates to:
+  /// **'Corridor, capacité et prix sont verrouillés. La date doit rester dans la fenêtre de tolérance de l\'expéditeur.'**
+  String get tripPublishLockedBannerSubtitle;
+
+  /// Titre de l'intro de publication, rôle expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier un colis'**
+  String get requestPublishIntroTitle;
+
+  /// Encart vert de l'intro quand l'identité est déjà vérifiée, rôle voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée. Vous pouvez publier votre trajet en toute sécurité.'**
+  String get tripPublishIntroVerifiedTextTrip;
+
+  /// Encart vert de l'intro quand l'identité est déjà vérifiée, rôle expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée. Vous pouvez publier votre demande d\'envoi en toute sécurité.'**
+  String get requestPublishIntroVerifiedText;
+
+  /// Titre de la section des engagements de l'intro, rôle voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos engagements de voyageur'**
+  String get tripPublishIntroEngagementsTitleTrip;
+
+  /// Phrase d'introduction de la liste des engagements, rôle voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'En publiant, vous vous engagez à :'**
+  String get tripPublishIntroEngagementsIntroTrip;
+
+  /// Engagement voyageur : transporter le colis soi-même (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'Transporter le colis **vous-même**, sans le confier à un tiers.'**
+  String get tripPublishIntroRuleTripCarry;
+
+  /// Engagement voyageur : respecter la date et l'itinéraire (** = segments en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'Respecter la **date** et l\'**itinéraire** annoncés.'**
+  String get tripPublishIntroRuleTripSchedule;
+
+  /// Engagement voyageur : scanner le QR à la remise et à la livraison (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'**Lire le QR** à la remise et à la livraison.'**
+  String get tripPublishIntroRuleTripScan;
+
+  /// Engagement voyageur : n'accepter que des contenus autorisés (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'N\'accepter que des **contenus autorisés**, jamais d\'objet illicite.'**
+  String get tripPublishIntroRuleTripContent;
+
+  /// Engagement voyageur : remettre le colis au bon destinataire (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remettre le colis **au bon destinataire**, en main propre.'**
+  String get tripPublishIntroRuleTripHandover;
+
+  /// Titre de la section « pourquoi publier », rôle voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Pourquoi publier'**
+  String get tripPublishIntroWhyTitleTrip;
+
+  /// Puce « pourquoi publier », rôle voyageur : visibilité
+  ///
+  /// In fr, this message translates to:
+  /// **'Visible par des milliers d\'expéditeurs de la diaspora.'**
+  String get tripPublishIntroWhyBulletTripVisibility;
+
+  /// Puce « pourquoi publier », rôle voyageur : revenus
+  ///
+  /// In fr, this message translates to:
+  /// **'Rentabilisez vos kilos libres à chaque voyage.'**
+  String get tripPublishIntroWhyBulletTripEarnings;
+
+  /// Puce « pourquoi publier », rôle voyageur : réputation
+  ///
+  /// In fr, this message translates to:
+  /// **'Bâtissez une réputation avec les avis reçus.'**
+  String get tripPublishIntroWhyBulletTripReputation;
+
+  /// Titre de la section des engagements de l'intro, rôle expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos engagements d\'expéditeur'**
+  String get requestPublishIntroEngagementsTitle;
+
+  /// Phrase d'introduction de la liste des engagements, rôle expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'En envoyant un colis, vous certifiez :'**
+  String get requestPublishIntroEngagementsIntro;
+
+  /// Engagement expéditeur : contenus licites uniquement (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'N\'envoyer que des **contenus licites** et autorisés.'**
+  String get requestPublishIntroRuleLicit;
+
+  /// Engagement expéditeur : aucun objet interdit (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun **objet interdit** (espèces, armes, produits dangereux…).'**
+  String get requestPublishIntroRuleForbidden;
+
+  /// Engagement expéditeur : description honnête du contenu (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrire **honnêtement** le contenu et sa valeur si le voyageur la demande.'**
+  String get requestPublishIntroRuleHonest;
+
+  /// Engagement expéditeur : emballage soigné (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'**Emballer soigneusement** et décrire précisément le contenu.'**
+  String get requestPublishIntroRulePackaging;
+
+  /// Engagement expéditeur : présence à la remise (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'Être présent à la **remise** et indiquer le bon destinataire.'**
+  String get requestPublishIntroRuleHandover;
+
+  /// Titre de la section « comment ça marche », rôle expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment ça marche'**
+  String get requestPublishIntroWhyTitle;
+
+  /// Puce « comment ça marche », rôle expéditeur : transport
+  ///
+  /// In fr, this message translates to:
+  /// **'Un voyageur transporte votre colis dans ses bagages.'**
+  String get requestPublishIntroWhyBulletCarried;
+
+  /// Puce « comment ça marche », rôle expéditeur : paiement séquestré
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé, libéré à la livraison confirmée.'**
+  String get requestPublishIntroWhyBulletPayment;
+
+  /// Puce « comment ça marche », rôle expéditeur : suivi QR
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi par QR de la remise jusqu\'à la réception.'**
+  String get requestPublishIntroWhyBulletTracking;
+
+  /// Encart d'invite à vérifier son identité avant de publier un trajet. Le segment en gras (identity) et le chemin souligné (path) sont insérés par paramètre puis découpés au rendu
+  ///
+  /// In fr, this message translates to:
+  /// **'Avant de publier, votre **{identity}**. Rendez-vous dans {path} pour la valider (2 min).'**
+  String tripPublishIntroVerifyCallout(String identity, String path);
+
+  /// Segment en gras (paramètre identity) de l'encart d'invite à vérifier son identité
+  ///
+  /// In fr, this message translates to:
+  /// **'identité doit être vérifiée'**
+  String get tripPublishIntroVerifyIdentity;
+
+  /// Chemin de menu en gras souligné (paramètre path), dans l'encart d'invite à vérifier son identité
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil › Vérifications'**
+  String get tripPublishIntroVerifyPath;
+
+  /// Bouton qui ouvre le portail KYC depuis l'intro de publication
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier mon identité'**
+  String get tripPublishIntroVerifyButton;
+
+  /// Texte sous le bouton de vérification, tant que l'identité n'est pas vérifiée
+  ///
+  /// In fr, this message translates to:
+  /// **'Le bouton devient « {continueLabel} » une fois l\'identité vérifiée.'**
+  String tripPublishIntroVerifyHint(String continueLabel);
+
+  /// Titre du rappel Stripe (voyageur) dans l'intro de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Activez les paiements par carte'**
+  String get tripPublishIntroStripeTitle;
+
+  /// Texte du rappel Stripe (voyageur) dans l'intro de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Configurez votre compte Stripe pour que vos expéditeurs paient par carte, et recevez plus de colis.'**
+  String get tripPublishIntroStripeSubtitle;
+
+  /// Option « au kilo » du toggle de mode de tarification, étape Prix & conditions
+  ///
+  /// In fr, this message translates to:
+  /// **'Au kilo'**
+  String get tripPublishPricingModeKg;
+
+  /// Option « grille + kilo » du toggle de mode de tarification
+  ///
+  /// In fr, this message translates to:
+  /// **'Grille + kilo'**
+  String get tripPublishPricingModeMixed;
+
+  /// Libellé de la section prix au kg, réutilisé comme libellé du champ de prix personnalisé
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix par kg'**
+  String get tripPublishPricePerKgSectionLabel;
+
+  /// Titre du toggle « Tarif au kilo », visible en mode grille
+  ///
+  /// In fr, this message translates to:
+  /// **'Tarif au kilo'**
+  String get tripPublishKgPriceToggleTitle;
+
+  /// Sous-titre du toggle « Tarif au kilo »
+  ///
+  /// In fr, this message translates to:
+  /// **'Optionnel en mode grille'**
+  String get tripPublishKgPriceToggleSubtitle;
+
+  /// Libellé de la puce « Autre prix » du sélecteur de prix au kg
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre prix'**
+  String get tripPublishCustomPriceChipLabel;
+
+  /// Indice du champ de saisie du prix personnalisé au kg
+  ///
+  /// In fr, this message translates to:
+  /// **'ex: 12'**
+  String get tripPublishCustomPriceFieldHint;
+
+  /// Invite affichée tant qu'aucun prix au kg n'est sélectionné
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionnez un prix pour voir l\'estimation'**
+  String get tripPublishPriceSelectPrompt;
+
+  /// Note affichée à la place de l'estimation quand la capacité est Kg libre
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité illimitée : estimation selon la demande'**
+  String get tripPublishUnlimitedCapacityEstimateNote;
+
+  /// Ligne d'estimation du prix au kg, montants déjà formatés dans la devise
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous touchez {travelerNet} · l\'expéditeur paie {senderTotal}'**
+  String tripPublishPriceEstimateLine(String travelerNet, String senderTotal);
+
+  /// Note sous l'aperçu de grille en mode mixte, percent déjà formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony ajoute {percent} % sur chaque article et sur le prix au kilo'**
+  String tripPublishGridCommissionNotice(String percent);
+
+  /// Titre du toggle d'ouverture aux propositions de prix des expéditeurs
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'accepte les propositions de prix'**
+  String get tripPublishNegotiableToggleTitle;
+
+  /// Sous-titre du toggle d'ouverture aux propositions de prix
+  ///
+  /// In fr, this message translates to:
+  /// **'Les expéditeurs pourront vous proposer un montant, vous restez libre de refuser'**
+  String get tripPublishNegotiableToggleSubtitle;
+
+  /// Libellé de la section des moyens de paiement acceptés
+  ///
+  /// In fr, this message translates to:
+  /// **'Modes de paiement acceptés'**
+  String get tripPublishPaymentMethodsSectionLabel;
+
+  /// Titre de la ligne paiement par carte, Stripe configuré ou non
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte bancaire (Stripe)'**
+  String get tripPublishCardPaymentTitle;
+
+  /// Sous-titre de la ligne paiement par carte quand Stripe est configuré
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé par défaut'**
+  String get tripPublishCardPaymentSubtitle;
+
+  /// Titre de la ligne paiement en espèces
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces'**
+  String get tripPublishCashLabel;
+
+  /// Sous-titre de la ligne paiement en espèces
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission prélevée au voyageur à la remise'**
+  String get tripPublishCashSubtitle;
+
+  /// Libellé de la section des contenus acceptés
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que j\'accepte'**
+  String get tripPublishAcceptedContentSectionLabel;
+
+  /// Libellé de la section des contenus refusés
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que je refuse'**
+  String get tripPublishRefusedContentSectionLabel;
+
+  /// Indice du combobox des contenus refusés
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex: Liquides, Denrées périssables…'**
+  String get tripPublishRefusedContentHint;
+
+  /// Libellé de la section note libre aux expéditeurs
+  ///
+  /// In fr, this message translates to:
+  /// **'Note aux expéditeurs'**
+  String get tripPublishNoteToSendersSectionLabel;
+
+  /// Indice du champ de note libre aux expéditeurs
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex: Je préfère les colis bien emballés. Contactez-moi avant le départ.'**
+  String get tripPublishNoteToSendersHint;
+
+  /// Bannière quand Stripe n'est pas configuré mais disponible dans le pays
+  ///
+  /// In fr, this message translates to:
+  /// **'Publiez en espèces dès maintenant. Connectez Stripe pour accepter aussi la carte.'**
+  String get tripPublishCashOnlyBannerWithConnect;
+
+  /// Bannière quand Stripe n'est pas disponible dans le pays du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement par carte n\'est pas encore disponible dans votre pays. Vos trajets sont publiés en espèces.'**
+  String get tripPublishCashOnlyBannerNoConnect;
+
+  /// CTA vers l'onboarding Stripe Connect depuis la bannière espèces uniquement
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer les paiements par carte'**
+  String get tripPublishActivateCardPaymentsCta;
+
+  /// Sous-titre de la ligne carte verrouillée quand Stripe n'est pas configuré
+  ///
+  /// In fr, this message translates to:
+  /// **'Non configuré, activez pour proposer le paiement sécurisé'**
+  String get tripPublishCardNotConfiguredSubtitle;
+
+  /// Bouton d'activation du versement mobile money
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer le versement'**
+  String get tripPublishActivatePayoutCta;
+
+  /// Sous-titre mobile money quand la devise n'est pas éligible
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible pour les trajets en XOF ou XAF'**
+  String get tripPublishMobileMoneyIneligibleSubtitle;
+
+  /// Sous-titre mobile money quand le compte de versement n'est pas actif
+  ///
+  /// In fr, this message translates to:
+  /// **'Active d\'abord ton versement mobile money'**
+  String get tripPublishMobileMoneyInactiveSubtitle;
+
+  /// Titre de la note remplacant la section prix quand le prix est verrouillé
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix fixé par la négociation'**
+  String get tripPublishLockedPriceNoteTitle;
+
+  /// Sous-titre de la note prix verrouillé
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant de ce colis a été convenu avec l\'expéditeur, non modifiable ici.'**
+  String get tripPublishLockedPriceNoteSubtitle;
+
+  /// Libellé de la carte affichant le prix total convenu (trajet dédié)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix total convenu'**
+  String get tripPublishAgreedPriceLabel;
+
+  /// Libellé au-dessus de l'aperçu de grille, étape Prix & conditions
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre grille'**
+  String get tripPublishGridPreviewLabel;
+
+  /// Bouton pour ouvrir la feuille listant tous les articles de la grille
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les {count} articles'**
+  String tripPublishGridPreviewSeeAll(int count);
+
+  /// Note sous l'aperçu de grille rappelant que la grille est un réglage de profil
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces prix viennent de votre profil. Les modifier les change sur tous vos trajets.'**
+  String get tripPublishGridPreviewNote;
+
+  /// Titre de la feuille listant tous les articles de la grille
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre grille de prix'**
+  String get tripPublishGridSheetTitle;
+
+  /// Sous-titre de la feuille de grille complète
+  ///
+  /// In fr, this message translates to:
+  /// **'Valable sur tous vos trajets'**
+  String get tripPublishGridSheetSubtitle;
+
+  /// Bouton sticky de la feuille de grille complète
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier ma grille'**
+  String get tripPublishGridSheetEditCta;
+
+  /// Note sous la liste d'articles de la feuille de grille complète
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix payés par l\'expéditeur, commission Yadony de {percent} % comprise.'**
+  String tripPublishGridSheetCommissionNote(String percent);
+
+  /// Titre de la carte affichée quand le voyageur choisit le mode grille sans étiquette
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre grille est vide'**
+  String get tripPublishGridEmptyTitle;
+
+  /// Sous-titre de la carte grille vide
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez au moins une étiquette pour que les expéditeurs réservent article par article.'**
+  String get tripPublishGridEmptySubtitle;
+
+  /// Bouton de la carte grille vide, ouvre l'écran de grille du profil
+  ///
+  /// In fr, this message translates to:
+  /// **'Composer ma grille'**
+  String get tripPublishGridComposeCta;
+
+  /// Badge sur l'aperçu du corridor une fois départ et arrivée sélectionnés
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmé'**
+  String get tripPublishCorridorConfirmedBadge;
+
+  /// Libellé de section « Trajet », aussi utilisé comme libellé d'étape du stepper
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet'**
+  String get tripPublishRouteSectionLabel;
+
+  /// Libellé du champ ville de départ verrouillé (corridor fixé par une demande)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville de départ'**
+  String get tripPublishDepartureCityLabel;
+
+  /// Libellé du champ ville d'arrivée verrouillé (corridor fixé par une demande)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville d\'arrivée'**
+  String get tripPublishArrivalCityLabel;
+
+  /// Libellé du champ heure de départ obligatoire
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure de départ'**
+  String get tripPublishDepartureTimeLabel;
+
+  /// Libellé du champ heure d'arrivée, optionnel
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure d\'arrivée (optionnel)'**
+  String get tripPublishArrivalTimeOptionalLabel;
+
+  /// Tooltip du bouton d'effacement de l'heure d'arrivée
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer l\'heure d\'arrivée'**
+  String get tripPublishClearArrivalTimeTooltip;
+
+  /// Libellé du champ date de départ
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de départ'**
+  String get tripPublishDepartureDateLabel;
+
+  /// Feedback informatif sous la date de départ quand elle est proche (tiret cadratin d'origine remplacé par un point médian, interdit par les tests arb)
+  ///
+  /// In fr, this message translates to:
+  /// **'🔥 Départ proche · ce trajet sera signalé urgent'**
+  String get tripPublishUrgentDepartureWarning;
+
+  /// Titre de la section capacité disponible, réutilisé dans lieux_capacite_step
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité disponible'**
+  String get tripPublishCapacityAvailableLabel;
+
+  /// Quantité de valises et leur poids unitaire, sous le total offert (mode presets valise)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} valise de {kg} kg} other{{count} valises de {kg} kg}}'**
+  String tripPublishSuitcaseCount(int count, int kg);
+
+  /// Titre affichant le poids total offert (mode presets valise)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous offrez {kg} kg'**
+  String tripPublishYouOfferKg(int kg);
+
+  /// Semantics du bouton moins du compteur de valises
+  ///
+  /// In fr, this message translates to:
+  /// **'Diminuer la quantité'**
+  String get tripPublishDecreaseQuantityTooltip;
+
+  /// Semantics du bouton plus du compteur de valises
+  ///
+  /// In fr, this message translates to:
+  /// **'Augmenter la quantité'**
+  String get tripPublishIncreaseQuantityTooltip;
+
+  /// Titre de la carte info capacité Kg libre
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité illimitée'**
+  String get tripPublishUnlimitedCapacityTitle;
+
+  /// Sous-titre de la carte info capacité Kg libre
+  ///
+  /// In fr, this message translates to:
+  /// **'Vendu au kilo · l\'expéditeur choisit son poids'**
+  String get tripPublishUnlimitedCapacitySubtitle;
+
+  /// Libellé du champ de saisie libre de la capacité personnalisée
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité (kg)'**
+  String get tripPublishCapacityKgFieldLabel;
+
+  /// Aide sous le champ de capacité personnalisée
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez la capacité totale que vous offrez'**
+  String get tripPublishCapacityKgFieldHint;
+
+  /// Semantics complet de la bannière de sélection de devise
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise de publication : {currencyName}, {currencyCode}. Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise. Bouton, modifier la devise.'**
+  String tripPublishCurrencySemanticsLabel(
+    String currencyName,
+    String currencyCode,
+  );
+
+  /// Titre visible de la bannière de sélection de devise
+  ///
+  /// In fr, this message translates to:
+  /// **'Publié en {currencyName} ({currencyCode})'**
+  String tripPublishCurrencyBannerTitle(
+    String currencyName,
+    String currencyCode,
+  );
+
+  /// Sous-titre visible de la bannière de sélection de devise
+  ///
+  /// In fr, this message translates to:
+  /// **'Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.'**
+  String get tripPublishCurrencyBannerSubtitle;
+
+  /// Bouton « Changer » de la bannière de sélection de devise
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer'**
+  String get tripPublishCurrencyChangeCta;
+
+  /// Libellé d'étape du stepper de publication (étape 1)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieux & capacité'**
+  String get tripPublishPlacesCapacityStepLabel;
+
+  /// Libellé d'étape du stepper de publication (étape 2)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix & conditions'**
+  String get tripPublishPriceConditionsStepLabel;
+
+  /// Titre de la section lieux de remise et de récupération
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieux de remise'**
+  String get tripPublishHandoverLocationsLabel;
+
+  /// Sous-titre de la section lieux de remise et de récupération
+  ///
+  /// In fr, this message translates to:
+  /// **'Précisez l\'endroit exact de remise et récupération'**
+  String get tripPublishHandoverLocationsSubtitle;
+
+  /// Note sous la capacité verrouillée (flux trajet dédié)
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité fixée par la demande'**
+  String get tripPublishLockedCapacityNote;
+
+  /// Libellé de repli utilisé comme adresse quand le géocodage inverse échoue : coordonnées brutes formatées (address_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Position GPS ({lat}, {lng})'**
+  String addressGpsPosition(String lat, String lng);
+
+  /// Titre de la sheet d'info quand le service de localisation est coupé (sélecteurs d'adresse et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'GPS désactivé'**
+  String get addressGpsDisabledTitle;
+
+  /// Titre de la sheet d'info quand la permission de localisation est refusée (sélecteurs d'adresse et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Localisation refusée'**
+  String get addressLocationDeniedTitle;
+
+  /// Titre de la sheet d'info quand la permission de localisation est refusée définitivement (sélecteurs d'adresse et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Localisation définitivement refusée'**
+  String get addressLocationDeniedForeverTitle;
+
+  /// Message de la sheet d'info GPS désactivé (sélecteurs d'adresse et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Activez la géolocalisation dans vos paramètres système.'**
+  String get addressGpsDisabledMessage;
+
+  /// Message de la sheet d'info permission de localisation refusée (sélecteurs d'adresse et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Activez la localisation dans vos paramètres pour utiliser cette fonctionnalité.'**
+  String get addressLocationDeniedMessage;
+
+  /// Bouton de la sheet d'info localisation/GPS (sélecteurs d'adresse et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir les paramètres'**
+  String get addressOpenSettingsButton;
+
+  /// Titre de la sheet d'info quand aucun fix GPS n'est disponible (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Position indisponible'**
+  String get addressPositionUnavailableTitle;
+
+  /// Message de la sheet d'info position indisponible (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de récupérer votre position pour le moment. Réessayez.'**
+  String get addressPositionUnavailableMessage;
+
+  /// Titre de la sheet d'info quand le géocodage inverse échoue après 3 tentatives (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse introuvable'**
+  String get addressReverseGeocodeFailedTitle;
+
+  /// Message de la sheet d'info géocodage inverse en échec (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de convertir votre position en adresse. Réessayez.'**
+  String get addressReverseGeocodeFailedMessage;
+
+  /// SnackBar affiché quand la résolution d'une suggestion échoue (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de sélectionner cette adresse. Réessayez.'**
+  String get addressSelectFailedMessage;
+
+  /// Placeholder du champ de recherche inline des sélecteurs d'adresse pickup/delivery
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher une adresse…'**
+  String get addressSearchHint;
+
+  /// Bouton de validation des sélecteurs d'adresse pickup/delivery
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer cette adresse'**
+  String get addressConfirmButton;
+
+  /// Titre de l'état vide hors ligne de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion requise'**
+  String get addressOfflineTitle;
+
+  /// Sous-titre de l'état vide hors ligne de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre connexion pour rechercher une adresse.'**
+  String get addressOfflineSubtitle;
+
+  /// Titre de l'état d'erreur de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur'**
+  String get addressSearchErrorTitle;
+
+  /// Sous-titre de l'état d'erreur de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de rechercher une adresse. Réessayez.'**
+  String get addressSearchErrorSubtitle;
+
+  /// Titre de l'état vide sans résultat de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun résultat'**
+  String get addressNoResultsTitle;
+
+  /// Sous-titre de l'état vide sans résultat de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Essayez « Utiliser ma position actuelle ».'**
+  String get addressNoResultsSubtitle;
+
+  /// Libellé du bouton GPS (sélecteurs d'adresse pickup/delivery et champ d'adresse)
+  ///
+  /// In fr, this message translates to:
+  /// **'Utiliser ma position actuelle'**
+  String get addressUseCurrentLocation;
+
+  /// En-tête de section des adresses récentes (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'RECHERCHES RÉCENTES'**
+  String get addressRecentSearchesHeader;
+
+  /// En-tête de section des adresses enregistrées (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'MES ADRESSES ENREGISTRÉES'**
+  String get addressSavedAddressesHeader;
+
+  /// Titre de la tuile d'ajout d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une adresse'**
+  String get addressAddNewTitle;
+
+  /// Sous-titre de la tuile d'ajout d'adresse (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer pour la prochaine fois'**
+  String get addressAddNewSubtitle;
+
+  /// Badge sur l'adresse enregistrée par défaut (sélecteurs d'adresse pickup/delivery)
+  ///
+  /// In fr, this message translates to:
+  /// **'Par défaut'**
+  String get addressDefaultBadge;
+
+  /// Titre du sélecteur d'adresse de remise (pickup_address_picker_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'📦  Adresse de remise'**
+  String get addressPickupSheetTitle;
+
+  /// Titre du sélecteur d'adresse de livraison (delivery_address_picker_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'🗺️  Adresse de livraison'**
+  String get addressDeliverySheetTitle;
+
+  /// Message de validation quand le champ d'adresse obligatoire est vide (address_picker_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse obligatoire'**
+  String get addressFieldRequiredError;
+
+  /// Placeholder du champ d'adresse une fois focalisé (address_picker_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tapez pour rechercher une adresse…'**
+  String get addressFieldSearchHint;
+
+  /// Message affiché quand la recherche du champ d'adresse ne renvoie rien (address_picker_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun résultat, essayez \"Ma position actuelle\"'**
+  String get addressFieldNoResultsHint;
+
+  /// Message inline hors ligne sous le champ d'adresse (address_picker_field.dart et address_suggest_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion requise pour la recherche d\'adresse'**
+  String get addressOfflineInlineMessage;
+
+  /// Libellé de la carte vide du sélecteur d'adresse de remise (address_selector_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une adresse de remise'**
+  String get addressSelectorDropoffLabel;
+
+  /// Sous-titre de la carte vide du sélecteur d'adresse de remise (address_selector_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Où tu récupères les colis des expéditeurs'**
+  String get addressSelectorDropoffSubtitle;
+
+  /// Libellé de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une adresse de livraison'**
+  String get addressSelectorDeliveryLabel;
+
+  /// Sous-titre de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Où tu déposes les colis à destination'**
+  String get addressSelectorDeliverySubtitle;
+
+  /// Motif intl DateFormat, pas un texte : heure de l'échéance de l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'HH\'h\'mm'**
+  String get tripPosterTimePattern;
+
+  /// Libellé de la ligne date de départ sur l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get tripPosterDepartureLabel;
+
+  /// Libellé de la ligne date limite de dépôt sur l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernier dépôt'**
+  String get tripPosterDeadlineLabel;
+
+  /// Libellé de la ligne capacité disponible sur l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Place disponible'**
+  String get tripPosterCapacityLabel;
+
+  /// Libellé du lieu de remise (pickupAddress) sur l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise'**
+  String get tripPosterHandoverLabel;
+
+  /// Libellé du lieu de récupération (deliveryAddress) sur l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Récupération'**
+  String get tripPosterPickupLabel;
+
+  /// Montant affiché en grand sur l'affiche quand le trajet a une grille de prix (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'dès {price}'**
+  String tripPosterFromPrice(String price);
+
+  /// Unité affichée à côté du prix quand il s'agit d'un tarif à l'article (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'l\'article'**
+  String get tripPosterUnitPerItem;
+
+  /// Unité affichée à côté du prix quand il s'agit d'un tarif au kilo (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'le kilo'**
+  String get tripPosterUnitPerKg;
+
+  /// Prix affiché quand ni la grille ni le tarif au kilo ne sont renseignés (trip_poster_card.dart, trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix indisponible'**
+  String get tripPosterPriceUnavailable;
+
+  /// Tarif au kilo secondaire sous le prix de grille (trip_poster_card.dart), et phrase de prix de la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{price} le kilo'**
+  String tripPosterPricePerKg(String price);
+
+  /// Phrase de prix à l'article dans la légende partageable de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'dès {price} l\'article'**
+  String tripPosterPriceFromItem(String price);
+
+  /// Accroche en pied de l'affiche du trajet (trip_poster_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé, suivi du colis, voyageurs vérifiés'**
+  String get tripPosterTagline;
+
+  /// Titre de l'écran d'aperçu de l'affiche du trajet (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon affiche'**
+  String get tripPosterTitle;
+
+  /// Titre de l'état vide quand le trajet de l'affiche ne charge pas (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet introuvable'**
+  String get tripPosterNotFoundTitle;
+
+  /// Description de l'état vide quand le trajet de l'affiche ne charge pas (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger ce trajet pour le moment.'**
+  String get tripPosterNotFoundDescription;
+
+  /// Première ligne de la légende partageable : corridor du trajet (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{departure} vers {arrival}'**
+  String tripPosterCaptionCorridor(String departure, String arrival);
+
+  /// Ligne date de départ de la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ le {day}'**
+  String tripPosterCaptionDeparture(String day);
+
+  /// Ligne date limite de dépôt de la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernier dépôt le {deadline}'**
+  String tripPosterCaptionDeadline(String deadline);
+
+  /// Ligne lieu de remise de la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise : {address}'**
+  String tripPosterCaptionHandover(String address);
+
+  /// Ligne lieu de récupération de la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Récupération : {address}'**
+  String tripPosterCaptionPickup(String address);
+
+  /// Appel à l'action avant le lien, dans la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réservez vos kilos ici :'**
+  String get tripPosterCaptionCta;
+
+  /// Dernière ligne de la légende partageable (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé, suivi du colis, voyageur vérifié.'**
+  String get tripPosterCaptionFooter;
+
+  /// Objet du partage système de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet {departure} vers {arrival}'**
+  String tripPosterShareSubject(String departure, String arrival);
+
+  /// Message d'échec du partage de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de partager l\'affiche'**
+  String get tripPosterShareError;
+
+  /// Message d'échec de l'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'enregistrer l\'affiche'**
+  String get tripPosterSaveError;
+
+  /// Message de succès de l'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Affiche enregistrée dans votre galerie'**
+  String get tripPosterSaveSuccess;
+
+  /// Confirmation après copie de la légende de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Légende copiée'**
+  String get tripPosterCaptionCopied;
+
+  /// Confirmation après copie du lien de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lien copié'**
+  String get tripPosterLinkCopiedMessage;
+
+  /// Texte d'instructions sous l'aperçu de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Postez cette affiche comme d\'habitude, puis collez la légende dans le texte de votre publication. Le lien y devient cliquable, ce qui n\'est pas le cas d\'une adresse écrite sur l\'image.'**
+  String get tripPosterInstructions;
+
+  /// Bouton de partage de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager l\'affiche'**
+  String get tripPosterShareButton;
+
+  /// Bouton de copie de la légende de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier la légende'**
+  String get tripPosterCopyCaptionButton;
+
+  /// Bouton de copie du lien de l'affiche (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le lien'**
+  String get tripPosterCopyLinkButton;
+
+  /// Bouton d'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer dans la galerie'**
+  String get tripPosterSaveButton;
+
+  /// Titre du catalogue d'erreurs pour le code announcement-update-blocked : modification refusée car des colis sont déjà acceptés (error_catalog.dart, announcement_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modification impossible'**
+  String get errorAnnouncementUpdateBlockedTitle;
+
+  /// Message du catalogue d'erreurs pour le code announcement-update-blocked (error_catalog.dart, announcement_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Des colis sont déjà acceptés pour ce trajet'**
+  String get errorAnnouncementUpdateBlockedMessage;
+
+  /// Titre de l'écran liste des modèles de trajet (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes modèles de trajet'**
+  String get tripTemplateListTitle;
+
+  /// Tooltip du bouton d'ajout de la liste des modèles (trip_templates_screen.dart) et titre de l'écran d'édition en mode création (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau modèle'**
+  String get tripTemplateNewLabel;
+
+  /// Titre de l'état d'erreur de la liste des modèles de trajet (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur de chargement'**
+  String get tripTemplateLoadErrorTitle;
+
+  /// Description de repli de l'état d'erreur, quand le serveur n'a pas fourni de message (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue.'**
+  String get tripTemplateLoadErrorFallback;
+
+  /// Titre de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun modèle'**
+  String get tripTemplateEmptyTitle;
+
+  /// Description de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Crée des modèles de trajet réutilisables pour publier tes annonces en quelques secondes.'**
+  String get tripTemplateEmptyDescription;
+
+  /// Bouton d'action de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un modèle'**
+  String get tripTemplateCreateAction;
+
+  /// Repli affiché à la place du tarif au kilo quand le modèle vend à la grille (trip_templates_screen.dart, trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'prix à la grille'**
+  String get tripTemplateGridPriceLabel;
+
+  /// Titre du dialogue de confirmation de suppression d'un modèle (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer le modèle'**
+  String get tripTemplateDeleteDialogTitle;
+
+  /// Message du dialogue de confirmation de suppression d'un modèle (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Es-tu sûr de vouloir supprimer \"{label}\" ? Cette action est irréversible.'**
+  String tripTemplateDeleteDialogMessage(String label);
+
+  /// Entrée du menu d'une carte modèle pour programmer sa récurrence (trip_templates_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Programmer la récurrence'**
+  String get tripTemplateScheduleRecurrenceAction;
+
+  /// Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'NOM DU MODÈLE'**
+  String get tripTemplateNameSectionLabel;
+
+  /// Libellé du champ nom du modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get tripTemplateNameFieldLabel;
+
+  /// Placeholder du champ nom du modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : Mon Paris → Dakar'**
+  String get tripTemplateNameFieldHint;
+
+  /// Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'TRAJET'**
+  String get tripTemplateTripSectionLabel;
+
+  /// Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'MODE DE TRANSPORT'**
+  String get tripTemplateTransportSectionLabel;
+
+  /// Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'HORAIRES'**
+  String get tripTemplateScheduleSectionLabel;
+
+  /// Libellé complet du champ heure de départ, utilisé au placeholder et en annonce d'accessibilité (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure de départ'**
+  String get tripTemplateDepartureTimeFieldLabel;
+
+  /// Libellé court affiché en préfixe une fois l'heure de départ posée (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get tripTemplateDepartureShortLabel;
+
+  /// Libellé complet du champ heure d'arrivée, utilisé au placeholder et en annonce d'accessibilité (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure d\'arrivée'**
+  String get tripTemplateArrivalTimeFieldLabel;
+
+  /// Libellé court affiché en préfixe une fois l'heure d'arrivée posée (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get tripTemplateArrivalShortLabel;
+
+  /// Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DÉLAI DE REMISE'**
+  String get tripTemplateHandoverDeadlineSectionLabel;
+
+  /// Texte d'aide sous le titre de la section délai de remise (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au plus tard combien de jours avant le départ le colis doit être remis ?'**
+  String get tripTemplateHandoverDeadlineHint;
+
+  /// Choix de délai de remise : aucun délai mémorisé (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun'**
+  String get tripTemplateHandoverNone;
+
+  /// Choix de délai de remise : le jour du départ (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le jour même'**
+  String get tripTemplateHandoverSameDay;
+
+  /// Choix de délai de remise : N jours avant le départ (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} jour avant} other{{count} jours avant}}'**
+  String tripTemplateHandoverDaysBefore(int count);
+
+  /// Placeholder d'un champ heure tant qu'aucune heure n'est posée (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{label} (optionnel)'**
+  String tripTemplateOptionalSuffix(String label);
+
+  /// Libellé d'accessibilité du bouton d'effacement d'un champ heure (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer {label}'**
+  String tripTemplateClearFieldSemantic(String label);
+
+  /// Titre de l'écran d'édition d'un modèle existant (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le modèle'**
+  String get tripTemplateEditTitle;
+
+  /// Bouton de la dernière étape du formulaire de modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer le modèle'**
+  String get tripTemplateSaveButton;
+
+  /// Confirmation après mise à jour d'un modèle existant (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modèle mis à jour'**
+  String get tripTemplateUpdatedMessage;
+
+  /// Confirmation après création d'un nouveau modèle (trip_template_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modèle enregistré'**
+  String get tripTemplateSavedMessage;
+
+  /// Confirmation après activation d'une récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Récurrence activée. Tes trajets seront publiés automatiquement.'**
+  String get tripTemplateRecurrenceActivatedMessage;
+
+  /// Titre de l'écran de programmation d'une récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet récurrent'**
+  String get tripTemplateRecurrenceTitle;
+
+  /// Bouton de validation de l'écran de récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer la récurrence'**
+  String get tripTemplateActivateRecurrenceButton;
+
+  /// Avertissement quand le modèle source n'a pas de prix au kilo éditable (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce modèle n\'a pas de prix au kilo'**
+  String get tripTemplateNoPricePerKgWarning;
+
+  /// Titre de section de l'écran de récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'JOURS DE RÉPÉTITION'**
+  String get tripTemplateRepeatDaysSectionLabel;
+
+  /// Titre de section de l'écran de récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'HEURE DE DÉPART'**
+  String get tripTemplateRecurrenceDepartureTimeSectionLabel;
+
+  /// Placeholder du champ heure de départ tant qu'aucune heure n'est posée (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Optionnel : choisir une heure'**
+  String get tripTemplateOptionalTimeHint;
+
+  /// Libellé d'accessibilité du bouton d'effacement de l'heure de départ (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer l\'heure de départ'**
+  String get tripTemplateClearTimeSemantic;
+
+  /// Titre de section de l'écran de récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'LIEUX'**
+  String get tripTemplateLocationsSectionLabel;
+
+  /// Libellé du champ adresse de remise de l'écran de récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu de remise du colis *'**
+  String get tripTemplatePickupFieldLabel;
+
+  /// Libellé du champ adresse de récupération de l'écran de récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu de récupération *'**
+  String get tripTemplateDeliveryFieldLabel;
+
+  /// Titre du bloc bascule d'activation de la récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Récurrence active'**
+  String get tripTemplateActiveLabel;
+
+  /// Sous-titre du bloc bascule d'activation de la récurrence (trip_recurrence_edit_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Publie automatiquement les trajets à venir'**
+  String get tripTemplateActiveDescription;
 }
 
 class _AppLocalizationsDelegate

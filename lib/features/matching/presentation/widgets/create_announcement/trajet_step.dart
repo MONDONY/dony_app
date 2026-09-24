@@ -92,10 +92,11 @@ class TrajetStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: _buildWidgets(context, tt, cs),
+      children: _buildWidgets(context, tt, cs, l),
     );
   }
 
@@ -119,17 +120,14 @@ class TrajetStep extends StatelessWidget {
 
   /// Formate la date et les heures du corridor pour l'aperçu.
   /// Reproduit exactement la logique de [_CreateAnnouncementContentState._formatCorridorDateTime].
-  String _formatCorridorDateTime() {
+  String _formatCorridorDateTime(String localeName) {
     final departureDate = departureDateNotifier.value;
     final departureTime = departureTimeNotifier.value;
     final arrivalTime = arrivalTimeNotifier.value;
     if (departureDate == null) {
       return '';
     }
-    final date = DateFormat(
-      'EEE d MMM',
-      AppL10n.localeName,
-    ).format(departureDate);
+    final date = DateFormat.MMMEd(localeName).format(departureDate);
     if (departureTime != null && arrivalTime != null) {
       return '$date · ${departureTime.hour}h–${arrivalTime.hour}h';
     } else if (departureTime != null) {
@@ -142,6 +140,7 @@ class TrajetStep extends StatelessWidget {
     BuildContext context,
     TextTheme tt,
     ColorScheme cs,
+    AppLocalizations l,
   ) {
     return [
       // ── Corridor preview ──────────────────────────────────────────────────
@@ -161,7 +160,7 @@ class TrajetStep extends StatelessWidget {
           }
           final depCode = cityAirportCode(dep, departure: true);
           final arrCode = cityAirportCode(arr, departure: false);
-          final dateStr = _formatCorridorDateTime();
+          final dateStr = _formatCorridorDateTime(l.localeName);
           return Column(
             children: [
               CaSectionCard(
@@ -202,7 +201,7 @@ class TrajetStep extends StatelessWidget {
                           borderRadius: BorderRadius.circular(DonyRadius.full),
                         ),
                         child: Text(
-                          'Confirmé',
+                          l.tripPublishCorridorConfirmedBadge,
                           style: tt.labelSmall?.copyWith(
                             color: cs.primary,
                             fontWeight: FontWeight.w600,
@@ -220,7 +219,10 @@ class TrajetStep extends StatelessWidget {
       ),
 
       // ── TRAJET ────────────────────────────────────────────────────────────
-      const CaSectionLabel(label: 'Trajet', iconAsset: 'plane-takeoff'),
+      CaSectionLabel(
+        label: l.tripPublishRouteSectionLabel,
+        iconAsset: 'plane-takeoff',
+      ),
       const SizedBox(height: DonySpacing.sm),
       ListenableBuilder(
         listenable: Listenable.merge([
@@ -242,7 +244,7 @@ class TrajetStep extends StatelessWidget {
               if (lockCorridor) ...[
                 DonyTextField.tappable(
                   key: const Key('departureCityField'),
-                  label: 'Ville de départ',
+                  label: l.tripPublishDepartureCityLabel,
                   value: departureCityNotifier.value,
                   prefixWidget: const DonyEmoji.planeTakeoff(size: 20),
                   trailing: DonyIcon(
@@ -255,7 +257,7 @@ class TrajetStep extends StatelessWidget {
                 const SizedBox(height: DonySpacing.sm),
                 DonyTextField.tappable(
                   key: const Key('arrivalCityField'),
-                  label: 'Ville d\'arrivée',
+                  label: l.tripPublishArrivalCityLabel,
                   value: arrivalCityNotifier.value,
                   prefixWidget: const DonyEmoji.planeLanding(size: 20),
                   trailing: DonyIcon(
@@ -300,7 +302,7 @@ class TrajetStep extends StatelessWidget {
               // ── Heure de départ (obligatoire, D1) — DonyTextField.tappable ───
               DonyTextField.tappable(
                 key: const Key('departureTimeField'),
-                label: 'Heure de départ',
+                label: l.tripPublishDepartureTimeLabel,
                 requiredLabel: true,
                 value: departureTimeNotifier.value != null
                     ? '${departureTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${departureTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
@@ -320,7 +322,7 @@ class TrajetStep extends StatelessWidget {
               // ── Heure d'arrivée (optionnel) — DonyTextField.tappable ───
               DonyTextField.tappable(
                 key: const Key('arrivalTimeField'),
-                label: 'Heure d\'arrivée (optionnel)',
+                label: l.tripPublishArrivalTimeOptionalLabel,
                 value: arrivalTimeNotifier.value != null
                     ? '${arrivalTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${arrivalTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
                     : null,
@@ -328,7 +330,7 @@ class TrajetStep extends StatelessWidget {
                 prefixIconColor: Theme.of(context).colorScheme.secondary,
                 trailing: arrivalTimeNotifier.value != null
                     ? IconButton(
-                        tooltip: "Effacer l'heure d'arrivée",
+                        tooltip: l.tripPublishClearArrivalTimeTooltip,
                         icon: Icon(
                           DonyIcons.close,
                           size: 18,
@@ -352,11 +354,10 @@ class TrajetStep extends StatelessWidget {
               // ── Date de départ * — DonyTextField.tappable ─────────────
               DonyTextField.tappable(
                 key: const Key('departureDateField'),
-                label: 'Date de départ',
+                label: l.tripPublishDepartureDateLabel,
                 value: departureDateNotifier.value != null
-                    ? DateFormat(
-                        'EEE d MMM yyyy',
-                        AppL10n.localeName,
+                    ? DateFormat.yMMMEd(
+                        l.localeName,
                       ).format(departureDateNotifier.value!)
                     : null,
                 prefixIcon: DonyIcons.date,
@@ -381,7 +382,7 @@ class TrajetStep extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(top: DonySpacing.xs),
                     child: Text(
-                      '🔥 Départ proche — ce trajet sera signalé urgent',
+                      l.tripPublishUrgentDepartureWarning,
                       style: Theme.of(
                         context,
                       ).textTheme.bodySmall?.copyWith(color: cs.error),

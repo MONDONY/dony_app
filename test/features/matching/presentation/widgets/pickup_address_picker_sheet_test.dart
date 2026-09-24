@@ -20,6 +20,8 @@ import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockPickupAddressBloc
     extends MockBloc<PickupAddressEvent, PickupAddressState>
     implements PickupAddressBloc {}
@@ -358,5 +360,14 @@ void main() {
         );
       },
     );
+  });
+
+  group('en anglais', () {
+    testWidgets('titre traduit', (tester) async {
+      useEnglish();
+      await pump(tester);
+
+      expect(find.text('📦  Drop-off address'), findsOneWidget);
+    });
   });
 }

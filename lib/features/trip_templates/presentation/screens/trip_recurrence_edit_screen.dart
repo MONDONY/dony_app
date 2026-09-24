@@ -9,12 +9,21 @@ import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
-const _weekdayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+/// Initiales des jours de la semaine (lundi → dimanche), dans la langue de
+/// l'app. `EEEEE` (narrow) rend exactement l'ancien motif figé en français
+/// (L, M, M, J, V, S, D) et son équivalent anglais (M, T, W, T, F, S, S).
+/// 2024-01-01 est un lundi, semaine de référence pour les sept jours.
+List<String> _weekdayLabels(String locale) {
+  final format = DateFormat.EEEEE(locale);
+  return List.generate(7, (i) => format.format(DateTime(2024, 1, 1 + i)));
+}
 
 class TripRecurrenceEditScreen extends StatefulWidget {
   const TripRecurrenceEditScreen({super.key, required this.template});
@@ -105,8 +114,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
         if (_submitted && state.status == TripRecurrenceStatus.success) {
           DonySnackbar.show(
             context,
-            message:
-                'Récurrence activée. Tes trajets seront publiés automatiquement.',
+            message: context.l10n.tripTemplateRecurrenceActivatedMessage,
             type: DonySnackbarType.success,
           );
           context.pop(true);
@@ -122,10 +130,12 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
       },
       builder: (context, state) {
         final isLoading = state.status == TripRecurrenceStatus.loading;
+        final l = context.l10n;
+        final weekdayInitials = _weekdayLabels(l.localeName);
         return DonyPageScaffold(
-          title: 'Trajet récurrent',
+          title: l.tripTemplateRecurrenceTitle,
           stickyBottom: DonyButton(
-            label: 'Activer la récurrence',
+            label: l.tripTemplateActivateRecurrenceButton,
             onPressed: (_isValid && !isLoading) ? () => _submit(context) : null,
             isLoading: isLoading,
           ),
@@ -157,7 +167,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                             ),
                           ),
                           Text(
-                            '${t.departureCity} → ${t.arrivalCity} · ${t.pricePerKg == null ? 'prix à la grille' : '${formatPriceActive(t.pricePerKg!)}/kg'}',
+                            '${t.departureCity} → ${t.arrivalCity} · ${t.pricePerKg == null ? l.tripTemplateGridPriceLabel : '${formatPriceActive(t.pricePerKg!)}/kg'}',
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
@@ -177,7 +187,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                     const SizedBox(width: DonySpacing.xs),
                     Expanded(
                       child: Text(
-                        "Ce modèle n'a pas de prix au kilo",
+                        l.tripTemplateNoPricePerKgWarning,
                         style: tt.bodySmall?.copyWith(color: cs.error),
                       ),
                     ),
@@ -186,8 +196,8 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
               ],
               const SizedBox(height: DonySpacing.xxl),
 
-              const _SectionLabel(
-                label: 'JOURS DE RÉPÉTITION',
+              _SectionLabel(
+                label: l.tripTemplateRepeatDaysSectionLabel,
                 iconAsset: 'calendar-sync',
               ),
               const SizedBox(height: DonySpacing.sm),
@@ -209,7 +219,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                         ),
                       ),
                       child: Text(
-                        _weekdayLabels[i],
+                        weekdayInitials[i],
                         style: tt.bodyMedium?.copyWith(
                           color: selected ? cs.onPrimary : cs.onSurfaceVariant,
                           fontWeight: FontWeight.w700,
@@ -221,7 +231,10 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
               ).animate().fadeIn(delay: 40.ms, duration: 280.ms),
               const SizedBox(height: DonySpacing.xxl),
 
-              const _SectionLabel(label: 'HEURE DE DÉPART', iconAsset: 'clock'),
+              _SectionLabel(
+                label: l.tripTemplateRecurrenceDepartureTimeSectionLabel,
+                iconAsset: 'clock',
+              ),
               const SizedBox(height: DonySpacing.sm),
               GestureDetector(
                 onTap: _pickTime,
@@ -242,7 +255,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                       Expanded(
                         child: Text(
                           _departureTime == null
-                              ? 'Optionnel : choisir une heure'
+                              ? l.tripTemplateOptionalTimeHint
                               : _timeWire!,
                           style: tt.bodyMedium?.copyWith(
                             color: _departureTime == null
@@ -256,7 +269,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                           button: true,
                           container: true,
                           excludeSemantics: true,
-                          label: "Effacer l'heure de départ",
+                          label: l.tripTemplateClearTimeSemantic,
                           child: GestureDetector(
                             onTap: () => setState(() => _departureTime = null),
                             child: DonyIcon(
@@ -272,19 +285,19 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
               ).animate().fadeIn(delay: 80.ms, duration: 280.ms),
               const SizedBox(height: DonySpacing.xxl),
 
-              const _SectionLabel(
-                label: 'LIEUX',
+              _SectionLabel(
+                label: l.tripTemplateLocationsSectionLabel,
                 iconAsset: 'arrow-left-right',
               ),
               const SizedBox(height: DonySpacing.sm),
               AddressPickerField(
-                fieldLabel: 'Lieu de remise du colis *',
+                fieldLabel: l.tripTemplatePickupFieldLabel,
                 autocompleteService: getIt<AddressAutocompleteService>(),
                 onChanged: (addr) => setState(() => _pickup = addr),
               ).animate().fadeIn(delay: 120.ms, duration: 280.ms),
               const SizedBox(height: DonySpacing.base),
               AddressPickerField(
-                fieldLabel: 'Lieu de récupération *',
+                fieldLabel: l.tripTemplateDeliveryFieldLabel,
                 showGpsButton: false,
                 autocompleteService: getIt<AddressAutocompleteService>(),
                 onChanged: (addr) => setState(() => _delivery = addr),
@@ -319,13 +332,13 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Récurrence active',
+                              l.tripTemplateActiveLabel,
                               style: tt.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             Text(
-                              'Publie automatiquement les trajets à venir',
+                              l.tripTemplateActiveDescription,
                               style: tt.bodySmall?.copyWith(
                                 color: cs.onSurfaceVariant,
                               ),

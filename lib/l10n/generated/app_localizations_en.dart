@@ -2299,4 +2299,996 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shellTermsTitle => 'Terms of Use';
+
+  @override
+  String get commonSave => 'Save';
+
+  @override
+  String get commonDelete => 'Delete';
+
+  @override
+  String get commonEdit => 'Edit';
+
+  @override
+  String get commonBack => 'Back';
+
+  @override
+  String get commonSend => 'Send';
+
+  @override
+  String get commonShare => 'Share';
+
+  @override
+  String get commonCopy => 'Copy';
+
+  @override
+  String get commonSeeAll => 'See all';
+
+  @override
+  String commonDateAtTime(String date, String time) {
+    return '$date at $time';
+  }
+
+  @override
+  String commonListPair(String first, String second) {
+    return '$first and $second';
+  }
+
+  @override
+  String commonListLast(String head, String last) {
+    return '$head, and $last';
+  }
+
+  @override
+  String get tripKgFree => 'Flexible kg';
+
+  @override
+  String get tripFixedPrice => 'Fixed price';
+
+  @override
+  String get tripTravelerFallbackName => 'Traveler';
+
+  @override
+  String get tripTransportPlane => 'Plane';
+
+  @override
+  String get tripTransportCar => 'Car';
+
+  @override
+  String get tripTransportTrain => 'Train';
+
+  @override
+  String get tripTransportBus => 'Bus';
+
+  @override
+  String get tripTransportBoat => 'Boat';
+
+  @override
+  String get tripTransportOther => 'Other';
+
+  @override
+  String get tripUrgencyVeryUrgent => '< 3d';
+
+  @override
+  String get tripUrgencyUrgent => '3–7d';
+
+  @override
+  String get tripUrgencySoon => '7–14d';
+
+  @override
+  String get tripUrgencyLater => '14d+';
+
+  @override
+  String get tripCapacitySuitcase23 => '1 suitcase (23 kg)';
+
+  @override
+  String get tripCapacitySuitcase32 => '1 suitcase (32 kg)';
+
+  @override
+  String get tripCapacityCustom => 'Custom';
+
+  @override
+  String get tripPublishTitle => 'Post a trip';
+
+  @override
+  String get tripPublishEditTitle => 'Edit trip';
+
+  @override
+  String get tripPublishDedicatedTitle => 'Create the trip for this request';
+
+  @override
+  String get tripPublishSubmitDedicated => 'Confirm the trip';
+
+  @override
+  String get tripPublishPreviewButton => 'Preview';
+
+  @override
+  String get tripPublishFieldDepartureCityRequired => 'Departure city required';
+
+  @override
+  String get tripPublishFieldArrivalCityRequired => 'Arrival city required';
+
+  @override
+  String get tripPublishFieldDepartureDateRequired => 'Departure date required';
+
+  @override
+  String get tripPublishFieldDepartureTimeRequired => 'Departure time required';
+
+  @override
+  String get tripPublishFieldTransportModeRequired => 'Transport mode required';
+
+  @override
+  String get tripPublishFieldHandoverDeadlineRequired =>
+      'Drop-off deadline required';
+
+  @override
+  String get tripPublishFieldPickupAddressRequired =>
+      'Parcel drop-off location required';
+
+  @override
+  String get tripPublishFieldDeliveryAddressRequired =>
+      'Pickup location required';
+
+  @override
+  String get tripPublishHandoverDeadlineInvalid =>
+      'The deadline must be before departure.';
+
+  @override
+  String get tripPublishHandoverDeadlineBeforeDeparture =>
+      'The drop-off deadline must be before departure';
+
+  @override
+  String get tripPublishOfferSentWithTrip => 'Offer sent with the linked trip.';
+
+  @override
+  String get tripPublishTripLinked => 'Trip linked. The sender can now pay.';
+
+  @override
+  String get tripPublishSuccessTitleEdit => 'Trip updated!';
+
+  @override
+  String get tripPublishSuccessTitleCreate => 'Trip posted!';
+
+  @override
+  String tripPublishSuccessSubtitle(String departureCity, String arrivalCity) {
+    return 'Your trip $departureCity → $arrivalCity is live.';
+  }
+
+  @override
+  String get tripPublishSuccessCta => 'View my trip';
+
+  @override
+  String get tripPublishSuccessShareCta => 'Share my poster';
+
+  @override
+  String get tripPublishMonthlyLimitTitle => 'Monthly limit reached';
+
+  @override
+  String get tripPublishDraftLimitTitle => 'Draft limit reached';
+
+  @override
+  String get tripPublishTemplatesLabel => 'My templates';
+
+  @override
+  String get tripPublishTemplatesHint =>
+      'Apply a template to pre-fill the trip';
+
+  @override
+  String tripPublishTemplateAppliedMessage(String label) {
+    return 'Template “$label” applied';
+  }
+
+  @override
+  String tripPublishTemplateChipGrid(String label) {
+    return '$label · price grid';
+  }
+
+  @override
+  String get tripPublishDropoffSectionLabel => 'PARCEL DROP-OFF';
+
+  @override
+  String get tripPublishHandoverDeadlineLabel => 'Drop-off deadline';
+
+  @override
+  String get tripPublishHandoverDeadlineSubtitle =>
+      'Latest date senders can hand you their parcels';
+
+  @override
+  String get tripPublishHandoverDeadlineChoose => 'Choose';
+
+  @override
+  String get tripPublishLockedBannerTitle => 'Trip dedicated to the request';
+
+  @override
+  String get tripPublishLockedBannerSubtitle =>
+      'Corridor, capacity and price are locked. The date must stay within the sender\'s tolerance window.';
+
+  @override
+  String get requestPublishIntroTitle => 'Post a parcel';
+
+  @override
+  String get tripPublishIntroVerifiedTextTrip =>
+      'Identity verified. You can post your trip safely.';
+
+  @override
+  String get requestPublishIntroVerifiedText =>
+      'Identity verified. You can post your shipping request safely.';
+
+  @override
+  String get tripPublishIntroEngagementsTitleTrip =>
+      'Your commitments as a traveler';
+
+  @override
+  String get tripPublishIntroEngagementsIntroTrip =>
+      'By posting, you commit to:';
+
+  @override
+  String get tripPublishIntroRuleTripCarry =>
+      'Carrying the parcel **yourself**, never handing it off to a third party.';
+
+  @override
+  String get tripPublishIntroRuleTripSchedule =>
+      'Sticking to the announced **date** and **route**.';
+
+  @override
+  String get tripPublishIntroRuleTripScan =>
+      '**Scanning the QR code** at drop-off and delivery.';
+
+  @override
+  String get tripPublishIntroRuleTripContent =>
+      'Only accepting **allowed contents**, never an illegal item.';
+
+  @override
+  String get tripPublishIntroRuleTripHandover =>
+      'Handing the parcel to **the right recipient**, in person.';
+
+  @override
+  String get tripPublishIntroWhyTitleTrip => 'Why post a trip';
+
+  @override
+  String get tripPublishIntroWhyBulletTripVisibility =>
+      'Seen by thousands of senders in the diaspora.';
+
+  @override
+  String get tripPublishIntroWhyBulletTripEarnings =>
+      'Turn your spare kilos into earnings on every trip.';
+
+  @override
+  String get tripPublishIntroWhyBulletTripReputation =>
+      'Build a reputation through the reviews you receive.';
+
+  @override
+  String get requestPublishIntroEngagementsTitle =>
+      'Your commitments as a sender';
+
+  @override
+  String get requestPublishIntroEngagementsIntro =>
+      'By sending a parcel, you certify:';
+
+  @override
+  String get requestPublishIntroRuleLicit =>
+      'Only sending **lawful** and allowed contents.';
+
+  @override
+  String get requestPublishIntroRuleForbidden =>
+      'No **forbidden item** (cash, weapons, dangerous goods…).';
+
+  @override
+  String get requestPublishIntroRuleHonest =>
+      'Describing the contents **honestly**, and their value if the traveler asks.';
+
+  @override
+  String get requestPublishIntroRulePackaging =>
+      '**Packing it carefully** and describing the contents precisely.';
+
+  @override
+  String get requestPublishIntroRuleHandover =>
+      'Being present at the **drop-off** and stating the right recipient.';
+
+  @override
+  String get requestPublishIntroWhyTitle => 'How it works';
+
+  @override
+  String get requestPublishIntroWhyBulletCarried =>
+      'A traveler carries your parcel in their luggage.';
+
+  @override
+  String get requestPublishIntroWhyBulletPayment =>
+      'Secure payment, released once delivery is confirmed.';
+
+  @override
+  String get requestPublishIntroWhyBulletTracking =>
+      'QR tracking from drop-off to receipt.';
+
+  @override
+  String tripPublishIntroVerifyCallout(String identity, String path) {
+    return 'Before you post, your **$identity**. Go to $path to verify it (2 min).';
+  }
+
+  @override
+  String get tripPublishIntroVerifyIdentity => 'identity must be verified';
+
+  @override
+  String get tripPublishIntroVerifyPath => 'Profile › Verifications';
+
+  @override
+  String get tripPublishIntroVerifyButton => 'Verify my identity';
+
+  @override
+  String tripPublishIntroVerifyHint(String continueLabel) {
+    return 'The button becomes “$continueLabel” once your identity is verified.';
+  }
+
+  @override
+  String get tripPublishIntroStripeTitle => 'Turn on card payments';
+
+  @override
+  String get tripPublishIntroStripeSubtitle =>
+      'Set up your Stripe account so your senders can pay by card, and get more parcels.';
+
+  @override
+  String get tripPublishPricingModeKg => 'By the kilo';
+
+  @override
+  String get tripPublishPricingModeMixed => 'Price grid + kilo';
+
+  @override
+  String get tripPublishPricePerKgSectionLabel => 'Price per kg';
+
+  @override
+  String get tripPublishKgPriceToggleTitle => 'Price per kilo';
+
+  @override
+  String get tripPublishKgPriceToggleSubtitle => 'Optional in grid mode';
+
+  @override
+  String get tripPublishCustomPriceChipLabel => 'Other price';
+
+  @override
+  String get tripPublishCustomPriceFieldHint => 'e.g. 12';
+
+  @override
+  String get tripPublishPriceSelectPrompt =>
+      'Select a price to see the estimate';
+
+  @override
+  String get tripPublishUnlimitedCapacityEstimateNote =>
+      'Unlimited capacity: estimate based on demand';
+
+  @override
+  String tripPublishPriceEstimateLine(String travelerNet, String senderTotal) {
+    return 'You get $travelerNet · the sender pays $senderTotal';
+  }
+
+  @override
+  String tripPublishGridCommissionNotice(String percent) {
+    return 'Yadony adds $percent% to every item and to the price per kilo';
+  }
+
+  @override
+  String get tripPublishNegotiableToggleTitle => 'I accept price proposals';
+
+  @override
+  String get tripPublishNegotiableToggleSubtitle =>
+      'Senders will be able to propose an amount, and you\'re always free to decline';
+
+  @override
+  String get tripPublishPaymentMethodsSectionLabel =>
+      'Accepted payment methods';
+
+  @override
+  String get tripPublishCardPaymentTitle => 'Card payment (Stripe)';
+
+  @override
+  String get tripPublishCardPaymentSubtitle => 'Secure payment by default';
+
+  @override
+  String get tripPublishCashLabel => 'Cash';
+
+  @override
+  String get tripPublishCashSubtitle =>
+      'Service fee charged to the traveler at drop-off';
+
+  @override
+  String get tripPublishAcceptedContentSectionLabel => 'What I accept';
+
+  @override
+  String get tripPublishRefusedContentSectionLabel => 'What I refuse';
+
+  @override
+  String get tripPublishRefusedContentHint => 'E.g. Liquids, Perishable goods…';
+
+  @override
+  String get tripPublishNoteToSendersSectionLabel => 'Note to senders';
+
+  @override
+  String get tripPublishNoteToSendersHint =>
+      'E.g. I prefer well-packed parcels. Contact me before departure.';
+
+  @override
+  String get tripPublishCashOnlyBannerWithConnect =>
+      'Post in cash right now. Connect Stripe to also accept card payments.';
+
+  @override
+  String get tripPublishCashOnlyBannerNoConnect =>
+      'Card payment isn\'t available in your country yet. Your trips are posted in cash.';
+
+  @override
+  String get tripPublishActivateCardPaymentsCta => 'Turn on card payments';
+
+  @override
+  String get tripPublishCardNotConfiguredSubtitle =>
+      'Not set up, turn it on to offer secure payment';
+
+  @override
+  String get tripPublishActivatePayoutCta => 'Turn on payout';
+
+  @override
+  String get tripPublishMobileMoneyIneligibleSubtitle =>
+      'Available for trips in XOF or XAF';
+
+  @override
+  String get tripPublishMobileMoneyInactiveSubtitle =>
+      'First turn on your mobile money payout';
+
+  @override
+  String get tripPublishLockedPriceNoteTitle => 'Price set by the negotiation';
+
+  @override
+  String get tripPublishLockedPriceNoteSubtitle =>
+      'This parcel\'s amount was agreed with the sender and can\'t be changed here.';
+
+  @override
+  String get tripPublishAgreedPriceLabel => 'Total price agreed';
+
+  @override
+  String get tripPublishGridPreviewLabel => 'Your grid';
+
+  @override
+  String tripPublishGridPreviewSeeAll(int count) {
+    return 'See all $count items';
+  }
+
+  @override
+  String get tripPublishGridPreviewNote =>
+      'These prices come from your profile. Editing them changes them on all your trips.';
+
+  @override
+  String get tripPublishGridSheetTitle => 'Your price grid';
+
+  @override
+  String get tripPublishGridSheetSubtitle => 'Valid on all your trips';
+
+  @override
+  String get tripPublishGridSheetEditCta => 'Edit my grid';
+
+  @override
+  String tripPublishGridSheetCommissionNote(String percent) {
+    return 'Prices paid by the sender, Yadony service fee of $percent% included.';
+  }
+
+  @override
+  String get tripPublishGridEmptyTitle => 'Your grid is empty';
+
+  @override
+  String get tripPublishGridEmptySubtitle =>
+      'Add at least one item so senders can book item by item.';
+
+  @override
+  String get tripPublishGridComposeCta => 'Build my grid';
+
+  @override
+  String get tripPublishCorridorConfirmedBadge => 'Confirmed';
+
+  @override
+  String get tripPublishRouteSectionLabel => 'Trip';
+
+  @override
+  String get tripPublishDepartureCityLabel => 'Departure city';
+
+  @override
+  String get tripPublishArrivalCityLabel => 'Arrival city';
+
+  @override
+  String get tripPublishDepartureTimeLabel => 'Departure time';
+
+  @override
+  String get tripPublishArrivalTimeOptionalLabel => 'Arrival time (optional)';
+
+  @override
+  String get tripPublishClearArrivalTimeTooltip => 'Clear arrival time';
+
+  @override
+  String get tripPublishDepartureDateLabel => 'Departure date';
+
+  @override
+  String get tripPublishUrgentDepartureWarning =>
+      '🔥 Departure soon · this trip will be flagged urgent';
+
+  @override
+  String get tripPublishCapacityAvailableLabel => 'Available capacity';
+
+  @override
+  String tripPublishSuitcaseCount(int count, int kg) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count suitcases of $kg kg',
+      one: '$count suitcase of $kg kg',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripPublishYouOfferKg(int kg) {
+    return 'You offer $kg kg';
+  }
+
+  @override
+  String get tripPublishDecreaseQuantityTooltip => 'Decrease quantity';
+
+  @override
+  String get tripPublishIncreaseQuantityTooltip => 'Increase quantity';
+
+  @override
+  String get tripPublishUnlimitedCapacityTitle => 'Unlimited capacity';
+
+  @override
+  String get tripPublishUnlimitedCapacitySubtitle =>
+      'Sold by the kilo · the sender chooses the weight';
+
+  @override
+  String get tripPublishCapacityKgFieldLabel => 'Capacity (kg)';
+
+  @override
+  String get tripPublishCapacityKgFieldHint =>
+      'Enter the total capacity you\'re offering';
+
+  @override
+  String tripPublishCurrencySemanticsLabel(
+    String currencyName,
+    String currencyCode,
+  ) {
+    return 'Publishing currency: $currencyName, $currencyCode. Users in another currency see a converted price. Payment stays in this currency. Button, change currency.';
+  }
+
+  @override
+  String tripPublishCurrencyBannerTitle(
+    String currencyName,
+    String currencyCode,
+  ) {
+    return 'Posted in $currencyName ($currencyCode)';
+  }
+
+  @override
+  String get tripPublishCurrencyBannerSubtitle =>
+      'Users in another currency see a converted price. Payment stays in this currency.';
+
+  @override
+  String get tripPublishCurrencyChangeCta => 'Change';
+
+  @override
+  String get tripPublishPlacesCapacityStepLabel => 'Locations & capacity';
+
+  @override
+  String get tripPublishPriceConditionsStepLabel => 'Price & conditions';
+
+  @override
+  String get tripPublishHandoverLocationsLabel => 'Drop-off locations';
+
+  @override
+  String get tripPublishHandoverLocationsSubtitle =>
+      'Specify the exact drop-off and pickup location';
+
+  @override
+  String get tripPublishLockedCapacityNote => 'Capacity set by the request';
+
+  @override
+  String addressGpsPosition(String lat, String lng) {
+    return 'GPS location ($lat, $lng)';
+  }
+
+  @override
+  String get addressGpsDisabledTitle => 'GPS disabled';
+
+  @override
+  String get addressLocationDeniedTitle => 'Location access denied';
+
+  @override
+  String get addressLocationDeniedForeverTitle =>
+      'Location access permanently denied';
+
+  @override
+  String get addressGpsDisabledMessage =>
+      'Turn on location services in your system settings.';
+
+  @override
+  String get addressLocationDeniedMessage =>
+      'Turn on location access in your settings to use this feature.';
+
+  @override
+  String get addressOpenSettingsButton => 'Open settings';
+
+  @override
+  String get addressPositionUnavailableTitle => 'Position unavailable';
+
+  @override
+  String get addressPositionUnavailableMessage =>
+      'Couldn\'t get your position right now. Try again.';
+
+  @override
+  String get addressReverseGeocodeFailedTitle => 'Address not found';
+
+  @override
+  String get addressReverseGeocodeFailedMessage =>
+      'Couldn\'t convert your position into an address. Try again.';
+
+  @override
+  String get addressSelectFailedMessage =>
+      'Couldn\'t select this address. Try again.';
+
+  @override
+  String get addressSearchHint => 'Search for an address…';
+
+  @override
+  String get addressConfirmButton => 'Confirm this address';
+
+  @override
+  String get addressOfflineTitle => 'Connection required';
+
+  @override
+  String get addressOfflineSubtitle =>
+      'Check your connection to search for an address.';
+
+  @override
+  String get addressSearchErrorTitle => 'Error';
+
+  @override
+  String get addressSearchErrorSubtitle =>
+      'Couldn\'t search for an address. Try again.';
+
+  @override
+  String get addressNoResultsTitle => 'No results';
+
+  @override
+  String get addressNoResultsSubtitle => 'Try “Use my current location”.';
+
+  @override
+  String get addressUseCurrentLocation => 'Use my current location';
+
+  @override
+  String get addressRecentSearchesHeader => 'RECENT SEARCHES';
+
+  @override
+  String get addressSavedAddressesHeader => 'MY SAVED ADDRESSES';
+
+  @override
+  String get addressAddNewTitle => 'Add an address';
+
+  @override
+  String get addressAddNewSubtitle => 'Save it for next time';
+
+  @override
+  String get addressDefaultBadge => 'Default';
+
+  @override
+  String get addressPickupSheetTitle => '📦  Drop-off address';
+
+  @override
+  String get addressDeliverySheetTitle => '🗺️  Delivery address';
+
+  @override
+  String get addressFieldRequiredError => 'Address required';
+
+  @override
+  String get addressFieldSearchHint => 'Type to search for an address…';
+
+  @override
+  String get addressFieldNoResultsHint =>
+      'No results, try \"My current location\"';
+
+  @override
+  String get addressOfflineInlineMessage =>
+      'Connection required to search for an address';
+
+  @override
+  String get addressSelectorDropoffLabel => 'Choose a drop-off address';
+
+  @override
+  String get addressSelectorDropoffSubtitle =>
+      'Where you collect parcels from senders';
+
+  @override
+  String get addressSelectorDeliveryLabel => 'Choose a delivery address';
+
+  @override
+  String get addressSelectorDeliverySubtitle =>
+      'Where you drop off parcels at destination';
+
+  @override
+  String get tripPosterTimePattern => 'h:mm a';
+
+  @override
+  String get tripPosterDepartureLabel => 'Departure';
+
+  @override
+  String get tripPosterDeadlineLabel => 'Last drop-off';
+
+  @override
+  String get tripPosterCapacityLabel => 'Available space';
+
+  @override
+  String get tripPosterHandoverLabel => 'Drop-off';
+
+  @override
+  String get tripPosterPickupLabel => 'Pickup';
+
+  @override
+  String tripPosterFromPrice(String price) {
+    return 'from $price';
+  }
+
+  @override
+  String get tripPosterUnitPerItem => 'per item';
+
+  @override
+  String get tripPosterUnitPerKg => 'per kg';
+
+  @override
+  String get tripPosterPriceUnavailable => 'Price unavailable';
+
+  @override
+  String tripPosterPricePerKg(String price) {
+    return '$price per kg';
+  }
+
+  @override
+  String tripPosterPriceFromItem(String price) {
+    return 'from $price per item';
+  }
+
+  @override
+  String get tripPosterTagline =>
+      'Secure payment, parcel tracking, verified travelers';
+
+  @override
+  String get tripPosterTitle => 'My poster';
+
+  @override
+  String get tripPosterNotFoundTitle => 'Trip not found';
+
+  @override
+  String get tripPosterNotFoundDescription =>
+      'Couldn\'t load this trip right now.';
+
+  @override
+  String tripPosterCaptionCorridor(String departure, String arrival) {
+    return '$departure to $arrival';
+  }
+
+  @override
+  String tripPosterCaptionDeparture(String day) {
+    return 'Departure on $day';
+  }
+
+  @override
+  String tripPosterCaptionDeadline(String deadline) {
+    return 'Last drop-off on $deadline';
+  }
+
+  @override
+  String tripPosterCaptionHandover(String address) {
+    return 'Drop-off: $address';
+  }
+
+  @override
+  String tripPosterCaptionPickup(String address) {
+    return 'Pickup: $address';
+  }
+
+  @override
+  String get tripPosterCaptionCta => 'Book your kilos here:';
+
+  @override
+  String get tripPosterCaptionFooter =>
+      'Secure payment, parcel tracking, verified traveler.';
+
+  @override
+  String tripPosterShareSubject(String departure, String arrival) {
+    return 'Trip $departure to $arrival';
+  }
+
+  @override
+  String get tripPosterShareError => 'Couldn\'t share the poster';
+
+  @override
+  String get tripPosterSaveError => 'Couldn\'t save the poster';
+
+  @override
+  String get tripPosterSaveSuccess => 'Poster saved to your gallery';
+
+  @override
+  String get tripPosterCaptionCopied => 'Caption copied';
+
+  @override
+  String get tripPosterLinkCopiedMessage => 'Link copied';
+
+  @override
+  String get tripPosterInstructions =>
+      'Post this poster as usual, then paste the caption into your post\'s text. The link becomes clickable there, unlike an address written on the image.';
+
+  @override
+  String get tripPosterShareButton => 'Share the poster';
+
+  @override
+  String get tripPosterCopyCaptionButton => 'Copy the caption';
+
+  @override
+  String get tripPosterCopyLinkButton => 'Copy the link';
+
+  @override
+  String get tripPosterSaveButton => 'Save to gallery';
+
+  @override
+  String get errorAnnouncementUpdateBlockedTitle => 'Can\'t edit this trip';
+
+  @override
+  String get errorAnnouncementUpdateBlockedMessage =>
+      'Parcels have already been accepted for this trip';
+
+  @override
+  String get tripTemplateListTitle => 'My trip templates';
+
+  @override
+  String get tripTemplateNewLabel => 'New template';
+
+  @override
+  String get tripTemplateLoadErrorTitle => 'Loading error';
+
+  @override
+  String get tripTemplateLoadErrorFallback => 'Something went wrong.';
+
+  @override
+  String get tripTemplateEmptyTitle => 'No templates';
+
+  @override
+  String get tripTemplateEmptyDescription =>
+      'Create reusable trip templates to post your listings in seconds.';
+
+  @override
+  String get tripTemplateCreateAction => 'Create a template';
+
+  @override
+  String get tripTemplateGridPriceLabel => 'grid pricing';
+
+  @override
+  String get tripTemplateDeleteDialogTitle => 'Delete template';
+
+  @override
+  String tripTemplateDeleteDialogMessage(String label) {
+    return 'Are you sure you want to delete \"$label\"? This action can\'t be undone.';
+  }
+
+  @override
+  String get tripTemplateScheduleRecurrenceAction =>
+      'Schedule the recurring trip';
+
+  @override
+  String get tripTemplateNameSectionLabel => 'TEMPLATE NAME';
+
+  @override
+  String get tripTemplateNameFieldLabel => 'Name';
+
+  @override
+  String get tripTemplateNameFieldHint => 'E.g. My Paris → Dakar';
+
+  @override
+  String get tripTemplateTripSectionLabel => 'TRIP';
+
+  @override
+  String get tripTemplateTransportSectionLabel => 'TRANSPORT MODE';
+
+  @override
+  String get tripTemplateScheduleSectionLabel => 'SCHEDULE';
+
+  @override
+  String get tripTemplateDepartureTimeFieldLabel => 'Departure time';
+
+  @override
+  String get tripTemplateDepartureShortLabel => 'Departure';
+
+  @override
+  String get tripTemplateArrivalTimeFieldLabel => 'Arrival time';
+
+  @override
+  String get tripTemplateArrivalShortLabel => 'Arrival';
+
+  @override
+  String get tripTemplateHandoverDeadlineSectionLabel => 'DROP-OFF DEADLINE';
+
+  @override
+  String get tripTemplateHandoverDeadlineHint =>
+      'At the latest, how many days before departure should the parcel be dropped off?';
+
+  @override
+  String get tripTemplateHandoverNone => 'None';
+
+  @override
+  String get tripTemplateHandoverSameDay => 'Same day';
+
+  @override
+  String tripTemplateHandoverDaysBefore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days before',
+      one: '$count day before',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripTemplateOptionalSuffix(String label) {
+    return '$label (optional)';
+  }
+
+  @override
+  String tripTemplateClearFieldSemantic(String label) {
+    return 'Clear $label';
+  }
+
+  @override
+  String get tripTemplateEditTitle => 'Edit template';
+
+  @override
+  String get tripTemplateSaveButton => 'Save template';
+
+  @override
+  String get tripTemplateUpdatedMessage => 'Template updated';
+
+  @override
+  String get tripTemplateSavedMessage => 'Template saved';
+
+  @override
+  String get tripTemplateRecurrenceActivatedMessage =>
+      'Recurring trip activated. Your trips will be posted automatically.';
+
+  @override
+  String get tripTemplateRecurrenceTitle => 'Recurring trip';
+
+  @override
+  String get tripTemplateActivateRecurrenceButton => 'Make it a recurring trip';
+
+  @override
+  String get tripTemplateNoPricePerKgWarning =>
+      'This template has no price per kg';
+
+  @override
+  String get tripTemplateRepeatDaysSectionLabel => 'REPEAT DAYS';
+
+  @override
+  String get tripTemplateRecurrenceDepartureTimeSectionLabel =>
+      'DEPARTURE TIME';
+
+  @override
+  String get tripTemplateOptionalTimeHint => 'Optional: pick a time';
+
+  @override
+  String get tripTemplateClearTimeSemantic => 'Clear the departure time';
+
+  @override
+  String get tripTemplateLocationsSectionLabel => 'LOCATIONS';
+
+  @override
+  String get tripTemplatePickupFieldLabel => 'Parcel drop-off location *';
+
+  @override
+  String get tripTemplateDeliveryFieldLabel => 'Pickup location *';
+
+  @override
+  String get tripTemplateActiveLabel => 'Recurring trip on';
+
+  @override
+  String get tripTemplateActiveDescription =>
+      'Automatically posts upcoming trips';
 }

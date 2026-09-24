@@ -865,6 +865,28 @@ void main() {
       );
     });
 
+    test('announcement-update-blocked : colis déjà acceptés sur le trajet', () {
+      const error = ConflictException('x', code: 'announcement-update-blocked');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'Modification impossible');
+      expect(p.message, 'Des colis sont déjà acceptés pour ce trajet');
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('announcement-update-blocked en anglais', () {
+      const error = ConflictException('x', code: 'announcement-update-blocked');
+
+      final p = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+
+      expect(p.title, "Can't edit this trip");
+      expect(p.message, 'Parcels have already been accepted for this trip');
+    });
+
     test('guest-session-failed et auth-generic-error sont connus', () {
       expect(
         ErrorCatalog.isKnown(

@@ -35,10 +35,13 @@ class TripFormFields {
   final cashEnabled = ValueNotifier<bool>(false);
   final mobileMoneyEnabled = ValueNotifier<bool>(false);
   final negotiable = ValueNotifier<bool>(false);
+  // Valeurs de donnée (libellés ContentCategory) : comparées au catalogue par
+  // égalité de chaîne, jamais affichées telles quelles. Affichage traité par
+  // la tâche B1.
   final selectedContent = ValueNotifier<Set<String>>({
-    'Vêtements & tissus',
-    'Médicaments traditionnels',
-    'Documents & administratif',
+    'Vêtements & tissus', // i18n-ignore : valeur de donnée ContentCategory
+    'Médicaments traditionnels', // i18n-ignore : valeur de donnée ContentCategory
+    'Documents & administratif', // i18n-ignore : valeur de donnée ContentCategory
   });
   final customAccepted = ValueNotifier<Set<String>>({});
   final refusedTypes = ValueNotifier<Set<String>>({});
@@ -86,9 +89,11 @@ class TripFormFields {
   List<String> acceptedPaymentMethodsFor({required bool stripeConfigured}) {
     final stripe = stripeConfigured && currency.value.isStripeEligible;
     return [
-      if (stripe) 'STRIPE',
-      if (cashEnabled.value || !stripe) 'CASH',
-      if (mobileMoneyEnabled.value) 'MOBILE_MONEY',
+      if (stripe) 'STRIPE', // i18n-ignore : code de moyen de paiement (API)
+      if (cashEnabled.value || !stripe)
+        'CASH', // i18n-ignore : code de moyen de paiement (API)
+      if (mobileMoneyEnabled.value)
+        'MOBILE_MONEY', // i18n-ignore : code de moyen de paiement (API)
     ];
   }
 

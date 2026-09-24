@@ -39,6 +39,8 @@ const _sameInBothLanguages = <String>{
   'homeFilterChipsUrgent', // « 🔥 Urgent » se dit pareil
   'homeFilterFieldsTransport', // « TRANSPORT » se dit pareil
   'homeFilterFieldsDate', // « DATE » se dit pareil
+  'tripTransportTrain', // « Train » se dit pareil
+  'tripTransportBus', // « Bus » se dit pareil
 };
 
 void main() {

@@ -3,8 +3,8 @@
 // - Tap sur "Autre prix" (affiche le champ prix custom)
 // - Saisie dans le champ prix custom (met à jour customPriceNotifier)
 // - Tap sur chip de contenu (add/remove dans selectedContentNotifier)
-// - Ajout d'un type custom "Ce que j'accepte" via CaInlineAddRow
-// - Ajout d'un type refusé via CaInlineAddRow
+// - Ajout d'un type custom "Ce que j'accepte" via ContentCategoryComboBox
+// - Ajout d'un type refusé via ContentCategoryComboBox
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';

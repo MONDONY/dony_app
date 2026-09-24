@@ -9,6 +9,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/address_selector_field.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/capacity_control.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -65,18 +66,19 @@ class LieuxCapaciteStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── LIEUX DE REMISE ─────────────────────────────────────────────────
-        const CaSectionLabel(
-          label: 'Lieux de remise',
+        CaSectionLabel(
+          label: l.tripPublishHandoverLocationsLabel,
           iconAsset: 'arrow-left-right',
         ),
         const SizedBox(height: DonySpacing.xs),
         Text(
-          'Précisez l\'endroit exact de remise et récupération',
+          l.tripPublishHandoverLocationsSubtitle,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.sm),
@@ -118,8 +120,8 @@ class LieuxCapaciteStep extends StatelessWidget {
         const SizedBox(height: DonySpacing.xxl),
 
         // ── CAPACITÉ DISPONIBLE ─────────────────────────────────────────────
-        const CaSectionLabel(
-          label: 'Capacité disponible',
+        CaSectionLabel(
+          label: l.tripPublishCapacityAvailableLabel,
           iconAsset: 'luggage',
         ),
         const SizedBox(height: DonySpacing.base),
@@ -143,6 +145,7 @@ class _LockedCapacityDisplay extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Container(
       key: const Key('locked-capacity-display'),
       width: double.infinity,
@@ -168,7 +171,7 @@ class _LockedCapacityDisplay extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Capacité fixée par la demande',
+                  l.tripPublishLockedCapacityNote,
                   style: tt.bodySmall?.copyWith(
                     color: cs.onSurfaceVariant,
                     fontStyle: FontStyle.italic,

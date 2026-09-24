@@ -984,5 +984,1278 @@
   "shellTermsTitle": "CGU",
   "@shellTermsTitle": {
     "description": "Titre de l'écran des conditions générales d'utilisation (/legal/terms)"
+  },
+  "commonSave": "Enregistrer",
+  "@commonSave": {
+    "description": "Bouton générique qui enregistre une modification"
+  },
+  "commonDelete": "Supprimer",
+  "@commonDelete": {
+    "description": "Bouton générique qui supprime un élément"
+  },
+  "commonEdit": "Modifier",
+  "@commonEdit": {
+    "description": "Bouton générique qui ouvre l'édition d'un élément"
+  },
+  "commonBack": "Retour",
+  "@commonBack": {
+    "description": "Bouton générique de retour en arrière"
+  },
+  "commonSend": "Envoyer",
+  "@commonSend": {
+    "description": "Bouton générique d'envoi"
+  },
+  "commonShare": "Partager",
+  "@commonShare": {
+    "description": "Bouton générique de partage"
+  },
+  "commonCopy": "Copier",
+  "@commonCopy": {
+    "description": "Bouton générique de copie (presse-papiers)"
+  },
+  "commonSeeAll": "Voir tout",
+  "@commonSeeAll": {
+    "description": "Bouton générique qui déplie une liste tronquée"
+  },
+  "commonDateAtTime": "{date} à {time}",
+  "@commonDateAtTime": {
+    "description": "Date et heure accolées, sans mot en dur dans un motif de formatage",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "commonListPair": "{first} et {second}",
+  "@commonListPair": {
+    "description": "Liste de deux éléments jointe pour l'affichage",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "commonListLast": "{head} et {last}",
+  "@commonListLast": {
+    "description": "Liste de trois éléments ou plus : tête déjà jointe par des virgules, et dernier élément",
+    "placeholders": {
+      "head": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "tripKgFree": "Kg libre",
+  "@tripKgFree": {
+    "description": "Trajet sans capacité fixée : le voyageur accepte le kilo au fil de l'eau"
+  },
+  "tripFixedPrice": "Prix ferme",
+  "@tripFixedPrice": {
+    "description": "Trajet dont le prix n'est pas négociable"
+  },
+  "tripTravelerFallbackName": "Voyageur",
+  "@tripTravelerFallbackName": {
+    "description": "Nom affiché quand le voyageur n'a pas de displayName exploitable"
+  },
+  "tripTransportPlane": "Avion",
+  "tripTransportCar": "Voiture",
+  "tripTransportTrain": "Train",
+  "tripTransportBus": "Bus",
+  "tripTransportBoat": "Bateau",
+  "tripTransportOther": "Autre",
+  "tripUrgencyVeryUrgent": "< 3j",
+  "tripUrgencyUrgent": "3–7j",
+  "tripUrgencySoon": "7–14j",
+  "tripUrgencyLater": "14j+",
+  "tripCapacitySuitcase23": "1 valise 23 kg",
+  "tripCapacitySuitcase32": "1 valise 32 kg",
+  "tripCapacityCustom": "Personnalisé",
+  "tripPublishTitle": "Publier un trajet",
+  "@tripPublishTitle": {
+    "description": "Titre de l'écran de publication d'un trajet (AppBar en création, et intro voyageur)"
+  },
+  "tripPublishEditTitle": "Modifier le trajet",
+  "@tripPublishEditTitle": {
+    "description": "Titre de l'AppBar en mode édition d'un trajet"
+  },
+  "tripPublishDedicatedTitle": "Créer le trajet pour cette demande",
+  "@tripPublishDedicatedTitle": {
+    "description": "Titre de l'AppBar quand le trajet est créé pour une demande de colis verrouillée"
+  },
+  "tripPublishSubmitDedicated": "Confirmer le trajet",
+  "@tripPublishSubmitDedicated": {
+    "description": "Bouton de soumission du trajet dédié à une demande de colis"
+  },
+  "tripPublishPreviewButton": "Aperçu",
+  "@tripPublishPreviewButton": {
+    "description": "Bouton qui ouvre l'aperçu du trajet avant publication"
+  },
+  "tripPublishFieldDepartureCityRequired": "Ville de départ obligatoire",
+  "@tripPublishFieldDepartureCityRequired": {
+    "description": "Erreur de validation : ville de départ manquante à l'étape Trajet"
+  },
+  "tripPublishFieldArrivalCityRequired": "Ville d'arrivée obligatoire",
+  "@tripPublishFieldArrivalCityRequired": {
+    "description": "Erreur de validation : ville d'arrivée manquante à l'étape Trajet"
+  },
+  "tripPublishFieldDepartureDateRequired": "Date de départ obligatoire",
+  "@tripPublishFieldDepartureDateRequired": {
+    "description": "Erreur de validation : date de départ manquante à l'étape Trajet"
+  },
+  "tripPublishFieldDepartureTimeRequired": "Heure de départ obligatoire",
+  "@tripPublishFieldDepartureTimeRequired": {
+    "description": "Erreur de validation : heure de départ manquante à l'étape Trajet"
+  },
+  "tripPublishFieldTransportModeRequired": "Mode de transport obligatoire",
+  "@tripPublishFieldTransportModeRequired": {
+    "description": "Erreur de validation : mode de transport manquant à l'étape Trajet"
+  },
+  "tripPublishFieldHandoverDeadlineRequired": "Date limite de dépôt obligatoire",
+  "@tripPublishFieldHandoverDeadlineRequired": {
+    "description": "Erreur de validation : date limite de dépôt des colis manquante à l'étape Trajet"
+  },
+  "tripPublishFieldPickupAddressRequired": "Lieu de remise du colis obligatoire",
+  "@tripPublishFieldPickupAddressRequired": {
+    "description": "Erreur de validation : lieu de remise du colis manquant à l'étape Lieux & Capacité"
+  },
+  "tripPublishFieldDeliveryAddressRequired": "Lieu de récupération obligatoire",
+  "@tripPublishFieldDeliveryAddressRequired": {
+    "description": "Erreur de validation : lieu de récupération du colis manquant à l'étape Lieux & Capacité"
+  },
+  "tripPublishHandoverDeadlineInvalid": "La date limite doit précéder le départ.",
+  "@tripPublishHandoverDeadlineInvalid": {
+    "description": "Erreur affichée sous la ligne date limite de dépôt quand elle est postérieure au départ"
+  },
+  "tripPublishHandoverDeadlineBeforeDeparture": "La date limite de dépôt doit précéder le départ",
+  "@tripPublishHandoverDeadlineBeforeDeparture": {
+    "description": "Snackbar d'erreur à la soumission quand la date limite de dépôt est postérieure au départ"
+  },
+  "tripPublishOfferSentWithTrip": "Offre envoyée avec le trajet associé.",
+  "@tripPublishOfferSentWithTrip": {
+    "description": "Confirmation quand un trajet dédié est créé avec une nouvelle offre, sans fil de négociation existant"
+  },
+  "tripPublishTripLinked": "Trajet lié. L'expéditeur peut désormais payer.",
+  "@tripPublishTripLinked": {
+    "description": "Confirmation quand un trajet dédié est lié à un fil de négociation existant"
+  },
+  "tripPublishSuccessTitleEdit": "Trajet modifié !",
+  "@tripPublishSuccessTitleEdit": {
+    "description": "Titre de l'écran de succès après modification d'un trajet"
+  },
+  "tripPublishSuccessTitleCreate": "Trajet publié !",
+  "@tripPublishSuccessTitleCreate": {
+    "description": "Titre de l'écran de succès après publication d'un trajet"
+  },
+  "tripPublishSuccessSubtitle": "Ton trajet {departureCity} → {arrivalCity} est en ligne.",
+  "@tripPublishSuccessSubtitle": {
+    "description": "Sous-titre de l'écran de succès, avec le corridor du trajet publié",
+    "placeholders": {
+      "departureCity": {
+        "type": "String"
+      },
+      "arrivalCity": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishSuccessCta": "Voir mon trajet",
+  "@tripPublishSuccessCta": {
+    "description": "CTA principal de l'écran de succès de publication d'un trajet"
+  },
+  "tripPublishSuccessShareCta": "Partager mon affiche",
+  "@tripPublishSuccessShareCta": {
+    "description": "CTA secondaire de l'écran de succès (partager l'affiche du trajet), absent en mode édition"
+  },
+  "tripPublishMonthlyLimitTitle": "Limite mensuelle atteinte",
+  "@tripPublishMonthlyLimitTitle": {
+    "description": "Titre du dialogue quand la limite mensuelle de publications PRO est atteinte"
+  },
+  "tripPublishDraftLimitTitle": "Limite de brouillons atteinte",
+  "@tripPublishDraftLimitTitle": {
+    "description": "Titre du dialogue quand la limite de brouillons est atteinte"
+  },
+  "tripPublishTemplatesLabel": "Mes modèles",
+  "@tripPublishTemplatesLabel": {
+    "description": "Titre de la barre de suggestion des modèles de trajet enregistrés"
+  },
+  "tripPublishTemplatesHint": "Applique un modèle pour pré-remplir le trajet",
+  "@tripPublishTemplatesHint": {
+    "description": "Texte d'aide sous le titre de la barre de suggestion des modèles de trajet"
+  },
+  "tripPublishTemplateAppliedMessage": "Modèle « {label} » appliqué",
+  "@tripPublishTemplateAppliedMessage": {
+    "description": "Confirmation après application d'un modèle de trajet, avec son nom",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishTemplateChipGrid": "{label} · grille",
+  "@tripPublishTemplateChipGrid": {
+    "description": "Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishDropoffSectionLabel": "DÉPÔT DES COLIS",
+  "@tripPublishDropoffSectionLabel": {
+    "description": "Titre de section (étape Trajet) pour la date limite de dépôt des colis"
+  },
+  "tripPublishHandoverDeadlineLabel": "Date limite de dépôt",
+  "@tripPublishHandoverDeadlineLabel": {
+    "description": "Libellé de la ligne date limite de dépôt des colis"
+  },
+  "tripPublishHandoverDeadlineSubtitle": "Jusqu'à quand les expéditeurs peuvent te remettre leurs colis",
+  "@tripPublishHandoverDeadlineSubtitle": {
+    "description": "Sous-titre de la ligne date limite de dépôt des colis"
+  },
+  "tripPublishHandoverDeadlineChoose": "Choisir",
+  "@tripPublishHandoverDeadlineChoose": {
+    "description": "Valeur affichée sur la ligne date limite de dépôt tant qu'aucune date n'est choisie"
+  },
+  "tripPublishLockedBannerTitle": "Trajet dédié à la demande",
+  "@tripPublishLockedBannerTitle": {
+    "description": "Titre du bandeau affiché quand le trajet est créé pour une demande de colis verrouillée"
+  },
+  "tripPublishLockedBannerSubtitle": "Corridor, capacité et prix sont verrouillés. La date doit rester dans la fenêtre de tolérance de l'expéditeur.",
+  "@tripPublishLockedBannerSubtitle": {
+    "description": "Texte du bandeau affiché quand le trajet est créé pour une demande de colis verrouillée"
+  },
+  "requestPublishIntroTitle": "Publier un colis",
+  "@requestPublishIntroTitle": {
+    "description": "Titre de l'intro de publication, rôle expéditeur"
+  },
+  "tripPublishIntroVerifiedTextTrip": "Identité vérifiée. Vous pouvez publier votre trajet en toute sécurité.",
+  "@tripPublishIntroVerifiedTextTrip": {
+    "description": "Encart vert de l'intro quand l'identité est déjà vérifiée, rôle voyageur"
+  },
+  "requestPublishIntroVerifiedText": "Identité vérifiée. Vous pouvez publier votre demande d'envoi en toute sécurité.",
+  "@requestPublishIntroVerifiedText": {
+    "description": "Encart vert de l'intro quand l'identité est déjà vérifiée, rôle expéditeur"
+  },
+  "tripPublishIntroEngagementsTitleTrip": "Vos engagements de voyageur",
+  "@tripPublishIntroEngagementsTitleTrip": {
+    "description": "Titre de la section des engagements de l'intro, rôle voyageur"
+  },
+  "tripPublishIntroEngagementsIntroTrip": "En publiant, vous vous engagez à :",
+  "@tripPublishIntroEngagementsIntroTrip": {
+    "description": "Phrase d'introduction de la liste des engagements, rôle voyageur"
+  },
+  "tripPublishIntroRuleTripCarry": "Transporter le colis **vous-même**, sans le confier à un tiers.",
+  "@tripPublishIntroRuleTripCarry": {
+    "description": "Engagement voyageur : transporter le colis soi-même (** = segment en gras)"
+  },
+  "tripPublishIntroRuleTripSchedule": "Respecter la **date** et l'**itinéraire** annoncés.",
+  "@tripPublishIntroRuleTripSchedule": {
+    "description": "Engagement voyageur : respecter la date et l'itinéraire (** = segments en gras)"
+  },
+  "tripPublishIntroRuleTripScan": "**Lire le QR** à la remise et à la livraison.",
+  "@tripPublishIntroRuleTripScan": {
+    "description": "Engagement voyageur : scanner le QR à la remise et à la livraison (** = segment en gras)"
+  },
+  "tripPublishIntroRuleTripContent": "N'accepter que des **contenus autorisés**, jamais d'objet illicite.",
+  "@tripPublishIntroRuleTripContent": {
+    "description": "Engagement voyageur : n'accepter que des contenus autorisés (** = segment en gras)"
+  },
+  "tripPublishIntroRuleTripHandover": "Remettre le colis **au bon destinataire**, en main propre.",
+  "@tripPublishIntroRuleTripHandover": {
+    "description": "Engagement voyageur : remettre le colis au bon destinataire (** = segment en gras)"
+  },
+  "tripPublishIntroWhyTitleTrip": "Pourquoi publier",
+  "@tripPublishIntroWhyTitleTrip": {
+    "description": "Titre de la section « pourquoi publier », rôle voyageur"
+  },
+  "tripPublishIntroWhyBulletTripVisibility": "Visible par des milliers d'expéditeurs de la diaspora.",
+  "@tripPublishIntroWhyBulletTripVisibility": {
+    "description": "Puce « pourquoi publier », rôle voyageur : visibilité"
+  },
+  "tripPublishIntroWhyBulletTripEarnings": "Rentabilisez vos kilos libres à chaque voyage.",
+  "@tripPublishIntroWhyBulletTripEarnings": {
+    "description": "Puce « pourquoi publier », rôle voyageur : revenus"
+  },
+  "tripPublishIntroWhyBulletTripReputation": "Bâtissez une réputation avec les avis reçus.",
+  "@tripPublishIntroWhyBulletTripReputation": {
+    "description": "Puce « pourquoi publier », rôle voyageur : réputation"
+  },
+  "requestPublishIntroEngagementsTitle": "Vos engagements d'expéditeur",
+  "@requestPublishIntroEngagementsTitle": {
+    "description": "Titre de la section des engagements de l'intro, rôle expéditeur"
+  },
+  "requestPublishIntroEngagementsIntro": "En envoyant un colis, vous certifiez :",
+  "@requestPublishIntroEngagementsIntro": {
+    "description": "Phrase d'introduction de la liste des engagements, rôle expéditeur"
+  },
+  "requestPublishIntroRuleLicit": "N'envoyer que des **contenus licites** et autorisés.",
+  "@requestPublishIntroRuleLicit": {
+    "description": "Engagement expéditeur : contenus licites uniquement (** = segment en gras)"
+  },
+  "requestPublishIntroRuleForbidden": "Aucun **objet interdit** (espèces, armes, produits dangereux…).",
+  "@requestPublishIntroRuleForbidden": {
+    "description": "Engagement expéditeur : aucun objet interdit (** = segment en gras)"
+  },
+  "requestPublishIntroRuleHonest": "Décrire **honnêtement** le contenu et sa valeur si le voyageur la demande.",
+  "@requestPublishIntroRuleHonest": {
+    "description": "Engagement expéditeur : description honnête du contenu (** = segment en gras)"
+  },
+  "requestPublishIntroRulePackaging": "**Emballer soigneusement** et décrire précisément le contenu.",
+  "@requestPublishIntroRulePackaging": {
+    "description": "Engagement expéditeur : emballage soigné (** = segment en gras)"
+  },
+  "requestPublishIntroRuleHandover": "Être présent à la **remise** et indiquer le bon destinataire.",
+  "@requestPublishIntroRuleHandover": {
+    "description": "Engagement expéditeur : présence à la remise (** = segment en gras)"
+  },
+  "requestPublishIntroWhyTitle": "Comment ça marche",
+  "@requestPublishIntroWhyTitle": {
+    "description": "Titre de la section « comment ça marche », rôle expéditeur"
+  },
+  "requestPublishIntroWhyBulletCarried": "Un voyageur transporte votre colis dans ses bagages.",
+  "@requestPublishIntroWhyBulletCarried": {
+    "description": "Puce « comment ça marche », rôle expéditeur : transport"
+  },
+  "requestPublishIntroWhyBulletPayment": "Paiement sécurisé, libéré à la livraison confirmée.",
+  "@requestPublishIntroWhyBulletPayment": {
+    "description": "Puce « comment ça marche », rôle expéditeur : paiement séquestré"
+  },
+  "requestPublishIntroWhyBulletTracking": "Suivi par QR de la remise jusqu'à la réception.",
+  "@requestPublishIntroWhyBulletTracking": {
+    "description": "Puce « comment ça marche », rôle expéditeur : suivi QR"
+  },
+  "tripPublishIntroVerifyCallout": "Avant de publier, votre **{identity}**. Rendez-vous dans {path} pour la valider (2 min).",
+  "@tripPublishIntroVerifyCallout": {
+    "description": "Encart d'invite à vérifier son identité avant de publier un trajet. Le segment en gras (identity) et le chemin souligné (path) sont insérés par paramètre puis découpés au rendu",
+    "placeholders": {
+      "identity": {
+        "type": "String"
+      },
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishIntroVerifyIdentity": "identité doit être vérifiée",
+  "@tripPublishIntroVerifyIdentity": {
+    "description": "Segment en gras (paramètre identity) de l'encart d'invite à vérifier son identité"
+  },
+  "tripPublishIntroVerifyPath": "Profil › Vérifications",
+  "@tripPublishIntroVerifyPath": {
+    "description": "Chemin de menu en gras souligné (paramètre path), dans l'encart d'invite à vérifier son identité"
+  },
+  "tripPublishIntroVerifyButton": "Vérifier mon identité",
+  "@tripPublishIntroVerifyButton": {
+    "description": "Bouton qui ouvre le portail KYC depuis l'intro de publication"
+  },
+  "tripPublishIntroVerifyHint": "Le bouton devient « {continueLabel} » une fois l'identité vérifiée.",
+  "@tripPublishIntroVerifyHint": {
+    "description": "Texte sous le bouton de vérification, tant que l'identité n'est pas vérifiée",
+    "placeholders": {
+      "continueLabel": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishIntroStripeTitle": "Activez les paiements par carte",
+  "@tripPublishIntroStripeTitle": {
+    "description": "Titre du rappel Stripe (voyageur) dans l'intro de publication d'un trajet"
+  },
+  "tripPublishIntroStripeSubtitle": "Configurez votre compte Stripe pour que vos expéditeurs paient par carte, et recevez plus de colis.",
+  "@tripPublishIntroStripeSubtitle": {
+    "description": "Texte du rappel Stripe (voyageur) dans l'intro de publication d'un trajet"
+  },
+  "tripPublishPricingModeKg": "Au kilo",
+  "@tripPublishPricingModeKg": {
+    "description": "Option « au kilo » du toggle de mode de tarification, étape Prix & conditions"
+  },
+  "tripPublishPricingModeMixed": "Grille + kilo",
+  "@tripPublishPricingModeMixed": {
+    "description": "Option « grille + kilo » du toggle de mode de tarification"
+  },
+  "tripPublishPricePerKgSectionLabel": "Prix par kg",
+  "@tripPublishPricePerKgSectionLabel": {
+    "description": "Libellé de la section prix au kg, réutilisé comme libellé du champ de prix personnalisé"
+  },
+  "tripPublishKgPriceToggleTitle": "Tarif au kilo",
+  "@tripPublishKgPriceToggleTitle": {
+    "description": "Titre du toggle « Tarif au kilo », visible en mode grille"
+  },
+  "tripPublishKgPriceToggleSubtitle": "Optionnel en mode grille",
+  "@tripPublishKgPriceToggleSubtitle": {
+    "description": "Sous-titre du toggle « Tarif au kilo »"
+  },
+  "tripPublishCustomPriceChipLabel": "Autre prix",
+  "@tripPublishCustomPriceChipLabel": {
+    "description": "Libellé de la puce « Autre prix » du sélecteur de prix au kg"
+  },
+  "tripPublishCustomPriceFieldHint": "ex: 12",
+  "@tripPublishCustomPriceFieldHint": {
+    "description": "Indice du champ de saisie du prix personnalisé au kg"
+  },
+  "tripPublishPriceSelectPrompt": "Sélectionnez un prix pour voir l'estimation",
+  "@tripPublishPriceSelectPrompt": {
+    "description": "Invite affichée tant qu'aucun prix au kg n'est sélectionné"
+  },
+  "tripPublishUnlimitedCapacityEstimateNote": "Capacité illimitée : estimation selon la demande",
+  "@tripPublishUnlimitedCapacityEstimateNote": {
+    "description": "Note affichée à la place de l'estimation quand la capacité est Kg libre"
+  },
+  "tripPublishPriceEstimateLine": "Vous touchez {travelerNet} · l'expéditeur paie {senderTotal}",
+  "@tripPublishPriceEstimateLine": {
+    "description": "Ligne d'estimation du prix au kg, montants déjà formatés dans la devise",
+    "placeholders": {
+      "travelerNet": {
+        "type": "String"
+      },
+      "senderTotal": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishGridCommissionNotice": "Yadony ajoute {percent} % sur chaque article et sur le prix au kilo",
+  "@tripPublishGridCommissionNotice": {
+    "description": "Note sous l'aperçu de grille en mode mixte, percent déjà formaté",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishNegotiableToggleTitle": "J'accepte les propositions de prix",
+  "@tripPublishNegotiableToggleTitle": {
+    "description": "Titre du toggle d'ouverture aux propositions de prix des expéditeurs"
+  },
+  "tripPublishNegotiableToggleSubtitle": "Les expéditeurs pourront vous proposer un montant, vous restez libre de refuser",
+  "@tripPublishNegotiableToggleSubtitle": {
+    "description": "Sous-titre du toggle d'ouverture aux propositions de prix"
+  },
+  "tripPublishPaymentMethodsSectionLabel": "Modes de paiement acceptés",
+  "@tripPublishPaymentMethodsSectionLabel": {
+    "description": "Libellé de la section des moyens de paiement acceptés"
+  },
+  "tripPublishCardPaymentTitle": "Carte bancaire (Stripe)",
+  "@tripPublishCardPaymentTitle": {
+    "description": "Titre de la ligne paiement par carte, Stripe configuré ou non"
+  },
+  "tripPublishCardPaymentSubtitle": "Paiement sécurisé par défaut",
+  "@tripPublishCardPaymentSubtitle": {
+    "description": "Sous-titre de la ligne paiement par carte quand Stripe est configuré"
+  },
+  "tripPublishCashLabel": "Espèces",
+  "@tripPublishCashLabel": {
+    "description": "Titre de la ligne paiement en espèces"
+  },
+  "tripPublishCashSubtitle": "Commission prélevée au voyageur à la remise",
+  "@tripPublishCashSubtitle": {
+    "description": "Sous-titre de la ligne paiement en espèces"
+  },
+  "tripPublishAcceptedContentSectionLabel": "Ce que j'accepte",
+  "@tripPublishAcceptedContentSectionLabel": {
+    "description": "Libellé de la section des contenus acceptés"
+  },
+  "tripPublishRefusedContentSectionLabel": "Ce que je refuse",
+  "@tripPublishRefusedContentSectionLabel": {
+    "description": "Libellé de la section des contenus refusés"
+  },
+  "tripPublishRefusedContentHint": "Ex: Liquides, Denrées périssables…",
+  "@tripPublishRefusedContentHint": {
+    "description": "Indice du combobox des contenus refusés"
+  },
+  "tripPublishNoteToSendersSectionLabel": "Note aux expéditeurs",
+  "@tripPublishNoteToSendersSectionLabel": {
+    "description": "Libellé de la section note libre aux expéditeurs"
+  },
+  "tripPublishNoteToSendersHint": "Ex: Je préfère les colis bien emballés. Contactez-moi avant le départ.",
+  "@tripPublishNoteToSendersHint": {
+    "description": "Indice du champ de note libre aux expéditeurs"
+  },
+  "tripPublishCashOnlyBannerWithConnect": "Publiez en espèces dès maintenant. Connectez Stripe pour accepter aussi la carte.",
+  "@tripPublishCashOnlyBannerWithConnect": {
+    "description": "Bannière quand Stripe n'est pas configuré mais disponible dans le pays"
+  },
+  "tripPublishCashOnlyBannerNoConnect": "Le paiement par carte n'est pas encore disponible dans votre pays. Vos trajets sont publiés en espèces.",
+  "@tripPublishCashOnlyBannerNoConnect": {
+    "description": "Bannière quand Stripe n'est pas disponible dans le pays du voyageur"
+  },
+  "tripPublishActivateCardPaymentsCta": "Activer les paiements par carte",
+  "@tripPublishActivateCardPaymentsCta": {
+    "description": "CTA vers l'onboarding Stripe Connect depuis la bannière espèces uniquement"
+  },
+  "tripPublishCardNotConfiguredSubtitle": "Non configuré, activez pour proposer le paiement sécurisé",
+  "@tripPublishCardNotConfiguredSubtitle": {
+    "description": "Sous-titre de la ligne carte verrouillée quand Stripe n'est pas configuré"
+  },
+  "tripPublishActivatePayoutCta": "Activer le versement",
+  "@tripPublishActivatePayoutCta": {
+    "description": "Bouton d'activation du versement mobile money"
+  },
+  "tripPublishMobileMoneyIneligibleSubtitle": "Disponible pour les trajets en XOF ou XAF",
+  "@tripPublishMobileMoneyIneligibleSubtitle": {
+    "description": "Sous-titre mobile money quand la devise n'est pas éligible"
+  },
+  "tripPublishMobileMoneyInactiveSubtitle": "Active d'abord ton versement mobile money",
+  "@tripPublishMobileMoneyInactiveSubtitle": {
+    "description": "Sous-titre mobile money quand le compte de versement n'est pas actif"
+  },
+  "tripPublishLockedPriceNoteTitle": "Prix fixé par la négociation",
+  "@tripPublishLockedPriceNoteTitle": {
+    "description": "Titre de la note remplacant la section prix quand le prix est verrouillé"
+  },
+  "tripPublishLockedPriceNoteSubtitle": "Le montant de ce colis a été convenu avec l'expéditeur, non modifiable ici.",
+  "@tripPublishLockedPriceNoteSubtitle": {
+    "description": "Sous-titre de la note prix verrouillé"
+  },
+  "tripPublishAgreedPriceLabel": "Prix total convenu",
+  "@tripPublishAgreedPriceLabel": {
+    "description": "Libellé de la carte affichant le prix total convenu (trajet dédié)"
+  },
+  "tripPublishGridPreviewLabel": "Votre grille",
+  "@tripPublishGridPreviewLabel": {
+    "description": "Libellé au-dessus de l'aperçu de grille, étape Prix & conditions"
+  },
+  "tripPublishGridPreviewSeeAll": "Voir les {count} articles",
+  "@tripPublishGridPreviewSeeAll": {
+    "description": "Bouton pour ouvrir la feuille listant tous les articles de la grille",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripPublishGridPreviewNote": "Ces prix viennent de votre profil. Les modifier les change sur tous vos trajets.",
+  "@tripPublishGridPreviewNote": {
+    "description": "Note sous l'aperçu de grille rappelant que la grille est un réglage de profil"
+  },
+  "tripPublishGridSheetTitle": "Votre grille de prix",
+  "@tripPublishGridSheetTitle": {
+    "description": "Titre de la feuille listant tous les articles de la grille"
+  },
+  "tripPublishGridSheetSubtitle": "Valable sur tous vos trajets",
+  "@tripPublishGridSheetSubtitle": {
+    "description": "Sous-titre de la feuille de grille complète"
+  },
+  "tripPublishGridSheetEditCta": "Modifier ma grille",
+  "@tripPublishGridSheetEditCta": {
+    "description": "Bouton sticky de la feuille de grille complète"
+  },
+  "tripPublishGridSheetCommissionNote": "Prix payés par l'expéditeur, commission Yadony de {percent} % comprise.",
+  "@tripPublishGridSheetCommissionNote": {
+    "description": "Note sous la liste d'articles de la feuille de grille complète",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishGridEmptyTitle": "Votre grille est vide",
+  "@tripPublishGridEmptyTitle": {
+    "description": "Titre de la carte affichée quand le voyageur choisit le mode grille sans étiquette"
+  },
+  "tripPublishGridEmptySubtitle": "Ajoutez au moins une étiquette pour que les expéditeurs réservent article par article.",
+  "@tripPublishGridEmptySubtitle": {
+    "description": "Sous-titre de la carte grille vide"
+  },
+  "tripPublishGridComposeCta": "Composer ma grille",
+  "@tripPublishGridComposeCta": {
+    "description": "Bouton de la carte grille vide, ouvre l'écran de grille du profil"
+  },
+  "tripPublishCorridorConfirmedBadge": "Confirmé",
+  "@tripPublishCorridorConfirmedBadge": {
+    "description": "Badge sur l'aperçu du corridor une fois départ et arrivée sélectionnés"
+  },
+  "tripPublishRouteSectionLabel": "Trajet",
+  "@tripPublishRouteSectionLabel": {
+    "description": "Libellé de section « Trajet », aussi utilisé comme libellé d'étape du stepper"
+  },
+  "tripPublishDepartureCityLabel": "Ville de départ",
+  "@tripPublishDepartureCityLabel": {
+    "description": "Libellé du champ ville de départ verrouillé (corridor fixé par une demande)"
+  },
+  "tripPublishArrivalCityLabel": "Ville d'arrivée",
+  "@tripPublishArrivalCityLabel": {
+    "description": "Libellé du champ ville d'arrivée verrouillé (corridor fixé par une demande)"
+  },
+  "tripPublishDepartureTimeLabel": "Heure de départ",
+  "@tripPublishDepartureTimeLabel": {
+    "description": "Libellé du champ heure de départ obligatoire"
+  },
+  "tripPublishArrivalTimeOptionalLabel": "Heure d'arrivée (optionnel)",
+  "@tripPublishArrivalTimeOptionalLabel": {
+    "description": "Libellé du champ heure d'arrivée, optionnel"
+  },
+  "tripPublishClearArrivalTimeTooltip": "Effacer l'heure d'arrivée",
+  "@tripPublishClearArrivalTimeTooltip": {
+    "description": "Tooltip du bouton d'effacement de l'heure d'arrivée"
+  },
+  "tripPublishDepartureDateLabel": "Date de départ",
+  "@tripPublishDepartureDateLabel": {
+    "description": "Libellé du champ date de départ"
+  },
+  "tripPublishUrgentDepartureWarning": "🔥 Départ proche · ce trajet sera signalé urgent",
+  "@tripPublishUrgentDepartureWarning": {
+    "description": "Feedback informatif sous la date de départ quand elle est proche (tiret cadratin d'origine remplacé par un point médian, interdit par les tests arb)"
+  },
+  "tripPublishCapacityAvailableLabel": "Capacité disponible",
+  "@tripPublishCapacityAvailableLabel": {
+    "description": "Titre de la section capacité disponible, réutilisé dans lieux_capacite_step"
+  },
+  "tripPublishSuitcaseCount": "{count, plural, =1{{count} valise de {kg} kg} other{{count} valises de {kg} kg}}",
+  "@tripPublishSuitcaseCount": {
+    "description": "Quantité de valises et leur poids unitaire, sous le total offert (mode presets valise)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "kg": {
+        "type": "int"
+      }
+    }
+  },
+  "tripPublishYouOfferKg": "Vous offrez {kg} kg",
+  "@tripPublishYouOfferKg": {
+    "description": "Titre affichant le poids total offert (mode presets valise)",
+    "placeholders": {
+      "kg": {
+        "type": "int"
+      }
+    }
+  },
+  "tripPublishDecreaseQuantityTooltip": "Diminuer la quantité",
+  "@tripPublishDecreaseQuantityTooltip": {
+    "description": "Semantics du bouton moins du compteur de valises"
+  },
+  "tripPublishIncreaseQuantityTooltip": "Augmenter la quantité",
+  "@tripPublishIncreaseQuantityTooltip": {
+    "description": "Semantics du bouton plus du compteur de valises"
+  },
+  "tripPublishUnlimitedCapacityTitle": "Capacité illimitée",
+  "@tripPublishUnlimitedCapacityTitle": {
+    "description": "Titre de la carte info capacité Kg libre"
+  },
+  "tripPublishUnlimitedCapacitySubtitle": "Vendu au kilo · l'expéditeur choisit son poids",
+  "@tripPublishUnlimitedCapacitySubtitle": {
+    "description": "Sous-titre de la carte info capacité Kg libre"
+  },
+  "tripPublishCapacityKgFieldLabel": "Capacité (kg)",
+  "@tripPublishCapacityKgFieldLabel": {
+    "description": "Libellé du champ de saisie libre de la capacité personnalisée"
+  },
+  "tripPublishCapacityKgFieldHint": "Indiquez la capacité totale que vous offrez",
+  "@tripPublishCapacityKgFieldHint": {
+    "description": "Aide sous le champ de capacité personnalisée"
+  },
+  "tripPublishCurrencySemanticsLabel": "Devise de publication : {currencyName}, {currencyCode}. Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise. Bouton, modifier la devise.",
+  "@tripPublishCurrencySemanticsLabel": {
+    "description": "Semantics complet de la bannière de sélection de devise",
+    "placeholders": {
+      "currencyName": {
+        "type": "String"
+      },
+      "currencyCode": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishCurrencyBannerTitle": "Publié en {currencyName} ({currencyCode})",
+  "@tripPublishCurrencyBannerTitle": {
+    "description": "Titre visible de la bannière de sélection de devise",
+    "placeholders": {
+      "currencyName": {
+        "type": "String"
+      },
+      "currencyCode": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishCurrencyBannerSubtitle": "Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.",
+  "@tripPublishCurrencyBannerSubtitle": {
+    "description": "Sous-titre visible de la bannière de sélection de devise"
+  },
+  "tripPublishCurrencyChangeCta": "Changer",
+  "@tripPublishCurrencyChangeCta": {
+    "description": "Bouton « Changer » de la bannière de sélection de devise"
+  },
+  "tripPublishPlacesCapacityStepLabel": "Lieux & capacité",
+  "@tripPublishPlacesCapacityStepLabel": {
+    "description": "Libellé d'étape du stepper de publication (étape 1)"
+  },
+  "tripPublishPriceConditionsStepLabel": "Prix & conditions",
+  "@tripPublishPriceConditionsStepLabel": {
+    "description": "Libellé d'étape du stepper de publication (étape 2)"
+  },
+  "tripPublishHandoverLocationsLabel": "Lieux de remise",
+  "@tripPublishHandoverLocationsLabel": {
+    "description": "Titre de la section lieux de remise et de récupération"
+  },
+  "tripPublishHandoverLocationsSubtitle": "Précisez l'endroit exact de remise et récupération",
+  "@tripPublishHandoverLocationsSubtitle": {
+    "description": "Sous-titre de la section lieux de remise et de récupération"
+  },
+  "tripPublishLockedCapacityNote": "Capacité fixée par la demande",
+  "@tripPublishLockedCapacityNote": {
+    "description": "Note sous la capacité verrouillée (flux trajet dédié)"
+  },
+
+  "addressGpsPosition": "Position GPS ({lat}, {lng})",
+  "@addressGpsPosition": {
+    "description": "Libellé de repli utilisé comme adresse quand le géocodage inverse échoue : coordonnées brutes formatées (address_labels.dart)",
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lng": {
+        "type": "String"
+      }
+    }
+  },
+  "addressGpsDisabledTitle": "GPS désactivé",
+  "@addressGpsDisabledTitle": {
+    "description": "Titre de la sheet d'info quand le service de localisation est coupé (sélecteurs d'adresse et champ d'adresse)"
+  },
+  "addressLocationDeniedTitle": "Localisation refusée",
+  "@addressLocationDeniedTitle": {
+    "description": "Titre de la sheet d'info quand la permission de localisation est refusée (sélecteurs d'adresse et champ d'adresse)"
+  },
+  "addressLocationDeniedForeverTitle": "Localisation définitivement refusée",
+  "@addressLocationDeniedForeverTitle": {
+    "description": "Titre de la sheet d'info quand la permission de localisation est refusée définitivement (sélecteurs d'adresse et champ d'adresse)"
+  },
+  "addressGpsDisabledMessage": "Activez la géolocalisation dans vos paramètres système.",
+  "@addressGpsDisabledMessage": {
+    "description": "Message de la sheet d'info GPS désactivé (sélecteurs d'adresse et champ d'adresse)"
+  },
+  "addressLocationDeniedMessage": "Activez la localisation dans vos paramètres pour utiliser cette fonctionnalité.",
+  "@addressLocationDeniedMessage": {
+    "description": "Message de la sheet d'info permission de localisation refusée (sélecteurs d'adresse et champ d'adresse)"
+  },
+  "addressOpenSettingsButton": "Ouvrir les paramètres",
+  "@addressOpenSettingsButton": {
+    "description": "Bouton de la sheet d'info localisation/GPS (sélecteurs d'adresse et champ d'adresse)"
+  },
+  "addressPositionUnavailableTitle": "Position indisponible",
+  "@addressPositionUnavailableTitle": {
+    "description": "Titre de la sheet d'info quand aucun fix GPS n'est disponible (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressPositionUnavailableMessage": "Impossible de récupérer votre position pour le moment. Réessayez.",
+  "@addressPositionUnavailableMessage": {
+    "description": "Message de la sheet d'info position indisponible (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressReverseGeocodeFailedTitle": "Adresse introuvable",
+  "@addressReverseGeocodeFailedTitle": {
+    "description": "Titre de la sheet d'info quand le géocodage inverse échoue après 3 tentatives (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressReverseGeocodeFailedMessage": "Impossible de convertir votre position en adresse. Réessayez.",
+  "@addressReverseGeocodeFailedMessage": {
+    "description": "Message de la sheet d'info géocodage inverse en échec (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressSelectFailedMessage": "Impossible de sélectionner cette adresse. Réessayez.",
+  "@addressSelectFailedMessage": {
+    "description": "SnackBar affiché quand la résolution d'une suggestion échoue (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressSearchHint": "Rechercher une adresse…",
+  "@addressSearchHint": {
+    "description": "Placeholder du champ de recherche inline des sélecteurs d'adresse pickup/delivery"
+  },
+  "addressConfirmButton": "Confirmer cette adresse",
+  "@addressConfirmButton": {
+    "description": "Bouton de validation des sélecteurs d'adresse pickup/delivery"
+  },
+  "addressOfflineTitle": "Connexion requise",
+  "@addressOfflineTitle": {
+    "description": "Titre de l'état vide hors ligne de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressOfflineSubtitle": "Vérifiez votre connexion pour rechercher une adresse.",
+  "@addressOfflineSubtitle": {
+    "description": "Sous-titre de l'état vide hors ligne de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressSearchErrorTitle": "Erreur",
+  "@addressSearchErrorTitle": {
+    "description": "Titre de l'état d'erreur de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressSearchErrorSubtitle": "Impossible de rechercher une adresse. Réessayez.",
+  "@addressSearchErrorSubtitle": {
+    "description": "Sous-titre de l'état d'erreur de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressNoResultsTitle": "Aucun résultat",
+  "@addressNoResultsTitle": {
+    "description": "Titre de l'état vide sans résultat de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressNoResultsSubtitle": "Essayez « Utiliser ma position actuelle ».",
+  "@addressNoResultsSubtitle": {
+    "description": "Sous-titre de l'état vide sans résultat de la recherche d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressUseCurrentLocation": "Utiliser ma position actuelle",
+  "@addressUseCurrentLocation": {
+    "description": "Libellé du bouton GPS (sélecteurs d'adresse pickup/delivery et champ d'adresse)"
+  },
+  "addressRecentSearchesHeader": "RECHERCHES RÉCENTES",
+  "@addressRecentSearchesHeader": {
+    "description": "En-tête de section des adresses récentes (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressSavedAddressesHeader": "MES ADRESSES ENREGISTRÉES",
+  "@addressSavedAddressesHeader": {
+    "description": "En-tête de section des adresses enregistrées (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressAddNewTitle": "Ajouter une adresse",
+  "@addressAddNewTitle": {
+    "description": "Titre de la tuile d'ajout d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressAddNewSubtitle": "Enregistrer pour la prochaine fois",
+  "@addressAddNewSubtitle": {
+    "description": "Sous-titre de la tuile d'ajout d'adresse (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressDefaultBadge": "Par défaut",
+  "@addressDefaultBadge": {
+    "description": "Badge sur l'adresse enregistrée par défaut (sélecteurs d'adresse pickup/delivery)"
+  },
+  "addressPickupSheetTitle": "📦  Adresse de remise",
+  "@addressPickupSheetTitle": {
+    "description": "Titre du sélecteur d'adresse de remise (pickup_address_picker_sheet.dart)"
+  },
+  "addressDeliverySheetTitle": "🗺️  Adresse de livraison",
+  "@addressDeliverySheetTitle": {
+    "description": "Titre du sélecteur d'adresse de livraison (delivery_address_picker_sheet.dart)"
+  },
+  "addressFieldRequiredError": "Adresse obligatoire",
+  "@addressFieldRequiredError": {
+    "description": "Message de validation quand le champ d'adresse obligatoire est vide (address_picker_field.dart)"
+  },
+  "addressFieldSearchHint": "Tapez pour rechercher une adresse…",
+  "@addressFieldSearchHint": {
+    "description": "Placeholder du champ d'adresse une fois focalisé (address_picker_field.dart)"
+  },
+  "addressFieldNoResultsHint": "Aucun résultat, essayez \"Ma position actuelle\"",
+  "@addressFieldNoResultsHint": {
+    "description": "Message affiché quand la recherche du champ d'adresse ne renvoie rien (address_picker_field.dart)"
+  },
+  "addressOfflineInlineMessage": "Connexion requise pour la recherche d'adresse",
+  "@addressOfflineInlineMessage": {
+    "description": "Message inline hors ligne sous le champ d'adresse (address_picker_field.dart et address_suggest_field.dart)"
+  },
+  "addressSelectorDropoffLabel": "Choisir une adresse de remise",
+  "@addressSelectorDropoffLabel": {
+    "description": "Libellé de la carte vide du sélecteur d'adresse de remise (address_selector_field.dart)"
+  },
+  "addressSelectorDropoffSubtitle": "Où tu récupères les colis des expéditeurs",
+  "@addressSelectorDropoffSubtitle": {
+    "description": "Sous-titre de la carte vide du sélecteur d'adresse de remise (address_selector_field.dart)"
+  },
+  "addressSelectorDeliveryLabel": "Choisir une adresse de livraison",
+  "@addressSelectorDeliveryLabel": {
+    "description": "Libellé de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)"
+  },
+  "addressSelectorDeliverySubtitle": "Où tu déposes les colis à destination",
+  "@addressSelectorDeliverySubtitle": {
+    "description": "Sous-titre de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)"
+  },
+
+  "tripPosterTimePattern": "HH'h'mm",
+  "@tripPosterTimePattern": {
+    "description": "Motif intl DateFormat, pas un texte : heure de l'échéance de l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterDepartureLabel": "Départ",
+  "@tripPosterDepartureLabel": {
+    "description": "Libellé de la ligne date de départ sur l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterDeadlineLabel": "Dernier dépôt",
+  "@tripPosterDeadlineLabel": {
+    "description": "Libellé de la ligne date limite de dépôt sur l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterCapacityLabel": "Place disponible",
+  "@tripPosterCapacityLabel": {
+    "description": "Libellé de la ligne capacité disponible sur l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterHandoverLabel": "Remise",
+  "@tripPosterHandoverLabel": {
+    "description": "Libellé du lieu de remise (pickupAddress) sur l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterPickupLabel": "Récupération",
+  "@tripPosterPickupLabel": {
+    "description": "Libellé du lieu de récupération (deliveryAddress) sur l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterFromPrice": "dès {price}",
+  "@tripPosterFromPrice": {
+    "description": "Montant affiché en grand sur l'affiche quand le trajet a une grille de prix (trip_poster_card.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterUnitPerItem": "l'article",
+  "@tripPosterUnitPerItem": {
+    "description": "Unité affichée à côté du prix quand il s'agit d'un tarif à l'article (trip_poster_card.dart)"
+  },
+  "tripPosterUnitPerKg": "le kilo",
+  "@tripPosterUnitPerKg": {
+    "description": "Unité affichée à côté du prix quand il s'agit d'un tarif au kilo (trip_poster_card.dart)"
+  },
+  "tripPosterPriceUnavailable": "Prix indisponible",
+  "@tripPosterPriceUnavailable": {
+    "description": "Prix affiché quand ni la grille ni le tarif au kilo ne sont renseignés (trip_poster_card.dart, trip_poster_screen.dart)"
+  },
+  "tripPosterPricePerKg": "{price} le kilo",
+  "@tripPosterPricePerKg": {
+    "description": "Tarif au kilo secondaire sous le prix de grille (trip_poster_card.dart), et phrase de prix de la légende partageable (trip_poster_screen.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterPriceFromItem": "dès {price} l'article",
+  "@tripPosterPriceFromItem": {
+    "description": "Phrase de prix à l'article dans la légende partageable de l'affiche (trip_poster_screen.dart)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterTagline": "Paiement sécurisé, suivi du colis, voyageurs vérifiés",
+  "@tripPosterTagline": {
+    "description": "Accroche en pied de l'affiche du trajet (trip_poster_card.dart)"
+  },
+  "tripPosterTitle": "Mon affiche",
+  "@tripPosterTitle": {
+    "description": "Titre de l'écran d'aperçu de l'affiche du trajet (trip_poster_screen.dart)"
+  },
+  "tripPosterNotFoundTitle": "Trajet introuvable",
+  "@tripPosterNotFoundTitle": {
+    "description": "Titre de l'état vide quand le trajet de l'affiche ne charge pas (trip_poster_screen.dart)"
+  },
+  "tripPosterNotFoundDescription": "Impossible de charger ce trajet pour le moment.",
+  "@tripPosterNotFoundDescription": {
+    "description": "Description de l'état vide quand le trajet de l'affiche ne charge pas (trip_poster_screen.dart)"
+  },
+  "tripPosterCaptionCorridor": "{departure} vers {arrival}",
+  "@tripPosterCaptionCorridor": {
+    "description": "Première ligne de la légende partageable : corridor du trajet (trip_poster_screen.dart)",
+    "placeholders": {
+      "departure": {
+        "type": "String"
+      },
+      "arrival": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterCaptionDeparture": "Départ le {day}",
+  "@tripPosterCaptionDeparture": {
+    "description": "Ligne date de départ de la légende partageable (trip_poster_screen.dart)",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterCaptionDeadline": "Dernier dépôt le {deadline}",
+  "@tripPosterCaptionDeadline": {
+    "description": "Ligne date limite de dépôt de la légende partageable (trip_poster_screen.dart)",
+    "placeholders": {
+      "deadline": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterCaptionHandover": "Remise : {address}",
+  "@tripPosterCaptionHandover": {
+    "description": "Ligne lieu de remise de la légende partageable (trip_poster_screen.dart)",
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterCaptionPickup": "Récupération : {address}",
+  "@tripPosterCaptionPickup": {
+    "description": "Ligne lieu de récupération de la légende partageable (trip_poster_screen.dart)",
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterCaptionCta": "Réservez vos kilos ici :",
+  "@tripPosterCaptionCta": {
+    "description": "Appel à l'action avant le lien, dans la légende partageable (trip_poster_screen.dart)"
+  },
+  "tripPosterCaptionFooter": "Paiement sécurisé, suivi du colis, voyageur vérifié.",
+  "@tripPosterCaptionFooter": {
+    "description": "Dernière ligne de la légende partageable (trip_poster_screen.dart)"
+  },
+  "tripPosterShareSubject": "Trajet {departure} vers {arrival}",
+  "@tripPosterShareSubject": {
+    "description": "Objet du partage système de l'affiche (trip_poster_screen.dart)",
+    "placeholders": {
+      "departure": {
+        "type": "String"
+      },
+      "arrival": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPosterShareError": "Impossible de partager l'affiche",
+  "@tripPosterShareError": {
+    "description": "Message d'échec du partage de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterSaveError": "Impossible d'enregistrer l'affiche",
+  "@tripPosterSaveError": {
+    "description": "Message d'échec de l'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)"
+  },
+  "tripPosterSaveSuccess": "Affiche enregistrée dans votre galerie",
+  "@tripPosterSaveSuccess": {
+    "description": "Message de succès de l'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)"
+  },
+  "tripPosterCaptionCopied": "Légende copiée",
+  "@tripPosterCaptionCopied": {
+    "description": "Confirmation après copie de la légende de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterLinkCopiedMessage": "Lien copié",
+  "@tripPosterLinkCopiedMessage": {
+    "description": "Confirmation après copie du lien de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterInstructions": "Postez cette affiche comme d'habitude, puis collez la légende dans le texte de votre publication. Le lien y devient cliquable, ce qui n'est pas le cas d'une adresse écrite sur l'image.",
+  "@tripPosterInstructions": {
+    "description": "Texte d'instructions sous l'aperçu de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterShareButton": "Partager l'affiche",
+  "@tripPosterShareButton": {
+    "description": "Bouton de partage de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterCopyCaptionButton": "Copier la légende",
+  "@tripPosterCopyCaptionButton": {
+    "description": "Bouton de copie de la légende de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterCopyLinkButton": "Copier le lien",
+  "@tripPosterCopyLinkButton": {
+    "description": "Bouton de copie du lien de l'affiche (trip_poster_screen.dart)"
+  },
+  "tripPosterSaveButton": "Enregistrer dans la galerie",
+  "@tripPosterSaveButton": {
+    "description": "Bouton d'enregistrement de l'affiche dans la galerie (trip_poster_screen.dart)"
+  },
+
+  "errorAnnouncementUpdateBlockedTitle": "Modification impossible",
+  "@errorAnnouncementUpdateBlockedTitle": {
+    "description": "Titre du catalogue d'erreurs pour le code announcement-update-blocked : modification refusée car des colis sont déjà acceptés (error_catalog.dart, announcement_bloc.dart)"
+  },
+  "errorAnnouncementUpdateBlockedMessage": "Des colis sont déjà acceptés pour ce trajet",
+  "@errorAnnouncementUpdateBlockedMessage": {
+    "description": "Message du catalogue d'erreurs pour le code announcement-update-blocked (error_catalog.dart, announcement_bloc.dart)"
+  },
+
+  "tripTemplateListTitle": "Mes modèles de trajet",
+  "@tripTemplateListTitle": {
+    "description": "Titre de l'écran liste des modèles de trajet (trip_templates_screen.dart)"
+  },
+  "tripTemplateNewLabel": "Nouveau modèle",
+  "@tripTemplateNewLabel": {
+    "description": "Tooltip du bouton d'ajout de la liste des modèles (trip_templates_screen.dart) et titre de l'écran d'édition en mode création (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateLoadErrorTitle": "Erreur de chargement",
+  "@tripTemplateLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur de la liste des modèles de trajet (trip_templates_screen.dart)"
+  },
+  "tripTemplateLoadErrorFallback": "Une erreur est survenue.",
+  "@tripTemplateLoadErrorFallback": {
+    "description": "Description de repli de l'état d'erreur, quand le serveur n'a pas fourni de message (trip_templates_screen.dart)"
+  },
+  "tripTemplateEmptyTitle": "Aucun modèle",
+  "@tripTemplateEmptyTitle": {
+    "description": "Titre de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)"
+  },
+  "tripTemplateEmptyDescription": "Crée des modèles de trajet réutilisables pour publier tes annonces en quelques secondes.",
+  "@tripTemplateEmptyDescription": {
+    "description": "Description de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)"
+  },
+  "tripTemplateCreateAction": "Créer un modèle",
+  "@tripTemplateCreateAction": {
+    "description": "Bouton d'action de l'état vide de la liste des modèles de trajet (trip_templates_screen.dart)"
+  },
+  "tripTemplateGridPriceLabel": "prix à la grille",
+  "@tripTemplateGridPriceLabel": {
+    "description": "Repli affiché à la place du tarif au kilo quand le modèle vend à la grille (trip_templates_screen.dart, trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateDeleteDialogTitle": "Supprimer le modèle",
+  "@tripTemplateDeleteDialogTitle": {
+    "description": "Titre du dialogue de confirmation de suppression d'un modèle (trip_templates_screen.dart)"
+  },
+  "tripTemplateDeleteDialogMessage": "Es-tu sûr de vouloir supprimer \"{label}\" ? Cette action est irréversible.",
+  "@tripTemplateDeleteDialogMessage": {
+    "description": "Message du dialogue de confirmation de suppression d'un modèle (trip_templates_screen.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tripTemplateScheduleRecurrenceAction": "Programmer la récurrence",
+  "@tripTemplateScheduleRecurrenceAction": {
+    "description": "Entrée du menu d'une carte modèle pour programmer sa récurrence (trip_templates_screen.dart)"
+  },
+
+  "tripTemplateNameSectionLabel": "NOM DU MODÈLE",
+  "@tripTemplateNameSectionLabel": {
+    "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateNameFieldLabel": "Nom",
+  "@tripTemplateNameFieldLabel": {
+    "description": "Libellé du champ nom du modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateNameFieldHint": "Ex : Mon Paris → Dakar",
+  "@tripTemplateNameFieldHint": {
+    "description": "Placeholder du champ nom du modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateTripSectionLabel": "TRAJET",
+  "@tripTemplateTripSectionLabel": {
+    "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateTransportSectionLabel": "MODE DE TRANSPORT",
+  "@tripTemplateTransportSectionLabel": {
+    "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateScheduleSectionLabel": "HORAIRES",
+  "@tripTemplateScheduleSectionLabel": {
+    "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateDepartureTimeFieldLabel": "Heure de départ",
+  "@tripTemplateDepartureTimeFieldLabel": {
+    "description": "Libellé complet du champ heure de départ, utilisé au placeholder et en annonce d'accessibilité (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateDepartureShortLabel": "Départ",
+  "@tripTemplateDepartureShortLabel": {
+    "description": "Libellé court affiché en préfixe une fois l'heure de départ posée (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateArrivalTimeFieldLabel": "Heure d'arrivée",
+  "@tripTemplateArrivalTimeFieldLabel": {
+    "description": "Libellé complet du champ heure d'arrivée, utilisé au placeholder et en annonce d'accessibilité (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateArrivalShortLabel": "Arrivée",
+  "@tripTemplateArrivalShortLabel": {
+    "description": "Libellé court affiché en préfixe une fois l'heure d'arrivée posée (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateHandoverDeadlineSectionLabel": "DÉLAI DE REMISE",
+  "@tripTemplateHandoverDeadlineSectionLabel": {
+    "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateHandoverDeadlineHint": "Au plus tard combien de jours avant le départ le colis doit être remis ?",
+  "@tripTemplateHandoverDeadlineHint": {
+    "description": "Texte d'aide sous le titre de la section délai de remise (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateHandoverNone": "Aucun",
+  "@tripTemplateHandoverNone": {
+    "description": "Choix de délai de remise : aucun délai mémorisé (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateHandoverSameDay": "Le jour même",
+  "@tripTemplateHandoverSameDay": {
+    "description": "Choix de délai de remise : le jour du départ (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateHandoverDaysBefore": "{count, plural, =1{{count} jour avant} other{{count} jours avant}}",
+  "@tripTemplateHandoverDaysBefore": {
+    "description": "Choix de délai de remise : N jours avant le départ (trip_template_edit_screen.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripTemplateOptionalSuffix": "{label} (optionnel)",
+  "@tripTemplateOptionalSuffix": {
+    "description": "Placeholder d'un champ heure tant qu'aucune heure n'est posée (trip_template_edit_screen.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tripTemplateClearFieldSemantic": "Effacer {label}",
+  "@tripTemplateClearFieldSemantic": {
+    "description": "Libellé d'accessibilité du bouton d'effacement d'un champ heure (trip_template_edit_screen.dart)",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tripTemplateEditTitle": "Modifier le modèle",
+  "@tripTemplateEditTitle": {
+    "description": "Titre de l'écran d'édition d'un modèle existant (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateSaveButton": "Enregistrer le modèle",
+  "@tripTemplateSaveButton": {
+    "description": "Bouton de la dernière étape du formulaire de modèle (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateUpdatedMessage": "Modèle mis à jour",
+  "@tripTemplateUpdatedMessage": {
+    "description": "Confirmation après mise à jour d'un modèle existant (trip_template_edit_screen.dart)"
+  },
+  "tripTemplateSavedMessage": "Modèle enregistré",
+  "@tripTemplateSavedMessage": {
+    "description": "Confirmation après création d'un nouveau modèle (trip_template_edit_screen.dart)"
+  },
+
+  "tripTemplateRecurrenceActivatedMessage": "Récurrence activée. Tes trajets seront publiés automatiquement.",
+  "@tripTemplateRecurrenceActivatedMessage": {
+    "description": "Confirmation après activation d'une récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateRecurrenceTitle": "Trajet récurrent",
+  "@tripTemplateRecurrenceTitle": {
+    "description": "Titre de l'écran de programmation d'une récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateActivateRecurrenceButton": "Activer la récurrence",
+  "@tripTemplateActivateRecurrenceButton": {
+    "description": "Bouton de validation de l'écran de récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateNoPricePerKgWarning": "Ce modèle n'a pas de prix au kilo",
+  "@tripTemplateNoPricePerKgWarning": {
+    "description": "Avertissement quand le modèle source n'a pas de prix au kilo éditable (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateRepeatDaysSectionLabel": "JOURS DE RÉPÉTITION",
+  "@tripTemplateRepeatDaysSectionLabel": {
+    "description": "Titre de section de l'écran de récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateRecurrenceDepartureTimeSectionLabel": "HEURE DE DÉPART",
+  "@tripTemplateRecurrenceDepartureTimeSectionLabel": {
+    "description": "Titre de section de l'écran de récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateOptionalTimeHint": "Optionnel : choisir une heure",
+  "@tripTemplateOptionalTimeHint": {
+    "description": "Placeholder du champ heure de départ tant qu'aucune heure n'est posée (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateClearTimeSemantic": "Effacer l'heure de départ",
+  "@tripTemplateClearTimeSemantic": {
+    "description": "Libellé d'accessibilité du bouton d'effacement de l'heure de départ (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateLocationsSectionLabel": "LIEUX",
+  "@tripTemplateLocationsSectionLabel": {
+    "description": "Titre de section de l'écran de récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplatePickupFieldLabel": "Lieu de remise du colis *",
+  "@tripTemplatePickupFieldLabel": {
+    "description": "Libellé du champ adresse de remise de l'écran de récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateDeliveryFieldLabel": "Lieu de récupération *",
+  "@tripTemplateDeliveryFieldLabel": {
+    "description": "Libellé du champ adresse de récupération de l'écran de récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateActiveLabel": "Récurrence active",
+  "@tripTemplateActiveLabel": {
+    "description": "Titre du bloc bascule d'activation de la récurrence (trip_recurrence_edit_screen.dart)"
+  },
+  "tripTemplateActiveDescription": "Publie automatiquement les trajets à venir",
+  "@tripTemplateActiveDescription": {
+    "description": "Sous-titre du bloc bascule d'activation de la récurrence (trip_recurrence_edit_screen.dart)"
   }
 }

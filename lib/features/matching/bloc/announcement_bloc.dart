@@ -320,7 +320,9 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         emit(
           AnnouncementError(
             const ConflictException(
-              'Modification impossible : des colis sont déjà acceptés pour ce trajet',
+              // Message technique jamais affiché : ErrorCatalog.lookup résout
+              // l'affichage sur le code announcement-update-blocked.
+              'Modification impossible : des colis sont déjà acceptés pour ce trajet', // i18n-ignore
               code: 'announcement-update-blocked',
             ),
           ),

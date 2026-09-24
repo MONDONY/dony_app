@@ -22,6 +22,8 @@ import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockDeliveryAddressBloc
     extends MockBloc<DeliveryAddressEvent, DeliveryAddressState>
     implements DeliveryAddressBloc {}
@@ -388,6 +390,15 @@ void main() {
 
       expect(find.text('Aucun résultat'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('en anglais', () {
+    testWidgets('titre traduit', (tester) async {
+      useEnglish();
+      await pump(tester);
+
+      expect(find.text('🗺️  Delivery address'), findsOneWidget);
     });
   });
 }
