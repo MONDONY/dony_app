@@ -751,9 +751,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (e is DioException) return unwrapDioError(e);
     const phoneTakenMarker = 'Ce numéro est déjà associé'; // i18n-ignore
     if (e.toString().contains(phoneTakenMarker)) {
+      // `phone-already-exists` est l'entrée du catalogue ; l'ancien code
+      // `phone-already-registered` n'y figurait pas et l'écran affichait
+      // « Erreur réseau » à la place du vrai motif.
       return const NetworkException(
         'Phone already registered',
-        code: 'phone-already-registered',
+        code: 'phone-already-exists',
       );
     }
     return const NetworkException('Auth error', code: 'auth-generic-error');

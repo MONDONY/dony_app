@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:firebase_core/firebase_core.dart' show FirebaseException;
@@ -93,6 +94,31 @@ void main() {
         'apns-token-not-set)',
       );
       expect(sink.error.toString(), isNot(contains('+2250102030405')));
+    },
+  );
+
+  test(
+    'keeps the business code of an AppException wrapped in a DioException',
+    () async {
+      // L'intercepteur HTTP rapporte la DioException brute : sans dépliage, aucun
+      // code métier n'atteignait Sentry et tout se regroupait sous une issue unique.
+      final sink = _RecordingSink();
+      final reporter = ErrorReportingService(sink);
+      final options = RequestOptions(path: '/wallet/topup');
+
+      await reporter.report(
+        DioException(
+          requestOptions: options,
+          error: const ServerException('boom', 'wallet-topup-stripe-error'),
+          response: Response(requestOptions: options, statusCode: 500),
+        ),
+        operation: 'http.POST',
+      );
+
+      expect(
+        sink.error.toString(),
+        'ReportedError(http.POST, DioException, wallet-topup-stripe-error)',
+      );
     },
   );
 
