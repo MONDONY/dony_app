@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -13,6 +14,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/post_signup_route.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -65,11 +67,7 @@ class AuthMethodScreen extends StatelessWidget {
           } else if (state is AuthGuestSessionReady) {
             context.go('/home');
           } else if (state is AuthError) {
-            DonySnackbar.show(
-              context,
-              message: state.error.message,
-              type: DonySnackbarType.error,
-            );
+            ErrorPresenter.show(context, state.error);
           }
         },
         child: Stack(
@@ -142,7 +140,7 @@ class _LoginBackground extends StatelessWidget {
         Image.asset(
           'assets/illustrations/auth-login-security.png',
           fit: BoxFit.cover,
-          semanticLabel: 'Voyageur Yadony tenant un colis sécurisé',
+          semanticLabel: context.l10n.authMethodIllustrationLabel,
           opacity: AlwaysStoppedAnimation(isLight ? 0.32 : 1),
         ),
         DecoratedBox(
@@ -252,7 +250,7 @@ class _SecureBadge extends StatelessWidget {
               DonyIcon('shield-check', size: 18, color: cs.success),
               const SizedBox(width: DonySpacing.xs),
               Text(
-                'Sécurisé',
+                context.l10n.authMethodSecureBadge,
                 style: tt.labelLarge?.copyWith(
                   color: isLight ? cs.primary : DonyColors.neutral0,
                   fontWeight: FontWeight.w800,
@@ -278,7 +276,7 @@ class _LoginIntro extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Connecte-toi en toute confiance',
+          context.l10n.authMethodTitle,
           style: tt.displayLarge?.copyWith(
             color: isLight ? cs.onSurface : DonyColors.neutral0,
             fontWeight: FontWeight.w900,
@@ -287,7 +285,7 @@ class _LoginIntro extends StatelessWidget {
         ),
         const SizedBox(height: DonySpacing.sm),
         Text(
-          'Tes échanges, ton paiement et ton suivi colis sont protégés à chaque étape.',
+          context.l10n.authMethodSubtitle,
           style: tt.bodyLarge?.copyWith(
             color: isLight
                 ? cs.onSurfaceVariant
@@ -347,7 +345,7 @@ class _AuthActionsPanel extends StatelessWidget {
               if (showAppleButton) ...[
                 _SocialCta(
                   iconAsset: 'apple',
-                  label: 'Continuer avec Apple',
+                  label: context.l10n.authMethodContinueWithApple,
                   onTap: () => context.read<AuthBloc>().add(
                     const AuthAppleSignInRequested(),
                   ),
@@ -362,7 +360,7 @@ class _AuthActionsPanel extends StatelessWidget {
               const SizedBox(height: DonySpacing.sm),
               _SocialCta(
                 iconAsset: 'mail',
-                label: 'Continuer avec mon email',
+                label: context.l10n.authMethodContinueWithEmail,
                 onTap: () => context.push('/auth/email'),
               ),
               const SizedBox(height: DonySpacing.md),
@@ -390,7 +388,7 @@ class _PhoneCta extends StatelessWidget {
     return SizedBox(
       height: 56,
       child: DonyButton(
-        label: 'Continuer avec mon téléphone',
+        label: context.l10n.authMethodContinueWithPhone,
         onPressed: onTap,
       ),
     );
@@ -448,12 +446,12 @@ class _GoogleCta extends StatelessWidget {
             borderRadius: BorderRadius.circular(DonyRadius.lg),
           ),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _GoogleLogo(),
-            SizedBox(width: DonySpacing.sm),
-            Text('Continuer avec Google'),
+            const _GoogleLogo(),
+            const SizedBox(width: DonySpacing.sm),
+            Text(context.l10n.authMethodContinueWithGoogle),
           ],
         ),
       ),
@@ -538,7 +536,7 @@ class _OrDivider extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
           child: Text(
-            'OU',
+            context.l10n.authMethodOr,
             style: tt.labelSmall?.copyWith(
               color: cs.onSurfaceVariant,
               fontWeight: FontWeight.w700,
@@ -565,8 +563,7 @@ class _GuestCta extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     return Semantics(
       button: true,
-      label:
-          'Parcourir sans compte. Accès limité à la recherche. Connexion requise pour publier, contacter, réserver ou payer.',
+      label: context.l10n.authMethodGuestSemantics,
       child: Container(
         padding: const EdgeInsets.all(DonySpacing.md),
         decoration: BoxDecoration(
@@ -584,14 +581,14 @@ class _GuestCta extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             DonyButton(
-              label: 'Parcourir sans compte',
+              label: context.l10n.authMethodBrowseWithoutAccount,
               iconAsset: 'search',
               variant: DonyButtonVariant.secondary,
               onPressed: onTap,
             ),
             const SizedBox(height: DonySpacing.sm),
             Text(
-              'Accès limité : recherche uniquement. Connexion requise pour publier, contacter, réserver ou payer.',
+              context.l10n.authMethodGuestNotice,
               textAlign: TextAlign.center,
               style: tt.bodySmall?.copyWith(
                 color: cs.onSurfaceVariant,
@@ -643,15 +640,20 @@ class _CguFooterState extends State<_CguFooter> {
       decoration: TextDecoration.underline,
       decorationColor: cs.primary,
     );
+    final l10n = context.l10n;
     return Text.rich(
       TextSpan(
         style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
         children: [
-          const TextSpan(text: 'En continuant tu acceptes nos '),
-          TextSpan(text: 'CGU', style: linkStyle, recognizer: _termsTap),
-          const TextSpan(text: ' et notre '),
+          TextSpan(text: l10n.authLegalPrefix),
           TextSpan(
-            text: 'politique de confidentialité',
+            text: l10n.authLegalTermsLink,
+            style: linkStyle,
+            recognizer: _termsTap,
+          ),
+          TextSpan(text: l10n.authLegalMiddle),
+          TextSpan(
+            text: l10n.authLegalPrivacyLink,
             style: linkStyle,
             recognizer: _privacyTap,
           ),

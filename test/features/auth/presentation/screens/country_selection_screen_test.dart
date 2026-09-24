@@ -12,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockCountryOnboardingCubit extends MockCubit<CountryOnboardingState>
     implements CountryOnboardingCubit {}
 
@@ -225,9 +227,7 @@ void main() {
       cubit,
       Stream.fromIterable([
         const CountryOnboardingSaving('CA'),
-        const CountryOnboardingError(
-          'Impossible d’enregistrer le pays. Réessayez.',
-        ),
+        const CountryOnboardingError(CountryOnboardingFailure.saveCountry),
       ]),
       initialState: const CountryOnboardingInitial(),
     );
@@ -240,6 +240,29 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'état Error (choix « continuer sans voyager ») affiche le message propre '
+    'au choix, pas celui du pays',
+    (tester) async {
+      whenListen<CountryOnboardingState>(
+        cubit,
+        Stream.fromIterable([
+          const CountryOnboardingSaving(null),
+          const CountryOnboardingError(CountryOnboardingFailure.saveChoice),
+        ]),
+        initialState: const CountryOnboardingInitial(),
+      );
+
+      await _wrap(tester, cubit);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Impossible d’enregistrer ce choix. Réessayez.'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets(
     'état Success navigue vers l\'étape « Vos informations » en passant le '
@@ -320,4 +343,18 @@ void main() {
       verifyNever(() => authBloc.add(const AuthProfileRefreshRequested()));
     },
   );
+
+  testWidgets('en anglais, le titre et les suggestions sont traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await _wrap(tester, cubit);
+
+    expect(find.text('Which country do you live in?'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'germ');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Germany'), findsOneWidget);
+  });
 }

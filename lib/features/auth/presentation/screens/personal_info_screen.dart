@@ -8,6 +8,8 @@ import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
+import 'package:dony/l10n/country_names.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -51,13 +53,16 @@ class PersonalInfoScreen extends StatefulWidget {
 }
 
 class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
-  // Le champ verrouillé affiche le nom lisible ('France'), jamais le code
-  // ISO brut ('FR') que porte `widget.country`.
-  String? get _countryName => CountryCatalog.byCode(widget.country)?.name;
+  // Le champ verrouillé affiche le nom lisible ('France'), dans la langue de
+  // l'app, jamais le code ISO brut ('FR') que porte `widget.country`.
+  String? _countryName(AppLocalizations l) {
+    final country = CountryCatalog.byCode(widget.country);
+    return country == null ? null : countryName(l, country.code);
+  }
 
-  late final _countryCtrl = TextEditingController(
-    text: _countryName ?? 'Non renseigné',
-  );
+  // Texte posé dans `didChangeDependencies` : il dépend de la langue, lue
+  // dans le contexte, et suit un changement de langue sans `setState`.
+  final _countryCtrl = TextEditingController();
   late final _firstNameCtrl = TextEditingController(
     text: widget.user?.firstName ?? '',
   );
@@ -81,6 +86,13 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l = context.l10n;
+    _countryCtrl.text = _countryName(l) ?? l.authPersonalInfoCountryNotSet;
+  }
+
+  @override
   void dispose() {
     _countryCtrl.dispose();
     _firstNameCtrl.dispose();
@@ -100,6 +112,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   Widget build(BuildContext context) {
     final h = DonyLayout.hPadding(context);
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final l = context.l10n;
 
     return BlocConsumer<PersonalInfoCubit, PersonalInfoState>(
       listener: (context, state) {
@@ -121,7 +134,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         } else if (state is PersonalInfoError) {
           DonySnackbar.show(
             context,
-            message: state.message,
+            message: context.l10n.authPersonalInfoSaveError,
             type: DonySnackbarType.error,
           );
         }
@@ -150,7 +163,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                       children: [
                         AuthFlowHeader.gauge(
                           segments: widget.progress.segments,
-                          label: 'Informations',
+                          label: l.authPersonalInfoGaugeLabel,
                         ),
                         const SizedBox(height: DonySpacing.md),
                         Expanded(
@@ -160,20 +173,18 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const AuthIntroCard.compact(
+                                AuthIntroCard.compact(
                                       iconAsset: 'user',
-                                      title: 'Vos informations',
-                                      body:
-                                          'Votre nom légal, tel qu’il figure sur votre pièce d’identité. Le reste vous sera demandé une seule fois, par Stripe.',
-                                      footnote:
-                                          'Jamais partagées avec les autres membres, jamais affichées publiquement.',
+                                      title: l.authPersonalInfoTitle,
+                                      body: l.authPersonalInfoBody,
+                                      footnote: l.authPersonalInfoFootnote,
                                     )
                                     .animate()
                                     .fadeIn(duration: 300.ms)
                                     .slideY(begin: 0.04),
                                 const SizedBox(height: DonySpacing.md),
                                 _IdentityFieldsPanel(
-                                  country: _countryName,
+                                  country: _countryName(l),
                                   countryCtrl: _countryCtrl,
                                   firstNameCtrl: _firstNameCtrl,
                                   lastNameCtrl: _lastNameCtrl,
@@ -190,7 +201,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                           primary: ValueListenableBuilder<bool>(
                             valueListenable: _isValid,
                             builder: (context, hasAllFields, _) => DonyButton(
-                              label: 'Continuer',
+                              label: l.commonContinue,
                               iconAsset: 'arrow-right',
                               isLoading: isSaving,
                               onPressed: hasAllFields && !isSaving
@@ -236,6 +247,8 @@ class _IdentityFieldsPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isLight = cs.brightness == Brightness.light;
+    final l = context.l10n;
+    final country = this.country;
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -254,7 +267,7 @@ class _IdentityFieldsPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const AddressSectionLabel('Identité'),
+          AddressSectionLabel(l.authPersonalInfoIdentitySection),
           Row(
             children: [
               Expanded(
@@ -263,8 +276,8 @@ class _IdentityFieldsPanel extends StatelessWidget {
                   textInputAction: TextInputAction.next,
                   controller: firstNameCtrl,
                   enabled: !isSaving,
-                  label: 'Prénom',
-                  hint: 'Awa',
+                  label: l.authPersonalInfoFirstName,
+                  hint: 'Awa', // i18n-ignore
                 ),
               ),
               const SizedBox(width: DonySpacing.sm),
@@ -274,23 +287,23 @@ class _IdentityFieldsPanel extends StatelessWidget {
                   textInputAction: TextInputAction.done,
                   controller: lastNameCtrl,
                   enabled: !isSaving,
-                  label: 'Nom',
-                  hint: 'Diallo',
+                  label: l.authPersonalInfoLastName,
+                  hint: 'Diallo', // i18n-ignore
                 ),
               ),
             ],
           ),
           const SizedBox(height: DonySpacing.xl),
-          const AddressSectionLabel('Pays'),
+          AddressSectionLabel(l.authPersonalInfoCountrySection),
           Semantics(
             container: true,
             label: country != null
-                ? 'Pays de résidence : $country. Déterminé à l’inscription, non modifiable ici.'
-                : 'Pays de résidence non renseigné. Déterminé à l’inscription, non modifiable ici.',
+                ? l.authPersonalInfoCountrySemantics(country)
+                : l.authPersonalInfoCountryMissingSemantics,
             child: DonyTextField(
               enabled: false,
               controller: countryCtrl,
-              label: 'Pays',
+              label: l.authPersonalInfoCountryField,
               prefixWidget: DonyIcon('globe', size: 20, color: cs.primary),
             ),
           ),

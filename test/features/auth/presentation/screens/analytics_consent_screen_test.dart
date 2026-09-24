@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 /// Premier écran du parcours : aucun BLoC/Cubit propre, donc aucun harnais
@@ -85,5 +86,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Pays'), findsOneWidget);
+  });
+
+  testWidgets('en anglais, les deux réponses sont traduites', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(_wrap());
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Accept'), findsOneWidget);
+    expect(find.text('No thanks'), findsOneWidget);
   });
 }

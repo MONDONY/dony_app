@@ -1,10 +1,10 @@
 import 'package:dony/core/currency/supported_currency.dart';
 
 enum CountryZone {
-  europe('Europe'),
-  ameriqueDuNord('Amérique du Nord'),
-  afriqueOuest('Afrique de l\'Ouest'),
-  afriqueCentrale('Afrique centrale');
+  europe('Europe'), // i18n-ignore
+  ameriqueDuNord('Amérique du Nord'), // i18n-ignore
+  afriqueOuest('Afrique de l\'Ouest'), // i18n-ignore
+  afriqueCentrale('Afrique centrale'); // i18n-ignore
 
   const CountryZone(this.label);
   final String label;
@@ -35,82 +35,237 @@ class CountryCatalog {
 
   static const all = <Country>[
     // Europe (EUR sauf Suisse et Royaume-Uni)
-    Country('DE', 'Allemagne', SupportedCurrency.eur, CountryZone.europe),
-    Country('AT', 'Autriche', SupportedCurrency.eur, CountryZone.europe),
-    Country('BE', 'Belgique', SupportedCurrency.eur, CountryZone.europe),
-    Country('CY', 'Chypre', SupportedCurrency.eur, CountryZone.europe),
-    Country('HR', 'Croatie', SupportedCurrency.eur, CountryZone.europe),
-    Country('ES', 'Espagne', SupportedCurrency.eur, CountryZone.europe),
-    Country('EE', 'Estonie', SupportedCurrency.eur, CountryZone.europe),
-    Country('FI', 'Finlande', SupportedCurrency.eur, CountryZone.europe),
-    Country('FR', 'France', SupportedCurrency.eur, CountryZone.europe),
-    Country('GR', 'Grèce', SupportedCurrency.eur, CountryZone.europe),
-    Country('IE', 'Irlande', SupportedCurrency.eur, CountryZone.europe),
-    Country('IT', 'Italie', SupportedCurrency.eur, CountryZone.europe),
-    Country('LV', 'Lettonie', SupportedCurrency.eur, CountryZone.europe),
-    Country('LT', 'Lituanie', SupportedCurrency.eur, CountryZone.europe),
-    Country('LU', 'Luxembourg', SupportedCurrency.eur, CountryZone.europe),
-    Country('MT', 'Malte', SupportedCurrency.eur, CountryZone.europe),
-    Country('NL', 'Pays-Bas', SupportedCurrency.eur, CountryZone.europe),
-    Country('PT', 'Portugal', SupportedCurrency.eur, CountryZone.europe),
-    Country('GB', 'Royaume-Uni', SupportedCurrency.gbp, CountryZone.europe),
-    Country('SK', 'Slovaquie', SupportedCurrency.eur, CountryZone.europe),
-    Country('SI', 'Slovénie', SupportedCurrency.eur, CountryZone.europe),
-    Country('CH', 'Suisse', SupportedCurrency.chf, CountryZone.europe),
+    Country(
+      'DE',
+      'Allemagne', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'AT',
+      'Autriche', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'BE',
+      'Belgique', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'CY',
+      'Chypre', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'HR',
+      'Croatie', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'ES',
+      'Espagne', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'EE',
+      'Estonie', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'FI',
+      'Finlande', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'FR',
+      'France', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'GR',
+      'Grèce', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'IE',
+      'Irlande', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'IT',
+      'Italie', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'LV',
+      'Lettonie', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'LT',
+      'Lituanie', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'LU',
+      'Luxembourg', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'MT',
+      'Malte', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'NL',
+      'Pays-Bas', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'PT',
+      'Portugal', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'GB',
+      'Royaume-Uni', // i18n-ignore
+      SupportedCurrency.gbp,
+      CountryZone.europe,
+    ),
+    Country(
+      'SK',
+      'Slovaquie', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'SI',
+      'Slovénie', // i18n-ignore
+      SupportedCurrency.eur,
+      CountryZone.europe,
+    ),
+    Country(
+      'CH',
+      'Suisse', // i18n-ignore
+      SupportedCurrency.chf,
+      CountryZone.europe,
+    ),
     // Amérique du Nord
-    Country('CA', 'Canada', SupportedCurrency.cad, CountryZone.ameriqueDuNord),
+    Country(
+      'CA',
+      'Canada', // i18n-ignore
+      SupportedCurrency.cad,
+      CountryZone.ameriqueDuNord,
+    ),
     Country(
       'US',
-      'États-Unis',
+      'États-Unis', // i18n-ignore
       SupportedCurrency.usd,
       CountryZone.ameriqueDuNord,
     ),
     // Afrique de l'Ouest (XOF)
-    Country('BJ', 'Bénin', SupportedCurrency.xof, CountryZone.afriqueOuest),
+    Country(
+      'BJ',
+      'Bénin', // i18n-ignore
+      SupportedCurrency.xof,
+      CountryZone.afriqueOuest,
+    ),
     Country(
       'BF',
-      'Burkina Faso',
+      'Burkina Faso', // i18n-ignore
       SupportedCurrency.xof,
       CountryZone.afriqueOuest,
     ),
     Country(
       'CI',
-      'Côte d\'Ivoire',
+      'Côte d\'Ivoire', // i18n-ignore
       SupportedCurrency.xof,
       CountryZone.afriqueOuest,
     ),
     Country(
       'GW',
-      'Guinée-Bissau',
+      'Guinée-Bissau', // i18n-ignore
       SupportedCurrency.xof,
       CountryZone.afriqueOuest,
     ),
-    Country('ML', 'Mali', SupportedCurrency.xof, CountryZone.afriqueOuest),
-    Country('NE', 'Niger', SupportedCurrency.xof, CountryZone.afriqueOuest),
-    Country('SN', 'Sénégal', SupportedCurrency.xof, CountryZone.afriqueOuest),
-    Country('TG', 'Togo', SupportedCurrency.xof, CountryZone.afriqueOuest),
+    Country(
+      'ML',
+      'Mali', // i18n-ignore
+      SupportedCurrency.xof,
+      CountryZone.afriqueOuest,
+    ),
+    Country(
+      'NE',
+      'Niger', // i18n-ignore
+      SupportedCurrency.xof,
+      CountryZone.afriqueOuest,
+    ),
+    Country(
+      'SN',
+      'Sénégal', // i18n-ignore
+      SupportedCurrency.xof,
+      CountryZone.afriqueOuest,
+    ),
+    Country(
+      'TG',
+      'Togo', // i18n-ignore
+      SupportedCurrency.xof,
+      CountryZone.afriqueOuest,
+    ),
     // Afrique centrale (XAF)
     Country(
       'CM',
-      'Cameroun',
+      'Cameroun', // i18n-ignore
       SupportedCurrency.xaf,
       CountryZone.afriqueCentrale,
     ),
     Country(
       'CF',
-      'Centrafrique',
+      'Centrafrique', // i18n-ignore
       SupportedCurrency.xaf,
       CountryZone.afriqueCentrale,
     ),
-    Country('CG', 'Congo', SupportedCurrency.xaf, CountryZone.afriqueCentrale),
-    Country('GA', 'Gabon', SupportedCurrency.xaf, CountryZone.afriqueCentrale),
+    Country(
+      'CG',
+      'Congo', // i18n-ignore
+      SupportedCurrency.xaf,
+      CountryZone.afriqueCentrale,
+    ),
+    Country(
+      'GA',
+      'Gabon', // i18n-ignore
+      SupportedCurrency.xaf,
+      CountryZone.afriqueCentrale,
+    ),
     Country(
       'GQ',
-      'Guinée équatoriale',
+      'Guinée équatoriale', // i18n-ignore
       SupportedCurrency.xaf,
       CountryZone.afriqueCentrale,
     ),
-    Country('TD', 'Tchad', SupportedCurrency.xaf, CountryZone.afriqueCentrale),
+    Country(
+      'TD',
+      'Tchad', // i18n-ignore
+      SupportedCurrency.xaf,
+      CountryZone.afriqueCentrale,
+    ),
   ];
 
   static Country? byCode(String? code) {
@@ -145,13 +300,22 @@ class CountryCatalog {
     return groups;
   }
 
-  /// Recherche insensible à la casse et aux accents : « senegal » trouve Sénégal.
-  static List<Country> search(String query) {
+  /// Recherche insensible à la casse et aux accents : « senegal » trouve
+  /// Sénégal. [localizedName] ajoute le nom affiché dans la langue de l'app
+  /// (ex. « Germany ») : un pays est trouvé par l'un ou l'autre nom.
+  static List<Country> search(
+    String query, {
+    String Function(Country c)? localizedName,
+  }) {
     final needle = _fold(query);
     if (needle.isEmpty) {
       return all;
     }
-    return all.where((c) => _fold(c.name).contains(needle)).toList();
+    return all.where((c) {
+      if (_fold(c.name).contains(needle)) return true;
+      final local = localizedName?.call(c);
+      return local != null && _fold(local).contains(needle);
+    }).toList();
   }
 
   static String _fold(String value) {

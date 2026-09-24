@@ -1579,6 +1579,1344 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Erreur réseau'**
   String get networkFallbackNetworkError;
+
+  /// No description provided for @countryNameDe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Allemagne'**
+  String get countryNameDe;
+
+  /// No description provided for @countryNameAt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autriche'**
+  String get countryNameAt;
+
+  /// No description provided for @countryNameBe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Belgique'**
+  String get countryNameBe;
+
+  /// No description provided for @countryNameCy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chypre'**
+  String get countryNameCy;
+
+  /// No description provided for @countryNameHr.
+  ///
+  /// In fr, this message translates to:
+  /// **'Croatie'**
+  String get countryNameHr;
+
+  /// No description provided for @countryNameEs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Espagne'**
+  String get countryNameEs;
+
+  /// No description provided for @countryNameEe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Estonie'**
+  String get countryNameEe;
+
+  /// No description provided for @countryNameFi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Finlande'**
+  String get countryNameFi;
+
+  /// No description provided for @countryNameFr.
+  ///
+  /// In fr, this message translates to:
+  /// **'France'**
+  String get countryNameFr;
+
+  /// No description provided for @countryNameGr.
+  ///
+  /// In fr, this message translates to:
+  /// **'Grèce'**
+  String get countryNameGr;
+
+  /// No description provided for @countryNameIe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Irlande'**
+  String get countryNameIe;
+
+  /// No description provided for @countryNameIt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Italie'**
+  String get countryNameIt;
+
+  /// No description provided for @countryNameLv.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lettonie'**
+  String get countryNameLv;
+
+  /// No description provided for @countryNameLt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lituanie'**
+  String get countryNameLt;
+
+  /// No description provided for @countryNameLu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Luxembourg'**
+  String get countryNameLu;
+
+  /// No description provided for @countryNameMt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Malte'**
+  String get countryNameMt;
+
+  /// No description provided for @countryNameNl.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays-Bas'**
+  String get countryNameNl;
+
+  /// No description provided for @countryNamePt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Portugal'**
+  String get countryNamePt;
+
+  /// No description provided for @countryNameGb.
+  ///
+  /// In fr, this message translates to:
+  /// **'Royaume-Uni'**
+  String get countryNameGb;
+
+  /// No description provided for @countryNameSk.
+  ///
+  /// In fr, this message translates to:
+  /// **'Slovaquie'**
+  String get countryNameSk;
+
+  /// No description provided for @countryNameSi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Slovénie'**
+  String get countryNameSi;
+
+  /// No description provided for @countryNameCh.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suisse'**
+  String get countryNameCh;
+
+  /// No description provided for @countryNameCa.
+  ///
+  /// In fr, this message translates to:
+  /// **'Canada'**
+  String get countryNameCa;
+
+  /// No description provided for @countryNameUs.
+  ///
+  /// In fr, this message translates to:
+  /// **'États-Unis'**
+  String get countryNameUs;
+
+  /// No description provided for @countryNameBj.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bénin'**
+  String get countryNameBj;
+
+  /// No description provided for @countryNameBf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Burkina Faso'**
+  String get countryNameBf;
+
+  /// No description provided for @countryNameCi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Côte d\'Ivoire'**
+  String get countryNameCi;
+
+  /// No description provided for @countryNameGw.
+  ///
+  /// In fr, this message translates to:
+  /// **'Guinée-Bissau'**
+  String get countryNameGw;
+
+  /// No description provided for @countryNameMl.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mali'**
+  String get countryNameMl;
+
+  /// No description provided for @countryNameNe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Niger'**
+  String get countryNameNe;
+
+  /// No description provided for @countryNameSn.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sénégal'**
+  String get countryNameSn;
+
+  /// No description provided for @countryNameTg.
+  ///
+  /// In fr, this message translates to:
+  /// **'Togo'**
+  String get countryNameTg;
+
+  /// No description provided for @countryNameCm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cameroun'**
+  String get countryNameCm;
+
+  /// No description provided for @countryNameCf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Centrafrique'**
+  String get countryNameCf;
+
+  /// No description provided for @countryNameCg.
+  ///
+  /// In fr, this message translates to:
+  /// **'Congo'**
+  String get countryNameCg;
+
+  /// No description provided for @countryNameGa.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gabon'**
+  String get countryNameGa;
+
+  /// No description provided for @countryNameGq.
+  ///
+  /// In fr, this message translates to:
+  /// **'Guinée équatoriale'**
+  String get countryNameGq;
+
+  /// No description provided for @countryNameTd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tchad'**
+  String get countryNameTd;
+
+  /// No description provided for @countryZoneEurope.
+  ///
+  /// In fr, this message translates to:
+  /// **'Europe'**
+  String get countryZoneEurope;
+
+  /// No description provided for @countryZoneNorthAmerica.
+  ///
+  /// In fr, this message translates to:
+  /// **'Amérique du Nord'**
+  String get countryZoneNorthAmerica;
+
+  /// No description provided for @countryZoneWestAfrica.
+  ///
+  /// In fr, this message translates to:
+  /// **'Afrique de l\'Ouest'**
+  String get countryZoneWestAfrica;
+
+  /// No description provided for @countryZoneCentralAfrica.
+  ///
+  /// In fr, this message translates to:
+  /// **'Afrique centrale'**
+  String get countryZoneCentralAfrica;
+
+  /// No description provided for @errorGuestSessionFailedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Navigation indisponible'**
+  String get errorGuestSessionFailedTitle;
+
+  /// No description provided for @errorGuestSessionFailedMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de démarrer la navigation sans compte. Vérifiez votre connexion.'**
+  String get errorGuestSessionFailedMessage;
+
+  /// No description provided for @authCountrySaveError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d’enregistrer le pays. Réessayez.'**
+  String get authCountrySaveError;
+
+  /// No description provided for @authCountryChoiceSaveError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d’enregistrer ce choix. Réessayez.'**
+  String get authCountryChoiceSaveError;
+
+  /// No description provided for @authPersonalInfoSaveError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'enregistrer ces informations. Réessayez.'**
+  String get authPersonalInfoSaveError;
+
+  /// No description provided for @authUserFallbackName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateur'**
+  String get authUserFallbackName;
+
+  /// No description provided for @authBiometricUnlockReason.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déverrouillez Yadony pour accéder à votre compte'**
+  String get authBiometricUnlockReason;
+
+  /// No description provided for @authStepConsent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confidentialité'**
+  String get authStepConsent;
+
+  /// No description provided for @authStepCountry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get authStepCountry;
+
+  /// No description provided for @authStepIdentity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité'**
+  String get authStepIdentity;
+
+  /// No description provided for @authStepPersonalInfo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos infos'**
+  String get authStepPersonalInfo;
+
+  /// No description provided for @authStepPayouts.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiements'**
+  String get authStepPayouts;
+
+  /// No description provided for @authMethodIllustrationLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur Yadony tenant un colis sécurisé'**
+  String get authMethodIllustrationLabel;
+
+  /// No description provided for @authMethodSecureBadge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sécurisé'**
+  String get authMethodSecureBadge;
+
+  /// No description provided for @authMethodTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connecte-toi en toute confiance'**
+  String get authMethodTitle;
+
+  /// No description provided for @authMethodSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tes échanges, ton paiement et ton suivi colis sont protégés à chaque étape.'**
+  String get authMethodSubtitle;
+
+  /// No description provided for @authMethodContinueWithApple.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer avec Apple'**
+  String get authMethodContinueWithApple;
+
+  /// No description provided for @authMethodContinueWithEmail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer avec mon email'**
+  String get authMethodContinueWithEmail;
+
+  /// No description provided for @authMethodContinueWithPhone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer avec mon téléphone'**
+  String get authMethodContinueWithPhone;
+
+  /// No description provided for @authMethodContinueWithGoogle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer avec Google'**
+  String get authMethodContinueWithGoogle;
+
+  /// No description provided for @authMethodOr.
+  ///
+  /// In fr, this message translates to:
+  /// **'OU'**
+  String get authMethodOr;
+
+  /// No description provided for @authMethodGuestSemantics.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parcourir sans compte. Accès limité à la recherche. Connexion requise pour publier, contacter, réserver ou payer.'**
+  String get authMethodGuestSemantics;
+
+  /// No description provided for @authMethodBrowseWithoutAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parcourir sans compte'**
+  String get authMethodBrowseWithoutAccount;
+
+  /// No description provided for @authMethodGuestNotice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès limité : recherche uniquement. Connexion requise pour publier, contacter, réserver ou payer.'**
+  String get authMethodGuestNotice;
+
+  /// No description provided for @authLegalPrefix.
+  ///
+  /// In fr, this message translates to:
+  /// **'En continuant tu acceptes nos '**
+  String get authLegalPrefix;
+
+  /// No description provided for @authLegalTermsLink.
+  ///
+  /// In fr, this message translates to:
+  /// **'CGU'**
+  String get authLegalTermsLink;
+
+  /// No description provided for @authLegalMiddle.
+  ///
+  /// In fr, this message translates to:
+  /// **' et notre '**
+  String get authLegalMiddle;
+
+  /// No description provided for @authLegalPrivacyLink.
+  ///
+  /// In fr, this message translates to:
+  /// **'politique de confidentialité'**
+  String get authLegalPrivacyLink;
+
+  /// No description provided for @authEmailStepLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Email'**
+  String get authEmailStepLabel;
+
+  /// No description provided for @authEmailTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton adresse email'**
+  String get authEmailTitle;
+
+  /// No description provided for @authEmailBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisis ton adresse email pour recevoir un code de connexion.'**
+  String get authEmailBody;
+
+  /// No description provided for @authEmailFootnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'On protège ton accès sans partager ton email avec les voyageurs.'**
+  String get authEmailFootnote;
+
+  /// No description provided for @authEmailHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'exemple@email.com'**
+  String get authEmailHint;
+
+  /// No description provided for @authEmailSpamHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifie tes spams si tu ne reçois pas le code.'**
+  String get authEmailSpamHint;
+
+  /// No description provided for @authEmailSendCode.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le code'**
+  String get authEmailSendCode;
+
+  /// No description provided for @authEmailPreferSms.
+  ///
+  /// In fr, this message translates to:
+  /// **'Préfères le SMS ?'**
+  String get authEmailPreferSms;
+
+  /// No description provided for @authPhoneDialCodeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indicatif pays'**
+  String get authPhoneDialCodeTitle;
+
+  /// No description provided for @authPhoneStepLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone'**
+  String get authPhoneStepLabel;
+
+  /// No description provided for @authPhoneTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton numéro'**
+  String get authPhoneTitle;
+
+  /// No description provided for @authPhoneBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'On t’envoie un code à 6 chiffres par SMS pour vérifier que c’est bien toi.'**
+  String get authPhoneBody;
+
+  /// No description provided for @authPhoneFootnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton numéro sert uniquement à sécuriser ton compte et tes échanges Yadony.'**
+  String get authPhoneFootnote;
+
+  /// No description provided for @authPhoneNumberLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'NUMÉRO DE TÉLÉPHONE'**
+  String get authPhoneNumberLabel;
+
+  /// No description provided for @authPhoneEnterNumber.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez votre numéro'**
+  String get authPhoneEnterNumber;
+
+  /// No description provided for @authPhoneNumberTooShort.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro trop court'**
+  String get authPhoneNumberTooShort;
+
+  /// No description provided for @authPhoneGetSmsCode.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevoir le code SMS'**
+  String get authPhoneGetSmsCode;
+
+  /// No description provided for @authPhoneContinueWithEmail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer avec une adresse email'**
+  String get authPhoneContinueWithEmail;
+
+  /// No description provided for @authOtpEnterSixDigits.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez le code à 6 chiffres'**
+  String get authOtpEnterSixDigits;
+
+  /// No description provided for @authOtpSessionExpired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Session expirée, veuillez recommencer'**
+  String get authOtpSessionExpired;
+
+  /// No description provided for @authOtpEmailVerified.
+  ///
+  /// In fr, this message translates to:
+  /// **'Email vérifié avec succès !'**
+  String get authOtpEmailVerified;
+
+  /// No description provided for @authOtpPhoneAdded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro ajouté avec succès !'**
+  String get authOtpPhoneAdded;
+
+  /// No description provided for @authOtpStepEmail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code email'**
+  String get authOtpStepEmail;
+
+  /// No description provided for @authOtpStepSms.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code SMS'**
+  String get authOtpStepSms;
+
+  /// No description provided for @authOtpEmailTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code reçu ?'**
+  String get authOtpEmailTitle;
+
+  /// No description provided for @authOtpPhoneTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez le code'**
+  String get authOtpPhoneTitle;
+
+  /// No description provided for @authOtpCodeSentTo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code envoyé à {contact}'**
+  String authOtpCodeSentTo(String contact);
+
+  /// No description provided for @authOtpCodeSentToPhone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code envoyé au {contact}'**
+  String authOtpCodeSentToPhone(String contact);
+
+  /// No description provided for @authOtpFootnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code expire rapidement pour garder ton compte Yadony protégé.'**
+  String get authOtpFootnote;
+
+  /// No description provided for @authOtpResendIn.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer le code ({seconds} s)'**
+  String authOtpResendIn(int seconds);
+
+  /// No description provided for @authOtpResend.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renvoyer le code'**
+  String get authOtpResend;
+
+  /// No description provided for @authOtpVerify.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier'**
+  String get authOtpVerify;
+
+  /// No description provided for @authDialCodeSearchHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un pays ou un indicatif'**
+  String get authDialCodeSearchHint;
+
+  /// No description provided for @authDialCodeNoMatch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun pays ne correspond'**
+  String get authDialCodeNoMatch;
+
+  /// No description provided for @authFlowIllustrationLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion sécurisée Yadony'**
+  String get authFlowIllustrationLabel;
+
+  /// No description provided for @authFlowProtectedBadge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion protégée'**
+  String get authFlowProtectedBadge;
+
+  /// No description provided for @authFlowSkipForNow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer pour l\'instant'**
+  String get authFlowSkipForNow;
+
+  /// No description provided for @authRequiredTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion requise'**
+  String get authRequiredTitle;
+
+  /// No description provided for @authRequiredSignIn.
+  ///
+  /// In fr, this message translates to:
+  /// **'Se connecter'**
+  String get authRequiredSignIn;
+
+  /// No description provided for @authRequiredKeepExploring.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer à explorer'**
+  String get authRequiredKeepExploring;
+
+  /// No description provided for @authRequiredFreeSearchTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recherche libre'**
+  String get authRequiredFreeSearchTitle;
+
+  /// No description provided for @authRequiredFreeSearchBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu peux consulter les demandes et comparer les trajets.'**
+  String get authRequiredFreeSearchBody;
+
+  /// No description provided for @authRequiredProtectedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Actions protégées'**
+  String get authRequiredProtectedTitle;
+
+  /// No description provided for @authRequiredOfferSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connecte-toi pour proposer ton trajet en toute sécurité.'**
+  String get authRequiredOfferSubtitle;
+
+  /// No description provided for @authRequiredOfferBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'La connexion protège les échanges, les propositions et le suivi du colis.'**
+  String get authRequiredOfferBody;
+
+  /// No description provided for @authRequiredReportSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connecte-toi pour signaler une annonce.'**
+  String get authRequiredReportSubtitle;
+
+  /// No description provided for @authRequiredReportBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les signalements sont reliés à un compte pour éviter les abus et mieux protéger la communauté.'**
+  String get authRequiredReportBody;
+
+  /// No description provided for @authRequiredExploreSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connecte-toi pour utiliser cette action.'**
+  String get authRequiredExploreSubtitle;
+
+  /// No description provided for @authRequiredExploreBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier, contacter, réserver ou payer nécessite un compte Yadony.'**
+  String get authRequiredExploreBody;
+
+  /// No description provided for @authOnboardingHandoffEyebrow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape 1'**
+  String get authOnboardingHandoffEyebrow;
+
+  /// No description provided for @authOnboardingHandoffTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Préparez votre envoi.'**
+  String get authOnboardingHandoffTitle;
+
+  /// No description provided for @authOnboardingHandoffSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez la destination, le format du colis et trouvez un voyageur disponible.'**
+  String get authOnboardingHandoffSubtitle;
+
+  /// No description provided for @authOnboardingHandoffStep1Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer l’annonce'**
+  String get authOnboardingHandoffStep1Title;
+
+  /// No description provided for @authOnboardingHandoffStep1Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ, arrivée, taille du colis.'**
+  String get authOnboardingHandoffStep1Subtitle;
+
+  /// No description provided for @authOnboardingHandoffStep2Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir un voyageur'**
+  String get authOnboardingHandoffStep2Title;
+
+  /// No description provided for @authOnboardingHandoffStep2Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil, trajet et disponibilité.'**
+  String get authOnboardingHandoffStep2Subtitle;
+
+  /// No description provided for @authOnboardingHandoffStep3Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remettre le colis'**
+  String get authOnboardingHandoffStep3Title;
+
+  /// No description provided for @authOnboardingHandoffStep3Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le parcours commence au scan.'**
+  String get authOnboardingHandoffStep3Subtitle;
+
+  /// No description provided for @authOnboardingSecurityEyebrow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sécurité'**
+  String get authOnboardingSecurityEyebrow;
+
+  /// No description provided for @authOnboardingSecurityTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque remise est encadrée.'**
+  String get authOnboardingSecurityTitle;
+
+  /// No description provided for @authOnboardingSecuritySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony protège les profils, le paiement et les étapes importantes du colis.'**
+  String get authOnboardingSecuritySubtitle;
+
+  /// No description provided for @authOnboardingChipVerifiedIdentity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée'**
+  String get authOnboardingChipVerifiedIdentity;
+
+  /// No description provided for @authOnboardingChipPaymentOnHold.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement bloqué'**
+  String get authOnboardingChipPaymentOnHold;
+
+  /// No description provided for @authOnboardingChipTrackingQr.
+  ///
+  /// In fr, this message translates to:
+  /// **'QR de suivi'**
+  String get authOnboardingChipTrackingQr;
+
+  /// No description provided for @authOnboardingChipProofOfDropOff.
+  ///
+  /// In fr, this message translates to:
+  /// **'Preuve de remise'**
+  String get authOnboardingChipProofOfDropOff;
+
+  /// No description provided for @authOnboardingTrackingEyebrow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Temps réel'**
+  String get authOnboardingTrackingEyebrow;
+
+  /// No description provided for @authOnboardingTrackingTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gardez le fil du colis.'**
+  String get authOnboardingTrackingTitle;
+
+  /// No description provided for @authOnboardingTrackingSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le suivi avance à chaque scan, du départ jusqu’à la confirmation d’arrivée.'**
+  String get authOnboardingTrackingSubtitle;
+
+  /// No description provided for @authOnboardingTrackingStep1Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remis'**
+  String get authOnboardingTrackingStep1Title;
+
+  /// No description provided for @authOnboardingTrackingStep1Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis est confié au voyageur.'**
+  String get authOnboardingTrackingStep1Subtitle;
+
+  /// No description provided for @authOnboardingTrackingStep2Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ, transit, arrivée'**
+  String get authOnboardingTrackingStep2Title;
+
+  /// No description provided for @authOnboardingTrackingStep2Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque scan met le suivi à jour.'**
+  String get authOnboardingTrackingStep2Subtitle;
+
+  /// No description provided for @authOnboardingTrackingStep3Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison'**
+  String get authOnboardingTrackingStep3Title;
+
+  /// No description provided for @authOnboardingTrackingStep3Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'La réception confirme la fin du trajet.'**
+  String get authOnboardingTrackingStep3Subtitle;
+
+  /// No description provided for @authOnboardingDestinationsEyebrow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinations'**
+  String get authOnboardingDestinationsEyebrow;
+
+  /// No description provided for @authOnboardingDestinationsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos colis voyagent plus loin.'**
+  String get authOnboardingDestinationsTitle;
+
+  /// No description provided for @authOnboardingDestinationsSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony relie les pays disponibles avec des voyageurs qui font déjà le trajet.'**
+  String get authOnboardingDestinationsSubtitle;
+
+  /// No description provided for @authOnboardingDestinationsStep6Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remettre à l’arrivée'**
+  String get authOnboardingDestinationsStep6Title;
+
+  /// No description provided for @authOnboardingDestinationsStep6Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le destinataire confirme la réception.'**
+  String get authOnboardingDestinationsStep6Subtitle;
+
+  /// No description provided for @authOnboardingDestinationsStep7Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Libérer le paiement'**
+  String get authOnboardingDestinationsStep7Title;
+
+  /// No description provided for @authOnboardingDestinationsStep7Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur est payé après succès.'**
+  String get authOnboardingDestinationsStep7Subtitle;
+
+  /// No description provided for @authOnboardingChipAfrica.
+  ///
+  /// In fr, this message translates to:
+  /// **'Afrique'**
+  String get authOnboardingChipAfrica;
+
+  /// No description provided for @authOnboardingChipAvailableCountries.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays disponibles'**
+  String get authOnboardingChipAvailableCountries;
+
+  /// No description provided for @authOnboardingImageLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Scène d’onboarding Yadony'**
+  String get authOnboardingImageLabel;
+
+  /// No description provided for @authOnboardingSkip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer'**
+  String get authOnboardingSkip;
+
+  /// No description provided for @authOnboardingRouteDropOff.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remis'**
+  String get authOnboardingRouteDropOff;
+
+  /// No description provided for @authOnboardingRouteDeparture.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get authOnboardingRouteDeparture;
+
+  /// No description provided for @authOnboardingRouteTransit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Transit'**
+  String get authOnboardingRouteTransit;
+
+  /// No description provided for @authOnboardingRouteArrival.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get authOnboardingRouteArrival;
+
+  /// No description provided for @authOnboardingRouteDelivery.
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison'**
+  String get authOnboardingRouteDelivery;
+
+  /// No description provided for @authOnboardingGetStarted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commencer'**
+  String get authOnboardingGetStarted;
+
+  /// No description provided for @authOnboardingNext.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivant'**
+  String get authOnboardingNext;
+
+  /// No description provided for @authOnboardingLegalPrefix.
+  ///
+  /// In fr, this message translates to:
+  /// **'En continuant, vous acceptez nos '**
+  String get authOnboardingLegalPrefix;
+
+  /// No description provided for @authOnboardingLegalTermsLink.
+  ///
+  /// In fr, this message translates to:
+  /// **'CGU'**
+  String get authOnboardingLegalTermsLink;
+
+  /// No description provided for @authOnboardingLegalMiddle.
+  ///
+  /// In fr, this message translates to:
+  /// **' et notre '**
+  String get authOnboardingLegalMiddle;
+
+  /// No description provided for @authOnboardingLegalPrivacyLink.
+  ///
+  /// In fr, this message translates to:
+  /// **'politique de confidentialité'**
+  String get authOnboardingLegalPrivacyLink;
+
+  /// No description provided for @authCountryTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans quel pays es-tu ?'**
+  String get authCountryTitle;
+
+  /// No description provided for @authCountrySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise, trajets et disponibilité seront adaptés à ton pays.'**
+  String get authCountrySubtitle;
+
+  /// No description provided for @authCountryFieldLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get authCountryFieldLabel;
+
+  /// No description provided for @authCountryFieldHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : Sénégal, France, Canada'**
+  String get authCountryFieldHint;
+
+  /// No description provided for @authCountryFieldHelper.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tape ton pays puis choisis une suggestion.'**
+  String get authCountryFieldHelper;
+
+  /// No description provided for @authCountrySaving.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrement du pays...'**
+  String get authCountrySaving;
+
+  /// No description provided for @authCountryDeleteDialogTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer définitivement le compte ?'**
+  String get authCountryDeleteDialogTitle;
+
+  /// No description provided for @authCountryDeleteDialogMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton compte Yadony et tes données associées seront supprimés. Cette action est irréversible.'**
+  String get authCountryDeleteDialogMessage;
+
+  /// No description provided for @authCountryDeleteDialogConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la suppression'**
+  String get authCountryDeleteDialogConfirm;
+
+  /// No description provided for @authCountryUnavailableTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony n’est pas encore disponible dans ce pays'**
+  String get authCountryUnavailableTitle;
+
+  /// No description provided for @authCountryUnavailableBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu peux continuer pour envoyer des colis. Les trajets et la prise de colis resteront indisponibles depuis ce compte.'**
+  String get authCountryUnavailableBody;
+
+  /// No description provided for @authCountryContinueAsSender.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je souhaite continuer et envoyer des colis'**
+  String get authCountryContinueAsSender;
+
+  /// No description provided for @authCountryDeleteAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer mon compte'**
+  String get authCountryDeleteAccount;
+
+  /// No description provided for @authCountryOptionSavingLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays sélectionné : {country}, devise {currency}. Enregistrement en cours.'**
+  String authCountryOptionSavingLabel(String country, String currency);
+
+  /// No description provided for @authCountryOptionSelectLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionner {country}, devise {currency}'**
+  String authCountryOptionSelectLabel(String country, String currency);
+
+  /// No description provided for @authPersonalInfoCountryNotSet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non renseigné'**
+  String get authPersonalInfoCountryNotSet;
+
+  /// No description provided for @authPersonalInfoGaugeLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations'**
+  String get authPersonalInfoGaugeLabel;
+
+  /// No description provided for @authPersonalInfoTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos informations'**
+  String get authPersonalInfoTitle;
+
+  /// No description provided for @authPersonalInfoBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre nom légal, tel qu’il figure sur votre pièce d’identité. Le reste vous sera demandé une seule fois, par Stripe.'**
+  String get authPersonalInfoBody;
+
+  /// No description provided for @authPersonalInfoFootnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jamais partagées avec les autres membres, jamais affichées publiquement.'**
+  String get authPersonalInfoFootnote;
+
+  /// No description provided for @authPersonalInfoIdentitySection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité'**
+  String get authPersonalInfoIdentitySection;
+
+  /// No description provided for @authPersonalInfoFirstName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prénom'**
+  String get authPersonalInfoFirstName;
+
+  /// No description provided for @authPersonalInfoLastName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get authPersonalInfoLastName;
+
+  /// No description provided for @authPersonalInfoCountrySection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get authPersonalInfoCountrySection;
+
+  /// No description provided for @authPersonalInfoCountryField.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get authPersonalInfoCountryField;
+
+  /// No description provided for @authPersonalInfoCountrySemantics.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays de résidence : {country}. Déterminé à l’inscription, non modifiable ici.'**
+  String authPersonalInfoCountrySemantics(String country);
+
+  /// No description provided for @authPersonalInfoCountryMissingSemantics.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays de résidence non renseigné. Déterminé à l’inscription, non modifiable ici.'**
+  String get authPersonalInfoCountryMissingSemantics;
+
+  /// No description provided for @authReferralGaugeLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parrainage'**
+  String get authReferralGaugeLabel;
+
+  /// No description provided for @authReferralTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu as été invité par un ami ?'**
+  String get authReferralTitle;
+
+  /// No description provided for @authReferralBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre son code pour qu’il soit récompensé à ta première livraison.'**
+  String get authReferralBody;
+
+  /// No description provided for @authReferralFootnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette étape est facultative. Tu peux entrer dans Yadony sans code.'**
+  String get authReferralFootnote;
+
+  /// No description provided for @authReferralCodeLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code parrain'**
+  String get authReferralCodeLabel;
+
+  /// No description provided for @authReferralCodeHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : JEAN0234'**
+  String get authReferralCodeHint;
+
+  /// No description provided for @authReferralApply.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appliquer le code'**
+  String get authReferralApply;
+
+  /// No description provided for @authReferralSuccessTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code appliqué !'**
+  String get authReferralSuccessTitle;
+
+  /// No description provided for @authReferralSuccessBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton ami sera récompensé dès que tu complètes ta première livraison.'**
+  String get authReferralSuccessBody;
+
+  /// No description provided for @authReferralSuccessFootnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton compte Yadony est prêt. Tu peux commencer à rechercher, envoyer ou suivre tes colis.'**
+  String get authReferralSuccessFootnote;
+
+  /// No description provided for @authReferralContinueHome.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer vers l\'accueil'**
+  String get authReferralContinueHome;
+
+  /// No description provided for @authConsentTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une dernière chose'**
+  String get authConsentTitle;
+
+  /// No description provided for @authConsentBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour améliorer Yadony, on aimerait mesurer comment l\'app est utilisée. C\'est anonyme et facultatif.'**
+  String get authConsentBody;
+
+  /// No description provided for @authConsentFootnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jamais tes paiements, ton identité ou ton numéro. Tu peux changer d’avis dans Réglages.'**
+  String get authConsentFootnote;
+
+  /// No description provided for @authConsentPointScreens.
+  ///
+  /// In fr, this message translates to:
+  /// **'Écrans visités et fonctionnalités utilisées'**
+  String get authConsentPointScreens;
+
+  /// No description provided for @authConsentPointGestures.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gestes pour repérer ce qui bloque'**
+  String get authConsentPointGestures;
+
+  /// No description provided for @authConsentPointNeverPersonal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jamais tes paiements, identité ou numéro'**
+  String get authConsentPointNeverPersonal;
+
+  /// No description provided for @authConsentPointChangeAnytime.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifiable à tout moment dans Réglages'**
+  String get authConsentPointChangeAnytime;
+
+  /// No description provided for @authConsentAccept.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter'**
+  String get authConsentAccept;
+
+  /// No description provided for @authConsentDecline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non merci'**
+  String get authConsentDecline;
+
+  /// No description provided for @authLocalSwitchAccountTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de compte ?'**
+  String get authLocalSwitchAccountTitle;
+
+  /// No description provided for @authLocalSwitchAccountMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous allez être déconnecté de ce compte. Vous devrez vous reconnecter et reconfigurer votre code PIN.'**
+  String get authLocalSwitchAccountMessage;
+
+  /// No description provided for @authLocalOtherAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre compte'**
+  String get authLocalOtherAccount;
+
+  /// No description provided for @authLocalEnterPin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez votre code PIN'**
+  String get authLocalEnterPin;
+
+  /// No description provided for @authLocalLastAttempt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernière tentative avant blocage'**
+  String get authLocalLastAttempt;
+
+  /// No description provided for @authLocalAttemptsLeft.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} tentative restante} other{{count} tentatives restantes}}'**
+  String authLocalAttemptsLeft(int count);
+
+  /// No description provided for @authLocalRetryIn.
+  ///
+  /// In fr, this message translates to:
+  /// **'{seconds, plural, =1{Réessayez dans {seconds} seconde} other{Réessayez dans {seconds} secondes}}'**
+  String authLocalRetryIn(int seconds);
+
+  /// No description provided for @countryNameCd.
+  ///
+  /// In fr, this message translates to:
+  /// **'RD Congo'**
+  String get countryNameCd;
+
+  /// No description provided for @commonCancel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get commonCancel;
+
+  /// No description provided for @commonContinue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer'**
+  String get commonContinue;
 }
 
 class _AppLocalizationsDelegate

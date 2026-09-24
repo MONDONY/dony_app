@@ -8,6 +8,7 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_event.dart';
 import 'package:dony/features/auth/bloc/local_auth_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -76,23 +77,21 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
   /// du mode de connexion.
   Future<void> _switchAccount() async {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Changer de compte ?'),
-        content: const Text(
-          'Vous allez être déconnecté de ce compte. Vous devrez vous '
-          'reconnecter et reconfigurer votre code PIN.',
-        ),
+        title: Text(l.authLocalSwitchAccountTitle),
+        content: Text(l.authLocalSwitchAccountMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Annuler'),
+            child: Text(l.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: TextButton.styleFrom(foregroundColor: cs.primary),
-            child: const Text('Continuer'),
+            child: Text(l.commonContinue),
           ),
         ],
       ),
@@ -194,7 +193,7 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
                                 size: 18,
                                 color: cs.primary,
                               ),
-                              label: const Text('Autre compte'),
+                              label: Text(context.l10n.authLocalOtherAccount),
                               style: TextButton.styleFrom(
                                 foregroundColor: cs.primary,
                                 padding: const EdgeInsets.symmetric(
@@ -304,7 +303,7 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
         DonyLogo(fontSize: logoSize),
         const SizedBox(height: 10),
         Text(
-          'Saisissez votre code PIN',
+          context.l10n.authLocalEnterPin,
           style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
       ],
@@ -345,9 +344,12 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: DonySpacing.md),
       child: Text(
+        // Le bloc ne publie que 1, 2 ou 3 (0 bascule sur LocalAuthLocked) et
+        // l'avertissement n'apparaît que sous 3 : le pluriel ne reçoit donc
+        // que 2 en pratique, 1 ayant son propre message.
         attemptsLeft == 1
-            ? 'Dernière tentative avant blocage'
-            : '$attemptsLeft tentatives restantes',
+            ? context.l10n.authLocalLastAttempt
+            : context.l10n.authLocalAttemptsLeft(attemptsLeft),
         style: tt.bodySmall?.copyWith(
           color: cs.error,
           fontWeight: FontWeight.w500,
@@ -376,7 +378,7 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
             DonyIcon('timer', color: cs.error, size: 18),
             const SizedBox(width: DonySpacing.sm),
             Text(
-              'Réessayez dans $_lockSecondsLeft secondes',
+              context.l10n.authLocalRetryIn(_lockSecondsLeft),
               style: tt.bodySmall?.copyWith(
                 color: cs.onErrorContainer,
                 fontWeight: FontWeight.w500,

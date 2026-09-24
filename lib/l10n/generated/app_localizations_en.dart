@@ -864,4 +864,748 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get networkFallbackNetworkError => 'Network error';
+
+  @override
+  String get countryNameDe => 'Germany';
+
+  @override
+  String get countryNameAt => 'Austria';
+
+  @override
+  String get countryNameBe => 'Belgium';
+
+  @override
+  String get countryNameCy => 'Cyprus';
+
+  @override
+  String get countryNameHr => 'Croatia';
+
+  @override
+  String get countryNameEs => 'Spain';
+
+  @override
+  String get countryNameEe => 'Estonia';
+
+  @override
+  String get countryNameFi => 'Finland';
+
+  @override
+  String get countryNameFr => 'France';
+
+  @override
+  String get countryNameGr => 'Greece';
+
+  @override
+  String get countryNameIe => 'Ireland';
+
+  @override
+  String get countryNameIt => 'Italy';
+
+  @override
+  String get countryNameLv => 'Latvia';
+
+  @override
+  String get countryNameLt => 'Lithuania';
+
+  @override
+  String get countryNameLu => 'Luxembourg';
+
+  @override
+  String get countryNameMt => 'Malta';
+
+  @override
+  String get countryNameNl => 'Netherlands';
+
+  @override
+  String get countryNamePt => 'Portugal';
+
+  @override
+  String get countryNameGb => 'United Kingdom';
+
+  @override
+  String get countryNameSk => 'Slovakia';
+
+  @override
+  String get countryNameSi => 'Slovenia';
+
+  @override
+  String get countryNameCh => 'Switzerland';
+
+  @override
+  String get countryNameCa => 'Canada';
+
+  @override
+  String get countryNameUs => 'United States';
+
+  @override
+  String get countryNameBj => 'Benin';
+
+  @override
+  String get countryNameBf => 'Burkina Faso';
+
+  @override
+  String get countryNameCi => 'Côte d\'Ivoire';
+
+  @override
+  String get countryNameGw => 'Guinea-Bissau';
+
+  @override
+  String get countryNameMl => 'Mali';
+
+  @override
+  String get countryNameNe => 'Niger';
+
+  @override
+  String get countryNameSn => 'Senegal';
+
+  @override
+  String get countryNameTg => 'Togo';
+
+  @override
+  String get countryNameCm => 'Cameroon';
+
+  @override
+  String get countryNameCf => 'Central African Republic';
+
+  @override
+  String get countryNameCg => 'Congo';
+
+  @override
+  String get countryNameGa => 'Gabon';
+
+  @override
+  String get countryNameGq => 'Equatorial Guinea';
+
+  @override
+  String get countryNameTd => 'Chad';
+
+  @override
+  String get countryZoneEurope => 'Europe';
+
+  @override
+  String get countryZoneNorthAmerica => 'North America';
+
+  @override
+  String get countryZoneWestAfrica => 'West Africa';
+
+  @override
+  String get countryZoneCentralAfrica => 'Central Africa';
+
+  @override
+  String get errorGuestSessionFailedTitle => 'Browsing unavailable';
+
+  @override
+  String get errorGuestSessionFailedMessage =>
+      'Couldn\'t start browsing without an account. Check your connection.';
+
+  @override
+  String get authCountrySaveError => 'Couldn\'t save your country. Try again.';
+
+  @override
+  String get authCountryChoiceSaveError =>
+      'Couldn\'t save your choice. Try again.';
+
+  @override
+  String get authPersonalInfoSaveError =>
+      'Couldn\'t save your details. Try again.';
+
+  @override
+  String get authUserFallbackName => 'User';
+
+  @override
+  String get authBiometricUnlockReason =>
+      'Unlock Yadony to access your account';
+
+  @override
+  String get authStepConsent => 'Privacy';
+
+  @override
+  String get authStepCountry => 'Country';
+
+  @override
+  String get authStepIdentity => 'Identity';
+
+  @override
+  String get authStepPersonalInfo => 'Your details';
+
+  @override
+  String get authStepPayouts => 'Payments';
+
+  @override
+  String get authMethodIllustrationLabel =>
+      'Yadony traveler holding a secured parcel';
+
+  @override
+  String get authMethodSecureBadge => 'Secure';
+
+  @override
+  String get authMethodTitle => 'Sign in with confidence';
+
+  @override
+  String get authMethodSubtitle =>
+      'Your messages, your payment and your parcel tracking are protected at every step.';
+
+  @override
+  String get authMethodContinueWithApple => 'Continue with Apple';
+
+  @override
+  String get authMethodContinueWithEmail => 'Continue with email';
+
+  @override
+  String get authMethodContinueWithPhone => 'Continue with phone';
+
+  @override
+  String get authMethodContinueWithGoogle => 'Continue with Google';
+
+  @override
+  String get authMethodOr => 'OR';
+
+  @override
+  String get authMethodGuestSemantics =>
+      'Browse without an account. Access limited to search. Sign-in required to post, contact, book or pay.';
+
+  @override
+  String get authMethodBrowseWithoutAccount => 'Browse without an account';
+
+  @override
+  String get authMethodGuestNotice =>
+      'Limited access: search only. Sign-in required to post, contact, book or pay.';
+
+  @override
+  String get authLegalPrefix => 'By continuing, you agree to our ';
+
+  @override
+  String get authLegalTermsLink => 'Terms of Use';
+
+  @override
+  String get authLegalMiddle => ' and our ';
+
+  @override
+  String get authLegalPrivacyLink => 'Privacy Policy';
+
+  @override
+  String get authEmailStepLabel => 'Email';
+
+  @override
+  String get authEmailTitle => 'Your email address';
+
+  @override
+  String get authEmailBody => 'Enter your email address to get a sign-in code.';
+
+  @override
+  String get authEmailFootnote =>
+      'We protect your access without sharing your email with travelers.';
+
+  @override
+  String get authEmailHint => 'example@email.com';
+
+  @override
+  String get authEmailSpamHint =>
+      'Check your spam folder if you don\'t get the code.';
+
+  @override
+  String get authEmailSendCode => 'Send code';
+
+  @override
+  String get authEmailPreferSms => 'Prefer SMS?';
+
+  @override
+  String get authPhoneDialCodeTitle => 'Country code';
+
+  @override
+  String get authPhoneStepLabel => 'Phone';
+
+  @override
+  String get authPhoneTitle => 'Your number';
+
+  @override
+  String get authPhoneBody =>
+      'We\'ll text you a 6-digit code to check that it\'s really you.';
+
+  @override
+  String get authPhoneFootnote =>
+      'Your number is only used to secure your account and your Yadony messages.';
+
+  @override
+  String get authPhoneNumberLabel => 'PHONE NUMBER';
+
+  @override
+  String get authPhoneEnterNumber => 'Enter your number';
+
+  @override
+  String get authPhoneNumberTooShort => 'Number too short';
+
+  @override
+  String get authPhoneGetSmsCode => 'Get SMS code';
+
+  @override
+  String get authPhoneContinueWithEmail => 'Continue with an email address';
+
+  @override
+  String get authOtpEnterSixDigits => 'Enter the 6-digit code';
+
+  @override
+  String get authOtpSessionExpired => 'Session expired, please start again';
+
+  @override
+  String get authOtpEmailVerified => 'Email verified!';
+
+  @override
+  String get authOtpPhoneAdded => 'Number added!';
+
+  @override
+  String get authOtpStepEmail => 'Email code';
+
+  @override
+  String get authOtpStepSms => 'SMS code';
+
+  @override
+  String get authOtpEmailTitle => 'Got the code?';
+
+  @override
+  String get authOtpPhoneTitle => 'Enter the code';
+
+  @override
+  String authOtpCodeSentTo(String contact) {
+    return 'Code sent to $contact';
+  }
+
+  @override
+  String authOtpCodeSentToPhone(String contact) {
+    return 'Code sent to $contact';
+  }
+
+  @override
+  String get authOtpFootnote =>
+      'The code expires quickly to keep your Yadony account protected.';
+
+  @override
+  String authOtpResendIn(int seconds) {
+    return 'Resend code ($seconds s)';
+  }
+
+  @override
+  String get authOtpResend => 'Resend code';
+
+  @override
+  String get authOtpVerify => 'Verify';
+
+  @override
+  String get authDialCodeSearchHint => 'Search for a country or code';
+
+  @override
+  String get authDialCodeNoMatch => 'No matching country';
+
+  @override
+  String get authFlowIllustrationLabel => 'Secure Yadony sign-in';
+
+  @override
+  String get authFlowProtectedBadge => 'Protected sign-in';
+
+  @override
+  String get authFlowSkipForNow => 'Skip for now';
+
+  @override
+  String get authRequiredTitle => 'Sign-in required';
+
+  @override
+  String get authRequiredSignIn => 'Sign in';
+
+  @override
+  String get authRequiredKeepExploring => 'Keep exploring';
+
+  @override
+  String get authRequiredFreeSearchTitle => 'Browse freely';
+
+  @override
+  String get authRequiredFreeSearchBody =>
+      'You can browse parcel requests and compare trips.';
+
+  @override
+  String get authRequiredProtectedTitle => 'Protected actions';
+
+  @override
+  String get authRequiredOfferSubtitle => 'Sign in to offer your trip safely.';
+
+  @override
+  String get authRequiredOfferBody =>
+      'Signing in protects messages, offers and parcel tracking.';
+
+  @override
+  String get authRequiredReportSubtitle => 'Sign in to report a listing.';
+
+  @override
+  String get authRequiredReportBody =>
+      'Reports are tied to an account to prevent abuse and better protect the community.';
+
+  @override
+  String get authRequiredExploreSubtitle => 'Sign in to use this action.';
+
+  @override
+  String get authRequiredExploreBody =>
+      'Posting, contacting, booking or paying requires a Yadony account.';
+
+  @override
+  String get authOnboardingHandoffEyebrow => 'Step 1';
+
+  @override
+  String get authOnboardingHandoffTitle => 'Get your parcel ready.';
+
+  @override
+  String get authOnboardingHandoffSubtitle =>
+      'Enter the destination and parcel size, then find an available traveler.';
+
+  @override
+  String get authOnboardingHandoffStep1Title => 'Create the listing';
+
+  @override
+  String get authOnboardingHandoffStep1Subtitle =>
+      'Departure, arrival, parcel size.';
+
+  @override
+  String get authOnboardingHandoffStep2Title => 'Choose a traveler';
+
+  @override
+  String get authOnboardingHandoffStep2Subtitle =>
+      'Profile, trip and availability.';
+
+  @override
+  String get authOnboardingHandoffStep3Title => 'Drop off the parcel';
+
+  @override
+  String get authOnboardingHandoffStep3Subtitle =>
+      'The journey starts with the scan.';
+
+  @override
+  String get authOnboardingSecurityEyebrow => 'Security';
+
+  @override
+  String get authOnboardingSecurityTitle => 'Every drop-off is safeguarded.';
+
+  @override
+  String get authOnboardingSecuritySubtitle =>
+      'Yadony protects profiles, payments and every key step of the parcel\'s journey.';
+
+  @override
+  String get authOnboardingChipVerifiedIdentity => 'Verified identity';
+
+  @override
+  String get authOnboardingChipPaymentOnHold => 'Payment on hold';
+
+  @override
+  String get authOnboardingChipTrackingQr => 'Tracking QR code';
+
+  @override
+  String get authOnboardingChipProofOfDropOff => 'Proof of drop-off';
+
+  @override
+  String get authOnboardingTrackingEyebrow => 'Real time';
+
+  @override
+  String get authOnboardingTrackingTitle => 'Keep track of your parcel.';
+
+  @override
+  String get authOnboardingTrackingSubtitle =>
+      'Tracking moves forward with every scan, from departure to confirmed arrival.';
+
+  @override
+  String get authOnboardingTrackingStep1Title => 'Dropped off';
+
+  @override
+  String get authOnboardingTrackingStep1Subtitle =>
+      'The parcel is handed to the traveler.';
+
+  @override
+  String get authOnboardingTrackingStep2Title => 'Departure, transit, arrival';
+
+  @override
+  String get authOnboardingTrackingStep2Subtitle =>
+      'Every scan updates the tracking.';
+
+  @override
+  String get authOnboardingTrackingStep3Title => 'Delivery';
+
+  @override
+  String get authOnboardingTrackingStep3Subtitle =>
+      'The recipient\'s confirmation ends the trip.';
+
+  @override
+  String get authOnboardingDestinationsEyebrow => 'Destinations';
+
+  @override
+  String get authOnboardingDestinationsTitle => 'Your parcels go further.';
+
+  @override
+  String get authOnboardingDestinationsSubtitle =>
+      'Yadony connects available countries with travelers already making the trip.';
+
+  @override
+  String get authOnboardingDestinationsStep6Title => 'Hand over on arrival';
+
+  @override
+  String get authOnboardingDestinationsStep6Subtitle =>
+      'The recipient confirms receipt.';
+
+  @override
+  String get authOnboardingDestinationsStep7Title => 'Release the payment';
+
+  @override
+  String get authOnboardingDestinationsStep7Subtitle =>
+      'The traveler gets paid once delivery succeeds.';
+
+  @override
+  String get authOnboardingChipAfrica => 'Africa';
+
+  @override
+  String get authOnboardingChipAvailableCountries => 'Available countries';
+
+  @override
+  String get authOnboardingImageLabel => 'Yadony onboarding scene';
+
+  @override
+  String get authOnboardingSkip => 'Skip';
+
+  @override
+  String get authOnboardingRouteDropOff => 'Drop-off';
+
+  @override
+  String get authOnboardingRouteDeparture => 'Departure';
+
+  @override
+  String get authOnboardingRouteTransit => 'In transit';
+
+  @override
+  String get authOnboardingRouteArrival => 'Arrival';
+
+  @override
+  String get authOnboardingRouteDelivery => 'Delivery';
+
+  @override
+  String get authOnboardingGetStarted => 'Get started';
+
+  @override
+  String get authOnboardingNext => 'Next';
+
+  @override
+  String get authOnboardingLegalPrefix => 'By continuing, you agree to our ';
+
+  @override
+  String get authOnboardingLegalTermsLink => 'Terms of Use';
+
+  @override
+  String get authOnboardingLegalMiddle => ' and our ';
+
+  @override
+  String get authOnboardingLegalPrivacyLink => 'Privacy Policy';
+
+  @override
+  String get authCountryTitle => 'Which country do you live in?';
+
+  @override
+  String get authCountrySubtitle =>
+      'We\'ll adapt the currency, trips and availability to your country.';
+
+  @override
+  String get authCountryFieldLabel => 'Country';
+
+  @override
+  String get authCountryFieldHint => 'E.g. Senegal, France, Canada';
+
+  @override
+  String get authCountryFieldHelper =>
+      'Type your country, then pick a suggestion.';
+
+  @override
+  String get authCountrySaving => 'Saving country...';
+
+  @override
+  String get authCountryDeleteDialogTitle => 'Permanently delete the account?';
+
+  @override
+  String get authCountryDeleteDialogMessage =>
+      'Your Yadony account and all related data will be deleted. This action cannot be undone.';
+
+  @override
+  String get authCountryDeleteDialogConfirm => 'Confirm deletion';
+
+  @override
+  String get authCountryUnavailableTitle =>
+      'Yadony isn\'t available in this country yet';
+
+  @override
+  String get authCountryUnavailableBody =>
+      'You can continue to send parcels. Trips and carrying parcels won\'t be available from this account.';
+
+  @override
+  String get authCountryContinueAsSender => 'Continue and send parcels';
+
+  @override
+  String get authCountryDeleteAccount => 'Delete my account';
+
+  @override
+  String authCountryOptionSavingLabel(String country, String currency) {
+    return 'Selected country: $country, currency $currency. Saving.';
+  }
+
+  @override
+  String authCountryOptionSelectLabel(String country, String currency) {
+    return 'Select $country, currency $currency';
+  }
+
+  @override
+  String get authPersonalInfoCountryNotSet => 'Not provided';
+
+  @override
+  String get authPersonalInfoGaugeLabel => 'Details';
+
+  @override
+  String get authPersonalInfoTitle => 'Your details';
+
+  @override
+  String get authPersonalInfoBody =>
+      'Your legal name, exactly as it appears on your ID. Stripe will ask for the rest, only once.';
+
+  @override
+  String get authPersonalInfoFootnote =>
+      'Never shared with other members, never shown publicly.';
+
+  @override
+  String get authPersonalInfoIdentitySection => 'Identity';
+
+  @override
+  String get authPersonalInfoFirstName => 'First name';
+
+  @override
+  String get authPersonalInfoLastName => 'Last name';
+
+  @override
+  String get authPersonalInfoCountrySection => 'Country';
+
+  @override
+  String get authPersonalInfoCountryField => 'Country';
+
+  @override
+  String authPersonalInfoCountrySemantics(String country) {
+    return 'Country of residence: $country. Set at sign-up, can\'t be changed here.';
+  }
+
+  @override
+  String get authPersonalInfoCountryMissingSemantics =>
+      'Country of residence not provided. Set at sign-up, can\'t be changed here.';
+
+  @override
+  String get authReferralGaugeLabel => 'Referral';
+
+  @override
+  String get authReferralTitle => 'Did a friend invite you?';
+
+  @override
+  String get authReferralBody =>
+      'Enter their code so they get a reward after your first delivery.';
+
+  @override
+  String get authReferralFootnote =>
+      'This step is optional. You can use Yadony without a code.';
+
+  @override
+  String get authReferralCodeLabel => 'Referral code';
+
+  @override
+  String get authReferralCodeHint => 'E.g. JEAN0234';
+
+  @override
+  String get authReferralApply => 'Apply code';
+
+  @override
+  String get authReferralSuccessTitle => 'Code applied!';
+
+  @override
+  String get authReferralSuccessBody =>
+      'Your friend gets a reward as soon as you complete your first delivery.';
+
+  @override
+  String get authReferralSuccessFootnote =>
+      'Your Yadony account is ready. You can start searching for, sending and tracking parcels.';
+
+  @override
+  String get authReferralContinueHome => 'Continue to home';
+
+  @override
+  String get authConsentTitle => 'One last thing';
+
+  @override
+  String get authConsentBody =>
+      'To improve Yadony, we\'d like to measure how the app is used. It\'s anonymous and optional.';
+
+  @override
+  String get authConsentFootnote =>
+      'Never your payments, identity or phone number. You can change your mind in Settings.';
+
+  @override
+  String get authConsentPointScreens => 'Screens visited and features used';
+
+  @override
+  String get authConsentPointGestures =>
+      'Taps and swipes, to spot what gets in the way';
+
+  @override
+  String get authConsentPointNeverPersonal =>
+      'Never your payments, identity or phone number';
+
+  @override
+  String get authConsentPointChangeAnytime =>
+      'Can be changed anytime in Settings';
+
+  @override
+  String get authConsentAccept => 'Accept';
+
+  @override
+  String get authConsentDecline => 'No thanks';
+
+  @override
+  String get authLocalSwitchAccountTitle => 'Switch account?';
+
+  @override
+  String get authLocalSwitchAccountMessage =>
+      'You\'ll be signed out of this account. You\'ll need to sign in again and set up a new PIN.';
+
+  @override
+  String get authLocalOtherAccount => 'Other account';
+
+  @override
+  String get authLocalEnterPin => 'Enter your PIN';
+
+  @override
+  String get authLocalLastAttempt => 'Last attempt before lockout';
+
+  @override
+  String authLocalAttemptsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attempts left',
+      one: '$count attempt left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String authLocalRetryIn(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: 'Try again in $seconds seconds',
+      one: 'Try again in $seconds second',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get countryNameCd => 'DR Congo';
+
+  @override
+  String get commonCancel => 'Cancel';
+
+  @override
+  String get commonContinue => 'Continue';
 }

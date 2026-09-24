@@ -3,6 +3,7 @@ import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Un utilisateur dont chaque fait serveur se pose champ par champ, pour tester
@@ -384,13 +385,20 @@ void main() {
     });
   });
 
-  group('OnboardingStep.displayLabel — noms montrés à l\'utilisateur', () {
+  group('OnboardingStep.label — noms montrés à l\'utilisateur', () {
+    final fr = lookupAppLocalizations(AppL10n.fr);
+    final en = lookupAppLocalizations(AppL10n.en);
+
     test('chaque étape a un nom, fermé et en français', () {
-      expect(OnboardingStep.consent.displayLabel, 'Confidentialité');
-      expect(OnboardingStep.country.displayLabel, 'Pays');
-      expect(OnboardingStep.personalInfo.displayLabel, 'Vos infos');
-      expect(OnboardingStep.identity.displayLabel, 'Identité');
-      expect(OnboardingStep.payouts.displayLabel, 'Paiements');
+      expect(OnboardingStep.consent.label(fr), 'Confidentialité');
+      expect(OnboardingStep.country.label(fr), 'Pays');
+      expect(OnboardingStep.personalInfo.label(fr), 'Vos infos');
+      expect(OnboardingStep.identity.label(fr), 'Identité');
+      expect(OnboardingStep.payouts.label(fr), 'Paiements');
+    });
+
+    test('en anglais', () {
+      expect(OnboardingStep.personalInfo.label(en), 'Your details');
     });
   });
 

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,16 +11,17 @@ abstract final class AuthRequiredSheet {
     BuildContext context, {
     AuthRequiredReason reason = AuthRequiredReason.explore,
   }) {
-    final copy = _copyFor(reason);
+    final l10n = context.l10n;
+    final copy = _copyFor(reason, l10n);
     return DonyBottomSheet.show<void>(
       context,
-      title: 'Connexion requise',
+      title: l10n.authRequiredTitle,
       subtitle: copy.subtitle,
       stickyBottom: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: 'Se connecter',
+            label: l10n.authRequiredSignIn,
             iconAsset: 'key-round',
             onPressed: () {
               Navigator.of(context, rootNavigator: true).pop();
@@ -28,7 +30,7 @@ abstract final class AuthRequiredSheet {
           ),
           const SizedBox(height: DonySpacing.sm),
           DonyButton(
-            label: 'Continuer à explorer',
+            label: l10n.authRequiredKeepExploring,
             variant: DonyButtonVariant.ghost,
             onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           ),
@@ -37,15 +39,15 @@ abstract final class AuthRequiredSheet {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _ReassuranceRow(
+          _ReassuranceRow(
             iconAsset: 'search',
-            title: 'Recherche libre',
-            subtitle: 'Tu peux consulter les demandes et comparer les trajets.',
+            title: l10n.authRequiredFreeSearchTitle,
+            subtitle: l10n.authRequiredFreeSearchBody,
           ),
           const SizedBox(height: DonySpacing.md),
           _ReassuranceRow(
             iconAsset: 'shield-check',
-            title: 'Actions protégées',
+            title: l10n.authRequiredProtectedTitle,
             subtitle: copy.body,
           ),
         ],
@@ -53,22 +55,22 @@ abstract final class AuthRequiredSheet {
     );
   }
 
-  static _AuthRequiredCopy _copyFor(AuthRequiredReason reason) {
+  static _AuthRequiredCopy _copyFor(
+    AuthRequiredReason reason,
+    AppLocalizations l10n,
+  ) {
     return switch (reason) {
-      AuthRequiredReason.offer => const _AuthRequiredCopy(
-        subtitle: 'Connecte-toi pour proposer ton trajet en toute sécurité.',
-        body:
-            'La connexion protège les échanges, les propositions et le suivi du colis.',
+      AuthRequiredReason.offer => _AuthRequiredCopy(
+        subtitle: l10n.authRequiredOfferSubtitle,
+        body: l10n.authRequiredOfferBody,
       ),
-      AuthRequiredReason.report => const _AuthRequiredCopy(
-        subtitle: 'Connecte-toi pour signaler une annonce.',
-        body:
-            'Les signalements sont reliés à un compte pour éviter les abus et mieux protéger la communauté.',
+      AuthRequiredReason.report => _AuthRequiredCopy(
+        subtitle: l10n.authRequiredReportSubtitle,
+        body: l10n.authRequiredReportBody,
       ),
-      AuthRequiredReason.explore => const _AuthRequiredCopy(
-        subtitle: 'Connecte-toi pour utiliser cette action.',
-        body:
-            'Publier, contacter, réserver ou payer nécessite un compte Yadony.',
+      AuthRequiredReason.explore => _AuthRequiredCopy(
+        subtitle: l10n.authRequiredExploreSubtitle,
+        body: l10n.authRequiredExploreBody,
       ),
     };
   }

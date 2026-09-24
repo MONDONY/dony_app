@@ -6,6 +6,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +25,7 @@ class AnalyticsConsentScreen extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final h = DonyLayout.hPadding(context);
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final l = context.l10n;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -46,7 +48,7 @@ class AnalyticsConsentScreen extends StatelessWidget {
                   children: [
                     AuthFlowHeader.gauge(
                       segments: progress.segments,
-                      label: 'Confidentialité',
+                      label: OnboardingStep.consent.label(context.l10n),
                     ),
                     const SizedBox(height: DonySpacing.md),
                     Expanded(
@@ -59,13 +61,11 @@ class AnalyticsConsentScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const AuthIntroCard.compact(
+                            AuthIntroCard.compact(
                                   iconAsset: 'shield-check',
-                                  title: 'Une dernière chose',
-                                  body:
-                                      "Pour améliorer Yadony, on aimerait mesurer comment l'app est utilisée. C'est anonyme et facultatif.",
-                                  footnote:
-                                      'Jamais tes paiements, ton identité ou ton numéro. Tu peux changer d’avis dans Réglages.',
+                                  title: l.authConsentTitle,
+                                  body: l.authConsentBody,
+                                  footnote: l.authConsentFootnote,
                                 )
                                 .animate()
                                 .fadeIn(duration: 300.ms)
@@ -134,14 +134,12 @@ class _ConsentPoints extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const points = [
-      _ConsentPoint(
-        'trending-up',
-        'Écrans visités et fonctionnalités utilisées',
-      ),
-      _ConsentPoint('search', 'Gestes pour repérer ce qui bloque'),
-      _ConsentPoint('lock', 'Jamais tes paiements, identité ou numéro'),
-      _ConsentPoint('refresh-cw', 'Modifiable à tout moment dans Réglages'),
+    final l = context.l10n;
+    final points = [
+      _ConsentPoint('trending-up', l.authConsentPointScreens),
+      _ConsentPoint('search', l.authConsentPointGestures),
+      _ConsentPoint('lock', l.authConsentPointNeverPersonal),
+      _ConsentPoint('refresh-cw', l.authConsentPointChangeAnytime),
     ];
 
     return _GlassPanel(
@@ -213,17 +211,18 @@ class _Buttons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     // Même zone d'action que les autres écrans du parcours : « Non merci »
     // occupe la place du lien « Passer pour l'instant » — refuser le suivi et
     // passer une étape sont la même intention, et le pouce les retrouve à la
     // même hauteur d'un écran à l'autre.
     return AuthFlowActions(
           primary: DonyButton(
-            label: 'Accepter',
+            label: l.authConsentAccept,
             iconAsset: 'shield-check',
             onPressed: () => _respond(context, granted: true),
           ),
-          skipLabel: 'Non merci',
+          skipLabel: l.authConsentDecline,
           onSkip: () => _respond(context, granted: false),
         )
         .animate()

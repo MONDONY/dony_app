@@ -109,4 +109,30 @@ void main() {
       contains('SN'),
     );
   });
+
+  group('search avec nom localisé', () {
+    test('trouve un pays par son nom anglais', () {
+      final r = CountryCatalog.search(
+        'senegal',
+        localizedName: (c) => c.code == 'SN' ? 'Senegal' : c.name,
+      );
+      expect(r.map((c) => c.code), contains('SN'));
+    });
+
+    test('trouve toujours par le nom français', () {
+      final r = CountryCatalog.search(
+        'allemagne',
+        localizedName: (c) => c.code == 'DE' ? 'Germany' : c.name,
+      );
+      expect(r.map((c) => c.code), contains('DE'));
+    });
+
+    test('nom anglais sans accent ni casse', () {
+      final r = CountryCatalog.search(
+        'GERMANY',
+        localizedName: (c) => c.code == 'DE' ? 'Germany' : c.name,
+      );
+      expect(r.single.code, 'DE');
+    });
+  });
 }

@@ -6,6 +6,8 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
+import 'package:dony/l10n/country_names.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -70,7 +72,12 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
         } else if (state is CountryOnboardingError) {
           DonySnackbar.show(
             context,
-            message: state.message,
+            message: switch (state.failure) {
+              CountryOnboardingFailure.saveCountry =>
+                context.l10n.authCountrySaveError,
+              CountryOnboardingFailure.saveChoice =>
+                context.l10n.authCountryChoiceSaveError,
+            },
             type: DonySnackbarType.error,
           );
         }
@@ -100,7 +107,7 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
                       children: [
                         AuthFlowHeader.gauge(
                           segments: widget.progress.segments,
-                          label: 'Pays',
+                          label: OnboardingStep.country.label(context.l10n),
                         ),
                         SizedBox(
                           height: (media.size.height * 0.018).clamp(
@@ -150,6 +157,7 @@ class _CountryIntroCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final isLight = cs.brightness == Brightness.light;
+    final l = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -183,7 +191,7 @@ class _CountryIntroCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Dans quel pays es-tu ?',
+                  l.authCountryTitle,
                   style: tt.titleLarge?.copyWith(
                     color: cs.onSurface,
                     fontWeight: FontWeight.w900,
@@ -192,7 +200,7 @@ class _CountryIntroCard extends StatelessWidget {
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Devise, trajets et disponibilité seront adaptés à ton pays.',
+                  l.authCountrySubtitle,
                   style: tt.bodySmall?.copyWith(
                     color: cs.onSurfaceVariant,
                     height: 1.3,
@@ -231,6 +239,8 @@ class _CountryListState extends State<_CountryList> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final isLight = cs.brightness == Brightness.light;
+    final l = context.l10n;
+    String localizedName(Country c) => countryName(l, c.code);
 
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -241,12 +251,15 @@ class _CountryListState extends State<_CountryList> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Autocomplete<Country>(
-            displayStringForOption: (country) => country.name,
+            displayStringForOption: localizedName,
             optionsBuilder: (value) {
               if (widget.isSaving) {
                 return const Iterable<Country>.empty();
               }
-              return CountryCatalog.search(value.text).take(8);
+              return CountryCatalog.search(
+                value.text,
+                localizedName: localizedName,
+              ).take(8);
             },
             onSelected: (country) =>
                 context.read<CountryOnboardingCubit>().select(country.code),
@@ -256,8 +269,8 @@ class _CountryListState extends State<_CountryList> {
                     controller: controller,
                     focusNode: focusNode,
                     enabled: !widget.isSaving,
-                    label: 'Pays',
-                    hint: 'Ex : Sénégal, France, Canada',
+                    label: l.authCountryFieldLabel,
+                    hint: l.authCountryFieldHint,
                     prefixIcon: Icons.search,
                     textInputAction: TextInputAction.search,
                     onChanged: (value) => _query.value = value,
@@ -319,7 +332,7 @@ class _CountryListState extends State<_CountryList> {
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Tape ton pays puis choisis une suggestion.',
+            l.authCountryFieldHelper,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           if (widget.isSaving && widget.selectedCode != null) ...[
@@ -337,7 +350,7 @@ class _CountryListState extends State<_CountryList> {
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
-                    'Enregistrement du pays...',
+                    l.authCountrySaving,
                     style: tt.labelMedium?.copyWith(color: cs.primary),
                   ),
                 ),
@@ -349,7 +362,10 @@ class _CountryListState extends State<_CountryList> {
             builder: (context, query, _) {
               final hasNoResult =
                   query.trim().isNotEmpty &&
-                  CountryCatalog.search(query).isEmpty;
+                  CountryCatalog.search(
+                    query,
+                    localizedName: localizedName,
+                  ).isEmpty;
               if (!hasNoResult) {
                 return const SizedBox(height: DonySpacing.md);
               }
@@ -369,12 +385,13 @@ class _EmptyCountryResults extends StatelessWidget {
   const _EmptyCountryResults();
 
   Future<void> _confirmDelete(BuildContext context) async {
+    final l = context.l10n;
     final confirmed = await DonyDialog.show(
       context,
-      title: 'Supprimer définitivement le compte ?',
-      message:
-          'Ton compte Yadony et tes données associées seront supprimés. Cette action est irréversible.',
-      confirmLabel: 'Confirmer la suppression',
+      title: l.authCountryDeleteDialogTitle,
+      message: l.authCountryDeleteDialogMessage,
+      confirmLabel: l.authCountryDeleteDialogConfirm,
+      cancelLabel: l.commonCancel,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'circle-alert',
     );
@@ -387,6 +404,7 @@ class _EmptyCountryResults extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Align(
       alignment: Alignment.topCenter,
@@ -417,13 +435,13 @@ class _EmptyCountryResults extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.xs),
               Text(
-                'Yadony n’est pas encore disponible dans ce pays',
+                l.authCountryUnavailableTitle,
                 textAlign: TextAlign.center,
                 style: tt.titleLarge?.copyWith(color: cs.onSurface),
               ),
               const SizedBox(height: DonySpacing.xs),
               Text(
-                'Tu peux continuer pour envoyer des colis. Les trajets et la prise de colis resteront indisponibles depuis ce compte.',
+                l.authCountryUnavailableBody,
                 textAlign: TextAlign.center,
                 style: tt.bodySmall?.copyWith(
                   color: cs.onSurfaceVariant,
@@ -432,14 +450,14 @@ class _EmptyCountryResults extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.sm),
               DonyButton(
-                label: 'Je souhaite continuer et envoyer des colis',
+                label: l.authCountryContinueAsSender,
                 onPressed: () => context
                     .read<CountryOnboardingCubit>()
                     .continueAsSenderOnly(),
               ),
               const SizedBox(height: DonySpacing.xxs),
               DonyButton(
-                label: 'Supprimer mon compte',
+                label: l.authCountryDeleteAccount,
                 variant: DonyButtonVariant.destructive,
                 onPressed: () => _confirmDelete(context),
               ),
@@ -466,9 +484,11 @@ class _CountryOptionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    final name = countryName(l, country.code);
     final label = isSelected
-        ? 'Pays sélectionné : ${country.name}, devise ${country.currency.code}. Enregistrement en cours.'
-        : 'Sélectionner ${country.name}, devise ${country.currency.code}';
+        ? l.authCountryOptionSavingLabel(name, country.currency.code)
+        : l.authCountryOptionSelectLabel(name, country.currency.code);
 
     return Semantics(
       button: true,
@@ -508,7 +528,7 @@ class _CountryOptionTile extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        country.name,
+                        name,
                         style: tt.titleMedium?.copyWith(
                           color: cs.onSurface,
                           fontWeight: FontWeight.w800,
@@ -516,7 +536,7 @@ class _CountryOptionTile extends StatelessWidget {
                       ),
                       const SizedBox(height: DonySpacing.xxs),
                       Text(
-                        '${country.zone.label} · ${country.currency.code} · ${country.currency.symbol}',
+                        '${countryZoneLabel(l, country.zone)} · ${country.currency.code} · ${country.currency.symbol}', // i18n-ignore (format)
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),

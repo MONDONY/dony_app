@@ -643,8 +643,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(
         const AuthError(
           NetworkException(
-            'Impossible de démarrer la navigation sans compte. '
-            'Vérifiez votre connexion.',
+            'Guest session failed',
             code: 'guest-session-failed',
           ),
         ),
@@ -711,7 +710,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // utilisateurs. `AppLog` reste no-op sans DSN Sentry et ne lève jamais.
       // Ni jeton ni identifiant : seul le code métier est journalisé.
       AppLog.warn(
-        'Réclamation des données invité impossible',
+        'Réclamation des données invité impossible', // i18n-ignore
         data: {'reason': reason},
       );
       unawaited(
@@ -750,18 +749,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AppException _friendlyError(Object e) {
     if (e is AppException) return e;
     if (e is DioException) return unwrapDioError(e);
-    if (e.toString().contains('Ce numéro est déjà associé')) {
+    const phoneTakenMarker = 'Ce numéro est déjà associé'; // i18n-ignore
+    if (e.toString().contains(phoneTakenMarker)) {
       // `phone-already-exists` est l'entrée du catalogue ; l'ancien code
       // `phone-already-registered` n'y figurait pas et l'écran affichait
       // « Erreur réseau » à la place du vrai motif.
       return const NetworkException(
-        'Ce numéro est déjà associé à un compte',
+        'Phone already registered',
         code: 'phone-already-exists',
       );
     }
-    return const NetworkException(
-      'Une erreur est survenue. Réessayez.',
-      code: 'auth-generic-error',
-    );
+    return const NetworkException('Auth error', code: 'auth-generic-error');
   }
 }

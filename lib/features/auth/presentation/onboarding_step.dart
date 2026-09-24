@@ -6,6 +6,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -58,12 +59,12 @@ enum OnboardingStep {
   };
 
   /// Nom montré à l'utilisateur (jauge du parcours, carte de reprise).
-  String get displayLabel => switch (this) {
-    consent => 'Confidentialité',
-    country => 'Pays',
-    identity => 'Identité',
-    personalInfo => 'Vos infos',
-    payouts => 'Paiements',
+  String label(AppLocalizations l) => switch (this) {
+    consent => l.authStepConsent,
+    country => l.authStepCountry,
+    identity => l.authStepIdentity,
+    personalInfo => l.authStepPersonalInfo,
+    payouts => l.authStepPayouts,
   };
 }
 

@@ -18,6 +18,21 @@ Set<String> _placeholders(String message) =>
 /// Toute nouvelle entrée doit être justifiée en commentaire.
 const _sameInBothLanguages = <String>{
   'commonOk', // « OK » se dit pareil
+  'authEmailStepLabel', // « Email » se dit pareil
+  'authOnboardingDestinationsEyebrow', // « Destinations » se dit pareil
+  // Noms propres identiques en français et en anglais.
+  'countryNameFr',
+  'countryNameLu',
+  'countryNamePt',
+  'countryNameCa',
+  'countryNameBf',
+  'countryNameCi',
+  'countryNameMl',
+  'countryNameNe',
+  'countryNameTg',
+  'countryNameCg',
+  'countryNameGa',
+  'countryZoneEurope',
 };
 
 void main() {

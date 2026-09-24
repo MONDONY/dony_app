@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
@@ -335,5 +336,14 @@ void main() {
         expect(find.byType(PhoneAuthScreen), findsOneWidget);
       },
     );
+  });
+
+  testWidgets('affiche l\'écran en anglais', (tester) async {
+    useEnglish();
+    await _pump(tester, mockAuthBloc);
+
+    expect(find.text('Get SMS code'), findsOneWidget);
+    expect(find.text('Your number'), findsOneWidget);
+    expect(find.text('Continue with an email address'), findsOneWidget);
   });
 }

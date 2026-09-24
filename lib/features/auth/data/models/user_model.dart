@@ -1,3 +1,4 @@
+import 'package:dony/l10n/l10n.dart';
 import 'package:equatable/equatable.dart';
 
 class UserModel extends Equatable {
@@ -185,7 +186,7 @@ class UserModel extends Equatable {
     ].where((p) => p != null && p.isNotEmpty).join(' ');
     if (parts.isNotEmpty) return parts;
     if (username != null && username!.isNotEmpty) return username!;
-    return 'Utilisateur';
+    return AppL10n.current.authUserFallbackName;
   }
 
   String get initials {

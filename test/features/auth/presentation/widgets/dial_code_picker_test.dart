@@ -3,6 +3,8 @@ import 'package:dony/features/auth/presentation/widgets/dial_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   Future<PhoneCountry?> pump(
     WidgetTester tester, {
@@ -88,6 +90,25 @@ void main() {
       expect(find.text('Canada (+1)'), findsOneWidget);
       expect(find.text('États-Unis (+1)'), findsOneWidget);
       expect(find.byType(ListTile), findsNWidgets(2));
+    });
+
+    testWidgets('en anglais, le message vide et la recherche bilingue', (
+      tester,
+    ) async {
+      useEnglish();
+      await pump(tester);
+      await tester.enterText(search(), 'zzz');
+      await tester.pumpAndSettle();
+      expect(find.text('No matching country'), findsOneWidget);
+
+      await tester.enterText(search(), 'germany');
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Germany'), findsOneWidget);
+
+      // Le nom français de référence trouve toujours le pays.
+      await tester.enterText(search(), 'allemagne');
+      await tester.pumpAndSettle();
+      expect(find.text('Germany (+49)'), findsOneWidget);
     });
   });
 }

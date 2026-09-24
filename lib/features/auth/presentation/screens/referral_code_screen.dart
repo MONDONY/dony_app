@@ -7,6 +7,7 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -147,10 +148,14 @@ class _FormView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AuthFlowHeader.gauge(segments: progress.segments, label: 'Parrainage'),
+        AuthFlowHeader.gauge(
+          segments: progress.segments,
+          label: l.authReferralGaugeLabel,
+        ),
         const SizedBox(height: DonySpacing.md),
         Expanded(
           child: SingleChildScrollView(
@@ -159,20 +164,18 @@ class _FormView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const AuthIntroCard.compact(
+                AuthIntroCard.compact(
                   iconAsset: 'gift',
-                  title: 'Tu as été invité par un ami ?',
-                  body:
-                      'Entre son code pour qu’il soit récompensé à ta première livraison.',
-                  footnote:
-                      'Cette étape est facultative. Tu peux entrer dans Yadony sans code.',
+                  title: l.authReferralTitle,
+                  body: l.authReferralBody,
+                  footnote: l.authReferralFootnote,
                 ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
                 const SizedBox(height: DonySpacing.md),
                 _ReferralActionPanel(
                   child: DonyTextField(
                     controller: ctrl,
-                    label: 'Code parrain',
-                    hint: 'Ex : JEAN0234',
+                    label: l.authReferralCodeLabel,
+                    hint: l.authReferralCodeHint,
                   ),
                 ).animate().fadeIn(delay: 120.ms, duration: 300.ms),
               ],
@@ -185,7 +188,7 @@ class _FormView extends StatelessWidget {
           primary: ValueListenableBuilder<bool>(
             valueListenable: isNotEmpty,
             builder: (context, hasText, _) => DonyButton(
-              label: 'Appliquer le code',
+              label: l.authReferralApply,
               iconAsset: 'gift',
               isLoading: isLoading,
               onPressed: hasText && !isLoading ? onApply : null,
@@ -237,23 +240,25 @@ class _SuccessView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AuthFlowHeader.gauge(segments: progress.segments, label: 'Parrainage'),
+        AuthFlowHeader.gauge(
+          segments: progress.segments,
+          label: l.authReferralGaugeLabel,
+        ),
         const SizedBox(height: DonySpacing.md),
         Expanded(
           child: SingleChildScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: const EdgeInsets.only(bottom: DonySpacing.base),
             child:
-                const AuthIntroCard(
+                AuthIntroCard(
                       iconAsset: 'circle-check',
-                      title: 'Code appliqué !',
-                      body:
-                          'Ton ami sera récompensé dès que tu complètes ta première livraison.',
-                      footnote:
-                          'Ton compte Yadony est prêt. Tu peux commencer à rechercher, envoyer ou suivre tes colis.',
+                      title: l.authReferralSuccessTitle,
+                      body: l.authReferralSuccessBody,
+                      footnote: l.authReferralSuccessFootnote,
                     )
                     .animate()
                     .fadeIn(duration: 300.ms)
@@ -266,7 +271,7 @@ class _SuccessView extends StatelessWidget {
         ),
         AuthFlowActions(
           primary: DonyButton(
-            label: 'Continuer vers l\'accueil',
+            label: l.authReferralContinueHome,
             iconAsset: 'arrow-right',
             onPressed: onContinue,
             variant: DonyButtonVariant.success,

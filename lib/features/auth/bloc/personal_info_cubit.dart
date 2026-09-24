@@ -25,10 +25,9 @@ class PersonalInfoSuccess extends PersonalInfoState {
 }
 
 class PersonalInfoError extends PersonalInfoState {
-  const PersonalInfoError(this.message);
-  final String message;
+  const PersonalInfoError();
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [];
 }
 
 /// Étape « Vos informations » du parcours d'onboarding : le nom légal, et
@@ -70,11 +69,7 @@ class PersonalInfoCubit extends Cubit<PersonalInfoState> {
       );
       emit(const PersonalInfoSuccess());
     } catch (_) {
-      emit(
-        const PersonalInfoError(
-          'Impossible d\'enregistrer ces informations. Réessayez.',
-        ),
-      );
+      emit(const PersonalInfoError());
     }
   }
 

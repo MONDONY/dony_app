@@ -14,6 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class _MockCubit extends MockCubit<PersonalInfoState>
     implements PersonalInfoCubit {}
 
@@ -229,5 +231,16 @@ void main() {
         expect(find.text('Parrainage extra=SN'), findsOneWidget);
       },
     );
+  });
+
+  testWidgets('en anglais, le titre et le nom du pays sont traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(_wrap(cubit, authBloc, country: 'SN'));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Your details'), findsOneWidget);
+    expect(find.text('Senegal'), findsOneWidget);
   });
 }
