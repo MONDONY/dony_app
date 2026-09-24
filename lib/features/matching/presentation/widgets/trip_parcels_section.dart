@@ -81,7 +81,7 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Colis dans le trajet',
+          context.l10n.tripOwnerParcelsSectionTitle,
           style: tt.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
             color: cs.onSurface,
@@ -109,11 +109,11 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
               });
 
               if (embarked.isEmpty) {
-                return const DonyEmptyState(
+                return DonyEmptyState(
                   iconAsset: 'inbox',
-                  title: 'Aucun colis embarqué',
-                  description: 'Les colis acceptés apparaîtront ici.',
-                  padding: EdgeInsets.symmetric(vertical: DonySpacing.xl),
+                  title: context.l10n.tripOwnerNoParcelsMessage,
+                  description: context.l10n.tripOwnerParcelsEmptyDescription,
+                  padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),
                 );
               }
 
@@ -152,12 +152,17 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
                           onSelected: _onFilter,
                           chips: [
                             StatusChipData<String?>(
-                              label: 'Tous',
+                              label: context.l10n.tripOwnerParcelsFilterAll,
                               value: null,
                               count: embarked.length,
                             ),
                             for (final st in present)
-                              _statusFilterChip(st, counts[st]!, cs),
+                              _statusFilterChip(
+                                st,
+                                counts[st]!,
+                                cs,
+                                context.l10n,
+                              ),
                           ],
                         ),
                         const SizedBox(height: DonySpacing.md),
@@ -199,7 +204,10 @@ class _ColisRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final content = bid.contentCategory ?? bid.description ?? 'Colis';
+    final content =
+        bid.contentCategory ??
+        bid.description ??
+        context.l10n.tripOwnerParcelsDefaultContent;
     final sender = bid.senderDisplayName(context.l10n);
     final weight = _weightLabel;
 
@@ -288,31 +296,35 @@ const _kStatusOrder = <String>[
   'CANCELLED',
 ];
 
-/// Libellé FR + couleur d'un statut de colis embarqué.
-(String, Color) _statusMeta(String status, ColorScheme cs) => switch (status) {
-  'ACCEPTED' => ('Accepté', cs.primary),
+/// Libellé traduit + couleur d'un statut de colis embarqué.
+(String, Color) _statusMeta(
+  String status,
+  ColorScheme cs,
+  AppLocalizations l,
+) => switch (status) {
+  'ACCEPTED' => (l.tripOwnerParcelsStatusAccepted, cs.primary),
   // Voyageur vient d'accepter une offre mobile money, en attente du
   // séquestre par l'expéditeur (30 min) — jamais la chaîne brute anglaise
   // (régression staging).
-  'AWAITING_PAYMENT' => ('Paiement en attente', cs.warning),
-  'HANDED_OVER' => ('Remis', cs.warning),
-  'IN_TRANSIT' => ('En transit', cs.info),
-  // Même libellé/couleur que le _StatusDot de bid_card.dart.
-  'ARRIVED' => ('Arrivé', cs.info),
-  'COMPLETED' => ('Livré', cs.success),
-  'NO_SHOW' => ('Absent', cs.error),
-  'PARCEL_REFUSED' => ('Refusé', cs.error),
-  'CANCELLED' => ('Annulé', cs.error),
+  'AWAITING_PAYMENT' => (l.tripOwnerParcelsStatusAwaitingPayment, cs.warning),
+  'HANDED_OVER' => (l.tripOwnerParcelsStatusHandedOver, cs.warning),
+  'IN_TRANSIT' => (l.tripOwnerParcelsStatusInTransit, cs.info),
+  'ARRIVED' => (l.tripOwnerParcelsStatusArrived, cs.info),
+  'COMPLETED' => (l.tripOwnerParcelsStatusDelivered, cs.success),
+  'NO_SHOW' => (l.tripOwnerParcelsStatusNoShow, cs.error),
+  'PARCEL_REFUSED' => (l.tripOwnerParcelsStatusParcelRefused, cs.error),
+  'CANCELLED' => (l.tripOwnerParcelsStatusCancelled, cs.error),
   _ => (status, cs.onSurfaceVariant),
 };
 
-/// Chip de filtre d'un statut : libellé FR + compteur + pastille colorée.
+/// Chip de filtre d'un statut : libellé traduit + compteur + pastille colorée.
 StatusChipData<String?> _statusFilterChip(
   String status,
   int count,
   ColorScheme cs,
+  AppLocalizations l,
 ) {
-  final (label, color) = _statusMeta(status, cs);
+  final (label, color) = _statusMeta(status, cs, l);
   return StatusChipData<String?>(
     label: label,
     value: status,
@@ -321,7 +333,7 @@ StatusChipData<String?> _statusFilterChip(
   );
 }
 
-/// Petit chip de statut traduit en français pour un colis embarqué.
+/// Petit chip de statut traduit pour un colis embarqué.
 class _StatusChip extends StatelessWidget {
   const _StatusChip({required this.status});
 
@@ -330,7 +342,7 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final (label, color) = _statusMeta(status, cs);
+    final (label, color) = _statusMeta(status, cs, context.l10n);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.sm,

@@ -187,7 +187,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: const DonyAppBar(title: 'Trajet'),
+      appBar: DonyAppBar(title: context.l10n.listingHeroTripLabel),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, _) {
           final a = _current;
@@ -216,7 +216,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
             if (state is AnnouncementDeleted) {
               DonySnackbar.show(
                 context,
-                message: 'Trajet supprimé',
+                message: context.l10n.tripOwnerDeletedSnackbar,
                 type: DonySnackbarType.success,
               );
               if (context.mounted) {
@@ -225,7 +225,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
             } else if (state is AnnouncementNotFound) {
               DonySnackbar.show(
                 context,
-                message: 'Cette annonce n\'existe plus',
+                message: context.l10n.listingAnnouncementGoneMessage,
                 type: DonySnackbarType.warning,
               );
               if (context.mounted) {
@@ -238,28 +238,33 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               context.read<AnnouncementBloc>().add(
                 AnnouncementDetailRequested(widget.announcementId),
               );
+              final l = context.l10n;
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (routeContext) => DonySuccessScreen(
                     mascotteType: DonyMascotteType.succes,
-                    title: 'Trajet publié !',
-                    subtitle:
-                        'Ton trajet ${state.announcement.departureCity} → ${state.announcement.arrivalCity} est en ligne.',
-                    ctaLabel: 'Continuer',
+                    title: l.tripOwnerPublishedTitle,
+                    subtitle: l.tripOwnerPublishedSubtitle(
+                      state.announcement.departureCity,
+                      state.announcement.arrivalCity,
+                    ),
+                    ctaLabel: l.commonContinue,
                     ctaVariant: DonyButtonVariant.accent,
                     onCta: () => Navigator.of(
                       routeContext,
                     ).pop(), // revient au détail, déjà rafraîchi
                     analyticsContext: 'trip_draft_published',
-                    secondaryLabel: 'Partager mon trajet',
+                    secondaryLabel: l.tripOwnerShareMyTrip,
                     onSecondary: () => unawaited(
                       Share.share(
-                        '✈️ Je voyage ${state.announcement.departureCity} → '
-                        '${state.announcement.arrivalCity} le '
-                        '${DateFormat('d MMMM', AppL10n.localeName).format(state.announcement.departureDate)} '
-                        'avec de la place dans mes bagages !\n'
-                        'Réserve tes kilos sur Yadony 📦\n'
-                        '$posterShareBaseUrl/annonce/${state.announcement.id}',
+                        l.tripOwnerShareMessage(
+                          state.announcement.departureCity,
+                          state.announcement.arrivalCity,
+                          DateFormat.MMMMd(
+                            l.localeName,
+                          ).format(state.announcement.departureDate),
+                          '$posterShareBaseUrl/annonce/${state.announcement.id}',
+                        ),
                         sharePositionOrigin: sharePositionOriginFor(
                           routeContext,
                         ),
@@ -307,11 +312,10 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (a.status == 'DRAFT') ...[
-                    const DonyStatusBanner(
+                    DonyStatusBanner(
                       type: DonyStatusBannerType.warning,
-                      title: 'Ce trajet est un brouillon',
-                      message:
-                          'Il est invisible pour les expéditeurs tant qu\'il n\'est pas publié.',
+                      title: context.l10n.tripOwnerDraftBannerTitle,
+                      message: context.l10n.tripOwnerDraftBannerMessage,
                     ),
                     const SizedBox(height: DonySpacing.md),
                   ],
@@ -334,8 +338,8 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                         padding: const EdgeInsets.only(top: DonySpacing.md),
                         child: DonyButton(
                           label: isEditing
-                              ? 'Modifier les instructions de retrait'
-                              : 'Arrivé à destination',
+                              ? context.l10n.tripOwnerEditInstructionsButton
+                              : context.l10n.tripOwnerMarkArrivedButton,
                           variant: isEditing
                               ? DonyButtonVariant.secondary
                               : DonyButtonVariant.primary,
@@ -380,13 +384,13 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
     BuildContext context,
     String announcementId,
   ) async {
+    final l = context.l10n;
     final confirmed = await DonyDialog.show(
       context,
-      title: 'Suppression impossible',
-      message:
-          "Un colis est déjà accepté sur ce trajet. Pour le retirer, vous devez d'abord annuler le voyage : l'expéditeur sera remboursé automatiquement.",
-      confirmLabel: 'Annuler le voyage',
-      cancelLabel: 'Fermer',
+      title: l.tripOwnerDeleteBlockedTitle,
+      message: l.tripOwnerDeleteBlockedMessage,
+      confirmLabel: l.tripOwnerCancelTripButton,
+      cancelLabel: l.commonClose,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'calendar-x',
     );
@@ -421,7 +425,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   Future<void> _onProLimitReached(BuildContext context, String message) async {
     final goPro = await showProLimitReachedDialog(
       context,
-      title: 'Limite mensuelle atteinte',
+      title: context.l10n.tripOwnerProLimitTitle,
       message: message,
     );
     if (goPro && context.mounted) {

@@ -20,6 +20,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
@@ -418,5 +420,24 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('home'), findsOneWidget);
+  });
+
+  group('traductions', () {
+    testWidgets('en anglais : titre et état vide traduits', (tester) async {
+      useEnglish();
+      // Même pattern que le test fr ci-dessus : état chargé dès le 1er frame,
+      // un seul pump(durée) draine l'animation flutter_animate sans laisser
+      // de timer en vol après dispose.
+      final loaded = BidListLoaded([_makeBid(status: 'ACCEPTED')]);
+      when(() => bidBloc.state).thenReturn(loaded);
+      whenListen(bidBloc, const Stream<BidState>.empty(), initialState: loaded);
+
+      await _pump(tester, bidBloc, acceptanceBloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('To review'), findsOneWidget);
+      expect(find.textContaining('No requests to review'), findsOneWidget);
+      expect(find.text('Aucune demande à traiter'), findsNothing);
+    });
   });
 }

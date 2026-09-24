@@ -15,6 +15,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
@@ -737,5 +739,45 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('parent'), findsOneWidget);
+  });
+
+  group('traductions', () {
+    testWidgets(
+      'en anglais : bouton Try again (BidListErrorView, bid_list_chrome.dart)',
+      (tester) async {
+        useEnglish();
+        const error = NetworkException('Erreur réseau');
+        when(() => bidBloc.state).thenReturn(BidError(error));
+        whenListen(
+          bidBloc,
+          Stream<BidState>.fromIterable([BidError(error)]),
+          initialState: BidError(error),
+        );
+
+        await _pump(tester, bidBloc);
+        await tester.pump();
+
+        expect(find.text('Try again'), findsOneWidget);
+        expect(find.text('Réessayer'), findsNothing);
+      },
+    );
+
+    testWidgets('en anglais : chips de statut, recherche et scanner traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      final ctrl = _wireStates(bidBloc, tester);
+      addTearDown(ctrl.close);
+
+      await _pump(tester, bidBloc);
+      ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+      await tester.pumpAndSettle();
+
+      expect(find.text('All (1)'), findsOneWidget);
+      expect(find.text('Active (1)'), findsOneWidget);
+      expect(find.text('Closed (0)'), findsOneWidget);
+      expect(find.text('Name or tracking number…'), findsOneWidget);
+      expect(find.text('Scan QR code'), findsOneWidget);
+    });
   });
 }

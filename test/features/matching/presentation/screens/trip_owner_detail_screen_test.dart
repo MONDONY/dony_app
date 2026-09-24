@@ -31,6 +31,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/stripe_account_test_doubles.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
@@ -556,6 +557,51 @@ void main() {
 
     expect(find.byType(TripOwnerDetailScreen), findsOneWidget);
     expect(find.text('Faire une demande'), findsNothing);
+  });
+
+  group('traductions', () {
+    testWidgets('en anglais : AppBar + bouton d\'arrivée traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      final announcement = _makeAnnouncement();
+      when(
+        () => annBloc.state,
+      ).thenReturn(AnnouncementDetailLoaded(announcement));
+      whenListen(
+        annBloc,
+        Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
+        initialState: AnnouncementDetailLoaded(announcement),
+      );
+
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
+
+      final bids = [_makeBid(status: 'IN_TRANSIT')];
+      when(() => bidBloc.state).thenReturn(BidListLoaded(bids));
+      whenListen(
+        bidBloc,
+        Stream<BidState>.value(BidListLoaded(bids)),
+        initialState: BidListLoaded(bids),
+      );
+
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Trip'), findsOneWidget);
+      expect(find.text('Arrived at destination'), findsOneWidget);
+      expect(find.text('Trajet'), findsNothing);
+    });
   });
 
   group('tripArrivalCtaFor', () {

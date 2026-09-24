@@ -16,6 +16,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockAnnouncementBloc
     extends MockBloc<AnnouncementEvent, AnnouncementState>
     implements AnnouncementBloc {}
@@ -232,5 +234,19 @@ void main() {
     expect(button.isLoading, isTrue);
     expect(button.label, 'Publication…');
     expect(button.onPressed, isNull);
+  });
+
+  group('traductions', () {
+    testWidgets('en anglais : titre, capacité réservée et bouton traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await open(tester);
+
+      expect(find.text('Open remaining kg'), findsOneWidget);
+      expect(find.text('12 kg locked'), findsOneWidget);
+      expect(find.text('Publish'), findsOneWidget);
+      expect(find.text('Ouvrir les kg restants'), findsNothing);
+    });
   });
 }

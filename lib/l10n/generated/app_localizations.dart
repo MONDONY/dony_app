@@ -12770,6 +12770,786 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Publiés'**
   String get shipmentTabPubliesLabel;
+
+  /// Filtre « à traiter » de l'écran Demandes reçues (TravelerBidFilterL10n.label, traveler_bids_labels.dart, appelée depuis demandes_screen.dart) ; réutilisée telle quelle pour le bouton/pill de bid_list_screen.dart et le titre de pending_bids_screen.dart (même préfixe bidList, texte identique).
+  ///
+  /// In fr, this message translates to:
+  /// **'À traiter'**
+  String get bidListFilterToReview;
+
+  /// Filtre « acceptées » (TravelerBidFilterL10n.label, traveler_bids_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Acceptées'**
+  String get bidListFilterAccepted;
+
+  /// Filtre « terminées » (TravelerBidFilterL10n.label, traveler_bids_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminées'**
+  String get bidListFilterCompleted;
+
+  /// Semantics label du bouton pill « À traiter » de l'app bar (bid_list_screen.dart, remplace bid_list_screen.dart:283). Ruling R41 : one{} au lieu de =1{} en français, la catégorie CLDR fr couvre 0 et 1.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, one{{count} demande à traiter} other{{count} demandes à traiter}}'**
+  String bidListRequestsToReview(int count);
+
+  /// Titre de l'état vide de la liste « Acceptées » (bid_list_screen.dart _AcceptedList) ; réutilisé dans demandes_screen.dart pour le filtre « Acceptées » (même préfixe, texte identique).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande acceptée'**
+  String get bidListEmptyAcceptedTitle;
+
+  /// Description de l'état vide ci-dessus (bid_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous n\'avez accepté aucune demande pour l\'instant.'**
+  String get bidListEmptyAcceptedDescription;
+
+  /// Hint du champ de recherche (bid_list_screen.dart _BidSearchField).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom ou n° de suivi…'**
+  String get bidListSearchHint;
+
+  /// Chip de filtre « Tous » (bid_list_screen.dart _StatusFilterChips).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous ({count})'**
+  String bidListChipAll(int count);
+
+  /// Chip de filtre « Actifs » (bid_list_screen.dart _StatusFilterChips).
+  ///
+  /// In fr, this message translates to:
+  /// **'Actifs ({count})'**
+  String bidListChipActive(int count);
+
+  /// Chip de filtre « Clôturés » (bid_list_screen.dart _StatusFilterChips).
+  ///
+  /// In fr, this message translates to:
+  /// **'Clôturés ({count})'**
+  String bidListChipClosed(int count);
+
+  /// Titre de l'état vide recherche sans résultat (bid_list_screen.dart _SearchEmptyState) ; réutilisé dans demandes_screen.dart _NoSearchResult (même préfixe, texte identique).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun résultat'**
+  String get bidListNoResultTitle;
+
+  /// Titre de l'état vide sans recherche active (bid_list_screen.dart _SearchEmptyState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun envoi'**
+  String get bidListEmptyShipmentsTitle;
+
+  /// Description avec la recherche en cours (bid_list_screen.dart _SearchEmptyState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun envoi ne correspond à « {query} ».'**
+  String bidListNoResultDescription(String query);
+
+  /// Description sans recherche active (bid_list_screen.dart _SearchEmptyState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun envoi dans cette catégorie.'**
+  String get bidListEmptyShipmentsDescription;
+
+  /// Chip scanner de l'app bar (bid_list_screen.dart _ScannerChipButton).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire le QR'**
+  String get bidListScanChipLabel;
+
+  /// Bandeau d'offres masquées par le filtre prix minimum (bid_list_chrome.dart HiddenBidsBanner, remplace bid_list_chrome.dart:81). Ruling R41 : one{} au lieu de =1{} en français.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, one{{count} offre masquée (prix minimum actif)} other{{count} offres masquées (prix minimum actif)}}'**
+  String bidListHiddenOffers(int count);
+
+  /// Snackbar de succès d'acceptation (pending_bids_screen.dart, demandes_screen.dart — même préfixe, texte identique).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande acceptée !'**
+  String get bidListAcceptedSnackbar;
+
+  /// Snackbar de refus (pending_bids_screen.dart, demandes_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande refusée.'**
+  String get bidListRejectedSnackbar;
+
+  /// Snackbar de suppression (pending_bids_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande supprimée.'**
+  String get bidListDeletedSnackbar;
+
+  /// Titre de la sheet « paiement carte refusé » (pending_bids_screen.dart _showCardDeclinedSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement refusé'**
+  String get bidListCardDeclinedSheetTitle;
+
+  /// Indication sous le message d'erreur de la sheet paiement refusé (pending_bids_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changez votre carte de commission pour accepter cette demande.'**
+  String get bidListCardDeclinedHint;
+
+  /// Bouton de la sheet « paiement carte refusé » (pending_bids_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer ma carte de commission'**
+  String get bidListChangeCommissionCardButton;
+
+  /// Titre de la sheet solde insuffisant (pending_bids_screen.dart, demandes_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde insuffisant'**
+  String get bidListWalletInsufficientTitle;
+
+  /// Indication de la sheet solde insuffisant (pending_bids_screen.dart, demandes_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharge ton portefeuille ou paie la commission directement par carte.'**
+  String get bidListWalletInsufficientHint;
+
+  /// Bouton de recharge de la sheet solde insuffisant (pending_bids_screen.dart, demandes_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharger mon portefeuille'**
+  String get bidListWalletTopupButton;
+
+  /// Bouton paiement carte de la sheet solde insuffisant (pending_bids_screen.dart, demandes_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer par carte'**
+  String get bidListPayByCardButton;
+
+  /// Bouton ajout de carte de la sheet solde insuffisant (pending_bids_screen.dart, demandes_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une carte'**
+  String get bidListAddCardButton;
+
+  /// Titre du dialogue de refus d'une demande (pending_bids_screen.dart, demandes_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser cette demande ?'**
+  String get bidListDeclineDialogTitle;
+
+  /// Message du dialogue de refus d'une demande (pending_bids_screen.dart, demandes_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur sera informé. Cette action est irréversible.'**
+  String get bidListDeclineDialogMessage;
+
+  /// Bouton « Refuser » (bid_card.dart _PendingActions) ; réutilisé comme confirmLabel du dialogue de refus (pending_bids_screen.dart, demandes_screen.dart — même préfixe).
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser'**
+  String get bidListDeclineButton;
+
+  /// Titre du dialogue de suppression d'une demande refusée (pending_bids_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer cette demande ?'**
+  String get bidListDeleteDialogTitle;
+
+  /// Message du dialogue de suppression (pending_bids_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette demande refusée sera retirée définitivement de votre liste.'**
+  String get bidListDeleteDialogMessage;
+
+  /// Titre de l'app bar avec compteur (pending_bids_screen.dart) ; le cas count == 0 réutilise bidListFilterToReview.
+  ///
+  /// In fr, this message translates to:
+  /// **'À traiter ({count})'**
+  String bidListPendingTitleWithCount(int count);
+
+  /// État vide de l'écran « À traiter » (pending_bids_screen.dart) ; réutilisé dans demandes_screen.dart pour le filtre « À traiter » (même préfixe, texte identique).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande à traiter'**
+  String get bidListEmptyPendingTitle;
+
+  /// Description de l'état vide « À traiter » (pending_bids_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Partagez votre annonce pour recevoir des demandes.'**
+  String get bidListEmptyPendingDescription;
+
+  /// Titre de l'app bar (demandes_screen.dart). Clé dédiée (R40) : le texte est identique à shellRequestsTitle mais le préfixe shell n'est pas partagé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes'**
+  String get bidListDemandesTitle;
+
+  /// Hint du champ de recherche (demandes_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Expéditeur, n° de suivi…'**
+  String get bidListDemandesSearchHint;
+
+  /// Description de l'état « Aucun résultat » (demandes_screen.dart _NoSearchResult).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande ne correspond à votre recherche.'**
+  String get bidListNoSearchResultDescription;
+
+  /// Description du filtre « À traiter » vide (demandes_screen.dart _EmptyForFilter).
+  ///
+  /// In fr, this message translates to:
+  /// **'Publiez un trajet pour recevoir des demandes d\'expéditeurs.'**
+  String get bidListEmptyNoRequestsDescription;
+
+  /// Description du filtre « Acceptées » vide (demandes_screen.dart _EmptyForFilter).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les demandes que vous acceptez apparaîtront ici.'**
+  String get bidListEmptyAcceptedArchiveDescription;
+
+  /// Titre du filtre « Terminées » vide (demandes_screen.dart _EmptyForFilter).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande terminée'**
+  String get bidListEmptyCompletedTitle;
+
+  /// Description du filtre « Terminées » vide (demandes_screen.dart _EmptyForFilter).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos demandes clôturées seront archivées ici.'**
+  String get bidListEmptyCompletedDescription;
+
+  /// Snackbar de succès à la suppression du trajet (trip_owner_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet supprimé'**
+  String get tripOwnerDeletedSnackbar;
+
+  /// Titre de l'écran de succès après publication d'un brouillon (trip_owner_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet publié !'**
+  String get tripOwnerPublishedTitle;
+
+  /// Sous-titre de l'écran de succès après publication (trip_owner_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton trajet {dep} → {arr} est en ligne.'**
+  String tripOwnerPublishedSubtitle(String dep, String arr);
+
+  /// Bouton secondaire de partage de l'écran de succès (trip_owner_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager mon trajet'**
+  String get tripOwnerShareMyTrip;
+
+  /// Message partagé après publication d'un brouillon (trip_owner_detail_screen.dart). date formatée en DateFormat.MMMMd(locale) ; url = donnée non traduite.
+  ///
+  /// In fr, this message translates to:
+  /// **'✈️ Je voyage {dep} → {arr} le {date} avec de la place dans mes bagages !\nRéserve tes kilos sur Yadony 📦\n{url}'**
+  String tripOwnerShareMessage(String dep, String arr, String date, String url);
+
+  /// Titre du bandeau brouillon (trip_owner_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet est un brouillon'**
+  String get tripOwnerDraftBannerTitle;
+
+  /// Message du bandeau brouillon (trip_owner_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Il est invisible pour les expéditeurs tant qu\'il n\'est pas publié.'**
+  String get tripOwnerDraftBannerMessage;
+
+  /// Bouton CTA d'arrivée (trip_owner_detail_screen.dart) ; réutilisé comme titre de ArrivalInstructionsBottomSheet en mode création (arrival_instructions_bottom_sheet.dart, même préfixe tripOwner, texte identique).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé à destination'**
+  String get tripOwnerMarkArrivedButton;
+
+  /// Bouton CTA d'édition des instructions déjà arrivées (trip_owner_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier les instructions de retrait'**
+  String get tripOwnerEditInstructionsButton;
+
+  /// Titre du dialogue de suppression bloquée par un colis accepté (trip_owner_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suppression impossible'**
+  String get tripOwnerDeleteBlockedTitle;
+
+  /// Message du dialogue de suppression bloquée (trip_owner_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un colis est déjà accepté sur ce trajet. Pour le retirer, vous devez d\'abord annuler le voyage : l\'expéditeur sera remboursé automatiquement.'**
+  String get tripOwnerDeleteBlockedMessage;
+
+  /// confirmLabel du dialogue de suppression bloquée (trip_owner_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler le voyage'**
+  String get tripOwnerCancelTripButton;
+
+  /// Titre du dialogue de limite mensuelle PRO atteinte (trip_owner_detail_screen.dart). Clé dédiée (R40) : distincte de tripPublishMonthlyLimitTitle (préfixe non partagé).
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite mensuelle atteinte'**
+  String get tripOwnerProLimitTitle;
+
+  /// Libellé du montant, en majuscules dans le code (bid_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'MONTANT'**
+  String get bidListCardAmountLabel;
+
+  /// Pastille de poids en mode grille tarifaire (bid_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Forfait'**
+  String get bidListCardFlatRateLabel;
+
+  /// Numéro de suivi affiché sous le nom de l'expéditeur (bid_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'N° {number}'**
+  String bidListCardTrackingNumberLabel(String number);
+
+  /// Bouton « Accepter » (bid_card.dart _PendingActions).
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter'**
+  String get bidListAcceptButton;
+
+  /// Bandeau paiement espèces en attente (bid_card.dart _PaymentHint).
+  ///
+  /// In fr, this message translates to:
+  /// **'💵 Paiement en espèces : en attente de votre réponse'**
+  String get bidListCashPaymentHint;
+
+  /// Bandeau paiement carte/mobile money déjà reçu, en attente de réponse (bid_card.dart _PaymentHint).
+  ///
+  /// In fr, this message translates to:
+  /// **'💳 Paiement reçu : en attente de votre réponse'**
+  String get bidListEscrowPaymentHint;
+
+  /// Statut compact du badge de bid (bid_card.dart _StatusDot). Clé dédiée (R40) : distincte des libellés ticketStatus…/shipmentBadge…, texte parfois identique, doublons acceptés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepté'**
+  String get bidListStatusAccepted;
+
+  /// Statut compact (bid_card.dart _StatusDot).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en attente'**
+  String get bidListStatusAwaitingPayment;
+
+  /// Statut compact (bid_card.dart _StatusDot).
+  ///
+  /// In fr, this message translates to:
+  /// **'En route'**
+  String get bidListStatusHandedOver;
+
+  /// Statut compact (bid_card.dart _StatusDot).
+  ///
+  /// In fr, this message translates to:
+  /// **'En transit'**
+  String get bidListStatusInTransit;
+
+  /// Statut compact (bid_card.dart _StatusDot).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé'**
+  String get bidListStatusArrived;
+
+  /// Statut compact (bid_card.dart _StatusDot).
+  ///
+  /// In fr, this message translates to:
+  /// **'Livré'**
+  String get bidListStatusDelivered;
+
+  /// Statut compact (bid_card.dart _StatusDot).
+  ///
+  /// In fr, this message translates to:
+  /// **'Absent'**
+  String get bidListStatusNoShow;
+
+  /// Statut compact (bid_card.dart _StatusDot).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis refusé'**
+  String get bidListStatusParcelRefused;
+
+  /// Statut compact (bid_card.dart _StatusDot). Orthographe américaine (R38).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulé'**
+  String get bidListStatusCancelled;
+
+  /// Tuile « Publier » (owner_action_grid.dart) ; réutilisée pour le libellé actif du bouton de OpenSurplusBottomSheet (même préfixe tripOwner, texte identique).
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier'**
+  String get tripOwnerPublishTile;
+
+  /// Tuile « Affiche » (owner_action_grid.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Affiche'**
+  String get tripOwnerPosterTile;
+
+  /// Tuile + confirmLabel « Dépublier » (owner_action_grid.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépublier'**
+  String get tripOwnerUnpublishTile;
+
+  /// Titre du dialogue de dépublication (owner_action_grid.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépublier ce trajet ?'**
+  String get tripOwnerUnpublishDialogTitle;
+
+  /// Message du dialogue de dépublication (owner_action_grid.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le trajet ne sera plus visible et restera dans vos brouillons.'**
+  String get tripOwnerUnpublishDialogMessage;
+
+  /// Tuile « Demandes » (owner_action_grid.dart). Clé dédiée (R40) : distincte de bidListDemandesTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes'**
+  String get tripOwnerRequestsTile;
+
+  /// Tooltip de la tuile « Demandes » désactivée (owner_action_grid.dart). Clé dédiée (R40) : distincte de bidListEmptyPendingTitle, texte identique, doublon accepté.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande à traiter'**
+  String get tripOwnerRequestsDisabledMessage;
+
+  /// Tuile « Colis » (owner_action_grid.dart), aussi valeur poussée comme titre à BidListScreen via extra['title'] (remplace le littéral en dur).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get tripOwnerParcelsTile;
+
+  /// Tooltip de la tuile « Colis » désactivée (owner_action_grid.dart) ; réutilisé comme titre de l'état vide de la section Colis (trip_parcels_section.dart, même préfixe, texte identique).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun colis embarqué'**
+  String get tripOwnerNoParcelsMessage;
+
+  /// Tooltip de la tuile « Modifier » désactivée (owner_action_grid.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifiable tant qu\'aucune demande'**
+  String get tripOwnerEditDisabledMessage;
+
+  /// Titre du dialogue de suppression du trajet (owner_action_grid.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer ce trajet ?'**
+  String get tripOwnerDeleteDialogTitle;
+
+  /// Message de suppression d'un trajet déjà annulé (owner_action_grid.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette action est irréversible. Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.'**
+  String get tripOwnerDeleteCancelledMessage;
+
+  /// Message de suppression d'un trajet actif (owner_action_grid.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.'**
+  String get tripOwnerDeleteActiveMessage;
+
+  /// Tuile « Annuler » quand le trajet actif n'est plus supprimable (owner_action_grid.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get tripOwnerCancelTile;
+
+  /// Titre de la section colis embarqués (trip_parcels_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis dans le trajet'**
+  String get tripOwnerParcelsSectionTitle;
+
+  /// Description de l'état vide de la section (trip_parcels_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les colis acceptés apparaîtront ici.'**
+  String get tripOwnerParcelsEmptyDescription;
+
+  /// Chip de filtre « Tous » de la section colis embarqués (trip_parcels_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous'**
+  String get tripOwnerParcelsFilterAll;
+
+  /// Statut compact de la section colis embarqués (trip_parcels_section.dart _statusMeta). Clé dédiée (R40) : distincte de bidListStatusAccepted, texte identique, doublon accepté.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepté'**
+  String get tripOwnerParcelsStatusAccepted;
+
+  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en attente'**
+  String get tripOwnerParcelsStatusAwaitingPayment;
+
+  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remis'**
+  String get tripOwnerParcelsStatusHandedOver;
+
+  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  ///
+  /// In fr, this message translates to:
+  /// **'En transit'**
+  String get tripOwnerParcelsStatusInTransit;
+
+  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé'**
+  String get tripOwnerParcelsStatusArrived;
+
+  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  ///
+  /// In fr, this message translates to:
+  /// **'Livré'**
+  String get tripOwnerParcelsStatusDelivered;
+
+  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  ///
+  /// In fr, this message translates to:
+  /// **'Absent'**
+  String get tripOwnerParcelsStatusNoShow;
+
+  /// Statut compact (trip_parcels_section.dart _statusMeta).
+  ///
+  /// In fr, this message translates to:
+  /// **'Refusé'**
+  String get tripOwnerParcelsStatusParcelRefused;
+
+  /// Statut compact (trip_parcels_section.dart _statusMeta). Orthographe américaine (R38).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulé'**
+  String get tripOwnerParcelsStatusCancelled;
+
+  /// Repli de contenu quand le bid n'a ni catégorie ni description (trip_parcels_section.dart _ColisRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get tripOwnerParcelsDefaultContent;
+
+  /// Titre de la sheet (open_surplus_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir les kg restants'**
+  String get tripOwnerSurplusTitle;
+
+  /// Sous-titre de la sheet (open_surplus_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettez votre capacité libre à disposition du public'**
+  String get tripOwnerSurplusSubtitle;
+
+  /// Libellé du bouton pendant la publication (open_surplus_bottom_sheet.dart) ; l'état actif réutilise tripOwnerPublishTile.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publication…'**
+  String get tripOwnerSurplusPublishingButton;
+
+  /// Erreur du validateur kg quand le champ est vide/invalide (open_surplus_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez un nombre de kg'**
+  String get tripOwnerSurplusKgValidatorEmpty;
+
+  /// Erreur du validateur kg quand la valeur est < 1 (open_surplus_bottom_sheet.dart) — identique en anglais (chiffre + unité).
+  ///
+  /// In fr, this message translates to:
+  /// **'Minimum 1 kg'**
+  String get tripOwnerSurplusKgValidatorMin;
+
+  /// Snackbar de succès à l'ouverture du surplus (open_surplus_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité ouverte au public'**
+  String get tripOwnerSurplusOpenedSnackbar;
+
+  /// Libellé du bandeau de capacité réservée (open_surplus_bottom_sheet.dart _ReservedBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réservé à votre expéditeur'**
+  String get tripOwnerSurplusReservedLabel;
+
+  /// Valeur du bandeau de capacité réservée, {kg} déjà formaté (open_surplus_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} kg verrouillés'**
+  String tripOwnerSurplusReservedKgValue(String kg);
+
+  /// Libellé de section, en majuscules dans le code (open_surplus_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'KG À OUVRIR'**
+  String get tripOwnerSurplusKgSectionLabel;
+
+  /// Libellé de section, en majuscules dans le code (open_surplus_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'PRIX PAR KG'**
+  String get tripOwnerSurplusPriceSectionLabel;
+
+  /// Hint du champ kg à ouvrir (open_surplus_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. 8'**
+  String get tripOwnerSurplusKgHint;
+
+  /// Chip de prix « Autre » (open_surplus_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get tripOwnerSurplusOtherPriceChip;
+
+  /// Hint du champ de prix libre (open_surplus_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre prix'**
+  String get tripOwnerSurplusCustomPriceHint;
+
+  /// Erreur du validateur de prix libre (open_surplus_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix invalide'**
+  String get tripOwnerSurplusCustomPriceInvalid;
+
+  /// Texte d'avertissement en bas de la sheet (open_surplus_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Action définitive : une fois publiée, votre capacité libre devient visible dans la recherche et ne peut plus être refermée.'**
+  String get tripOwnerSurplusDisclaimerText;
+
+  /// Libellé de l'aperçu du prix public (open_surplus_bottom_sheet.dart _PublicPricePreview).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix affiché aux expéditeurs'**
+  String get tripOwnerSurplusPublicPriceLabel;
+
+  /// Titre de la sheet en mode édition, et titre statique du corps (arrival_instructions_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Instructions de retrait'**
+  String get tripOwnerArrivalEditingTitle;
+
+  /// Sous-titre de la sheet (arrival_instructions_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez où et comment récupérer le colis'**
+  String get tripOwnerArrivalSubtitle;
+
+  /// Bouton de confirmation en mode création (arrival_instructions_bottom_sheet.dart) ; le mode édition réutilise commonSave.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer l\'arrivée'**
+  String get tripOwnerArrivalConfirmButton;
+
+  /// Snackbar de succès au marquage d'arrivée (arrival_instructions_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet marqué comme arrivé'**
+  String get tripOwnerArrivedSnackbar;
+
+  /// Snackbar de succès à la mise à jour des instructions (arrival_instructions_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Instructions mises à jour'**
+  String get tripOwnerArrivalUpdatedSnackbar;
+
+  /// Label du champ en mode édition, obligatoire (arrival_instructions_bottom_sheet.dart) — identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'Instructions'**
+  String get tripOwnerArrivalFieldLabel;
+
+  /// Label du champ en mode création, optionnel (arrival_instructions_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Instructions (optionnel)'**
+  String get tripOwnerArrivalFieldLabelOptional;
+
+  /// Hint du champ de texte libre (arrival_instructions_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : Métro Châtelet, sortie 3'**
+  String get tripOwnerArrivalFieldHint;
+
+  /// Titre du dialogue d'annulation d'un bid par le voyageur (cancellation_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler cette demande ?'**
+  String get bidCancelDialogTitle;
+
+  /// Sous-titre du cas colis pas encore remis (cancellation_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur sera remboursé automatiquement.'**
+  String get bidCancelAcceptedSubtitle;
+
+  /// Message d'avertissement du cas colis déjà remis (cancellation_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis a déjà été remis. Vous devrez le restituer à l\'expéditeur sous 3 jours en saisissant le code de retour qu\'il vous communiquera.'**
+  String get bidCancelWarningMessage;
+
+  /// Note de remboursement du cas colis déjà remis (cancellation_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur sera intégralement remboursé. Si le paiement était en espèces, aucun mouvement d\'argent n\'a lieu.'**
+  String get bidCancelWarningRefundNote;
+
+  /// Hint du champ motif quand il est obligatoire (cancellation_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif de l\'annulation *'**
+  String get bidCancelReasonRequiredHint;
+
+  /// Hint du champ motif quand il est optionnel (cancellation_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif (optionnel)'**
+  String get bidCancelReasonOptionalHint;
+
+  /// Erreur affichée si le motif obligatoire est vide (cancellation_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif requis'**
+  String get bidCancelReasonRequiredError;
+
+  /// Bouton de fermeture sans annuler (cancellation_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder'**
+  String get bidCancelKeepButton;
+
+  /// Bouton de confirmation destructive (cancellation_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la demande'**
+  String get bidCancelConfirmButton;
 }
 
 class _AppLocalizationsDelegate

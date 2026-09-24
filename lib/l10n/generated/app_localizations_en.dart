@@ -7592,4 +7592,460 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shipmentTabPubliesLabel => 'Published';
+
+  @override
+  String get bidListFilterToReview => 'To review';
+
+  @override
+  String get bidListFilterAccepted => 'Accepted';
+
+  @override
+  String get bidListFilterCompleted => 'Completed';
+
+  @override
+  String bidListRequestsToReview(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count requests to review',
+      one: '$count request to review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bidListEmptyAcceptedTitle => 'No accepted requests';
+
+  @override
+  String get bidListEmptyAcceptedDescription =>
+      'You haven\'t accepted any requests yet.';
+
+  @override
+  String get bidListSearchHint => 'Name or tracking number…';
+
+  @override
+  String bidListChipAll(int count) {
+    return 'All ($count)';
+  }
+
+  @override
+  String bidListChipActive(int count) {
+    return 'Active ($count)';
+  }
+
+  @override
+  String bidListChipClosed(int count) {
+    return 'Closed ($count)';
+  }
+
+  @override
+  String get bidListNoResultTitle => 'No results';
+
+  @override
+  String get bidListEmptyShipmentsTitle => 'No shipments';
+
+  @override
+  String bidListNoResultDescription(String query) {
+    return 'No shipment matches “$query”.';
+  }
+
+  @override
+  String get bidListEmptyShipmentsDescription =>
+      'No shipment in this category.';
+
+  @override
+  String get bidListScanChipLabel => 'Scan QR code';
+
+  @override
+  String bidListHiddenOffers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count offers hidden (minimum price on)',
+      one: '$count offer hidden (minimum price on)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bidListAcceptedSnackbar => 'Request accepted!';
+
+  @override
+  String get bidListRejectedSnackbar => 'Request declined.';
+
+  @override
+  String get bidListDeletedSnackbar => 'Request deleted.';
+
+  @override
+  String get bidListCardDeclinedSheetTitle => 'Payment declined';
+
+  @override
+  String get bidListCardDeclinedHint =>
+      'Change your commission card to accept this request.';
+
+  @override
+  String get bidListChangeCommissionCardButton => 'Change my commission card';
+
+  @override
+  String get bidListWalletInsufficientTitle => 'Insufficient balance';
+
+  @override
+  String get bidListWalletInsufficientHint =>
+      'Top up your wallet or pay the fee directly by card.';
+
+  @override
+  String get bidListWalletTopupButton => 'Top up my wallet';
+
+  @override
+  String get bidListPayByCardButton => 'Pay by card';
+
+  @override
+  String get bidListAddCardButton => 'Add a card';
+
+  @override
+  String get bidListDeclineDialogTitle => 'Decline this request?';
+
+  @override
+  String get bidListDeclineDialogMessage =>
+      'The sender will be notified. This action is irreversible.';
+
+  @override
+  String get bidListDeclineButton => 'Decline';
+
+  @override
+  String get bidListDeleteDialogTitle => 'Delete this request?';
+
+  @override
+  String get bidListDeleteDialogMessage =>
+      'This declined request will be permanently removed from your list.';
+
+  @override
+  String bidListPendingTitleWithCount(int count) {
+    return 'To review ($count)';
+  }
+
+  @override
+  String get bidListEmptyPendingTitle => 'No requests to review';
+
+  @override
+  String get bidListEmptyPendingDescription =>
+      'Share your listing to receive requests.';
+
+  @override
+  String get bidListDemandesTitle => 'Requests';
+
+  @override
+  String get bidListDemandesSearchHint => 'Sender, tracking number…';
+
+  @override
+  String get bidListNoSearchResultDescription =>
+      'No request matches your search.';
+
+  @override
+  String get bidListEmptyNoRequestsDescription =>
+      'Post a trip to receive requests from senders.';
+
+  @override
+  String get bidListEmptyAcceptedArchiveDescription =>
+      'Requests you accept will appear here.';
+
+  @override
+  String get bidListEmptyCompletedTitle => 'No completed requests';
+
+  @override
+  String get bidListEmptyCompletedDescription =>
+      'Your closed requests will be archived here.';
+
+  @override
+  String get tripOwnerDeletedSnackbar => 'Trip deleted';
+
+  @override
+  String get tripOwnerPublishedTitle => 'Trip published!';
+
+  @override
+  String tripOwnerPublishedSubtitle(String dep, String arr) {
+    return 'Your trip $dep → $arr is live.';
+  }
+
+  @override
+  String get tripOwnerShareMyTrip => 'Share my trip';
+
+  @override
+  String tripOwnerShareMessage(
+    String dep,
+    String arr,
+    String date,
+    String url,
+  ) {
+    return '✈️ I\'m traveling $dep → $arr on $date with room in my luggage!\nBook your kilos on Yadony 📦\n$url';
+  }
+
+  @override
+  String get tripOwnerDraftBannerTitle => 'This trip is a draft';
+
+  @override
+  String get tripOwnerDraftBannerMessage =>
+      'It\'s invisible to senders until it\'s published.';
+
+  @override
+  String get tripOwnerMarkArrivedButton => 'Arrived at destination';
+
+  @override
+  String get tripOwnerEditInstructionsButton => 'Edit pickup instructions';
+
+  @override
+  String get tripOwnerDeleteBlockedTitle => 'Deletion not possible';
+
+  @override
+  String get tripOwnerDeleteBlockedMessage =>
+      'A parcel has already been accepted on this trip. To remove it, you must first cancel the trip: the sender will be automatically refunded.';
+
+  @override
+  String get tripOwnerCancelTripButton => 'Cancel the trip';
+
+  @override
+  String get tripOwnerProLimitTitle => 'Monthly limit reached';
+
+  @override
+  String get bidListCardAmountLabel => 'AMOUNT';
+
+  @override
+  String get bidListCardFlatRateLabel => 'Flat rate';
+
+  @override
+  String bidListCardTrackingNumberLabel(String number) {
+    return 'No. $number';
+  }
+
+  @override
+  String get bidListAcceptButton => 'Accept';
+
+  @override
+  String get bidListCashPaymentHint =>
+      '💵 Cash payment: awaiting your response';
+
+  @override
+  String get bidListEscrowPaymentHint =>
+      '💳 Payment received: awaiting your response';
+
+  @override
+  String get bidListStatusAccepted => 'Accepted';
+
+  @override
+  String get bidListStatusAwaitingPayment => 'Payment pending';
+
+  @override
+  String get bidListStatusHandedOver => 'On the way';
+
+  @override
+  String get bidListStatusInTransit => 'In transit';
+
+  @override
+  String get bidListStatusArrived => 'Arrived';
+
+  @override
+  String get bidListStatusDelivered => 'Delivered';
+
+  @override
+  String get bidListStatusNoShow => 'No-show';
+
+  @override
+  String get bidListStatusParcelRefused => 'Parcel refused';
+
+  @override
+  String get bidListStatusCancelled => 'Canceled';
+
+  @override
+  String get tripOwnerPublishTile => 'Publish';
+
+  @override
+  String get tripOwnerPosterTile => 'Poster';
+
+  @override
+  String get tripOwnerUnpublishTile => 'Unpublish';
+
+  @override
+  String get tripOwnerUnpublishDialogTitle => 'Unpublish this trip?';
+
+  @override
+  String get tripOwnerUnpublishDialogMessage =>
+      'The trip will no longer be visible and will stay in your drafts.';
+
+  @override
+  String get tripOwnerRequestsTile => 'Requests';
+
+  @override
+  String get tripOwnerRequestsDisabledMessage => 'No requests to review';
+
+  @override
+  String get tripOwnerParcelsTile => 'Parcels';
+
+  @override
+  String get tripOwnerNoParcelsMessage => 'No parcels on board';
+
+  @override
+  String get tripOwnerEditDisabledMessage =>
+      'Editable only while there\'s no request';
+
+  @override
+  String get tripOwnerDeleteDialogTitle => 'Delete this trip?';
+
+  @override
+  String get tripOwnerDeleteCancelledMessage =>
+      'This action is irreversible. The canceled trip and all associated requests will be permanently removed from the platform.';
+
+  @override
+  String get tripOwnerDeleteActiveMessage =>
+      'This action is irreversible. The trip will no longer be visible to senders.';
+
+  @override
+  String get tripOwnerCancelTile => 'Cancel';
+
+  @override
+  String get tripOwnerParcelsSectionTitle => 'Parcels on this trip';
+
+  @override
+  String get tripOwnerParcelsEmptyDescription =>
+      'Accepted parcels will appear here.';
+
+  @override
+  String get tripOwnerParcelsFilterAll => 'All';
+
+  @override
+  String get tripOwnerParcelsStatusAccepted => 'Accepted';
+
+  @override
+  String get tripOwnerParcelsStatusAwaitingPayment => 'Payment pending';
+
+  @override
+  String get tripOwnerParcelsStatusHandedOver => 'Handed over';
+
+  @override
+  String get tripOwnerParcelsStatusInTransit => 'In transit';
+
+  @override
+  String get tripOwnerParcelsStatusArrived => 'Arrived';
+
+  @override
+  String get tripOwnerParcelsStatusDelivered => 'Delivered';
+
+  @override
+  String get tripOwnerParcelsStatusNoShow => 'No-show';
+
+  @override
+  String get tripOwnerParcelsStatusParcelRefused => 'Refused';
+
+  @override
+  String get tripOwnerParcelsStatusCancelled => 'Canceled';
+
+  @override
+  String get tripOwnerParcelsDefaultContent => 'Parcel';
+
+  @override
+  String get tripOwnerSurplusTitle => 'Open remaining kg';
+
+  @override
+  String get tripOwnerSurplusSubtitle =>
+      'Make your spare capacity available to the public';
+
+  @override
+  String get tripOwnerSurplusPublishingButton => 'Publishing…';
+
+  @override
+  String get tripOwnerSurplusKgValidatorEmpty => 'Enter a number of kg';
+
+  @override
+  String get tripOwnerSurplusKgValidatorMin => 'Minimum 1 kg';
+
+  @override
+  String get tripOwnerSurplusOpenedSnackbar => 'Capacity opened to the public';
+
+  @override
+  String get tripOwnerSurplusReservedLabel => 'Reserved for your sender';
+
+  @override
+  String tripOwnerSurplusReservedKgValue(String kg) {
+    return '$kg kg locked';
+  }
+
+  @override
+  String get tripOwnerSurplusKgSectionLabel => 'KG TO OPEN';
+
+  @override
+  String get tripOwnerSurplusPriceSectionLabel => 'PRICE PER KG';
+
+  @override
+  String get tripOwnerSurplusKgHint => 'E.g. 8';
+
+  @override
+  String get tripOwnerSurplusOtherPriceChip => 'Other';
+
+  @override
+  String get tripOwnerSurplusCustomPriceHint => 'Your price';
+
+  @override
+  String get tripOwnerSurplusCustomPriceInvalid => 'Invalid price';
+
+  @override
+  String get tripOwnerSurplusDisclaimerText =>
+      'Final action: once published, your spare capacity becomes visible in search and can no longer be closed.';
+
+  @override
+  String get tripOwnerSurplusPublicPriceLabel => 'Price shown to senders';
+
+  @override
+  String get tripOwnerArrivalEditingTitle => 'Pickup instructions';
+
+  @override
+  String get tripOwnerArrivalSubtitle =>
+      'Tell us where and how to pick up the parcel';
+
+  @override
+  String get tripOwnerArrivalConfirmButton => 'Confirm arrival';
+
+  @override
+  String get tripOwnerArrivedSnackbar => 'Trip marked as arrived';
+
+  @override
+  String get tripOwnerArrivalUpdatedSnackbar => 'Instructions updated';
+
+  @override
+  String get tripOwnerArrivalFieldLabel => 'Instructions';
+
+  @override
+  String get tripOwnerArrivalFieldLabelOptional => 'Instructions (optional)';
+
+  @override
+  String get tripOwnerArrivalFieldHint =>
+      'E.g.: Châtelet metro station, exit 3';
+
+  @override
+  String get bidCancelDialogTitle => 'Cancel this request?';
+
+  @override
+  String get bidCancelAcceptedSubtitle =>
+      'The sender will be automatically refunded.';
+
+  @override
+  String get bidCancelWarningMessage =>
+      'The parcel has already been handed over. You\'ll need to return it to the sender within 3 days by entering the return code they\'ll give you.';
+
+  @override
+  String get bidCancelWarningRefundNote =>
+      'The sender will be fully refunded. If the payment was in cash, no money changes hands.';
+
+  @override
+  String get bidCancelReasonRequiredHint => 'Reason for cancellation *';
+
+  @override
+  String get bidCancelReasonOptionalHint => 'Reason (optional)';
+
+  @override
+  String get bidCancelReasonRequiredError => 'Reason required';
+
+  @override
+  String get bidCancelKeepButton => 'Keep';
+
+  @override
+  String get bidCancelConfirmButton => 'Cancel the request';
 }

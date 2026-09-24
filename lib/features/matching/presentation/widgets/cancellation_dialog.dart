@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -72,6 +73,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Dialog(
       shape: RoundedRectangleBorder(
@@ -89,13 +91,13 @@ class _CancellationDialogState extends State<CancellationDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // ── Titre ──────────────────────────────────────────────
-            Text('Annuler cette demande ?', style: tt.headlineSmall),
+            Text(l.bidCancelDialogTitle, style: tt.headlineSmall),
             const SizedBox(height: DonySpacing.sm),
 
             // ── Sous-titre (cas accepted) ──────────────────────────
             if (!widget._isAfterHandover) ...[
               Text(
-                "L'expéditeur sera remboursé automatiquement.",
+                l.bidCancelAcceptedSubtitle,
                 style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.base),
@@ -120,7 +122,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Le colis a déjà été remis. Vous devrez le restituer à l\'expéditeur sous 3 jours en saisissant le code de retour qu\'il vous communiquera.',
+                            l.bidCancelWarningMessage,
                             style: tt.bodySmall?.copyWith(
                               color: cs.error,
                               height: 1.4,
@@ -128,7 +130,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
                           ),
                           const SizedBox(height: DonySpacing.sm),
                           Text(
-                            "L'expéditeur sera intégralement remboursé. Si le paiement était en espèces, aucun mouvement d'argent n'a lieu.",
+                            l.bidCancelWarningRefundNote,
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                               height: 1.4,
@@ -155,8 +157,8 @@ class _CancellationDialogState extends State<CancellationDialog> {
               },
               decoration: InputDecoration(
                 hintText: widget._isAfterHandover
-                    ? 'Motif de l\'annulation *'
-                    : 'Motif (optionnel)',
+                    ? l.bidCancelReasonRequiredHint
+                    : l.bidCancelReasonOptionalHint,
                 hintStyle: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -179,7 +181,9 @@ class _CancellationDialogState extends State<CancellationDialog> {
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                   borderSide: BorderSide(color: cs.error),
                 ),
-                errorText: _showReasonError ? 'Motif requis' : null,
+                errorText: _showReasonError
+                    ? l.bidCancelReasonRequiredError
+                    : null,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: DonySpacing.base,
                   vertical: DonySpacing.md,
@@ -206,7 +210,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
                         borderRadius: BorderRadius.circular(DonyRadius.lg),
                       ),
                     ),
-                    child: Text('Garder', style: tt.labelLarge),
+                    child: Text(l.bidCancelKeepButton, style: tt.labelLarge),
                   ),
                 ),
                 const SizedBox(width: DonySpacing.sm),
@@ -226,7 +230,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
                       ),
                     ),
                     child: Text(
-                      'Annuler la demande',
+                      l.bidCancelConfirmButton,
                       style: tt.labelLarge?.copyWith(color: cs.onError),
                     ),
                   ),

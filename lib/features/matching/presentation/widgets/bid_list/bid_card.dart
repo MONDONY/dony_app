@@ -50,7 +50,8 @@ class BidCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final senderName = bid.senderDisplayName(context.l10n);
+    final l = context.l10n;
+    final senderName = bid.senderDisplayName(l);
 
     final amount = bid.totalAmountEur != null
         ? formatPriceIn(bid.totalAmountEur!, bid.currency)
@@ -104,7 +105,9 @@ class BidCard extends StatelessWidget {
                         if (hasTracking) ...[
                           const SizedBox(height: DonySpacing.xxs),
                           _HighlightedText(
-                            text: 'N° ${bid.trackingNumber}',
+                            text: l.bidListCardTrackingNumberLabel(
+                              bid.trackingNumber!,
+                            ),
                             query: query,
                             style: tt.labelSmall?.copyWith(
                               color: cs.onSurfaceVariant,
@@ -119,7 +122,7 @@ class BidCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        'MONTANT',
+                        l.bidListCardAmountLabel,
                         style: tt.labelSmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -145,7 +148,7 @@ class BidCard extends StatelessWidget {
                     label: bid.weightKg != null
                         ? '${bid.weightKg!.toStringAsFixed(0)} kg'
                         : bid.pricingMode == BidPricingMode.grid
-                        ? 'Forfait'
+                        ? l.bidListCardFlatRateLabel
                         : '-',
                   ),
                   if (categories.isNotEmpty) ...[
@@ -337,11 +340,12 @@ class _PendingActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Row(
       children: [
         Expanded(
           child: DonyButton(
-            label: 'Refuser',
+            label: l.bidListDeclineButton,
             variant: DonyButtonVariant.ghost,
             onPressed: isProcessing ? null : onReject,
           ),
@@ -349,7 +353,7 @@ class _PendingActions extends StatelessWidget {
         const SizedBox(width: DonySpacing.md),
         Expanded(
           child: DonyButton(
-            label: 'Accepter',
+            label: l.bidListAcceptButton,
             isLoading: isProcessing,
             onPressed: isProcessing ? null : onAccept,
           ),
@@ -372,10 +376,11 @@ class _PaymentHint extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final iconAsset = isCash ? 'banknote' : 'lock';
     final label = isCash
-        ? '💵 Paiement en espèces : en attente de votre réponse'
-        : '💳 Paiement reçu : en attente de votre réponse';
+        ? l.bidListCashPaymentHint
+        : l.bidListEscrowPaymentHint;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
@@ -415,27 +420,36 @@ class _StatusDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     final (Color color, Color bg, String label) = switch (status) {
-      'ACCEPTED' => (cs.success, cs.successLight, 'Accepté'),
+      'ACCEPTED' => (cs.success, cs.successLight, l.bidListStatusAccepted),
       // Voyageur vient d'accepter une offre mobile money, en attente du
       // séquestre par l'expéditeur (30 min) — jamais la chaîne brute
       // anglaise (régression staging).
       'AWAITING_PAYMENT' => (
         cs.warning,
         cs.warningLight,
-        'Paiement en attente',
+        l.bidListStatusAwaitingPayment,
       ),
-      'HANDED_OVER' => (cs.primary, cs.primaryContainer, 'En route'),
-      'IN_TRANSIT' => (cs.info, cs.infoLight, 'En transit'),
-      'ARRIVED' => (cs.info, cs.infoLight, 'Arrivé'),
-      'COMPLETED' => (cs.success, cs.successLight, 'Livré'),
-      'NO_SHOW' => (cs.warning, cs.warningLight, 'Absent'),
-      'PARCEL_REFUSED' => (cs.error, cs.errorLight, 'Colis refusé'),
+      'HANDED_OVER' => (
+        cs.primary,
+        cs.primaryContainer,
+        l.bidListStatusHandedOver,
+      ),
+      'IN_TRANSIT' => (cs.info, cs.infoLight, l.bidListStatusInTransit),
+      'ARRIVED' => (cs.info, cs.infoLight, l.bidListStatusArrived),
+      'COMPLETED' => (cs.success, cs.successLight, l.bidListStatusDelivered),
+      'NO_SHOW' => (cs.warning, cs.warningLight, l.bidListStatusNoShow),
+      'PARCEL_REFUSED' => (
+        cs.error,
+        cs.errorLight,
+        l.bidListStatusParcelRefused,
+      ),
       'CANCELLED' => (
         cs.onSurfaceVariant,
         cs.surfaceContainerHighest,
-        'Annulé',
+        l.bidListStatusCancelled,
       ),
       _ => (cs.onSurfaceVariant, cs.surfaceContainerHighest, status),
     };

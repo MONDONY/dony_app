@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 BidModel _makeBid({
@@ -250,4 +252,41 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  group('traductions', () {
+    testWidgets('en anglais : montant, actions, bandeau et statut traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await _pumpCard(
+        tester,
+        BidCard(
+          bid: _makeBid(
+            status: 'PENDING',
+            paymentMethod: BidPaymentMethod.cash,
+          ),
+          isProcessing: false,
+          onAccept: () {},
+          onReject: () {},
+        ),
+      );
+
+      expect(find.text('AMOUNT'), findsOneWidget);
+      expect(find.text('Decline'), findsOneWidget);
+      expect(find.text('Accept'), findsOneWidget);
+      expect(find.textContaining('Cash payment'), findsOneWidget);
+      expect(find.text('Refuser'), findsNothing);
+    });
+
+    testWidgets('en anglais : statut compact « Accepted »', (tester) async {
+      useEnglish();
+      await _pumpCard(
+        tester,
+        BidCard(bid: _makeBid(status: 'ACCEPTED'), isProcessing: false),
+      );
+
+      expect(find.text('Accepted'), findsOneWidget);
+      expect(find.text('Accepté'), findsNothing);
+    });
+  });
 }

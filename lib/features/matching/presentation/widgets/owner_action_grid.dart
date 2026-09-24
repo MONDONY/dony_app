@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -39,6 +40,7 @@ class OwnerActionGrid extends StatelessWidget {
     }
 
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     // Compteurs « demandes à traiter » et « colis embarqués » : source de
     // vérité = BidBloc (chargé pour la section colis) ; repli sur le modèle
@@ -76,7 +78,7 @@ class OwnerActionGrid extends StatelessWidget {
       if (a.status == 'DRAFT')
         _tile(
           iconAsset: 'send',
-          label: 'Publier',
+          label: l.tripOwnerPublishTile,
           accent: cs.primary,
           onTap: () => context.read<AnnouncementBloc>().add(
             AnnouncementPublishRequested(a.id),
@@ -88,22 +90,21 @@ class OwnerActionGrid extends StatelessWidget {
       if (isActive)
         _tile(
           iconAsset: 'share-2',
-          label: 'Affiche',
+          label: l.tripOwnerPosterTile,
           accent: cs.primary,
           onTap: () => context.push('/announcements/${a.id}/affiche', extra: a),
         ),
       if (isActive && (a.bidsCount ?? 0) == 0)
         _tile(
           iconAsset: 'eye-off',
-          label: 'Dépublier',
+          label: l.tripOwnerUnpublishTile,
           accent: cs.onSurface,
           onTap: () async {
             final confirmed = await DonyDialog.show(
               context,
-              title: 'Dépublier ce trajet ?',
-              message:
-                  'Le trajet ne sera plus visible et restera dans vos brouillons.',
-              confirmLabel: 'Dépublier',
+              title: l.tripOwnerUnpublishDialogTitle,
+              message: l.tripOwnerUnpublishDialogMessage,
+              confirmLabel: l.tripOwnerUnpublishTile,
               iconAsset: 'eye-off',
             );
             if (confirmed == true && context.mounted) {
@@ -116,33 +117,33 @@ class OwnerActionGrid extends StatelessWidget {
       // ── Demandes → écran « À traiter » ; désactivé si rien en attente ──
       _tile(
         iconAsset: 'package',
-        label: 'Demandes',
+        label: l.tripOwnerRequestsTile,
         accent: cs.primary,
         badgeCount: pendingCount,
         onTap: hasPending
             ? () => context.push('/announcements/${a.id}/bids/pending')
             : null,
-        disabledMessage: 'Aucune demande à traiter',
+        disabledMessage: l.tripOwnerRequestsDisabledMessage,
       ),
       // ── Colis → écran des colis ; désactivé si aucun colis embarqué ──
       _tile(
         // `inbox` = convention « colis » de la feature matching (pas de `box.svg`).
         iconAsset: 'inbox',
-        label: 'Colis',
+        label: l.tripOwnerParcelsTile,
         accent: cs.primary,
         badgeCount: a.confirmedParcelCount,
         onTap: hasColis
             ? () => context.push(
                 '/announcements/${a.id}/bids',
-                extra: const <String, dynamic>{'title': 'Colis'},
+                extra: <String, dynamic>{'title': l.tripOwnerParcelsTile},
               )
             : null,
-        disabledMessage: 'Aucun colis embarqué',
+        disabledMessage: l.tripOwnerNoParcelsMessage,
       ),
       // ── Modifier (désactivée tant qu'une demande existe) ──
       _tile(
         iconAsset: 'square-pen',
-        label: 'Modifier',
+        label: l.commonEdit,
         accent: cs.onSurface,
         onTap: canEdit
             ? () async {
@@ -156,22 +157,22 @@ class OwnerActionGrid extends StatelessWidget {
                 }
               }
             : null,
-        disabledMessage: 'Modifiable tant qu\'aucune demande',
+        disabledMessage: l.tripOwnerEditDisabledMessage,
       ),
       // ── Supprimer (si supprimable) ou Annuler (si ACTIVE non supprimable) ──
       if (canDelete)
         _tile(
           iconAsset: 'trash-2',
-          label: 'Supprimer',
+          label: l.commonDelete,
           accent: cs.error,
           onTap: () async {
             final confirmed = await DonyDialog.show(
               context,
-              title: 'Supprimer ce trajet ?',
+              title: l.tripOwnerDeleteDialogTitle,
               message: isCancelled
-                  ? 'Cette action est irréversible. Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.'
-                  : 'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.',
-              confirmLabel: 'Supprimer',
+                  ? l.tripOwnerDeleteCancelledMessage
+                  : l.tripOwnerDeleteActiveMessage,
+              confirmLabel: l.commonDelete,
               variant: DonyDialogVariant.destructive,
               iconAsset: 'trash-2',
             );
@@ -185,7 +186,7 @@ class OwnerActionGrid extends StatelessWidget {
       else if (isActive)
         _tile(
           iconAsset: 'circle-x',
-          label: 'Annuler',
+          label: l.tripOwnerCancelTile,
           accent: cs.error,
           onTap: () =>
               CancellationBottomSheet.show(context, announcementId: a.id),

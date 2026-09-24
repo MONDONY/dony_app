@@ -118,7 +118,7 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
       setState(() => _processingBidIds.clear());
       DonySnackbar.show(
         context,
-        message: 'Demande acceptée !',
+        message: context.l10n.bidListAcceptedSnackbar,
         type: DonySnackbarType.success,
       );
       context.read<BidBloc>().add(BidListRequested(widget.announcementId));
@@ -144,24 +144,24 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
       _removeProcessing(state.bid.id);
       DonySnackbar.show(
         context,
-        message: 'Demande acceptée !',
+        message: context.l10n.bidListAcceptedSnackbar,
         type: DonySnackbarType.success,
       );
       context.read<BidBloc>().add(BidListRequested(widget.announcementId));
     } else if (state is BidRejected) {
-      DonySnackbar.show(context, message: 'Demande refusée.');
+      DonySnackbar.show(context, message: context.l10n.bidListRejectedSnackbar);
       context.read<BidBloc>().add(BidListRequested(widget.announcementId));
     } else if (state is BidDeleted) {
       DonySnackbar.show(
         context,
-        message: 'Demande supprimée.',
+        message: context.l10n.bidListDeletedSnackbar,
         type: DonySnackbarType.success,
       );
       context.read<BidBloc>().add(BidListRequested(widget.announcementId));
     } else if (state is BidNotFound) {
       DonySnackbar.show(
         context,
-        message: 'Cette annonce n\'existe plus',
+        message: context.l10n.listingAnnouncementGoneMessage,
         type: DonySnackbarType.warning,
       );
       if (context.canPop()) {
@@ -181,9 +181,10 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
 
   void _showCardDeclinedSheet(BuildContext context, String message) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     DonyBottomSheet.show<void>(
       context,
-      title: 'Paiement refusé',
+      title: l.bidListCardDeclinedSheetTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -195,7 +196,7 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Changez votre carte de commission pour accepter cette demande.',
+            l.bidListCardDeclinedHint,
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -203,7 +204,7 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
         ],
       ),
       stickyBottom: DonyButton(
-        label: 'Changer ma carte de commission',
+        label: l.bidListChangeCommissionCardButton,
         onPressed: () {
           context.pop();
           context.push('/payments/commission-method');
@@ -217,9 +218,10 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
     acs.BidWalletInsufficient state,
   ) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     DonyBottomSheet.show<void>(
       context,
-      title: 'Solde insuffisant',
+      title: l.bidListWalletInsufficientTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -243,7 +245,7 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
           ],
           const SizedBox(height: 8),
           Text(
-            'Recharge ton portefeuille ou paie la commission directement par carte.',
+            l.bidListWalletInsufficientHint,
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -254,7 +256,7 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: 'Recharger mon portefeuille',
+            label: l.bidListWalletTopupButton,
             onPressed: () async {
               context.pop();
               final recharged = await context.push<bool>(
@@ -270,7 +272,7 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
           if (state.hasCard) ...[
             const SizedBox(height: 8),
             DonyButton(
-              label: 'Payer par carte',
+              label: l.bidListPayByCardButton,
               variant: DonyButtonVariant.secondary,
               onPressed: () {
                 context.pop();
@@ -282,7 +284,7 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
           ] else ...[
             const SizedBox(height: 8),
             DonyButton(
-              label: 'Ajouter une carte',
+              label: l.bidListAddCardButton,
               variant: DonyButtonVariant.secondary,
               onPressed: () async {
                 context.pop();
@@ -296,11 +298,12 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
   }
 
   Future<void> _showRejectDialog(BuildContext context, String bidId) async {
+    final l = context.l10n;
     final confirmed = await DonyDialog.show(
       context,
-      title: 'Refuser cette demande ?',
-      message: "L'expéditeur sera informé. Cette action est irréversible.",
-      confirmLabel: 'Refuser',
+      title: l.bidListDeclineDialogTitle,
+      message: l.bidListDeclineDialogMessage,
+      confirmLabel: l.bidListDeclineButton,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'circle-x',
     );
@@ -310,12 +313,12 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
   }
 
   Future<bool> _confirmDelete(BuildContext context) async {
+    final l = context.l10n;
     final confirmed = await DonyDialog.show(
       context,
-      title: 'Supprimer cette demande ?',
-      message:
-          'Cette demande refusée sera retirée définitivement de votre liste.',
-      confirmLabel: 'Supprimer',
+      title: l.bidListDeleteDialogTitle,
+      message: l.bidListDeleteDialogMessage,
+      confirmLabel: l.commonDelete,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'trash-2',
     );
@@ -377,7 +380,9 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
               centerTitle: false,
               leading: const DonyAppBarBackButton(),
               title: Text(
-                count > 0 ? 'À traiter ($count)' : 'À traiter',
+                count > 0
+                    ? context.l10n.bidListPendingTitleWithCount(count)
+                    : context.l10n.bidListFilterToReview,
                 style: tt.headlineLarge,
               ),
               bottom: PreferredSize(
@@ -440,10 +445,10 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
       final hiddenCount = pendingBids.length - visibleBids.length;
 
       if (visibleBids.isEmpty && hiddenCount == 0) {
-        return const DonyEmptyState(
+        return DonyEmptyState(
           mascotte: DonyMascotteType.assis,
-          title: 'Aucune demande à traiter',
-          description: 'Partagez votre annonce pour recevoir des demandes.',
+          title: context.l10n.bidListEmptyPendingTitle,
+          description: context.l10n.bidListEmptyPendingDescription,
         ).animate().fadeIn(duration: 300.ms);
       }
 
@@ -516,10 +521,10 @@ class _PendingList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (bids.isEmpty) {
-      return const DonyEmptyState(
+      return DonyEmptyState(
         mascotte: DonyMascotteType.assis,
-        title: 'Aucune demande à traiter',
-        description: 'Partagez votre annonce pour recevoir des demandes.',
+        title: context.l10n.bidListEmptyPendingTitle,
+        description: context.l10n.bidListEmptyPendingDescription,
       ).animate().fadeIn(duration: 300.ms);
     }
 

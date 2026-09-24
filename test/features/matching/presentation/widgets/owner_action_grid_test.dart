@@ -15,6 +15,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 class _MockAnnouncementBloc
@@ -273,5 +275,26 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('BIDS_SCREEN'), findsNothing);
+  });
+
+  group('traductions', () {
+    testWidgets('en anglais : tuiles Demandes/Colis/Modifier traduites', (
+      tester,
+    ) async {
+      useEnglish();
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        a: _makeAnnouncement(),
+        isOwner: true,
+      );
+
+      expect(find.text('Requests'), findsOneWidget);
+      expect(find.text('Parcels'), findsOneWidget);
+      expect(find.text('Edit'), findsOneWidget);
+      expect(find.byTooltip('No parcels on board'), findsOneWidget);
+      expect(find.text('Colis'), findsNothing);
+    });
   });
 }
