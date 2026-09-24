@@ -5544,4 +5544,240 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tripPublishCashCommissionOutro =>
       '. À défaut, il faudra le recharger ou enregistrer une carte valide au moment d’accepter.';
+
+  @override
+  String get negotiationStageToPay => 'à payer';
+
+  @override
+  String get negotiationStageAwaitingPayment => 'attente paiement';
+
+  @override
+  String get negotiationStageDealAgreed => 'accord conclu';
+
+  @override
+  String get negotiationStageClosed => 'terminé';
+
+  @override
+  String get negotiationStageProposal => 'proposition';
+
+  @override
+  String get bidSenderFallbackName => 'Expéditeur';
+
+  @override
+  String bidTravelerTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trajets',
+      one: '$count trajet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bidSenderShipments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count envois',
+      one: '$count envoi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bidSubmittedOn(String date) {
+    return 'Soumis le $date';
+  }
+
+  @override
+  String get negotiationThreadTitle => 'Discussion de prix';
+
+  @override
+  String get negotiationThreadErrorTitle => 'Discussion indisponible';
+
+  @override
+  String get negotiationThreadYouWouldReceive => 'Vous recevriez';
+
+  @override
+  String get negotiationThreadYouWouldPay => 'Vous paieriez';
+
+  @override
+  String negotiationThreadRoundLabel(int round, int maxRounds) {
+    return 'Tour $round sur $maxRounds';
+  }
+
+  @override
+  String get negotiationThreadParcelSectionTitle => 'Le colis';
+
+  @override
+  String get negotiationThreadExchangesTitle => 'Échanges';
+
+  @override
+  String get negotiationThreadKindProposal => 'Proposition';
+
+  @override
+  String get negotiationThreadKindCounter => 'Contre-offre';
+
+  @override
+  String get negotiationThreadKindAccepted => 'Acceptée';
+
+  @override
+  String get negotiationThreadKindRejected => 'Refusée';
+
+  @override
+  String get negotiationThreadPayHint =>
+      'Prix accepté. Réglez maintenant pour réserver votre place, le montant reste bloqué jusqu\'à la livraison.';
+
+  @override
+  String get negotiationThreadPayButton => 'Payer';
+
+  @override
+  String get negotiationThreadAwaitingSenderPaymentHint =>
+      'Prix accepté. En attente du paiement de l\'expéditeur.';
+
+  @override
+  String get negotiationThreadCashTravelerHint =>
+      'Prix accepté. Paiement en espèces, il vous reste à régler la commission Yadony.';
+
+  @override
+  String get negotiationThreadCashSenderHint =>
+      'Prix accepté. Paiement en espèces, en attente du voyageur, vous n\'avez rien à régler ici.';
+
+  @override
+  String get negotiationThreadClosedAccepted =>
+      'Prix accepté. Rendez-vous sur votre colis pour la suite.';
+
+  @override
+  String get negotiationThreadClosedRejected => 'Proposition refusée.';
+
+  @override
+  String get negotiationThreadClosedExpired => 'Proposition expirée.';
+
+  @override
+  String get negotiationThreadClosedDefault => 'Négociation terminée.';
+
+  @override
+  String negotiationThreadWaitingForReply(String name) {
+    return 'En attente de la réponse de $name.';
+  }
+
+  @override
+  String get negotiationThreadCounterpartyFallback => 'votre interlocuteur';
+
+  @override
+  String get negotiationThreadAcceptButton => 'Accepter';
+
+  @override
+  String get negotiationThreadCounterButton => 'Contre-proposer';
+
+  @override
+  String get negotiationThreadRejectButton => 'Refuser';
+
+  @override
+  String get negotiationThreadCounterSubtitle =>
+      'Indiquez le montant total que vous proposez. Votre interlocuteur pourra l\'accepter ou répondre à son tour.';
+
+  @override
+  String get negotiationThreadCounterSubmitButton => 'Envoyer ma contre-offre';
+
+  @override
+  String negotiationThreadCounterAmountLabel(String symbol) {
+    return 'Montant proposé ($symbol)';
+  }
+
+  @override
+  String get negotiationThreadCounterMessageLabel => 'Message (facultatif)';
+
+  @override
+  String get negotiationThreadCounterMessageHint =>
+      'Expliquez votre proposition';
+
+  @override
+  String get negotiationThreadPaymentNotConfirmed =>
+      'Paiement non confirmé, réessayez';
+
+  @override
+  String get negotiationThreadPaymentContextLabel =>
+      'Prix négocié de votre colis';
+
+  @override
+  String get travelerProfileLoadErrorTitle => 'Erreur de chargement';
+
+  @override
+  String get travelerProfileLoadErrorDescription =>
+      'Impossible de charger le détail';
+
+  @override
+  String get profileSheetMoreOptionsTooltip => 'Plus d\'options';
+
+  @override
+  String get profileSheetReviewsTitle => 'Évaluations';
+
+  @override
+  String get profileSheetNoReviewsYet => 'Aucune évaluation pour l\'instant.';
+
+  @override
+  String get profileSheetSeeMoreReviews => 'Voir plus';
+
+  @override
+  String get profileSheetProBadge => 'Compte PRO';
+
+  @override
+  String get profileSheetVerifiedBadge => 'Identité vérifiée';
+
+  @override
+  String get travelerProfileTripsLabel => 'Trajets';
+
+  @override
+  String get travelerProfileDeliveryLabel => 'Livraison';
+
+  @override
+  String get travelerProfilePhoneHiddenLabel =>
+      'Numéro révélé après acceptation';
+
+  @override
+  String get travelerProfileSubscribeLabel => 'S\'abonner à ce voyageur';
+
+  @override
+  String get senderProfilePhoneHiddenLabel =>
+      '📞 Numéro révélé après acceptation';
+
+  @override
+  String get senderProfilePhoneLoadingLabel =>
+      'Numéro en cours de récupération…';
+
+  @override
+  String get senderProfileShipmentsLabel => 'Envois';
+
+  @override
+  String blockMenuEntryLabel(String name) {
+    return 'Bloquer $name';
+  }
+
+  @override
+  String blockSuccessMessage(String name) {
+    return '$name a été bloqué(e)';
+  }
+
+  @override
+  String blockConfirmTitle(String name) {
+    return 'Bloquer $name ?';
+  }
+
+  @override
+  String get blockConfirmBody =>
+      'Il·elle ne pourra plus voir tes annonces ni t\'envoyer d\'offre. Tu ne verras plus les siennes non plus. Tu pourras le·la débloquer à tout moment dans Confidentialité.';
+
+  @override
+  String get blockConfirmButton => 'Bloquer';
+
+  @override
+  String get bidTravelerRoleTag => 'VOYAGEUR';
+
+  @override
+  String get voyageurCardCallSemanticLabel => 'Appeler';
+
+  @override
+  String get voyageurCardOpenChatSemanticLabel => 'Ouvrir la discussion';
 }

@@ -104,7 +104,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                   right: DonySpacing.sm,
                   child: IconButton(
                     icon: DonyIcon('ellipsis', color: cs.onSurfaceVariant),
-                    tooltip: 'Plus d\'options',
+                    tooltip: context.l10n.profileSheetMoreOptionsTooltip,
                     onPressed: () => showBlockMenu(
                       context,
                       userId: traveler.id,
@@ -153,7 +153,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                     Expanded(
                       child: _StatCard(
                         value: noteValue,
-                        label: 'Note',
+                        label: context.l10n.listingRowLabelNote,
                         iconAsset: 'star',
                         iconColor: cs.warning,
                       ),
@@ -162,7 +162,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                     Expanded(
                       child: _StatCard(
                         value: tripsValue,
-                        label: 'Trajets',
+                        label: context.l10n.travelerProfileTripsLabel,
                         iconAsset: 'plane-takeoff',
                         iconColor: cs.primary,
                       ),
@@ -171,7 +171,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                     Expanded(
                       child: _StatCard(
                         value: '–',
-                        label: 'Livraison',
+                        label: context.l10n.travelerProfileDeliveryLabel,
                         iconAsset: 'circle-check',
                         iconColor: cs.success,
                       ),
@@ -197,7 +197,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                       ),
                       children: [
                         Text(
-                          'Évaluations',
+                          context.l10n.profileSheetReviewsTitle,
                           style: tt.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: cs.onSurface,
@@ -209,7 +209,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                             if (state is UserRatingsLoaded) {
                               if (state.ratingCount == 0) {
                                 return Text(
-                                  'Aucune évaluation pour l\'instant.',
+                                  context.l10n.profileSheetNoReviewsYet,
                                   style: tt.bodyMedium?.copyWith(
                                     color: cs.onSurfaceVariant,
                                   ),
@@ -237,7 +237,11 @@ class _TravelerProfileSheet extends StatelessWidget {
                                                 page: state.page + 1,
                                               ),
                                             ),
-                                        child: const Text('Voir plus'),
+                                        child: Text(
+                                          context
+                                              .l10n
+                                              .profileSheetSeeMoreReviews,
+                                        ),
                                       ),
                                     ),
                                 ],
@@ -253,7 +257,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                                         ),
                                       ),
                                   icon: const DonyIcon('refresh-cw'),
-                                  label: const Text('Réessayer'),
+                                  label: Text(context.l10n.commonRetry),
                                 ),
                               );
                             }
@@ -356,7 +360,7 @@ class _ProfileHeader extends StatelessWidget {
                   )
                 else
                   Text(
-                    'Numéro révélé après acceptation',
+                    context.l10n.travelerProfilePhoneHiddenLabel,
                     style: tt.bodySmall?.copyWith(
                       color: cs.onSurfaceVariant,
                       fontStyle: FontStyle.italic,
@@ -370,19 +374,19 @@ class _ProfileHeader extends StatelessWidget {
                     if (traveler.isProAccount)
                       _ProfileBadge(
                         iconAsset: 'star',
-                        label: 'Compte PRO',
+                        label: context.l10n.profileSheetProBadge,
                         iconColor: cs.warning,
                       ),
                     if (traveler.kiloPro)
                       _ProfileBadge(
                         iconAsset: 'package',
-                        label: 'Kilo Pro',
+                        label: context.l10n.listingKiloProChip,
                         iconColor: cs.warning,
                       ),
                     if (traveler.kycVerified)
                       _ProfileBadge(
                         iconAsset: 'badge-check',
-                        label: 'Identité vérifiée',
+                        label: context.l10n.profileSheetVerifiedBadge,
                         iconColor: cs.primary,
                       ),
                   ],
@@ -524,7 +528,7 @@ class _SubscribeBar extends StatelessWidget {
               child: SubscribeBar(
                 subscribed: state.subscribed,
                 pushEnabled: state.pushEnabled,
-                subscribeLabel: "S'abonner à ce voyageur",
+                subscribeLabel: context.l10n.travelerProfileSubscribeLabel,
                 onSubscribe: () => context.read<TravelerSubscribeBloc>().add(
                   const SubscribePressed(),
                 ),

@@ -9,7 +9,9 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -198,7 +200,7 @@ class _ColisRow extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     final content = bid.contentCategory ?? bid.description ?? 'Colis';
-    final sender = bid.resolvedSenderName;
+    final sender = bid.senderDisplayName(context.l10n);
     final weight = _weightLabel;
 
     return Material(

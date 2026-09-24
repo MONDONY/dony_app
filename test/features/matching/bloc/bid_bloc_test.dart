@@ -8,6 +8,8 @@ import 'package:dony/features/matching/data/models/bid_checkout_response_model.d
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';
@@ -1189,7 +1191,9 @@ void main() {
 
   // ─── BidModel helpers ────────────────────────────────────────────────────────
 
-  group('BidModel.resolvedSenderName', () {
+  group('BidModel.senderDisplayName', () {
+    final l = lookupAppLocalizations(AppL10n.fr);
+
     test('avec senderName → retourne le nom', () {
       final bid = BidModel(
         id: 'b1',
@@ -1202,7 +1206,7 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      expect(bid.resolvedSenderName, 'Amadou Diallo');
+      expect(bid.senderDisplayName(l), 'Amadou Diallo');
     });
 
     test(
@@ -1219,9 +1223,27 @@ void main() {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
-        expect(bid.resolvedSenderName, 'Expéditeur');
+        expect(bid.senderDisplayName(l), 'Expéditeur');
       },
     );
+
+    test('en anglais : repli "Sender"', () {
+      final bid = BidModel(
+        id: 'b1',
+        announcementId: 'a1',
+        senderId: 's1',
+        senderPhoneAvailable: true,
+        weightKg: 5.0,
+        description: 'Test',
+        status: 'PENDING',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      expect(
+        bid.senderDisplayName(lookupAppLocalizations(AppL10n.en)),
+        'Sender',
+      );
+    });
   });
 
   // ─── BidQuoteRequested ───────────────────────────────────────────────────────

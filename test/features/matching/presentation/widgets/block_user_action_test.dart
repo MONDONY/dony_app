@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockBlockedUsersRepository extends Mock
     implements BlockedUsersRepository {}
 
@@ -109,5 +111,16 @@ void main() {
 
     expect(find.text('Bloquer Mamadou ?'), findsNothing);
     verifyNever(() => mockRepo.blockUser(any()));
+  });
+
+  testWidgets('en anglais : titre et boutons du dialog traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await openDialog(tester);
+
+    expect(find.text('Block Mamadou?'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'Block'), findsOneWidget);
   });
 }

@@ -1,4 +1,6 @@
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, dynamic> _threadJson({
@@ -84,6 +86,9 @@ Map<String, dynamic> _summaryJson() => {
 };
 
 void main() {
+  final l = lookupAppLocalizations(AppL10n.fr);
+  final en = lookupAppLocalizations(AppL10n.en);
+
   group('BidNegotiation.fromJson', () {
     test('lit un fil complet, vue voyageur', () {
       final thread = BidNegotiation.fromJson(_threadJson());
@@ -325,7 +330,7 @@ void main() {
       expect(card.isClosed, isFalse);
       expect(card.isAwaitingCardPayment, isTrue);
       expect(card.needsMyPayment, isTrue, reason: 'vu par l expediteur');
-      expect(card.stageLabel, 'à payer');
+      expect(card.stageLabel(l), 'à payer');
 
       final cardTraveler = BidNegotiationSummary.fromJson({
         ..._summaryJson(),
@@ -333,7 +338,7 @@ void main() {
         'role': 'TRAVELER',
       });
       expect(cardTraveler.needsMyPayment, isFalse);
-      expect(cardTraveler.stageLabel, 'attente paiement');
+      expect(cardTraveler.stageLabel(l), 'attente paiement');
 
       final cash = BidNegotiationSummary.fromJson({
         ..._summaryJson(),
@@ -341,7 +346,7 @@ void main() {
       });
       expect(cash.isClosed, isFalse);
       expect(cash.isAwaitingCashSettlement, isTrue);
-      expect(cash.stageLabel, 'accord conclu');
+      expect(cash.stageLabel(l), 'accord conclu');
     });
 
     test('un accord paye ou un fil clos est termine', () {
@@ -356,11 +361,47 @@ void main() {
           'status': status,
         });
         expect(summary.isClosed, isTrue, reason: status);
-        expect(summary.stageLabel, 'terminé', reason: status);
+        expect(summary.stageLabel(l), 'terminé', reason: status);
       }
       expect(
-        BidNegotiationSummary.fromJson(_summaryJson()).stageLabel,
+        BidNegotiationSummary.fromJson(_summaryJson()).stageLabel(l),
         'proposition',
+      );
+    });
+
+    test('en anglais : les cinq stades sont traduits', () {
+      expect(
+        BidNegotiationSummary.fromJson({
+          ..._summaryJson(),
+          'status': 'AWAITING_PAYMENT',
+        }).stageLabel(en),
+        'to pay',
+      );
+      expect(
+        BidNegotiationSummary.fromJson({
+          ..._summaryJson(),
+          'status': 'AWAITING_PAYMENT',
+          'role': 'TRAVELER',
+        }).stageLabel(en),
+        'awaiting payment',
+      );
+      expect(
+        BidNegotiationSummary.fromJson({
+          ..._summaryJson(),
+          'status': 'PENDING',
+        }).stageLabel(en),
+        'deal agreed',
+      );
+      expect(
+        BidNegotiationSummary.fromJson({
+          ..._summaryJson(),
+          'status': 'ACCEPTED',
+        }).stageLabel(en),
+        'closed',
+      );
+      expect(
+        BidNegotiationSummary.fromJson(_summaryJson()).stageLabel(en),
+        'proposal',
       );
     });
   });

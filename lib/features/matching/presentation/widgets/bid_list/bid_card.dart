@@ -3,6 +3,8 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/text_search.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -48,6 +50,7 @@ class BidCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final senderName = bid.senderDisplayName(context.l10n);
 
     final amount = bid.totalAmountEur != null
         ? formatPriceIn(bid.totalAmountEur!, bid.currency)
@@ -87,17 +90,14 @@ class BidCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  DonyAvatar(
-                    name: bid.resolvedSenderName,
-                    imageUrl: bid.senderAvatarUrl,
-                  ),
+                  DonyAvatar(name: senderName, imageUrl: bid.senderAvatarUrl),
                   const SizedBox(width: DonySpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _HighlightedText(
-                          text: bid.resolvedSenderName,
+                          text: senderName,
                           query: query,
                           style: tt.titleLarge,
                         ),

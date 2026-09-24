@@ -313,18 +313,4 @@ class BidNegotiationSummary {
 
   /// C'est à moi de payer : accord carte, vu par l'expéditeur.
   bool get needsMyPayment => isAwaitingCardPayment && role != 'TRAVELER';
-
-  /// Libellé court sous le montant de la carte de liste.
-  String get stageLabel {
-    if (isAwaitingCardPayment) {
-      return needsMyPayment ? 'à payer' : 'attente paiement';
-    }
-    if (isAwaitingCashSettlement) {
-      return 'accord conclu';
-    }
-    if (isClosed) {
-      return 'terminé';
-    }
-    return 'proposition';
-  }
 }

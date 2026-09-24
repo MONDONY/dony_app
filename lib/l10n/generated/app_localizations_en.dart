@@ -4905,7 +4905,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listingCashOnlyWarningBody =>
-      'Payment is made directly to the traveler in person. Yadony does not hold your money in escrow and cannot refund it automatically in case of a dispute.';
+      'Payment is made directly to the traveler in person. Yadony does not put your money on hold and cannot refund it automatically in case of a dispute.';
 
   @override
   String get listingNewRatingLabel => 'New';
@@ -5517,4 +5517,237 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tripPublishCashCommissionOutro =>
       '. Otherwise, you\'ll need to top it up or add a valid card when accepting.';
+
+  @override
+  String get negotiationStageToPay => 'to pay';
+
+  @override
+  String get negotiationStageAwaitingPayment => 'awaiting payment';
+
+  @override
+  String get negotiationStageDealAgreed => 'deal agreed';
+
+  @override
+  String get negotiationStageClosed => 'closed';
+
+  @override
+  String get negotiationStageProposal => 'proposal';
+
+  @override
+  String get bidSenderFallbackName => 'Sender';
+
+  @override
+  String bidTravelerTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trips',
+      one: '$count trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bidSenderShipments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count shipments',
+      one: '$count shipment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bidSubmittedOn(String date) {
+    return 'Submitted on $date';
+  }
+
+  @override
+  String get negotiationThreadTitle => 'Price discussion';
+
+  @override
+  String get negotiationThreadErrorTitle => 'Discussion unavailable';
+
+  @override
+  String get negotiationThreadYouWouldReceive => 'You would receive';
+
+  @override
+  String get negotiationThreadYouWouldPay => 'You would pay';
+
+  @override
+  String negotiationThreadRoundLabel(int round, int maxRounds) {
+    return 'Round $round of $maxRounds';
+  }
+
+  @override
+  String get negotiationThreadParcelSectionTitle => 'The parcel';
+
+  @override
+  String get negotiationThreadExchangesTitle => 'Exchanges';
+
+  @override
+  String get negotiationThreadKindProposal => 'Proposal';
+
+  @override
+  String get negotiationThreadKindCounter => 'Counter-offer';
+
+  @override
+  String get negotiationThreadKindAccepted => 'Accepted';
+
+  @override
+  String get negotiationThreadKindRejected => 'Rejected';
+
+  @override
+  String get negotiationThreadPayHint =>
+      'Price accepted. Pay now to secure your spot, the amount stays on hold until delivery.';
+
+  @override
+  String get negotiationThreadPayButton => 'Pay';
+
+  @override
+  String get negotiationThreadAwaitingSenderPaymentHint =>
+      'Price accepted. Awaiting the sender\'s payment.';
+
+  @override
+  String get negotiationThreadCashTravelerHint =>
+      'Price accepted. Cash payment, you still need to pay the Yadony service fee.';
+
+  @override
+  String get negotiationThreadCashSenderHint =>
+      'Price accepted. Cash payment, awaiting the traveler, you have nothing to pay here.';
+
+  @override
+  String get negotiationThreadClosedAccepted =>
+      'Price accepted. Head to your shipment for what\'s next.';
+
+  @override
+  String get negotiationThreadClosedRejected => 'Proposal rejected.';
+
+  @override
+  String get negotiationThreadClosedExpired => 'Proposal expired.';
+
+  @override
+  String get negotiationThreadClosedDefault => 'Negotiation closed.';
+
+  @override
+  String negotiationThreadWaitingForReply(String name) {
+    return 'Waiting for $name\'s reply.';
+  }
+
+  @override
+  String get negotiationThreadCounterpartyFallback => 'the other party';
+
+  @override
+  String get negotiationThreadAcceptButton => 'Accept';
+
+  @override
+  String get negotiationThreadCounterButton => 'Counter-propose';
+
+  @override
+  String get negotiationThreadRejectButton => 'Reject';
+
+  @override
+  String get negotiationThreadCounterSubtitle =>
+      'Enter the total amount you\'re proposing. The other party can accept it or respond in turn.';
+
+  @override
+  String get negotiationThreadCounterSubmitButton => 'Send my counter-offer';
+
+  @override
+  String negotiationThreadCounterAmountLabel(String symbol) {
+    return 'Proposed amount ($symbol)';
+  }
+
+  @override
+  String get negotiationThreadCounterMessageLabel => 'Message (optional)';
+
+  @override
+  String get negotiationThreadCounterMessageHint => 'Explain your proposal';
+
+  @override
+  String get negotiationThreadPaymentNotConfirmed =>
+      'Payment not confirmed, please try again';
+
+  @override
+  String get negotiationThreadPaymentContextLabel =>
+      'Negotiated price for your shipment';
+
+  @override
+  String get travelerProfileLoadErrorTitle => 'Loading error';
+
+  @override
+  String get travelerProfileLoadErrorDescription => 'Unable to load details';
+
+  @override
+  String get profileSheetMoreOptionsTooltip => 'More options';
+
+  @override
+  String get profileSheetReviewsTitle => 'Reviews';
+
+  @override
+  String get profileSheetNoReviewsYet => 'No reviews yet.';
+
+  @override
+  String get profileSheetSeeMoreReviews => 'See more';
+
+  @override
+  String get profileSheetProBadge => 'PRO account';
+
+  @override
+  String get profileSheetVerifiedBadge => 'Verified identity';
+
+  @override
+  String get travelerProfileTripsLabel => 'Trips';
+
+  @override
+  String get travelerProfileDeliveryLabel => 'Delivery';
+
+  @override
+  String get travelerProfilePhoneHiddenLabel =>
+      'Number revealed after acceptance';
+
+  @override
+  String get travelerProfileSubscribeLabel => 'Follow this traveler';
+
+  @override
+  String get senderProfilePhoneHiddenLabel =>
+      '📞 Number revealed after acceptance';
+
+  @override
+  String get senderProfilePhoneLoadingLabel => 'Retrieving number…';
+
+  @override
+  String get senderProfileShipmentsLabel => 'Shipments';
+
+  @override
+  String blockMenuEntryLabel(String name) {
+    return 'Block $name';
+  }
+
+  @override
+  String blockSuccessMessage(String name) {
+    return '$name has been blocked';
+  }
+
+  @override
+  String blockConfirmTitle(String name) {
+    return 'Block $name?';
+  }
+
+  @override
+  String get blockConfirmBody =>
+      'They won\'t be able to see your listings or send you offers anymore. You won\'t see theirs either. You can unblock them anytime in Privacy.';
+
+  @override
+  String get blockConfirmButton => 'Block';
+
+  @override
+  String get bidTravelerRoleTag => 'TRAVELER';
+
+  @override
+  String get voyageurCardCallSemanticLabel => 'Call';
+
+  @override
+  String get voyageurCardOpenChatSemanticLabel => 'Open the conversation';
 }

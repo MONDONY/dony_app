@@ -11,6 +11,8 @@ import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockRatingBloc extends MockBloc<RatingEvent, RatingState>
     implements RatingBloc {}
 
@@ -139,6 +141,25 @@ void main() {
       await _openSheet(tester, _travelerMinimal);
       // note=null → '–', trajets=null → '–', livraison toujours '–' → exactement 3
       expect(find.text('–'), findsNWidgets(3));
+    });
+  });
+
+  group('en anglais', () {
+    testWidgets('badges et libellés de stat traduits', (tester) async {
+      useEnglish();
+      await _openSheet(tester, _travelerFull);
+
+      expect(find.text('PRO account'), findsOneWidget);
+      expect(find.text('Verified identity'), findsOneWidget);
+      expect(find.text('Trips'), findsOneWidget);
+      expect(find.text('Delivery'), findsOneWidget);
+    });
+
+    testWidgets('numéro masqué traduit', (tester) async {
+      useEnglish();
+      await _openSheet(tester, _travelerMinimal);
+
+      expect(find.text('Number revealed after acceptance'), findsOneWidget);
     });
   });
 }

@@ -9224,6 +9224,390 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'. À défaut, il faudra le recharger ou enregistrer une carte valide au moment d’accepter.'**
   String get tripPublishCashCommissionOutro;
+
+  /// Libellé de stage : accord carte, c'est à moi de payer (bid_labels.dart, ex-BidNegotiationSummary.stageLabel)
+  ///
+  /// In fr, this message translates to:
+  /// **'à payer'**
+  String get negotiationStageToPay;
+
+  /// Libellé de stage : accord carte, en attente du paiement de l'autre partie (bid_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'attente paiement'**
+  String get negotiationStageAwaitingPayment;
+
+  /// Libellé de stage : accord en espèces, pas encore réglé (bid_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'accord conclu'**
+  String get negotiationStageDealAgreed;
+
+  /// Libellé de stage : fil clos, quel que soit le motif (bid_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'terminé'**
+  String get negotiationStageClosed;
+
+  /// Libellé de stage par défaut : négociation en cours (bid_labels.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'proposition'**
+  String get negotiationStageProposal;
+
+  /// Nom de repli affiché pour l'expéditeur sans nom (bid_labels.dart, ex-BidModel.resolvedSenderName). Réutilisé comme intitulé de section « Expéditeur » sur expediteur_card.dart : même texte, même clé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Expéditeur'**
+  String get bidSenderFallbackName;
+
+  /// Nombre de trajets du voyageur, composable dans une ligne compacte « · N trajets » (bid_labels.dart, voyageur_card.dart, et partie D pour voyageur_contact_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} trajet} other{{count} trajets}}'**
+  String bidTravelerTrips(int count);
+
+  /// Nombre d'envois de l'expéditeur, composable dans une ligne compacte (bid_labels.dart, expediteur_card.dart, et partie D pour expediteur_contact_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} envoi} other{{count} envois}}'**
+  String bidSenderShipments(int count);
+
+  /// Date de soumission d'une offre, date déjà formatée par DateFormat.yMd(locale) (expediteur_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Soumis le {date}'**
+  String bidSubmittedOn(String date);
+
+  /// Titre de l'écran du fil de négociation (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Discussion de prix'**
+  String get negotiationThreadTitle;
+
+  /// Titre de l'état d'erreur du fil de négociation (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Discussion indisponible'**
+  String get negotiationThreadErrorTitle;
+
+  /// Amorce du montant en tête, vue voyageur (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous recevriez'**
+  String get negotiationThreadYouWouldReceive;
+
+  /// Amorce du montant en tête, vue expéditeur (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous paieriez'**
+  String get negotiationThreadYouWouldPay;
+
+  /// Compteur de tours de négociation (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tour {round} sur {maxRounds}'**
+  String negotiationThreadRoundLabel(int round, int maxRounds);
+
+  /// Titre de la section récapitulatif du colis (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis'**
+  String get negotiationThreadParcelSectionTitle;
+
+  /// Titre de la section des messages du fil (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Échanges'**
+  String get negotiationThreadExchangesTitle;
+
+  /// Libellé d'un message de type proposition initiale (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposition'**
+  String get negotiationThreadKindProposal;
+
+  /// Libellé d'un message de type contre-offre (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Contre-offre'**
+  String get negotiationThreadKindCounter;
+
+  /// Libellé d'un message d'acceptation (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Acceptée'**
+  String get negotiationThreadKindAccepted;
+
+  /// Libellé d'un message de refus (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Refusée'**
+  String get negotiationThreadKindRejected;
+
+  /// Consigne de paiement, accord carte côté expéditeur (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix accepté. Réglez maintenant pour réserver votre place, le montant reste bloqué jusqu\'à la livraison.'**
+  String get negotiationThreadPayHint;
+
+  /// Bouton de paiement d'un accord carte (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer'**
+  String get negotiationThreadPayButton;
+
+  /// Accord carte, vue voyageur en attente du paiement (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix accepté. En attente du paiement de l\'expéditeur.'**
+  String get negotiationThreadAwaitingSenderPaymentHint;
+
+  /// Accord en espèces, vue voyageur (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix accepté. Paiement en espèces, il vous reste à régler la commission Yadony.'**
+  String get negotiationThreadCashTravelerHint;
+
+  /// Accord en espèces, vue expéditeur (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix accepté. Paiement en espèces, en attente du voyageur, vous n\'avez rien à régler ici.'**
+  String get negotiationThreadCashSenderHint;
+
+  /// Fil clos, statut ACCEPTED (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix accepté. Rendez-vous sur votre colis pour la suite.'**
+  String get negotiationThreadClosedAccepted;
+
+  /// Fil clos par un refus explicite, message REJECT présent (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposition refusée.'**
+  String get negotiationThreadClosedRejected;
+
+  /// Fil clos par péremption, aucun message REJECT (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposition expirée.'**
+  String get negotiationThreadClosedExpired;
+
+  /// Fil clos, statut générique (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Négociation terminée.'**
+  String get negotiationThreadClosedDefault;
+
+  /// Attente du tour de l'interlocuteur, nom ou repli traduit (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de la réponse de {name}.'**
+  String negotiationThreadWaitingForReply(String name);
+
+  /// Repli quand l'interlocuteur n'a pas de nom (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'votre interlocuteur'**
+  String get negotiationThreadCounterpartyFallback;
+
+  /// Bouton d'acceptation d'une proposition (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter'**
+  String get negotiationThreadAcceptButton;
+
+  /// Bouton et titre de la feuille de contre-proposition (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Contre-proposer'**
+  String get negotiationThreadCounterButton;
+
+  /// Bouton de refus d'une proposition (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser'**
+  String get negotiationThreadRejectButton;
+
+  /// Sous-titre de la feuille de contre-proposition (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez le montant total que vous proposez. Votre interlocuteur pourra l\'accepter ou répondre à son tour.'**
+  String get negotiationThreadCounterSubtitle;
+
+  /// Bouton d'envoi de la feuille de contre-proposition (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer ma contre-offre'**
+  String get negotiationThreadCounterSubmitButton;
+
+  /// Label du champ montant de la contre-proposition (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant proposé ({symbol})'**
+  String negotiationThreadCounterAmountLabel(String symbol);
+
+  /// Label du champ message de la contre-proposition (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Message (facultatif)'**
+  String get negotiationThreadCounterMessageLabel;
+
+  /// Indice du champ message de la contre-proposition (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Expliquez votre proposition'**
+  String get negotiationThreadCounterMessageHint;
+
+  /// Message d'échec d'authentification avant paiement (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement non confirmé, réessayez'**
+  String get negotiationThreadPaymentNotConfirmed;
+
+  /// Libellé de contexte affiché dans la feuille de paiement (bid_negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix négocié de votre colis'**
+  String get negotiationThreadPaymentContextLabel;
+
+  /// Titre de l'état d'erreur du chargeur de détail (traveler_profile_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur de chargement'**
+  String get travelerProfileLoadErrorTitle;
+
+  /// Description de repli d'un état de chargement inattendu (traveler_profile_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger le détail'**
+  String get travelerProfileLoadErrorDescription;
+
+  /// Tooltip du bouton menu ⋯ des fiches profil (traveler_profile_sheet.dart, sender_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus d\'options'**
+  String get profileSheetMoreOptionsTooltip;
+
+  /// Titre de la section avis des fiches profil (traveler_profile_sheet.dart, sender_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Évaluations'**
+  String get profileSheetReviewsTitle;
+
+  /// État vide de la section avis (traveler_profile_sheet.dart, sender_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune évaluation pour l\'instant.'**
+  String get profileSheetNoReviewsYet;
+
+  /// Bouton de pagination des avis (traveler_profile_sheet.dart, sender_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir plus'**
+  String get profileSheetSeeMoreReviews;
+
+  /// Badge compte PRO des fiches profil (traveler_profile_sheet.dart, sender_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte PRO'**
+  String get profileSheetProBadge;
+
+  /// Badge identité vérifiée des fiches profil (traveler_profile_sheet.dart, sender_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée'**
+  String get profileSheetVerifiedBadge;
+
+  /// Libellé de la stat card « Trajets » (traveler_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets'**
+  String get travelerProfileTripsLabel;
+
+  /// Libellé de la stat card « Livraison » (traveler_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison'**
+  String get travelerProfileDeliveryLabel;
+
+  /// Numéro masqué avant acceptation (traveler_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro révélé après acceptation'**
+  String get travelerProfilePhoneHiddenLabel;
+
+  /// Libellé de la barre d'abonnement (traveler_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'S\'abonner à ce voyageur'**
+  String get travelerProfileSubscribeLabel;
+
+  /// Numéro masqué avant acceptation, expéditeur non joignable (sender_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'📞 Numéro révélé après acceptation'**
+  String get senderProfilePhoneHiddenLabel;
+
+  /// Numéro en cours de révélation (sender_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro en cours de récupération…'**
+  String get senderProfilePhoneLoadingLabel;
+
+  /// Libellé de la stat « Envois » (sender_profile_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envois'**
+  String get senderProfileShipmentsLabel;
+
+  /// Entrée du menu ⋯ de blocage (block_user_action.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloquer {name}'**
+  String blockMenuEntryLabel(String name);
+
+  /// Snackbar de confirmation de blocage (block_user_action.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} a été bloqué(e)'**
+  String blockSuccessMessage(String name);
+
+  /// Titre du dialog de confirmation de blocage (block_user_action.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloquer {name} ?'**
+  String blockConfirmTitle(String name);
+
+  /// Corps du dialog de confirmation de blocage (block_user_action.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Il·elle ne pourra plus voir tes annonces ni t\'envoyer d\'offre. Tu ne verras plus les siennes non plus. Tu pourras le·la débloquer à tout moment dans Confidentialité.'**
+  String get blockConfirmBody;
+
+  /// Bouton de confirmation du blocage (block_user_action.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloquer'**
+  String get blockConfirmButton;
+
+  /// Étiquette de rôle en tête de la carte voyageur (voyageur_card.dart, et partie D pour voyageur_contact_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'VOYAGEUR'**
+  String get bidTravelerRoleTag;
+
+  /// Libellé d'accessibilité du bouton d'appel (voyageur_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler'**
+  String get voyageurCardCallSemanticLabel;
+
+  /// Libellé d'accessibilité du bouton de messagerie (voyageur_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir la discussion'**
+  String get voyageurCardOpenChatSemanticLabel;
 }
 
 class _AppLocalizationsDelegate

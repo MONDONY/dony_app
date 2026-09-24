@@ -5124,5 +5124,309 @@
   "tripPublishCashCommissionOutro": ". À défaut, il faudra le recharger ou enregistrer une carte valide au moment d’accepter.",
   "@tripPublishCashCommissionOutro": {
     "description": "Dernier segment de l'avertissement commission espèces (cash_commission_notice.dart)"
+  },
+  "negotiationStageToPay": "à payer",
+  "@negotiationStageToPay": {
+    "description": "Libellé de stage : accord carte, c'est à moi de payer (bid_labels.dart, ex-BidNegotiationSummary.stageLabel)"
+  },
+  "negotiationStageAwaitingPayment": "attente paiement",
+  "@negotiationStageAwaitingPayment": {
+    "description": "Libellé de stage : accord carte, en attente du paiement de l'autre partie (bid_labels.dart)"
+  },
+  "negotiationStageDealAgreed": "accord conclu",
+  "@negotiationStageDealAgreed": {
+    "description": "Libellé de stage : accord en espèces, pas encore réglé (bid_labels.dart)"
+  },
+  "negotiationStageClosed": "terminé",
+  "@negotiationStageClosed": {
+    "description": "Libellé de stage : fil clos, quel que soit le motif (bid_labels.dart)"
+  },
+  "negotiationStageProposal": "proposition",
+  "@negotiationStageProposal": {
+    "description": "Libellé de stage par défaut : négociation en cours (bid_labels.dart)"
+  },
+  "bidSenderFallbackName": "Expéditeur",
+  "@bidSenderFallbackName": {
+    "description": "Nom de repli affiché pour l'expéditeur sans nom (bid_labels.dart, ex-BidModel.resolvedSenderName). Réutilisé comme intitulé de section « Expéditeur » sur expediteur_card.dart : même texte, même clé."
+  },
+  "bidTravelerTrips": "{count, plural, =1{{count} trajet} other{{count} trajets}}",
+  "@bidTravelerTrips": {
+    "description": "Nombre de trajets du voyageur, composable dans une ligne compacte « · N trajets » (bid_labels.dart, voyageur_card.dart, et partie D pour voyageur_contact_card.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bidSenderShipments": "{count, plural, =1{{count} envoi} other{{count} envois}}",
+  "@bidSenderShipments": {
+    "description": "Nombre d'envois de l'expéditeur, composable dans une ligne compacte (bid_labels.dart, expediteur_card.dart, et partie D pour expediteur_contact_card.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bidSubmittedOn": "Soumis le {date}",
+  "@bidSubmittedOn": {
+    "description": "Date de soumission d'une offre, date déjà formatée par DateFormat.yMd(locale) (expediteur_card.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationThreadTitle": "Discussion de prix",
+  "@negotiationThreadTitle": {
+    "description": "Titre de l'écran du fil de négociation (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadErrorTitle": "Discussion indisponible",
+  "@negotiationThreadErrorTitle": {
+    "description": "Titre de l'état d'erreur du fil de négociation (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadYouWouldReceive": "Vous recevriez",
+  "@negotiationThreadYouWouldReceive": {
+    "description": "Amorce du montant en tête, vue voyageur (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadYouWouldPay": "Vous paieriez",
+  "@negotiationThreadYouWouldPay": {
+    "description": "Amorce du montant en tête, vue expéditeur (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadRoundLabel": "Tour {round} sur {maxRounds}",
+  "@negotiationThreadRoundLabel": {
+    "description": "Compteur de tours de négociation (bid_negotiation_thread_screen.dart)",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "maxRounds": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationThreadParcelSectionTitle": "Le colis",
+  "@negotiationThreadParcelSectionTitle": {
+    "description": "Titre de la section récapitulatif du colis (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadExchangesTitle": "Échanges",
+  "@negotiationThreadExchangesTitle": {
+    "description": "Titre de la section des messages du fil (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadKindProposal": "Proposition",
+  "@negotiationThreadKindProposal": {
+    "description": "Libellé d'un message de type proposition initiale (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadKindCounter": "Contre-offre",
+  "@negotiationThreadKindCounter": {
+    "description": "Libellé d'un message de type contre-offre (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadKindAccepted": "Acceptée",
+  "@negotiationThreadKindAccepted": {
+    "description": "Libellé d'un message d'acceptation (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadKindRejected": "Refusée",
+  "@negotiationThreadKindRejected": {
+    "description": "Libellé d'un message de refus (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadPayHint": "Prix accepté. Réglez maintenant pour réserver votre place, le montant reste bloqué jusqu'à la livraison.",
+  "@negotiationThreadPayHint": {
+    "description": "Consigne de paiement, accord carte côté expéditeur (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadPayButton": "Payer",
+  "@negotiationThreadPayButton": {
+    "description": "Bouton de paiement d'un accord carte (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadAwaitingSenderPaymentHint": "Prix accepté. En attente du paiement de l'expéditeur.",
+  "@negotiationThreadAwaitingSenderPaymentHint": {
+    "description": "Accord carte, vue voyageur en attente du paiement (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCashTravelerHint": "Prix accepté. Paiement en espèces, il vous reste à régler la commission Yadony.",
+  "@negotiationThreadCashTravelerHint": {
+    "description": "Accord en espèces, vue voyageur (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCashSenderHint": "Prix accepté. Paiement en espèces, en attente du voyageur, vous n'avez rien à régler ici.",
+  "@negotiationThreadCashSenderHint": {
+    "description": "Accord en espèces, vue expéditeur (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadClosedAccepted": "Prix accepté. Rendez-vous sur votre colis pour la suite.",
+  "@negotiationThreadClosedAccepted": {
+    "description": "Fil clos, statut ACCEPTED (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadClosedRejected": "Proposition refusée.",
+  "@negotiationThreadClosedRejected": {
+    "description": "Fil clos par un refus explicite, message REJECT présent (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadClosedExpired": "Proposition expirée.",
+  "@negotiationThreadClosedExpired": {
+    "description": "Fil clos par péremption, aucun message REJECT (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadClosedDefault": "Négociation terminée.",
+  "@negotiationThreadClosedDefault": {
+    "description": "Fil clos, statut générique (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadWaitingForReply": "En attente de la réponse de {name}.",
+  "@negotiationThreadWaitingForReply": {
+    "description": "Attente du tour de l'interlocuteur, nom ou repli traduit (bid_negotiation_thread_screen.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationThreadCounterpartyFallback": "votre interlocuteur",
+  "@negotiationThreadCounterpartyFallback": {
+    "description": "Repli quand l'interlocuteur n'a pas de nom (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadAcceptButton": "Accepter",
+  "@negotiationThreadAcceptButton": {
+    "description": "Bouton d'acceptation d'une proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCounterButton": "Contre-proposer",
+  "@negotiationThreadCounterButton": {
+    "description": "Bouton et titre de la feuille de contre-proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadRejectButton": "Refuser",
+  "@negotiationThreadRejectButton": {
+    "description": "Bouton de refus d'une proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCounterSubtitle": "Indiquez le montant total que vous proposez. Votre interlocuteur pourra l'accepter ou répondre à son tour.",
+  "@negotiationThreadCounterSubtitle": {
+    "description": "Sous-titre de la feuille de contre-proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCounterSubmitButton": "Envoyer ma contre-offre",
+  "@negotiationThreadCounterSubmitButton": {
+    "description": "Bouton d'envoi de la feuille de contre-proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCounterAmountLabel": "Montant proposé ({symbol})",
+  "@negotiationThreadCounterAmountLabel": {
+    "description": "Label du champ montant de la contre-proposition (bid_negotiation_thread_screen.dart)",
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationThreadCounterMessageLabel": "Message (facultatif)",
+  "@negotiationThreadCounterMessageLabel": {
+    "description": "Label du champ message de la contre-proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadCounterMessageHint": "Expliquez votre proposition",
+  "@negotiationThreadCounterMessageHint": {
+    "description": "Indice du champ message de la contre-proposition (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadPaymentNotConfirmed": "Paiement non confirmé, réessayez",
+  "@negotiationThreadPaymentNotConfirmed": {
+    "description": "Message d'échec d'authentification avant paiement (bid_negotiation_thread_screen.dart)"
+  },
+  "negotiationThreadPaymentContextLabel": "Prix négocié de votre colis",
+  "@negotiationThreadPaymentContextLabel": {
+    "description": "Libellé de contexte affiché dans la feuille de paiement (bid_negotiation_thread_screen.dart)"
+  },
+  "travelerProfileLoadErrorTitle": "Erreur de chargement",
+  "@travelerProfileLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur du chargeur de détail (traveler_profile_screen.dart)"
+  },
+  "travelerProfileLoadErrorDescription": "Impossible de charger le détail",
+  "@travelerProfileLoadErrorDescription": {
+    "description": "Description de repli d'un état de chargement inattendu (traveler_profile_screen.dart)"
+  },
+  "profileSheetMoreOptionsTooltip": "Plus d'options",
+  "@profileSheetMoreOptionsTooltip": {
+    "description": "Tooltip du bouton menu ⋯ des fiches profil (traveler_profile_sheet.dart, sender_profile_sheet.dart)"
+  },
+  "profileSheetReviewsTitle": "Évaluations",
+  "@profileSheetReviewsTitle": {
+    "description": "Titre de la section avis des fiches profil (traveler_profile_sheet.dart, sender_profile_sheet.dart)"
+  },
+  "profileSheetNoReviewsYet": "Aucune évaluation pour l'instant.",
+  "@profileSheetNoReviewsYet": {
+    "description": "État vide de la section avis (traveler_profile_sheet.dart, sender_profile_sheet.dart)"
+  },
+  "profileSheetSeeMoreReviews": "Voir plus",
+  "@profileSheetSeeMoreReviews": {
+    "description": "Bouton de pagination des avis (traveler_profile_sheet.dart, sender_profile_sheet.dart)"
+  },
+  "profileSheetProBadge": "Compte PRO",
+  "@profileSheetProBadge": {
+    "description": "Badge compte PRO des fiches profil (traveler_profile_sheet.dart, sender_profile_sheet.dart)"
+  },
+  "profileSheetVerifiedBadge": "Identité vérifiée",
+  "@profileSheetVerifiedBadge": {
+    "description": "Badge identité vérifiée des fiches profil (traveler_profile_sheet.dart, sender_profile_sheet.dart)"
+  },
+  "travelerProfileTripsLabel": "Trajets",
+  "@travelerProfileTripsLabel": {
+    "description": "Libellé de la stat card « Trajets » (traveler_profile_sheet.dart)"
+  },
+  "travelerProfileDeliveryLabel": "Livraison",
+  "@travelerProfileDeliveryLabel": {
+    "description": "Libellé de la stat card « Livraison » (traveler_profile_sheet.dart)"
+  },
+  "travelerProfilePhoneHiddenLabel": "Numéro révélé après acceptation",
+  "@travelerProfilePhoneHiddenLabel": {
+    "description": "Numéro masqué avant acceptation (traveler_profile_sheet.dart)"
+  },
+  "travelerProfileSubscribeLabel": "S'abonner à ce voyageur",
+  "@travelerProfileSubscribeLabel": {
+    "description": "Libellé de la barre d'abonnement (traveler_profile_sheet.dart)"
+  },
+  "senderProfilePhoneHiddenLabel": "📞 Numéro révélé après acceptation",
+  "@senderProfilePhoneHiddenLabel": {
+    "description": "Numéro masqué avant acceptation, expéditeur non joignable (sender_profile_sheet.dart)"
+  },
+  "senderProfilePhoneLoadingLabel": "Numéro en cours de récupération…",
+  "@senderProfilePhoneLoadingLabel": {
+    "description": "Numéro en cours de révélation (sender_profile_sheet.dart)"
+  },
+  "senderProfileShipmentsLabel": "Envois",
+  "@senderProfileShipmentsLabel": {
+    "description": "Libellé de la stat « Envois » (sender_profile_sheet.dart)"
+  },
+  "blockMenuEntryLabel": "Bloquer {name}",
+  "@blockMenuEntryLabel": {
+    "description": "Entrée du menu ⋯ de blocage (block_user_action.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockSuccessMessage": "{name} a été bloqué(e)",
+  "@blockSuccessMessage": {
+    "description": "Snackbar de confirmation de blocage (block_user_action.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockConfirmTitle": "Bloquer {name} ?",
+  "@blockConfirmTitle": {
+    "description": "Titre du dialog de confirmation de blocage (block_user_action.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockConfirmBody": "Il·elle ne pourra plus voir tes annonces ni t'envoyer d'offre. Tu ne verras plus les siennes non plus. Tu pourras le·la débloquer à tout moment dans Confidentialité.",
+  "@blockConfirmBody": {
+    "description": "Corps du dialog de confirmation de blocage (block_user_action.dart)"
+  },
+  "blockConfirmButton": "Bloquer",
+  "@blockConfirmButton": {
+    "description": "Bouton de confirmation du blocage (block_user_action.dart)"
+  },
+  "bidTravelerRoleTag": "VOYAGEUR",
+  "@bidTravelerRoleTag": {
+    "description": "Étiquette de rôle en tête de la carte voyageur (voyageur_card.dart, et partie D pour voyageur_contact_card.dart)"
+  },
+  "voyageurCardCallSemanticLabel": "Appeler",
+  "@voyageurCardCallSemanticLabel": {
+    "description": "Libellé d'accessibilité du bouton d'appel (voyageur_card.dart)"
+  },
+  "voyageurCardOpenChatSemanticLabel": "Ouvrir la discussion",
+  "@voyageurCardOpenChatSemanticLabel": {
+    "description": "Libellé d'accessibilité du bouton de messagerie (voyageur_card.dart)"
   }
 }

@@ -5,12 +5,14 @@ import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.d
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_list_item.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_summary_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -64,8 +66,8 @@ class _SenderProfileSheet extends StatelessWidget {
   final BidModel bid;
   final ScrollController scrollController;
 
-  String get _abbreviatedName {
-    final name = bid.resolvedSenderName;
+  String _abbreviatedName(BuildContext context) {
+    final name = bid.senderDisplayName(context.l10n);
     final parts = name.trim().split(' ');
     if (parts.length >= 2) {
       return '${parts[0]} ${parts[1][0]}.';
@@ -105,11 +107,11 @@ class _SenderProfileSheet extends StatelessWidget {
                   right: DonySpacing.sm,
                   child: IconButton(
                     icon: DonyIcon('ellipsis', color: cs.onSurfaceVariant),
-                    tooltip: 'Plus d\'options',
+                    tooltip: context.l10n.profileSheetMoreOptionsTooltip,
                     onPressed: () => showBlockMenu(
                       context,
                       userId: bid.senderId,
-                      displayName: _abbreviatedName,
+                      displayName: _abbreviatedName(context),
                     ),
                   ),
                 ),
@@ -134,14 +136,14 @@ class _SenderProfileSheet extends StatelessWidget {
                   child: Column(
                     children: [
                       DonyAvatar(
-                        name: bid.resolvedSenderName,
+                        name: bid.senderDisplayName(context.l10n),
                         size: DonyAvatarSize.xl,
                         verified: bid.senderKycVerified,
                         pro: bid.senderIsProAccount,
                       ),
                       const SizedBox(height: DonySpacing.md),
                       Text(
-                        _abbreviatedName,
+                        _abbreviatedName(context),
                         style: tt.headlineLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: cs.onSurface,
@@ -165,7 +167,10 @@ class _SenderProfileSheet extends StatelessWidget {
                                 ),
                                 const SizedBox(width: DonySpacing.xs),
                                 Text(
-                                  phone ?? 'Numéro en cours de récupération…',
+                                  phone ??
+                                      context
+                                          .l10n
+                                          .senderProfilePhoneLoadingLabel,
                                   style: tt.bodyMedium?.copyWith(
                                     color: cs.onSurfaceVariant,
                                   ),
@@ -176,7 +181,7 @@ class _SenderProfileSheet extends StatelessWidget {
                         )
                       else
                         Text(
-                          '📞 Numéro révélé après acceptation',
+                          context.l10n.senderProfilePhoneHiddenLabel,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
                             color: cs.onSurfaceVariant,
@@ -195,15 +200,15 @@ class _SenderProfileSheet extends StatelessWidget {
                             if (bid.senderIsProAccount)
                               _SheetBadge(
                                 iconAsset: 'star',
-                                label: 'Compte PRO',
+                                label: context.l10n.profileSheetProBadge,
                                 iconColor: cs.warning,
                                 bgColor: cs.warningLight,
                                 textColor: cs.warning,
                               ),
                             if (bid.senderKiloPro)
-                              const _SheetBadge(
+                              _SheetBadge(
                                 iconAsset: 'star',
-                                label: 'Kilo Pro',
+                                label: context.l10n.listingKiloProChip,
                                 iconColor: DonyColors.amberDark,
                                 bgColor: DonyColors.amberLight,
                                 textColor: DonyColors.amberDark,
@@ -211,7 +216,7 @@ class _SenderProfileSheet extends StatelessWidget {
                             if (bid.senderKycVerified)
                               _SheetBadge(
                                 iconAsset: 'badge-check',
-                                label: 'Identité vérifiée',
+                                label: context.l10n.profileSheetVerifiedBadge,
                                 iconColor: cs.primary,
                                 bgColor: cs.primaryContainer,
                                 textColor: cs.primary,
@@ -247,7 +252,7 @@ class _SenderProfileSheet extends StatelessWidget {
                         children: [
                           _SheetStat(
                             value: noteValue,
-                            label: 'Note',
+                            label: context.l10n.listingRowLabelNote,
                             iconAsset: 'star',
                             iconColor: cs.warning,
                           ),
@@ -256,7 +261,7 @@ class _SenderProfileSheet extends StatelessWidget {
                             value: bid.senderTotalShipments != null
                                 ? '${bid.senderTotalShipments}'
                                 : '–',
-                            label: 'Envois',
+                            label: context.l10n.senderProfileShipmentsLabel,
                             iconAsset: 'package',
                             iconColor: cs.primary,
                           ),
@@ -269,7 +274,7 @@ class _SenderProfileSheet extends StatelessWidget {
 
                 // ── Évaluations ────────────────────────────────────────────
                 Text(
-                  'Évaluations',
+                  context.l10n.profileSheetReviewsTitle,
                   style: tt.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
@@ -281,7 +286,7 @@ class _SenderProfileSheet extends StatelessWidget {
                     if (state is UserRatingsLoaded) {
                       if (state.ratingCount == 0) {
                         return Text(
-                          'Aucune évaluation pour l\'instant.',
+                          context.l10n.profileSheetNoReviewsYet,
                           style: tt.bodyMedium?.copyWith(
                             color: cs.onSurfaceVariant,
                           ),
@@ -306,7 +311,9 @@ class _SenderProfileSheet extends StatelessWidget {
                                     page: state.page + 1,
                                   ),
                                 ),
-                                child: const Text('Voir plus'),
+                                child: Text(
+                                  context.l10n.profileSheetSeeMoreReviews,
+                                ),
                               ),
                             ),
                         ],
@@ -319,7 +326,7 @@ class _SenderProfileSheet extends StatelessWidget {
                             UserRatingsLoadRequested(userId: bid.senderId),
                           ),
                           icon: const DonyIcon('refresh-cw'),
-                          label: const Text('Réessayer'),
+                          label: Text(context.l10n.commonRetry),
                         ),
                       );
                     }

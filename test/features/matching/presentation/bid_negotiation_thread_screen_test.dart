@@ -30,6 +30,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/error_reporting_test_doubles.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 
 class _MockNegotiationBloc
     extends MockBloc<BidNegotiationEvent, BidNegotiationState>
@@ -797,6 +798,47 @@ void main() {
       await tester.pump(_kSettle);
 
       verify(() => authService.isPinSet()).called(1);
+    });
+  });
+
+  group('en anglais', () {
+    testWidgets('montant, tour et actions traduits', (tester) async {
+      useEnglish();
+      await pumpScreen(tester, BidNegotiationLoaded(_thread()));
+
+      expect(find.text('You would pay'), findsOneWidget);
+      expect(find.text('Round 1 of 6'), findsOneWidget);
+      expect(find.text('Accept'), findsOneWidget);
+      expect(find.text('Counter-propose'), findsOneWidget);
+      expect(find.text('Reject'), findsOneWidget);
+    });
+
+    testWidgets('fil clos par refus : message traduit', (tester) async {
+      useEnglish();
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(
+            status: 'NEGOTIATION_CLOSED',
+            myTurn: false,
+            messages: const [
+              BidNegotiationMessage(
+                id: 'm1',
+                kind: BidNegotiationMessageKind.proposal,
+                authorId: 'sender-1',
+                proposedGrossEur: 42,
+              ),
+              BidNegotiationMessage(
+                id: 'm2',
+                kind: BidNegotiationMessageKind.reject,
+                authorId: 'traveler-1',
+              ),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.text('Proposal rejected.'), findsOneWidget);
     });
   });
 }
