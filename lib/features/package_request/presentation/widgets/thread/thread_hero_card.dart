@@ -76,26 +76,6 @@ enum ThreadStatusVariant {
     ),
   };
 
-  String get badge => switch (this) {
-    open => 'EN COURS',
-    awaitingTrip => 'ATT. TRAJET',
-    awaitingPayment => 'PAIEMENT',
-    awaitingCommission => 'COMMISSION',
-    awaitingDeposit => 'DÉPÔT',
-    accepted => 'ACCEPTÉE',
-    terminal => 'TERMINÉ',
-  };
-
-  String get priceLabel => switch (this) {
-    open => 'PRIX ACTUEL',
-    awaitingTrip => 'ACCORD TROUVÉ',
-    awaitingPayment => 'À RÉGLER',
-    awaitingCommission => 'COMMISSION DUE',
-    awaitingDeposit => 'DÉPÔT EN COURS',
-    accepted => 'DEMANDE ACCEPTÉE',
-    terminal => 'PRIX FINAL',
-  };
-
   String get iconAsset => switch (this) {
     open => 'handshake',
     awaitingTrip => 'hourglass',
@@ -104,6 +84,38 @@ enum ThreadStatusVariant {
     awaitingDeposit => 'smartphone',
     accepted => 'circle-check',
     terminal => 'circle-x',
+  };
+}
+
+/// Libellés traduits de [ThreadStatusVariant] : pastille de statut et
+/// libellé au-dessus du prix. Repris tels quels par `_StatusPill`
+/// (my_negotiations_screen.dart) — même texte, même clé.
+extension ThreadStatusVariantL10n on ThreadStatusVariant {
+  String badge(AppLocalizations l) => switch (this) {
+    ThreadStatusVariant.open => l.negotiationStatusBadgeOpen,
+    ThreadStatusVariant.awaitingTrip => l.negotiationStatusBadgeAwaitingTrip,
+    ThreadStatusVariant.awaitingPayment =>
+      l.negotiationStatusBadgeAwaitingPayment,
+    ThreadStatusVariant.awaitingCommission =>
+      l.negotiationStatusBadgeAwaitingCommission,
+    ThreadStatusVariant.awaitingDeposit =>
+      l.negotiationStatusBadgeAwaitingDeposit,
+    ThreadStatusVariant.accepted => l.negotiationStatusBadgeAccepted,
+    ThreadStatusVariant.terminal => l.negotiationStatusBadgeTerminal,
+  };
+
+  String priceLabel(AppLocalizations l) => switch (this) {
+    ThreadStatusVariant.open => l.negotiationStatusPriceLabelOpen,
+    ThreadStatusVariant.awaitingTrip =>
+      l.negotiationStatusPriceLabelAwaitingTrip,
+    ThreadStatusVariant.awaitingPayment =>
+      l.negotiationStatusPriceLabelAwaitingPayment,
+    ThreadStatusVariant.awaitingCommission =>
+      l.negotiationStatusPriceLabelAwaitingCommission,
+    ThreadStatusVariant.awaitingDeposit =>
+      l.negotiationStatusPriceLabelAwaitingDeposit,
+    ThreadStatusVariant.accepted => l.negotiationStatusPriceLabelAccepted,
+    ThreadStatusVariant.terminal => l.negotiationStatusPriceLabelTerminal,
   };
 }
 
@@ -186,7 +198,7 @@ class ThreadHeroCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            statusVariant.priceLabel,
+                            statusVariant.priceLabel(context.l10n),
                             style: Theme.of(context).textTheme.bodyMedium!
                                 .copyWith(
                                   fontSize: 11,
@@ -219,7 +231,7 @@ class ThreadHeroCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    _StatusBadge(label: statusVariant.badge),
+                    _StatusBadge(label: statusVariant.badge(context.l10n)),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -238,7 +250,7 @@ class ThreadHeroCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      '⚠ Dernier round : Accepter ou Refuser uniquement',
+                      context.l10n.negotiationLastRoundWarning,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -294,7 +306,7 @@ class _RoundProgress extends StatelessWidget {
     return Row(
       children: [
         Text(
-          'Round $n/$max',
+          context.l10n.negotiationRoundCounter(n, max),
           style: Theme.of(context).textTheme.bodyMedium!.copyWith(
             fontSize: 12,
             fontWeight: FontWeight.w600,

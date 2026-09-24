@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
@@ -660,5 +662,87 @@ void main() {
         verify(() => bloc.add(const NegotiationNudgeRequested('t1'))).called(1);
       },
     );
+  });
+
+  group('en anglais — un état par rôle', () {
+    testWidgets('OPEN · sender → "Accept: You pay X €" / "Counter-offer" / '
+        '"Decline"', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.open, canAccept: true),
+          _viewerSender,
+        ),
+      );
+      // Le montant reste formaté selon la devise (EUR → fr_FR), seul le
+      // libellé se traduit : CurrencyFormatter.format ne dépend pas de la
+      // langue de l'app.
+      expect(find.text('Accept: You pay 42,56 €'), findsOneWidget);
+      expect(find.text('Counter-offer'), findsOneWidget);
+      expect(find.text('Decline'), findsOneWidget);
+    });
+
+    testWidgets('OPEN · traveler → "Accept: You receive X €"', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.open, canAccept: true),
+          _viewerTraveler,
+        ),
+      );
+      expect(find.textContaining('Accept: You receive 38'), findsOneWidget);
+    });
+
+    testWidgets('AWAITING_TRIP · sender → bandeau traduit', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.awaitingTrip),
+          _viewerSender,
+        ),
+      );
+      expect(find.text('The traveler is preparing their trip'), findsOneWidget);
+    });
+
+    testWidgets('AWAITING_TRIP · traveler → boutons traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.awaitingTrip),
+          _viewerTraveler,
+        ),
+      );
+      expect(find.text('Link a trip to this offer'), findsOneWidget);
+      expect(find.text('Create a dedicated trip'), findsOneWidget);
+    });
+
+    testWidgets('ACCEPTED · sender → bandeau traduit', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(_thread(status: NegotiationThreadStatus.accepted), _viewerSender),
+      );
+      expect(find.text('Request accepted and paid'), findsOneWidget);
+    });
+
+    testWidgets('bouton Relancer traduit', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.awaitingTrip, canNudge: true),
+          _viewerSender,
+        ),
+      );
+      expect(find.text('Send a reminder'), findsOneWidget);
+    });
+
+    testWidgets('négociation terminée (rejected) → message traduit', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(_thread(status: NegotiationThreadStatus.rejected), _viewerSender),
+      );
+      expect(find.text('This negotiation has ended'), findsOneWidget);
+    });
   });
 }

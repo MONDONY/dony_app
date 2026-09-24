@@ -5750,4 +5750,392 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voyageurCardOpenChatSemanticLabel => 'Open the conversation';
+
+  @override
+  String get negotiationStatusBadgeOpen => 'IN PROGRESS';
+
+  @override
+  String get negotiationStatusBadgeAwaitingTrip => 'AWAITING TRIP';
+
+  @override
+  String get negotiationStatusBadgeAwaitingPayment => 'PAYMENT';
+
+  @override
+  String get negotiationStatusBadgeAwaitingCommission => 'FEE';
+
+  @override
+  String get negotiationStatusBadgeAwaitingDeposit => 'DEPOSIT';
+
+  @override
+  String get negotiationStatusBadgeAccepted => 'ACCEPTED';
+
+  @override
+  String get negotiationStatusBadgeTerminal => 'CLOSED';
+
+  @override
+  String get negotiationStatusPriceLabelOpen => 'CURRENT PRICE';
+
+  @override
+  String get negotiationStatusPriceLabelAwaitingTrip => 'DEAL AGREED';
+
+  @override
+  String get negotiationStatusPriceLabelAwaitingPayment => 'DUE';
+
+  @override
+  String get negotiationStatusPriceLabelAwaitingCommission => 'SERVICE FEE DUE';
+
+  @override
+  String get negotiationStatusPriceLabelAwaitingDeposit =>
+      'DEPOSIT IN PROGRESS';
+
+  @override
+  String get negotiationStatusPriceLabelAccepted => 'REQUEST ACCEPTED';
+
+  @override
+  String get negotiationStatusPriceLabelTerminal => 'FINAL PRICE';
+
+  @override
+  String get negotiationLastRoundWarning =>
+      '⚠ Last round: Accept or Decline only';
+
+  @override
+  String negotiationRoundCounter(int round, int max) {
+    return 'Round $round/$max';
+  }
+
+  @override
+  String get negotiationMessageNewBadge => 'NEW';
+
+  @override
+  String get negotiationMessageKindProposalBadge => 'PROPOSAL';
+
+  @override
+  String get negotiationMessageKindCounterBadge => 'COUNTER-OFFER';
+
+  @override
+  String get negotiationMessageKindRejectedBadge => 'DECLINED';
+
+  @override
+  String get negotiationNudgeSentMessage => 'Reminder sent';
+
+  @override
+  String get negotiationNudgeRateLimitedMessage =>
+      'Already sent a reminder recently';
+
+  @override
+  String get negotiationNudgeGenericErrorMessage =>
+      'Can\'t send a reminder right now, try again later';
+
+  @override
+  String get negotiationOpenAwaitingReplyTitle => 'Waiting for a reply';
+
+  @override
+  String get negotiationOpenAwaitingReplySubtitle =>
+      'You\'ll be notified as soon as the other party replies.';
+
+  @override
+  String get negotiationAwaitingTripSenderTitle =>
+      'The traveler is preparing their trip';
+
+  @override
+  String get negotiationAwaitingTripSenderSubtitle =>
+      'You\'ll be notified as soon as they\'ve confirmed it.';
+
+  @override
+  String get negotiationLinkTripButton => 'Link a trip to this offer';
+
+  @override
+  String get negotiationCreateDedicatedTripButton => 'Create a dedicated trip';
+
+  @override
+  String negotiationCompleteAndPayButton(String amount) {
+    return 'Complete & pay $amount';
+  }
+
+  @override
+  String get negotiationAwaitingPaymentTravelerTitle =>
+      'Waiting for the sender\'s payment';
+
+  @override
+  String get negotiationAwaitingPaymentTravelerSubtitle =>
+      'You\'ll be notified as soon as they\'ve paid.';
+
+  @override
+  String get negotiationAwaitingDepositTravelerTitle =>
+      'The sender is paying by mobile money';
+
+  @override
+  String get negotiationAwaitingDepositTravelerSubtitle =>
+      'You\'ll be notified as soon as the payment is confirmed.';
+
+  @override
+  String get negotiationDepositInProgressTitle =>
+      'Mobile money deposit in progress';
+
+  @override
+  String get negotiationDepositSubtitleDefault =>
+      'Confirm the payment on your phone.';
+
+  @override
+  String get negotiationDepositSubtitleExpired =>
+      'Time\'s up, the thread will go back to “awaiting payment”.';
+
+  @override
+  String negotiationDepositSubtitleExpiring(int minutes) {
+    return 'Confirm the payment on your phone. Expires in $minutes min.';
+  }
+
+  @override
+  String get negotiationResumePaymentButton => 'Resume payment';
+
+  @override
+  String get negotiationChangePaymentMethodButton => 'Change payment method';
+
+  @override
+  String get negotiationAwaitingCommissionSenderTitle =>
+      'Waiting for the traveler\'s confirmation';
+
+  @override
+  String get negotiationAwaitingCommissionSenderSubtitle =>
+      'Your request stays open: you can keep receiving and accepting other offers until they\'ve paid.';
+
+  @override
+  String get negotiationCommissionTravelerBannerTitle =>
+      'Confirm you\'re taking this parcel';
+
+  @override
+  String negotiationCommissionTravelerBannerSubtitle(String amount) {
+    return 'The sender picked your offer. Pay the Yadony service fee ($amount) before the deadline to get this parcel, or another traveler could beat you to it.';
+  }
+
+  @override
+  String get negotiationPayCommissionButton => 'Pay the service fee';
+
+  @override
+  String get negotiationDeclineParcelDialogTitle => 'Give up this parcel?';
+
+  @override
+  String get negotiationDeclineParcelDialogMessage =>
+      'The request will immediately become available to another traveler. This action is final.';
+
+  @override
+  String get negotiationDeclineParcelConfirmButton => 'Give up';
+
+  @override
+  String get negotiationDeclineParcelButton => 'Give up this parcel';
+
+  @override
+  String get negotiationAcceptedPaidTitle => 'Request accepted and paid';
+
+  @override
+  String get negotiationAcceptedTitle => 'Request accepted';
+
+  @override
+  String get negotiationAcceptedPaidSubtitle =>
+      'You can move on to the next tracking steps.';
+
+  @override
+  String get negotiationAcceptedCashSubtitle =>
+      'Payment is made in cash at parcel drop-off.';
+
+  @override
+  String get negotiationAcceptedOtherSubtitle =>
+      'Payment is made at parcel drop-off.';
+
+  @override
+  String get negotiationViewShipmentButton => 'View my shipment';
+
+  @override
+  String get negotiationEndedMessage => 'This negotiation has ended';
+
+  @override
+  String get negotiationNudgeButton => 'Send a reminder';
+
+  @override
+  String negotiationSenderAcceptButton(String amount) {
+    return 'Accept: You pay $amount';
+  }
+
+  @override
+  String get negotiationDeclineButton => 'Decline';
+
+  @override
+  String negotiationTravelerAcceptButton(String amount) {
+    return 'Accept: You receive $amount';
+  }
+
+  @override
+  String get negotiationCommissionCountdownExpired => 'Time\'s up';
+
+  @override
+  String negotiationCommissionCountdownHours(int hours, String minutes) {
+    return '${hours}h ${minutes}min left';
+  }
+
+  @override
+  String negotiationCommissionCountdownMinutes(String minutes, String seconds) {
+    return '$minutes:$seconds left';
+  }
+
+  @override
+  String get negotiationRefuseTripAction => 'Decline this trip';
+
+  @override
+  String get negotiationConfirmRefusalButton => 'Confirm the refusal';
+
+  @override
+  String get negotiationRefuseTripWarning =>
+      'The traveler will need to suggest another trip. This action cannot be undone.';
+
+  @override
+  String get negotiationRefusalReasonLabel => 'Reason for refusal (optional)';
+
+  @override
+  String get negotiationRefusalReasonHint =>
+      'E.g.: wrong date, trip cancelled…';
+
+  @override
+  String get negotiationLinkedTripSheetTitle => 'Linked trip';
+
+  @override
+  String get negotiationTripRouteLabel => 'Route';
+
+  @override
+  String get negotiationTripDepartureDateLabel => 'Departure date';
+
+  @override
+  String get negotiationTripDepartureTimeLabel => 'Departure time';
+
+  @override
+  String get negotiationTripAvailableWeightLabel => 'Available weight';
+
+  @override
+  String get negotiationTripPickupAddressLabel => 'Drop-off address';
+
+  @override
+  String get negotiationTripDeliveryAddressLabel => 'Delivery address';
+
+  @override
+  String get negotiationTripTravelerNoteLabel => 'Traveler\'s note';
+
+  @override
+  String get negotiationEndedSnackbar => 'Negotiation ended';
+
+  @override
+  String get negotiationRejectedSnackbar => 'Negotiation declined';
+
+  @override
+  String get negotiationCommissionSettledSnackbar =>
+      'Service fee paid: this parcel is yours!';
+
+  @override
+  String get negotiationGaveUpParcelSnackbar =>
+      'You\'ve given up this parcel, it\'s available to another traveler again.';
+
+  @override
+  String get negotiationFallbackTitle => 'Negotiation';
+
+  @override
+  String get negotiationEndMenuItem => 'End the negotiation';
+
+  @override
+  String get negotiationEndDialogTitle => 'End this negotiation?';
+
+  @override
+  String get negotiationEndDialogMessage => 'This action is final.';
+
+  @override
+  String get negotiationEndDialogConfirmButton => 'End it';
+
+  @override
+  String get negotiationListTitle => 'Price discussions';
+
+  @override
+  String get negotiationEmptyTitle => 'No negotiations';
+
+  @override
+  String get negotiationEmptyDescription =>
+      'Your active negotiations will show up here as soon as a traveler makes an offer.';
+
+  @override
+  String get negotiationSearchHint => 'Traveler, city…';
+
+  @override
+  String negotiationFilterAllCountLabel(int count) {
+    return 'All ($count)';
+  }
+
+  @override
+  String negotiationFilterActiveCountLabel(int count) {
+    return 'In progress ($count)';
+  }
+
+  @override
+  String negotiationFilterTerminalCountLabel(int count) {
+    return 'Completed ($count)';
+  }
+
+  @override
+  String get negotiationEmptyActiveFilter => 'No negotiations in progress';
+
+  @override
+  String get negotiationEmptyTerminalFilter => 'No completed negotiations';
+
+  @override
+  String get negotiationSourcePillRequest => 'Request';
+
+  @override
+  String negotiationTravelerFallbackWithId(String id) {
+    return 'Traveler $id';
+  }
+
+  @override
+  String get negotiationStageDealPending => 'deal';
+
+  @override
+  String get negotiationStageDepositInProgress => 'deposit in progress';
+
+  @override
+  String get negotiationStageCommissionDue => 'service fee due';
+
+  @override
+  String get negotiationStagePaid => 'paid';
+
+  @override
+  String get negotiationTripCardCounterpartyFallback => 'Counterpart';
+
+  @override
+  String negotiationTripCardRoundLabel(int round, String timeAgo) {
+    return 'Round $round · $timeAgo';
+  }
+
+  @override
+  String get negotiationLinkTripScreenTitle => 'Link a trip';
+
+  @override
+  String get negotiationSelectTripLabel => 'Select a trip';
+
+  @override
+  String get negotiationConfirmTripLabel => 'Confirm this trip';
+
+  @override
+  String get negotiationSelectedTripCount => '1 trip';
+
+  @override
+  String negotiationLinkTripDate(String date) {
+    return 'Travel date: $date';
+  }
+
+  @override
+  String negotiationLinkTripKgAvailable(String kg) {
+    return '$kg kg available';
+  }
+
+  @override
+  String negotiationAcceptedAtPriceBanner(String amount) {
+    return 'Request accepted at $amount';
+  }
+
+  @override
+  String get negotiationSenderChoosesAmong => 'The sender will choose from';
 }

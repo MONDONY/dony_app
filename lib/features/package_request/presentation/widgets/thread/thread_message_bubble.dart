@@ -89,7 +89,7 @@ class ThreadMessageBubble extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _kindLabel(message.kind),
+                    _kindLabel(context.l10n, message.kind),
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
@@ -157,7 +157,7 @@ class ThreadMessageBubble extends StatelessWidget {
                     borderRadius: BorderRadius.circular(DonyRadius.xl),
                   ),
                   child: Text(
-                    'NOUVEAU',
+                    context.l10n.negotiationMessageNewBadge,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 9,
                       fontWeight: FontWeight.w800,
@@ -173,10 +173,14 @@ class ThreadMessageBubble extends StatelessWidget {
     );
   }
 
-  String _kindLabel(NegotiationMessageKind k) => switch (k) {
-    NegotiationMessageKind.proposal => 'PROPOSITION',
-    NegotiationMessageKind.counter => 'CONTRE-OFFRE',
-    NegotiationMessageKind.accept => 'ACCEPTÉE',
-    NegotiationMessageKind.reject => 'REJETÉE',
-  };
+  String _kindLabel(AppLocalizations l, NegotiationMessageKind k) =>
+      switch (k) {
+        NegotiationMessageKind.proposal =>
+          l.negotiationMessageKindProposalBadge,
+        NegotiationMessageKind.counter => l.negotiationMessageKindCounterBadge,
+        // Même texte tout capitales que la pastille de statut « ACCEPTÉE »
+        // du hero card et de `_StatusPill` : une seule clé pour les trois.
+        NegotiationMessageKind.accept => l.negotiationStatusBadgeAccepted,
+        NegotiationMessageKind.reject => l.negotiationMessageKindRejectedBadge,
+      };
 }

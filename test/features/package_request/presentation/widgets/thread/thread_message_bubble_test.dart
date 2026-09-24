@@ -5,6 +5,8 @@ import 'package:dony/features/package_request/presentation/widgets/thread/thread
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 NegotiationMessage _msg({
   required NegotiationMessageKind kind,
   double? price = 35,
@@ -153,6 +155,24 @@ void main() {
       );
       expect(find.textContaining('€'), findsNothing);
       expect(find.text('REJETÉE'), findsOneWidget);
+    });
+
+    testWidgets('en anglais : labels et badge NOUVEAU traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(
+          ThreadMessageBubble(
+            message: _msg(kind: NegotiationMessageKind.counter, price: 38),
+            mine: false,
+            highlight: true,
+            isTraveler: false,
+          ),
+        ),
+      );
+      expect(find.text('COUNTER-OFFER'), findsOneWidget);
+      expect(find.text('NEW'), findsOneWidget);
     });
   });
 }

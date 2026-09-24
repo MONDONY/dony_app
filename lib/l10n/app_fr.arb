@@ -5428,5 +5428,537 @@
   "voyageurCardOpenChatSemanticLabel": "Ouvrir la discussion",
   "@voyageurCardOpenChatSemanticLabel": {
     "description": "Libellé d'accessibilité du bouton de messagerie (voyageur_card.dart)"
+  },
+  "negotiationStatusBadgeOpen": "EN COURS",
+    "@negotiationStatusBadgeOpen": {
+    "description": "Pastille de statut OPEN (thread_hero_card.dart, réutilisée par _StatusPill de my_negotiations_screen.dart)"
+  },
+  "negotiationStatusBadgeAwaitingTrip": "ATT. TRAJET",
+    "@negotiationStatusBadgeAwaitingTrip": {
+    "description": "Pastille de statut AWAITING_TRIP (thread_hero_card.dart)"
+  },
+  "negotiationStatusBadgeAwaitingPayment": "PAIEMENT",
+    "@negotiationStatusBadgeAwaitingPayment": {
+    "description": "Pastille de statut AWAITING_PAYMENT (thread_hero_card.dart)"
+  },
+  "negotiationStatusBadgeAwaitingCommission": "COMMISSION",
+    "@negotiationStatusBadgeAwaitingCommission": {
+    "description": "Pastille de statut AWAITING_COMMISSION (thread_hero_card.dart)"
+  },
+  "negotiationStatusBadgeAwaitingDeposit": "DÉPÔT",
+    "@negotiationStatusBadgeAwaitingDeposit": {
+    "description": "Pastille de statut AWAITING_DEPOSIT (thread_hero_card.dart)"
+  },
+  "negotiationStatusBadgeAccepted": "ACCEPTÉE",
+    "@negotiationStatusBadgeAccepted": {
+    "description": "Pastille de statut ACCEPTED (thread_hero_card.dart) — aussi le libellé du message système « acceptée » dans thread_message_bubble.dart, texte identique"
+  },
+  "negotiationStatusBadgeTerminal": "TERMINÉ",
+    "@negotiationStatusBadgeTerminal": {
+    "description": "Pastille de statut terminal (rejected/autoRejected/expired/cancelled) (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelOpen": "PRIX ACTUEL",
+    "@negotiationStatusPriceLabelOpen": {
+    "description": "Libellé au-dessus du prix pour OPEN (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelAwaitingTrip": "ACCORD TROUVÉ",
+    "@negotiationStatusPriceLabelAwaitingTrip": {
+    "description": "Libellé au-dessus du prix pour AWAITING_TRIP (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelAwaitingPayment": "À RÉGLER",
+    "@negotiationStatusPriceLabelAwaitingPayment": {
+    "description": "Libellé au-dessus du prix pour AWAITING_PAYMENT (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelAwaitingCommission": "COMMISSION DUE",
+    "@negotiationStatusPriceLabelAwaitingCommission": {
+    "description": "Libellé au-dessus du prix pour AWAITING_COMMISSION (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelAwaitingDeposit": "DÉPÔT EN COURS",
+    "@negotiationStatusPriceLabelAwaitingDeposit": {
+    "description": "Libellé au-dessus du prix pour AWAITING_DEPOSIT (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelAccepted": "DEMANDE ACCEPTÉE",
+    "@negotiationStatusPriceLabelAccepted": {
+    "description": "Libellé au-dessus du prix pour ACCEPTED (thread_hero_card.dart)"
+  },
+  "negotiationStatusPriceLabelTerminal": "PRIX FINAL",
+    "@negotiationStatusPriceLabelTerminal": {
+    "description": "Libellé au-dessus du prix pour un statut terminal (thread_hero_card.dart)"
+  },
+  "negotiationLastRoundWarning": "⚠ Dernier round : Accepter ou Refuser uniquement",
+    "@negotiationLastRoundWarning": {
+    "description": "Alerte dernier round sans contre-offre possible (thread_hero_card.dart)"
+  },
+  "negotiationRoundCounter": "Round {round}/{max}",
+    "@negotiationRoundCounter": {
+    "description": "Compteur de round du hero card, identique en fr/en (« Round » est déjà utilisé tel quel en français dans ce contexte) (thread_hero_card.dart)",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationMessageNewBadge": "NOUVEAU",
+    "@negotiationMessageNewBadge": {
+    "description": "Badge « nouveau message » (thread_message_bubble.dart, réutilisé par la carte de liste my_negotiations_screen.dart)"
+  },
+  "negotiationMessageKindProposalBadge": "PROPOSITION",
+    "@negotiationMessageKindProposalBadge": {
+    "description": "Libellé capitales du type de message « proposition » (thread_message_bubble.dart)"
+  },
+  "negotiationMessageKindCounterBadge": "CONTRE-OFFRE",
+    "@negotiationMessageKindCounterBadge": {
+    "description": "Libellé capitales du type de message « contre-offre » (thread_message_bubble.dart)"
+  },
+  "negotiationMessageKindRejectedBadge": "REJETÉE",
+    "@negotiationMessageKindRejectedBadge": {
+    "description": "Libellé capitales du type de message « rejetée » (thread_message_bubble.dart)"
+  },
+  "negotiationNudgeSentMessage": "Relance envoyée",
+    "@negotiationNudgeSentMessage": {
+    "description": "Snackbar de succès après relance (thread_state_cta_bar.dart)"
+  },
+  "negotiationNudgeRateLimitedMessage": "Déjà relancé récemment",
+    "@negotiationNudgeRateLimitedMessage": {
+    "description": "Snackbar d'erreur de relance, code nudge/rate-limited (thread_state_cta_bar.dart)"
+  },
+  "negotiationNudgeGenericErrorMessage": "Impossible de relancer pour le moment, réessaie plus tard",
+    "@negotiationNudgeGenericErrorMessage": {
+    "description": "Snackbar d'erreur de relance générique (thread_state_cta_bar.dart)"
+  },
+  "negotiationOpenAwaitingReplyTitle": "En attente de la réponse",
+    "@negotiationOpenAwaitingReplyTitle": {
+    "description": "Bandeau OPEN quand le dernier message est du viewer (thread_state_cta_bar.dart)"
+  },
+  "negotiationOpenAwaitingReplySubtitle": "Tu seras notifié dès que la partie adverse répondra.",
+    "@negotiationOpenAwaitingReplySubtitle": {
+    "description": "Sous-titre du bandeau « en attente de la réponse » (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingTripSenderTitle": "Le voyageur prépare son trajet",
+    "@negotiationAwaitingTripSenderTitle": {
+    "description": "Bandeau AWAITING_TRIP côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingTripSenderSubtitle": "Tu seras notifié dès qu'il l'aura confirmé.",
+    "@negotiationAwaitingTripSenderSubtitle": {
+    "description": "Sous-titre du bandeau AWAITING_TRIP côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationLinkTripButton": "Lier un trajet à cette offre",
+    "@negotiationLinkTripButton": {
+    "description": "Bouton AWAITING_TRIP côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationCreateDedicatedTripButton": "Créer un trajet dédié",
+    "@negotiationCreateDedicatedTripButton": {
+    "description": "Bouton AWAITING_TRIP côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationCompleteAndPayButton": "Compléter & payer {amount}",
+    "@negotiationCompleteAndPayButton": {
+    "description": "Bouton AWAITING_PAYMENT côté expéditeur (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationAwaitingPaymentTravelerTitle": "En attente du paiement de l'expéditeur",
+    "@negotiationAwaitingPaymentTravelerTitle": {
+    "description": "Bandeau AWAITING_PAYMENT côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingPaymentTravelerSubtitle": "Tu seras notifié dès qu'il aura réglé.",
+    "@negotiationAwaitingPaymentTravelerSubtitle": {
+    "description": "Sous-titre du bandeau AWAITING_PAYMENT côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingDepositTravelerTitle": "L'expéditeur règle par mobile money",
+    "@negotiationAwaitingDepositTravelerTitle": {
+    "description": "Bandeau AWAITING_DEPOSIT côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingDepositTravelerSubtitle": "Tu seras notifié dès que le paiement sera confirmé.",
+    "@negotiationAwaitingDepositTravelerSubtitle": {
+    "description": "Sous-titre du bandeau AWAITING_DEPOSIT côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationDepositInProgressTitle": "Dépôt mobile money en cours",
+    "@negotiationDepositInProgressTitle": {
+    "description": "Bandeau AWAITING_DEPOSIT côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationDepositSubtitleDefault": "Valide le paiement sur ton téléphone.",
+    "@negotiationDepositSubtitleDefault": {
+    "description": "Sous-titre du dépôt en cours, échéance inconnue (thread_state_cta_bar.dart)"
+  },
+  "negotiationDepositSubtitleExpired": "Le délai est écoulé, le fil va revenir à « à payer ».",
+    "@negotiationDepositSubtitleExpired": {
+    "description": "Sous-titre du dépôt en cours, échéance dépassée (thread_state_cta_bar.dart)"
+  },
+  "negotiationDepositSubtitleExpiring": "Valide le paiement sur ton téléphone. Expire dans {minutes} min.",
+    "@negotiationDepositSubtitleExpiring": {
+    "description": "Sous-titre du dépôt en cours, échéance future (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationResumePaymentButton": "Reprendre le paiement",
+    "@negotiationResumePaymentButton": {
+    "description": "Bouton AWAITING_DEPOSIT côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationChangePaymentMethodButton": "Changer de moyen de paiement",
+    "@negotiationChangePaymentMethodButton": {
+    "description": "Bouton AWAITING_DEPOSIT côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingCommissionSenderTitle": "En attente de la confirmation du voyageur",
+    "@negotiationAwaitingCommissionSenderTitle": {
+    "description": "Bandeau AWAITING_COMMISSION côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationAwaitingCommissionSenderSubtitle": "Ta demande reste ouverte : tu peux continuer à recevoir et accepter d'autres offres tant qu'il n'a pas réglé.",
+    "@negotiationAwaitingCommissionSenderSubtitle": {
+    "description": "Sous-titre du bandeau AWAITING_COMMISSION côté expéditeur (thread_state_cta_bar.dart)"
+  },
+  "negotiationCommissionTravelerBannerTitle": "Confirme ta prise en charge",
+    "@negotiationCommissionTravelerBannerTitle": {
+    "description": "Bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationCommissionTravelerBannerSubtitle": "L'expéditeur a retenu ton offre. Règle la commission Yadony ({amount}) avant l'échéance pour emporter ce colis, sinon un autre voyageur peut te doubler.",
+    "@negotiationCommissionTravelerBannerSubtitle": {
+    "description": "Sous-titre du bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationPayCommissionButton": "Régler la commission",
+    "@negotiationPayCommissionButton": {
+    "description": "Bouton de règlement de la commission (thread_state_cta_bar.dart)"
+  },
+  "negotiationDeclineParcelDialogTitle": "Renoncer à ce colis ?",
+    "@negotiationDeclineParcelDialogTitle": {
+    "description": "Titre du dialog de renoncement à la commission (thread_state_cta_bar.dart)"
+  },
+  "negotiationDeclineParcelDialogMessage": "La demande sera aussitôt disponible pour un autre voyageur. Cette action est définitive.",
+    "@negotiationDeclineParcelDialogMessage": {
+    "description": "Message du dialog de renoncement à la commission (thread_state_cta_bar.dart)"
+  },
+  "negotiationDeclineParcelConfirmButton": "Renoncer",
+    "@negotiationDeclineParcelConfirmButton": {
+    "description": "Bouton de confirmation du dialog de renoncement (thread_state_cta_bar.dart)"
+  },
+  "negotiationDeclineParcelButton": "Renoncer à ce colis",
+    "@negotiationDeclineParcelButton": {
+    "description": "Lien discret d'ouverture du dialog de renoncement (thread_state_cta_bar.dart)"
+  },
+  "negotiationAcceptedPaidTitle": "Demande acceptée et payée",
+    "@negotiationAcceptedPaidTitle": {
+    "description": "Bandeau ACCEPTED, paiement en ligne (thread_state_cta_bar.dart)"
+  },
+  "negotiationAcceptedTitle": "Demande acceptée",
+    "@negotiationAcceptedTitle": {
+    "description": "Bandeau ACCEPTED, paiement hors ligne (thread_state_cta_bar.dart)"
+  },
+  "negotiationAcceptedPaidSubtitle": "Tu peux passer aux étapes suivantes du suivi.",
+    "@negotiationAcceptedPaidSubtitle": {
+    "description": "Sous-titre du bandeau ACCEPTED payé en ligne (thread_state_cta_bar.dart)"
+  },
+  "negotiationAcceptedCashSubtitle": "Le paiement se fait en espèces à la remise du colis.",
+    "@negotiationAcceptedCashSubtitle": {
+    "description": "Sous-titre du bandeau ACCEPTED, paiement cash (thread_state_cta_bar.dart)"
+  },
+  "negotiationAcceptedOtherSubtitle": "Le paiement se fait à la remise du colis.",
+    "@negotiationAcceptedOtherSubtitle": {
+    "description": "Sous-titre du bandeau ACCEPTED, autre moyen hors ligne (thread_state_cta_bar.dart)"
+  },
+  "negotiationViewShipmentButton": "Voir mon envoi",
+    "@negotiationViewShipmentButton": {
+    "description": "Bouton vers le détail de l'envoi matérialisé (thread_state_cta_bar.dart)"
+  },
+  "negotiationEndedMessage": "Cette négociation est terminée",
+    "@negotiationEndedMessage": {
+    "description": "Message centré pour les statuts terminaux (thread_state_cta_bar.dart)"
+  },
+  "negotiationNudgeButton": "Relancer",
+    "@negotiationNudgeButton": {
+    "description": "Bouton secondaire de relance (thread_state_cta_bar.dart)"
+  },
+  "negotiationSenderAcceptButton": "Accepter : Tu paies {amount}",
+    "@negotiationSenderAcceptButton": {
+    "description": "Bouton d'acceptation côté expéditeur, montant brut (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationDeclineButton": "Rejeter",
+    "@negotiationDeclineButton": {
+    "description": "Bouton de refus, expéditeur et voyageur (thread_state_cta_bar.dart)"
+  },
+  "negotiationTravelerAcceptButton": "Accepter : Tu reçois {amount}",
+    "@negotiationTravelerAcceptButton": {
+    "description": "Bouton d'acceptation côté voyageur, montant net (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationCommissionCountdownExpired": "Délai écoulé",
+    "@negotiationCommissionCountdownExpired": {
+    "description": "Compte à rebours de la commission, échéance dépassée (thread_state_cta_bar.dart)"
+  },
+  "negotiationCommissionCountdownHours": "Il te reste {hours}h {minutes}min",
+    "@negotiationCommissionCountdownHours": {
+    "description": "Compte à rebours de la commission, au moins une heure restante ; `minutes` déjà mis en forme sur deux chiffres (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationCommissionCountdownMinutes": "Il te reste {minutes}:{seconds}",
+    "@negotiationCommissionCountdownMinutes": {
+    "description": "Compte à rebours de la commission, moins d'une heure restante ; `minutes`/`seconds` déjà mis en forme sur deux chiffres (thread_state_cta_bar.dart)",
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationRefuseTripAction": "Refuser ce trajet",
+    "@negotiationRefuseTripAction": {
+    "description": "Bouton et titre de confirmation du refus d'un trajet lié (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationConfirmRefusalButton": "Confirmer le refus",
+    "@negotiationConfirmRefusalButton": {
+    "description": "Bouton de confirmation du refus (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationRefuseTripWarning": "Le voyageur devra proposer un autre trajet. Cette action est irréversible.",
+    "@negotiationRefuseTripWarning": {
+    "description": "Bandeau d'avertissement de la confirmation de refus (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationRefusalReasonLabel": "Raison du refus (optionnel)",
+    "@negotiationRefusalReasonLabel": {
+    "description": "Label du champ de raison du refus (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationRefusalReasonHint": "Ex : date incorrecte, trajet annulé…",
+    "@negotiationRefusalReasonHint": {
+    "description": "Placeholder du champ de raison du refus (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationLinkedTripSheetTitle": "Trajet lié",
+    "@negotiationLinkedTripSheetTitle": {
+    "description": "Titre de la feuille de détail du trajet lié (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripRouteLabel": "Itinéraire",
+    "@negotiationTripRouteLabel": {
+    "description": "Libellé de la ligne itinéraire (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripDepartureDateLabel": "Date de départ",
+    "@negotiationTripDepartureDateLabel": {
+    "description": "Libellé de la ligne date de départ (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripDepartureTimeLabel": "Heure de départ",
+    "@negotiationTripDepartureTimeLabel": {
+    "description": "Libellé de la ligne heure de départ (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripAvailableWeightLabel": "Poids disponible",
+    "@negotiationTripAvailableWeightLabel": {
+    "description": "Libellé de la ligne poids disponible (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripPickupAddressLabel": "Adresse de remise",
+    "@negotiationTripPickupAddressLabel": {
+    "description": "Libellé de la ligne adresse de remise (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripDeliveryAddressLabel": "Adresse de livraison",
+    "@negotiationTripDeliveryAddressLabel": {
+    "description": "Libellé de la ligne adresse de livraison (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationTripTravelerNoteLabel": "Note du voyageur",
+    "@negotiationTripTravelerNoteLabel": {
+    "description": "Libellé de la note du voyageur (trip_detail_bottom_sheet.dart)"
+  },
+  "negotiationEndedSnackbar": "Négociation terminée",
+    "@negotiationEndedSnackbar": {
+    "description": "Snackbar de fin de négociation via le menu (negotiation_thread_screen.dart)"
+  },
+  "negotiationRejectedSnackbar": "Négociation rejetée",
+    "@negotiationRejectedSnackbar": {
+    "description": "Snackbar de rejet via reject_bottom_sheet (negotiation_thread_screen.dart)"
+  },
+  "negotiationCommissionSettledSnackbar": "Commission réglée : ce colis est à toi !",
+    "@negotiationCommissionSettledSnackbar": {
+    "description": "Snackbar de succès du règlement de la commission (negotiation_thread_screen.dart)"
+  },
+  "negotiationGaveUpParcelSnackbar": "Tu as renoncé à ce colis, il reste disponible pour un autre voyageur.",
+    "@negotiationGaveUpParcelSnackbar": {
+    "description": "Snackbar de confirmation du renoncement (negotiation_thread_screen.dart)"
+  },
+  "negotiationFallbackTitle": "Négociation",
+    "@negotiationFallbackTitle": {
+    "description": "Titre de l'AppBar tant que le fil n'est pas chargé (negotiation_thread_screen.dart)"
+  },
+  "negotiationEndMenuItem": "Mettre fin à la négociation",
+    "@negotiationEndMenuItem": {
+    "description": "Entrée du menu ⋯ pour mettre fin à la négociation (negotiation_thread_screen.dart)"
+  },
+  "negotiationEndDialogTitle": "Mettre fin à cette négociation ?",
+    "@negotiationEndDialogTitle": {
+    "description": "Titre du dialog de confirmation de fin de négociation (negotiation_thread_screen.dart)"
+  },
+  "negotiationEndDialogMessage": "Cette action est définitive.",
+    "@negotiationEndDialogMessage": {
+    "description": "Message du dialog de confirmation de fin de négociation (negotiation_thread_screen.dart)"
+  },
+  "negotiationEndDialogConfirmButton": "Mettre fin",
+    "@negotiationEndDialogConfirmButton": {
+    "description": "Bouton de confirmation du dialog de fin de négociation (negotiation_thread_screen.dart)"
+  },
+  "negotiationListTitle": "Discussions de prix",
+    "@negotiationListTitle": {
+    "description": "Titre de l'écran « Discussions de prix » (my_negotiations_screen.dart)"
+  },
+  "negotiationEmptyTitle": "Aucune négociation",
+    "@negotiationEmptyTitle": {
+    "description": "Titre de l'état vide global et du filtre « Toutes » sans résultat (my_negotiations_screen.dart)"
+  },
+  "negotiationEmptyDescription": "Tes négociations actives apparaîtront ici dès qu'un voyageur fait une offre.",
+    "@negotiationEmptyDescription": {
+    "description": "Description de l'état vide global (my_negotiations_screen.dart)"
+  },
+  "negotiationSearchHint": "Voyageur, ville…",
+    "@negotiationSearchHint": {
+    "description": "Placeholder du champ de recherche (my_negotiations_screen.dart)"
+  },
+  "negotiationFilterAllCountLabel": "Toutes ({count})",
+    "@negotiationFilterAllCountLabel": {
+    "description": "Chip de filtre « Toutes » avec le total (my_negotiations_screen.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationFilterActiveCountLabel": "En cours ({count})",
+    "@negotiationFilterActiveCountLabel": {
+    "description": "Chip de filtre « En cours » avec le total (my_negotiations_screen.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationFilterTerminalCountLabel": "Terminées ({count})",
+    "@negotiationFilterTerminalCountLabel": {
+    "description": "Chip de filtre « Terminées » avec le total (my_negotiations_screen.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "negotiationEmptyActiveFilter": "Aucune négociation en cours",
+    "@negotiationEmptyActiveFilter": {
+    "description": "État vide du filtre « En cours » (my_negotiations_screen.dart)"
+  },
+  "negotiationEmptyTerminalFilter": "Aucune négociation terminée",
+    "@negotiationEmptyTerminalFilter": {
+    "description": "État vide du filtre « Terminées » (my_negotiations_screen.dart)"
+  },
+  "negotiationSourcePillRequest": "Demande",
+    "@negotiationSourcePillRequest": {
+    "description": "Pastille de source « Demande » sur une carte de négociation colis (my_negotiations_screen.dart)"
+  },
+  "negotiationTravelerFallbackWithId": "Voyageur {id}",
+    "@negotiationTravelerFallbackWithId": {
+    "description": "Nom de repli du voyageur avec les 4 premiers caractères de son id (my_negotiations_screen.dart)",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationStageDealPending": "accord",
+    "@negotiationStageDealPending": {
+    "description": "Libellé compact sous le prix, statut AWAITING_TRIP (my_negotiations_screen.dart, _NegoCard)"
+  },
+  "negotiationStageDepositInProgress": "dépôt en cours",
+    "@negotiationStageDepositInProgress": {
+    "description": "Libellé compact sous le prix, statut AWAITING_DEPOSIT (my_negotiations_screen.dart, _NegoCard)"
+  },
+  "negotiationStageCommissionDue": "commission due",
+    "@negotiationStageCommissionDue": {
+    "description": "Libellé compact sous le prix, statut AWAITING_COMMISSION (my_negotiations_screen.dart, _NegoCard)"
+  },
+  "negotiationStagePaid": "payé",
+    "@negotiationStagePaid": {
+    "description": "Libellé compact sous le prix, statut ACCEPTED (my_negotiations_screen.dart, _NegoCard)"
+  },
+  "negotiationTripCardCounterpartyFallback": "Interlocuteur",
+    "@negotiationTripCardCounterpartyFallback": {
+    "description": "Nom de repli de l'interlocuteur sur une carte de négociation de trajet (my_negotiations_screen.dart, _TripNegoCard)"
+  },
+  "negotiationTripCardRoundLabel": "Tour {round} · {timeAgo}",
+    "@negotiationTripCardRoundLabel": {
+    "description": "Ligne round + horodatage relatif d'une carte de négociation de trajet ; `timeAgo` déjà traduit (my_negotiations_screen.dart, _TripNegoCard)",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "timeAgo": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationLinkTripScreenTitle": "Lier un trajet",
+    "@negotiationLinkTripScreenTitle": {
+    "description": "Titre de l'AppBar de l'écran de liaison de trajet (link_trip_screen.dart)"
+  },
+  "negotiationSelectTripLabel": "Sélectionner un trajet",
+    "@negotiationSelectTripLabel": {
+    "description": "Label par défaut de la barre de sélection (link_trip_screen.dart)"
+  },
+  "negotiationConfirmTripLabel": "Confirmer ce trajet",
+    "@negotiationConfirmTripLabel": {
+    "description": "Label confirmé de la barre de sélection (link_trip_screen.dart)"
+  },
+  "negotiationSelectedTripCount": "1 trajet",
+    "@negotiationSelectedTripCount": {
+    "description": "Décompte affiché quand un trajet est sélectionné, toujours exactement un (link_trip_screen.dart)"
+  },
+  "negotiationLinkTripDate": "Date de voyage : {date}",
+    "@negotiationLinkTripDate": {
+    "description": "Date de voyage affichée sur le récapitulatif de l'écran de liaison (link_trip_screen.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationLinkTripKgAvailable": "{kg} kg dispo",
+    "@negotiationLinkTripKgAvailable": {
+    "description": "Kg disponibles du trajet sélectionné, utilisé aussi par my_negotiations_screen.dart (link_trip_screen.dart)",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationAcceptedAtPriceBanner": "Demande acceptée à {amount}",
+    "@negotiationAcceptedAtPriceBanner": {
+    "description": "Bandeau de récapitulatif du prix accepté (link_trip_screen.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negotiationSenderChoosesAmong": "L'expéditeur choisira parmi",
+    "@negotiationSenderChoosesAmong": {
+    "description": "Titre de l'aperçu des moyens de paiement acceptés (link_trip_screen.dart)"
   }
 }

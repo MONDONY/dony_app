@@ -146,6 +146,7 @@ const _sameInBothLanguages = <String>{
   'bidCreateMobileMoneySubtitle', // « Orange Money, Wave, MTN » : noms de marque
   'bidCreateTotalLabel', // « Total » se dit pareil
   'bidCreatePromoBadge', // « Promo » se dit pareil
+  'negotiationRoundCounter', // « Round » déjà utilisé tel quel en français
 };
 
 void main() {

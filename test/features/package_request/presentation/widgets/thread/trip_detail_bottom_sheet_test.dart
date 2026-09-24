@@ -4,6 +4,8 @@ import 'package:dony/features/package_request/presentation/widgets/thread/trip_d
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 LinkedTripSummary _trip({
   String? date,
   String? time,
@@ -153,6 +155,24 @@ void main() {
         findsOneWidget,
       ); // confirmation title
       expect(find.text('Confirmer le refus'), findsOneWidget);
+    });
+  });
+
+  group('en anglais', () {
+    testWidgets('titre, adresses et bouton de refus traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _buildApp(
+          _trip(pickupLabel: '10 rue Rivoli', deliveryLabel: 'Aéroport DSS'),
+          isSender: true,
+        ),
+      );
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('Linked trip'), findsOneWidget);
+      expect(find.text('Drop-off address'), findsOneWidget);
+      expect(find.text('Delivery address'), findsOneWidget);
+      expect(find.text('Decline this trip'), findsOneWidget);
     });
   });
 }

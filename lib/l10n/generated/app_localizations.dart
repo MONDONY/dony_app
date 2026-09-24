@@ -9608,6 +9608,666 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ouvrir la discussion'**
   String get voyageurCardOpenChatSemanticLabel;
+
+  /// Pastille de statut OPEN (thread_hero_card.dart, réutilisée par _StatusPill de my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'EN COURS'**
+  String get negotiationStatusBadgeOpen;
+
+  /// Pastille de statut AWAITING_TRIP (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'ATT. TRAJET'**
+  String get negotiationStatusBadgeAwaitingTrip;
+
+  /// Pastille de statut AWAITING_PAYMENT (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PAIEMENT'**
+  String get negotiationStatusBadgeAwaitingPayment;
+
+  /// Pastille de statut AWAITING_COMMISSION (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'COMMISSION'**
+  String get negotiationStatusBadgeAwaitingCommission;
+
+  /// Pastille de statut AWAITING_DEPOSIT (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DÉPÔT'**
+  String get negotiationStatusBadgeAwaitingDeposit;
+
+  /// Pastille de statut ACCEPTED (thread_hero_card.dart) — aussi le libellé du message système « acceptée » dans thread_message_bubble.dart, texte identique
+  ///
+  /// In fr, this message translates to:
+  /// **'ACCEPTÉE'**
+  String get negotiationStatusBadgeAccepted;
+
+  /// Pastille de statut terminal (rejected/autoRejected/expired/cancelled) (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'TERMINÉ'**
+  String get negotiationStatusBadgeTerminal;
+
+  /// Libellé au-dessus du prix pour OPEN (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PRIX ACTUEL'**
+  String get negotiationStatusPriceLabelOpen;
+
+  /// Libellé au-dessus du prix pour AWAITING_TRIP (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'ACCORD TROUVÉ'**
+  String get negotiationStatusPriceLabelAwaitingTrip;
+
+  /// Libellé au-dessus du prix pour AWAITING_PAYMENT (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À RÉGLER'**
+  String get negotiationStatusPriceLabelAwaitingPayment;
+
+  /// Libellé au-dessus du prix pour AWAITING_COMMISSION (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'COMMISSION DUE'**
+  String get negotiationStatusPriceLabelAwaitingCommission;
+
+  /// Libellé au-dessus du prix pour AWAITING_DEPOSIT (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DÉPÔT EN COURS'**
+  String get negotiationStatusPriceLabelAwaitingDeposit;
+
+  /// Libellé au-dessus du prix pour ACCEPTED (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DEMANDE ACCEPTÉE'**
+  String get negotiationStatusPriceLabelAccepted;
+
+  /// Libellé au-dessus du prix pour un statut terminal (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PRIX FINAL'**
+  String get negotiationStatusPriceLabelTerminal;
+
+  /// Alerte dernier round sans contre-offre possible (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'⚠ Dernier round : Accepter ou Refuser uniquement'**
+  String get negotiationLastRoundWarning;
+
+  /// Compteur de round du hero card, identique en fr/en (« Round » est déjà utilisé tel quel en français dans ce contexte) (thread_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Round {round}/{max}'**
+  String negotiationRoundCounter(int round, int max);
+
+  /// Badge « nouveau message » (thread_message_bubble.dart, réutilisé par la carte de liste my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'NOUVEAU'**
+  String get negotiationMessageNewBadge;
+
+  /// Libellé capitales du type de message « proposition » (thread_message_bubble.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PROPOSITION'**
+  String get negotiationMessageKindProposalBadge;
+
+  /// Libellé capitales du type de message « contre-offre » (thread_message_bubble.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'CONTRE-OFFRE'**
+  String get negotiationMessageKindCounterBadge;
+
+  /// Libellé capitales du type de message « rejetée » (thread_message_bubble.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'REJETÉE'**
+  String get negotiationMessageKindRejectedBadge;
+
+  /// Snackbar de succès après relance (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Relance envoyée'**
+  String get negotiationNudgeSentMessage;
+
+  /// Snackbar d'erreur de relance, code nudge/rate-limited (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Déjà relancé récemment'**
+  String get negotiationNudgeRateLimitedMessage;
+
+  /// Snackbar d'erreur de relance générique (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de relancer pour le moment, réessaie plus tard'**
+  String get negotiationNudgeGenericErrorMessage;
+
+  /// Bandeau OPEN quand le dernier message est du viewer (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de la réponse'**
+  String get negotiationOpenAwaitingReplyTitle;
+
+  /// Sous-titre du bandeau « en attente de la réponse » (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu seras notifié dès que la partie adverse répondra.'**
+  String get negotiationOpenAwaitingReplySubtitle;
+
+  /// Bandeau AWAITING_TRIP côté expéditeur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur prépare son trajet'**
+  String get negotiationAwaitingTripSenderTitle;
+
+  /// Sous-titre du bandeau AWAITING_TRIP côté expéditeur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu seras notifié dès qu\'il l\'aura confirmé.'**
+  String get negotiationAwaitingTripSenderSubtitle;
+
+  /// Bouton AWAITING_TRIP côté voyageur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lier un trajet à cette offre'**
+  String get negotiationLinkTripButton;
+
+  /// Bouton AWAITING_TRIP côté voyageur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un trajet dédié'**
+  String get negotiationCreateDedicatedTripButton;
+
+  /// Bouton AWAITING_PAYMENT côté expéditeur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Compléter & payer {amount}'**
+  String negotiationCompleteAndPayButton(String amount);
+
+  /// Bandeau AWAITING_PAYMENT côté voyageur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente du paiement de l\'expéditeur'**
+  String get negotiationAwaitingPaymentTravelerTitle;
+
+  /// Sous-titre du bandeau AWAITING_PAYMENT côté voyageur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu seras notifié dès qu\'il aura réglé.'**
+  String get negotiationAwaitingPaymentTravelerSubtitle;
+
+  /// Bandeau AWAITING_DEPOSIT côté voyageur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur règle par mobile money'**
+  String get negotiationAwaitingDepositTravelerTitle;
+
+  /// Sous-titre du bandeau AWAITING_DEPOSIT côté voyageur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu seras notifié dès que le paiement sera confirmé.'**
+  String get negotiationAwaitingDepositTravelerSubtitle;
+
+  /// Bandeau AWAITING_DEPOSIT côté expéditeur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépôt mobile money en cours'**
+  String get negotiationDepositInProgressTitle;
+
+  /// Sous-titre du dépôt en cours, échéance inconnue (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Valide le paiement sur ton téléphone.'**
+  String get negotiationDepositSubtitleDefault;
+
+  /// Sous-titre du dépôt en cours, échéance dépassée (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le délai est écoulé, le fil va revenir à « à payer ».'**
+  String get negotiationDepositSubtitleExpired;
+
+  /// Sous-titre du dépôt en cours, échéance future (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Valide le paiement sur ton téléphone. Expire dans {minutes} min.'**
+  String negotiationDepositSubtitleExpiring(int minutes);
+
+  /// Bouton AWAITING_DEPOSIT côté expéditeur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre le paiement'**
+  String get negotiationResumePaymentButton;
+
+  /// Bouton AWAITING_DEPOSIT côté expéditeur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de moyen de paiement'**
+  String get negotiationChangePaymentMethodButton;
+
+  /// Bandeau AWAITING_COMMISSION côté expéditeur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de la confirmation du voyageur'**
+  String get negotiationAwaitingCommissionSenderTitle;
+
+  /// Sous-titre du bandeau AWAITING_COMMISSION côté expéditeur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ta demande reste ouverte : tu peux continuer à recevoir et accepter d\'autres offres tant qu\'il n\'a pas réglé.'**
+  String get negotiationAwaitingCommissionSenderSubtitle;
+
+  /// Bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirme ta prise en charge'**
+  String get negotiationCommissionTravelerBannerTitle;
+
+  /// Sous-titre du bandeau AWAITING_COMMISSION côté voyageur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur a retenu ton offre. Règle la commission Yadony ({amount}) avant l\'échéance pour emporter ce colis, sinon un autre voyageur peut te doubler.'**
+  String negotiationCommissionTravelerBannerSubtitle(String amount);
+
+  /// Bouton de règlement de la commission (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Régler la commission'**
+  String get negotiationPayCommissionButton;
+
+  /// Titre du dialog de renoncement à la commission (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Renoncer à ce colis ?'**
+  String get negotiationDeclineParcelDialogTitle;
+
+  /// Message du dialog de renoncement à la commission (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La demande sera aussitôt disponible pour un autre voyageur. Cette action est définitive.'**
+  String get negotiationDeclineParcelDialogMessage;
+
+  /// Bouton de confirmation du dialog de renoncement (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Renoncer'**
+  String get negotiationDeclineParcelConfirmButton;
+
+  /// Lien discret d'ouverture du dialog de renoncement (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Renoncer à ce colis'**
+  String get negotiationDeclineParcelButton;
+
+  /// Bandeau ACCEPTED, paiement en ligne (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande acceptée et payée'**
+  String get negotiationAcceptedPaidTitle;
+
+  /// Bandeau ACCEPTED, paiement hors ligne (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande acceptée'**
+  String get negotiationAcceptedTitle;
+
+  /// Sous-titre du bandeau ACCEPTED payé en ligne (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu peux passer aux étapes suivantes du suivi.'**
+  String get negotiationAcceptedPaidSubtitle;
+
+  /// Sous-titre du bandeau ACCEPTED, paiement cash (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement se fait en espèces à la remise du colis.'**
+  String get negotiationAcceptedCashSubtitle;
+
+  /// Sous-titre du bandeau ACCEPTED, autre moyen hors ligne (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement se fait à la remise du colis.'**
+  String get negotiationAcceptedOtherSubtitle;
+
+  /// Bouton vers le détail de l'envoi matérialisé (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mon envoi'**
+  String get negotiationViewShipmentButton;
+
+  /// Message centré pour les statuts terminaux (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette négociation est terminée'**
+  String get negotiationEndedMessage;
+
+  /// Bouton secondaire de relance (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Relancer'**
+  String get negotiationNudgeButton;
+
+  /// Bouton d'acceptation côté expéditeur, montant brut (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter : Tu paies {amount}'**
+  String negotiationSenderAcceptButton(String amount);
+
+  /// Bouton de refus, expéditeur et voyageur (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Rejeter'**
+  String get negotiationDeclineButton;
+
+  /// Bouton d'acceptation côté voyageur, montant net (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter : Tu reçois {amount}'**
+  String negotiationTravelerAcceptButton(String amount);
+
+  /// Compte à rebours de la commission, échéance dépassée (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Délai écoulé'**
+  String get negotiationCommissionCountdownExpired;
+
+  /// Compte à rebours de la commission, au moins une heure restante ; `minutes` déjà mis en forme sur deux chiffres (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Il te reste {hours}h {minutes}min'**
+  String negotiationCommissionCountdownHours(int hours, String minutes);
+
+  /// Compte à rebours de la commission, moins d'une heure restante ; `minutes`/`seconds` déjà mis en forme sur deux chiffres (thread_state_cta_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Il te reste {minutes}:{seconds}'**
+  String negotiationCommissionCountdownMinutes(String minutes, String seconds);
+
+  /// Bouton et titre de confirmation du refus d'un trajet lié (trip_detail_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser ce trajet'**
+  String get negotiationRefuseTripAction;
+
+  /// Bouton de confirmation du refus (trip_detail_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer le refus'**
+  String get negotiationConfirmRefusalButton;
+
+  /// Bandeau d'avertissement de la confirmation de refus (trip_detail_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur devra proposer un autre trajet. Cette action est irréversible.'**
+  String get negotiationRefuseTripWarning;
+
+  /// Label du champ de raison du refus (trip_detail_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Raison du refus (optionnel)'**
+  String get negotiationRefusalReasonLabel;
+
+  /// Placeholder du champ de raison du refus (trip_detail_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : date incorrecte, trajet annulé…'**
+  String get negotiationRefusalReasonHint;
+
+  /// Titre de la feuille de détail du trajet lié (trip_detail_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet lié'**
+  String get negotiationLinkedTripSheetTitle;
+
+  /// Libellé de la ligne itinéraire (trip_detail_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Itinéraire'**
+  String get negotiationTripRouteLabel;
+
+  /// Libellé de la ligne date de départ (trip_detail_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de départ'**
+  String get negotiationTripDepartureDateLabel;
+
+  /// Libellé de la ligne heure de départ (trip_detail_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure de départ'**
+  String get negotiationTripDepartureTimeLabel;
+
+  /// Libellé de la ligne poids disponible (trip_detail_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids disponible'**
+  String get negotiationTripAvailableWeightLabel;
+
+  /// Libellé de la ligne adresse de remise (trip_detail_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse de remise'**
+  String get negotiationTripPickupAddressLabel;
+
+  /// Libellé de la ligne adresse de livraison (trip_detail_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse de livraison'**
+  String get negotiationTripDeliveryAddressLabel;
+
+  /// Libellé de la note du voyageur (trip_detail_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Note du voyageur'**
+  String get negotiationTripTravelerNoteLabel;
+
+  /// Snackbar de fin de négociation via le menu (negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Négociation terminée'**
+  String get negotiationEndedSnackbar;
+
+  /// Snackbar de rejet via reject_bottom_sheet (negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Négociation rejetée'**
+  String get negotiationRejectedSnackbar;
+
+  /// Snackbar de succès du règlement de la commission (negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission réglée : ce colis est à toi !'**
+  String get negotiationCommissionSettledSnackbar;
+
+  /// Snackbar de confirmation du renoncement (negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu as renoncé à ce colis, il reste disponible pour un autre voyageur.'**
+  String get negotiationGaveUpParcelSnackbar;
+
+  /// Titre de l'AppBar tant que le fil n'est pas chargé (negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Négociation'**
+  String get negotiationFallbackTitle;
+
+  /// Entrée du menu ⋯ pour mettre fin à la négociation (negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre fin à la négociation'**
+  String get negotiationEndMenuItem;
+
+  /// Titre du dialog de confirmation de fin de négociation (negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre fin à cette négociation ?'**
+  String get negotiationEndDialogTitle;
+
+  /// Message du dialog de confirmation de fin de négociation (negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette action est définitive.'**
+  String get negotiationEndDialogMessage;
+
+  /// Bouton de confirmation du dialog de fin de négociation (negotiation_thread_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre fin'**
+  String get negotiationEndDialogConfirmButton;
+
+  /// Titre de l'écran « Discussions de prix » (my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Discussions de prix'**
+  String get negotiationListTitle;
+
+  /// Titre de l'état vide global et du filtre « Toutes » sans résultat (my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune négociation'**
+  String get negotiationEmptyTitle;
+
+  /// Description de l'état vide global (my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tes négociations actives apparaîtront ici dès qu\'un voyageur fait une offre.'**
+  String get negotiationEmptyDescription;
+
+  /// Placeholder du champ de recherche (my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur, ville…'**
+  String get negotiationSearchHint;
+
+  /// Chip de filtre « Toutes » avec le total (my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes ({count})'**
+  String negotiationFilterAllCountLabel(int count);
+
+  /// Chip de filtre « En cours » avec le total (my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours ({count})'**
+  String negotiationFilterActiveCountLabel(int count);
+
+  /// Chip de filtre « Terminées » avec le total (my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminées ({count})'**
+  String negotiationFilterTerminalCountLabel(int count);
+
+  /// État vide du filtre « En cours » (my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune négociation en cours'**
+  String get negotiationEmptyActiveFilter;
+
+  /// État vide du filtre « Terminées » (my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune négociation terminée'**
+  String get negotiationEmptyTerminalFilter;
+
+  /// Pastille de source « Demande » sur une carte de négociation colis (my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande'**
+  String get negotiationSourcePillRequest;
+
+  /// Nom de repli du voyageur avec les 4 premiers caractères de son id (my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur {id}'**
+  String negotiationTravelerFallbackWithId(String id);
+
+  /// Libellé compact sous le prix, statut AWAITING_TRIP (my_negotiations_screen.dart, _NegoCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'accord'**
+  String get negotiationStageDealPending;
+
+  /// Libellé compact sous le prix, statut AWAITING_DEPOSIT (my_negotiations_screen.dart, _NegoCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'dépôt en cours'**
+  String get negotiationStageDepositInProgress;
+
+  /// Libellé compact sous le prix, statut AWAITING_COMMISSION (my_negotiations_screen.dart, _NegoCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'commission due'**
+  String get negotiationStageCommissionDue;
+
+  /// Libellé compact sous le prix, statut ACCEPTED (my_negotiations_screen.dart, _NegoCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'payé'**
+  String get negotiationStagePaid;
+
+  /// Nom de repli de l'interlocuteur sur une carte de négociation de trajet (my_negotiations_screen.dart, _TripNegoCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Interlocuteur'**
+  String get negotiationTripCardCounterpartyFallback;
+
+  /// Ligne round + horodatage relatif d'une carte de négociation de trajet ; `timeAgo` déjà traduit (my_negotiations_screen.dart, _TripNegoCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tour {round} · {timeAgo}'**
+  String negotiationTripCardRoundLabel(int round, String timeAgo);
+
+  /// Titre de l'AppBar de l'écran de liaison de trajet (link_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lier un trajet'**
+  String get negotiationLinkTripScreenTitle;
+
+  /// Label par défaut de la barre de sélection (link_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionner un trajet'**
+  String get negotiationSelectTripLabel;
+
+  /// Label confirmé de la barre de sélection (link_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer ce trajet'**
+  String get negotiationConfirmTripLabel;
+
+  /// Décompte affiché quand un trajet est sélectionné, toujours exactement un (link_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'1 trajet'**
+  String get negotiationSelectedTripCount;
+
+  /// Date de voyage affichée sur le récapitulatif de l'écran de liaison (link_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de voyage : {date}'**
+  String negotiationLinkTripDate(String date);
+
+  /// Kg disponibles du trajet sélectionné, utilisé aussi par my_negotiations_screen.dart (link_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} kg dispo'**
+  String negotiationLinkTripKgAvailable(String kg);
+
+  /// Bandeau de récapitulatif du prix accepté (link_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande acceptée à {amount}'**
+  String negotiationAcceptedAtPriceBanner(String amount);
+
+  /// Titre de l'aperçu des moyens de paiement acceptés (link_trip_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur choisira parmi'**
+  String get negotiationSenderChoosesAmong;
 }
 
 class _AppLocalizationsDelegate

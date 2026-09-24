@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
@@ -14,6 +15,7 @@ import 'package:dony/features/package_request/presentation/widgets/thread/thread
 import 'package:dony/features/package_request/presentation/widgets/thread/trip_detail_bottom_sheet.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -65,6 +67,7 @@ class _ThreadViewState extends State<_ThreadView> {
   Widget build(BuildContext context) {
     return BlocConsumer<NegotiationBloc, NegotiationState>(
       listener: (ctx, state) {
+        final l = ctx.l10n;
         if (state is NegotiationLoaded) {
           getIt<NegotiationListBloc>().add(
             const NegotiationListRefreshRequested(),
@@ -77,8 +80,8 @@ class _ThreadViewState extends State<_ThreadView> {
           DonySnackbar.show(
             ctx,
             message: state.cancelled
-                ? 'Négociation terminée'
-                : 'Négociation rejetée',
+                ? l.negotiationEndedSnackbar
+                : l.negotiationRejectedSnackbar,
             type: DonySnackbarType.warning,
           );
           ctx.pop();
@@ -108,7 +111,7 @@ class _ThreadViewState extends State<_ThreadView> {
         if (state is NegotiationCommissionSettled) {
           DonySnackbar.show(
             ctx,
-            message: 'Commission réglée : ce colis est à toi !',
+            message: l.negotiationCommissionSettledSnackbar,
             type: DonySnackbarType.success,
           );
           ctx.read<NegotiationBloc>().add(
@@ -120,9 +123,7 @@ class _ThreadViewState extends State<_ThreadView> {
         if (state is NegotiationCommissionDeclined) {
           DonySnackbar.show(
             ctx,
-            message:
-                'Tu as renoncé à ce colis, il reste disponible pour un '
-                'autre voyageur.',
+            message: l.negotiationGaveUpParcelSnackbar,
             type: DonySnackbarType.warning,
           );
           ctx.pop();
@@ -194,7 +195,7 @@ class _ThreadViewState extends State<_ThreadView> {
               ),
             ] else ...[
               Text(
-                'Négociation',
+                context.l10n.negotiationFallbackTitle,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: cs.onSurface,
@@ -219,7 +220,7 @@ class _ThreadViewState extends State<_ThreadView> {
                 PopupMenuItem(
                   value: 'end_negotiation',
                   child: Text(
-                    'Mettre fin à la négociation',
+                    context.l10n.negotiationEndMenuItem,
                     style: TextStyle(
                       color: Theme.of(menuContext).colorScheme.error,
                     ),
@@ -259,11 +260,12 @@ class _ThreadViewState extends State<_ThreadView> {
     BuildContext context,
     NegotiationThread thread,
   ) async {
+    final l = context.l10n;
     final confirmed = await DonyDialog.show(
       context,
-      title: 'Mettre fin à cette négociation ?',
-      message: 'Cette action est définitive.',
-      confirmLabel: 'Mettre fin',
+      title: l.negotiationEndDialogTitle,
+      message: l.negotiationEndDialogMessage,
+      confirmLabel: l.negotiationEndDialogConfirmButton,
       variant: DonyDialogVariant.destructive,
     );
     if (confirmed == true && context.mounted) {
@@ -287,10 +289,11 @@ class _PartnerTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final bool iAmTraveler = viewerUserId == thread.travelerId;
     final String name = iAmTraveler
-        ? (thread.senderName ?? 'Expéditeur')
-        : (thread.travelerName ?? 'Voyageur');
+        ? (thread.senderName ?? l.bidSenderFallbackName)
+        : (thread.travelerName ?? l.tripTravelerFallbackName);
     final double? rating = iAmTraveler ? null : thread.travelerRating;
     final int? trips = iAmTraveler ? null : thread.travelerTripsCount;
     final String? photoUrl = iAmTraveler
@@ -301,7 +304,7 @@ class _PartnerTitle extends StatelessWidget {
     if (rating != null) {
       meta = '★${rating.toStringAsFixed(1)}';
       if (trips != null && trips > 0) {
-        meta += ' · $trips trajets';
+        meta += ' · ${travelerTripsCount(l, trips)}';
       }
     }
 
