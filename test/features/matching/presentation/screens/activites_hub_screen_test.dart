@@ -762,6 +762,26 @@ void main() {
       expect(find.text('History'), findsOneWidget);
       expect(find.text('Help & support'), findsOneWidget);
     });
+
+    testWidgets(
+      'en anglais, un seul trajet publié / colis envoyé reste au singulier',
+      (tester) async {
+        useEnglish();
+        await _pump(
+          tester,
+          summary: const TripsSummaryModel(
+            activeTrips: 1,
+            kgSold: 1,
+            revenue: 10,
+            tripsPublished: 1,
+            parcelsSent: 1,
+          ),
+        );
+
+        expect(find.text('1 published'), findsOneWidget);
+        expect(find.text('1 sent'), findsOneWidget);
+      },
+    );
   });
 
   group('throttle de rechargement', () {
@@ -1001,6 +1021,53 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(visitedUris, contains('/envois?status=delivered'));
+    });
+
+    testWidgets(
+      'sans tripsPublished/parcelsSent (ancien backend) : « - », jamais de tiret cadratin',
+      (tester) async {
+        await _pump(tester);
+
+        expect(find.text('-'), findsNWidgets(2));
+        expect(find.textContaining('—'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'un seul trajet publié / un seul colis envoyé : accord au singulier',
+      (tester) async {
+        await _pump(
+          tester,
+          summary: const TripsSummaryModel(
+            activeTrips: 1,
+            kgSold: 1,
+            revenue: 10,
+            tripsPublished: 1,
+            parcelsSent: 1,
+          ),
+        );
+
+        expect(find.text('1 publié'), findsOneWidget);
+        expect(find.text('1 envoyé'), findsOneWidget);
+      },
+    );
+
+    testWidgets('plusieurs trajets publiés / colis envoyés : pluriel', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        summary: const TripsSummaryModel(
+          activeTrips: 1,
+          kgSold: 1,
+          revenue: 10,
+          tripsPublished: 3,
+          parcelsSent: 4,
+        ),
+      );
+
+      expect(find.text('3 publiés'), findsOneWidget);
+      expect(find.text('4 envoyés'), findsOneWidget);
     });
   });
 

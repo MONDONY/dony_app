@@ -8774,9 +8774,9 @@
   "@activityStatTripsLabel": {
     "description": "Libellé de la tuile de statistiques Trajets (activites_hub_screen.dart _StatsRow)."
   },
-  "activityStatTripsPublished": "{count} publiés",
+  "activityStatTripsPublished": "{count, plural, one{{count} publié} other{{count} publiés}}",
   "@activityStatTripsPublished": {
-    "description": "Valeur de la tuile de statistiques Trajets (activites_hub_screen.dart _StatsRow).",
+    "description": "Valeur de la tuile de statistiques Trajets (activites_hub_screen.dart _StatsRow) ; correction d'accord 0/1 (Ruling R44, fix round 1).",
     "placeholders": {
       "count": {
         "type": "int"
@@ -8787,9 +8787,9 @@
   "@activityStatParcelsLabel": {
     "description": "Libellé de la tuile de statistiques Envois (activites_hub_screen.dart _StatsRow)."
   },
-  "activityStatParcelsSent": "{count} envoyés",
+  "activityStatParcelsSent": "{count, plural, one{{count} envoyé} other{{count} envoyés}}",
   "@activityStatParcelsSent": {
-    "description": "Valeur de la tuile de statistiques Envois (activites_hub_screen.dart _StatsRow).",
+    "description": "Valeur de la tuile de statistiques Envois (activites_hub_screen.dart _StatsRow) ; correction d'accord 0/1 (Ruling R44, fix round 1).",
     "placeholders": {
       "count": {
         "type": "int"

@@ -240,5 +240,32 @@ void main() {
       expect(en.activityNewCount(1), '1 new');
       expect(en.activityNewCount(3), '3 new');
     });
+
+    test(
+      'activityStatTripsPublished — fr : accord 0/1 corrigé (Ruling R44)',
+      () {
+        expect(fr.activityStatTripsPublished(0), '0 publié');
+        expect(fr.activityStatTripsPublished(1), '1 publié');
+        expect(fr.activityStatTripsPublished(3), '3 publiés');
+      },
+    );
+
+    test('activityStatTripsPublished — en', () {
+      expect(en.activityStatTripsPublished(0), '0 published');
+      expect(en.activityStatTripsPublished(1), '1 published');
+      expect(en.activityStatTripsPublished(3), '3 published');
+    });
+
+    test('activityStatParcelsSent — fr : accord 0/1 corrigé (Ruling R44)', () {
+      expect(fr.activityStatParcelsSent(0), '0 envoyé');
+      expect(fr.activityStatParcelsSent(1), '1 envoyé');
+      expect(fr.activityStatParcelsSent(3), '3 envoyés');
+    });
+
+    test('activityStatParcelsSent — en', () {
+      expect(en.activityStatParcelsSent(0), '0 sent');
+      expect(en.activityStatParcelsSent(1), '1 sent');
+      expect(en.activityStatParcelsSent(3), '3 sent');
+    });
   });
 }

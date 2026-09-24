@@ -962,13 +962,14 @@ class _StatsRow extends StatelessWidget {
             onTap: openKgSold,
           ),
           // Un backend antérieur ne renvoie pas ces deux compteurs. Afficher 0
-          // laisserait croire à une absence d'activité : on montre « — »,
-          // comme les tuiles dont le compteur est indisponible.
+          // laisserait croire à une absence d'activité : on montre « - »
+          // (tiret court, jamais de tiret cadratin), comme les tuiles dont le
+          // compteur est indisponible.
           StatTile(
             iconName: 'plane',
             label: l.activityStatTripsLabel,
             value: summary?.tripsPublished == null
-                ? '—'
+                ? '-'
                 : l.activityStatTripsPublished(summary!.tripsPublished!),
             color: DonyColors.violet,
             isLoading: loading,
@@ -982,7 +983,7 @@ class _StatsRow extends StatelessWidget {
             iconName: 'package',
             label: l.activityStatParcelsLabel,
             value: summary?.parcelsSent == null
-                ? '—'
+                ? '-'
                 : l.activityStatParcelsSent(summary!.parcelsSent!),
             color: cs.secondary,
             isLoading: loading,

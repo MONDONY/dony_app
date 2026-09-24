@@ -178,7 +178,10 @@ void main() {
 
     expect(find.text('6 parcels delivered'), findsOneWidget);
     expect(find.text('2 trips'), findsOneWidget);
-    expect(find.textContaining('Sep 12'), findsOneWidget);
+    // Vérifie le mot traduit lui-même, pas seulement la date : une
+    // régression qui laisserait « Départ le » en anglais passerait
+    // inaperçue avec un seul textContaining('Sep 12').
+    expect(find.textContaining('Departed Sep 12'), findsOneWidget);
   });
 
   testWidgets('erreur : « Détail indisponible », « Réessayer » recharge', (

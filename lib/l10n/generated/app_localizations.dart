@@ -13971,10 +13971,10 @@ abstract class AppLocalizations {
   /// **'Trajets'**
   String get activityStatTripsLabel;
 
-  /// Valeur de la tuile de statistiques Trajets (activites_hub_screen.dart _StatsRow).
+  /// Valeur de la tuile de statistiques Trajets (activites_hub_screen.dart _StatsRow) ; correction d'accord 0/1 (Ruling R44, fix round 1).
   ///
   /// In fr, this message translates to:
-  /// **'{count} publiés'**
+  /// **'{count, plural, one{{count} publié} other{{count} publiés}}'**
   String activityStatTripsPublished(int count);
 
   /// Libellé de la tuile de statistiques Envois (activites_hub_screen.dart _StatsRow).
@@ -13983,10 +13983,10 @@ abstract class AppLocalizations {
   /// **'Envois'**
   String get activityStatParcelsLabel;
 
-  /// Valeur de la tuile de statistiques Envois (activites_hub_screen.dart _StatsRow).
+  /// Valeur de la tuile de statistiques Envois (activites_hub_screen.dart _StatsRow) ; correction d'accord 0/1 (Ruling R44, fix round 1).
   ///
   /// In fr, this message translates to:
-  /// **'{count} envoyés'**
+  /// **'{count, plural, one{{count} envoyé} other{{count} envoyés}}'**
   String activityStatParcelsSent(int count);
 
   /// Action rapide Suivre un colis de la feuille de menu burger (activites_menu_sheet.dart).

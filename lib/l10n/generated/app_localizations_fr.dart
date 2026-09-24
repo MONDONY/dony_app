@@ -8354,7 +8354,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String activityStatTripsPublished(int count) {
-    return '$count publiés';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count publiés',
+      one: '$count publié',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -8362,7 +8368,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String activityStatParcelsSent(int count) {
-    return '$count envoyés';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count envoyés',
+      one: '$count envoyé',
+    );
+    return '$_temp0';
   }
 
   @override
