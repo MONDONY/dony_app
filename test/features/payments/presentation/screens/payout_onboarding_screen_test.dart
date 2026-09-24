@@ -23,7 +23,6 @@ import '../../../../helpers/l10n_test_helpers.dart';
 // que la constante d'état pour éviter la collision de noms.
 import '../../../../helpers/stripe_account_test_doubles.dart'
     show stripeCountryUnavailableState;
-import '../../../../helpers/l10n_test_helpers.dart';
 
 class MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
