@@ -255,6 +255,11 @@ class _MesColisHeader extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // Header maison (pas de DonyAppBar) : le scarabée de
+                  // signalement se pose à la main, à gauche de l'action
+                  // principale pour la laisser au bord.
+                  const DonyFeedbackButton(),
+                  const SizedBox(width: DonySpacing.xs),
                   HeaderPill(
                     key: const Key('mes-colis-new-request'),
                     label: 'Envoyer',

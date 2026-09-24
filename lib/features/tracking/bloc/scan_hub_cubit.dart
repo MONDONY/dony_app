@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -21,9 +22,11 @@ class ScanHubEmpty extends ScanHubState {
 }
 
 class ScanHubError extends ScanHubState {
-  const ScanHubError(this.message);
+  const ScanHubError(this.error);
 
-  final String message;
+  /// Typée, jamais un `toString()` : l'écran passe par `ErrorPresenter`, sinon le
+  /// détail brut du back (voire la `DioException` entière) s'affichait tel quel.
+  final AppException error;
 }
 
 class ScanHubLoaded extends ScanHubState {
@@ -95,7 +98,7 @@ class ScanHubCubit extends Cubit<ScanHubState> {
         ),
       );
     } catch (e) {
-      emit(ScanHubError(e.toString()));
+      emit(ScanHubError(unwrapDioError(e)));
     }
   }
 
