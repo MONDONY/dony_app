@@ -4396,5 +4396,619 @@
     }
   },
   "walletTopupMmExpired": "The payment wasn't approved in time.",
-  "walletTopupMmRefused": "The payment was declined by the mobile operator."
+  "walletTopupMmRefused": "The payment was declined by the mobile operator.",
+
+  "walletShortfallRequired": "Service fee due: {amount}",
+  "@walletShortfallRequired": {
+    "description": "Sheet « Solde insuffisant », sans breakdown : première ligne (commission_shortfall_text.dart).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletShortfallBalance": "Wallet balance: {amount}",
+  "@walletShortfallBalance": {
+    "description": "Sheet « Solde insuffisant », sans breakdown : deuxième ligne (commission_shortfall_text.dart).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletShortfallCommission": "Service fee: {amount}",
+  "@walletShortfallCommission": {
+    "description": "Sheet « Solde insuffisant », avec breakdown : montant de la commission dans la devise du colis (commission_shortfall_text.dart).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletShortfallCovered": "Your {currency} wallet covers {amount}",
+  "@walletShortfallCovered": {
+    "description": "Sheet « Solde insuffisant », part couverte par le portefeuille de la devise du colis (commission_shortfall_text.dart).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletShortfallMissing": "You're short {missing} ({converted}), and your {currency} wallet only has {balance}",
+  "@walletShortfallMissing": {
+    "description": "Sheet « Solde insuffisant », montant manquant après la part couverte par le portefeuille du colis (commission_shortfall_text.dart).",
+    "placeholders": {
+      "missing": {
+        "type": "String"
+      },
+      "converted": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      },
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "walletShortfallCommissionConverted": "Service fee: {amount} ({converted})",
+  "@walletShortfallCommissionConverted": {
+    "description": "Sheet « Solde insuffisant », rien couvert par le portefeuille du colis : commission convertie dans la devise active (commission_shortfall_text.dart).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "converted": {
+        "type": "String"
+      }
+    }
+  },
+  "walletShortfallTopUpHint": "Your {currency} wallet only has {balance}. Top up in {symbol} or {currency}, or pay by card.",
+  "@walletShortfallTopUpHint": {
+    "description": "Sheet « Solde insuffisant », invite à recharger (commission_shortfall_text.dart).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "balance": {
+        "type": "String"
+      },
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+
+  "walletTitle": "My wallet",
+  "@walletTitle": {
+    "description": "Titre du SliverAppBar de l'écran portefeuille (wallet_screen.dart _LoadedView)."
+  },
+  "walletInfoTooltip": "How it works",
+  "@walletInfoTooltip": {
+    "description": "Tooltip du bouton d'info du portefeuille (wallet_screen.dart _LoadedView)."
+  },
+  "walletInfoTitle": "How the wallet works",
+  "@walletInfoTitle": {
+    "description": "Titre de la sheet d'information du portefeuille (wallet_screen.dart _LoadedView)."
+  },
+  "walletTopupConfirmed": "+{amount} added to your {currency} wallet, confirmed by {provider}.",
+  "@walletTopupConfirmed": {
+    "description": "Bandeau de confirmation d'une recharge mobile money (wallet_screen.dart _LoadedView).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      },
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "walletRefundAbsorbedByFees": "This balance can't be refunded: the payment provider's fees absorb it entirely. It stays usable to pay for your shipments.",
+  "@walletRefundAbsorbedByFees": {
+    "description": "Bandeau affiché quand le net remboursable est nul (wallet_screen.dart _LoadedView)."
+  },
+  "walletEmptyTransactions": "No transactions yet",
+  "@walletEmptyTransactions": {
+    "description": "État vide de la liste des transactions (wallet_screen.dart _LoadedView)."
+  },
+  "walletHistorySectionTitle": "History",
+  "@walletHistorySectionTitle": {
+    "description": "Titre de la section transactions (wallet_screen.dart _LoadedView)."
+  },
+  "walletEstimatedTotalLabel": "Estimated total",
+  "@walletEstimatedTotalLabel": {
+    "description": "Libellé du montant du hero quand un total estimé multi-devises est disponible (wallet_screen.dart _HeroHeader)."
+  },
+  "walletAvailableBalanceLabel": "Available balance",
+  "@walletAvailableBalanceLabel": {
+    "description": "Libellé du montant du hero sans total estimé, et titre de la première ligne de la sheet d'info (wallet_screen.dart _HeroHeader, _WalletInfoContent)."
+  },
+  "walletEstimateCompleteNote": "Estimated at today's rate, currencies kept separate.",
+  "@walletEstimateCompleteNote": {
+    "description": "Sous-titre du total estimé quand toutes les devises ont un taux (wallet_screen.dart _HeroHeader)."
+  },
+  "walletEstimatePartialNote": "Partial estimate: one currency has no rate.",
+  "@walletEstimatePartialNote": {
+    "description": "Sous-titre du total estimé quand une devise n'a pas de taux du jour (wallet_screen.dart _HeroHeader)."
+  },
+  "walletRefundRequestSentSnackbar": "Refund request sent.",
+  "@walletRefundRequestSentSnackbar": {
+    "description": "Snackbar après l'envoi réussi d'une demande de remboursement (wallet_screen.dart _HeroHeader)."
+  },
+  "walletActionTopUp": "Top up",
+  "@walletActionTopUp": {
+    "description": "Action « Recharger » du hero, et titre de la ligne correspondante de la sheet d'info (wallet_screen.dart _HeroHeader, _WalletInfoContent)."
+  },
+  "walletActionRefund": "Refund",
+  "@walletActionRefund": {
+    "description": "Action « Rembourser » du hero, et titre de la ligne correspondante de la sheet d'info (wallet_screen.dart _HeroHeader, _WalletInfoContent)."
+  },
+  "walletActionRequests": "Requests",
+  "@walletActionRequests": {
+    "description": "Action « Demandes » du hero, et titre de la ligne correspondante de la sheet d'info (wallet_screen.dart _HeroHeader, _WalletInfoContent)."
+  },
+  "walletTxTypeMobileMoneyTopUp": "Mobile money top-up",
+  "@walletTxTypeMobileMoneyTopUp": {
+    "description": "Libellé d'une transaction TOP_UP créditée par mobile money (wallet_screen.dart _TxTile)."
+  },
+  "walletTxTypeTopUp": "Top-up",
+  "@walletTxTypeTopUp": {
+    "description": "Libellé d'une transaction TOP_UP par carte (wallet_screen.dart _TxTile)."
+  },
+  "walletTxTypeBidPayment": "Parcel payment",
+  "@walletTxTypeBidPayment": {
+    "description": "Libellé d'une transaction BID_PAYMENT (wallet_screen.dart _TxTile)."
+  },
+  "walletTxTypeCommission": "Service fee",
+  "@walletTxTypeCommission": {
+    "description": "Libellé d'une transaction COMMISSION_DEDUCTED (wallet_screen.dart _TxTile)."
+  },
+  "walletTxTypeRefund": "Refund",
+  "@walletTxTypeRefund": {
+    "description": "Libellé d'une transaction REFUND ou SELF_REFUND_OUT (wallet_screen.dart _TxTile)."
+  },
+  "walletTxTypeReferral": "Referral",
+  "@walletTxTypeReferral": {
+    "description": "Libellé d'une transaction REFERRAL_REWARD (wallet_screen.dart _TxTile)."
+  },
+  "walletTxDateTimePattern": "MMM d · h:mm a",
+  "@walletTxDateTimePattern": {
+    "description": "Motif intl DateFormat, pas un texte. Date d'une ligne de transaction (wallet_screen.dart _TxTile)."
+  },
+  "walletRefundProcessingNote": "Refund in progress · within 5 to 10 business days",
+  "@walletRefundProcessingNote": {
+    "description": "Sous-titre d'une transaction en cours de remboursement, à la place de la date (wallet_screen.dart _TxTile)."
+  },
+  "walletRateUnavailable": "rate unavailable",
+  "@walletRateUnavailable": {
+    "description": "Ligne de fin d'une devise détenue sans taux du jour (wallet_screen.dart _CurrencyBalanceRow)."
+  },
+  "walletLockedCurrencySemantics": "Locked currency {currency}, this balance stays available in its own currency",
+  "@walletLockedCurrencySemantics": {
+    "description": "Label d'accessibilité de la tuile d'une devise verrouillée (wallet_screen.dart _LockedBalanceTile).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "walletLockedBadge": "locked",
+  "@walletLockedBadge": {
+    "description": "Badge d'une devise non active à solde non nul (wallet_screen.dart _LockedBalanceTile)."
+  },
+  "walletLockedCurrencyNote": "Stays in its original currency ({currency}).",
+  "@walletLockedCurrencyNote": {
+    "description": "Sous-texte de la tuile d'une devise verrouillée (wallet_screen.dart _LockedBalanceTile).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "walletInfoBalanceDesc": "The amount you can use to pay for a shipment or request a refund.",
+  "@walletInfoBalanceDesc": {
+    "description": "Description de la ligne « Solde disponible » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
+  },
+  "walletInfoTopUpDesc": "Add funds by credit card. The credit appears as soon as the payment is validated.",
+  "@walletInfoTopUpDesc": {
+    "description": "Description de la ligne « Recharger » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
+  },
+  "walletInfoRefundDesc": "Request a refund of your balance to your original payment method.",
+  "@walletInfoRefundDesc": {
+    "description": "Description de la ligne « Rembourser » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
+  },
+  "walletInfoRequestsDesc": "Find the status of your sent refund requests.",
+  "@walletInfoRequestsDesc": {
+    "description": "Description de la ligne « Demandes » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
+  },
+  "walletInfoMultiCurrencyTitle": "Multiple currencies",
+  "@walletInfoMultiCurrencyTitle": {
+    "description": "Titre de la ligne « Plusieurs devises » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
+  },
+  "walletInfoMultiCurrencyDesc": "Your money stays in the currency it was received in. The total at the top is an estimate at today's rate, it doesn't convert anything.",
+  "@walletInfoMultiCurrencyDesc": {
+    "description": "Description de la ligne « Plusieurs devises » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
+  },
+  "walletInfoChangeCurrencyTitle": "Change currency",
+  "@walletInfoChangeCurrencyTitle": {
+    "description": "Titre de la ligne « Changer de devise » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
+  },
+  "walletInfoChangeCurrencyDesc": "The active currency can be changed in Preferences as long as your total balance is zero. Otherwise, empty your wallets first.",
+  "@walletInfoChangeCurrencyDesc": {
+    "description": "Description de la ligne « Changer de devise » de la sheet d'info (wallet_screen.dart _WalletInfoContent)."
+  },
+
+  "walletTopupMethodCard": "Credit card",
+  "@walletTopupMethodCard": {
+    "description": "Libellé de la méthode carte, réutilisé par wallet_topup_method_screen.dart (wallet_topup_amount_screen.dart _methodLabel)."
+  },
+  "walletTopupPaymentContextLabel": "Top-up of your Yadony balance",
+  "@walletTopupPaymentContextLabel": {
+    "description": "contextLabel de la DonyPaymentSheet Stripe (wallet_topup_amount_screen.dart _presentStripePaymentSheet)."
+  },
+  "walletTopupSuccessTitle": "Top-up successful!",
+  "@walletTopupSuccessTitle": {
+    "description": "Titre de l'écran de succès après une recharge Stripe (wallet_topup_amount_screen.dart _presentStripePaymentSheet)."
+  },
+  "walletTopupSuccessSubtitle": "Your balance will be credited shortly.",
+  "@walletTopupSuccessSubtitle": {
+    "description": "Sous-titre de l'écran de succès après une recharge Stripe (wallet_topup_amount_screen.dart _presentStripePaymentSheet)."
+  },
+  "walletTopupSuccessCta": "See my balance",
+  "@walletTopupSuccessCta": {
+    "description": "Bouton de l'écran de succès après une recharge Stripe (wallet_topup_amount_screen.dart _presentStripePaymentSheet)."
+  },
+  "walletTopupAmountTitle": "Top up · Step 2/2",
+  "@walletTopupAmountTitle": {
+    "description": "Titre de l'écran de saisie du montant, carte ou mobile money (wallet_topup_amount_screen.dart _buildStripe, _buildMobileMoney)."
+  },
+  "walletTopupCreditNotice": "Your Yadony balance will be credited in {code} after confirmation.",
+  "@walletTopupCreditNotice": {
+    "description": "Note sous le montant saisi, carte ou mobile money (wallet_topup_amount_screen.dart _buildStripe, _buildMobileMoney).",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "walletTopupNoDecimalsNotice": "{symbol} doesn't use cents: enter a whole number.",
+  "@walletTopupNoDecimalsNotice": {
+    "description": "Avertissement mobile money quand la devise n'a pas de sous-unité (wallet_topup_amount_screen.dart _buildMobileMoney).",
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "walletTopupCreditedAmount": "Your {currency} wallet will be credited {amount}. Your {active} wallet stays the same.",
+  "@walletTopupCreditedAmount": {
+    "description": "Bandeau de mismatch de devise mobile money, montant déjà saisi (wallet_topup_amount_screen.dart _buildMobileMoney).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "active": {
+        "type": "String"
+      }
+    }
+  },
+  "walletTopupCreditedPending": "Your {currency} wallet will be credited the amount you enter. Your {active} wallet stays the same.",
+  "@walletTopupCreditedPending": {
+    "description": "Bandeau de mismatch de devise mobile money, avant toute saisie (wallet_topup_amount_screen.dart _buildMobileMoney).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "active": {
+        "type": "String"
+      }
+    }
+  },
+  "walletTopupProcessing": "Processing…",
+  "@walletTopupProcessing": {
+    "description": "Bouton sticky pendant l'envoi, carte ou mobile money (wallet_topup_amount_screen.dart _StickyButton, _MobileMoneyStickyButton)."
+  },
+  "walletTopupEnterAmount": "Enter an amount",
+  "@walletTopupEnterAmount": {
+    "description": "Bouton sticky tant qu'aucun montant n'est saisi, carte ou mobile money (wallet_topup_amount_screen.dart _StickyButton, _MobileMoneyStickyButton)."
+  },
+  "walletTopupPayAmount": "Pay {amount} {symbol}",
+  "@walletTopupPayAmount": {
+    "description": "Bouton sticky mobile money une fois un montant saisi (wallet_topup_amount_screen.dart _MobileMoneyStickyButton).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "walletTopupAmountLabel": "Amount to top up",
+  "@walletTopupAmountLabel": {
+    "description": "Sous-texte de l'affichage du montant saisi (wallet_topup_amount_screen.dart _AmountDisplay)."
+  },
+  "walletTopupBelowMinimum": "Minimum {amount}",
+  "@walletTopupBelowMinimum": {
+    "description": "Bouton sticky Stripe quand le montant est sous le minimum de recharge (wallet_topup_amount_screen.dart _StickyButton).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletTopupViaMethod": "Top up {amount} {symbol} via {method}",
+  "@walletTopupViaMethod": {
+    "description": "Bouton sticky Stripe une fois un montant valide saisi (wallet_topup_amount_screen.dart _StickyButton).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "symbol": {
+        "type": "String"
+      },
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+
+  "walletTopupMethodCardSubtitle": "Via Stripe · Visa, Mastercard",
+  "@walletTopupMethodCardSubtitle": {
+    "description": "Sous-titre de la tuile carte bancaire : noms de marques, identique fr/en (wallet_topup_method_screen.dart _cardMethod)."
+  },
+  "walletTopupMethodMobileMoneySubtitle": "Orange Money, Wave, MTN MoMo",
+  "@walletTopupMethodMobileMoneySubtitle": {
+    "description": "Sous-titre de la tuile mobile money : noms de marques, identique fr/en (wallet_topup_method_screen.dart _mobileMoneyMethod)."
+  },
+  "walletTopupMethodTitle": "Top up · Step 1/2",
+  "@walletTopupMethodTitle": {
+    "description": "Titre de l'écran de choix de méthode de recharge (wallet_topup_method_screen.dart)."
+  },
+  "walletTopupMethodSectionLabel": "TOP-UP METHOD",
+  "@walletTopupMethodSectionLabel": {
+    "description": "Libellé de section au-dessus des tuiles de méthode (wallet_topup_method_screen.dart)."
+  },
+  "walletTopupMethodNextCta": "Next → Amount",
+  "@walletTopupMethodNextCta": {
+    "description": "Bouton sticky de l'écran de choix de méthode (wallet_topup_method_screen.dart)."
+  },
+  "walletTopupMethodCurrencyNotice": "The balance is credited in {code}, the operator's currency.",
+  "@walletTopupMethodCurrencyNotice": {
+    "description": "Note sous le champ numéro payeur mobile money, une fois le catalogue chargé (wallet_topup_method_screen.dart _MobileMoneySection).",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "walletTopupMethodNoNetworks": "No mobile money network available for this number.",
+  "@walletTopupMethodNoNetworks": {
+    "description": "Avertissement quand le catalogue d'opérateurs est vide pour le numéro saisi (wallet_topup_method_screen.dart _MobileMoneySection)."
+  },
+
+  "walletRefundConfirmTitle": "Refund my balance",
+  "@walletRefundConfirmTitle": {
+    "description": "Titre de la sheet de confirmation d'un remboursement (wallet_refund_confirm_sheet.dart)."
+  },
+  "walletRefundConfirmCta": "Refund {amount}",
+  "@walletRefundConfirmCta": {
+    "description": "Bouton sticky de la sheet de confirmation d'un remboursement (wallet_refund_confirm_sheet.dart).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletRefundableOnMobileMoney": "Refundable to mobile money: {amount}",
+  "@walletRefundableOnMobileMoney": {
+    "description": "Rail connu (pawaPay) : montant remboursable (wallet_refund_confirm_sheet.dart _ConfirmContent).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletRefundableOnCard": "Refundable to your card: {amount}",
+  "@walletRefundableOnCard": {
+    "description": "Rail connu (Stripe ou mixte) : montant remboursable (wallet_refund_confirm_sheet.dart _ConfirmContent).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletRefundable": "Refundable: {amount}",
+  "@walletRefundable": {
+    "description": "Rail encore inconnu (recharges éligibles pas encore arrivées) : montant remboursable (wallet_refund_confirm_sheet.dart _ConfirmContent).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletRefundExplainUnknown": "The amount goes back to the payment method used for the top-up. Your {currency} balance is on hold while this is processed.",
+  "@walletRefundExplainUnknown": {
+    "description": "Texte explicatif quand le rail du remboursement n'est pas encore connu (wallet_refund_confirm_sheet.dart _ConfirmContent).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "walletRefundExplainMobileMoney": "The amount goes back to the number that paid for the top-up, usually within a few minutes. Your {currency} balance is on hold while this is processed.",
+  "@walletRefundExplainMobileMoney": {
+    "description": "Texte explicatif quand le rail du remboursement est mobile money (wallet_refund_confirm_sheet.dart _ConfirmContent).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "walletRefundExplainCard": "The amount goes back to the card used for the top-up, within 5 to 10 days depending on your bank. Your balance is on hold while this is processed.",
+  "@walletRefundExplainCard": {
+    "description": "Texte explicatif quand le rail du remboursement est la carte (wallet_refund_confirm_sheet.dart _ConfirmContent)."
+  },
+  "walletRefundFeeLabel": "Refund fee",
+  "@walletRefundFeeLabel": {
+    "description": "Libellé de la ligne de frais de la sheet de confirmation (wallet_refund_confirm_sheet.dart _ConfirmContent)."
+  },
+  "walletRefundFeeFreeValue": "Free",
+  "@walletRefundFeeFreeValue": {
+    "description": "Valeur de la ligne de frais quand ils sont nuls (wallet_refund_confirm_sheet.dart _ConfirmContent)."
+  },
+  "walletRefundWillReceiveLabel": "You'll receive",
+  "@walletRefundWillReceiveLabel": {
+    "description": "Libellé du montant net de la sheet de confirmation (wallet_refund_confirm_sheet.dart _ConfirmContent)."
+  },
+  "walletRefundBonusNotice": "{amount} in bonus isn't refundable and stays in your wallet.",
+  "@walletRefundBonusNotice": {
+    "description": "Bandeau informant du bonus non remboursable (wallet_refund_confirm_sheet.dart _ConfirmContent).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletRefundFeeRetainedNotice": "This top-up was never used: the payment provider's fees are withheld. They're canceled as soon as a top-up pays for a shipment.",
+  "@walletRefundFeeRetainedNotice": {
+    "description": "Bandeau d'avertissement quand des frais sont retenus sur une recharge jamais utilisée (wallet_refund_confirm_sheet.dart _ConfirmContent)."
+  },
+
+  "walletRefundCurrencyTitle": "Which currency to refund?",
+  "@walletRefundCurrencyTitle": {
+    "description": "Titre de la sheet de choix de la devise à rembourser (wallet_refund_currency_sheet.dart)."
+  },
+  "walletRefundCurrencyHint": "One request per currency. You can make another one afterward.",
+  "@walletRefundCurrencyHint": {
+    "description": "Texte explicatif de la sheet de choix de la devise à rembourser (wallet_refund_currency_sheet.dart)."
+  },
+  "walletRefundFeeFree": "Refund fee: Free",
+  "@walletRefundFeeFree": {
+    "description": "Sous-texte d'un choix de devise, frais nuls (wallet_refund_currency_sheet.dart _choice)."
+  },
+  "walletRefundFee": "Refund fee: {amount}",
+  "@walletRefundFee": {
+    "description": "Sous-texte d'un choix de devise, frais non nuls (wallet_refund_currency_sheet.dart _choice).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletRefundCurrencyChoiceTitle": "{amount} refundable",
+  "@walletRefundCurrencyChoiceTitle": {
+    "description": "Titre d'un choix de devise (wallet_refund_currency_sheet.dart _choice).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletRefundCurrencyChoiceSubtitle": "you get {amount}",
+  "@walletRefundCurrencyChoiceSubtitle": {
+    "description": "Sous-titre d'un choix de devise, montant net (wallet_refund_currency_sheet.dart _choice).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+  "walletRefundSelectionTitle": "Choose a top-up",
+  "@walletRefundSelectionTitle": {
+    "description": "Titre de la sheet de sélection des recharges à rembourser, ancien contrat back (wallet_refund_selection_sheet.dart)."
+  },
+  "walletRefundSelectionSubtitle": "Select the top-up(s) to refund",
+  "@walletRefundSelectionSubtitle": {
+    "description": "Sous-titre de la sheet de sélection des recharges à rembourser (wallet_refund_selection_sheet.dart)."
+  },
+  "walletRefundSelectionEmpty": "No top-up available for refund right now.",
+  "@walletRefundSelectionEmpty": {
+    "description": "État vide de la liste des recharges éligibles (wallet_refund_selection_sheet.dart _SelectionList)."
+  },
+  "walletTopupDateTimePattern": "MMM d, yyyy · h:mm a",
+  "@walletTopupDateTimePattern": {
+    "description": "Motif intl DateFormat, pas un texte. Date d'une recharge éligible (wallet_refund_selection_sheet.dart _SelectionList)."
+  },
+  "walletRefundSelectionCta": "Select a top-up",
+  "@walletRefundSelectionCta": {
+    "description": "Bouton sticky tant qu'aucune recharge n'est cochée (wallet_refund_selection_sheet.dart _SelectionStickyBottom)."
+  },
+  "walletRefundSelectionCount": "Refund ({count})",
+  "@walletRefundSelectionCount": {
+    "description": "Bouton sticky une fois des recharges cochées (wallet_refund_selection_sheet.dart _SelectionStickyBottom).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "walletRefundRequestsTitle": "My refunds",
+  "@walletRefundRequestsTitle": {
+    "description": "Titre de l'écran « Mes remboursements » (wallet_refund_requests_screen.dart)."
+  },
+  "walletRefundRequestsLoadError": "Couldn't load your refund requests.",
+  "@walletRefundRequestsLoadError": {
+    "description": "Message d'erreur de chargement de l'écran « Mes remboursements » (wallet_refund_requests_screen.dart)."
+  },
+  "walletRefundRequestsEmpty": "No refund requests yet.",
+  "@walletRefundRequestsEmpty": {
+    "description": "État vide de l'écran « Mes remboursements » (wallet_refund_requests_screen.dart)."
+  },
+  "walletRefundStatusInProgress": "In progress",
+  "@walletRefundStatusInProgress": {
+    "description": "Statut PENDING ou PROCESSING d'une demande de remboursement (wallet_refund_requests_screen.dart _RefundRequestTile)."
+  },
+  "walletRefundStatusRefunded": "Refunded",
+  "@walletRefundStatusRefunded": {
+    "description": "Statut RESOLVED ou REFUNDED d'une demande de remboursement (wallet_refund_requests_screen.dart _RefundRequestTile)."
+  },
+  "walletRefundStatusFailed": "Failed",
+  "@walletRefundStatusFailed": {
+    "description": "Statut FAILED d'une demande de remboursement (wallet_refund_requests_screen.dart _RefundRequestTile)."
+  },
+  "walletRefundRailManual": "Manual",
+  "@walletRefundRailManual": {
+    "description": "Rail MANUAL d'une demande de remboursement (wallet_refund_requests_screen.dart _RefundRequestTile)."
+  },
+  "walletDatePattern": "MMM d, yyyy",
+  "@walletDatePattern": {
+    "description": "Motif intl DateFormat, pas un texte. Date d'une demande de remboursement (wallet_refund_requests_screen.dart _RefundRequestTile)."
+  },
+  "walletRefundFallbackNotice": "The refund is sent to {destination}. If the operator refuses it, the money is sent back via a payout to the same number.",
+  "@walletRefundFallbackNotice": {
+    "description": "Notice affichée sur une demande mobile money non terminale avec destination connue (wallet_refund_requests_screen.dart _RefundRequestTile).",
+    "placeholders": {
+      "destination": {
+        "type": "String"
+      }
+    }
+  },
+  "walletRefundFeeDetail": "{gross} refundable, {fee} in fees withheld, you receive {net}",
+  "@walletRefundFeeDetail": {
+    "description": "Détail des frais d'une demande de remboursement quand ils sont connus (wallet_refund_requests_screen.dart _RefundRequestTile).",
+    "placeholders": {
+      "gross": {
+        "type": "String"
+      },
+      "fee": {
+        "type": "String"
+      },
+      "net": {
+        "type": "String"
+      }
+    }
+  }
 }

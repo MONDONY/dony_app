@@ -14892,6 +14892,619 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le paiement a été refusé par l\'opérateur.'**
   String get walletTopupMmRefused;
+
+  /// Sheet « Solde insuffisant », sans breakdown : première ligne (commission_shortfall_text.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission requise : {amount}'**
+  String walletShortfallRequired(String amount);
+
+  /// Sheet « Solde insuffisant », sans breakdown : deuxième ligne (commission_shortfall_text.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde du portefeuille : {amount}'**
+  String walletShortfallBalance(String amount);
+
+  /// Sheet « Solde insuffisant », avec breakdown : montant de la commission dans la devise du colis (commission_shortfall_text.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission : {amount}'**
+  String walletShortfallCommission(String amount);
+
+  /// Sheet « Solde insuffisant », part couverte par le portefeuille de la devise du colis (commission_shortfall_text.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton portefeuille {currency} en couvre {amount}'**
+  String walletShortfallCovered(String currency, String amount);
+
+  /// Sheet « Solde insuffisant », montant manquant après la part couverte par le portefeuille du colis (commission_shortfall_text.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Il manque {missing}, soit {converted}, et ton portefeuille {currency} n\'a que {balance}'**
+  String walletShortfallMissing(
+    String missing,
+    String converted,
+    String currency,
+    String balance,
+  );
+
+  /// Sheet « Solde insuffisant », rien couvert par le portefeuille du colis : commission convertie dans la devise active (commission_shortfall_text.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission : {amount}, soit {converted}'**
+  String walletShortfallCommissionConverted(String amount, String converted);
+
+  /// Sheet « Solde insuffisant », invite à recharger (commission_shortfall_text.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton portefeuille {currency} n\'a que {balance}. Recharge en {symbol} ou en {currency}, ou paie par carte.'**
+  String walletShortfallTopUpHint(
+    String currency,
+    String balance,
+    String symbol,
+  );
+
+  /// Titre du SliverAppBar de l'écran portefeuille (wallet_screen.dart _LoadedView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon portefeuille'**
+  String get walletTitle;
+
+  /// Tooltip du bouton d'info du portefeuille (wallet_screen.dart _LoadedView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment ça marche'**
+  String get walletInfoTooltip;
+
+  /// Titre de la sheet d'information du portefeuille (wallet_screen.dart _LoadedView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment fonctionne le portefeuille'**
+  String get walletInfoTitle;
+
+  /// Bandeau de confirmation d'une recharge mobile money (wallet_screen.dart _LoadedView).
+  ///
+  /// In fr, this message translates to:
+  /// **'+{amount} sur ton portefeuille {currency}, confirmé par {provider}.'**
+  String walletTopupConfirmed(String amount, String currency, String provider);
+
+  /// Bandeau affiché quand le net remboursable est nul (wallet_screen.dart _LoadedView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l\'absorbent entièrement. Il reste utilisable pour payer tes envois.'**
+  String get walletRefundAbsorbedByFees;
+
+  /// État vide de la liste des transactions (wallet_screen.dart _LoadedView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune transaction pour l\'instant'**
+  String get walletEmptyTransactions;
+
+  /// Titre de la section transactions (wallet_screen.dart _LoadedView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique'**
+  String get walletHistorySectionTitle;
+
+  /// Libellé du montant du hero quand un total estimé multi-devises est disponible (wallet_screen.dart _HeroHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Total estimé'**
+  String get walletEstimatedTotalLabel;
+
+  /// Libellé du montant du hero sans total estimé, et titre de la première ligne de la sheet d'info (wallet_screen.dart _HeroHeader, _WalletInfoContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde disponible'**
+  String get walletAvailableBalanceLabel;
+
+  /// Sous-titre du total estimé quand toutes les devises ont un taux (wallet_screen.dart _HeroHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Estimé au taux du jour, devises séparées.'**
+  String get walletEstimateCompleteNote;
+
+  /// Sous-titre du total estimé quand une devise n'a pas de taux du jour (wallet_screen.dart _HeroHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Estimation partielle : une devise sans taux.'**
+  String get walletEstimatePartialNote;
+
+  /// Snackbar après l'envoi réussi d'une demande de remboursement (wallet_screen.dart _HeroHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande de remboursement envoyée.'**
+  String get walletRefundRequestSentSnackbar;
+
+  /// Action « Recharger » du hero, et titre de la ligne correspondante de la sheet d'info (wallet_screen.dart _HeroHeader, _WalletInfoContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharger'**
+  String get walletActionTopUp;
+
+  /// Action « Rembourser » du hero, et titre de la ligne correspondante de la sheet d'info (wallet_screen.dart _HeroHeader, _WalletInfoContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rembourser'**
+  String get walletActionRefund;
+
+  /// Action « Demandes » du hero, et titre de la ligne correspondante de la sheet d'info (wallet_screen.dart _HeroHeader, _WalletInfoContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes'**
+  String get walletActionRequests;
+
+  /// Libellé d'une transaction TOP_UP créditée par mobile money (wallet_screen.dart _TxTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharge mobile money'**
+  String get walletTxTypeMobileMoneyTopUp;
+
+  /// Libellé d'une transaction TOP_UP par carte (wallet_screen.dart _TxTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharge'**
+  String get walletTxTypeTopUp;
+
+  /// Libellé d'une transaction BID_PAYMENT (wallet_screen.dart _TxTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement colis'**
+  String get walletTxTypeBidPayment;
+
+  /// Libellé d'une transaction COMMISSION_DEDUCTED (wallet_screen.dart _TxTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission'**
+  String get walletTxTypeCommission;
+
+  /// Libellé d'une transaction REFUND ou SELF_REFUND_OUT (wallet_screen.dart _TxTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement'**
+  String get walletTxTypeRefund;
+
+  /// Libellé d'une transaction REFERRAL_REWARD (wallet_screen.dart _TxTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Parrainage'**
+  String get walletTxTypeReferral;
+
+  /// Motif intl DateFormat, pas un texte. Date d'une ligne de transaction (wallet_screen.dart _TxTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'dd MMM · HH:mm'**
+  String get walletTxDateTimePattern;
+
+  /// Sous-titre d'une transaction en cours de remboursement, à la place de la date (wallet_screen.dart _TxTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement en cours · sous 5 à 10 jours ouvrés'**
+  String get walletRefundProcessingNote;
+
+  /// Ligne de fin d'une devise détenue sans taux du jour (wallet_screen.dart _CurrencyBalanceRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'taux indisponible'**
+  String get walletRateUnavailable;
+
+  /// Label d'accessibilité de la tuile d'une devise verrouillée (wallet_screen.dart _LockedBalanceTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise verrouillée {currency}, ce solde reste disponible dans sa propre devise'**
+  String walletLockedCurrencySemantics(String currency);
+
+  /// Badge d'une devise non active à solde non nul (wallet_screen.dart _LockedBalanceTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'verrouillé'**
+  String get walletLockedBadge;
+
+  /// Sous-texte de la tuile d'une devise verrouillée (wallet_screen.dart _LockedBalanceTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Reste dans sa devise d\'origine ({currency}).'**
+  String walletLockedCurrencyNote(String currency);
+
+  /// Description de la ligne « Solde disponible » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant utilisable pour payer un envoi ou demander un remboursement.'**
+  String get walletInfoBalanceDesc;
+
+  /// Description de la ligne « Recharger » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoute des fonds par carte bancaire. Le crédit apparaît dès la validation du paiement.'**
+  String get walletInfoTopUpDesc;
+
+  /// Description de la ligne « Rembourser » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande le remboursement de ton solde vers ton moyen de paiement d\'origine.'**
+  String get walletInfoRefundDesc;
+
+  /// Description de la ligne « Demandes » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retrouve le suivi de tes demandes de remboursement envoyées.'**
+  String get walletInfoRequestsDesc;
+
+  /// Titre de la ligne « Plusieurs devises » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Plusieurs devises'**
+  String get walletInfoMultiCurrencyTitle;
+
+  /// Description de la ligne « Plusieurs devises » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton argent reste dans la devise où il a été reçu. Le total en haut est une estimation au taux du jour, il ne convertit rien.'**
+  String get walletInfoMultiCurrencyDesc;
+
+  /// Titre de la ligne « Changer de devise » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de devise'**
+  String get walletInfoChangeCurrencyTitle;
+
+  /// Description de la ligne « Changer de devise » de la sheet d'info (wallet_screen.dart _WalletInfoContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'La devise active se change dans Préférences tant que ton solde total est à zéro. Sinon, vide d\'abord tes portefeuilles.'**
+  String get walletInfoChangeCurrencyDesc;
+
+  /// Libellé de la méthode carte, réutilisé par wallet_topup_method_screen.dart (wallet_topup_amount_screen.dart _methodLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte bancaire'**
+  String get walletTopupMethodCard;
+
+  /// contextLabel de la DonyPaymentSheet Stripe (wallet_topup_amount_screen.dart _presentStripePaymentSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharge de votre solde Yadony'**
+  String get walletTopupPaymentContextLabel;
+
+  /// Titre de l'écran de succès après une recharge Stripe (wallet_topup_amount_screen.dart _presentStripePaymentSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharge réussie !'**
+  String get walletTopupSuccessTitle;
+
+  /// Sous-titre de l'écran de succès après une recharge Stripe (wallet_topup_amount_screen.dart _presentStripePaymentSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton solde sera crédité dans un instant.'**
+  String get walletTopupSuccessSubtitle;
+
+  /// Bouton de l'écran de succès après une recharge Stripe (wallet_topup_amount_screen.dart _presentStripePaymentSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mon solde'**
+  String get walletTopupSuccessCta;
+
+  /// Titre de l'écran de saisie du montant, carte ou mobile money (wallet_topup_amount_screen.dart _buildStripe, _buildMobileMoney).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharger · Étape 2/2'**
+  String get walletTopupAmountTitle;
+
+  /// Note sous le montant saisi, carte ou mobile money (wallet_topup_amount_screen.dart _buildStripe, _buildMobileMoney).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le solde Yadony sera crédité en {code} après confirmation.'**
+  String walletTopupCreditNotice(String code);
+
+  /// Avertissement mobile money quand la devise n'a pas de sous-unité (wallet_topup_amount_screen.dart _buildMobileMoney).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le {symbol} ne connaît pas les centimes : indique un montant entier.'**
+  String walletTopupNoDecimalsNotice(String symbol);
+
+  /// Bandeau de mismatch de devise mobile money, montant déjà saisi (wallet_topup_amount_screen.dart _buildMobileMoney).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton portefeuille {currency} sera crédité de {amount}. Ton portefeuille {active} ne bouge pas.'**
+  String walletTopupCreditedAmount(
+    String currency,
+    String amount,
+    String active,
+  );
+
+  /// Bandeau de mismatch de devise mobile money, avant toute saisie (wallet_topup_amount_screen.dart _buildMobileMoney).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton portefeuille {currency} sera crédité du montant que tu saisis. Ton portefeuille {active} ne bouge pas.'**
+  String walletTopupCreditedPending(String currency, String active);
+
+  /// Bouton sticky pendant l'envoi, carte ou mobile money (wallet_topup_amount_screen.dart _StickyButton, _MobileMoneyStickyButton).
+  ///
+  /// In fr, this message translates to:
+  /// **'Traitement en cours…'**
+  String get walletTopupProcessing;
+
+  /// Bouton sticky tant qu'aucun montant n'est saisi, carte ou mobile money (wallet_topup_amount_screen.dart _StickyButton, _MobileMoneyStickyButton).
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez un montant'**
+  String get walletTopupEnterAmount;
+
+  /// Bouton sticky mobile money une fois un montant saisi (wallet_topup_amount_screen.dart _MobileMoneyStickyButton).
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer {amount} {symbol}'**
+  String walletTopupPayAmount(String amount, String symbol);
+
+  /// Sous-texte de l'affichage du montant saisi (wallet_topup_amount_screen.dart _AmountDisplay).
+  ///
+  /// In fr, this message translates to:
+  /// **'Montant à recharger'**
+  String get walletTopupAmountLabel;
+
+  /// Bouton sticky Stripe quand le montant est sous le minimum de recharge (wallet_topup_amount_screen.dart _StickyButton).
+  ///
+  /// In fr, this message translates to:
+  /// **'Minimum {amount}'**
+  String walletTopupBelowMinimum(String amount);
+
+  /// Bouton sticky Stripe une fois un montant valide saisi (wallet_topup_amount_screen.dart _StickyButton).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharger {amount} {symbol} via {method}'**
+  String walletTopupViaMethod(String amount, String symbol, String method);
+
+  /// Sous-titre de la tuile carte bancaire : noms de marques, identique fr/en (wallet_topup_method_screen.dart _cardMethod).
+  ///
+  /// In fr, this message translates to:
+  /// **'Via Stripe · Visa, Mastercard'**
+  String get walletTopupMethodCardSubtitle;
+
+  /// Sous-titre de la tuile mobile money : noms de marques, identique fr/en (wallet_topup_method_screen.dart _mobileMoneyMethod).
+  ///
+  /// In fr, this message translates to:
+  /// **'Orange Money, Wave, MTN MoMo'**
+  String get walletTopupMethodMobileMoneySubtitle;
+
+  /// Titre de l'écran de choix de méthode de recharge (wallet_topup_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharger · Étape 1/2'**
+  String get walletTopupMethodTitle;
+
+  /// Libellé de section au-dessus des tuiles de méthode (wallet_topup_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'MÉTHODE DE RECHARGE'**
+  String get walletTopupMethodSectionLabel;
+
+  /// Bouton sticky de l'écran de choix de méthode (wallet_topup_method_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivant → Montant'**
+  String get walletTopupMethodNextCta;
+
+  /// Note sous le champ numéro payeur mobile money, une fois le catalogue chargé (wallet_topup_method_screen.dart _MobileMoneySection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le solde est crédité en {code}, la devise de l\'opérateur.'**
+  String walletTopupMethodCurrencyNotice(String code);
+
+  /// Avertissement quand le catalogue d'opérateurs est vide pour le numéro saisi (wallet_topup_method_screen.dart _MobileMoneySection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun réseau mobile money disponible pour ce numéro.'**
+  String get walletTopupMethodNoNetworks;
+
+  /// Titre de la sheet de confirmation d'un remboursement (wallet_refund_confirm_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rembourser mon solde'**
+  String get walletRefundConfirmTitle;
+
+  /// Bouton sticky de la sheet de confirmation d'un remboursement (wallet_refund_confirm_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rembourser {amount}'**
+  String walletRefundConfirmCta(String amount);
+
+  /// Rail connu (pawaPay) : montant remboursable (wallet_refund_confirm_sheet.dart _ConfirmContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursable sur mobile money : {amount}'**
+  String walletRefundableOnMobileMoney(String amount);
+
+  /// Rail connu (Stripe ou mixte) : montant remboursable (wallet_refund_confirm_sheet.dart _ConfirmContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursable sur votre carte : {amount}'**
+  String walletRefundableOnCard(String amount);
+
+  /// Rail encore inconnu (recharges éligibles pas encore arrivées) : montant remboursable (wallet_refund_confirm_sheet.dart _ConfirmContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursable : {amount}'**
+  String walletRefundable(String amount);
+
+  /// Texte explicatif quand le rail du remboursement n'est pas encore connu (wallet_refund_confirm_sheet.dart _ConfirmContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant revient sur le moyen de paiement utilisé pour la recharge. Votre solde {currency} est gelé le temps du traitement.'**
+  String walletRefundExplainUnknown(String currency);
+
+  /// Texte explicatif quand le rail du remboursement est mobile money (wallet_refund_confirm_sheet.dart _ConfirmContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant revient sur le numéro qui a payé la recharge, en général en quelques minutes. Votre solde {currency} est gelé le temps du traitement.'**
+  String walletRefundExplainMobileMoney(String currency);
+
+  /// Texte explicatif quand le rail du remboursement est la carte (wallet_refund_confirm_sheet.dart _ConfirmContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant revient sur la carte utilisée pour la recharge, sous 5 à 10 jours selon votre banque. Votre solde est gelé le temps du traitement.'**
+  String get walletRefundExplainCard;
+
+  /// Libellé de la ligne de frais de la sheet de confirmation (wallet_refund_confirm_sheet.dart _ConfirmContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais de remboursement'**
+  String get walletRefundFeeLabel;
+
+  /// Valeur de la ligne de frais quand ils sont nuls (wallet_refund_confirm_sheet.dart _ConfirmContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Offerts'**
+  String get walletRefundFeeFreeValue;
+
+  /// Libellé du montant net de la sheet de confirmation (wallet_refund_confirm_sheet.dart _ConfirmContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous recevrez'**
+  String get walletRefundWillReceiveLabel;
+
+  /// Bandeau informant du bonus non remboursable (wallet_refund_confirm_sheet.dart _ConfirmContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} de bonus ne sont pas remboursables et restent sur votre portefeuille.'**
+  String walletRefundBonusNotice(String amount);
+
+  /// Bandeau d'avertissement quand des frais sont retenus sur une recharge jamais utilisée (wallet_refund_confirm_sheet.dart _ConfirmContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette recharge n\'a jamais servi : les frais du prestataire de paiement sont retenus. Ils sont annulés dès qu\'une recharge a payé un envoi.'**
+  String get walletRefundFeeRetainedNotice;
+
+  /// Titre de la sheet de choix de la devise à rembourser (wallet_refund_currency_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Quelle devise rembourser ?'**
+  String get walletRefundCurrencyTitle;
+
+  /// Texte explicatif de la sheet de choix de la devise à rembourser (wallet_refund_currency_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une demande par devise. Tu pourras en faire une autre ensuite.'**
+  String get walletRefundCurrencyHint;
+
+  /// Sous-texte d'un choix de devise, frais nuls (wallet_refund_currency_sheet.dart _choice).
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais de remboursement : Offerts'**
+  String get walletRefundFeeFree;
+
+  /// Sous-texte d'un choix de devise, frais non nuls (wallet_refund_currency_sheet.dart _choice).
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais de remboursement : {amount}'**
+  String walletRefundFee(String amount);
+
+  /// Titre d'un choix de devise (wallet_refund_currency_sheet.dart _choice).
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} remboursables'**
+  String walletRefundCurrencyChoiceTitle(String amount);
+
+  /// Sous-titre d'un choix de devise, montant net (wallet_refund_currency_sheet.dart _choice).
+  ///
+  /// In fr, this message translates to:
+  /// **'tu reçois {amount}'**
+  String walletRefundCurrencyChoiceSubtitle(String amount);
+
+  /// Titre de la sheet de sélection des recharges à rembourser, ancien contrat back (wallet_refund_selection_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une recharge'**
+  String get walletRefundSelectionTitle;
+
+  /// Sous-titre de la sheet de sélection des recharges à rembourser (wallet_refund_selection_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionnez la ou les recharges à rembourser'**
+  String get walletRefundSelectionSubtitle;
+
+  /// État vide de la liste des recharges éligibles (wallet_refund_selection_sheet.dart _SelectionList).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune recharge disponible pour le remboursement pour le moment.'**
+  String get walletRefundSelectionEmpty;
+
+  /// Motif intl DateFormat, pas un texte. Date d'une recharge éligible (wallet_refund_selection_sheet.dart _SelectionList).
+  ///
+  /// In fr, this message translates to:
+  /// **'dd MMM yyyy · HH:mm'**
+  String get walletTopupDateTimePattern;
+
+  /// Bouton sticky tant qu'aucune recharge n'est cochée (wallet_refund_selection_sheet.dart _SelectionStickyBottom).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionnez une recharge'**
+  String get walletRefundSelectionCta;
+
+  /// Bouton sticky une fois des recharges cochées (wallet_refund_selection_sheet.dart _SelectionStickyBottom).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rembourser ({count})'**
+  String walletRefundSelectionCount(int count);
+
+  /// Titre de l'écran « Mes remboursements » (wallet_refund_requests_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes remboursements'**
+  String get walletRefundRequestsTitle;
+
+  /// Message d'erreur de chargement de l'écran « Mes remboursements » (wallet_refund_requests_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger vos demandes de remboursement.'**
+  String get walletRefundRequestsLoadError;
+
+  /// État vide de l'écran « Mes remboursements » (wallet_refund_requests_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande de remboursement pour l\'instant.'**
+  String get walletRefundRequestsEmpty;
+
+  /// Statut PENDING ou PROCESSING d'une demande de remboursement (wallet_refund_requests_screen.dart _RefundRequestTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours'**
+  String get walletRefundStatusInProgress;
+
+  /// Statut RESOLVED ou REFUNDED d'une demande de remboursement (wallet_refund_requests_screen.dart _RefundRequestTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursé'**
+  String get walletRefundStatusRefunded;
+
+  /// Statut FAILED d'une demande de remboursement (wallet_refund_requests_screen.dart _RefundRequestTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Échoué'**
+  String get walletRefundStatusFailed;
+
+  /// Rail MANUAL d'une demande de remboursement (wallet_refund_requests_screen.dart _RefundRequestTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Manuel'**
+  String get walletRefundRailManual;
+
+  /// Motif intl DateFormat, pas un texte. Date d'une demande de remboursement (wallet_refund_requests_screen.dart _RefundRequestTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'dd MMM yyyy'**
+  String get walletDatePattern;
+
+  /// Notice affichée sur une demande mobile money non terminale avec destination connue (wallet_refund_requests_screen.dart _RefundRequestTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le remboursement part vers {destination}. En cas de refus de l\'opérateur, l\'argent est renvoyé par un versement sur le même numéro.'**
+  String walletRefundFallbackNotice(String destination);
+
+  /// Détail des frais d'une demande de remboursement quand ils sont connus (wallet_refund_requests_screen.dart _RefundRequestTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'{gross} remboursables, {fee} de frais retenus, vous recevez {net}'**
+  String walletRefundFeeDetail(String gross, String fee, String net);
 }
 
 class _AppLocalizationsDelegate

@@ -8901,4 +8901,397 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get walletTopupMmRefused =>
       'The payment was declined by the mobile operator.';
+
+  @override
+  String walletShortfallRequired(String amount) {
+    return 'Service fee due: $amount';
+  }
+
+  @override
+  String walletShortfallBalance(String amount) {
+    return 'Wallet balance: $amount';
+  }
+
+  @override
+  String walletShortfallCommission(String amount) {
+    return 'Service fee: $amount';
+  }
+
+  @override
+  String walletShortfallCovered(String currency, String amount) {
+    return 'Your $currency wallet covers $amount';
+  }
+
+  @override
+  String walletShortfallMissing(
+    String missing,
+    String converted,
+    String currency,
+    String balance,
+  ) {
+    return 'You\'re short $missing ($converted), and your $currency wallet only has $balance';
+  }
+
+  @override
+  String walletShortfallCommissionConverted(String amount, String converted) {
+    return 'Service fee: $amount ($converted)';
+  }
+
+  @override
+  String walletShortfallTopUpHint(
+    String currency,
+    String balance,
+    String symbol,
+  ) {
+    return 'Your $currency wallet only has $balance. Top up in $symbol or $currency, or pay by card.';
+  }
+
+  @override
+  String get walletTitle => 'My wallet';
+
+  @override
+  String get walletInfoTooltip => 'How it works';
+
+  @override
+  String get walletInfoTitle => 'How the wallet works';
+
+  @override
+  String walletTopupConfirmed(String amount, String currency, String provider) {
+    return '+$amount added to your $currency wallet, confirmed by $provider.';
+  }
+
+  @override
+  String get walletRefundAbsorbedByFees =>
+      'This balance can\'t be refunded: the payment provider\'s fees absorb it entirely. It stays usable to pay for your shipments.';
+
+  @override
+  String get walletEmptyTransactions => 'No transactions yet';
+
+  @override
+  String get walletHistorySectionTitle => 'History';
+
+  @override
+  String get walletEstimatedTotalLabel => 'Estimated total';
+
+  @override
+  String get walletAvailableBalanceLabel => 'Available balance';
+
+  @override
+  String get walletEstimateCompleteNote =>
+      'Estimated at today\'s rate, currencies kept separate.';
+
+  @override
+  String get walletEstimatePartialNote =>
+      'Partial estimate: one currency has no rate.';
+
+  @override
+  String get walletRefundRequestSentSnackbar => 'Refund request sent.';
+
+  @override
+  String get walletActionTopUp => 'Top up';
+
+  @override
+  String get walletActionRefund => 'Refund';
+
+  @override
+  String get walletActionRequests => 'Requests';
+
+  @override
+  String get walletTxTypeMobileMoneyTopUp => 'Mobile money top-up';
+
+  @override
+  String get walletTxTypeTopUp => 'Top-up';
+
+  @override
+  String get walletTxTypeBidPayment => 'Parcel payment';
+
+  @override
+  String get walletTxTypeCommission => 'Service fee';
+
+  @override
+  String get walletTxTypeRefund => 'Refund';
+
+  @override
+  String get walletTxTypeReferral => 'Referral';
+
+  @override
+  String get walletTxDateTimePattern => 'MMM d · h:mm a';
+
+  @override
+  String get walletRefundProcessingNote =>
+      'Refund in progress · within 5 to 10 business days';
+
+  @override
+  String get walletRateUnavailable => 'rate unavailable';
+
+  @override
+  String walletLockedCurrencySemantics(String currency) {
+    return 'Locked currency $currency, this balance stays available in its own currency';
+  }
+
+  @override
+  String get walletLockedBadge => 'locked';
+
+  @override
+  String walletLockedCurrencyNote(String currency) {
+    return 'Stays in its original currency ($currency).';
+  }
+
+  @override
+  String get walletInfoBalanceDesc =>
+      'The amount you can use to pay for a shipment or request a refund.';
+
+  @override
+  String get walletInfoTopUpDesc =>
+      'Add funds by credit card. The credit appears as soon as the payment is validated.';
+
+  @override
+  String get walletInfoRefundDesc =>
+      'Request a refund of your balance to your original payment method.';
+
+  @override
+  String get walletInfoRequestsDesc =>
+      'Find the status of your sent refund requests.';
+
+  @override
+  String get walletInfoMultiCurrencyTitle => 'Multiple currencies';
+
+  @override
+  String get walletInfoMultiCurrencyDesc =>
+      'Your money stays in the currency it was received in. The total at the top is an estimate at today\'s rate, it doesn\'t convert anything.';
+
+  @override
+  String get walletInfoChangeCurrencyTitle => 'Change currency';
+
+  @override
+  String get walletInfoChangeCurrencyDesc =>
+      'The active currency can be changed in Preferences as long as your total balance is zero. Otherwise, empty your wallets first.';
+
+  @override
+  String get walletTopupMethodCard => 'Credit card';
+
+  @override
+  String get walletTopupPaymentContextLabel => 'Top-up of your Yadony balance';
+
+  @override
+  String get walletTopupSuccessTitle => 'Top-up successful!';
+
+  @override
+  String get walletTopupSuccessSubtitle =>
+      'Your balance will be credited shortly.';
+
+  @override
+  String get walletTopupSuccessCta => 'See my balance';
+
+  @override
+  String get walletTopupAmountTitle => 'Top up · Step 2/2';
+
+  @override
+  String walletTopupCreditNotice(String code) {
+    return 'Your Yadony balance will be credited in $code after confirmation.';
+  }
+
+  @override
+  String walletTopupNoDecimalsNotice(String symbol) {
+    return '$symbol doesn\'t use cents: enter a whole number.';
+  }
+
+  @override
+  String walletTopupCreditedAmount(
+    String currency,
+    String amount,
+    String active,
+  ) {
+    return 'Your $currency wallet will be credited $amount. Your $active wallet stays the same.';
+  }
+
+  @override
+  String walletTopupCreditedPending(String currency, String active) {
+    return 'Your $currency wallet will be credited the amount you enter. Your $active wallet stays the same.';
+  }
+
+  @override
+  String get walletTopupProcessing => 'Processing…';
+
+  @override
+  String get walletTopupEnterAmount => 'Enter an amount';
+
+  @override
+  String walletTopupPayAmount(String amount, String symbol) {
+    return 'Pay $amount $symbol';
+  }
+
+  @override
+  String get walletTopupAmountLabel => 'Amount to top up';
+
+  @override
+  String walletTopupBelowMinimum(String amount) {
+    return 'Minimum $amount';
+  }
+
+  @override
+  String walletTopupViaMethod(String amount, String symbol, String method) {
+    return 'Top up $amount $symbol via $method';
+  }
+
+  @override
+  String get walletTopupMethodCardSubtitle => 'Via Stripe · Visa, Mastercard';
+
+  @override
+  String get walletTopupMethodMobileMoneySubtitle =>
+      'Orange Money, Wave, MTN MoMo';
+
+  @override
+  String get walletTopupMethodTitle => 'Top up · Step 1/2';
+
+  @override
+  String get walletTopupMethodSectionLabel => 'TOP-UP METHOD';
+
+  @override
+  String get walletTopupMethodNextCta => 'Next → Amount';
+
+  @override
+  String walletTopupMethodCurrencyNotice(String code) {
+    return 'The balance is credited in $code, the operator\'s currency.';
+  }
+
+  @override
+  String get walletTopupMethodNoNetworks =>
+      'No mobile money network available for this number.';
+
+  @override
+  String get walletRefundConfirmTitle => 'Refund my balance';
+
+  @override
+  String walletRefundConfirmCta(String amount) {
+    return 'Refund $amount';
+  }
+
+  @override
+  String walletRefundableOnMobileMoney(String amount) {
+    return 'Refundable to mobile money: $amount';
+  }
+
+  @override
+  String walletRefundableOnCard(String amount) {
+    return 'Refundable to your card: $amount';
+  }
+
+  @override
+  String walletRefundable(String amount) {
+    return 'Refundable: $amount';
+  }
+
+  @override
+  String walletRefundExplainUnknown(String currency) {
+    return 'The amount goes back to the payment method used for the top-up. Your $currency balance is on hold while this is processed.';
+  }
+
+  @override
+  String walletRefundExplainMobileMoney(String currency) {
+    return 'The amount goes back to the number that paid for the top-up, usually within a few minutes. Your $currency balance is on hold while this is processed.';
+  }
+
+  @override
+  String get walletRefundExplainCard =>
+      'The amount goes back to the card used for the top-up, within 5 to 10 days depending on your bank. Your balance is on hold while this is processed.';
+
+  @override
+  String get walletRefundFeeLabel => 'Refund fee';
+
+  @override
+  String get walletRefundFeeFreeValue => 'Free';
+
+  @override
+  String get walletRefundWillReceiveLabel => 'You\'ll receive';
+
+  @override
+  String walletRefundBonusNotice(String amount) {
+    return '$amount in bonus isn\'t refundable and stays in your wallet.';
+  }
+
+  @override
+  String get walletRefundFeeRetainedNotice =>
+      'This top-up was never used: the payment provider\'s fees are withheld. They\'re canceled as soon as a top-up pays for a shipment.';
+
+  @override
+  String get walletRefundCurrencyTitle => 'Which currency to refund?';
+
+  @override
+  String get walletRefundCurrencyHint =>
+      'One request per currency. You can make another one afterward.';
+
+  @override
+  String get walletRefundFeeFree => 'Refund fee: Free';
+
+  @override
+  String walletRefundFee(String amount) {
+    return 'Refund fee: $amount';
+  }
+
+  @override
+  String walletRefundCurrencyChoiceTitle(String amount) {
+    return '$amount refundable';
+  }
+
+  @override
+  String walletRefundCurrencyChoiceSubtitle(String amount) {
+    return 'you get $amount';
+  }
+
+  @override
+  String get walletRefundSelectionTitle => 'Choose a top-up';
+
+  @override
+  String get walletRefundSelectionSubtitle => 'Select the top-up(s) to refund';
+
+  @override
+  String get walletRefundSelectionEmpty =>
+      'No top-up available for refund right now.';
+
+  @override
+  String get walletTopupDateTimePattern => 'MMM d, yyyy · h:mm a';
+
+  @override
+  String get walletRefundSelectionCta => 'Select a top-up';
+
+  @override
+  String walletRefundSelectionCount(int count) {
+    return 'Refund ($count)';
+  }
+
+  @override
+  String get walletRefundRequestsTitle => 'My refunds';
+
+  @override
+  String get walletRefundRequestsLoadError =>
+      'Couldn\'t load your refund requests.';
+
+  @override
+  String get walletRefundRequestsEmpty => 'No refund requests yet.';
+
+  @override
+  String get walletRefundStatusInProgress => 'In progress';
+
+  @override
+  String get walletRefundStatusRefunded => 'Refunded';
+
+  @override
+  String get walletRefundStatusFailed => 'Failed';
+
+  @override
+  String get walletRefundRailManual => 'Manual';
+
+  @override
+  String get walletDatePattern => 'MMM d, yyyy';
+
+  @override
+  String walletRefundFallbackNotice(String destination) {
+    return 'The refund is sent to $destination. If the operator refuses it, the money is sent back via a payout to the same number.';
+  }
+
+  @override
+  String walletRefundFeeDetail(String gross, String fee, String net) {
+    return '$gross refundable, $fee in fees withheld, you receive $net';
+  }
 }

@@ -16,6 +16,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockWalletRefundRequestCubit extends MockCubit<WalletRefundRequestState>
     implements WalletRefundRequestCubit {}
 
@@ -320,6 +322,25 @@ void main() {
         expect(find.text('Offerts'), findsNothing);
         expect(find.text(expectedButtonLabel), findsOneWidget);
       },
+    );
+  });
+
+  testWidgets('anglais : titre, frais et bouton traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      host(refundable: 35, nonRefundable: 0, feeAmount: 3, netAmount: 32),
+    );
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Refund my balance'), findsOneWidget);
+    expect(find.text('Refund fee'), findsOneWidget);
+    expect(find.text("You'll receive"), findsOneWidget);
+    expect(
+      find.text(
+        'Refund ${CurrencyFormatter.format(32, SupportedCurrency.eur)}',
+      ),
+      findsOneWidget,
     );
   });
 

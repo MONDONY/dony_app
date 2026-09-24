@@ -165,6 +165,9 @@ const _sameInBothLanguages = <String>{
   'bidCreateMaxWeightLabel', // « max » se dit pareil (vague finale D, I5/M12)
   'currencyNameEur', // « Euro » se dit pareil (tâche E1)
   'paymentSummaryTypeLabel', // « Type » se dit pareil (tâche E1)
+  'walletTopupMethodCardSubtitle', // « Via Stripe · Visa, Mastercard » : noms de marques (tâche E3)
+  'walletTopupMethodMobileMoneySubtitle', // « Orange Money, Wave, MTN MoMo » : noms de marques (tâche E3)
+  'walletTopupBelowMinimum', // « Minimum » se dit pareil (tâche E3)
 };
 
 void main() {

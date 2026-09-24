@@ -181,6 +181,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final (i, line) in commissionShortfallLines(
+            l,
             breakdown: state.breakdown,
             requiredCommission: state.requiredCommission,
             availableBalance: state.availableBalance,

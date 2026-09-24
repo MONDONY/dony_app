@@ -37,7 +37,8 @@ class WalletTransactionModel {
       );
 
   bool get isCredit => amount > 0;
-  bool get isRefundProcessing => refundStatus == 'PROCESSING';
+  bool get isRefundProcessing =>
+      refundStatus == 'PROCESSING'; // i18n-ignore : code serveur comparé
 
   /// `paymentRef` d'un dépôt pawaPay : préfixe `pawapay:` suivi de l'UUID de
   /// l'opération `pawapay_operations` (cf. `WalletRefundRail` côté back,

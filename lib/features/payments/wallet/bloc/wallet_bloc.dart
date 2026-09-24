@@ -93,7 +93,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     emit(WalletLoading());
     try {
       switch (event.paymentMethod) {
-        case 'STRIPE':
+        case 'STRIPE': // i18n-ignore : code de méthode de paiement comparé
           final clientSecret = await _repository.topupStripe(
             amount: event.amount,
             currencyCode: event.currencyCode,
@@ -111,7 +111,11 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
             );
           } else {
             emit(
-              WalletError(const NetworkException('Réponse vide du serveur')),
+              WalletError(
+                const NetworkException(
+                  'Réponse vide du serveur', // i18n-ignore : message d'exception, jamais affiché
+                ),
+              ),
             );
           }
       }

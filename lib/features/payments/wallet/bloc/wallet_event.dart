@@ -27,6 +27,7 @@ class WalletTopupRequested extends WalletEvent {
   WalletTopupRequested({
     required this.amount,
     required this.paymentMethod,
-    this.currencyCode = 'EUR',
+    this.currencyCode =
+        'EUR', // i18n-ignore : code devise par défaut envoyé au serveur
   });
 }

@@ -8956,4 +8956,400 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get walletTopupMmRefused =>
       'Le paiement a été refusé par l\'opérateur.';
+
+  @override
+  String walletShortfallRequired(String amount) {
+    return 'Commission requise : $amount';
+  }
+
+  @override
+  String walletShortfallBalance(String amount) {
+    return 'Solde du portefeuille : $amount';
+  }
+
+  @override
+  String walletShortfallCommission(String amount) {
+    return 'Commission : $amount';
+  }
+
+  @override
+  String walletShortfallCovered(String currency, String amount) {
+    return 'Ton portefeuille $currency en couvre $amount';
+  }
+
+  @override
+  String walletShortfallMissing(
+    String missing,
+    String converted,
+    String currency,
+    String balance,
+  ) {
+    return 'Il manque $missing, soit $converted, et ton portefeuille $currency n\'a que $balance';
+  }
+
+  @override
+  String walletShortfallCommissionConverted(String amount, String converted) {
+    return 'Commission : $amount, soit $converted';
+  }
+
+  @override
+  String walletShortfallTopUpHint(
+    String currency,
+    String balance,
+    String symbol,
+  ) {
+    return 'Ton portefeuille $currency n\'a que $balance. Recharge en $symbol ou en $currency, ou paie par carte.';
+  }
+
+  @override
+  String get walletTitle => 'Mon portefeuille';
+
+  @override
+  String get walletInfoTooltip => 'Comment ça marche';
+
+  @override
+  String get walletInfoTitle => 'Comment fonctionne le portefeuille';
+
+  @override
+  String walletTopupConfirmed(String amount, String currency, String provider) {
+    return '+$amount sur ton portefeuille $currency, confirmé par $provider.';
+  }
+
+  @override
+  String get walletRefundAbsorbedByFees =>
+      'Ce solde ne peut pas être remboursé : les frais du prestataire de paiement l\'absorbent entièrement. Il reste utilisable pour payer tes envois.';
+
+  @override
+  String get walletEmptyTransactions => 'Aucune transaction pour l\'instant';
+
+  @override
+  String get walletHistorySectionTitle => 'Historique';
+
+  @override
+  String get walletEstimatedTotalLabel => 'Total estimé';
+
+  @override
+  String get walletAvailableBalanceLabel => 'Solde disponible';
+
+  @override
+  String get walletEstimateCompleteNote =>
+      'Estimé au taux du jour, devises séparées.';
+
+  @override
+  String get walletEstimatePartialNote =>
+      'Estimation partielle : une devise sans taux.';
+
+  @override
+  String get walletRefundRequestSentSnackbar =>
+      'Demande de remboursement envoyée.';
+
+  @override
+  String get walletActionTopUp => 'Recharger';
+
+  @override
+  String get walletActionRefund => 'Rembourser';
+
+  @override
+  String get walletActionRequests => 'Demandes';
+
+  @override
+  String get walletTxTypeMobileMoneyTopUp => 'Recharge mobile money';
+
+  @override
+  String get walletTxTypeTopUp => 'Recharge';
+
+  @override
+  String get walletTxTypeBidPayment => 'Paiement colis';
+
+  @override
+  String get walletTxTypeCommission => 'Commission';
+
+  @override
+  String get walletTxTypeRefund => 'Remboursement';
+
+  @override
+  String get walletTxTypeReferral => 'Parrainage';
+
+  @override
+  String get walletTxDateTimePattern => 'dd MMM · HH:mm';
+
+  @override
+  String get walletRefundProcessingNote =>
+      'Remboursement en cours · sous 5 à 10 jours ouvrés';
+
+  @override
+  String get walletRateUnavailable => 'taux indisponible';
+
+  @override
+  String walletLockedCurrencySemantics(String currency) {
+    return 'Devise verrouillée $currency, ce solde reste disponible dans sa propre devise';
+  }
+
+  @override
+  String get walletLockedBadge => 'verrouillé';
+
+  @override
+  String walletLockedCurrencyNote(String currency) {
+    return 'Reste dans sa devise d\'origine ($currency).';
+  }
+
+  @override
+  String get walletInfoBalanceDesc =>
+      'Le montant utilisable pour payer un envoi ou demander un remboursement.';
+
+  @override
+  String get walletInfoTopUpDesc =>
+      'Ajoute des fonds par carte bancaire. Le crédit apparaît dès la validation du paiement.';
+
+  @override
+  String get walletInfoRefundDesc =>
+      'Demande le remboursement de ton solde vers ton moyen de paiement d\'origine.';
+
+  @override
+  String get walletInfoRequestsDesc =>
+      'Retrouve le suivi de tes demandes de remboursement envoyées.';
+
+  @override
+  String get walletInfoMultiCurrencyTitle => 'Plusieurs devises';
+
+  @override
+  String get walletInfoMultiCurrencyDesc =>
+      'Ton argent reste dans la devise où il a été reçu. Le total en haut est une estimation au taux du jour, il ne convertit rien.';
+
+  @override
+  String get walletInfoChangeCurrencyTitle => 'Changer de devise';
+
+  @override
+  String get walletInfoChangeCurrencyDesc =>
+      'La devise active se change dans Préférences tant que ton solde total est à zéro. Sinon, vide d\'abord tes portefeuilles.';
+
+  @override
+  String get walletTopupMethodCard => 'Carte bancaire';
+
+  @override
+  String get walletTopupPaymentContextLabel => 'Recharge de votre solde Yadony';
+
+  @override
+  String get walletTopupSuccessTitle => 'Recharge réussie !';
+
+  @override
+  String get walletTopupSuccessSubtitle =>
+      'Ton solde sera crédité dans un instant.';
+
+  @override
+  String get walletTopupSuccessCta => 'Voir mon solde';
+
+  @override
+  String get walletTopupAmountTitle => 'Recharger · Étape 2/2';
+
+  @override
+  String walletTopupCreditNotice(String code) {
+    return 'Le solde Yadony sera crédité en $code après confirmation.';
+  }
+
+  @override
+  String walletTopupNoDecimalsNotice(String symbol) {
+    return 'Le $symbol ne connaît pas les centimes : indique un montant entier.';
+  }
+
+  @override
+  String walletTopupCreditedAmount(
+    String currency,
+    String amount,
+    String active,
+  ) {
+    return 'Ton portefeuille $currency sera crédité de $amount. Ton portefeuille $active ne bouge pas.';
+  }
+
+  @override
+  String walletTopupCreditedPending(String currency, String active) {
+    return 'Ton portefeuille $currency sera crédité du montant que tu saisis. Ton portefeuille $active ne bouge pas.';
+  }
+
+  @override
+  String get walletTopupProcessing => 'Traitement en cours…';
+
+  @override
+  String get walletTopupEnterAmount => 'Entrez un montant';
+
+  @override
+  String walletTopupPayAmount(String amount, String symbol) {
+    return 'Payer $amount $symbol';
+  }
+
+  @override
+  String get walletTopupAmountLabel => 'Montant à recharger';
+
+  @override
+  String walletTopupBelowMinimum(String amount) {
+    return 'Minimum $amount';
+  }
+
+  @override
+  String walletTopupViaMethod(String amount, String symbol, String method) {
+    return 'Recharger $amount $symbol via $method';
+  }
+
+  @override
+  String get walletTopupMethodCardSubtitle => 'Via Stripe · Visa, Mastercard';
+
+  @override
+  String get walletTopupMethodMobileMoneySubtitle =>
+      'Orange Money, Wave, MTN MoMo';
+
+  @override
+  String get walletTopupMethodTitle => 'Recharger · Étape 1/2';
+
+  @override
+  String get walletTopupMethodSectionLabel => 'MÉTHODE DE RECHARGE';
+
+  @override
+  String get walletTopupMethodNextCta => 'Suivant → Montant';
+
+  @override
+  String walletTopupMethodCurrencyNotice(String code) {
+    return 'Le solde est crédité en $code, la devise de l\'opérateur.';
+  }
+
+  @override
+  String get walletTopupMethodNoNetworks =>
+      'Aucun réseau mobile money disponible pour ce numéro.';
+
+  @override
+  String get walletRefundConfirmTitle => 'Rembourser mon solde';
+
+  @override
+  String walletRefundConfirmCta(String amount) {
+    return 'Rembourser $amount';
+  }
+
+  @override
+  String walletRefundableOnMobileMoney(String amount) {
+    return 'Remboursable sur mobile money : $amount';
+  }
+
+  @override
+  String walletRefundableOnCard(String amount) {
+    return 'Remboursable sur votre carte : $amount';
+  }
+
+  @override
+  String walletRefundable(String amount) {
+    return 'Remboursable : $amount';
+  }
+
+  @override
+  String walletRefundExplainUnknown(String currency) {
+    return 'Le montant revient sur le moyen de paiement utilisé pour la recharge. Votre solde $currency est gelé le temps du traitement.';
+  }
+
+  @override
+  String walletRefundExplainMobileMoney(String currency) {
+    return 'Le montant revient sur le numéro qui a payé la recharge, en général en quelques minutes. Votre solde $currency est gelé le temps du traitement.';
+  }
+
+  @override
+  String get walletRefundExplainCard =>
+      'Le montant revient sur la carte utilisée pour la recharge, sous 5 à 10 jours selon votre banque. Votre solde est gelé le temps du traitement.';
+
+  @override
+  String get walletRefundFeeLabel => 'Frais de remboursement';
+
+  @override
+  String get walletRefundFeeFreeValue => 'Offerts';
+
+  @override
+  String get walletRefundWillReceiveLabel => 'Vous recevrez';
+
+  @override
+  String walletRefundBonusNotice(String amount) {
+    return '$amount de bonus ne sont pas remboursables et restent sur votre portefeuille.';
+  }
+
+  @override
+  String get walletRefundFeeRetainedNotice =>
+      'Cette recharge n\'a jamais servi : les frais du prestataire de paiement sont retenus. Ils sont annulés dès qu\'une recharge a payé un envoi.';
+
+  @override
+  String get walletRefundCurrencyTitle => 'Quelle devise rembourser ?';
+
+  @override
+  String get walletRefundCurrencyHint =>
+      'Une demande par devise. Tu pourras en faire une autre ensuite.';
+
+  @override
+  String get walletRefundFeeFree => 'Frais de remboursement : Offerts';
+
+  @override
+  String walletRefundFee(String amount) {
+    return 'Frais de remboursement : $amount';
+  }
+
+  @override
+  String walletRefundCurrencyChoiceTitle(String amount) {
+    return '$amount remboursables';
+  }
+
+  @override
+  String walletRefundCurrencyChoiceSubtitle(String amount) {
+    return 'tu reçois $amount';
+  }
+
+  @override
+  String get walletRefundSelectionTitle => 'Choisir une recharge';
+
+  @override
+  String get walletRefundSelectionSubtitle =>
+      'Sélectionnez la ou les recharges à rembourser';
+
+  @override
+  String get walletRefundSelectionEmpty =>
+      'Aucune recharge disponible pour le remboursement pour le moment.';
+
+  @override
+  String get walletTopupDateTimePattern => 'dd MMM yyyy · HH:mm';
+
+  @override
+  String get walletRefundSelectionCta => 'Sélectionnez une recharge';
+
+  @override
+  String walletRefundSelectionCount(int count) {
+    return 'Rembourser ($count)';
+  }
+
+  @override
+  String get walletRefundRequestsTitle => 'Mes remboursements';
+
+  @override
+  String get walletRefundRequestsLoadError =>
+      'Impossible de charger vos demandes de remboursement.';
+
+  @override
+  String get walletRefundRequestsEmpty =>
+      'Aucune demande de remboursement pour l\'instant.';
+
+  @override
+  String get walletRefundStatusInProgress => 'En cours';
+
+  @override
+  String get walletRefundStatusRefunded => 'Remboursé';
+
+  @override
+  String get walletRefundStatusFailed => 'Échoué';
+
+  @override
+  String get walletRefundRailManual => 'Manuel';
+
+  @override
+  String get walletDatePattern => 'dd MMM yyyy';
+
+  @override
+  String walletRefundFallbackNotice(String destination) {
+    return 'Le remboursement part vers $destination. En cas de refus de l\'opérateur, l\'argent est renvoyé par un versement sur le même numéro.';
+  }
+
+  @override
+  String walletRefundFeeDetail(String gross, String fee, String net) {
+    return '$gross remboursables, $fee de frais retenus, vous recevez $net';
+  }
 }

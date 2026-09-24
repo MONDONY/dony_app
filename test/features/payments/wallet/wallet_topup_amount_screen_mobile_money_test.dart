@@ -19,6 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 /// Écran de montant, branche mobile money : devise de l'opérateur sans
@@ -197,6 +198,22 @@ void main() {
       cubit.stopPolling();
     },
   );
+
+  testWidgets('anglais : montant sans décimales et bouton Pay traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(buildHarness());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Top up · Step 2/2'), findsOneWidget);
+    expect(find.text('Enter an amount'), findsOneWidget);
+
+    await tapQuickAmount(tester, 1000);
+
+    expect(find.text('Pay 1000 F CFA'), findsOneWidget);
+    expect(find.textContaining("doesn't use cents"), findsOneWidget);
+  });
 
   group('devise de l\'opérateur différente de la devise active', () {
     /// Enregistre le dépôt wallet dans GetIt : c'est lui que l'écran

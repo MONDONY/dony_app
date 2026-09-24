@@ -14,13 +14,17 @@ class WalletRemoteDatasource {
   Future<Map<String, dynamic>> topup({
     required double amount,
     required String paymentMethod,
-    String currencyCode = 'EUR',
+    String currencyCode =
+        'EUR', // i18n-ignore : code devise par défaut envoyé au serveur
   }) async {
     final data = <String, dynamic>{
       'amount': double.parse(amount.toStringAsFixed(2)),
       'paymentMethod': paymentMethod,
     };
-    if (currencyCode.toUpperCase() != 'EUR') {
+    final needsCurrencyCode =
+        currencyCode.toUpperCase() !=
+        'EUR'; // i18n-ignore : code devise comparé
+    if (needsCurrencyCode) {
       data['currencyCode'] = currencyCode.toUpperCase();
     }
     final response = await _client.dio.post('/wallet/topup', data: data);

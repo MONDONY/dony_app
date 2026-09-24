@@ -53,8 +53,13 @@ class WalletRefundRequestModel {
         destinationMasked: json['destinationMasked'] as String?,
       );
 
+  // Comparaisons sur `status` : codes serveur, jamais affichés bruts.
   bool get isTerminal =>
-      status == 'RESOLVED' || status == 'REFUNDED' || status == 'FAILED';
+      status == 'RESOLVED' || // i18n-ignore
+      status == 'REFUNDED' || // i18n-ignore
+      status == 'FAILED'; // i18n-ignore
 
-  bool get isSuccess => status == 'RESOLVED' || status == 'REFUNDED';
+  bool get isSuccess =>
+      status == 'RESOLVED' || // i18n-ignore
+      status == 'REFUNDED'; // i18n-ignore
 }

@@ -11,6 +11,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_ava
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_method_selection.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,17 +47,18 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
   /// changé depuis.
   String? _lastLoadedPhone;
 
-  static const _cardMethod = _MethodDef(
+  static _MethodDef _cardMethod(AppLocalizations l) => _MethodDef(
     iconAsset: 'credit-card',
-    label: 'Carte bancaire',
-    subtitle: 'Via Stripe · Visa, Mastercard',
-    value: 'STRIPE',
+    label: l.walletTopupMethodCard,
+    subtitle: l.walletTopupMethodCardSubtitle,
+    value:
+        'STRIPE', // i18n-ignore : code de méthode de paiement envoyé au serveur
   );
 
-  static const _mobileMoneyMethod = _MethodDef(
+  static _MethodDef _mobileMoneyMethod(AppLocalizations l) => _MethodDef(
     iconAsset: 'smartphone',
-    label: 'Mobile money',
-    subtitle: 'Orange Money, Wave, MTN MoMo',
+    label: l.paymentMethodMobileMoney,
+    subtitle: l.walletTopupMethodMobileMoneySubtitle,
     value: 'MOBILE_MONEY',
   );
 
@@ -155,6 +157,7 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     // La tuile mobile money n'existe que si le backend déployé sert ce rail
@@ -163,7 +166,10 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
     final mobileMoneyAvailable = context
         .watch<WalletTopupMobileMoneyAvailabilityCubit>()
         .state;
-    final methods = [_cardMethod, if (mobileMoneyAvailable) _mobileMoneyMethod];
+    final methods = [
+      _cardMethod(l),
+      if (mobileMoneyAvailable) _mobileMoneyMethod(l),
+    ];
 
     return BlocConsumer<
       WalletTopupMobileMoneyCubit,
@@ -213,7 +219,7 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
             centerTitle: false,
             leading: const DonyAppBarBackButton(),
             title: Text(
-              'Recharger · Étape 1/2',
+              l.walletTopupMethodTitle,
               style: tt.headlineLarge?.copyWith(
                 color: DonyColors.neutral0,
                 fontSize: 17,
@@ -236,7 +242,7 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
                   ),
                   children: [
                     Text(
-                      'MÉTHODE DE RECHARGE',
+                      l.walletTopupMethodSectionLabel,
                       style: tt.labelMedium?.copyWith(
                         color: cs.onSurfaceVariant,
                         letterSpacing: 0.8,
@@ -291,7 +297,7 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
                   MediaQuery.paddingOf(context).bottom + DonySpacing.lg,
                 ),
                 child: DonyButton(
-                  label: 'Suivant → Montant',
+                  label: l.walletTopupMethodNextCta,
                   onPressed: _canProceed(mobileMoneyState)
                       ? () => _onNext(mobileMoneyState)
                       : null,
@@ -322,6 +328,7 @@ class _MobileMoneySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -345,7 +352,7 @@ class _MobileMoneySection extends StatelessWidget {
             key: const Key('wallet-topup-payer-phone-field'),
             controller: phoneController,
             focusNode: phoneFocusNode,
-            label: 'Numéro qui paie',
+            label: l.mobileMoneyPayingNumberLabel,
             keyboardType: TextInputType.phone,
           ),
           if (currencyCode != null) ...[
@@ -357,8 +364,7 @@ class _MobileMoneySection extends StatelessWidget {
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(
                   child: Text(
-                    'Le solde est crédité en $currencyCode, la devise de '
-                    "l'opérateur.",
+                    l.walletTopupMethodCurrencyNotice(currencyCode),
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
@@ -371,9 +377,9 @@ class _MobileMoneySection extends StatelessWidget {
               const MobileMoneyNetworksSkeleton(),
             final WalletTopupMobileMoneyProvidersReady s
                 when s.catalog.isEmpty =>
-              const DonyStatusBanner(
+              DonyStatusBanner(
                 type: DonyStatusBannerType.warning,
-                message: 'Aucun réseau mobile money disponible pour ce numéro.',
+                message: l.walletTopupMethodNoNetworks,
               ),
             final WalletTopupMobileMoneyProvidersReady s =>
               _SingleProviderSelector(
@@ -389,7 +395,7 @@ class _MobileMoneySection extends StatelessWidget {
               message: ErrorPresenter.resolve(e.error).message,
               action: TextButton(
                 onPressed: onRetry,
-                child: const Text('Réessayer'),
+                child: Text(l.commonRetry),
               ),
             ),
             _ => const SizedBox.shrink(),
