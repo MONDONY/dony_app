@@ -152,6 +152,9 @@ const _sameInBothLanguages = <String>{
   'negotiationCounterOfferSubtitle', // gabarit identique, « Round » déjà utilisé tel quel en français
   'bidDetailFallbackDestination', // « destination » se dit pareil
   'bidDetailGainMobileMoneyPill', // « Mobile money » se dit pareil
+  'bidDetailOptionsTitle', // « Options » se dit pareil (tâche D2)
+  'bidDetailMobileMoneyBadge', // « MOBILE MONEY » se dit pareil (tâche D2)
+  'bidDetailCashBadge', // « CASH » se dit pareil (tâche D2)
 };
 
 void main() {

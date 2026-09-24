@@ -10,6 +10,7 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -37,8 +38,8 @@ abstract final class ReturnCodeSheet {
 
     await DonyBottomSheet.show<void>(
       context,
-      title: 'Code de retour',
-      subtitle: 'À communiquer au voyageur en récupérant votre colis',
+      title: context.l10n.bidDetailReturnCodeTitle,
+      subtitle: context.l10n.bidDetailReturnCodeSubtitle,
       wrapper: (child) =>
           BlocProvider<CancellationBloc>.value(value: bloc, child: child),
       child: _ReturnCodeBody(bid: bid),
@@ -150,7 +151,7 @@ class _ReturnCodeContent extends StatelessWidget {
                 Clipboard.setData(ClipboardData(text: code!));
                 DonySnackbar.show(
                   context,
-                  message: 'Code copié',
+                  message: context.l10n.bidDetailReturnCodeCopiedSnackbar,
                   type: DonySnackbarType.success,
                 );
               },
@@ -167,7 +168,7 @@ class _ReturnCodeContent extends StatelessWidget {
                       DonyIcon('copy', size: 16, color: cs.primary),
                       const SizedBox(width: DonySpacing.sm),
                       Text(
-                        'Copier le code',
+                        context.l10n.bidDetailReturnCopyCode,
                         style: tt.titleSmall?.copyWith(color: cs.primary),
                       ),
                     ],
@@ -191,8 +192,10 @@ class _ReturnCodeContent extends StatelessWidget {
                 Expanded(
                   child: Text(
                     deadline != null
-                        ? 'Le voyageur doit vous restituer le colis avant le ${_fmtDate(deadline!)}. Donnez-lui ce code uniquement en récupérant votre colis.'
-                        : 'Donnez ce code au voyageur uniquement en récupérant votre colis.',
+                        ? context.l10n.bidDetailReturnDeadlineHint(
+                            _fmtDate(context, deadline!),
+                          )
+                        : context.l10n.bidDetailReturnNoDeadlineHint,
                     style: tt.bodySmall?.copyWith(
                       color: cs.onSurfaceVariant,
                       height: 1.4,
@@ -225,12 +228,12 @@ class _ReturnedConfirmation extends StatelessWidget {
           DonyIcon('circle-check', size: 48, color: cs.success),
           const SizedBox(height: DonySpacing.md),
           Text(
-            'Colis restitué',
+            context.l10n.bidDetailReturnedTitle,
             style: tt.titleLarge?.copyWith(color: cs.success),
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Le voyageur a confirmé vous avoir restitué le colis.',
+            context.l10n.bidDetailReturnedSubtitle,
             textAlign: TextAlign.center,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
@@ -262,8 +265,8 @@ abstract final class ReturnEntrySheet {
 
     await DonyBottomSheet.show<void>(
       context,
-      title: 'Confirmer le retour',
-      subtitle: 'Saisissez le code de retour fourni par l\'expéditeur',
+      title: context.l10n.bidDetailReturnEntryTitle,
+      subtitle: context.l10n.bidDetailReturnEntrySubtitle,
       wrapper: (child) =>
           BlocProvider<CancellationBloc>.value(value: bloc, child: child),
       stickyBottom: ValueListenableBuilder<String>(
@@ -271,7 +274,7 @@ abstract final class ReturnEntrySheet {
         builder: (context, code, _) =>
             BlocBuilder<CancellationBloc, CancellationState>(
               builder: (ctx, state) => DonyButton(
-                label: 'Confirmer la restitution',
+                label: context.l10n.bidDetailReturnConfirmButton,
                 isLoading: state is CancellationLoading,
                 onPressed: code.length < 6 || state is CancellationLoading
                     ? null
@@ -364,7 +367,7 @@ class _ReturnEntryBodyState extends State<_ReturnEntryBody> {
           ),
           const SizedBox(height: DonySpacing.md),
           Text(
-            'En confirmant, vous déclarez avoir restitué le colis à l\'expéditeur.',
+            context.l10n.bidDetailReturnConfirmHint,
             textAlign: TextAlign.center,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
@@ -375,5 +378,5 @@ class _ReturnEntryBodyState extends State<_ReturnEntryBody> {
   }
 }
 
-// Pattern numérique (dd/MM) : pas de données de locale requises.
-String _fmtDate(DateTime d) => DateFormat('dd/MM').format(d.toLocal());
+String _fmtDate(BuildContext context, DateTime d) =>
+    DateFormat.Md(context.l10n.localeName).format(d.toLocal());

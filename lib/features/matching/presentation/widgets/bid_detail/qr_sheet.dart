@@ -12,6 +12,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -62,7 +63,7 @@ abstract final class QrSheet {
 
     await DonyBottomSheet.show<void>(
       context,
-      title: 'QR du colis',
+      title: context.l10n.bidDetailQrSheetTitle,
       wrapper: (child) => BlocProvider<TrackingBloc>(
         create: (_) =>
             (trackingBlocFactory?.call() ?? GetIt.instance<TrackingBloc>())
@@ -145,7 +146,7 @@ class _QrSheetStickyBottom extends StatelessWidget {
       builder: (context, state) {
         if (state is TrackingQrError) {
           return DonyButton(
-            label: 'Réessayer',
+            label: context.l10n.commonRetry,
             variant: DonyButtonVariant.secondary,
             onPressed: () {
               context.read<TrackingBloc>().add(TrackingQrCodeRequested(bidId));
@@ -166,7 +167,7 @@ class _QrSheetStickyBottom extends StatelessWidget {
                     valueListenable: sharing,
                     builder: (context, isSharing, _) {
                       return DonyButton(
-                        label: 'Enregistrer',
+                        label: context.l10n.commonSave,
                         iconAsset: 'download',
                         isLoading: isSaving,
                         onPressed: (isSaving || isSharing)
@@ -186,7 +187,7 @@ class _QrSheetStickyBottom extends StatelessWidget {
                     valueListenable: sharing,
                     builder: (context, isSharing, _) {
                       return DonyButton(
-                        label: 'Partager',
+                        label: context.l10n.commonShare,
                         variant: DonyButtonVariant.secondary,
                         iconAsset: 'share-2',
                         isLoading: isSharing,
@@ -212,11 +213,12 @@ class _QrSheetStickyBottom extends StatelessWidget {
     Uint8List imageBytes,
   ) async {
     saving.value = true;
+    final l = context.l10n;
     void notifyFailure() {
       if (context.mounted) {
         DonySnackbar.show(
           context,
-          message: 'Impossible d\'enregistrer l\'image',
+          message: l.bidDetailQrSaveErrorSnackbar,
           type: DonySnackbarType.error,
         );
       }
@@ -245,7 +247,7 @@ class _QrSheetStickyBottom extends StatelessWidget {
       if (context.mounted) {
         DonySnackbar.show(
           context,
-          message: 'QR code enregistré dans votre galerie',
+          message: l.bidDetailQrSavedSnackbar,
           type: DonySnackbarType.success,
         );
       }
@@ -263,6 +265,7 @@ class _QrSheetStickyBottom extends StatelessWidget {
 
   Future<void> _shareQrCode(BuildContext context, Uint8List imageBytes) async {
     sharing.value = true;
+    final l = context.l10n;
     // Calculé avant tout await : sharePositionOriginFor lit le RenderBox
     // du context, qui peut être démonté pendant les opérations async.
     final origin = sharePositionOriginFor(context);
@@ -274,8 +277,8 @@ class _QrSheetStickyBottom extends StatelessWidget {
       await file.writeAsBytes(imageBytes);
       final result = await Share.shareXFiles(
         [XFile(file.path, mimeType: 'image/png')],
-        subject: 'QR du colis Yadony',
-        text: 'QR à présenter ou à coller sur le colis.',
+        subject: l.bidDetailQrShareSubject,
+        text: l.bidDetailQrShareText,
         sharePositionOrigin: origin,
       );
       // Only log if the user actually shared (not dismissed)
@@ -291,7 +294,7 @@ class _QrSheetStickyBottom extends StatelessWidget {
       if (context.mounted) {
         DonySnackbar.show(
           context,
-          message: 'Impossible de partager le QR code',
+          message: l.bidDetailQrShareErrorSnackbar,
           type: DonySnackbarType.error,
         );
       }
@@ -355,8 +358,7 @@ class _QrLoadedView extends StatelessWidget {
       children: [
         // Instruction text
         Text(
-          'Lu par le voyageur à la remise, puis à chaque étape jusqu\'au '
-          'retrait. Vous pouvez aussi l\'imprimer et le coller sur le colis.',
+          context.l10n.bidDetailQrInstructions,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),

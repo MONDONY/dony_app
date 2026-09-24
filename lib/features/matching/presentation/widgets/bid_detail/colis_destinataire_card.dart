@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_photo_viewer_modal.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Carte fusionnée « Colis & destinataire » (vue expéditeur).
@@ -29,23 +30,30 @@ class ColisDestinataireCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return DetailCard(
-      title: 'Colis & destinataire',
+      title: l.bidDetailParcelRecipientTitle,
       child: Column(
         children: [
           if (bid.photos.isNotEmpty) ...[
             _PhotoGallery(photos: bid.photos),
             const SizedBox(height: DonySpacing.md),
           ],
-          InfoRow(label: 'Colis', value: _colisLabel),
+          InfoRow(label: l.requestCreateRecapPackage, value: _colisLabel),
           if (bid.description != null && bid.description!.isNotEmpty) ...[
             const SizedBox(height: DonySpacing.sm),
-            InfoRow(label: 'Description', value: bid.description!),
+            InfoRow(label: l.requestDescriptionLabel, value: bid.description!),
           ],
           const SizedBox(height: DonySpacing.sm),
-          InfoRow(label: 'Destinataire', value: bid.recipientName ?? '-'),
+          InfoRow(
+            label: l.requestCreateRecipientSection,
+            value: bid.recipientName ?? '-',
+          ),
           const SizedBox(height: DonySpacing.sm),
-          InfoRow(label: 'Téléphone', value: bid.recipientPhone ?? '-'),
+          InfoRow(
+            label: l.requestCreateRecipientPhoneLabel,
+            value: bid.recipientPhone ?? '-',
+          ),
         ],
       ),
     );

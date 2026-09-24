@@ -10,6 +10,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_act
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -159,7 +160,7 @@ class SenderStickyBar extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: 'Payer par mobile money',
+            label: context.l10n.bidDetailPayByMobileMoney,
             iconAsset: 'smartphone',
             isLoading: isLoading,
             onPressed: isLoading
@@ -190,7 +191,7 @@ class SenderStickyBar extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: 'Payer mon envoi',
+            label: context.l10n.bidDetailPayMyShipment,
             iconAsset: 'lock',
             isLoading: isLoading,
             onPressed: isLoading
@@ -239,7 +240,7 @@ class SenderStickyBar extends StatelessWidget {
 
     if (needsPayment) {
       return DonyButton(
-        label: 'Payer mon envoi',
+        label: context.l10n.bidDetailPayMyShipment,
         iconAsset: 'lock',
         isLoading: isLoading,
         onPressed: isLoading
@@ -251,7 +252,7 @@ class SenderStickyBar extends StatelessWidget {
     // 4. By status
     if (status == 'ACCEPTED') {
       return DonyButton(
-        label: 'Afficher le QR de remise',
+        label: context.l10n.bidDetailShowPickupQr,
         iconAsset: 'qr-code',
         onPressed: () {
           // Haptic is handled by QrSheet.show internally — do not duplicate it.
@@ -269,9 +270,9 @@ class SenderStickyBar extends StatelessWidget {
       final arr = bid.arrivalCity ?? '';
       final corridor = (dep.isNotEmpty && arr.isNotEmpty)
           ? '$dep → $arr'
-          : 'Suivi du colis';
+          : context.l10n.bidDetailTrackParcel;
       return DonyButton(
-        label: 'Suivi du colis',
+        label: context.l10n.bidDetailTrackParcel,
         iconAsset: 'package',
         onPressed: () {
           HapticFeedback.lightImpact();
@@ -295,13 +296,15 @@ class SenderStickyBar extends StatelessWidget {
         return null;
       }
       return DonyButton(
-        label: 'Noter le voyageur',
+        label: context.l10n.bidDetailRateTraveler,
         iconAsset: 'star',
         onPressed: () {
           RatingBottomSheet.show(
             context,
             bidId: bid.id,
-            travelerName: bid.travelerName ?? 'le voyageur',
+            travelerName:
+                bid.travelerName ??
+                context.l10n.bidDetailSenderTravelerFallback,
           );
         },
       );
@@ -310,7 +313,7 @@ class SenderStickyBar extends StatelessWidget {
     // Statuts ∈ kEnvoisPasses (hors COMPLETED/DELIVERED déjà traités ci-dessus)
     if (kEnvoisPasses.contains(status)) {
       return DonyButton(
-        label: 'Supprimer cette demande',
+        label: context.l10n.bidDetailDeleteRequest,
         iconAsset: 'trash-2',
         variant: DonyButtonVariant.destructive,
         onPressed: () {
@@ -328,17 +331,18 @@ class SenderStickyBar extends StatelessWidget {
   /// Bouton « Annuler la demande » partagé par les blocs AWAITING_PAYMENT
   /// mobile money et stripe : même dialogue de confirmation dans les deux cas.
   Widget _cancelRequestButton(BuildContext context) {
+    final l = context.l10n;
     return DonyButton(
-      label: 'Annuler la demande',
+      label: l.requestDetailMenuCancelLabel,
       variant: DonyButtonVariant.ghost,
       onPressed: isLoading
           ? null
           : () => _showDeleteDialog(
               context,
-              title: 'Annuler la demande de transport ?',
-              body: "Aucun paiement n'a été effectué. La demande sera retirée.",
-              confirmLabel: 'Oui, annuler',
-              dismissLabel: 'Retour',
+              title: l.bidDetailCancelTransportRequestTitle,
+              body: l.bidDetailCancelTransportRequestBody,
+              confirmLabel: l.bidDetailConfirmCancelButton,
+              dismissLabel: l.commonBack,
             ),
     );
   }
@@ -347,11 +351,16 @@ class SenderStickyBar extends StatelessWidget {
 
   void _showDeleteDialog(
     BuildContext context, {
-    String title = 'Supprimer cette demande ?',
-    String body = 'Elle sera retirée définitivement de votre historique.',
-    String confirmLabel = 'Supprimer',
-    String dismissLabel = 'Annuler',
+    String? title,
+    String? body,
+    String? confirmLabel,
+    String? dismissLabel,
   }) {
+    final l = context.l10n;
+    final resolvedTitle = title ?? l.bidDetailDeleteRequestQuestionTitle;
+    final resolvedBody = body ?? l.bidDetailDeleteRequestDefaultBody;
+    final resolvedConfirmLabel = confirmLabel ?? l.commonDelete;
+    final resolvedDismissLabel = dismissLabel ?? l.commonCancel;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     // Capture the bloc before opening the dialog so the reference stays valid
@@ -363,16 +372,16 @@ class SenderStickyBar extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DonyRadius.sheet),
         ),
-        title: Text(title, style: tt.headlineMedium),
+        title: Text(resolvedTitle, style: tt.headlineMedium),
         content: Text(
-          body,
+          resolvedBody,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
-              dismissLabel,
+              resolvedDismissLabel,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
@@ -383,7 +392,7 @@ class SenderStickyBar extends StatelessWidget {
               foregroundColor: DonyColors.white,
               elevation: 0,
             ),
-            child: Text(confirmLabel, style: tt.labelLarge),
+            child: Text(resolvedConfirmLabel, style: tt.labelLarge),
           ),
         ],
       ),

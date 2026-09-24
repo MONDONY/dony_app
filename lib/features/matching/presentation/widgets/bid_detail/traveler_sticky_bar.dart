@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -132,7 +133,7 @@ class _AwaitingMobileMoneyPaymentBar extends StatelessWidget {
           const SizedBox(width: DonySpacing.xs),
           Flexible(
             child: Text(
-              "En attente du paiement de l'expéditeur (mobile money).",
+              context.l10n.bidDetailAwaitingSenderMobileMoneyPayment,
               textAlign: TextAlign.center,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
@@ -163,7 +164,7 @@ class _ScanBar extends StatelessWidget {
       // Redirige vers l'étape Départ du hub de scan (identify → photo →
       // confirm), cohérent avec le flux d'étapes du Suivi.
       child: DonyButton(
-        label: 'Lire le QR du colis',
+        label: context.l10n.bidDetailScanParcelQr,
         iconAsset: 'scan-line',
         onPressed: () => context.push(
           '/tracking/scan/identify',
@@ -194,7 +195,7 @@ class _TransitBar extends StatelessWidget {
       // Étape Transit du hub de scan. Une fois scanné, le bid passe en
       // IN_TRANSIT et la barre affiche « Valider la remise » (étape Arrivée).
       child: DonyButton(
-        label: 'Lire le QR de transit',
+        label: context.l10n.bidDetailScanTransitQr,
         iconAsset: 'arrow-left-right',
         onPressed: () => context.push(
           '/tracking/scan/identify',
@@ -226,7 +227,7 @@ class _DeliverBar extends StatelessWidget {
       // dispatche ConfirmDeliveryRequested et libère le paiement — au lieu de
       // l'écran de réception autonome (/tracking/confirm).
       child: DonyButton(
-        label: 'Valider la remise',
+        label: context.l10n.bidDetailConfirmHandover,
         iconAsset: 'badge-check',
         variant: DonyButtonVariant.success,
         onPressed: () => context.push(

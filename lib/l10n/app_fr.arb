@@ -6800,5 +6800,535 @@
   "bidDetailGainEscrowedPill": "🔒 séquestré",
     "@bidDetailGainEscrowedPill": {
     "description": "Pastille, paiement carte sequestre (traveler_gain_card.dart)"
+  },
+  "bidDetailCardDeclinedTitle": "Paiement refusé",
+  "@bidDetailCardDeclinedTitle": {
+    "description": "Titre du sheet affiché quand la carte de commission est refusée (bid_detail_screen.dart, tâche D2)"
+  },
+  "bidDetailCardDeclinedHint": "Changez votre carte de commission pour accepter cette demande.",
+  "@bidDetailCardDeclinedHint": {
+    "description": "Indication sous le message d'erreur du sheet carte refusée (bid_detail_screen.dart)"
+  },
+  "bidDetailChangeCommissionCard": "Changer ma carte de commission",
+  "@bidDetailChangeCommissionCard": {
+    "description": "Bouton du sheet carte refusée (bid_detail_screen.dart)"
+  },
+  "bidDetailInsufficientBalanceTitle": "Solde insuffisant",
+  "@bidDetailInsufficientBalanceTitle": {
+    "description": "Titre du sheet solde insuffisant (bid_detail_screen.dart)"
+  },
+  "bidDetailInsufficientBalanceHint": "Recharge ton portefeuille ou paie la commission directement par carte.",
+  "@bidDetailInsufficientBalanceHint": {
+    "description": "Indication du sheet solde insuffisant (bid_detail_screen.dart)"
+  },
+  "bidDetailTopupWallet": "Recharger mon portefeuille",
+  "@bidDetailTopupWallet": {
+    "description": "Bouton du sheet solde insuffisant (bid_detail_screen.dart)"
+  },
+  "bidDetailPayByCard": "Payer par carte",
+  "@bidDetailPayByCard": {
+    "description": "Bouton du sheet solde insuffisant, quand une carte existe déjà (bid_detail_screen.dart)"
+  },
+  "bidDetailAddCard": "Ajouter une carte",
+  "@bidDetailAddCard": {
+    "description": "Bouton du sheet solde insuffisant, quand aucune carte n'existe (bid_detail_screen.dart)"
+  },
+  "bidDetailAcceptedSetHandoverWindow": "Demande acceptée ! Définissez maintenant la fenêtre de remise.",
+  "@bidDetailAcceptedSetHandoverWindow": {
+    "description": "Snackbar après acceptation via BidAcceptanceBloc (bid_detail_screen.dart)"
+  },
+  "bidDetailNoShowReportedSnackbar": "Absence signalée. L'expéditeur a 48 h pour contester.",
+  "@bidDetailNoShowReportedSnackbar": {
+    "description": "Snackbar NoShowReported (bid_detail_screen.dart)"
+  },
+  "bidDetailDeliveryNoShowReportedSnackbar": "Absence signalée. L'autre partie a 24 h pour contester.",
+  "@bidDetailDeliveryNoShowReportedSnackbar": {
+    "description": "Snackbar DeliveryNoShowReported (bid_detail_screen.dart)"
+  },
+  "bidDetailContestSentSnackbar": "Contestation envoyée. Notre équipe va examiner votre demande.",
+  "@bidDetailContestSentSnackbar": {
+    "description": "Snackbar DeliveryNoShowContested et NoShowContested, même texte (bid_detail_screen.dart)"
+  },
+  "bidDetailNoShowConfirmedSnackbar": "Absence confirmée. L'envoi a été annulé, vous ne serez pas débité.",
+  "@bidDetailNoShowConfirmedSnackbar": {
+    "description": "Snackbar NoShowConfirmed (bid_detail_screen.dart)"
+  },
+  "bidDetailCancelledAfterHandoverSnackbar": "Trajet annulé. Restituez le colis sous 3 jours avec le code de retour.",
+  "@bidDetailCancelledAfterHandoverSnackbar": {
+    "description": "Snackbar CancelledAfterHandover (bid_detail_screen.dart)"
+  },
+  "bidDetailReturnConfirmedSnackbar": "Retour confirmé. Le colis a bien été restitué.",
+  "@bidDetailReturnConfirmedSnackbar": {
+    "description": "Snackbar ReturnConfirmed (bid_detail_screen.dart)"
+  },
+  "bidDetailAcceptedSnackbar": "Demande acceptée !",
+  "@bidDetailAcceptedSnackbar": {
+    "description": "Snackbar BidAccepted du BidBloc (bid_detail_screen.dart)"
+  },
+  "bidDetailRejectedSnackbar": "Demande refusée.",
+  "@bidDetailRejectedSnackbar": {
+    "description": "Snackbar BidRejected (bid_detail_screen.dart)"
+  },
+  "bidDetailPresenceConfirmedSnackbar": "Présence confirmée !",
+  "@bidDetailPresenceConfirmedSnackbar": {
+    "description": "Snackbar BidPresenceConfirmed (bid_detail_screen.dart)"
+  },
+  "bidDetailCancelledSnackbar": "Demande annulée. L'expéditeur sera remboursé.",
+  "@bidDetailCancelledSnackbar": {
+    "description": "Snackbar BidCancelled (bid_detail_screen.dart)"
+  },
+  "bidDetailDeletedSnackbar": "Demande supprimée.",
+  "@bidDetailDeletedSnackbar": {
+    "description": "Snackbar BidDeleted (bid_detail_screen.dart)"
+  },
+  "bidDetailNotFoundSnackbar": "Ce colis n'existe plus",
+  "@bidDetailNotFoundSnackbar": {
+    "description": "Snackbar BidNotFound (bid_detail_screen.dart)"
+  },
+  "bidDetailShareTracking": "Partager le suivi",
+  "@bidDetailShareTracking": {
+    "description": "Tooltip et libellé de tuile pour partager le lien de suivi (bid_detail_screen.dart, bid_detail_action_bars.dart, quick_actions_row.dart)"
+  },
+  "bidDetailOptionsTitle": "Options",
+  "@bidDetailOptionsTitle": {
+    "description": "Tooltip du bouton ⋮ et titre des sheets d'options (bid_detail_screen.dart, bid_detail_action_bars.dart, traveler_options_sheet.dart) - identique en anglais"
+  },
+  "bidDetailDeclineRequestTitle": "Refuser la demande",
+  "@bidDetailDeclineRequestTitle": {
+    "description": "Titre du sheet de refus (bid_detail_action_bars.dart)"
+  },
+  "bidDetailDeclineRequestSubtitle": "Souhaitez-vous indiquer une raison à l'expéditeur ?",
+  "@bidDetailDeclineRequestSubtitle": {
+    "description": "Sous-titre du sheet de refus (bid_detail_action_bars.dart)"
+  },
+  "bidDetailConfirmDecline": "Confirmer le refus",
+  "@bidDetailConfirmDecline": {
+    "description": "Bouton de confirmation du sheet de refus (bid_detail_action_bars.dart)"
+  },
+  "bidDetailReasonHint": "Raison (optionnelle)",
+  "@bidDetailReasonHint": {
+    "description": "Hint du champ de raison de refus (bid_detail_action_bars.dart)"
+  },
+  "bidDetailConfirmPresence": "Confirmer ma présence",
+  "@bidDetailConfirmPresence": {
+    "description": "Bouton ConfirmPresenceBar (bid_detail_action_bars.dart)"
+  },
+  "bidDetailPayMyShipment": "Payer mon envoi",
+  "@bidDetailPayMyShipment": {
+    "description": "Bouton de paiement expéditeur (bid_detail_action_bars.dart, sender_sticky_bar.dart)"
+  },
+  "bidDetailDeleteRequest": "Supprimer cette demande",
+  "@bidDetailDeleteRequest": {
+    "description": "Libellé/titre partagé pour supprimer une demande (bid_detail_action_bars.dart, traveler_options_sheet.dart, traveler_sticky_bar.dart)"
+  },
+  "bidDetailDeleteRejectedBody": "Cette demande refusée sera retirée définitivement de votre liste.",
+  "@bidDetailDeleteRejectedBody": {
+    "description": "Corps du dialog de suppression, vue voyageur d'une demande refusée (bid_detail_action_bars.dart)"
+  },
+  "bidDetailEscrowReleasedLabel": "Voyageur payé · {amount}",
+  "@bidDetailEscrowReleasedLabel": {
+    "description": "EscrowBadge, paiement libéré (bid_detail_action_bars.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailEscrowRefundedLabel": "Remboursé · {amount}",
+  "@bidDetailEscrowRefundedLabel": {
+    "description": "EscrowBadge, paiement remboursé (bid_detail_action_bars.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailEscrowFailedLabel": "Paiement échoué",
+  "@bidDetailEscrowFailedLabel": {
+    "description": "EscrowBadge, paiement échoué (bid_detail_action_bars.dart)"
+  },
+  "bidDetailEscrowSecuredPendingLabel": "Paiement sécurisé · En attente du voyageur",
+  "@bidDetailEscrowSecuredPendingLabel": {
+    "description": "EscrowBadge, statut PENDING (bid_detail_action_bars.dart)"
+  },
+  "bidDetailEscrowSecuredLabel": "Paiement sécurisé · {amount}",
+  "@bidDetailEscrowSecuredLabel": {
+    "description": "EscrowBadge, statut ACCEPTED ou défaut (bid_detail_action_bars.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailCashAtDropoffLabel": "Paiement en espèces à la remise",
+  "@bidDetailCashAtDropoffLabel": {
+    "description": "_CashBadge (bid_detail_action_bars.dart)"
+  },
+  "bidDetailMobileMoneyPaymentLabel": "Paiement mobile money",
+  "@bidDetailMobileMoneyPaymentLabel": {
+    "description": "_MobileMoneyBadge (bid_detail_action_bars.dart)"
+  },
+  "bidDetailReportTripLabel": "Signaler ce trajet",
+  "@bidDetailReportTripLabel": {
+    "description": "Tuile d'options expéditeur : signaler le trajet (bid_detail_action_bars.dart)"
+  },
+  "bidDetailReportSubtitle": "Signaler un problème au support Yadony",
+  "@bidDetailReportSubtitle": {
+    "description": "Sous-titre commun des tuiles de signalement (bid_detail_action_bars.dart, traveler_options_sheet.dart)"
+  },
+  "bidDetailContactTravelerLabel": "Contacter le voyageur",
+  "@bidDetailContactTravelerLabel": {
+    "description": "Tuile d'options expéditeur : contacter le voyageur (bid_detail_action_bars.dart)"
+  },
+  "bidDetailContactTravelerSubtitle": "Envoyer un message au voyageur",
+  "@bidDetailContactTravelerSubtitle": {
+    "description": "Sous-titre de la tuile contacter le voyageur (bid_detail_action_bars.dart)"
+  },
+  "bidDetailShareTrackingSubtitle": "Envoyer le lien de suivi au destinataire",
+  "@bidDetailShareTrackingSubtitle": {
+    "description": "Sous-titre de la tuile partager le suivi (bid_detail_action_bars.dart)"
+  },
+  "bidDetailCancelRefundAutoSubtitle": "Votre paiement sera remboursé automatiquement",
+  "@bidDetailCancelRefundAutoSubtitle": {
+    "description": "Sous-titre annulation avant remise (bid_detail_action_bars.dart)"
+  },
+  "bidDetailCancelAfterHandoverOptionSubtitle": "Remboursement intégral · vous récupérez votre colis",
+  "@bidDetailCancelAfterHandoverOptionSubtitle": {
+    "description": "Sous-titre annulation après remise, tuile d'options (bid_detail_action_bars.dart)"
+  },
+  "bidDetailRemoveFromHistorySubtitle": "Retirer définitivement de votre historique",
+  "@bidDetailRemoveFromHistorySubtitle": {
+    "description": "Sous-titre commun des tuiles de suppression (bid_detail_action_bars.dart, traveler_options_sheet.dart)"
+  },
+  "bidDetailCancelConfirmBody": "Voulez-vous vraiment annuler votre demande d'envoi ? Cette action est définitive.",
+  "@bidDetailCancelConfirmBody": {
+    "description": "Corps du dialog d'annulation avant remise (bid_detail_action_bars.dart)"
+  },
+  "bidDetailNo": "Non",
+  "@bidDetailNo": {
+    "description": "Bouton de dismiss des dialogs d'annulation (bid_detail_action_bars.dart)"
+  },
+  "bidDetailConfirmCancelButton": "Oui, annuler",
+  "@bidDetailConfirmCancelButton": {
+    "description": "Bouton de confirmation des dialogs d'annulation (bid_detail_action_bars.dart, sender_sticky_bar.dart)"
+  },
+  "bidDetailCancelAfterHandoverTitle": "Annuler après remise ?",
+  "@bidDetailCancelAfterHandoverTitle": {
+    "description": "Titre du dialog d'annulation après remise (bid_detail_action_bars.dart)"
+  },
+  "bidDetailCancelAfterHandoverBody": "Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.",
+  "@bidDetailCancelAfterHandoverBody": {
+    "description": "Corps du dialog d'annulation après remise (bid_detail_action_bars.dart)"
+  },
+  "bidDetailDeleteConfirmBody": "Cette demande sera définitivement supprimée de votre historique.",
+  "@bidDetailDeleteConfirmBody": {
+    "description": "Corps du dialog de suppression, vue expéditeur (bid_detail_action_bars.dart)"
+  },
+  "bidDetailMoreDetails": "Plus de détails",
+  "@bidDetailMoreDetails": {
+    "description": "En-tête de l'accordéon (details_accordion.dart)"
+  },
+  "bidDetailSectionDropoff": "DÉPÔT DU COLIS",
+  "@bidDetailSectionDropoff": {
+    "description": "Titre de section 1 de l'accordéon (details_accordion.dart)"
+  },
+  "bidDetailLocationLabel": "Lieu",
+  "@bidDetailLocationLabel": {
+    "description": "InfoRow lieu de remise (details_accordion.dart)"
+  },
+  "bidDetailHandoverStatusLabel": "Remise",
+  "@bidDetailHandoverStatusLabel": {
+    "description": "Libellé InfoRow quand le colis a déjà été remis (details_accordion.dart)"
+  },
+  "bidDetailPresenceConfirmedLabel": "Présence confirmée",
+  "@bidDetailPresenceConfirmedLabel": {
+    "description": "Libellé InfoRow avant remise (details_accordion.dart)"
+  },
+  "bidDetailParcelHandedOverValue": "Colis remis ✓",
+  "@bidDetailParcelHandedOverValue": {
+    "description": "Valeur InfoRow quand le colis a déjà été remis (details_accordion.dart)"
+  },
+  "bidDetailYesValue": "Oui ✓",
+  "@bidDetailYesValue": {
+    "description": "Valeur InfoRow, présence confirmée (details_accordion.dart)"
+  },
+  "bidDetailNotYetValue": "Non encore",
+  "@bidDetailNotYetValue": {
+    "description": "Valeur InfoRow, présence non confirmée (details_accordion.dart)"
+  },
+  "bidDetailPricePerKgLabel": "Tarif par kg",
+  "@bidDetailPricePerKgLabel": {
+    "description": "InfoRow tarif brut par kg (details_accordion.dart)"
+  },
+  "bidDetailSectionTrackingLink": "LIEN DE SUIVI",
+  "@bidDetailSectionTrackingLink": {
+    "description": "Titre de section 3 de l'accordéon (details_accordion.dart)"
+  },
+  "bidDetailSectionLegal": "RESPONSABILITÉ LÉGALE",
+  "@bidDetailSectionLegal": {
+    "description": "Titre de section 4 de l'accordéon (details_accordion.dart)"
+  },
+  "bidDetailDisclaimerSignedNoDate": "Disclaimer signé",
+  "@bidDetailDisclaimerSignedNoDate": {
+    "description": "Disclaimer sans date de signature (details_accordion.dart)"
+  },
+  "bidDetailDisclaimerSignedCompact": "Disclaimer signé le {date} {time}",
+  "@bidDetailDisclaimerSignedCompact": {
+    "description": "Repli du disclaimer sans locale, sans « à » entre date et heure (details_accordion.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailContactSenderLabel": "Contacter l'expéditeur",
+  "@bidDetailContactSenderLabel": {
+    "description": "Tuile d'options voyageur : contacter l'expéditeur (traveler_options_sheet.dart)"
+  },
+  "bidDetailContactSenderSubtitle": "Envoyer un message à l'expéditeur",
+  "@bidDetailContactSenderSubtitle": {
+    "description": "Sous-titre de la tuile contacter l'expéditeur (traveler_options_sheet.dart)"
+  },
+  "bidDetailParcelDetailsLabel": "Détails du colis",
+  "@bidDetailParcelDetailsLabel": {
+    "description": "Tuile d'options voyageur et titre du sous-sheet colis (traveler_options_sheet.dart)"
+  },
+  "bidDetailParcelDetailsSubtitle": "Voir les informations du colis et du destinataire",
+  "@bidDetailParcelDetailsSubtitle": {
+    "description": "Sous-titre de la tuile détails du colis (traveler_options_sheet.dart)"
+  },
+  "bidDetailReportSenderLabel": "Signaler l'expéditeur",
+  "@bidDetailReportSenderLabel": {
+    "description": "Tuile d'options voyageur : signaler l'expéditeur (traveler_options_sheet.dart)"
+  },
+  "bidDetailCancelTransportLabel": "Annuler ce transport",
+  "@bidDetailCancelTransportLabel": {
+    "description": "Tuile d'options voyageur : annuler ce transport (traveler_options_sheet.dart)"
+  },
+  "bidDetailCancelTransportHandedOverSubtitle": "Vous devrez restituer le colis sous 3 jours",
+  "@bidDetailCancelTransportHandedOverSubtitle": {
+    "description": "Sous-titre annuler ce transport, statut HANDED_OVER (traveler_options_sheet.dart)"
+  },
+  "bidDetailCancelTransportAcceptedSubtitle": "L'expéditeur sera remboursé automatiquement",
+  "@bidDetailCancelTransportAcceptedSubtitle": {
+    "description": "Sous-titre annuler ce transport, autre statut (traveler_options_sheet.dart)"
+  },
+  "bidDetailPayByMobileMoney": "Payer par mobile money",
+  "@bidDetailPayByMobileMoney": {
+    "description": "Bouton AWAITING_PAYMENT mobile money (sender_sticky_bar.dart)"
+  },
+  "bidDetailShowPickupQr": "Afficher le QR de remise",
+  "@bidDetailShowPickupQr": {
+    "description": "Bouton statut ACCEPTED (sender_sticky_bar.dart)"
+  },
+  "bidDetailTrackParcel": "Suivi du colis",
+  "@bidDetailTrackParcel": {
+    "description": "Bouton/tuile/corridor de repli de suivi (sender_sticky_bar.dart, quick_actions_row.dart)"
+  },
+  "bidDetailRateTraveler": "Noter le voyageur",
+  "@bidDetailRateTraveler": {
+    "description": "Bouton statut COMPLETED/DELIVERED, pas encore noté (sender_sticky_bar.dart)"
+  },
+  "bidDetailCancelTransportRequestTitle": "Annuler la demande de transport ?",
+  "@bidDetailCancelTransportRequestTitle": {
+    "description": "Titre du dialog d'annulation AWAITING_PAYMENT (sender_sticky_bar.dart)"
+  },
+  "bidDetailCancelTransportRequestBody": "Aucun paiement n'a été effectué. La demande sera retirée.",
+  "@bidDetailCancelTransportRequestBody": {
+    "description": "Corps du dialog d'annulation AWAITING_PAYMENT (sender_sticky_bar.dart)"
+  },
+  "bidDetailDeleteRequestQuestionTitle": "Supprimer cette demande ?",
+  "@bidDetailDeleteRequestQuestionTitle": {
+    "description": "Titre par défaut du dialog de suppression (sender_sticky_bar.dart)"
+  },
+  "bidDetailDeleteRequestDefaultBody": "Elle sera retirée définitivement de votre historique.",
+  "@bidDetailDeleteRequestDefaultBody": {
+    "description": "Corps par défaut du dialog de suppression (sender_sticky_bar.dart)"
+  },
+  "bidDetailAwaitingSenderMobileMoneyPayment": "En attente du paiement de l'expéditeur (mobile money).",
+  "@bidDetailAwaitingSenderMobileMoneyPayment": {
+    "description": "Ligne d'information AWAITING_PAYMENT mobile money, vue voyageur (traveler_sticky_bar.dart)"
+  },
+  "bidDetailScanParcelQr": "Lire le QR du colis",
+  "@bidDetailScanParcelQr": {
+    "description": "Bouton étape Départ (traveler_sticky_bar.dart)"
+  },
+  "bidDetailScanTransitQr": "Lire le QR de transit",
+  "@bidDetailScanTransitQr": {
+    "description": "Bouton étape Transit (traveler_sticky_bar.dart)"
+  },
+  "bidDetailConfirmHandover": "Valider la remise",
+  "@bidDetailConfirmHandover": {
+    "description": "Bouton étape Arrivée, valider la remise au destinataire (traveler_sticky_bar.dart)"
+  },
+  "bidDetailQrSheetTitle": "QR du colis",
+  "@bidDetailQrSheetTitle": {
+    "description": "Titre du sheet QR (qr_sheet.dart)"
+  },
+  "bidDetailQrSaveErrorSnackbar": "Impossible d'enregistrer l'image",
+  "@bidDetailQrSaveErrorSnackbar": {
+    "description": "Snackbar d'échec d'enregistrement du QR (qr_sheet.dart)"
+  },
+  "bidDetailQrSavedSnackbar": "QR code enregistré dans votre galerie",
+  "@bidDetailQrSavedSnackbar": {
+    "description": "Snackbar de succès d'enregistrement du QR (qr_sheet.dart)"
+  },
+  "bidDetailQrShareSubject": "QR du colis Yadony",
+  "@bidDetailQrShareSubject": {
+    "description": "Sujet du partage natif du QR (qr_sheet.dart)"
+  },
+  "bidDetailQrShareText": "QR à présenter ou à coller sur le colis.",
+  "@bidDetailQrShareText": {
+    "description": "Texte du partage natif du QR (qr_sheet.dart)"
+  },
+  "bidDetailQrShareErrorSnackbar": "Impossible de partager le QR code",
+  "@bidDetailQrShareErrorSnackbar": {
+    "description": "Snackbar d'échec de partage du QR (qr_sheet.dart)"
+  },
+  "bidDetailQrInstructions": "Lu par le voyageur à la remise, puis à chaque étape jusqu'au retrait. Vous pouvez aussi l'imprimer et le coller sur le colis.",
+  "@bidDetailQrInstructions": {
+    "description": "Instruction affichée sous le QR (qr_sheet.dart)"
+  },
+  "bidDetailReturnCodeTitle": "Code de retour",
+  "@bidDetailReturnCodeTitle": {
+    "description": "Titre du sheet code de retour, vue expéditeur (return_code_sheet.dart)"
+  },
+  "bidDetailReturnCodeSubtitle": "À communiquer au voyageur en récupérant votre colis",
+  "@bidDetailReturnCodeSubtitle": {
+    "description": "Sous-titre du sheet code de retour (return_code_sheet.dart)"
+  },
+  "bidDetailReturnCodeCopiedSnackbar": "Code copié",
+  "@bidDetailReturnCodeCopiedSnackbar": {
+    "description": "Snackbar après copie du code de retour (return_code_sheet.dart)"
+  },
+  "bidDetailReturnCopyCode": "Copier le code",
+  "@bidDetailReturnCopyCode": {
+    "description": "Bouton copier le code de retour (return_code_sheet.dart)"
+  },
+  "bidDetailReturnDeadlineHint": "Le voyageur doit vous restituer le colis avant le {date}. Donnez-lui ce code uniquement en récupérant votre colis.",
+  "@bidDetailReturnDeadlineHint": {
+    "description": "Indication avec date limite de restitution (return_code_sheet.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailReturnNoDeadlineHint": "Donnez ce code au voyageur uniquement en récupérant votre colis.",
+  "@bidDetailReturnNoDeadlineHint": {
+    "description": "Indication sans date limite (return_code_sheet.dart)"
+  },
+  "bidDetailReturnedTitle": "Colis restitué",
+  "@bidDetailReturnedTitle": {
+    "description": "Titre de la confirmation de restitution (return_code_sheet.dart)"
+  },
+  "bidDetailReturnedSubtitle": "Le voyageur a confirmé vous avoir restitué le colis.",
+  "@bidDetailReturnedSubtitle": {
+    "description": "Sous-titre de la confirmation de restitution (return_code_sheet.dart)"
+  },
+  "bidDetailReturnEntryTitle": "Confirmer le retour",
+  "@bidDetailReturnEntryTitle": {
+    "description": "Titre du sheet de saisie du code de retour, vue voyageur (return_code_sheet.dart)"
+  },
+  "bidDetailReturnEntrySubtitle": "Saisissez le code de retour fourni par l'expéditeur",
+  "@bidDetailReturnEntrySubtitle": {
+    "description": "Sous-titre du sheet de saisie du code de retour (return_code_sheet.dart)"
+  },
+  "bidDetailReturnConfirmButton": "Confirmer la restitution",
+  "@bidDetailReturnConfirmButton": {
+    "description": "Bouton de confirmation de restitution (return_code_sheet.dart)"
+  },
+  "bidDetailReturnConfirmHint": "En confirmant, vous déclarez avoir restitué le colis à l'expéditeur.",
+  "@bidDetailReturnConfirmHint": {
+    "description": "Indication sous le clavier PIN de saisie du code (return_code_sheet.dart)"
+  },
+  "ticketPickupCode": "Code de retrait",
+  "@ticketPickupCode": {
+    "description": "Titre du sheet de code de retrait (retrait_code_sheet.dart, tâche D2, réutilisé par D3)"
+  },
+  "bidDetailPaymentCardTitle": "Paiement",
+  "@bidDetailPaymentCardTitle": {
+    "description": "Titre de la carte paiement, vue expéditeur (paiement_card.dart)"
+  },
+  "bidDetailMobileMoneySecuredLabel": "Paiement mobile money, gardé en sécurité par Yadony jusqu'à la livraison : {amount}",
+  "@bidDetailMobileMoneySecuredLabel": {
+    "description": "Corps de la carte paiement, méthode mobile money (paiement_card.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailMobileMoneyBadge": "MOBILE MONEY",
+  "@bidDetailMobileMoneyBadge": {
+    "description": "Badge de la carte paiement, méthode mobile money (paiement_card.dart) - identique en anglais"
+  },
+  "bidDetailCashAtDropoffAmountLabel": "À régler en espèces à la remise : {amount}",
+  "@bidDetailCashAtDropoffAmountLabel": {
+    "description": "Corps de la carte paiement, méthode cash/Wave/Orange Money (paiement_card.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailCashBadge": "CASH",
+  "@bidDetailCashBadge": {
+    "description": "Badge de la carte paiement, méthode cash (paiement_card.dart) - identique en anglais"
+  },
+  "bidDetailPaymentReleasedLabel": "Paiement libéré ✓",
+  "@bidDetailPaymentReleasedLabel": {
+    "description": "Corps de la carte paiement, stripe statut terminal (paiement_card.dart)"
+  },
+  "bidDetailAmountRefundedLabel": "{amount} remboursé",
+  "@bidDetailAmountRefundedLabel": {
+    "description": "Corps de la carte paiement, stripe statut annulé (paiement_card.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailEscrowedUntilDeliveryLabel": "{amount} séquestré : libéré à la livraison",
+  "@bidDetailEscrowedUntilDeliveryLabel": {
+    "description": "Corps de la carte paiement, stripe par défaut/en séquestre (paiement_card.dart)",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailShareTrackingMessage": "Suivez votre colis Yadony en temps réel :\n{url}",
+  "@bidDetailShareTrackingMessage": {
+    "description": "Texte du partage natif du lien de suivi (quick_actions_row.dart)",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailTrackingShareSubject": "Suivi de colis Yadony · {number}",
+  "@bidDetailTrackingShareSubject": {
+    "description": "Sujet du partage natif du lien de suivi (quick_actions_row.dart)",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "bidSenderRoleTag": "EXPÉDITEUR",
+  "@bidSenderRoleTag": {
+    "description": "Étiquette de rôle en tête de la carte expéditeur (expediteur_contact_card.dart, tâche D2)"
+  },
+  "bidDetailRatingSentBadge": "Évaluation envoyée",
+  "@bidDetailRatingSentBadge": {
+    "description": "Pill affichée quand l'évaluation du voyageur a déjà été soumise (sender_detail_body.dart)"
+  },
+  "bidDetailParcelRecipientTitle": "Colis & destinataire",
+  "@bidDetailParcelRecipientTitle": {
+    "description": "Titre de la carte fusionnée colis + destinataire (colis_destinataire_card.dart)"
   }
 }

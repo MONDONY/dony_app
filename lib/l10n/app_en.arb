@@ -3565,5 +3565,203 @@
   "bidDetailGainEscrowedPill": "🔒 on hold",
     "@bidDetailGainEscrowedPill": {
     "description": "Pastille, paiement carte sequestre (traveler_gain_card.dart)"
-  }
+  },
+  "bidDetailCardDeclinedTitle": "Payment declined",
+  "bidDetailCardDeclinedHint": "Change your commission card to accept this request.",
+  "bidDetailChangeCommissionCard": "Change my commission card",
+  "bidDetailInsufficientBalanceTitle": "Insufficient balance",
+  "bidDetailInsufficientBalanceHint": "Top up your wallet or pay the service fee directly by card.",
+  "bidDetailTopupWallet": "Top up my wallet",
+  "bidDetailPayByCard": "Pay by card",
+  "bidDetailAddCard": "Add a card",
+  "bidDetailAcceptedSetHandoverWindow": "Request accepted! Now set the drop-off window.",
+  "bidDetailNoShowReportedSnackbar": "Absence reported. The sender has 48 hours to contest.",
+  "bidDetailDeliveryNoShowReportedSnackbar": "Absence reported. The other party has 24 hours to contest.",
+  "bidDetailContestSentSnackbar": "Objection sent. Our team will review your request.",
+  "bidDetailNoShowConfirmedSnackbar": "Absence confirmed. The shipment has been canceled, you will not be charged.",
+  "bidDetailCancelledAfterHandoverSnackbar": "Trip canceled. Return the parcel within 3 days using the return code.",
+  "bidDetailReturnConfirmedSnackbar": "Return confirmed. The parcel has been returned.",
+  "bidDetailAcceptedSnackbar": "Request accepted!",
+  "bidDetailRejectedSnackbar": "Request declined.",
+  "bidDetailPresenceConfirmedSnackbar": "Presence confirmed!",
+  "bidDetailCancelledSnackbar": "Request canceled. The sender will be refunded.",
+  "bidDetailDeletedSnackbar": "Request deleted.",
+  "bidDetailNotFoundSnackbar": "This parcel no longer exists",
+  "bidDetailShareTracking": "Share tracking",
+  "bidDetailOptionsTitle": "Options",
+  "bidDetailDeclineRequestTitle": "Decline the request",
+  "bidDetailDeclineRequestSubtitle": "Would you like to give the sender a reason?",
+  "bidDetailConfirmDecline": "Confirm the decline",
+  "bidDetailReasonHint": "Reason (optional)",
+  "bidDetailConfirmPresence": "Confirm my presence",
+  "bidDetailPayMyShipment": "Pay for my shipment",
+  "bidDetailDeleteRequest": "Delete this request",
+  "bidDetailDeleteRejectedBody": "This declined request will be permanently removed from your list.",
+  "bidDetailEscrowReleasedLabel": "Traveler paid · {amount}",
+  "@bidDetailEscrowReleasedLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailEscrowRefundedLabel": "Refunded · {amount}",
+  "@bidDetailEscrowRefundedLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailEscrowFailedLabel": "Payment failed",
+  "bidDetailEscrowSecuredPendingLabel": "Payment secured · Awaiting the traveler",
+  "bidDetailEscrowSecuredLabel": "Payment secured · {amount}",
+  "@bidDetailEscrowSecuredLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailCashAtDropoffLabel": "Cash payment at drop-off",
+  "bidDetailMobileMoneyPaymentLabel": "Mobile money payment",
+  "bidDetailReportTripLabel": "Report this trip",
+  "bidDetailReportSubtitle": "Report a problem to Yadony support",
+  "bidDetailContactTravelerLabel": "Contact the traveler",
+  "bidDetailContactTravelerSubtitle": "Send a message to the traveler",
+  "bidDetailShareTrackingSubtitle": "Send the tracking link to the recipient",
+  "bidDetailCancelRefundAutoSubtitle": "Your payment will be refunded automatically",
+  "bidDetailCancelAfterHandoverOptionSubtitle": "Full refund · you get your parcel back",
+  "bidDetailRemoveFromHistorySubtitle": "Permanently remove from your history",
+  "bidDetailCancelConfirmBody": "Are you sure you want to cancel your shipment request? This action is final.",
+  "bidDetailNo": "No",
+  "bidDetailConfirmCancelButton": "Yes, cancel",
+  "bidDetailCancelAfterHandoverTitle": "Cancel after drop-off?",
+  "bidDetailCancelAfterHandoverBody": "The parcel is already with the traveler. You will be fully refunded and get your parcel back: the traveler will confirm the return by entering your return code.",
+  "bidDetailDeleteConfirmBody": "This request will be permanently deleted from your history.",
+  "bidDetailMoreDetails": "More details",
+  "bidDetailSectionDropoff": "PARCEL DROP-OFF",
+  "bidDetailLocationLabel": "Location",
+  "bidDetailHandoverStatusLabel": "Drop-off",
+  "bidDetailPresenceConfirmedLabel": "Presence confirmed",
+  "bidDetailParcelHandedOverValue": "Parcel handed over ✓",
+  "bidDetailYesValue": "Yes ✓",
+  "bidDetailNotYetValue": "Not yet",
+  "bidDetailPricePerKgLabel": "Price per kg",
+  "bidDetailSectionTrackingLink": "TRACKING LINK",
+  "bidDetailSectionLegal": "LEGAL LIABILITY",
+  "bidDetailDisclaimerSignedNoDate": "Disclaimer signed",
+  "bidDetailDisclaimerSignedCompact": "Disclaimer signed on {date} {time}",
+  "@bidDetailDisclaimerSignedCompact": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailContactSenderLabel": "Contact the sender",
+  "bidDetailContactSenderSubtitle": "Send a message to the sender",
+  "bidDetailParcelDetailsLabel": "Parcel details",
+  "bidDetailParcelDetailsSubtitle": "View the parcel and recipient information",
+  "bidDetailReportSenderLabel": "Report the sender",
+  "bidDetailCancelTransportLabel": "Cancel this transport",
+  "bidDetailCancelTransportHandedOverSubtitle": "You will need to return the parcel within 3 days",
+  "bidDetailCancelTransportAcceptedSubtitle": "The sender will be refunded automatically",
+  "bidDetailPayByMobileMoney": "Pay by mobile money",
+  "bidDetailShowPickupQr": "Show the drop-off QR",
+  "bidDetailTrackParcel": "Track my parcel",
+  "bidDetailRateTraveler": "Rate the traveler",
+  "bidDetailCancelTransportRequestTitle": "Cancel the transport request?",
+  "bidDetailCancelTransportRequestBody": "No payment has been made. The request will be withdrawn.",
+  "bidDetailDeleteRequestQuestionTitle": "Delete this request?",
+  "bidDetailDeleteRequestDefaultBody": "It will be permanently removed from your history.",
+  "bidDetailAwaitingSenderMobileMoneyPayment": "Awaiting the sender's payment (mobile money).",
+  "bidDetailScanParcelQr": "Scan the parcel QR",
+  "bidDetailScanTransitQr": "Scan the transit QR",
+  "bidDetailConfirmHandover": "Confirm the drop-off",
+  "bidDetailQrSheetTitle": "Parcel QR",
+  "bidDetailQrSaveErrorSnackbar": "Unable to save the image",
+  "bidDetailQrSavedSnackbar": "QR code saved to your gallery",
+  "bidDetailQrShareSubject": "Yadony parcel QR",
+  "bidDetailQrShareText": "QR to show or stick on the parcel.",
+  "bidDetailQrShareErrorSnackbar": "Unable to share the QR code",
+  "bidDetailQrInstructions": "Scanned by the traveler at drop-off, then at every step until pickup. You can also print it and stick it on the parcel.",
+  "bidDetailReturnCodeTitle": "Return code",
+  "bidDetailReturnCodeSubtitle": "To share with the traveler when picking up your parcel",
+  "bidDetailReturnCodeCopiedSnackbar": "Code copied",
+  "bidDetailReturnCopyCode": "Copy the code",
+  "bidDetailReturnDeadlineHint": "The traveler must return the parcel to you before {date}. Only give them this code when picking up your parcel.",
+  "@bidDetailReturnDeadlineHint": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailReturnNoDeadlineHint": "Only give this code to the traveler when picking up your parcel.",
+  "bidDetailReturnedTitle": "Parcel returned",
+  "bidDetailReturnedSubtitle": "The traveler has confirmed returning the parcel to you.",
+  "bidDetailReturnEntryTitle": "Confirm the return",
+  "bidDetailReturnEntrySubtitle": "Enter the return code provided by the sender",
+  "bidDetailReturnConfirmButton": "Confirm the return",
+  "bidDetailReturnConfirmHint": "By confirming, you declare that you have returned the parcel to the sender.",
+  "ticketPickupCode": "Pickup code",
+  "bidDetailPaymentCardTitle": "Payment",
+  "bidDetailMobileMoneySecuredLabel": "Mobile money payment, kept safe by Yadony until delivery: {amount}",
+  "@bidDetailMobileMoneySecuredLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailMobileMoneyBadge": "MOBILE MONEY",
+  "bidDetailCashAtDropoffAmountLabel": "To pay in cash at drop-off: {amount}",
+  "@bidDetailCashAtDropoffAmountLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailCashBadge": "CASH",
+  "bidDetailPaymentReleasedLabel": "Payment released ✓",
+  "bidDetailAmountRefundedLabel": "{amount} refunded",
+  "@bidDetailAmountRefundedLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailEscrowedUntilDeliveryLabel": "{amount} on hold: released at delivery",
+  "@bidDetailEscrowedUntilDeliveryLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailShareTrackingMessage": "Track your Yadony parcel in real time:\n{url}",
+  "@bidDetailShareTrackingMessage": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailTrackingShareSubject": "Yadony parcel tracking · {number}",
+  "@bidDetailTrackingShareSubject": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "bidSenderRoleTag": "SENDER",
+  "bidDetailRatingSentBadge": "Rating sent",
+  "bidDetailParcelRecipientTitle": "Parcel & recipient"
 }

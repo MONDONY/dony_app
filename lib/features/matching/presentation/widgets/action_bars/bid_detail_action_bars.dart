@@ -14,6 +14,7 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/models/payment_status.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -44,6 +45,7 @@ class TravelerPendingBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final h = DonyLayout.hPadding(context);
     return Container(
       color: cs.surface,
@@ -59,9 +61,9 @@ class TravelerPendingBar extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: isLoading ? null : () => _showRejectDialog(context),
               icon: DonyIcon('x', size: 20, color: cs.error),
-              label: const FittedBox(
+              label: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text('Refuser', maxLines: 1),
+                child: Text(l.negotiationThreadRejectButton, maxLines: 1),
               ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: cs.error,
@@ -89,9 +91,9 @@ class TravelerPendingBar extends StatelessWidget {
                       ),
                     )
                   : const DonyIcon('check', color: DonyColors.white),
-              label: const FittedBox(
+              label: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text('Accepter', maxLines: 1),
+                child: Text(l.negotiationThreadAcceptButton, maxLines: 1),
               ),
               style: FilledButton.styleFrom(
                 backgroundColor: cs.success,
@@ -115,14 +117,15 @@ class TravelerPendingBar extends StatelessWidget {
     // clavier et figeait la feuille sur device réel. Bouton dans stickyBottom
     // (règle CLAUDE.md). Le refus est dispatché sur le BidBloc du détail via le
     // [context] capturé (la feuille root-navigator n'a pas le provider).
+    final l = context.l10n;
     final reasonNotifier = ValueNotifier<String>('');
     DonyBottomSheet.show<void>(
       context,
-      title: 'Refuser la demande',
-      subtitle: 'Souhaitez-vous indiquer une raison à l\'expéditeur ?',
+      title: l.bidDetailDeclineRequestTitle,
+      subtitle: l.bidDetailDeclineRequestSubtitle,
       isDanger: true,
       stickyBottom: DonyButton(
-        label: 'Confirmer le refus',
+        label: l.bidDetailConfirmDecline,
         variant: DonyButtonVariant.destructive,
         onPressed: () {
           final reason = reasonNotifier.value.trim();
@@ -171,7 +174,7 @@ class _RejectReasonFieldState extends State<_RejectReasonField> {
       autofocus: true,
       onChanged: widget.onChanged,
       decoration: InputDecoration(
-        hintText: 'Raison (optionnelle)',
+        hintText: context.l10n.bidDetailReasonHint,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
         ),
@@ -206,7 +209,7 @@ class ConfirmPresenceBar extends StatelessWidget {
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
       child: DonyButton(
-        label: 'Confirmer ma présence',
+        label: context.l10n.bidDetailConfirmPresence,
         iconAsset: 'map-pin',
         onPressed: isLoading
             ? null
@@ -317,9 +320,12 @@ class SenderActionBar extends StatelessWidget {
                         size: 18,
                         color: DonyColors.white,
                       ),
-                      label: const FittedBox(
+                      label: FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text('Payer mon envoi', maxLines: 1),
+                        child: Text(
+                          context.l10n.bidDetailPayMyShipment,
+                          maxLines: 1,
+                        ),
                       ),
                       style: FilledButton.styleFrom(
                         backgroundColor: cs.primary,
@@ -366,7 +372,7 @@ class TravelerRejectedBar extends StatelessWidget {
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
       child: DonyButton(
-        label: 'Supprimer cette demande',
+        label: context.l10n.bidDetailDeleteRequest,
         iconAsset: 'trash-2',
         variant: DonyButtonVariant.destructive,
         onPressed: isLoading ? null : () => _showDeleteDialog(context),
@@ -378,22 +384,23 @@ class TravelerRejectedBar extends StatelessWidget {
   void _showDeleteDialog(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DonyRadius.sheet),
         ),
-        title: Text('Supprimer cette demande', style: tt.headlineMedium),
+        title: Text(l.bidDetailDeleteRequest, style: tt.headlineMedium),
         content: Text(
-          'Cette demande refusée sera retirée définitivement de votre liste.',
+          l.bidDetailDeleteRejectedBody,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),
             child: Text(
-              'Annuler',
+              l.commonCancel,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
@@ -407,7 +414,7 @@ class TravelerRejectedBar extends StatelessWidget {
               foregroundColor: DonyColors.white,
               elevation: 0,
             ),
-            child: Text('Supprimer', style: tt.labelLarge),
+            child: Text(l.commonDelete, style: tt.labelLarge),
           ),
         ],
       ),
@@ -431,7 +438,7 @@ class EscrowBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final (String icon, Color color, String label) = _resolve(cs);
+    final (String icon, Color color, String label) = _resolve(context.l10n, cs);
 
     return Container(
       height: 52,
@@ -458,31 +465,35 @@ class EscrowBadge extends StatelessWidget {
     );
   }
 
-  (String, Color, String) _resolve(ColorScheme cs) {
+  (String, Color, String) _resolve(AppLocalizations l, ColorScheme cs) {
     final amount = formatPriceIn(payment.amount, payment.currency);
     return switch (payment.status) {
       PaymentStatus.released => (
         'circle-check',
         cs.success,
-        'Voyageur payé · $amount',
+        l.bidDetailEscrowReleasedLabel(amount),
       ),
       PaymentStatus.refunded => (
         'refresh-cw',
         cs.onSurfaceVariant,
-        'Remboursé · $amount',
+        l.bidDetailEscrowRefundedLabel(amount),
       ),
-      PaymentStatus.failed => ('circle-alert', cs.error, 'Paiement échoué'),
+      PaymentStatus.failed => (
+        'circle-alert',
+        cs.error,
+        l.bidDetailEscrowFailedLabel,
+      ),
       _ when bidStatus == 'PENDING' => (
         'clock',
         cs.warning,
-        'Paiement sécurisé · En attente du voyageur',
+        l.bidDetailEscrowSecuredPendingLabel,
       ),
       _ when bidStatus == 'ACCEPTED' => (
         'lock',
         cs.success,
-        'Paiement sécurisé · $amount',
+        l.bidDetailEscrowSecuredLabel(amount),
       ),
-      _ => ('lock', cs.success, 'Paiement sécurisé · $amount'),
+      _ => ('lock', cs.success, l.bidDetailEscrowSecuredLabel(amount)),
     };
   }
 }
@@ -514,7 +525,7 @@ class _CashBadge extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Flexible(
             child: Text(
-              'Paiement en espèces à la remise',
+              context.l10n.bidDetailCashAtDropoffLabel,
               style: tt.titleSmall?.copyWith(color: color),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -553,7 +564,7 @@ class _MobileMoneyBadge extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Flexible(
             child: Text(
-              'Paiement mobile money',
+              context.l10n.bidDetailMobileMoneyPaymentLabel,
               style: tt.titleSmall?.copyWith(color: color),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -575,6 +586,7 @@ class _SenderOptionsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     final h = DonyLayout.hPadding(context);
@@ -601,14 +613,14 @@ class _SenderOptionsSheet extends StatelessWidget {
               ),
             ),
           ),
-          Text('Options', style: tt.headlineMedium),
+          Text(l.bidDetailOptionsTitle, style: tt.headlineMedium),
           const SizedBox(height: DonySpacing.base),
           _OptionTile(
             iconAsset: 'flag',
             iconColor: cs.error,
             iconBg: cs.errorLight,
-            label: 'Signaler ce trajet',
-            subtitle: 'Signaler un problème au support Yadony',
+            label: l.bidDetailReportTripLabel,
+            subtitle: l.bidDetailReportSubtitle,
             onTap: () {
               context.pop();
               _showReportSheet(outerContext);
@@ -619,8 +631,8 @@ class _SenderOptionsSheet extends StatelessWidget {
             iconAsset: 'message-circle',
             iconColor: cs.primary,
             iconBg: cs.primaryContainer,
-            label: 'Contacter le voyageur',
-            subtitle: 'Envoyer un message au voyageur',
+            label: l.bidDetailContactTravelerLabel,
+            subtitle: l.bidDetailContactTravelerSubtitle,
             onTap: () {
               context.pop();
               outerContext.read<ConversationOpenBloc>().add(
@@ -634,8 +646,8 @@ class _SenderOptionsSheet extends StatelessWidget {
               iconAsset: 'share-2',
               iconColor: cs.primary,
               iconBg: cs.primaryContainer,
-              label: 'Partager le suivi',
-              subtitle: 'Envoyer le lien de suivi au destinataire',
+              label: l.bidDetailShareTracking,
+              subtitle: l.bidDetailShareTrackingSubtitle,
               onTap: () {
                 final origin = sharePositionOriginFor(context);
                 context.pop();
@@ -649,8 +661,8 @@ class _SenderOptionsSheet extends StatelessWidget {
               iconAsset: 'ban',
               iconColor: cs.error,
               iconBg: cs.errorLight,
-              label: 'Annuler la demande',
-              subtitle: 'Votre paiement sera remboursé automatiquement',
+              label: l.requestDetailMenuCancelLabel,
+              subtitle: l.bidDetailCancelRefundAutoSubtitle,
               onTap: () {
                 context.pop();
                 _showCancelDialog(outerContext);
@@ -665,8 +677,8 @@ class _SenderOptionsSheet extends StatelessWidget {
               iconAsset: 'ban',
               iconColor: cs.error,
               iconBg: cs.errorLight,
-              label: 'Annuler la demande',
-              subtitle: 'Remboursement intégral · vous récupérez votre colis',
+              label: l.requestDetailMenuCancelLabel,
+              subtitle: l.bidDetailCancelAfterHandoverOptionSubtitle,
               onTap: () {
                 context.pop();
                 _showAfterHandoverCancelDialog(outerContext);
@@ -681,8 +693,8 @@ class _SenderOptionsSheet extends StatelessWidget {
               iconAsset: 'trash-2',
               iconColor: cs.error,
               iconBg: cs.errorLight,
-              label: 'Supprimer cette demande',
-              subtitle: 'Retirer définitivement de votre historique',
+              label: l.bidDetailDeleteRequest,
+              subtitle: l.bidDetailRemoveFromHistorySubtitle,
               onTap: () {
                 context.pop();
                 _showDeleteDialog(outerContext);
@@ -709,22 +721,23 @@ class _SenderOptionsSheet extends StatelessWidget {
   void _showCancelDialog(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DonyRadius.sheet),
         ),
-        title: Text('Annuler la demande', style: tt.headlineMedium),
+        title: Text(l.requestDetailMenuCancelLabel, style: tt.headlineMedium),
         content: Text(
-          'Voulez-vous vraiment annuler votre demande d\'envoi ? Cette action est définitive.',
+          l.bidDetailCancelConfirmBody,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),
             child: Text(
-              'Non',
+              l.bidDetailNo,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
@@ -738,7 +751,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               foregroundColor: DonyColors.white,
               elevation: 0,
             ),
-            child: Text('Oui, annuler', style: tt.labelLarge),
+            child: Text(l.bidDetailConfirmCancelButton, style: tt.labelLarge),
           ),
         ],
       ),
@@ -748,24 +761,26 @@ class _SenderOptionsSheet extends StatelessWidget {
   void _showAfterHandoverCancelDialog(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DonyRadius.sheet),
         ),
-        title: Text('Annuler après remise ?', style: tt.headlineMedium),
+        title: Text(
+          l.bidDetailCancelAfterHandoverTitle,
+          style: tt.headlineMedium,
+        ),
         content: Text(
-          'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé '
-          'et récupérerez votre colis : le voyageur confirmera la restitution en '
-          'saisissant votre code de retour.',
+          l.bidDetailCancelAfterHandoverBody,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),
             child: Text(
-              'Non',
+              l.bidDetailNo,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
@@ -781,7 +796,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               foregroundColor: DonyColors.white,
               elevation: 0,
             ),
-            child: Text('Oui, annuler', style: tt.labelLarge),
+            child: Text(l.bidDetailConfirmCancelButton, style: tt.labelLarge),
           ),
         ],
       ),
@@ -791,22 +806,23 @@ class _SenderOptionsSheet extends StatelessWidget {
   void _showDeleteDialog(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DonyRadius.sheet),
         ),
-        title: Text('Supprimer cette demande', style: tt.headlineMedium),
+        title: Text(l.bidDetailDeleteRequest, style: tt.headlineMedium),
         content: Text(
-          'Cette demande sera définitivement supprimée de votre historique.',
+          l.bidDetailDeleteConfirmBody,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),
             child: Text(
-              'Annuler',
+              l.commonCancel,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
@@ -820,7 +836,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               foregroundColor: DonyColors.white,
               elevation: 0,
             ),
-            child: Text('Supprimer', style: tt.labelLarge),
+            child: Text(l.commonDelete, style: tt.labelLarge),
           ),
         ],
       ),

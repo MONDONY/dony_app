@@ -136,9 +136,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
 
   void _showCardDeclinedSheet(BuildContext context, String message) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     DonyBottomSheet.show<void>(
       context,
-      title: 'Paiement refusé',
+      title: l.bidDetailCardDeclinedTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -150,7 +151,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Changez votre carte de commission pour accepter cette demande.',
+            l.bidDetailCardDeclinedHint,
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -158,7 +159,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
         ],
       ),
       stickyBottom: DonyButton(
-        label: 'Changer ma carte de commission',
+        label: l.bidDetailChangeCommissionCard,
         onPressed: () {
           context.pop();
           context.push('/payments/commission-method');
@@ -172,9 +173,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
     acs.BidWalletInsufficient state,
   ) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     DonyBottomSheet.show<void>(
       context,
-      title: 'Solde insuffisant',
+      title: l.bidDetailInsufficientBalanceTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -198,7 +200,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
           ],
           const SizedBox(height: 8),
           Text(
-            'Recharge ton portefeuille ou paie la commission directement par carte.',
+            l.bidDetailInsufficientBalanceHint,
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -209,7 +211,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: 'Recharger mon portefeuille',
+            label: l.bidDetailTopupWallet,
             onPressed: () async {
               context.pop();
               // /topup/method est le point d'entrée correct : il compose le
@@ -228,7 +230,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
           if (state.hasCard) ...[
             const SizedBox(height: 8),
             DonyButton(
-              label: 'Payer par carte',
+              label: l.bidDetailPayByCard,
               variant: DonyButtonVariant.secondary,
               onPressed: () {
                 context.pop();
@@ -240,7 +242,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
           ] else ...[
             const SizedBox(height: 8),
             DonyButton(
-              label: 'Ajouter une carte',
+              label: l.bidDetailAddCard,
               variant: DonyButtonVariant.secondary,
               onPressed: () async {
                 context.pop();
@@ -256,14 +258,14 @@ class _BidDetailViewState extends State<_BidDetailView> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return BlocListener<BidAcceptanceBloc, acs.BidAcceptanceState>(
       listener: (context, state) {
         if (state is acs.BidAccepted) {
           DonySnackbar.show(
             context,
-            message:
-                'Demande acceptée ! Définissez maintenant la fenêtre de remise.',
+            message: l.bidDetailAcceptedSetHandoverWindow,
             type: DonySnackbarType.success,
           );
           context.read<BidBloc>().add(BidDetailRequested(_bid.id));
@@ -287,50 +289,45 @@ class _BidDetailViewState extends State<_BidDetailView> {
           if (state is NoShowReported) {
             DonySnackbar.show(
               context,
-              message: "Absence signalée. L'expéditeur a 48 h pour contester.",
+              message: l.bidDetailNoShowReportedSnackbar,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is DeliveryNoShowReported) {
             DonySnackbar.show(
               context,
-              message:
-                  "Absence signalée. L'autre partie a 24 h pour contester.",
+              message: l.bidDetailDeliveryNoShowReportedSnackbar,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is DeliveryNoShowContested) {
             DonySnackbar.show(
               context,
-              message:
-                  'Contestation envoyée. Notre équipe va examiner votre demande.',
+              message: l.bidDetailContestSentSnackbar,
               type: DonySnackbarType.success,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is NoShowContested) {
             DonySnackbar.show(
               context,
-              message:
-                  'Contestation envoyée. Notre équipe va examiner votre demande.',
+              message: l.bidDetailContestSentSnackbar,
               type: DonySnackbarType.success,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is NoShowConfirmed) {
             DonySnackbar.show(
               context,
-              message:
-                  'Absence confirmée. L\'envoi a été annulé, vous ne serez pas débité.',
+              message: l.bidDetailNoShowConfirmedSnackbar,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is CancelledAfterHandover) {
             DonySnackbar.show(
               context,
-              message:
-                  'Trajet annulé. Restituez le colis sous 3 jours avec le code de retour.',
+              message: l.bidDetailCancelledAfterHandoverSnackbar,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is ReturnConfirmed) {
             DonySnackbar.show(
               context,
-              message: 'Retour confirmé. Le colis a bien été restitué.',
+              message: l.bidDetailReturnConfirmedSnackbar,
               type: DonySnackbarType.success,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
@@ -361,12 +358,15 @@ class _BidDetailViewState extends State<_BidDetailView> {
                   _bid = state.bid;
                   DonySnackbar.show(
                     context,
-                    message: 'Demande acceptée !',
+                    message: l.bidDetailAcceptedSnackbar,
                     type: DonySnackbarType.success,
                   );
                 } else if (state is BidRejected) {
                   _bid = state.bid;
-                  DonySnackbar.show(context, message: 'Demande refusée.');
+                  DonySnackbar.show(
+                    context,
+                    message: l.bidDetailRejectedSnackbar,
+                  );
                   if (context.canPop()) {
                     context.pop();
                   } else {
@@ -376,7 +376,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                   _bid = state.bid;
                   DonySnackbar.show(
                     context,
-                    message: 'Présence confirmée !',
+                    message: l.bidDetailPresenceConfirmedSnackbar,
                     type: DonySnackbarType.success,
                   );
                 } else if (state is BidCancelled) {
@@ -384,7 +384,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                   _bid = state.bid;
                   DonySnackbar.show(
                     context,
-                    message: 'Demande annulée. L\'expéditeur sera remboursé.',
+                    message: l.bidDetailCancelledSnackbar,
                   );
                   if (context.canPop()) {
                     context.pop();
@@ -392,7 +392,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
                     context.go('/home');
                   }
                 } else if (state is BidDeleted) {
-                  DonySnackbar.show(context, message: 'Demande supprimée.');
+                  DonySnackbar.show(
+                    context,
+                    message: l.bidDetailDeletedSnackbar,
+                  );
                   if (context.canPop()) {
                     context.pop();
                   } else {
@@ -402,7 +405,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                   _refreshTimer?.cancel();
                   DonySnackbar.show(
                     context,
-                    message: 'Ce colis n\'existe plus',
+                    message: l.bidDetailNotFoundSnackbar,
                     type: DonySnackbarType.warning,
                   );
                   if (context.canPop()) {
@@ -492,7 +495,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       if (isSender && _bid.trackingToken != null)
                         IconButton(
                           icon: DonyIcon('share-2', color: cs.onSurface),
-                          tooltip: 'Partager le suivi',
+                          tooltip: l.bidDetailShareTracking,
                           onPressed: () => shareTrackingLink(
                             _bid,
                             sharePositionOrigin: sharePositionOriginFor(
@@ -506,7 +509,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                             'ellipsis-vertical',
                             color: cs.onSurface,
                           ),
-                          tooltip: 'Options',
+                          tooltip: l.bidDetailOptionsTitle,
                           onPressed: () =>
                               showSenderOptionsSheet(context, _bid),
                         ),
@@ -516,7 +519,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                             'ellipsis-vertical',
                             color: cs.onSurface,
                           ),
-                          tooltip: 'Options',
+                          tooltip: l.bidDetailOptionsTitle,
                           onPressed: () =>
                               showTravelerOptionsSheet(context, _bid),
                         ),

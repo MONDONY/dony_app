@@ -24,6 +24,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 class _MockCancellationBloc
@@ -263,4 +265,20 @@ void main() {
     expect(find.byType(ColisBillet), findsOneWidget);
     expect(find.byType(SenderHeroCard), findsOneWidget);
   });
+
+  testWidgets(
+    'anglais · COMPLETED + senderHasRated=true → "Rating sent" affiché',
+    (tester) async {
+      useEnglish();
+      sizeView(tester);
+      final bid = _bid(status: 'COMPLETED', senderHasRated: true);
+
+      await tester.pumpWidget(
+        _host(bid, cancellationBloc, conversationOpenBloc),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('Rating sent'), findsOneWidget);
+    },
+  );
 }

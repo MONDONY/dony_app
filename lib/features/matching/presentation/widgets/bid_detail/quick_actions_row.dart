@@ -8,6 +8,7 @@ import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -37,9 +38,10 @@ Future<void> shareTrackingLink(
   );
 
   final url = trackingPublicUrl(token);
+  final l = AppL10n.current;
   await Share.share(
-    'Suivez votre colis Yadony en temps réel :\n$url',
-    subject: 'Suivi de colis Yadony · ${bid.trackingNumber ?? ''}',
+    l.bidDetailShareTrackingMessage(url),
+    subject: l.bidDetailTrackingShareSubject(bid.trackingNumber ?? ''),
     sharePositionOrigin: sharePositionOrigin,
   );
 }
@@ -51,16 +53,19 @@ class QuickActionsRow extends StatelessWidget {
 
   const QuickActionsRow({super.key, required this.bid});
 
-  String get _corridor {
+  String _corridor(BuildContext context) {
     final dep = bid.departureCity ?? '';
     final arr = bid.arrivalCity ?? '';
-    return dep.isNotEmpty && arr.isNotEmpty ? '$dep → $arr' : 'Suivi du colis';
+    return dep.isNotEmpty && arr.isNotEmpty
+        ? '$dep → $arr'
+        : context.l10n.bidDetailTrackParcel;
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final hasToken = bid.trackingToken != null;
 
     return Row(
@@ -68,13 +73,13 @@ class QuickActionsRow extends StatelessWidget {
         Expanded(
           child: _ActionTile(
             iconAsset: 'package',
-            label: 'Suivi du colis',
+            label: l.bidDetailTrackParcel,
             cs: cs,
             tt: tt,
             onTap: () => showTrackingTimelineSheet(
               context,
               bidId: bid.id,
-              corridor: _corridor,
+              corridor: _corridor(context),
               onShareTracking: hasToken
                   ? () => shareTrackingLink(
                       bid,
@@ -89,7 +94,7 @@ class QuickActionsRow extends StatelessWidget {
           Expanded(
             child: _ActionTile(
               iconAsset: 'share-2',
-              label: 'Partager le suivi',
+              label: l.bidDetailShareTracking,
               cs: cs,
               tt: tt,
               onTap: () => shareTrackingLink(

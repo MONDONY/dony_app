@@ -11282,6 +11282,714 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'🔒 séquestré'**
   String get bidDetailGainEscrowedPill;
+
+  /// Titre du sheet affiché quand la carte de commission est refusée (bid_detail_screen.dart, tâche D2)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement refusé'**
+  String get bidDetailCardDeclinedTitle;
+
+  /// Indication sous le message d'erreur du sheet carte refusée (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Changez votre carte de commission pour accepter cette demande.'**
+  String get bidDetailCardDeclinedHint;
+
+  /// Bouton du sheet carte refusée (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer ma carte de commission'**
+  String get bidDetailChangeCommissionCard;
+
+  /// Titre du sheet solde insuffisant (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde insuffisant'**
+  String get bidDetailInsufficientBalanceTitle;
+
+  /// Indication du sheet solde insuffisant (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharge ton portefeuille ou paie la commission directement par carte.'**
+  String get bidDetailInsufficientBalanceHint;
+
+  /// Bouton du sheet solde insuffisant (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharger mon portefeuille'**
+  String get bidDetailTopupWallet;
+
+  /// Bouton du sheet solde insuffisant, quand une carte existe déjà (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer par carte'**
+  String get bidDetailPayByCard;
+
+  /// Bouton du sheet solde insuffisant, quand aucune carte n'existe (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une carte'**
+  String get bidDetailAddCard;
+
+  /// Snackbar après acceptation via BidAcceptanceBloc (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande acceptée ! Définissez maintenant la fenêtre de remise.'**
+  String get bidDetailAcceptedSetHandoverWindow;
+
+  /// Snackbar NoShowReported (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Absence signalée. L\'expéditeur a 48 h pour contester.'**
+  String get bidDetailNoShowReportedSnackbar;
+
+  /// Snackbar DeliveryNoShowReported (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Absence signalée. L\'autre partie a 24 h pour contester.'**
+  String get bidDetailDeliveryNoShowReportedSnackbar;
+
+  /// Snackbar DeliveryNoShowContested et NoShowContested, même texte (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Contestation envoyée. Notre équipe va examiner votre demande.'**
+  String get bidDetailContestSentSnackbar;
+
+  /// Snackbar NoShowConfirmed (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Absence confirmée. L\'envoi a été annulé, vous ne serez pas débité.'**
+  String get bidDetailNoShowConfirmedSnackbar;
+
+  /// Snackbar CancelledAfterHandover (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet annulé. Restituez le colis sous 3 jours avec le code de retour.'**
+  String get bidDetailCancelledAfterHandoverSnackbar;
+
+  /// Snackbar ReturnConfirmed (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour confirmé. Le colis a bien été restitué.'**
+  String get bidDetailReturnConfirmedSnackbar;
+
+  /// Snackbar BidAccepted du BidBloc (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande acceptée !'**
+  String get bidDetailAcceptedSnackbar;
+
+  /// Snackbar BidRejected (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande refusée.'**
+  String get bidDetailRejectedSnackbar;
+
+  /// Snackbar BidPresenceConfirmed (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Présence confirmée !'**
+  String get bidDetailPresenceConfirmedSnackbar;
+
+  /// Snackbar BidCancelled (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande annulée. L\'expéditeur sera remboursé.'**
+  String get bidDetailCancelledSnackbar;
+
+  /// Snackbar BidDeleted (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande supprimée.'**
+  String get bidDetailDeletedSnackbar;
+
+  /// Snackbar BidNotFound (bid_detail_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis n\'existe plus'**
+  String get bidDetailNotFoundSnackbar;
+
+  /// Tooltip et libellé de tuile pour partager le lien de suivi (bid_detail_screen.dart, bid_detail_action_bars.dart, quick_actions_row.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager le suivi'**
+  String get bidDetailShareTracking;
+
+  /// Tooltip du bouton ⋮ et titre des sheets d'options (bid_detail_screen.dart, bid_detail_action_bars.dart, traveler_options_sheet.dart) - identique en anglais
+  ///
+  /// In fr, this message translates to:
+  /// **'Options'**
+  String get bidDetailOptionsTitle;
+
+  /// Titre du sheet de refus (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser la demande'**
+  String get bidDetailDeclineRequestTitle;
+
+  /// Sous-titre du sheet de refus (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Souhaitez-vous indiquer une raison à l\'expéditeur ?'**
+  String get bidDetailDeclineRequestSubtitle;
+
+  /// Bouton de confirmation du sheet de refus (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer le refus'**
+  String get bidDetailConfirmDecline;
+
+  /// Hint du champ de raison de refus (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Raison (optionnelle)'**
+  String get bidDetailReasonHint;
+
+  /// Bouton ConfirmPresenceBar (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer ma présence'**
+  String get bidDetailConfirmPresence;
+
+  /// Bouton de paiement expéditeur (bid_detail_action_bars.dart, sender_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer mon envoi'**
+  String get bidDetailPayMyShipment;
+
+  /// Libellé/titre partagé pour supprimer une demande (bid_detail_action_bars.dart, traveler_options_sheet.dart, traveler_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer cette demande'**
+  String get bidDetailDeleteRequest;
+
+  /// Corps du dialog de suppression, vue voyageur d'une demande refusée (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette demande refusée sera retirée définitivement de votre liste.'**
+  String get bidDetailDeleteRejectedBody;
+
+  /// EscrowBadge, paiement libéré (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur payé · {amount}'**
+  String bidDetailEscrowReleasedLabel(String amount);
+
+  /// EscrowBadge, paiement remboursé (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursé · {amount}'**
+  String bidDetailEscrowRefundedLabel(String amount);
+
+  /// EscrowBadge, paiement échoué (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement échoué'**
+  String get bidDetailEscrowFailedLabel;
+
+  /// EscrowBadge, statut PENDING (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé · En attente du voyageur'**
+  String get bidDetailEscrowSecuredPendingLabel;
+
+  /// EscrowBadge, statut ACCEPTED ou défaut (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé · {amount}'**
+  String bidDetailEscrowSecuredLabel(String amount);
+
+  /// _CashBadge (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en espèces à la remise'**
+  String get bidDetailCashAtDropoffLabel;
+
+  /// _MobileMoneyBadge (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement mobile money'**
+  String get bidDetailMobileMoneyPaymentLabel;
+
+  /// Tuile d'options expéditeur : signaler le trajet (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler ce trajet'**
+  String get bidDetailReportTripLabel;
+
+  /// Sous-titre commun des tuiles de signalement (bid_detail_action_bars.dart, traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler un problème au support Yadony'**
+  String get bidDetailReportSubtitle;
+
+  /// Tuile d'options expéditeur : contacter le voyageur (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter le voyageur'**
+  String get bidDetailContactTravelerLabel;
+
+  /// Sous-titre de la tuile contacter le voyageur (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer un message au voyageur'**
+  String get bidDetailContactTravelerSubtitle;
+
+  /// Sous-titre de la tuile partager le suivi (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le lien de suivi au destinataire'**
+  String get bidDetailShareTrackingSubtitle;
+
+  /// Sous-titre annulation avant remise (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre paiement sera remboursé automatiquement'**
+  String get bidDetailCancelRefundAutoSubtitle;
+
+  /// Sous-titre annulation après remise, tuile d'options (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement intégral · vous récupérez votre colis'**
+  String get bidDetailCancelAfterHandoverOptionSubtitle;
+
+  /// Sous-titre commun des tuiles de suppression (bid_detail_action_bars.dart, traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer définitivement de votre historique'**
+  String get bidDetailRemoveFromHistorySubtitle;
+
+  /// Corps du dialog d'annulation avant remise (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voulez-vous vraiment annuler votre demande d\'envoi ? Cette action est définitive.'**
+  String get bidDetailCancelConfirmBody;
+
+  /// Bouton de dismiss des dialogs d'annulation (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Non'**
+  String get bidDetailNo;
+
+  /// Bouton de confirmation des dialogs d'annulation (bid_detail_action_bars.dart, sender_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Oui, annuler'**
+  String get bidDetailConfirmCancelButton;
+
+  /// Titre du dialog d'annulation après remise (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler après remise ?'**
+  String get bidDetailCancelAfterHandoverTitle;
+
+  /// Corps du dialog d'annulation après remise (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé et récupérerez votre colis : le voyageur confirmera la restitution en saisissant votre code de retour.'**
+  String get bidDetailCancelAfterHandoverBody;
+
+  /// Corps du dialog de suppression, vue expéditeur (bid_detail_action_bars.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette demande sera définitivement supprimée de votre historique.'**
+  String get bidDetailDeleteConfirmBody;
+
+  /// En-tête de l'accordéon (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus de détails'**
+  String get bidDetailMoreDetails;
+
+  /// Titre de section 1 de l'accordéon (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DÉPÔT DU COLIS'**
+  String get bidDetailSectionDropoff;
+
+  /// InfoRow lieu de remise (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu'**
+  String get bidDetailLocationLabel;
+
+  /// Libellé InfoRow quand le colis a déjà été remis (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise'**
+  String get bidDetailHandoverStatusLabel;
+
+  /// Libellé InfoRow avant remise (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Présence confirmée'**
+  String get bidDetailPresenceConfirmedLabel;
+
+  /// Valeur InfoRow quand le colis a déjà été remis (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis remis ✓'**
+  String get bidDetailParcelHandedOverValue;
+
+  /// Valeur InfoRow, présence confirmée (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Oui ✓'**
+  String get bidDetailYesValue;
+
+  /// Valeur InfoRow, présence non confirmée (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Non encore'**
+  String get bidDetailNotYetValue;
+
+  /// InfoRow tarif brut par kg (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tarif par kg'**
+  String get bidDetailPricePerKgLabel;
+
+  /// Titre de section 3 de l'accordéon (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'LIEN DE SUIVI'**
+  String get bidDetailSectionTrackingLink;
+
+  /// Titre de section 4 de l'accordéon (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'RESPONSABILITÉ LÉGALE'**
+  String get bidDetailSectionLegal;
+
+  /// Disclaimer sans date de signature (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Disclaimer signé'**
+  String get bidDetailDisclaimerSignedNoDate;
+
+  /// Repli du disclaimer sans locale, sans « à » entre date et heure (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Disclaimer signé le {date} {time}'**
+  String bidDetailDisclaimerSignedCompact(String date, String time);
+
+  /// Tuile d'options voyageur : contacter l'expéditeur (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter l\'expéditeur'**
+  String get bidDetailContactSenderLabel;
+
+  /// Sous-titre de la tuile contacter l'expéditeur (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer un message à l\'expéditeur'**
+  String get bidDetailContactSenderSubtitle;
+
+  /// Tuile d'options voyageur et titre du sous-sheet colis (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Détails du colis'**
+  String get bidDetailParcelDetailsLabel;
+
+  /// Sous-titre de la tuile détails du colis (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les informations du colis et du destinataire'**
+  String get bidDetailParcelDetailsSubtitle;
+
+  /// Tuile d'options voyageur : signaler l'expéditeur (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler l\'expéditeur'**
+  String get bidDetailReportSenderLabel;
+
+  /// Tuile d'options voyageur : annuler ce transport (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler ce transport'**
+  String get bidDetailCancelTransportLabel;
+
+  /// Sous-titre annuler ce transport, statut HANDED_OVER (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous devrez restituer le colis sous 3 jours'**
+  String get bidDetailCancelTransportHandedOverSubtitle;
+
+  /// Sous-titre annuler ce transport, autre statut (traveler_options_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur sera remboursé automatiquement'**
+  String get bidDetailCancelTransportAcceptedSubtitle;
+
+  /// Bouton AWAITING_PAYMENT mobile money (sender_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer par mobile money'**
+  String get bidDetailPayByMobileMoney;
+
+  /// Bouton statut ACCEPTED (sender_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher le QR de remise'**
+  String get bidDetailShowPickupQr;
+
+  /// Bouton/tuile/corridor de repli de suivi (sender_sticky_bar.dart, quick_actions_row.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi du colis'**
+  String get bidDetailTrackParcel;
+
+  /// Bouton statut COMPLETED/DELIVERED, pas encore noté (sender_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Noter le voyageur'**
+  String get bidDetailRateTraveler;
+
+  /// Titre du dialog d'annulation AWAITING_PAYMENT (sender_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la demande de transport ?'**
+  String get bidDetailCancelTransportRequestTitle;
+
+  /// Corps du dialog d'annulation AWAITING_PAYMENT (sender_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun paiement n\'a été effectué. La demande sera retirée.'**
+  String get bidDetailCancelTransportRequestBody;
+
+  /// Titre par défaut du dialog de suppression (sender_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer cette demande ?'**
+  String get bidDetailDeleteRequestQuestionTitle;
+
+  /// Corps par défaut du dialog de suppression (sender_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Elle sera retirée définitivement de votre historique.'**
+  String get bidDetailDeleteRequestDefaultBody;
+
+  /// Ligne d'information AWAITING_PAYMENT mobile money, vue voyageur (traveler_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente du paiement de l\'expéditeur (mobile money).'**
+  String get bidDetailAwaitingSenderMobileMoneyPayment;
+
+  /// Bouton étape Départ (traveler_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire le QR du colis'**
+  String get bidDetailScanParcelQr;
+
+  /// Bouton étape Transit (traveler_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire le QR de transit'**
+  String get bidDetailScanTransitQr;
+
+  /// Bouton étape Arrivée, valider la remise au destinataire (traveler_sticky_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider la remise'**
+  String get bidDetailConfirmHandover;
+
+  /// Titre du sheet QR (qr_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'QR du colis'**
+  String get bidDetailQrSheetTitle;
+
+  /// Snackbar d'échec d'enregistrement du QR (qr_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'enregistrer l\'image'**
+  String get bidDetailQrSaveErrorSnackbar;
+
+  /// Snackbar de succès d'enregistrement du QR (qr_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'QR code enregistré dans votre galerie'**
+  String get bidDetailQrSavedSnackbar;
+
+  /// Sujet du partage natif du QR (qr_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'QR du colis Yadony'**
+  String get bidDetailQrShareSubject;
+
+  /// Texte du partage natif du QR (qr_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'QR à présenter ou à coller sur le colis.'**
+  String get bidDetailQrShareText;
+
+  /// Snackbar d'échec de partage du QR (qr_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de partager le QR code'**
+  String get bidDetailQrShareErrorSnackbar;
+
+  /// Instruction affichée sous le QR (qr_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lu par le voyageur à la remise, puis à chaque étape jusqu\'au retrait. Vous pouvez aussi l\'imprimer et le coller sur le colis.'**
+  String get bidDetailQrInstructions;
+
+  /// Titre du sheet code de retour, vue expéditeur (return_code_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de retour'**
+  String get bidDetailReturnCodeTitle;
+
+  /// Sous-titre du sheet code de retour (return_code_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À communiquer au voyageur en récupérant votre colis'**
+  String get bidDetailReturnCodeSubtitle;
+
+  /// Snackbar après copie du code de retour (return_code_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code copié'**
+  String get bidDetailReturnCodeCopiedSnackbar;
+
+  /// Bouton copier le code de retour (return_code_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le code'**
+  String get bidDetailReturnCopyCode;
+
+  /// Indication avec date limite de restitution (return_code_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur doit vous restituer le colis avant le {date}. Donnez-lui ce code uniquement en récupérant votre colis.'**
+  String bidDetailReturnDeadlineHint(String date);
+
+  /// Indication sans date limite (return_code_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Donnez ce code au voyageur uniquement en récupérant votre colis.'**
+  String get bidDetailReturnNoDeadlineHint;
+
+  /// Titre de la confirmation de restitution (return_code_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis restitué'**
+  String get bidDetailReturnedTitle;
+
+  /// Sous-titre de la confirmation de restitution (return_code_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur a confirmé vous avoir restitué le colis.'**
+  String get bidDetailReturnedSubtitle;
+
+  /// Titre du sheet de saisie du code de retour, vue voyageur (return_code_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer le retour'**
+  String get bidDetailReturnEntryTitle;
+
+  /// Sous-titre du sheet de saisie du code de retour (return_code_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le code de retour fourni par l\'expéditeur'**
+  String get bidDetailReturnEntrySubtitle;
+
+  /// Bouton de confirmation de restitution (return_code_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la restitution'**
+  String get bidDetailReturnConfirmButton;
+
+  /// Indication sous le clavier PIN de saisie du code (return_code_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En confirmant, vous déclarez avoir restitué le colis à l\'expéditeur.'**
+  String get bidDetailReturnConfirmHint;
+
+  /// Titre du sheet de code de retrait (retrait_code_sheet.dart, tâche D2, réutilisé par D3)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de retrait'**
+  String get ticketPickupCode;
+
+  /// Titre de la carte paiement, vue expéditeur (paiement_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement'**
+  String get bidDetailPaymentCardTitle;
+
+  /// Corps de la carte paiement, méthode mobile money (paiement_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement mobile money, gardé en sécurité par Yadony jusqu\'à la livraison : {amount}'**
+  String bidDetailMobileMoneySecuredLabel(String amount);
+
+  /// Badge de la carte paiement, méthode mobile money (paiement_card.dart) - identique en anglais
+  ///
+  /// In fr, this message translates to:
+  /// **'MOBILE MONEY'**
+  String get bidDetailMobileMoneyBadge;
+
+  /// Corps de la carte paiement, méthode cash/Wave/Orange Money (paiement_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À régler en espèces à la remise : {amount}'**
+  String bidDetailCashAtDropoffAmountLabel(String amount);
+
+  /// Badge de la carte paiement, méthode cash (paiement_card.dart) - identique en anglais
+  ///
+  /// In fr, this message translates to:
+  /// **'CASH'**
+  String get bidDetailCashBadge;
+
+  /// Corps de la carte paiement, stripe statut terminal (paiement_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement libéré ✓'**
+  String get bidDetailPaymentReleasedLabel;
+
+  /// Corps de la carte paiement, stripe statut annulé (paiement_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} remboursé'**
+  String bidDetailAmountRefundedLabel(String amount);
+
+  /// Corps de la carte paiement, stripe par défaut/en séquestre (paiement_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} séquestré : libéré à la livraison'**
+  String bidDetailEscrowedUntilDeliveryLabel(String amount);
+
+  /// Texte du partage natif du lien de suivi (quick_actions_row.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivez votre colis Yadony en temps réel :\n{url}'**
+  String bidDetailShareTrackingMessage(String url);
+
+  /// Sujet du partage natif du lien de suivi (quick_actions_row.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi de colis Yadony · {number}'**
+  String bidDetailTrackingShareSubject(String number);
+
+  /// Étiquette de rôle en tête de la carte expéditeur (expediteur_contact_card.dart, tâche D2)
+  ///
+  /// In fr, this message translates to:
+  /// **'EXPÉDITEUR'**
+  String get bidSenderRoleTag;
+
+  /// Pill affichée quand l'évaluation du voyageur a déjà été soumise (sender_detail_body.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Évaluation envoyée'**
+  String get bidDetailRatingSentBadge;
+
+  /// Titre de la carte fusionnée colis + destinataire (colis_destinataire_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis & destinataire'**
+  String get bidDetailParcelRecipientTitle;
 }
 
 class _AppLocalizationsDelegate

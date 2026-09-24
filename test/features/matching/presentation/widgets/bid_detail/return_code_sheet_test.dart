@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class _MockCancellationBloc
     extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
@@ -233,5 +235,45 @@ void main() {
 
     // L'erreur n'a pas refermé le sheet (contrairement à ReturnConfirmed).
     expect(find.text('Confirmer la restitution'), findsOneWidget);
+  });
+
+  testWidgets('anglais — ReturnCodeSheet titre et bouton copier traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _host(
+        (ctx) => ReturnCodeSheet.show(
+          ctx,
+          bid: _bid(returnCode: '654321', returnDeadline: DateTime(2026, 6, 4)),
+          cancellationBloc: bloc,
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Return code'), findsWidgets);
+    expect(find.text('Copy the code'), findsOneWidget);
+  });
+
+  testWidgets('anglais — ReturnEntrySheet titre et bouton traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _host(
+        (ctx) => ReturnEntrySheet.show(
+          ctx,
+          bid: _bid(returnDeadline: DateTime(2026, 6, 4)),
+          cancellationBloc: bloc,
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Confirm the return'), findsWidgets);
   });
 }

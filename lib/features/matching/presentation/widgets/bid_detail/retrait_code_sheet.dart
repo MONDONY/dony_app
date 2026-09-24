@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_retrait_code_view.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -43,7 +44,7 @@ abstract final class RetraitCodeSheet {
 
     await DonyBottomSheet.show<void>(
       context,
-      title: 'Code de retrait',
+      title: context.l10n.ticketPickupCode,
       wrapper: (child) => MultiBlocProvider(
         providers: [
           BlocProvider<TrackingBloc>.value(value: tracking),

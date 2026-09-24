@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
 
@@ -71,6 +73,19 @@ void main() {
     }
     expect(find.text('Copier le code'), findsOneWidget);
     expect(find.textContaining('Régénérer'), findsOneWidget);
+
+    // Drain des timers d'animation.
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('anglais — titre du sheet "Pickup code" traduit', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(host(_bid()));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Pickup code'), findsOneWidget);
 
     // Drain des timers d'animation.
     await tester.tapAt(const Offset(10, 10));
