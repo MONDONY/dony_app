@@ -15,6 +15,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockSupportBloc extends MockBloc<SupportEvent, SupportState>
     implements SupportBloc {}
 
@@ -282,7 +284,7 @@ void main() {
     stubState(
       const SupportState(
         detailStatus: SupportViewStatus.failure,
-        errorMessage: 'Ticket support introuvable',
+        serverDetail: 'Ticket support introuvable',
       ),
     );
 
@@ -520,5 +522,63 @@ void main() {
     // Le SupportAttachmentPicker n'affiche le bouton inline que si canAdd.
     final addButtonFinder = find.byTooltip('Joindre une image');
     expect(addButtonFinder, findsNothing);
+  });
+
+  testWidgets(
+    'anglais : sujet, statut, catégorie, bulle admin et trombone traduits',
+    (tester) async {
+      useEnglish();
+      stubState(
+        const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _openTicket,
+        ),
+      );
+
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Paiement bloque'), findsOneWidget); // titre app bar
+      // DonyBadge rend son libellé en majuscules.
+      expect(find.text('REPLY RECEIVED'), findsOneWidget);
+      expect(find.text('Payment'), findsOneWidget);
+      expect(find.text('Yadony Support'), findsOneWidget);
+      expect(find.text('Your message'), findsOneWidget);
+      expect(find.byTooltip('Attach an image'), findsOneWidget);
+      expect(find.byTooltip('Send'), findsOneWidget);
+    },
+  );
+
+  testWidgets('anglais : bandeau ticket résolu traduit', (tester) async {
+    useEnglish();
+    stubState(
+      const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _resolvedTicket,
+      ),
+    );
+
+    await tester.pumpWidget(_harness(bloc));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('This ticket is resolved'), findsOneWidget);
+    // DonyBadge rend son libellé en majuscules.
+    expect(find.text('RESOLVED'), findsOneWidget);
+  });
+
+  testWidgets('anglais : état introuvable avec Try again', (tester) async {
+    useEnglish();
+    stubState(
+      const SupportState(
+        detailStatus: SupportViewStatus.failure,
+        serverDetail: 'Ticket support introuvable',
+      ),
+    );
+
+    await tester.pumpWidget(_harness(bloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ticket not found'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
   });
 }

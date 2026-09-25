@@ -12,6 +12,8 @@ import 'package:get_it/get_it.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockAppPreferencesBloc
     extends MockBloc<AppPreferencesEvent, AppPreferencesState>
     implements AppPreferencesBloc {}
@@ -509,5 +511,25 @@ void main() {
         verify(() => mockBloc.add(const BiometricToggled())).called(1);
       },
     );
+  });
+
+  group('anglais', () {
+    testWidgets('titre, sections et tuiles traduits', (tester) async {
+      useEnglish();
+      const state = AppPreferencesState(preferences: UserPreferencesModel());
+      await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Security'), findsOneWidget);
+      expect(find.text('PAYMENTS'), findsOneWidget);
+      expect(find.text('Biometrics before payment'), findsOneWidget);
+      expect(find.text('APPLICATION'), findsOneWidget);
+      expect(find.text('App lock'), findsOneWidget);
+      expect(find.text('AUTHENTICATION'), findsOneWidget);
+      expect(find.text('PIN on launch'), findsOneWidget);
+      expect(find.text('SESSION'), findsOneWidget);
+      expect(find.text('Signed-in devices'), findsOneWidget);
+      expect(find.text('Sécurité'), findsNothing);
+    });
   });
 }

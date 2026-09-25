@@ -108,7 +108,7 @@ class _BlockConfirmDialog extends StatelessWidget {
         userId: userId,
         displayName: displayName,
         loading: state is BlockedUserBlocking,
-        errorMessage: state is BlockedUserBlockFailure ? state.message : null,
+        hasError: state is BlockedUserBlockFailure,
       ),
     );
   }
@@ -119,13 +119,13 @@ class _BlockConfirmDialogView extends StatelessWidget {
     required this.userId,
     required this.displayName,
     required this.loading,
-    required this.errorMessage,
+    required this.hasError,
   });
 
   final String userId;
   final String displayName;
   final bool loading;
-  final String? errorMessage;
+  final bool hasError;
 
   @override
   Widget build(BuildContext context) {
@@ -157,7 +157,7 @@ class _BlockConfirmDialogView extends StatelessWidget {
                 height: 1.6,
               ),
             ),
-            if (errorMessage != null) ...[
+            if (hasError) ...[
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(10),
@@ -167,7 +167,7 @@ class _BlockConfirmDialogView extends StatelessWidget {
                   border: Border.all(color: const Color(0xFFFFCDD2)),
                 ),
                 child: Text(
-                  errorMessage!,
+                  context.l10n.blockConfirmError,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
                     color: const Color(0xFFE53935),

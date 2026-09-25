@@ -11,8 +11,10 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/deletion_eligibility_cubit.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
+import 'package:dony/features/settings/presentation/deletion_labels.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_confirmation_sheet.dart';
 import 'package:dony/features/settings/presentation/widgets/escrow_block_dialog.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -43,7 +45,7 @@ class DeleteAccountBottomSheet extends StatefulWidget {
 
     return DonyBottomSheet.show(
       context,
-      title: 'Supprimer mon compte',
+      title: context.l10n.deletionSheetTitle,
       wrapper: (child) => MultiBlocProvider(
         providers: [
           BlocProvider.value(value: deletionBloc),
@@ -88,14 +90,14 @@ class _DeleteAccountBottomSheetState extends State<DeleteAccountBottomSheet> {
     final mode = widget.modeNotifier.value;
 
     if (mode == DeleteMode.soft) {
+      final l = context.l10n;
       // Dialog shown while sheet is still mounted so context stays valid.
       // BlocListener catches AccountDeletionRequested (below) to close the sheet
       // and show the snackbar while still in the tree.
       DonyDialog.show(
         context,
-        title: 'Confirmer la pause',
-        message:
-            'Votre compte sera suspendu pendant 30 jours. Vous pourrez le réactiver depuis votre profil.',
+        title: l.deletionSoftConfirmLabel,
+        message: l.deletionSoftConfirmDialogMessage,
         iconAsset: 'hourglass',
       ).then((confirmed) {
         if (confirmed == true && mounted) bloc.add(const RequestDeletion());
@@ -109,6 +111,7 @@ class _DeleteAccountBottomSheetState extends State<DeleteAccountBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final walletSettlement = context
         .watch<DeletionEligibilityCubit>()
@@ -121,10 +124,7 @@ class _DeleteAccountBottomSheetState extends State<DeleteAccountBottomSheet> {
           Navigator.of(context, rootNavigator: true).pop();
           DonySnackbar.show(
             context,
-            message:
-                'Votre compte sera supprimé dans 30 jours. Vous pouvez annuler '
-                'depuis votre profil. Les remboursements déjà lancés ne sont pas '
-                'annulés.',
+            message: context.l10n.deletionRequestedSnackbar,
           );
         } else if (state is AccountDeletionError && state.isEscrowBlocked) {
           EscrowBlockDialog.show(context);
@@ -143,43 +143,48 @@ class _DeleteAccountBottomSheetState extends State<DeleteAccountBottomSheet> {
             mode: DeleteMode.soft,
             modeNotifier: widget.modeNotifier,
             iconAsset: 'hourglass',
-            title: 'Pause 30 jours',
-            badge: 'RÉVERSIBLE',
+            title: l.deletionModeSoftTitle,
+            badge: l.deletionModeSoftBadge,
             isDestructive: false,
-            description:
-                'Votre compte est suspendu. Vous pouvez revenir à tout moment dans les 30 jours. Après ce délai, vos données personnelles sont pseudonymisées (RGPD).',
+            description: l.deletionModeSoftDescription,
           ),
           const SizedBox(height: DonySpacing.md),
           _ModeCard(
             mode: DeleteMode.hard,
             modeNotifier: widget.modeNotifier,
             iconAsset: 'trash',
-            title: 'Supprimer définitivement',
-            badge: 'IRRÉVERSIBLE',
+            title: l.deletionModeHardTitle,
+            badge: l.deletionModeHardBadge,
             isDestructive: true,
-            description:
-                'Toutes vos données personnelles sont effacées immédiatement. Cette action est définitive et ne peut pas être annulée.',
+            description: l.deletionModeHardDescription,
           ),
           const SizedBox(height: DonySpacing.lg),
-          Text('Raison (optionnel)', style: tt.titleSmall),
+          Text(l.deletionReasonSectionTitle, style: tt.titleSmall),
           const SizedBox(height: DonySpacing.sm),
           DonyRadioGroup<String>(
             value: _reason,
             onChanged: (v) => setState(() => _reason = v),
-            options: const [
+            options: [
               DonyRadioOption(
-                value: "Je n'utilise plus le service",
-                label: "Je n'utilise plus le service",
+                value:
+                    "Je n'utilise plus le service", // i18n-ignore: motif envoyé au serveur (valeur de donnée)
+                label: l.deletionReasonNotUsing,
               ),
               DonyRadioOption(
-                value: 'Problème de confidentialité',
-                label: 'Problème de confidentialité',
+                value:
+                    'Problème de confidentialité', // i18n-ignore: motif envoyé au serveur (valeur de donnée)
+                label: l.deletionReasonPrivacy,
               ),
               DonyRadioOption(
-                value: 'Trop de notifications',
-                label: 'Trop de notifications',
+                value:
+                    'Trop de notifications', // i18n-ignore: motif envoyé au serveur (valeur de donnée)
+                label: l.deletionReasonTooManyNotifications,
               ),
-              DonyRadioOption(value: 'Autre raison', label: 'Autre raison'),
+              DonyRadioOption(
+                value:
+                    'Autre raison', // i18n-ignore: motif envoyé au serveur (valeur de donnée)
+                label: l.deletionReasonOther,
+              ),
             ],
           ),
           const SizedBox(height: DonySpacing.xl),
@@ -199,10 +204,13 @@ class _DeleteActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final eligibility = context.watch<DeletionEligibilityCubit>().state;
     final isSubmitting =
         context.watch<AccountDeletionBloc>().state is AccountDeletionLoading;
-    final blockedReason = eligibility.blockedReasonMessage;
+    final blockedReason = eligibility.canDelete
+        ? null
+        : deletionBlockedMessage(l, eligibility.blockedReasonCode);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -232,7 +240,7 @@ class _DeleteActions extends StatelessWidget {
               children: [
                 Expanded(
                   child: DonyButton(
-                    label: 'Annuler',
+                    label: l.commonCancel,
                     variant: DonyButtonVariant.ghost,
                     onPressed: () =>
                         Navigator.of(context, rootNavigator: true).pop(),
@@ -242,7 +250,9 @@ class _DeleteActions extends StatelessWidget {
                 Expanded(
                   flex: 2,
                   child: DonyButton(
-                    label: isHard ? 'Continuer →' : 'Confirmer la pause',
+                    label: isHard
+                        ? l.deletionContinueArrow
+                        : l.deletionSoftConfirmLabel,
                     variant: isHard
                         ? DonyButtonVariant.destructive
                         : DonyButtonVariant.primary,
@@ -284,6 +294,7 @@ class _WalletRefundRequestCta extends StatelessWidget {
         }
       },
       builder: (context, state) {
+        final l = context.l10n;
         if (state.walletRefundRequested) {
           final amounts = state.walletRefundRequests
               .map(
@@ -296,26 +307,21 @@ class _WalletRefundRequestCta extends StatelessWidget {
           return DonyStatusBanner(
             type: DonyStatusBannerType.success,
             iconAsset: 'circle-check',
-            message:
-                'Demande envoyée pour $amounts. Un membre de l\'équipe vous '
-                'recontacte pour le remboursement.',
+            message: l.deletionWalletRefundRequestedMessage(amounts),
           );
         }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const DonyStatusBanner(
+            DonyStatusBanner(
               type: DonyStatusBannerType.info,
               iconAsset: 'wallet',
-              message:
-                  'Vous avez un solde disponible. Il sera automatiquement '
-                  'remboursé après la suppression de votre compte — vous '
-                  'pouvez aussi le demander dès maintenant.',
+              message: l.deletionWalletBalanceInfo,
             ),
             const SizedBox(height: DonySpacing.sm),
             DonyButton(
-              label: 'Demander le remboursement maintenant',
+              label: l.deletionRequestRefundNowButton,
               variant: DonyButtonVariant.secondary,
               isLoading: state.isRequestingWalletRefund,
               onPressed: state.isRequestingWalletRefund
@@ -353,6 +359,7 @@ class _WalletSettlementSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     // Alimente le bandeau récapitulatif du bas : seules les devises au
     // nouveau contrat et automatiquement remboursées (jamais MANUAL, qui
     // dépend d'un ticket support) y entrent.
@@ -368,18 +375,18 @@ class _WalletSettlementSummary extends StatelessWidget {
             DonyStatusBanner(
               type: DonyStatusBannerType.info,
               iconAsset: 'wallet',
-              message:
-                  'Solde de ${_fmt(s.refundableAmount, s.currency)} : un membre '
-                  'de l\'équipe vous recontacte pour le remboursement.',
+              message: l.deletionManualRailMessage(
+                _fmt(s.refundableAmount, s.currency),
+              ),
             )
           else if (!s.hasFeeInfo) ...[
             if (s.refundableAmount > 0)
               DonyStatusBanner(
                 type: DonyStatusBannerType.info,
                 iconAsset: 'wallet',
-                message:
-                    '${_fmt(s.refundableAmount, s.currency)} seront remboursés '
-                    'sur votre carte dès la demande de suppression.',
+                message: l.deletionRefundableOnCardMessage(
+                  _fmt(s.refundableAmount, s.currency),
+                ),
               ),
           ] else
             _RailAmountBlock(s),
@@ -388,16 +395,16 @@ class _WalletSettlementSummary extends StatelessWidget {
             DonyStatusBanner(
               type: DonyStatusBannerType.info,
               iconAsset: 'history',
-              message:
-                  '${_fmt(s.inFlightAmount, s.currency)} sont déjà en cours '
-                  'de remboursement.',
+              message: l.deletionInFlightMessage(
+                _fmt(s.inFlightAmount, s.currency),
+              ),
             ),
           ],
           if (s.forfeitedAmount > 0) ...[
             const SizedBox(height: DonySpacing.xs),
             if (!s.isManual && s.hasFeeInfo)
               Text(
-                'Bonus parrainage perdu : ${_fmt(s.forfeitedAmount, s.currency)}',
+                l.deletionBonusLostLabel(_fmt(s.forfeitedAmount, s.currency)),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.error,
                   fontWeight: FontWeight.w600,
@@ -407,9 +414,9 @@ class _WalletSettlementSummary extends StatelessWidget {
               DonyStatusBanner(
                 type: DonyStatusBannerType.warning,
                 iconAsset: 'circle-alert',
-                message:
-                    '${_fmt(s.forfeitedAmount, s.currency)} de bonus seront '
-                    'perdus définitivement à la suppression du compte.',
+                message: l.deletionBonusForfeitedMessage(
+                  _fmt(s.forfeitedAmount, s.currency),
+                ),
               ),
           ],
           const SizedBox(height: DonySpacing.xs),
@@ -436,6 +443,7 @@ class _RailAmountBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final net = settlement.netAmount ?? settlement.refundableAmount;
     if (net <= 0) {
       // Un solde entièrement absorbé par les frais ne disparaît pas du
@@ -445,11 +453,12 @@ class _RailAmountBlock extends StatelessWidget {
       return DonyStatusBanner(
         type: DonyStatusBannerType.warning,
         iconAsset: 'circle-alert',
-        message:
-            'Solde de '
-            '${_WalletSettlementSummary._fmt(settlement.refundableAmount, settlement.currency)} '
-            'non remboursable : les frais du prestataire de paiement '
-            'l\'absorbent entièrement.',
+        message: l.deletionBalanceAbsorbedByFeesMessage(
+          _WalletSettlementSummary._fmt(
+            settlement.refundableAmount,
+            settlement.currency,
+          ),
+        ),
       );
     }
 
@@ -458,19 +467,25 @@ class _RailAmountBlock extends StatelessWidget {
     final fee = settlement.feeAmount ?? 0;
 
     final (railLabel, railColor) = switch (settlement.rail) {
-      'PAWAPAY' => ('Mobile money', cs.secondary),
-      'STRIPE' => ('Carte', cs.primary),
+      'PAWAPAY' => (l.paymentMethodMobileMoney, cs.secondary),
+      'STRIPE' => (l.paymentMethodCard, cs.primary),
       _ => (null, null),
     };
 
     String? detail;
     if (fee > 0) {
-      detail =
-          '${_WalletSettlementSummary._fmt(settlement.refundableAmount, settlement.currency)} '
-          'remboursables, ${_WalletSettlementSummary._fmt(fee, settlement.currency)} de frais';
+      detail = l.deletionRefundableWithFeeMessage(
+        _WalletSettlementSummary._fmt(
+          settlement.refundableAmount,
+          settlement.currency,
+        ),
+        _WalletSettlementSummary._fmt(fee, settlement.currency),
+      );
     } else if (settlement.rail == 'PAWAPAY' &&
         settlement.destinationMasked != null) {
-      detail = 'Vers ${settlement.destinationMasked}, sans frais';
+      detail = l.deletionFeelessDestinationMessage(
+        settlement.destinationMasked!,
+      );
     }
 
     return Padding(
@@ -524,13 +539,9 @@ class _SettlementBanner extends StatelessWidget {
 
   final List<WalletSettlement> items;
 
-  static String _join(List<String> parts) {
-    if (parts.length == 1) return parts.first;
-    return '${parts.sublist(0, parts.length - 1).join(', ')} et ${parts.last}';
-  }
-
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final netTexts = items
         .map((s) => s.netAmount ?? s.refundableAmount)
         .toList();
@@ -548,12 +559,11 @@ class _SettlementBanner extends StatelessWidget {
     ];
 
     final message = StringBuffer(
-      '${_join(nonZeroNets)} seront remboursés dès la demande.',
+      l.deletionSettlementRefundedOnRequest(joinList(l, nonZeroNets)),
     );
     if (forfeitedTexts.isNotEmpty) {
       message.write(
-        ' ${_join(forfeitedTexts)} de bonus seront perdus définitivement à '
-        'la suppression.',
+        ' ${l.deletionSettlementBonusLost(joinList(l, forfeitedTexts))}',
       );
     }
 

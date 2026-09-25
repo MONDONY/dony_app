@@ -486,10 +486,10 @@ void main() {
       expect: () => [
         isA<NotificationPrefsState>()
             .having((s) => s.prefs['push_messages'], 'optimiste', isFalse)
-            .having((s) => s.errorMessage, 'sans erreur', isNull),
+            .having((s) => s.hasSyncError, 'sans erreur', isFalse),
         isA<NotificationPrefsState>()
             .having((s) => s.prefs['push_messages'], 'restauré', isTrue)
-            .having((s) => s.errorMessage, 'erreur', isNotNull),
+            .having((s) => s.hasSyncError, 'erreur', isTrue),
       ],
       verify: (_) {
         // Laisser Hive en avance sur le serveur recréerait le défaut d'origine :
@@ -571,7 +571,7 @@ void main() {
         await Future<void>.delayed(Duration.zero);
         bloc.add(const NotifPrefToggled('push_messages'));
       },
-      verify: (bloc) => expect(bloc.state.errorMessage, isNull),
+      verify: (bloc) => expect(bloc.state.hasSyncError, isFalse),
     );
   });
 

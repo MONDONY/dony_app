@@ -5,6 +5,7 @@ import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
 import 'package:dony/features/settings/data/models/device_model.dart';
 import 'package:dony/features/settings/presentation/widgets/pin_confirm_bottom_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,7 +16,7 @@ class ConnectedDevicesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Appareils connectés'),
+      appBar: DonyAppBar(title: context.l10n.devicesTitle),
       body: BlocBuilder<ConnectedDevicesBloc, ConnectedDevicesState>(
         builder: (context, state) {
           if (state is ConnectedDevicesLoading) {
@@ -34,7 +35,7 @@ class ConnectedDevicesScreen extends StatelessWidget {
           }
           if (state is ConnectedDevicesError) {
             return _ErrorView(
-              message: state.message,
+              failure: state.failure,
               onRetry: () => context.read<ConnectedDevicesBloc>().add(
                 const DevicesLoadRequested(),
               ),
@@ -73,7 +74,7 @@ class _DeviceList extends StatelessWidget {
       ),
       children: [
         Text(
-          'Tu es connecté sur ${devices.length} appareil(s)',
+          context.l10n.devicesSignedInCount(devices.length),
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),
@@ -86,7 +87,7 @@ class _DeviceList extends StatelessWidget {
         if (others.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.xl),
           DonyButton(
-            label: 'Déconnecter tous les autres appareils',
+            label: context.l10n.devicesRevokeAllOthers,
             variant: DonyButtonVariant.destructive,
             onPressed: () => _confirmAndRevokeAll(context),
           ),
@@ -120,22 +121,23 @@ class _DeviceTile extends StatelessWidget {
     _ => '\u{1F4F1}',
   };
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
+    final l = context.l10n;
     final now = DateTime.now();
     final diff = now.difference(date);
     if (diff.inMinutes < 5) {
-      return 'Actif maintenant';
+      return l.devicesActiveNow;
     }
     if (diff.inHours < 1) {
-      return 'il y a ${diff.inMinutes} min';
+      return l.devicesAgoMinutes(diff.inMinutes);
     }
     if (diff.inDays < 1) {
-      return 'il y a ${diff.inHours} h';
+      return l.devicesAgoHours(diff.inHours);
     }
     if (diff.inDays == 1) {
-      return 'hier';
+      return l.devicesAgoYesterday;
     }
-    return 'il y a ${diff.inDays} jours';
+    return l.devicesAgoDays(diff.inDays);
   }
 
   @override
@@ -169,7 +171,9 @@ class _DeviceTile extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        device.deviceName,
+                        device.deviceName.isEmpty
+                            ? context.l10n.devicesUnknown
+                            : device.deviceName,
                         style: tt.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -188,7 +192,7 @@ class _DeviceTile extends StatelessWidget {
                           borderRadius: BorderRadius.circular(DonyRadius.xs),
                         ),
                         child: Text(
-                          'Cet appareil',
+                          context.l10n.devicesThisDevice,
                           style: tt.labelSmall?.copyWith(color: cs.onPrimary),
                         ),
                       ),
@@ -197,7 +201,7 @@ class _DeviceTile extends StatelessWidget {
                 ),
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
-                  _formatDate(device.lastSeenAt),
+                  _formatDate(context, device.lastSeenAt),
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
@@ -207,7 +211,7 @@ class _DeviceTile extends StatelessWidget {
             TextButton(
               style: TextButton.styleFrom(foregroundColor: cs.error),
               onPressed: () => _confirmAndRevoke(context),
-              child: const Text('Révoquer'),
+              child: Text(context.l10n.devicesRevoke),
             ),
         ],
       ),
@@ -227,10 +231,20 @@ class _DeviceTile extends StatelessWidget {
   }
 }
 
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message, required this.onRetry});
+/// Texte affiché pour chaque catégorie d'échec du bloc : le bloc ne porte
+/// qu'un code, cette extension de présentation choisit le texte traduit.
+extension _DevicesFailureLabel on DevicesFailure {
+  String label(AppLocalizations l) => switch (this) {
+    DevicesFailure.load => l.devicesLoadError,
+    DevicesFailure.revoke => l.devicesRevokeError,
+    DevicesFailure.revokeAll => l.devicesRevokeAllError,
+  };
+}
 
-  final String message;
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.failure, required this.onRetry});
+
+  final DevicesFailure failure;
   final VoidCallback onRetry;
 
   @override
@@ -246,9 +260,13 @@ class _ErrorView extends StatelessWidget {
           children: [
             DonyIcon('wifi-off', size: 48, color: cs.onSurfaceVariant),
             const SizedBox(height: DonySpacing.md),
-            Text(message, style: tt.bodyMedium, textAlign: TextAlign.center),
+            Text(
+              failure.label(context.l10n),
+              style: tt.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: DonySpacing.lg),
-            DonyButton(label: 'Réessayer', onPressed: onRetry),
+            DonyButton(label: context.l10n.commonRetry, onPressed: onRetry),
           ],
         ),
       ),

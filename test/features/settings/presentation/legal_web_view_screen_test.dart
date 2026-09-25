@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../helpers/fake_web_view_platform.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -74,6 +75,15 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: Scaffold()));
       await tester.pumpAndSettle();
       // Aucune exception n'est levée
+    });
+
+    testWidgets('anglais : tooltip du bouton externe traduit', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(wrap());
+      await tester.pump();
+
+      expect(find.byTooltip('Open in browser'), findsOneWidget);
+      expect(find.byTooltip('Ouvrir dans le navigateur'), findsNothing);
     });
   });
 }

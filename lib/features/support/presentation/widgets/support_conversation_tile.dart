@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,14 +20,15 @@ class SupportConversationTile extends StatelessWidget {
   /// Aperçu du dernier message. Si vide, affiche l'invitation par défaut.
   final String preview;
 
-  static const _defaultPreview = 'Une question ? Notre équipe vous répond ici.';
-
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final hasUnread = unreadCount > 0;
-    final previewText = preview.isEmpty ? _defaultPreview : preview;
+    final previewText = preview.isEmpty
+        ? l.supportConversationDefaultPreview
+        : preview;
 
     return Material(
       color: hasUnread
@@ -52,7 +54,7 @@ class SupportConversationTile extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            'Support Yadony',
+                            l.supportBrandName,
                             style: tt.titleLarge?.copyWith(
                               fontWeight: hasUnread
                                   ? FontWeight.w800

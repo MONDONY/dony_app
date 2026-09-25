@@ -54,18 +54,14 @@ class BlockedUserBlockSuccess extends BlockedUsersState {
   List<Object?> get props => [userId];
 }
 
+/// Échec du blocage. Marqueur sans donnée : le widget appelant (dialog de
+/// confirmation) choisit son propre texte à l'affichage.
 class BlockedUserBlockFailure extends BlockedUsersState {
-  final String message;
-  const BlockedUserBlockFailure(this.message);
-
-  @override
-  List<Object?> get props => [message];
+  const BlockedUserBlockFailure();
 }
 
+/// Échec du chargement de la liste. Marqueur sans donnée : l'écran choisit
+/// son propre texte à l'affichage.
 class BlockedUsersError extends BlockedUsersState {
-  final String message;
-  const BlockedUsersError(this.message);
-
-  @override
-  List<Object?> get props => [message];
+  const BlockedUsersError();
 }

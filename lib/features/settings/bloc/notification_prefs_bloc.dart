@@ -80,7 +80,7 @@ class NotificationPrefsBloc
     NotifPrefsSyncRequested event,
     Emitter<NotificationPrefsState> emit,
   ) async {
-    emit(state.copyWith(isSyncing: true, errorMessageGetter: () => null));
+    emit(state.copyWith(isSyncing: true, hasSyncError: false));
     try {
       if (_box.get(_syncedOnceKey, defaultValue: false) != true) {
         await _prefsRepository.updatePrefs(NotificationPrefsDto(state.prefs));
@@ -114,7 +114,7 @@ class NotificationPrefsBloc
     final enabled = !state.prefs[event.key]!;
     final updated = Map<String, bool>.from(previous)..[event.key] = enabled;
     await _box.put('notif_${event.key}', enabled);
-    emit(state.copyWith(prefs: updated, errorMessageGetter: () => null));
+    emit(state.copyWith(prefs: updated, hasSyncError: false));
 
     if (!NotificationPrefsDto.isSynced(event.key)) {
       return; // réglage local, rien à pousser
@@ -130,12 +130,7 @@ class NotificationPrefsBloc
       );
     } catch (_) {
       await _box.put('notif_${event.key}', previous[event.key]);
-      emit(
-        state.copyWith(
-          prefs: previous,
-          errorMessageGetter: () => 'Impossible de synchroniser. Réessayez.',
-        ),
-      );
+      emit(state.copyWith(prefs: previous, hasSyncError: true));
     }
   }
 

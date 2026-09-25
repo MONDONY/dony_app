@@ -3,11 +3,14 @@ import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/presentation/notification_bottom_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/l10n_test_helpers.dart';
 
 class _MockNotificationBloc extends Mock implements NotificationBloc {}
 
@@ -148,25 +151,34 @@ void main() {
 
   group('horodatage compact', () {
     test('minutes, heures, jours, puis la date', () {
+      final fr = lookupAppLocalizations(AppL10n.fr);
       expect(
-        formatNotificationAge(now.subtract(const Duration(seconds: 20)), now),
+        formatNotificationAge(
+          fr,
+          now.subtract(const Duration(seconds: 20)),
+          now,
+        ),
         'maintenant',
       );
       expect(
-        formatNotificationAge(now.subtract(const Duration(minutes: 2)), now),
+        formatNotificationAge(
+          fr,
+          now.subtract(const Duration(minutes: 2)),
+          now,
+        ),
         '2 min',
       );
       expect(
-        formatNotificationAge(now.subtract(const Duration(hours: 3)), now),
+        formatNotificationAge(fr, now.subtract(const Duration(hours: 3)), now),
         '3 h',
       );
       expect(
-        formatNotificationAge(now.subtract(const Duration(days: 2)), now),
+        formatNotificationAge(fr, now.subtract(const Duration(days: 2)), now),
         '2 j',
       );
-      expect(formatNotificationAge(DateTime(2026, 8, 12), now), '12 août');
+      expect(formatNotificationAge(fr, DateTime(2026, 8, 12), now), '12 août');
       expect(
-        formatNotificationAge(DateTime(2025, 12, 24), now),
+        formatNotificationAge(fr, DateTime(2025, 12, 24), now),
         '24 déc. 2025',
       );
     });
@@ -286,5 +298,37 @@ void main() {
     expect(title.overflow, TextOverflow.ellipsis);
     expect(body.maxLines, 2);
     expect(body.overflow, TextOverflow.ellipsis);
+  });
+
+  testWidgets('anglais : état vide traduit', (tester) async {
+    useEnglish();
+    stub(const NotificationLoaded(notifications: [], unreadCount: 0));
+
+    await pumpSheet(tester);
+
+    expect(find.text('No notifications'), findsOneWidget);
+    expect(find.text('Your notifications will appear here.'), findsOneWidget);
+  });
+
+  testWidgets('anglais : bouton « Tout lire » et section traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    stub(
+      NotificationLoaded(
+        notifications: [
+          _notif(
+            id: 'a',
+            createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
+          ),
+        ],
+        unreadCount: 1,
+      ),
+    );
+
+    await pumpSheet(tester);
+
+    expect(find.text('Read all'), findsOneWidget);
+    expect(find.text('NEW'), findsOneWidget);
   });
 }

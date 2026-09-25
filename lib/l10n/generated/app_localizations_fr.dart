@@ -11357,4 +11357,1255 @@ class AppLocalizationsFr extends AppLocalizations {
   String helpTutorialCardSemanticsLabel(String title) {
     return 'Lire le tutoriel $title';
   }
+
+  @override
+  String get settingsTitle => 'Paramètres';
+
+  @override
+  String get settingsSectionAppearance => 'APPARENCE';
+
+  @override
+  String get settingsThemeLabel => 'Thème';
+
+  @override
+  String get settingsThemeSubtitle => 'Prioritaire sur le réglage système';
+
+  @override
+  String get settingsThemeLight => 'Clair';
+
+  @override
+  String get settingsThemeDark => 'Sombre';
+
+  @override
+  String get settingsThemeAuto => 'Auto';
+
+  @override
+  String get settingsSectionLanguage => 'LANGUE & COMMUNICATION';
+
+  @override
+  String get settingsSectionDestinations => 'DESTINATIONS FAVORITES';
+
+  @override
+  String get settingsDestinationsLabel => 'Destinations';
+
+  @override
+  String get settingsNoDestination => 'Aucune';
+
+  @override
+  String get settingsSectionSecurityData => 'SÉCURITÉ & DONNÉES';
+
+  @override
+  String get securityTitle => 'Sécurité';
+
+  @override
+  String get settingsSecuritySubtitle => 'Biométrie, PIN, sessions';
+
+  @override
+  String get settingsPrivacyLabel => 'Confidentialité';
+
+  @override
+  String get settingsPrivacySubtitle => 'Visibilité profil, numéro';
+
+  @override
+  String get settingsMyData => 'Mes données';
+
+  @override
+  String get settingsMyDataSubtitle => 'Export RGPD';
+
+  @override
+  String get settingsSectionPersonalization => 'PERSONNALISATION';
+
+  @override
+  String get settingsNotificationsLabel => 'Notifications';
+
+  @override
+  String get settingsNotificationsSubtitle => 'Par type d\'alerte';
+
+  @override
+  String get settingsPreferencesLabel => 'Préférences';
+
+  @override
+  String get settingsPreferencesSubtitle => 'kg/lbs, devise, rayon de collecte';
+
+  @override
+  String get settingsAccessibilityLabel => 'Accessibilité';
+
+  @override
+  String get settingsAccessibilitySubtitle => 'Contraste, taille de police';
+
+  @override
+  String get settingsResetGuidanceLabel => 'Réafficher les suggestions';
+
+  @override
+  String get settingsResetGuidanceSubtitle =>
+      'Fait revenir les cartes fermées (écran Recherche)';
+
+  @override
+  String get settingsResetGuidanceSnackbar =>
+      'Suggestions et tutoriels réaffichés.';
+
+  @override
+  String get settingsSectionInformation => 'INFORMATIONS';
+
+  @override
+  String get settingsTermsLabel => 'CGU';
+
+  @override
+  String get settingsPrivacyPolicyLabel => 'Politique de confidentialité';
+
+  @override
+  String get settingsReportProblemLabel => 'Signaler un problème';
+
+  @override
+  String get settingsReportProblemSubtitle =>
+      'Incident, bug, litige (avec captures)';
+
+  @override
+  String get diagnosticsTitle => 'Diagnostics';
+
+  @override
+  String get settingsDiagnosticsSubtitle => 'Version, signaler un bug';
+
+  @override
+  String get devicesTitle => 'Appareils connectés';
+
+  @override
+  String get devicesSubtitle => 'Voir et révoquer les sessions actives';
+
+  @override
+  String get pinRemovedMessage =>
+      'Code PIN retiré, l\'app s\'ouvrira sans code';
+
+  @override
+  String get securitySectionPayments => 'PAIEMENTS';
+
+  @override
+  String get securityBiometricBeforePayment => 'Biométrie avant paiement';
+
+  @override
+  String get securityFingerprintOrFaceId => 'Empreinte digitale ou Face ID';
+
+  @override
+  String get securityUnavailableOnDevice => 'Non disponible sur cet appareil';
+
+  @override
+  String get securitySectionApplication => 'APPLICATION';
+
+  @override
+  String get securityAppLockTitle => 'Verrouillage de l\'app';
+
+  @override
+  String get securityAppLockBiometricSubtitle =>
+      'Biométrie ou Face ID à l\'ouverture';
+
+  @override
+  String get securityAppLockNeedsPinSubtitle =>
+      'Nécessite d\'activer le code PIN ci-dessous';
+
+  @override
+  String get securitySectionAuthentication => 'AUTHENTIFICATION';
+
+  @override
+  String get securityPinOnLaunchTitle => 'Code PIN à l\'ouverture';
+
+  @override
+  String get securityPinRequestedSubtitle =>
+      'Demandé à chaque ouverture de Yadony';
+
+  @override
+  String get securityPinDisabledSubtitle =>
+      'Désactivé, l\'app s\'ouvre sans code';
+
+  @override
+  String get pinChangeTitle => 'Modifier le code PIN';
+
+  @override
+  String get securityPinCodeLength => 'Code à 6 chiffres';
+
+  @override
+  String get securitySectionSession => 'SESSION';
+
+  @override
+  String get pinCreateTitle => 'Créer un code PIN';
+
+  @override
+  String get pinIncorrectCode => 'Code incorrect';
+
+  @override
+  String get pinCreatedMessage =>
+      'Code PIN activé, il sera demandé à l\'ouverture';
+
+  @override
+  String get pinChangedMessage => 'Code PIN modifié';
+
+  @override
+  String get pinCodesMismatch => 'Les codes ne correspondent pas';
+
+  @override
+  String get pinEnterCurrentSubtitle => 'Saisissez votre code actuel';
+
+  @override
+  String get pinCreateNewSubtitle =>
+      'Choisissez un code à 6 chiffres, il sera demandé à l\'ouverture';
+
+  @override
+  String get pinEnterNewSubtitle => 'Créez votre nouveau code';
+
+  @override
+  String get pinConfirmCreateSubtitle =>
+      'Saisissez le même code pour confirmer';
+
+  @override
+  String get pinConfirmChangeSubtitle => 'Confirmez le nouveau code';
+
+  @override
+  String get devicesRevokeAllOthers => 'Déconnecter tous les autres appareils';
+
+  @override
+  String get devicesActiveNow => 'Actif maintenant';
+
+  @override
+  String devicesAgoMinutes(int minutes) {
+    return 'il y a $minutes min';
+  }
+
+  @override
+  String devicesAgoHours(int hours) {
+    return 'il y a $hours h';
+  }
+
+  @override
+  String devicesAgoDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'il y a $count jours',
+      one: 'il y a $count jour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesAgoYesterday => 'hier';
+
+  @override
+  String get devicesThisDevice => 'Cet appareil';
+
+  @override
+  String get devicesRevoke => 'Révoquer';
+
+  @override
+  String devicesSignedInCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Tu es connecté sur $count appareils',
+      one: 'Tu es connecté sur $count appareil',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesLoadError => 'Impossible de charger les appareils';
+
+  @override
+  String get devicesRevokeError => 'Erreur lors de la révocation';
+
+  @override
+  String get devicesRevokeAllError => 'Erreur lors de la déconnexion';
+
+  @override
+  String get devicesUnknown => 'Appareil inconnu';
+
+  @override
+  String get legalOpenInBrowser => 'Ouvrir dans le navigateur';
+
+  @override
+  String get legalPageLoadError => 'Impossible de charger la page';
+
+  @override
+  String get legalPageLoadErrorHint => 'Vérifie ta connexion et réessaie.';
+
+  @override
+  String get diagnosticsSectionApplication => 'APPLICATION';
+
+  @override
+  String get diagnosticsVersionLabel => 'Version';
+
+  @override
+  String get diagnosticsSectionConnectivity => 'CONNECTIVITÉ';
+
+  @override
+  String get diagnosticsApiStatusLabel => 'Statut API';
+
+  @override
+  String get diagnosticsSectionSupport => 'SUPPORT';
+
+  @override
+  String get diagnosticsReportBugLabel => 'Signaler un bug';
+
+  @override
+  String get diagnosticsCopyUserIdLabel => 'Copier mon ID utilisateur';
+
+  @override
+  String get diagnosticsCopyUserIdSubtitle => 'Utile pour le support';
+
+  @override
+  String get diagnosticsOnline => 'En ligne';
+
+  @override
+  String get diagnosticsOffline => 'Hors ligne';
+
+  @override
+  String get diagnosticsTest => 'Tester';
+
+  @override
+  String get diagnosticsIdCopiedMessage => 'ID copie dans le presse-papier';
+
+  @override
+  String get dataSettingsSectionYourData => 'VOS DONNÉES';
+
+  @override
+  String get dataSettingsDownloadLabel => 'Télécharger mes données';
+
+  @override
+  String get dataSettingsDownloadSubtitle => 'Export RGPD au format JSON';
+
+  @override
+  String get dataSettingsExportStartedMessage =>
+      'Export lancé. Tu recevras un e-mail avec le lien de téléchargement sous 72h.';
+
+  @override
+  String get pinConfirmSheetTitle => 'Confirmez votre code PIN';
+
+  @override
+  String get pinConfirmSheetSubtitle => 'Saisissez votre code pour confirmer';
+
+  @override
+  String pinAttemptsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tentatives restantes',
+      one: '$count tentative restante',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get privacyTitle => 'Confidentialité';
+
+  @override
+  String get privacySaveFailedMessage =>
+      'Réglage non enregistré, vérifie ta connexion.';
+
+  @override
+  String get privacySectionWhoCanContact => 'QUI PEUT ME CONTACTER';
+
+  @override
+  String get privacyKycOnlyLabel => 'Profils vérifiés uniquement';
+
+  @override
+  String get privacyKycOnlySubtitle =>
+      'Seuls les utilisateurs ayant validé leur identité peuvent t\'envoyer une offre';
+
+  @override
+  String get privacyHidePhoneLabel => 'Masquer mon numéro';
+
+  @override
+  String get privacyHidePhoneSubtitle =>
+      'Ton numéro n\'est jamais communiqué, même après une offre acceptée. Tes échanges passent par la messagerie Yadony.';
+
+  @override
+  String get privacySectionBlocking => 'BLOCAGE';
+
+  @override
+  String get privacySectionAppImprovement => 'AMÉLIORATION DE L\'APP';
+
+  @override
+  String get privacyDataFooterNote =>
+      'Pour télécharger tes données ou supprimer ton compte, va dans Paramètres › Données.';
+
+  @override
+  String get privacyBannerPhoneHiddenTitle => 'Ton numéro reste masqué';
+
+  @override
+  String get privacyBannerPhoneProtectedTitle => 'Ton numéro est protégé';
+
+  @override
+  String get privacyBannerPhoneHiddenBody =>
+      'Ton numéro n\'est communiqué à personne, même une fois l\'accord conclu. Tes partenaires te joignent par la messagerie Yadony, et tu peux toujours appeler le leur.';
+
+  @override
+  String get privacyBannerPhoneProtectedBody =>
+      'Personne ne voit ton numéro tant qu\'une offre n\'est pas acceptée. Une fois l\'accord conclu, toi et ton partenaire échangez vos numéros pour organiser la remise.';
+
+  @override
+  String get privacyUnverifiedExposureNotice =>
+      'Les profils non vérifiés peuvent te faire des demandes. Yadony n\'est pas responsable des difficultés rencontrées avec eux.';
+
+  @override
+  String get privacyAnalyticsConsentLabel => 'Statistiques d\'utilisation';
+
+  @override
+  String get privacyAnalyticsConsentSubtitle =>
+      'Mesure anonyme de l\'usage pour améliorer l\'app. Jamais tes paiements ni ton identité.';
+
+  @override
+  String get blockedUsersTitle => 'Utilisateurs bloqués';
+
+  @override
+  String get blockedUsersCardSubtitle =>
+      'Gérer les personnes que tu as bloquées';
+
+  @override
+  String get blockedUsersListIntro =>
+      'Une personne bloquée ne voit plus tes annonces et ne peut plus t\'envoyer d\'offre. Tu ne vois plus les siennes non plus.';
+
+  @override
+  String get blockedUsersToday => 'Bloqué aujourd\'hui';
+
+  @override
+  String get blockedUsersYesterday => 'Bloqué hier';
+
+  @override
+  String blockedUsersDaysAgo(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Bloqué il y a $count jours',
+      one: 'Bloqué il y a $count jour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String blockedUsersWeeksAgo(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Bloqué il y a $count semaines',
+      one: 'Bloqué il y a $count semaine',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String blockedUsersOnDate(String date) {
+    return 'Bloqué le $date';
+  }
+
+  @override
+  String get blockedUsersUnblock => 'Débloquer';
+
+  @override
+  String get blockedUsersEmptyTitle => 'Tu n\'as bloqué personne';
+
+  @override
+  String get blockedUsersEmptySubtitle =>
+      'Les personnes que tu bloques apparaîtront ici.';
+
+  @override
+  String get blockedUsersLoadError =>
+      'Impossible de charger les utilisateurs bloqués';
+
+  @override
+  String get blockConfirmError =>
+      'Une erreur est survenue. Réessaie plus tard.';
+
+  @override
+  String get settingsSyncFailed => 'Impossible de synchroniser. Réessayez.';
+
+  @override
+  String get a11yTitle => 'Accessibilité';
+
+  @override
+  String get a11ySectionText => 'TEXTE';
+
+  @override
+  String get a11yFollowSystemLabel => 'Suivre les réglages du téléphone';
+
+  @override
+  String get a11yFollowSystemSubtitle =>
+      'La taille du texte suit celle définie dans votre téléphone';
+
+  @override
+  String get a11yBoldTextLabel => 'Texte en gras';
+
+  @override
+  String get a11yBoldTextSubtitle =>
+      'Épaissit tous les textes de l\'application';
+
+  @override
+  String get a11ySectionDisplay => 'AFFICHAGE';
+
+  @override
+  String get a11yHighContrastLabel => 'Contraste élevé';
+
+  @override
+  String get a11yHighContrastSubtitle =>
+      'Renforce le texte, les bordures et les séparateurs';
+
+  @override
+  String get a11yUnderlineLinksLabel => 'Souligner les liens';
+
+  @override
+  String get a11yUnderlineLinksSubtitle =>
+      'Les liens ne sont plus signalés par la couleur seule';
+
+  @override
+  String get a11yReinforceLabelsLabel => 'Renforcer les étiquettes';
+
+  @override
+  String get a11yReinforceLabelsSubtitle =>
+      'Ajoute une icône et un mot aux statuts signalés par une couleur';
+
+  @override
+  String get a11ySectionMotion => 'MOUVEMENT';
+
+  @override
+  String get a11yReduceMotionLabel => 'Réduire les animations';
+
+  @override
+  String get a11yReduceMotionSubtitle =>
+      'Supprime les transitions, les apparitions et les effets de chargement';
+
+  @override
+  String get a11ySectionMessagesActions => 'MESSAGES ET ACTIONS';
+
+  @override
+  String get a11yPersistentMessagesLabel => 'Garder les messages affichés';
+
+  @override
+  String get a11yPersistentMessagesSubtitle =>
+      'Les messages restent visibles jusqu\'à ce que vous les fermiez';
+
+  @override
+  String get a11yConfirmActionsLabel => 'Confirmer les actions importantes';
+
+  @override
+  String get a11yConfirmActionsSubtitle =>
+      'Demande une confirmation avant un paiement, une annulation ou une suppression';
+
+  @override
+  String get a11yOpenSystemSettingsLabel => 'Ouvrir les réglages du téléphone';
+
+  @override
+  String get a11yOpenSystemSettingsSubtitle =>
+      'Taille de texte, contraste et animations du système';
+
+  @override
+  String get a11yResetAll => 'Tout réinitialiser';
+
+  @override
+  String get a11yResetAllMessage =>
+      'Tous les réglages d\'accessibilité reviendront à leur valeur d\'origine.';
+
+  @override
+  String get a11yPreviewLabel => 'Aperçu';
+
+  @override
+  String get a11yPreviewUrgentLabel => 'Urgent';
+
+  @override
+  String get a11yTextSizeLabel => 'Taille du texte';
+
+  @override
+  String a11yPercent(int percent) {
+    return '$percent %';
+  }
+
+  @override
+  String a11yTextSizeDisabledSemantics(String percent) {
+    return 'Taille du texte, $percent, désactivé';
+  }
+
+  @override
+  String get a11yModeSystem => 'Suivre le téléphone';
+
+  @override
+  String get a11yModeOn => 'Toujours activé';
+
+  @override
+  String get a11yModeOff => 'Toujours désactivé';
+
+  @override
+  String get a11yModeSystemShort => 'Automatique';
+
+  @override
+  String get a11yModeOnShort => 'Activé';
+
+  @override
+  String get a11yModeOffShort => 'Désactivé';
+
+  @override
+  String get a11yModeSystemSubtitle =>
+      'Utilise le réglage défini dans votre téléphone';
+
+  @override
+  String get a11yModeFixedSubtitle => 'Quel que soit le réglage du téléphone';
+
+  @override
+  String get privacyUnverifiedWarningTitle =>
+      'Accepter les profils non vérifiés ?';
+
+  @override
+  String get privacyUnverifiedWarningSubtitle =>
+      'Cette option n\'est pas recommandée par Yadony.';
+
+  @override
+  String get privacyUnverifiedWarningAccept => 'Accepter quand même';
+
+  @override
+  String get privacyUnverifiedWarningConsequence1 =>
+      'Tous les utilisateurs pourront t\'envoyer une demande, qu\'ils aient vérifié leur identité ou non.';
+
+  @override
+  String get privacyUnverifiedWarningConsequence2 =>
+      'Yadony ne peut pas confirmer l\'identité d\'un profil non vérifié, ni son nom, ni ses papiers.';
+
+  @override
+  String get privacyUnverifiedWarningConsequence3 =>
+      'Yadony n\'est pas responsable des difficultés que tu pourrais rencontrer avec un profil non vérifié.';
+
+  @override
+  String get privacyUnverifiedWarningReversible =>
+      'Tu peux réactiver ce réglage à tout moment. Les demandes déjà reçues ne sont pas affectées.';
+
+  @override
+  String get privacyUnverifiedWarningCheckbox =>
+      'J\'ai compris et j\'accepte d\'assumer ce risque.';
+
+  @override
+  String get notificationSettingsTitle => 'Notifications';
+
+  @override
+  String get notificationSettingsSectionCritical => 'PROTECTIONS CRITIQUES';
+
+  @override
+  String get notificationSettingsDeliveryConfirmedLabel =>
+      'Livraison confirmée';
+
+  @override
+  String get notificationSettingsSmsFallbackSubtitle =>
+      'SMS automatique si push non reçu';
+
+  @override
+  String get notificationSettingsPaymentReceivedLabel => 'Paiement reçu';
+
+  @override
+  String get notificationSettingsDisputeOpenedLabel => 'Litige ouvert';
+
+  @override
+  String get notificationSettingsSectionActivity => 'ACTIVITÉ';
+
+  @override
+  String get notificationSettingsBidsLabel => 'Matchs & enchères';
+
+  @override
+  String get notificationSettingsBidsSubtitle =>
+      'Demandes, acceptations, remise, annulation…';
+
+  @override
+  String get notificationSettingsCorridorLabel => 'Nouveaux trajets';
+
+  @override
+  String get notificationSettingsCorridorSubtitle =>
+      'Alertes corridor et voyageurs suivis';
+
+  @override
+  String get notificationSettingsNegotiationsLabel => 'Discussions de prix';
+
+  @override
+  String get notificationSettingsNegotiationsSubtitle =>
+      'Propositions, contre-offres, paiements…';
+
+  @override
+  String get notificationSettingsMessagesLabel => 'Messages';
+
+  @override
+  String get notificationSettingsMessagesSubtitle => 'Nouveaux messages reçus';
+
+  @override
+  String get notificationSettingsAlwaysOnBadge => 'Toujours actif';
+
+  @override
+  String get notificationSettingsCriticalBannerText =>
+      'Ces notifications protègent vos transactions. Elles ne peuvent pas être désactivées.';
+
+  @override
+  String get notificationSettingsPackageMatchLabel =>
+      'Nouveaux colis compatibles';
+
+  @override
+  String get notificationSettingsPackageMatchSubtitle =>
+      'Quand un colis correspond à un de tes trajets';
+
+  @override
+  String get prefsTitle => 'Préférences';
+
+  @override
+  String get prefsSectionUnits => 'UNITÉS';
+
+  @override
+  String get prefsWeightUnitLabel => 'Unité de poids';
+
+  @override
+  String get prefsSectionCurrency => 'DEVISE';
+
+  @override
+  String get prefsCountryLabel => 'Pays';
+
+  @override
+  String get prefsCountryLockedSubtitle =>
+      'Verrouillé : un envoi est en cours ou votre compte de paiement est créé';
+
+  @override
+  String get prefsCountryPlaceholder => 'Choisir mon pays';
+
+  @override
+  String get prefsCurrencyLabel => 'Devise';
+
+  @override
+  String get prefsCurrencyLockedSubtitle =>
+      'Verrouillée : videz votre portefeuille pour en changer';
+
+  @override
+  String get prefsDisplayCurrencyLabel => 'Devise d\'affichage';
+
+  @override
+  String get prefsDisplayCurrencySubtitle =>
+      'Les prix publiés dans une autre devise sont convertis à titre indicatif';
+
+  @override
+  String get prefsAutoLabel => 'Automatique';
+
+  @override
+  String get prefsSectionGeolocation => 'GÉOLOCALISATION';
+
+  @override
+  String get prefsPickupRadiusLabel => 'Rayon de collecte';
+
+  @override
+  String get prefsCountrySearchHint => 'Rechercher un pays';
+
+  @override
+  String get prefsCountryNotFound => 'Aucun pays trouvé';
+
+  @override
+  String get prefsAutoCurrencySubtitle => 'Suivre la devise de mon compte';
+
+  @override
+  String get prefsSectionMyTrips => 'MES TRAJETS';
+
+  @override
+  String get prefsTravelerBadge => 'Voyageur';
+
+  @override
+  String get prefsDefaultWeightLabel => 'Poids par défaut';
+
+  @override
+  String get prefsDefaultWeightSubtitle => 'Pré-remplit vos annonces';
+
+  @override
+  String get prefsMinPriceLabel => 'Prix minimum';
+
+  @override
+  String prefsMinPriceNone(String symbol) {
+    return '0 $symbol = aucun filtre';
+  }
+
+  @override
+  String get prefsMinPriceValueNone => 'Aucun';
+
+  @override
+  String get prefsContactModeLabel => 'Mode de contact';
+
+  @override
+  String get prefsContactModeCall => 'Appel';
+
+  @override
+  String get prefsContactModeMessage => 'Message';
+
+  @override
+  String get prefsContactModeBoth => 'Les deux';
+
+  @override
+  String get prefsResponseDelayLabel => 'Délai de réponse';
+
+  @override
+  String get prefsResponseDelayHint => 'ex. 3';
+
+  @override
+  String get deletionSheetTitle => 'Supprimer mon compte';
+
+  @override
+  String get deletionSoftConfirmLabel => 'Confirmer la pause';
+
+  @override
+  String get deletionSoftConfirmDialogMessage =>
+      'Votre compte sera suspendu pendant 30 jours. Vous pourrez le réactiver depuis votre profil.';
+
+  @override
+  String get deletionRequestedSnackbar =>
+      'Votre compte sera supprimé dans 30 jours. Vous pouvez annuler depuis votre profil. Les remboursements déjà lancés ne sont pas annulés.';
+
+  @override
+  String get deletionModeSoftTitle => 'Pause 30 jours';
+
+  @override
+  String get deletionModeSoftBadge => 'RÉVERSIBLE';
+
+  @override
+  String get deletionModeSoftDescription =>
+      'Votre compte est suspendu. Vous pouvez revenir à tout moment dans les 30 jours. Après ce délai, vos données personnelles sont pseudonymisées (RGPD).';
+
+  @override
+  String get deletionModeHardTitle => 'Supprimer définitivement';
+
+  @override
+  String get deletionModeHardBadge => 'IRRÉVERSIBLE';
+
+  @override
+  String get deletionModeHardDescription =>
+      'Toutes vos données personnelles sont effacées immédiatement. Cette action est définitive et ne peut pas être annulée.';
+
+  @override
+  String get deletionReasonSectionTitle => 'Raison (optionnel)';
+
+  @override
+  String get deletionReasonNotUsing => 'Je n\'utilise plus le service';
+
+  @override
+  String get deletionReasonPrivacy => 'Problème de confidentialité';
+
+  @override
+  String get deletionReasonTooManyNotifications => 'Trop de notifications';
+
+  @override
+  String get deletionReasonOther => 'Autre raison';
+
+  @override
+  String get deletionContinueArrow => 'Continuer →';
+
+  @override
+  String deletionWalletRefundRequestedMessage(String amounts) {
+    return 'Demande envoyée pour $amounts. Un membre de l\'équipe vous recontacte pour le remboursement.';
+  }
+
+  @override
+  String get deletionWalletBalanceInfo =>
+      'Vous avez un solde disponible. Il sera automatiquement remboursé après la suppression de votre compte. Vous pouvez aussi le demander dès maintenant.';
+
+  @override
+  String get deletionRequestRefundNowButton =>
+      'Demander le remboursement maintenant';
+
+  @override
+  String deletionManualRailMessage(String amount) {
+    return 'Solde de $amount : un membre de l\'équipe vous recontacte pour le remboursement.';
+  }
+
+  @override
+  String deletionRefundableOnCardMessage(String amount) {
+    return '$amount seront remboursés sur votre carte dès la demande de suppression.';
+  }
+
+  @override
+  String deletionInFlightMessage(String amount) {
+    return '$amount sont déjà en cours de remboursement.';
+  }
+
+  @override
+  String deletionBonusLostLabel(String amount) {
+    return 'Bonus parrainage perdu : $amount';
+  }
+
+  @override
+  String deletionBonusForfeitedMessage(String amount) {
+    return '$amount de bonus seront perdus définitivement à la suppression du compte.';
+  }
+
+  @override
+  String deletionBalanceAbsorbedByFeesMessage(String amount) {
+    return 'Solde de $amount non remboursable : les frais du prestataire de paiement l\'absorbent entièrement.';
+  }
+
+  @override
+  String deletionRefundableWithFeeMessage(String refundable, String fee) {
+    return '$refundable remboursables, $fee de frais';
+  }
+
+  @override
+  String deletionFeelessDestinationMessage(String destination) {
+    return 'Vers $destination, sans frais';
+  }
+
+  @override
+  String deletionSettlementRefundedOnRequest(String amounts) {
+    return '$amounts seront remboursés dès la demande.';
+  }
+
+  @override
+  String deletionSettlementBonusLost(String amounts) {
+    return '$amounts de bonus seront perdus définitivement à la suppression.';
+  }
+
+  @override
+  String get deletionBlockedActiveTransactions =>
+      'Vous avez un envoi en cours de livraison, avec des fonds bloqués en séquestre. Vous pourrez supprimer votre compte dès que la livraison sera confirmée.';
+
+  @override
+  String get deletionBlockedGeneric =>
+      'La suppression n\'est pas possible pour l\'instant.';
+
+  @override
+  String get deletionFinalStepTitle => 'Dernière étape';
+
+  @override
+  String get deletionFinalStepWarning =>
+      'Toutes vos données personnelles seront effacées immédiatement et définitivement. Cette action est irréversible.';
+
+  @override
+  String get deletionFinalStepAcknowledgement =>
+      'Je comprends que cette suppression est définitive et irréversible.';
+
+  @override
+  String get deletionEscrowBlockedTitle =>
+      'Suppression impossible pour l\'instant';
+
+  @override
+  String get deletionEscrowBlockedMessage =>
+      'Un de vos envois est en cours de livraison et ses fonds sont bloqués en séquestre. Vous pourrez supprimer votre compte dès que la livraison aura été confirmée.';
+
+  @override
+  String get deletionEscrowBlockedCta => 'Voir mes envois';
+
+  @override
+  String get errorEscrowBlockedTitle =>
+      'Suppression impossible pour l\'instant';
+
+  @override
+  String get errorEscrowBlockedMessage =>
+      'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.';
+
+  @override
+  String get notificationChannelTransactionalName => 'Notifications Yadony';
+
+  @override
+  String get notificationChannelTransactionalDescription =>
+      'Paiements, livraisons et mises à jour de vos envois';
+
+  @override
+  String get notificationChannelGeneralName => 'Actualités Yadony';
+
+  @override
+  String get notificationChannelGeneralDescription =>
+      'Correspondances, invitations et informations générales';
+
+  @override
+  String get notificationAgeNow => 'maintenant';
+
+  @override
+  String notificationAgeMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String notificationAgeHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String notificationAgeDays(int days) {
+    return '$days j';
+  }
+
+  @override
+  String get notificationSectionNew => 'Nouveau';
+
+  @override
+  String get notificationSectionEarlier => 'Plus tôt';
+
+  @override
+  String get notificationSheetTitle => 'Notifications';
+
+  @override
+  String get notificationMarkAllRead => 'Tout lire';
+
+  @override
+  String get notificationLoadErrorTitle => 'Erreur de chargement';
+
+  @override
+  String get notificationLoadErrorDescription =>
+      'Impossible de charger vos notifications.';
+
+  @override
+  String get notificationEmptyTitle => 'Aucune notification';
+
+  @override
+  String get notificationEmptyDescription =>
+      'Vos notifications apparaîtront ici.';
+
+  @override
+  String get notificationRouteMissing =>
+      'Cette notification ne mène plus nulle part.';
+
+  @override
+  String get notificationAnnouncementsCardTitle => 'Annonces Yadony';
+
+  @override
+  String get notificationAnnouncementsLoadErrorDescription =>
+      'Impossible de charger les annonces.';
+
+  @override
+  String get notificationAnnouncementsEmptyTitle => 'Aucune annonce';
+
+  @override
+  String get notificationAnnouncementsEmptyDescription =>
+      'Les nouveautés et informations de Yadony apparaîtront ici.';
+
+  @override
+  String get notificationDetailFallbackTitle => 'Notification';
+
+  @override
+  String get notificationDetailAnnouncementTitle => 'Annonce Yadony';
+
+  @override
+  String get notificationDetailNotFoundTitle => 'Notification introuvable';
+
+  @override
+  String get notificationDetailNotFoundDescription =>
+      'Elle a peut-être été supprimée, ou le réseau est indisponible.';
+
+  @override
+  String get disputeDetailTitle => 'Litige';
+
+  @override
+  String disputeOtherParty(String role, String name) {
+    String _temp0 = intl.Intl.selectLogic(role, {
+      'SENDER': 'Voyageur : $name',
+      'other': 'Expéditeur : $name',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get disputeShipmentDeleted => 'Envoi supprimé';
+
+  @override
+  String disputeParcelWeight(String kg) {
+    return 'Envoi $kg kg';
+  }
+
+  @override
+  String get disputeDetailFrozenNotice =>
+      'Remboursement gelé le temps de l\'instruction. L\'équipe Yadony tranche sous 72 h ouvrées.';
+
+  @override
+  String get disputeDetailTimelineSectionTitle => 'SUIVI';
+
+  @override
+  String get disputeDetailDecisionSectionTitle => 'DÉCISION';
+
+  @override
+  String get disputeDetailResolvedInFavor => 'Résolu en votre faveur';
+
+  @override
+  String get disputeDetailResolved => 'Litige résolu';
+
+  @override
+  String get disputeDetailCompensationPaid => 'Indemnisation versée';
+
+  @override
+  String get disputeDetailContactSupport => 'Contacter le support';
+
+  @override
+  String get disputeListTitle => 'Mes litiges';
+
+  @override
+  String get disputeListLoadErrorTitle => 'Impossible de charger vos litiges';
+
+  @override
+  String get disputeListEmptyTitle => 'Aucun litige';
+
+  @override
+  String get disputeListEmptyDescription =>
+      'Tant mieux ! Un litige s\'ouvre automatiquement si vous contestez l\'absence d\'un voyageur lors d\'une remise.';
+
+  @override
+  String get disputeListEmptyAction => 'Un problème avec un envoi ?';
+
+  @override
+  String get disputeTypeContestedNoShow => 'Contestation d\'absence';
+
+  @override
+  String get disputeTypeRecipientNoShow => 'Absence du destinataire';
+
+  @override
+  String get disputeTypeDeliveryFailure => 'Défaut de livraison';
+
+  @override
+  String get disputeStatusOpen => 'En instruction';
+
+  @override
+  String get disputeStatusResolved => 'Résolu';
+
+  @override
+  String disputeOpenedOn(String date) {
+    return 'Ouvert le $date';
+  }
+
+  @override
+  String disputeOpenedAndResolved(String opened, String resolved) {
+    return 'Ouvert le $opened · Résolu le $resolved';
+  }
+
+  @override
+  String get disputeCardFrozenNotice =>
+      'Remboursement gelé le temps de l\'instruction. Réponse sous 72 h.';
+
+  @override
+  String get disputeTimelineOpenedTitle => 'Litige ouvert';
+
+  @override
+  String disputeTimelineContestedTraveler(String date) {
+    return '$date · vous avez contesté l\'absence du voyageur';
+  }
+
+  @override
+  String disputeTimelineContestedSender(String date) {
+    return '$date · l\'expéditeur a contesté une absence à la remise';
+  }
+
+  @override
+  String get disputeTimelineReviewedSubtitle => 'examiné par l\'équipe Yadony';
+
+  @override
+  String get disputeTimelineUnderReviewSubtitle =>
+      'en cours d\'examen par l\'équipe Yadony';
+
+  @override
+  String get disputeTimelineDecisionTitleDone => 'Décision rendue';
+
+  @override
+  String get disputeTimelineDecisionTitlePending => 'Décision';
+
+  @override
+  String get disputeTimelineDecisionEta => 'sous 72 h';
+
+  @override
+  String get supportCategoryAccount => 'Compte';
+
+  @override
+  String get supportCategoryKyc => 'Vérification d\'identité';
+
+  @override
+  String get supportCategoryPayment => 'Paiement';
+
+  @override
+  String get supportCategoryTrip => 'Trajet';
+
+  @override
+  String get supportCategoryPackage => 'Colis';
+
+  @override
+  String get supportCategoryDelivery => 'Livraison';
+
+  @override
+  String get supportCategoryOther => 'Autre';
+
+  @override
+  String get supportStatusNew => 'Nouveau';
+
+  @override
+  String get supportStatusAssigned => 'Pris en charge';
+
+  @override
+  String get supportStatusWaitingUser => 'Réponse reçue';
+
+  @override
+  String get supportStatusWaitingSupport => 'En attente du support';
+
+  @override
+  String get supportStatusResolved => 'Résolu';
+
+  @override
+  String get supportTicketResolvedError =>
+      'Ce ticket est résolu. Ouvrez-en un nouveau pour un autre problème.';
+
+  @override
+  String get supportGenericError => 'Une erreur est survenue. Réessayez.';
+
+  @override
+  String get supportScreenTitle => 'Support';
+
+  @override
+  String get supportHomeLoadErrorTitle => 'Impossible de charger le support';
+
+  @override
+  String get supportHomeFaqTitle => 'Questions fréquentes';
+
+  @override
+  String get supportHomeFaqSubtitle =>
+      'La réponse est peut-être déjà là. Sinon, ouvrez un ticket.';
+
+  @override
+  String get supportHomeMyTicketsTitle => 'Mes tickets';
+
+  @override
+  String get supportHomeNoTicketsMessage =>
+      'Aucun ticket pour le moment. Un problème non résolu par l\'assistant ? Ouvrez un ticket, l\'équipe Yadony vous répond.';
+
+  @override
+  String get supportContactCta => 'Contacter le support';
+
+  @override
+  String get supportCreateTicketCategoryLabel => 'Catégorie';
+
+  @override
+  String get supportCreateTicketSubjectLabel => 'Sujet';
+
+  @override
+  String get supportCreateTicketSubjectHint => 'Résumez votre problème';
+
+  @override
+  String get supportCreateTicketMessageLabel => 'Message';
+
+  @override
+  String get supportCreateTicketMessageHint => 'Décrivez ce qui vous arrive';
+
+  @override
+  String get supportTicketFallbackTitle => 'Ticket support';
+
+  @override
+  String get supportTicketNotFoundTitle => 'Ticket introuvable';
+
+  @override
+  String get supportBrandName => 'Support Yadony';
+
+  @override
+  String get supportViewImageLabel => 'Voir l\'image en plein écran';
+
+  @override
+  String supportPhotoIndex(int index, int count) {
+    return 'Photo $index / $count';
+  }
+
+  @override
+  String get supportResolvedBannerMessage =>
+      'Ce ticket est résolu. Un autre problème ? Ouvrez un nouveau ticket depuis la page Support.';
+
+  @override
+  String get supportMessageHint => 'Votre message';
+
+  @override
+  String get supportAttachTooltip => 'Joindre une image';
+
+  @override
+  String get supportRemoveAttachmentLabel => 'Retirer cette image';
+
+  @override
+  String get supportConversationDefaultPreview =>
+      'Une question ? Notre équipe vous répond ici.';
 }

@@ -13,6 +13,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
+import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -38,9 +39,10 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Préférences'),
+      appBar: DonyAppBar(title: l.prefsTitle),
       body: BlocBuilder<BusinessPrefsBloc, BusinessPrefsState>(
         builder: (context, state) =>
             ListView(
@@ -51,22 +53,34 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                     DonySpacing.huge,
                   ),
                   children: [
-                    if (state.errorMessage != null) ...[
-                      _ErrorBanner(message: state.errorMessage!),
+                    if (state.hasSyncError) ...[
+                      _ErrorBanner(message: l.settingsSyncFailed),
                       const SizedBox(height: DonySpacing.lg),
                     ],
-                    const SettingsSectionHeader('UNITÉS'),
+                    SettingsSectionHeader(l.prefsSectionUnits),
                     SettingsFlatGroup(
                       children: [
                         DonyListTile(
                           iconAsset: 'scale',
                           iconColor: cs.primary,
                           iconBgColor: cs.primaryContainer,
-                          label: 'Unité de poids',
+                          label: l.prefsWeightUnitLabel,
                           trailing: SegmentedButton<String>(
                             segments: const [
-                              ButtonSegment(value: 'kg', label: Text('kg')),
-                              ButtonSegment(value: 'lbs', label: Text('lbs')),
+                              ButtonSegment(
+                                value:
+                                    'kg', // i18n-ignore: code d'unité stocké/envoyé, identique en anglais
+                                label: Text(
+                                  'kg',
+                                ), // i18n-ignore: unité identique en anglais
+                              ),
+                              ButtonSegment(
+                                value:
+                                    'lbs', // i18n-ignore: code d'unité stocké/envoyé, identique en anglais
+                                label: Text(
+                                  'lbs',
+                                ), // i18n-ignore: unité identique en anglais
+                              ),
                             ],
                             selected: {state.weightUnit},
                             onSelectionChanged: (s) => context
@@ -76,20 +90,21 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                         ),
                       ],
                     ),
-                    const SettingsSectionHeader('DEVISE'),
+                    SettingsSectionHeader(l.prefsSectionCurrency),
                     SettingsFlatGroup(
                       children: [
                         DonyListTile(
                           iconAsset: 'globe',
                           iconColor: cs.primary,
                           iconBgColor: cs.primaryContainer,
-                          label: 'Pays',
+                          label: l.prefsCountryLabel,
                           subtitle: state.countryLocked
-                              ? 'Verrouillé : un envoi est en cours ou votre compte de paiement est créé'
+                              ? l.prefsCountryLockedSubtitle
                               : null,
                           trailing: Text(
-                            CountryCatalog.byCode(state.country)?.name ??
-                                'Choisir mon pays',
+                            CountryCatalog.byCode(state.country) != null
+                                ? countryName(l, state.country!)
+                                : l.prefsCountryPlaceholder,
                             style: tt.labelMedium?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
@@ -102,9 +117,9 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                           iconAsset: 'euro',
                           iconColor: cs.primary,
                           iconBgColor: cs.primaryContainer,
-                          label: 'Devise',
+                          label: l.prefsCurrencyLabel,
                           subtitle: state.currencyLocked
-                              ? 'Verrouillée : videz votre portefeuille pour en changer'
+                              ? l.prefsCurrencyLockedSubtitle
                               : null,
                           trailing: Text(
                             state.currencyCode,
@@ -120,13 +135,11 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                           iconAsset: 'eye',
                           iconColor: cs.primary,
                           iconBgColor: cs.primaryContainer,
-                          label: "Devise d'affichage",
-                          subtitle:
-                              'Les prix publiés dans une autre devise sont '
-                              'convertis à titre indicatif',
+                          label: l.prefsDisplayCurrencyLabel,
+                          subtitle: l.prefsDisplayCurrencySubtitle,
                           trailing: Text(
                             state.displayCurrencyCode == 'AUTO'
-                                ? 'Automatique'
+                                ? l.prefsAutoLabel
                                 : state.displayCurrencyCode,
                             style: tt.labelMedium?.copyWith(
                               color: cs.onSurfaceVariant,
@@ -139,7 +152,7 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                         ),
                       ],
                     ),
-                    const SettingsSectionHeader('GÉOLOCALISATION'),
+                    SettingsSectionHeader(l.prefsSectionGeolocation),
                     SettingsFlatGroup(
                       children: [
                         Padding(
@@ -152,7 +165,7 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'Rayon de collecte',
+                                    l.prefsPickupRadiusLabel,
                                     style: tt.bodyMedium?.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -220,7 +233,7 @@ Future<void> _openCountryPicker(
   final bloc = context.read<BusinessPrefsBloc>();
   final selected = await DonyBottomSheet.show<String>(
     context,
-    title: 'Pays',
+    title: context.l10n.prefsCountryLabel,
     heightFraction: 0.85,
     child: _CountryPickerList(selectedCode: state.country),
   );
@@ -277,7 +290,7 @@ Future<void> _openDisplayCurrencyPicker(
   final bloc = context.read<BusinessPrefsBloc>();
   final selected = await DonyBottomSheet.show<String>(
     context,
-    title: "Devise d'affichage",
+    title: context.l10n.prefsDisplayCurrencyLabel,
     child: _DisplayCurrencyPickerList(selectedCode: state.displayCurrencyCode),
   );
   if (selected == null || !context.mounted) {
@@ -305,7 +318,9 @@ class _DisplayCurrencyPickerList extends StatelessWidget {
     }) {
       final isSelected = selectedCode == code;
       return DonyListTile(
-        iconAsset: code == 'AUTO' ? 'refresh-cw' : 'euro',
+        iconAsset: code == 'AUTO'
+            ? 'refresh-cw'
+            : 'euro', // i18n-ignore: code de devise technique (R49)
         iconColor: cs.primary,
         iconBgColor: cs.primaryContainer,
         label: label,
@@ -322,9 +337,9 @@ class _DisplayCurrencyPickerList extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         tile(
-          code: 'AUTO',
-          label: 'Automatique',
-          subtitle: 'Suivre la devise de mon compte',
+          code: 'AUTO', // i18n-ignore: code de devise technique (R49)
+          label: l.prefsAutoLabel,
+          subtitle: l.prefsAutoCurrencySubtitle,
         ),
         for (final (index, currency) in SupportedCurrency.values.indexed)
           tile(
@@ -351,11 +366,31 @@ class _CountryPickerListState extends State<_CountryPickerList> {
   final _controller = TextEditingController();
   List<CountryZoneGroup> _results = CountryCatalog.groupedSearch('');
 
+  // `l` n'est connu qu'à partir de `didChangeDependencies` (les délégués ne
+  // sont pas prêts en `initState`) : on le garde ici pour que la recherche
+  // trouve aussi le nom localisé, et on relance le calcul si la langue change.
+  AppLocalizations? _l;
+
   @override
   void initState() {
     super.initState();
-    _controller.addListener(() {
-      setState(() => _results = CountryCatalog.groupedSearch(_controller.text));
+    _controller.addListener(_refreshResults);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _l = context.l10n;
+    _refreshResults();
+  }
+
+  void _refreshResults() {
+    final l = _l;
+    setState(() {
+      _results = CountryCatalog.groupedSearch(
+        _controller.text,
+        localizedName: l == null ? null : (c) => countryName(l, c.code),
+      );
     });
   }
 
@@ -369,13 +404,14 @@ class _CountryPickerListState extends State<_CountryPickerList> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         DonyTextField(
           controller: _controller,
-          hint: 'Rechercher un pays',
+          hint: l.prefsCountrySearchHint,
           prefixIcon: Icons.search,
         ),
         const SizedBox(height: DonySpacing.md),
@@ -383,7 +419,7 @@ class _CountryPickerListState extends State<_CountryPickerList> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),
             child: Text(
-              'Aucun pays trouvé',
+              l.prefsCountryNotFound,
               textAlign: TextAlign.center,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
@@ -405,7 +441,7 @@ class _CountryPickerListState extends State<_CountryPickerList> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    group.zone.label.toUpperCase(),
+                    countryZoneLabel(l, group.zone).toUpperCase(),
                     style: tt.labelMedium?.copyWith(
                       color: cs.onSurfaceVariant,
                       fontWeight: FontWeight.w700,
@@ -417,7 +453,7 @@ class _CountryPickerListState extends State<_CountryPickerList> {
             ),
             for (final country in group.countries)
               ListTile(
-                title: Text(country.name),
+                title: Text(countryName(l, country.code)),
                 subtitle: Text(
                   '${country.currency.code} · ${country.currency.symbol}',
                 ),
@@ -516,6 +552,7 @@ class _TravelerSectionState extends State<_TravelerSection> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final state = widget.state;
 
     return Column(
@@ -532,7 +569,7 @@ class _TravelerSectionState extends State<_TravelerSection> {
           child: Row(
             children: [
               Text(
-                'MES TRAJETS',
+                l.prefsSectionMyTrips,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -551,7 +588,7 @@ class _TravelerSectionState extends State<_TravelerSection> {
                   borderRadius: BorderRadius.circular(DonyRadius.full),
                 ),
                 child: Text(
-                  'Voyageur',
+                  l.prefsTravelerBadge,
                   style: tt.labelSmall?.copyWith(
                     color: cs.primary,
                     fontWeight: FontWeight.w700,
@@ -570,8 +607,8 @@ class _TravelerSectionState extends State<_TravelerSection> {
               iconAsset: 'package',
               iconColor: cs.primary,
               iconBgColor: cs.primaryContainer,
-              label: 'Poids par défaut',
-              subtitle: 'Pré-remplit vos annonces',
+              label: l.prefsDefaultWeightLabel,
+              subtitle: l.prefsDefaultWeightSubtitle,
               trailing: Text(
                 '${state.defaultPackageWeightKg} kg',
                 style: tt.labelMedium?.copyWith(
@@ -606,12 +643,13 @@ class _TravelerSectionState extends State<_TravelerSection> {
               iconAsset: 'euro',
               iconColor: cs.primary,
               iconBgColor: cs.primaryContainer,
-              label: 'Prix minimum',
-              subtitle:
-                  '0 ${SupportedCurrency.symbolOf(state.currencyCode)} = aucun filtre',
+              label: l.prefsMinPriceLabel,
+              subtitle: l.prefsMinPriceNone(
+                SupportedCurrency.symbolOf(state.currencyCode),
+              ),
               trailing: Text(
                 state.minBidPriceEur == 0
-                    ? 'Aucun'
+                    ? l.prefsMinPriceValueNone
                     : formatPriceIn(
                         state.minBidPriceEur.toDouble(),
                         state.currencyCode,
@@ -647,7 +685,7 @@ class _TravelerSectionState extends State<_TravelerSection> {
               iconAsset: 'phone',
               iconColor: cs.primary,
               iconBgColor: cs.primaryContainer,
-              label: 'Mode de contact',
+              label: l.prefsContactModeLabel,
               showDivider: false,
             ),
             Padding(
@@ -659,10 +697,22 @@ class _TravelerSectionState extends State<_TravelerSection> {
               ),
               child: SegmentedButton<String>(
                 emptySelectionAllowed: true,
-                segments: const [
-                  ButtonSegment(value: 'call', label: Text('Appel')),
-                  ButtonSegment(value: 'message', label: Text('Message')),
-                  ButtonSegment(value: 'both', label: Text('Les deux')),
+                segments: [
+                  ButtonSegment(
+                    value:
+                        'call', // i18n-ignore: code contact_mode envoyé au serveur
+                    label: Text(l.prefsContactModeCall),
+                  ),
+                  ButtonSegment(
+                    value:
+                        'message', // i18n-ignore: code contact_mode envoyé au serveur
+                    label: Text(l.prefsContactModeMessage),
+                  ),
+                  ButtonSegment(
+                    value:
+                        'both', // i18n-ignore: code contact_mode envoyé au serveur
+                    label: Text(l.prefsContactModeBoth),
+                  ),
                 ],
                 selected: state.contactMode != null
                     ? {state.contactMode!}
@@ -679,7 +729,7 @@ class _TravelerSectionState extends State<_TravelerSection> {
               iconAsset: 'timer',
               iconColor: cs.primary,
               iconBgColor: cs.primaryContainer,
-              label: 'Délai de réponse',
+              label: l.prefsResponseDelayLabel,
               showDivider: false,
             ),
             Padding(
@@ -722,8 +772,9 @@ class _TravelerSectionState extends State<_TravelerSection> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: InputDecoration(
-                        hintText: 'ex. 3',
-                        suffixText: 'h',
+                        hintText: l.prefsResponseDelayHint,
+                        suffixText:
+                            'h', // i18n-ignore: unité, identique en anglais
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: DonySpacing.sm,
                           vertical: DonySpacing.sm,

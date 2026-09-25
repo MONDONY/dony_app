@@ -32,11 +32,7 @@ class BlockedUsersBloc extends Bloc<BlockedUsersEvent, BlockedUsersState> {
       final users = await _repo.fetchBlockedUsers();
       emit(BlockedUsersLoaded(users));
     } catch (_) {
-      emit(
-        const BlockedUsersError(
-          'Impossible de charger les utilisateurs bloqués',
-        ),
-      );
+      emit(const BlockedUsersError());
     }
   }
 
@@ -72,11 +68,7 @@ class BlockedUsersBloc extends Bloc<BlockedUsersEvent, BlockedUsersState> {
       _blockEvents.notifyBlocked(event.userId);
       emit(BlockedUserBlockSuccess(event.userId));
     } catch (_) {
-      emit(
-        const BlockedUserBlockFailure(
-          'Une erreur est survenue. Réessaie plus tard.',
-        ),
-      );
+      emit(const BlockedUserBlockFailure());
     }
   }
 }

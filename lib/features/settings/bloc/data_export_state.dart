@@ -19,8 +19,8 @@ class DataExportSuccess extends DataExportState {
 }
 
 class DataExportError extends DataExportState {
-  final String message;
-  const DataExportError(this.message);
+  final AppException error;
+  const DataExportError(this.error);
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [error];
 }

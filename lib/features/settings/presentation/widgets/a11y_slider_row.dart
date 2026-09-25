@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Ligne de réglage de la taille du texte.
@@ -28,7 +29,9 @@ class A11ySliderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final percent = '${(value * 100).round()} %';
+    final l = context.l10n;
+    final percentValue = (value * 100).round();
+    final percent = l.a11yPercent(percentValue);
 
     final content = Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -44,7 +47,7 @@ class A11ySliderRow extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Taille du texte',
+                  l.a11yTextSizeLabel,
                   style: tt.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: cs.onSurface,
@@ -55,7 +58,7 @@ class A11ySliderRow extends StatelessWidget {
             ],
           ),
           Semantics(
-            label: 'Taille du texte',
+            label: l.a11yTextSizeLabel,
             value: percent,
             child: Slider(
               value: value,
@@ -73,11 +76,11 @@ class A11ySliderRow extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '85 %',
+                l.a11yPercent((kA11yMinTextScale * 100).round()),
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               Text(
-                '200 %',
+                l.a11yPercent((kA11yMaxTextScale * 100).round()),
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],
@@ -98,7 +101,7 @@ class A11ySliderRow extends StatelessWidget {
           : Semantics(
               container: true,
               enabled: false,
-              label: 'Taille du texte, $percent, désactivé',
+              label: l.a11yTextSizeDisabledSemantics(percent),
               child: ExcludeSemantics(child: content),
             ),
     );

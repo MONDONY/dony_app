@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Aperçu réagissant en direct aux réglages d'accessibilité.
@@ -36,7 +37,7 @@ class A11yPreviewCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: DonySpacing.sm),
           child: Text(
-            'Aperçu',
+            context.l10n.a11yPreviewLabel,
             style: outerTt.labelMedium?.copyWith(
               color: outerCs.onSurfaceVariant,
               letterSpacing: 0.8,
@@ -68,6 +69,7 @@ class A11yPreviewCard extends StatelessWidget {
   Widget _buildSample(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -88,7 +90,7 @@ class A11yPreviewCard extends StatelessWidget {
             runSpacing: DonySpacing.xs,
             children: [
               Text(
-                'Paris',
+                'Paris', // i18n-ignore: nom de ville, aperçu fictif
                 style: tt.titleLarge?.copyWith(color: cs.onSurface),
               ),
               Icon(
@@ -97,7 +99,7 @@ class A11yPreviewCard extends StatelessWidget {
                 color: cs.onSurfaceVariant,
               ),
               Text(
-                'Dakar',
+                'Dakar', // i18n-ignore: nom de ville, aperçu fictif
                 style: tt.titleLarge?.copyWith(color: cs.onSurface),
               ),
               // Seul ce badge a un défaut de contraste connu et déjà différé
@@ -107,18 +109,20 @@ class A11yPreviewCard extends StatelessWidget {
               // soumis aux mêmes contrôles de contraste et de cible tactile
               // que n'importe quel contenu réel de cet écran.
               Semantics(
-                label: 'Urgent',
+                label: l.a11yPreviewUrgentLabel,
                 child: const ExcludeSemantics(child: DonyUrgentBadge()),
               ),
             ],
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            '12 kg disponibles',
+            l.listingAvailableKgLabel(
+              '12 kg',
+            ), // i18n-ignore: valeur fictive de l'aperçu, identique en anglais
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.md),
-          DonyButton(label: 'Faire une offre', onPressed: () {}),
+          DonyButton(label: l.negotiationMakeOfferTitle, onPressed: () {}),
         ],
       ),
     );

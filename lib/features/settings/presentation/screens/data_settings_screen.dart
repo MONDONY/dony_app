@@ -1,7 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -11,24 +13,20 @@ class DataSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Mes données'),
+      appBar: DonyAppBar(title: l.settingsMyData),
       body: BlocListener<DataExportBloc, DataExportState>(
         listener: (context, state) {
           if (state is DataExportSuccess) {
             DonySnackbar.show(
               context,
-              message:
-                  'Export lancé. Tu recevras un e-mail avec le lien de téléchargement sous 72h.',
+              message: context.l10n.dataSettingsExportStartedMessage,
               type: DonySnackbarType.success,
             );
           } else if (state is DataExportError) {
-            DonySnackbar.show(
-              context,
-              message: state.message,
-              type: DonySnackbarType.error,
-            );
+            ErrorPresenter.show(context, state.error);
           }
         },
         child: ListView(
@@ -39,7 +37,7 @@ class DataSettingsScreen extends StatelessWidget {
             DonySpacing.huge,
           ),
           children: [
-            const SettingsSectionHeader('VOS DONNÉES'),
+            SettingsSectionHeader(l.dataSettingsSectionYourData),
             // Export tile — wrapped in BlocBuilder to react to loading state
             SettingsFlatGroup(
               children: [
@@ -50,8 +48,8 @@ class DataSettingsScreen extends StatelessWidget {
                       iconAsset: 'download',
                       iconColor: cs.primary,
                       iconBgColor: cs.primaryContainer,
-                      label: 'Télécharger mes données',
-                      subtitle: 'Export RGPD au format JSON',
+                      label: l.dataSettingsDownloadLabel,
+                      subtitle: l.dataSettingsDownloadSubtitle,
                       showDivider: false,
                       trailing: isLoading
                           ? SizedBox(

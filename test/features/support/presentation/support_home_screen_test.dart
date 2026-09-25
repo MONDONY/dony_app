@@ -9,6 +9,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockSupportBloc extends MockBloc<SupportEvent, SupportState>
     implements SupportBloc {}
 
@@ -166,7 +168,7 @@ void main() {
     stubState(
       const SupportState(
         homeStatus: SupportViewStatus.failure,
-        errorMessage: 'Une erreur est survenue. Réessayez.',
+        failure: SupportFailure.generic,
       ),
     );
 
@@ -175,5 +177,25 @@ void main() {
 
     expect(find.text('Impossible de charger le support'), findsOneWidget);
     expect(find.text('Réessayer'), findsOneWidget);
+  });
+
+  testWidgets('anglais : titre, tickets et CTA traduits', (tester) async {
+    useEnglish();
+    stubState(
+      const SupportState(
+        homeStatus: SupportViewStatus.ready,
+        tickets: [_ticket],
+      ),
+    );
+
+    await tester.pumpWidget(_harness(bloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Support'), findsOneWidget);
+    expect(find.text('My tickets'), findsOneWidget);
+    // DonyBadge rend son libellé en majuscules.
+    expect(find.text('REPLY RECEIVED'), findsOneWidget);
+    expect(find.text('Payment'), findsOneWidget);
+    expect(find.text('Contact support'), findsOneWidget);
   });
 }

@@ -58,9 +58,7 @@ class PrivacySettingsBloc
     } catch (_) {
       // Si une valeur Hive est déjà affichée, on la conserve sans montrer d'erreur.
       if (state is! PrivacySettingsLoaded) {
-        emit(
-          const PrivacySettingsError('Impossible de charger les préférences'),
-        );
+        emit(const PrivacySettingsError());
       }
     }
   }

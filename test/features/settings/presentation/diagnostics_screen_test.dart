@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockDiagnosticsBloc extends MockBloc<DiagnosticsEvent, DiagnosticsState>
     implements DiagnosticsBloc {}
 
@@ -165,5 +167,38 @@ void main() {
         expect(find.byType(AlertDialog), findsNothing);
       },
     );
+
+    testWidgets('renders statut En ligne quand apiOk vrai', (tester) async {
+      await tester.pumpWidget(_wrap(apiOk: true));
+      await tester.pumpAndSettle();
+      expect(find.text('En ligne'), findsOneWidget);
+    });
+
+    testWidgets('renders statut Hors ligne quand apiOk faux', (tester) async {
+      await tester.pumpWidget(_wrap(apiOk: false));
+      await tester.pumpAndSettle();
+      expect(find.text('Hors ligne'), findsOneWidget);
+    });
+
+    testWidgets('anglais : titre, sections et tuiles traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Diagnostics'), findsOneWidget);
+      expect(find.text('CONNECTIVITY'), findsOneWidget);
+      expect(find.text('API status'), findsOneWidget);
+      expect(find.text('SUPPORT'), findsOneWidget);
+      expect(find.text('Report a bug'), findsOneWidget);
+      expect(find.text('Copy my user ID'), findsOneWidget);
+      expect(find.text('CONNECTIVITÉ'), findsNothing);
+    });
+
+    testWidgets('anglais : statut Test traduit', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('Test'), findsOneWidget);
+    });
   });
 }

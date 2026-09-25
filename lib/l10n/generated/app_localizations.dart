@@ -18943,6 +18943,2142 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Lire le tutoriel {title}'**
   String helpTutorialCardSemanticsLabel(String title);
+
+  /// Titre de l'AppBar (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paramètres'**
+  String get settingsTitle;
+
+  /// En-tête de section (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'APPARENCE'**
+  String get settingsSectionAppearance;
+
+  /// Libellé de la tuile de choix du thème (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Thème'**
+  String get settingsThemeLabel;
+
+  /// Sous-titre de la tuile de choix du thème (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prioritaire sur le réglage système'**
+  String get settingsThemeSubtitle;
+
+  /// Option de thème clair, utilisée à la fois pour le libellé affiché et dans le sélecteur (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Clair'**
+  String get settingsThemeLight;
+
+  /// Option de thème sombre, utilisée à la fois pour le libellé affiché et dans le sélecteur (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sombre'**
+  String get settingsThemeDark;
+
+  /// Option de thème système, utilisée à la fois pour le libellé affiché et dans le sélecteur (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Auto'**
+  String get settingsThemeAuto;
+
+  /// En-tête de section (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'LANGUE & COMMUNICATION'**
+  String get settingsSectionLanguage;
+
+  /// En-tête de section (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DESTINATIONS FAVORITES'**
+  String get settingsSectionDestinations;
+
+  /// Libellé de la tuile de sélection des destinations favorites (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinations'**
+  String get settingsDestinationsLabel;
+
+  /// Résumé affiché quand aucune destination favorite n'est sélectionnée (settings_screen.dart, _destinationsSummary)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune'**
+  String get settingsNoDestination;
+
+  /// En-tête de section (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'SÉCURITÉ & DONNÉES'**
+  String get settingsSectionSecurityData;
+
+  /// Libellé de la tuile de navigation (settings_screen.dart) et titre de l'AppBar de l'écran de sécurité (security_settings_screen.dart) : même écran, un seul texte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sécurité'**
+  String get securityTitle;
+
+  /// Sous-titre de la tuile Sécurité (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Biométrie, PIN, sessions'**
+  String get settingsSecuritySubtitle;
+
+  /// Libellé de la tuile de navigation vers l'écran de confidentialité (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confidentialité'**
+  String get settingsPrivacyLabel;
+
+  /// Sous-titre de la tuile Confidentialité (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Visibilité profil, numéro'**
+  String get settingsPrivacySubtitle;
+
+  /// Libellé de la tuile de navigation (settings_screen.dart) et titre de l'AppBar de l'écran de données (data_settings_screen.dart) : même écran, un seul texte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes données'**
+  String get settingsMyData;
+
+  /// Sous-titre de la tuile Mes données (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Export RGPD'**
+  String get settingsMyDataSubtitle;
+
+  /// En-tête de section (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PERSONNALISATION'**
+  String get settingsSectionPersonalization;
+
+  /// Libellé de la tuile de navigation vers les réglages de notifications (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotificationsLabel;
+
+  /// Sous-titre de la tuile Notifications (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Par type d\'alerte'**
+  String get settingsNotificationsSubtitle;
+
+  /// Libellé de la tuile de navigation vers les préférences métier (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Préférences'**
+  String get settingsPreferencesLabel;
+
+  /// Sous-titre de la tuile Préférences (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'kg/lbs, devise, rayon de collecte'**
+  String get settingsPreferencesSubtitle;
+
+  /// Libellé de la tuile de navigation vers les réglages d'accessibilité (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accessibilité'**
+  String get settingsAccessibilityLabel;
+
+  /// Sous-titre de la tuile Accessibilité (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Contraste, taille de police'**
+  String get settingsAccessibilitySubtitle;
+
+  /// Libellé de la tuile de réinitialisation des cartes de guidance (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réafficher les suggestions'**
+  String get settingsResetGuidanceLabel;
+
+  /// Sous-titre de la tuile de réinitialisation des cartes de guidance (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Fait revenir les cartes fermées (écran Recherche)'**
+  String get settingsResetGuidanceSubtitle;
+
+  /// Snackbar de confirmation après réinitialisation des cartes de guidance (settings_screen.dart, _resetGuidanceCards)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suggestions et tutoriels réaffichés.'**
+  String get settingsResetGuidanceSnackbar;
+
+  /// En-tête de section (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'INFORMATIONS'**
+  String get settingsSectionInformation;
+
+  /// Libellé de la tuile de navigation vers les CGU (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'CGU'**
+  String get settingsTermsLabel;
+
+  /// Libellé de la tuile de navigation vers la politique de confidentialité (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Politique de confidentialité'**
+  String get settingsPrivacyPolicyLabel;
+
+  /// Libellé de la tuile de signalement d'un problème (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler un problème'**
+  String get settingsReportProblemLabel;
+
+  /// Sous-titre de la tuile de signalement d'un problème (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Incident, bug, litige (avec captures)'**
+  String get settingsReportProblemSubtitle;
+
+  /// Libellé de la tuile de navigation (settings_screen.dart) et titre de l'AppBar de l'écran de diagnostics (diagnostics_screen.dart) : même écran, un seul texte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Diagnostics'**
+  String get diagnosticsTitle;
+
+  /// Sous-titre de la tuile Diagnostics (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Version, signaler un bug'**
+  String get settingsDiagnosticsSubtitle;
+
+  /// Libellé de la tuile de navigation (security_settings_screen.dart) et titre de l'AppBar de l'écran des appareils connectés (connected_devices_screen.dart) : même écran, un seul texte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appareils connectés'**
+  String get devicesTitle;
+
+  /// Sous-titre de la tuile Appareils connectés (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir et révoquer les sessions actives'**
+  String get devicesSubtitle;
+
+  /// Snackbar après désactivation du code PIN (security_settings_screen.dart, _disablePin)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code PIN retiré, l\'app s\'ouvrira sans code'**
+  String get pinRemovedMessage;
+
+  /// En-tête de section (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PAIEMENTS'**
+  String get securitySectionPayments;
+
+  /// Libellé de la tuile de bascule biométrie avant paiement (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Biométrie avant paiement'**
+  String get securityBiometricBeforePayment;
+
+  /// Sous-titre de la tuile biométrie quand disponible (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Empreinte digitale ou Face ID'**
+  String get securityFingerprintOrFaceId;
+
+  /// Sous-titre affiché quand la biométrie n'est pas disponible, réutilisé pour les tuiles biométrie et verrouillage de l'app (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Non disponible sur cet appareil'**
+  String get securityUnavailableOnDevice;
+
+  /// En-tête de section (security_settings_screen.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'APPLICATION'**
+  String get securitySectionApplication;
+
+  /// Libellé de la tuile de verrouillage de l'app (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Verrouillage de l\'app'**
+  String get securityAppLockTitle;
+
+  /// Sous-titre du verrouillage de l'app quand un code PIN est configuré (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Biométrie ou Face ID à l\'ouverture'**
+  String get securityAppLockBiometricSubtitle;
+
+  /// Sous-titre du verrouillage de l'app quand aucun code PIN n'est configuré (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nécessite d\'activer le code PIN ci-dessous'**
+  String get securityAppLockNeedsPinSubtitle;
+
+  /// En-tête de section (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'AUTHENTIFICATION'**
+  String get securitySectionAuthentication;
+
+  /// Libellé de la tuile de bascule du code PIN à l'ouverture (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code PIN à l\'ouverture'**
+  String get securityPinOnLaunchTitle;
+
+  /// Sous-titre quand le code PIN est configuré (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandé à chaque ouverture de Yadony'**
+  String get securityPinRequestedSubtitle;
+
+  /// Sous-titre quand le code PIN n'est pas configuré (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactivé, l\'app s\'ouvre sans code'**
+  String get securityPinDisabledSubtitle;
+
+  /// Libellé de la tuile de navigation (security_settings_screen.dart) et titre de l'AppBar de l'écran de modification du code (change_pin_screen.dart, mode édition) : même écran, un seul texte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le code PIN'**
+  String get pinChangeTitle;
+
+  /// Sous-titre de la tuile Modifier le code PIN (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code à 6 chiffres'**
+  String get securityPinCodeLength;
+
+  /// En-tête de section (security_settings_screen.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'SESSION'**
+  String get securitySectionSession;
+
+  /// Titre de l'AppBar en mode création (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un code PIN'**
+  String get pinCreateTitle;
+
+  /// Message d'erreur quand le code actuel saisi est invalide (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code incorrect'**
+  String get pinIncorrectCode;
+
+  /// Snackbar de succès en mode création (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code PIN activé, il sera demandé à l\'ouverture'**
+  String get pinCreatedMessage;
+
+  /// Snackbar de succès en mode modification (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code PIN modifié'**
+  String get pinChangedMessage;
+
+  /// Message d'erreur quand la confirmation ne correspond pas au nouveau code (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les codes ne correspondent pas'**
+  String get pinCodesMismatch;
+
+  /// Sous-titre de l'étape de vérification du code actuel (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez votre code actuel'**
+  String get pinEnterCurrentSubtitle;
+
+  /// Sous-titre de l'étape de saisie du nouveau code, en mode création (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un code à 6 chiffres, il sera demandé à l\'ouverture'**
+  String get pinCreateNewSubtitle;
+
+  /// Sous-titre de l'étape de saisie du nouveau code, en mode modification (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Créez votre nouveau code'**
+  String get pinEnterNewSubtitle;
+
+  /// Sous-titre de l'étape de confirmation, en mode création (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le même code pour confirmer'**
+  String get pinConfirmCreateSubtitle;
+
+  /// Sous-titre de l'étape de confirmation, en mode modification (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmez le nouveau code'**
+  String get pinConfirmChangeSubtitle;
+
+  /// Bouton de déconnexion de tous les autres appareils (connected_devices_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Déconnecter tous les autres appareils'**
+  String get devicesRevokeAllOthers;
+
+  /// Date relative : dernière activité il y a moins de 5 minutes (connected_devices_screen.dart, _formatDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'Actif maintenant'**
+  String get devicesActiveNow;
+
+  /// Date relative en minutes (connected_devices_screen.dart, _formatDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {minutes} min'**
+  String devicesAgoMinutes(int minutes);
+
+  /// Date relative en heures (connected_devices_screen.dart, _formatDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {hours} h'**
+  String devicesAgoHours(int hours);
+
+  /// Date relative en jours (connected_devices_screen.dart, _formatDate). Correction d'accord déclarée : plus jamais « il y a 1 jours ».
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{il y a {count} jour} other{il y a {count} jours}}'**
+  String devicesAgoDays(int count);
+
+  /// Date relative : dernière activité exactement la veille (connected_devices_screen.dart, _formatDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'hier'**
+  String get devicesAgoYesterday;
+
+  /// Badge sur l'appareil courant dans la liste (connected_devices_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet appareil'**
+  String get devicesThisDevice;
+
+  /// Bouton de révocation d'un appareil (connected_devices_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Révoquer'**
+  String get devicesRevoke;
+
+  /// Résumé du nombre d'appareils connectés (connected_devices_screen.dart). Correction d'accord déclarée : plus jamais « 2 appareil(s) ».
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Tu es connecté sur {count} appareil} other{Tu es connecté sur {count} appareils}}'**
+  String devicesSignedInCount(int count);
+
+  /// Message d'erreur du bloc, affiché par l'écran selon DevicesFailure.load (connected_devices_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les appareils'**
+  String get devicesLoadError;
+
+  /// Message d'erreur du bloc, affiché par l'écran selon DevicesFailure.revoke (connected_devices_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur lors de la révocation'**
+  String get devicesRevokeError;
+
+  /// Message d'erreur du bloc, affiché par l'écran selon DevicesFailure.revokeAll (connected_devices_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur lors de la déconnexion'**
+  String get devicesRevokeAllError;
+
+  /// Nom affiché quand device.deviceName est vide (device_model.dart garde '' ; l'écran affiche cette clé)
+  ///
+  /// In fr, this message translates to:
+  /// **'Appareil inconnu'**
+  String get devicesUnknown;
+
+  /// Tooltip du bouton d'ouverture externe (legal_web_view_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir dans le navigateur'**
+  String get legalOpenInBrowser;
+
+  /// Titre de l'état d'erreur (legal_web_view_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger la page'**
+  String get legalPageLoadError;
+
+  /// Description de l'état d'erreur (legal_web_view_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifie ta connexion et réessaie.'**
+  String get legalPageLoadErrorHint;
+
+  /// En-tête de section (diagnostics_screen.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'APPLICATION'**
+  String get diagnosticsSectionApplication;
+
+  /// Libellé de la tuile de version (diagnostics_screen.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'Version'**
+  String get diagnosticsVersionLabel;
+
+  /// En-tête de section (diagnostics_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'CONNECTIVITÉ'**
+  String get diagnosticsSectionConnectivity;
+
+  /// Libellé de la tuile de statut API (diagnostics_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Statut API'**
+  String get diagnosticsApiStatusLabel;
+
+  /// En-tête de section (diagnostics_screen.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'SUPPORT'**
+  String get diagnosticsSectionSupport;
+
+  /// Libellé de la tuile de signalement de bug (diagnostics_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler un bug'**
+  String get diagnosticsReportBugLabel;
+
+  /// Libellé de la tuile de copie de l'ID utilisateur (diagnostics_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier mon ID utilisateur'**
+  String get diagnosticsCopyUserIdLabel;
+
+  /// Sous-titre de la tuile de copie de l'ID utilisateur (diagnostics_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Utile pour le support'**
+  String get diagnosticsCopyUserIdSubtitle;
+
+  /// Statut API en ligne (diagnostics_screen.dart, _pingLabel)
+  ///
+  /// In fr, this message translates to:
+  /// **'En ligne'**
+  String get diagnosticsOnline;
+
+  /// Statut API hors ligne (diagnostics_screen.dart, _pingLabel)
+  ///
+  /// In fr, this message translates to:
+  /// **'Hors ligne'**
+  String get diagnosticsOffline;
+
+  /// Statut API pas encore testé (diagnostics_screen.dart, _pingLabel)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tester'**
+  String get diagnosticsTest;
+
+  /// Snackbar après copie de l'ID utilisateur (diagnostics_screen.dart, _copyUserId). Faute d'accent recopiée telle quelle (« copié » manque son accent) : correction laissée à une PR dédiée, cf. règle du plan.
+  ///
+  /// In fr, this message translates to:
+  /// **'ID copie dans le presse-papier'**
+  String get diagnosticsIdCopiedMessage;
+
+  /// En-tête de section (data_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'VOS DONNÉES'**
+  String get dataSettingsSectionYourData;
+
+  /// Libellé de la tuile de téléchargement (data_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Télécharger mes données'**
+  String get dataSettingsDownloadLabel;
+
+  /// Sous-titre de la tuile de téléchargement (data_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Export RGPD au format JSON'**
+  String get dataSettingsDownloadSubtitle;
+
+  /// Snackbar de succès après lancement de l'export RGPD (data_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Export lancé. Tu recevras un e-mail avec le lien de téléchargement sous 72h.'**
+  String get dataSettingsExportStartedMessage;
+
+  /// Titre de la feuille de confirmation du code PIN (pin_confirm_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmez votre code PIN'**
+  String get pinConfirmSheetTitle;
+
+  /// Sous-titre de la feuille de confirmation du code PIN (pin_confirm_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez votre code pour confirmer'**
+  String get pinConfirmSheetSubtitle;
+
+  /// Tentatives restantes après un code PIN erroné (pin_confirm_bottom_sheet.dart). Correction d'accord déclarée : plus jamais « 2 tentative(s) restante(s) ».
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} tentative restante} other{{count} tentatives restantes}}'**
+  String pinAttemptsLeft(int count);
+
+  /// Titre de l'écran (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confidentialité'**
+  String get privacyTitle;
+
+  /// Snackbar d'échec d'enregistrement optimiste (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réglage non enregistré, vérifie ta connexion.'**
+  String get privacySaveFailedMessage;
+
+  /// En-tête de section (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'QUI PEUT ME CONTACTER'**
+  String get privacySectionWhoCanContact;
+
+  /// Libellé du réglage contactKycOnly (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Profils vérifiés uniquement'**
+  String get privacyKycOnlyLabel;
+
+  /// Sous-titre du réglage contactKycOnly (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls les utilisateurs ayant validé leur identité peuvent t\'envoyer une offre'**
+  String get privacyKycOnlySubtitle;
+
+  /// Libellé du réglage hidePhoneNumber (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Masquer mon numéro'**
+  String get privacyHidePhoneLabel;
+
+  /// Sous-titre du réglage hidePhoneNumber (privacy_settings_screen.dart). Fusion de deux fragments concaténés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton numéro n\'est jamais communiqué, même après une offre acceptée. Tes échanges passent par la messagerie Yadony.'**
+  String get privacyHidePhoneSubtitle;
+
+  /// En-tête de section (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'BLOCAGE'**
+  String get privacySectionBlocking;
+
+  /// En-tête de section (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'AMÉLIORATION DE L\'APP'**
+  String get privacySectionAppImprovement;
+
+  /// Note de pied de page vers Données (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour télécharger tes données ou supprimer ton compte, va dans Paramètres › Données.'**
+  String get privacyDataFooterNote;
+
+  /// Titre du bandeau vert quand le numéro est masqué (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton numéro reste masqué'**
+  String get privacyBannerPhoneHiddenTitle;
+
+  /// Titre du bandeau vert quand le numéro n'est pas masqué (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton numéro est protégé'**
+  String get privacyBannerPhoneProtectedTitle;
+
+  /// Corps du bandeau vert quand le numéro est masqué (privacy_settings_screen.dart). Fusion de trois fragments concaténés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton numéro n\'est communiqué à personne, même une fois l\'accord conclu. Tes partenaires te joignent par la messagerie Yadony, et tu peux toujours appeler le leur.'**
+  String get privacyBannerPhoneHiddenBody;
+
+  /// Corps du bandeau vert quand le numéro n'est pas masqué (privacy_settings_screen.dart). Fusion de trois fragments concaténés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Personne ne voit ton numéro tant qu\'une offre n\'est pas acceptée. Une fois l\'accord conclu, toi et ton partenaire échangez vos numéros pour organiser la remise.'**
+  String get privacyBannerPhoneProtectedBody;
+
+  /// Rappel persistant affiché quand contactKycOnly est désactivé (privacy_settings_screen.dart). Fusion de deux fragments concaténés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les profils non vérifiés peuvent te faire des demandes. Yadony n\'est pas responsable des difficultés rencontrées avec eux.'**
+  String get privacyUnverifiedExposureNotice;
+
+  /// Libellé du consentement analytics (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Statistiques d\'utilisation'**
+  String get privacyAnalyticsConsentLabel;
+
+  /// Sous-titre du consentement analytics (privacy_settings_screen.dart). Fusion de deux fragments concaténés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mesure anonyme de l\'usage pour améliorer l\'app. Jamais tes paiements ni ton identité.'**
+  String get privacyAnalyticsConsentSubtitle;
+
+  /// Titre de la carte blocage (privacy_settings_screen.dart) et de l'AppBar (blocked_users_screen.dart) : même texte, même écran cible (R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateurs bloqués'**
+  String get blockedUsersTitle;
+
+  /// Sous-titre de la carte blocage (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Gérer les personnes que tu as bloquées'**
+  String get blockedUsersCardSubtitle;
+
+  /// Bandeau explicatif en tête de liste (blocked_users_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Une personne bloquée ne voit plus tes annonces et ne peut plus t\'envoyer d\'offre. Tu ne vois plus les siennes non plus.'**
+  String get blockedUsersListIntro;
+
+  /// Date relative : bloqué aujourd'hui (blocked_users_screen.dart, _formatDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloqué aujourd\'hui'**
+  String get blockedUsersToday;
+
+  /// Date relative : bloqué hier (blocked_users_screen.dart, _formatDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloqué hier'**
+  String get blockedUsersYesterday;
+
+  /// Date relative : bloqué il y a N jours, 2 à 6 jours (blocked_users_screen.dart, _formatDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Bloqué il y a {count} jour} other{Bloqué il y a {count} jours}}'**
+  String blockedUsersDaysAgo(num count);
+
+  /// Date relative : bloqué il y a N semaines, 7 à 29 jours (blocked_users_screen.dart, _formatDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Bloqué il y a {count} semaine} other{Bloqué il y a {count} semaines}}'**
+  String blockedUsersWeeksAgo(num count);
+
+  /// Date relative au-delà de 29 jours, date déjà formatée à la langue (blocked_users_screen.dart, _formatDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloqué le {date}'**
+  String blockedUsersOnDate(String date);
+
+  /// Bouton de déblocage d'une ligne (blocked_users_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Débloquer'**
+  String get blockedUsersUnblock;
+
+  /// Titre de l'état vide (blocked_users_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu n\'as bloqué personne'**
+  String get blockedUsersEmptyTitle;
+
+  /// Sous-titre de l'état vide (blocked_users_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les personnes que tu bloques apparaîtront ici.'**
+  String get blockedUsersEmptySubtitle;
+
+  /// Message d'échec de chargement (blocked_users_bloc.dart, BlockedUsersError), rendu par blocked_users_screen.dart
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les utilisateurs bloqués'**
+  String get blockedUsersLoadError;
+
+  /// Message d'échec du blocage (blocked_users_bloc.dart, BlockedUserBlockFailure), rendu par block_user_action.dart (dialog de confirmation)
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue. Réessaie plus tard.'**
+  String get blockConfirmError;
+
+  /// Message d'échec de synchro serveur, partagé par business_prefs_bloc.dart (2 sites) et notification_prefs_bloc.dart (1 site) ; rendu par business_prefs_screen.dart et notification_settings_screen.dart
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de synchroniser. Réessayez.'**
+  String get settingsSyncFailed;
+
+  /// Titre de l'écran (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accessibilité'**
+  String get a11yTitle;
+
+  /// En-tête de section (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'TEXTE'**
+  String get a11ySectionText;
+
+  /// Libellé du réglage followSystemTextScale (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre les réglages du téléphone'**
+  String get a11yFollowSystemLabel;
+
+  /// Sous-titre du réglage followSystemTextScale (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La taille du texte suit celle définie dans votre téléphone'**
+  String get a11yFollowSystemSubtitle;
+
+  /// Libellé du réglage boldText (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Texte en gras'**
+  String get a11yBoldTextLabel;
+
+  /// Sous-titre du réglage boldText (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Épaissit tous les textes de l\'application'**
+  String get a11yBoldTextSubtitle;
+
+  /// En-tête de section (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'AFFICHAGE'**
+  String get a11ySectionDisplay;
+
+  /// Libellé de ligne et titre de sheet du réglage highContrast (accessibility_settings_screen.dart) : même texte, même écran cible (R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contraste élevé'**
+  String get a11yHighContrastLabel;
+
+  /// Sous-titre du réglage highContrast (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Renforce le texte, les bordures et les séparateurs'**
+  String get a11yHighContrastSubtitle;
+
+  /// Libellé du réglage underlineLinks (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Souligner les liens'**
+  String get a11yUnderlineLinksLabel;
+
+  /// Sous-titre du réglage underlineLinks (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les liens ne sont plus signalés par la couleur seule'**
+  String get a11yUnderlineLinksSubtitle;
+
+  /// Libellé du réglage reinforceLabels (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Renforcer les étiquettes'**
+  String get a11yReinforceLabelsLabel;
+
+  /// Sous-titre du réglage reinforceLabels (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoute une icône et un mot aux statuts signalés par une couleur'**
+  String get a11yReinforceLabelsSubtitle;
+
+  /// En-tête de section (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'MOUVEMENT'**
+  String get a11ySectionMotion;
+
+  /// Libellé de ligne et titre de sheet du réglage reduceMotion (accessibility_settings_screen.dart) : même texte, même écran cible (R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réduire les animations'**
+  String get a11yReduceMotionLabel;
+
+  /// Sous-titre du réglage reduceMotion (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprime les transitions, les apparitions et les effets de chargement'**
+  String get a11yReduceMotionSubtitle;
+
+  /// En-tête de section (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'MESSAGES ET ACTIONS'**
+  String get a11ySectionMessagesActions;
+
+  /// Libellé du réglage persistentMessages (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder les messages affichés'**
+  String get a11yPersistentMessagesLabel;
+
+  /// Sous-titre du réglage persistentMessages (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les messages restent visibles jusqu\'à ce que vous les fermiez'**
+  String get a11yPersistentMessagesSubtitle;
+
+  /// Libellé du réglage confirmImportantActions (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer les actions importantes'**
+  String get a11yConfirmActionsLabel;
+
+  /// Sous-titre du réglage confirmImportantActions (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande une confirmation avant un paiement, une annulation ou une suppression'**
+  String get a11yConfirmActionsSubtitle;
+
+  /// Libellé de la tuile vers les réglages système (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir les réglages du téléphone'**
+  String get a11yOpenSystemSettingsLabel;
+
+  /// Sous-titre de la tuile vers les réglages système (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille de texte, contraste et animations du système'**
+  String get a11yOpenSystemSettingsSubtitle;
+
+  /// Bouton et titre du dialog de réinitialisation (accessibility_settings_screen.dart) : même texte, même écran cible (R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout réinitialiser'**
+  String get a11yResetAll;
+
+  /// Message du dialog de confirmation de réinitialisation (accessibility_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les réglages d\'accessibilité reviendront à leur valeur d\'origine.'**
+  String get a11yResetAllMessage;
+
+  /// Libellé au-dessus de l'aperçu en direct (a11y_preview_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aperçu'**
+  String get a11yPreviewLabel;
+
+  /// Semantics label du badge urgent fictif de l'aperçu (a11y_preview_card.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'Urgent'**
+  String get a11yPreviewUrgentLabel;
+
+  /// Libellé de la ligne de taille de texte, réutilisé pour le Semantics label (a11y_slider_row.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille du texte'**
+  String get a11yTextSizeLabel;
+
+  /// Pourcentage de taille de texte, avec espace en français (a11y_slider_row.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{percent} %'**
+  String a11yPercent(int percent);
+
+  /// Semantics label quand le curseur est désactivé, {percent} déjà formaté via a11yPercent (a11y_slider_row.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille du texte, {percent}, désactivé'**
+  String a11yTextSizeDisabledSemantics(String percent);
+
+  /// Libellé long du mode système, option de sheet (a11y_tristate_row.dart, a11yModeLabel)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre le téléphone'**
+  String get a11yModeSystem;
+
+  /// Libellé long du mode toujours activé, option de sheet (a11y_tristate_row.dart, a11yModeLabel)
+  ///
+  /// In fr, this message translates to:
+  /// **'Toujours activé'**
+  String get a11yModeOn;
+
+  /// Libellé long du mode toujours désactivé, option de sheet (a11y_tristate_row.dart, a11yModeLabel)
+  ///
+  /// In fr, this message translates to:
+  /// **'Toujours désactivé'**
+  String get a11yModeOff;
+
+  /// Libellé court du mode système, valeur de fin de ligne (a11y_tristate_row.dart, a11yModeShortLabel)
+  ///
+  /// In fr, this message translates to:
+  /// **'Automatique'**
+  String get a11yModeSystemShort;
+
+  /// Libellé court du mode toujours activé, valeur de fin de ligne (a11y_tristate_row.dart, a11yModeShortLabel)
+  ///
+  /// In fr, this message translates to:
+  /// **'Activé'**
+  String get a11yModeOnShort;
+
+  /// Libellé court du mode toujours désactivé, valeur de fin de ligne (a11y_tristate_row.dart, a11yModeShortLabel)
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactivé'**
+  String get a11yModeOffShort;
+
+  /// Sous-titre de l'option système dans la sheet (a11y_tristate_row.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilise le réglage défini dans votre téléphone'**
+  String get a11yModeSystemSubtitle;
+
+  /// Sous-titre des options « toujours activé »/« toujours désactivé » dans la sheet (a11y_tristate_row.dart) : même texte pour les deux options (R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Quel que soit le réglage du téléphone'**
+  String get a11yModeFixedSubtitle;
+
+  /// Titre de la sheet d'avertissement (unverified_contact_warning_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter les profils non vérifiés ?'**
+  String get privacyUnverifiedWarningTitle;
+
+  /// Sous-titre de la sheet d'avertissement (unverified_contact_warning_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette option n\'est pas recommandée par Yadony.'**
+  String get privacyUnverifiedWarningSubtitle;
+
+  /// Bouton de confirmation de la sheet (unverified_contact_warning_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter quand même'**
+  String get privacyUnverifiedWarningAccept;
+
+  /// Première conséquence listée (unverified_contact_warning_sheet.dart). Fusion de deux fragments concaténés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les utilisateurs pourront t\'envoyer une demande, qu\'ils aient vérifié leur identité ou non.'**
+  String get privacyUnverifiedWarningConsequence1;
+
+  /// Deuxième conséquence listée (unverified_contact_warning_sheet.dart). Fusion de deux fragments concaténés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony ne peut pas confirmer l\'identité d\'un profil non vérifié, ni son nom, ni ses papiers.'**
+  String get privacyUnverifiedWarningConsequence2;
+
+  /// Troisième conséquence listée (unverified_contact_warning_sheet.dart). Fusion de deux fragments concaténés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony n\'est pas responsable des difficultés que tu pourrais rencontrer avec un profil non vérifié.'**
+  String get privacyUnverifiedWarningConsequence3;
+
+  /// Note de réversibilité (unverified_contact_warning_sheet.dart). Fusion de deux fragments concaténés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu peux réactiver ce réglage à tout moment. Les demandes déjà reçues ne sont pas affectées.'**
+  String get privacyUnverifiedWarningReversible;
+
+  /// Texte de la case à cocher de confirmation (unverified_contact_warning_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ai compris et j\'accepte d\'assumer ce risque.'**
+  String get privacyUnverifiedWarningCheckbox;
+
+  /// Titre de l'écran (notification_settings_screen.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications'**
+  String get notificationSettingsTitle;
+
+  /// En-tête de section (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PROTECTIONS CRITIQUES'**
+  String get notificationSettingsSectionCritical;
+
+  /// Libellé de la tuile verrouillée « Livraison confirmée » (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison confirmée'**
+  String get notificationSettingsDeliveryConfirmedLabel;
+
+  /// Sous-titre des trois tuiles verrouillées de la section Protections critiques (notification_settings_screen.dart) : même texte, même écran (R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'SMS automatique si push non reçu'**
+  String get notificationSettingsSmsFallbackSubtitle;
+
+  /// Libellé de la tuile verrouillée « Paiement reçu » (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement reçu'**
+  String get notificationSettingsPaymentReceivedLabel;
+
+  /// Libellé de la tuile verrouillée « Litige ouvert » (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Litige ouvert'**
+  String get notificationSettingsDisputeOpenedLabel;
+
+  /// En-tête de section (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'ACTIVITÉ'**
+  String get notificationSettingsSectionActivity;
+
+  /// Libellé de la tuile push_activity_bids (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Matchs & enchères'**
+  String get notificationSettingsBidsLabel;
+
+  /// Sous-titre de la tuile push_activity_bids (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes, acceptations, remise, annulation…'**
+  String get notificationSettingsBidsSubtitle;
+
+  /// Libellé de la tuile push_corridor_alerts (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveaux trajets'**
+  String get notificationSettingsCorridorLabel;
+
+  /// Sous-titre de la tuile push_corridor_alerts (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Alertes corridor et voyageurs suivis'**
+  String get notificationSettingsCorridorSubtitle;
+
+  /// Libellé de la tuile push_activity_negotiations (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Discussions de prix'**
+  String get notificationSettingsNegotiationsLabel;
+
+  /// Sous-titre de la tuile push_activity_negotiations (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Propositions, contre-offres, paiements…'**
+  String get notificationSettingsNegotiationsSubtitle;
+
+  /// Libellé de la tuile push_messages (notification_settings_screen.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'Messages'**
+  String get notificationSettingsMessagesLabel;
+
+  /// Sous-titre de la tuile push_messages (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveaux messages reçus'**
+  String get notificationSettingsMessagesSubtitle;
+
+  /// Badge des tuiles verrouillées (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Toujours actif'**
+  String get notificationSettingsAlwaysOnBadge;
+
+  /// Bandeau sous la section Protections critiques (notification_settings_screen.dart). Fusion de deux fragments concaténés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces notifications protègent vos transactions. Elles ne peuvent pas être désactivées.'**
+  String get notificationSettingsCriticalBannerText;
+
+  /// Libellé de la cloche colis compatibles (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveaux colis compatibles'**
+  String get notificationSettingsPackageMatchLabel;
+
+  /// Sous-titre de la cloche colis compatibles (notification_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand un colis correspond à un de tes trajets'**
+  String get notificationSettingsPackageMatchSubtitle;
+
+  /// Titre de l'écran (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Préférences'**
+  String get prefsTitle;
+
+  /// En-tête de section (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'UNITÉS'**
+  String get prefsSectionUnits;
+
+  /// Libellé du sélecteur d'unité de poids (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Unité de poids'**
+  String get prefsWeightUnitLabel;
+
+  /// En-tête de section (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DEVISE'**
+  String get prefsSectionCurrency;
+
+  /// Libellé de la tuile pays et titre de la sheet de sélection (business_prefs_screen.dart) : même texte, même écran cible (R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get prefsCountryLabel;
+
+  /// Sous-titre quand le pays est verrouillé (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Verrouillé : un envoi est en cours ou votre compte de paiement est créé'**
+  String get prefsCountryLockedSubtitle;
+
+  /// Valeur affichée tant qu'aucun pays n'est choisi (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir mon pays'**
+  String get prefsCountryPlaceholder;
+
+  /// Libellé de la tuile devise (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise'**
+  String get prefsCurrencyLabel;
+
+  /// Sous-titre quand la devise est verrouillée (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Verrouillée : videz votre portefeuille pour en changer'**
+  String get prefsCurrencyLockedSubtitle;
+
+  /// Libellé de la tuile devise d'affichage et titre de la sheet de sélection (business_prefs_screen.dart) : même texte, même écran cible (R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise d\'affichage'**
+  String get prefsDisplayCurrencyLabel;
+
+  /// Sous-titre de la tuile devise d'affichage (business_prefs_screen.dart). Fusion de deux fragments concaténés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les prix publiés dans une autre devise sont convertis à titre indicatif'**
+  String get prefsDisplayCurrencySubtitle;
+
+  /// Valeur affichée pour la devise d'affichage AUTO, tuile et sheet (business_prefs_screen.dart) : même texte, même écran cible (R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Automatique'**
+  String get prefsAutoLabel;
+
+  /// En-tête de section (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'GÉOLOCALISATION'**
+  String get prefsSectionGeolocation;
+
+  /// Libellé du curseur de rayon de collecte (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Rayon de collecte'**
+  String get prefsPickupRadiusLabel;
+
+  /// Placeholder du champ de recherche de pays (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un pays'**
+  String get prefsCountrySearchHint;
+
+  /// État vide de la recherche de pays (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun pays trouvé'**
+  String get prefsCountryNotFound;
+
+  /// Sous-titre de l'option Automatique dans la sheet de devise d'affichage (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre la devise de mon compte'**
+  String get prefsAutoCurrencySubtitle;
+
+  /// En-tête de section voyageur (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'MES TRAJETS'**
+  String get prefsSectionMyTrips;
+
+  /// Badge de rôle à côté de « Mes trajets » (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur'**
+  String get prefsTravelerBadge;
+
+  /// Libellé du curseur de poids par défaut (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids par défaut'**
+  String get prefsDefaultWeightLabel;
+
+  /// Sous-titre du curseur de poids par défaut (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pré-remplit vos annonces'**
+  String get prefsDefaultWeightSubtitle;
+
+  /// Libellé du curseur de prix minimum (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix minimum'**
+  String get prefsMinPriceLabel;
+
+  /// Sous-titre du curseur de prix minimum à 0 (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'0 {symbol} = aucun filtre'**
+  String prefsMinPriceNone(String symbol);
+
+  /// Valeur affichée quand le prix minimum est à 0 (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun'**
+  String get prefsMinPriceValueNone;
+
+  /// Libellé du sélecteur de mode de contact (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode de contact'**
+  String get prefsContactModeLabel;
+
+  /// Option « call » du mode de contact (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel'**
+  String get prefsContactModeCall;
+
+  /// Option « message » du mode de contact (business_prefs_screen.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'Message'**
+  String get prefsContactModeMessage;
+
+  /// Option « both » du mode de contact (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les deux'**
+  String get prefsContactModeBoth;
+
+  /// Libellé du champ de délai de réponse (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Délai de réponse'**
+  String get prefsResponseDelayLabel;
+
+  /// Placeholder du champ de délai de réponse personnalisé (business_prefs_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'ex. 3'**
+  String get prefsResponseDelayHint;
+
+  /// Titre de la bottom sheet de suppression de compte (delete_account_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer mon compte'**
+  String get deletionSheetTitle;
+
+  /// Titre du dialogue de confirmation de la pause 30 jours ET libellé du bouton de validation quand ce mode est sélectionné (delete_account_bottom_sheet.dart, même texte aux deux endroits, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la pause'**
+  String get deletionSoftConfirmLabel;
+
+  /// Message du dialogue de confirmation de la pause 30 jours (delete_account_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte sera suspendu pendant 30 jours. Vous pourrez le réactiver depuis votre profil.'**
+  String get deletionSoftConfirmDialogMessage;
+
+  /// Snackbar affiché après la demande de pause 30 jours (delete_account_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte sera supprimé dans 30 jours. Vous pouvez annuler depuis votre profil. Les remboursements déjà lancés ne sont pas annulés.'**
+  String get deletionRequestedSnackbar;
+
+  /// Titre de la carte de mode « pause » (delete_account_bottom_sheet.dart _ModeCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pause 30 jours'**
+  String get deletionModeSoftTitle;
+
+  /// Badge de la carte de mode « pause » (delete_account_bottom_sheet.dart _ModeCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'RÉVERSIBLE'**
+  String get deletionModeSoftBadge;
+
+  /// Description de la carte de mode « pause » (delete_account_bottom_sheet.dart _ModeCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte est suspendu. Vous pouvez revenir à tout moment dans les 30 jours. Après ce délai, vos données personnelles sont pseudonymisées (RGPD).'**
+  String get deletionModeSoftDescription;
+
+  /// Titre de la carte de mode « suppression définitive » (delete_account_bottom_sheet.dart _ModeCard), réutilisé comme libellé du bouton de validation en mode hard et comme libellé du bouton final de delete_confirmation_sheet.dart (même texte, même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer définitivement'**
+  String get deletionModeHardTitle;
+
+  /// Badge de la carte de mode « suppression définitive » (delete_account_bottom_sheet.dart _ModeCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'IRRÉVERSIBLE'**
+  String get deletionModeHardBadge;
+
+  /// Description de la carte de mode « suppression définitive » (delete_account_bottom_sheet.dart _ModeCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes vos données personnelles sont effacées immédiatement. Cette action est définitive et ne peut pas être annulée.'**
+  String get deletionModeHardDescription;
+
+  /// Titre de la section des motifs de suppression (delete_account_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Raison (optionnel)'**
+  String get deletionReasonSectionTitle;
+
+  /// Libellé affiché du motif de suppression « je n'utilise plus le service » (delete_account_bottom_sheet.dart) — la valeur envoyée au serveur (DonyRadioOption.value) reste le texte français, // i18n-ignore.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je n\'utilise plus le service'**
+  String get deletionReasonNotUsing;
+
+  /// Libellé affiché du motif de suppression « problème de confidentialité » (delete_account_bottom_sheet.dart) — la valeur envoyée au serveur reste le texte français.
+  ///
+  /// In fr, this message translates to:
+  /// **'Problème de confidentialité'**
+  String get deletionReasonPrivacy;
+
+  /// Libellé affiché du motif de suppression « trop de notifications » (delete_account_bottom_sheet.dart) — la valeur envoyée au serveur reste le texte français.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de notifications'**
+  String get deletionReasonTooManyNotifications;
+
+  /// Libellé affiché du motif de suppression « autre raison » (delete_account_bottom_sheet.dart) — la valeur envoyée au serveur reste le texte français.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre raison'**
+  String get deletionReasonOther;
+
+  /// Libellé du bouton de validation en mode suppression définitive, avant l'étape finale (delete_account_bottom_sheet.dart _DeleteActions).
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer →'**
+  String get deletionContinueArrow;
+
+  /// Bandeau de confirmation après une demande de remboursement du solde wallet, avant suppression (delete_account_bottom_sheet.dart _WalletRefundRequestCta). {amounts} déjà formatés dans leur devise, joints par une simple virgule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée pour {amounts}. Un membre de l\'équipe vous recontacte pour le remboursement.'**
+  String deletionWalletRefundRequestedMessage(String amounts);
+
+  /// Bandeau informatif proposant le remboursement anticipé du solde wallet (delete_account_bottom_sheet.dart _WalletRefundRequestCta). Tiret cadratin de l'ancien texte remplacé par un point (deux phrases), signalé en PR.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez un solde disponible. Il sera automatiquement remboursé après la suppression de votre compte. Vous pouvez aussi le demander dès maintenant.'**
+  String get deletionWalletBalanceInfo;
+
+  /// Bouton de demande de remboursement anticipé du solde wallet (delete_account_bottom_sheet.dart _WalletRefundRequestCta).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander le remboursement maintenant'**
+  String get deletionRequestRefundNowButton;
+
+  /// Ligne du récapitulatif de règlement pour une devise au rail MANUAL (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde de {amount} : un membre de l\'équipe vous recontacte pour le remboursement.'**
+  String deletionManualRailMessage(String amount);
+
+  /// Ligne du récapitulatif de règlement, ancien contrat sans détail des frais (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} seront remboursés sur votre carte dès la demande de suppression.'**
+  String deletionRefundableOnCardMessage(String amount);
+
+  /// Ligne du récapitulatif de règlement pour un montant déjà en cours de remboursement (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} sont déjà en cours de remboursement.'**
+  String deletionInFlightMessage(String amount);
+
+  /// Ligne rouge du récapitulatif de règlement, nouveau contrat (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonus parrainage perdu : {amount}'**
+  String deletionBonusLostLabel(String amount);
+
+  /// Bandeau de bonus perdu, ancien contrat (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} de bonus seront perdus définitivement à la suppression du compte.'**
+  String deletionBonusForfeitedMessage(String amount);
+
+  /// Bandeau affiché quand les frais absorbent tout le solde remboursable d'une devise (delete_account_bottom_sheet.dart _RailAmountBlock). {amount} déjà formaté dans sa devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde de {amount} non remboursable : les frais du prestataire de paiement l\'absorbent entièrement.'**
+  String deletionBalanceAbsorbedByFeesMessage(String amount);
+
+  /// Détail des frais sous le montant net d'une devise au nouveau contrat (delete_account_bottom_sheet.dart _RailAmountBlock). Montants déjà formatés dans leur devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'{refundable} remboursables, {fee} de frais'**
+  String deletionRefundableWithFeeMessage(String refundable, String fee);
+
+  /// Détail sous le montant net d'un versement mobile money sans frais (delete_account_bottom_sheet.dart _RailAmountBlock). {destination} est un numéro masqué renvoyé par le serveur, affiché tel quel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vers {destination}, sans frais'**
+  String deletionFeelessDestinationMessage(String destination);
+
+  /// Première phrase du bandeau récapitulatif combinant toutes les devises au nouveau contrat (delete_account_bottom_sheet.dart _SettlementBanner). {amounts} joints par joinList.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amounts} seront remboursés dès la demande.'**
+  String deletionSettlementRefundedOnRequest(String amounts);
+
+  /// Seconde phrase du bandeau récapitulatif, si des bonus sont perdus (delete_account_bottom_sheet.dart _SettlementBanner). {amounts} joints par joinList.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amounts} de bonus seront perdus définitivement à la suppression.'**
+  String deletionSettlementBonusLost(String amounts);
+
+  /// Message affiché à côté du bouton de suppression quand le serveur renvoie le code active-transactions (deletion_labels.dart deletionBlockedMessage, deletion_eligibility_cubit.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez un envoi en cours de livraison, avec des fonds bloqués en séquestre. Vous pourrez supprimer votre compte dès que la livraison sera confirmée.'**
+  String get deletionBlockedActiveTransactions;
+
+  /// Repli affiché pour tout code de blocage inconnu ou absent (deletion_labels.dart deletionBlockedMessage, deletion_eligibility_cubit.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La suppression n\'est pas possible pour l\'instant.'**
+  String get deletionBlockedGeneric;
+
+  /// Titre de la bottom sheet de confirmation finale de suppression immédiate (delete_confirmation_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernière étape'**
+  String get deletionFinalStepTitle;
+
+  /// Bandeau d'avertissement de la confirmation finale (delete_confirmation_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes vos données personnelles seront effacées immédiatement et définitivement. Cette action est irréversible.'**
+  String get deletionFinalStepWarning;
+
+  /// Texte de la case à cocher de la confirmation finale (delete_confirmation_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Je comprends que cette suppression est définitive et irréversible.'**
+  String get deletionFinalStepAcknowledgement;
+
+  /// Titre du dialogue affiché quand la suppression est bloquée par un séquestre actif (escrow_block_dialog.dart). Distinct de errorEscrowBlockedTitle : deux textes indépendants pour deux affichages différents (voir account_deletion_bloc.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suppression impossible pour l\'instant'**
+  String get deletionEscrowBlockedTitle;
+
+  /// Message du dialogue de blocage par séquestre actif (escrow_block_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un de vos envois est en cours de livraison et ses fonds sont bloqués en séquestre. Vous pourrez supprimer votre compte dès que la livraison aura été confirmée.'**
+  String get deletionEscrowBlockedMessage;
+
+  /// Bouton de confirmation du dialogue de blocage par séquestre actif, vers la liste des envois (escrow_block_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mes envois'**
+  String get deletionEscrowBlockedCta;
+
+  /// Titre ErrorCatalog du code escrow-blocked (account_deletion_bloc.dart, RequestDeletion/ConfirmImmediateDeletion) — n'atteint l'utilisateur que si AccountDeletionError parvient jusqu'à ErrorPresenter (profile_screen.dart), les deux sheets de suppression interceptant isEscrowBlocked avant avec leur propre texte (escrow_block_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suppression impossible pour l\'instant'**
+  String get errorEscrowBlockedTitle;
+
+  /// Message ErrorCatalog du code escrow-blocked.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.'**
+  String get errorEscrowBlockedMessage;
+
+  /// Nom du canal Android transactionnel, résolu sans BuildContext à la création (notification_service.dart, AppL10n.current).
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications Yadony'**
+  String get notificationChannelTransactionalName;
+
+  /// Description du canal Android transactionnel (notification_service.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiements, livraisons et mises à jour de vos envois'**
+  String get notificationChannelTransactionalDescription;
+
+  /// Nom du canal Android général, résolu sans BuildContext à la création (notification_service.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Actualités Yadony'**
+  String get notificationChannelGeneralName;
+
+  /// Description du canal Android général (notification_service.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Correspondances, invitations et informations générales'**
+  String get notificationChannelGeneralDescription;
+
+  /// Horodatage compact d'une notification, moins d'une minute (notification_bottom_sheet.dart, formatNotificationAge).
+  ///
+  /// In fr, this message translates to:
+  /// **'maintenant'**
+  String get notificationAgeNow;
+
+  /// Horodatage compact en minutes (notification_bottom_sheet.dart). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'{minutes} min'**
+  String notificationAgeMinutes(int minutes);
+
+  /// Horodatage compact en heures (notification_bottom_sheet.dart). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'{hours} h'**
+  String notificationAgeHours(int hours);
+
+  /// Horodatage compact en jours (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{days} j'**
+  String notificationAgeDays(int days);
+
+  /// Titre de section du feed de notifications, moins de 24 h (notification_bottom_sheet.dart, NotificationSection.label).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau'**
+  String get notificationSectionNew;
+
+  /// Titre de section du feed de notifications, plus de 7 jours (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tôt'**
+  String get notificationSectionEarlier;
+
+  /// Titre du sheet de notifications (notification_bottom_sheet.dart). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications'**
+  String get notificationSheetTitle;
+
+  /// Bouton qui marque toutes les notifications comme lues (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout lire'**
+  String get notificationMarkAllRead;
+
+  /// Titre de l'état d'erreur du feed de notifications (notification_bottom_sheet.dart). Réutilisé tel quel par announcements_inbox_screen.dart (même feature, même texte, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur de chargement'**
+  String get notificationLoadErrorTitle;
+
+  /// Description de l'état d'erreur du feed de notifications (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger vos notifications.'**
+  String get notificationLoadErrorDescription;
+
+  /// Titre de l'état vide du feed de notifications (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune notification'**
+  String get notificationEmptyTitle;
+
+  /// Description de l'état vide du feed de notifications (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos notifications apparaîtront ici.'**
+  String get notificationEmptyDescription;
+
+  /// Snackbar affichée quand le deeplink d'une notification est périmé ou inconnu du routeur (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette notification ne mène plus nulle part.'**
+  String get notificationRouteMissing;
+
+  /// Titre de la carte « Annonces Yadony » du feed (notification_bottom_sheet.dart). Réutilisé tel quel comme titre de app bar par announcements_inbox_screen.dart (même feature, même texte, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annonces Yadony'**
+  String get notificationAnnouncementsCardTitle;
+
+  /// Description de l'état d'erreur de la boîte « Annonces Yadony » (announcements_inbox_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les annonces.'**
+  String get notificationAnnouncementsLoadErrorDescription;
+
+  /// Titre de l'état vide de la boîte « Annonces Yadony » (announcements_inbox_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune annonce'**
+  String get notificationAnnouncementsEmptyTitle;
+
+  /// Description de l'état vide de la boîte « Annonces Yadony » (announcements_inbox_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les nouveautés et informations de Yadony apparaîtront ici.'**
+  String get notificationAnnouncementsEmptyDescription;
+
+  /// Titre générique de l'écran de détail hors annonce (notification_detail_screen.dart). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Notification'**
+  String get notificationDetailFallbackTitle;
+
+  /// Titre de l'écran de détail pour une annonce plateforme (notification_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annonce Yadony'**
+  String get notificationDetailAnnouncementTitle;
+
+  /// Titre de l'état d'erreur de l'écran de détail (notification_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Notification introuvable'**
+  String get notificationDetailNotFoundTitle;
+
+  /// Description de l'état d'erreur de l'écran de détail (notification_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Elle a peut-être été supprimée, ou le réseau est indisponible.'**
+  String get notificationDetailNotFoundDescription;
+
+  /// Titre de l'app bar du détail d'un litige (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Litige'**
+  String get disputeDetailTitle;
+
+  /// Autre partie d'un litige, selon le rôle du viewer (dispute_detail_screen.dart, dispute_card.dart : même texte, même feature, R42). role = myRole du litige (SENDER/TRAVELER).
+  ///
+  /// In fr, this message translates to:
+  /// **'{role, select, SENDER{Voyageur : {name}} other{Expéditeur : {name}}}'**
+  String disputeOtherParty(String role, String name);
+
+  /// Remplace la ligne autre-partie quand otherPartyName est absent (dispute_detail_screen.dart, dispute_card.dart : même texte, même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi supprimé'**
+  String get disputeShipmentDeleted;
+
+  /// Poids de l'envoi d'un litige, {kg} déjà formaté (entier ou une décimale via formatOneDecimal) (dispute_detail_screen.dart, dispute_card.dart : même texte, même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi {kg} kg'**
+  String disputeParcelWeight(String kg);
+
+  /// Bandeau de gel du remboursement pendant l'instruction (dispute_detail_screen.dart). Tiret cadratin d'origine remplacé par un point (deux phrases), signalé en PR.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement gelé le temps de l\'instruction. L\'équipe Yadony tranche sous 72 h ouvrées.'**
+  String get disputeDetailFrozenNotice;
+
+  /// En-tête de section au-dessus de la frise (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'SUIVI'**
+  String get disputeDetailTimelineSectionTitle;
+
+  /// En-tête de section au-dessus du bloc décision (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'DÉCISION'**
+  String get disputeDetailDecisionSectionTitle;
+
+  /// Verdict affiché quand l'utilisateur est bénéficiaire de la décision (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résolu en votre faveur'**
+  String get disputeDetailResolvedInFavor;
+
+  /// Verdict neutre affiché quand l'utilisateur n'est pas bénéficiaire (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Litige résolu'**
+  String get disputeDetailResolved;
+
+  /// Libellé du montant d'indemnisation versé (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indemnisation versée'**
+  String get disputeDetailCompensationPaid;
+
+  /// CTA en bas du détail d'un litige, vers /support (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter le support'**
+  String get disputeDetailContactSupport;
+
+  /// Titre de l'app bar de la liste des litiges (dispute_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes litiges'**
+  String get disputeListTitle;
+
+  /// Titre de l'état d'erreur de la liste des litiges (dispute_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger vos litiges'**
+  String get disputeListLoadErrorTitle;
+
+  /// Titre de l'état vide de la liste des litiges (dispute_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun litige'**
+  String get disputeListEmptyTitle;
+
+  /// Description de l'état vide de la liste des litiges (dispute_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tant mieux ! Un litige s\'ouvre automatiquement si vous contestez l\'absence d\'un voyageur lors d\'une remise.'**
+  String get disputeListEmptyDescription;
+
+  /// CTA de l'état vide de la liste des litiges, vers /support (dispute_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un problème avec un envoi ?'**
+  String get disputeListEmptyAction;
+
+  /// Libellé du type SENDER_NO_SHOW_CONTESTED (dispute_labels.dart, disputeTypeLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contestation d\'absence'**
+  String get disputeTypeContestedNoShow;
+
+  /// Libellé des types RECIPIENT_NO_SHOW(_CONTESTED) (dispute_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Absence du destinataire'**
+  String get disputeTypeRecipientNoShow;
+
+  /// Libellé des types TRAVELER_DELIVERY_NO_SHOW(_CONTESTED) (dispute_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Défaut de livraison'**
+  String get disputeTypeDeliveryFailure;
+
+  /// Libellé du statut OPEN (dispute_labels.dart, disputeStatusLabel). Réutilisé tel quel comme titre de l'étape « en instruction » de la frise (dispute_timeline.dart, même feature, même texte, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'En instruction'**
+  String get disputeStatusOpen;
+
+  /// Libellé du statut RESOLVED (dispute_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résolu'**
+  String get disputeStatusResolved;
+
+  /// Date d'ouverture d'un litige encore en cours (dispute_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvert le {date}'**
+  String disputeOpenedOn(String date);
+
+  /// Dates d'ouverture et de résolution d'un litige résolu (dispute_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvert le {opened} · Résolu le {resolved}'**
+  String disputeOpenedAndResolved(String opened, String resolved);
+
+  /// Bandeau de gel du remboursement, version compacte de la carte liste (dispute_card.dart). Tiret cadratin d'origine remplacé par un point (deux phrases), signalé en PR.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement gelé le temps de l\'instruction. Réponse sous 72 h.'**
+  String get disputeCardFrozenNotice;
+
+  /// Titre de la première étape de la frise (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Litige ouvert'**
+  String get disputeTimelineOpenedTitle;
+
+  /// Sous-titre de la première étape côté expéditeur (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} · vous avez contesté l\'absence du voyageur'**
+  String disputeTimelineContestedTraveler(String date);
+
+  /// Sous-titre de la première étape côté voyageur (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} · l\'expéditeur a contesté une absence à la remise'**
+  String disputeTimelineContestedSender(String date);
+
+  /// Sous-titre de l'étape « en instruction » une fois le litige résolu (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'examiné par l\'équipe Yadony'**
+  String get disputeTimelineReviewedSubtitle;
+
+  /// Sous-titre de l'étape « en instruction » tant que le litige est ouvert (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'en cours d\'examen par l\'équipe Yadony'**
+  String get disputeTimelineUnderReviewSubtitle;
+
+  /// Titre de la dernière étape une fois la décision rendue (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Décision rendue'**
+  String get disputeTimelineDecisionTitleDone;
+
+  /// Titre de la dernière étape tant que le litige est ouvert (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Décision'**
+  String get disputeTimelineDecisionTitlePending;
+
+  /// Sous-titre de la dernière étape tant que le litige est ouvert (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'sous 72 h'**
+  String get disputeTimelineDecisionEta;
+
+  /// Libellé de la catégorie backend ACCOUNT (support_home_screen.dart, SupportLabels.category).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte'**
+  String get supportCategoryAccount;
+
+  /// Libellé de la catégorie backend KYC (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification d\'identité'**
+  String get supportCategoryKyc;
+
+  /// Libellé de la catégorie backend PAYMENT (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement'**
+  String get supportCategoryPayment;
+
+  /// Libellé de la catégorie backend TRIP (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet'**
+  String get supportCategoryTrip;
+
+  /// Libellé de la catégorie backend PACKAGE (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get supportCategoryPackage;
+
+  /// Libellé de la catégorie backend DELIVERY (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison'**
+  String get supportCategoryDelivery;
+
+  /// Libellé de la catégorie backend OTHER (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get supportCategoryOther;
+
+  /// Libellé du statut backend NEW (support_home_screen.dart, SupportLabels.status).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau'**
+  String get supportStatusNew;
+
+  /// Libellé du statut backend ASSIGNED (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pris en charge'**
+  String get supportStatusAssigned;
+
+  /// Libellé du statut backend WAITING_USER (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse reçue'**
+  String get supportStatusWaitingUser;
+
+  /// Libellé du statut backend WAITING_SUPPORT (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente du support'**
+  String get supportStatusWaitingSupport;
+
+  /// Libellé du statut backend RESOLVED (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résolu'**
+  String get supportStatusResolved;
+
+  /// Message affiché quand un envoi est refusé localement car le ticket est déjà résolu (support_home_screen.dart, supportErrorMessage ; SupportState.failure == ticketResolved).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce ticket est résolu. Ouvrez-en un nouveau pour un autre problème.'**
+  String get supportTicketResolvedError;
+
+  /// Repli générique affiché quand un échec support n'a pas de detail serveur (support_home_screen.dart, supportErrorMessage ; SupportState.failure == generic).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue. Réessayez.'**
+  String get supportGenericError;
+
+  /// Titre de l'app bar de l'accueil support (support_home_screen.dart). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Support'**
+  String get supportScreenTitle;
+
+  /// Titre de l'état d'erreur de l'accueil support (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger le support'**
+  String get supportHomeLoadErrorTitle;
+
+  /// Titre de la section des réponses prédéfinies (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Questions fréquentes'**
+  String get supportHomeFaqTitle;
+
+  /// Sous-titre de la section des réponses prédéfinies (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La réponse est peut-être déjà là. Sinon, ouvrez un ticket.'**
+  String get supportHomeFaqSubtitle;
+
+  /// Titre de la section des tickets de l'utilisateur (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes tickets'**
+  String get supportHomeMyTicketsTitle;
+
+  /// Message affiché quand l'utilisateur n'a aucun ticket (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun ticket pour le moment. Un problème non résolu par l\'assistant ? Ouvrez un ticket, l\'équipe Yadony vous répond.'**
+  String get supportHomeNoTicketsMessage;
+
+  /// Bouton d'accueil support et titre de la sheet de création de ticket (support_home_screen.dart, même texte deux usages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter le support'**
+  String get supportContactCta;
+
+  /// Libellé du sélecteur de catégorie de la sheet de création de ticket (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Catégorie'**
+  String get supportCreateTicketCategoryLabel;
+
+  /// Libellé du champ sujet de la sheet de création de ticket (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sujet'**
+  String get supportCreateTicketSubjectLabel;
+
+  /// Texte d'indication du champ sujet (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résumez votre problème'**
+  String get supportCreateTicketSubjectHint;
+
+  /// Libellé du champ message de la sheet de création de ticket (support_home_screen.dart). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Message'**
+  String get supportCreateTicketMessageLabel;
+
+  /// Texte d'indication du champ message (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez ce qui vous arrive'**
+  String get supportCreateTicketMessageHint;
+
+  /// Titre de l'app bar du détail d'un ticket tant que le sujet n'est pas chargé (support_ticket_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ticket support'**
+  String get supportTicketFallbackTitle;
+
+  /// Titre de l'état d'erreur du détail d'un ticket (support_ticket_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ticket introuvable'**
+  String get supportTicketNotFoundTitle;
+
+  /// Nom affiché de l'équipe support, en-tête des messages admin et ligne épinglée des conversations (support_ticket_detail_screen.dart, support_conversation_tile.dart : même feature, même texte, R42). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Support Yadony'**
+  String get supportBrandName;
+
+  /// Libellé d'accessibilité d'une vignette d'image jointe dans le fil (support_ticket_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir l\'image en plein écran'**
+  String get supportViewImageLabel;
+
+  /// Compteur de la visionneuse plein écran des pièces jointes (support_ticket_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo {index} / {count}'**
+  String supportPhotoIndex(int index, int count);
+
+  /// Bandeau affiché à la place du champ de réponse quand le ticket est résolu (support_ticket_detail_screen.dart, _ResolvedBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce ticket est résolu. Un autre problème ? Ouvrez un nouveau ticket depuis la page Support.'**
+  String get supportResolvedBannerMessage;
+
+  /// Texte d'indication du champ de réponse d'un ticket (support_ticket_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre message'**
+  String get supportMessageHint;
+
+  /// Tooltip du bouton trombone, sans et avec vignettes déjà présentes (support_attachment_picker.dart, deux usages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Joindre une image'**
+  String get supportAttachTooltip;
+
+  /// Libellé d'accessibilité du bouton de retrait d'une vignette en attente d'envoi (support_attachment_picker.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer cette image'**
+  String get supportRemoveAttachmentLabel;
+
+  /// Aperçu par défaut de la ligne épinglée support quand aucun message n'existe encore (support_conversation_tile.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une question ? Notre équipe vous répond ici.'**
+  String get supportConversationDefaultPreview;
 }
 
 class _AppLocalizationsDelegate

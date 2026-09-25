@@ -17,6 +17,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockPrivacySettingsBloc
@@ -503,6 +504,43 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('2'), findsOneWidget);
+    });
+
+    // ── Anglais ──────────────────────────────────────────────────────────────
+
+    testWidgets('en anglais : titre, sections et tuiles traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Privacy'), findsOneWidget);
+      expect(find.text('Your number is protected'), findsOneWidget);
+      expect(find.text('WHO CAN CONTACT ME'), findsOneWidget);
+      expect(find.text('Verified profiles only'), findsOneWidget);
+      expect(find.text('BLOCKING'), findsOneWidget);
+      expect(find.text('Blocked users'), findsOneWidget);
+      expect(find.text('Hide my number'), findsOneWidget);
+    });
+
+    testWidgets('en anglais : avertissement profils non vérifiés traduit', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const PrivacySettingsLoaded(contactKycOnly: true),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(Switch).first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Accept unverified profiles?'), findsOneWidget);
+      expect(find.text('Accept anyway'), findsOneWidget);
     });
   });
 }

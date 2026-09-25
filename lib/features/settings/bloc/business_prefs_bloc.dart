@@ -81,7 +81,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
   ) async {
     final prev = state;
     await _box.put(HiveService.kWeightUnit, e.unit);
-    emit(state.copyWith(weightUnit: e.unit, errorMessageGetter: () => null));
+    emit(state.copyWith(weightUnit: e.unit, hasSyncError: false));
     await _putOrRollback(emit, prev);
   }
 
@@ -96,7 +96,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
   ) async {
     final prev = state;
     await _box.put(HiveService.kCurrencyCode, e.code);
-    emit(state.copyWith(currencyCode: e.code, errorMessageGetter: () => null));
+    emit(state.copyWith(currencyCode: e.code, hasSyncError: false));
     await _putOrRollback(emit, prev);
   }
 
@@ -109,12 +109,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
   ) async {
     final prev = state;
     await _box.put(HiveService.kDisplayCurrencyCode, e.code);
-    emit(
-      state.copyWith(
-        displayCurrencyCode: e.code,
-        errorMessageGetter: () => null,
-      ),
-    );
+    emit(state.copyWith(displayCurrencyCode: e.code, hasSyncError: false));
     await _putOrRollback(emit, prev);
   }
 
@@ -132,7 +127,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
       state.copyWith(
         isSyncing: true,
         countryGetter: () => e.code,
-        errorMessageGetter: () => null,
+        hasSyncError: false,
       ),
     );
     try {
@@ -141,12 +136,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
       emit(_dtoToState(saved).copyWith(isSyncing: false));
     } catch (_) {
       await _writeToHive(_stateToDto(prev));
-      emit(
-        prev.copyWith(
-          isSyncing: false,
-          errorMessageGetter: () => 'Impossible de synchroniser. Réessayez.',
-        ),
-      );
+      emit(prev.copyWith(isSyncing: false, hasSyncError: true));
     }
   }
 
@@ -156,7 +146,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
   ) async {
     final prev = state;
     await _box.put(HiveService.kPickupRadiusKm, e.km);
-    emit(state.copyWith(pickupRadiusKm: e.km, errorMessageGetter: () => null));
+    emit(state.copyWith(pickupRadiusKm: e.km, hasSyncError: false));
     await _putOrRollback(emit, prev);
   }
 
@@ -166,12 +156,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
   ) async {
     final prev = state;
     await _box.put(HiveService.kDefaultPackageWeight, e.kg);
-    emit(
-      state.copyWith(
-        defaultPackageWeightKg: e.kg,
-        errorMessageGetter: () => null,
-      ),
-    );
+    emit(state.copyWith(defaultPackageWeightKg: e.kg, hasSyncError: false));
     await _putOrRollback(emit, prev);
   }
 
@@ -181,9 +166,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
   ) async {
     final prev = state;
     await _box.put(HiveService.kMinBidPrice, e.euros);
-    emit(
-      state.copyWith(minBidPriceEur: e.euros, errorMessageGetter: () => null),
-    );
+    emit(state.copyWith(minBidPriceEur: e.euros, hasSyncError: false));
     await _putOrRollback(emit, prev);
   }
 
@@ -197,12 +180,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     } else {
       await _box.put(HiveService.kContactMode, e.mode);
     }
-    emit(
-      state.copyWith(
-        contactModeGetter: () => e.mode,
-        errorMessageGetter: () => null,
-      ),
-    );
+    emit(state.copyWith(contactModeGetter: () => e.mode, hasSyncError: false));
     await _putOrRollback(emit, prev);
   }
 
@@ -219,7 +197,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     emit(
       state.copyWith(
         responseDelayHoursGetter: () => e.hours,
-        errorMessageGetter: () => null,
+        hasSyncError: false,
       ),
     );
     await _putOrRollback(emit, prev);
@@ -237,12 +215,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
       emit(state.copyWith(isSyncing: false));
     } catch (_) {
       await _writeToHive(_stateToDto(prev));
-      emit(
-        prev.copyWith(
-          isSyncing: false,
-          errorMessageGetter: () => 'Impossible de synchroniser. Réessayez.',
-        ),
-      );
+      emit(prev.copyWith(isSyncing: false, hasSyncError: true));
     }
   }
 

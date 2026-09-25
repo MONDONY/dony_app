@@ -3,6 +3,8 @@ import 'package:dony/features/settings/presentation/widgets/unverified_contact_w
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 /// Ouvre la sheet et expose le résultat retourné par `show`, pour vérifier ce
 /// que l'appelant reçoit réellement (c'est lui qui décide d'appliquer ou non).
 Future<bool?> _openSheet(WidgetTester tester) async {
@@ -125,6 +127,21 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(result, isNot(isTrue));
+    });
+
+    testWidgets('en anglais : titre, sous-titre et bouton traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await _openSheet(tester);
+
+      expect(find.text('Accept unverified profiles?'), findsOneWidget);
+      expect(
+        find.text('This option is not recommended by Yadony.'),
+        findsOneWidget,
+      );
+      expect(find.text('Accept anyway'), findsOneWidget);
+      expect(find.text('I understand and accept this risk.'), findsOneWidget);
     });
   });
 }

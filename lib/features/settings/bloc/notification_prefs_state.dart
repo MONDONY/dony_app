@@ -11,29 +11,28 @@ class NotificationPrefsState extends Equatable {
   /// Lecture serveur des préférences en cours.
   final bool isSyncing;
 
-  /// Message affiché quand l'écriture serveur a échoué et que la bascule a été
-  /// annulée. `null` dès qu'une nouvelle bascule repart.
-  final String? errorMessage;
+  /// L'écriture serveur a échoué et la bascule a été annulée. L'écran choisit
+  /// lui-même le texte (`settingsSyncFailed`) : aucun message n'est gardé ici.
+  /// Remis à `false` dès qu'une nouvelle bascule repart.
+  final bool hasSyncError;
 
   const NotificationPrefsState({
     required this.prefs,
     this.packageMatchAlert,
     this.isSyncing = false,
-    this.errorMessage,
+    this.hasSyncError = false,
   });
 
   NotificationPrefsState copyWith({
     Map<String, bool>? prefs,
     bool? packageMatchAlert,
     bool? isSyncing,
-    String? Function()? errorMessageGetter,
+    bool? hasSyncError,
   }) => NotificationPrefsState(
     prefs: prefs ?? this.prefs,
     packageMatchAlert: packageMatchAlert ?? this.packageMatchAlert,
     isSyncing: isSyncing ?? this.isSyncing,
-    errorMessage: errorMessageGetter != null
-        ? errorMessageGetter()
-        : errorMessage,
+    hasSyncError: hasSyncError ?? this.hasSyncError,
   );
 
   @override
@@ -41,6 +40,6 @@ class NotificationPrefsState extends Equatable {
     prefs,
     packageMatchAlert,
     isSyncing,
-    errorMessage,
+    hasSyncError,
   ];
 }

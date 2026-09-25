@@ -4,6 +4,19 @@ enum SupportViewStatus { initial, loading, ready, failure }
 
 enum SupportActionStatus { idle, submitting, success, failure }
 
+/// Cause d'un échec, pour que la présentation choisisse le texte localisé
+/// sans jamais porter de texte figé dans l'état (`support_home_screen.dart`
+/// résout le message affiché).
+enum SupportFailure {
+  /// Envoi refusé localement : le ticket est déjà résolu (règle appliquée
+  /// avant tout appel réseau).
+  ticketResolved,
+
+  /// Échec générique (réseau, serveur) : le detail RFC 7807 du backend
+  /// prime quand il existe ([SupportState.serverDetail]).
+  generic,
+}
+
 /// État composite : l'écran d'accueil lit `homeStatus`/`replies`/`tickets`,
 /// l'écran de détail lit `detailStatus`/`ticket`. Chaque route reçoit sa
 /// propre instance de bloc (registerFactory) : les deux moitiés ne vivent
@@ -18,7 +31,8 @@ final class SupportState extends Equatable {
     this.createStatus = SupportActionStatus.idle,
     this.createdTicketId,
     this.sendStatus = SupportActionStatus.idle,
-    this.errorMessage,
+    this.failure,
+    this.serverDetail,
     this.pendingAttachments = const [],
   });
 
@@ -33,7 +47,15 @@ final class SupportState extends Equatable {
   /// puis le bloc de la nouvelle route recharge le fil.
   final String? createdTicketId;
   final SupportActionStatus sendStatus;
-  final String? errorMessage;
+
+  /// Cause du dernier échec (chargement, création ou envoi). `null` hors
+  /// échec. La présentation choisit le texte localisé à partir de cette
+  /// valeur, jamais l'inverse.
+  final SupportFailure? failure;
+
+  /// `detail` RFC 7807 renvoyé par le backend, relayé tel quel quand il
+  /// existe : donnée serveur, jamais traduite (voir `supportErrorMessage`).
+  final String? serverDetail;
 
   /// Images en attente d'envoi (état local avant que le message parte).
   final List<SupportAttachmentUpload> pendingAttachments;
@@ -56,11 +78,11 @@ final class SupportState extends Equatable {
     return draft.trim().isNotEmpty || hasReadyAttachment;
   }
 
-  /// `createdTicketId` et `errorMessage` ne sont volontairement pas reportés
-  /// de l'état précédent : ce sont des signaux à usage unique, consommés par
-  /// un listener. Les reporter les rejouerait à chaque émission suivante —
-  /// une erreur déjà affichée reviendrait, une navigation se déclencherait
-  /// deux fois.
+  /// `createdTicketId`, `failure` et `serverDetail` ne sont volontairement
+  /// pas reportés de l'état précédent : ce sont des signaux à usage unique,
+  /// consommés par un listener. Les reporter les rejouerait à chaque
+  /// émission suivante — une erreur déjà affichée reviendrait, une
+  /// navigation se déclencherait deux fois.
   SupportState copyWith({
     SupportViewStatus? homeStatus,
     List<SupportPredefinedReply>? replies,
@@ -70,7 +92,8 @@ final class SupportState extends Equatable {
     SupportActionStatus? createStatus,
     String? createdTicketId,
     SupportActionStatus? sendStatus,
-    String? errorMessage,
+    SupportFailure? failure,
+    String? serverDetail,
     List<SupportAttachmentUpload>? pendingAttachments,
   }) {
     return SupportState(
@@ -82,7 +105,8 @@ final class SupportState extends Equatable {
       createStatus: createStatus ?? this.createStatus,
       createdTicketId: createdTicketId,
       sendStatus: sendStatus ?? this.sendStatus,
-      errorMessage: errorMessage,
+      failure: failure,
+      serverDetail: serverDetail,
       pendingAttachments: pendingAttachments ?? this.pendingAttachments,
     );
   }
@@ -97,7 +121,8 @@ final class SupportState extends Equatable {
     createStatus,
     createdTicketId,
     sendStatus,
-    errorMessage,
+    failure,
+    serverDetail,
     pendingAttachments,
   ];
 }

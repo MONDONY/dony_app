@@ -1,4 +1,5 @@
 import 'package:dony/core/design/widgets/dony_dialog.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,15 +11,13 @@ import 'package:go_router/go_router.dart';
 /// erreur système et n'expliquait pas clairement la marche à suivre.
 abstract final class EscrowBlockDialog {
   static Future<void> show(BuildContext context) async {
+    final l = context.l10n;
     final goToShipments = await DonyDialog.show(
       context,
-      title: 'Suppression impossible pour l\'instant',
-      message:
-          'Un de vos envois est en cours de livraison et ses fonds '
-          'sont bloqués en séquestre. Vous pourrez supprimer votre compte '
-          'dès que la livraison aura été confirmée.',
-      confirmLabel: 'Voir mes envois',
-      cancelLabel: 'Fermer',
+      title: l.deletionEscrowBlockedTitle,
+      message: l.deletionEscrowBlockedMessage,
+      confirmLabel: l.deletionEscrowBlockedCta,
+      cancelLabel: l.commonClose,
       iconAsset: 'lock',
     );
     if (goToShipments == true && context.mounted) {

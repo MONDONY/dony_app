@@ -358,6 +358,18 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.critical,
       icon: Icons.event_busy_rounded,
     ),
+    // Suppression de compte bloquée par un escrow actif (RequestDeletion /
+    // ConfirmImmediateDeletion, account_deletion_bloc.dart) : cette entrée
+    // n'atteint l'utilisateur que si `AccountDeletionError` parvient jusqu'à
+    // `ErrorPresenter` (listener générique de profile_screen.dart) — les deux
+    // sheets de suppression interceptent `isEscrowBlocked` avant et affichent
+    // leur propre texte (`EscrowBlockDialog`, `deletionEscrowBlocked*`).
+    'escrow-blocked': _Entry(
+      title: (l) => l.errorEscrowBlockedTitle,
+      message: (l) => l.errorEscrowBlockedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_clock_rounded,
+    ),
     'pro-limit-reached': _Entry(
       title: (l) => l.errorProLimitReachedTitle,
       message: (l) => l.errorProLimitReachedMessage,

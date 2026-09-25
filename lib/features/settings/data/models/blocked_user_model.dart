@@ -12,7 +12,9 @@ class BlockedUserModel {
   factory BlockedUserModel.fromJson(Map<String, dynamic> json) =>
       BlockedUserModel(
         userId: json['userId'] as String? ?? '',
-        displayName: json['displayName'] as String? ?? 'Utilisateur',
+        // Vide plutôt qu'un nom de repli figé en français : l'affichage passe
+        // désormais par `profileUserFallback` (blocked_users_screen.dart).
+        displayName: json['displayName'] as String? ?? '',
         blockedAt:
             DateTime.tryParse(json['blockedAt'] as String? ?? '') ??
             DateTime.now(),

@@ -5,6 +5,7 @@ import 'package:dony/features/disputes/bloc/dispute_list_state.dart';
 import 'package:dony/features/disputes/presentation/widgets/dispute_card.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,13 +16,14 @@ class DisputeListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
-        title: const Text('Mes litiges'),
+        title: Text(l.disputeListTitle),
       ),
       body: Column(
         children: [
@@ -42,9 +44,9 @@ class DisputeListScreen extends StatelessWidget {
                 ),
                 DisputeListError(:final error) => DonyEmptyState(
                   type: DonyEmptyStateType.error,
-                  title: 'Impossible de charger vos litiges',
+                  title: l.disputeListLoadErrorTitle,
                   description: error.message,
-                  actionLabel: 'Réessayer',
+                  actionLabel: l.commonRetry,
                   onAction: () => context.read<DisputeListBloc>().add(
                     const DisputesLoadRequested(),
                   ),
@@ -52,10 +54,9 @@ class DisputeListScreen extends StatelessWidget {
                 DisputeListLoaded(:final disputes) when disputes.isEmpty =>
                   DonyEmptyState(
                     iconAsset: 'scale',
-                    title: 'Aucun litige',
-                    description:
-                        'Tant mieux ! Un litige s\'ouvre automatiquement si vous contestez l\'absence d\'un voyageur lors d\'une remise.',
-                    actionLabel: 'Un problème avec un envoi ?',
+                    title: l.disputeListEmptyTitle,
+                    description: l.disputeListEmptyDescription,
+                    actionLabel: l.disputeListEmptyAction,
                     onAction: () => context.push('/support'),
                   ),
                 DisputeListLoaded(:final disputes) => RefreshIndicator(

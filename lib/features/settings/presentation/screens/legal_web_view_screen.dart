@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -58,7 +59,7 @@ class _LegalWebViewScreenState extends State<LegalWebViewScreen> {
         actions: [
           IconButton(
             icon: DonyIcon('external-link', color: cs.onSurfaceVariant),
-            tooltip: 'Ouvrir dans le navigateur',
+            tooltip: context.l10n.legalOpenInBrowser,
             onPressed: () async {
               final uri = Uri.parse(widget.url);
               if (await canLaunchUrl(uri)) {
@@ -90,13 +91,13 @@ class _LegalWebViewScreenState extends State<LegalWebViewScreen> {
                       ),
                       const SizedBox(height: DonySpacing.base),
                       Text(
-                        'Impossible de charger la page',
+                        context.l10n.legalPageLoadError,
                         style: tt.titleMedium,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: DonySpacing.sm),
                       Text(
-                        'Vérifie ta connexion et réessaie.',
+                        context.l10n.legalPageLoadErrorHint,
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -109,7 +110,7 @@ class _LegalWebViewScreenState extends State<LegalWebViewScreen> {
                           _isLoading.value = true;
                           _controller.reload();
                         },
-                        child: const Text('Réessayer'),
+                        child: Text(context.l10n.commonRetry),
                       ),
                     ],
                   ),

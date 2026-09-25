@@ -30,7 +30,7 @@ void main() {
   test('initial state: isLoading=true, canDelete=true', () {
     expect(cubit.state.isLoading, isTrue);
     expect(cubit.state.canDelete, isTrue);
-    expect(cubit.state.blockedReasonMessage, isNull);
+    expect(cubit.state.blockedReasonCode, isNull);
   });
 
   group('check()', () {
@@ -47,16 +47,12 @@ void main() {
         isA<DeletionEligibilityState>()
             .having((s) => s.isLoading, 'isLoading', isFalse)
             .having((s) => s.canDelete, 'canDelete', isTrue)
-            .having(
-              (s) => s.blockedReasonMessage,
-              'blockedReasonMessage',
-              isNull,
-            ),
+            .having((s) => s.blockedReasonCode, 'blockedReasonCode', isNull),
       ],
     );
 
     blocTest<DeletionEligibilityCubit, DeletionEligibilityState>(
-      'escrow actif → canDelete=false avec message explicite',
+      'escrow actif → canDelete=false avec le code du serveur',
       build: () {
         when(() => mockRepo.checkEligibility()).thenAnswer(
           (_) async => const DeletionEligibility(
@@ -71,9 +67,9 @@ void main() {
         isA<DeletionEligibilityState>()
             .having((s) => s.canDelete, 'canDelete', isFalse)
             .having(
-              (s) => s.blockedReasonMessage,
-              'blockedReasonMessage',
-              contains('séquestre'),
+              (s) => s.blockedReasonCode,
+              'blockedReasonCode',
+              'active-transactions',
             ),
       ],
     );
@@ -94,11 +90,7 @@ void main() {
       expect: () => [
         isA<DeletionEligibilityState>()
             .having((s) => s.canDelete, 'canDelete', isTrue)
-            .having(
-              (s) => s.blockedReasonMessage,
-              'blockedReasonMessage',
-              isNull,
-            )
+            .having((s) => s.blockedReasonCode, 'blockedReasonCode', isNull)
             .having((s) => s.hasWalletBalance, 'hasWalletBalance', isTrue),
       ],
     );
@@ -125,7 +117,7 @@ void main() {
     );
 
     blocTest<DeletionEligibilityCubit, DeletionEligibilityState>(
-      'code inconnu → message générique de repli',
+      'code inconnu → conservé tel quel, la présentation retombera sur son repli générique',
       build: () {
         when(() => mockRepo.checkEligibility()).thenAnswer(
           (_) async => const DeletionEligibility(
@@ -140,9 +132,9 @@ void main() {
         isA<DeletionEligibilityState>()
             .having((s) => s.canDelete, 'canDelete', isFalse)
             .having(
-              (s) => s.blockedReasonMessage,
-              'blockedReasonMessage',
-              isNotNull,
+              (s) => s.blockedReasonCode,
+              'blockedReasonCode',
+              'some-new-backend-code',
             ),
       ],
     );

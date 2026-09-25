@@ -2,8 +2,11 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/a11y_slider_row.dart';
 import 'package:dony/features/settings/presentation/widgets/a11y_tristate_row.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../../helpers/l10n_test_helpers.dart';
 
 Widget wrap(Widget child) => MaterialApp(
   theme: AppTheme.light(),
@@ -219,17 +222,78 @@ void main() {
 
   group('a11yModeLabel', () {
     test('traduit les trois modes', () {
-      expect(a11yModeLabel(AccessibilityMode.system), 'Suivre le téléphone');
-      expect(a11yModeLabel(AccessibilityMode.on), 'Toujours activé');
-      expect(a11yModeLabel(AccessibilityMode.off), 'Toujours désactivé');
+      final l = AppL10n.current;
+      expect(a11yModeLabel(l, AccessibilityMode.system), 'Suivre le téléphone');
+      expect(a11yModeLabel(l, AccessibilityMode.on), 'Toujours activé');
+      expect(a11yModeLabel(l, AccessibilityMode.off), 'Toujours désactivé');
+    });
+
+    test('en anglais : traduit les trois modes', () {
+      useEnglish();
+      final l = AppL10n.current;
+      expect(a11yModeLabel(l, AccessibilityMode.system), 'Follow phone');
+      expect(a11yModeLabel(l, AccessibilityMode.on), 'Always on');
+      expect(a11yModeLabel(l, AccessibilityMode.off), 'Always off');
     });
   });
 
   group('a11yModeShortLabel', () {
     test('traduit les trois modes en un mot', () {
-      expect(a11yModeShortLabel(AccessibilityMode.system), 'Automatique');
-      expect(a11yModeShortLabel(AccessibilityMode.on), 'Activé');
-      expect(a11yModeShortLabel(AccessibilityMode.off), 'Désactivé');
+      final l = AppL10n.current;
+      expect(a11yModeShortLabel(l, AccessibilityMode.system), 'Automatique');
+      expect(a11yModeShortLabel(l, AccessibilityMode.on), 'Activé');
+      expect(a11yModeShortLabel(l, AccessibilityMode.off), 'Désactivé');
     });
+
+    test('en anglais : traduit les trois modes en un mot', () {
+      useEnglish();
+      final l = AppL10n.current;
+      expect(a11yModeShortLabel(l, AccessibilityMode.system), 'Automatic');
+      expect(a11yModeShortLabel(l, AccessibilityMode.on), 'On');
+      expect(a11yModeShortLabel(l, AccessibilityMode.off), 'Off');
+    });
+  });
+
+  group('A11ySliderRow — anglais', () {
+    testWidgets('affiche le pourcentage courant en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(A11ySliderRow(value: 1.25, enabled: true, onChanged: (_) {})),
+      );
+      expect(find.text('125%'), findsOneWidget);
+    });
+
+    testWidgets('le libellé désactivé est traduit en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(A11ySliderRow(value: 1.0, enabled: false, onChanged: (_) {})),
+      );
+      expect(find.text('Text size'), findsOneWidget);
+    });
+  });
+
+  group('A11yTristateRow — anglais', () {
+    testWidgets(
+      'le tap ouvre la sheet avec les trois libellés longs traduits',
+      (tester) async {
+        useEnglish();
+        await tester.pumpWidget(
+          wrap(
+            A11yTristateRow(
+              label: 'Contraste élevé',
+              subtitle: 'Renforce le texte et les bordures',
+              value: AccessibilityMode.system,
+              sheetTitle: 'Contraste élevé',
+              onChanged: (_) {},
+            ),
+          ),
+        );
+        await tester.tap(find.text('Contraste élevé').first);
+        await tester.pumpAndSettle();
+        expect(find.text('Follow phone'), findsOneWidget);
+        expect(find.text('Always on'), findsOneWidget);
+        expect(find.text('Always off'), findsOneWidget);
+      },
+    );
   });
 }

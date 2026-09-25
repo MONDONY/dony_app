@@ -288,8 +288,15 @@ class CountryCatalog {
   /// C'est cette forme, pas [search], que les deux sélecteurs de pays
   /// affichent : 38 entrées à plat sont illisibles, et la zone porte
   /// l'information utile (« ma devise dépend de ma zone »).
-  static List<CountryZoneGroup> groupedSearch(String query) {
-    final matches = search(query);
+  ///
+  /// [localizedName] ajoute le nom affiché dans la langue de l'app à la
+  /// recherche, comme [search] : un pays est trouvé par son nom français de
+  /// référence ou par son nom traduit (ex. « Germany »).
+  static List<CountryZoneGroup> groupedSearch(
+    String query, {
+    String Function(Country c)? localizedName,
+  }) {
+    final matches = search(query, localizedName: localizedName);
     final groups = <CountryZoneGroup>[];
     for (final zone in CountryZone.values) {
       final countries = matches.where((c) => c.zone == zone).toList();

@@ -6,7 +6,10 @@ import 'package:dony/features/notifications/presentation/notification_detail_scr
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/l10n_test_helpers.dart';
 
 class _MockCubit extends Mock implements NotificationDetailCubit {}
 
@@ -29,6 +32,7 @@ void main() {
 
   setUpAll(() async {
     await initializeDateFormatting('fr_FR');
+    await initializeDateFormatting('en_US');
   });
 
   setUp(() {
@@ -103,5 +107,75 @@ void main() {
     await tester.tap(find.text('Réessayer'));
     await tester.pump();
     verify(() => cubit.load('a1')).called(2);
+  });
+
+  // Non-régression du remplacement de "d MMMM yyyy 'à' HH:mm" par
+  // commonDateAtTime(yMMMMd, jm).
+  testWidgets(
+    'date et heure : rendu identique à l\'ancien motif fixe (6 oct. 2026, 14:05)',
+    (tester) async {
+      final detail = _detail();
+      stub(
+        NotificationDetailLoaded(
+          NotificationDetail(
+            id: detail.id,
+            type: detail.type,
+            category: detail.category,
+            title: detail.title,
+            body: detail.body,
+            fullBody: detail.fullBody,
+            read: detail.read,
+            createdAt: DateTime(2026, 10, 6, 14, 5),
+          ),
+        ),
+      );
+
+      await pump(tester);
+
+      expect(find.textContaining('6 octobre 2026 à 14:05'), findsOneWidget);
+    },
+  );
+
+  testWidgets('anglais : titre générique et date traduits', (tester) async {
+    useEnglish();
+    stub(
+      NotificationDetailLoaded(
+        NotificationDetail(
+          id: 'a1',
+          type: 'ADMIN_BROADCAST',
+          category: 'paiements',
+          title: 'Title',
+          body: 'Body',
+          read: false,
+          createdAt: DateTime(2026, 10, 6, 14, 5),
+        ),
+      ),
+    );
+
+    await pump(tester);
+
+    expect(find.text('Notification'), findsOneWidget);
+    final expectedDate = DateFormat.yMMMMd(
+      'en',
+    ).format(DateTime(2026, 10, 6, 14, 5));
+    final expectedTime = DateFormat.jm(
+      'en',
+    ).format(DateTime(2026, 10, 6, 14, 5));
+    expect(
+      find.textContaining('$expectedDate at $expectedTime'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('anglais : état introuvable avec réessai traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    stub(const NotificationDetailError(NetworkException('404')));
+
+    await pump(tester);
+
+    expect(find.text('Notification not found'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
   });
 }

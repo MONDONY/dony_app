@@ -4,6 +4,8 @@ import 'package:dony/features/settings/presentation/widgets/a11y_preview_card.da
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 Widget wrap(AccessibilityState state) => MaterialApp(
   theme: AppTheme.light(),
   home: Scaffold(body: A11yPreviewCard(state: state)),
@@ -60,5 +62,15 @@ void main() {
   testWidgets('l\'aperçu affiche un badge de statut', (tester) async {
     await tester.pumpWidget(wrap(const AccessibilityState()));
     expect(find.textContaining('Urgent'), findsOneWidget);
+  });
+
+  testWidgets('en anglais : libellé et bouton de l\'aperçu traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(wrap(const AccessibilityState()));
+    expect(find.text('Preview'), findsOneWidget);
+    expect(find.text('12 kg available'), findsOneWidget);
+    expect(find.text('Make an offer'), findsOneWidget);
   });
 }

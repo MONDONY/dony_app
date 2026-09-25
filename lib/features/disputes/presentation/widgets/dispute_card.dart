@@ -11,20 +11,20 @@ class DisputeCard extends StatelessWidget {
   final DisputeModel dispute;
   final VoidCallback onTap;
 
-  String get _otherPartyLine {
+  String _otherPartyLine(AppLocalizations l) {
     final name = dispute.otherPartyName;
     if (name == null) {
-      return 'Envoi supprimé';
+      return l.disputeShipmentDeleted;
     }
-    final prefix = dispute.myRole == 'SENDER' ? 'Voyageur' : 'Expéditeur';
-    return '$prefix : $name';
+    return l.disputeOtherParty(dispute.myRole, name);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final df = DateFormat('d MMM yyyy', AppL10n.localeName);
+    final df = DateFormat.yMMMd(l.localeName);
     final dep = dispute.departureCity;
     final arr = dispute.arrivalCity;
 
@@ -48,7 +48,7 @@ class DisputeCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      disputeTypeLabel(dispute.type),
+                      disputeTypeLabel(l, dispute.type),
                       style: tt.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -68,17 +68,22 @@ class DisputeCard extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 [
-                  _otherPartyLine,
+                  _otherPartyLine(l),
                   if (dispute.weightKg != null)
-                    'Envoi ${dispute.weightKg!.toStringAsFixed(dispute.weightKg! % 1 == 0 ? 0 : 1)} kg',
+                    l.disputeParcelWeight(
+                      disputeWeightLabel(l, dispute.weightKg!),
+                    ),
                 ].join(' · '),
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: 4),
               Text(
                 dispute.isResolved && dispute.resolvedAt != null
-                    ? 'Ouvert le ${df.format(dispute.createdAt)} · Résolu le ${df.format(dispute.resolvedAt!)}'
-                    : 'Ouvert le ${df.format(dispute.createdAt)}',
+                    ? l.disputeOpenedAndResolved(
+                        df.format(dispute.createdAt),
+                        df.format(dispute.resolvedAt!),
+                      )
+                    : l.disputeOpenedOn(df.format(dispute.createdAt)),
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               if (dispute.refundFrozen && dispute.isOpen) ...[
@@ -102,7 +107,7 @@ class DisputeCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Remboursement gelé le temps de l\'instruction — réponse sous 72 h.',
+                          l.disputeCardFrozenNotice,
                           style: tt.bodySmall?.copyWith(
                             color: cs.primary,
                             fontWeight: FontWeight.w600,

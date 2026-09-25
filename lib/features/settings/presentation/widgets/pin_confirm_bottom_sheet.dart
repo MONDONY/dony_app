@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -81,12 +82,12 @@ class _PinConfirmBottomSheetState extends State<PinConfirmBottomSheet> {
       children: [
         const SizedBox(height: DonySpacing.lg),
         Text(
-          'Confirmez votre code PIN',
+          context.l10n.pinConfirmSheetTitle,
           style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: DonySpacing.xs),
         Text(
-          'Saisissez votre code pour confirmer',
+          context.l10n.pinConfirmSheetSubtitle,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.xl),
@@ -114,7 +115,7 @@ class _PinConfirmBottomSheetState extends State<PinConfirmBottomSheet> {
           Padding(
             padding: const EdgeInsets.only(top: DonySpacing.sm),
             child: Text(
-              '$_attemptsLeft tentative(s) restante(s)',
+              context.l10n.pinAttemptsLeft(_attemptsLeft),
               style: tt.bodySmall?.copyWith(color: cs.error),
             ).animate().fadeIn(),
           ),

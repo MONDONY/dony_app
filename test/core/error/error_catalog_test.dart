@@ -918,6 +918,41 @@ void main() {
     });
   });
 
+  group('ErrorCatalog — escrow-blocked (suppression de compte)', () {
+    test('code dédié → titre et message fr', () {
+      const error = ValidationException(
+        'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.',
+        code: 'escrow-blocked',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'Suppression impossible pour l\'instant');
+      expect(
+        p.message,
+        'Vous avez un paiement en cours. La suppression sera possible une '
+        'fois la livraison confirmée.',
+      );
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('code dédié → titre et message en anglais', () {
+      const error = ValidationException('ignored', code: 'escrow-blocked');
+
+      final p = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+
+      expect(p.title, "Can't delete your account yet");
+      expect(
+        p.message,
+        'You have a payment in progress. You can delete your account once '
+        'the delivery is confirmed.',
+      );
+    });
+  });
+
   group('ErrorCatalog — anglais', () {
     final en = lookupAppLocalizations(AppL10n.en);
     final fr = lookupAppLocalizations(AppL10n.fr);

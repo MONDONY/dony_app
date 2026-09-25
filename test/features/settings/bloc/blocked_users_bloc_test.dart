@@ -94,14 +94,7 @@ void main() {
       },
       build: () => makeBloc(),
       act: (bloc) => bloc.add(const BlockedUsersLoadRequested()),
-      expect: () => [
-        isA<BlockedUsersLoading>(),
-        isA<BlockedUsersError>().having(
-          (s) => s.message,
-          'message',
-          'Impossible de charger les utilisateurs bloqués',
-        ),
-      ],
+      expect: () => [isA<BlockedUsersLoading>(), isA<BlockedUsersError>()],
     );
 
     // ── BlockedUserUnblockRequested — succès ────────────────────────────────
@@ -180,11 +173,7 @@ void main() {
       act: (bloc) => bloc.add(const BlockedUserBlockRequested('u1')),
       expect: () => [
         isA<BlockedUserBlocking>(),
-        isA<BlockedUserBlockFailure>().having(
-          (s) => s.message,
-          'message',
-          'Une erreur est survenue. Réessaie plus tard.',
-        ),
+        isA<BlockedUserBlockFailure>(),
       ],
       verify: (_) {
         verifyNever(
@@ -248,11 +237,9 @@ void main() {
     });
 
     test('BlockedUsersError equality est correcte', () {
-      const a = BlockedUsersError('msg');
-      const b = BlockedUsersError('msg');
-      const c = BlockedUsersError('autre');
+      const a = BlockedUsersError();
+      const b = BlockedUsersError();
       expect(a, equals(b));
-      expect(a, isNot(equals(c)));
     });
   });
 }

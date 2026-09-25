@@ -231,7 +231,7 @@ void main() {
     );
 
     blocTest<BusinessPrefsBloc, BusinessPrefsState>(
-      'erreur PUT : rollback Hive + émet errorMessage',
+      'erreur PUT : rollback Hive + émet hasSyncError',
       setUp: () {
         when(() => mockRepo.updatePrefs(any())).thenThrow(Exception('server'));
       },
@@ -247,7 +247,7 @@ void main() {
         syncStarted,
         isA<BusinessPrefsState>()
             .having((s) => s.defaultPackageWeightKg, 'kg', 23)
-            .having((s) => s.errorMessage, 'error', isNotNull),
+            .having((s) => s.hasSyncError, 'error', isTrue),
       ],
     );
   });
@@ -308,7 +308,7 @@ void main() {
         syncStarted,
         isA<BusinessPrefsState>()
             .having((s) => s.contactMode, 'mode', 'message')
-            .having((s) => s.errorMessage, 'error', isNotNull),
+            .having((s) => s.hasSyncError, 'error', isTrue),
       ],
     );
   });
@@ -398,7 +398,7 @@ void main() {
             .having((s) => s.country, 'country', 'CA'),
         isA<BusinessPrefsState>()
             .having((s) => s.country, 'country', 'FR')
-            .having((s) => s.errorMessage, 'error', isNotNull),
+            .having((s) => s.hasSyncError, 'error', isTrue),
       ],
       verify: (_) {
         verifyNever(() => mockRepo.fetchPrefs());

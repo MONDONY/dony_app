@@ -9,7 +9,11 @@ class BusinessPrefsState extends Equatable {
   final String? contactMode;
   final int? responseDelayHours;
   final bool isSyncing;
-  final String? errorMessage;
+
+  /// La dernière synchro serveur a échoué et le champ a été remis à sa
+  /// valeur précédente. L'écran choisit lui-même le texte (`settingsSyncFailed`) :
+  /// aucun message n'est gardé ici.
+  final bool hasSyncError;
 
   /// Lot 2 : gel de la devise au premier mouvement d'argent. Renseigné par le
   /// serveur à chaque synchro (`GET`/`PUT`), jamais dérivé localement — seul
@@ -39,7 +43,7 @@ class BusinessPrefsState extends Equatable {
     this.contactMode,
     this.responseDelayHours,
     this.isSyncing = false,
-    this.errorMessage,
+    this.hasSyncError = false,
     this.currencyLocked = false,
     this.country,
     this.countryLocked = false,
@@ -55,7 +59,7 @@ class BusinessPrefsState extends Equatable {
     String? Function()? contactModeGetter,
     int? Function()? responseDelayHoursGetter,
     bool? isSyncing,
-    String? Function()? errorMessageGetter,
+    bool? hasSyncError,
     bool? currencyLocked,
     String? Function()? countryGetter,
     bool? countryLocked,
@@ -72,9 +76,7 @@ class BusinessPrefsState extends Equatable {
         ? responseDelayHoursGetter()
         : responseDelayHours,
     isSyncing: isSyncing ?? this.isSyncing,
-    errorMessage: errorMessageGetter != null
-        ? errorMessageGetter()
-        : errorMessage,
+    hasSyncError: hasSyncError ?? this.hasSyncError,
     currencyLocked: currencyLocked ?? this.currencyLocked,
     country: countryGetter != null ? countryGetter() : country,
     countryLocked: countryLocked ?? this.countryLocked,
@@ -91,7 +93,7 @@ class BusinessPrefsState extends Equatable {
     contactMode,
     responseDelayHours,
     isSyncing,
-    errorMessage,
+    hasSyncError,
     currencyLocked,
     country,
     countryLocked,

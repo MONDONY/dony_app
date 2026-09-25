@@ -267,10 +267,8 @@ void main() {
       when(() => mockEligibilityCubit.state).thenReturn(
         const DeletionEligibilityState(
           isLoading: false,
-          blockedReasonMessage:
-              'Vous avez un envoi en cours de livraison, avec des fonds '
-              'bloqués en séquestre. Vous pourrez supprimer votre compte dès '
-              'que la livraison sera confirmée.',
+          canDelete: false,
+          blockedReasonCode: 'active-transactions',
         ),
       );
 
@@ -312,8 +310,8 @@ void main() {
       when(() => mockEligibilityCubit.state).thenReturn(
         const DeletionEligibilityState(
           isLoading: false,
+          canDelete: false,
           blockedReasonCode: 'active-transactions',
-          blockedReasonMessage: 'fonds bloqués en séquestre',
         ),
       );
 

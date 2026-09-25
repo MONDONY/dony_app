@@ -61,7 +61,13 @@ class AccountDeletionBloc
       emit(
         AccountDeletionError(
           error: ValidationException(
-            'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.',
+            // Jamais affiché : les deux sheets de suppression interceptent
+            // isEscrowBlocked avant ErrorPresenter et montrent
+            // EscrowBlockDialog (son propre texte) ; si AccountDeletionError
+            // atteint quand même ErrorPresenter (profile_screen.dart),
+            // ErrorCatalog résout le message via error.code (entrée
+            // 'escrow-blocked'), jamais ce texte.
+            'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.', // i18n-ignore
             code: e.code ?? 'escrow-blocked',
           ),
           isEscrowBlocked: true,
@@ -102,7 +108,8 @@ class AccountDeletionBloc
       emit(
         AccountDeletionError(
           error: ValidationException(
-            'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.',
+            // Jamais affiché (voir _onRequestDeletion ci-dessus).
+            'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.', // i18n-ignore
             code: e.code ?? 'escrow-blocked',
           ),
           isEscrowBlocked: true,

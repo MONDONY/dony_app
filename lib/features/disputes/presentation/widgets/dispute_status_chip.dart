@@ -1,5 +1,6 @@
 import 'package:dony/core/design/tokens/color_tokens.dart'; // DonyStatusColors extension
 import 'package:dony/features/disputes/presentation/utils/dispute_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 class DisputeStatusChip extends StatelessWidget {
@@ -28,7 +29,7 @@ class DisputeStatusChip extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            disputeStatusLabel(status),
+            disputeStatusLabel(context.l10n, status),
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
