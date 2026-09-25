@@ -89,7 +89,9 @@ void main() {
   // compare donc à des décalages relatifs, jamais à une date absolue fixe.
   group('formatConversationTime', () {
     test('aujourd\'hui -> heure (fr)', () {
-      final date = DateTime.now().subtract(const Duration(hours: 2));
+      // 2 minutes : reste le même jour, sauf juste après minuit (un recul
+      // de 2 h tombait la veille quand la CI tournait avant 2 h du matin).
+      final date = DateTime.now().subtract(const Duration(minutes: 2));
       expect(
         formatConversationTime(AppL10n.current, date),
         DateFormat.jm('fr').format(date),
@@ -98,7 +100,9 @@ void main() {
 
     test('aujourd\'hui -> heure (en)', () {
       useEnglish();
-      final date = DateTime.now().subtract(const Duration(hours: 2));
+      // 2 minutes : reste le même jour, sauf juste après minuit (un recul
+      // de 2 h tombait la veille quand la CI tournait avant 2 h du matin).
+      final date = DateTime.now().subtract(const Duration(minutes: 2));
       expect(
         formatConversationTime(AppL10n.current, date),
         DateFormat.jm('en').format(date),
