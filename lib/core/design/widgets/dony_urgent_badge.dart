@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Pill rouge « 🔥 Urgent » pour les publications dont la date clé est proche.
@@ -12,6 +13,7 @@ class DonyUrgentBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.sm,
@@ -25,7 +27,7 @@ class DonyUrgentBadge extends StatelessWidget {
         // Sans renforcement, la pastille rouge et l'emoji portent le sens. Avec
         // renforcement, le statut est écrit en toutes lettres : une information
         // ne doit pas dépendre de la seule couleur (WCAG 1.4.1).
-        context.a11y.reinforceLabels ? '🔥 Départ imminent' : '🔥 Urgent',
+        context.a11y.reinforceLabels ? l.dsUrgentImminent : l.dsUrgent,
         // fontSize forcé à 12 (règle projet : fontSize < 12 interdit) —
         // labelMedium résout à 11px, aucun token DonyTypography à 12px/w500+
         // n'existe (bodySmall est 12px mais w400).

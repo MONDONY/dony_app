@@ -1,19 +1,20 @@
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class DonyBackCircle extends StatelessWidget {
-  const DonyBackCircle({super.key, this.onTap, this.tooltip = 'Retour'});
+  const DonyBackCircle({super.key, this.onTap, this.tooltip});
 
   final VoidCallback? onTap;
-  final String tooltip;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Tooltip(
-      message: tooltip,
+      message: tooltip ?? context.l10n.commonBack,
       child: InkWell(
         onTap: onTap ?? () => context.pop(),
         customBorder: const CircleBorder(),

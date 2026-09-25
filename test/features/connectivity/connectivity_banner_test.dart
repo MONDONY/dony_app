@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 class _MockConnectivityCubit extends MockCubit<ConnectivityState>
     implements ConnectivityCubit {}
 
@@ -69,4 +71,43 @@ void main() {
       expect(find.text('Connexion rétablie'), findsOneWidget);
     },
   );
+
+  testWidgets('en : bandeau rouge "No internet connection" quand offline', (
+    tester,
+  ) async {
+    useEnglish();
+    when(
+      () => cubit.state,
+    ).thenReturn(const ConnectivityState(status: ConnectivityStatus.offline));
+    await tester.pumpWidget(wrap());
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('No internet connection'), findsOneWidget);
+  });
+
+  testWidgets('en : bandeau ambre "Unstable connection" quand weak', (
+    tester,
+  ) async {
+    useEnglish();
+    when(
+      () => cubit.state,
+    ).thenReturn(const ConnectivityState(status: ConnectivityStatus.weak));
+    await tester.pumpWidget(wrap());
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Unstable connection'), findsOneWidget);
+  });
+
+  testWidgets('en : bandeau vert "Connection restored" quand justReconnected', (
+    tester,
+  ) async {
+    useEnglish();
+    when(
+      () => cubit.state,
+    ).thenReturn(const ConnectivityState(justReconnected: true));
+    await tester.pumpWidget(wrap());
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Connection restored'), findsOneWidget);
+  });
 }

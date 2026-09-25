@@ -25,17 +25,18 @@ class CurrencyPublishBanner extends StatelessWidget {
     final l = context.l10n;
     final hasCurrency = currency != null;
     final title = hasCurrency
-        ? 'Publié en ${currency!.name(l)} (${currency!.code})'
-        : 'Devise à confirmer';
+        ? l.currencyPublishBannerTitle(currency!.name(l), currency!.code)
+        : l.currencyPublishBannerTitleUnknown;
     final description = hasCurrency
-        ? 'Les utilisateurs dans une autre devise voient un prix converti. '
-              'Le paiement reste dans cette devise.'
-        : 'La devise de publication est vérifiée par Yadony avant publication.';
+        ? l.currencyPublishBannerDescriptionKnown
+        : l.currencyPublishBannerDescriptionUnknown;
     final semantics = hasCurrency
-        ? 'Publication en ${currency!.name(l)}, devise ${currency!.code}. '
-              'Les utilisateurs dans une autre devise voient un prix converti. '
-              'Le paiement reste dans cette devise.'
-        : 'Devise de publication à confirmer par Yadony avant publication.';
+        ? l.currencyPublishBannerSemanticsKnown(
+            currency!.name(l),
+            currency!.code,
+            description,
+          )
+        : l.currencyPublishBannerSemanticsUnknown;
 
     return Semantics(
       container: true,

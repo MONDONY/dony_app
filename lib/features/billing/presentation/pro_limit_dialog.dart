@@ -27,7 +27,7 @@ Future<bool> showProLimitReachedDialog(
       title: title,
       message: message,
       confirmLabel: l.proLimitUnderstoodButton,
-      cancelLabel: null,
+      showCancel: false,
     );
     return false;
   }

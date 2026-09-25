@@ -15,13 +15,14 @@ class DonyBrandMark extends StatelessWidget {
   final double size;
 
   /// (fond, texte, sigle) par marque.
+  // Marques (noms propres) : i18n-ignore.
   static const Map<String, (Color, Color, String)> _palette = {
-    'ORANGE': (Color(0xFFFF7900), Color(0xFFFFFFFF), 'O'),
-    'WAVE': (Color(0xFF20B2E6), Color(0xFFFFFFFF), 'W'),
-    'MTN': (Color(0xFFFFCC00), Color(0xFF0A2540), 'MTN'),
-    'MOOV': (Color(0xFF0066B3), Color(0xFFFFFFFF), 'M'),
-    'FREE': (Color(0xFFCD1E25), Color(0xFFFFFFFF), 'F'),
-    'AIRTEL': (Color(0xFFE40000), Color(0xFFFFFFFF), 'A'),
+    'ORANGE': (Color(0xFFFF7900), Color(0xFFFFFFFF), 'O'), // i18n-ignore
+    'WAVE': (Color(0xFF20B2E6), Color(0xFFFFFFFF), 'W'), // i18n-ignore
+    'MTN': (Color(0xFFFFCC00), Color(0xFF0A2540), 'MTN'), // i18n-ignore
+    'MOOV': (Color(0xFF0066B3), Color(0xFFFFFFFF), 'M'), // i18n-ignore
+    'FREE': (Color(0xFFCD1E25), Color(0xFFFFFFFF), 'F'), // i18n-ignore
+    'AIRTEL': (Color(0xFFE40000), Color(0xFFFFFFFF), 'A'), // i18n-ignore
   };
 
   @override

@@ -84,12 +84,12 @@ Future<void> _bootstrap() async {
   if (!kDebugMode) {
     if (!allowHttp && !kApiBaseUrl.startsWith('https://')) {
       throw StateError(
-        'API_BASE_URL must use https in release builds (got "$kApiBaseUrl")',
+        'API_BASE_URL must use https in release builds (got "$kApiBaseUrl")', // i18n-ignore
       );
     }
     if (!_stripePublishableKey.startsWith('pk_')) {
       throw StateError(
-        'STRIPE_PUBLISHABLE_KEY missing or malformed in release build',
+        'STRIPE_PUBLISHABLE_KEY missing or malformed in release build', // i18n-ignore
       );
     }
   }

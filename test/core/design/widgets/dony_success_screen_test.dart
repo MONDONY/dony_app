@@ -12,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 // ── Test doubles ─────────────────────────────────────────────────────────────
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
@@ -113,6 +115,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.byTooltip('Fermer'), findsOneWidget);
+  });
+
+  testWidgets('bouton fermer traduit en anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(host(onCta: () {}));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.byTooltip('Close'), findsOneWidget);
+    expect(find.byTooltip('Fermer'), findsNothing);
   });
 
   testWidgets(

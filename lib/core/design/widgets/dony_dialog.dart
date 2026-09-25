@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Dialogue standardisé Yadony.
@@ -15,7 +16,7 @@ import 'package:flutter/material.dart';
 /// );
 /// ```
 ///
-/// `cancelLabel: null` retire le bouton secondaire : le dialogue ne fait
+/// `showCancel: false` retire le bouton secondaire : le dialogue ne fait
 /// qu'informer, et son unique bouton rend `true`. À réserver aux messages
 /// sans alternative (une limite atteinte qu'aucune action ne peut lever).
 enum DonyDialogVariant { info, destructive }
@@ -26,8 +27,9 @@ abstract final class DonyDialog {
     required String title,
     String? message,
     Widget? content,
-    String confirmLabel = 'Confirmer',
-    String? cancelLabel = 'Annuler',
+    String? confirmLabel,
+    String? cancelLabel,
+    bool showCancel = true,
     DonyDialogVariant variant = DonyDialogVariant.info,
     IconData? icon,
     String? iconAsset,
@@ -40,6 +42,7 @@ abstract final class DonyDialog {
         content: content,
         confirmLabel: confirmLabel,
         cancelLabel: cancelLabel,
+        showCancel: showCancel,
         variant: variant,
         icon: icon,
         iconAsset: iconAsset,
@@ -56,14 +59,13 @@ abstract final class DonyDialog {
   /// À n'appeler que si le formulaire est réellement entamé, sinon on impose
   /// une confirmation pour rien à quelqu'un qui n'a fait qu'ouvrir l'écran.
   static Future<bool?> confirmDiscard(BuildContext context) {
+    final l = context.l10n;
     return show(
       context,
-      title: 'Quitter sans enregistrer ?',
-      message:
-          'Les informations que vous avez saisies ne seront pas '
-          'conservées. Vous devrez tout ressaisir.',
-      confirmLabel: 'Quitter',
-      cancelLabel: 'Continuer la saisie',
+      title: l.dsDiscardTitle,
+      message: l.dsDiscardMessage,
+      confirmLabel: l.dsDiscardConfirm,
+      cancelLabel: l.dsDiscardCancel,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'circle-alert',
     );
@@ -75,8 +77,9 @@ class _DonyDialogWidget extends StatelessWidget {
     required this.title,
     this.message,
     this.content,
-    required this.confirmLabel,
-    required this.cancelLabel,
+    this.confirmLabel,
+    this.cancelLabel,
+    required this.showCancel,
     required this.variant,
     this.icon,
     this.iconAsset,
@@ -85,8 +88,9 @@ class _DonyDialogWidget extends StatelessWidget {
   final String title;
   final String? message;
   final Widget? content;
-  final String confirmLabel;
+  final String? confirmLabel;
   final String? cancelLabel;
+  final bool showCancel;
   final DonyDialogVariant variant;
   final IconData? icon;
   final String? iconAsset;
@@ -95,6 +99,11 @@ class _DonyDialogWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    final effectiveConfirmLabel = confirmLabel ?? l.commonConfirm;
+    final effectiveCancelLabel = showCancel
+        ? (cancelLabel ?? l.commonCancel)
+        : null;
 
     final confirmColor = switch (variant) {
       DonyDialogVariant.info => cs.primary,
@@ -168,11 +177,11 @@ class _DonyDialogWidget extends StatelessWidget {
             const SizedBox(height: DonySpacing.xl),
             Row(
               children: [
-                if (cancelLabel != null) ...[
+                if (effectiveCancelLabel != null) ...[
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Navigator.of(context).pop(false),
-                      child: Text(cancelLabel!),
+                      child: Text(effectiveCancelLabel),
                     ),
                   ),
                   const SizedBox(width: DonySpacing.sm),
@@ -183,7 +192,7 @@ class _DonyDialogWidget extends StatelessWidget {
                     style: FilledButton.styleFrom(
                       backgroundColor: confirmColor,
                     ),
-                    child: Text(confirmLabel),
+                    child: Text(effectiveConfirmLabel),
                   ),
                 ),
               ],

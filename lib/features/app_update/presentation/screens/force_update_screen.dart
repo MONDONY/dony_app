@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
@@ -31,6 +32,11 @@ class ForceUpdateScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    // Cet écran peut s'afficher avant que la langue de l'app ne soit connue
+    // (bloquant, planté avant tout parcours) : context.l10n retombe alors
+    // sur AppL10n.current (langue effective, pas systématiquement le
+    // français) plutôt que de planter.
+    final l = context.l10n;
 
     return PopScope(
       canPop: false,
@@ -52,14 +58,13 @@ class ForceUpdateScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: DonySpacing.xl),
                 Text(
-                  'Une mise à jour est nécessaire',
+                  l.appUpdateTitle,
                   style: tt.headlineSmall,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: DonySpacing.sm),
                 Text(
-                  "Cette version de l'application n'est plus prise en "
-                  'charge. Mets-la à jour pour continuer à utiliser Yadony.',
+                  l.appUpdateMessage,
                   style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   textAlign: TextAlign.center,
                 ),
@@ -67,7 +72,7 @@ class ForceUpdateScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: DonyButton(
-                    label: 'Mettre à jour maintenant',
+                    label: l.appUpdateButton,
                     onPressed: _openStore,
                   ),
                 ),

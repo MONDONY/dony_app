@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -25,7 +26,7 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.showFeedback = true,
   }) : assert(
          variant == DonyAppBarVariant.compact,
-         'Use DonySliverAppBar for the large variant inside a CustomScrollView.',
+         'Use DonySliverAppBar for the large variant inside a CustomScrollView.', // i18n-ignore
        );
 
   final String title;
@@ -101,8 +102,9 @@ class DonyAppBarBackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return IconButton(
-      tooltip: leadingIcon != null ? 'Fermer' : 'Retour',
+      tooltip: leadingIcon != null ? l.commonClose : l.commonBack,
       onPressed: () {
         HapticFeedback.lightImpact();
         if (onBack != null) {
@@ -167,7 +169,7 @@ class DonySliverAppBar extends StatelessWidget {
       surfaceTintColor: Colors.transparent,
       leading: showBackButton
           ? IconButton(
-              tooltip: 'Retour',
+              tooltip: context.l10n.commonBack,
               onPressed:
                   onBack ??
                   () {

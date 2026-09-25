@@ -266,7 +266,7 @@ class _AuthInterceptor extends Interceptor {
         DioException(
           requestOptions: options,
           error: const UnauthorizedException(
-            'Authentification impossible',
+            'Authentification impossible', // i18n-ignore : catalogue résout 'auth-token-unavailable'
             'auth-token-unavailable',
           ),
         ),
@@ -278,7 +278,7 @@ class _AuthInterceptor extends Interceptor {
         DioException(
           requestOptions: options,
           error: const UnauthorizedException(
-            'Authentification impossible',
+            'Authentification impossible', // i18n-ignore : catalogue résout 'auth-token-unavailable'
             'auth-token-unavailable',
           ),
         ),

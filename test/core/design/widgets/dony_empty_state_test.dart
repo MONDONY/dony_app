@@ -2,6 +2,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   Widget wrap(Widget child) => MaterialApp(
     theme: AppTheme.light(),
@@ -21,6 +23,24 @@ void main() {
       await tester.pump();
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.text('Chargement'), findsNothing);
+      expect(find.text('Chargement en cours...'), findsOneWidget);
+    });
+
+    testWidgets('loading type shows the translated message in English', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrap(
+          const DonyEmptyState(
+            title: 'Chargement',
+            type: DonyEmptyStateType.loading,
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('Loading...'), findsOneWidget);
+      expect(find.text('Chargement en cours...'), findsNothing);
     });
 
     testWidgets('empty type shows icon + title', (tester) async {

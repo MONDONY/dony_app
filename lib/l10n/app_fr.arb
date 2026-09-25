@@ -15860,5 +15860,375 @@
   "errorReportPhotoNotOwnedMessage": "Une des captures ne t'appartient pas.",
   "@errorReportPhotoNotOwnedMessage": {
     "description": "Message du refus 403 `photo-not-owned`."
+  },
+  "dsDiscardTitle": "Quitter sans enregistrer ?",
+  "@dsDiscardTitle": {
+    "description": "Titre de la confirmation d'abandon d'un formulaire en cours de saisie (dony_dialog.dart, DonyDialog.confirmDiscard)."
+  },
+  "dsDiscardMessage": "Les informations que vous avez saisies ne seront pas conservées. Vous devrez tout ressaisir.",
+  "@dsDiscardMessage": {
+    "description": "Message de la confirmation d'abandon d'un formulaire (dony_dialog.dart, DonyDialog.confirmDiscard)."
+  },
+  "dsDiscardConfirm": "Quitter",
+  "@dsDiscardConfirm": {
+    "description": "Bouton de confirmation d'abandon d'un formulaire (dony_dialog.dart, DonyDialog.confirmDiscard)."
+  },
+  "dsDiscardCancel": "Continuer la saisie",
+  "@dsDiscardCancel": {
+    "description": "Bouton d'annulation de l'abandon, reste sur le formulaire (dony_dialog.dart, DonyDialog.confirmDiscard)."
+  },
+  "dsSearchHint": "Rechercher...",
+  "@dsSearchHint": {
+    "description": "Placeholder par défaut du champ de recherche du design system (dony_search_field.dart)."
+  },
+  "dsSelect": "Sélectionner",
+  "@dsSelect": {
+    "description": "Libellé par défaut du bouton de DonySelectBar quand rien n'est sélectionné (dony_select_bar.dart)."
+  },
+  "dsConfirmSelection": "Confirmer la sélection",
+  "@dsConfirmSelection": {
+    "description": "Libellé par défaut du bouton de DonySelectBar quand une sélection est active (dony_select_bar.dart)."
+  },
+  "dsSignupProgress": "Progression de l'inscription",
+  "@dsSignupProgress": {
+    "description": "Libellé d'accessibilité par défaut de la jauge d'onboarding, lu par le lecteur d'écran (dony_onboarding_gauge.dart)."
+  },
+  "dsGaugeCurrentStep": "Étape {index} sur {total}",
+  "@dsGaugeCurrentStep": {
+    "description": "Lu par le lecteur d'écran quand une étape de la jauge d'onboarding est en cours (dony_onboarding_gauge.dart).",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dsGaugeReachedSteps": "{count, plural, =1{{count} étape sur {total}} other{{count} étapes sur {total}}}",
+  "@dsGaugeReachedSteps": {
+    "description": "Lu par le lecteur d'écran quand aucune étape de la jauge d'onboarding n'est en cours : nombre d'étapes déjà franchies sur le total (dony_onboarding_gauge.dart).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dsBannerInfo": "Information",
+  "@dsBannerInfo": {
+    "description": "Titre renforcé par défaut d'un DonyStatusBanner de type info, quand aucun titre explicite n'est fourni et que les étiquettes sont renforcées (dony_status_banner.dart)."
+  },
+  "dsBannerSuccess": "Succès",
+  "@dsBannerSuccess": {
+    "description": "Titre renforcé par défaut d'un DonyStatusBanner de type success (dony_status_banner.dart)."
+  },
+  "dsBannerWarning": "Attention",
+  "@dsBannerWarning": {
+    "description": "Titre renforcé par défaut d'un DonyStatusBanner de type warning (dony_status_banner.dart)."
+  },
+  "dsBannerError": "Erreur",
+  "@dsBannerError": {
+    "description": "Titre renforcé par défaut d'un DonyStatusBanner de type error (dony_status_banner.dart)."
+  },
+  "dsBannerDismiss": "Fermer le message",
+  "@dsBannerDismiss": {
+    "description": "Libellé d'accessibilité du bouton de fermeture d'un DonyStatusBanner (dony_status_banner.dart)."
+  },
+  "dsLoading": "Chargement en cours...",
+  "@dsLoading": {
+    "description": "Message affiché sous le spinner de DonyEmptyState en type loading (dony_empty_state.dart)."
+  },
+  "dsHideKeyboard": "Masquer le clavier",
+  "@dsHideKeyboard": {
+    "description": "Libellé d'accessibilité du bouton de la barre « Terminé » qui referme le clavier (dony_keyboard_scope.dart)."
+  },
+  "dsMascotteJoyeux": "Mascotte qui salue",
+  "@dsMascotteJoyeux": {
+    "description": "Libellé d'accessibilité de la mascotte DonyMascotteType.joyeux (dony_mascotte.dart)."
+  },
+  "dsMascotteBienvenue": "Mascotte accueillante, bras ouverts",
+  "@dsMascotteBienvenue": {
+    "description": "Libellé d'accessibilité de la mascotte DonyMascotteType.bienvenue (dony_mascotte.dart)."
+  },
+  "dsMascotteConfiant": "Mascotte prête à partir en voyage",
+  "@dsMascotteConfiant": {
+    "description": "Libellé d'accessibilité de la mascotte DonyMascotteType.confiant (dony_mascotte.dart)."
+  },
+  "dsMascotteSecurise": "Mascotte brandissant un badge de validation",
+  "@dsMascotteSecurise": {
+    "description": "Libellé d'accessibilité de la mascotte DonyMascotteType.securise (dony_mascotte.dart)."
+  },
+  "dsMascotteSucces": "Mascotte célébrant une réussite",
+  "@dsMascotteSucces": {
+    "description": "Libellé d'accessibilité de la mascotte DonyMascotteType.succes (dony_mascotte.dart)."
+  },
+  "dsMascotteEnCourse": "Colis en transit",
+  "@dsMascotteEnCourse": {
+    "description": "Libellé d'accessibilité de la mascotte DonyMascotteType.enCourse (dony_mascotte.dart)."
+  },
+  "dsMascotteAssis": "Mascotte curieuse, une loupe à la main",
+  "@dsMascotteAssis": {
+    "description": "Libellé d'accessibilité de la mascotte DonyMascotteType.assis (dony_mascotte.dart)."
+  },
+  "dsMascotteAucunResultat": "Mascotte perplexe devant une carte, aucun résultat",
+  "@dsMascotteAucunResultat": {
+    "description": "Libellé d'accessibilité de la mascotte DonyMascotteType.aucunResultat (dony_mascotte.dart)."
+  },
+  "dsMascotteAttente": "Mascotte patientant devant une horloge",
+  "@dsMascotteAttente": {
+    "description": "Libellé d'accessibilité de la mascotte DonyMascotteType.attente (dony_mascotte.dart)."
+  },
+  "dsMascotteErreur": "Mascotte inquiète, une erreur est survenue",
+  "@dsMascotteErreur": {
+    "description": "Libellé d'accessibilité de la mascotte DonyMascotteType.erreur (dony_mascotte.dart)."
+  },
+  "dsMascotteErreurLegere": "Mascotte signalant un souci mineur",
+  "@dsMascotteErreurLegere": {
+    "description": "Libellé d'accessibilité de la mascotte DonyMascotteType.erreurLegere (dony_mascotte.dart)."
+  },
+  "dsUrgentImminent": "🔥 Départ imminent",
+  "@dsUrgentImminent": {
+    "description": "Texte du badge urgent quand les étiquettes sont renforcées (dony_urgent_badge.dart)."
+  },
+  "dsUrgent": "🔥 Urgent",
+  "@dsUrgent": {
+    "description": "Texte par défaut du badge urgent sans renforcement des étiquettes (dony_urgent_badge.dart)."
+  },
+  "feedbackSheetTitle": "Un problème sur cet écran ?",
+  "@feedbackSheetTitle": {
+    "description": "Titre de la feuille du scarabée de signalement (dony_feedback_button.dart)."
+  },
+  "feedbackSheetSubtitle": "Décrivez le bug. Une capture de l'écran est jointe automatiquement, vous pouvez en ajouter d'autres.",
+  "@feedbackSheetSubtitle": {
+    "description": "Sous-titre de la feuille du scarabée de signalement (dony_feedback_button.dart)."
+  },
+  "feedbackButtonTooltip": "Signaler un problème",
+  "@feedbackButtonTooltip": {
+    "description": "Infobulle du bouton scarabée (dony_feedback_button.dart)."
+  },
+  "feedbackHint": "Ex : le code retrait ne s'affiche pas…",
+  "@feedbackHint": {
+    "description": "Placeholder du champ de description du bug (dony_feedback_button.dart)."
+  },
+  "feedbackAttachmentsLabel": "Vos captures (facultatif)",
+  "@feedbackAttachmentsLabel": {
+    "description": "Libellé au-dessus des vignettes de captures jointes (dony_feedback_button.dart)."
+  },
+  "feedbackAddAttachment": "Ajouter une capture",
+  "@feedbackAddAttachment": {
+    "description": "Libellé d'accessibilité de la tuile d'ajout d'une capture (dony_feedback_button.dart)."
+  },
+  "feedbackRemoveAttachment": "Retirer la capture",
+  "@feedbackRemoveAttachment": {
+    "description": "Libellé d'accessibilité du bouton de retrait d'une capture jointe (dony_feedback_button.dart)."
+  },
+  "feedbackSuccessMessage": "Merci ! Votre rapport a bien été envoyé.",
+  "@feedbackSuccessMessage": {
+    "description": "Snackbar de succès après l'envoi du rapport de bug (dony_feedback_button.dart)."
+  },
+  "feedbackErrorMessage": "Envoi impossible. Réessayez.",
+  "@feedbackErrorMessage": {
+    "description": "Snackbar d'erreur quand l'envoi du rapport de bug échoue (dony_feedback_button.dart)."
+  },
+  "feedbackSubmitButton": "Envoyer le rapport",
+  "@feedbackSubmitButton": {
+    "description": "Bouton d'envoi de la feuille de signalement (dony_feedback_button.dart)."
+  },
+  "currencySelectorTitle": "Choisir une devise",
+  "@currencySelectorTitle": {
+    "description": "Titre de la bottom sheet de sélection de devise (currency_selector.dart)."
+  },
+  "currencySelectorConfirm": "Confirmer {code}",
+  "@currencySelectorConfirm": {
+    "description": "Bouton de confirmation de la devise choisie (currency_selector.dart).",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "currencySelectorSubtitleCard": "Carte et espèces",
+  "@currencySelectorSubtitleCard": {
+    "description": "Sous-titre court d'une option devise avec rail carte (currency_selector.dart)."
+  },
+  "currencySelectorSubtitleMobileMoney": "Mobile money et espèces",
+  "@currencySelectorSubtitleMobileMoney": {
+    "description": "Sous-titre court d'une option devise avec rail mobile money (currency_selector.dart)."
+  },
+  "currencySelectorSubtitleCashOnly": "Espèces uniquement",
+  "@currencySelectorSubtitleCashOnly": {
+    "description": "Sous-titre court d'une option devise sans rail carte ni mobile money (currency_selector.dart)."
+  },
+  "currencyCardAndCashAvailable": "Carte et espèces disponibles en {currency}",
+  "@currencyCardAndCashAvailable": {
+    "description": "Titre de l'encart quand le serveur annonce le rail carte pour la devise (currency_selector.dart). currency peut être le code (EUR) ou le nom localisé, selon l'appel.",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyCardAndCashDescription": "Le voyageur peut accepter un paiement par carte ou en espèces pour cette devise.",
+  "@currencyCardAndCashDescription": {
+    "description": "Détail de l'encart quand le rail carte est disponible (currency_selector.dart)."
+  },
+  "currencyMobileMoneyAndCashAvailable": "Mobile money et espèces disponibles en {currency}",
+  "@currencyMobileMoneyAndCashAvailable": {
+    "description": "Titre de l'encart quand le serveur annonce le rail mobile money pour la devise (currency_selector.dart). currency peut être le code (XOF) ou le nom localisé, selon l'appel.",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyMobileMoneyAndCashDescription": "Le voyageur peut accepter un paiement par mobile money ou en espèces pour cette devise.",
+  "@currencyMobileMoneyAndCashDescription": {
+    "description": "Détail de l'encart quand le rail mobile money est disponible (currency_selector.dart)."
+  },
+  "currencyCashOnlyAvailable": "Espèces uniquement en {currency}",
+  "@currencyCashOnlyAvailable": {
+    "description": "Titre de l'encart quand seul le paiement en espèces est possible (currency_selector.dart). currency peut être le code ou le nom localisé, selon l'appel.",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyCashOnlyDescription": "Le paiement par carte n'est pas proposé pour cette devise : soit le voyageur n'a pas encore activé les paiements Yadony, soit {currency} n'est pas prise en charge par Stripe. Seul le paiement en espèces sera possible.",
+  "@currencyCashOnlyDescription": {
+    "description": "Détail de l'encart quand seul le paiement en espèces est possible (currency_selector.dart).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyCashOnlyWithDescription": "Espèces uniquement en {currency}. {description}",
+  "@currencyCashOnlyWithDescription": {
+    "description": "Libellé d'accessibilité regroupant le titre (avec le nom localisé de la devise) et le détail de l'encart espèces uniquement (currency_selector.dart).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "description": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyPublishBannerTitle": "Publié en {currencyName} ({code})",
+  "@currencyPublishBannerTitle": {
+    "description": "Titre de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).",
+    "placeholders": {
+      "currencyName": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyPublishBannerTitleUnknown": "Devise à confirmer",
+  "@currencyPublishBannerTitleUnknown": {
+    "description": "Titre de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart)."
+  },
+  "currencyPublishBannerDescriptionKnown": "Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.",
+  "@currencyPublishBannerDescriptionKnown": {
+    "description": "Détail de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart)."
+  },
+  "currencyPublishBannerDescriptionUnknown": "La devise de publication est vérifiée par Yadony avant publication.",
+  "@currencyPublishBannerDescriptionUnknown": {
+    "description": "Détail de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart)."
+  },
+  "currencyPublishBannerSemanticsKnown": "Publication en {currencyName}, devise {code}. {description}",
+  "@currencyPublishBannerSemanticsKnown": {
+    "description": "Libellé d'accessibilité de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).",
+    "placeholders": {
+      "currencyName": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      },
+      "description": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyPublishBannerSemanticsUnknown": "Devise de publication à confirmer par Yadony avant publication.",
+  "@currencyPublishBannerSemanticsUnknown": {
+    "description": "Libellé d'accessibilité de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart)."
+  },
+  "currencyApprox": "environ {amount}",
+  "@currencyApprox": {
+    "description": "Préfixe d'estimation devant un prix converti, jamais un montant exact (converted_price.dart). amount inclut déjà son suffixe d'unité (ex. /kg).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dialNoNumber": "Aucun numéro disponible pour ce contact",
+  "@dialNoNumber": {
+    "description": "Snackbar quand aucun numéro n'est disponible pour composer un appel (phone_dialer.dart)."
+  },
+  "dialNoPhoneApp": "Aucune application téléphone. Numéro : {phone}",
+  "@dialNoPhoneApp": {
+    "description": "Snackbar quand l'appareil n'a pas d'application téléphone, avec repli sur la copie du numéro (phone_dialer.dart).",
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "addressDefaultLabel": "Adresse par défaut",
+  "@addressDefaultLabel": {
+    "description": "Libellé du bouton bascule d'adresse par défaut (address_default_toggle.dart)."
+  },
+  "addressLocatedStatus": "Adresse localisée",
+  "@addressLocatedStatus": {
+    "description": "Statut affiché quand l'adresse a été localisée par GPS ou recherche (address_location_status.dart)."
+  },
+  "addressNotLocatedStatus": "Adresse non localisée, tu peux la saisir à la main",
+  "@addressNotLocatedStatus": {
+    "description": "Statut affiché quand l'adresse n'a pas été localisée (address_location_status.dart)."
+  },
+  "dsEmojiTakeoff": "Décollage",
+  "@dsEmojiTakeoff": {
+    "description": "Étiquette d'accessibilité par défaut de l'emoji décollage ✈️ (dony_emoji.dart)."
+  },
+  "dsEmojiLanding": "Atterrissage",
+  "@dsEmojiLanding": {
+    "description": "Étiquette d'accessibilité par défaut de l'emoji atterrissage 🛬 (dony_emoji.dart)."
+  },
+  "dsEmojiParcel": "Colis",
+  "@dsEmojiParcel": {
+    "description": "Étiquette d'accessibilité par défaut de l'emoji colis 📦 (dony_emoji.dart)."
+  },
+  "appUpdateTitle": "Une mise à jour est nécessaire",
+  "@appUpdateTitle": {
+    "description": "Titre de l'écran bloquant de mise à jour obligatoire (force_update_screen.dart)."
+  },
+  "appUpdateMessage": "Cette version de l'application n'est plus prise en charge. Mets-la à jour pour continuer à utiliser Yadony.",
+  "@appUpdateMessage": {
+    "description": "Message de l'écran bloquant de mise à jour obligatoire (force_update_screen.dart)."
+  },
+  "appUpdateButton": "Mettre à jour maintenant",
+  "@appUpdateButton": {
+    "description": "Bouton d'ouverture du store depuis l'écran de mise à jour obligatoire (force_update_screen.dart)."
+  },
+  "connectivityRestored": "Connexion rétablie",
+  "@connectivityRestored": {
+    "description": "Bandeau vert de confirmation du retour de connexion (connectivity_banner.dart)."
+  },
+  "connectivityOffline": "Pas de connexion internet",
+  "@connectivityOffline": {
+    "description": "Bandeau rouge affiché hors ligne (connectivity_banner.dart)."
+  },
+  "connectivityWeak": "Connexion instable",
+  "@connectivityWeak": {
+    "description": "Bandeau ambre affiché en cas de connexion faible (connectivity_banner.dart)."
   }
 }

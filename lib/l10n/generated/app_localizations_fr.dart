@@ -13891,4 +13891,269 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorReportPhotoNotOwnedMessage =>
       'Une des captures ne t\'appartient pas.';
+
+  @override
+  String get dsDiscardTitle => 'Quitter sans enregistrer ?';
+
+  @override
+  String get dsDiscardMessage =>
+      'Les informations que vous avez saisies ne seront pas conservées. Vous devrez tout ressaisir.';
+
+  @override
+  String get dsDiscardConfirm => 'Quitter';
+
+  @override
+  String get dsDiscardCancel => 'Continuer la saisie';
+
+  @override
+  String get dsSearchHint => 'Rechercher...';
+
+  @override
+  String get dsSelect => 'Sélectionner';
+
+  @override
+  String get dsConfirmSelection => 'Confirmer la sélection';
+
+  @override
+  String get dsSignupProgress => 'Progression de l\'inscription';
+
+  @override
+  String dsGaugeCurrentStep(int index, int total) {
+    return 'Étape $index sur $total';
+  }
+
+  @override
+  String dsGaugeReachedSteps(int count, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count étapes sur $total',
+      one: '$count étape sur $total',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dsBannerInfo => 'Information';
+
+  @override
+  String get dsBannerSuccess => 'Succès';
+
+  @override
+  String get dsBannerWarning => 'Attention';
+
+  @override
+  String get dsBannerError => 'Erreur';
+
+  @override
+  String get dsBannerDismiss => 'Fermer le message';
+
+  @override
+  String get dsLoading => 'Chargement en cours...';
+
+  @override
+  String get dsHideKeyboard => 'Masquer le clavier';
+
+  @override
+  String get dsMascotteJoyeux => 'Mascotte qui salue';
+
+  @override
+  String get dsMascotteBienvenue => 'Mascotte accueillante, bras ouverts';
+
+  @override
+  String get dsMascotteConfiant => 'Mascotte prête à partir en voyage';
+
+  @override
+  String get dsMascotteSecurise =>
+      'Mascotte brandissant un badge de validation';
+
+  @override
+  String get dsMascotteSucces => 'Mascotte célébrant une réussite';
+
+  @override
+  String get dsMascotteEnCourse => 'Colis en transit';
+
+  @override
+  String get dsMascotteAssis => 'Mascotte curieuse, une loupe à la main';
+
+  @override
+  String get dsMascotteAucunResultat =>
+      'Mascotte perplexe devant une carte, aucun résultat';
+
+  @override
+  String get dsMascotteAttente => 'Mascotte patientant devant une horloge';
+
+  @override
+  String get dsMascotteErreur => 'Mascotte inquiète, une erreur est survenue';
+
+  @override
+  String get dsMascotteErreurLegere => 'Mascotte signalant un souci mineur';
+
+  @override
+  String get dsUrgentImminent => '🔥 Départ imminent';
+
+  @override
+  String get dsUrgent => '🔥 Urgent';
+
+  @override
+  String get feedbackSheetTitle => 'Un problème sur cet écran ?';
+
+  @override
+  String get feedbackSheetSubtitle =>
+      'Décrivez le bug. Une capture de l\'écran est jointe automatiquement, vous pouvez en ajouter d\'autres.';
+
+  @override
+  String get feedbackButtonTooltip => 'Signaler un problème';
+
+  @override
+  String get feedbackHint => 'Ex : le code retrait ne s\'affiche pas…';
+
+  @override
+  String get feedbackAttachmentsLabel => 'Vos captures (facultatif)';
+
+  @override
+  String get feedbackAddAttachment => 'Ajouter une capture';
+
+  @override
+  String get feedbackRemoveAttachment => 'Retirer la capture';
+
+  @override
+  String get feedbackSuccessMessage =>
+      'Merci ! Votre rapport a bien été envoyé.';
+
+  @override
+  String get feedbackErrorMessage => 'Envoi impossible. Réessayez.';
+
+  @override
+  String get feedbackSubmitButton => 'Envoyer le rapport';
+
+  @override
+  String get currencySelectorTitle => 'Choisir une devise';
+
+  @override
+  String currencySelectorConfirm(String code) {
+    return 'Confirmer $code';
+  }
+
+  @override
+  String get currencySelectorSubtitleCard => 'Carte et espèces';
+
+  @override
+  String get currencySelectorSubtitleMobileMoney => 'Mobile money et espèces';
+
+  @override
+  String get currencySelectorSubtitleCashOnly => 'Espèces uniquement';
+
+  @override
+  String currencyCardAndCashAvailable(String currency) {
+    return 'Carte et espèces disponibles en $currency';
+  }
+
+  @override
+  String get currencyCardAndCashDescription =>
+      'Le voyageur peut accepter un paiement par carte ou en espèces pour cette devise.';
+
+  @override
+  String currencyMobileMoneyAndCashAvailable(String currency) {
+    return 'Mobile money et espèces disponibles en $currency';
+  }
+
+  @override
+  String get currencyMobileMoneyAndCashDescription =>
+      'Le voyageur peut accepter un paiement par mobile money ou en espèces pour cette devise.';
+
+  @override
+  String currencyCashOnlyAvailable(String currency) {
+    return 'Espèces uniquement en $currency';
+  }
+
+  @override
+  String currencyCashOnlyDescription(String currency) {
+    return 'Le paiement par carte n\'est pas proposé pour cette devise : soit le voyageur n\'a pas encore activé les paiements Yadony, soit $currency n\'est pas prise en charge par Stripe. Seul le paiement en espèces sera possible.';
+  }
+
+  @override
+  String currencyCashOnlyWithDescription(String currency, String description) {
+    return 'Espèces uniquement en $currency. $description';
+  }
+
+  @override
+  String currencyPublishBannerTitle(String currencyName, String code) {
+    return 'Publié en $currencyName ($code)';
+  }
+
+  @override
+  String get currencyPublishBannerTitleUnknown => 'Devise à confirmer';
+
+  @override
+  String get currencyPublishBannerDescriptionKnown =>
+      'Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.';
+
+  @override
+  String get currencyPublishBannerDescriptionUnknown =>
+      'La devise de publication est vérifiée par Yadony avant publication.';
+
+  @override
+  String currencyPublishBannerSemanticsKnown(
+    String currencyName,
+    String code,
+    String description,
+  ) {
+    return 'Publication en $currencyName, devise $code. $description';
+  }
+
+  @override
+  String get currencyPublishBannerSemanticsUnknown =>
+      'Devise de publication à confirmer par Yadony avant publication.';
+
+  @override
+  String currencyApprox(String amount) {
+    return 'environ $amount';
+  }
+
+  @override
+  String get dialNoNumber => 'Aucun numéro disponible pour ce contact';
+
+  @override
+  String dialNoPhoneApp(String phone) {
+    return 'Aucune application téléphone. Numéro : $phone';
+  }
+
+  @override
+  String get addressDefaultLabel => 'Adresse par défaut';
+
+  @override
+  String get addressLocatedStatus => 'Adresse localisée';
+
+  @override
+  String get addressNotLocatedStatus =>
+      'Adresse non localisée, tu peux la saisir à la main';
+
+  @override
+  String get dsEmojiTakeoff => 'Décollage';
+
+  @override
+  String get dsEmojiLanding => 'Atterrissage';
+
+  @override
+  String get dsEmojiParcel => 'Colis';
+
+  @override
+  String get appUpdateTitle => 'Une mise à jour est nécessaire';
+
+  @override
+  String get appUpdateMessage =>
+      'Cette version de l\'application n\'est plus prise en charge. Mets-la à jour pour continuer à utiliser Yadony.';
+
+  @override
+  String get appUpdateButton => 'Mettre à jour maintenant';
+
+  @override
+  String get connectivityRestored => 'Connexion rétablie';
+
+  @override
+  String get connectivityOffline => 'Pas de connexion internet';
+
+  @override
+  String get connectivityWeak => 'Connexion instable';
 }

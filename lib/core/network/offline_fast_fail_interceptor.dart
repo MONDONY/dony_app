@@ -47,12 +47,15 @@ class OfflineFastFailInterceptor extends Interceptor {
     // confirmé hors ligne (après les ré-essais ci-dessus) ne fait que
     // retarder l'échec de plusieurs secondes pour rien.
     options.extra['skipTransientRetry'] = true;
+    // Messages techniques jamais affichés : unwrapDioError bascule sur
+    // DioExceptionType.connectionError -> OfflineException() avant même de
+    // regarder `error`/`message`, qu'ErrorCatalog ignore de toute façon.
     handler.reject(
       DioException(
         requestOptions: options,
         type: DioExceptionType.connectionError,
-        error: 'Aucune connexion réseau',
-        message: 'Aucune connexion réseau',
+        error: 'Aucune connexion réseau', // i18n-ignore
+        message: 'Aucune connexion réseau', // i18n-ignore
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 class AddressDefaultToggle extends StatelessWidget {
@@ -45,7 +46,7 @@ class AddressDefaultToggle extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Adresse par défaut',
+                    context.l10n.addressDefaultLabel,
                     style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   Text(

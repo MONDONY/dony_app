@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Champ de recherche Yadony avec animation de focus et bouton clear.
@@ -15,7 +16,7 @@ import 'package:flutter/material.dart';
 class DonySearchField extends StatefulWidget {
   const DonySearchField({
     super.key,
-    this.hint = 'Rechercher...',
+    this.hint,
     this.controller,
     this.onChanged,
     this.onSubmitted,
@@ -25,7 +26,7 @@ class DonySearchField extends StatefulWidget {
     this.prefixIcon = Icons.search_rounded,
   });
 
-  final String hint;
+  final String? hint;
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
@@ -73,6 +74,7 @@ class _DonySearchFieldState extends State<DonySearchField> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return TextField(
       controller: _controller,
@@ -85,7 +87,7 @@ class _DonySearchFieldState extends State<DonySearchField> {
         context,
       ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
       decoration: InputDecoration(
-        hintText: widget.hint,
+        hintText: widget.hint ?? l.dsSearchHint,
         prefixIcon: Icon(
           widget.prefixIcon,
           size: 20,
@@ -96,7 +98,7 @@ class _DonySearchFieldState extends State<DonySearchField> {
                 icon: const DonyIcon('x', size: 18),
                 color: cs.onSurfaceVariant,
                 onPressed: _clear,
-                tooltip: 'Effacer',
+                tooltip: l.commonClear,
               )
             : null,
         filled: true,

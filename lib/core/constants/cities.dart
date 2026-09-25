@@ -6,6 +6,9 @@ enum CityType { departure, arrival }
 class City {
   final String id;
   final String displayName;
+
+  /// Donnée de catalogue, jamais affichée : le seul importateur
+  /// (`route_bottom_sheet.dart`) n'utilise que [displayName].
   final String country;
   final LatLng coordinates;
   final CityType type;
@@ -26,49 +29,49 @@ class CityConstants {
     City(
       id: 'paris',
       displayName: 'Paris',
-      country: 'France',
+      country: 'France', // i18n-ignore
       coordinates: LatLng(48.8566, 2.3522),
       type: CityType.departure,
     ),
     City(
       id: 'lyon',
       displayName: 'Lyon',
-      country: 'France',
+      country: 'France', // i18n-ignore
       coordinates: LatLng(45.7640, 4.8357),
       type: CityType.departure,
     ),
     City(
       id: 'marseille',
       displayName: 'Marseille',
-      country: 'France',
+      country: 'France', // i18n-ignore
       coordinates: LatLng(43.2965, 5.3698),
       type: CityType.departure,
     ),
     City(
       id: 'dakar',
       displayName: 'Dakar',
-      country: 'Sénégal',
+      country: 'Sénégal', // i18n-ignore
       coordinates: LatLng(14.7167, -17.4677),
       type: CityType.arrival,
     ),
     City(
       id: 'abidjan',
       displayName: 'Abidjan',
-      country: "Côte d'Ivoire",
+      country: "Côte d'Ivoire", // i18n-ignore
       coordinates: LatLng(5.3599, -4.0083),
       type: CityType.arrival,
     ),
     City(
       id: 'bamako',
       displayName: 'Bamako',
-      country: 'Mali',
+      country: 'Mali', // i18n-ignore
       coordinates: LatLng(12.6392, -8.0029),
       type: CityType.arrival,
     ),
     City(
       id: 'douala',
       displayName: 'Douala',
-      country: 'Cameroun',
+      country: 'Cameroun', // i18n-ignore
       coordinates: LatLng(4.0511, 9.7679),
       type: CityType.arrival,
     ),

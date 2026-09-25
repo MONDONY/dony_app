@@ -265,20 +265,25 @@ class TripDetailBottomSheet extends StatelessWidget {
     if (l.localeName != 'fr') {
       return DateFormat.yMMMd(l.localeName).format(d);
     }
+    // Rendu français historique, sans point après le mois ; l'anglais passe
+    // par DateFormat.yMMMd. Cette liste n'est jamais lue quand `l.localeName`
+    // vaut 'en' (retour anticipé ci-dessus) : les abréviations sans accent
+    // (jan, mar, avr…) sont donc aussi des faux positifs du garde-fou, comme
+    // celles marquées `// i18n-ignore`.
     const months = [
       '',
       'jan',
-      'fév',
+      'fév', // i18n-ignore
       'mar',
       'avr',
       'mai',
       'juin',
       'juil',
-      'août',
+      'août', // i18n-ignore
       'sep',
       'oct',
       'nov',
-      'déc',
+      'déc', // i18n-ignore
     ];
     return '${d.day} ${months[d.month]} ${d.year}';
   }

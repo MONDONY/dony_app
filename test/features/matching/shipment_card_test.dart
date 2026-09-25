@@ -146,7 +146,9 @@ void main() {
 
       expect(find.text('IN TRANSIT'), findsOneWidget);
       expect(find.text('Track the parcel →'), findsOneWidget);
-      expect(find.textContaining('Parcel 4,5 kg'), findsOneWidget);
+      // Décimale au point en anglais (avant ce correctif, la virgule
+      // française restait figée par un `replaceAll('.', ',')`).
+      expect(find.textContaining('Parcel 4.5 kg'), findsOneWidget);
       expect(find.textContaining('for Mariama'), findsOneWidget);
       expect(find.text('Handed over'), findsOneWidget);
       expect(find.text('Boarded'), findsOneWidget);

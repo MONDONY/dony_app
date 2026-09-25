@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// État d'un segment de [DonyOnboardingGauge].
@@ -33,7 +34,7 @@ class DonyOnboardingGauge extends StatelessWidget {
     super.key,
     required this.segments,
     required this.label,
-    this.semanticsLabel = 'Progression de l\'inscription',
+    this.semanticsLabel,
     this.showCounter = true,
   });
 
@@ -44,7 +45,7 @@ class DonyOnboardingGauge extends StatelessWidget {
 
   /// Ce que la jauge mesure, lu par le lecteur d'écran. Par défaut le parcours
   /// d'inscription, son premier usage ; la carte des outils en fournit un autre.
-  final String semanticsLabel;
+  final String? semanticsLabel;
 
   /// Affiche la ligne de compteur texte (« n / total · label ») au-dessus des
   /// segments. À `false` quand un autre élément de l'écran affiche déjà ce
@@ -59,33 +60,33 @@ class DonyOnboardingGauge extends StatelessWidget {
   int get _reachedCount =>
       segments.where((s) => s != DonyGaugeSegment.todo).length;
 
-  String _semanticsValue() {
+  String _semanticsValue(AppLocalizations l) {
     final total = segments.length;
     final index = segments.indexOf(DonyGaugeSegment.current);
     if (index >= 0) {
-      return 'Étape ${index + 1} sur $total';
+      return l.dsGaugeCurrentStep(index + 1, total);
     }
-    final plural = _reachedCount > 1 ? 's' : '';
-    return '$_reachedCount étape$plural sur $total';
+    return l.dsGaugeReachedSteps(_reachedCount, total);
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final total = segments.length;
 
     return Semantics(
       container: true,
-      label: semanticsLabel,
-      value: _semanticsValue(),
+      label: semanticsLabel ?? l.dsSignupProgress,
+      value: _semanticsValue(l),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
           if (showCounter) ...[
             Text(
-              '$_reachedCount / $total · $label',
+              '$_reachedCount / $total · $label', // i18n-ignore : format, label déjà localisé par l'appelant
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: tt.labelSmall?.copyWith(

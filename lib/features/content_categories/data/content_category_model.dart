@@ -46,6 +46,12 @@ class ContentCategory {
 /// Catalogue embarqué, identique au catalogue backend
 /// (`GET /config/content-categories`). Filet de sécurité hors ligne : utilisé
 /// quand l'appel réseau échoue, pour ne jamais bloquer un formulaire.
+///
+/// Chaque `label` est une valeur de donnée (comparée, stockée, envoyée au
+/// serveur) : elle ne s'affiche jamais telle quelle, seulement via
+/// [contentCategoryDisplayName]. Tous les libellés ci-dessous sont donc des
+/// faux positifs du garde-fou, même ceux sans accent que `// i18n-ignore` ne
+/// marque pas un par un.
 const List<ContentCategory> fallbackCatalog = [
   ContentCategory(
     code: 'DOCUMENTS',
@@ -54,29 +60,33 @@ const List<ContentCategory> fallbackCatalog = [
   ),
   ContentCategory(
     code: 'ALIMENTATION_SECHE',
-    label: 'Alimentation sèche',
+    label: 'Alimentation sèche', // i18n-ignore
     emoji: '🍚',
   ),
   ContentCategory(
     code: 'PRODUITS_FRAIS',
-    label: 'Produits frais / périssables',
+    label: 'Produits frais / périssables', // i18n-ignore
     emoji: '🐟',
   ),
   ContentCategory(
     code: 'COSMETIQUES',
-    label: 'Cosmétiques & parfums',
+    label: 'Cosmétiques & parfums', // i18n-ignore
     emoji: '💄',
   ),
-  ContentCategory(code: 'VETEMENTS', label: 'Vêtements & tissus', emoji: '👗'),
+  ContentCategory(
+    code: 'VETEMENTS',
+    label: 'Vêtements & tissus', // i18n-ignore
+    emoji: '👗',
+  ),
   ContentCategory(code: 'CHAUSSURES', label: 'Chaussures', emoji: '👟'),
   ContentCategory(
     code: 'MEDICAMENTS_TRADITIONNELS',
-    label: 'Médicaments traditionnels',
+    label: 'Médicaments traditionnels', // i18n-ignore
     emoji: '🌿',
   ),
   ContentCategory(
     code: 'ELECTRONIQUE',
-    label: 'Téléphone & électronique',
+    label: 'Téléphone & électronique', // i18n-ignore
     emoji: '📱',
   ),
   ContentCategory(code: 'LIVRES', label: 'Livres', emoji: '📚'),

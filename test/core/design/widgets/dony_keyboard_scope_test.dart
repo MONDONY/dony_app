@@ -2,6 +2,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   final barFinder = find.byKey(const Key('donyKeyboardDoneBar'));
 
@@ -78,6 +80,25 @@ void main() {
 
     expect(barFinder, findsOneWidget);
     expect(find.text('Terminé'), findsOneWidget);
+  });
+
+  testWidgets('barre Terminé traduite en anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      wrap(
+        field: const TextField(
+          autofocus: true,
+          keyboardType: TextInputType.number,
+        ),
+        keyboardHeight: 300,
+      ),
+    );
+    await tester.pump();
+
+    expect(barFinder, findsOneWidget);
+    expect(find.text('Done'), findsOneWidget);
+    expect(find.text('Terminé'), findsNothing);
+    expect(find.bySemanticsLabel('Hide keyboard'), findsOneWidget);
   });
 
   testWidgets('barre Terminé affichée sur un champ multiligne', (tester) async {

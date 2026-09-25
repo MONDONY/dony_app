@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 enum AddressLocationState { localized, manual, hidden }
@@ -14,14 +15,13 @@ class AddressLocationStatus extends StatelessWidget {
     if (state == AddressLocationState.hidden) {
       return const SizedBox.shrink();
     }
+    final l = context.l10n;
     final localized = state == AddressLocationState.localized;
     final color = localized ? cs.success : cs.onSurfaceVariant;
     final icon = localized
         ? Icons.check_circle_rounded
         : Icons.edit_location_alt_outlined;
-    final text = localized
-        ? 'Adresse localisée'
-        : 'Adresse non localisée, tu peux la saisir à la main';
+    final text = localized ? l.addressLocatedStatus : l.addressNotLocatedStatus;
 
     return Padding(
       padding: const EdgeInsets.only(top: DonySpacing.sm, left: DonySpacing.xs),

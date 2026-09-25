@@ -1,6 +1,7 @@
 import 'package:dony/core/design/tokens/animation_tokens.dart';
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -41,18 +42,18 @@ enum DonyMascotteType {
     erreurLegere => 'assets/mascotte/error_light.png',
   };
 
-  String get semanticLabel => switch (this) {
-    joyeux => 'Mascotte qui salue',
-    bienvenue => 'Mascotte accueillante, bras ouverts',
-    confiant => 'Mascotte prête à partir en voyage',
-    securise => 'Mascotte brandissant un badge de validation',
-    succes => 'Mascotte célébrant une réussite',
-    enCourse => 'Colis en transit',
-    assis => 'Mascotte curieuse, une loupe à la main',
-    aucunResultat => 'Mascotte perplexe devant une carte, aucun résultat',
-    attente => 'Mascotte patientant devant une horloge',
-    erreur => 'Mascotte inquiète, une erreur est survenue',
-    erreurLegere => 'Mascotte signalant un souci mineur',
+  String semanticLabel(AppLocalizations l) => switch (this) {
+    joyeux => l.dsMascotteJoyeux,
+    bienvenue => l.dsMascotteBienvenue,
+    confiant => l.dsMascotteConfiant,
+    securise => l.dsMascotteSecurise,
+    succes => l.dsMascotteSucces,
+    enCourse => l.dsMascotteEnCourse,
+    assis => l.dsMascotteAssis,
+    aucunResultat => l.dsMascotteAucunResultat,
+    attente => l.dsMascotteAttente,
+    erreur => l.dsMascotteErreur,
+    erreurLegere => l.dsMascotteErreurLegere,
   };
 
   /// Vrai pour les types dont l'animation tourne tant que la mascotte est
@@ -104,7 +105,7 @@ class DonyMascotte extends StatelessWidget {
       fit: fit,
       cacheWidth: _kDecodeSize,
       cacheHeight: _kDecodeSize,
-      semanticLabel: type.semanticLabel,
+      semanticLabel: type.semanticLabel(context.l10n),
     );
     if (borderRadius != null) {
       return ClipRRect(borderRadius: borderRadius!, child: image);

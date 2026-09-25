@@ -326,7 +326,8 @@ class CountryCatalog {
   }
 
   static String _fold(String value) {
-    const from = 'àâäçéèêëîïôöùûü';
+    const from =
+        'àâäçéèêëîïôöùûü'; // i18n-ignore : table de repliement d'accents, donnée
     const to = 'aaaceeeeiioouuu';
     final buffer = StringBuffer();
     for (final rune in value.trim().toLowerCase().runes) {

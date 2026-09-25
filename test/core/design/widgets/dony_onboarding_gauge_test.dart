@@ -2,6 +2,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 Widget _wrap(Widget child) => MaterialApp(
   theme: AppTheme.light(),
   home: Scaffold(body: Center(child: child)),
@@ -220,6 +222,116 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('1 / 3 · Outils'), findsOneWidget);
+    });
+  });
+
+  group('DonyOnboardingGauge — dsGaugeReachedSteps (0, 1, 2 en fr)', () {
+    testWidgets('0 étape franchie', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DonyOnboardingGauge(
+            segments: [DonyGaugeSegment.todo, DonyGaugeSegment.todo],
+            label: 'Pays',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
+      expect(semantics.value, '0 étape sur 2');
+    });
+
+    testWidgets('1 étape franchie', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DonyOnboardingGauge(
+            segments: [DonyGaugeSegment.done, DonyGaugeSegment.todo],
+            label: 'Pays',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
+      expect(semantics.value, '1 étape sur 2');
+    });
+
+    testWidgets('2 étapes franchies', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DonyOnboardingGauge(
+            segments: [DonyGaugeSegment.done, DonyGaugeSegment.done],
+            label: 'Pays',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
+      expect(semantics.value, '2 étapes sur 2');
+    });
+  });
+
+  group('DonyOnboardingGauge — traduction en anglais', () {
+    testWidgets('étape en cours', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          const DonyOnboardingGauge(
+            segments: [
+              DonyGaugeSegment.done,
+              DonyGaugeSegment.done,
+              DonyGaugeSegment.current,
+              DonyGaugeSegment.todo,
+              DonyGaugeSegment.todo,
+            ],
+            label: 'Identity',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
+      expect(semantics.value, 'Step 3 of 5');
+      expect(semantics.label, startsWith('Sign-up progress'));
+    });
+
+    testWidgets('total atteint, 0 / 1 / 2', (tester) async {
+      useEnglish();
+      for (final entry in {
+        0: '0 steps of 2',
+        1: '1 step of 2',
+        2: '2 steps of 2',
+      }.entries) {
+        final segments = List.generate(
+          2,
+          (i) => i < entry.key ? DonyGaugeSegment.done : DonyGaugeSegment.todo,
+        );
+        await tester.pumpWidget(
+          _wrap(DonyOnboardingGauge(segments: segments, label: 'Country')),
+        );
+        await tester.pumpAndSettle();
+
+        final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
+        expect(semantics.value, entry.value, reason: 'count=${entry.key}');
+      }
+    });
+
+    testWidgets('semanticsLabel explicite l\'emporte toujours', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          const DonyOnboardingGauge(
+            segments: [DonyGaugeSegment.done, DonyGaugeSegment.todo],
+            label: 'Tools',
+            semanticsLabel: 'Tools setup progress',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
+      expect(semantics.label, startsWith('Tools setup progress'));
     });
   });
 }

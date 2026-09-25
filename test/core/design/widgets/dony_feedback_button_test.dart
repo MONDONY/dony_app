@@ -12,6 +12,8 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 // ── Test doubles ─────────────────────────────────────────────────────────────
 
 class _FakeAnalytics extends Fake implements AnalyticsService {
@@ -660,6 +662,8 @@ void main() {
       findsOneWidget,
     );
   });
+
+  _englishTests();
 }
 
 class _RecordingSender extends Fake implements ScreenFeedbackSender {
@@ -687,4 +691,139 @@ class _FailingSender extends Fake implements ScreenFeedbackSender {
     required String route,
     Uint8List? screenshot,
   }) async => throw Exception('hors ligne');
+}
+
+void _englishTests() {
+  Widget subject({Future<void> Function(FeedbackReport report)? onSubmit}) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          actions: [DonyFeedbackButton(onSubmitOverride: onSubmit)],
+        ),
+        body: const SizedBox(),
+      ),
+    );
+  }
+
+  group('DonyFeedbackButton — English', () {
+    testWidgets('tooltip translated', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(subject());
+      expect(find.byTooltip('Report a problem'), findsOneWidget);
+    });
+
+    testWidgets('sheet texts translated', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(subject());
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('A problem with this screen?'), findsOneWidget);
+      expect(
+        find.text(
+          'Describe the bug. A screenshot is attached automatically, '
+          'you can add more.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Your screenshots (optional)'), findsOneWidget);
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.decoration?.hintText, "E.g. the pickup code doesn't show…");
+      final btn = tester.widget<DonyButton>(
+        find.widgetWithText(DonyButton, 'Send report'),
+      );
+      expect(btn.onPressed, isNull);
+    });
+
+    testWidgets('success message translated', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(subject(onSubmit: (_) async {}));
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'bug');
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Send report'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Thank you! Your report was sent successfully.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('error message translated', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        subject(onSubmit: (_) async => throw Exception('network')),
+      );
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'bug');
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Send report'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Couldn't send. Try again."), findsOneWidget);
+    });
+
+    testWidgets('attachment picker texts translated', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            appBar: AppBar(
+              actions: [
+                DonyFeedbackButton(
+                  pickImageOverride: (_) async => null,
+                  onSubmitOverride: (_) async {},
+                ),
+              ],
+            ),
+            body: const SizedBox(),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(DonyFeedbackButton));
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsLabel('Add a screenshot'), findsOneWidget);
+      await tester.tap(find.bySemanticsLabel('Add a screenshot'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choose from gallery'), findsOneWidget);
+      expect(find.text('Take a photo'), findsOneWidget);
+    });
+
+    testWidgets('unsupported image message translated', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            appBar: AppBar(
+              actions: [
+                DonyFeedbackButton(
+                  pickImageOverride: (_) async => throw Exception('trop gros'),
+                  onSubmitOverride: (_) async {},
+                ),
+              ],
+            ),
+            body: const SizedBox(),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(DonyFeedbackButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Add a screenshot'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Choose from gallery'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unsupported or too large image'), findsOneWidget);
+    });
+  });
 }

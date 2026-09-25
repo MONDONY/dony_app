@@ -2,6 +2,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 Widget _wrap(Widget child) => MaterialApp(
   theme: AppTheme.light(),
   home: Scaffold(body: Center(child: child)),
@@ -203,9 +205,35 @@ void main() {
       await tester.pumpWidget(_wrap(const DonySelectBar(onConfirm: null)));
       await tester.pump();
 
-      final bar = tester.widget<DonySelectBar>(find.byType(DonySelectBar));
-      expect(bar.defaultLabel, equals('Sélectionner'));
-      expect(bar.confirmedLabel, equals('Confirmer la sélection'));
+      expect(find.text('Sélectionner'), findsOneWidget);
+
+      await _drain(tester);
+    });
+
+    testWidgets('default label values, in English', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap(const DonySelectBar(onConfirm: null)));
+      await tester.pump();
+
+      expect(find.text('Select'), findsOneWidget);
+      expect(find.text('Sélectionner'), findsNothing);
+
+      await _drain(tester);
+    });
+
+    testWidgets('confirmedLabel par défaut, en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          DonySelectBar(
+            selectedSummary: 'Paris → Dakar sélectionné',
+            onConfirm: () {},
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(find.text('Confirm selection'), findsOneWidget);
 
       await _drain(tester);
     });

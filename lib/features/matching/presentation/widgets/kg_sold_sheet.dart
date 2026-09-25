@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/kg_sold_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
@@ -75,16 +76,7 @@ class KgSoldSheet extends StatelessWidget {
   }
 }
 
-String _kg(double v) {
-  // Arrondir d'abord à une décimale, puis juger l'entier sur la valeur
-  // arrondie : sinon 2.04 (arrondi ultérieur à 1 décimale donnerait 2.0)
-  // passait le test `v % 1 == 0` sur la valeur brute et s'affichait « 2,0 kg ».
-  final rounded = double.parse(v.toStringAsFixed(1));
-  final text = rounded % 1 == 0
-      ? rounded.toStringAsFixed(0)
-      : rounded.toStringAsFixed(1).replaceAll('.', ',');
-  return '$text kg';
-}
+String _kg(AppLocalizations l, double v) => formatWeightKg(l, v);
 
 class _LoadedBody extends StatelessWidget {
   const _LoadedBody({required this.model});
@@ -120,7 +112,7 @@ class _LoadedBody extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                _kg(model.totalKg),
+                _kg(l, model.totalKg),
                 style: tt.displayLarge?.copyWith(
                   color: cs.primary,
                   fontFeatures: const [FontFeature.tabularFigures()],
@@ -194,7 +186,7 @@ class _TripRow extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            _kg(trip.kg),
+            _kg(l, trip.kg),
             style: tt.bodyMedium?.copyWith(
               color: cs.primary,
               fontWeight: FontWeight.w700,

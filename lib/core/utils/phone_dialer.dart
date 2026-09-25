@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,7 +18,7 @@ Future<void> dialPhoneNumber(BuildContext context, String? phone) async {
   if (phone == null || phone.isEmpty) {
     DonySnackbar.show(
       context,
-      message: 'Aucun numéro disponible pour ce contact',
+      message: context.l10n.dialNoNumber,
       type: DonySnackbarType.warning,
     );
     return;
@@ -41,12 +42,13 @@ Future<void> dialPhoneNumber(BuildContext context, String? phone) async {
 
   // Pas de composeur : on montre le numéro et on offre de le copier plutôt que de
   // laisser l'utilisateur sans rien.
+  final l = context.l10n;
   DonySnackbar.show(
     context,
-    message: 'Aucune application téléphone. Numéro : $phone',
+    message: l.dialNoPhoneApp(phone),
     type: DonySnackbarType.warning,
     duration: const Duration(seconds: 8),
-    actionLabel: 'Copier',
+    actionLabel: l.commonCopy,
     onAction: () => Clipboard.setData(ClipboardData(text: phone)),
   );
 }

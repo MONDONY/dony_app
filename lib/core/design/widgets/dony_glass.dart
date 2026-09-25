@@ -151,8 +151,8 @@ class DonyGlassCard extends StatelessWidget {
     this.opacity = 0.62,
   }) : assert(
          opacity >= 0.62,
-         'DonyGlassCard.opacity must be >= 0.62 (AA contrast contract). '
-         'Below 0.62, ink-900 text on saturated aurora becomes unreadable.',
+         'DonyGlassCard.opacity must be >= 0.62 (AA contrast contract). ' // i18n-ignore
+         'Below 0.62, ink-900 text on saturated aurora becomes unreadable.', // i18n-ignore
        );
 
   final Widget child;
@@ -202,7 +202,7 @@ class DonyGlassDarkFloating extends StatelessWidget {
     this.tint,
   }) : assert(
          opacity >= 0.62,
-         'DonyGlassDarkFloating.opacity must be >= 0.62 (AA contrast contract).',
+         'DonyGlassDarkFloating.opacity must be >= 0.62 (AA contrast contract).', // i18n-ignore
        );
 
   final Widget child;

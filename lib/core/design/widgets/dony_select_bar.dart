@@ -1,6 +1,7 @@
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -27,8 +28,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 class DonySelectBar extends StatelessWidget {
   const DonySelectBar({
     super.key,
-    this.defaultLabel = 'Sélectionner',
-    this.confirmedLabel = 'Confirmer la sélection',
+    this.defaultLabel,
+    this.confirmedLabel,
     this.selectedSummary,
     this.selectedCount,
     required this.onConfirm,
@@ -36,10 +37,10 @@ class DonySelectBar extends StatelessWidget {
   });
 
   /// Label du bouton quand rien n'est sélectionné (bouton désactivé).
-  final String defaultLabel;
+  final String? defaultLabel;
 
   /// Label du bouton quand une sélection est active (bouton activé).
-  final String confirmedLabel;
+  final String? confirmedLabel;
 
   /// Résumé textuel de la sélection (ex: "Paris → Dakar sélectionné").
   /// Si `null`, la ligne de contexte n'est pas affichée.
@@ -59,8 +60,11 @@ class DonySelectBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     final hasSelection = selectedSummary != null;
+    final effectiveDefaultLabel = defaultLabel ?? l.dsSelect;
+    final effectiveConfirmedLabel = confirmedLabel ?? l.dsConfirmSelection;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -70,39 +74,33 @@ class DonySelectBar extends StatelessWidget {
         if (hasSelection)
           Padding(
             padding: const EdgeInsets.only(bottom: DonySpacing.xs),
-            child:
-                Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            selectedSummary!,
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (selectedCount != null) ...[
-                          const SizedBox(width: DonySpacing.xs),
-                          Text(
-                            '✓ $selectedCount',
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.success,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ],
-                    )
-                    .animate()
-                    .fadeIn(duration: 200.ms)
-                    .slideY(begin: -0.3, duration: 200.ms),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    selectedSummary!,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (selectedCount != null) ...[
+                  const SizedBox(width: DonySpacing.xs),
+                  Text(
+                    '✓ $selectedCount', // i18n-ignore : format, la valeur est déjà localisée par l'appelant
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.success,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ).animate().fadeIn(duration: 200.ms).slideY(begin: -0.3, duration: 200.ms),
           ),
 
         // ── Bouton principal ────────────────────────────────────────────────
         DonyButton(
-          label: hasSelection ? confirmedLabel : defaultLabel,
+          label: hasSelection ? effectiveConfirmedLabel : effectiveDefaultLabel,
           onPressed: onConfirm,
           isLoading: isLoading,
         ),

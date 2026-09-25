@@ -38,9 +38,10 @@ abstract final class ErrorPresenter {
 
     // Always log raw details in debug — never in prod and never to the user.
     if (kDebugMode && unwrapped is AppException) {
+      // Journal de debug console uniquement, jamais affiché à l'utilisateur.
       debugPrint(
-        '[ErrorPresenter] code=${unwrapped.code} '
-        'severity=${p.severity.name} raw="${unwrapped.message}"',
+        '[ErrorPresenter] code=${unwrapped.code} ' // i18n-ignore
+        'severity=${p.severity.name} raw="${unwrapped.message}"', // i18n-ignore
       );
     }
 

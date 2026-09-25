@@ -49,7 +49,7 @@ class DonyExpandableChoice<T> extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.enableHaptic = true,
-  }) : assert(choices.length >= 1, 'Au moins un choix');
+  }) : assert(choices.length >= 1, 'Au moins un choix'); // i18n-ignore
 
   final List<DonyChoice<T>> choices;
   final T value;

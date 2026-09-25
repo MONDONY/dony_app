@@ -1,7 +1,10 @@
 import 'package:dony/core/currency/converted_price.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/l10n_test_helpers.dart';
 
 void main() {
   Future<void> pump(
@@ -101,5 +104,18 @@ void main() {
     expect(text.toLowerCase(), isNot(contains('débité')));
     expect(text.toLowerCase(), isNot(contains('payé')));
     expect(text.toLowerCase(), isNot(contains('facturé')));
+  });
+
+  testWidgets('en : préfixe traduit, toujours une estimation', (tester) async {
+    useEnglish();
+    await pump(
+      tester,
+      originalCurrency: 'EUR',
+      convertedPricePerKg: 6560,
+      convertedCurrency: 'XOF',
+    );
+
+    expect(find.text('about ${formatPriceIn(6560, 'XOF')}/kg'), findsOneWidget);
+    expect(find.textContaining('environ'), findsNothing);
   });
 }

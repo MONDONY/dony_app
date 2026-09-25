@@ -1,9 +1,12 @@
 import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../helpers/l10n_test_helpers.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
   theme: AppTheme.light(),
@@ -49,14 +52,31 @@ void main() {
       );
     });
 
-    test('chaque type a un semanticLabel non vide et distinct', () {
+    test('chaque type a un semanticLabel non vide et distinct (fr)', () {
+      final l = AppL10n.current;
       final labels = <String>{};
       for (final t in DonyMascotteType.values) {
-        expect(t.semanticLabel, isNotEmpty);
+        final label = t.semanticLabel(l);
+        expect(label, isNotEmpty);
         expect(
-          labels.add(t.semanticLabel),
+          labels.add(label),
           isTrue,
-          reason: 'semanticLabel dupliqué : ${t.semanticLabel}',
+          reason: 'semanticLabel dupliqué : $label',
+        );
+      }
+    });
+
+    test('chaque type a un semanticLabel non vide et distinct (en)', () {
+      useEnglish();
+      final l = AppL10n.current;
+      final labels = <String>{};
+      for (final t in DonyMascotteType.values) {
+        final label = t.semanticLabel(l);
+        expect(label, isNotEmpty);
+        expect(
+          labels.add(label),
+          isTrue,
+          reason: 'semanticLabel duplicated: $label',
         );
       }
     });
@@ -187,6 +207,17 @@ void main() {
         find.bySemanticsLabel('Mascotte curieuse, une loupe à la main'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('expose Semantics traduit en anglais pour joyeux', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(const DonyMascotte(type: DonyMascotteType.joyeux)),
+      );
+
+      expect(find.bySemanticsLabel('Mascot waving hello'), findsOneWidget);
     });
   });
 

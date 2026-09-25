@@ -2,6 +2,7 @@ import 'package:dony/core/design/accessibility_scope.dart';
 import 'package:dony/core/design/tokens/color_tokens.dart'; // DonyStatusColors extension
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Banner types for [DonyStatusBanner].
@@ -36,7 +37,7 @@ class DonyStatusBanner extends StatelessWidget {
     this.action,
   }) : assert(
          message != null || messageSpan != null,
-         'Either message or messageSpan must be provided.',
+         'Either message or messageSpan must be provided.', // i18n-ignore
        );
 
   final DonyStatusBannerType type;
@@ -95,6 +96,7 @@ class DonyStatusBanner extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final style = _resolveStyle(cs);
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final effectiveIcon = icon ?? style.defaultIcon;
 
     final baseTextStyle = tt.bodySmall?.copyWith(color: cs.onSurface);
@@ -119,10 +121,10 @@ class DonyStatusBanner extends StatelessWidget {
         title ??
         (context.a11y.reinforceLabels
             ? switch (type) {
-                DonyStatusBannerType.info => 'Information',
-                DonyStatusBannerType.success => 'Succès',
-                DonyStatusBannerType.warning => 'Attention',
-                DonyStatusBannerType.error => 'Erreur',
+                DonyStatusBannerType.info => l.dsBannerInfo,
+                DonyStatusBannerType.success => l.dsBannerSuccess,
+                DonyStatusBannerType.warning => l.dsBannerWarning,
+                DonyStatusBannerType.error => l.dsBannerError,
               }
             : null);
 
@@ -184,7 +186,7 @@ class DonyStatusBanner extends StatelessWidget {
                 button: true,
                 container: true,
                 excludeSemantics: true,
-                label: 'Fermer le message',
+                label: l.dsBannerDismiss,
                 child: GestureDetector(
                   onTap: onDismiss,
                   child: DonyIcon('x', size: 16, color: style.iconColor),

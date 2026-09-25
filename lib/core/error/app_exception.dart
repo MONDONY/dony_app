@@ -17,9 +17,22 @@ AppException unwrapDioError(Object e) {
       case DioExceptionType.connectionError:
         return const OfflineException();
       case DioExceptionType.cancel:
-        return const NetworkException('Requête annulée', code: 'CANCELLED');
+        // Jamais affiché PAR ErrorCatalog : ErrorCatalog.lookup résout
+        // 'CANCELLED' via son propre texte localisé (errorCancelledMessage),
+        // sans jamais lire AppException.message. Un écran qui affiche
+        // directement `e.toString()`/`e.message` sans passer par
+        // ErrorPresenter/ErrorCatalog reste hors de cette garantie (suivi
+        // distinct, cf. relecture finale du lot J).
+        return const NetworkException(
+          'Requête annulée', // i18n-ignore
+          code: 'CANCELLED',
+        );
       default:
-        return NetworkException(e.message ?? 'Erreur réseau');
+        // Jamais affiché PAR ErrorCatalog : NetworkException tombe sur
+        // _networkGeneric dans ErrorCatalog (_byType), qui ignore
+        // error.message. Voir la remarque ci-dessus pour un écran qui
+        // contournerait ErrorCatalog.
+        return NetworkException(e.message ?? 'Erreur réseau'); // i18n-ignore
     }
   }
   return NetworkException(e.toString());
@@ -51,12 +64,20 @@ class NetworkException extends AppException {
 }
 
 class TimeoutException extends AppException {
-  const TimeoutException([super.message = 'Délai dépassé'])
+  // Jamais affiché PAR ErrorCatalog : ErrorCatalog.lookup résout 'TIMEOUT'
+  // via errorTimeoutMessage, sans jamais lire AppException.message. Un écran
+  // qui affiche directement `e.toString()`/`e.message` reste hors de cette
+  // garantie (suivi distinct, cf. relecture finale du lot J).
+  const TimeoutException([super.message = 'Délai dépassé']) // i18n-ignore
     : super(code: 'TIMEOUT');
 }
 
 class OfflineException extends AppException {
-  const OfflineException([super.message = 'Pas de connexion'])
+  // Jamais affiché PAR ErrorCatalog : ErrorCatalog.lookup résout 'OFFLINE'
+  // via errorOfflineMessage, sans jamais lire AppException.message. Même
+  // remarque que TimeoutException pour un écran qui contournerait
+  // ErrorCatalog.
+  const OfflineException([super.message = 'Pas de connexion']) // i18n-ignore
     : super(code: 'OFFLINE');
 }
 
@@ -71,8 +92,11 @@ class ForbiddenException extends AppException {
 }
 
 class NotFoundException extends AppException {
+  // Jamais affiché PAR ErrorCatalog : ErrorCatalog._byType retombe sur
+  // _notFoundGeneric (errorNotFoundMessage), sans jamais lire ce champ. Un
+  // écran qui contournerait ErrorCatalog reste hors de cette garantie.
   const NotFoundException({
-    String message = 'Ressource introuvable',
+    String message = 'Ressource introuvable', // i18n-ignore
     String? apiCode,
     this.resourceType,
   }) : super(message, code: apiCode ?? 'NOT_FOUND');
@@ -97,8 +121,12 @@ class ConflictException extends AppException {
 }
 
 class RateLimitException extends AppException {
-  const RateLimitException([super.message = 'Trop de tentatives'])
-    : super(code: 'RATE_LIMITED');
+  // Jamais affiché PAR ErrorCatalog : ErrorCatalog.lookup résout
+  // 'RATE_LIMITED' via errorRateLimitedMessage, sans jamais lire ce champ. Un
+  // écran qui contournerait ErrorCatalog reste hors de cette garantie.
+  const RateLimitException([
+    super.message = 'Trop de tentatives', // i18n-ignore
+  ]) : super(code: 'RATE_LIMITED');
 }
 
 class ServerException extends AppException {

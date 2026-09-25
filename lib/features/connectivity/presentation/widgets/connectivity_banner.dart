@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/connectivity/bloc/connectivity_cubit.dart';
 import 'package:dony/features/connectivity/bloc/connectivity_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -41,11 +42,12 @@ class ConnectivityBanner extends StatelessWidget {
 
   _BannerConfig? _configFor(BuildContext context, ConnectivityState state) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     if (state.justReconnected) {
       return _BannerConfig(
         color: cs.success,
         iconName: 'wifi',
-        label: 'Connexion rétablie',
+        label: l.connectivityRestored,
         testId: 'reconnected',
       );
     }
@@ -54,14 +56,14 @@ class ConnectivityBanner extends StatelessWidget {
         return _BannerConfig(
           color: cs.error,
           iconName: 'wifi-off',
-          label: 'Pas de connexion internet',
+          label: l.connectivityOffline,
           testId: 'offline',
         );
       case ConnectivityStatus.weak:
         return _BannerConfig(
           color: cs.warning,
           iconName: 'triangle-alert',
-          label: 'Connexion instable',
+          label: l.connectivityWeak,
           testId: 'weak',
         );
       case ConnectivityStatus.online:

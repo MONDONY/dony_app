@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Enveloppe globale qui rend le clavier refermable partout dans l'app.
@@ -56,9 +57,9 @@ class _DonyKeyboardScopeState extends State<DonyKeyboardScope> {
     // true)` n'est pas égal à `TextInputType.number` (les options entrent dans
     // l'égalité) alors qu'il ouvre le même pavé, sans touche retour.
     final type = editable.keyboardType.toString();
-    return type.contains('TextInputType.number') ||
-        type.contains('TextInputType.phone') ||
-        type.contains('TextInputType.datetime');
+    return type.contains('TextInputType.number') || // i18n-ignore
+        type.contains('TextInputType.phone') || // i18n-ignore
+        type.contains('TextInputType.datetime'); // i18n-ignore
   }
 
   @override
@@ -111,6 +112,7 @@ class _KeyboardDoneBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     return Material(
       key: const Key('donyKeyboardDoneBar'),
       color: cs.surfaceContainerHighest,
@@ -123,7 +125,7 @@ class _KeyboardDoneBar extends StatelessWidget {
               button: true,
               container: true,
               excludeSemantics: true,
-              label: 'Masquer le clavier',
+              label: l.dsHideKeyboard,
               child: InkWell(
                 onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
                 child: Padding(
@@ -141,7 +143,7 @@ class _KeyboardDoneBar extends StatelessWidget {
                       ),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
-                        'Terminé',
+                        l.commonDone,
                         style: tt.labelLarge?.copyWith(color: cs.primary),
                       ),
                     ],

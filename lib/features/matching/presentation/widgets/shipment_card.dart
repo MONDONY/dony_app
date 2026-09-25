@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -156,14 +157,14 @@ class ShipmentCard extends StatelessWidget {
     return DateFormat.yMMMEd(l.localeName).format(date);
   }
 
-  /// Format weight with comma decimal separator: '4,5 kg' or '5 kg'.
-  String _weightLabel() {
+  /// Format weight at the effective language: '4,5 kg' in French, '4.5 kg'
+  /// in English.
+  String _weightLabel(AppLocalizations l) {
     final kg = bid.weightKg;
     if (kg == null) {
       return '- kg';
     }
-    final whole = kg.truncateToDouble() == kg;
-    return '${kg.toStringAsFixed(whole ? 0 : 1).replaceAll('.', ',')} kg';
+    return formatWeightKg(l, kg);
   }
 
   @override
@@ -212,10 +213,10 @@ class ShipmentCard extends StatelessWidget {
             Text(
               bid.recipientName != null
                   ? l.shipmentParcelWeightForRecipientLabel(
-                      _weightLabel(),
+                      _weightLabel(l),
                       bid.recipientName!,
                     )
-                  : l.shipmentParcelWeightLabel(_weightLabel()),
+                  : l.shipmentParcelWeightLabel(_weightLabel(l)),
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

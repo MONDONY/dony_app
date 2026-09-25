@@ -11,6 +11,7 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
@@ -108,7 +109,7 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
       if (!mounted) return;
       SemanticsService.sendAnnouncement(
         View.of(context),
-        '${widget.title}. ${widget.subtitle}',
+        '${widget.title}. ${widget.subtitle}', // i18n-ignore : format, valeurs déjà localisées par l'appelant
         TextDirection.ltr,
       );
     });
@@ -190,6 +191,7 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final closeLabel = context.l10n.commonClose;
 
     return PopScope(
       // Seules sorties autorisées : le CTA et le bouton fermer (X). Le retour
@@ -204,10 +206,10 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
             Padding(
               padding: const EdgeInsets.only(right: DonySpacing.base),
               child: Tooltip(
-                message: 'Fermer',
+                message: closeLabel,
                 child: Semantics(
                   button: true,
-                  label: 'Fermer',
+                  label: closeLabel,
                   child: InkWell(
                     onTap: () => _handleClose(context),
                     customBorder: const CircleBorder(),

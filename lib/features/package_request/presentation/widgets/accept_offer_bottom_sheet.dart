@@ -16,6 +16,7 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 class AcceptOfferBottomSheet {
   const AcceptOfferBottomSheet._();
@@ -341,7 +342,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
         ? originalTotal! - totalEur
         : 0.0;
     final hasRealSavings = savings > 0.005;
-    final ratePct = _ratePercentLabel(rate);
+    final ratePct = _ratePercentLabel(l, rate);
 
     final rows = <Widget>[];
     if (isTraveler) {
@@ -502,11 +503,10 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
     ],
   );
 
-  /// Libellé pourcentage : entier si rond, sinon 1 décimale virgule FR.
-  String _ratePercentLabel(double rate) {
+  /// Libellé pourcentage à la langue effective : entier si rond, sinon 1
+  /// décimale (virgule en français, point en anglais).
+  String _ratePercentLabel(AppLocalizations l, double rate) {
     final pct = rate * 100;
-    return pct % 1 == 0
-        ? pct.toStringAsFixed(0)
-        : pct.toStringAsFixed(1).replaceFirst('.', ',');
+    return NumberFormat('#0.#', l.localeName).format(pct);
   }
 }

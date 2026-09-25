@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/currency_test_doubles.dart';
+import '../../helpers/l10n_test_helpers.dart';
 
 void main() {
   Future<void> pumpAndOpen(
@@ -241,5 +242,54 @@ void main() {
         expect(value.contains('—'), isFalse, reason: value);
       }
     }
+  });
+
+  testWidgets('en : titre, sous-titres et bouton de confirmation traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    registerCurrencyPreference('EUR');
+
+    await pumpAndOpen(
+      tester,
+      options: [
+        const CurrencyPaymentOption(
+          currency: SupportedCurrency.eur,
+          availablePaymentMethods: {
+            BidPaymentMethod.stripe,
+            BidPaymentMethod.cash,
+          },
+        ),
+      ],
+    );
+
+    expect(find.text('Choose a currency'), findsOneWidget);
+    expect(find.text('Card and cash available in EUR'), findsOneWidget);
+    expect(find.text('Confirm EUR'), findsOneWidget);
+    expect(find.text('Card and cash'), findsOneWidget);
+  });
+
+  testWidgets('en : espèces uniquement traduit avec le pourquoi', (
+    tester,
+  ) async {
+    useEnglish();
+    registerCurrencyPreference('XAF');
+
+    await pumpAndOpen(
+      tester,
+      options: [
+        const CurrencyPaymentOption(
+          currency: SupportedCurrency.xaf,
+          availablePaymentMethods: {BidPaymentMethod.cash},
+        ),
+      ],
+    );
+
+    expect(find.text('Cash only in XAF'), findsOneWidget);
+    expect(
+      find.textContaining("traveler hasn't activated Yadony payments"),
+      findsOneWidget,
+    );
+    expect(find.textContaining("isn't supported by Stripe"), findsOneWidget);
   });
 }

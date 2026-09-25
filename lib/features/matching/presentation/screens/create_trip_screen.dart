@@ -603,9 +603,9 @@ class _TripFormContentState extends State<_TripFormContent> {
   );
 
   final _selectedContentNotifier = ValueNotifier<Set<String>>({
-    'Vêtements & tissus',
-    'Médicaments traditionnels',
-    'Documents & administratif',
+    'Vêtements & tissus', // i18n-ignore : valeur stockée (ContentCategory.label)
+    'Médicaments traditionnels', // i18n-ignore
+    'Documents & administratif', // i18n-ignore : idem, sans accent
   });
   final _customAcceptedNotifier = ValueNotifier<Set<String>>({});
   // Catalogue de types de contenu — seedé synchrone avec le catalogue
