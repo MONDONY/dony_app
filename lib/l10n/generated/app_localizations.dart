@@ -23365,6 +23365,208 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Envoyer le rapport'**
   String get feedbackSubmitButton;
+
+  /// Titre de la bottom sheet de sélection de devise (currency_selector.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une devise'**
+  String get currencySelectorTitle;
+
+  /// Bouton de confirmation de la devise choisie (currency_selector.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer {code}'**
+  String currencySelectorConfirm(String code);
+
+  /// Sous-titre court d'une option devise avec rail carte (currency_selector.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte et espèces'**
+  String get currencySelectorSubtitleCard;
+
+  /// Sous-titre court d'une option devise avec rail mobile money (currency_selector.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mobile money et espèces'**
+  String get currencySelectorSubtitleMobileMoney;
+
+  /// Sous-titre court d'une option devise sans rail carte ni mobile money (currency_selector.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces uniquement'**
+  String get currencySelectorSubtitleCashOnly;
+
+  /// Titre de l'encart quand le serveur annonce le rail carte pour la devise (currency_selector.dart). currency peut être le code (EUR) ou le nom localisé, selon l'appel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte et espèces disponibles en {currency}'**
+  String currencyCardAndCashAvailable(String currency);
+
+  /// Détail de l'encart quand le rail carte est disponible (currency_selector.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur peut accepter un paiement par carte ou en espèces pour cette devise.'**
+  String get currencyCardAndCashDescription;
+
+  /// Titre de l'encart quand le serveur annonce le rail mobile money pour la devise (currency_selector.dart). currency peut être le code (XOF) ou le nom localisé, selon l'appel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mobile money et espèces disponibles en {currency}'**
+  String currencyMobileMoneyAndCashAvailable(String currency);
+
+  /// Détail de l'encart quand le rail mobile money est disponible (currency_selector.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur peut accepter un paiement par mobile money ou en espèces pour cette devise.'**
+  String get currencyMobileMoneyAndCashDescription;
+
+  /// Titre de l'encart quand seul le paiement en espèces est possible (currency_selector.dart). currency peut être le code ou le nom localisé, selon l'appel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces uniquement en {currency}'**
+  String currencyCashOnlyAvailable(String currency);
+
+  /// Détail de l'encart quand seul le paiement en espèces est possible (currency_selector.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement par carte n\'est pas proposé pour cette devise : soit le voyageur n\'a pas encore activé les paiements Yadony, soit {currency} n\'est pas prise en charge par Stripe. Seul le paiement en espèces sera possible.'**
+  String currencyCashOnlyDescription(String currency);
+
+  /// Libellé d'accessibilité regroupant le titre (avec le nom localisé de la devise) et le détail de l'encart espèces uniquement (currency_selector.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces uniquement en {currency}. {description}'**
+  String currencyCashOnlyWithDescription(String currency, String description);
+
+  /// Titre de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Publié en {currencyName} ({code})'**
+  String currencyPublishBannerTitle(String currencyName, String code);
+
+  /// Titre de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise à confirmer'**
+  String get currencyPublishBannerTitleUnknown;
+
+  /// Détail de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.'**
+  String get currencyPublishBannerDescriptionKnown;
+
+  /// Détail de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La devise de publication est vérifiée par Yadony avant publication.'**
+  String get currencyPublishBannerDescriptionUnknown;
+
+  /// Libellé d'accessibilité de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Publication en {currencyName}, devise {code}. {description}'**
+  String currencyPublishBannerSemanticsKnown(
+    String currencyName,
+    String code,
+    String description,
+  );
+
+  /// Libellé d'accessibilité de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise de publication à confirmer par Yadony avant publication.'**
+  String get currencyPublishBannerSemanticsUnknown;
+
+  /// Préfixe d'estimation devant un prix converti, jamais un montant exact (converted_price.dart). amount inclut déjà son suffixe d'unité (ex. /kg).
+  ///
+  /// In fr, this message translates to:
+  /// **'environ {amount}'**
+  String currencyApprox(String amount);
+
+  /// Snackbar quand aucun numéro n'est disponible pour composer un appel (phone_dialer.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun numéro disponible pour ce contact'**
+  String get dialNoNumber;
+
+  /// Snackbar quand l'appareil n'a pas d'application téléphone, avec repli sur la copie du numéro (phone_dialer.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune application téléphone. Numéro : {phone}'**
+  String dialNoPhoneApp(String phone);
+
+  /// Libellé du bouton bascule d'adresse par défaut (address_default_toggle.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse par défaut'**
+  String get addressDefaultLabel;
+
+  /// Statut affiché quand l'adresse a été localisée par GPS ou recherche (address_location_status.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse localisée'**
+  String get addressLocatedStatus;
+
+  /// Statut affiché quand l'adresse n'a pas été localisée (address_location_status.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse non localisée, tu peux la saisir à la main'**
+  String get addressNotLocatedStatus;
+
+  /// Étiquette d'accessibilité par défaut de l'emoji décollage ✈️ (dony_emoji.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Décollage'**
+  String get dsEmojiTakeoff;
+
+  /// Étiquette d'accessibilité par défaut de l'emoji atterrissage 🛬 (dony_emoji.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Atterrissage'**
+  String get dsEmojiLanding;
+
+  /// Étiquette d'accessibilité par défaut de l'emoji colis 📦 (dony_emoji.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get dsEmojiParcel;
+
+  /// Titre de l'écran bloquant de mise à jour obligatoire (force_update_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une mise à jour est nécessaire'**
+  String get appUpdateTitle;
+
+  /// Message de l'écran bloquant de mise à jour obligatoire (force_update_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette version de l\'application n\'est plus prise en charge. Mets-la à jour pour continuer à utiliser Yadony.'**
+  String get appUpdateMessage;
+
+  /// Bouton d'ouverture du store depuis l'écran de mise à jour obligatoire (force_update_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre à jour maintenant'**
+  String get appUpdateButton;
+
+  /// Bandeau vert de confirmation du retour de connexion (connectivity_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion rétablie'**
+  String get connectivityRestored;
+
+  /// Bandeau rouge affiché hors ligne (connectivity_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de connexion internet'**
+  String get connectivityOffline;
+
+  /// Bandeau ambre affiché en cas de connexion faible (connectivity_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion instable'**
+  String get connectivityWeak;
 }
 
 class _AppLocalizationsDelegate

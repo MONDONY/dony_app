@@ -16036,5 +16036,199 @@
   "feedbackSubmitButton": "Envoyer le rapport",
   "@feedbackSubmitButton": {
     "description": "Bouton d'envoi de la feuille de signalement (dony_feedback_button.dart)."
+  },
+  "currencySelectorTitle": "Choisir une devise",
+  "@currencySelectorTitle": {
+    "description": "Titre de la bottom sheet de sélection de devise (currency_selector.dart)."
+  },
+  "currencySelectorConfirm": "Confirmer {code}",
+  "@currencySelectorConfirm": {
+    "description": "Bouton de confirmation de la devise choisie (currency_selector.dart).",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "currencySelectorSubtitleCard": "Carte et espèces",
+  "@currencySelectorSubtitleCard": {
+    "description": "Sous-titre court d'une option devise avec rail carte (currency_selector.dart)."
+  },
+  "currencySelectorSubtitleMobileMoney": "Mobile money et espèces",
+  "@currencySelectorSubtitleMobileMoney": {
+    "description": "Sous-titre court d'une option devise avec rail mobile money (currency_selector.dart)."
+  },
+  "currencySelectorSubtitleCashOnly": "Espèces uniquement",
+  "@currencySelectorSubtitleCashOnly": {
+    "description": "Sous-titre court d'une option devise sans rail carte ni mobile money (currency_selector.dart)."
+  },
+  "currencyCardAndCashAvailable": "Carte et espèces disponibles en {currency}",
+  "@currencyCardAndCashAvailable": {
+    "description": "Titre de l'encart quand le serveur annonce le rail carte pour la devise (currency_selector.dart). currency peut être le code (EUR) ou le nom localisé, selon l'appel.",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyCardAndCashDescription": "Le voyageur peut accepter un paiement par carte ou en espèces pour cette devise.",
+  "@currencyCardAndCashDescription": {
+    "description": "Détail de l'encart quand le rail carte est disponible (currency_selector.dart)."
+  },
+  "currencyMobileMoneyAndCashAvailable": "Mobile money et espèces disponibles en {currency}",
+  "@currencyMobileMoneyAndCashAvailable": {
+    "description": "Titre de l'encart quand le serveur annonce le rail mobile money pour la devise (currency_selector.dart). currency peut être le code (XOF) ou le nom localisé, selon l'appel.",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyMobileMoneyAndCashDescription": "Le voyageur peut accepter un paiement par mobile money ou en espèces pour cette devise.",
+  "@currencyMobileMoneyAndCashDescription": {
+    "description": "Détail de l'encart quand le rail mobile money est disponible (currency_selector.dart)."
+  },
+  "currencyCashOnlyAvailable": "Espèces uniquement en {currency}",
+  "@currencyCashOnlyAvailable": {
+    "description": "Titre de l'encart quand seul le paiement en espèces est possible (currency_selector.dart). currency peut être le code ou le nom localisé, selon l'appel.",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyCashOnlyDescription": "Le paiement par carte n'est pas proposé pour cette devise : soit le voyageur n'a pas encore activé les paiements Yadony, soit {currency} n'est pas prise en charge par Stripe. Seul le paiement en espèces sera possible.",
+  "@currencyCashOnlyDescription": {
+    "description": "Détail de l'encart quand seul le paiement en espèces est possible (currency_selector.dart).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyCashOnlyWithDescription": "Espèces uniquement en {currency}. {description}",
+  "@currencyCashOnlyWithDescription": {
+    "description": "Libellé d'accessibilité regroupant le titre (avec le nom localisé de la devise) et le détail de l'encart espèces uniquement (currency_selector.dart).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "description": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyPublishBannerTitle": "Publié en {currencyName} ({code})",
+  "@currencyPublishBannerTitle": {
+    "description": "Titre de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).",
+    "placeholders": {
+      "currencyName": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyPublishBannerTitleUnknown": "Devise à confirmer",
+  "@currencyPublishBannerTitleUnknown": {
+    "description": "Titre de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart)."
+  },
+  "currencyPublishBannerDescriptionKnown": "Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.",
+  "@currencyPublishBannerDescriptionKnown": {
+    "description": "Détail de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart)."
+  },
+  "currencyPublishBannerDescriptionUnknown": "La devise de publication est vérifiée par Yadony avant publication.",
+  "@currencyPublishBannerDescriptionUnknown": {
+    "description": "Détail de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart)."
+  },
+  "currencyPublishBannerSemanticsKnown": "Publication en {currencyName}, devise {code}. {description}",
+  "@currencyPublishBannerSemanticsKnown": {
+    "description": "Libellé d'accessibilité de la bannière de devise de publication quand une devise en cache est connue (currency_publish_banner.dart).",
+    "placeholders": {
+      "currencyName": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      },
+      "description": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyPublishBannerSemanticsUnknown": "Devise de publication à confirmer par Yadony avant publication.",
+  "@currencyPublishBannerSemanticsUnknown": {
+    "description": "Libellé d'accessibilité de la bannière de devise de publication sans devise en cache (currency_publish_banner.dart)."
+  },
+  "currencyApprox": "environ {amount}",
+  "@currencyApprox": {
+    "description": "Préfixe d'estimation devant un prix converti, jamais un montant exact (converted_price.dart). amount inclut déjà son suffixe d'unité (ex. /kg).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dialNoNumber": "Aucun numéro disponible pour ce contact",
+  "@dialNoNumber": {
+    "description": "Snackbar quand aucun numéro n'est disponible pour composer un appel (phone_dialer.dart)."
+  },
+  "dialNoPhoneApp": "Aucune application téléphone. Numéro : {phone}",
+  "@dialNoPhoneApp": {
+    "description": "Snackbar quand l'appareil n'a pas d'application téléphone, avec repli sur la copie du numéro (phone_dialer.dart).",
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "addressDefaultLabel": "Adresse par défaut",
+  "@addressDefaultLabel": {
+    "description": "Libellé du bouton bascule d'adresse par défaut (address_default_toggle.dart)."
+  },
+  "addressLocatedStatus": "Adresse localisée",
+  "@addressLocatedStatus": {
+    "description": "Statut affiché quand l'adresse a été localisée par GPS ou recherche (address_location_status.dart)."
+  },
+  "addressNotLocatedStatus": "Adresse non localisée, tu peux la saisir à la main",
+  "@addressNotLocatedStatus": {
+    "description": "Statut affiché quand l'adresse n'a pas été localisée (address_location_status.dart)."
+  },
+  "dsEmojiTakeoff": "Décollage",
+  "@dsEmojiTakeoff": {
+    "description": "Étiquette d'accessibilité par défaut de l'emoji décollage ✈️ (dony_emoji.dart)."
+  },
+  "dsEmojiLanding": "Atterrissage",
+  "@dsEmojiLanding": {
+    "description": "Étiquette d'accessibilité par défaut de l'emoji atterrissage 🛬 (dony_emoji.dart)."
+  },
+  "dsEmojiParcel": "Colis",
+  "@dsEmojiParcel": {
+    "description": "Étiquette d'accessibilité par défaut de l'emoji colis 📦 (dony_emoji.dart)."
+  },
+  "appUpdateTitle": "Une mise à jour est nécessaire",
+  "@appUpdateTitle": {
+    "description": "Titre de l'écran bloquant de mise à jour obligatoire (force_update_screen.dart)."
+  },
+  "appUpdateMessage": "Cette version de l'application n'est plus prise en charge. Mets-la à jour pour continuer à utiliser Yadony.",
+  "@appUpdateMessage": {
+    "description": "Message de l'écran bloquant de mise à jour obligatoire (force_update_screen.dart)."
+  },
+  "appUpdateButton": "Mettre à jour maintenant",
+  "@appUpdateButton": {
+    "description": "Bouton d'ouverture du store depuis l'écran de mise à jour obligatoire (force_update_screen.dart)."
+  },
+  "connectivityRestored": "Connexion rétablie",
+  "@connectivityRestored": {
+    "description": "Bandeau vert de confirmation du retour de connexion (connectivity_banner.dart)."
+  },
+  "connectivityOffline": "Pas de connexion internet",
+  "@connectivityOffline": {
+    "description": "Bandeau rouge affiché hors ligne (connectivity_banner.dart)."
+  },
+  "connectivityWeak": "Connexion instable",
+  "@connectivityWeak": {
+    "description": "Bandeau ambre affiché en cas de connexion faible (connectivity_banner.dart)."
   }
 }

@@ -79,7 +79,7 @@ abstract final class CurrencySelector {
     );
     return DonyBottomSheet.show<SupportedCurrency>(
       context,
-      title: 'Choisir une devise',
+      title: context.l10n.currencySelectorTitle,
       child: _CurrencyOptionList(options: options, selected: selected),
       // Règle DonyButton dans bottom sheet : toujours en stickyBottom,
       // jamais dans le child scrollable.
@@ -87,7 +87,7 @@ abstract final class CurrencySelector {
         valueListenable: selected,
         builder: (context, value, _) => DonyButton(
           key: const Key('currency-selector-confirm'),
-          label: 'Confirmer ${value.code}',
+          label: context.l10n.currencySelectorConfirm(value.code),
           onPressed: () => Navigator.of(context).pop(value),
         ),
       ),
@@ -113,11 +113,13 @@ class _CurrencyOptionList extends StatelessWidget {
     return null;
   }
 
-  String _subtitleFor(SupportedCurrency currency) {
+  String _subtitleFor(AppLocalizations l, SupportedCurrency currency) {
     final option = _optionFor(currency);
-    if (option?.hasCardRail ?? false) return 'Carte et espèces';
-    if (option?.hasMobileMoneyRail ?? false) return 'Mobile money et espèces';
-    return 'Espèces uniquement';
+    if (option?.hasCardRail ?? false) return l.currencySelectorSubtitleCard;
+    if (option?.hasMobileMoneyRail ?? false) {
+      return l.currencySelectorSubtitleMobileMoney;
+    }
+    return l.currencySelectorSubtitleCashOnly;
   }
 
   @override
@@ -144,7 +146,7 @@ class _CurrencyOptionList extends StatelessWidget {
                   DonyRadioOption<SupportedCurrency>(
                     value: currency,
                     label: '${currency.name(l)} (${currency.code})',
-                    subtitle: _subtitleFor(currency),
+                    subtitle: _subtitleFor(l, currency),
                   ),
               ],
             ),
@@ -184,26 +186,25 @@ class _PaymentMethodsNotice extends StatelessWidget {
 
     final String title;
     final String description;
+    final String semanticsLabel;
     if (hasCardRail) {
-      title = 'Carte et espèces disponibles en ${currency.code}';
-      description =
-          'Le voyageur peut accepter un paiement par carte ou en espèces pour cette devise.';
+      title = l.currencyCardAndCashAvailable(currency.code);
+      description = l.currencyCardAndCashDescription;
+      semanticsLabel = '${l.currencyCardAndCashAvailable(currency.name(l))}.';
     } else if (hasMobileMoneyRail) {
-      title = 'Mobile money et espèces disponibles en ${currency.code}';
-      description =
-          'Le voyageur peut accepter un paiement par mobile money ou en espèces pour cette devise.';
+      title = l.currencyMobileMoneyAndCashAvailable(currency.code);
+      description = l.currencyMobileMoneyAndCashDescription;
+      semanticsLabel =
+          '${l.currencyMobileMoneyAndCashAvailable(currency.name(l))}.';
     } else {
-      title = 'Espèces uniquement en ${currency.code}';
-      description =
-          'Le paiement par carte n\'est pas proposé pour cette devise : soit le '
-          'voyageur n\'a pas encore activé les paiements Yadony, soit '
-          '${currency.code} n\'est pas prise en charge par Stripe. Seul le '
-          'paiement en espèces sera possible.';
+      title = l.currencyCashOnlyAvailable(currency.code);
+      description = l.currencyCashOnlyDescription(currency.code);
+      semanticsLabel = l.currencyCashOnlyWithDescription(
+        currency.name(l),
+        description,
+      );
     }
     final hasRail = hasCardRail || hasMobileMoneyRail;
-    final semanticsLabel = hasRail
-        ? '$title.'.replaceFirst(currency.code, currency.name(l))
-        : 'Espèces uniquement en ${currency.name(l)}. $description';
 
     return Semantics(
       container: true,

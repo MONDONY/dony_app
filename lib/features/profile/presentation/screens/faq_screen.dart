@@ -148,18 +148,20 @@ class _FaqScreenState extends State<FaqScreen> {
     ),
   ];
 
+  // Repliement des diacritiques pour la recherche FAQ : donnée de calcul
+  // (classes de caractères RegExp), jamais du texte affiché.
   static String _normalize(String value) {
     return value
         .trim()
         .toLowerCase()
-        .replaceAll(RegExp('[àâäáãå]'), 'a')
-        .replaceAll(RegExp('[ç]'), 'c')
-        .replaceAll(RegExp('[èéêë]'), 'e')
-        .replaceAll(RegExp('[ìíîï]'), 'i')
+        .replaceAll(RegExp('[àâäáãå]'), 'a') // i18n-ignore
+        .replaceAll(RegExp('[ç]'), 'c') // i18n-ignore
+        .replaceAll(RegExp('[èéêë]'), 'e') // i18n-ignore
+        .replaceAll(RegExp('[ìíîï]'), 'i') // i18n-ignore
         .replaceAll(RegExp('[ñ]'), 'n')
-        .replaceAll(RegExp('[òóôöõ]'), 'o')
-        .replaceAll(RegExp('[ùúûü]'), 'u')
-        .replaceAll(RegExp('[ýÿ]'), 'y');
+        .replaceAll(RegExp('[òóôöõ]'), 'o') // i18n-ignore
+        .replaceAll(RegExp('[ùúûü]'), 'u') // i18n-ignore
+        .replaceAll(RegExp('[ýÿ]'), 'y'); // i18n-ignore
   }
 
   static List<_FaqSectionData> _filterSections(

@@ -3,6 +3,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 void main() {
   Future<void> pump(
     WidgetTester tester, {
@@ -101,5 +103,18 @@ void main() {
     expect(text.toLowerCase(), isNot(contains('débité')));
     expect(text.toLowerCase(), isNot(contains('payé')));
     expect(text.toLowerCase(), isNot(contains('facturé')));
+  });
+
+  testWidgets('en : préfixe traduit, toujours une estimation', (tester) async {
+    useEnglish();
+    await pump(
+      tester,
+      originalCurrency: 'EUR',
+      convertedPricePerKg: 6560,
+      convertedCurrency: 'XOF',
+    );
+
+    expect(find.textContaining('about'), findsOneWidget);
+    expect(find.textContaining('environ'), findsNothing);
   });
 }

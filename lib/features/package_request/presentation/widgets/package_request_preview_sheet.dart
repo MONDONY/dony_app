@@ -110,7 +110,7 @@ class _PreviewBody extends StatelessWidget {
         if (s.weightKg != null)
           DonyInfoRow(
             label: l.requestCreateRecapWeight,
-            value: formatWeightKg(s.weightKg!),
+            value: formatWeightKg(l, s.weightKg!),
           ),
         if (photoCount > 0)
           DonyInfoRow(

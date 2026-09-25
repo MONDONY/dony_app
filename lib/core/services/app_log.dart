@@ -49,7 +49,11 @@ abstract final class AppLog {
     StackTrace? stackTrace,
     Map<String, Object>? data,
   }) {
-    _console('ERROR', '$message${error != null ? ' — $error' : ''}', data);
+    _console(
+      'ERROR',
+      '$message${error != null ? ' — $error' : ''}', // i18n-ignore
+      data,
+    );
     unawaited(
       Future.sync(() => Sentry.logger.error(message, attributes: _attrs(data))),
     );

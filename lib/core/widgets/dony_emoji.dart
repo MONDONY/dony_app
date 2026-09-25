@@ -1,3 +1,4 @@
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Emoji rendu comme un glyphe, dimensionné pour s'aligner avec un `Icon` ou du
@@ -18,28 +19,18 @@ class DonyEmoji extends StatelessWidget {
     Key? key,
     double size = 16,
     String? semanticLabel,
-  }) : this(
-         '🛫',
-         key: key,
-         size: size,
-         semanticLabel: semanticLabel ?? 'Décollage',
-       );
+  }) : this('🛫', key: key, size: size, semanticLabel: semanticLabel);
 
   /// Atterrissage 🛬 — arrivée d'un trajet.
   const DonyEmoji.planeLanding({
     Key? key,
     double size = 16,
     String? semanticLabel,
-  }) : this(
-         '🛬',
-         key: key,
-         size: size,
-         semanticLabel: semanticLabel ?? 'Atterrissage',
-       );
+  }) : this('🛬', key: key, size: size, semanticLabel: semanticLabel);
 
   /// Colis 📦.
   const DonyEmoji.parcel({Key? key, double size = 16, String? semanticLabel})
-    : this('📦', key: key, size: size, semanticLabel: semanticLabel ?? 'Colis');
+    : this('📦', key: key, size: size, semanticLabel: semanticLabel);
 
   final String emoji;
 
@@ -48,11 +39,27 @@ class DonyEmoji extends StatelessWidget {
 
   final String? semanticLabel;
 
+  /// Étiquette d'accessibilité par défaut selon l'emoji, quand [semanticLabel]
+  /// n'a pas été fourni explicitement par l'appelant (raccourcis métier
+  /// [DonyEmoji.planeTakeoff]/[DonyEmoji.planeLanding]/[DonyEmoji.parcel]).
+  String? _defaultLabel(AppLocalizations l) {
+    switch (emoji) {
+      case '🛫':
+        return l.dsEmojiTakeoff;
+      case '🛬':
+        return l.dsEmojiLanding;
+      case '📦':
+        return l.dsEmojiParcel;
+      default:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Text(
       emoji,
-      semanticsLabel: semanticLabel,
+      semanticsLabel: semanticLabel ?? _defaultLabel(context.l10n),
       textAlign: TextAlign.center,
       style: TextStyle(
         fontSize: size,

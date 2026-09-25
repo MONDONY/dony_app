@@ -13,8 +13,8 @@ class DonyKeypad extends StatelessWidget {
     this.enabled = true,
   }) : assert(
          onBiometric == null || onDecimal == null,
-         'Le slot bas-gauche ne peut porter qu\'une seule fonction : '
-         'biométrie (saisie de code) ou séparateur décimal (saisie de montant).',
+         'Le slot bas-gauche ne peut porter qu\'une seule fonction : ' // i18n-ignore : message d'assertion, jamais affiché
+         'biométrie (saisie de code) ou séparateur décimal (saisie de montant).', // i18n-ignore
        );
 
   final void Function(String) onDigit;

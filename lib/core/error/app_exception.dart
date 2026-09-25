@@ -17,9 +17,18 @@ AppException unwrapDioError(Object e) {
       case DioExceptionType.connectionError:
         return const OfflineException();
       case DioExceptionType.cancel:
-        return const NetworkException('Requête annulée', code: 'CANCELLED');
+        // Message technique jamais affiché : ErrorCatalog.lookup résout
+        // 'CANCELLED' via son propre texte localisé (errorCancelledMessage),
+        // sans jamais lire AppException.message.
+        return const NetworkException(
+          'Requête annulée', // i18n-ignore
+          code: 'CANCELLED',
+        );
       default:
-        return NetworkException(e.message ?? 'Erreur réseau');
+        // Message technique jamais affiché : NetworkException tombe sur
+        // _networkGeneric dans ErrorCatalog (_byType), qui ignore
+        // error.message.
+        return NetworkException(e.message ?? 'Erreur réseau'); // i18n-ignore
     }
   }
   return NetworkException(e.toString());
@@ -51,12 +60,16 @@ class NetworkException extends AppException {
 }
 
 class TimeoutException extends AppException {
-  const TimeoutException([super.message = 'Délai dépassé'])
+  // Message technique jamais affiché : ErrorCatalog.lookup résout 'TIMEOUT'
+  // via errorTimeoutMessage, sans jamais lire AppException.message.
+  const TimeoutException([super.message = 'Délai dépassé']) // i18n-ignore
     : super(code: 'TIMEOUT');
 }
 
 class OfflineException extends AppException {
-  const OfflineException([super.message = 'Pas de connexion'])
+  // Message technique jamais affiché : ErrorCatalog.lookup résout 'OFFLINE'
+  // via errorOfflineMessage, sans jamais lire AppException.message.
+  const OfflineException([super.message = 'Pas de connexion']) // i18n-ignore
     : super(code: 'OFFLINE');
 }
 
@@ -71,8 +84,10 @@ class ForbiddenException extends AppException {
 }
 
 class NotFoundException extends AppException {
+  // Message technique jamais affiché : ErrorCatalog._byType retombe sur
+  // _notFoundGeneric (errorNotFoundMessage), sans jamais lire ce champ.
   const NotFoundException({
-    String message = 'Ressource introuvable',
+    String message = 'Ressource introuvable', // i18n-ignore
     String? apiCode,
     this.resourceType,
   }) : super(message, code: apiCode ?? 'NOT_FOUND');
@@ -97,8 +112,11 @@ class ConflictException extends AppException {
 }
 
 class RateLimitException extends AppException {
-  const RateLimitException([super.message = 'Trop de tentatives'])
-    : super(code: 'RATE_LIMITED');
+  // Message technique jamais affiché : ErrorCatalog.lookup résout
+  // 'RATE_LIMITED' via errorRateLimitedMessage, sans jamais lire ce champ.
+  const RateLimitException([
+    super.message = 'Trop de tentatives', // i18n-ignore
+  ]) : super(code: 'RATE_LIMITED');
 }
 
 class ServerException extends AppException {

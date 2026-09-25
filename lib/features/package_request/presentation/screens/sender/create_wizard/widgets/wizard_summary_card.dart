@@ -40,7 +40,7 @@ class WizardSummaryCard extends StatelessWidget {
             ),
           ],
           _divider(cs),
-          _line(context, l.requestCreateRecapPackage, _packageText(state)),
+          _line(context, l.requestCreateRecapPackage, _packageText(l, state)),
           if (state.categories.isNotEmpty) ...[
             _divider(cs),
             _line(
@@ -100,9 +100,9 @@ class WizardSummaryCard extends StatelessWidget {
   /// Poids seul. La taille n'est plus affichée : elle n'est pas saisie par
   /// l'expéditeur (l'étape 2 la déduit du poids pour les filtres de recherche),
   /// et le récap la sortait telle quelle du fil, en « MEDIUM ».
-  String _packageText(PackageRequestFormState s) {
+  String _packageText(AppLocalizations l, PackageRequestFormState s) {
     final w = s.weightKg;
-    return w == null ? '-' : formatWeightKg(w);
+    return w == null ? '-' : formatWeightKg(l, w);
   }
 
   /// Toutes les catégories, pas seulement la première : le récap en affichait

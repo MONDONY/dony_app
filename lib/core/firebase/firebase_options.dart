@@ -18,7 +18,7 @@ class DefaultFirebaseOptions {
       TargetPlatform.android => android,
       TargetPlatform.iOS => ios,
       _ => throw UnsupportedError(
-        'DefaultFirebaseOptions are not supported for this platform.',
+        'DefaultFirebaseOptions are not supported for this platform.', // i18n-ignore
       ),
     };
   }

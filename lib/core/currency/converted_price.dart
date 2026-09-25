@@ -1,4 +1,5 @@
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Équivalent estimé d'un prix au kilo dans la devise du lecteur courant,
@@ -59,7 +60,7 @@ class ConvertedPriceLabel extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final formatted = formatPriceIn(convertedPricePerKg!, convertedCurrency);
     return Text(
-      'environ $formatted$suffix',
+      context.l10n.currencyApprox('$formatted$suffix'),
       style:
           style ??
           tt.bodySmall?.copyWith(

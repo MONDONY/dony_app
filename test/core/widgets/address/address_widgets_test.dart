@@ -5,6 +5,8 @@ import 'package:dony/core/widgets/address/address_section_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   testWidgets('AddressSectionLabel renders uppercase text', (tester) async {
     await tester.pumpWidget(
@@ -70,6 +72,37 @@ void main() {
       ),
     );
     expect(find.textContaining('non localisée'), findsOneWidget);
+  });
+
+  testWidgets('en : AddressLocationStatus localized shows English label', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: AddressLocationStatus(state: AddressLocationState.localized),
+        ),
+      ),
+    );
+    expect(find.text('Address located'), findsOneWidget);
+  });
+
+  testWidgets('en : AddressLocationStatus manual shows English label', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: AddressLocationStatus(state: AddressLocationState.manual),
+        ),
+      ),
+    );
+    expect(
+      find.text('Address not located, you can type it in manually'),
+      findsOneWidget,
+    );
   });
 
   group('AddressDefaultToggle', () {
@@ -150,6 +183,23 @@ void main() {
       await tester.pump();
 
       expect(received, isTrue);
+    });
+
+    testWidgets('en : shows English label', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AddressDefaultToggle(
+              value: false,
+              onChanged: (_) {},
+              activeColor: Colors.blue,
+              subtitle: 'Subtitle',
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Default address'), findsOneWidget);
     });
   });
 

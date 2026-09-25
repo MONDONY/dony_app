@@ -14026,4 +14026,134 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get feedbackSubmitButton => 'Envoyer le rapport';
+
+  @override
+  String get currencySelectorTitle => 'Choisir une devise';
+
+  @override
+  String currencySelectorConfirm(String code) {
+    return 'Confirmer $code';
+  }
+
+  @override
+  String get currencySelectorSubtitleCard => 'Carte et espèces';
+
+  @override
+  String get currencySelectorSubtitleMobileMoney => 'Mobile money et espèces';
+
+  @override
+  String get currencySelectorSubtitleCashOnly => 'Espèces uniquement';
+
+  @override
+  String currencyCardAndCashAvailable(String currency) {
+    return 'Carte et espèces disponibles en $currency';
+  }
+
+  @override
+  String get currencyCardAndCashDescription =>
+      'Le voyageur peut accepter un paiement par carte ou en espèces pour cette devise.';
+
+  @override
+  String currencyMobileMoneyAndCashAvailable(String currency) {
+    return 'Mobile money et espèces disponibles en $currency';
+  }
+
+  @override
+  String get currencyMobileMoneyAndCashDescription =>
+      'Le voyageur peut accepter un paiement par mobile money ou en espèces pour cette devise.';
+
+  @override
+  String currencyCashOnlyAvailable(String currency) {
+    return 'Espèces uniquement en $currency';
+  }
+
+  @override
+  String currencyCashOnlyDescription(String currency) {
+    return 'Le paiement par carte n\'est pas proposé pour cette devise : soit le voyageur n\'a pas encore activé les paiements Yadony, soit $currency n\'est pas prise en charge par Stripe. Seul le paiement en espèces sera possible.';
+  }
+
+  @override
+  String currencyCashOnlyWithDescription(String currency, String description) {
+    return 'Espèces uniquement en $currency. $description';
+  }
+
+  @override
+  String currencyPublishBannerTitle(String currencyName, String code) {
+    return 'Publié en $currencyName ($code)';
+  }
+
+  @override
+  String get currencyPublishBannerTitleUnknown => 'Devise à confirmer';
+
+  @override
+  String get currencyPublishBannerDescriptionKnown =>
+      'Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.';
+
+  @override
+  String get currencyPublishBannerDescriptionUnknown =>
+      'La devise de publication est vérifiée par Yadony avant publication.';
+
+  @override
+  String currencyPublishBannerSemanticsKnown(
+    String currencyName,
+    String code,
+    String description,
+  ) {
+    return 'Publication en $currencyName, devise $code. $description';
+  }
+
+  @override
+  String get currencyPublishBannerSemanticsUnknown =>
+      'Devise de publication à confirmer par Yadony avant publication.';
+
+  @override
+  String currencyApprox(String amount) {
+    return 'environ $amount';
+  }
+
+  @override
+  String get dialNoNumber => 'Aucun numéro disponible pour ce contact';
+
+  @override
+  String dialNoPhoneApp(String phone) {
+    return 'Aucune application téléphone. Numéro : $phone';
+  }
+
+  @override
+  String get addressDefaultLabel => 'Adresse par défaut';
+
+  @override
+  String get addressLocatedStatus => 'Adresse localisée';
+
+  @override
+  String get addressNotLocatedStatus =>
+      'Adresse non localisée, tu peux la saisir à la main';
+
+  @override
+  String get dsEmojiTakeoff => 'Décollage';
+
+  @override
+  String get dsEmojiLanding => 'Atterrissage';
+
+  @override
+  String get dsEmojiParcel => 'Colis';
+
+  @override
+  String get appUpdateTitle => 'Une mise à jour est nécessaire';
+
+  @override
+  String get appUpdateMessage =>
+      'Cette version de l\'application n\'est plus prise en charge. Mets-la à jour pour continuer à utiliser Yadony.';
+
+  @override
+  String get appUpdateButton => 'Mettre à jour maintenant';
+
+  @override
+  String get connectivityRestored => 'Connexion rétablie';
+
+  @override
+  String get connectivityOffline => 'Pas de connexion internet';
+
+  @override
+  String get connectivityWeak => 'Connexion instable';
 }
