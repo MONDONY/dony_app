@@ -603,8 +603,8 @@ class _TripFormContentState extends State<_TripFormContent> {
   );
 
   final _selectedContentNotifier = ValueNotifier<Set<String>>({
-    'Vêtements & tissus',
-    'Médicaments traditionnels',
+    'Vêtements & tissus', // i18n-ignore : valeur stockée (ContentCategory.label)
+    'Médicaments traditionnels', // i18n-ignore
     'Documents & administratif',
   });
   final _customAcceptedNotifier = ValueNotifier<Set<String>>({});

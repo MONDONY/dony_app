@@ -54,29 +54,33 @@ const List<ContentCategory> fallbackCatalog = [
   ),
   ContentCategory(
     code: 'ALIMENTATION_SECHE',
-    label: 'Alimentation sèche',
+    label: 'Alimentation sèche', // i18n-ignore
     emoji: '🍚',
   ),
   ContentCategory(
     code: 'PRODUITS_FRAIS',
-    label: 'Produits frais / périssables',
+    label: 'Produits frais / périssables', // i18n-ignore
     emoji: '🐟',
   ),
   ContentCategory(
     code: 'COSMETIQUES',
-    label: 'Cosmétiques & parfums',
+    label: 'Cosmétiques & parfums', // i18n-ignore
     emoji: '💄',
   ),
-  ContentCategory(code: 'VETEMENTS', label: 'Vêtements & tissus', emoji: '👗'),
+  ContentCategory(
+    code: 'VETEMENTS',
+    label: 'Vêtements & tissus', // i18n-ignore
+    emoji: '👗',
+  ),
   ContentCategory(code: 'CHAUSSURES', label: 'Chaussures', emoji: '👟'),
   ContentCategory(
     code: 'MEDICAMENTS_TRADITIONNELS',
-    label: 'Médicaments traditionnels',
+    label: 'Médicaments traditionnels', // i18n-ignore
     emoji: '🌿',
   ),
   ContentCategory(
     code: 'ELECTRONIQUE',
-    label: 'Téléphone & électronique',
+    label: 'Téléphone & électronique', // i18n-ignore
     emoji: '📱',
   ),
   ContentCategory(code: 'LIVRES', label: 'Livres', emoji: '📚'),

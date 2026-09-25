@@ -42,7 +42,9 @@ class DonyAvatar extends StatelessWidget {
     DonyAvatarSize.xl => 26,
   };
 
-  static final _letterPattern = RegExp(r'[A-Za-zÀ-ÿ]');
+  static final _letterPattern = RegExp(
+    r'[A-Za-zÀ-ÿ]', // i18n-ignore : motif de détection d'initiale
+  );
 
   /// Première lettre de [s], en ignorant les caractères non alphabétiques
   /// (ex: le `+` d'un numéro de téléphone utilisé en repli de nom).

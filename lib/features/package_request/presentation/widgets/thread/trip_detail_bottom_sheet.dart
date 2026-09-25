@@ -265,20 +265,22 @@ class TripDetailBottomSheet extends StatelessWidget {
     if (l.localeName != 'fr') {
       return DateFormat.yMMMd(l.localeName).format(d);
     }
+    // Rendu français historique, sans point après le mois ; l'anglais passe
+    // par DateFormat.yMMMd.
     const months = [
       '',
       'jan',
-      'fév',
+      'fév', // i18n-ignore
       'mar',
       'avr',
       'mai',
       'juin',
       'juil',
-      'août',
+      'août', // i18n-ignore
       'sep',
       'oct',
       'nov',
-      'déc',
+      'déc', // i18n-ignore
     ];
     return '${d.day} ${months[d.month]} ${d.year}';
   }
