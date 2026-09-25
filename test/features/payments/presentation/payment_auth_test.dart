@@ -459,9 +459,9 @@ void main() {
         );
 
         // Refuse la confirmation : le paiement s'arrête avant toute vérification.
-        // Les boutons du dialogue restent ceux, non traduits, de DonyDialog
-        // (lot design system) : seuls le titre et le message viennent d'ici.
-        await tester.tap(find.text('Annuler'));
+        // Le bouton secondaire est le libellé par défaut de DonyDialog, traduit
+        // depuis le lot design system.
+        await tester.tap(find.text('Cancel'));
         await tester.pumpAndSettle();
 
         expect(captured, isFalse);
