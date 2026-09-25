@@ -174,10 +174,11 @@ class NotificationService {
   final _newNotificationController = StreamController<void>.broadcast();
   Stream<void> get newNotificationStream => _newNotificationController.stream;
 
-  /// Résolus à la création (pas de `BuildContext` disponible ici) : Android ne
-  /// renomme un canal existant qu'en le recréant avec le même identifiant, ce
-  /// qui n'arrive qu'au prochain démarrage de l'app — un changement de langue
-  /// en cours de session ne renomme donc pas les canaux déjà créés.
+  /// Résolus sans `BuildContext` (pas encore disponible à [initialize]) à
+  /// partir de [AppL10n.current]. [refreshChannelNames] les recrée ensuite
+  /// avec la langue effective, ce qui renomme les canaux déjà créés : Android
+  /// met à jour le nom d'un canal existant quand on le recrée avec le même
+  /// identifiant.
   static AndroidNotificationChannel _androidChannel(AppLocalizations l) =>
       AndroidNotificationChannel(
         'dony_transactional',
@@ -243,6 +244,23 @@ class NotificationService {
     // Token upload is deferred to after authentication (called by app.dart).
     // onTokenRefresh re-uploads automatically once the user is signed in.
     _fcm.onTokenRefresh.listen((_) => _scheduleTokenUpload());
+  }
+
+  /// Recrée les deux canaux Android avec leurs noms traduits dans la langue
+  /// de [l]. Android renomme un canal existant quand on le recrée avec le
+  /// même identifiant (`dony_transactional`, `dony_general`) : contrairement
+  /// à [initialize], appelée une seule fois avant que la langue effective ne
+  /// soit connue, cette méthode est prévue pour être rappelée à chaque
+  /// changement de langue.
+  Future<void> refreshChannelNames(AppLocalizations l) async {
+    final androidNotifications = _localNotifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    await androidNotifications?.createNotificationChannel(_androidChannel(l));
+    await androidNotifications?.createNotificationChannel(
+      _androidGeneralChannel(l),
+    );
   }
 
   /// Demande la permission de notification.

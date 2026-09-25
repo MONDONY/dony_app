@@ -55,7 +55,7 @@ void main() {
       wrap(const SupportConversationTile(unreadCount: 0, preview: '')),
     );
 
-    expect(find.text('Support Yadony'), findsOneWidget);
+    expect(find.text('Yadony Support'), findsOneWidget);
     expect(
       find.text('A question? Our team will get back to you here.'),
       findsOneWidget,

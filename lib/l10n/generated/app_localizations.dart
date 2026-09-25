@@ -20960,12 +20960,6 @@ abstract class AppLocalizations {
   /// **'Impossible de charger le support'**
   String get supportHomeLoadErrorTitle;
 
-  /// Repli de description d'un état d'erreur support sans message serveur (support_home_screen.dart, support_ticket_detail_screen.dart : même feature, même texte, R42).
-  ///
-  /// In fr, this message translates to:
-  /// **'Vérifiez votre connexion et réessayez.'**
-  String get supportConnectionCheckFallback;
-
   /// Titre de la section des réponses prédéfinies (support_home_screen.dart).
   ///
   /// In fr, this message translates to:

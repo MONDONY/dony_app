@@ -14152,10 +14152,6 @@
   "@supportHomeLoadErrorTitle": {
     "description": "Titre de l'état d'erreur de l'accueil support (support_home_screen.dart)."
   },
-  "supportConnectionCheckFallback": "Vérifiez votre connexion et réessayez.",
-  "@supportConnectionCheckFallback": {
-    "description": "Repli de description d'un état d'erreur support sans message serveur (support_home_screen.dart, support_ticket_detail_screen.dart : même feature, même texte, R42)."
-  },
   "supportHomeFaqTitle": "Questions fréquentes",
   "@supportHomeFaqTitle": {
     "description": "Titre de la section des réponses prédéfinies (support_home_screen.dart)."

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:dony/app/announcement_deep_link.dart';
 import 'package:dony/app/deep_link_gate.dart';
+import 'package:dony/app/language_change_guard.dart';
 import 'package:dony/app/mobile_money_deep_link.dart';
 import 'package:dony/app/package_request_deep_link.dart';
 import 'package:dony/app/reduced_motion_priming.dart';
@@ -89,6 +90,11 @@ class _DonyAppState extends State<DonyApp> {
   /// les `AuthInitial` ultérieurs (déconnexion volontaire, changement de
   /// compte) qui ont déjà leur propre navigation.
   bool _startupAuthResolved = false;
+
+  /// Ne rappelle [NotificationService.refreshChannelNames] que lors d'un vrai
+  /// changement de langue effective, pas à chaque reconstruction du `builder`
+  /// de `MaterialApp` (rebâti à chaque frame).
+  final _channelLanguageGuard = LanguageChangeGuard();
 
   // go() est nécessaire pour activer le bon onglet du shell principal.
   // Toutes les autres routes utilisent push() pour empiler par-dessus l'état
@@ -464,6 +470,12 @@ class _DonyAppState extends State<DonyApp> {
                       // Sous Localizations, rebâti à chaque langue effective ;
                       // le callback, lui, voit parfois une langue périmée.
                       AppL10n.syncIntl(Localizations.localeOf(context));
+                      final l = context.l10n;
+                      _channelLanguageGuard.notify(l.localeName, (_) {
+                        unawaited(
+                          getIt<NotificationService>().refreshChannelNames(l),
+                        );
+                      });
                       final mq = MediaQuery.of(context);
                       return MediaQuery(
                         data: mq.copyWith(

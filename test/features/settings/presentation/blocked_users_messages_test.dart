@@ -87,8 +87,11 @@ void main() {
         _wrap(BlockedUsersLoaded([_blockedAgo(const Duration(days: 40))])),
       );
       await tester.pumpAndSettle();
+      // Non-régression contre l'ancien motif fixe 'd MMM yyyy' (pas contre
+      // `DateFormat.yMMMd`, le remplacement lui-même utilisé par le code sous
+      // test : comparer un appel à lui-même ne prouverait rien).
       expect(
-        find.text('Bloqué le ${DateFormat.yMMMd('fr').format(date)}'),
+        find.text('Bloqué le ${DateFormat('d MMM yyyy', 'fr').format(date)}'),
         findsOneWidget,
       );
     });

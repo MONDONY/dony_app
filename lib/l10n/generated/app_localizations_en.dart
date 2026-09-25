@@ -11360,7 +11360,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPreferencesLabel => 'Preferences';
 
   @override
-  String get settingsPreferencesSubtitle => 'kg/lbs, currency, pickup radius';
+  String get settingsPreferencesSubtitle =>
+      'kg/lbs, currency, collection radius';
 
   @override
   String get settingsAccessibilityLabel => 'Accessibility';
@@ -11888,7 +11889,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyUnverifiedWarningConsequence2 =>
-      'Yadony cannot confirm the identity of an unverified profile, nor their name, nor their documents.';
+      'Yadony can\'t confirm the identity, name or documents of an unverified profile.';
 
   @override
   String get privacyUnverifiedWarningConsequence3 =>
@@ -11925,7 +11926,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationSettingsSectionActivity => 'ACTIVITY';
 
   @override
-  String get notificationSettingsBidsLabel => 'Matches & bids';
+  String get notificationSettingsBidsLabel => 'Matches & offers';
 
   @override
   String get notificationSettingsBidsSubtitle =>
@@ -12055,7 +12056,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prefsContactModeBoth => 'Both';
 
   @override
-  String get prefsResponseDelayLabel => 'Response delay';
+  String get prefsResponseDelayLabel => 'Response time';
 
   @override
   String get prefsResponseDelayHint => 'e.g. 3';
@@ -12064,7 +12065,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deletionSheetTitle => 'Delete my account';
 
   @override
-  String get deletionSoftConfirmLabel => 'Confirm the pause';
+  String get deletionSoftConfirmLabel => 'Confirm pause';
 
   @override
   String get deletionSoftConfirmDialogMessage =>
@@ -12464,10 +12465,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportHomeLoadErrorTitle => 'We couldn\'t load support';
 
   @override
-  String get supportConnectionCheckFallback =>
-      'Check your connection and try again.';
-
-  @override
   String get supportHomeFaqTitle => 'Frequently asked questions';
 
   @override
@@ -12506,7 +12503,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportTicketNotFoundTitle => 'Ticket not found';
 
   @override
-  String get supportBrandName => 'Support Yadony';
+  String get supportBrandName => 'Yadony Support';
 
   @override
   String get supportViewImageLabel => 'View image fullscreen';

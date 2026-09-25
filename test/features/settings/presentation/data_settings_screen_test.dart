@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/presentation/screens/data_settings_screen.dart';
@@ -130,24 +131,32 @@ void main() {
       expect(find.textContaining('Export lancé'), findsOneWidget);
     });
 
-    testWidgets('affiche snackbar erreur quand DataExportError', (
-      tester,
-    ) async {
-      const errorMessage = 'Erreur réseau';
-      final stream = Stream<DataExportState>.fromIterable([
-        const DataExportError(errorMessage),
-      ]);
-      whenListen<DataExportState>(
-        mockDataExportBloc,
-        stream,
-        initialState: const DataExportInitial(),
-      );
+    testWidgets(
+      'affiche snackbar erreur quand DataExportError, jamais le message brut '
+      '(ErrorPresenter résout un texte générique depuis l\'AppException)',
+      (tester) async {
+        final stream = Stream<DataExportState>.fromIterable([
+          const DataExportError(NetworkException('detail technique brut')),
+        ]);
+        whenListen<DataExportState>(
+          mockDataExportBloc,
+          stream,
+          initialState: const DataExportInitial(),
+        );
 
-      await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildScreen());
+        await tester.pumpAndSettle();
 
-      expect(find.text(errorMessage), findsOneWidget);
-    });
+        expect(
+          find.text(
+            'Une erreur est survenue. Vérifie ta connexion et '
+            'réessaie.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('detail technique brut'), findsNothing);
+      },
+    );
 
     testWidgets('anglais : titre, section et tuile traduits', (tester) async {
       useEnglish();

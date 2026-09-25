@@ -226,6 +226,56 @@ void main() {
     verify(() => mockPrefsBloc.add(const CountryChanged('SN'))).called(1);
   });
 
+  testWidgets('en anglais : la tuile Pays affiche le nom traduit', (
+    tester,
+  ) async {
+    useEnglish();
+    mockPrefsBloc = stubBusinessPrefsBloc(
+      state: const BusinessPrefsState(country: 'DE'),
+    );
+    when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+    await tester.pumpWidget(buildScreen());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Germany'), findsOneWidget);
+    expect(find.text('Allemagne'), findsNothing);
+  });
+
+  testWidgets(
+    'en anglais : le sélecteur affiche les zones et les pays traduits',
+    (tester) async {
+      useEnglish();
+      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Choose my country'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('WEST AFRICA'), findsOneWidget);
+      expect(find.text('Germany'), findsOneWidget);
+      expect(find.text('Allemagne'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'en anglais : la recherche trouve aussi le pays par son nom traduit',
+    (tester) async {
+      useEnglish();
+      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Choose my country'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Germany');
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(ListTile, 'Germany'), findsOneWidget);
+      expect(find.text('France'), findsNothing);
+    },
+  );
+
   testWidgets('la recherche filtre le sélecteur de pays', (tester) async {
     when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
     await tester.pumpWidget(buildScreen());

@@ -208,7 +208,6 @@ const _sameInBothLanguages = <String>{
   'notificationDetailFallbackTitle', // « Notification » se dit pareil (tâche H4)
   'supportScreenTitle', // « Support » se dit pareil (tâche H4)
   'supportCreateTicketMessageLabel', // « Message » se dit pareil (tâche H4)
-  'supportBrandName', // « Support Yadony » : marque, identique en anglais (tâche H4)
 };
 
 void main() {

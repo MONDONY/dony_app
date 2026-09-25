@@ -12544,10 +12544,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get supportHomeLoadErrorTitle => 'Impossible de charger le support';
 
   @override
-  String get supportConnectionCheckFallback =>
-      'Vérifiez votre connexion et réessayez.';
-
-  @override
   String get supportHomeFaqTitle => 'Questions fréquentes';
 
   @override

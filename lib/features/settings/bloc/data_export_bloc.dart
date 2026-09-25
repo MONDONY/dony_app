@@ -22,7 +22,7 @@ class DataExportBloc extends Bloc<DataExportEvent, DataExportState> {
       await _api.dio.get('/users/me/export');
       emit(const DataExportSuccess());
     } catch (e) {
-      emit(DataExportError(unwrapDioError(e).message));
+      emit(DataExportError(unwrapDioError(e)));
     }
   }
 }

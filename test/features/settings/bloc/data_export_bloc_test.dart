@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -71,7 +72,8 @@ void main() {
     );
 
     blocTest<DataExportBloc, DataExportState>(
-      'DataExportError contient le message de l\'exception',
+      'DataExportError porte l\'AppException, jamais un message brut '
+      '(app_exception.dart : "UI must NEVER display [message] directly")',
       build: () {
         when(
           () => mockDio.get('/users/me/export'),
@@ -81,7 +83,11 @@ void main() {
       act: (bloc) => bloc.add(const DataExportRequested()),
       expect: () => [
         isA<DataExportLoading>(),
-        isA<DataExportError>().having((s) => s.message, 'message', isNotEmpty),
+        isA<DataExportError>().having(
+          (s) => s.error,
+          'error',
+          isA<AppException>(),
+        ),
       ],
     );
   });

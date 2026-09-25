@@ -13,6 +13,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
+import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -101,8 +102,9 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                               ? l.prefsCountryLockedSubtitle
                               : null,
                           trailing: Text(
-                            CountryCatalog.byCode(state.country)?.name ??
-                                l.prefsCountryPlaceholder,
+                            CountryCatalog.byCode(state.country) != null
+                                ? countryName(l, state.country!)
+                                : l.prefsCountryPlaceholder,
                             style: tt.labelMedium?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
@@ -364,11 +366,31 @@ class _CountryPickerListState extends State<_CountryPickerList> {
   final _controller = TextEditingController();
   List<CountryZoneGroup> _results = CountryCatalog.groupedSearch('');
 
+  // `l` n'est connu qu'à partir de `didChangeDependencies` (les délégués ne
+  // sont pas prêts en `initState`) : on le garde ici pour que la recherche
+  // trouve aussi le nom localisé, et on relance le calcul si la langue change.
+  AppLocalizations? _l;
+
   @override
   void initState() {
     super.initState();
-    _controller.addListener(() {
-      setState(() => _results = CountryCatalog.groupedSearch(_controller.text));
+    _controller.addListener(_refreshResults);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _l = context.l10n;
+    _refreshResults();
+  }
+
+  void _refreshResults() {
+    final l = _l;
+    setState(() {
+      _results = CountryCatalog.groupedSearch(
+        _controller.text,
+        localizedName: l == null ? null : (c) => countryName(l, c.code),
+      );
     });
   }
 
@@ -419,7 +441,7 @@ class _CountryPickerListState extends State<_CountryPickerList> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    group.zone.label.toUpperCase(),
+                    countryZoneLabel(l, group.zone).toUpperCase(),
                     style: tt.labelMedium?.copyWith(
                       color: cs.onSurfaceVariant,
                       fontWeight: FontWeight.w700,
@@ -431,7 +453,7 @@ class _CountryPickerListState extends State<_CountryPickerList> {
             ),
             for (final country in group.countries)
               ListTile(
-                title: Text(country.name),
+                title: Text(countryName(l, country.code)),
                 subtitle: Text(
                   '${country.currency.code} · ${country.currency.symbol}',
                 ),

@@ -542,7 +542,7 @@ void main() {
       // DonyBadge rend son libellé en majuscules.
       expect(find.text('REPLY RECEIVED'), findsOneWidget);
       expect(find.text('Payment'), findsOneWidget);
-      expect(find.text('Support Yadony'), findsOneWidget);
+      expect(find.text('Yadony Support'), findsOneWidget);
       expect(find.text('Your message'), findsOneWidget);
       expect(find.byTooltip('Attach an image'), findsOneWidget);
       expect(find.byTooltip('Send'), findsOneWidget);

@@ -104,9 +104,10 @@ class SupportHomeScreen extends StatelessWidget {
           SupportViewStatus.failure => DonyEmptyState(
             type: DonyEmptyStateType.error,
             title: context.l10n.supportHomeLoadErrorTitle,
-            description:
-                supportErrorMessage(context.l10n, state) ??
-                context.l10n.supportConnectionCheckFallback,
+            // `state.failure` est toujours renseigné dans cette branche :
+            // `supportErrorMessage` n'y rend jamais `null` (relecture finale
+            // H, Mineur #8). Pas de repli.
+            description: supportErrorMessage(context.l10n, state),
             actionLabel: context.l10n.commonRetry,
             onAction: () =>
                 context.read<SupportBloc>().add(const SupportHomeRequested()),

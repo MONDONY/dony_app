@@ -9,8 +9,8 @@ import 'package:dony/l10n/l10n.dart';
 /// possible côté backend depuis Apple 5.1.1(v) : un solde wallet ne bloque
 /// plus jamais la suppression (`DeletionEligibilityState.hasWalletBalance`,
 /// informatif). Seul `active-transactions` atteint encore ce switch.
-/// Consommé par `deletion_eligibility_cubit.dart`'s state dans
-/// `delete_account_bottom_sheet.dart`.
+/// Appelée par `_DeleteActions` (`delete_account_bottom_sheet.dart`) à partir
+/// de `DeletionEligibilityState.blockedReasonCode`.
 String deletionBlockedMessage(AppLocalizations l, String? code) {
   switch (code) {
     case 'active-transactions':
