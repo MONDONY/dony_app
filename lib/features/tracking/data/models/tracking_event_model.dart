@@ -38,18 +38,4 @@ class TrackingEventModel {
             : DateTime.parse(json['offlineTimestamp'] as String),
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
-
-  String get stepLabel => switch (eventType) {
-    'DEPART' => 'Départ confirmé',
-    'TRANSIT' => 'En transit',
-    'ARRIVEE' => 'Arrivée confirmée',
-    _ => eventType,
-  };
-
-  String? get displayLocationLabel {
-    final label = gpsLabel?.trim();
-    if (label != null && label.isNotEmpty) return label;
-    if (gpsLat != null && gpsLon != null) return 'Lieu GPS enregistré';
-    return null;
-  }
 }

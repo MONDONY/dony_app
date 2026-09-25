@@ -10393,5 +10393,1118 @@
   "walletActiveCurrencyBadge": "active",
   "@walletActiveCurrencyBadge": {
     "description": "Badge de la devise active de l'utilisateur, dans la liste des soldes (wallet_screen.dart _CurrencyBalanceRow). Relevé en E3, corrigé en vague finale E."
+  },
+  "chatPreviewPhoto": "📷 Photo",
+  "@chatPreviewPhoto": {
+    "description": "Affichage traduit du marqueur d'aperçu kChatPreviewPhoto (chat_labels.dart), identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "chatPreviewLocation": "📍 Localisation partagée",
+  "@chatPreviewLocation": {
+    "description": "Affichage traduit du marqueur d'aperçu kChatPreviewLocation (chat_labels.dart)."
+  },
+  "chatBlockedLength": "Message trop long ({max} caractères max).",
+  "@chatBlockedLength": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'length' de ChatMessageValidator.",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "chatBlockedDuplicate": "Tu viens d'envoyer ce message.",
+  "@chatBlockedDuplicate": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'duplicate' de ChatMessageValidator."
+  },
+  "chatBlockedRate": "Tu envoies trop de messages, patiente un instant.",
+  "@chatBlockedRate": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'rate' de ChatMessageValidator."
+  },
+  "chatBlockedContact": "Pour ta sécurité, garde les échanges et le paiement sur Yadony. Le partage de coordonnées est interdit.",
+  "@chatBlockedContact": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'contact' de ChatMessageValidator."
+  },
+  "chatBlockedBanking": "Le partage de coordonnées bancaires est interdit.",
+  "@chatBlockedBanking": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'banking' de ChatMessageValidator."
+  },
+  "chatBlockedUrl": "Les liens externes ne sont pas autorisés dans la messagerie.",
+  "@chatBlockedUrl": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'url' de ChatMessageValidator."
+  },
+  "chatBlockedProfanity": "Reste courtois : ce message contient des termes interdits.",
+  "@chatBlockedProfanity": {
+    "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'profanity' de ChatMessageValidator."
+  },
+  "chatDeleteConversationTitle": "Supprimer la conversation",
+  "@chatDeleteConversationTitle": {
+    "description": "Titre du dialogue de confirmation et libellé du menu ⋯ de chat_screen.dart (même texte aux deux endroits)."
+  },
+  "chatDeleteConversationMessage": "Cette conversation sera définitivement supprimée pour vous et votre interlocuteur. Impossible de la recréer.",
+  "@chatDeleteConversationMessage": {
+    "description": "Contenu du dialogue de confirmation de suppression de chat_screen.dart."
+  },
+  "chatUnknownConversationLabel": "Conversation",
+  "@chatUnknownConversationLabel": {
+    "description": "Repli du titre de l'app bar de chat_screen.dart quand le participant n'a pas de nom, identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "chatCallTooltip": "Appeler",
+  "@chatCallTooltip": {
+    "description": "Tooltip du bouton d'appel de chat_screen.dart."
+  },
+  "chatReportUser": "Signaler {name}",
+  "@chatReportUser": {
+    "description": "Entrée du menu ⋯ de chat_screen.dart pour signaler l'interlocuteur.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBlockUser": "Bloquer {name}",
+  "@chatBlockUser": {
+    "description": "Entrée du menu ⋯ de chat_screen.dart pour bloquer l'interlocuteur.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatConversationDeletedSnackbar": "Conversation supprimée",
+  "@chatConversationDeletedSnackbar": {
+    "description": "Snackbar affichée après ChatConversationDeleted (chat_screen.dart)."
+  },
+  "chatConnectionLostTitle": "Connexion interrompue",
+  "@chatConnectionLostTitle": {
+    "description": "Titre du DonyEmptyState affiché sur ChatError (chat_screen.dart) ; pas d'entrée ErrorCatalog dédiée pour le code chat-stream-error, ce titre est hors catalogue."
+  },
+  "chatEmptyStateTitle": "Démarrez la conversation !",
+  "@chatEmptyStateTitle": {
+    "description": "Texte de l'état vide d'une conversation sans message (chat_screen.dart)."
+  },
+  "chatReadOnlyBannerMessage": "Votre interlocuteur a quitté cette conversation. Vous êtes en lecture seule.",
+  "@chatReadOnlyBannerMessage": {
+    "description": "Bandeau affiché en lecture seule de chat_screen.dart (_ReadOnlyBanner)."
+  },
+  "chatLinkedTripLabel": "Trajet lié",
+  "@chatLinkedTripLabel": {
+    "description": "Sur-titre du bandeau de trajet lié de chat_screen.dart (_TripBanner)."
+  },
+  "chatBidStatusAccepted": "Offre acceptée",
+  "@chatBidStatusAccepted": {
+    "description": "Libellé du bandeau de statut BID_ACCEPTED de chat_screen.dart (_BidStatusBanner)."
+  },
+  "chatBidStatusDeliveryConfirmed": "Livraison confirmée",
+  "@chatBidStatusDeliveryConfirmed": {
+    "description": "Libellé du bandeau de statut DELIVERY_CONFIRMED de chat_screen.dart (_BidStatusBanner)."
+  },
+  "chatBidStatusTripCancelled": "Trajet annulé",
+  "@chatBidStatusTripCancelled": {
+    "description": "Libellé du bandeau de statut TRIP_CANCELLED de chat_screen.dart (_BidStatusBanner)."
+  },
+  "chatMessageDeleted": "Message supprimé",
+  "@chatMessageDeleted": {
+    "description": "Texte d'un message supprimé, dans la bulle système et dans _DeletedContent (chat_screen.dart, même texte aux deux endroits)."
+  },
+  "chatLocationMessageLabel": "Localisation partagée",
+  "@chatLocationMessageLabel": {
+    "description": "Libellé affiché dans la bulle d'un message de localisation (chat_screen.dart _LocationContent)."
+  },
+  "chatSendingDisabled": "Envoi de messages désactivé",
+  "@chatSendingDisabled": {
+    "description": "Barre de saisie désactivée (lecture seule) de chat_screen.dart (_InputBar)."
+  },
+  "chatMessageHint": "Votre message…",
+  "@chatMessageHint": {
+    "description": "Texte indicatif du champ de saisie de chat_screen.dart (_InputBar)."
+  },
+  "chatSendMessageSemantics": "Envoyer le message",
+  "@chatSendMessageSemantics": {
+    "description": "Libellé d'accessibilité du bouton d'envoi de chat_screen.dart (_InputBar)."
+  },
+  "conversationListTitle": "Messages",
+  "@conversationListTitle": {
+    "description": "Titre de l'en-tête de conversation_list_screen.dart, identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "conversationListArchivedTooltip": "Voir les conversations archivées",
+  "@conversationListArchivedTooltip": {
+    "description": "Tooltip du bouton d'accès aux archives de conversation_list_screen.dart."
+  },
+  "conversationListSearchHint": "Rechercher une conversation…",
+  "@conversationListSearchHint": {
+    "description": "Texte indicatif de la barre de recherche de conversation_list_screen.dart."
+  },
+  "conversationListEmptyResultsTitle": "Aucun résultat",
+  "@conversationListEmptyResultsTitle": {
+    "description": "Titre de l'état vide quand la recherche ne trouve rien (conversation_list_screen.dart)."
+  },
+  "conversationListEmptyTitle": "Aucun message",
+  "@conversationListEmptyTitle": {
+    "description": "Titre de l'état vide sans conversation (conversation_list_screen.dart)."
+  },
+  "conversationListEmptySearchDescription": "Aucune conversation ne correspond à « {query} ».",
+  "@conversationListEmptySearchDescription": {
+    "description": "Description de l'état vide de recherche de conversation_list_screen.dart.",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "conversationListEmptyDescription": "Vos conversations apparaîtront ici\naprès l'acceptation d'une offre.",
+  "@conversationListEmptyDescription": {
+    "description": "Description de l'état vide sans conversation de conversation_list_screen.dart (le saut de ligne fait partie de la valeur)."
+  },
+  "conversationFilterAll": "Tous",
+  "@conversationFilterAll": {
+    "description": "Pastille de filtre « Tous » de conversation_list_screen.dart."
+  },
+  "conversationFilterUnread": "Non lus",
+  "@conversationFilterUnread": {
+    "description": "Pastille de filtre « Non lus » de conversation_list_screen.dart."
+  },
+  "conversationFilterActive": "En cours",
+  "@conversationFilterActive": {
+    "description": "Pastille de filtre « En cours » de conversation_list_screen.dart."
+  },
+  "conversationFilterDone": "Terminés",
+  "@conversationFilterDone": {
+    "description": "Pastille de filtre « Terminés » de conversation_list_screen.dart."
+  },
+  "conversationSectionToday": "AUJOURD'HUI",
+  "@conversationSectionToday": {
+    "description": "Titre de section (en majuscules) du regroupement temporel du jour, conversation_list_screen.dart."
+  },
+  "conversationSectionThisWeek": "CETTE SEMAINE",
+  "@conversationSectionThisWeek": {
+    "description": "Titre de section (en majuscules) du regroupement temporel de la semaine, conversation_list_screen.dart."
+  },
+  "conversationSectionOlder": "PLUS ANCIEN",
+  "@conversationSectionOlder": {
+    "description": "Titre de section (en majuscules) du regroupement temporel plus ancien, conversation_list_screen.dart."
+  },
+  "conversationArchiveAction": "Archiver",
+  "@conversationArchiveAction": {
+    "description": "Libellé du SlidableAction d'archivage de conversation_list_screen.dart."
+  },
+  "conversationArchivedSnackbar": "Conversation archivée",
+  "@conversationArchivedSnackbar": {
+    "description": "Snackbar affichée après archivage d'une conversation (conversation_list_screen.dart)."
+  },
+  "conversationDeleteConfirmTitle": "Supprimer la conversation ?",
+  "@conversationDeleteConfirmTitle": {
+    "description": "Titre du dialogue de confirmation de suppression depuis le swipe de conversation_list_screen.dart (_SlidableTile, distinct de chatDeleteConversationTitle : point d'interrogation)."
+  },
+  "conversationDeleteConfirmMessage": "Cette action est irréversible.",
+  "@conversationDeleteConfirmMessage": {
+    "description": "Contenu du dialogue de confirmation de suppression de conversation_list_screen.dart (_SlidableTile)."
+  },
+  "archivedConversationsTitle": "Archives",
+  "@archivedConversationsTitle": {
+    "description": "Titre de archived_conversations_screen.dart, identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "archivedConversationsEmptyTitle": "Aucune archive",
+  "@archivedConversationsEmptyTitle": {
+    "description": "Titre de l'état vide de archived_conversations_screen.dart."
+  },
+  "archivedConversationsEmptyDescription": "Les conversations que vous archivez apparaîtront ici.",
+  "@archivedConversationsEmptyDescription": {
+    "description": "Description de l'état vide de archived_conversations_screen.dart."
+  },
+  "conversationUnarchivedSnackbar": "Conversation désarchivée",
+  "@conversationUnarchivedSnackbar": {
+    "description": "Snackbar affichée après désarchivage d'une conversation (archived_conversations_screen.dart)."
+  },
+  "conversationUnarchiveAction": "Désarchiver",
+  "@conversationUnarchiveAction": {
+    "description": "Libellé du SlidableAction de désarchivage de archived_conversations_screen.dart."
+  },
+  "conversationLoaderNotFoundTitle": "Conversation introuvable",
+  "@conversationLoaderNotFoundTitle": {
+    "description": "Titre de l'état d'erreur de conversation_loader_screen.dart."
+  },
+  "conversationLoaderNotFoundDescription": "Impossible de charger cette conversation.",
+  "@conversationLoaderNotFoundDescription": {
+    "description": "Description de l'état d'erreur de conversation_loader_screen.dart."
+  },
+  "conversationUserFallback": "Utilisateur",
+  "@conversationUserFallback": {
+    "description": "Repli du nom du participant dans conversation_tile.dart quand il est vide."
+  },
+  "conversationStartedFallback": "Conversation démarrée",
+  "@conversationStartedFallback": {
+    "description": "Repli de l'aperçu de dernier message dans conversation_tile.dart quand la conversation n'a encore aucun message."
+  },
+  "conversationTimeJustNow": "maintenant",
+  "@conversationTimeJustNow": {
+    "description": "Repli de formatConversationTime (conversation_tile.dart) pour un message envoyé il y a moins d'une minute."
+  },
+  "trackingStepDeparture": "Départ",
+  "@trackingStepDeparture": {
+    "description": "Libellé de l'étape de suivi DEPART (tracking_labels.dart, trackingStepLabel)."
+  },
+  "trackingStepTransit": "Transit",
+  "@trackingStepTransit": {
+    "description": "Libellé de l'étape de suivi TRANSIT (tracking_labels.dart, trackingStepLabel), identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "trackingStepArrival": "Arrivée",
+  "@trackingStepArrival": {
+    "description": "Libellé de l'étape de suivi ARRIVEE (tracking_labels.dart, trackingStepLabel)."
+  },
+  "scanStepRecorded": "{step, select, DEPART{Départ enregistrée} TRANSIT{Transit enregistrée} other{Arrivée enregistrée}}",
+  "@scanStepRecorded": {
+    "description": "Chip de confirmation d'une lecture QR (scan_confirm_screen.dart) : step reçoit le code brut (DEPART/TRANSIT/ARRIVEE), pas le libellé.",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "scanStepLabel": "Étape : {step}",
+  "@scanStepLabel": {
+    "description": "Badge étape sur la photo d'une lecture (scan_photo_screen.dart) : step reçoit le libellé déjà traduit via trackingStepLabel.",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "scanPendingSync": "{count, plural, =1{{count} lecture en attente de synchro} other{{count} lectures en attente de synchro}}",
+  "@scanPendingSync": {
+    "description": "Bandeau de synchro du hub Scan & Suivi (scan_hub_screen.dart, _SyncBanner).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanQueueSafe": "{count, plural, =1{{count} lecture en attente. On l'enverra dès que vous récupérez du réseau.} other{{count} lectures en attente. On les enverra dès que vous récupérez du réseau.}}",
+  "@scanQueueSafe": {
+    "description": "Bandeau d'alerte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _AlertBanner) : corrige l'accord faux à 1 (\"1 lectures\").",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanAgoUnderMinute": "il y a < 1 min",
+  "@scanAgoUnderMinute": {
+    "description": "Ancienneté d'une lecture hors-ligne de moins d'une minute (tracking_labels.dart, scanRelativeTime)."
+  },
+  "scanAgoMinutes": "il y a {minutes} min",
+  "@scanAgoMinutes": {
+    "description": "Ancienneté d'une lecture hors-ligne en minutes (tracking_labels.dart, scanRelativeTime).",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "scanAgoHours": "il y a {hours}h",
+  "@scanAgoHours": {
+    "description": "Ancienneté d'une lecture hors-ligne en heures (tracking_labels.dart, scanRelativeTime).",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "scanPhotoTooLarge": "Photo trop lourde (max {mb} Mo). Réessayez.",
+  "@scanPhotoTooLarge": {
+    "description": "Erreur de photo trop volumineuse à la lecture d'un QR (tracking_labels.dart, qr_scanner_screen.dart, scan_photo_screen.dart), mb dynamique.",
+    "placeholders": {
+      "mb": {
+        "type": "int"
+      }
+    }
+  },
+  "scanDepartureTitle": "Lecture au départ",
+  "@scanDepartureTitle": {
+    "description": "Titre de l'écran de lecture QR au départ (qr_scanner_screen.dart)."
+  },
+  "scanTorchTooltip": "Lampe torche",
+  "@scanTorchTooltip": {
+    "description": "Tooltip du bouton lampe torche de qr_scanner_screen.dart."
+  },
+  "scanQrReadTitle": "QR lu",
+  "@scanQrReadTitle": {
+    "description": "Titre de la feuille de confirmation après lecture d'un QR (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanStepIndicatorStatic": "ÉTAPE 1 SUR 3",
+  "@scanStepIndicatorStatic": {
+    "description": "Indicateur de progression de l'écran de lecture au départ (qr_scanner_screen.dart), toujours étape 1 sur 3 : c'est le premier des trois scans du parcours."
+  },
+  "scanConfirmedInSuitcase": "Colis confirmé en valise",
+  "@scanConfirmedInSuitcase": {
+    "description": "Sous-titre de l'indicateur de progression de qr_scanner_screen.dart."
+  },
+  "scanPhotoWordLabel": "Photo",
+  "@scanPhotoWordLabel": {
+    "description": "Mot « Photo » seul, identique dans les deux langues (voir _sameInBothLanguages) : bouton de qr_scanner_screen.dart, badge de scan_hub_screen.dart."
+  },
+  "scanConfirmAndContinue": "Confirmer & continuer",
+  "@scanConfirmAndContinue": {
+    "description": "Bouton principal de qr_scanner_screen.dart."
+  },
+  "scanTrackingNumberDialogTitle": "Numéro de suivi",
+  "@scanTrackingNumberDialogTitle": {
+    "description": "Titre du dialogue de saisie manuelle du numéro de suivi (qr_scanner_screen.dart)."
+  },
+  "scanTrackingNumberDialogBody": "Entrez le numéro DON-XXXXXX du colis à lire.",
+  "@scanTrackingNumberDialogBody": {
+    "description": "Corps du dialogue de saisie manuelle du numéro de suivi (qr_scanner_screen.dart)."
+  },
+  "scanNumberNotFound": "Numéro introuvable. Vérifiez et réessayez.",
+  "@scanNumberNotFound": {
+    "description": "Erreur de numéro de suivi introuvable (qr_scanner_screen.dart, scan_identify_screen.dart)."
+  },
+  "scanQueuedTitle": "Lecture en attente",
+  "@scanQueuedTitle": {
+    "description": "Titre du dialogue de lecture mise en file d'attente hors-ligne (qr_scanner_screen.dart, scan_confirm_screen.dart)."
+  },
+  "scanQueuedNoConnectionBodyLong": "Pas de connexion internet. La lecture sera synchronisée automatiquement dès que vous serez en ligne.",
+  "@scanQueuedNoConnectionBodyLong": {
+    "description": "Corps du dialogue hors-ligne de qr_scanner_screen.dart."
+  },
+  "scanUnderstoodButton": "Compris",
+  "@scanUnderstoodButton": {
+    "description": "Bouton de fermeture des dialogues hors-ligne (qr_scanner_screen.dart, scan_confirm_screen.dart)."
+  },
+  "scanParcelDeliveredTitle": "Colis livré !",
+  "@scanParcelDeliveredTitle": {
+    "description": "Titre affiché quand la lecture confirme une livraison finale (qr_scanner_screen.dart, scan_confirm_screen.dart)."
+  },
+  "scanRecordedTitle": "Lecture enregistrée !",
+  "@scanRecordedTitle": {
+    "description": "Titre affiché après une lecture QR réussie non finale (qr_scanner_screen.dart, scan_confirm_screen.dart)."
+  },
+  "scanEventTypeSectionLabel": "Type d'étape",
+  "@scanEventTypeSectionLabel": {
+    "description": "Libellé du sélecteur d'étape de la feuille de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanConfirmationCodeLabel": "Code de confirmation",
+  "@scanConfirmationCodeLabel": {
+    "description": "Libellé du champ code de confirmation à l'arrivée (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanConfirmationCodeHintLong": "Demandez le code à 6 chiffres au destinataire. Il l'a reçu de l'expéditeur.",
+  "@scanConfirmationCodeHintLong": {
+    "description": "Texte d'aide du champ code de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanPhotoOfParcelLabel": "Photo du colis",
+  "@scanPhotoOfParcelLabel": {
+    "description": "Libellé/titre de la section photo (qr_scanner_screen.dart, scan_photo_screen.dart)."
+  },
+  "scanRemovePhotoSemantics": "Supprimer la photo",
+  "@scanRemovePhotoSemantics": {
+    "description": "Libellé Semantics du bouton de suppression de la photo prise (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanGpsLocationSaved": "Lieu GPS enregistré",
+  "@scanGpsLocationSaved": {
+    "description": "Repli affiché quand une position GPS est enregistrée sans libellé de lieu résolu (qr_scanner_screen.dart, scan_confirm_screen.dart)."
+  },
+  "scanPhotoTooLargeFixed": "Photo trop lourde (max 10 MB). Réessayez.",
+  "@scanPhotoTooLargeFixed": {
+    "description": "Message d'erreur photo trop lourde à taille fixe (qr_scanner_screen.dart:1141), distinct de scanPhotoTooLarge (« MB » au lieu de « Mo », taille non dynamique)."
+  },
+  "scanSubmittingConfirmation": "Confirmation...",
+  "@scanSubmittingConfirmation": {
+    "description": "Libellé du bouton pendant la confirmation d'une livraison (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanSubmittingRecording": "Enregistrement...",
+  "@scanSubmittingRecording": {
+    "description": "Libellé du bouton pendant l'enregistrement d'une lecture DEPART/TRANSIT (qr_scanner_screen.dart, _ScanConfirmSheet)."
+  },
+  "scanConfirmDeliveryButton": "Confirmer la livraison",
+  "@scanConfirmDeliveryButton": {
+    "description": "Bouton de confirmation d'une livraison ARRIVEE (qr_scanner_screen.dart, scan_confirm_screen.dart)."
+  },
+  "scanConfirmReadingLabel": "Confirmer la lecture",
+  "@scanConfirmReadingLabel": {
+    "description": "Bouton de confirmation d'une lecture DEPART/TRANSIT (qr_scanner_screen.dart) et titre d'appbar de scan_confirm_screen.dart, même texte."
+  },
+  "scanConfirmParcelLabel": "Colis",
+  "@scanConfirmParcelLabel": {
+    "description": "Libellé de la ligne colis du récapitulatif (scan_confirm_screen.dart, _MetaRow)."
+  },
+  "scanConfirmStepLabel": "Étape",
+  "@scanConfirmStepLabel": {
+    "description": "Libellé de la ligne étape du récapitulatif (scan_confirm_screen.dart, _MetaRow)."
+  },
+  "scanConfirmConfirmationCodeHint": "Demandez le code à 6 chiffres au destinataire.",
+  "@scanConfirmConfirmationCodeHint": {
+    "description": "Texte d'aide du champ code de confirmation de scan_confirm_screen.dart (version courte, distincte de scanConfirmationCodeHintLong)."
+  },
+  "scanValidateReadingButton": "Valider la lecture",
+  "@scanValidateReadingButton": {
+    "description": "Bouton de validation d'une lecture DEPART/TRANSIT (scan_confirm_screen.dart)."
+  },
+  "scanRetakePhotoButton": "Reprendre la photo",
+  "@scanRetakePhotoButton": {
+    "description": "Bouton pour revenir reprendre la photo (scan_confirm_screen.dart)."
+  },
+  "scanConfirmQueuedNoConnectionBody": "Pas de connexion. La lecture sera synchronisée dès que vous serez en ligne.",
+  "@scanConfirmQueuedNoConnectionBody": {
+    "description": "Corps du dialogue hors-ligne de scan_confirm_screen.dart (version courte, distincte de scanQueuedNoConnectionBodyLong)."
+  },
+  "scanTerminateButton": "Terminer",
+  "@scanTerminateButton": {
+    "description": "CTA de l'écran de succès livraison (scan_confirm_screen.dart, DonySuccessScreen)."
+  },
+  "scanHubTitle": "Lecture & Suivi",
+  "@scanHubTitle": {
+    "description": "Titre du hub Scan & Suivi (scan_hub_screen.dart)."
+  },
+  "scanTrackParcelEntry": "Suivre un colis",
+  "@scanTrackParcelEntry": {
+    "description": "Entrée additive « Suivre un colis » du hub Scan & Suivi (scan_hub_screen.dart)."
+  },
+  "scanChooseTripTitle": "Choisir un trajet",
+  "@scanChooseTripTitle": {
+    "description": "Titre de la feuille de sélection de trajet (scan_hub_screen.dart, _TripPicker)."
+  },
+  "scanChangeTripLabel": "Changer de trajet",
+  "@scanChangeTripLabel": {
+    "description": "Bandeau du hero trajet quand plusieurs trajets sont actifs (scan_hub_screen.dart, _TripHeroCompact)."
+  },
+  "scanNoTripTitle": "Aucun trajet à traiter",
+  "@scanNoTripTitle": {
+    "description": "Titre de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState)."
+  },
+  "scanNoTripDescription": "Tu pourras lire les QR des colis dès qu'une demande sera acceptée sur l'un de tes trajets.",
+  "@scanNoTripDescription": {
+    "description": "Description de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState)."
+  },
+  "scanViewMyTripsAction": "Voir mes trajets",
+  "@scanViewMyTripsAction": {
+    "description": "Action de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState)."
+  },
+  "scanLoadTripsErrorTitle": "Impossible de charger les trajets",
+  "@scanLoadTripsErrorTitle": {
+    "description": "Titre de l'état d'erreur du hub Scan & Suivi (scan_hub_screen.dart, _ErrorState)."
+  },
+  "scanQuickReadSectionTitle": "LECTURE RAPIDE",
+  "@scanQuickReadSectionTitle": {
+    "description": "Titre de la section des 3 boutons de scan rapide (scan_hub_screen.dart, _EtapesSection)."
+  },
+  "scanColisSectionTitle": "COLIS ({count})",
+  "@scanColisSectionTitle": {
+    "description": "Titre de la section liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanNoColisConfirmed": "Aucun colis confirmé sur ce trajet pour l'instant.",
+  "@scanNoColisConfirmed": {
+    "description": "Message vide de la liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection)."
+  },
+  "scanColisRowScanBadge": "Scan",
+  "@scanColisRowScanBadge": {
+    "description": "Pastille d'action d'une ligne colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisRow), identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "scanHistorySectionTitle": "HISTORIQUE DES LECTURES",
+  "@scanHistorySectionTitle": {
+    "description": "Titre de la section historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection)."
+  },
+  "scanNoHistoryYet": "Aucune lecture pour l'instant",
+  "@scanNoHistoryYet": {
+    "description": "Message vide de l'historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection)."
+  },
+  "scanIdentifyTitle": "Identifier le colis",
+  "@scanIdentifyTitle": {
+    "description": "Titre de l'écran d'identification du colis (scan_identify_screen.dart)."
+  },
+  "scanOpenQrReaderTitle": "Ouvrir le lecteur QR",
+  "@scanOpenQrReaderTitle": {
+    "description": "Bouton d'ouverture du lecteur QR (scan_identify_screen.dart)."
+  },
+  "scanPointQrHint": "Pointez vers le QR du colis",
+  "@scanPointQrHint": {
+    "description": "Sous-titre du bouton d'ouverture du lecteur QR (scan_identify_screen.dart)."
+  },
+  "scanOrDivider": "OU",
+  "@scanOrDivider": {
+    "description": "Séparateur « OU » entre le lecteur QR et la saisie manuelle (scan_identify_screen.dart)."
+  },
+  "scanIdentifySubmit": "Identifier →",
+  "@scanIdentifySubmit": {
+    "description": "Bouton de soumission du numéro saisi manuellement (scan_identify_screen.dart)."
+  },
+  "scanWhichStepTitle": "Quelle étape ?",
+  "@scanWhichStepTitle": {
+    "description": "Titre de la feuille de sélection d'étape (scan_identify_screen.dart, _EtapePickerSheet)."
+  },
+  "scanPhotoMandatoryBadge": "Photo obligatoire",
+  "@scanPhotoMandatoryBadge": {
+    "description": "Badge photo obligatoire pour DEPART/ARRIVEE (scan_photo_screen.dart)."
+  },
+  "scanPhotoOptionalBadge": "Photo optionnelle",
+  "@scanPhotoOptionalBadge": {
+    "description": "Badge photo optionnelle pour TRANSIT (scan_photo_screen.dart)."
+  },
+  "scanPhotoOpeningLoading": "Ouverture...",
+  "@scanPhotoOpeningLoading": {
+    "description": "Libellé du bouton pendant l'ouverture de la caméra (scan_photo_screen.dart)."
+  },
+  "scanTakePhotoButton": "Prendre la photo",
+  "@scanTakePhotoButton": {
+    "description": "Bouton principal de prise de photo (scan_photo_screen.dart), distinct de commonTakePhoto (« une » vs « la »)."
+  },
+  "scanSkipPhotoButton": "Passer : continuer sans photo",
+  "@scanSkipPhotoButton": {
+    "description": "Bouton pour ignorer la photo optionnelle (scan_photo_screen.dart)."
+  },
+  "scanAutoGeolocation": "Géolocalisation automatique",
+  "@scanAutoGeolocation": {
+    "description": "Mention de géolocalisation automatique (scan_photo_screen.dart)."
+  },
+  "scanQrPickerTitle": "Lire le QR code",
+  "@scanQrPickerTitle": {
+    "description": "Titre de l'écran de lecture QR générique (qr_picker_screen.dart)."
+  },
+  "scanTorchToggleTooltip": "Activer ou couper la lampe",
+  "@scanTorchToggleTooltip": {
+    "description": "Tooltip du bouton lampe torche de qr_picker_screen.dart, distinct de scanTorchTooltip."
+  },
+  "scanQrPickerHint": "Pointez vers le QR code du colis",
+  "@scanQrPickerHint": {
+    "description": "Texte d'aide de l'écran de lecture QR générique (qr_picker_screen.dart)."
+  },
+  "scanOfflineEventPickupLabel": "collecte",
+  "@scanOfflineEventPickupLabel": {
+    "description": "Libellé court de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineEventTransitLabel": "transit",
+  "@scanOfflineEventTransitLabel": {
+    "description": "Libellé court de l'événement IN_TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart), identique dans les deux langues (voir _sameInBothLanguages)."
+  },
+  "scanOfflineEventDeliveredLabel": "livré",
+  "@scanOfflineEventDeliveredLabel": {
+    "description": "Libellé court de l'événement DELIVERED dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineEventDefaultLabel": "file",
+  "@scanOfflineEventDefaultLabel": {
+    "description": "Libellé court de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineDescPickup": "Collecte enregistrée",
+  "@scanOfflineDescPickup": {
+    "description": "Description de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineDescTransit": "En transit sauvegardé",
+  "@scanOfflineDescTransit": {
+    "description": "Description de l'événement IN_TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineDescDelivered": "Livraison sauvegardée",
+  "@scanOfflineDescDelivered": {
+    "description": "Description de l'événement DELIVERED dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineDescDefault": "Lecture sauvegardée",
+  "@scanOfflineDescDefault": {
+    "description": "Description de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineQueueTitle": "Lectures hors-ligne",
+  "@scanOfflineQueueTitle": {
+    "description": "Titre de l'écran de file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineBadge": "Hors-ligne",
+  "@scanOfflineBadge": {
+    "description": "Pastille « Hors-ligne » de l'appbar (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineQueueSectionTitle": "FILE D'ATTENTE ({count})",
+  "@scanOfflineQueueSectionTitle": {
+    "description": "Titre de section de la file d'attente hors-ligne (offline_scan_queue_screen.dart).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanOfflineQueueEmpty": "Aucune lecture en attente.",
+  "@scanOfflineQueueEmpty": {
+    "description": "Message vide de la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanOfflineFooterHint": "Continuez les lectures même sans réseau.",
+  "@scanOfflineFooterHint": {
+    "description": "Message de pied de page de la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
+  },
+  "scanQueueSafeTitle": "Vos lectures sont en sécurité",
+  "@scanQueueSafeTitle": {
+    "description": "Titre du bandeau d'alerte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _AlertBanner)."
+  },
+  "scanOfflineParcelCode": "colis {code}",
+  "@scanOfflineParcelCode": {
+    "description": "Code court d'un colis dans une carte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _QueueItemCard).",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+
+  "trackingSearchTitle": "Suivre un colis",
+  "@trackingSearchTitle": {
+    "description": "Titre de l'app bar de l'écran de recherche de suivi (tracking_search_screen.dart)."
+  },
+  "trackingSearchScanTripEntry": "Lire le QR d'un trajet",
+  "@trackingSearchScanTripEntry": {
+    "description": "Entrée additive (voyageur occasionnel) de tracking_search_screen.dart, affichée seulement si onScanTrip est fourni."
+  },
+  "trackingSearchNumberLabel": "Numéro de suivi",
+  "@trackingSearchNumberLabel": {
+    "description": "Titre de section et labelText du champ de recherche de tracking_search_screen.dart (même texte aux deux endroits), réutilisé pour le même champ de tracking_search_bottom_sheet.dart (même feature, même préfixe)."
+  },
+  "trackingSearchNumberHint": "Entrez le numéro DON-XXXXXX pour suivre votre colis en temps réel.",
+  "@trackingSearchNumberHint": {
+    "description": "Sous-titre explicatif de tracking_search_screen.dart, sous le titre « Numéro de suivi »."
+  },
+  "trackingSearchSubmit": "Rechercher",
+  "@trackingSearchSubmit": {
+    "description": "Bouton de recherche de tracking_search_screen.dart, réutilisé par tracking_search_bottom_sheet.dart (même feature, même préfixe)."
+  },
+  "trackingSearchViewDetails": "Voir le suivi détaillé",
+  "@trackingSearchViewDetails": {
+    "description": "Bouton de la carte résultat qui ouvre la frise de suivi (tracking_search_screen.dart, _TrackingResultCard)."
+  },
+  "trackingSearchStatusPending": "En attente",
+  "@trackingSearchStatusPending": {
+    "description": "Libellé de l'étape PENDING dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
+  },
+  "trackingSearchStatusAccepted": "Confirmé",
+  "@trackingSearchStatusAccepted": {
+    "description": "Libellé de l'étape ACCEPTED dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
+  },
+  "trackingSearchStatusPaid": "Payé",
+  "@trackingSearchStatusPaid": {
+    "description": "Libellé de l'étape PAYMENT_SECURED dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
+  },
+  "trackingSearchStatusDroppedOff": "Remis",
+  "@trackingSearchStatusDroppedOff": {
+    "description": "Libellé de l'étape DEPARTED (remise au voyageur) dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
+  },
+  "trackingSearchStatusDelivered": "Livré",
+  "@trackingSearchStatusDelivered": {
+    "description": "Libellé de l'étape DELIVERED dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
+  },
+  "receptionConfirmTitle": "Confirmation",
+  "@receptionConfirmTitle": {
+    "description": "Titre de l'app bar de reception_confirm_screen.dart. Identique en anglais : mot cognate (voir _sameInBothLanguages)."
+  },
+  "receptionConfirmHeading": "Confirmer la réception",
+  "@receptionConfirmHeading": {
+    "description": "Titre Caveat et libellé du bouton CTA de reception_confirm_screen.dart (même texte aux deux endroits)."
+  },
+  "receptionChooseInFrontOf": "Devant {name}, choisissez :",
+  "@receptionChooseInFrontOf": {
+    "description": "Sous-titre de reception_confirm_screen.dart, sous le titre Confirmer la réception.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionTabQr": "Lire le QR",
+  "@receptionTabQr": {
+    "description": "Onglet gauche du sélecteur de reception_confirm_screen.dart (_TabToggle)."
+  },
+  "receptionTabCode": "Taper le code",
+  "@receptionTabCode": {
+    "description": "Onglet droit du sélecteur de reception_confirm_screen.dart (_TabToggle)."
+  },
+  "receptionQrTitle": "Lire le QR code",
+  "@receptionQrTitle": {
+    "description": "Titre du contenu de l'onglet QR de reception_confirm_screen.dart (_QrTabContent)."
+  },
+  "receptionQrDescription": "Demandez au voyageur d'afficher le QR code sur son téléphone.",
+  "@receptionQrDescription": {
+    "description": "Description du contenu de l'onglet QR de reception_confirm_screen.dart (_QrTabContent)."
+  },
+  "receptionCodeOptionLabel": "OPTION 2 · CODE",
+  "@receptionCodeOptionLabel": {
+    "description": "Étiquette d'en-tête de l'onglet code de reception_confirm_screen.dart (_CodeTabContent). Identique en anglais : « OPTION »/« CODE » se disent pareil (voir _sameInBothLanguages)."
+  },
+  "receptionCodeTitle": "Tapez le code reçu",
+  "@receptionCodeTitle": {
+    "description": "Titre du contenu de l'onglet code de reception_confirm_screen.dart (_CodeTabContent)."
+  },
+  "receptionCodeExpiresIn": "Reçu par SMS · expire dans {time}",
+  "@receptionCodeExpiresIn": {
+    "description": "Minuteur de reception_confirm_screen.dart (_CodeTabContent) — {time} est le compte à rebours mm:ss déjà formaté, mis en valeur via emphasizedSpans.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionReleaseWarning": "En confirmant, vous libérez le paiement vers {name}. Si quelque chose ne va pas, contestez d'abord.",
+  "@receptionReleaseWarning": {
+    "description": "Note légale complète de reception_confirm_screen.dart (_LegalNote) — le segment receptionContestFirst y est retrouvé et mis en forme/rendu cliquable via emphasizedSpans.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionContestFirst": "contestez d'abord",
+  "@receptionContestFirst": {
+    "description": "Segment cliquable (vers /disputes) de receptionReleaseWarning, isolé pour emphasizedSpans (reception_confirm_screen.dart, _LegalNote)."
+  },
+  "trackingTimelineTitle": "Suivi du colis",
+  "@trackingTimelineTitle": {
+    "description": "Titre de la sheet showTrackingTimelineSheet (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingTimelineShare": "Partager le suivi",
+  "@trackingTimelineShare": {
+    "description": "Bouton sticky de la sheet showTrackingTimelineSheet, visible seulement si onShareTracking est fourni (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingTimelineStepsHeader": "ÉTAPES",
+  "@trackingTimelineStepsHeader": {
+    "description": "En-tête de section de la frise d'événements (tracking_timeline_bottom_sheet.dart, _Timeline)."
+  },
+  "trackingEventDepartureConfirmed": "Départ confirmé",
+  "@trackingEventDepartureConfirmed": {
+    "description": "Libellé complet de l'étape DEPART d'un événement de suivi (extension TrackingEventL10n, tracking_labels.dart) — distinct de trackingStepDeparture (« Départ » seul, écrans de lecture)."
+  },
+  "trackingEventInTransit": "En transit",
+  "@trackingEventInTransit": {
+    "description": "Libellé complet de l'étape TRANSIT d'un événement de suivi (extension TrackingEventL10n, tracking_labels.dart)."
+  },
+  "trackingEventArrivalConfirmed": "Arrivée confirmée",
+  "@trackingEventArrivalConfirmed": {
+    "description": "Libellé complet de l'étape ARRIVEE d'un événement de suivi (extension TrackingEventL10n, tracking_labels.dart)."
+  },
+  "trackingGpsRecorded": "Lieu GPS enregistré",
+  "@trackingGpsRecorded": {
+    "description": "Repli affiché quand un événement de suivi a des coordonnées GPS mais aucun gpsLabel (extension TrackingEventL10n, tracking_labels.dart)."
+  },
+  "trackingOfflineScanSynced": "Lecture hors-ligne synchronisée",
+  "@trackingOfflineScanSynced": {
+    "description": "Badge d'un événement de suivi ayant un offlineTimestamp (tracking_timeline_bottom_sheet.dart, _TimelineItem)."
+  },
+  "trackingAwaitingConfirmationTitle": "En attente de confirmation",
+  "@trackingAwaitingConfirmationTitle": {
+    "description": "Titre du bandeau affiché tant qu'aucun événement ARRIVEE n'est enregistré (tracking_timeline_bottom_sheet.dart, _PendingConfirmationBanner)."
+  },
+  "trackingAwaitingConfirmationDesc": "Le destinataire doit confirmer la réception via le code SMS.",
+  "@trackingAwaitingConfirmationDesc": {
+    "description": "Description du bandeau _PendingConfirmationBanner (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingEmptyTimelineTitle": "En attente de la lecture au départ",
+  "@trackingEmptyTimelineTitle": {
+    "description": "Titre de la frise vide, avant tout événement (tracking_timeline_bottom_sheet.dart, _EmptyTimeline)."
+  },
+  "trackingEmptyTimelineDesc": "Le voyageur lira le QR code lors de la remise du colis.",
+  "@trackingEmptyTimelineDesc": {
+    "description": "Description de la frise vide (tracking_timeline_bottom_sheet.dart, _EmptyTimeline)."
+  },
+  "trackingApplessTitle": "Pas besoin d'app !",
+  "@trackingApplessTitle": {
+    "description": "Titre du bandeau « pas besoin d'app » (tracking_timeline_bottom_sheet.dart, _ApplessBanner)."
+  },
+  "trackingApplessMessage": "Quand le voyageur sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.",
+  "@trackingApplessMessage": {
+    "description": "Message complet du bandeau _ApplessBanner (tracking_timeline_bottom_sheet.dart) — l'ancien paramètre travelerName valait toujours le littéral « le voyageur » (seul appelant), donc intégré tel quel dans le message plutôt que fragmenté."
+  },
+  "trackingSearchSheetTitle": "Rechercher un colis",
+  "@trackingSearchSheetTitle": {
+    "description": "Titre de la sheet TrackingSearchBottomSheet.show (tracking_search_bottom_sheet.dart)."
+  },
+  "trackingSearchSheetSubtitle": "Format : DON-XXXXXX",
+  "@trackingSearchSheetSubtitle": {
+    "description": "Sous-titre de la sheet TrackingSearchBottomSheet.show (tracking_search_bottom_sheet.dart)."
+  },
+  "cancellationConfirmTitle": "Annuler ce trajet ?",
+  "@cancellationConfirmTitle": {
+    "description": "Titre de la sheet CancellationBottomSheet.show (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationIrreversibleSubtitle": "Cette action est irréversible",
+  "@cancellationIrreversibleSubtitle": {
+    "description": "Sous-titre de la sheet CancellationBottomSheet.show (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationConfirmAction": "Confirmer l'annulation",
+  "@cancellationConfirmAction": {
+    "description": "Bouton sticky et titre du dialogue de confirmation de cancellation_bottom_sheet.dart (même texte aux deux endroits)."
+  },
+  "cancellationAutoRefundNotice": "Tous les expéditeurs liés seront remboursés automatiquement.",
+  "@cancellationAutoRefundNotice": {
+    "description": "Bandeau d'avertissement de cancellation_bottom_sheet.dart."
+  },
+  "cancellationReasonFieldLabel": "Raison",
+  "@cancellationReasonFieldLabel": {
+    "description": "Libellé du groupe de boutons radio de motifs (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationSpecifyLabel": "Précisez...",
+  "@cancellationSpecifyLabel": {
+    "description": "Label du champ texte affiché quand le motif « Autre » est sélectionné (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationSpecifyHint": "Décrivez votre raison",
+  "@cancellationSpecifyHint": {
+    "description": "Hint du champ texte affiché quand le motif « Autre » est sélectionné (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationSelectReasonError": "Veuillez sélectionner une raison",
+  "@cancellationSelectReasonError": {
+    "description": "Snackbar d'erreur quand aucun motif n'est sélectionné à la confirmation (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationSpecifyReasonError": "Veuillez préciser votre raison",
+  "@cancellationSpecifyReasonError": {
+    "description": "Snackbar d'erreur quand « Autre » est sélectionné sans texte de précision (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationConfirmDialogMessage": "Cette action annulera votre trajet et remboursera automatiquement tous les expéditeurs concernés.",
+  "@cancellationConfirmDialogMessage": {
+    "description": "Message du dialogue de confirmation finale (cancellation_bottom_sheet.dart)."
+  },
+  "cancellationTripCanceledSnackbar": "Trajet annulé",
+  "@cancellationTripCanceledSnackbar": {
+    "description": "Snackbar de succès de l'annulation (cancellation_bottom_sheet.dart). Texte fixe, identique au code vivant d'avant migration — pas de compteur."
+  },
+  "deliveryNoShowTravelerNotDeliveringTitle": "Le voyageur ne livre pas",
+  "@deliveryNoShowTravelerNotDeliveringTitle": {
+    "description": "Titre de la cellule côté expéditeur (delivery_noshow_cta_cell.dart, isSender: true)."
+  },
+  "deliveryNoShowReportAbsentRecipientTitle": "Signaler l'absence du destinataire",
+  "@deliveryNoShowReportAbsentRecipientTitle": {
+    "description": "Titre de la cellule côté voyageur (delivery_noshow_cta_cell.dart, isSender: false)."
+  },
+  "deliveryNoShowTravelerNotDeliveringSubtitle": "Injoignable ou refus de remettre le colis",
+  "@deliveryNoShowTravelerNotDeliveringSubtitle": {
+    "description": "Sous-titre de la cellule côté expéditeur (delivery_noshow_cta_cell.dart, isSender: true)."
+  },
+  "deliveryNoShowReportAbsentRecipientSubtitle": "Si vous êtes sur place et qu'il ne répond pas",
+  "@deliveryNoShowReportAbsentRecipientSubtitle": {
+    "description": "Sous-titre de la cellule côté voyageur (delivery_noshow_cta_cell.dart, isSender: false)."
+  },
+  "deliveryNoShowTravelerAbsentSheetTitle": "Le voyageur ne s'est pas présenté à la remise ?",
+  "@deliveryNoShowTravelerAbsentSheetTitle": {
+    "description": "Titre de la sheet de confirmation côté expéditeur (delivery_noshow_cta_cell.dart, _showSheet, isSender: true)."
+  },
+  "deliveryNoShowRecipientAbsentSheetTitle": "Le destinataire ne s'est pas présenté à la remise ?",
+  "@deliveryNoShowRecipientAbsentSheetTitle": {
+    "description": "Titre de la sheet de confirmation côté voyageur (delivery_noshow_cta_cell.dart, _showSheet, isSender: false)."
+  },
+  "deliveryNoShowConfirmReportAction": "Confirmer le signalement",
+  "@deliveryNoShowConfirmReportAction": {
+    "description": "Bouton sticky de la sheet de confirmation (delivery_noshow_cta_cell.dart, _showSheet)."
+  },
+  "deliveryNoShowTravelerNotDeliveringBody": "Le voyageur ne livre pas le colis à votre destinataire.",
+  "@deliveryNoShowTravelerNotDeliveringBody": {
+    "description": "Corps de la sheet de confirmation côté expéditeur (delivery_noshow_cta_cell.dart, _showSheet, isSender: true)."
+  },
+  "deliveryNoShowRecipientAbsentBody": "Le destinataire ne s'est pas présenté au point de remise.",
+  "@deliveryNoShowRecipientAbsentBody": {
+    "description": "Corps de la sheet de confirmation côté voyageur (delivery_noshow_cta_cell.dart, _showSheet, isSender: false)."
+  },
+  "deliveryNoShowContestNotice": "L'autre partie aura 24 h pour contester. Le paiement reste gelé le temps de l'instruction. Aucun versement automatique.",
+  "@deliveryNoShowContestNotice": {
+    "description": "Note légale de la sheet de confirmation (delivery_noshow_cta_cell.dart, _showSheet). Tiret cadratin d'origine (« ... l'instruction — aucun versement automatique. ») remplacé par un point : deux phrases, signalé en PR."
+  },
+  "rematchAlternativesTitle": "Alternatives disponibles",
+  "@rematchAlternativesTitle": {
+    "description": "Titre de l'app bar de RematchSearchScreen (rematch_search_screen.dart)."
+  },
+  "rematchAnnouncementUnavailable": "Cette annonce n'est plus disponible",
+  "@rematchAnnouncementUnavailable": {
+    "description": "Snackbar d'erreur quand le fetch de l'annonce réelle échoue au tap sur une suggestion (rematch_search_screen.dart)."
+  },
+  "rematchNoTravelersTitle": "Aucun voyageur disponible",
+  "@rematchNoTravelersTitle": {
+    "description": "Titre de l'état vide quand aucune suggestion de rematch n'existe (rematch_search_screen.dart, _RematchBody)."
+  },
+  "rematchNoTravelersDescription": "Aucun voyageur disponible dans les 72h : votre remboursement est traité",
+  "@rematchNoTravelersDescription": {
+    "description": "Description de l'état vide (rematch_search_screen.dart, _RematchBody). Tiret cadratin d'origine remplacé par « : » (l'explication qui suit), signalé en PR."
+  },
+  "rematchTravelersAvailable": "{count, plural, =1{{count} voyageur disponible} other{{count} voyageurs disponibles}}",
+  "@rematchTravelersAvailable": {
+    "description": "Compteur de suggestions au-dessus de la liste (rematch_search_screen.dart, _RematchBody).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rematchTripCancelledTitle": "Trajet annulé",
+  "@rematchTripCancelledTitle": {
+    "description": "Titre du bandeau de confirmation d'annulation (rematch_search_screen.dart, _ConfirmationBanner). Clé dédiée : même texte que chatBidStatusTripCancelled mais préfixe non partagé (R40)."
+  },
+  "rematchSendersRefunded": "{count, plural, =1{{count} expéditeur remboursé automatiquement.} other{{count} expéditeurs remboursés automatiquement.}}",
+  "@rematchSendersRefunded": {
+    "description": "Sous-texte du bandeau de confirmation quand affectedBidsCount est connu (rematch_search_screen.dart, _ConfirmationBanner).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rematchRefundInProgress": "Votre remboursement est en cours.",
+  "@rematchRefundInProgress": {
+    "description": "Sous-texte du bandeau de confirmation quand affectedBidsCount est null, chemin self-fetching (rematch_search_screen.dart, _ConfirmationBanner)."
+  },
+  "rematchBackHomeAction": "Retour à l'accueil",
+  "@rematchBackHomeAction": {
+    "description": "Bouton fantôme en bas de RematchSearchScreen (rematch_search_screen.dart, _RematchBody)."
+  },
+  "ratingRateSender": "Évaluer l'expéditeur",
+  "@ratingRateSender": {
+    "description": "Titre de la sheet quand isTravelerRating est vrai (rating_bottom_sheet.dart, show)."
+  },
+  "ratingRateTraveler": "Évaluer {name}",
+  "@ratingRateTraveler": {
+    "description": "Titre de la sheet quand isTravelerRating est faux — {name} est alors garanti non-null par le contrat des appelants (rating_bottom_sheet.dart, show).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ratingSubtitle": "Votre avis aide la communauté Yadony",
+  "@ratingSubtitle": {
+    "description": "Sous-titre de la sheet RatingBottomSheet.show (rating_bottom_sheet.dart)."
+  },
+  "ratingSubmitAction": "Envoyer l'évaluation",
+  "@ratingSubmitAction": {
+    "description": "Bouton sticky de la sheet RatingBottomSheet.show (rating_bottom_sheet.dart)."
+  },
+  "ratingCommentLabel": "Commentaire (facultatif)",
+  "@ratingCommentLabel": {
+    "description": "Label du champ commentaire (rating_bottom_sheet.dart)."
+  },
+  "ratingCommentHint": "Partagez votre expérience…",
+  "@ratingCommentHint": {
+    "description": "Hint du champ commentaire (rating_bottom_sheet.dart)."
+  },
+  "ratingThanksSnackbar": "Merci pour votre évaluation !",
+  "@ratingThanksSnackbar": {
+    "description": "Snackbar de succès après soumission d'un avis (rating_bottom_sheet.dart)."
+  },
+  "ratingStarsSemantics": "Noter {index} sur 5",
+  "@ratingStarsSemantics": {
+    "description": "Label d'accessibilité de chaque étoile du sélecteur (star_selector.dart).",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingReviewCount": "{count, plural, =1{{count} avis} other{{count} avis}}",
+  "@ratingReviewCount": {
+    "description": "Nombre d'avis sous la note moyenne (rating_summary_card.dart) — « avis » est invariable en français.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingMyReviewsTitle": "Mes avis reçus",
+  "@ratingMyReviewsTitle": {
+    "description": "Titre de l'écran MyReviewsScreen (my_reviews_screen.dart)."
+  },
+  "ratingAuthorFallbackName": "Utilisateur Yadony",
+  "@ratingAuthorFallbackName": {
+    "description": "Nom de repli d'un auteur d'avis sans nom (my_reviews_screen.dart, _ReviewItem). Clé dédiée : distincte de requestSenderFallbackName (R40, préfixe non partagé)."
+  },
+  "ratingEmptyTitle": "Tu n'as pas encore reçu d'avis",
+  "@ratingEmptyTitle": {
+    "description": "Titre de l'état vide de MyReviewsScreen (my_reviews_screen.dart, _EmptyView)."
+  },
+  "ratingEmptyDescription": "Les notes et commentaires laissés par les voyageurs apparaîtront ici.",
+  "@ratingEmptyDescription": {
+    "description": "Description de l'état vide de MyReviewsScreen (my_reviews_screen.dart, _EmptyView)."
+  },
+  "ratingLoadErrorTitle": "Impossible de charger les avis",
+  "@ratingLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur de MyReviewsScreen (my_reviews_screen.dart, _ErrorView)."
+  },
+  "ratingReceivedHeader": "AVIS REÇUS",
+  "@ratingReceivedHeader": {
+    "description": "En-tête de section quand aucun filtre n'est actif (my_reviews_screen.dart, _LoadedView)."
+  },
+  "ratingFilteredHeader": "AVIS {stars}★ · {count}",
+  "@ratingFilteredHeader": {
+    "description": "En-tête de section quand un filtre par note est actif (my_reviews_screen.dart, _LoadedView).",
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingShowAll": "Tout afficher",
+  "@ratingShowAll": {
+    "description": "Bouton de réinitialisation du filtre par note (my_reviews_screen.dart, _LoadedView)."
+  },
+  "ratingTotalReceived": "Sur {count} avis reçus",
+  "@ratingTotalReceived": {
+    "description": "Sous-titre du hero éditorial de MyReviewsScreen (my_reviews_screen.dart, _HeaderSummary) — le français n'a pas de pluriel (« avis » invariable), l'anglais en a un ; même paramètre count des deux côtés.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingDistributionSemantics": "{stars} étoiles, {count} avis",
+  "@ratingDistributionSemantics": {
+    "description": "Label d'accessibilité d'une ligne de distribution (my_reviews_screen.dart, _RatingBar) — même remarque que ratingTotalReceived sur le pluriel.",
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingQuotedComment": "« {comment} »",
+  "@ratingQuotedComment": {
+    "description": "Commentaire d'un avis entre guillemets (my_reviews_screen.dart, _ReviewItem).",
+    "placeholders": {
+      "comment": {
+        "type": "String"
+      }
+    }
+  },
+  "ratingExcludedNotice": "Avis exclu du calcul",
+  "@ratingExcludedNotice": {
+    "description": "Mention sous un avis exclu du calcul de la moyenne (my_reviews_screen.dart, _ReviewItem)."
+  },
+  "cancellationReasonFlightCanceled": "Vol annulé",
+  "@cancellationReasonFlightCanceled": {
+    "description": "Libellé affiché du motif d'annulation 'Vol annulé' (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste envoyée au serveur telle quelle (cancellation_bottom_sheet.dart, _reasons)."
+  },
+  "cancellationReasonPersonalEmergency": "Urgence personnelle",
+  "@cancellationReasonPersonalEmergency": {
+    "description": "Libellé affiché du motif d'annulation 'Urgence personnelle' (cancellation_labels.dart, cancellationReasonLabel)."
+  },
+  "cancellationReasonHealthIssue": "Problème de santé",
+  "@cancellationReasonHealthIssue": {
+    "description": "Libellé affiché du motif d'annulation 'Problème de santé' (cancellation_labels.dart, cancellationReasonLabel)."
+  },
+  "cancellationReasonItineraryChange": "Changement d'itinéraire",
+  "@cancellationReasonItineraryChange": {
+    "description": "Libellé affiché du motif d'annulation 'Changement d'itinéraire' (cancellation_labels.dart, cancellationReasonLabel)."
+  },
+  "cancellationReasonOther": "Autre",
+  "@cancellationReasonOther": {
+    "description": "Libellé affiché du motif d'annulation 'Autre' (cancellation_labels.dart, cancellationReasonLabel)."
+  },
+  "ratingStarVeryDisappointing": "Très décevant",
+  "@ratingStarVeryDisappointing": {
+    "description": "Libellé affiché pour 1 étoile (rating_labels.dart, ratingStarLabel)."
+  },
+  "ratingStarDisappointing": "Décevant",
+  "@ratingStarDisappointing": {
+    "description": "Libellé affiché pour 2 étoiles (rating_labels.dart, ratingStarLabel)."
+  },
+  "ratingStarFair": "Correct",
+  "@ratingStarFair": {
+    "description": "Libellé affiché pour 3 étoiles (rating_labels.dart, ratingStarLabel)."
+  },
+  "ratingStarGood": "Bien",
+  "@ratingStarGood": {
+    "description": "Libellé affiché pour 4 étoiles (rating_labels.dart, ratingStarLabel)."
+  },
+  "ratingStarExcellent": "Excellent !",
+  "@ratingStarExcellent": {
+    "description": "Libellé affiché pour 5 étoiles (rating_labels.dart, ratingStarLabel)."
   }
 }

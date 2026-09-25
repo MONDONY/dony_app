@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 GoRouter _router(String etape) => GoRouter(
   routes: [
     GoRoute(
@@ -151,5 +153,20 @@ void main() {
     );
     await tester.pump();
     expect(find.text('Géolocalisation automatique'), findsOneWidget);
+  });
+
+  // ─── anglais — titre, badges et boutons traduits ─────────────────────────
+  testWidgets('anglais — titre, badges et boutons traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      MaterialApp.router(routerConfig: _router('TRANSIT')),
+    );
+    await tester.pump();
+    expect(find.text('Parcel photo'), findsOneWidget);
+    expect(find.text('Step: Transit'), findsOneWidget);
+    expect(find.text('Photo optional'), findsOneWidget);
+    expect(find.text('Take the photo'), findsOneWidget);
+    expect(find.text('Skip: continue without a photo'), findsOneWidget);
+    expect(find.text('Automatic geolocation'), findsOneWidget);
   });
 }

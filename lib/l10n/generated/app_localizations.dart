@@ -15889,6 +15889,1470 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'active'**
   String get walletActiveCurrencyBadge;
+
+  /// Affichage traduit du marqueur d'aperçu kChatPreviewPhoto (chat_labels.dart), identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'📷 Photo'**
+  String get chatPreviewPhoto;
+
+  /// Affichage traduit du marqueur d'aperçu kChatPreviewLocation (chat_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'📍 Localisation partagée'**
+  String get chatPreviewLocation;
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'length' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Message trop long ({max} caractères max).'**
+  String chatBlockedLength(int max);
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'duplicate' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu viens d\'envoyer ce message.'**
+  String get chatBlockedDuplicate;
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'rate' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu envoies trop de messages, patiente un instant.'**
+  String get chatBlockedRate;
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'contact' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour ta sécurité, garde les échanges et le paiement sur Yadony. Le partage de coordonnées est interdit.'**
+  String get chatBlockedContact;
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'banking' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le partage de coordonnées bancaires est interdit.'**
+  String get chatBlockedBanking;
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'url' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les liens externes ne sont pas autorisés dans la messagerie.'**
+  String get chatBlockedUrl;
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'profanity' de ChatMessageValidator.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reste courtois : ce message contient des termes interdits.'**
+  String get chatBlockedProfanity;
+
+  /// Titre du dialogue de confirmation et libellé du menu ⋯ de chat_screen.dart (même texte aux deux endroits).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la conversation'**
+  String get chatDeleteConversationTitle;
+
+  /// Contenu du dialogue de confirmation de suppression de chat_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette conversation sera définitivement supprimée pour vous et votre interlocuteur. Impossible de la recréer.'**
+  String get chatDeleteConversationMessage;
+
+  /// Repli du titre de l'app bar de chat_screen.dart quand le participant n'a pas de nom, identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation'**
+  String get chatUnknownConversationLabel;
+
+  /// Tooltip du bouton d'appel de chat_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler'**
+  String get chatCallTooltip;
+
+  /// Entrée du menu ⋯ de chat_screen.dart pour signaler l'interlocuteur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler {name}'**
+  String chatReportUser(String name);
+
+  /// Entrée du menu ⋯ de chat_screen.dart pour bloquer l'interlocuteur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloquer {name}'**
+  String chatBlockUser(String name);
+
+  /// Snackbar affichée après ChatConversationDeleted (chat_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation supprimée'**
+  String get chatConversationDeletedSnackbar;
+
+  /// Titre du DonyEmptyState affiché sur ChatError (chat_screen.dart) ; pas d'entrée ErrorCatalog dédiée pour le code chat-stream-error, ce titre est hors catalogue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion interrompue'**
+  String get chatConnectionLostTitle;
+
+  /// Texte de l'état vide d'une conversation sans message (chat_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Démarrez la conversation !'**
+  String get chatEmptyStateTitle;
+
+  /// Bandeau affiché en lecture seule de chat_screen.dart (_ReadOnlyBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre interlocuteur a quitté cette conversation. Vous êtes en lecture seule.'**
+  String get chatReadOnlyBannerMessage;
+
+  /// Sur-titre du bandeau de trajet lié de chat_screen.dart (_TripBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet lié'**
+  String get chatLinkedTripLabel;
+
+  /// Libellé du bandeau de statut BID_ACCEPTED de chat_screen.dart (_BidStatusBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre acceptée'**
+  String get chatBidStatusAccepted;
+
+  /// Libellé du bandeau de statut DELIVERY_CONFIRMED de chat_screen.dart (_BidStatusBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison confirmée'**
+  String get chatBidStatusDeliveryConfirmed;
+
+  /// Libellé du bandeau de statut TRIP_CANCELLED de chat_screen.dart (_BidStatusBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet annulé'**
+  String get chatBidStatusTripCancelled;
+
+  /// Texte d'un message supprimé, dans la bulle système et dans _DeletedContent (chat_screen.dart, même texte aux deux endroits).
+  ///
+  /// In fr, this message translates to:
+  /// **'Message supprimé'**
+  String get chatMessageDeleted;
+
+  /// Libellé affiché dans la bulle d'un message de localisation (chat_screen.dart _LocationContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Localisation partagée'**
+  String get chatLocationMessageLabel;
+
+  /// Barre de saisie désactivée (lecture seule) de chat_screen.dart (_InputBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi de messages désactivé'**
+  String get chatSendingDisabled;
+
+  /// Texte indicatif du champ de saisie de chat_screen.dart (_InputBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre message…'**
+  String get chatMessageHint;
+
+  /// Libellé d'accessibilité du bouton d'envoi de chat_screen.dart (_InputBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le message'**
+  String get chatSendMessageSemantics;
+
+  /// Titre de l'en-tête de conversation_list_screen.dart, identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Messages'**
+  String get conversationListTitle;
+
+  /// Tooltip du bouton d'accès aux archives de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les conversations archivées'**
+  String get conversationListArchivedTooltip;
+
+  /// Texte indicatif de la barre de recherche de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher une conversation…'**
+  String get conversationListSearchHint;
+
+  /// Titre de l'état vide quand la recherche ne trouve rien (conversation_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun résultat'**
+  String get conversationListEmptyResultsTitle;
+
+  /// Titre de l'état vide sans conversation (conversation_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun message'**
+  String get conversationListEmptyTitle;
+
+  /// Description de l'état vide de recherche de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune conversation ne correspond à « {query} ».'**
+  String conversationListEmptySearchDescription(String query);
+
+  /// Description de l'état vide sans conversation de conversation_list_screen.dart (le saut de ligne fait partie de la valeur).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos conversations apparaîtront ici\naprès l\'acceptation d\'une offre.'**
+  String get conversationListEmptyDescription;
+
+  /// Pastille de filtre « Tous » de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous'**
+  String get conversationFilterAll;
+
+  /// Pastille de filtre « Non lus » de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non lus'**
+  String get conversationFilterUnread;
+
+  /// Pastille de filtre « En cours » de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours'**
+  String get conversationFilterActive;
+
+  /// Pastille de filtre « Terminés » de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminés'**
+  String get conversationFilterDone;
+
+  /// Titre de section (en majuscules) du regroupement temporel du jour, conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'AUJOURD\'HUI'**
+  String get conversationSectionToday;
+
+  /// Titre de section (en majuscules) du regroupement temporel de la semaine, conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'CETTE SEMAINE'**
+  String get conversationSectionThisWeek;
+
+  /// Titre de section (en majuscules) du regroupement temporel plus ancien, conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'PLUS ANCIEN'**
+  String get conversationSectionOlder;
+
+  /// Libellé du SlidableAction d'archivage de conversation_list_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Archiver'**
+  String get conversationArchiveAction;
+
+  /// Snackbar affichée après archivage d'une conversation (conversation_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation archivée'**
+  String get conversationArchivedSnackbar;
+
+  /// Titre du dialogue de confirmation de suppression depuis le swipe de conversation_list_screen.dart (_SlidableTile, distinct de chatDeleteConversationTitle : point d'interrogation).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la conversation ?'**
+  String get conversationDeleteConfirmTitle;
+
+  /// Contenu du dialogue de confirmation de suppression de conversation_list_screen.dart (_SlidableTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette action est irréversible.'**
+  String get conversationDeleteConfirmMessage;
+
+  /// Titre de archived_conversations_screen.dart, identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Archives'**
+  String get archivedConversationsTitle;
+
+  /// Titre de l'état vide de archived_conversations_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune archive'**
+  String get archivedConversationsEmptyTitle;
+
+  /// Description de l'état vide de archived_conversations_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les conversations que vous archivez apparaîtront ici.'**
+  String get archivedConversationsEmptyDescription;
+
+  /// Snackbar affichée après désarchivage d'une conversation (archived_conversations_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation désarchivée'**
+  String get conversationUnarchivedSnackbar;
+
+  /// Libellé du SlidableAction de désarchivage de archived_conversations_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désarchiver'**
+  String get conversationUnarchiveAction;
+
+  /// Titre de l'état d'erreur de conversation_loader_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation introuvable'**
+  String get conversationLoaderNotFoundTitle;
+
+  /// Description de l'état d'erreur de conversation_loader_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger cette conversation.'**
+  String get conversationLoaderNotFoundDescription;
+
+  /// Repli du nom du participant dans conversation_tile.dart quand il est vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateur'**
+  String get conversationUserFallback;
+
+  /// Repli de l'aperçu de dernier message dans conversation_tile.dart quand la conversation n'a encore aucun message.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation démarrée'**
+  String get conversationStartedFallback;
+
+  /// Repli de formatConversationTime (conversation_tile.dart) pour un message envoyé il y a moins d'une minute.
+  ///
+  /// In fr, this message translates to:
+  /// **'maintenant'**
+  String get conversationTimeJustNow;
+
+  /// Libellé de l'étape de suivi DEPART (tracking_labels.dart, trackingStepLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get trackingStepDeparture;
+
+  /// Libellé de l'étape de suivi TRANSIT (tracking_labels.dart, trackingStepLabel), identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Transit'**
+  String get trackingStepTransit;
+
+  /// Libellé de l'étape de suivi ARRIVEE (tracking_labels.dart, trackingStepLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get trackingStepArrival;
+
+  /// Chip de confirmation d'une lecture QR (scan_confirm_screen.dart) : step reçoit le code brut (DEPART/TRANSIT/ARRIVEE), pas le libellé.
+  ///
+  /// In fr, this message translates to:
+  /// **'{step, select, DEPART{Départ enregistrée} TRANSIT{Transit enregistrée} other{Arrivée enregistrée}}'**
+  String scanStepRecorded(String step);
+
+  /// Badge étape sur la photo d'une lecture (scan_photo_screen.dart) : step reçoit le libellé déjà traduit via trackingStepLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape : {step}'**
+  String scanStepLabel(String step);
+
+  /// Bandeau de synchro du hub Scan & Suivi (scan_hub_screen.dart, _SyncBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} lecture en attente de synchro} other{{count} lectures en attente de synchro}}'**
+  String scanPendingSync(int count);
+
+  /// Bandeau d'alerte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _AlertBanner) : corrige l'accord faux à 1 ("1 lectures").
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} lecture en attente. On l\'enverra dès que vous récupérez du réseau.} other{{count} lectures en attente. On les enverra dès que vous récupérez du réseau.}}'**
+  String scanQueueSafe(int count);
+
+  /// Ancienneté d'une lecture hors-ligne de moins d'une minute (tracking_labels.dart, scanRelativeTime).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a < 1 min'**
+  String get scanAgoUnderMinute;
+
+  /// Ancienneté d'une lecture hors-ligne en minutes (tracking_labels.dart, scanRelativeTime).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {minutes} min'**
+  String scanAgoMinutes(int minutes);
+
+  /// Ancienneté d'une lecture hors-ligne en heures (tracking_labels.dart, scanRelativeTime).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {hours}h'**
+  String scanAgoHours(int hours);
+
+  /// Erreur de photo trop volumineuse à la lecture d'un QR (tracking_labels.dart, qr_scanner_screen.dart, scan_photo_screen.dart), mb dynamique.
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo trop lourde (max {mb} Mo). Réessayez.'**
+  String scanPhotoTooLarge(int mb);
+
+  /// Titre de l'écran de lecture QR au départ (qr_scanner_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture au départ'**
+  String get scanDepartureTitle;
+
+  /// Tooltip du bouton lampe torche de qr_scanner_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lampe torche'**
+  String get scanTorchTooltip;
+
+  /// Titre de la feuille de confirmation après lecture d'un QR (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'QR lu'**
+  String get scanQrReadTitle;
+
+  /// Indicateur de progression de l'écran de lecture au départ (qr_scanner_screen.dart), toujours étape 1 sur 3 : c'est le premier des trois scans du parcours.
+  ///
+  /// In fr, this message translates to:
+  /// **'ÉTAPE 1 SUR 3'**
+  String get scanStepIndicatorStatic;
+
+  /// Sous-titre de l'indicateur de progression de qr_scanner_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis confirmé en valise'**
+  String get scanConfirmedInSuitcase;
+
+  /// Mot « Photo » seul, identique dans les deux langues (voir _sameInBothLanguages) : bouton de qr_scanner_screen.dart, badge de scan_hub_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo'**
+  String get scanPhotoWordLabel;
+
+  /// Bouton principal de qr_scanner_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer & continuer'**
+  String get scanConfirmAndContinue;
+
+  /// Titre du dialogue de saisie manuelle du numéro de suivi (qr_scanner_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de suivi'**
+  String get scanTrackingNumberDialogTitle;
+
+  /// Corps du dialogue de saisie manuelle du numéro de suivi (qr_scanner_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez le numéro DON-XXXXXX du colis à lire.'**
+  String get scanTrackingNumberDialogBody;
+
+  /// Erreur de numéro de suivi introuvable (qr_scanner_screen.dart, scan_identify_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro introuvable. Vérifiez et réessayez.'**
+  String get scanNumberNotFound;
+
+  /// Titre du dialogue de lecture mise en file d'attente hors-ligne (qr_scanner_screen.dart, scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture en attente'**
+  String get scanQueuedTitle;
+
+  /// Corps du dialogue hors-ligne de qr_scanner_screen.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de connexion internet. La lecture sera synchronisée automatiquement dès que vous serez en ligne.'**
+  String get scanQueuedNoConnectionBodyLong;
+
+  /// Bouton de fermeture des dialogues hors-ligne (qr_scanner_screen.dart, scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compris'**
+  String get scanUnderstoodButton;
+
+  /// Titre affiché quand la lecture confirme une livraison finale (qr_scanner_screen.dart, scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis livré !'**
+  String get scanParcelDeliveredTitle;
+
+  /// Titre affiché après une lecture QR réussie non finale (qr_scanner_screen.dart, scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture enregistrée !'**
+  String get scanRecordedTitle;
+
+  /// Libellé du sélecteur d'étape de la feuille de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Type d\'étape'**
+  String get scanEventTypeSectionLabel;
+
+  /// Libellé du champ code de confirmation à l'arrivée (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de confirmation'**
+  String get scanConfirmationCodeLabel;
+
+  /// Texte d'aide du champ code de confirmation (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez le code à 6 chiffres au destinataire. Il l\'a reçu de l\'expéditeur.'**
+  String get scanConfirmationCodeHintLong;
+
+  /// Libellé/titre de la section photo (qr_scanner_screen.dart, scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo du colis'**
+  String get scanPhotoOfParcelLabel;
+
+  /// Libellé Semantics du bouton de suppression de la photo prise (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer la photo'**
+  String get scanRemovePhotoSemantics;
+
+  /// Repli affiché quand une position GPS est enregistrée sans libellé de lieu résolu (qr_scanner_screen.dart, scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu GPS enregistré'**
+  String get scanGpsLocationSaved;
+
+  /// Message d'erreur photo trop lourde à taille fixe (qr_scanner_screen.dart:1141), distinct de scanPhotoTooLarge (« MB » au lieu de « Mo », taille non dynamique).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo trop lourde (max 10 MB). Réessayez.'**
+  String get scanPhotoTooLargeFixed;
+
+  /// Libellé du bouton pendant la confirmation d'une livraison (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmation...'**
+  String get scanSubmittingConfirmation;
+
+  /// Libellé du bouton pendant l'enregistrement d'une lecture DEPART/TRANSIT (qr_scanner_screen.dart, _ScanConfirmSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrement...'**
+  String get scanSubmittingRecording;
+
+  /// Bouton de confirmation d'une livraison ARRIVEE (qr_scanner_screen.dart, scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la livraison'**
+  String get scanConfirmDeliveryButton;
+
+  /// Bouton de confirmation d'une lecture DEPART/TRANSIT (qr_scanner_screen.dart) et titre d'appbar de scan_confirm_screen.dart, même texte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la lecture'**
+  String get scanConfirmReadingLabel;
+
+  /// Libellé de la ligne colis du récapitulatif (scan_confirm_screen.dart, _MetaRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get scanConfirmParcelLabel;
+
+  /// Libellé de la ligne étape du récapitulatif (scan_confirm_screen.dart, _MetaRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape'**
+  String get scanConfirmStepLabel;
+
+  /// Texte d'aide du champ code de confirmation de scan_confirm_screen.dart (version courte, distincte de scanConfirmationCodeHintLong).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez le code à 6 chiffres au destinataire.'**
+  String get scanConfirmConfirmationCodeHint;
+
+  /// Bouton de validation d'une lecture DEPART/TRANSIT (scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider la lecture'**
+  String get scanValidateReadingButton;
+
+  /// Bouton pour revenir reprendre la photo (scan_confirm_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre la photo'**
+  String get scanRetakePhotoButton;
+
+  /// Corps du dialogue hors-ligne de scan_confirm_screen.dart (version courte, distincte de scanQueuedNoConnectionBodyLong).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de connexion. La lecture sera synchronisée dès que vous serez en ligne.'**
+  String get scanConfirmQueuedNoConnectionBody;
+
+  /// CTA de l'écran de succès livraison (scan_confirm_screen.dart, DonySuccessScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminer'**
+  String get scanTerminateButton;
+
+  /// Titre du hub Scan & Suivi (scan_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture & Suivi'**
+  String get scanHubTitle;
+
+  /// Entrée additive « Suivre un colis » du hub Scan & Suivi (scan_hub_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre un colis'**
+  String get scanTrackParcelEntry;
+
+  /// Titre de la feuille de sélection de trajet (scan_hub_screen.dart, _TripPicker).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir un trajet'**
+  String get scanChooseTripTitle;
+
+  /// Bandeau du hero trajet quand plusieurs trajets sont actifs (scan_hub_screen.dart, _TripHeroCompact).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de trajet'**
+  String get scanChangeTripLabel;
+
+  /// Titre de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet à traiter'**
+  String get scanNoTripTitle;
+
+  /// Description de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu pourras lire les QR des colis dès qu\'une demande sera acceptée sur l\'un de tes trajets.'**
+  String get scanNoTripDescription;
+
+  /// Action de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mes trajets'**
+  String get scanViewMyTripsAction;
+
+  /// Titre de l'état d'erreur du hub Scan & Suivi (scan_hub_screen.dart, _ErrorState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les trajets'**
+  String get scanLoadTripsErrorTitle;
+
+  /// Titre de la section des 3 boutons de scan rapide (scan_hub_screen.dart, _EtapesSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'LECTURE RAPIDE'**
+  String get scanQuickReadSectionTitle;
+
+  /// Titre de la section liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'COLIS ({count})'**
+  String scanColisSectionTitle(int count);
+
+  /// Message vide de la liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun colis confirmé sur ce trajet pour l\'instant.'**
+  String get scanNoColisConfirmed;
+
+  /// Pastille d'action d'une ligne colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisRow), identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Scan'**
+  String get scanColisRowScanBadge;
+
+  /// Titre de la section historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection).
+  ///
+  /// In fr, this message translates to:
+  /// **'HISTORIQUE DES LECTURES'**
+  String get scanHistorySectionTitle;
+
+  /// Message vide de l'historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune lecture pour l\'instant'**
+  String get scanNoHistoryYet;
+
+  /// Titre de l'écran d'identification du colis (scan_identify_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifier le colis'**
+  String get scanIdentifyTitle;
+
+  /// Bouton d'ouverture du lecteur QR (scan_identify_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir le lecteur QR'**
+  String get scanOpenQrReaderTitle;
+
+  /// Sous-titre du bouton d'ouverture du lecteur QR (scan_identify_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pointez vers le QR du colis'**
+  String get scanPointQrHint;
+
+  /// Séparateur « OU » entre le lecteur QR et la saisie manuelle (scan_identify_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'OU'**
+  String get scanOrDivider;
+
+  /// Bouton de soumission du numéro saisi manuellement (scan_identify_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identifier →'**
+  String get scanIdentifySubmit;
+
+  /// Titre de la feuille de sélection d'étape (scan_identify_screen.dart, _EtapePickerSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Quelle étape ?'**
+  String get scanWhichStepTitle;
+
+  /// Badge photo obligatoire pour DEPART/ARRIVEE (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo obligatoire'**
+  String get scanPhotoMandatoryBadge;
+
+  /// Badge photo optionnelle pour TRANSIT (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo optionnelle'**
+  String get scanPhotoOptionalBadge;
+
+  /// Libellé du bouton pendant l'ouverture de la caméra (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouverture...'**
+  String get scanPhotoOpeningLoading;
+
+  /// Bouton principal de prise de photo (scan_photo_screen.dart), distinct de commonTakePhoto (« une » vs « la »).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre la photo'**
+  String get scanTakePhotoButton;
+
+  /// Bouton pour ignorer la photo optionnelle (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer : continuer sans photo'**
+  String get scanSkipPhotoButton;
+
+  /// Mention de géolocalisation automatique (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Géolocalisation automatique'**
+  String get scanAutoGeolocation;
+
+  /// Titre de l'écran de lecture QR générique (qr_picker_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire le QR code'**
+  String get scanQrPickerTitle;
+
+  /// Tooltip du bouton lampe torche de qr_picker_screen.dart, distinct de scanTorchTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer ou couper la lampe'**
+  String get scanTorchToggleTooltip;
+
+  /// Texte d'aide de l'écran de lecture QR générique (qr_picker_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pointez vers le QR code du colis'**
+  String get scanQrPickerHint;
+
+  /// Libellé court de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'collecte'**
+  String get scanOfflineEventPickupLabel;
+
+  /// Libellé court de l'événement IN_TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart), identique dans les deux langues (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'transit'**
+  String get scanOfflineEventTransitLabel;
+
+  /// Libellé court de l'événement DELIVERED dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'livré'**
+  String get scanOfflineEventDeliveredLabel;
+
+  /// Libellé court de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'file'**
+  String get scanOfflineEventDefaultLabel;
+
+  /// Description de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Collecte enregistrée'**
+  String get scanOfflineDescPickup;
+
+  /// Description de l'événement IN_TRANSIT dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En transit sauvegardé'**
+  String get scanOfflineDescTransit;
+
+  /// Description de l'événement DELIVERED dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison sauvegardée'**
+  String get scanOfflineDescDelivered;
+
+  /// Description de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture sauvegardée'**
+  String get scanOfflineDescDefault;
+
+  /// Titre de l'écran de file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lectures hors-ligne'**
+  String get scanOfflineQueueTitle;
+
+  /// Pastille « Hors-ligne » de l'appbar (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Hors-ligne'**
+  String get scanOfflineBadge;
+
+  /// Titre de section de la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'FILE D\'ATTENTE ({count})'**
+  String scanOfflineQueueSectionTitle(int count);
+
+  /// Message vide de la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune lecture en attente.'**
+  String get scanOfflineQueueEmpty;
+
+  /// Message de pied de page de la file d'attente hors-ligne (offline_scan_queue_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuez les lectures même sans réseau.'**
+  String get scanOfflineFooterHint;
+
+  /// Titre du bandeau d'alerte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _AlertBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos lectures sont en sécurité'**
+  String get scanQueueSafeTitle;
+
+  /// Code court d'un colis dans une carte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _QueueItemCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'colis {code}'**
+  String scanOfflineParcelCode(String code);
+
+  /// Titre de l'app bar de l'écran de recherche de suivi (tracking_search_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre un colis'**
+  String get trackingSearchTitle;
+
+  /// Entrée additive (voyageur occasionnel) de tracking_search_screen.dart, affichée seulement si onScanTrip est fourni.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire le QR d\'un trajet'**
+  String get trackingSearchScanTripEntry;
+
+  /// Titre de section et labelText du champ de recherche de tracking_search_screen.dart (même texte aux deux endroits), réutilisé pour le même champ de tracking_search_bottom_sheet.dart (même feature, même préfixe).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de suivi'**
+  String get trackingSearchNumberLabel;
+
+  /// Sous-titre explicatif de tracking_search_screen.dart, sous le titre « Numéro de suivi ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez le numéro DON-XXXXXX pour suivre votre colis en temps réel.'**
+  String get trackingSearchNumberHint;
+
+  /// Bouton de recherche de tracking_search_screen.dart, réutilisé par tracking_search_bottom_sheet.dart (même feature, même préfixe).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher'**
+  String get trackingSearchSubmit;
+
+  /// Bouton de la carte résultat qui ouvre la frise de suivi (tracking_search_screen.dart, _TrackingResultCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le suivi détaillé'**
+  String get trackingSearchViewDetails;
+
+  /// Libellé de l'étape PENDING dans la frise de statut de tracking_search_screen.dart (_StepTimeline).
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente'**
+  String get trackingSearchStatusPending;
+
+  /// Libellé de l'étape ACCEPTED dans la frise de statut de tracking_search_screen.dart (_StepTimeline).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmé'**
+  String get trackingSearchStatusAccepted;
+
+  /// Libellé de l'étape PAYMENT_SECURED dans la frise de statut de tracking_search_screen.dart (_StepTimeline).
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé'**
+  String get trackingSearchStatusPaid;
+
+  /// Libellé de l'étape DEPARTED (remise au voyageur) dans la frise de statut de tracking_search_screen.dart (_StepTimeline).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remis'**
+  String get trackingSearchStatusDroppedOff;
+
+  /// Libellé de l'étape DELIVERED dans la frise de statut de tracking_search_screen.dart (_StepTimeline).
+  ///
+  /// In fr, this message translates to:
+  /// **'Livré'**
+  String get trackingSearchStatusDelivered;
+
+  /// Titre de l'app bar de reception_confirm_screen.dart. Identique en anglais : mot cognate (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmation'**
+  String get receptionConfirmTitle;
+
+  /// Titre Caveat et libellé du bouton CTA de reception_confirm_screen.dart (même texte aux deux endroits).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la réception'**
+  String get receptionConfirmHeading;
+
+  /// Sous-titre de reception_confirm_screen.dart, sous le titre Confirmer la réception.
+  ///
+  /// In fr, this message translates to:
+  /// **'Devant {name}, choisissez :'**
+  String receptionChooseInFrontOf(String name);
+
+  /// Onglet gauche du sélecteur de reception_confirm_screen.dart (_TabToggle).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire le QR'**
+  String get receptionTabQr;
+
+  /// Onglet droit du sélecteur de reception_confirm_screen.dart (_TabToggle).
+  ///
+  /// In fr, this message translates to:
+  /// **'Taper le code'**
+  String get receptionTabCode;
+
+  /// Titre du contenu de l'onglet QR de reception_confirm_screen.dart (_QrTabContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire le QR code'**
+  String get receptionQrTitle;
+
+  /// Description du contenu de l'onglet QR de reception_confirm_screen.dart (_QrTabContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez au voyageur d\'afficher le QR code sur son téléphone.'**
+  String get receptionQrDescription;
+
+  /// Étiquette d'en-tête de l'onglet code de reception_confirm_screen.dart (_CodeTabContent). Identique en anglais : « OPTION »/« CODE » se disent pareil (voir _sameInBothLanguages).
+  ///
+  /// In fr, this message translates to:
+  /// **'OPTION 2 · CODE'**
+  String get receptionCodeOptionLabel;
+
+  /// Titre du contenu de l'onglet code de reception_confirm_screen.dart (_CodeTabContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tapez le code reçu'**
+  String get receptionCodeTitle;
+
+  /// Minuteur de reception_confirm_screen.dart (_CodeTabContent) — {time} est le compte à rebours mm:ss déjà formaté, mis en valeur via emphasizedSpans.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reçu par SMS · expire dans {time}'**
+  String receptionCodeExpiresIn(String time);
+
+  /// Note légale complète de reception_confirm_screen.dart (_LegalNote) — le segment receptionContestFirst y est retrouvé et mis en forme/rendu cliquable via emphasizedSpans.
+  ///
+  /// In fr, this message translates to:
+  /// **'En confirmant, vous libérez le paiement vers {name}. Si quelque chose ne va pas, contestez d\'abord.'**
+  String receptionReleaseWarning(String name);
+
+  /// Segment cliquable (vers /disputes) de receptionReleaseWarning, isolé pour emphasizedSpans (reception_confirm_screen.dart, _LegalNote).
+  ///
+  /// In fr, this message translates to:
+  /// **'contestez d\'abord'**
+  String get receptionContestFirst;
+
+  /// Titre de la sheet showTrackingTimelineSheet (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi du colis'**
+  String get trackingTimelineTitle;
+
+  /// Bouton sticky de la sheet showTrackingTimelineSheet, visible seulement si onShareTracking est fourni (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager le suivi'**
+  String get trackingTimelineShare;
+
+  /// En-tête de section de la frise d'événements (tracking_timeline_bottom_sheet.dart, _Timeline).
+  ///
+  /// In fr, this message translates to:
+  /// **'ÉTAPES'**
+  String get trackingTimelineStepsHeader;
+
+  /// Libellé complet de l'étape DEPART d'un événement de suivi (extension TrackingEventL10n, tracking_labels.dart) — distinct de trackingStepDeparture (« Départ » seul, écrans de lecture).
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ confirmé'**
+  String get trackingEventDepartureConfirmed;
+
+  /// Libellé complet de l'étape TRANSIT d'un événement de suivi (extension TrackingEventL10n, tracking_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En transit'**
+  String get trackingEventInTransit;
+
+  /// Libellé complet de l'étape ARRIVEE d'un événement de suivi (extension TrackingEventL10n, tracking_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée confirmée'**
+  String get trackingEventArrivalConfirmed;
+
+  /// Repli affiché quand un événement de suivi a des coordonnées GPS mais aucun gpsLabel (extension TrackingEventL10n, tracking_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu GPS enregistré'**
+  String get trackingGpsRecorded;
+
+  /// Badge d'un événement de suivi ayant un offlineTimestamp (tracking_timeline_bottom_sheet.dart, _TimelineItem).
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture hors-ligne synchronisée'**
+  String get trackingOfflineScanSynced;
+
+  /// Titre du bandeau affiché tant qu'aucun événement ARRIVEE n'est enregistré (tracking_timeline_bottom_sheet.dart, _PendingConfirmationBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de confirmation'**
+  String get trackingAwaitingConfirmationTitle;
+
+  /// Description du bandeau _PendingConfirmationBanner (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le destinataire doit confirmer la réception via le code SMS.'**
+  String get trackingAwaitingConfirmationDesc;
+
+  /// Titre de la frise vide, avant tout événement (tracking_timeline_bottom_sheet.dart, _EmptyTimeline).
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de la lecture au départ'**
+  String get trackingEmptyTimelineTitle;
+
+  /// Description de la frise vide (tracking_timeline_bottom_sheet.dart, _EmptyTimeline).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur lira le QR code lors de la remise du colis.'**
+  String get trackingEmptyTimelineDesc;
+
+  /// Titre du bandeau « pas besoin d'app » (tracking_timeline_bottom_sheet.dart, _ApplessBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas besoin d\'app !'**
+  String get trackingApplessTitle;
+
+  /// Message complet du bandeau _ApplessBanner (tracking_timeline_bottom_sheet.dart) — l'ancien paramètre travelerName valait toujours le littéral « le voyageur » (seul appelant), donc intégré tel quel dans le message plutôt que fragmenté.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand le voyageur sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.'**
+  String get trackingApplessMessage;
+
+  /// Titre de la sheet TrackingSearchBottomSheet.show (tracking_search_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un colis'**
+  String get trackingSearchSheetTitle;
+
+  /// Sous-titre de la sheet TrackingSearchBottomSheet.show (tracking_search_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Format : DON-XXXXXX'**
+  String get trackingSearchSheetSubtitle;
+
+  /// Titre de la sheet CancellationBottomSheet.show (cancellation_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler ce trajet ?'**
+  String get cancellationConfirmTitle;
+
+  /// Sous-titre de la sheet CancellationBottomSheet.show (cancellation_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette action est irréversible'**
+  String get cancellationIrreversibleSubtitle;
+
+  /// Bouton sticky et titre du dialogue de confirmation de cancellation_bottom_sheet.dart (même texte aux deux endroits).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer l\'annulation'**
+  String get cancellationConfirmAction;
+
+  /// Bandeau d'avertissement de cancellation_bottom_sheet.dart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les expéditeurs liés seront remboursés automatiquement.'**
+  String get cancellationAutoRefundNotice;
+
+  /// Libellé du groupe de boutons radio de motifs (cancellation_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Raison'**
+  String get cancellationReasonFieldLabel;
+
+  /// Label du champ texte affiché quand le motif « Autre » est sélectionné (cancellation_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Précisez...'**
+  String get cancellationSpecifyLabel;
+
+  /// Hint du champ texte affiché quand le motif « Autre » est sélectionné (cancellation_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez votre raison'**
+  String get cancellationSpecifyHint;
+
+  /// Snackbar d'erreur quand aucun motif n'est sélectionné à la confirmation (cancellation_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Veuillez sélectionner une raison'**
+  String get cancellationSelectReasonError;
+
+  /// Snackbar d'erreur quand « Autre » est sélectionné sans texte de précision (cancellation_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Veuillez préciser votre raison'**
+  String get cancellationSpecifyReasonError;
+
+  /// Message du dialogue de confirmation finale (cancellation_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette action annulera votre trajet et remboursera automatiquement tous les expéditeurs concernés.'**
+  String get cancellationConfirmDialogMessage;
+
+  /// Snackbar de succès de l'annulation (cancellation_bottom_sheet.dart). Texte fixe, identique au code vivant d'avant migration — pas de compteur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet annulé'**
+  String get cancellationTripCanceledSnackbar;
+
+  /// Titre de la cellule côté expéditeur (delivery_noshow_cta_cell.dart, isSender: true).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur ne livre pas'**
+  String get deliveryNoShowTravelerNotDeliveringTitle;
+
+  /// Titre de la cellule côté voyageur (delivery_noshow_cta_cell.dart, isSender: false).
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler l\'absence du destinataire'**
+  String get deliveryNoShowReportAbsentRecipientTitle;
+
+  /// Sous-titre de la cellule côté expéditeur (delivery_noshow_cta_cell.dart, isSender: true).
+  ///
+  /// In fr, this message translates to:
+  /// **'Injoignable ou refus de remettre le colis'**
+  String get deliveryNoShowTravelerNotDeliveringSubtitle;
+
+  /// Sous-titre de la cellule côté voyageur (delivery_noshow_cta_cell.dart, isSender: false).
+  ///
+  /// In fr, this message translates to:
+  /// **'Si vous êtes sur place et qu\'il ne répond pas'**
+  String get deliveryNoShowReportAbsentRecipientSubtitle;
+
+  /// Titre de la sheet de confirmation côté expéditeur (delivery_noshow_cta_cell.dart, _showSheet, isSender: true).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur ne s\'est pas présenté à la remise ?'**
+  String get deliveryNoShowTravelerAbsentSheetTitle;
+
+  /// Titre de la sheet de confirmation côté voyageur (delivery_noshow_cta_cell.dart, _showSheet, isSender: false).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le destinataire ne s\'est pas présenté à la remise ?'**
+  String get deliveryNoShowRecipientAbsentSheetTitle;
+
+  /// Bouton sticky de la sheet de confirmation (delivery_noshow_cta_cell.dart, _showSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer le signalement'**
+  String get deliveryNoShowConfirmReportAction;
+
+  /// Corps de la sheet de confirmation côté expéditeur (delivery_noshow_cta_cell.dart, _showSheet, isSender: true).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur ne livre pas le colis à votre destinataire.'**
+  String get deliveryNoShowTravelerNotDeliveringBody;
+
+  /// Corps de la sheet de confirmation côté voyageur (delivery_noshow_cta_cell.dart, _showSheet, isSender: false).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le destinataire ne s\'est pas présenté au point de remise.'**
+  String get deliveryNoShowRecipientAbsentBody;
+
+  /// Note légale de la sheet de confirmation (delivery_noshow_cta_cell.dart, _showSheet). Tiret cadratin d'origine (« ... l'instruction — aucun versement automatique. ») remplacé par un point : deux phrases, signalé en PR.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'autre partie aura 24 h pour contester. Le paiement reste gelé le temps de l\'instruction. Aucun versement automatique.'**
+  String get deliveryNoShowContestNotice;
+
+  /// Titre de l'app bar de RematchSearchScreen (rematch_search_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alternatives disponibles'**
+  String get rematchAlternativesTitle;
+
+  /// Snackbar d'erreur quand le fetch de l'annonce réelle échoue au tap sur une suggestion (rematch_search_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette annonce n\'est plus disponible'**
+  String get rematchAnnouncementUnavailable;
+
+  /// Titre de l'état vide quand aucune suggestion de rematch n'existe (rematch_search_screen.dart, _RematchBody).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun voyageur disponible'**
+  String get rematchNoTravelersTitle;
+
+  /// Description de l'état vide (rematch_search_screen.dart, _RematchBody). Tiret cadratin d'origine remplacé par « : » (l'explication qui suit), signalé en PR.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun voyageur disponible dans les 72h : votre remboursement est traité'**
+  String get rematchNoTravelersDescription;
+
+  /// Compteur de suggestions au-dessus de la liste (rematch_search_screen.dart, _RematchBody).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} voyageur disponible} other{{count} voyageurs disponibles}}'**
+  String rematchTravelersAvailable(int count);
+
+  /// Titre du bandeau de confirmation d'annulation (rematch_search_screen.dart, _ConfirmationBanner). Clé dédiée : même texte que chatBidStatusTripCancelled mais préfixe non partagé (R40).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet annulé'**
+  String get rematchTripCancelledTitle;
+
+  /// Sous-texte du bandeau de confirmation quand affectedBidsCount est connu (rematch_search_screen.dart, _ConfirmationBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} expéditeur remboursé automatiquement.} other{{count} expéditeurs remboursés automatiquement.}}'**
+  String rematchSendersRefunded(int count);
+
+  /// Sous-texte du bandeau de confirmation quand affectedBidsCount est null, chemin self-fetching (rematch_search_screen.dart, _ConfirmationBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre remboursement est en cours.'**
+  String get rematchRefundInProgress;
+
+  /// Bouton fantôme en bas de RematchSearchScreen (rematch_search_screen.dart, _RematchBody).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour à l\'accueil'**
+  String get rematchBackHomeAction;
+
+  /// Titre de la sheet quand isTravelerRating est vrai (rating_bottom_sheet.dart, show).
+  ///
+  /// In fr, this message translates to:
+  /// **'Évaluer l\'expéditeur'**
+  String get ratingRateSender;
+
+  /// Titre de la sheet quand isTravelerRating est faux — {name} est alors garanti non-null par le contrat des appelants (rating_bottom_sheet.dart, show).
+  ///
+  /// In fr, this message translates to:
+  /// **'Évaluer {name}'**
+  String ratingRateTraveler(String name);
+
+  /// Sous-titre de la sheet RatingBottomSheet.show (rating_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre avis aide la communauté Yadony'**
+  String get ratingSubtitle;
+
+  /// Bouton sticky de la sheet RatingBottomSheet.show (rating_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer l\'évaluation'**
+  String get ratingSubmitAction;
+
+  /// Label du champ commentaire (rating_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Commentaire (facultatif)'**
+  String get ratingCommentLabel;
+
+  /// Hint du champ commentaire (rating_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Partagez votre expérience…'**
+  String get ratingCommentHint;
+
+  /// Snackbar de succès après soumission d'un avis (rating_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Merci pour votre évaluation !'**
+  String get ratingThanksSnackbar;
+
+  /// Label d'accessibilité de chaque étoile du sélecteur (star_selector.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Noter {index} sur 5'**
+  String ratingStarsSemantics(int index);
+
+  /// Nombre d'avis sous la note moyenne (rating_summary_card.dart) — « avis » est invariable en français.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} avis} other{{count} avis}}'**
+  String ratingReviewCount(int count);
+
+  /// Titre de l'écran MyReviewsScreen (my_reviews_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes avis reçus'**
+  String get ratingMyReviewsTitle;
+
+  /// Nom de repli d'un auteur d'avis sans nom (my_reviews_screen.dart, _ReviewItem). Clé dédiée : distincte de requestSenderFallbackName (R40, préfixe non partagé).
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateur Yadony'**
+  String get ratingAuthorFallbackName;
+
+  /// Titre de l'état vide de MyReviewsScreen (my_reviews_screen.dart, _EmptyView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu n\'as pas encore reçu d\'avis'**
+  String get ratingEmptyTitle;
+
+  /// Description de l'état vide de MyReviewsScreen (my_reviews_screen.dart, _EmptyView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les notes et commentaires laissés par les voyageurs apparaîtront ici.'**
+  String get ratingEmptyDescription;
+
+  /// Titre de l'état d'erreur de MyReviewsScreen (my_reviews_screen.dart, _ErrorView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les avis'**
+  String get ratingLoadErrorTitle;
+
+  /// En-tête de section quand aucun filtre n'est actif (my_reviews_screen.dart, _LoadedView).
+  ///
+  /// In fr, this message translates to:
+  /// **'AVIS REÇUS'**
+  String get ratingReceivedHeader;
+
+  /// En-tête de section quand un filtre par note est actif (my_reviews_screen.dart, _LoadedView).
+  ///
+  /// In fr, this message translates to:
+  /// **'AVIS {stars}★ · {count}'**
+  String ratingFilteredHeader(int stars, int count);
+
+  /// Bouton de réinitialisation du filtre par note (my_reviews_screen.dart, _LoadedView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout afficher'**
+  String get ratingShowAll;
+
+  /// Sous-titre du hero éditorial de MyReviewsScreen (my_reviews_screen.dart, _HeaderSummary) — le français n'a pas de pluriel (« avis » invariable), l'anglais en a un ; même paramètre count des deux côtés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sur {count} avis reçus'**
+  String ratingTotalReceived(int count);
+
+  /// Label d'accessibilité d'une ligne de distribution (my_reviews_screen.dart, _RatingBar) — même remarque que ratingTotalReceived sur le pluriel.
+  ///
+  /// In fr, this message translates to:
+  /// **'{stars} étoiles, {count} avis'**
+  String ratingDistributionSemantics(int stars, int count);
+
+  /// Commentaire d'un avis entre guillemets (my_reviews_screen.dart, _ReviewItem).
+  ///
+  /// In fr, this message translates to:
+  /// **'« {comment} »'**
+  String ratingQuotedComment(String comment);
+
+  /// Mention sous un avis exclu du calcul de la moyenne (my_reviews_screen.dart, _ReviewItem).
+  ///
+  /// In fr, this message translates to:
+  /// **'Avis exclu du calcul'**
+  String get ratingExcludedNotice;
+
+  /// Libellé affiché du motif d'annulation 'Vol annulé' (cancellation_labels.dart, cancellationReasonLabel). La valeur brute reste envoyée au serveur telle quelle (cancellation_bottom_sheet.dart, _reasons).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vol annulé'**
+  String get cancellationReasonFlightCanceled;
+
+  /// Libellé affiché du motif d'annulation 'Urgence personnelle' (cancellation_labels.dart, cancellationReasonLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Urgence personnelle'**
+  String get cancellationReasonPersonalEmergency;
+
+  /// Libellé affiché du motif d'annulation 'Problème de santé' (cancellation_labels.dart, cancellationReasonLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Problème de santé'**
+  String get cancellationReasonHealthIssue;
+
+  /// Libellé affiché du motif d'annulation 'Changement d'itinéraire' (cancellation_labels.dart, cancellationReasonLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changement d\'itinéraire'**
+  String get cancellationReasonItineraryChange;
+
+  /// Libellé affiché du motif d'annulation 'Autre' (cancellation_labels.dart, cancellationReasonLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get cancellationReasonOther;
+
+  /// Libellé affiché pour 1 étoile (rating_labels.dart, ratingStarLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Très décevant'**
+  String get ratingStarVeryDisappointing;
+
+  /// Libellé affiché pour 2 étoiles (rating_labels.dart, ratingStarLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Décevant'**
+  String get ratingStarDisappointing;
+
+  /// Libellé affiché pour 3 étoiles (rating_labels.dart, ratingStarLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Correct'**
+  String get ratingStarFair;
+
+  /// Libellé affiché pour 4 étoiles (rating_labels.dart, ratingStarLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bien'**
+  String get ratingStarGood;
+
+  /// Libellé affiché pour 5 étoiles (rating_labels.dart, ratingStarLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Excellent !'**
+  String get ratingStarExcellent;
 }
 
 class _AppLocalizationsDelegate

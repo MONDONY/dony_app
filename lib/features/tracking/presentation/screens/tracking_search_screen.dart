@@ -8,6 +8,7 @@ import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -56,7 +57,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
 
     return Scaffold(
       appBar: DonyAppBar(
-        title: 'Suivre un colis',
+        title: context.l10n.trackingSearchTitle,
         showBackButton: widget.showBackButton,
       ),
       body: Builder(
@@ -85,7 +86,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
                           ),
                           child: SecondaryActivityEntry(
                             iconAsset: 'scan-line',
-                            label: 'Lire le QR d\'un trajet',
+                            label: context.l10n.trackingSearchScanTripEntry,
                             onTap: widget.onScanTrip!,
                           ),
                         ),
@@ -95,7 +96,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
                       _buildSearchField(cs, tt),
                       const SizedBox(height: DonySpacing.lg),
                       DonyButton(
-                        label: 'Rechercher',
+                        label: context.l10n.trackingSearchSubmit,
                         onPressed: () => _search(context),
                         iconAsset: 'search',
                       ),
@@ -140,13 +141,14 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
   }
 
   Widget _buildSearchHeader(ColorScheme cs, TextTheme tt) {
+    final l = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Numéro de suivi', style: tt.headlineLarge),
+        Text(l.trackingSearchNumberLabel, style: tt.headlineLarge),
         const SizedBox(height: DonySpacing.xs),
         Text(
-          'Entrez le numéro DON-XXXXXX pour suivre votre colis en temps réel.',
+          l.trackingSearchNumberHint,
           style: tt.bodyMedium?.copyWith(
             color: cs.onSurfaceVariant,
             height: 1.5,
@@ -167,8 +169,8 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
         letterSpacing: 2,
       ),
       decoration: InputDecoration(
-        labelText: 'Numéro de suivi',
-        hintText: 'DON-XXXXXX',
+        labelText: context.l10n.trackingSearchNumberLabel,
+        hintText: 'DON-XXXXXX', // i18n-ignore — exemple de format, pas un mot
         hintStyle: tt.bodyLarge?.copyWith(
           color: cs.outline,
           letterSpacing: 1.5,
@@ -358,13 +360,13 @@ class _TrackingResultCard extends StatelessWidget {
                       const SizedBox(height: DonySpacing.md),
                       DonyStatusBanner(
                         type: DonyStatusBannerType.info,
-                        title: 'Instructions de retrait',
+                        title: context.l10n.tripOwnerArrivalEditingTitle,
                         message: result.arrivalInstructions,
                       ),
                     ],
                     const SizedBox(height: DonySpacing.lg),
                     DonyButton(
-                      label: 'Voir le suivi détaillé',
+                      label: context.l10n.trackingSearchViewDetails,
                       onPressed: () {
                         final corridor =
                             '${result.departureCity} → ${result.arrivalCity}';
@@ -407,17 +409,17 @@ class _StepTimeline extends StatelessWidget {
   final String currentStep;
   const _StepTimeline({required this.currentStep});
 
-  static const _steps = [
-    ('PENDING', 'En attente'),
-    ('ACCEPTED', 'Confirmé'),
-    ('PAYMENT_SECURED', 'Payé'),
-    ('DEPARTED', 'Remis'),
-    ('IN_TRANSIT', 'Transit'),
-    ('DELIVERED', 'Livré'),
+  static List<(String, String)> _steps(AppLocalizations l) => [
+    ('PENDING', l.trackingSearchStatusPending),
+    ('ACCEPTED', l.trackingSearchStatusAccepted),
+    ('PAYMENT_SECURED', l.trackingSearchStatusPaid),
+    ('DEPARTED', l.trackingSearchStatusDroppedOff),
+    ('IN_TRANSIT', l.trackingStepTransit),
+    ('DELIVERED', l.trackingSearchStatusDelivered),
   ];
 
-  int _stepIndex(String step) {
-    final idx = _steps.indexWhere((s) => s.$1 == step);
+  int _stepIndex(List<(String, String)> steps, String step) {
+    final idx = steps.indexWhere((s) => s.$1 == step);
     return idx == -1 ? 0 : idx;
   }
 
@@ -425,14 +427,15 @@ class _StepTimeline extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final steps = _steps(context.l10n);
 
     if (currentStep == 'REJECTED' || currentStep == 'CANCELLED') {
       return const SizedBox.shrink();
     }
-    final current = _stepIndex(currentStep);
+    final current = _stepIndex(steps, currentStep);
 
     return Row(
-      children: List.generate(_steps.length * 2 - 1, (i) {
+      children: List.generate(steps.length * 2 - 1, (i) {
         if (i.isOdd) {
           final stepIdx = (i + 1) ~/ 2;
           final isActive = stepIdx <= current;
@@ -454,28 +457,36 @@ class _StepTimeline extends StatelessWidget {
           dotColor = cs.outline;
         }
 
-        return Column(
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: dotColor,
-                border: isActive
-                    ? Border.all(color: cs.primary, width: 2)
-                    : null,
+        // Expanded (comme les connecteurs) : un libellé anglais plus long
+        // (« Dropped off », « Confirmed ») dépassait sinon la largeur de la
+        // ligne, jamais atteint en français (régression finale F).
+        return Expanded(
+          child: Column(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: dotColor,
+                  border: isActive
+                      ? Border.all(color: cs.primary, width: 2)
+                      : null,
+                ),
               ),
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            Text(
-              _steps[stepIdx].$2,
-              style: tt.labelSmall?.copyWith(
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-                color: isActive ? cs.primary : cs.onSurfaceVariant,
+              const SizedBox(height: DonySpacing.sm),
+              Text(
+                steps[stepIdx].$2,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: tt.labelSmall?.copyWith(
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+                  color: isActive ? cs.primary : cs.onSurfaceVariant,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       }),
     );

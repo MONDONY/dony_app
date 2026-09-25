@@ -2,6 +2,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -9,10 +11,11 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:native_exif/native_exif.dart';
 
-const _etapeLabels = <String, (String, String?, String?)>{
-  'DEPART': ('Départ', null, 'plane-takeoff'),
-  'TRANSIT': ('Transit', 'arrow-left-right', null),
-  'ARRIVEE': ('Arrivée', null, 'plane-landing'),
+// Icônes uniquement : le libellé se calcule via trackingStepLabel.
+const _etapeIcons = <String, (String?, String?)>{
+  'DEPART': (null, 'plane-takeoff'),
+  'TRANSIT': ('arrow-left-right', null),
+  'ARRIVEE': (null, 'plane-landing'),
 };
 
 class ScanPhotoScreen extends StatefulWidget {
@@ -86,7 +89,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
       _loading.value = false;
       DonySnackbar.show(
         context,
-        message: 'Photo trop lourde (max ${e.maxMb} Mo). Réessayez.',
+        message: context.l10n.scanPhotoTooLarge(e.maxMb),
         type: DonySnackbarType.error,
       );
     } catch (_) {
@@ -146,11 +149,12 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
   Future<void> _writeGpsExif(String path, Position pos) async {
     try {
       final exif = await Exif.fromPath(path);
+      // Clés EXIF standard — jamais traduites (i18n-ignore).
       await exif.writeAttributes({
-        'GPSLatitude': _toExifDms(pos.latitude.abs()),
-        'GPSLatitudeRef': pos.latitude >= 0 ? 'N' : 'S',
-        'GPSLongitude': _toExifDms(pos.longitude.abs()),
-        'GPSLongitudeRef': pos.longitude >= 0 ? 'E' : 'W',
+        'GPSLatitude': _toExifDms(pos.latitude.abs()), // i18n-ignore
+        'GPSLatitudeRef': pos.latitude >= 0 ? 'N' : 'S', // i18n-ignore
+        'GPSLongitude': _toExifDms(pos.longitude.abs()), // i18n-ignore
+        'GPSLongitudeRef': pos.longitude >= 0 ? 'E' : 'W', // i18n-ignore
       });
       await exif.close();
     } catch (_) {}
@@ -168,7 +172,8 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final etapeInfo = _etapeLabels[widget.etape];
+    final l = context.l10n;
+    final etapeIcons = _etapeIcons[widget.etape];
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
@@ -194,13 +199,13 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                     Row(
                       children: [
                         IconButton(
-                          tooltip: 'Fermer',
+                          tooltip: l.commonClose,
                           icon: const DonyIcon('x', color: DonyColors.neutral0),
                           onPressed: () => context.pop(),
                         ),
                         Expanded(
                           child: Text(
-                            'Photo du colis',
+                            l.scanPhotoOfParcelLabel,
                             textAlign: TextAlign.center,
                             style: tt.bodyMedium?.copyWith(
                               color: DonyColors.neutral0,
@@ -246,7 +251,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                     ),
                     const SizedBox(height: DonySpacing.xs),
                     // Étape + badge photo
-                    if (etapeInfo != null)
+                    if (etapeIcons != null)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -264,21 +269,23 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (etapeInfo.$3 != null)
+                                if (etapeIcons.$2 != null)
                                   DonyIcon(
-                                    etapeInfo.$3!,
+                                    etapeIcons.$2!,
                                     color: DonyColors.neutral0,
                                     size: 12,
                                   )
                                 else
                                   DonyIcon(
-                                    etapeInfo.$2!,
+                                    etapeIcons.$1!,
                                     color: DonyColors.neutral0,
                                     size: 12,
                                   ),
                                 const SizedBox(width: DonySpacing.xs),
                                 Text(
-                                  'Étape : ${etapeInfo.$1}',
+                                  l.scanStepLabel(
+                                    trackingStepLabel(l, widget.etape),
+                                  ),
                                   style: tt.labelSmall?.copyWith(
                                     color: DonyColors.neutral0,
                                     fontWeight: FontWeight.w700,
@@ -311,8 +318,8 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                                 const SizedBox(width: 2),
                                 Text(
                                   _photoRequired
-                                      ? 'Photo obligatoire'
-                                      : 'Photo optionnelle',
+                                      ? l.scanPhotoMandatoryBadge
+                                      : l.scanPhotoOptionalBadge,
                                   style: tt.labelSmall?.copyWith(
                                     color: DonyColors.neutral0,
                                     fontWeight: FontWeight.w700,
@@ -364,7 +371,9 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                                 )
                               : const DonyIcon('camera'),
                           label: Text(
-                            loading ? 'Ouverture...' : 'Prendre la photo',
+                            loading
+                                ? l.scanPhotoOpeningLoading
+                                : l.scanTakePhotoButton,
                           ),
                           style: FilledButton.styleFrom(
                             backgroundColor: DonyColors.neutral0,
@@ -402,7 +411,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                                 ),
                               ),
                             ),
-                            child: const Text('Passer : continuer sans photo'),
+                            child: Text(l.scanSkipPhotoButton),
                           ),
                         ),
                       ],
@@ -417,7 +426,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                           ),
                           const SizedBox(width: DonySpacing.xs),
                           Text(
-                            'Géolocalisation automatique',
+                            l.scanAutoGeolocation,
                             style: tt.labelSmall?.copyWith(
                               color: DonyColors.neutral0.withValues(alpha: 0.5),
                             ),

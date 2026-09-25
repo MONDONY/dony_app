@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -61,6 +62,7 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Scaffold(
       backgroundColor: DonyColors.ink900,
@@ -82,13 +84,13 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      tooltip: 'Fermer',
+                      tooltip: l.commonClose,
                       icon: const DonyIcon('x', color: DonyColors.neutral0),
                       onPressed: () => context.pop<String?>(),
                     ),
                     Expanded(
                       child: Text(
-                        'Lire le QR code',
+                        l.scanQrPickerTitle,
                         textAlign: TextAlign.center,
                         style: tt.bodyMedium?.copyWith(
                           color: DonyColors.neutral0,
@@ -97,7 +99,7 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Activer ou couper la lampe',
+                      tooltip: l.scanTorchToggleTooltip,
                       icon: const DonyIcon('zap', color: DonyColors.neutral0),
                       onPressed: () => _scanner.toggleTorch(),
                     ),
@@ -117,7 +119,7 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
               left: 0,
               right: 0,
               child: Text(
-                'Pointez vers le QR code du colis',
+                l.scanQrPickerHint,
                 textAlign: TextAlign.center,
                 style: tt.bodySmall?.copyWith(
                   color: DonyColors.neutral0.withValues(alpha: 0.7),

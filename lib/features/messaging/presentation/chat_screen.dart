@@ -24,6 +24,7 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/data/chat_message_validator.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
+import 'package:dony/features/messaging/presentation/chat_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -140,17 +141,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _confirmAndDelete() {
+    final l = context.l10n;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Supprimer la conversation'),
-        content: const Text(
-          'Cette conversation sera définitivement supprimée pour vous et votre interlocuteur. Impossible de la recréer.',
-        ),
+        title: Text(l.chatDeleteConversationTitle),
+        content: Text(l.chatDeleteConversationMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Annuler'),
+            child: Text(l.commonCancel),
           ),
           TextButton(
             onPressed: () {
@@ -166,7 +166,7 @@ class _ChatScreenState extends State<ChatScreen> {
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(ctx).colorScheme.error,
             ),
-            child: const Text('Supprimer'),
+            child: Text(l.commonDelete),
           ),
         ],
       ),
@@ -194,10 +194,11 @@ class _ChatScreenState extends State<ChatScreen> {
     // Règles de contenu (cf. ChatMessageValidator) — bloque + avertit.
     final result = _validator.validate(raw, recent: _recentSends, now: now);
     if (result is ChatValidationBlocked) {
-      if (result.message.isNotEmpty) {
+      final message = chatBlockedMessage(context.l10n, result.reason);
+      if (message.isNotEmpty) {
         DonySnackbar.show(
           context,
-          message: result.message,
+          message: message,
           type: DonySnackbarType.warning,
         );
         unawaited(
@@ -234,6 +235,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final conversation = widget.conversation;
     final participant = conversation.otherParticipant;
     // Repli partagé par le titre de l'écran et le menu ⋯ (Signaler/Bloquer/
@@ -241,7 +243,7 @@ class _ChatScreenState extends State<ChatScreen> {
     // afficher un menu à moitié vide.
     final displayName = participant.name.isNotEmpty
         ? participant.name
-        : 'Conversation';
+        : l.chatUnknownConversationLabel;
     // Le canal SMS OTP coupé n'empêche pas d'appeler (fonctionnalité
     // indépendante), mais tant qu'il l'est le concept même de "numéro" reste
     // masqué partout dans l'app — bouton retiré pour rester cohérent.
@@ -312,7 +314,7 @@ class _ChatScreenState extends State<ChatScreen> {
               builder: (context, state) {
                 final isRevealing = state is ContactRevealLoading;
                 return IconButton(
-                  tooltip: 'Appeler',
+                  tooltip: l.chatCallTooltip,
                   onPressed: isRevealing ? null : _requestCall,
                   icon: Container(
                     width: 38,
@@ -366,7 +368,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     const SizedBox(width: DonySpacing.sm),
                     Flexible(
                       child: Text(
-                        'Signaler $displayName',
+                        l.chatReportUser(displayName),
                         style: tt.bodyMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -382,7 +384,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     const SizedBox(width: DonySpacing.sm),
                     Flexible(
                       child: Text(
-                        'Bloquer $displayName',
+                        l.chatBlockUser(displayName),
                         style: tt.bodyMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -398,7 +400,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     const SizedBox(width: DonySpacing.sm),
                     Flexible(
                       child: Text(
-                        'Supprimer la conversation',
+                        l.chatDeleteConversationTitle,
                         style: tt.bodyMedium?.copyWith(color: cs.error),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -425,7 +427,10 @@ class _ChatScreenState extends State<ChatScreen> {
             );
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!context.mounted) return;
-              DonySnackbar.show(context, message: 'Conversation supprimée');
+              DonySnackbar.show(
+                context,
+                message: l.chatConversationDeletedSnackbar,
+              );
               if (context.canPop()) context.pop();
             });
           } else if (state is ChatError) {
@@ -462,11 +467,11 @@ class _ChatScreenState extends State<ChatScreen> {
                         type: DonyEmptyStateType.error,
                         mascotte: DonyMascotteType.erreurLegere,
                         iconAsset: 'wifi-off',
-                        title: 'Connexion interrompue',
+                        title: l.chatConnectionLostTitle,
                         description: ErrorPresenter.resolve(
                           state.error,
                         ).message,
-                        actionLabel: 'Réessayer',
+                        actionLabel: l.commonRetry,
                         onAction: () => context.read<ChatBloc>().add(
                           ChatSubscribeRequested(
                             widget.conversation.firestoreConversationId,
@@ -496,7 +501,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               ),
                               const SizedBox(height: DonySpacing.md),
                               Text(
-                                'Démarrez la conversation !',
+                                l.chatEmptyStateTitle,
                                 style: tt.bodyMedium?.copyWith(
                                   color: cs.onSurfaceVariant,
                                 ),
@@ -607,7 +612,7 @@ class _ReadOnlyBanner extends StatelessWidget {
           const SizedBox(width: DonySpacing.xs),
           Expanded(
             child: Text(
-              'Votre interlocuteur a quitté cette conversation. Vous êtes en lecture seule.',
+              context.l10n.chatReadOnlyBannerMessage,
               style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
@@ -668,7 +673,7 @@ class _TripBanner extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Trajet lié',
+                          context.l10n.chatLinkedTripLabel,
                           style: tt.labelSmall?.copyWith(
                             color: cs.onSurfaceVariant,
                             fontSize: 11,
@@ -717,10 +722,15 @@ class _BidStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final (String, Color, String?)? config = switch (status) {
-      'BID_ACCEPTED' => ('Offre acceptée', cs.success, 'circle-check'),
-      'DELIVERY_CONFIRMED' => ('Livraison confirmée', cs.success, 'package'),
-      'TRIP_CANCELLED' => ('Trajet annulé', cs.error, 'circle-x'),
+      'BID_ACCEPTED' => (l.chatBidStatusAccepted, cs.success, 'circle-check'),
+      'DELIVERY_CONFIRMED' => (
+        l.chatBidStatusDeliveryConfirmed,
+        cs.success,
+        'package',
+      ),
+      'TRIP_CANCELLED' => (l.chatBidStatusTripCancelled, cs.error, 'circle-x'),
       _ => null,
     };
     if (config == null) return const SizedBox.shrink();
@@ -765,14 +775,14 @@ class _DateSeparator extends StatelessWidget {
     required this.tt,
   });
 
-  String _label() {
+  String _label(AppLocalizations l) {
     final now = DateTime.now();
     final isToday =
         now.year == date.year && now.month == date.month && now.day == date.day;
     final isYesterday = now.difference(date).inDays == 1;
-    if (isToday) return 'Aujourd\'hui';
-    if (isYesterday) return 'Hier';
-    return DateFormat('d MMMM y', AppL10n.localeName).format(date);
+    if (isToday) return l.commonDateToday;
+    if (isYesterday) return l.commonDateYesterday;
+    return DateFormat.yMMMMd(l.localeName).format(date);
   }
 
   @override
@@ -790,7 +800,7 @@ class _DateSeparator extends StatelessWidget {
             borderRadius: BorderRadius.circular(DonyRadius.full),
           ),
           child: Text(
-            _label(),
+            _label(context.l10n),
             style: tt.labelSmall?.copyWith(
               color: cs.onSurfaceVariant,
               fontWeight: FontWeight.w600,
@@ -818,6 +828,7 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     if (message.type == MessageType.system) {
       return Padding(
@@ -833,7 +844,7 @@ class _MessageBubble extends StatelessWidget {
               borderRadius: BorderRadius.circular(DonyRadius.full),
             ),
             child: Text(
-              message.isDeleted ? 'Message supprimé' : (message.body ?? ''),
+              message.isDeleted ? l.chatMessageDeleted : (message.body ?? ''),
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
@@ -913,7 +924,9 @@ class _MessageBubble extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          DateFormat('HH:mm').format(message.sentAt.toLocal()),
+                          DateFormat.jm(
+                            l.localeName,
+                          ).format(message.sentAt.toLocal()),
                           style: tt.bodySmall?.copyWith(
                             fontSize: 10,
                             color: cs.onSurfaceVariant,
@@ -1047,7 +1060,7 @@ class _LocationContent extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Localisation partagée',
+                context.l10n.chatLocationMessageLabel,
                 style: tt.bodySmall?.copyWith(
                   color: isMe ? cs.onPrimary : cs.onSurface,
                   fontWeight: FontWeight.w600,
@@ -1099,7 +1112,7 @@ class _DeletedContent extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.xs),
           Text(
-            'Message supprimé',
+            context.l10n.chatMessageDeleted,
             style: tt.bodySmall?.copyWith(
               fontStyle: FontStyle.italic,
               color: isMe
@@ -1132,6 +1145,7 @@ class _InputBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
 
     if (disabled) {
@@ -1152,7 +1166,7 @@ class _InputBar extends StatelessWidget {
             DonyIcon('lock', size: 14, color: cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.xs),
             Text(
-              'Envoi de messages désactivé',
+              l.chatSendingDisabled,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
@@ -1197,7 +1211,7 @@ class _InputBar extends StatelessWidget {
                   textInputAction: TextInputAction.newline,
                   style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                   decoration: InputDecoration(
-                    hintText: 'Votre message…',
+                    hintText: l.chatMessageHint,
                     hintStyle: tt.bodyMedium?.copyWith(
                       color: cs.onSurfaceVariant,
                     ),
@@ -1229,7 +1243,7 @@ class _InputBar extends StatelessWidget {
                         child: Semantics(
                           button: true,
                           enabled: hasText && !isSending,
-                          label: 'Envoyer le message',
+                          label: l.chatSendMessageSemantics,
                           container: true,
                           excludeSemantics: true,
                           child: InkWell(

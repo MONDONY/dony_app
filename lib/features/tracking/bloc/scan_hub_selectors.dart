@@ -5,6 +5,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 // destinataire) est un statut intermédiaire entre IN_TRANSIT et COMPLETED : il
 // appartient à tous les groupes qui contiennent déjà IN_TRANSIT, sinon le colis
 // disparaît du hub Scan & Suivi dès le marquage d'arrivée.
+// Codes de statut backend — valeurs de donnée, jamais affichées (i18n-ignore).
 const _confirmedStatuses = {
   'ACCEPTED',
   'HANDED_OVER',
@@ -35,6 +36,7 @@ List<AnnouncementModel> selectScannableTrips(List<AnnouncementModel> trips) {
   int byDate(AnnouncementModel a, AnnouncementModel b) =>
       a.departureDate.compareTo(b.departureDate);
 
+  // Statuts backend comparés ici — valeurs de donnée (i18n-ignore).
   final inProgress = trips.where((t) => t.status == 'IN_PROGRESS').toList()
     ..sort(byDate);
   final upcoming =
@@ -67,17 +69,21 @@ List<BidModel> confirmedColis(List<BidModel> bids) => bids
 
 /// Étape à scanner ensuite pour ce colis, dérivée de son statut. `null` si
 /// toutes les étapes sont déjà scannées (statut `COMPLETED`).
+///
+/// Renvoie le code d'étape (`DEPART`/`TRANSIT`/`ARRIVEE`), une valeur de
+/// donnée réutilisée telle quelle par les écrans de lecture — jamais affichée
+/// directement (voir `trackingStepLabel`).
 String? nextRequiredStep(BidModel bid) {
   if (_arrivedStatuses.contains(bid.status)) {
     return null;
   }
   if (_transitStatuses.contains(bid.status)) {
-    return 'ARRIVEE';
+    return 'ARRIVEE'; // i18n-ignore
   }
   if (_departedStatuses.contains(bid.status)) {
-    return 'TRANSIT';
+    return 'TRANSIT'; // i18n-ignore
   }
-  return 'DEPART';
+  return 'DEPART'; // i18n-ignore
 }
 
 /// Progression par étape d'un colis — pilote les 3 points affichés sur sa

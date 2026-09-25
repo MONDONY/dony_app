@@ -5,6 +5,9 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
+import 'package:dony/l10n/rich_text.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
@@ -88,7 +91,7 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: const DonyAppBar(title: 'Confirmation'),
+      appBar: DonyAppBar(title: context.l10n.receptionConfirmTitle),
       body: Builder(
         builder: (context) {
           final h = DonyLayout.hPadding(context);
@@ -114,7 +117,7 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
 
                   // ── Caveat title ─────────────────────────────────────────────
                   Text(
-                    'Confirmer la réception',
+                    context.l10n.receptionConfirmHeading,
                     style: DonyTypography.caveat(
                       fontSize: 28,
                       color: cs.onSurface,
@@ -122,7 +125,7 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
                   ),
                   const SizedBox(height: DonySpacing.xs),
                   Text(
-                    'Devant ${widget.travelerName}, choisissez :',
+                    context.l10n.receptionChooseInFrontOf(widget.travelerName),
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   const SizedBox(height: DonySpacing.lg),
@@ -166,7 +169,7 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
                         ValueListenableBuilder<int>(
                           valueListenable: _tabIndex,
                           builder: (context, tab, _) => DonyButton(
-                            label: 'Confirmer la réception',
+                            label: context.l10n.receptionConfirmHeading,
                             iconAsset: 'check',
                             onPressed: (tab == 1 && complete)
                                 ? () => _confirm(context)
@@ -212,14 +215,14 @@ class _TabToggle extends StatelessWidget {
         children: [
           Expanded(
             child: _TabItem(
-              label: 'Lire le QR',
+              label: context.l10n.receptionTabQr,
               selected: selected == 0,
               onTap: () => onTap(0),
             ),
           ),
           Expanded(
             child: _TabItem(
-              label: 'Taper le code',
+              label: context.l10n.receptionTabCode,
               selected: selected == 1,
               onTap: () => onTap(1),
             ),
@@ -301,12 +304,12 @@ class _QrTabContent extends StatelessWidget {
           DonyIcon('scan-line', size: 48, color: cs.primary),
           const SizedBox(height: DonySpacing.base),
           Text(
-            'Lire le QR code',
+            context.l10n.receptionQrTitle,
             style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            'Demandez au voyageur d\'afficher le QR code sur son téléphone.',
+            context.l10n.receptionQrDescription,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
@@ -359,7 +362,7 @@ class _CodeTabContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'OPTION 2 · CODE',
+          context.l10n.receptionCodeOptionLabel,
           style: tt.labelMedium?.copyWith(
             color: cs.onSurfaceVariant,
             letterSpacing: 0.8,
@@ -368,7 +371,7 @@ class _CodeTabContent extends StatelessWidget {
         const SizedBox(height: DonySpacing.lg),
         Center(
           child: Text(
-            'Tapez le code reçu',
+            context.l10n.receptionCodeTitle,
             style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
         ),
@@ -387,22 +390,22 @@ class _CodeTabContent extends StatelessWidget {
           valueListenable: secondsLeft,
           builder: (context, secs, _) {
             final innerCs = Theme.of(context).colorScheme;
+            final time = formatTime(secs);
+            final message = context.l10n.receptionCodeExpiresIn(time);
             return Center(
               child: Text.rich(
                 TextSpan(
                   style: tt.bodySmall?.copyWith(
                     color: innerCs.onSurfaceVariant,
                   ),
-                  children: [
-                    const TextSpan(text: 'Reçu par SMS · expire dans '),
-                    TextSpan(
-                      text: formatTime(secs),
-                      style: TextStyle(
-                        color: innerCs.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
+                  children: emphasizedSpans(
+                    message,
+                    time,
+                    style: TextStyle(
+                      color: innerCs.primary,
+                      fontWeight: FontWeight.w700,
                     ),
-                  ],
+                  ),
                 ),
               ),
             );
@@ -415,16 +418,32 @@ class _CodeTabContent extends StatelessWidget {
 
 // ── Legal note ────────────────────────────────────────────────────────────────
 
-class _LegalNote extends StatelessWidget {
+class _LegalNote extends StatefulWidget {
   const _LegalNote({required this.travelerName, required this.bidId});
 
   final String travelerName;
   final String bidId;
 
   @override
+  State<_LegalNote> createState() => _LegalNoteState();
+}
+
+class _LegalNoteState extends State<_LegalNote> {
+  late final TapGestureRecognizer _contestTap = TapGestureRecognizer()
+    ..onTap = () => context.push('/disputes');
+
+  @override
+  void dispose() {
+    _contestTap.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final message = l.receptionReleaseWarning(widget.travelerName);
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
@@ -445,26 +464,15 @@ class _LegalNote extends StatelessWidget {
             child: Text.rich(
               TextSpan(
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                children: [
-                  TextSpan(
-                    text:
-                        'En confirmant, vous libérez le paiement vers $travelerName. '
-                        'Si quelque chose ne va pas, ',
+                children: emphasizedSpans(
+                  message,
+                  l.receptionContestFirst,
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    decoration: TextDecoration.underline,
                   ),
-                  WidgetSpan(
-                    child: GestureDetector(
-                      onTap: () => context.push('/disputes'),
-                      child: Text(
-                        'contestez d\'abord',
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const TextSpan(text: '.'),
-                ],
+                  recognizer: _contestTap,
+                ),
               ),
             ),
           ),

@@ -9,6 +9,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockBloc extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
 
@@ -133,4 +135,23 @@ void main() {
       );
     },
   );
+
+  testWidgets('libellés traduits en anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _harness(
+        DeliveryNoShowCtaCell(bid: _inTransitBid(), isSender: false),
+        bloc,
+      ),
+    );
+    expect(find.text("Report the recipient's no-show"), findsOneWidget);
+
+    await tester.tap(find.text("Report the recipient's no-show"));
+    await tester.pumpAndSettle();
+    expect(
+      find.text("The recipient didn't show up for the handover?"),
+      findsOneWidget,
+    );
+    expect(find.text('Confirm the report'), findsOneWidget);
+  });
 }

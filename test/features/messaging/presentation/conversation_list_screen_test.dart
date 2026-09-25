@@ -17,6 +17,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 
 class MockConversationListBloc
     extends MockBloc<ConversationListEvent, ConversationListState>
@@ -176,6 +177,24 @@ void main() {
       expect(find.text('Aucun message'), findsOneWidget);
     });
 
+    testWidgets(
+      // « Messages » est identique en anglais : c'est l'état vide qui prouve
+      // que l'écran est bien traduit.
+      'en anglais : état vide et pastilles de filtre traduits',
+      (tester) async {
+        useEnglish();
+        when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
+        await _pump(tester, bloc);
+
+        expect(find.text('No messages'), findsOneWidget);
+        expect(find.text('Aucun message'), findsNothing);
+        expect(find.text('All'), findsOneWidget);
+        expect(find.text('Unread'), findsOneWidget);
+        expect(find.text('Active'), findsOneWidget);
+        expect(find.text('Done'), findsOneWidget);
+      },
+    );
+
     testWidgets('renders conversation tile with participant name', (
       tester,
     ) async {
@@ -321,6 +340,19 @@ void main() {
       expect(find.text('Kadiatou'), findsOneWidget);
       expect(find.text('maintenant'), findsOneWidget);
     });
+
+    testWidgets(
+      'en anglais : heure du dernier message et section AUJOURD\'HUI traduites',
+      (tester) async {
+        useEnglish();
+        when(() => bloc.state).thenReturn(ConversationListLoaded([_convNow]));
+        await _pump(tester, bloc);
+
+        expect(find.text('Kadiatou'), findsOneWidget);
+        expect(find.text('just now'), findsOneWidget);
+        expect(find.text('TODAY'), findsOneWidget);
+      },
+    );
 
     testWidgets('empty state adapté quand searchQuery non vide', (
       tester,

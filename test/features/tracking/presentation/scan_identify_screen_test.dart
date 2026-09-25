@@ -11,6 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
 
@@ -304,5 +306,21 @@ void main() {
     );
     await tester.pump();
     expect(find.text('Identifier le colis'), findsOneWidget);
+  });
+
+  // ─── anglais — titre, badge étape et bouton traduits ─────────────────────
+  testWidgets('anglais — titre, badge étape et bouton traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      MaterialApp.router(routerConfig: _router('DEPART')),
+    );
+    await tester.pump();
+    expect(find.text('Identify the parcel'), findsOneWidget);
+    expect(find.text('Departure'), findsOneWidget);
+    expect(find.text('Open QR reader'), findsOneWidget);
+    expect(find.text('OR'), findsOneWidget);
+    expect(find.text('Identify →'), findsOneWidget);
   });
 }

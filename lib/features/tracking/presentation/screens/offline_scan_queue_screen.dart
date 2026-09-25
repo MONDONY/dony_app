@@ -2,41 +2,37 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 class OfflineScanQueueScreen extends StatelessWidget {
   const OfflineScanQueueScreen({super.key});
 
-  static String _relativeTime(String isoTimestamp) {
+  static String _relativeTime(AppLocalizations l, String isoTimestamp) {
     final ts = DateTime.tryParse(isoTimestamp);
     if (ts == null) {
       return '';
     }
     final diff = DateTime.now().toUtc().difference(ts);
-    if (diff.inMinutes < 1) {
-      return 'il y a < 1 min';
-    }
-    if (diff.inMinutes < 60) {
-      return 'il y a ${diff.inMinutes} min';
-    }
-    return 'il y a ${diff.inHours}h';
+    return scanRelativeTime(l, diff);
   }
 
-  static String _eventLabel(String eventType) {
+  static String _eventLabel(AppLocalizations l, String eventType) {
     return switch (eventType.toUpperCase()) {
-      'PICKUP' => 'collecte',
-      'IN_TRANSIT' => 'transit',
-      'DELIVERED' => 'livré',
-      _ => 'file',
+      'PICKUP' => l.scanOfflineEventPickupLabel,
+      'IN_TRANSIT' => l.scanOfflineEventTransitLabel,
+      'DELIVERED' => l.scanOfflineEventDeliveredLabel,
+      _ => l.scanOfflineEventDefaultLabel,
     };
   }
 
-  static String _eventDescription(String eventType) {
+  static String _eventDescription(AppLocalizations l, String eventType) {
     return switch (eventType.toUpperCase()) {
-      'PICKUP' => 'Collecte enregistrée',
-      'IN_TRANSIT' => 'En transit sauvegardé',
-      'DELIVERED' => 'Livraison sauvegardée',
-      _ => 'Lecture sauvegardée',
+      'PICKUP' => l.scanOfflineDescPickup,
+      'IN_TRANSIT' => l.scanOfflineDescTransit,
+      'DELIVERED' => l.scanOfflineDescDelivered,
+      _ => l.scanOfflineDescDefault,
     };
   }
 
@@ -44,6 +40,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final queue = getIt<HiveService>().offlineQueue;
     final entries = queue.values
         .map((v) => Map<String, dynamic>.from(v))
@@ -53,7 +50,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: DonyAppBar(
-        title: 'Lectures hors-ligne',
+        title: l.scanOfflineQueueTitle,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: DonySpacing.base),
@@ -74,7 +71,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
                     DonyIcon('wifi-off', size: 12, color: cs.secondary),
                     const SizedBox(width: DonySpacing.xs),
                     Text(
-                      'Hors-ligne',
+                      l.scanOfflineBadge,
                       style: tt.labelMedium?.copyWith(color: cs.secondary),
                     ),
                   ],
@@ -103,7 +100,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xl),
 
                   Text(
-                    "FILE D'ATTENTE ($count)",
+                    l.scanOfflineQueueSectionTitle(count),
                     style: tt.labelMedium?.copyWith(
                       color: cs.onSurfaceVariant,
                       letterSpacing: 0.8,
@@ -116,7 +113,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.all(DonySpacing.xxl),
                         child: Text(
-                          'Aucune lecture en attente.',
+                          l.scanOfflineQueueEmpty,
                           style: tt.bodyMedium?.copyWith(
                             color: cs.onSurfaceVariant,
                           ),
@@ -138,7 +135,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xxl),
                   Center(
                     child: Text(
-                      'Continuez les lectures même sans réseau.',
+                      l.scanOfflineFooterHint,
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                       textAlign: TextAlign.center,
                     ),
@@ -163,6 +160,7 @@ class _AlertBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
@@ -180,12 +178,12 @@ class _AlertBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Vos lectures sont en sécurité',
+                  l.scanQueueSafeTitle,
                   style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  '$count lectures en attente. On les enverra dès que vous récupérez du réseau.',
+                  l.scanQueueSafe(count),
                   style: tt.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -223,9 +221,10 @@ class _QueueItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final label = OfflineScanQueueScreen._eventLabel(eventType);
-    final description = OfflineScanQueueScreen._eventDescription(eventType);
-    final relTime = OfflineScanQueueScreen._relativeTime(timestamp);
+    final l = context.l10n;
+    final label = OfflineScanQueueScreen._eventLabel(l, eventType);
+    final description = OfflineScanQueueScreen._eventDescription(l, eventType);
+    final relTime = OfflineScanQueueScreen._relativeTime(l, timestamp);
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -249,7 +248,7 @@ class _QueueItemCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      'colis $_shortCode',
+                      l.scanOfflineParcelCode(_shortCode),
                       style: tt.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),

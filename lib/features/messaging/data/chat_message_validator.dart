@@ -29,14 +29,13 @@ class ChatValidationOk extends ChatValidation {
 }
 
 class ChatValidationBlocked extends ChatValidation {
-  const ChatValidationBlocked(this.reason, this.message);
+  const ChatValidationBlocked(this.reason);
 
-  /// Famille de la règle (analytics / debug) : empty, length, rate, duplicate,
-  /// contact, url, banking, profanity.
+  /// Famille de la règle (analytics / debug ; propriété `reason` de
+  /// l'événement `message_blocked`) : empty, length, rate, duplicate,
+  /// contact, url, banking, profanity. Le message affiché à l'utilisateur se
+  /// calcule à partir de ce code via `chatBlockedMessage` (chat_labels.dart).
   final String reason;
-
-  /// Message utilisateur (snackbar). Vide pour `empty` (envoi silencieusement ignoré).
-  final String message;
 }
 
 abstract final class ChatMessageRules {
@@ -44,10 +43,6 @@ abstract final class ChatMessageRules {
   static const int rateMax = 5;
   static const Duration rateWindow = Duration(seconds: 15);
   static const Duration dedupWindow = Duration(seconds: 30);
-
-  static const String contactMsg =
-      'Pour ta sécurité, garde les échanges et le paiement sur Yadony. '
-      'Le partage de coordonnées est interdit.';
 
   // ── Détecteurs (anti-contournement / contenu interdit) ──────────────────────
 
@@ -74,7 +69,7 @@ abstract final class ChatMessageRules {
 
   /// Liste FR minimale (évite les faux positifs ; bornée par limites de mot).
   static final RegExp _profanity = RegExp(
-    r'\b(connard|connasse|encul[ée]s?|salop[e]?|put[ea]in|t[a]?barnak|nique? ta|fdp|ntm|batard|bâtard)\b',
+    r'\b(connard|connasse|encul[ée]s?|salop[e]?|put[ea]in|t[a]?barnak|nique? ta|fdp|ntm|batard|bâtard)\b', // i18n-ignore
     caseSensitive: false,
   );
 }
@@ -92,14 +87,11 @@ class ChatMessageValidator {
 
     // 1. Vide
     if (text.isEmpty) {
-      return const ChatValidationBlocked('empty', '');
+      return const ChatValidationBlocked('empty');
     }
     // 1. Longueur
     if (text.length > ChatMessageRules.maxLength) {
-      return const ChatValidationBlocked(
-        'length',
-        'Message trop long (500 caractères max).',
-      );
+      return const ChatValidationBlocked('length');
     }
     // 3. Anti-doublon (même texte trim < 30 s)
     final dupCutoff = clock.subtract(ChatMessageRules.dedupWindow);
@@ -107,49 +99,31 @@ class ChatMessageValidator {
       (r) => r.body.trim() == text && r.at.isAfter(dupCutoff),
     );
     if (isDup) {
-      return const ChatValidationBlocked(
-        'duplicate',
-        'Tu viens d\'envoyer ce message.',
-      );
+      return const ChatValidationBlocked('duplicate');
     }
     // 3. Débit (5 / 15 s glissant)
     final rateCutoff = clock.subtract(ChatMessageRules.rateWindow);
     final inWindow = recent.where((r) => r.at.isAfter(rateCutoff)).length;
     if (inWindow >= ChatMessageRules.rateMax) {
-      return const ChatValidationBlocked(
-        'rate',
-        'Tu envoies trop de messages, patiente un instant.',
-      );
+      return const ChatValidationBlocked('rate');
     }
     // 4. IBAN (avant le téléphone : un IBAN est plein de chiffres et serait
     // sinon capté comme « contact »). Message bancaire plus précis.
     if (ChatMessageRules._iban.hasMatch(text)) {
-      return const ChatValidationBlocked(
-        'banking',
-        'Le partage de coordonnées bancaires est interdit.',
-      );
+      return const ChatValidationBlocked('banking');
     }
     // 2. Anti-contournement
     if (ChatMessageRules._phone.hasMatch(text) ||
         ChatMessageRules._email.hasMatch(text) ||
         ChatMessageRules._apps.hasMatch(text)) {
-      return const ChatValidationBlocked(
-        'contact',
-        ChatMessageRules.contactMsg,
-      );
+      return const ChatValidationBlocked('contact');
     }
     // 4. Contenu interdit
     if (ChatMessageRules._url.hasMatch(text)) {
-      return const ChatValidationBlocked(
-        'url',
-        'Les liens externes ne sont pas autorisés dans la messagerie.',
-      );
+      return const ChatValidationBlocked('url');
     }
     if (ChatMessageRules._profanity.hasMatch(text)) {
-      return const ChatValidationBlocked(
-        'profanity',
-        'Reste courtois : ce message contient des termes interdits.',
-      );
+      return const ChatValidationBlocked('profanity');
     }
 
     return ChatValidationOk(text);

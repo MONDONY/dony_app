@@ -7,6 +7,7 @@ import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
+import 'package:dony/features/messaging/presentation/chat_labels.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -78,7 +79,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           event.isReadOnly ? ChatReadOnly(messages) : ChatLoaded(messages),
       onError: (e, st) => const ChatError(
         NetworkException(
-          'Erreur de connexion à la messagerie',
+          'Erreur de connexion à la messagerie', // i18n-ignore
           code: 'chat-stream-error',
         ),
       ),
@@ -115,7 +116,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       senderFirebaseUid: event.senderFirebaseUid,
       imageUrl: result['presignedUrl']!,
     );
-    await _conversationRepo.updateLastMessage(event.conversationId, '📷 Photo');
+    await _conversationRepo.updateLastMessage(
+      event.conversationId,
+      kChatPreviewPhoto,
+    );
   }
 
   Future<void> _onSendLocation(
@@ -130,7 +134,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     );
     await _conversationRepo.updateLastMessage(
       event.conversationId,
-      '📍 Localisation partagée',
+      kChatPreviewLocation,
     );
   }
 

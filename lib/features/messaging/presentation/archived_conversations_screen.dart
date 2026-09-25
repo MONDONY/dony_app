@@ -4,6 +4,7 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/widgets/conversation_tile.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -13,8 +14,9 @@ class ArchivedConversationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Archives'),
+      appBar: DonyAppBar(title: l.archivedConversationsTitle),
       body: BlocBuilder<ConversationListBloc, ConversationListState>(
         builder: (context, state) {
           if (state is! ConversationListLoaded) {
@@ -27,11 +29,10 @@ class ArchivedConversationsScreen extends StatelessWidget {
           final archived = state.archivedConversations;
 
           if (archived.isEmpty) {
-            return const DonyEmptyState(
+            return DonyEmptyState(
               mascotte: DonyMascotteType.assis,
-              title: 'Aucune archive',
-              description:
-                  'Les conversations que vous archivez apparaîtront ici.',
+              title: l.archivedConversationsEmptyTitle,
+              description: l.archivedConversationsEmptyDescription,
             );
           }
 
@@ -53,6 +54,7 @@ class _ArchivedTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Slidable(
       key: ValueKey(conversation.id),
@@ -65,12 +67,12 @@ class _ArchivedTile extends StatelessWidget {
               ctx.read<ConversationListBloc>().add(
                 ConversationUnarchiveRequested(conversation.id),
               );
-              DonySnackbar.show(ctx, message: 'Conversation désarchivée');
+              DonySnackbar.show(ctx, message: l.conversationUnarchivedSnackbar);
             },
             backgroundColor: cs.primary,
             foregroundColor: cs.onPrimary,
             icon: Icons.unarchive_outlined,
-            label: 'Désarchiver',
+            label: l.conversationUnarchiveAction,
           ),
         ],
       ),

@@ -24,11 +24,14 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/l10n_test_helpers.dart';
 
 class _MockCancellationBloc
     extends MockBloc<CancellationEvent, CancellationState>
@@ -297,7 +300,7 @@ void main() {
     expect(find.text('Aucun voyageur disponible'), findsOneWidget);
     expect(
       find.text(
-        'Aucun voyageur disponible dans les 72h — votre remboursement est traité',
+        'Aucun voyageur disponible dans les 72h : votre remboursement est traité',
       ),
       findsOneWidget,
     );
@@ -484,4 +487,58 @@ void main() {
       expect(find.byType(SnackBar), findsOneWidget);
     },
   );
+
+  testWidgets('titre et alternatives traduits en anglais', (tester) async {
+    useEnglish();
+    when(() => bloc.state).thenReturn(RematchSuggestionsLoaded(_suggestions));
+
+    await tester.pumpWidget(_wrap(bloc, cancellationId: 'canc-1'));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Available alternatives'), findsOneWidget);
+    expect(find.text('1 traveler available'), findsOneWidget);
+    expect(find.text('Your refund is in progress.'), findsOneWidget);
+  });
+
+  group('rematchTravelersAvailable', () {
+    final fr = lookupAppLocalizations(AppL10n.fr);
+    final en = lookupAppLocalizations(AppL10n.en);
+
+    test('1 — fr (égal à l\'ancien code)', () {
+      expect(fr.rematchTravelersAvailable(1), '1 voyageur disponible');
+    });
+    test('1 — en', () {
+      expect(en.rematchTravelersAvailable(1), '1 traveler available');
+    });
+    test('3 — fr (égal à l\'ancien code)', () {
+      expect(fr.rematchTravelersAvailable(3), '3 voyageurs disponibles');
+    });
+    test('3 — en', () {
+      expect(en.rematchTravelersAvailable(3), '3 travelers available');
+    });
+  });
+
+  group('rematchSendersRefunded', () {
+    final fr = lookupAppLocalizations(AppL10n.fr);
+    final en = lookupAppLocalizations(AppL10n.en);
+
+    test('1 — fr (égal à l\'ancien code)', () {
+      expect(
+        fr.rematchSendersRefunded(1),
+        '1 expéditeur remboursé automatiquement.',
+      );
+    });
+    test('1 — en', () {
+      expect(en.rematchSendersRefunded(1), '1 sender refunded automatically.');
+    });
+    test('3 — fr (égal à l\'ancien code)', () {
+      expect(
+        fr.rematchSendersRefunded(3),
+        '3 expéditeurs remboursés automatiquement.',
+      );
+    });
+    test('3 — en', () {
+      expect(en.rematchSendersRefunded(3), '3 senders refunded automatically.');
+    });
+  });
 }

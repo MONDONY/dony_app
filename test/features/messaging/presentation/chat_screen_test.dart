@@ -24,6 +24,7 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockChatBloc extends MockBloc<ChatEvent, ChatState> implements ChatBloc {}
@@ -41,12 +42,13 @@ MessageModel _makeMsg({
   required String body,
   String senderId = 'uid-1',
   MessageType type = MessageType.text,
+  DateTime? sentAt,
 }) => MessageModel(
   id: id,
   senderId: senderId,
   body: body,
   type: type,
-  sentAt: DateTime(2026, 4, 29, 10),
+  sentAt: sentAt ?? DateTime(2026, 4, 29, 10),
 );
 
 Future<void> _pump(WidgetTester tester, ChatBloc bloc) async {
@@ -155,6 +157,37 @@ void main() {
       expect(find.text('Bonjour, colis reçu !'), findsOneWidget);
     });
 
+    // Régression finale F : 'd MMMM y' + 'HH:mm' fixes (AppL10n.localeName)
+    // → DateFormat.yMMMMd/.jm(l.localeName). Rendu fr identique à l'ancien
+    // motif pour le séparateur de date et l'horodatage du message.
+    testWidgets(
+      'date separator and message time render like the old fr pattern',
+      (tester) async {
+        final date = DateTime(2026, 10, 6, 14, 5);
+        when(() => bloc.state).thenReturn(
+          ChatLoaded([_makeMsg(id: 'm1', body: 'Bien reçu', sentAt: date)]),
+        );
+        await _pump(tester, bloc);
+
+        expect(find.text('6 octobre 2026'), findsOneWidget);
+        expect(find.text('14:05'), findsOneWidget);
+      },
+    );
+
+    testWidgets('date separator and message time render in English', (
+      tester,
+    ) async {
+      useEnglish();
+      final date = DateTime(2026, 10, 6, 14, 5);
+      when(() => bloc.state).thenReturn(
+        ChatLoaded([_makeMsg(id: 'm1', body: 'Got it', sentAt: date)]),
+      );
+      await _pump(tester, bloc);
+
+      expect(find.text(DateFormat.yMMMMd('en').format(date)), findsOneWidget);
+      expect(find.text(DateFormat.jm('en').format(date)), findsOneWidget);
+    });
+
     testWidgets('shows participant name in app bar', (tester) async {
       when(() => bloc.state).thenReturn(const ChatLoaded([]));
       await _pump(tester, bloc);
@@ -169,6 +202,28 @@ void main() {
       await _pump(tester, bloc);
 
       expect(find.text('Connexion interrompue'), findsOneWidget);
+    });
+
+    testWidgets(
+      'en anglais : état vide et titre de la barre de saisie traduits',
+      (tester) async {
+        useEnglish();
+        when(() => bloc.state).thenReturn(const ChatLoaded([]));
+        await _pump(tester, bloc);
+
+        expect(find.text('Start the conversation!'), findsOneWidget);
+        expect(find.text('Démarrez la conversation !'), findsNothing);
+      },
+    );
+
+    testWidgets('en anglais : état d\'erreur traduit', (tester) async {
+      useEnglish();
+      when(
+        () => bloc.state,
+      ).thenReturn(const ChatError(NetworkException('Erreur de connexion')));
+      await _pump(tester, bloc);
+
+      expect(find.text('Connection lost'), findsOneWidget);
     });
 
     testWidgets('footer texte : envoi présent, plus de bouton image/position', (

@@ -10,7 +10,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/l10n_test_helpers.dart';
 
 class MockMyReviewsBloc extends MockBloc<MyReviewsEvent, MyReviewsState>
     implements MyReviewsBloc {}
@@ -38,6 +41,25 @@ final _summaryWithReviews = RatingSummary(
       excluded: false,
     ),
     RatingItem(stars: 4, createdAt: DateTime.utc(2026, 4), excluded: false),
+  ],
+  page: 0,
+  totalPages: 1,
+);
+
+// Régression finale F : 'd MMM yyyy' fixe (AppL10n.localeName) + toUpperCase
+// → DateFormat.yMMMd(l.localeName).toUpperCase(). Rendu fr identique à
+// l'ancien motif.
+final _summaryWithDatedReview = RatingSummary(
+  averageRating: 5,
+  ratingCount: 1,
+  distribution: const {1: 0, 2: 0, 3: 0, 4: 0, 5: 1},
+  ratings: [
+    RatingItem(
+      stars: 5,
+      comment: 'Très bien !',
+      createdAt: DateTime(2026, 10, 6, 14, 5),
+      excluded: false,
+    ),
   ],
   page: 0,
   totalPages: 1,
@@ -99,7 +121,27 @@ void main() {
   });
 
   // 4. Affiche le score moyen quand des avis existent
-  testWidgets('shows average score when reviews exist', (tester) async {
+  // Correction R46 (fix round 1) : l'ancien code (`toStringAsFixed(1)`)
+  // affichait un point même en français ("4.5"). `formatOneDecimal` rend
+  // désormais la virgule française ("4,5"), déclarée ici comme accord.
+  testWidgets('shows average score with French comma when reviews exist', (
+    tester,
+  ) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(MyReviewsLoaded(summary: _summaryWithReviews));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('4,5'), findsOneWidget);
+    expect(find.text('4.5'), findsNothing);
+  });
+
+  testWidgets('shows average score with English dot when reviews exist', (
+    tester,
+  ) async {
+    useEnglish();
     when(
       () => bloc.state,
     ).thenReturn(MyReviewsLoaded(summary: _summaryWithReviews));
@@ -108,6 +150,32 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('4.5'), findsOneWidget);
+  });
+
+  testWidgets('shows review date like the old fr pattern', (tester) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(MyReviewsLoaded(summary: _summaryWithDatedReview));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('6 OCT. 2026'), findsOneWidget);
+  });
+
+  testWidgets('shows review date in English', (tester) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(MyReviewsLoaded(summary: _summaryWithDatedReview));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    final expected = DateFormat.yMMMd(
+      'en',
+    ).format(DateTime(2026, 10, 6, 14, 5)).toUpperCase();
+    expect(find.text(expected), findsOneWidget);
   });
 
   // 5. Affiche les barres de distribution
@@ -190,5 +258,36 @@ void main() {
     expect(find.text('Tout afficher'), findsOneWidget);
     // _summaryWithReviews a 1 avis 5★ et 1 avis 4★ → filtre 5★ ⇒ 1 visible.
     expect(find.text('AVIS 5★ · 1'), findsOneWidget);
+  });
+
+  testWidgets('titre et en-têtes traduits en anglais', (tester) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(MyReviewsLoaded(summary: _summaryWithReviews));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Reviews received'), findsOneWidget);
+    expect(find.text('REVIEWS RECEIVED'), findsOneWidget);
+    expect(find.text('From 3 reviews'), findsOneWidget);
+    expect(find.text('“Excellent envoi !”'), findsOneWidget);
+    expect(find.text('« Excellent envoi ! »'), findsNothing);
+  });
+
+  testWidgets('état vide traduit en anglais', (tester) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(const MyReviewsLoaded(summary: _emptySummary));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      find.textContaining("haven't received any reviews yet"),
+      findsOneWidget,
+    );
   });
 }

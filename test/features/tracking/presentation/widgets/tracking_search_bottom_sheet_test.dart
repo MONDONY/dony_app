@@ -8,6 +8,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockTrackingBloc extends Mock implements TrackingBloc {}
 
 class _FakeTrackingEvent extends Fake implements TrackingEvent {}
@@ -135,5 +137,30 @@ void main() {
         ),
       ),
     ).called(1);
+  });
+
+  testWidgets('titre et champ traduits en anglais', (tester) async {
+    useEnglish();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlocProvider<TrackingBloc>.value(
+          value: bloc,
+          child: Builder(
+            builder: (ctx) => TextButton(
+              onPressed: () => TrackingSearchBottomSheet.show(ctx),
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Search for a parcel'), findsOneWidget);
+    expect(find.text('Tracking number'), findsOneWidget);
+    expect(find.text('Search'), findsOneWidget);
   });
 }

@@ -10,15 +10,18 @@ import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.d
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-const _etapeLabels = <String, (String, String?, String?)>{
-  'DEPART': ('Départ', null, 'plane-takeoff'),
-  'TRANSIT': ('Transit', 'arrow-left-right', null),
-  'ARRIVEE': ('Arrivée', null, 'plane-landing'),
+// Icônes uniquement : le libellé se calcule via trackingStepLabel.
+const _etapeIcons = <String, (String?, String?)>{
+  'DEPART': (null, 'plane-takeoff'),
+  'TRANSIT': ('arrow-left-right', null),
+  'ARRIVEE': (null, 'plane-landing'),
 };
 
 class ScanConfirmScreen extends StatefulWidget {
@@ -82,20 +85,22 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final etapeInfo = _etapeLabels[widget.etape];
+    final l = context.l10n;
+    final etapeIcons = _etapeIcons[widget.etape];
+    final etapeLabel = trackingStepLabel(l, widget.etape);
     final bottomPad = MediaQuery.of(context).padding.bottom;
-    final locationLabel = _displayLocationLabel();
+    final locationLabel = _displayLocationLabel(l);
 
     return BlocConsumer<TrackingBloc, TrackingState>(
       listener: (context, state) {
         if (state is QrScanSuccess) {
-          _showSuccess(context, state.event.stepLabel);
+          _showSuccess(context, state.event.stepLabel(l));
         } else if (state is QrScanQueued) {
           _showQueued(context);
         } else if (state is DeliveryConfirmSuccess) {
           _navigateToDeliverySuccess(
             context,
-            state.event.stepLabel,
+            state.event.stepLabel(l),
             finalBidId: state.event.bidId,
           );
         }
@@ -113,7 +118,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
             elevation: 0,
             scrolledUnderElevation: 0,
             centerTitle: false,
-            title: Text('Confirmer la lecture', style: tt.headlineLarge),
+            title: Text(l.scanConfirmReadingLabel, style: tt.headlineLarge),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(1),
               child: Divider(height: 1, color: cs.outline),
@@ -131,11 +136,11 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Chip étape
-                if (etapeInfo != null)
+                if (etapeIcons != null)
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Chip(
-                      avatar: switch (etapeInfo.$3) {
+                      avatar: switch (etapeIcons.$2) {
                         'plane-takeoff' => const DonyEmoji.planeTakeoff(
                           size: 14,
                         ),
@@ -143,12 +148,12 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                           size: 14,
                         ),
                         _ => DonyIcon(
-                          etapeInfo.$2!,
+                          etapeIcons.$1!,
                           size: 14,
                           color: cs.primary,
                         ),
                       },
-                      label: Text('${etapeInfo.$1} enregistrée'),
+                      label: Text(l.scanStepRecorded(widget.etape)),
                       labelStyle: tt.labelSmall?.copyWith(
                         color: cs.primary,
                         fontWeight: FontWeight.w700,
@@ -186,15 +191,13 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                         child: Column(
                           children: [
                             _MetaRow(
-                              label: 'Colis',
+                              label: l.scanConfirmParcelLabel,
                               value: widget.packageLabel,
                             ),
                             const Divider(height: DonySpacing.base),
                             _MetaRow(
-                              label: 'Étape',
-                              value: etapeInfo != null
-                                  ? etapeInfo.$1
-                                  : widget.etape,
+                              label: l.scanConfirmStepLabel,
+                              value: etapeLabel,
                             ),
                             if (locationLabel != null) ...[
                               const SizedBox(height: DonySpacing.sm),
@@ -253,7 +256,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                         const SizedBox(width: DonySpacing.sm),
                         Expanded(
                           child: Text(
-                            'Demandez le code à 6 chiffres au destinataire.',
+                            l.scanConfirmConfirmationCodeHint,
                             style: tt.bodySmall?.copyWith(
                               color: cs.onPrimaryContainer,
                               fontWeight: FontWeight.w500,
@@ -299,8 +302,8 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                 // Bouton principal
                 DonyButton(
                   label: _isArrivee
-                      ? 'Confirmer la livraison'
-                      : 'Valider la lecture',
+                      ? l.scanConfirmDeliveryButton
+                      : l.scanValidateReadingButton,
                   iconAsset: _isArrivee ? 'badge-check' : 'check',
                   onPressed: isSubmitting ? null : () => _submit(context),
                   isLoading: isSubmitting,
@@ -317,7 +320,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                       size: 16,
                       color: cs.onSurfaceVariant,
                     ),
-                    label: const Text('Reprendre la photo'),
+                    label: Text(l.scanRetakePhotoButton),
                     style: TextButton.styleFrom(
                       foregroundColor: cs.onSurfaceVariant,
                     ),
@@ -347,16 +350,17 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
     );
   }
 
-  String? _displayLocationLabel() {
+  String? _displayLocationLabel(AppLocalizations l) {
     final label = widget.gpsLabel?.trim();
     if (label != null && label.isNotEmpty) return label;
     if (widget.gpsLat != null && widget.gpsLon != null) {
-      return 'Lieu GPS enregistré';
+      return l.scanGpsLocationSaved;
     }
     return null;
   }
 
   void _showSuccess(BuildContext context, String label) {
+    final l = context.l10n;
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -373,7 +377,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
-              'Lecture enregistrée !',
+              l.scanRecordedTitle,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -399,7 +403,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                   borderRadius: BorderRadius.circular(DonyRadius.lg),
                 ),
               ),
-              child: const Text('Terminé'),
+              child: Text(l.commonDone),
             ),
           ),
         ],
@@ -412,19 +416,19 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
     String label, {
     required String finalBidId,
   }) {
+    final l = context.l10n;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => DonySuccessScreen(
           mascotteType: DonyMascotteType.succes,
-          title: 'Colis livré !',
+          title: l.scanParcelDeliveredTitle,
           subtitle: label,
-          ctaLabel: 'Terminer',
+          ctaLabel: l.scanTerminateButton,
           ctaVariant: DonyButtonVariant.success,
           onCta: () async {
             await RatingBottomSheet.show(
               context,
               bidId: finalBidId,
-              travelerName: "l'expéditeur",
               isTravelerRating: true,
             );
             if (!context.mounted) return;
@@ -439,6 +443,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
 
   void _showQueued(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -459,12 +464,12 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
-              'Lecture en attente',
+              l.scanQueuedTitle,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: DonySpacing.sm),
             Text(
-              'Pas de connexion. La lecture sera synchronisée dès que vous serez en ligne.',
+              l.scanConfirmQueuedNoConnectionBody,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: cs.onSurfaceVariant,
@@ -488,7 +493,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                   borderRadius: BorderRadius.circular(DonyRadius.lg),
                 ),
               ),
-              child: const Text('Compris'),
+              child: Text(l.scanUnderstoodButton),
             ),
           ),
         ],

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Sélecteur de note, de 1 à 5 étoiles.
@@ -41,7 +42,7 @@ class StarSelector extends StatelessWidget {
               // La note choisie, pas « toutes les étoiles jusqu'à elle » :
               // c'est la valeur qui est sélectionnée, pas le remplissage.
               selected: index == selected,
-              label: 'Noter $index sur 5',
+              label: context.l10n.ratingStarsSemantics(index),
               container: true,
               excludeSemantics: true,
               child: GestureDetector(

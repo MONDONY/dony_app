@@ -11,6 +11,8 @@ import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
+import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -101,7 +103,6 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               RatingBottomSheet.show(
                 context,
                 bidId: confirmedBidId,
-                travelerName: "l'expéditeur",
                 isTravelerRating: true,
               );
             });
@@ -114,12 +115,13 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return BlocListener<TrackingBloc, TrackingState>(
       listener: (context, state) {
         if (state is QrScanSuccess) {
           context.pop(); // close sheet
-          _showSuccessDialog(state.event.stepLabel);
+          _showSuccessDialog(state.event.eventType, state.event.stepLabel(l));
         } else if (state is QrScanQueued) {
           context.pop(); // close sheet
           _showQueuedDialog();
@@ -150,12 +152,12 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       IconButton(
                         icon: const DonyIcon('x', color: DonyColors.white),
                         onPressed: () => context.pop(),
-                        tooltip: 'Fermer',
+                        tooltip: l.commonClose,
                       ),
                       // Title centered
                       Expanded(
                         child: Text(
-                          'Lecture au départ',
+                          l.scanDepartureTitle,
                           textAlign: TextAlign.center,
                           style: tt.bodyMedium?.copyWith(
                             color: DonyColors.white,
@@ -167,36 +169,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       IconButton(
                         icon: const DonyIcon('zap', color: DonyColors.white),
                         onPressed: () => _scanner.toggleTorch(),
-                        tooltip: 'Lampe torche',
+                        tooltip: l.scanTorchTooltip,
                       ),
                     ],
                   ),
                 ),
-              ),
-
-              // Context text below top bar
-              Positioned(
-                top: 72,
-                left: 0,
-                right: 0,
-                child: Column(
-                  children: [
-                    Text(
-                      'colis #A47C',
-                      style: tt.labelMedium?.copyWith(
-                        color: DonyColors.white.withValues(alpha: 0.6),
-                      ),
-                    ),
-                    const SizedBox(height: DonySpacing.xs),
-                    Text(
-                      'Bonjour Aminata 👋',
-                      style: DonyTypography.caveat(
-                        fontSize: 28,
-                        color: DonyColors.white,
-                      ),
-                    ),
-                  ],
-                ).animate().fadeIn(duration: 400.ms),
               ),
 
               // QR scanner frame (center)
@@ -225,7 +202,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                     children: [
                       // Step indicator
                       Text(
-                        'ÉTAPE 1 SUR 3',
+                        l.scanStepIndicatorStatic,
                         style: tt.labelSmall?.copyWith(
                           color: DonyColors.white,
                           letterSpacing: 1.0,
@@ -233,7 +210,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       ),
                       const SizedBox(height: DonySpacing.xs),
                       Text(
-                        'Colis confirmé en valise',
+                        l.scanConfirmedInSuitcase,
                         style: tt.bodySmall?.copyWith(color: DonyColors.white),
                       ),
                       const SizedBox(height: DonySpacing.base),
@@ -250,7 +227,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                                 size: 18,
                               ),
                               label: Text(
-                                'Photo',
+                                l.scanPhotoWordLabel,
                                 style: tt.labelLarge?.copyWith(
                                   color: DonyColors.white,
                                 ),
@@ -274,7 +251,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                           Expanded(
                             flex: 2,
                             child: DonyButton(
-                              label: 'Confirmer & continuer',
+                              label: l.scanConfirmAndContinue,
                               iconAsset: 'check',
                               onPressed: _showManualEntryDialog,
                             ),
@@ -295,6 +272,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   void _showManualEntryDialog() {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     _scanner.stop();
     final ctrl = TextEditingController();
     bool loading = false;
@@ -306,13 +284,16 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DonyRadius.sheet),
           ),
-          title: Text('Numéro de suivi', style: tt.headlineMedium),
+          title: Text(
+            l.scanTrackingNumberDialogTitle,
+            style: tt.headlineMedium,
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Entrez le numéro DON-XXXXXX du colis à lire.',
+                l.scanTrackingNumberDialogBody,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.md),
@@ -320,7 +301,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 controller: ctrl,
                 textCapitalization: TextCapitalization.characters,
                 decoration: InputDecoration(
-                  hintText: 'DON-XXXXXX',
+                  hintText: 'DON-XXXXXX', // i18n-ignore: format de numéro
                   hintStyle: tt.bodyMedium?.copyWith(
                     color: cs.onSurfaceVariant,
                   ),
@@ -350,7 +331,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       _resumeScanning();
                     },
               child: Text(
-                'Annuler',
+                l.commonCancel,
                 style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
@@ -377,8 +358,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         if (mounted) {
                           DonySnackbar.show(
                             context,
-                            message:
-                                'Numéro introuvable. Vérifiez et réessayez.',
+                            message: l.scanNumberNotFound,
                             type: DonySnackbarType.error,
                           );
                         }
@@ -401,7 +381,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         color: cs.onPrimary,
                       ),
                     )
-                  : Text('Confirmer', style: tt.labelLarge),
+                  : Text(l.commonConfirm, style: tt.labelLarge),
             ),
           ],
         ),
@@ -414,6 +394,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   void _showQueuedDialog() {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -434,12 +415,12 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
-              'Lecture en attente',
+              l.scanQueuedTitle,
               style: tt.headlineMedium?.copyWith(color: cs.onSurface),
             ),
             const SizedBox(height: DonySpacing.sm),
             Text(
-              'Pas de connexion internet. La lecture sera synchronisée automatiquement dès que vous serez en ligne.',
+              l.scanQueuedNoConnectionBodyLong,
               textAlign: TextAlign.center,
               style: tt.bodySmall?.copyWith(
                 color: cs.onSurfaceVariant,
@@ -464,7 +445,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                   borderRadius: BorderRadius.circular(DonyRadius.lg),
                 ),
               ),
-              child: Text('Compris', style: tt.labelLarge),
+              child: Text(l.scanUnderstoodButton, style: tt.labelLarge),
             ),
           ),
         ],
@@ -472,14 +453,15 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     );
   }
 
-  void _showSuccessDialog(String label) {
+  void _showSuccessDialog(String eventType, String label) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final isFinal = isFinalDeliveryStep(label);
+    final l = context.l10n;
+    final isFinal = isFinalDeliveryStep(eventType);
     final mascotteType = isFinal
         ? DonyMascotteType.securise
         : DonyMascotteType.confiant;
-    final title = isFinal ? 'Colis livré !' : 'Lecture enregistrée !';
+    final title = isFinal ? l.scanParcelDeliveredTitle : l.scanRecordedTitle;
 
     showDialog<void>(
       context: context,
@@ -524,7 +506,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                   borderRadius: BorderRadius.circular(DonyRadius.lg),
                 ),
               ),
-              child: Text('Terminé', style: tt.labelLarge),
+              child: Text(l.commonDone, style: tt.labelLarge),
             ),
           ),
         ],
@@ -533,15 +515,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   }
 }
 
-/// Renvoie true si le label correspond à une étape de livraison finale.
+/// Renvoie true si le code d'étape correspond à une livraison finale.
 ///
-/// Le `stepLabel` est une chaîne libre côté serveur ; ce matching est
-/// pragmatique pour le MVP. Si un enum d'événement est exposé plus tard,
-/// migrer vers un match d'enum.
-bool isFinalDeliveryStep(String label) {
-  final l = label.toLowerCase();
-  return l.contains('livr') || l.contains('remis') || l.contains('deliver');
-}
+/// Compare `eventType`, la donnée serveur (`DEPART`/`TRANSIT`/`ARRIVEE`),
+/// jamais le libellé traduit affiché à l'écran.
+bool isFinalDeliveryStep(String eventType) => eventType == 'ARRIVEE';
 
 // ── Scan frame overlay ────────────────────────────────────────────────────────
 
@@ -663,7 +641,7 @@ class _ScanConfirmSheet extends StatefulWidget {
 }
 
 class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
-  String _eventType = 'DEPART';
+  String _eventType = 'DEPART'; // i18n-ignore: valeur de donnée (eventType)
   XFile? _photo;
   Position? _position;
   String? _gpsLabel;
@@ -671,10 +649,12 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
   bool _photoTooBig = false;
   final _codeController = TextEditingController();
 
-  final _eventTypes = <(String, String, String?, String?)>[
-    ('DEPART', 'Départ', null, 'plane-takeoff'),
-    ('TRANSIT', 'Transit', 'arrow-left-right', null),
-    ('ARRIVEE', 'Arrivée', null, 'plane-landing'),
+  // Codes + icônes uniquement : le libellé se calcule dans build() via
+  // trackingStepLabel, jamais gardé en dur dans un champ de State.
+  static const _eventTypes = <(String, String?, String?)>[
+    ('DEPART', null, 'plane-takeoff'),
+    ('TRANSIT', 'arrow-left-right', null),
+    ('ARRIVEE', null, 'plane-landing'),
   ];
 
   @override
@@ -727,7 +707,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
         });
         DonySnackbar.show(
           context,
-          message: 'Photo trop lourde (max ${e.maxMb} Mo). Réessayez.',
+          message: context.l10n.scanPhotoTooLarge(e.maxMb),
           type: DonySnackbarType.error,
         );
       }
@@ -739,11 +719,12 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
   Future<void> _writeGpsExif(String path, Position pos) async {
     try {
       final exif = await Exif.fromPath(path);
+      // Clés EXIF standard — jamais traduites (i18n-ignore).
       await exif.writeAttributes({
-        'GPSLatitude': _toExifDms(pos.latitude.abs()),
-        'GPSLatitudeRef': pos.latitude >= 0 ? 'N' : 'S',
-        'GPSLongitude': _toExifDms(pos.longitude.abs()),
-        'GPSLongitudeRef': pos.longitude >= 0 ? 'E' : 'W',
+        'GPSLatitude': _toExifDms(pos.latitude.abs()), // i18n-ignore
+        'GPSLatitudeRef': pos.latitude >= 0 ? 'N' : 'S', // i18n-ignore
+        'GPSLongitude': _toExifDms(pos.longitude.abs()), // i18n-ignore
+        'GPSLongitudeRef': pos.longitude >= 0 ? 'E' : 'W', // i18n-ignore
       });
       await exif.close();
     } catch (_) {}
@@ -818,6 +799,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Container(
@@ -867,10 +849,12 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
 
               Row(
                 children: [
-                  Expanded(child: Text('QR lu', style: tt.headlineMedium)),
+                  Expanded(
+                    child: Text(l.scanQrReadTitle, style: tt.headlineMedium),
+                  ),
                   if (!isSubmitting)
                     IconButton(
-                      tooltip: 'Fermer',
+                      tooltip: l.commonClose,
                       icon: DonyIcon('x', color: cs.onSurfaceVariant),
                       onPressed: () {
                         context.pop();
@@ -884,7 +868,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
 
               // Event type selector
               Text(
-                'Type d\'étape',
+                l.scanEventTypeSectionLabel,
                 style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.sm),
@@ -914,9 +898,9 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                         ),
                         child: Column(
                           children: [
-                            if (type.$4 != null)
+                            if (type.$3 != null)
                               DonyIcon(
-                                type.$4!,
+                                type.$3!,
                                 color: isSelected
                                     ? cs.onPrimary
                                     : cs.onSurfaceVariant,
@@ -924,7 +908,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                               )
                             else
                               DonyIcon(
-                                type.$3!,
+                                type.$2!,
                                 color: isSelected
                                     ? cs.onPrimary
                                     : cs.onSurfaceVariant,
@@ -932,7 +916,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                               ),
                             const SizedBox(height: DonySpacing.xs),
                             Text(
-                              type.$2,
+                              trackingStepLabel(l, type.$1),
                               style: tt.labelSmall?.copyWith(
                                 color: isSelected
                                     ? cs.onPrimary
@@ -952,7 +936,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
               // ARRIVEE: code input — DEPART/TRANSIT: photo
               if (isArrivee) ...[
                 Text(
-                  'Code de confirmation',
+                  l.scanConfirmationCodeLabel,
                   style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: DonySpacing.sm),
@@ -972,7 +956,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: Text(
-                          'Demandez le code à 6 chiffres au destinataire. Il l\'a reçu de l\'expéditeur.',
+                          l.scanConfirmationCodeHintLong,
                           style: tt.bodySmall?.copyWith(
                             color: cs.onPrimaryContainer,
                             fontWeight: FontWeight.w500,
@@ -1014,7 +998,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                 ),
               ] else ...[
                 Text(
-                  'Photo du colis',
+                  l.scanPhotoOfParcelLabel,
                   style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: DonySpacing.sm),
@@ -1049,7 +1033,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                                   ),
                                   const SizedBox(width: DonySpacing.sm),
                                   Text(
-                                    'Prendre une photo',
+                                    l.commonTakePhoto,
                                     style: tt.titleSmall?.copyWith(
                                       color: cs.primary,
                                     ),
@@ -1090,7 +1074,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                             button: true,
                             container: true,
                             excludeSemantics: true,
-                            label: 'Supprimer la photo',
+                            label: l.scanRemovePhotoSemantics,
                             child: GestureDetector(
                               onTap: () => setState(() => _photo = null),
                               child: Container(
@@ -1122,7 +1106,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                       Text(
                         _gpsLabel?.trim().isNotEmpty == true
                             ? _gpsLabel!.trim()
-                            : 'Lieu GPS enregistré',
+                            : l.scanGpsLocationSaved,
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -1138,7 +1122,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                       const SizedBox(width: DonySpacing.xs),
                       Expanded(
                         child: Text(
-                          'Photo trop lourde (max 10 MB). Réessayez.',
+                          l.scanPhotoTooLargeFixed,
                           style: tt.bodySmall?.copyWith(
                             color: cs.error,
                             fontWeight: FontWeight.w500,
@@ -1155,10 +1139,12 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
               // Submit button
               DonyButton(
                 label: isSubmitting
-                    ? (isArrivee ? 'Confirmation...' : 'Enregistrement...')
+                    ? (isArrivee
+                          ? l.scanSubmittingConfirmation
+                          : l.scanSubmittingRecording)
                     : (isArrivee
-                          ? 'Confirmer la livraison'
-                          : 'Confirmer la lecture'),
+                          ? l.scanConfirmDeliveryButton
+                          : l.scanConfirmReadingLabel),
                 iconAsset: isArrivee ? 'badge-check' : 'check',
                 onPressed: isSubmitting ? null : () => _submit(context),
                 isLoading: isSubmitting,

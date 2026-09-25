@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 late Directory _tempDir;
 late HiveService _hiveService;
 
@@ -123,6 +125,61 @@ void main() {
       await tester.pump();
       expect(
         find.text('Continuez les lectures même sans réseau.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('anglais — titre, badge et pied de page traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(_buildApp());
+      await tester.pump();
+      expect(find.text('Offline scans'), findsOneWidget);
+      expect(find.text('Offline'), findsOneWidget);
+      expect(find.text('QUEUE (2)'), findsOneWidget);
+      expect(
+        find.text('Keep scanning even without a network connection.'),
+        findsOneWidget,
+      );
+    });
+  });
+
+  group('OfflineScanQueueScreen — correction d\'accord à 1', () {
+    setUp(() async {
+      final now = DateTime.now().toUtc();
+      await Hive.box<Map>(HiveService.offlineQueueBox).addAll([
+        {
+          'bidId': 'A47C000000',
+          'eventType': 'PICKUP',
+          'offlineTimestamp': now
+              .subtract(const Duration(minutes: 2))
+              .toIso8601String(),
+        },
+      ]);
+    });
+
+    testWidgets('affiche "1 lecture en attente" (pas "1 lectures") — fr', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildApp());
+      await tester.pump();
+      expect(
+        find.textContaining(
+          '1 lecture en attente. On l\'enverra dès que vous récupérez du réseau.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('anglais — "1 scan pending"', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_buildApp());
+      await tester.pump();
+      expect(
+        find.textContaining(
+          '1 scan pending. We\'ll send it as soon as you\'re back online.',
+        ),
         findsOneWidget,
       );
     });

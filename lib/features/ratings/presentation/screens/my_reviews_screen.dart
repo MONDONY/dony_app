@@ -31,7 +31,7 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
   @override
   Widget build(BuildContext context) {
     return DonyPageScaffold(
-      title: 'Mes avis reçus',
+      title: context.l10n.ratingMyReviewsTitle,
       scrollable: false,
       body: BlocBuilder<MyReviewsBloc, MyReviewsState>(
         builder: (context, state) {
@@ -96,11 +96,10 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const DonyEmptyState(
+    return DonyEmptyState(
       mascotte: DonyMascotteType.assis,
-      title: "Tu n'as pas encore reçu d'avis",
-      description:
-          'Les notes et commentaires laissés par les voyageurs apparaîtront ici.',
+      title: context.l10n.ratingEmptyTitle,
+      description: context.l10n.ratingEmptyDescription,
     );
   }
 }
@@ -118,9 +117,9 @@ class _ErrorView extends StatelessWidget {
       mascotte: DonyMascotteType.erreurLegere,
       type: DonyEmptyStateType.error,
       iconAsset: 'circle-alert',
-      title: 'Impossible de charger les avis',
+      title: context.l10n.ratingLoadErrorTitle,
       description: message,
-      actionLabel: 'Réessayer',
+      actionLabel: context.l10n.commonRetry,
       onAction: () =>
           context.read<MyReviewsBloc>().add(const MyReviewsRequested()),
     );
@@ -177,8 +176,11 @@ class _LoadedView extends StatelessWidget {
                 Expanded(
                   child: Text(
                     selected == null
-                        ? 'AVIS REÇUS'
-                        : 'AVIS $selected★ · ${visible.length}',
+                        ? context.l10n.ratingReceivedHeader
+                        : context.l10n.ratingFilteredHeader(
+                            selected,
+                            visible.length,
+                          ),
                     style: tt.labelMedium?.copyWith(
                       color: cs.onSurfaceVariant,
                       letterSpacing: 1.4,
@@ -203,7 +205,7 @@ class _LoadedView extends StatelessWidget {
                           DonyIcon('x', size: 14, color: cs.primary),
                           const SizedBox(width: 4),
                           Text(
-                            'Tout afficher',
+                            context.l10n.ratingShowAll,
                             style: tt.labelMedium?.copyWith(
                               color: cs.primary,
                               fontWeight: FontWeight.w700,
@@ -262,7 +264,7 @@ class _HeaderSummary extends StatelessWidget {
       children: [
         // Score géant (display) — calme, couleur encre.
         Text(
-          summary.averageRating.toStringAsFixed(1),
+          formatOneDecimal(context.l10n, summary.averageRating),
           style: tt.displayLarge?.copyWith(
             color: cs.onSurface,
             fontWeight: FontWeight.w800,
@@ -287,7 +289,7 @@ class _HeaderSummary extends StatelessWidget {
         ),
         const SizedBox(height: DonySpacing.sm),
         Text(
-          'Sur ${summary.ratingCount} avis reçus',
+          context.l10n.ratingTotalReceived(summary.ratingCount),
           style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.lg),
@@ -340,7 +342,7 @@ class _RatingBar extends StatelessWidget {
     return Semantics(
       button: !disabled,
       selected: selected,
-      label: '$stars étoiles, $count avis',
+      label: context.l10n.ratingDistributionSemantics(stars, count),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -424,13 +426,13 @@ class _ReviewItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final dateStr = DateFormat(
-      'd MMM yyyy',
-      AppL10n.localeName,
+    final l = context.l10n;
+    final dateStr = DateFormat.yMMMd(
+      l.localeName,
     ).format(item.createdAt).toUpperCase();
     final name = (item.authorName?.trim().isNotEmpty ?? false)
         ? item.authorName!.trim()
-        : 'Utilisateur Yadony';
+        : l.ratingAuthorFallbackName;
     final corridor = _corridor;
 
     return Padding(
@@ -491,7 +493,7 @@ class _ReviewItem extends StatelessWidget {
               if (item.comment != null && item.comment!.isNotEmpty) ...[
                 const SizedBox(height: DonySpacing.md),
                 Text(
-                  '« ${item.comment!} »',
+                  l.ratingQuotedComment(item.comment!),
                   style: tt.bodyLarge?.copyWith(
                     color: cs.onSurface,
                     height: 1.5,
@@ -512,7 +514,7 @@ class _ReviewItem extends StatelessWidget {
               if (item.excluded) ...[
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Avis exclu du calcul',
+                  l.ratingExcludedNotice,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],

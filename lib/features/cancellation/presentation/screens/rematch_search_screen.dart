@@ -16,6 +16,7 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -119,7 +120,7 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
       _loadingSuggestionId.value = null;
       DonySnackbar.show(
         context,
-        message: 'Cette annonce n\'est plus disponible',
+        message: context.l10n.rematchAnnouncementUnavailable,
         type: DonySnackbarType.error,
       );
     }
@@ -132,7 +133,7 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
     return BlocListener<AnnouncementBloc, AnnouncementState>(
       listener: _onAnnouncementState,
       child: Scaffold(
-        appBar: const DonyAppBar(title: 'Alternatives disponibles'),
+        appBar: DonyAppBar(title: context.l10n.rematchAlternativesTitle),
         body: cancellation != null
             ? _RematchBody(
                 suggestions: cancellation.rematchSuggestions,
@@ -154,9 +155,9 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
                     return DonyEmptyState(
                       type: DonyEmptyStateType.error,
                       mascotte: DonyMascotteType.erreurLegere,
-                      title: 'Erreur de chargement',
+                      title: context.l10n.commonLoadError,
                       description: ErrorPresenter.resolve(state.error).message,
-                      actionLabel: 'Réessayer',
+                      actionLabel: context.l10n.commonRetry,
                       onAction: () => context.read<CancellationBloc>().add(
                         RematchSuggestionsRequested(widget.cancellationId),
                       ),
@@ -213,6 +214,7 @@ class _RematchBody extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final h = DonyLayout.hPadding(context);
+    final l = context.l10n;
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(h, DonySpacing.lg, h, DonySpacing.huge),
@@ -228,15 +230,14 @@ class _RematchBody extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.xl),
             if (suggestions.isEmpty)
-              const DonyEmptyState(
+              DonyEmptyState(
                 mascotte: DonyMascotteType.assis,
-                title: 'Aucun voyageur disponible',
-                description:
-                    'Aucun voyageur disponible dans les 72h — votre remboursement est traité',
+                title: l.rematchNoTravelersTitle,
+                description: l.rematchNoTravelersDescription,
               )
             else ...[
               Text(
-                '${suggestions.length} voyageur${suggestions.length > 1 ? 's' : ''} disponible${suggestions.length > 1 ? 's' : ''}',
+                l.rematchTravelersAvailable(suggestions.length),
                 style: tt.titleLarge?.copyWith(color: cs.onSurface),
               ),
               const SizedBox(height: DonySpacing.base),
@@ -288,7 +289,7 @@ class _RematchBody extends StatelessWidget {
             ],
             const SizedBox(height: DonySpacing.lg),
             DonyButton(
-              label: 'Retour à l\'accueil',
+              label: l.rematchBackHomeAction,
               onPressed: () => context.go('/home'),
               variant: DonyButtonVariant.ghost,
             ),
@@ -312,6 +313,7 @@ class _ConfirmationBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = affectedCount;
+    final l = context.l10n;
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
@@ -327,7 +329,7 @@ class _ConfirmationBanner extends StatelessWidget {
               DonyIcon('circle-check', color: cs.success, size: 20),
               const SizedBox(width: DonySpacing.sm),
               Text(
-                'Trajet annulé',
+                l.rematchTripCancelledTitle,
                 style: tt.titleMedium?.copyWith(color: cs.success),
               ),
             ],
@@ -335,8 +337,8 @@ class _ConfirmationBanner extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           Text(
             count != null
-                ? '$count expéditeur${count > 1 ? 's' : ''} remboursé${count > 1 ? 's' : ''} automatiquement.'
-                : 'Votre remboursement est en cours.',
+                ? l.rematchSendersRefunded(count)
+                : l.rematchRefundInProgress,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],

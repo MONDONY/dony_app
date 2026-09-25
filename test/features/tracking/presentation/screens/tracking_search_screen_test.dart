@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockTrackingBloc extends Mock implements TrackingBloc {}
 
 class _FakeTrackingEvent extends Fake implements TrackingEvent {}
@@ -91,5 +93,34 @@ void main() {
 
       expect(find.text('Instructions de retrait'), findsNothing);
     });
+  });
+
+  testWidgets('title and search form are translated in English', (
+    tester,
+  ) async {
+    useEnglish();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+
+    await _pump(tester, bloc);
+
+    expect(find.text('Track a parcel'), findsOneWidget);
+    expect(find.text('Tracking number'), findsWidgets);
+    expect(find.text('Search'), findsOneWidget);
+  });
+
+  // Régression finale F (Mineur 8 de la relecture) : le test précédent
+  // affirmait tester la frise de statut sur TrackingInitial, où elle n'est
+  // jamais rendue. La frise (_StepTimeline) n'apparaît qu'avec un résultat
+  // chargé.
+  testWidgets('status timeline steps are translated in English', (
+    tester,
+  ) async {
+    useEnglish();
+    when(() => bloc.state).thenReturn(TrackingSearchLoaded(_result()));
+
+    await _pump(tester, bloc);
+
+    expect(find.text('Dropped off'), findsOneWidget);
+    expect(find.text('Delivered'), findsOneWidget);
   });
 }

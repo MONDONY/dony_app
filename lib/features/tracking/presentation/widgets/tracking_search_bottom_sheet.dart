@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -15,16 +16,17 @@ class TrackingSearchBottomSheet extends StatefulWidget {
   static Future<void> show(BuildContext context) {
     final trackingBloc = context.read<TrackingBloc>();
     VoidCallback? submit;
+    final l = context.l10n;
     return DonyBottomSheet.show(
       context,
-      title: 'Rechercher un colis',
-      subtitle: 'Format : DON-XXXXXX',
+      title: l.trackingSearchSheetTitle,
+      subtitle: l.trackingSearchSheetSubtitle,
       wrapper: (child) => BlocProvider.value(value: trackingBloc, child: child),
       stickyBottom: BlocBuilder<TrackingBloc, TrackingState>(
         builder: (ctx, state) {
           final isLoading = state is TrackingSearchLoading;
           return DonyButton(
-            label: 'Rechercher',
+            label: l.trackingSearchSubmit,
             iconAsset: 'search',
             isLoading: isLoading,
             onPressed: isLoading ? null : () => submit?.call(),
@@ -78,8 +80,9 @@ class _TrackingSearchBottomSheetState extends State<TrackingSearchBottomSheet> {
           textCapitalization: TextCapitalization.characters,
           enabled: !isLoading,
           decoration: InputDecoration(
-            labelText: 'Numéro de suivi',
-            hintText: 'DON-481234',
+            labelText: context.l10n.trackingSearchNumberLabel,
+            hintText:
+                'DON-481234', // i18n-ignore — exemple de format, pas un mot
             prefixIcon: const DonyIcon('qr-code', size: 20),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(DonyRadius.md),

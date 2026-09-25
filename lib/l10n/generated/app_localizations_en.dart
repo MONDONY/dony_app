@@ -9518,4 +9518,873 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walletActiveCurrencyBadge => 'active';
+
+  @override
+  String get chatPreviewPhoto => '📷 Photo';
+
+  @override
+  String get chatPreviewLocation => '📍 Shared location';
+
+  @override
+  String chatBlockedLength(int max) {
+    return 'Message too long ($max characters max).';
+  }
+
+  @override
+  String get chatBlockedDuplicate => 'You just sent this message.';
+
+  @override
+  String get chatBlockedRate =>
+      'You\'re sending too many messages. Wait a moment.';
+
+  @override
+  String get chatBlockedContact =>
+      'For your safety, keep conversations and payment on Yadony. Sharing contact details isn\'t allowed.';
+
+  @override
+  String get chatBlockedBanking => 'Sharing bank details isn\'t allowed.';
+
+  @override
+  String get chatBlockedUrl => 'External links aren\'t allowed in messages.';
+
+  @override
+  String get chatBlockedProfanity =>
+      'Keep it polite: this message contains banned words.';
+
+  @override
+  String get chatDeleteConversationTitle => 'Delete conversation';
+
+  @override
+  String get chatDeleteConversationMessage =>
+      'This conversation will be permanently deleted for you and the other person. It can\'t be recreated.';
+
+  @override
+  String get chatUnknownConversationLabel => 'Conversation';
+
+  @override
+  String get chatCallTooltip => 'Call';
+
+  @override
+  String chatReportUser(String name) {
+    return 'Report $name';
+  }
+
+  @override
+  String chatBlockUser(String name) {
+    return 'Block $name';
+  }
+
+  @override
+  String get chatConversationDeletedSnackbar => 'Conversation deleted';
+
+  @override
+  String get chatConnectionLostTitle => 'Connection lost';
+
+  @override
+  String get chatEmptyStateTitle => 'Start the conversation!';
+
+  @override
+  String get chatReadOnlyBannerMessage =>
+      'The other person has left this conversation. You\'re in read-only mode.';
+
+  @override
+  String get chatLinkedTripLabel => 'Linked trip';
+
+  @override
+  String get chatBidStatusAccepted => 'Offer accepted';
+
+  @override
+  String get chatBidStatusDeliveryConfirmed => 'Delivery confirmed';
+
+  @override
+  String get chatBidStatusTripCancelled => 'Trip canceled';
+
+  @override
+  String get chatMessageDeleted => 'Message deleted';
+
+  @override
+  String get chatLocationMessageLabel => 'Shared location';
+
+  @override
+  String get chatSendingDisabled => 'Sending messages is disabled';
+
+  @override
+  String get chatMessageHint => 'Your message…';
+
+  @override
+  String get chatSendMessageSemantics => 'Send message';
+
+  @override
+  String get conversationListTitle => 'Messages';
+
+  @override
+  String get conversationListArchivedTooltip => 'View archived conversations';
+
+  @override
+  String get conversationListSearchHint => 'Search conversations…';
+
+  @override
+  String get conversationListEmptyResultsTitle => 'No results';
+
+  @override
+  String get conversationListEmptyTitle => 'No messages';
+
+  @override
+  String conversationListEmptySearchDescription(String query) {
+    return 'No conversation matches “$query”.';
+  }
+
+  @override
+  String get conversationListEmptyDescription =>
+      'Your conversations will appear here\nonce an offer is accepted.';
+
+  @override
+  String get conversationFilterAll => 'All';
+
+  @override
+  String get conversationFilterUnread => 'Unread';
+
+  @override
+  String get conversationFilterActive => 'Active';
+
+  @override
+  String get conversationFilterDone => 'Done';
+
+  @override
+  String get conversationSectionToday => 'TODAY';
+
+  @override
+  String get conversationSectionThisWeek => 'THIS WEEK';
+
+  @override
+  String get conversationSectionOlder => 'OLDER';
+
+  @override
+  String get conversationArchiveAction => 'Archive';
+
+  @override
+  String get conversationArchivedSnackbar => 'Conversation archived';
+
+  @override
+  String get conversationDeleteConfirmTitle => 'Delete conversation?';
+
+  @override
+  String get conversationDeleteConfirmMessage =>
+      'This action can\'t be undone.';
+
+  @override
+  String get archivedConversationsTitle => 'Archives';
+
+  @override
+  String get archivedConversationsEmptyTitle => 'No archived conversations';
+
+  @override
+  String get archivedConversationsEmptyDescription =>
+      'Conversations you archive will appear here.';
+
+  @override
+  String get conversationUnarchivedSnackbar => 'Conversation unarchived';
+
+  @override
+  String get conversationUnarchiveAction => 'Unarchive';
+
+  @override
+  String get conversationLoaderNotFoundTitle => 'Conversation not found';
+
+  @override
+  String get conversationLoaderNotFoundDescription =>
+      'This conversation couldn\'t be loaded.';
+
+  @override
+  String get conversationUserFallback => 'User';
+
+  @override
+  String get conversationStartedFallback => 'Conversation started';
+
+  @override
+  String get conversationTimeJustNow => 'just now';
+
+  @override
+  String get trackingStepDeparture => 'Departure';
+
+  @override
+  String get trackingStepTransit => 'Transit';
+
+  @override
+  String get trackingStepArrival => 'Arrival';
+
+  @override
+  String scanStepRecorded(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Departure recorded',
+      'TRANSIT': 'Transit recorded',
+      'other': 'Arrival recorded',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String scanStepLabel(String step) {
+    return 'Step: $step';
+  }
+
+  @override
+  String scanPendingSync(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count scans waiting to sync',
+      one: '$count scan waiting to sync',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String scanQueueSafe(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count scans pending. We\'ll send them as soon as you\'re back online.',
+      one:
+          '$count scan pending. We\'ll send it as soon as you\'re back online.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get scanAgoUnderMinute => '< 1 min ago';
+
+  @override
+  String scanAgoMinutes(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String scanAgoHours(int hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String scanPhotoTooLarge(int mb) {
+    return 'Photo too large (max $mb MB). Try again.';
+  }
+
+  @override
+  String get scanDepartureTitle => 'Departure scan';
+
+  @override
+  String get scanTorchTooltip => 'Flashlight';
+
+  @override
+  String get scanQrReadTitle => 'QR scanned';
+
+  @override
+  String get scanStepIndicatorStatic => 'STEP 1 OF 3';
+
+  @override
+  String get scanConfirmedInSuitcase => 'Parcel loaded in the suitcase';
+
+  @override
+  String get scanPhotoWordLabel => 'Photo';
+
+  @override
+  String get scanConfirmAndContinue => 'Confirm & continue';
+
+  @override
+  String get scanTrackingNumberDialogTitle => 'Tracking number';
+
+  @override
+  String get scanTrackingNumberDialogBody =>
+      'Enter the parcel\'s DON-XXXXXX number to scan.';
+
+  @override
+  String get scanNumberNotFound => 'Number not found. Check and try again.';
+
+  @override
+  String get scanQueuedTitle => 'Scan pending';
+
+  @override
+  String get scanQueuedNoConnectionBodyLong =>
+      'No internet connection. The scan will sync automatically once you\'re back online.';
+
+  @override
+  String get scanUnderstoodButton => 'Got it';
+
+  @override
+  String get scanParcelDeliveredTitle => 'Parcel delivered!';
+
+  @override
+  String get scanRecordedTitle => 'Scan recorded!';
+
+  @override
+  String get scanEventTypeSectionLabel => 'Step type';
+
+  @override
+  String get scanConfirmationCodeLabel => 'Confirmation code';
+
+  @override
+  String get scanConfirmationCodeHintLong =>
+      'Ask the recipient for the 6-digit code. They received it from the sender.';
+
+  @override
+  String get scanPhotoOfParcelLabel => 'Parcel photo';
+
+  @override
+  String get scanRemovePhotoSemantics => 'Remove the photo';
+
+  @override
+  String get scanGpsLocationSaved => 'GPS location recorded';
+
+  @override
+  String get scanPhotoTooLargeFixed =>
+      'Photo too large (max 10 MB). Try again.';
+
+  @override
+  String get scanSubmittingConfirmation => 'Confirming...';
+
+  @override
+  String get scanSubmittingRecording => 'Saving...';
+
+  @override
+  String get scanConfirmDeliveryButton => 'Confirm delivery';
+
+  @override
+  String get scanConfirmReadingLabel => 'Confirm scan';
+
+  @override
+  String get scanConfirmParcelLabel => 'Parcel';
+
+  @override
+  String get scanConfirmStepLabel => 'Step';
+
+  @override
+  String get scanConfirmConfirmationCodeHint =>
+      'Ask the recipient for the 6-digit code.';
+
+  @override
+  String get scanValidateReadingButton => 'Validate scan';
+
+  @override
+  String get scanRetakePhotoButton => 'Retake the photo';
+
+  @override
+  String get scanConfirmQueuedNoConnectionBody =>
+      'No connection. The scan will sync once you\'re back online.';
+
+  @override
+  String get scanTerminateButton => 'Finish';
+
+  @override
+  String get scanHubTitle => 'Scan & Tracking';
+
+  @override
+  String get scanTrackParcelEntry => 'Track a parcel';
+
+  @override
+  String get scanChooseTripTitle => 'Choose a trip';
+
+  @override
+  String get scanChangeTripLabel => 'Change trip';
+
+  @override
+  String get scanNoTripTitle => 'No trip to handle';
+
+  @override
+  String get scanNoTripDescription =>
+      'You\'ll be able to scan parcel QR codes once a request is accepted on one of your trips.';
+
+  @override
+  String get scanViewMyTripsAction => 'See my trips';
+
+  @override
+  String get scanLoadTripsErrorTitle => 'Couldn\'t load your trips';
+
+  @override
+  String get scanQuickReadSectionTitle => 'QUICK SCAN';
+
+  @override
+  String scanColisSectionTitle(int count) {
+    return 'PARCELS ($count)';
+  }
+
+  @override
+  String get scanNoColisConfirmed => 'No parcel confirmed on this trip yet.';
+
+  @override
+  String get scanColisRowScanBadge => 'Scan';
+
+  @override
+  String get scanHistorySectionTitle => 'SCAN HISTORY';
+
+  @override
+  String get scanNoHistoryYet => 'No scans yet';
+
+  @override
+  String get scanIdentifyTitle => 'Identify the parcel';
+
+  @override
+  String get scanOpenQrReaderTitle => 'Open QR reader';
+
+  @override
+  String get scanPointQrHint => 'Point at the parcel\'s QR code';
+
+  @override
+  String get scanOrDivider => 'OR';
+
+  @override
+  String get scanIdentifySubmit => 'Identify →';
+
+  @override
+  String get scanWhichStepTitle => 'Which step?';
+
+  @override
+  String get scanPhotoMandatoryBadge => 'Photo required';
+
+  @override
+  String get scanPhotoOptionalBadge => 'Photo optional';
+
+  @override
+  String get scanPhotoOpeningLoading => 'Opening...';
+
+  @override
+  String get scanTakePhotoButton => 'Take the photo';
+
+  @override
+  String get scanSkipPhotoButton => 'Skip: continue without a photo';
+
+  @override
+  String get scanAutoGeolocation => 'Automatic geolocation';
+
+  @override
+  String get scanQrPickerTitle => 'Scan the QR code';
+
+  @override
+  String get scanTorchToggleTooltip => 'Turn the flashlight on or off';
+
+  @override
+  String get scanQrPickerHint => 'Point at the parcel\'s QR code';
+
+  @override
+  String get scanOfflineEventPickupLabel => 'collection';
+
+  @override
+  String get scanOfflineEventTransitLabel => 'transit';
+
+  @override
+  String get scanOfflineEventDeliveredLabel => 'delivered';
+
+  @override
+  String get scanOfflineEventDefaultLabel => 'queued';
+
+  @override
+  String get scanOfflineDescPickup => 'Collection recorded';
+
+  @override
+  String get scanOfflineDescTransit => 'Transit saved';
+
+  @override
+  String get scanOfflineDescDelivered => 'Delivery saved';
+
+  @override
+  String get scanOfflineDescDefault => 'Scan saved';
+
+  @override
+  String get scanOfflineQueueTitle => 'Offline scans';
+
+  @override
+  String get scanOfflineBadge => 'Offline';
+
+  @override
+  String scanOfflineQueueSectionTitle(int count) {
+    return 'QUEUE ($count)';
+  }
+
+  @override
+  String get scanOfflineQueueEmpty => 'No scan pending.';
+
+  @override
+  String get scanOfflineFooterHint =>
+      'Keep scanning even without a network connection.';
+
+  @override
+  String get scanQueueSafeTitle => 'Your scans are safe';
+
+  @override
+  String scanOfflineParcelCode(String code) {
+    return 'parcel $code';
+  }
+
+  @override
+  String get trackingSearchTitle => 'Track a parcel';
+
+  @override
+  String get trackingSearchScanTripEntry => 'Scan a trip\'s QR code';
+
+  @override
+  String get trackingSearchNumberLabel => 'Tracking number';
+
+  @override
+  String get trackingSearchNumberHint =>
+      'Enter the DON-XXXXXX number to track your parcel in real time.';
+
+  @override
+  String get trackingSearchSubmit => 'Search';
+
+  @override
+  String get trackingSearchViewDetails => 'View full tracking';
+
+  @override
+  String get trackingSearchStatusPending => 'Pending';
+
+  @override
+  String get trackingSearchStatusAccepted => 'Confirmed';
+
+  @override
+  String get trackingSearchStatusPaid => 'Paid';
+
+  @override
+  String get trackingSearchStatusDroppedOff => 'Dropped off';
+
+  @override
+  String get trackingSearchStatusDelivered => 'Delivered';
+
+  @override
+  String get receptionConfirmTitle => 'Confirmation';
+
+  @override
+  String get receptionConfirmHeading => 'Confirm receipt';
+
+  @override
+  String receptionChooseInFrontOf(String name) {
+    return 'In front of $name, choose:';
+  }
+
+  @override
+  String get receptionTabQr => 'Scan QR';
+
+  @override
+  String get receptionTabCode => 'Enter code';
+
+  @override
+  String get receptionQrTitle => 'Scan the QR code';
+
+  @override
+  String get receptionQrDescription =>
+      'Ask the traveler to show the QR code on their phone.';
+
+  @override
+  String get receptionCodeOptionLabel => 'OPTION 2 · CODE';
+
+  @override
+  String get receptionCodeTitle => 'Enter the code you received';
+
+  @override
+  String receptionCodeExpiresIn(String time) {
+    return 'Sent by SMS · expires in $time';
+  }
+
+  @override
+  String receptionReleaseWarning(String name) {
+    return 'By confirming, you release the payment to $name. If something\'s wrong, contest first.';
+  }
+
+  @override
+  String get receptionContestFirst => 'contest first';
+
+  @override
+  String get trackingTimelineTitle => 'Parcel tracking';
+
+  @override
+  String get trackingTimelineShare => 'Share tracking';
+
+  @override
+  String get trackingTimelineStepsHeader => 'STEPS';
+
+  @override
+  String get trackingEventDepartureConfirmed => 'Departure confirmed';
+
+  @override
+  String get trackingEventInTransit => 'In transit';
+
+  @override
+  String get trackingEventArrivalConfirmed => 'Arrival confirmed';
+
+  @override
+  String get trackingGpsRecorded => 'GPS location recorded';
+
+  @override
+  String get trackingOfflineScanSynced => 'Offline scan synced';
+
+  @override
+  String get trackingAwaitingConfirmationTitle => 'Awaiting confirmation';
+
+  @override
+  String get trackingAwaitingConfirmationDesc =>
+      'The recipient must confirm receipt with the SMS code.';
+
+  @override
+  String get trackingEmptyTimelineTitle => 'Waiting for the departure scan';
+
+  @override
+  String get trackingEmptyTimelineDesc =>
+      'The traveler will scan the QR code when the parcel is handed over.';
+
+  @override
+  String get trackingApplessTitle => 'No app needed!';
+
+  @override
+  String get trackingApplessMessage =>
+      'When the traveler is at your door, you\'ll confirm with a QR code or a 4-digit code.';
+
+  @override
+  String get trackingSearchSheetTitle => 'Search for a parcel';
+
+  @override
+  String get trackingSearchSheetSubtitle => 'Format: DON-XXXXXX';
+
+  @override
+  String get cancellationConfirmTitle => 'Cancel this trip?';
+
+  @override
+  String get cancellationIrreversibleSubtitle => 'This action can\'t be undone';
+
+  @override
+  String get cancellationConfirmAction => 'Confirm cancellation';
+
+  @override
+  String get cancellationAutoRefundNotice =>
+      'All affected senders will be refunded automatically.';
+
+  @override
+  String get cancellationReasonFieldLabel => 'Reason';
+
+  @override
+  String get cancellationSpecifyLabel => 'Please specify...';
+
+  @override
+  String get cancellationSpecifyHint => 'Describe your reason';
+
+  @override
+  String get cancellationSelectReasonError => 'Please select a reason';
+
+  @override
+  String get cancellationSpecifyReasonError => 'Please specify your reason';
+
+  @override
+  String get cancellationConfirmDialogMessage =>
+      'This will cancel your trip and automatically refund all affected senders.';
+
+  @override
+  String get cancellationTripCanceledSnackbar => 'Trip canceled';
+
+  @override
+  String get deliveryNoShowTravelerNotDeliveringTitle =>
+      'The traveler isn\'t delivering';
+
+  @override
+  String get deliveryNoShowReportAbsentRecipientTitle =>
+      'Report the recipient\'s no-show';
+
+  @override
+  String get deliveryNoShowTravelerNotDeliveringSubtitle =>
+      'Unreachable or refuses to hand over the parcel';
+
+  @override
+  String get deliveryNoShowReportAbsentRecipientSubtitle =>
+      'If you\'re on-site and they\'re not answering';
+
+  @override
+  String get deliveryNoShowTravelerAbsentSheetTitle =>
+      'The traveler didn\'t show up for the handover?';
+
+  @override
+  String get deliveryNoShowRecipientAbsentSheetTitle =>
+      'The recipient didn\'t show up for the handover?';
+
+  @override
+  String get deliveryNoShowConfirmReportAction => 'Confirm the report';
+
+  @override
+  String get deliveryNoShowTravelerNotDeliveringBody =>
+      'The traveler isn\'t delivering the parcel to your recipient.';
+
+  @override
+  String get deliveryNoShowRecipientAbsentBody =>
+      'The recipient didn\'t show up at the handover point.';
+
+  @override
+  String get deliveryNoShowContestNotice =>
+      'The other party has 24 hours to contest. The payment stays on hold during the review. No automatic payout.';
+
+  @override
+  String get rematchAlternativesTitle => 'Available alternatives';
+
+  @override
+  String get rematchAnnouncementUnavailable =>
+      'This listing is no longer available';
+
+  @override
+  String get rematchNoTravelersTitle => 'No traveler available';
+
+  @override
+  String get rematchNoTravelersDescription =>
+      'No traveler available within 72h: your refund is being processed';
+
+  @override
+  String rematchTravelersAvailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers available',
+      one: '$count traveler available',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get rematchTripCancelledTitle => 'Trip canceled';
+
+  @override
+  String rematchSendersRefunded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count senders refunded automatically.',
+      one: '$count sender refunded automatically.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get rematchRefundInProgress => 'Your refund is in progress.';
+
+  @override
+  String get rematchBackHomeAction => 'Back to home';
+
+  @override
+  String get ratingRateSender => 'Rate the sender';
+
+  @override
+  String ratingRateTraveler(String name) {
+    return 'Rate $name';
+  }
+
+  @override
+  String get ratingSubtitle => 'Your review helps the Yadony community';
+
+  @override
+  String get ratingSubmitAction => 'Send rating';
+
+  @override
+  String get ratingCommentLabel => 'Comment (optional)';
+
+  @override
+  String get ratingCommentHint => 'Share your experience…';
+
+  @override
+  String get ratingThanksSnackbar => 'Thanks for your rating!';
+
+  @override
+  String ratingStarsSemantics(int index) {
+    return 'Rate $index out of 5';
+  }
+
+  @override
+  String ratingReviewCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews',
+      one: '$count review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ratingMyReviewsTitle => 'Reviews received';
+
+  @override
+  String get ratingAuthorFallbackName => 'Yadony user';
+
+  @override
+  String get ratingEmptyTitle => 'You haven\'t received any reviews yet';
+
+  @override
+  String get ratingEmptyDescription =>
+      'Ratings and comments left by travelers will appear here.';
+
+  @override
+  String get ratingLoadErrorTitle => 'Couldn\'t load reviews';
+
+  @override
+  String get ratingReceivedHeader => 'REVIEWS RECEIVED';
+
+  @override
+  String ratingFilteredHeader(int stars, int count) {
+    return '$stars★ REVIEWS · $count';
+  }
+
+  @override
+  String get ratingShowAll => 'Show all';
+
+  @override
+  String ratingTotalReceived(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'From $count reviews',
+      one: 'From $count review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ratingDistributionSemantics(int stars, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews',
+      one: '$count review',
+    );
+    return '$stars stars, $_temp0';
+  }
+
+  @override
+  String ratingQuotedComment(String comment) {
+    return '“$comment”';
+  }
+
+  @override
+  String get ratingExcludedNotice => 'Excluded from the average';
+
+  @override
+  String get cancellationReasonFlightCanceled => 'Flight canceled';
+
+  @override
+  String get cancellationReasonPersonalEmergency => 'Personal emergency';
+
+  @override
+  String get cancellationReasonHealthIssue => 'Health issue';
+
+  @override
+  String get cancellationReasonItineraryChange => 'Itinerary change';
+
+  @override
+  String get cancellationReasonOther => 'Other';
+
+  @override
+  String get ratingStarVeryDisappointing => 'Very disappointing';
+
+  @override
+  String get ratingStarDisappointing => 'Disappointing';
+
+  @override
+  String get ratingStarFair => 'Fair';
+
+  @override
+  String get ratingStarGood => 'Good';
+
+  @override
+  String get ratingStarExcellent => 'Excellent!';
 }

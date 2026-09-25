@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -23,12 +24,13 @@ class DeliveryNoShowCtaCell extends StatelessWidget {
     if (!bid.canReportDeliveryNoShow) {
       return const SizedBox.shrink();
     }
+    final l = context.l10n;
     final title = isSender
-        ? 'Le voyageur ne livre pas'
-        : "Signaler l'absence du destinataire";
+        ? l.deliveryNoShowTravelerNotDeliveringTitle
+        : l.deliveryNoShowReportAbsentRecipientTitle;
     final subtitle = isSender
-        ? 'Injoignable ou refus de remettre le colis'
-        : "Si vous êtes sur place et qu'il ne répond pas";
+        ? l.deliveryNoShowTravelerNotDeliveringSubtitle
+        : l.deliveryNoShowReportAbsentRecipientSubtitle;
 
     return DonyCard(
       padding: EdgeInsets.zero,
@@ -45,14 +47,15 @@ class DeliveryNoShowCtaCell extends StatelessWidget {
 
   Future<void> _showSheet(BuildContext context) async {
     final bloc = context.read<CancellationBloc>();
+    final l = context.l10n;
     final confirmed = await DonyBottomSheet.show<bool>(
       context,
       title: isSender
-          ? "Le voyageur ne s'est pas présenté à la remise ?"
-          : "Le destinataire ne s'est pas présenté à la remise ?",
+          ? l.deliveryNoShowTravelerAbsentSheetTitle
+          : l.deliveryNoShowRecipientAbsentSheetTitle,
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(
-          label: 'Confirmer le signalement',
+          label: l.deliveryNoShowConfirmReportAction,
           iconAsset: 'user-x',
           onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
         ),
@@ -64,14 +67,13 @@ class DeliveryNoShowCtaCell extends StatelessWidget {
           children: [
             Text(
               isSender
-                  ? 'Le voyageur ne livre pas le colis à votre destinataire.'
-                  : "Le destinataire ne s'est pas présenté au point de remise.",
+                  ? l.deliveryNoShowTravelerNotDeliveringBody
+                  : l.deliveryNoShowRecipientAbsentBody,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: DonySpacing.md),
             Text(
-              "L'autre partie aura 24 h pour contester. Le paiement reste "
-              'gelé le temps de l\'instruction — aucun versement automatique.',
+              l.deliveryNoShowContestNotice,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),

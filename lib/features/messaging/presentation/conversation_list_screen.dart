@@ -9,6 +9,7 @@ import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/widgets/conversation_tile.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/presentation/widgets/support_conversation_tile.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -106,6 +107,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
 
   Widget _buildBody(BuildContext context, ConversationListState state) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     if (state is ConversationListLoading || state is ConversationListInitial) {
       return ListView.builder(
@@ -122,9 +124,9 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
         type: DonyEmptyStateType.error,
         mascotte: DonyMascotteType.erreurLegere,
         iconAsset: 'wifi-off',
-        title: 'Erreur de chargement',
+        title: l.commonLoadError,
         description: ErrorPresenter.resolve(state.error).message,
-        actionLabel: 'Réessayer',
+        actionLabel: l.commonRetry,
         onAction: () => context.read<ConversationListBloc>().add(
           const ConversationsLoadRequested(),
         ),
@@ -141,18 +143,20 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
               child: DonyEmptyState(
                 mascotte: DonyMascotteType.assis,
                 title: state.searchQuery.isNotEmpty
-                    ? 'Aucun résultat'
-                    : 'Aucun message',
+                    ? l.conversationListEmptyResultsTitle
+                    : l.conversationListEmptyTitle,
                 description: state.searchQuery.isNotEmpty
-                    ? 'Aucune conversation ne correspond à « ${state.searchQuery} ».'
-                    : 'Vos conversations apparaîtront ici\naprès l\'acceptation d\'une offre.',
+                    ? l.conversationListEmptySearchDescription(
+                        state.searchQuery,
+                      )
+                    : l.conversationListEmptyDescription,
               ),
             ),
           ),
         );
       }
 
-      final items = _buildGroupedItems(state.displayed);
+      final items = _buildGroupedItems(l, state.displayed);
 
       return RefreshIndicator(
         color: cs.primary,
@@ -200,7 +204,10 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
 
 // ── Regroupement temporel ──────────────────────────────────────────────────────
 
-List<_ListItem> _buildGroupedItems(List<ConversationModel> convs) {
+List<_ListItem> _buildGroupedItems(
+  AppLocalizations l,
+  List<ConversationModel> convs,
+) {
   final now = DateTime.now();
   final today = <ConversationModel>[];
   final thisWeek = <ConversationModel>[];
@@ -228,15 +235,15 @@ List<_ListItem> _buildGroupedItems(List<ConversationModel> convs) {
 
   final items = <_ListItem>[];
   if (today.isNotEmpty) {
-    items.add(_SectionItem("AUJOURD'HUI"));
+    items.add(_SectionItem(l.conversationSectionToday));
     items.addAll(today.map(_ConvItem.new));
   }
   if (thisWeek.isNotEmpty) {
-    items.add(_SectionItem('CETTE SEMAINE'));
+    items.add(_SectionItem(l.conversationSectionThisWeek));
     items.addAll(thisWeek.map(_ConvItem.new));
   }
   if (older.isNotEmpty) {
-    items.add(_SectionItem('PLUS ANCIEN'));
+    items.add(_SectionItem(l.conversationSectionOlder));
     items.addAll(older.map(_ConvItem.new));
   }
   return items;
@@ -259,6 +266,7 @@ class _MessagesHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final isSearching = searchQuery.isNotEmpty;
 
     return Container(
@@ -277,11 +285,11 @@ class _MessagesHeader extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Text('Messages', style: tt.headlineLarge),
+                Text(l.conversationListTitle, style: tt.headlineLarge),
                 const Spacer(),
                 const DonyFeedbackButton(),
                 IconButton(
-                  tooltip: 'Voir les conversations archivées',
+                  tooltip: l.conversationListArchivedTooltip,
                   onPressed: () => context.push('/messages/archives'),
                   icon: DonyIcon('archive', color: cs.onSurfaceVariant),
                   color: cs.onSurfaceVariant,
@@ -304,7 +312,7 @@ class _MessagesHeader extends StatelessWidget {
               textInputAction: TextInputAction.search,
               style: tt.bodyMedium?.copyWith(color: cs.onSurface),
               decoration: InputDecoration(
-                hintText: 'Rechercher une conversation…',
+                hintText: l.conversationListSearchHint,
                 hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 prefixIcon: DonyIcon(
                   'search',
@@ -327,7 +335,7 @@ class _MessagesHeader extends StatelessWidget {
                             ),
                           );
                         },
-                        tooltip: 'Effacer',
+                        tooltip: l.commonClear,
                       )
                     : null,
                 filled: true,
@@ -369,7 +377,7 @@ class _MessagesHeader extends StatelessWidget {
                     child: Row(
                       children: [
                         _FilterPill(
-                          label: 'Tous',
+                          label: l.conversationFilterAll,
                           isActive: activeFilter == ConversationFilter.all,
                           onTap: () => context.read<ConversationListBloc>().add(
                             const ConversationFilterChanged(
@@ -380,7 +388,7 @@ class _MessagesHeader extends StatelessWidget {
                         ),
                         const SizedBox(width: DonySpacing.xs),
                         _FilterPill(
-                          label: 'Non lus',
+                          label: l.conversationFilterUnread,
                           isActive: activeFilter == ConversationFilter.unread,
                           onTap: () => context.read<ConversationListBloc>().add(
                             const ConversationFilterChanged(
@@ -391,7 +399,7 @@ class _MessagesHeader extends StatelessWidget {
                         ),
                         const SizedBox(width: DonySpacing.xs),
                         _FilterPill(
-                          label: 'En cours',
+                          label: l.conversationFilterActive,
                           isActive: activeFilter == ConversationFilter.active,
                           onTap: () => context.read<ConversationListBloc>().add(
                             const ConversationFilterChanged(
@@ -402,7 +410,7 @@ class _MessagesHeader extends StatelessWidget {
                         ),
                         const SizedBox(width: DonySpacing.xs),
                         _FilterPill(
-                          label: 'Terminés',
+                          label: l.conversationFilterDone,
                           isActive: activeFilter == ConversationFilter.done,
                           onTap: () => context.read<ConversationListBloc>().add(
                             const ConversationFilterChanged(
@@ -504,6 +512,7 @@ class _SlidableTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Slidable(
       key: ValueKey(conversation.id),
@@ -518,8 +527,8 @@ class _SlidableTile extends StatelessWidget {
               );
               DonySnackbar.show(
                 ctx,
-                message: 'Conversation archivée',
-                actionLabel: 'Annuler',
+                message: l.conversationArchivedSnackbar,
+                actionLabel: l.commonCancel,
                 onAction: () => ctx.read<ConversationListBloc>().add(
                   ConversationUnarchiveRequested(conversation.id),
                 ),
@@ -528,7 +537,7 @@ class _SlidableTile extends StatelessWidget {
             backgroundColor: cs.warning,
             foregroundColor: cs.onPrimary,
             icon: Icons.archive_outlined,
-            label: 'Archiver',
+            label: l.conversationArchiveAction,
           ),
           SlidableAction(
             onPressed: (ctx) {
@@ -543,18 +552,18 @@ class _SlidableTile extends StatelessWidget {
                 // doivent utiliser le contexte du dialog, sinon ils dépilent
                 // la branche et la Future ne se résout jamais.
                 builder: (dialogCtx) => AlertDialog(
-                  title: const Text('Supprimer la conversation ?'),
-                  content: const Text('Cette action est irréversible.'),
+                  title: Text(l.conversationDeleteConfirmTitle),
+                  content: Text(l.conversationDeleteConfirmMessage),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(dialogCtx).pop(false),
-                      child: const Text('Annuler'),
+                      child: Text(l.commonCancel),
                     ),
                     TextButton(
                       onPressed: () => Navigator.of(dialogCtx).pop(true),
-                      child: const Text(
-                        'Supprimer',
-                        style: TextStyle(color: Colors.red),
+                      child: Text(
+                        l.commonDelete,
+                        style: const TextStyle(color: Colors.red),
                       ),
                     ),
                   ],
@@ -568,7 +577,7 @@ class _SlidableTile extends StatelessWidget {
             backgroundColor: cs.error,
             foregroundColor: cs.onError,
             icon: Icons.delete_outline_rounded,
-            label: 'Supprimer',
+            label: l.commonDelete,
           ),
         ],
       ),

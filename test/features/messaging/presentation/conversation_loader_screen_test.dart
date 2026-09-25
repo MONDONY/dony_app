@@ -19,6 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockConversationRepository extends Mock
@@ -120,6 +121,19 @@ void main() {
 
       expect(find.text('Conversation introuvable'), findsOneWidget);
       expect(find.text('Réessayer'), findsOneWidget);
+    });
+
+    testWidgets('en anglais : état d\'erreur traduit', (tester) async {
+      useEnglish();
+      when(
+        () => repository.getConversation('conv-1'),
+      ).thenAnswer((_) async => throw Exception('network error'));
+
+      await _pump(tester, 'conv-1');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Conversation not found'), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
     });
 
     testWidgets('tapping retry re-fetches the conversation', (tester) async {

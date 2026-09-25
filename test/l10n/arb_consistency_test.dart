@@ -170,6 +170,16 @@ const _sameInBothLanguages = <String>{
   'walletTopupBelowMinimum', // « Minimum » se dit pareil (tâche E3)
   'connectOnboardingBenefitTimeTitle', // « 5 minutes » se dit pareil (tâche E4)
   'walletActiveCurrencyBadge', // « active » se dit pareil (vague finale E, mineur 5)
+  'chatPreviewPhoto', // « 📷 Photo » se dit pareil (tâche F1)
+  'chatUnknownConversationLabel', // « Conversation » se dit pareil (tâche F1)
+  'conversationListTitle', // « Messages » se dit pareil (tâche F1)
+  'archivedConversationsTitle', // « Archives » se dit pareil (tâche F1)
+  'trackingStepTransit', // « Transit » se dit pareil (tâche F2)
+  'scanPhotoWordLabel', // « Photo » se dit pareil (tâche F2)
+  'scanColisRowScanBadge', // « Scan » se dit pareil (tâche F2)
+  'scanOfflineEventTransitLabel', // « transit » se dit pareil (tâche F2)
+  'receptionConfirmTitle', // « Confirmation » se dit pareil (tâche F3)
+  'receptionCodeOptionLabel', // « OPTION »/« CODE » se disent pareil (tâche F3)
 };
 
 void main() {

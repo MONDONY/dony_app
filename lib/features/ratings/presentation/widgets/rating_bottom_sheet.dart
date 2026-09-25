@@ -3,7 +3,9 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
+import 'package:dony/features/ratings/presentation/rating_labels.dart';
 import 'package:dony/features/ratings/presentation/widgets/star_selector.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,14 +14,16 @@ class RatingBottomSheet extends StatefulWidget {
   const RatingBottomSheet({
     super.key,
     required this.bidId,
-    required this.travelerName,
+    this.travelerName,
     this.starsNotifier,
     this.onSubmitReady,
     this.isTravelerRating = false,
   });
 
   final String bidId;
-  final String travelerName;
+  // Nullable : un appelant qui évalue l'expéditeur (isTravelerRating: true)
+  // n'a pas besoin de fournir de nom, le titre complet est fixe (ratingRateSender).
+  final String? travelerName;
   final ValueNotifier<int>? starsNotifier;
   final void Function(VoidCallback)? onSubmitReady;
   final bool isTravelerRating;
@@ -27,18 +31,23 @@ class RatingBottomSheet extends StatefulWidget {
   static Future<void> show(
     BuildContext context, {
     required String bidId,
-    required String travelerName,
+    String? travelerName,
     bool isTravelerRating = false,
   }) {
+    assert(
+      isTravelerRating || travelerName != null,
+      'travelerName est requis quand isTravelerRating est false (le titre affiche le nom du voyageur).', // i18n-ignore
+    );
     final ratingBloc = context.read<RatingBloc>();
+    final l = context.l10n;
     final starsNotifier = ValueNotifier<int>(0);
     VoidCallback? submit;
     return DonyBottomSheet.show(
       context,
       title: isTravelerRating
-          ? 'Évaluer l\'expéditeur'
-          : 'Évaluer $travelerName',
-      subtitle: 'Votre avis aide la communauté Yadony',
+          ? l.ratingRateSender
+          : l.ratingRateTraveler(travelerName!),
+      subtitle: l.ratingSubtitle,
       wrapper: (child) => BlocProvider.value(value: ratingBloc, child: child),
       stickyBottom: ValueListenableBuilder<int>(
         valueListenable: starsNotifier,
@@ -46,7 +55,7 @@ class RatingBottomSheet extends StatefulWidget {
           builder: (ctx, state) {
             final isLoading = state is RatingLoading;
             return DonyButton(
-              label: "Envoyer l'évaluation",
+              label: l.ratingSubmitAction,
               iconAsset: 'star',
               isLoading: isLoading,
               onPressed: (stars > 0 && !isLoading)
@@ -115,6 +124,7 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return BlocConsumer<RatingBloc, RatingState>(
       listener: (context, state) {
@@ -122,7 +132,7 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
           Navigator.of(context).pop();
           DonySnackbar.show(
             context,
-            message: 'Merci pour votre évaluation !',
+            message: l.ratingThanksSnackbar,
             type: DonySnackbarType.success,
           );
         } else if (state is RatingError) {
@@ -149,7 +159,7 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
               if (stars > 0)
                 Center(
                   child: Text(
-                    _starLabel(stars),
+                    ratingStarLabel(l, stars),
                     style: tt.labelLarge?.copyWith(
                       color: cs.primary,
                       fontWeight: FontWeight.w600,
@@ -164,8 +174,8 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
                 keyboardType: TextInputType.multiline,
                 textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
-                  labelText: 'Commentaire (facultatif)',
-                  hintText: 'Partagez votre expérience…',
+                  labelText: l.ratingCommentLabel,
+                  hintText: l.ratingCommentHint,
                   filled: true,
                   fillColor: cs.surface,
                   border: OutlineInputBorder(
@@ -188,13 +198,4 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
       },
     );
   }
-
-  String _starLabel(int s) => switch (s) {
-    1 => 'Très décevant',
-    2 => 'Décevant',
-    3 => 'Correct',
-    4 => 'Bien',
-    5 => 'Excellent !',
-    _ => '',
-  };
 }

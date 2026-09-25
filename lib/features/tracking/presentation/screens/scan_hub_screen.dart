@@ -12,6 +12,7 @@ import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_c
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
+import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -36,37 +37,18 @@ List<BoxShadow> _softShadow({double strength = 1}) => [
 
 class _EtapeInfo {
   final String code;
-  final String label;
   final String? iconAsset;
   final bool photoRequired;
 
-  const _EtapeInfo(
-    this.code,
-    this.label, {
-    this.iconAsset,
-    required this.photoRequired,
-  });
+  const _EtapeInfo(this.code, {this.iconAsset, required this.photoRequired});
 }
 
+// Le libellé de chaque étape se calcule dans build() via trackingStepLabel,
+// jamais gardé en dur ici.
 const _etapes = [
-  _EtapeInfo(
-    'DEPART',
-    'Départ',
-    iconAsset: 'plane-takeoff',
-    photoRequired: true,
-  ),
-  _EtapeInfo(
-    'TRANSIT',
-    'Transit',
-    iconAsset: 'arrow-left-right',
-    photoRequired: false,
-  ),
-  _EtapeInfo(
-    'ARRIVEE',
-    'Arrivée',
-    iconAsset: 'plane-landing',
-    photoRequired: true,
-  ),
+  _EtapeInfo('DEPART', iconAsset: 'plane-takeoff', photoRequired: true),
+  _EtapeInfo('TRANSIT', iconAsset: 'arrow-left-right', photoRequired: false),
+  _EtapeInfo('ARRIVEE', iconAsset: 'plane-landing', photoRequired: true),
 ];
 
 class ScanHubScreen extends StatelessWidget {
@@ -93,6 +75,7 @@ class ScanHubView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -102,7 +85,7 @@ class ScanHubView extends StatelessWidget {
         backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text('Lecture & Suivi', style: tt.headlineLarge),
+        title: Text(l.scanHubTitle, style: tt.headlineLarge),
         centerTitle: false,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -147,7 +130,7 @@ class ScanHubView extends StatelessWidget {
                                 ),
                                 child: SecondaryActivityEntry(
                                   iconAsset: 'package',
-                                  label: 'Suivre un colis',
+                                  label: l.scanTrackParcelEntry,
                                   onTap: onTrackParcel!,
                                 ),
                               ),
@@ -224,8 +207,8 @@ Widget _fadeSlide(Widget child, Animation<double> animation) {
   );
 }
 
-String _formatDate(DateTime date) {
-  return DateFormat('d MMMM yyyy', AppL10n.localeName).format(date);
+String _formatDate(BuildContext context, DateTime date) {
+  return DateFormat.yMMMMd(context.l10n.localeName).format(date);
 }
 
 // ── Hero trajet compact = sélecteur de trajet ────────────────────────────────
@@ -240,7 +223,7 @@ class _TripHeroCompact extends StatelessWidget {
     final cubit = context.read<ScanHubCubit>();
     DonyBottomSheet.show<void>(
       context,
-      title: 'Choisir un trajet',
+      title: context.l10n.scanChooseTripTitle,
       child: _TripPicker(
         trips: state.trips,
         selectedTripId: state.selectedTripId,
@@ -253,6 +236,7 @@ class _TripHeroCompact extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final trip = state.selectedTrip;
     final multi = state.trips.length > 1;
 
@@ -292,7 +276,7 @@ class _TripHeroCompact extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  _formatDate(trip.departureDate),
+                  _formatDate(context, trip.departureDate),
                   style: tt.bodySmall?.copyWith(
                     color: DonyColors.neutral0.withValues(alpha: 0.75),
                   ),
@@ -320,7 +304,7 @@ class _TripHeroCompact extends StatelessWidget {
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   Text(
-                    'Changer de trajet',
+                    l.scanChangeTripLabel,
                     style: tt.labelLarge?.copyWith(
                       color: DonyColors.neutral0,
                       fontWeight: FontWeight.w800,
@@ -420,7 +404,7 @@ class _TripPicker extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            _formatDate(trip.departureDate),
+                            _formatDate(context, trip.departureDate),
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
@@ -483,8 +467,7 @@ class _SyncBanner extends StatelessWidget {
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Text(
-                  '$pendingCount lecture${pendingCount > 1 ? 's' : ''} en '
-                  'attente de synchro',
+                  context.l10n.scanPendingSync(pendingCount),
                   style: tt.bodySmall?.copyWith(
                     color: cs.warning,
                     fontWeight: FontWeight.w700,
@@ -507,12 +490,12 @@ class _NoTripState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return DonyEmptyState(
-      title: 'Aucun trajet à traiter',
-      description:
-          'Tu pourras lire les QR des colis dès qu\'une demande sera acceptée sur l\'un de tes trajets.',
+      title: l.scanNoTripTitle,
+      description: l.scanNoTripDescription,
       mascotte: DonyMascotteType.assis,
-      actionLabel: 'Voir mes trajets',
+      actionLabel: l.scanViewMyTripsAction,
       onAction: () => context.push('/announcements/trips'),
     );
   }
@@ -526,12 +509,13 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return DonyEmptyState(
       mascotte: DonyMascotteType.erreurLegere,
-      title: 'Impossible de charger les trajets',
+      title: l.scanLoadTripsErrorTitle,
       description: message,
       type: DonyEmptyStateType.error,
-      actionLabel: 'Réessayer',
+      actionLabel: l.commonRetry,
       onAction: onRetry,
     );
   }
@@ -551,7 +535,7 @@ class _EtapesSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'LECTURE RAPIDE',
+          context.l10n.scanQuickReadSectionTitle,
           style: tt.labelSmall?.copyWith(
             color: cs.onSurfaceVariant,
             letterSpacing: 1,
@@ -607,7 +591,7 @@ class _EtapeChip extends StatelessWidget {
             },
             const SizedBox(height: DonySpacing.sm),
             Text(
-              etape.label,
+              trackingStepLabel(context.l10n, etape.code),
               style: tt.labelMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: cs.onSurface,
@@ -654,7 +638,7 @@ class _PhotoBadge extends StatelessWidget {
           DonyIcon('camera', size: 11, color: cs.error),
           const SizedBox(width: DonySpacing.xxs),
           Text(
-            'Photo',
+            context.l10n.scanPhotoWordLabel,
             style: tt.labelSmall?.copyWith(
               color: cs.error,
               fontWeight: FontWeight.w700,
@@ -677,11 +661,12 @@ class _ColisListSection extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
+    final l = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'COLIS (${bids.length})',
+          l.scanColisSectionTitle(bids.length),
           style: tt.labelSmall?.copyWith(
             color: cs.onSurfaceVariant,
             letterSpacing: 1,
@@ -690,7 +675,7 @@ class _ColisListSection extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         if (bids.isEmpty)
           Text(
-            'Aucun colis confirmé sur ce trajet pour l\'instant.',
+            l.scanNoColisConfirmed,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           )
         else
@@ -781,7 +766,7 @@ class _ColisRow extends StatelessWidget {
                         borderRadius: BorderRadius.circular(DonyRadius.full),
                       ),
                       child: Text(
-                        'Scan',
+                        context.l10n.scanColisRowScanBadge,
                         style: tt.labelSmall?.copyWith(
                           color: cs.primary,
                           fontWeight: FontWeight.w700,
@@ -838,12 +823,13 @@ class _ScanHistorySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'HISTORIQUE DES LECTURES',
+          l.scanHistorySectionTitle,
           style: tt.labelSmall?.copyWith(
             color: cs.onSurfaceVariant,
             letterSpacing: 1,
@@ -852,7 +838,7 @@ class _ScanHistorySection extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         if (history.isEmpty)
           Text(
-            'Aucune lecture pour l\'instant',
+            l.scanNoHistoryYet,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           )
         else
@@ -862,7 +848,7 @@ class _ScanHistorySection extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    DateFormat('HH:mm').format(entry.scannedAt),
+                    DateFormat.jm(l.localeName).format(entry.scannedAt),
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   const SizedBox(width: DonySpacing.sm),
@@ -882,12 +868,7 @@ class _ScanHistorySection extends StatelessWidget {
                       borderRadius: BorderRadius.circular(DonyRadius.full),
                     ),
                     child: Text(
-                      switch (entry.eventType) {
-                        'DEPART' => 'Départ',
-                        'TRANSIT' => 'Transit',
-                        'ARRIVEE' => 'Arrivée',
-                        _ => entry.eventType,
-                      },
+                      trackingStepLabel(l, entry.eventType),
                       style: tt.labelSmall?.copyWith(
                         color: cs.success,
                         fontWeight: FontWeight.w700,
