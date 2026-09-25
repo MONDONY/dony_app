@@ -945,6 +945,37 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.info,
       icon: Icons.cancel_outlined,
     ),
+
+    // ─── Signalements (ReportService.java) ─────────────────────────────
+    // Ces trois codes 422/403 sont en pratique hors d'atteinte depuis l'UI
+    // (incident_report_screen.dart n'envoie jamais un motif hors cible, ne
+    // laisse pas signaler son propre profil, et IncidentPhotosCubit.maxPhotos
+    // plafonne à 4 avant le MAX_PHOTOS = 5 du back), mais restent couverts
+    // pour ne pas relayer un message serveur brut si le contrat évolue.
+    'reason-not-applicable': _Entry(
+      title: (l) => l.errorReportReasonNotApplicableTitle,
+      message: (l) => l.errorReportReasonNotApplicableMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.rule_rounded,
+    ),
+    'cannot-report-self': _Entry(
+      title: (l) => l.errorReportCannotReportSelfTitle,
+      message: (l) => l.errorReportCannotReportSelfMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    'too-many-photos': _Entry(
+      title: (l) => l.errorReportTooManyPhotosTitle,
+      message: (l) => l.errorReportTooManyPhotosMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.image_not_supported_outlined,
+    ),
+    'photo-not-owned': _Entry(
+      title: (l) => l.errorReportPhotoNotOwnedTitle,
+      message: (l) => l.errorReportPhotoNotOwnedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
   };
 
   /// Codes dont le `detail` renvoyé par le back est déjà rédigé pour

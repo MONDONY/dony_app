@@ -218,6 +218,23 @@ void main() {
 
       expect(find.byKey(const Key('price-grid-create-custom')), findsNothing);
     });
+
+    testWidgets(
+      'en français : taper "Vêtements" trouve l\'article du catalogue et '
+      'n\'affiche pas la ligne de création',
+      (tester) async {
+        await _open(tester);
+
+        await tester.enterText(
+          find.byKey(const Key('price-grid-search')),
+          'Vêtements',
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Vêtements & tissus'), findsOneWidget);
+        expect(find.byKey(const Key('price-grid-create-custom')), findsNothing);
+      },
+    );
   });
 
   group('PriceGridItemFormSheet — étape prix', () {

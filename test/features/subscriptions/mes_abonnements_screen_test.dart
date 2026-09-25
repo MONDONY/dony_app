@@ -125,6 +125,42 @@ void main() {
     expect(find.text('Moussa'), findsNothing);
   });
 
+  testWidgets(
+    'un voyageur sans nom est trié et trouvé par son nom de repli affiché',
+    (tester) async {
+      // `travelerName` vide (voir SubscriptionItem.fromJson) : le tri et la
+      // recherche doivent lire displayName(l), pas le champ brut, sinon ce
+      // voyageur passe en tête du tri alphabétique et une recherche sur
+      // « Voyageur » ne le trouve jamais alors que la carte l'affiche.
+      await tester.binding.setSurfaceSize(const Size(400, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      givenItems([
+        _item('Awa'),
+        _item('Moussa'),
+        _item('Fatou'),
+        _item('Ibou'),
+        _item('Karim'),
+        _item(''),
+      ]);
+      await tester.pumpWidget(pump());
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('Voyageur'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'Voyageur');
+      await tester.pump(const Duration(milliseconds: 600));
+      // `find.text('Voyageur')` compte aussi le champ de recherche, qui porte
+      // désormais cette valeur comme texte saisi : on vérifie la carte
+      // elle-même via son `Text`, pas via l'`EditableText` du champ.
+      expect(
+        find.byWidgetPredicate((w) => w is Text && w.data == 'Voyageur'),
+        findsOneWidget,
+      );
+      expect(find.text('Awa'), findsNothing);
+    },
+  );
+
   testWidgets('recherche sans résultat → message dédié', (tester) async {
     await tester.binding.setSurfaceSize(const Size(400, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));

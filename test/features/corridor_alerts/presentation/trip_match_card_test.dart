@@ -63,7 +63,7 @@ void main() {
       await tester.pumpAndSettle();
       // DateTime(2026, 7, 10) → ancien DateFormat('d MMM', 'fr') rendait déjà
       // « 10 juil. » ; DateFormat.MMMd('fr') rend le même texte (vérifié hors
-      // widget avec intl 0.20.2). toLowerCase() reste appliqué ensuite.
+      // widget avec intl 0.20.2).
       expect(find.text('10 juil.'), findsOneWidget);
     },
   );
@@ -77,8 +77,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    // DateFormat.MMMd('en').format(...) → 'Jul 10', puis toLowerCase().
-    expect(find.text('jul 10'), findsOneWidget);
+    // DateFormat.MMMd('en').format(...) → 'Jul 10'.
+    expect(find.text('Jul 10'), findsOneWidget);
   });
 
   testWidgets('renders price per kg', (tester) async {

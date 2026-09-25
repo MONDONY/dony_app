@@ -269,7 +269,7 @@ void main() {
       useEnglish();
       await tester.pumpWidget(host(_item(last: trajet())));
       expect(find.text('2 h ago'), findsOneWidget);
-      expect(find.text('1 ongoing trip'), findsNothing);
+      expect(find.text('2 ongoing trips'), findsOneWidget);
 
       await tester.pumpWidget(host(_item(ongoing: 0)));
       expect(find.text('No ongoing trips'), findsOneWidget);

@@ -1188,7 +1188,7 @@ void main() {
         find.text("That's 11,98\u{00A0}€ saved over the year."),
         findsOneWidget,
       );
-      expect(find.text('Subscribe on the Yadony Pro site'), findsOneWidget);
+      expect(find.text('Subscribe on the Yadony PRO site'), findsOneWidget);
       expect(find.text('Unlimited volume'), findsOneWidget);
     });
 

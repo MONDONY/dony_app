@@ -35,9 +35,7 @@ class TripMatchCard extends StatelessWidget {
     final l = context.l10n;
     final accent = cs.primary;
 
-    final dateStr = DateFormat.MMMd(
-      l.localeName,
-    ).format(match.departureDate).toLowerCase();
+    final dateStr = DateFormat.MMMd(l.localeName).format(match.departureDate);
 
     return Material(
           color: cs.surface,

@@ -317,8 +317,8 @@ void main() {
     await t.tap(find.text('open'));
     await t.pumpAndSettle();
 
-    // Formatted date range should appear (e.g. "20 juil → 30 juil").
-    expect(find.textContaining('juil'), findsWidgets);
+    // Formatted date range should appear exactly, dateFrom/dateTo above.
+    expect(find.text('20 juil. → 28 juil.'), findsOneWidget);
     // Clear button should be visible.
     expect(
       find.byKey(const Key('corridor-alert-date-window-clear')),

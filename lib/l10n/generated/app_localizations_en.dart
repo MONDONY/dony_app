@@ -4823,13 +4823,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingBlockTravelerLink => 'Block this traveler';
 
   @override
-  String get listingFavoriteAddedMessage => 'Trip added to favorites';
+  String get listingFavoriteAddedMessage => 'Trip saved';
 
   @override
-  String get listingFavoriteRemovedMessage => 'Trip removed from favorites';
+  String get listingFavoriteRemovedMessage => 'Trip removed from saved';
 
   @override
-  String get listingFavoriteToggleErrorMessage => 'Couldn\'t update favorites';
+  String get listingFavoriteToggleErrorMessage =>
+      'Couldn\'t update your saved items';
 
   @override
   String listingKgAvailableLabel(String kg) {
@@ -12772,7 +12773,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get corridorAlertZoneToggleSubtitle =>
-      'Filter by pickup point (optional)';
+      'Filter by drop-off point (optional)';
 
   @override
   String get corridorAlertSegmentPackages => 'Parcels';
@@ -13222,7 +13223,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proPortalOpenFailedMessage =>
-      'Couldn\'t open the page. Try again, or go to the Yadony Pro site from your browser.';
+      'Couldn\'t open the page. Try again, or go to the Yadony PRO site from your browser.';
 
   @override
   String get proLimitUnderstoodButton => 'Got it';
@@ -13278,14 +13279,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proPortalHint =>
-      'You subscribe on the Yadony Pro site, in your browser.';
+      'You subscribe on the Yadony PRO site, in your browser.';
 
   @override
-  String get proPortalButtonLabel => 'Subscribe on the Yadony Pro site';
+  String get proPortalButtonLabel => 'Subscribe on the Yadony PRO site';
 
   @override
   String get proManageGuidance =>
-      'You manage and cancel your subscription on the Yadony Pro site, in your browser. You\'ll be asked to sign in there.';
+      'You manage and cancel your subscription on the Yadony PRO site, in your browser. You\'ll be asked to sign in there.';
 
   @override
   String proDowngradeBlockedMessage(String guidance) {
@@ -13294,11 +13295,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proAccessEndedMessage =>
-      'Your Pro access is no longer active. You can subscribe again on the Yadony Pro site.';
+      'Your Pro access is no longer active. You can subscribe again on the Yadony PRO site.';
 
   @override
   String get proNoSubscriptionMessage =>
-      'You don\'t have a Pro subscription. You can subscribe on the Yadony Pro site.';
+      'You don\'t have a Pro subscription. You can subscribe on the Yadony PRO site.';
 
   @override
   String get proSubscriberScreenTitle => 'My Pro account';
@@ -13464,7 +13465,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliveryAddressNameFieldLabel => 'Address name';
 
   @override
-  String get deliveryAddressNameFieldHint => 'E.g. Family Dakar, Drop-off…';
+  String get deliveryAddressNameFieldHint => 'E.g. Family Dakar, Depot…';
 
   @override
   String get deliveryAddressCountrySectionTitle => 'Country';
@@ -13775,4 +13776,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String referralRedeemCodeHint(String example) {
     return 'E.g. $example';
   }
+
+  @override
+  String get errorReportReasonNotApplicableTitle => 'Invalid reason';
+
+  @override
+  String get errorReportReasonNotApplicableMessage =>
+      'This reason doesn\'t apply to this type of report.';
+
+  @override
+  String get errorReportCannotReportSelfTitle => 'Can\'t report yourself';
+
+  @override
+  String get errorReportCannotReportSelfMessage =>
+      'You can\'t report yourself.';
+
+  @override
+  String get errorReportTooManyPhotosTitle => 'Too many screenshots';
+
+  @override
+  String get errorReportTooManyPhotosMessage =>
+      'Maximum 5 screenshots per report.';
+
+  @override
+  String get errorReportPhotoNotOwnedTitle => 'Can\'t do this';
+
+  @override
+  String get errorReportPhotoNotOwnedMessage =>
+      'One of the screenshots isn\'t yours.';
 }

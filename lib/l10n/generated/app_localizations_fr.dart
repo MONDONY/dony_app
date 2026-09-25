@@ -13863,4 +13863,32 @@ class AppLocalizationsFr extends AppLocalizations {
   String referralRedeemCodeHint(String example) {
     return 'Ex : $example';
   }
+
+  @override
+  String get errorReportReasonNotApplicableTitle => 'Motif invalide';
+
+  @override
+  String get errorReportReasonNotApplicableMessage =>
+      'Ce motif ne s\'applique pas à ce type de signalement.';
+
+  @override
+  String get errorReportCannotReportSelfTitle => 'Signalement impossible';
+
+  @override
+  String get errorReportCannotReportSelfMessage =>
+      'Tu ne peux pas te signaler toi-même.';
+
+  @override
+  String get errorReportTooManyPhotosTitle => 'Trop de captures';
+
+  @override
+  String get errorReportTooManyPhotosMessage =>
+      'Maximum 5 captures d\'écran par signalement.';
+
+  @override
+  String get errorReportPhotoNotOwnedTitle => 'Signalement impossible';
+
+  @override
+  String get errorReportPhotoNotOwnedMessage =>
+      'Une des captures ne t\'appartient pas.';
 }

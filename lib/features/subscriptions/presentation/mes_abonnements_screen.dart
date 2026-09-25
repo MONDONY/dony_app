@@ -39,16 +39,25 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
 
   /// Les voyageurs qui viennent de publier remontent, puis les plus récents.
   /// Un abonné sans trajet ouvert ferme la liste : il n'y a rien à en attendre.
-  List<SubscriptionItem> _sorted(List<SubscriptionItem> items) {
+  ///
+  /// Le tri alphabétique se fait sur le nom affiché ([SubscriptionItemL10n.
+  /// displayName]) plutôt que sur `travelerName`, qui peut être vide (repli
+  /// sur [AppLocalizations.tripTravelerFallbackName]) : sinon un voyageur
+  /// sans nom passerait en tête, avant `A`.
+  List<SubscriptionItem> _sorted(
+    List<SubscriptionItem> items,
+    AppLocalizations l,
+  ) {
     final sorted = [...items];
     sorted.sort((a, b) {
       if (a.hasNew != b.hasNew) return a.hasNew ? -1 : 1;
       final da = a.lastAnnouncement?.publishedAt;
       final db = b.lastAnnouncement?.publishedAt;
       if (da == null && db == null) {
-        return a.travelerName.toLowerCase().compareTo(
-          b.travelerName.toLowerCase(),
-        );
+        return a
+            .displayName(l)
+            .toLowerCase()
+            .compareTo(b.displayName(l).toLowerCase());
       }
       if (da == null) return 1;
       if (db == null) return -1;
@@ -158,12 +167,12 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
             );
           }
 
-          final all = _sorted(state.items);
+          final all = _sorted(state.items, l);
           final q = _query.trim().toLowerCase();
           final filtered = q.isEmpty
               ? all
               : all
-                    .where((i) => i.travelerName.toLowerCase().contains(q))
+                    .where((i) => i.displayName(l).toLowerCase().contains(q))
                     .toList();
           final newCount = all.where((i) => i.hasNew).length;
           final showSearch = all.length >= kSubscriptionsSearchThreshold;

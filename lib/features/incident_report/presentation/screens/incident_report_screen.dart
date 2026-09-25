@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/incident_report/bloc/incident_photo_upload.dart';
@@ -66,7 +68,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
           }
         } else if (state is IncidentReportError) {
           if (state.error != null) {
-            ErrorPresenter.show(context, state.error);
+            unawaited(ErrorPresenter.show(context, state.error));
           } else {
             DonySnackbar.show(
               context,

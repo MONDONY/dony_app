@@ -15,7 +15,6 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/billing/bloc/subscription_bloc.dart';
 import 'package:dony/features/billing/data/models/pro_subscription_model.dart';
-import 'package:dony/features/billing/presentation/pro_portal_copy.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_status_banner.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_status_card.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
@@ -302,7 +301,7 @@ class _UpgradeToProViewState extends State<_UpgradeToProView>
               clearBrowserLaunched();
               DonySnackbar.show(
                 context,
-                message: proPortalOpenFailedMessage(context.l10n),
+                message: context.l10n.proPortalOpenFailedMessage,
                 type: DonySnackbarType.error,
               );
             }

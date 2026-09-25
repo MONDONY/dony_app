@@ -15082,7 +15082,7 @@
   },
   "proPortalOpenFailedMessage": "Impossible d'ouvrir la page. Réessayez, ou rendez-vous sur le site Yadony PRO depuis votre navigateur.",
   "@proPortalOpenFailedMessage": {
-    "description": "Message d'échec d'ouverture du portail PRO, partagé par l'écran Compte PRO et le bandeau du Profil (pro_portal_copy.dart)."
+    "description": "Message d'échec d'ouverture du portail PRO, partagé par l'écran Compte PRO (upgrade_to_pro_screen.dart) et le bandeau du Profil (subscription_banner_host.dart)."
   },
   "proLimitUnderstoodButton": "Compris",
   "@proLimitUnderstoodButton": {
@@ -15828,5 +15828,37 @@
         "type": "String"
       }
     }
+  },
+  "errorReportReasonNotApplicableTitle": "Motif invalide",
+  "@errorReportReasonNotApplicableTitle": {
+    "description": "Titre du refus 422 `reason-not-applicable` (ReportService.java, error_catalog.dart) : le motif choisi ne s'applique pas au type de cible signalée."
+  },
+  "errorReportReasonNotApplicableMessage": "Ce motif ne s'applique pas à ce type de signalement.",
+  "@errorReportReasonNotApplicableMessage": {
+    "description": "Message du refus 422 `reason-not-applicable`."
+  },
+  "errorReportCannotReportSelfTitle": "Signalement impossible",
+  "@errorReportCannotReportSelfTitle": {
+    "description": "Titre du refus 422 `cannot-report-self` (ReportService.java, error_catalog.dart) : un utilisateur ne peut pas se signaler lui-même."
+  },
+  "errorReportCannotReportSelfMessage": "Tu ne peux pas te signaler toi-même.",
+  "@errorReportCannotReportSelfMessage": {
+    "description": "Message du refus 422 `cannot-report-self`."
+  },
+  "errorReportTooManyPhotosTitle": "Trop de captures",
+  "@errorReportTooManyPhotosTitle": {
+    "description": "Titre du refus 422 `too-many-photos` (ReportService.java : MAX_PHOTOS = 5, error_catalog.dart). En pratique hors d'atteinte : le client plafonne déjà à 4 (IncidentPhotosCubit.maxPhotos)."
+  },
+  "errorReportTooManyPhotosMessage": "Maximum 5 captures d'écran par signalement.",
+  "@errorReportTooManyPhotosMessage": {
+    "description": "Message du refus 422 `too-many-photos`."
+  },
+  "errorReportPhotoNotOwnedTitle": "Signalement impossible",
+  "@errorReportPhotoNotOwnedTitle": {
+    "description": "Titre du refus 403 `photo-not-owned` (ReportService.java, error_catalog.dart) : une capture jointe n'appartient pas à l'auteur du signalement."
+  },
+  "errorReportPhotoNotOwnedMessage": "Une des captures ne t'appartient pas.",
+  "@errorReportPhotoNotOwnedMessage": {
+    "description": "Message du refus 403 `photo-not-owned`."
   }
 }

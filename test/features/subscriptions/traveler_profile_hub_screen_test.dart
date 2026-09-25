@@ -667,7 +667,10 @@ void main() {
       expect(find.text('Reviews'), findsOneWidget);
       expect(find.text('Pro account'), findsOneWidget);
       expect(find.text('Verified identity'), findsOneWidget);
-      expect(find.textContaining('rating', findRichText: true), findsOneWidget);
+      expect(
+        find.textContaining('4.7 rating', findRichText: true),
+        findsOneWidget,
+      );
       expect(
         find.textContaining('12 deliveries', findRichText: true),
         findsOneWidget,

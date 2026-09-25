@@ -109,9 +109,8 @@ class SubscriptionStatusBanner extends StatelessWidget {
     }
     // L'échéance est strictement dans le futur et `daysUntil` arrondit vers le
     // haut : le compte vaut donc toujours 1 au minimum, et « 0 jour » est
-    // désormais inatteignable. Le pluriel ICU corrige de lui-même l'ancien
-    // accord faux (`days > 1 ? 's' : ''` donnait « 0 jour » à 0, jamais
-    // atteignable ici de toute façon).
+    // inatteignable ici. Le pluriel ICU rend le même texte que l'ancien
+    // `days > 1 ? 's' : ''` sur toute la plage réellement atteinte (1 et plus).
     final days = daysUntil(expiry) ?? 1;
     return l.proFreeAccessEndsInDays(days);
   }

@@ -22130,7 +22130,7 @@ abstract class AppLocalizations {
   /// **'Gérer mon abonnement'**
   String get proManageSubscriptionButton;
 
-  /// Message d'échec d'ouverture du portail PRO, partagé par l'écran Compte PRO et le bandeau du Profil (pro_portal_copy.dart).
+  /// Message d'échec d'ouverture du portail PRO, partagé par l'écran Compte PRO (upgrade_to_pro_screen.dart) et le bandeau du Profil (subscription_banner_host.dart).
   ///
   /// In fr, this message translates to:
   /// **'Impossible d\'ouvrir la page. Réessayez, ou rendez-vous sur le site Yadony PRO depuis votre navigateur.'**
@@ -23077,6 +23077,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ex : {example}'**
   String referralRedeemCodeHint(String example);
+
+  /// Titre du refus 422 `reason-not-applicable` (ReportService.java, error_catalog.dart) : le motif choisi ne s'applique pas au type de cible signalée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif invalide'**
+  String get errorReportReasonNotApplicableTitle;
+
+  /// Message du refus 422 `reason-not-applicable`.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce motif ne s\'applique pas à ce type de signalement.'**
+  String get errorReportReasonNotApplicableMessage;
+
+  /// Titre du refus 422 `cannot-report-self` (ReportService.java, error_catalog.dart) : un utilisateur ne peut pas se signaler lui-même.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signalement impossible'**
+  String get errorReportCannotReportSelfTitle;
+
+  /// Message du refus 422 `cannot-report-self`.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu ne peux pas te signaler toi-même.'**
+  String get errorReportCannotReportSelfMessage;
+
+  /// Titre du refus 422 `too-many-photos` (ReportService.java : MAX_PHOTOS = 5, error_catalog.dart). En pratique hors d'atteinte : le client plafonne déjà à 4 (IncidentPhotosCubit.maxPhotos).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de captures'**
+  String get errorReportTooManyPhotosTitle;
+
+  /// Message du refus 422 `too-many-photos`.
+  ///
+  /// In fr, this message translates to:
+  /// **'Maximum 5 captures d\'écran par signalement.'**
+  String get errorReportTooManyPhotosMessage;
+
+  /// Titre du refus 403 `photo-not-owned` (ReportService.java, error_catalog.dart) : une capture jointe n'appartient pas à l'auteur du signalement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signalement impossible'**
+  String get errorReportPhotoNotOwnedTitle;
+
+  /// Message du refus 403 `photo-not-owned`.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une des captures ne t\'appartient pas.'**
+  String get errorReportPhotoNotOwnedMessage;
 }
 
 class _AppLocalizationsDelegate
