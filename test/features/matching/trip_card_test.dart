@@ -3,6 +3,7 @@ import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 
 import '../../helpers/l10n_test_helpers.dart';
 
@@ -21,6 +22,7 @@ AnnouncementModel _announcement({
   double pricePerKg = 8.0,
   List<Map<String, dynamic>>? priceGridItems,
   String currency = 'EUR',
+  DateTime? departureDate,
 }) {
   return AnnouncementModel.fromJson({
     'id': 'a1',
@@ -29,9 +31,9 @@ AnnouncementModel _announcement({
     'arrivalCity': arrivalCity,
     'departureFlag': ?departureFlag,
     'arrivalFlag': ?arrivalFlag,
-    'departureDate': DateTime.now()
-        .add(const Duration(days: 3))
-        .toIso8601String(),
+    'departureDate':
+        (departureDate ?? DateTime.now().add(const Duration(days: 3)))
+            .toIso8601String(),
     'totalKg': totalKg,
     'availableKg': availableKg,
     'pricePerKg': pricePerKg,
@@ -393,5 +395,93 @@ void main() {
     expect(find.text('Flexible kg'), findsOneWidget);
     expect(find.text('Kg libre'), findsNothing);
     expect(find.text('Active'), findsOneWidget);
+  });
+
+  testWidgets(
+    'date proche (< 7 jours) fr non-régression (motif d MMM inchangé)',
+    (tester) async {
+      final date = DateTime.now().add(const Duration(days: 3));
+      await tester.pumpWidget(
+        _wrap(
+          TripCard(
+            announcement: _announcement(departureDate: date),
+            onTap: () {},
+            index: 0,
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.textContaining(DateFormat('d MMM', 'fr').format(date)),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('date proche (< 7 jours) en anglais (motif d MMM en)', (
+    tester,
+  ) async {
+    useEnglish();
+    final date = DateTime.now().add(const Duration(days: 3));
+    await tester.pumpWidget(
+      _wrap(
+        TripCard(
+          announcement: _announcement(departureDate: date),
+          onTap: () {},
+          index: 0,
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      find.textContaining(DateFormat.MMMd('en').format(date)),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'date lointaine (> 6 jours) fr non-régression (motif EEE d MMM yyyy inchangé)',
+    (tester) async {
+      final date = DateTime.now().add(const Duration(days: 30));
+      await tester.pumpWidget(
+        _wrap(
+          TripCard(
+            announcement: _announcement(departureDate: date),
+            onTap: () {},
+            index: 0,
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.textContaining(DateFormat('EEE d MMM yyyy', 'fr').format(date)),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('date lointaine (> 6 jours) en anglais (ordre anglais)', (
+    tester,
+  ) async {
+    useEnglish();
+    final date = DateTime.now().add(const Duration(days: 30));
+    await tester.pumpWidget(
+      _wrap(
+        TripCard(
+          announcement: _announcement(departureDate: date),
+          onTap: () {},
+          index: 0,
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      find.textContaining(DateFormat.yMMMEd('en').format(date)),
+      findsOneWidget,
+    );
   });
 }

@@ -12,6 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/stripe_account_test_doubles.dart';
@@ -209,5 +210,37 @@ void main() {
     expect(find.text('DROP-OFF LOCATIONS'), findsOneWidget);
     expect(find.text('PARCEL DROP-OFF DEADLINE'), findsOneWidget);
     expect(find.text('LIEUX DE REMISE'), findsNothing);
+  });
+
+  testWidgets(
+    'date de départ (chip héro) fr non-régression (motif EEE d MMM yyyy inchangé)',
+    (tester) async {
+      final announcement = _minimal();
+      await tester.pumpWidget(host(announcement));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining(
+          DateFormat('EEE d MMM yyyy', 'fr').format(announcement.departureDate),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('date de départ (chip héro) en anglais (ordre anglais)', (
+    tester,
+  ) async {
+    useEnglish();
+    final announcement = _minimal();
+    await tester.pumpWidget(host(announcement));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining(
+        DateFormat.yMMMEd('en').format(announcement.departureDate),
+      ),
+      findsOneWidget,
+    );
   });
 }

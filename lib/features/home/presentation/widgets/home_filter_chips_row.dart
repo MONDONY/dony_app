@@ -98,7 +98,7 @@ class HomeFilterChipsRow extends StatelessWidget {
         return l.commonDateThisMonthLong;
       case DonyDatePreset.custom:
         return filters.customDate != null
-            ? DateFormat('d MMM', l.localeName).format(filters.customDate!)
+            ? DateFormat.MMMd(l.localeName).format(filters.customDate!)
             : l.homeFilterChipsDate;
       case DonyDatePreset.none:
         return l.homeFilterChipsAnyDate;

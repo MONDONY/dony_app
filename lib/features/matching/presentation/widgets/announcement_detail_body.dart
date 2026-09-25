@@ -92,8 +92,7 @@ class AnnouncementDetailBody extends StatelessWidget {
                 runSpacing: DonySpacing.xs,
                 children: [
                   _HeroChip(
-                    label: DateFormat(
-                      'EEE d MMM yyyy',
+                    label: DateFormat.yMMMEd(
                       l.localeName,
                     ).format(a.departureDate),
                   ),

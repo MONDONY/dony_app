@@ -117,8 +117,7 @@ class TravelerCard extends StatelessWidget {
     final totalTrips = traveler?.totalTrips;
     final isKiloPro = traveler?.kiloPro ?? false;
     final isProAccount = traveler?.isProAccount ?? false;
-    final dateStr = DateFormat(
-      'EEE d MMM',
+    final dateStr = DateFormat.MMMEd(
       l.localeName,
     ).format(announcement.departureDate);
     final categories = announcement.acceptedContentTypes ?? [];

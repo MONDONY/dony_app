@@ -2601,10 +2601,7 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
           ),
           _PresetOption(
             label: _selected == DonyDatePreset.custom && _customDate != null
-                ? DateFormat(
-                    'EEE d MMM',
-                    context.l10n.localeName,
-                  ).format(_customDate!)
+                ? DateFormat.MMMEd(context.l10n.localeName).format(_customDate!)
                 : context.l10n.homeChooseDate,
             isSelected: _selected == DonyDatePreset.custom,
             onTap: _pickCustomDate,

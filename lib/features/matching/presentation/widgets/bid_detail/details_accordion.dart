@@ -67,7 +67,7 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
     }
     final locale = context.l10n.localeName;
     if (locale == 'fr') {
-      return DateFormat('EEE dd MMM yyyy', 'fr_FR').format(d.toLocal());
+      return DateFormat('EEE dd MMM yyyy', locale).format(d.toLocal());
     }
     return DateFormat.yMMMEd(locale).format(d.toLocal());
   }

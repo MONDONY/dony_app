@@ -5,6 +5,8 @@ import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
 
@@ -27,6 +29,11 @@ Widget _fields() => _wrap(
 );
 
 void main() {
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
+    await initializeDateFormatting('en');
+  });
+
   testWidgets('en français : libellés inchangés', (tester) async {
     await tester.pumpWidget(_fields());
 
@@ -131,5 +138,31 @@ void main() {
 
     expect(find.text('TRANSPORT'), findsOneWidget);
     expect(find.text('Any'), findsOneWidget);
+  });
+
+  testWidgets(
+    'DateField : date choisie fr non-régression (motif d MMM inchangé)',
+    (tester) async {
+      final date = DateTime(2026, 10, 6, 14, 5);
+      await tester.pumpWidget(_wrap(DateField(date: date, onChanged: (_) {})));
+
+      expect(
+        find.textContaining(DateFormat('d MMM', 'fr').format(date)),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('DateField : date choisie en anglais (motif d MMM en)', (
+    tester,
+  ) async {
+    useEnglish();
+    final date = DateTime(2026, 10, 6, 14, 5);
+    await tester.pumpWidget(_wrap(DateField(date: date, onChanged: (_) {})));
+
+    expect(
+      find.textContaining(DateFormat.MMMd('en').format(date)),
+      findsOneWidget,
+    );
   });
 }

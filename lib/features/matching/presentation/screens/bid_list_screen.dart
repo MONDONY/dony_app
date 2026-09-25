@@ -138,13 +138,17 @@ class _BidListView extends StatelessWidget {
     return parts.join(' · ');
   }
 
-  // Aucun squelette intl ne rend « jour abrégé + jour + mois complet, sans
-  // année » (MMMMEEEEd s'en approche mais garde le jour de semaine en toutes
-  // lettres). Motif fixe conservé pour les deux langues (vérifié fr par
-  // test, non-régression sur le 5 mars), locale lue depuis le contexte
-  // (jamais AppL10n.localeName dans un widget).
+  // fr : garde le motif fixe d'origine (« mar. 6 octobre »). en : aucun
+  // squelette intl ne rend « jour abrégé + jour + mois complet, sans année » ;
+  // MMMMEEEEd (jour de semaine en toutes lettres) donne « Tuesday, October 6 »,
+  // rendu naturel en anglais même s'il diffère de l'abréviation française.
+  // Locale lue depuis le contexte (jamais AppL10n.localeName dans un widget).
   String _formatDepartureDate(BuildContext context, DateTime date) {
-    return DateFormat('EEE d MMMM', context.l10n.localeName).format(date);
+    final locale = context.l10n.localeName;
+    if (locale == 'fr') {
+      return DateFormat('EEE d MMMM', locale).format(date);
+    }
+    return DateFormat.MMMMEEEEd(locale).format(date);
   }
 
   Future<void> _openPending(BuildContext context) async {

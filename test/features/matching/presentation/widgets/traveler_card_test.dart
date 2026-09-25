@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
@@ -949,6 +950,49 @@ void main() {
 
       expect(find.text('Your trip'), findsOneWidget);
       expect(find.text('Votre trajet'), findsNothing);
+    });
+
+    testWidgets('date de départ fr non-régression (motif EEE d MMM inchangé)', (
+      tester,
+    ) async {
+      final date = DateTime(2026, 10, 6, 14, 5);
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(departureDate: date),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining(DateFormat('EEE d MMM', 'fr').format(date)),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('date de départ en anglais (ordre anglais)', (tester) async {
+      useEnglish();
+      final date = DateTime(2026, 10, 6, 14, 5);
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(departureDate: date),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining(DateFormat.MMMEd('en').format(date)),
+        findsOneWidget,
+      );
     });
   });
 }

@@ -208,8 +208,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                       ),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
-                        DateFormat(
-                          'EEEE d MMMM yyyy',
+                        DateFormat.yMMMMEEEEd(
                           l.localeName,
                         ).format(a.departureDate),
                         style: tt.bodySmall?.copyWith(

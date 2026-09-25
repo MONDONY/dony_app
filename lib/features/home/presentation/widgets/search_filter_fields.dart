@@ -520,10 +520,7 @@ class DateField extends StatelessWidget {
                 const SizedBox(width: DonySpacing.xs),
                 Text(
                   date != null
-                      ? DateFormat(
-                          'd MMM',
-                          context.l10n.localeName,
-                        ).format(date!)
+                      ? DateFormat.MMMd(context.l10n.localeName).format(date!)
                       : context.l10n.homeFilterFieldsChoose,
                   style: tt.titleSmall?.copyWith(
                     color: date != null ? cs.primary : cs.onSurfaceVariant,

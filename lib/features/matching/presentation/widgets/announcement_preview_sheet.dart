@@ -78,11 +78,12 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
 
+    // fr : garde le zéro de tête du motif d'origine (« 06 oct. 2026 ») ;
+    // le squelette yMMMd le retire (« 6 oct. 2026 »). en : squelette yMMMd.
     final dateStr = formState.departureDate != null
-        ? DateFormat(
-            'dd MMM yyyy',
-            l.localeName,
-          ).format(formState.departureDate!)
+        ? (l.localeName == 'fr'
+              ? DateFormat('dd MMM yyyy', 'fr').format(formState.departureDate!)
+              : DateFormat.yMMMd(l.localeName).format(formState.departureDate!))
         : '-';
 
     // Le voyageur touche le prix net qu'il fixe ; la commission Yadony est en sus

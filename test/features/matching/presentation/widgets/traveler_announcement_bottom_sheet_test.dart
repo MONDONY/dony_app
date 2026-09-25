@@ -34,6 +34,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
@@ -85,6 +86,7 @@ AnnouncementModel _buildAnnouncement({
   double? rating,
   String displayName = 'Ibrahima Diallo',
   DateTime? handoverDeadline,
+  DateTime? departureDate,
   bool acceptsUnverified = false,
   bool isProAccount = false,
   String currency = 'EUR',
@@ -107,7 +109,7 @@ AnnouncementModel _buildAnnouncement({
     travelerId: 't1',
     departureCity: 'Paris',
     arrivalCity: 'Dakar',
-    departureDate: DateTime(now.year, now.month + 1, 15),
+    departureDate: departureDate ?? DateTime(now.year, now.month + 1, 15),
     departureTime: departureTime,
     arrivalTime: arrivalTime,
     availableKg: 12,
@@ -264,6 +266,75 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('date limite de dépôt'), findsNothing);
+  });
+
+  testWidgets(
+    'date limite de dépôt fr non-régression (motif EEE d MMM inchangé)',
+    (tester) async {
+      final deadline = DateTime(2026, 10, 6, 14, 5);
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        handoverDeadline: deadline,
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining(DateFormat('EEE d MMM', 'fr').format(deadline)),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('date limite de dépôt en anglais (ordre anglais)', (
+    tester,
+  ) async {
+    useEnglish();
+    final deadline = DateTime(2026, 10, 6, 14, 5);
+    final a = _buildAnnouncement(kycVerified: true, handoverDeadline: deadline);
+    await tester.pumpWidget(_harness(announcement: a));
+    await tester.tap(find.text('Ouvrir'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining(DateFormat.MMMEd('en').format(deadline)),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'date de départ (corridor héro) fr non-régression (motif EEE d MMM yyyy inchangé)',
+    (tester) async {
+      final departure = DateTime(2026, 10, 6, 14, 5);
+      final a = _buildAnnouncement(kycVerified: true, departureDate: departure);
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining(
+          DateFormat('EEE d MMM yyyy', 'fr').format(departure),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('date de départ (corridor héro) en anglais (ordre anglais)', (
+    tester,
+  ) async {
+    useEnglish();
+    final departure = DateTime(2026, 10, 6, 14, 5);
+    final a = _buildAnnouncement(kycVerified: true, departureDate: departure);
+    await tester.pumpWidget(_harness(announcement: a));
+    await tester.tap(find.text('Ouvrir'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining(DateFormat.yMMMEd('en').format(departure)),
+      findsOneWidget,
+    );
   });
 
   testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR', (
