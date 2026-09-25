@@ -51,6 +51,36 @@ void main() {
     expect(tapped, isTrue);
   });
 
+  testWidgets(
+    'date de départ — fr : motif inchangé (DateFormat.MMMd == ancien \'d MMM\')',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(body: TripMatchCard(match: _trip(), index: 0)),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // DateTime(2026, 7, 10) → ancien DateFormat('d MMM', 'fr') rendait déjà
+      // « 10 juil. » ; DateFormat.MMMd('fr') rend le même texte (vérifié hors
+      // widget avec intl 0.20.2). toLowerCase() reste appliqué ensuite.
+      expect(find.text('10 juil.'), findsOneWidget);
+    },
+  );
+
+  testWidgets('date de départ — anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(body: TripMatchCard(match: _trip(), index: 0)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    // DateFormat.MMMd('en').format(...) → 'Jul 10', puis toLowerCase().
+    expect(find.text('jul 10'), findsOneWidget);
+  });
+
   testWidgets('renders price per kg', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

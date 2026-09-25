@@ -28,8 +28,8 @@ class CorridorAlertMatchesScreen extends StatelessWidget {
   const CorridorAlertMatchesScreen({super.key, this.alert, String? alertId})
     : assert(
         alert != null || alertId != null,
-        'alert ou alertId requis',
-      ), // i18n-ignore
+        'alert ou alertId requis', // i18n-ignore
+      ),
       _alertId = alertId;
 
   final CorridorAlertModel? alert;
