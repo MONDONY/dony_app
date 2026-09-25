@@ -134,7 +134,7 @@ class DonyTripCard extends StatelessWidget {
               const Spacer(),
               if (availableKg != null) ...[
                 Text(
-                  '${availableKg!.toStringAsFixed(0)} kg',
+                  '${availableKg!.toStringAsFixed(0)} kg', // i18n-ignore : format, unité universelle
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(width: DonySpacing.sm),

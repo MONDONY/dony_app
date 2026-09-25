@@ -10,6 +10,7 @@ import 'package:dony/core/services/app_log.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/services/screen_feedback_sender.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -170,7 +171,9 @@ class DonyFeedbackButton extends StatelessWidget {
         screenshot: bytes,
       );
     } catch (e) {
-      AppLog.warn('Rapport d\'écran non transmis au backend : $e');
+      final logMessage =
+          'Rapport d\'écran non transmis au backend : $e'; // i18n-ignore
+      AppLog.warn(logMessage);
     }
   }
 
@@ -186,10 +189,12 @@ class DonyFeedbackButton extends StatelessWidget {
       final path = report.attachments[i];
       try {
         final data = await File(path).readAsBytes();
+        final attachmentName =
+            'capture_${i + 1}.${_contentTypeFor(path) == 'image/png' ? 'png' : 'jpg'}'; // i18n-ignore : nom de fichier technique, jamais affiché
         attachments.add(
           SentryAttachment.fromUint8List(
             data,
-            'capture_${i + 1}.${_contentTypeFor(path) == 'image/png' ? 'png' : 'jpg'}',
+            attachmentName,
             contentType: _contentTypeFor(path),
           ),
         );
@@ -197,7 +202,7 @@ class DonyFeedbackButton extends StatelessWidget {
     }
 
     final eventId = await Sentry.captureMessage(
-      'screen_feedback: $route',
+      'screen_feedback: $route', // i18n-ignore : identifiant Sentry, jamais affiché
       withScope: (scope) async {
         if (bytes != null) {
           scope.addAttachment(
@@ -253,6 +258,11 @@ class DonyFeedbackButton extends StatelessWidget {
   Future<void> _openSheet(BuildContext outerContext) async {
     unawaited(HapticFeedback.lightImpact());
 
+    // Textes résolus AVANT le await qui suit : outerContext pourrait ne plus
+    // être valide une fois la capture d'écran terminée.
+    final l = outerContext.l10n;
+    final sheetTitle = l.feedbackSheetTitle;
+    final sheetSubtitle = l.feedbackSheetSubtitle;
     // Capture the ScaffoldMessenger before the sheet opens so that the success
     // snackbar can be shown in the parent scaffold after the sheet is popped.
     final scaffoldMessenger = ScaffoldMessenger.maybeOf(outerContext);
@@ -268,10 +278,8 @@ class DonyFeedbackButton extends StatelessWidget {
 
     await DonyBottomSheet.show<void>(
       outerContext,
-      title: 'Un problème sur cet écran ?',
-      subtitle:
-          'Décrivez le bug. Une capture de l\'écran est jointe automatiquement, '
-          'vous pouvez en ajouter d\'autres.',
+      title: sheetTitle,
+      subtitle: sheetSubtitle,
       // wrapper provides the shared form state to both child (TextField) and
       // stickyBottom (DonyButton) — pattern recommandé CLAUDE.md pour état local.
       wrapper: (content) => _FeedbackFormProvider(
@@ -294,7 +302,7 @@ class DonyFeedbackButton extends StatelessWidget {
     // `IconButton.tooltip` enveloppe déjà dans un Tooltip : le Tooltip externe
     // qui existait ici en créait un second, avec le même message.
     return IconButton(
-      tooltip: 'Signaler un problème',
+      tooltip: context.l10n.feedbackButtonTooltip,
       icon: const DonyIcon('bug'),
       onPressed: () => _openSheet(context),
     );
@@ -429,6 +437,7 @@ class _FeedbackFormBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formState = _FeedbackFormInherited.of(context);
+    final l = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -437,15 +446,13 @@ class _FeedbackFormBody extends StatelessWidget {
           controller: formState.controller,
           minLines: 3,
           maxLines: 4,
-          decoration: const InputDecoration(
-            hintText: 'Ex : le code retrait ne s\'affiche pas…',
-          ),
+          decoration: InputDecoration(hintText: l.feedbackHint),
           autofocus: true,
           textInputAction: TextInputAction.newline,
         ),
         const SizedBox(height: DonySpacing.base),
         Text(
-          'Vos captures (facultatif)',
+          l.feedbackAttachmentsLabel,
           style: Theme.of(context).textTheme.labelLarge,
         ),
         const SizedBox(height: DonySpacing.sm),
@@ -476,7 +483,7 @@ class _FeedbackAttachments extends StatelessWidget {
       if (context.mounted) {
         DonySnackbar.show(
           context,
-          message: 'Image non supportée ou trop volumineuse',
+          message: context.l10n.commonImageUnsupported,
           type: DonySnackbarType.error,
         );
       }
@@ -484,6 +491,7 @@ class _FeedbackAttachments extends StatelessWidget {
   }
 
   void _showSourceSheet(BuildContext context) {
+    final l = context.l10n;
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -495,7 +503,7 @@ class _FeedbackAttachments extends StatelessWidget {
             children: [
               ListTile(
                 leading: Icon(Icons.photo_library_rounded, color: cs.primary),
-                title: const Text('Choisir dans la galerie'),
+                title: Text(l.commonPickFromGallery),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
                   _pick(context, ImageSource.gallery);
@@ -503,7 +511,7 @@ class _FeedbackAttachments extends StatelessWidget {
               ),
               ListTile(
                 leading: Icon(Icons.photo_camera_rounded, color: cs.primary),
-                title: const Text('Prendre une photo'),
+                title: Text(l.commonTakePhoto),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
                   _pick(context, ImageSource.camera);
@@ -520,6 +528,7 @@ class _FeedbackAttachments extends StatelessWidget {
   Widget build(BuildContext context) {
     final formState = _FeedbackFormInherited.of(context);
     final cs = Theme.of(context).colorScheme;
+    final addLabel = context.l10n.feedbackAddAttachment;
     return ValueListenableBuilder<List<String>>(
       valueListenable: formState.attachments,
       builder: (context, attachments, _) {
@@ -542,7 +551,7 @@ class _FeedbackAttachments extends StatelessWidget {
                 button: true,
                 container: true,
                 excludeSemantics: true,
-                label: 'Ajouter une capture',
+                label: addLabel,
                 child: GestureDetector(
                   onTap: () => _showSourceSheet(context),
                   child: Container(
@@ -601,7 +610,7 @@ class _AttachmentThumb extends StatelessWidget {
             right: -6,
             child: Semantics(
               button: true,
-              label: 'Retirer la capture',
+              label: context.l10n.feedbackRemoveAttachment,
               child: GestureDetector(
                 onTap: onRemove,
                 child: Container(
@@ -635,6 +644,11 @@ class _FeedbackSubmitButton extends StatefulWidget {
 class _FeedbackSubmitButtonState extends State<_FeedbackSubmitButton> {
   Future<void> _handleSubmit() async {
     final formState = _FeedbackFormInherited.of(context);
+    // Textes résolus ICI, pendant que le contexte est encore valide : ils
+    // sont réutilisés après le `pop` du sheet, une fois le widget démonté.
+    final l = context.l10n;
+    final successMessage = l.feedbackSuccessMessage;
+    final errorMessage = l.feedbackErrorMessage;
     final report = FeedbackReport(
       message: formState.controller.text.trim(),
       attachments: List<String>.unmodifiable(formState.attachments.value),
@@ -657,8 +671,8 @@ class _FeedbackSubmitButtonState extends State<_FeedbackSubmitButton> {
       // Déplacer cet appel dans le bloc `if (mounted)` ci-dessus ferait
       // échouer le snackbar une fois le sheet dépilé.
       formState.scaffoldMessenger?.showSnackBar(
-        const SnackBar(
-          content: Text('Merci ! Votre rapport a bien été envoyé.'),
+        SnackBar(
+          content: Text(successMessage),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -667,7 +681,7 @@ class _FeedbackSubmitButtonState extends State<_FeedbackSubmitButton> {
       if (mounted) {
         DonySnackbar.show(
           context,
-          message: 'Envoi impossible. Réessayez.',
+          message: errorMessage,
           type: DonySnackbarType.error,
         );
       }
@@ -681,12 +695,13 @@ class _FeedbackSubmitButtonState extends State<_FeedbackSubmitButton> {
   @override
   Widget build(BuildContext context) {
     final formState = _FeedbackFormInherited.of(context);
+    final label = context.l10n.feedbackSubmitButton;
     return ValueListenableBuilder<bool>(
       valueListenable: formState.canSend,
       builder: (ctx, enabled, _) => ValueListenableBuilder<bool>(
         valueListenable: formState.sending,
         builder: (ctx2, isSending, _) => DonyButton(
-          label: 'Envoyer le rapport',
+          label: label,
           onPressed: enabled && !isSending ? _handleSubmit : null,
           isLoading: isSending,
         ),

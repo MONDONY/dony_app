@@ -13891,4 +13891,139 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorReportPhotoNotOwnedMessage =>
       'Une des captures ne t\'appartient pas.';
+
+  @override
+  String get dsDiscardTitle => 'Quitter sans enregistrer ?';
+
+  @override
+  String get dsDiscardMessage =>
+      'Les informations que vous avez saisies ne seront pas conservées. Vous devrez tout ressaisir.';
+
+  @override
+  String get dsDiscardConfirm => 'Quitter';
+
+  @override
+  String get dsDiscardCancel => 'Continuer la saisie';
+
+  @override
+  String get dsSearchHint => 'Rechercher...';
+
+  @override
+  String get dsSelect => 'Sélectionner';
+
+  @override
+  String get dsConfirmSelection => 'Confirmer la sélection';
+
+  @override
+  String get dsSignupProgress => 'Progression de l\'inscription';
+
+  @override
+  String dsGaugeCurrentStep(int index, int total) {
+    return 'Étape $index sur $total';
+  }
+
+  @override
+  String dsGaugeReachedSteps(int count, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count étapes sur $total',
+      one: '$count étape sur $total',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dsBannerInfo => 'Information';
+
+  @override
+  String get dsBannerSuccess => 'Succès';
+
+  @override
+  String get dsBannerWarning => 'Attention';
+
+  @override
+  String get dsBannerError => 'Erreur';
+
+  @override
+  String get dsBannerDismiss => 'Fermer le message';
+
+  @override
+  String get dsLoading => 'Chargement en cours...';
+
+  @override
+  String get dsHideKeyboard => 'Masquer le clavier';
+
+  @override
+  String get dsMascotteJoyeux => 'Mascotte qui salue';
+
+  @override
+  String get dsMascotteBienvenue => 'Mascotte accueillante, bras ouverts';
+
+  @override
+  String get dsMascotteConfiant => 'Mascotte prête à partir en voyage';
+
+  @override
+  String get dsMascotteSecurise =>
+      'Mascotte brandissant un badge de validation';
+
+  @override
+  String get dsMascotteSucces => 'Mascotte célébrant une réussite';
+
+  @override
+  String get dsMascotteEnCourse => 'Colis en transit';
+
+  @override
+  String get dsMascotteAssis => 'Mascotte curieuse, une loupe à la main';
+
+  @override
+  String get dsMascotteAucunResultat =>
+      'Mascotte perplexe devant une carte, aucun résultat';
+
+  @override
+  String get dsMascotteAttente => 'Mascotte patientant devant une horloge';
+
+  @override
+  String get dsMascotteErreur => 'Mascotte inquiète, une erreur est survenue';
+
+  @override
+  String get dsMascotteErreurLegere => 'Mascotte signalant un souci mineur';
+
+  @override
+  String get dsUrgentImminent => '🔥 Départ imminent';
+
+  @override
+  String get dsUrgent => '🔥 Urgent';
+
+  @override
+  String get feedbackSheetTitle => 'Un problème sur cet écran ?';
+
+  @override
+  String get feedbackSheetSubtitle =>
+      'Décrivez le bug. Une capture de l\'écran est jointe automatiquement, vous pouvez en ajouter d\'autres.';
+
+  @override
+  String get feedbackButtonTooltip => 'Signaler un problème';
+
+  @override
+  String get feedbackHint => 'Ex : le code retrait ne s\'affiche pas…';
+
+  @override
+  String get feedbackAttachmentsLabel => 'Vos captures (facultatif)';
+
+  @override
+  String get feedbackAddAttachment => 'Ajouter une capture';
+
+  @override
+  String get feedbackRemoveAttachment => 'Retirer la capture';
+
+  @override
+  String get feedbackSuccessMessage =>
+      'Merci ! Votre rapport a bien été envoyé.';
+
+  @override
+  String get feedbackErrorMessage => 'Envoi impossible. Réessayez.';
+
+  @override
+  String get feedbackSubmitButton => 'Envoyer le rapport';
 }

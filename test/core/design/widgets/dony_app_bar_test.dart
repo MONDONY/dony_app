@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /// GoRouter wrapper — widget sits on a child route so context.canPop() == true.
@@ -195,6 +197,36 @@ void main() {
 
       expect(find.text('Mon titre'), findsOneWidget);
     });
+
+    // ── Tooltip in English ──────────────────────────────────────────────────
+
+    testWidgets("tooltip is 'Back' in English", (tester) async {
+      useEnglish();
+      await tester.pumpWidget(wrapAppBar(const DonyAppBar(title: 'Test')));
+      await tester.pump();
+
+      final iconButton = tester.widget<IconButton>(
+        find.byType(IconButton).first,
+      );
+      expect(iconButton.tooltip, 'Back');
+    });
+
+    testWidgets("tooltip is 'Close' in English when leadingIcon is provided", (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        wrapAppBar(
+          const DonyAppBar(title: 'Modal', leadingIcon: Icons.close_rounded),
+        ),
+      );
+      await tester.pump();
+
+      final iconButton = tester.widget<IconButton>(
+        find.byType(IconButton).first,
+      );
+      expect(iconButton.tooltip, 'Close');
+    });
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -237,6 +269,17 @@ void main() {
             .where((i) => i.icon == Icons.chevron_left_rounded),
         isEmpty,
       );
+    });
+
+    testWidgets("tooltip is 'Back' in English", (tester) async {
+      useEnglish();
+      await tester.pumpWidget(wrapSliver());
+      await tester.pump();
+
+      final iconButton = tester.widget<IconButton>(
+        find.byType(IconButton).first,
+      );
+      expect(iconButton.tooltip, 'Back');
     });
   });
 }

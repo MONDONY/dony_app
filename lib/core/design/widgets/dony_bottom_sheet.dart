@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Helper pour afficher un bottom sheet standardisé Yadony.
@@ -148,7 +149,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Fermer',
+                    tooltip: context.l10n.commonClose,
                     // `maybePop` consulte `PopScope`, contrairement à `pop` :
                     // une feuille qui protège une saisie en cours ne se fait
                     // donc plus vider par sa propre croix.

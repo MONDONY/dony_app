@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 enum DonySnackbarType { info, success, warning, error }
@@ -41,7 +42,8 @@ abstract final class DonySnackbar {
     final effectiveDuration = persistent
         ? const Duration(minutes: 10)
         : duration;
-    final effectiveActionLabel = actionLabel ?? (persistent ? 'Fermer' : null);
+    final effectiveActionLabel =
+        actionLabel ?? (persistent ? context.l10n.commonClose : null);
 
     final (bg, fg, defaultIcon) = switch (type) {
       DonySnackbarType.info => (

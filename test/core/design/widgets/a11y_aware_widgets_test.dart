@@ -2,6 +2,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 Widget wrap(Widget child, {bool reinforce = false, bool persistent = false}) =>
     MaterialApp(
       theme: AppTheme.light(),
@@ -27,6 +29,19 @@ void main() {
     testWidgets('avec renforcement, explicite le statut', (tester) async {
       await tester.pumpWidget(wrap(const DonyUrgentBadge(), reinforce: true));
       expect(find.textContaining('Départ imminent'), findsOneWidget);
+    });
+
+    testWidgets('en anglais, sans renforcement', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(wrap(const DonyUrgentBadge()));
+      expect(find.textContaining('Urgent'), findsOneWidget);
+      expect(find.textContaining('Imminent departure'), findsNothing);
+    });
+
+    testWidgets('en anglais, avec renforcement', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(wrap(const DonyUrgentBadge(), reinforce: true));
+      expect(find.textContaining('Imminent departure'), findsOneWidget);
     });
   });
 
@@ -106,6 +121,28 @@ void main() {
       final bar = tester.widget<SnackBar>(find.byType(SnackBar));
       expect(bar.duration.inMinutes, greaterThanOrEqualTo(1));
       expect(find.text('Fermer'), findsOneWidget);
+    });
+
+    testWidgets('en anglais, l\'action de fermeture est traduite', (
+      tester,
+    ) async {
+      useEnglish();
+      late BuildContext ctx;
+      await tester.pumpWidget(
+        wrap(
+          Builder(
+            builder: (c) {
+              ctx = c;
+              return const SizedBox.shrink();
+            },
+          ),
+          persistent: true,
+        ),
+      );
+      DonySnackbar.show(ctx, message: 'Hello');
+      await tester.pump();
+      expect(find.text('Close'), findsOneWidget);
+      expect(find.text('Fermer'), findsNothing);
     });
   });
 }

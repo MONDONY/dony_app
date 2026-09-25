@@ -212,7 +212,9 @@ class DonyPriceTag extends StatelessWidget {
     return Semantics(
       container: true,
       button: onTap != null,
-      label: semanticLabel ?? '$label, $price',
+      label:
+          semanticLabel ??
+          '$label, $price', // i18n-ignore : format, valeurs déjà localisées par l'appelant
       excludeSemantics: trailing == null,
       child: onTap == null
           ? withPunch

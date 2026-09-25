@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   Widget wrap(Widget child) => MaterialApp.router(
     routerConfig: GoRouter(
@@ -33,5 +35,12 @@ void main() {
     await tester.tap(find.byType(DonyBackCircle));
     await tester.pump();
     expect(tapped, isTrue);
+  });
+
+  testWidgets('tooltip par défaut traduit en anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(wrap(const DonyBackCircle()));
+    expect(find.byTooltip('Back'), findsOneWidget);
+    expect(find.byTooltip('Retour'), findsNothing);
   });
 }

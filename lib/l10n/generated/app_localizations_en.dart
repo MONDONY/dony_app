@@ -13804,4 +13804,138 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorReportPhotoNotOwnedMessage =>
       'One of the screenshots isn\'t yours.';
+
+  @override
+  String get dsDiscardTitle => 'Leave without saving?';
+
+  @override
+  String get dsDiscardMessage =>
+      'The information you entered won\'t be kept. You\'ll have to start over.';
+
+  @override
+  String get dsDiscardConfirm => 'Leave';
+
+  @override
+  String get dsDiscardCancel => 'Keep editing';
+
+  @override
+  String get dsSearchHint => 'Search...';
+
+  @override
+  String get dsSelect => 'Select';
+
+  @override
+  String get dsConfirmSelection => 'Confirm selection';
+
+  @override
+  String get dsSignupProgress => 'Signup progress';
+
+  @override
+  String dsGaugeCurrentStep(int index, int total) {
+    return 'Step $index of $total';
+  }
+
+  @override
+  String dsGaugeReachedSteps(int count, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count steps of $total',
+      one: '$count step of $total',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dsBannerInfo => 'Info';
+
+  @override
+  String get dsBannerSuccess => 'Success';
+
+  @override
+  String get dsBannerWarning => 'Warning';
+
+  @override
+  String get dsBannerError => 'Error';
+
+  @override
+  String get dsBannerDismiss => 'Dismiss message';
+
+  @override
+  String get dsLoading => 'Loading...';
+
+  @override
+  String get dsHideKeyboard => 'Hide keyboard';
+
+  @override
+  String get dsMascotteJoyeux => 'Mascot waving hello';
+
+  @override
+  String get dsMascotteBienvenue => 'Welcoming mascot, arms wide open';
+
+  @override
+  String get dsMascotteConfiant => 'Mascot ready to travel';
+
+  @override
+  String get dsMascotteSecurise => 'Mascot holding up a verified badge';
+
+  @override
+  String get dsMascotteSucces => 'Mascot celebrating a success';
+
+  @override
+  String get dsMascotteEnCourse => 'Parcel in transit';
+
+  @override
+  String get dsMascotteAssis => 'Curious mascot with a magnifying glass';
+
+  @override
+  String get dsMascotteAucunResultat =>
+      'Puzzled mascot looking at a map, no results';
+
+  @override
+  String get dsMascotteAttente => 'Mascot waiting by a clock';
+
+  @override
+  String get dsMascotteErreur => 'Worried mascot, an error occurred';
+
+  @override
+  String get dsMascotteErreurLegere => 'Mascot flagging a minor issue';
+
+  @override
+  String get dsUrgentImminent => '🔥 Imminent departure';
+
+  @override
+  String get dsUrgent => '🔥 Urgent';
+
+  @override
+  String get feedbackSheetTitle => 'A problem with this screen?';
+
+  @override
+  String get feedbackSheetSubtitle =>
+      'Describe the bug. A screenshot is attached automatically, you can add more.';
+
+  @override
+  String get feedbackButtonTooltip => 'Report a problem';
+
+  @override
+  String get feedbackHint => 'E.g. the pickup code doesn\'t show…';
+
+  @override
+  String get feedbackAttachmentsLabel => 'Your screenshots (optional)';
+
+  @override
+  String get feedbackAddAttachment => 'Add a screenshot';
+
+  @override
+  String get feedbackRemoveAttachment => 'Remove screenshot';
+
+  @override
+  String get feedbackSuccessMessage =>
+      'Thank you! Your report was sent successfully.';
+
+  @override
+  String get feedbackErrorMessage => 'Couldn\'t send. Try again.';
+
+  @override
+  String get feedbackSubmitButton => 'Send report';
 }

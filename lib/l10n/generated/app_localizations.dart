@@ -23125,6 +23125,246 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Une des captures ne t\'appartient pas.'**
   String get errorReportPhotoNotOwnedMessage;
+
+  /// Titre de la confirmation d'abandon d'un formulaire en cours de saisie (dony_dialog.dart, DonyDialog.confirmDiscard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Quitter sans enregistrer ?'**
+  String get dsDiscardTitle;
+
+  /// Message de la confirmation d'abandon d'un formulaire (dony_dialog.dart, DonyDialog.confirmDiscard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les informations que vous avez saisies ne seront pas conservées. Vous devrez tout ressaisir.'**
+  String get dsDiscardMessage;
+
+  /// Bouton de confirmation d'abandon d'un formulaire (dony_dialog.dart, DonyDialog.confirmDiscard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Quitter'**
+  String get dsDiscardConfirm;
+
+  /// Bouton d'annulation de l'abandon, reste sur le formulaire (dony_dialog.dart, DonyDialog.confirmDiscard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer la saisie'**
+  String get dsDiscardCancel;
+
+  /// Placeholder par défaut du champ de recherche du design system (dony_search_field.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher...'**
+  String get dsSearchHint;
+
+  /// Libellé par défaut du bouton de DonySelectBar quand rien n'est sélectionné (dony_select_bar.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionner'**
+  String get dsSelect;
+
+  /// Libellé par défaut du bouton de DonySelectBar quand une sélection est active (dony_select_bar.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la sélection'**
+  String get dsConfirmSelection;
+
+  /// Libellé d'accessibilité par défaut de la jauge d'onboarding, lu par le lecteur d'écran (dony_onboarding_gauge.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Progression de l\'inscription'**
+  String get dsSignupProgress;
+
+  /// Lu par le lecteur d'écran quand une étape de la jauge d'onboarding est en cours (dony_onboarding_gauge.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape {index} sur {total}'**
+  String dsGaugeCurrentStep(int index, int total);
+
+  /// Lu par le lecteur d'écran quand aucune étape de la jauge d'onboarding n'est en cours : nombre d'étapes déjà franchies sur le total (dony_onboarding_gauge.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} étape sur {total}} other{{count} étapes sur {total}}}'**
+  String dsGaugeReachedSteps(int count, int total);
+
+  /// Titre renforcé par défaut d'un DonyStatusBanner de type info, quand aucun titre explicite n'est fourni et que les étiquettes sont renforcées (dony_status_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Information'**
+  String get dsBannerInfo;
+
+  /// Titre renforcé par défaut d'un DonyStatusBanner de type success (dony_status_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Succès'**
+  String get dsBannerSuccess;
+
+  /// Titre renforcé par défaut d'un DonyStatusBanner de type warning (dony_status_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Attention'**
+  String get dsBannerWarning;
+
+  /// Titre renforcé par défaut d'un DonyStatusBanner de type error (dony_status_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur'**
+  String get dsBannerError;
+
+  /// Libellé d'accessibilité du bouton de fermeture d'un DonyStatusBanner (dony_status_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Fermer le message'**
+  String get dsBannerDismiss;
+
+  /// Message affiché sous le spinner de DonyEmptyState en type loading (dony_empty_state.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chargement en cours...'**
+  String get dsLoading;
+
+  /// Libellé d'accessibilité du bouton de la barre « Terminé » qui referme le clavier (dony_keyboard_scope.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Masquer le clavier'**
+  String get dsHideKeyboard;
+
+  /// Libellé d'accessibilité de la mascotte DonyMascotteType.joyeux (dony_mascotte.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mascotte qui salue'**
+  String get dsMascotteJoyeux;
+
+  /// Libellé d'accessibilité de la mascotte DonyMascotteType.bienvenue (dony_mascotte.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mascotte accueillante, bras ouverts'**
+  String get dsMascotteBienvenue;
+
+  /// Libellé d'accessibilité de la mascotte DonyMascotteType.confiant (dony_mascotte.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mascotte prête à partir en voyage'**
+  String get dsMascotteConfiant;
+
+  /// Libellé d'accessibilité de la mascotte DonyMascotteType.securise (dony_mascotte.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mascotte brandissant un badge de validation'**
+  String get dsMascotteSecurise;
+
+  /// Libellé d'accessibilité de la mascotte DonyMascotteType.succes (dony_mascotte.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mascotte célébrant une réussite'**
+  String get dsMascotteSucces;
+
+  /// Libellé d'accessibilité de la mascotte DonyMascotteType.enCourse (dony_mascotte.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis en transit'**
+  String get dsMascotteEnCourse;
+
+  /// Libellé d'accessibilité de la mascotte DonyMascotteType.assis (dony_mascotte.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mascotte curieuse, une loupe à la main'**
+  String get dsMascotteAssis;
+
+  /// Libellé d'accessibilité de la mascotte DonyMascotteType.aucunResultat (dony_mascotte.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mascotte perplexe devant une carte, aucun résultat'**
+  String get dsMascotteAucunResultat;
+
+  /// Libellé d'accessibilité de la mascotte DonyMascotteType.attente (dony_mascotte.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mascotte patientant devant une horloge'**
+  String get dsMascotteAttente;
+
+  /// Libellé d'accessibilité de la mascotte DonyMascotteType.erreur (dony_mascotte.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mascotte inquiète, une erreur est survenue'**
+  String get dsMascotteErreur;
+
+  /// Libellé d'accessibilité de la mascotte DonyMascotteType.erreurLegere (dony_mascotte.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mascotte signalant un souci mineur'**
+  String get dsMascotteErreurLegere;
+
+  /// Texte du badge urgent quand les étiquettes sont renforcées (dony_urgent_badge.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'🔥 Départ imminent'**
+  String get dsUrgentImminent;
+
+  /// Texte par défaut du badge urgent sans renforcement des étiquettes (dony_urgent_badge.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'🔥 Urgent'**
+  String get dsUrgent;
+
+  /// Titre de la feuille du scarabée de signalement (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un problème sur cet écran ?'**
+  String get feedbackSheetTitle;
+
+  /// Sous-titre de la feuille du scarabée de signalement (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez le bug. Une capture de l\'écran est jointe automatiquement, vous pouvez en ajouter d\'autres.'**
+  String get feedbackSheetSubtitle;
+
+  /// Infobulle du bouton scarabée (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler un problème'**
+  String get feedbackButtonTooltip;
+
+  /// Placeholder du champ de description du bug (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : le code retrait ne s\'affiche pas…'**
+  String get feedbackHint;
+
+  /// Libellé au-dessus des vignettes de captures jointes (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos captures (facultatif)'**
+  String get feedbackAttachmentsLabel;
+
+  /// Libellé d'accessibilité de la tuile d'ajout d'une capture (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une capture'**
+  String get feedbackAddAttachment;
+
+  /// Libellé d'accessibilité du bouton de retrait d'une capture jointe (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer la capture'**
+  String get feedbackRemoveAttachment;
+
+  /// Snackbar de succès après l'envoi du rapport de bug (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Merci ! Votre rapport a bien été envoyé.'**
+  String get feedbackSuccessMessage;
+
+  /// Snackbar d'erreur quand l'envoi du rapport de bug échoue (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi impossible. Réessayez.'**
+  String get feedbackErrorMessage;
+
+  /// Bouton d'envoi de la feuille de signalement (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le rapport'**
+  String get feedbackSubmitButton;
 }
 
 class _AppLocalizationsDelegate

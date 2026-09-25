@@ -3,10 +3,18 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget _wrap(Widget child) => MaterialApp(
+import '../../../helpers/l10n_test_helpers.dart';
+
+Widget _wrap(Widget child, {bool reinforce = false}) => MaterialApp(
   theme: AppTheme.light(),
-  home: Scaffold(
-    body: Padding(padding: const EdgeInsets.all(16), child: child),
+  home: AccessibilityScope(
+    underlineLinks: false,
+    reinforceLabels: reinforce,
+    persistentMessages: false,
+    confirmImportantActions: false,
+    child: Scaffold(
+      body: Padding(padding: const EdgeInsets.all(16), child: child),
+    ),
   ),
 );
 
@@ -182,6 +190,77 @@ void main() {
       );
       expect(find.byIcon(Icons.shield_outlined), findsOneWidget);
       expect(find.byIcon(Icons.info_outline_rounded), findsNothing);
+    });
+  });
+
+  group('DonyStatusBanner — titre renforcé par défaut', () {
+    testWidgets('warning renforcé — "Attention" en français', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DonyStatusBanner(
+            type: DonyStatusBannerType.warning,
+            message: 'Message',
+          ),
+          reinforce: true,
+        ),
+      );
+      expect(find.text('Attention'), findsOneWidget);
+    });
+
+    testWidgets('warning renforcé — "Warning" en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          const DonyStatusBanner(
+            type: DonyStatusBannerType.warning,
+            message: 'Message',
+          ),
+          reinforce: true,
+        ),
+      );
+      expect(find.text('Warning'), findsOneWidget);
+      expect(find.text('Attention'), findsNothing);
+    });
+
+    testWidgets('sans renforcement, aucun titre par défaut', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DonyStatusBanner(
+            type: DonyStatusBannerType.warning,
+            message: 'Message',
+          ),
+        ),
+      );
+      expect(find.text('Attention'), findsNothing);
+    });
+  });
+
+  group('DonyStatusBanner — libellé de fermeture', () {
+    testWidgets('en français', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          DonyStatusBanner(
+            type: DonyStatusBannerType.info,
+            message: 'Message',
+            onDismiss: () {},
+          ),
+        ),
+      );
+      expect(find.bySemanticsLabel('Fermer le message'), findsOneWidget);
+    });
+
+    testWidgets('en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          DonyStatusBanner(
+            type: DonyStatusBannerType.info,
+            message: 'Message',
+            onDismiss: () {},
+          ),
+        ),
+      );
+      expect(find.bySemanticsLabel('Dismiss message'), findsOneWidget);
     });
   });
 }

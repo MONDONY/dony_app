@@ -3,6 +3,7 @@ import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/design/widgets/dony_icon_container.dart';
 import 'package:dony/core/design/widgets/dony_mascotte.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -50,7 +51,7 @@ class DonyEmptyState extends StatelessWidget {
               CircularProgressIndicator(color: cs.primary, strokeWidth: 2),
               const SizedBox(height: DonySpacing.lg),
               Text(
-                'Chargement en cours...',
+                context.l10n.dsLoading,
                 style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],
@@ -71,7 +72,7 @@ class DonyEmptyState extends StatelessWidget {
         Icons.wifi_off_rounded,
       ),
       _ => throw StateError(
-        'DonyEmptyState: type loading handled by early return',
+        'DonyEmptyState: type loading handled by early return', // i18n-ignore
       ),
     };
 

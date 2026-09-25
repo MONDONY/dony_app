@@ -27,7 +27,7 @@ class DonyStepPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
-        '$current / $total · $label',
+        '$current / $total · $label', // i18n-ignore : format, label déjà localisé par l'appelant
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: tt.labelSmall?.copyWith(

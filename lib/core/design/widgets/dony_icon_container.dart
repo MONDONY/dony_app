@@ -20,7 +20,7 @@ class DonyIconContainer extends StatelessWidget {
     this.borderRadius,
   }) : assert(
          icon != null || iconAsset != null,
-         'DonyIconContainer requiert icon ou iconAsset',
+         'DonyIconContainer requiert icon ou iconAsset', // i18n-ignore
        );
 
   final IconData? icon;
