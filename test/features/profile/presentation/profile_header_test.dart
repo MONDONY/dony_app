@@ -243,7 +243,7 @@ void main() {
 
       expect(find.text('Phone ✓'), findsOneWidget);
       expect(find.text('Identity ✓'), findsOneWidget);
-      expect(find.text('PRO'), findsOneWidget);
+      expect(find.text('Pro'), findsOneWidget);
     });
   });
 }

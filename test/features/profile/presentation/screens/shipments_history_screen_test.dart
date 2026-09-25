@@ -23,6 +23,7 @@ BidModel _bid({
   required String id,
   required String status,
   String? travelerName,
+  DateTime? updatedAt,
 }) => BidModel(
   id: id,
   announcementId: 'ann-1',
@@ -31,7 +32,7 @@ BidModel _bid({
   weightKg: 2.0,
   status: status,
   createdAt: DateTime(2025, 3, 10),
-  updatedAt: DateTime(2025, 3, 12),
+  updatedAt: updatedAt ?? DateTime(2025, 3, 12),
   travelerKycVerified: true,
   travelerName: travelerName,
 );
@@ -288,20 +289,44 @@ void main() {
   // ── Non-régression : remplacement de 'dd/MM/yyyy' par DateFormat.yMd ──────
   //
   // _relativeDate bascule sur DateFormat.yMd(locale) uniquement à partir de
-  // 7 jours d'écart avec DateTime.now() : impossible à piloter avec la date
-  // fixe imposée par le plan (DateTime(2026, 10, 6, 14, 5), postérieure à la
-  // date système du run). On teste donc directement l'équivalence du motif
-  // remplacé — le point vérifié par le plan (rendu fr identique à l'ancien
-  // 'dd/MM/yyyy') — plutôt que de router artificiellement par _relativeDate.
-  test("remplacement 'dd/MM/yyyy' -> yMd : rendu fr identique pour "
-      'DateTime(2026, 10, 6, 14, 5)', () {
-    final date = DateTime(2026, 10, 6, 14, 5);
-    expect(DateFormat.yMd('fr').format(date), '06/10/2026');
-  });
+  // 7 jours d'écart avec DateTime.now(). On pilote donc une date relative
+  // (il y a 20 jours) et on vérifie le rendu réel du widget, plutôt que le
+  // motif de formatage isolément.
 
-  test("remplacement 'dd/MM/yyyy' -> yMd : rendu en pour "
-      'DateTime(2026, 10, 6, 14, 5)', () {
-    final date = DateTime(2026, 10, 6, 14, 5);
-    expect(DateFormat.yMd('en').format(date), '10/6/2026');
-  });
+  testWidgets(
+    "affiche la date au-delà de 7 jours au format DateFormat.yMd('fr')",
+    (tester) async {
+      final date = DateTime.now().subtract(const Duration(days: 20));
+      when(() => bloc.state).thenReturn(
+        BidListLoaded([_bid(id: 'b1', status: 'COMPLETED', updatedAt: date)]),
+      );
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text(DateFormat.yMd('fr').format(date), skipOffstage: false),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    "anglais : affiche la date au-delà de 7 jours au format DateFormat.yMd('en')",
+    (tester) async {
+      useEnglish();
+      final date = DateTime.now().subtract(const Duration(days: 20));
+      when(() => bloc.state).thenReturn(
+        BidListLoaded([_bid(id: 'b1', status: 'COMPLETED', updatedAt: date)]),
+      );
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text(DateFormat.yMd('en').format(date), skipOffstage: false),
+        findsOneWidget,
+      );
+    },
+  );
 }

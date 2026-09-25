@@ -9,6 +9,7 @@ import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
+import 'package:dony/features/profile/presentation/profile_labels.dart';
 import 'package:dony/features/profile/presentation/widgets/all_reviews_bottom_sheet.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
@@ -794,7 +795,7 @@ class _TravelerInfoSection extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            lang,
+                            spokenLanguageLabel(context.l10n, lang),
                             style: tt.labelMedium?.copyWith(
                               color: cs.primary,
                               fontWeight: FontWeight.w700,

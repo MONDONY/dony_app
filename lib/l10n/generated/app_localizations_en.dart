@@ -10539,7 +10539,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSectionMoney => 'MONEY';
 
   @override
-  String get profileMoneyReceivePayments => 'Receive my payments';
+  String get profileMoneyReceivePayments => 'Get paid';
 
   @override
   String get profileMoneyVerifyIdentityToActivate =>
@@ -10565,7 +10565,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileReputationPublicProfileSubtitle => 'What others see';
 
   @override
-  String get profileReputationMyReviews => 'My reviews received';
+  String get profileReputationMyReviews => 'Reviews received';
 
   @override
   String get profileSectionAdvantages => 'MY BENEFITS';
@@ -10693,7 +10693,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get profileProBadge => 'PRO';
+  String get profileProBadge => 'Pro';
 
   @override
   String get profileChipPhoneVerified => 'Phone ✓';
@@ -10726,7 +10726,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileMenuExportDataSubtitle => 'GDPR export in JSON format';
 
   @override
-  String get profileLogoutAction => 'Log out';
+  String get profileLogoutAction => 'Sign out';
 
   @override
   String get profileMenuDeleteAccount => 'Delete my account';
@@ -10827,7 +10827,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileCommunityActionSubscribe => 'Subscribe';
 
   @override
-  String get profileLogoutConfirmTitle => 'Log out?';
+  String get profileLogoutConfirmTitle => 'Sign out?';
 
   @override
   String get profileLogoutConfirmMessage =>
@@ -11224,7 +11224,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String faqSafetyLostParcelA(String cap) {
-    return 'Yadony doesn\'t automatically cover the loss of a parcel. After investigation, a refund of up to $cap € may be granted if all conditions are met:\n\n• card payment made within Yadony;\n• no payment or agreement made outside the platform;\n• drop-off and hand-over QR codes used;\n• dispute opened within 15 days of the expected date;\n• content complying with allowed items.\n\nAny decision remains subject to approval by the Yadony team.';
+    return 'Yadony doesn\'t automatically cover the loss of a parcel. After investigation, a refund of up to $cap € may be granted if all conditions are met:\n\n• card payment made within Yadony;\n• no payment or agreement made outside the platform;\n• drop-off and handover QR codes used;\n• dispute opened within 15 days of the expected date;\n• content complying with allowed items.\n\nAny decision remains subject to approval by the Yadony team.';
   }
 
   @override

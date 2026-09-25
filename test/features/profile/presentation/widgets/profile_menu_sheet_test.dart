@@ -123,7 +123,7 @@ void main() {
     expect(find.text('My account'), findsOneWidget);
     expect(find.text('Download my data'), findsOneWidget);
     expect(find.text('GDPR export in JSON format'), findsOneWidget);
-    expect(find.text('Log out'), findsOneWidget);
+    expect(find.text('Sign out'), findsOneWidget);
     expect(find.text('Delete my account'), findsOneWidget);
     expect(find.text('30-day withdrawal period'), findsOneWidget);
   });

@@ -461,6 +461,23 @@ void main() {
     },
   );
 
+  testWidgets('anglais : les langues parlées du profil public sont traduites', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: profileWith(languages: ['Français', 'Anglais', 'Wolof']),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('French', skipOffstage: false), findsOneWidget);
+    expect(find.text('English', skipOffstage: false), findsOneWidget);
+    expect(find.text('Wolof', skipOffstage: false), findsOneWidget);
+    expect(find.text('Français', skipOffstage: false), findsNothing);
+  });
+
   // ── 7. Stats row: 2 cols, no "Répond en" / "Membre depuis" stat ──────────
 
   testWidgets('stats row shows Note and Livraisons only (2 columns)', (

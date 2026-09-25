@@ -1189,6 +1189,26 @@ void main() {
       },
     );
 
+    testWidgets('anglais : le dialogue de déconnexion affiche "Sign out?"', (
+      tester,
+    ) async {
+      useEnglish();
+      await openMenu(tester, _dualRoleUser);
+
+      await tester.tap(find.byKey(const Key('profile-menu-logout')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sign out?'), findsOneWidget);
+      expect(
+        find.text("You'll need to sign in again to continue."),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Sign out').last);
+      await tester.pumpAndSettle();
+
+      verify(() => authBloc.add(const AuthLogoutRequested())).called(1);
+    });
+
     testWidgets('« Supprimer mon compte » ouvre la feuille de suppression', (
       tester,
     ) async {
