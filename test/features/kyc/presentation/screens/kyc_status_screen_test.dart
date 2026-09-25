@@ -18,6 +18,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockKycBloc extends MockBloc<KycEvent, KycState> implements KycBloc {}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
@@ -410,5 +412,21 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1600));
     await tester.pumpAndSettle();
     expect(find.text('Home route'), findsOneWidget);
+  });
+
+  testWidgets('PENDING is rendered in English', (tester) async {
+    useEnglish();
+    when(() => kycBloc.state).thenReturn(
+      const KycStatusLoaded(
+        kycStatus: 'PENDING',
+        verificationStatus: 'PENDING',
+      ),
+    );
+    when(() => kycBloc.stream).thenAnswer((_) => const Stream.empty());
+
+    await _wrap(tester, kycBloc: kycBloc, authBloc: authBloc);
+
+    expect(find.text('Verification in progress'), findsOneWidget);
+    expect(find.text('Resume verification'), findsOneWidget);
   });
 }

@@ -10,6 +10,7 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -133,7 +134,7 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
                   _isLoading.value = false;
                   DonySnackbar.show(
                     context,
-                    message: 'Impossible de charger la page de vérification',
+                    message: context.l10n.kycWebviewLoadError,
                     type: DonySnackbarType.error,
                   );
                 }
@@ -188,14 +189,15 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: DonyAppBar(
-        title: 'Vérification d\'identité',
+        title: l.kycVerificationTitle,
         showBackButton: false,
         actions: [
           IconButton(
-            tooltip: 'Fermer',
+            tooltip: l.commonClose,
             icon: DonyIcon('x', color: cs.onSurface),
             onPressed: () {
               context.read<KycBloc>().add(const KycSessionAbandoned());

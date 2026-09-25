@@ -17353,6 +17353,252 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Excellent !'**
   String get ratingStarExcellent;
+
+  /// Message de refus KYC pour le code Didit 'document_expired' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre pièce d\'identité est expirée. Utilisez un document valide et réessayez.'**
+  String get kycRejectionDocumentExpired;
+
+  /// Message de refus KYC pour le code Didit 'document_type_not_supported' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce type de document n\'est pas accepté. Utilisez une carte d\'identité, un passeport ou un permis de conduire.'**
+  String get kycRejectionDocumentTypeNotSupported;
+
+  /// Message de refus KYC pour le code Didit 'document_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le document fourni n\'a pas pu être lu ou vérifié. Assurez-vous qu\'il est net, complet et bien éclairé, puis réessayez.'**
+  String get kycRejectionDocumentUnverifiedOther;
+
+  /// Message de refus KYC pour le code Didit 'country_not_supported' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le pays de votre document n\'est pas pris en charge pour la vérification.'**
+  String get kycRejectionCountryNotSupported;
+
+  /// Message de refus KYC partagé par les codes Didit 'id_number_insufficient_document_data', 'id_number_mismatch' et 'id_number_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les informations de votre document n\'ont pas pu être confirmées. Vérifiez qu\'elles sont bien lisibles et réessayez.'**
+  String get kycRejectionIdNumberMismatch;
+
+  /// Message de refus KYC pour le code Didit 'selfie_document_missing_photo' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'La photo sur votre document n\'a pas pu être comparée à votre selfie. Réessayez avec une pièce d\'identité comportant une photo nette.'**
+  String get kycRejectionSelfieDocumentMissingPhoto;
+
+  /// Message de refus KYC pour le code Didit 'selfie_face_mismatch' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre selfie ne correspond pas à la photo du document. Reprenez la vérification dans de bonnes conditions de lumière.'**
+  String get kycRejectionSelfieFaceMismatch;
+
+  /// Message de refus KYC partagé par les codes Didit 'selfie_manipulated' et 'selfie_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre selfie n\'a pas pu être vérifié. Réessayez dans un endroit bien éclairé, sans lunettes ni couvre-chef.'**
+  String get kycRejectionSelfieUnverified;
+
+  /// Message de refus KYC pour le code Didit 'under_supported_age' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'La vérification d\'identité est réservée aux personnes majeures.'**
+  String get kycRejectionUnderSupportedAge;
+
+  /// Message de refus KYC pour le code Didit 'consent_declined' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez refusé de donner votre consentement, indispensable pour vérifier votre identité.'**
+  String get kycRejectionConsentDeclined;
+
+  /// Message de refus KYC pour le code Didit 'session_canceled' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'La vérification a été fermée avant d\'être terminée.'**
+  String get kycRejectionSessionCanceled;
+
+  /// Message de repli pour un code de refus KYC inconnu ou absent (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous n\'avons pas pu vérifier votre identité. Assurez-vous que votre document est lisible et réessayez.'**
+  String get kycRejectionGeneric;
+
+  /// Titre de l'écran/la feuille de vérification d'identité (kyc_status_bottom_sheet.dart, KycStatusBottomSheet.show ; kyc_webview_screen.dart, KycWebViewScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification d\'identité'**
+  String get kycVerificationTitle;
+
+  /// Titre de l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildNotStartedContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification non démarrée'**
+  String get kycStatusNotStartedTitle;
+
+  /// Texte de l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildNotStartedContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous devez vérifier votre identité pour utiliser toutes les fonctionnalités de Yadony.'**
+  String get kycStatusNotStartedBody;
+
+  /// Titre de l'état VERIFIED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildVerifiedContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée ✓'**
+  String get kycStatusVerifiedTitle;
+
+  /// Texte de l'état VERIFIED depuis l'écran plein, qui redirige vers l'étape suivante (kyc_status_screen.dart, _buildVerifiedContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre identité a été vérifiée avec succès. Redirection en cours…'**
+  String get kycStatusVerifiedBodyRedirecting;
+
+  /// Texte de l'état VERIFIED depuis la feuille, qui se referme automatiquement (kyc_status_bottom_sheet.dart, _buildVerifiedContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre identité a été vérifiée avec succès. Fermeture en cours…'**
+  String get kycStatusVerifiedBodyClosing;
+
+  /// Titre de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification en cours'**
+  String get kycStatusPendingTitle;
+
+  /// Texte de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cela prend généralement moins d\'une minute, parfois quelques minutes. Vous pouvez fermer cet écran, vous serez notifié du résultat.'**
+  String get kycStatusPendingBody;
+
+  /// Titre de l'état atteint après le délai d'attente de 5 minutes (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildTimedOutContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'La vérification prend plus de temps que prévu'**
+  String get kycStatusTimedOutTitle;
+
+  /// Texte de l'état atteint après le délai d'attente de 5 minutes (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildTimedOutContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pouvez fermer cet écran et revenir plus tard. Votre badge ✓ apparaîtra automatiquement dès que la vérification sera terminée.'**
+  String get kycStatusTimedOutBody;
+
+  /// Titre de l'état REJECTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildRejectedContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification échouée'**
+  String get kycStatusRejectedTitle;
+
+  /// Texte sous l'indicateur de poll pendant l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _PollingIndicator).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification automatique en cours'**
+  String get kycStatusPollingIndicator;
+
+  /// Bouton pour démarrer la vérification depuis l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Commencer la vérification'**
+  String get kycStatusStartAction;
+
+  /// Bouton pour relancer la vérification depuis l'état REJECTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer la vérification'**
+  String get kycStatusRetryAction;
+
+  /// Bouton pour rouvrir une session PENDING non terminée par Stripe/Didit, avec ou sans délai d'attente dépassé (kyc_status_screen.dart, _actionsFor).
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre la vérification'**
+  String get kycStatusResumeAction;
+
+  /// Lien de sortie une fois le délai d'attente de 5 minutes dépassé (kyc_status_screen.dart et kyc_status_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour à l\'app'**
+  String get kycStatusBackToApp;
+
+  /// Lien de sortie pendant l'état PENDING, avant le délai d'attente (kyc_status_screen.dart et kyc_status_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer plus tard'**
+  String get kycStatusContinueLater;
+
+  /// Message d'erreur si la page de vérification distante échoue à charger (kyc_webview_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger la page de vérification'**
+  String get kycWebviewLoadError;
+
+  /// Titre de la feuille de vérification requise (kyc_required_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification requise'**
+  String get kycRequiredTitle;
+
+  /// Message de la feuille de vérification requise, statut par défaut/non démarré (kyc_required_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour envoyer un colis, votre identité doit être vérifiée.'**
+  String get kycRequiredMessageNotStarted;
+
+  /// Message de la feuille de vérification requise, statut REJECTED (kyc_required_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre vérification a échoué. Réessayez pour pouvoir envoyer un colis.'**
+  String get kycRequiredMessageRejected;
+
+  /// Message de la feuille de vérification requise, statut PENDING (kyc_required_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre vérification est en cours. Vous pourrez envoyer une fois votre identité validée.'**
+  String get kycRequiredMessagePending;
+
+  /// Bouton principal de la feuille de vérification requise (kyc_required_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier mon identité'**
+  String get kycRequiredVerifyAction;
+
+  /// Ligne d'info sur la durée de la vérification (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification en 2 à 5 minutes'**
+  String get kycInfoDuration;
+
+  /// Ligne d'info sur la sécurité du processus (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Processus de vérification sécurisé'**
+  String get kycInfoSecureProcess;
+
+  /// Titre de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre identité'**
+  String get kycOnboardingTitle;
+
+  /// Sous-titre de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Requis pour publier des annonces sur Yadony'**
+  String get kycOnboardingSubtitle;
+
+  /// Bouton principal de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Démarrer la vérification'**
+  String get kycOnboardingStartAction;
+
+  /// Ligne d'info sur les pièces nécessaires (kyc_onboarding_bottom_sheet.dart, _InfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pièce d\'identité + selfie requis'**
+  String get kycOnboardingIdSelfieRequired;
 }
 
 class _AppLocalizationsDelegate

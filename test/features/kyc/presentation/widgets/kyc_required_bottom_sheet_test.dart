@@ -8,6 +8,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockKycBloc extends MockBloc<KycEvent, KycState> implements KycBloc {}
 
 Widget _wrap(String kycStatus) {
@@ -86,6 +88,21 @@ void main() {
       await tester.tap(find.text('Plus tard'));
       await tester.pumpAndSettle();
       expect(find.text('Vérification requise'), findsNothing);
+    });
+
+    testWidgets('affiche le titre et le message NOT_STARTED en anglais', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap('NOT_STARTED'));
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      expect(find.text('Verification required'), findsOneWidget);
+      expect(
+        find.text('To send a parcel, your identity must be verified.'),
+        findsOneWidget,
+      );
+      expect(find.text('Verify my identity'), findsOneWidget);
     });
   });
 }

@@ -12,6 +12,7 @@ import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/presentation/kyc_rejection_messages.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -37,7 +38,7 @@ class KycStatusBottomSheet extends StatefulWidget {
 
     final stripeUrl = await DonyBottomSheet.show<String>(
       context,
-      title: 'Vérification d\'identité',
+      title: context.l10n.kycVerificationTitle,
       wrapper: (child) =>
           BlocProvider(create: (_) => getIt<KycBloc>(), child: child),
       stickyBottom: ValueListenableBuilder<_StickyBtnConfig?>(
@@ -160,12 +161,13 @@ class _KycStatusContentState extends State<_KycStatusContent> {
   }
 
   void _updateStickyBtn(KycState state) {
+    final l = context.l10n;
     _StickyBtnConfig? config;
     if (state is KycStatusLoaded) {
       switch (state.kycStatus) {
         case 'NOT_STARTED':
           config = (
-            label: 'Commencer la vérification',
+            label: l.kycStatusStartAction,
             onPressed: () =>
                 context.read<KycBloc>().add(const KycSessionRequested()),
             variant: DonyButtonVariant.primary,
@@ -174,7 +176,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
           config = null;
         case 'REJECTED':
           config = (
-            label: 'Réessayer la vérification',
+            label: l.kycStatusRetryAction,
             onPressed: () =>
                 context.read<KycBloc>().add(const KycSessionRequested()),
             variant: DonyButtonVariant.primary,
@@ -182,13 +184,13 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         default:
           if (_timedOut) {
             config = (
-              label: "Retour à l'app",
+              label: l.kycStatusBackToApp,
               onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
               variant: DonyButtonVariant.primary,
             );
           } else {
             config = (
-              label: 'Continuer plus tard',
+              label: l.kycStatusContinueLater,
               onPressed: () {
                 _stopPolling();
                 Navigator.of(context, rootNavigator: true).pop();
@@ -199,7 +201,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
       }
     } else if (state is KycError) {
       config = (
-        label: 'Réessayer',
+        label: l.commonRetry,
         onPressed: _loadStatus,
         variant: DonyButtonVariant.ghost,
       );
@@ -299,7 +301,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
   ) {
     switch (state.kycStatus) {
       case 'VERIFIED':
-        return _buildVerifiedContent(cs, tt);
+        return _buildVerifiedContent(context, cs, tt);
       case 'REJECTED':
         return _buildRejectedContent(context, cs, tt, state.rejectionCode);
       case 'NOT_STARTED':
@@ -316,6 +318,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
     ColorScheme cs,
     TextTheme tt,
   ) {
+    final l = context.l10n;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -330,13 +333,13 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
         const SizedBox(height: DonySpacing.xxl),
         Text(
-          'Vérification non démarrée',
+          l.kycStatusNotStartedTitle,
           style: tt.headlineLarge,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: DonySpacing.md),
         Text(
-          'Vous devez vérifier votre identité pour utiliser toutes les fonctionnalités de Yadony.',
+          l.kycStatusNotStartedBody,
           style: tt.bodyLarge?.copyWith(
             color: cs.onSurfaceVariant,
             height: 1.5,
@@ -349,7 +352,12 @@ class _KycStatusContentState extends State<_KycStatusContent> {
   }
 
   // Auto-close fires 1.5s after this widget is shown.
-  Widget _buildVerifiedContent(ColorScheme cs, TextTheme tt) {
+  Widget _buildVerifiedContent(
+    BuildContext context,
+    ColorScheme cs,
+    TextTheme tt,
+  ) {
+    final l = context.l10n;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -366,13 +374,13 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         ).animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
         const SizedBox(height: DonySpacing.xxl),
         Text(
-          'Identité vérifiée ✓',
+          l.kycStatusVerifiedTitle,
           style: tt.headlineLarge?.copyWith(color: cs.primary),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: DonySpacing.md),
         Text(
-          'Votre identité a été vérifiée avec succès. Fermeture en cours…',
+          l.kycStatusVerifiedBodyClosing,
           style: tt.bodyLarge?.copyWith(
             color: cs.onSurfaceVariant,
             height: 1.5,
@@ -395,6 +403,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
     ColorScheme cs,
     TextTheme tt,
   ) {
+    final l = context.l10n;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -411,14 +420,13 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
         const SizedBox(height: DonySpacing.xxl),
         Text(
-          'Vérification en cours',
+          l.kycStatusPendingTitle,
           style: tt.headlineLarge,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: DonySpacing.md),
         Text(
-          "Cela prend généralement moins d'une minute, parfois quelques minutes. "
-          'Vous pouvez fermer cet écran, vous serez notifié du résultat.',
+          l.kycStatusPendingBody,
           style: tt.bodyLarge?.copyWith(
             color: cs.onSurfaceVariant,
             height: 1.5,
@@ -437,6 +445,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
     ColorScheme cs,
     TextTheme tt,
   ) {
+    final l = context.l10n;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -451,14 +460,13 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
         const SizedBox(height: DonySpacing.xxl),
         Text(
-          'La vérification prend plus de temps que prévu',
+          l.kycStatusTimedOutTitle,
           style: tt.headlineLarge,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: DonySpacing.md),
         Text(
-          'Vous pouvez fermer cet écran et revenir plus tard. '
-          'Votre badge ✓ apparaîtra automatiquement dès que la vérification sera terminée.',
+          l.kycStatusTimedOutBody,
           style: tt.bodyLarge?.copyWith(
             color: cs.onSurfaceVariant,
             height: 1.5,
@@ -476,6 +484,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
     TextTheme tt,
     String? rejectionCode,
   ) {
+    final l = context.l10n;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -490,13 +499,13 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
         const SizedBox(height: DonySpacing.xxl),
         Text(
-          'Vérification échouée',
+          l.kycStatusRejectedTitle,
           style: tt.headlineLarge,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: DonySpacing.md),
         Text(
-          kycRejectionMessage(rejectionCode),
+          kycRejectionMessage(l, rejectionCode),
           style: tt.bodyLarge?.copyWith(
             color: cs.onSurfaceVariant,
             height: 1.5,
@@ -543,7 +552,7 @@ class _PollingIndicator extends StatelessWidget {
         const SizedBox(width: DonySpacing.sm),
         Flexible(
           child: Text(
-            'Vérification automatique en cours',
+            context.l10n.kycStatusPollingIndicator,
             textAlign: TextAlign.center,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),

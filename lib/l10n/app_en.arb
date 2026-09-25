@@ -6389,5 +6389,169 @@
   "ratingStarExcellent": "Excellent!",
   "@ratingStarExcellent": {
     "description": "Libellé affiché pour 5 étoiles (rating_labels.dart, ratingStarLabel)."
+  },
+  "kycRejectionDocumentExpired": "Your ID document has expired. Use a valid document and try again.",
+  "@kycRejectionDocumentExpired": {
+    "description": "Message de refus KYC pour le code Didit 'document_expired' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionDocumentTypeNotSupported": "This document type is not accepted. Use an ID card, a passport, or a driver's license.",
+  "@kycRejectionDocumentTypeNotSupported": {
+    "description": "Message de refus KYC pour le code Didit 'document_type_not_supported' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionDocumentUnverifiedOther": "The document provided could not be read or verified. Make sure it is sharp, complete, and well lit, then try again.",
+  "@kycRejectionDocumentUnverifiedOther": {
+    "description": "Message de refus KYC pour le code Didit 'document_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionCountryNotSupported": "Your document's country is not supported for verification.",
+  "@kycRejectionCountryNotSupported": {
+    "description": "Message de refus KYC pour le code Didit 'country_not_supported' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionIdNumberMismatch": "The information on your document could not be confirmed. Make sure it is clearly legible and try again.",
+  "@kycRejectionIdNumberMismatch": {
+    "description": "Message de refus KYC partagé par les codes Didit 'id_number_insufficient_document_data', 'id_number_mismatch' et 'id_number_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionSelfieDocumentMissingPhoto": "The photo on your document could not be compared with your selfie. Try again with an ID document that has a clear photo.",
+  "@kycRejectionSelfieDocumentMissingPhoto": {
+    "description": "Message de refus KYC pour le code Didit 'selfie_document_missing_photo' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionSelfieFaceMismatch": "Your selfie does not match the photo on the document. Retry the verification in good lighting conditions.",
+  "@kycRejectionSelfieFaceMismatch": {
+    "description": "Message de refus KYC pour le code Didit 'selfie_face_mismatch' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionSelfieUnverified": "Your selfie could not be verified. Try again in a well-lit place, without glasses or headwear.",
+  "@kycRejectionSelfieUnverified": {
+    "description": "Message de refus KYC partagé par les codes Didit 'selfie_manipulated' et 'selfie_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionUnderSupportedAge": "Identity verification is reserved for adults.",
+  "@kycRejectionUnderSupportedAge": {
+    "description": "Message de refus KYC pour le code Didit 'under_supported_age' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionConsentDeclined": "You declined to give your consent, which is required to verify your identity.",
+  "@kycRejectionConsentDeclined": {
+    "description": "Message de refus KYC pour le code Didit 'consent_declined' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionSessionCanceled": "The verification was closed before it was completed.",
+  "@kycRejectionSessionCanceled": {
+    "description": "Message de refus KYC pour le code Didit 'session_canceled' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionGeneric": "We could not verify your identity. Make sure your document is legible and try again.",
+  "@kycRejectionGeneric": {
+    "description": "Message de repli pour un code de refus KYC inconnu ou absent (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycVerificationTitle": "Identity verification",
+  "@kycVerificationTitle": {
+    "description": "Titre de l'écran/la feuille de vérification d'identité (kyc_status_bottom_sheet.dart, KycStatusBottomSheet.show ; kyc_webview_screen.dart, KycWebViewScreen)."
+  },
+  "kycStatusNotStartedTitle": "Verification not started",
+  "@kycStatusNotStartedTitle": {
+    "description": "Titre de l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildNotStartedContent)."
+  },
+  "kycStatusNotStartedBody": "You need to verify your identity to use all of Yadony's features.",
+  "@kycStatusNotStartedBody": {
+    "description": "Texte de l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildNotStartedContent)."
+  },
+  "kycStatusVerifiedTitle": "Identity verified ✓",
+  "@kycStatusVerifiedTitle": {
+    "description": "Titre de l'état VERIFIED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildVerifiedContent)."
+  },
+  "kycStatusVerifiedBodyRedirecting": "Your identity has been successfully verified. Redirecting…",
+  "@kycStatusVerifiedBodyRedirecting": {
+    "description": "Texte de l'état VERIFIED depuis l'écran plein, qui redirige vers l'étape suivante (kyc_status_screen.dart, _buildVerifiedContent)."
+  },
+  "kycStatusVerifiedBodyClosing": "Your identity has been successfully verified. Closing…",
+  "@kycStatusVerifiedBodyClosing": {
+    "description": "Texte de l'état VERIFIED depuis la feuille, qui se referme automatiquement (kyc_status_bottom_sheet.dart, _buildVerifiedContent)."
+  },
+  "kycStatusPendingTitle": "Verification in progress",
+  "@kycStatusPendingTitle": {
+    "description": "Titre de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent)."
+  },
+  "kycStatusPendingBody": "This usually takes less than a minute, sometimes a few minutes. You can close this screen, you'll be notified of the result.",
+  "@kycStatusPendingBody": {
+    "description": "Texte de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent)."
+  },
+  "kycStatusTimedOutTitle": "Verification is taking longer than expected",
+  "@kycStatusTimedOutTitle": {
+    "description": "Titre de l'état atteint après le délai d'attente de 5 minutes (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildTimedOutContent)."
+  },
+  "kycStatusTimedOutBody": "You can close this screen and come back later. Your ✓ badge will appear automatically once the verification is complete.",
+  "@kycStatusTimedOutBody": {
+    "description": "Texte de l'état atteint après le délai d'attente de 5 minutes (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildTimedOutContent)."
+  },
+  "kycStatusRejectedTitle": "Verification failed",
+  "@kycStatusRejectedTitle": {
+    "description": "Titre de l'état REJECTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildRejectedContent)."
+  },
+  "kycStatusPollingIndicator": "Automatic verification in progress",
+  "@kycStatusPollingIndicator": {
+    "description": "Texte sous l'indicateur de poll pendant l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _PollingIndicator)."
+  },
+  "kycStatusStartAction": "Start verification",
+  "@kycStatusStartAction": {
+    "description": "Bouton pour démarrer la vérification depuis l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart)."
+  },
+  "kycStatusRetryAction": "Retry verification",
+  "@kycStatusRetryAction": {
+    "description": "Bouton pour relancer la vérification depuis l'état REJECTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart)."
+  },
+  "kycStatusResumeAction": "Resume verification",
+  "@kycStatusResumeAction": {
+    "description": "Bouton pour rouvrir une session PENDING non terminée par Stripe/Didit, avec ou sans délai d'attente dépassé (kyc_status_screen.dart, _actionsFor)."
+  },
+  "kycStatusBackToApp": "Back to the app",
+  "@kycStatusBackToApp": {
+    "description": "Lien de sortie une fois le délai d'attente de 5 minutes dépassé (kyc_status_screen.dart et kyc_status_bottom_sheet.dart)."
+  },
+  "kycStatusContinueLater": "Continue later",
+  "@kycStatusContinueLater": {
+    "description": "Lien de sortie pendant l'état PENDING, avant le délai d'attente (kyc_status_screen.dart et kyc_status_bottom_sheet.dart)."
+  },
+  "kycWebviewLoadError": "Unable to load the verification page",
+  "@kycWebviewLoadError": {
+    "description": "Message d'erreur si la page de vérification distante échoue à charger (kyc_webview_screen.dart)."
+  },
+  "kycRequiredTitle": "Verification required",
+  "@kycRequiredTitle": {
+    "description": "Titre de la feuille de vérification requise (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredMessageNotStarted": "To send a parcel, your identity must be verified.",
+  "@kycRequiredMessageNotStarted": {
+    "description": "Message de la feuille de vérification requise, statut par défaut/non démarré (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredMessageRejected": "Your verification failed. Try again so you can send a parcel.",
+  "@kycRequiredMessageRejected": {
+    "description": "Message de la feuille de vérification requise, statut REJECTED (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredMessagePending": "Your verification is in progress. You'll be able to send once your identity is validated.",
+  "@kycRequiredMessagePending": {
+    "description": "Message de la feuille de vérification requise, statut PENDING (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredVerifyAction": "Verify my identity",
+  "@kycRequiredVerifyAction": {
+    "description": "Bouton principal de la feuille de vérification requise (kyc_required_bottom_sheet.dart)."
+  },
+  "kycInfoDuration": "Verification takes 2 to 5 minutes",
+  "@kycInfoDuration": {
+    "description": "Ligne d'info sur la durée de la vérification (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow)."
+  },
+  "kycInfoSecureProcess": "Secure verification process",
+  "@kycInfoSecureProcess": {
+    "description": "Ligne d'info sur la sécurité du processus (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow)."
+  },
+  "kycOnboardingTitle": "Verify your identity",
+  "@kycOnboardingTitle": {
+    "description": "Titre de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart)."
+  },
+  "kycOnboardingSubtitle": "Required to post listings on Yadony",
+  "@kycOnboardingSubtitle": {
+    "description": "Sous-titre de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart)."
+  },
+  "kycOnboardingStartAction": "Start verification",
+  "@kycOnboardingStartAction": {
+    "description": "Bouton principal de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart)."
+  },
+  "kycOnboardingIdSelfieRequired": "ID document + selfie required",
+  "@kycOnboardingIdSelfieRequired": {
+    "description": "Ligne d'info sur les pièces nécessaires (kyc_onboarding_bottom_sheet.dart, _InfoRow)."
   }
 }

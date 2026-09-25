@@ -5,6 +5,7 @@ import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,6 +21,7 @@ class KycRequiredBottomSheet extends StatelessWidget {
     required String kycStatus,
   }) async {
     if (kycStatus == 'PENDING') {
+      final l = context.l10n;
       bool openStatus = false;
       await DonyBottomSheet.show<void>(
         context,
@@ -28,7 +30,7 @@ class KycRequiredBottomSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             DonyButton(
-              label: 'Vérifier mon identité',
+              label: l.kycRequiredVerifyAction,
               onPressed: () {
                 openStatus = true;
                 Navigator.of(context, rootNavigator: true).pop();
@@ -36,7 +38,7 @@ class KycRequiredBottomSheet extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.sm),
             DonyButton(
-              label: 'Plus tard',
+              label: l.commonLater,
               variant: DonyButtonVariant.ghost,
               onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
             ),
@@ -57,13 +59,14 @@ class KycRequiredBottomSheet extends StatelessWidget {
       wrapper: (child) => BlocProvider.value(value: kycBloc, child: child),
       stickyBottom: BlocBuilder<KycBloc, KycState>(
         builder: (ctx, state) {
+          final l = ctx.l10n;
           final isLoading = state is KycLoading;
           return Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               DonyButton(
-                label: 'Vérifier mon identité',
+                label: l.kycRequiredVerifyAction,
                 isLoading: isLoading,
                 onPressed: isLoading
                     ? null
@@ -72,7 +75,7 @@ class KycRequiredBottomSheet extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.sm),
               DonyButton(
-                label: 'Plus tard',
+                label: l.commonLater,
                 variant: DonyButtonVariant.ghost,
                 onPressed: () =>
                     Navigator.of(context, rootNavigator: true).pop(),
@@ -102,13 +105,12 @@ class KycRequiredBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     final message = switch (kycStatus) {
-      'REJECTED' =>
-        'Votre vérification a échoué. Réessayez pour pouvoir envoyer un colis.',
-      'PENDING' =>
-        'Votre vérification est en cours. Vous pourrez envoyer une fois votre identité validée.',
-      _ => 'Pour envoyer un colis, votre identité doit être vérifiée.',
+      'REJECTED' => l.kycRequiredMessageRejected,
+      'PENDING' => l.kycRequiredMessagePending,
+      _ => l.kycRequiredMessageNotStarted,
     };
 
     return Padding(
@@ -132,7 +134,7 @@ class KycRequiredBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xxl),
           Text(
-            'Vérification requise',
+            l.kycRequiredTitle,
             style: tt.headlineLarge,
             textAlign: TextAlign.center,
           ),
@@ -146,16 +148,11 @@ class KycRequiredBottomSheet extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DonySpacing.xl),
-          _InfoRow(
-            iconAsset: 'clock',
-            text: 'Vérification en 2 à 5 minutes',
-            cs: cs,
-            tt: tt,
-          ),
+          _InfoRow(iconAsset: 'clock', text: l.kycInfoDuration, cs: cs, tt: tt),
           const SizedBox(height: DonySpacing.sm),
           _InfoRow(
             iconAsset: 'shield-check',
-            text: 'Processus de vérification sécurisé',
+            text: l.kycInfoSecureProcess,
             cs: cs,
             tt: tt,
           ),

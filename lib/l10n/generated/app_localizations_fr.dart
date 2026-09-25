@@ -10440,4 +10440,151 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ratingStarExcellent => 'Excellent !';
+
+  @override
+  String get kycRejectionDocumentExpired =>
+      'Votre pièce d\'identité est expirée. Utilisez un document valide et réessayez.';
+
+  @override
+  String get kycRejectionDocumentTypeNotSupported =>
+      'Ce type de document n\'est pas accepté. Utilisez une carte d\'identité, un passeport ou un permis de conduire.';
+
+  @override
+  String get kycRejectionDocumentUnverifiedOther =>
+      'Le document fourni n\'a pas pu être lu ou vérifié. Assurez-vous qu\'il est net, complet et bien éclairé, puis réessayez.';
+
+  @override
+  String get kycRejectionCountryNotSupported =>
+      'Le pays de votre document n\'est pas pris en charge pour la vérification.';
+
+  @override
+  String get kycRejectionIdNumberMismatch =>
+      'Les informations de votre document n\'ont pas pu être confirmées. Vérifiez qu\'elles sont bien lisibles et réessayez.';
+
+  @override
+  String get kycRejectionSelfieDocumentMissingPhoto =>
+      'La photo sur votre document n\'a pas pu être comparée à votre selfie. Réessayez avec une pièce d\'identité comportant une photo nette.';
+
+  @override
+  String get kycRejectionSelfieFaceMismatch =>
+      'Votre selfie ne correspond pas à la photo du document. Reprenez la vérification dans de bonnes conditions de lumière.';
+
+  @override
+  String get kycRejectionSelfieUnverified =>
+      'Votre selfie n\'a pas pu être vérifié. Réessayez dans un endroit bien éclairé, sans lunettes ni couvre-chef.';
+
+  @override
+  String get kycRejectionUnderSupportedAge =>
+      'La vérification d\'identité est réservée aux personnes majeures.';
+
+  @override
+  String get kycRejectionConsentDeclined =>
+      'Vous avez refusé de donner votre consentement, indispensable pour vérifier votre identité.';
+
+  @override
+  String get kycRejectionSessionCanceled =>
+      'La vérification a été fermée avant d\'être terminée.';
+
+  @override
+  String get kycRejectionGeneric =>
+      'Nous n\'avons pas pu vérifier votre identité. Assurez-vous que votre document est lisible et réessayez.';
+
+  @override
+  String get kycVerificationTitle => 'Vérification d\'identité';
+
+  @override
+  String get kycStatusNotStartedTitle => 'Vérification non démarrée';
+
+  @override
+  String get kycStatusNotStartedBody =>
+      'Vous devez vérifier votre identité pour utiliser toutes les fonctionnalités de Yadony.';
+
+  @override
+  String get kycStatusVerifiedTitle => 'Identité vérifiée ✓';
+
+  @override
+  String get kycStatusVerifiedBodyRedirecting =>
+      'Votre identité a été vérifiée avec succès. Redirection en cours…';
+
+  @override
+  String get kycStatusVerifiedBodyClosing =>
+      'Votre identité a été vérifiée avec succès. Fermeture en cours…';
+
+  @override
+  String get kycStatusPendingTitle => 'Vérification en cours';
+
+  @override
+  String get kycStatusPendingBody =>
+      'Cela prend généralement moins d\'une minute, parfois quelques minutes. Vous pouvez fermer cet écran, vous serez notifié du résultat.';
+
+  @override
+  String get kycStatusTimedOutTitle =>
+      'La vérification prend plus de temps que prévu';
+
+  @override
+  String get kycStatusTimedOutBody =>
+      'Vous pouvez fermer cet écran et revenir plus tard. Votre badge ✓ apparaîtra automatiquement dès que la vérification sera terminée.';
+
+  @override
+  String get kycStatusRejectedTitle => 'Vérification échouée';
+
+  @override
+  String get kycStatusPollingIndicator => 'Vérification automatique en cours';
+
+  @override
+  String get kycStatusStartAction => 'Commencer la vérification';
+
+  @override
+  String get kycStatusRetryAction => 'Réessayer la vérification';
+
+  @override
+  String get kycStatusResumeAction => 'Reprendre la vérification';
+
+  @override
+  String get kycStatusBackToApp => 'Retour à l\'app';
+
+  @override
+  String get kycStatusContinueLater => 'Continuer plus tard';
+
+  @override
+  String get kycWebviewLoadError =>
+      'Impossible de charger la page de vérification';
+
+  @override
+  String get kycRequiredTitle => 'Vérification requise';
+
+  @override
+  String get kycRequiredMessageNotStarted =>
+      'Pour envoyer un colis, votre identité doit être vérifiée.';
+
+  @override
+  String get kycRequiredMessageRejected =>
+      'Votre vérification a échoué. Réessayez pour pouvoir envoyer un colis.';
+
+  @override
+  String get kycRequiredMessagePending =>
+      'Votre vérification est en cours. Vous pourrez envoyer une fois votre identité validée.';
+
+  @override
+  String get kycRequiredVerifyAction => 'Vérifier mon identité';
+
+  @override
+  String get kycInfoDuration => 'Vérification en 2 à 5 minutes';
+
+  @override
+  String get kycInfoSecureProcess => 'Processus de vérification sécurisé';
+
+  @override
+  String get kycOnboardingTitle => 'Vérifiez votre identité';
+
+  @override
+  String get kycOnboardingSubtitle =>
+      'Requis pour publier des annonces sur Yadony';
+
+  @override
+  String get kycOnboardingStartAction => 'Démarrer la vérification';
+
+  @override
+  String get kycOnboardingIdSelfieRequired =>
+      'Pièce d\'identité + selfie requis';
 }
