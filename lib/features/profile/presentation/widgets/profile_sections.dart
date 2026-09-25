@@ -12,6 +12,7 @@ import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.d
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/presentation/widgets/redeem_code_bottom_sheet.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -54,6 +55,7 @@ class ProfileAccountSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     // Une fois vérifié ou renseigné, chaque élément quitte « Mon compte » —
     // rien à vérifier deux fois, la section ne sert qu'aux actions restantes.
@@ -74,7 +76,7 @@ class ProfileAccountSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ProfileSectionLabel(label: 'MON COMPTE', cs: cs),
+            ProfileSectionLabel(label: l.profileSectionAccount, cs: cs),
             if (showKyc) ...[
               ProfileListSection(tiles: [kycTile(context, user)]),
               const SizedBox(height: DonySpacing.sm),
@@ -103,6 +105,7 @@ class ProfileMoneySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     // La section entière dépend de la couverture Stripe : le CTA d'activation
     // comme l'entrée « Recevoir mes paiements » mènent au même onboarding.
@@ -127,7 +130,7 @@ class ProfileMoneySection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ProfileSectionLabel(label: 'ARGENT', cs: cs),
+            ProfileSectionLabel(label: l.profileSectionMoney, cs: cs),
             // Plus de CTA d'activation ici : la bannière de complétion, en
             // tête de page, porte désormais « Activer les paiements » comme
             // une case à cocher parmi les autres. Deux appels à la même
@@ -146,10 +149,10 @@ class ProfileMoneySection extends StatelessWidget {
                     iconBgColor: identityVerified
                         ? cs.successLight
                         : cs.surfaceContainerHighest,
-                    label: 'Recevoir mes paiements',
+                    label: l.profileMoneyReceivePayments,
                     subtitle: identityVerified
                         ? null
-                        : 'Vérifiez votre identité pour activer',
+                        : l.profileMoneyVerifyIdentityToActivate,
                     enabled: identityVerified,
                     onTap: identityVerified
                         ? () => context.push('/payments/onboarding')
@@ -159,8 +162,8 @@ class ProfileMoneySection extends StatelessWidget {
                   iconAsset: 'smartphone',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
-                  label: 'Versement mobile money',
-                  subtitle: 'Zone CFA : Orange Money, Wave, MTN',
+                  label: l.profileMoneyMobileMoneyPayout,
+                  subtitle: l.profileMoneyMobileMoneyPayoutSubtitle,
                   onTap: () => context.push('/payments/mobile-money/account'),
                 ),
                 // « Ma grille de prix » a quitté cette section pour les
@@ -171,7 +174,7 @@ class ProfileMoneySection extends StatelessWidget {
                   iconAsset: 'credit-card',
                   iconColor: DonyColors.purple,
                   iconBgColor: DonyColors.violetLight,
-                  label: 'Carte commission espèces',
+                  label: l.profileMoneyCashCommissionCard,
                   showDivider: false,
                   onTap: () => context.push('/payments/commission-method'),
                 ),
@@ -194,19 +197,20 @@ class ProfileReputationSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ProfileSectionLabel(label: 'MA RÉPUTATION', cs: cs),
+        ProfileSectionLabel(label: l.profileSectionReputation, cs: cs),
         ProfileListSection(
           tiles: [
             DonyListTile(
               iconAsset: 'user',
               iconColor: cs.primary,
               iconBgColor: cs.primaryContainer,
-              label: 'Mon profil public',
-              subtitle: 'Ce que voient les autres',
+              label: l.profileReputationPublicProfile,
+              subtitle: l.profileReputationPublicProfileSubtitle,
               onTap: () => context.push(
                 '/profile/public',
                 extra: ProfilePublicArgs(userId: user?.id),
@@ -216,7 +220,7 @@ class ProfileReputationSection extends StatelessWidget {
               iconAsset: 'star',
               iconColor: cs.secondary,
               iconBgColor: cs.secondaryContainer,
-              label: 'Mes avis reçus',
+              label: l.profileReputationMyReviews,
               showDivider: false,
               onTap: () => context.push('/profile/reviews'),
             ),
@@ -243,6 +247,7 @@ class ProfileAdvantagesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     // La tuile PRO suit le feature flag backend (`pro_enabled`) : offre
     // fermée, elle disparaît pour tout le monde, y compris un compte déjà PRO
@@ -253,7 +258,7 @@ class ProfileAdvantagesSection extends StatelessWidget {
       builder: (context, proEnabled, _) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ProfileSectionLabel(label: 'MES AVANTAGES', cs: cs),
+          ProfileSectionLabel(label: l.profileSectionAdvantages, cs: cs),
           ProfileListSection(
             tiles: [
               if (proEnabled)
@@ -262,8 +267,8 @@ class ProfileAdvantagesSection extends StatelessWidget {
                   iconColor: isProAccount ? cs.success : cs.warning,
                   iconBgColor: isProAccount ? cs.successLight : cs.warningLight,
                   label: isProAccount
-                      ? 'Mon profil PRO'
-                      : 'Passer en compte PRO',
+                      ? l.profileAdvantagesProProfile
+                      : l.profileAdvantagesUpgradeToPro,
                   trailing: isProAccount
                       ? DonyIcon('badge-check', color: cs.success, size: 18)
                       : null,
@@ -275,9 +280,11 @@ class ProfileAdvantagesSection extends StatelessWidget {
                 iconAsset: 'user-plus',
                 iconColor: cs.success,
                 iconBgColor: cs.successLight,
-                label: 'Parrainages',
+                label: l.profileAdvantagesReferral,
                 trailing: Text(
-                  '0 invité',
+                  // Libellé fixe, jamais mis à jour avec le vrai nombre —
+                  // défaut probable signalé dans la PR, pas corrigé ici.
+                  l.profileReferralZeroInvited,
                   style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 onTap: () => context.push('/profile/referral'),
@@ -292,7 +299,7 @@ class ProfileAdvantagesSection extends StatelessWidget {
                     iconAsset: 'gift',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
-                    label: 'J\'ai un code parrain',
+                    label: l.profileAdvantagesHaveReferralCode,
                     showDivider: false,
                     onTap: () async {
                       final redeemed = await RedeemCodeBottomSheet.show(
@@ -323,27 +330,28 @@ class ProfileFollowUpSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ProfileSectionLabel(label: 'SUIVI', cs: cs),
+        ProfileSectionLabel(label: l.profileSectionTracking, cs: cs),
         ProfileListSection(
           tiles: [
             DonyListTile(
               iconAsset: 'scale',
               iconColor: cs.error,
               iconBgColor: cs.errorContainer.withValues(alpha: 0.5),
-              label: 'Mes litiges',
-              subtitle: 'Suivi de vos litiges',
+              label: l.profileTrackingDisputes,
+              subtitle: l.profileTrackingDisputesSubtitle,
               onTap: () => context.push('/disputes'),
             ),
             DonyListTile(
               iconAsset: 'bell',
               iconColor: cs.tertiary,
               iconBgColor: cs.tertiaryContainer.withValues(alpha: 0.5),
-              label: 'Mes abonnements',
-              subtitle: 'Les voyageurs dont vous suivez les trajets',
+              label: l.profileTrackingSubscriptions,
+              subtitle: l.profileTrackingSubscriptionsSubtitle,
               showDivider: false,
               onTap: () => context.push('/profile/subscriptions'),
             ),
@@ -364,35 +372,36 @@ class ProfileHelpSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ProfileSectionLabel(label: 'AIDE', cs: cs),
+        ProfileSectionLabel(label: l.profileSectionHelp, cs: cs),
         ProfileListSection(
           tiles: [
             DonyListTile(
               iconAsset: 'circle-help',
               iconColor: cs.tertiary,
               iconBgColor: cs.tertiaryContainer,
-              label: 'FAQ & aide',
-              subtitle: 'Réponses aux questions fréquentes',
+              label: l.profileHelpFaq,
+              subtitle: l.profileHelpFaqSubtitle,
               onTap: () => context.push('/profile/help/faq'),
             ),
             DonyListTile(
               iconAsset: 'globe',
               iconColor: cs.secondary,
               iconBgColor: cs.secondaryContainer,
-              label: 'Réseaux sociaux et tutoriels',
-              subtitle: 'Vidéos et communauté Yadony',
+              label: l.profileHelpCommunity,
+              subtitle: l.profileHelpCommunitySubtitle,
               onTap: () => context.push('/profile/community'),
             ),
             DonyListTile(
               iconAsset: 'headset',
               iconColor: cs.primary,
               iconBgColor: cs.primaryContainer,
-              label: 'Contacter le support',
-              subtitle: 'Réponse généralement sous 24 h',
+              label: l.profileHelpContactSupport,
+              subtitle: l.profileHelpContactSupportSubtitle,
               showDivider: false,
               onTap: () => context.push('/support'),
             ),
@@ -421,6 +430,7 @@ class _ContactSecuritySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return DonyCard(
       padding: EdgeInsets.zero,
@@ -431,7 +441,7 @@ class _ContactSecuritySection extends StatelessWidget {
               iconAsset: 'phone',
               iconBg: cs.primaryContainer,
               iconColor: cs.primary,
-              typeLabel: 'TÉLÉPHONE',
+              typeLabel: l.profileContactTypePhone,
               isFirst: true,
               isLast: !showEmailRow,
               onTap: onPhoneTap,
@@ -441,7 +451,7 @@ class _ContactSecuritySection extends StatelessWidget {
               iconAsset: 'at-sign',
               iconBg: cs.successLight,
               iconColor: cs.success,
-              typeLabel: 'E-MAIL',
+              typeLabel: l.profileContactTypeEmail,
               isFirst: !showPhoneRow,
               isLast: true,
               onTap: onEmailTap,
@@ -518,7 +528,7 @@ class _ContactRow extends StatelessWidget {
                       ),
                       const SizedBox(height: DonySpacing.xxs),
                       Text(
-                        'Non ajouté',
+                        context.l10n.profileNotAdded,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: tt.bodyMedium?.copyWith(
@@ -549,7 +559,7 @@ class _StatusBadge extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final bg = cs.primaryContainer;
     final fg = cs.primary;
-    const label = '+ Ajouter';
+    final label = context.l10n.profileAddBadge;
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -606,15 +616,16 @@ class ProfileSectionLabel extends StatelessWidget {
 DonyListTile kycTile(BuildContext context, UserModel? user) {
   final cs = Theme.of(context).colorScheme;
   final tt = Theme.of(context).textTheme;
+  final l = context.l10n;
   return DonyListTile(
     iconAsset: 'shield',
     iconColor: cs.primary,
     iconBgColor: cs.primaryContainer,
-    label: 'Documents d\'identité',
+    label: l.profileAccountIdentityDocuments,
     showDivider: false,
     trailing: switch (user?.kycStatus) {
       'VERIFIED' => Text(
-        'Vérifié',
+        l.profileKycVerifiedLabel,
         style: tt.labelMedium?.copyWith(
           color: cs.success,
           fontWeight: FontWeight.w600,
@@ -626,7 +637,7 @@ DonyListTile kycTile(BuildContext context, UserModel? user) {
           DonyIcon('triangle-alert', color: cs.warning, size: 16),
           const SizedBox(width: DonySpacing.xs),
           Text(
-            'Réessayer',
+            l.commonRetry,
             style: tt.labelMedium?.copyWith(
               color: cs.warning,
               fontWeight: FontWeight.w600,
@@ -647,7 +658,7 @@ DonyListTile kycTile(BuildContext context, UserModel? user) {
           ),
           const SizedBox(width: DonySpacing.xs),
           Text(
-            'En cours',
+            l.profileKycInProgressLabel,
             style: tt.labelMedium?.copyWith(
               color: cs.warning,
               fontWeight: FontWeight.w600,
@@ -656,7 +667,7 @@ DonyListTile kycTile(BuildContext context, UserModel? user) {
         ],
       ),
       _ => Text(
-        'Vérifier',
+        l.profileKycToVerifyLabel,
         style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
       ),
     },
@@ -730,6 +741,7 @@ class ProfileCompletionBanner extends StatelessWidget {
   ) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     final identityVerified = user.kycStatus == 'VERIFIED';
     final payoutsCounted = stripe.connectAvailableInCountry;
@@ -758,8 +770,8 @@ class ProfileCompletionBanner extends StatelessWidget {
     // l'utilisateur peut faire dans l'app, la photo de profil non.
     if (!identityVerified) {
       missing.add(
-        const _MissingItem(
-          'Vérifier mon identité',
+        _MissingItem(
+          l.profileCompletionVerifyIdentity,
           route: '/kyc/verify',
           iconAsset: 'shield-check',
         ),
@@ -768,33 +780,33 @@ class ProfileCompletionBanner extends StatelessWidget {
       // Jamais proposé avant l'identité : Stripe Connect la refuse (422
       // `kyc-required`). Une case qui ne mène qu'à un refus n'en est pas une.
       missing.add(
-        const _MissingItem(
-          'Activer les paiements',
+        _MissingItem(
+          l.profileCompletionActivatePayments,
           route: '/payments/onboarding',
           iconAsset: 'landmark',
         ),
       );
     }
     if (!(user.avatarUrl?.isNotEmpty ?? false)) {
-      missing.add(const _MissingItem('Photo'));
+      missing.add(_MissingItem(l.profileFieldPhotoShort));
     }
     if (!(user.firstName?.isNotEmpty ?? false)) {
-      missing.add(const _MissingItem('Prénom'));
+      missing.add(_MissingItem(l.profileFieldFirstName));
     }
     if (!(user.lastName?.isNotEmpty ?? false)) {
-      missing.add(const _MissingItem('Nom'));
+      missing.add(_MissingItem(l.profileFieldLastNameShort));
     }
     if (!(user.email?.isNotEmpty ?? false)) {
-      missing.add(const _MissingItem('Email'));
+      missing.add(_MissingItem(l.profileFieldEmailShort));
     }
     if (phoneAuthEnabled && !(user.phoneNumber?.isNotEmpty ?? false)) {
-      missing.add(const _MissingItem('Téléphone'));
+      missing.add(_MissingItem(l.profileFieldPhone));
     }
     if (!(user.city?.isNotEmpty ?? false)) {
-      missing.add(const _MissingItem('Ville'));
+      missing.add(_MissingItem(l.profileFieldCity));
     }
     if (!(user.bio?.isNotEmpty ?? false)) {
-      missing.add(const _MissingItem('À propos'));
+      missing.add(_MissingItem(l.profileFieldAbout));
     }
 
     // Pas de GestureDetector autour de la carte entière : il gagnait l'arène
@@ -814,9 +826,7 @@ class ProfileCompletionBanner extends StatelessWidget {
         children: [
           Semantics(
             button: true,
-            label:
-                'Compte complété à ${(pct * 100).round()} pour cent. '
-                'Compléter maintenant.',
+            label: l.profileCompletionSemantics((pct * 100).round()),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
@@ -842,14 +852,14 @@ class ProfileCompletionBanner extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Complétez votre compte',
+                            l.profileCompletionCta,
                             style: tt.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: cs.onSurface,
                             ),
                           ),
                           Text(
-                            '${(pct * 100).round()}% complété · Compléter maintenant',
+                            l.profileCompletionShort((pct * 100).round()),
                             style: tt.bodySmall?.copyWith(
                               color: tier.base,
                               fontWeight: FontWeight.w500,
@@ -921,7 +931,7 @@ class _MissingChip extends StatelessWidget {
     // vrai bouton, avec sa hauteur de cible tactile minimale.
     return Semantics(
       button: true,
-      label: '${item.label}, à compléter',
+      label: context.l10n.profileItemToComplete(item.label),
       child: Material(
         color: Colors.transparent,
         child: InkWell(

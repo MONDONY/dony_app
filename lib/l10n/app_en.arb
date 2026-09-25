@@ -6553,5 +6553,174 @@
   "kycOnboardingIdSelfieRequired": "ID document + selfie required",
   "@kycOnboardingIdSelfieRequired": {
     "description": "Ligne d'info sur les pièces nécessaires (kyc_onboarding_bottom_sheet.dart, _InfoRow)."
-  }
+  },
+  "profileSectionAccount": "MY ACCOUNT",
+  "profileSectionMoney": "MONEY",
+  "profileMoneyReceivePayments": "Receive my payments",
+  "profileMoneyVerifyIdentityToActivate": "Verify your identity to activate",
+  "profileMoneyMobileMoneyPayout": "Mobile money payout",
+  "profileMoneyMobileMoneyPayoutSubtitle": "CFA zone: Orange Money, Wave, MTN",
+  "profileMoneyCashCommissionCard": "Cash service fee card",
+  "profileSectionReputation": "MY REPUTATION",
+  "profileReputationPublicProfile": "My public profile",
+  "profileReputationPublicProfileSubtitle": "What others see",
+  "profileReputationMyReviews": "My reviews received",
+  "profileSectionAdvantages": "MY BENEFITS",
+  "profileAdvantagesProProfile": "My Pro profile",
+  "profileAdvantagesUpgradeToPro": "Upgrade to a Pro account",
+  "profileAdvantagesReferral": "Referrals",
+  "profileReferralZeroInvited": "0 invited",
+  "profileAdvantagesHaveReferralCode": "I have a referral code",
+  "profileSectionTracking": "TRACKING",
+  "profileTrackingDisputes": "My disputes",
+  "profileTrackingDisputesSubtitle": "Track your disputes",
+  "profileTrackingSubscriptions": "Following",
+  "profileTrackingSubscriptionsSubtitle": "The travelers whose trips you follow",
+  "profileSectionHelp": "HELP",
+  "profileHelpFaq": "FAQ & help",
+  "profileHelpFaqSubtitle": "Answers to frequently asked questions",
+  "profileHelpCommunity": "Social media & tutorials",
+  "profileHelpCommunitySubtitle": "Yadony videos and community",
+  "profileHelpContactSupport": "Contact support",
+  "profileHelpContactSupportSubtitle": "Response usually within 24 hours",
+  "profileContactTypePhone": "PHONE",
+  "profileContactTypeEmail": "EMAIL",
+  "profileNotAdded": "Not added",
+  "profileAddBadge": "+ Add",
+  "profileAccountIdentityDocuments": "ID documents",
+  "profileKycVerifiedLabel": "Verified",
+  "profileKycInProgressLabel": "In progress",
+  "profileKycToVerifyLabel": "Verify",
+  "profileCompletionVerifyIdentity": "Verify my identity",
+  "profileCompletionActivatePayments": "Activate payments",
+  "profileFieldPhotoShort": "Photo",
+  "profileFieldFirstName": "First name",
+  "profileFieldLastNameShort": "Last name",
+  "profileFieldEmailShort": "Email",
+  "profileFieldPhone": "Phone",
+  "profileFieldCity": "City",
+  "profileFieldAbout": "About",
+  "profileCompletionSemantics": "Account {percent} percent complete. Complete now.",
+  "@profileCompletionSemantics": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileCompletionCta": "Complete your account",
+  "profileCompletionShort": "{percent}% complete · Complete now",
+  "@profileCompletionShort": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileItemToComplete": "{label}, to complete",
+  "@profileItemToComplete": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "profileProBadge": "PRO",
+  "profileChipPhoneVerified": "Phone ✓",
+  "profileChipPhoneMissing": "Phone missing",
+  "profileChipEmailVerified": "Email ✓",
+  "profileChipEmailMissing": "Email missing",
+  "profileChipIdentityVerified": "Identity ✓",
+  "profileMenuEditProfile": "Edit profile",
+  "profileMenuSettings": "Settings",
+  "profileMenuAccountSection": "My account",
+  "profileMenuExportData": "Download my data",
+  "profileMenuExportDataSubtitle": "GDPR export in JSON format",
+  "profileLogoutAction": "Log out",
+  "profileMenuDeleteAccount": "Delete my account",
+  "profileMenuDeleteAccountSubtitle": "30-day withdrawal period",
+  "profileSkeletonLoadingSemantics": "Loading profile",
+  "profileSkeletonUnavailableTitle": "Profile unavailable",
+  "profileSkeletonUnavailableBody": "Unable to load your account. Check your connection, then try again.",
+  "profileDeletionScheduled": "Deletion scheduled for {date}",
+  "@profileDeletionScheduled": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "profileDeletionCancelAction": "Cancel deletion",
+  "profileDeletionRefundsNotice": "Refunds already in progress are not canceled.",
+  "profileWalletBalanceLabel": "Balance",
+  "profileWalletTopUpSemantics": "Top up wallet",
+  "profileWalletUnavailable": "Balance unavailable",
+  "contactEditPhoneTitle": "Edit phone number",
+  "contactSendCodeAction": "Send code",
+  "contactVerifyAction": "Verify",
+  "contactEditEmailTitle": "Edit email",
+  "contactAddPhoneTitle": "Add a phone number",
+  "contactPhoneAddedSuccess": "Number added successfully!",
+  "contactPhoneNumberLabel": "PHONE NUMBER",
+  "contactPhoneOtpNotice": "A verification code will be sent by SMS.",
+  "contactDialCodeTitle": "Country code",
+  "contactAddEmailTitle": "Add an email",
+  "contactEmailVerifiedSuccess": "Email verified successfully!",
+  "contactEmailAddressLabel": "EMAIL ADDRESS",
+  "contactEmailOtpNotice": "A verification code will be sent to this email.",
+  "contactCodeSentTo": "Code sent to {destination}",
+  "@contactCodeSentTo": {
+    "placeholders": {
+      "destination": {
+        "type": "String"
+      }
+    }
+  },
+  "profileCommunityJoinTitle": "Join the community",
+  "profileCommunityJoinSubtitle": "Find Yadony's official spaces.",
+  "profileCommunityActionJoin": "Join",
+  "profileCommunityActionFollow": "Follow",
+  "profileCommunityActionSubscribe": "Subscribe",
+  "profileLogoutConfirmTitle": "Log out?",
+  "profileLogoutConfirmMessage": "You'll need to sign in again to continue.",
+  "profileMenuButtonTooltip": "Menu",
+  "profileFooterVersion": "Yadony v1.0.0 · Made with ❤️ in Paris",
+  "editProfileImageOnlyError": "Only images are accepted (no video).",
+  "editProfilePhotoTooLarge": "Photo too large (max {maxMb} MB).",
+  "@editProfilePhotoTooLarge": {
+    "placeholders": {
+      "maxMb": {
+        "type": "int"
+      }
+    }
+  },
+  "profileEditChangePhotoSemantics": "Change profile photo",
+  "profileEditChangePhotoLabel": "Change photo",
+  "profileEditSectionIdentity": "Identity",
+  "profileEditLastNameFieldLabel": "Last name",
+  "profileEditNoBioPlaceholder": "No bio",
+  "profileEditBioFieldLabel": "Bio",
+  "profileEditSectionContact": "Contact details",
+  "profileFieldEmailAllCaps": "EMAIL",
+  "profileEditSectionPersonalInfo": "Personal information",
+  "profileFieldCityAllCaps": "CITY",
+  "profileEditCityPlaceholder": "Not provided",
+  "profileEditSectionPreferences": "Preferences",
+  "profileFieldLanguagesAllCaps": "LANGUAGES SPOKEN",
+  "profileEditLanguagesPlaceholder": "Not provided",
+  "profileEditLanguagesFieldLabel": "Languages spoken",
+  "profileEditCompletionGaugeTitle": "Profile complete",
+  "profileEditCompletionGaugeSubtitle": "Photo, identity, contact details and information complete your profile",
+  "profileEditNoNamePlaceholder": "Add your first and last name",
+  "profileAddBadgeAction": "Add",
+  "communityEmptyTitle": "No content yet",
+  "communityEmptyDescription": "Our tutorials and community spaces will be available here soon.",
+  "communityTutorialsTitle": "Video tutorials",
+  "communityTutorialsSubtitle": "Learn the essential Yadony journeys.",
+  "profileLanguageFrench": "French",
+  "profileLanguageWolof": "Wolof",
+  "profileLanguageBambara": "Bambara",
+  "profileLanguageEnglish": "English",
+  "profileLanguageSpanish": "Spanish",
+  "profileLanguageArabic": "Arabic"
 }

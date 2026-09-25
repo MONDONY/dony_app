@@ -10531,4 +10531,410 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kycOnboardingIdSelfieRequired => 'ID document + selfie required';
+
+  @override
+  String get profileSectionAccount => 'MY ACCOUNT';
+
+  @override
+  String get profileSectionMoney => 'MONEY';
+
+  @override
+  String get profileMoneyReceivePayments => 'Receive my payments';
+
+  @override
+  String get profileMoneyVerifyIdentityToActivate =>
+      'Verify your identity to activate';
+
+  @override
+  String get profileMoneyMobileMoneyPayout => 'Mobile money payout';
+
+  @override
+  String get profileMoneyMobileMoneyPayoutSubtitle =>
+      'CFA zone: Orange Money, Wave, MTN';
+
+  @override
+  String get profileMoneyCashCommissionCard => 'Cash service fee card';
+
+  @override
+  String get profileSectionReputation => 'MY REPUTATION';
+
+  @override
+  String get profileReputationPublicProfile => 'My public profile';
+
+  @override
+  String get profileReputationPublicProfileSubtitle => 'What others see';
+
+  @override
+  String get profileReputationMyReviews => 'My reviews received';
+
+  @override
+  String get profileSectionAdvantages => 'MY BENEFITS';
+
+  @override
+  String get profileAdvantagesProProfile => 'My Pro profile';
+
+  @override
+  String get profileAdvantagesUpgradeToPro => 'Upgrade to a Pro account';
+
+  @override
+  String get profileAdvantagesReferral => 'Referrals';
+
+  @override
+  String get profileReferralZeroInvited => '0 invited';
+
+  @override
+  String get profileAdvantagesHaveReferralCode => 'I have a referral code';
+
+  @override
+  String get profileSectionTracking => 'TRACKING';
+
+  @override
+  String get profileTrackingDisputes => 'My disputes';
+
+  @override
+  String get profileTrackingDisputesSubtitle => 'Track your disputes';
+
+  @override
+  String get profileTrackingSubscriptions => 'Following';
+
+  @override
+  String get profileTrackingSubscriptionsSubtitle =>
+      'The travelers whose trips you follow';
+
+  @override
+  String get profileSectionHelp => 'HELP';
+
+  @override
+  String get profileHelpFaq => 'FAQ & help';
+
+  @override
+  String get profileHelpFaqSubtitle => 'Answers to frequently asked questions';
+
+  @override
+  String get profileHelpCommunity => 'Social media & tutorials';
+
+  @override
+  String get profileHelpCommunitySubtitle => 'Yadony videos and community';
+
+  @override
+  String get profileHelpContactSupport => 'Contact support';
+
+  @override
+  String get profileHelpContactSupportSubtitle =>
+      'Response usually within 24 hours';
+
+  @override
+  String get profileContactTypePhone => 'PHONE';
+
+  @override
+  String get profileContactTypeEmail => 'EMAIL';
+
+  @override
+  String get profileNotAdded => 'Not added';
+
+  @override
+  String get profileAddBadge => '+ Add';
+
+  @override
+  String get profileAccountIdentityDocuments => 'ID documents';
+
+  @override
+  String get profileKycVerifiedLabel => 'Verified';
+
+  @override
+  String get profileKycInProgressLabel => 'In progress';
+
+  @override
+  String get profileKycToVerifyLabel => 'Verify';
+
+  @override
+  String get profileCompletionVerifyIdentity => 'Verify my identity';
+
+  @override
+  String get profileCompletionActivatePayments => 'Activate payments';
+
+  @override
+  String get profileFieldPhotoShort => 'Photo';
+
+  @override
+  String get profileFieldFirstName => 'First name';
+
+  @override
+  String get profileFieldLastNameShort => 'Last name';
+
+  @override
+  String get profileFieldEmailShort => 'Email';
+
+  @override
+  String get profileFieldPhone => 'Phone';
+
+  @override
+  String get profileFieldCity => 'City';
+
+  @override
+  String get profileFieldAbout => 'About';
+
+  @override
+  String profileCompletionSemantics(int percent) {
+    return 'Account $percent percent complete. Complete now.';
+  }
+
+  @override
+  String get profileCompletionCta => 'Complete your account';
+
+  @override
+  String profileCompletionShort(int percent) {
+    return '$percent% complete · Complete now';
+  }
+
+  @override
+  String profileItemToComplete(String label) {
+    return '$label, to complete';
+  }
+
+  @override
+  String get profileProBadge => 'PRO';
+
+  @override
+  String get profileChipPhoneVerified => 'Phone ✓';
+
+  @override
+  String get profileChipPhoneMissing => 'Phone missing';
+
+  @override
+  String get profileChipEmailVerified => 'Email ✓';
+
+  @override
+  String get profileChipEmailMissing => 'Email missing';
+
+  @override
+  String get profileChipIdentityVerified => 'Identity ✓';
+
+  @override
+  String get profileMenuEditProfile => 'Edit profile';
+
+  @override
+  String get profileMenuSettings => 'Settings';
+
+  @override
+  String get profileMenuAccountSection => 'My account';
+
+  @override
+  String get profileMenuExportData => 'Download my data';
+
+  @override
+  String get profileMenuExportDataSubtitle => 'GDPR export in JSON format';
+
+  @override
+  String get profileLogoutAction => 'Log out';
+
+  @override
+  String get profileMenuDeleteAccount => 'Delete my account';
+
+  @override
+  String get profileMenuDeleteAccountSubtitle => '30-day withdrawal period';
+
+  @override
+  String get profileSkeletonLoadingSemantics => 'Loading profile';
+
+  @override
+  String get profileSkeletonUnavailableTitle => 'Profile unavailable';
+
+  @override
+  String get profileSkeletonUnavailableBody =>
+      'Unable to load your account. Check your connection, then try again.';
+
+  @override
+  String profileDeletionScheduled(String date) {
+    return 'Deletion scheduled for $date';
+  }
+
+  @override
+  String get profileDeletionCancelAction => 'Cancel deletion';
+
+  @override
+  String get profileDeletionRefundsNotice =>
+      'Refunds already in progress are not canceled.';
+
+  @override
+  String get profileWalletBalanceLabel => 'Balance';
+
+  @override
+  String get profileWalletTopUpSemantics => 'Top up wallet';
+
+  @override
+  String get profileWalletUnavailable => 'Balance unavailable';
+
+  @override
+  String get contactEditPhoneTitle => 'Edit phone number';
+
+  @override
+  String get contactSendCodeAction => 'Send code';
+
+  @override
+  String get contactVerifyAction => 'Verify';
+
+  @override
+  String get contactEditEmailTitle => 'Edit email';
+
+  @override
+  String get contactAddPhoneTitle => 'Add a phone number';
+
+  @override
+  String get contactPhoneAddedSuccess => 'Number added successfully!';
+
+  @override
+  String get contactPhoneNumberLabel => 'PHONE NUMBER';
+
+  @override
+  String get contactPhoneOtpNotice =>
+      'A verification code will be sent by SMS.';
+
+  @override
+  String get contactDialCodeTitle => 'Country code';
+
+  @override
+  String get contactAddEmailTitle => 'Add an email';
+
+  @override
+  String get contactEmailVerifiedSuccess => 'Email verified successfully!';
+
+  @override
+  String get contactEmailAddressLabel => 'EMAIL ADDRESS';
+
+  @override
+  String get contactEmailOtpNotice =>
+      'A verification code will be sent to this email.';
+
+  @override
+  String contactCodeSentTo(String destination) {
+    return 'Code sent to $destination';
+  }
+
+  @override
+  String get profileCommunityJoinTitle => 'Join the community';
+
+  @override
+  String get profileCommunityJoinSubtitle => 'Find Yadony\'s official spaces.';
+
+  @override
+  String get profileCommunityActionJoin => 'Join';
+
+  @override
+  String get profileCommunityActionFollow => 'Follow';
+
+  @override
+  String get profileCommunityActionSubscribe => 'Subscribe';
+
+  @override
+  String get profileLogoutConfirmTitle => 'Log out?';
+
+  @override
+  String get profileLogoutConfirmMessage =>
+      'You\'ll need to sign in again to continue.';
+
+  @override
+  String get profileMenuButtonTooltip => 'Menu';
+
+  @override
+  String get profileFooterVersion => 'Yadony v1.0.0 · Made with ❤️ in Paris';
+
+  @override
+  String get editProfileImageOnlyError =>
+      'Only images are accepted (no video).';
+
+  @override
+  String editProfilePhotoTooLarge(int maxMb) {
+    return 'Photo too large (max $maxMb MB).';
+  }
+
+  @override
+  String get profileEditChangePhotoSemantics => 'Change profile photo';
+
+  @override
+  String get profileEditChangePhotoLabel => 'Change photo';
+
+  @override
+  String get profileEditSectionIdentity => 'Identity';
+
+  @override
+  String get profileEditLastNameFieldLabel => 'Last name';
+
+  @override
+  String get profileEditNoBioPlaceholder => 'No bio';
+
+  @override
+  String get profileEditBioFieldLabel => 'Bio';
+
+  @override
+  String get profileEditSectionContact => 'Contact details';
+
+  @override
+  String get profileFieldEmailAllCaps => 'EMAIL';
+
+  @override
+  String get profileEditSectionPersonalInfo => 'Personal information';
+
+  @override
+  String get profileFieldCityAllCaps => 'CITY';
+
+  @override
+  String get profileEditCityPlaceholder => 'Not provided';
+
+  @override
+  String get profileEditSectionPreferences => 'Preferences';
+
+  @override
+  String get profileFieldLanguagesAllCaps => 'LANGUAGES SPOKEN';
+
+  @override
+  String get profileEditLanguagesPlaceholder => 'Not provided';
+
+  @override
+  String get profileEditLanguagesFieldLabel => 'Languages spoken';
+
+  @override
+  String get profileEditCompletionGaugeTitle => 'Profile complete';
+
+  @override
+  String get profileEditCompletionGaugeSubtitle =>
+      'Photo, identity, contact details and information complete your profile';
+
+  @override
+  String get profileEditNoNamePlaceholder => 'Add your first and last name';
+
+  @override
+  String get profileAddBadgeAction => 'Add';
+
+  @override
+  String get communityEmptyTitle => 'No content yet';
+
+  @override
+  String get communityEmptyDescription =>
+      'Our tutorials and community spaces will be available here soon.';
+
+  @override
+  String get communityTutorialsTitle => 'Video tutorials';
+
+  @override
+  String get communityTutorialsSubtitle =>
+      'Learn the essential Yadony journeys.';
+
+  @override
+  String get profileLanguageFrench => 'French';
+
+  @override
+  String get profileLanguageWolof => 'Wolof';
+
+  @override
+  String get profileLanguageBambara => 'Bambara';
+
+  @override
+  String get profileLanguageEnglish => 'English';
+
+  @override
+  String get profileLanguageSpanish => 'Spanish';
+
+  @override
+  String get profileLanguageArabic => 'Arabic';
 }

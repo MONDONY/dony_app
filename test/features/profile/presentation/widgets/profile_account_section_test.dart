@@ -3,6 +3,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 
 const _userWithPhoneAndEmail = UserModel(
   id: 'user-1',
@@ -140,6 +141,19 @@ void main() {
       expect(find.text('E-MAIL'), findsNothing);
     },
   );
+
+  testWidgets('section MON COMPTE en anglais', (tester) async {
+    useEnglish();
+    setSmsAuthEnabled(true);
+
+    await tester.pumpWidget(_app(_userWithNothing));
+    await tester.pump();
+
+    expect(find.text('MY ACCOUNT'), findsOneWidget);
+    expect(find.text('ID documents'), findsOneWidget);
+    expect(find.text('PHONE'), findsOneWidget);
+    expect(find.text('Not added'), findsWidgets);
+  });
 
   // `ProfileAccountSection.isVisible` doit rendre exactement le même verdict
   // que `build()` : c'est ce que `_sections()` (ProfileScreen) utilise pour

@@ -38,6 +38,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/currency_test_doubles.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -470,6 +471,15 @@ void main() {
       expect(find.text('Mes négociations'), findsNothing);
       expect(find.text('Mes colis'), findsNothing);
       expect(find.text('Mes trajets et colis'), findsNothing);
+    });
+
+    testWidgets('la section ARGENT est traduite en anglais', (tester) async {
+      useEnglish();
+      await pumpWith(tester, _dualRoleUser);
+
+      await _scrollTo(tester, find.text('MONEY'));
+      expect(find.text('MONEY'), findsOneWidget);
+      expect(find.text('ARGENT'), findsNothing);
     });
   });
 

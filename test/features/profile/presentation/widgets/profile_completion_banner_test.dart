@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 
 const _empty = UserModel(
   id: 'u1',
@@ -185,6 +186,16 @@ void main() {
 
     // 8 sur 8 : la bannière s'efface sans jamais avoir parlé de paiements.
     expect(find.textContaining('% complété'), findsNothing);
+  });
+
+  testWidgets('bandeau en anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(_app(_empty));
+    await tester.pump();
+
+    expect(find.text('0% complete · Complete now'), findsOneWidget);
+    expect(find.text('Verify my identity'), findsOneWidget);
+    expect(find.text('Complete your account'), findsOneWidget);
   });
 
   testWidgets('tap sur l\'en-tête déclenche le callback onTap', (tester) async {

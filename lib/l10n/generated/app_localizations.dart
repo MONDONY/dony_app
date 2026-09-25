@@ -17599,6 +17599,768 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Pièce d\'identité + selfie requis'**
   String get kycOnboardingIdSelfieRequired;
+
+  /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileAccountSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'MON COMPTE'**
+  String get profileSectionAccount;
+
+  /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileMoneySection).
+  ///
+  /// In fr, this message translates to:
+  /// **'ARGENT'**
+  String get profileSectionMoney;
+
+  /// Tuile de la section ARGENT, active seulement identité vérifiée (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevoir mes paiements'**
+  String get profileMoneyReceivePayments;
+
+  /// Sous-titre de la tuile « Recevoir mes paiements » quand l'identité n'est pas vérifiée (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre identité pour activer'**
+  String get profileMoneyVerifyIdentityToActivate;
+
+  /// Tuile de la section ARGENT (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Versement mobile money'**
+  String get profileMoneyMobileMoneyPayout;
+
+  /// Sous-titre de la tuile « Versement mobile money » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Zone CFA : Orange Money, Wave, MTN'**
+  String get profileMoneyMobileMoneyPayoutSubtitle;
+
+  /// Tuile de la section ARGENT (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte commission espèces'**
+  String get profileMoneyCashCommissionCard;
+
+  /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileReputationSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'MA RÉPUTATION'**
+  String get profileSectionReputation;
+
+  /// Tuile de la section MA RÉPUTATION (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon profil public'**
+  String get profileReputationPublicProfile;
+
+  /// Sous-titre de la tuile « Mon profil public » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que voient les autres'**
+  String get profileReputationPublicProfileSubtitle;
+
+  /// Tuile de la section MA RÉPUTATION (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes avis reçus'**
+  String get profileReputationMyReviews;
+
+  /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileAdvantagesSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'MES AVANTAGES'**
+  String get profileSectionAdvantages;
+
+  /// Tuile PRO de la section MES AVANTAGES, compte déjà PRO (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon profil PRO'**
+  String get profileAdvantagesProProfile;
+
+  /// Tuile PRO de la section MES AVANTAGES, compte pas encore PRO (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer en compte PRO'**
+  String get profileAdvantagesUpgradeToPro;
+
+  /// Tuile de la section MES AVANTAGES (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Parrainages'**
+  String get profileAdvantagesReferral;
+
+  /// Libellé fixe à droite de la tuile « Parrainages », jamais mis à jour avec le vrai nombre — défaut probable signalé en PR (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'0 invité'**
+  String get profileReferralZeroInvited;
+
+  /// Tuile de la section MES AVANTAGES (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ai un code parrain'**
+  String get profileAdvantagesHaveReferralCode;
+
+  /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileFollowUpSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'SUIVI'**
+  String get profileSectionTracking;
+
+  /// Tuile de la section SUIVI (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes litiges'**
+  String get profileTrackingDisputes;
+
+  /// Sous-titre de la tuile « Mes litiges » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi de vos litiges'**
+  String get profileTrackingDisputesSubtitle;
+
+  /// Tuile de la section SUIVI, voyageurs suivis (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes abonnements'**
+  String get profileTrackingSubscriptions;
+
+  /// Sous-titre de la tuile « Mes abonnements » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les voyageurs dont vous suivez les trajets'**
+  String get profileTrackingSubscriptionsSubtitle;
+
+  /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileHelpSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'AIDE'**
+  String get profileSectionHelp;
+
+  /// Tuile de la section AIDE (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'FAQ & aide'**
+  String get profileHelpFaq;
+
+  /// Sous-titre de la tuile « FAQ & aide » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponses aux questions fréquentes'**
+  String get profileHelpFaqSubtitle;
+
+  /// Tuile de la section AIDE (profile_sections.dart) ; réutilisé comme titre de l'écran (community_screen.dart, même feature, même texte).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réseaux sociaux et tutoriels'**
+  String get profileHelpCommunity;
+
+  /// Sous-titre de la tuile « Réseaux sociaux et tutoriels » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vidéos et communauté Yadony'**
+  String get profileHelpCommunitySubtitle;
+
+  /// Tuile de la section AIDE (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter le support'**
+  String get profileHelpContactSupport;
+
+  /// Sous-titre de la tuile « Contacter le support » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse généralement sous 24 h'**
+  String get profileHelpContactSupportSubtitle;
+
+  /// Type de ligne « à renseigner » dans MON COMPTE (profile_sections.dart, _ContactRow) ; réutilisé pour le libellé TÉLÉPHONE de edit_profile_screen.dart (même feature, même texte).
+  ///
+  /// In fr, this message translates to:
+  /// **'TÉLÉPHONE'**
+  String get profileContactTypePhone;
+
+  /// Type de ligne « à renseigner » dans MON COMPTE (profile_sections.dart, _ContactRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'E-MAIL'**
+  String get profileContactTypeEmail;
+
+  /// Valeur affichée pour un contact non renseigné (profile_sections.dart, _ContactRow) ; réutilisé dans edit_profile_screen.dart (même feature, même texte).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non ajouté'**
+  String get profileNotAdded;
+
+  /// Badge d'action de la ligne « à renseigner » (profile_sections.dart, _StatusBadge).
+  ///
+  /// In fr, this message translates to:
+  /// **'+ Ajouter'**
+  String get profileAddBadge;
+
+  /// Tuile KYC de MON COMPTE (profile_sections.dart, kycTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Documents d\'identité'**
+  String get profileAccountIdentityDocuments;
+
+  /// Statut affiché de la tuile KYC quand VERIFIED (profile_sections.dart, kycTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifié'**
+  String get profileKycVerifiedLabel;
+
+  /// Statut affiché de la tuile KYC quand PENDING (profile_sections.dart, kycTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours'**
+  String get profileKycInProgressLabel;
+
+  /// Statut affiché de la tuile KYC par défaut / NOT_STARTED (profile_sections.dart, kycTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier'**
+  String get profileKycToVerifyLabel;
+
+  /// Case manquante de la bannière de complétion (profile_sections.dart, ProfileCompletionBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier mon identité'**
+  String get profileCompletionVerifyIdentity;
+
+  /// Case manquante de la bannière de complétion (profile_sections.dart, ProfileCompletionBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer les paiements'**
+  String get profileCompletionActivatePayments;
+
+  /// Case manquante « Photo » de la bannière de complétion (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo'**
+  String get profileFieldPhotoShort;
+
+  /// Case manquante « Prénom » de la bannière de complétion (profile_sections.dart) ; réutilisé comme libellé de champ (edit_profile_screen.dart, même feature).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prénom'**
+  String get profileFieldFirstName;
+
+  /// Case manquante « Nom » de la bannière de complétion (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get profileFieldLastNameShort;
+
+  /// Case manquante « Email » de la bannière de complétion (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Email'**
+  String get profileFieldEmailShort;
+
+  /// Case manquante « Téléphone » de la bannière de complétion (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone'**
+  String get profileFieldPhone;
+
+  /// Case manquante « Ville » de la bannière de complétion (profile_sections.dart) ; réutilisé comme libellé de champ (edit_profile_screen.dart, même feature).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville'**
+  String get profileFieldCity;
+
+  /// Case manquante « À propos » de la bannière de complétion (profile_sections.dart) ; réutilisé comme libellé de section (edit_profile_screen.dart, même feature).
+  ///
+  /// In fr, this message translates to:
+  /// **'À propos'**
+  String get profileFieldAbout;
+
+  /// Semantics du bandeau de complétion (profile_sections.dart, ProfileCompletionBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte complété à {percent} pour cent. Compléter maintenant.'**
+  String profileCompletionSemantics(int percent);
+
+  /// Titre du bandeau de complétion (profile_sections.dart, ProfileCompletionBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Complétez votre compte'**
+  String get profileCompletionCta;
+
+  /// Sous-titre du bandeau de complétion (profile_sections.dart, ProfileCompletionBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'{percent}% complété · Compléter maintenant'**
+  String profileCompletionShort(int percent);
+
+  /// Semantics d'une case manquante de la bannière de complétion (profile_sections.dart, _MissingChip).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, à compléter'**
+  String profileItemToComplete(String label);
+
+  /// Badge PRO à côté du nom (profile_header.dart, _ProBadge).
+  ///
+  /// In fr, this message translates to:
+  /// **'PRO'**
+  String get profileProBadge;
+
+  /// Chip téléphone vérifié du header (profile_header.dart, _ContactChips).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tél. ✓'**
+  String get profileChipPhoneVerified;
+
+  /// Chip téléphone manquant du header (profile_header.dart, _ContactChips).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tél. manquant'**
+  String get profileChipPhoneMissing;
+
+  /// Chip email vérifié du header (profile_header.dart, _ContactChips).
+  ///
+  /// In fr, this message translates to:
+  /// **'Email ✓'**
+  String get profileChipEmailVerified;
+
+  /// Chip email manquant du header (profile_header.dart, _ContactChips).
+  ///
+  /// In fr, this message translates to:
+  /// **'Email manquant'**
+  String get profileChipEmailMissing;
+
+  /// Chip identité vérifiée du header (profile_header.dart, _ContactChips).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité ✓'**
+  String get profileChipIdentityVerified;
+
+  /// Raccourci « Modifier le profil » de la feuille de menu (profile_menu_sheet.dart) ; réutilisé comme titre de l'écran (edit_profile_screen.dart, même feature, même texte).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le profil'**
+  String get profileMenuEditProfile;
+
+  /// Raccourci « Paramètres » de la feuille de menu (profile_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paramètres'**
+  String get profileMenuSettings;
+
+  /// Libellé de section de la feuille de menu (profile_menu_sheet.dart, _SectionLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon compte'**
+  String get profileMenuAccountSection;
+
+  /// Entrée de la feuille de menu (profile_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Télécharger mes données'**
+  String get profileMenuExportData;
+
+  /// Sous-titre de l'entrée « Télécharger mes données » (profile_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Export RGPD au format JSON'**
+  String get profileMenuExportDataSubtitle;
+
+  /// Entrée « Se déconnecter » de la feuille de menu (profile_menu_sheet.dart) ; réutilisé pour le bouton de confirmation (profile_screen.dart, même feature, même texte).
+  ///
+  /// In fr, this message translates to:
+  /// **'Se déconnecter'**
+  String get profileLogoutAction;
+
+  /// Entrée de la feuille de menu (profile_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer mon compte'**
+  String get profileMenuDeleteAccount;
+
+  /// Sous-titre de l'entrée « Supprimer mon compte » (profile_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Délai de rétractation de 30 jours'**
+  String get profileMenuDeleteAccountSubtitle;
+
+  /// Semantics du squelette de l'onglet Moi (profile_skeleton.dart, ProfileScreenSkeleton).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chargement du profil'**
+  String get profileSkeletonLoadingSemantics;
+
+  /// Titre de la carte « Réessayer » du squelette (profile_skeleton.dart, _RetryCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil indisponible'**
+  String get profileSkeletonUnavailableTitle;
+
+  /// Corps de la carte « Réessayer » du squelette (profile_skeleton.dart, _RetryCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger votre compte. Vérifiez votre connexion, puis réessayez.'**
+  String get profileSkeletonUnavailableBody;
+
+  /// Bannière de suppression planifiée (pending_deletion_banner.dart). `date` est formatée par DateFormat.yMd(locale).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suppression planifiée le {date}'**
+  String profileDeletionScheduled(String date);
+
+  /// Bouton de la bannière de suppression planifiée (pending_deletion_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la suppression'**
+  String get profileDeletionCancelAction;
+
+  /// Note de la bannière de suppression planifiée (pending_deletion_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les remboursements déjà lancés ne sont pas annulés.'**
+  String get profileDeletionRefundsNotice;
+
+  /// Libellé de la carte portefeuille de l'onglet Moi, devise unique (wallet_balance_card.dart, _LoadedCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde'**
+  String get profileWalletBalanceLabel;
+
+  /// Semantics du bouton de recharge de la carte portefeuille (wallet_balance_card.dart, _RechargeButton).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharger le portefeuille'**
+  String get profileWalletTopUpSemantics;
+
+  /// État d'erreur de la carte portefeuille de l'onglet Moi (wallet_balance_card.dart, _ErrorCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde indisponible'**
+  String get profileWalletUnavailable;
+
+  /// Titre de l'écran plein écran d'édition du téléphone (add_contact_sheets.dart, EditPhoneScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le numéro'**
+  String get contactEditPhoneTitle;
+
+  /// Bouton d'envoi du code OTP (add_contact_sheets.dart), étape saisie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le code'**
+  String get contactSendCodeAction;
+
+  /// Bouton de vérification du code OTP (add_contact_sheets.dart), étape code.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier'**
+  String get contactVerifyAction;
+
+  /// Titre de l'écran plein écran d'édition de l'email (add_contact_sheets.dart, EditEmailScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'email'**
+  String get contactEditEmailTitle;
+
+  /// Titre de la feuille d'ajout de numéro (add_contact_sheets.dart, AddPhoneSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un numéro'**
+  String get contactAddPhoneTitle;
+
+  /// Message de succès après ajout du numéro (add_contact_sheets.dart, _AddPhoneContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro ajouté avec succès !'**
+  String get contactPhoneAddedSuccess;
+
+  /// Libellé du champ numéro (add_contact_sheets.dart, _PhoneInputStep).
+  ///
+  /// In fr, this message translates to:
+  /// **'NUMÉRO DE TÉLÉPHONE'**
+  String get contactPhoneNumberLabel;
+
+  /// Note sous le champ numéro (add_contact_sheets.dart, _PhoneInputStep).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un code de vérification sera envoyé par SMS.'**
+  String get contactPhoneOtpNotice;
+
+  /// Titre de la feuille de sélection d'indicatif (add_contact_sheets.dart, _PhoneInputStep).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indicatif'**
+  String get contactDialCodeTitle;
+
+  /// Titre de la feuille d'ajout d'email (add_contact_sheets.dart, AddEmailSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un email'**
+  String get contactAddEmailTitle;
+
+  /// Message de succès après ajout de l'email (add_contact_sheets.dart, _AddEmailContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Email vérifié avec succès !'**
+  String get contactEmailVerifiedSuccess;
+
+  /// Libellé du champ email (add_contact_sheets.dart, _EmailInputStep).
+  ///
+  /// In fr, this message translates to:
+  /// **'ADRESSE EMAIL'**
+  String get contactEmailAddressLabel;
+
+  /// Note sous le champ email (add_contact_sheets.dart, _EmailInputStep).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un code de vérification sera envoyé à cet email.'**
+  String get contactEmailOtpNotice;
+
+  /// Phrase avec le contact en gras via emphasizedSpans (add_contact_sheets.dart, _OtpStep).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code envoyé à {destination}'**
+  String contactCodeSentTo(String destination);
+
+  /// Titre de la section communauté (social_community_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rejoindre la communauté'**
+  String get profileCommunityJoinTitle;
+
+  /// Sous-titre de la section communauté (social_community_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retrouve les espaces officiels Yadony.'**
+  String get profileCommunityJoinSubtitle;
+
+  /// Libellé d'action des réseaux « à rejoindre » (WhatsApp, Facebook) (social_community_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rejoindre'**
+  String get profileCommunityActionJoin;
+
+  /// Libellé d'action des réseaux « à suivre » (Instagram, TikTok) (social_community_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre'**
+  String get profileCommunityActionFollow;
+
+  /// Libellé d'action YouTube (social_community_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'S’abonner'**
+  String get profileCommunityActionSubscribe;
+
+  /// Titre du dialogue de confirmation de déconnexion (profile_screen.dart, _confirmLogout).
+  ///
+  /// In fr, this message translates to:
+  /// **'Se déconnecter ?'**
+  String get profileLogoutConfirmTitle;
+
+  /// Message du dialogue de confirmation de déconnexion (profile_screen.dart, _confirmLogout).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous devrez vous reconnecter pour continuer.'**
+  String get profileLogoutConfirmMessage;
+
+  /// Tooltip et semantics du bouton burger de l'onglet Moi (profile_screen.dart, _appBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Menu'**
+  String get profileMenuButtonTooltip;
+
+  /// Pied de page de l'onglet Moi (profile_screen.dart, _sections).
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony v1.0.0 · Made with ❤️ in Paris'**
+  String get profileFooterVersion;
+
+  /// Erreur d'upload de l'avatar, type de fichier non supporté (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Seules les images sont acceptées (pas de vidéo).'**
+  String get editProfileImageOnlyError;
+
+  /// Erreur d'upload de l'avatar, fichier trop volumineux (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo trop lourde (max {maxMb} Mo).'**
+  String editProfilePhotoTooLarge(int maxMb);
+
+  /// Semantics du geste sur l'avatar (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer la photo de profil'**
+  String get profileEditChangePhotoSemantics;
+
+  /// Libellé sous l'avatar (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier la photo'**
+  String get profileEditChangePhotoLabel;
+
+  /// Libellé de section (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase()).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité'**
+  String get profileEditSectionIdentity;
+
+  /// Libellé du champ nom de famille en édition (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de famille'**
+  String get profileEditLastNameFieldLabel;
+
+  /// Placeholder de la bio en lecture, vide (edit_profile_screen.dart, _StaticInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune présentation'**
+  String get profileEditNoBioPlaceholder;
+
+  /// Libellé du champ bio en édition (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Présentation'**
+  String get profileEditBioFieldLabel;
+
+  /// Libellé de section (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase()).
+  ///
+  /// In fr, this message translates to:
+  /// **'Coordonnées'**
+  String get profileEditSectionContact;
+
+  /// Libellé de la ligne email, toujours en lecture (edit_profile_screen.dart, _ContactInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'EMAIL'**
+  String get profileFieldEmailAllCaps;
+
+  /// Libellé de section (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase()).
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations personnelles'**
+  String get profileEditSectionPersonalInfo;
+
+  /// Libellé de la ville en lecture (edit_profile_screen.dart, _StaticInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'VILLE'**
+  String get profileFieldCityAllCaps;
+
+  /// Placeholder de la ville en lecture, vide (edit_profile_screen.dart, _StaticInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non renseignée'**
+  String get profileEditCityPlaceholder;
+
+  /// Libellé de section, voyageurs uniquement (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase()).
+  ///
+  /// In fr, this message translates to:
+  /// **'Préférences'**
+  String get profileEditSectionPreferences;
+
+  /// Libellé des langues parlées en lecture (edit_profile_screen.dart, _StaticInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'LANGUES PARLÉES'**
+  String get profileFieldLanguagesAllCaps;
+
+  /// Placeholder des langues parlées en lecture, vide (edit_profile_screen.dart, _StaticInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non renseignées'**
+  String get profileEditLanguagesPlaceholder;
+
+  /// Libellé au-dessus des chips de langues en édition (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Langues parlées'**
+  String get profileEditLanguagesFieldLabel;
+
+  /// Titre de la jauge de complétion (edit_profile_screen.dart, _CompletionGauge).
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil complet'**
+  String get profileEditCompletionGaugeTitle;
+
+  /// Sous-titre de la jauge de complétion (edit_profile_screen.dart, _CompletionGauge).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo, identité, coordonnées et informations complètent votre profil'**
+  String get profileEditCompletionGaugeSubtitle;
+
+  /// Placeholder du nom en lecture, vide (edit_profile_screen.dart, _NameView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez votre prénom et nom'**
+  String get profileEditNoNamePlaceholder;
+
+  /// Badge d'action de la ligne contact en édition, valeur absente (edit_profile_screen.dart, _ContactInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter'**
+  String get profileAddBadgeAction;
+
+  /// Titre de l'état vide (community_screen.dart, CommunityScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun contenu pour le moment'**
+  String get communityEmptyTitle;
+
+  /// Description de l'état vide (community_screen.dart, CommunityScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nos tutoriels et espaces communautaires seront bientôt disponibles ici.'**
+  String get communityEmptyDescription;
+
+  /// Titre de la section tutoriels (community_screen.dart, CommunityScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tutoriels vidéo'**
+  String get communityTutorialsTitle;
+
+  /// Sous-titre de la section tutoriels (community_screen.dart, CommunityScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Apprends les parcours essentiels de Yadony.'**
+  String get communityTutorialsSubtitle;
+
+  /// Libellé affiché de la langue parlée « Français » (profile_labels.dart, spokenLanguageLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Français'**
+  String get profileLanguageFrench;
+
+  /// Libellé affiché de la langue parlée « Wolof » (profile_labels.dart, spokenLanguageLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Wolof'**
+  String get profileLanguageWolof;
+
+  /// Libellé affiché de la langue parlée « Bambara » (profile_labels.dart, spokenLanguageLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bambara'**
+  String get profileLanguageBambara;
+
+  /// Libellé affiché de la langue parlée « Anglais » (profile_labels.dart, spokenLanguageLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Anglais'**
+  String get profileLanguageEnglish;
+
+  /// Libellé affiché de la langue parlée « Espagnol » (profile_labels.dart, spokenLanguageLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Espagnol'**
+  String get profileLanguageSpanish;
+
+  /// Libellé affiché de la langue parlée « Arabe » (profile_labels.dart, spokenLanguageLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arabe'**
+  String get profileLanguageArabic;
 }
 
 class _AppLocalizationsDelegate

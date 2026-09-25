@@ -18,6 +18,7 @@ import 'package:dony/features/profile/presentation/widgets/profile_sections.dart
 import 'package:dony/features/profile/presentation/widgets/profile_skeleton.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_account_bottom_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -117,11 +118,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _confirmLogout() async {
     final authBloc = context.read<AuthBloc>();
+    final l = context.l10n;
     final confirmed = await DonyDialog.show(
       context,
-      title: 'Se déconnecter ?',
-      message: 'Vous devrez vous reconnecter pour continuer.',
-      confirmLabel: 'Se déconnecter',
+      title: l.profileLogoutConfirmTitle,
+      message: l.profileLogoutConfirmMessage,
+      confirmLabel: l.profileLogoutAction,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'circle-alert',
     );
@@ -385,8 +387,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             key: const Key('profile-menu-button'),
             padding: EdgeInsets.zero,
             onPressed: onMenu,
-            tooltip: 'Menu',
-            icon: DonyIcon('menu', color: cs.onSurface, semanticLabel: 'Menu'),
+            tooltip: context.l10n.profileMenuButtonTooltip,
+            icon: DonyIcon(
+              'menu',
+              color: cs.onSurface,
+              semanticLabel: context.l10n.profileMenuButtonTooltip,
+            ),
           ),
         ),
         const SizedBox(width: DonySpacing.sm),
@@ -479,7 +485,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // il fallait défiler six sections pour l'atteindre.
       const SizedBox(height: DonySpacing.xxl),
       Text(
-        'Yadony v1.0.0 · Made with ❤️ in Paris',
+        context.l10n.profileFooterVersion,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: Theme.of(context).colorScheme.outline,
         ),

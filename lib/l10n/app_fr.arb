@@ -11670,5 +11670,543 @@
   "kycOnboardingIdSelfieRequired": "Pièce d'identité + selfie requis",
   "@kycOnboardingIdSelfieRequired": {
     "description": "Ligne d'info sur les pièces nécessaires (kyc_onboarding_bottom_sheet.dart, _InfoRow)."
+  },
+  "profileSectionAccount": "MON COMPTE",
+  "@profileSectionAccount": {
+    "description": "Libellé de section de l'onglet Moi (profile_sections.dart, ProfileAccountSection)."
+  },
+  "profileSectionMoney": "ARGENT",
+  "@profileSectionMoney": {
+    "description": "Libellé de section de l'onglet Moi (profile_sections.dart, ProfileMoneySection)."
+  },
+  "profileMoneyReceivePayments": "Recevoir mes paiements",
+  "@profileMoneyReceivePayments": {
+    "description": "Tuile de la section ARGENT, active seulement identité vérifiée (profile_sections.dart)."
+  },
+  "profileMoneyVerifyIdentityToActivate": "Vérifiez votre identité pour activer",
+  "@profileMoneyVerifyIdentityToActivate": {
+    "description": "Sous-titre de la tuile « Recevoir mes paiements » quand l'identité n'est pas vérifiée (profile_sections.dart)."
+  },
+  "profileMoneyMobileMoneyPayout": "Versement mobile money",
+  "@profileMoneyMobileMoneyPayout": {
+    "description": "Tuile de la section ARGENT (profile_sections.dart)."
+  },
+  "profileMoneyMobileMoneyPayoutSubtitle": "Zone CFA : Orange Money, Wave, MTN",
+  "@profileMoneyMobileMoneyPayoutSubtitle": {
+    "description": "Sous-titre de la tuile « Versement mobile money » (profile_sections.dart)."
+  },
+  "profileMoneyCashCommissionCard": "Carte commission espèces",
+  "@profileMoneyCashCommissionCard": {
+    "description": "Tuile de la section ARGENT (profile_sections.dart)."
+  },
+  "profileSectionReputation": "MA RÉPUTATION",
+  "@profileSectionReputation": {
+    "description": "Libellé de section de l'onglet Moi (profile_sections.dart, ProfileReputationSection)."
+  },
+  "profileReputationPublicProfile": "Mon profil public",
+  "@profileReputationPublicProfile": {
+    "description": "Tuile de la section MA RÉPUTATION (profile_sections.dart)."
+  },
+  "profileReputationPublicProfileSubtitle": "Ce que voient les autres",
+  "@profileReputationPublicProfileSubtitle": {
+    "description": "Sous-titre de la tuile « Mon profil public » (profile_sections.dart)."
+  },
+  "profileReputationMyReviews": "Mes avis reçus",
+  "@profileReputationMyReviews": {
+    "description": "Tuile de la section MA RÉPUTATION (profile_sections.dart)."
+  },
+  "profileSectionAdvantages": "MES AVANTAGES",
+  "@profileSectionAdvantages": {
+    "description": "Libellé de section de l'onglet Moi (profile_sections.dart, ProfileAdvantagesSection)."
+  },
+  "profileAdvantagesProProfile": "Mon profil PRO",
+  "@profileAdvantagesProProfile": {
+    "description": "Tuile PRO de la section MES AVANTAGES, compte déjà PRO (profile_sections.dart)."
+  },
+  "profileAdvantagesUpgradeToPro": "Passer en compte PRO",
+  "@profileAdvantagesUpgradeToPro": {
+    "description": "Tuile PRO de la section MES AVANTAGES, compte pas encore PRO (profile_sections.dart)."
+  },
+  "profileAdvantagesReferral": "Parrainages",
+  "@profileAdvantagesReferral": {
+    "description": "Tuile de la section MES AVANTAGES (profile_sections.dart)."
+  },
+  "profileReferralZeroInvited": "0 invité",
+  "@profileReferralZeroInvited": {
+    "description": "Libellé fixe à droite de la tuile « Parrainages », jamais mis à jour avec le vrai nombre — défaut probable signalé en PR (profile_sections.dart)."
+  },
+  "profileAdvantagesHaveReferralCode": "J'ai un code parrain",
+  "@profileAdvantagesHaveReferralCode": {
+    "description": "Tuile de la section MES AVANTAGES (profile_sections.dart)."
+  },
+  "profileSectionTracking": "SUIVI",
+  "@profileSectionTracking": {
+    "description": "Libellé de section de l'onglet Moi (profile_sections.dart, ProfileFollowUpSection)."
+  },
+  "profileTrackingDisputes": "Mes litiges",
+  "@profileTrackingDisputes": {
+    "description": "Tuile de la section SUIVI (profile_sections.dart)."
+  },
+  "profileTrackingDisputesSubtitle": "Suivi de vos litiges",
+  "@profileTrackingDisputesSubtitle": {
+    "description": "Sous-titre de la tuile « Mes litiges » (profile_sections.dart)."
+  },
+  "profileTrackingSubscriptions": "Mes abonnements",
+  "@profileTrackingSubscriptions": {
+    "description": "Tuile de la section SUIVI, voyageurs suivis (profile_sections.dart)."
+  },
+  "profileTrackingSubscriptionsSubtitle": "Les voyageurs dont vous suivez les trajets",
+  "@profileTrackingSubscriptionsSubtitle": {
+    "description": "Sous-titre de la tuile « Mes abonnements » (profile_sections.dart)."
+  },
+  "profileSectionHelp": "AIDE",
+  "@profileSectionHelp": {
+    "description": "Libellé de section de l'onglet Moi (profile_sections.dart, ProfileHelpSection)."
+  },
+  "profileHelpFaq": "FAQ & aide",
+  "@profileHelpFaq": {
+    "description": "Tuile de la section AIDE (profile_sections.dart)."
+  },
+  "profileHelpFaqSubtitle": "Réponses aux questions fréquentes",
+  "@profileHelpFaqSubtitle": {
+    "description": "Sous-titre de la tuile « FAQ & aide » (profile_sections.dart)."
+  },
+  "profileHelpCommunity": "Réseaux sociaux et tutoriels",
+  "@profileHelpCommunity": {
+    "description": "Tuile de la section AIDE (profile_sections.dart) ; réutilisé comme titre de l'écran (community_screen.dart, même feature, même texte)."
+  },
+  "profileHelpCommunitySubtitle": "Vidéos et communauté Yadony",
+  "@profileHelpCommunitySubtitle": {
+    "description": "Sous-titre de la tuile « Réseaux sociaux et tutoriels » (profile_sections.dart)."
+  },
+  "profileHelpContactSupport": "Contacter le support",
+  "@profileHelpContactSupport": {
+    "description": "Tuile de la section AIDE (profile_sections.dart)."
+  },
+  "profileHelpContactSupportSubtitle": "Réponse généralement sous 24 h",
+  "@profileHelpContactSupportSubtitle": {
+    "description": "Sous-titre de la tuile « Contacter le support » (profile_sections.dart)."
+  },
+  "profileContactTypePhone": "TÉLÉPHONE",
+  "@profileContactTypePhone": {
+    "description": "Type de ligne « à renseigner » dans MON COMPTE (profile_sections.dart, _ContactRow) ; réutilisé pour le libellé TÉLÉPHONE de edit_profile_screen.dart (même feature, même texte)."
+  },
+  "profileContactTypeEmail": "E-MAIL",
+  "@profileContactTypeEmail": {
+    "description": "Type de ligne « à renseigner » dans MON COMPTE (profile_sections.dart, _ContactRow)."
+  },
+  "profileNotAdded": "Non ajouté",
+  "@profileNotAdded": {
+    "description": "Valeur affichée pour un contact non renseigné (profile_sections.dart, _ContactRow) ; réutilisé dans edit_profile_screen.dart (même feature, même texte)."
+  },
+  "profileAddBadge": "+ Ajouter",
+  "@profileAddBadge": {
+    "description": "Badge d'action de la ligne « à renseigner » (profile_sections.dart, _StatusBadge)."
+  },
+  "profileAccountIdentityDocuments": "Documents d'identité",
+  "@profileAccountIdentityDocuments": {
+    "description": "Tuile KYC de MON COMPTE (profile_sections.dart, kycTile)."
+  },
+  "profileKycVerifiedLabel": "Vérifié",
+  "@profileKycVerifiedLabel": {
+    "description": "Statut affiché de la tuile KYC quand VERIFIED (profile_sections.dart, kycTile)."
+  },
+  "profileKycInProgressLabel": "En cours",
+  "@profileKycInProgressLabel": {
+    "description": "Statut affiché de la tuile KYC quand PENDING (profile_sections.dart, kycTile)."
+  },
+  "profileKycToVerifyLabel": "Vérifier",
+  "@profileKycToVerifyLabel": {
+    "description": "Statut affiché de la tuile KYC par défaut / NOT_STARTED (profile_sections.dart, kycTile)."
+  },
+  "profileCompletionVerifyIdentity": "Vérifier mon identité",
+  "@profileCompletionVerifyIdentity": {
+    "description": "Case manquante de la bannière de complétion (profile_sections.dart, ProfileCompletionBanner)."
+  },
+  "profileCompletionActivatePayments": "Activer les paiements",
+  "@profileCompletionActivatePayments": {
+    "description": "Case manquante de la bannière de complétion (profile_sections.dart, ProfileCompletionBanner)."
+  },
+  "profileFieldPhotoShort": "Photo",
+  "@profileFieldPhotoShort": {
+    "description": "Case manquante « Photo » de la bannière de complétion (profile_sections.dart)."
+  },
+  "profileFieldFirstName": "Prénom",
+  "@profileFieldFirstName": {
+    "description": "Case manquante « Prénom » de la bannière de complétion (profile_sections.dart) ; réutilisé comme libellé de champ (edit_profile_screen.dart, même feature)."
+  },
+  "profileFieldLastNameShort": "Nom",
+  "@profileFieldLastNameShort": {
+    "description": "Case manquante « Nom » de la bannière de complétion (profile_sections.dart)."
+  },
+  "profileFieldEmailShort": "Email",
+  "@profileFieldEmailShort": {
+    "description": "Case manquante « Email » de la bannière de complétion (profile_sections.dart)."
+  },
+  "profileFieldPhone": "Téléphone",
+  "@profileFieldPhone": {
+    "description": "Case manquante « Téléphone » de la bannière de complétion (profile_sections.dart)."
+  },
+  "profileFieldCity": "Ville",
+  "@profileFieldCity": {
+    "description": "Case manquante « Ville » de la bannière de complétion (profile_sections.dart) ; réutilisé comme libellé de champ (edit_profile_screen.dart, même feature)."
+  },
+  "profileFieldAbout": "À propos",
+  "@profileFieldAbout": {
+    "description": "Case manquante « À propos » de la bannière de complétion (profile_sections.dart) ; réutilisé comme libellé de section (edit_profile_screen.dart, même feature)."
+  },
+  "profileCompletionSemantics": "Compte complété à {percent} pour cent. Compléter maintenant.",
+  "@profileCompletionSemantics": {
+    "description": "Semantics du bandeau de complétion (profile_sections.dart, ProfileCompletionBanner).",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileCompletionCta": "Complétez votre compte",
+  "@profileCompletionCta": {
+    "description": "Titre du bandeau de complétion (profile_sections.dart, ProfileCompletionBanner)."
+  },
+  "profileCompletionShort": "{percent}% complété · Compléter maintenant",
+  "@profileCompletionShort": {
+    "description": "Sous-titre du bandeau de complétion (profile_sections.dart, ProfileCompletionBanner).",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileItemToComplete": "{label}, à compléter",
+  "@profileItemToComplete": {
+    "description": "Semantics d'une case manquante de la bannière de complétion (profile_sections.dart, _MissingChip).",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "profileProBadge": "PRO",
+  "@profileProBadge": {
+    "description": "Badge PRO à côté du nom (profile_header.dart, _ProBadge)."
+  },
+  "profileChipPhoneVerified": "Tél. ✓",
+  "@profileChipPhoneVerified": {
+    "description": "Chip téléphone vérifié du header (profile_header.dart, _ContactChips)."
+  },
+  "profileChipPhoneMissing": "Tél. manquant",
+  "@profileChipPhoneMissing": {
+    "description": "Chip téléphone manquant du header (profile_header.dart, _ContactChips)."
+  },
+  "profileChipEmailVerified": "Email ✓",
+  "@profileChipEmailVerified": {
+    "description": "Chip email vérifié du header (profile_header.dart, _ContactChips)."
+  },
+  "profileChipEmailMissing": "Email manquant",
+  "@profileChipEmailMissing": {
+    "description": "Chip email manquant du header (profile_header.dart, _ContactChips)."
+  },
+  "profileChipIdentityVerified": "Identité ✓",
+  "@profileChipIdentityVerified": {
+    "description": "Chip identité vérifiée du header (profile_header.dart, _ContactChips)."
+  },
+  "profileMenuEditProfile": "Modifier le profil",
+  "@profileMenuEditProfile": {
+    "description": "Raccourci « Modifier le profil » de la feuille de menu (profile_menu_sheet.dart) ; réutilisé comme titre de l'écran (edit_profile_screen.dart, même feature, même texte)."
+  },
+  "profileMenuSettings": "Paramètres",
+  "@profileMenuSettings": {
+    "description": "Raccourci « Paramètres » de la feuille de menu (profile_menu_sheet.dart)."
+  },
+  "profileMenuAccountSection": "Mon compte",
+  "@profileMenuAccountSection": {
+    "description": "Libellé de section de la feuille de menu (profile_menu_sheet.dart, _SectionLabel)."
+  },
+  "profileMenuExportData": "Télécharger mes données",
+  "@profileMenuExportData": {
+    "description": "Entrée de la feuille de menu (profile_menu_sheet.dart)."
+  },
+  "profileMenuExportDataSubtitle": "Export RGPD au format JSON",
+  "@profileMenuExportDataSubtitle": {
+    "description": "Sous-titre de l'entrée « Télécharger mes données » (profile_menu_sheet.dart)."
+  },
+  "profileLogoutAction": "Se déconnecter",
+  "@profileLogoutAction": {
+    "description": "Entrée « Se déconnecter » de la feuille de menu (profile_menu_sheet.dart) ; réutilisé pour le bouton de confirmation (profile_screen.dart, même feature, même texte)."
+  },
+  "profileMenuDeleteAccount": "Supprimer mon compte",
+  "@profileMenuDeleteAccount": {
+    "description": "Entrée de la feuille de menu (profile_menu_sheet.dart)."
+  },
+  "profileMenuDeleteAccountSubtitle": "Délai de rétractation de 30 jours",
+  "@profileMenuDeleteAccountSubtitle": {
+    "description": "Sous-titre de l'entrée « Supprimer mon compte » (profile_menu_sheet.dart)."
+  },
+  "profileSkeletonLoadingSemantics": "Chargement du profil",
+  "@profileSkeletonLoadingSemantics": {
+    "description": "Semantics du squelette de l'onglet Moi (profile_skeleton.dart, ProfileScreenSkeleton)."
+  },
+  "profileSkeletonUnavailableTitle": "Profil indisponible",
+  "@profileSkeletonUnavailableTitle": {
+    "description": "Titre de la carte « Réessayer » du squelette (profile_skeleton.dart, _RetryCard)."
+  },
+  "profileSkeletonUnavailableBody": "Impossible de charger votre compte. Vérifiez votre connexion, puis réessayez.",
+  "@profileSkeletonUnavailableBody": {
+    "description": "Corps de la carte « Réessayer » du squelette (profile_skeleton.dart, _RetryCard)."
+  },
+  "profileDeletionScheduled": "Suppression planifiée le {date}",
+  "@profileDeletionScheduled": {
+    "description": "Bannière de suppression planifiée (pending_deletion_banner.dart). `date` est formatée par DateFormat.yMd(locale).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "profileDeletionCancelAction": "Annuler la suppression",
+  "@profileDeletionCancelAction": {
+    "description": "Bouton de la bannière de suppression planifiée (pending_deletion_banner.dart)."
+  },
+  "profileDeletionRefundsNotice": "Les remboursements déjà lancés ne sont pas annulés.",
+  "@profileDeletionRefundsNotice": {
+    "description": "Note de la bannière de suppression planifiée (pending_deletion_banner.dart)."
+  },
+  "profileWalletBalanceLabel": "Solde",
+  "@profileWalletBalanceLabel": {
+    "description": "Libellé de la carte portefeuille de l'onglet Moi, devise unique (wallet_balance_card.dart, _LoadedCard)."
+  },
+  "profileWalletTopUpSemantics": "Recharger le portefeuille",
+  "@profileWalletTopUpSemantics": {
+    "description": "Semantics du bouton de recharge de la carte portefeuille (wallet_balance_card.dart, _RechargeButton)."
+  },
+  "profileWalletUnavailable": "Solde indisponible",
+  "@profileWalletUnavailable": {
+    "description": "État d'erreur de la carte portefeuille de l'onglet Moi (wallet_balance_card.dart, _ErrorCard)."
+  },
+  "contactEditPhoneTitle": "Modifier le numéro",
+  "@contactEditPhoneTitle": {
+    "description": "Titre de l'écran plein écran d'édition du téléphone (add_contact_sheets.dart, EditPhoneScreen)."
+  },
+  "contactSendCodeAction": "Envoyer le code",
+  "@contactSendCodeAction": {
+    "description": "Bouton d'envoi du code OTP (add_contact_sheets.dart), étape saisie."
+  },
+  "contactVerifyAction": "Vérifier",
+  "@contactVerifyAction": {
+    "description": "Bouton de vérification du code OTP (add_contact_sheets.dart), étape code."
+  },
+  "contactEditEmailTitle": "Modifier l'email",
+  "@contactEditEmailTitle": {
+    "description": "Titre de l'écran plein écran d'édition de l'email (add_contact_sheets.dart, EditEmailScreen)."
+  },
+  "contactAddPhoneTitle": "Ajouter un numéro",
+  "@contactAddPhoneTitle": {
+    "description": "Titre de la feuille d'ajout de numéro (add_contact_sheets.dart, AddPhoneSheet)."
+  },
+  "contactPhoneAddedSuccess": "Numéro ajouté avec succès !",
+  "@contactPhoneAddedSuccess": {
+    "description": "Message de succès après ajout du numéro (add_contact_sheets.dart, _AddPhoneContent)."
+  },
+  "contactPhoneNumberLabel": "NUMÉRO DE TÉLÉPHONE",
+  "@contactPhoneNumberLabel": {
+    "description": "Libellé du champ numéro (add_contact_sheets.dart, _PhoneInputStep)."
+  },
+  "contactPhoneOtpNotice": "Un code de vérification sera envoyé par SMS.",
+  "@contactPhoneOtpNotice": {
+    "description": "Note sous le champ numéro (add_contact_sheets.dart, _PhoneInputStep)."
+  },
+  "contactDialCodeTitle": "Indicatif",
+  "@contactDialCodeTitle": {
+    "description": "Titre de la feuille de sélection d'indicatif (add_contact_sheets.dart, _PhoneInputStep)."
+  },
+  "contactAddEmailTitle": "Ajouter un email",
+  "@contactAddEmailTitle": {
+    "description": "Titre de la feuille d'ajout d'email (add_contact_sheets.dart, AddEmailSheet)."
+  },
+  "contactEmailVerifiedSuccess": "Email vérifié avec succès !",
+  "@contactEmailVerifiedSuccess": {
+    "description": "Message de succès après ajout de l'email (add_contact_sheets.dart, _AddEmailContent)."
+  },
+  "contactEmailAddressLabel": "ADRESSE EMAIL",
+  "@contactEmailAddressLabel": {
+    "description": "Libellé du champ email (add_contact_sheets.dart, _EmailInputStep)."
+  },
+  "contactEmailOtpNotice": "Un code de vérification sera envoyé à cet email.",
+  "@contactEmailOtpNotice": {
+    "description": "Note sous le champ email (add_contact_sheets.dart, _EmailInputStep)."
+  },
+  "contactCodeSentTo": "Code envoyé à {destination}",
+  "@contactCodeSentTo": {
+    "description": "Phrase avec le contact en gras via emphasizedSpans (add_contact_sheets.dart, _OtpStep).",
+    "placeholders": {
+      "destination": {
+        "type": "String"
+      }
+    }
+  },
+  "profileCommunityJoinTitle": "Rejoindre la communauté",
+  "@profileCommunityJoinTitle": {
+    "description": "Titre de la section communauté (social_community_section.dart)."
+  },
+  "profileCommunityJoinSubtitle": "Retrouve les espaces officiels Yadony.",
+  "@profileCommunityJoinSubtitle": {
+    "description": "Sous-titre de la section communauté (social_community_section.dart)."
+  },
+  "profileCommunityActionJoin": "Rejoindre",
+  "@profileCommunityActionJoin": {
+    "description": "Libellé d'action des réseaux « à rejoindre » (WhatsApp, Facebook) (social_community_section.dart)."
+  },
+  "profileCommunityActionFollow": "Suivre",
+  "@profileCommunityActionFollow": {
+    "description": "Libellé d'action des réseaux « à suivre » (Instagram, TikTok) (social_community_section.dart)."
+  },
+  "profileCommunityActionSubscribe": "S’abonner",
+  "@profileCommunityActionSubscribe": {
+    "description": "Libellé d'action YouTube (social_community_section.dart)."
+  },
+  "profileLogoutConfirmTitle": "Se déconnecter ?",
+  "@profileLogoutConfirmTitle": {
+    "description": "Titre du dialogue de confirmation de déconnexion (profile_screen.dart, _confirmLogout)."
+  },
+  "profileLogoutConfirmMessage": "Vous devrez vous reconnecter pour continuer.",
+  "@profileLogoutConfirmMessage": {
+    "description": "Message du dialogue de confirmation de déconnexion (profile_screen.dart, _confirmLogout)."
+  },
+  "profileMenuButtonTooltip": "Menu",
+  "@profileMenuButtonTooltip": {
+    "description": "Tooltip et semantics du bouton burger de l'onglet Moi (profile_screen.dart, _appBar)."
+  },
+  "profileFooterVersion": "Yadony v1.0.0 · Made with ❤️ in Paris",
+  "@profileFooterVersion": {
+    "description": "Pied de page de l'onglet Moi (profile_screen.dart, _sections)."
+  },
+  "editProfileImageOnlyError": "Seules les images sont acceptées (pas de vidéo).",
+  "@editProfileImageOnlyError": {
+    "description": "Erreur d'upload de l'avatar, type de fichier non supporté (edit_profile_screen.dart)."
+  },
+  "editProfilePhotoTooLarge": "Photo trop lourde (max {maxMb} Mo).",
+  "@editProfilePhotoTooLarge": {
+    "description": "Erreur d'upload de l'avatar, fichier trop volumineux (edit_profile_screen.dart).",
+    "placeholders": {
+      "maxMb": {
+        "type": "int"
+      }
+    }
+  },
+  "profileEditChangePhotoSemantics": "Changer la photo de profil",
+  "@profileEditChangePhotoSemantics": {
+    "description": "Semantics du geste sur l'avatar (edit_profile_screen.dart)."
+  },
+  "profileEditChangePhotoLabel": "Modifier la photo",
+  "@profileEditChangePhotoLabel": {
+    "description": "Libellé sous l'avatar (edit_profile_screen.dart)."
+  },
+  "profileEditSectionIdentity": "Identité",
+  "@profileEditSectionIdentity": {
+    "description": "Libellé de section (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase())."
+  },
+  "profileEditLastNameFieldLabel": "Nom de famille",
+  "@profileEditLastNameFieldLabel": {
+    "description": "Libellé du champ nom de famille en édition (edit_profile_screen.dart)."
+  },
+  "profileEditNoBioPlaceholder": "Aucune présentation",
+  "@profileEditNoBioPlaceholder": {
+    "description": "Placeholder de la bio en lecture, vide (edit_profile_screen.dart, _StaticInfoRow)."
+  },
+  "profileEditBioFieldLabel": "Présentation",
+  "@profileEditBioFieldLabel": {
+    "description": "Libellé du champ bio en édition (edit_profile_screen.dart)."
+  },
+  "profileEditSectionContact": "Coordonnées",
+  "@profileEditSectionContact": {
+    "description": "Libellé de section (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase())."
+  },
+  "profileFieldEmailAllCaps": "EMAIL",
+  "@profileFieldEmailAllCaps": {
+    "description": "Libellé de la ligne email, toujours en lecture (edit_profile_screen.dart, _ContactInfoRow)."
+  },
+  "profileEditSectionPersonalInfo": "Informations personnelles",
+  "@profileEditSectionPersonalInfo": {
+    "description": "Libellé de section (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase())."
+  },
+  "profileFieldCityAllCaps": "VILLE",
+  "@profileFieldCityAllCaps": {
+    "description": "Libellé de la ville en lecture (edit_profile_screen.dart, _StaticInfoRow)."
+  },
+  "profileEditCityPlaceholder": "Non renseignée",
+  "@profileEditCityPlaceholder": {
+    "description": "Placeholder de la ville en lecture, vide (edit_profile_screen.dart, _StaticInfoRow)."
+  },
+  "profileEditSectionPreferences": "Préférences",
+  "@profileEditSectionPreferences": {
+    "description": "Libellé de section, voyageurs uniquement (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase())."
+  },
+  "profileFieldLanguagesAllCaps": "LANGUES PARLÉES",
+  "@profileFieldLanguagesAllCaps": {
+    "description": "Libellé des langues parlées en lecture (edit_profile_screen.dart, _StaticInfoRow)."
+  },
+  "profileEditLanguagesPlaceholder": "Non renseignées",
+  "@profileEditLanguagesPlaceholder": {
+    "description": "Placeholder des langues parlées en lecture, vide (edit_profile_screen.dart, _StaticInfoRow)."
+  },
+  "profileEditLanguagesFieldLabel": "Langues parlées",
+  "@profileEditLanguagesFieldLabel": {
+    "description": "Libellé au-dessus des chips de langues en édition (edit_profile_screen.dart)."
+  },
+  "profileEditCompletionGaugeTitle": "Profil complet",
+  "@profileEditCompletionGaugeTitle": {
+    "description": "Titre de la jauge de complétion (edit_profile_screen.dart, _CompletionGauge)."
+  },
+  "profileEditCompletionGaugeSubtitle": "Photo, identité, coordonnées et informations complètent votre profil",
+  "@profileEditCompletionGaugeSubtitle": {
+    "description": "Sous-titre de la jauge de complétion (edit_profile_screen.dart, _CompletionGauge)."
+  },
+  "profileEditNoNamePlaceholder": "Ajoutez votre prénom et nom",
+  "@profileEditNoNamePlaceholder": {
+    "description": "Placeholder du nom en lecture, vide (edit_profile_screen.dart, _NameView)."
+  },
+  "profileAddBadgeAction": "Ajouter",
+  "@profileAddBadgeAction": {
+    "description": "Badge d'action de la ligne contact en édition, valeur absente (edit_profile_screen.dart, _ContactInfoRow)."
+  },
+  "communityEmptyTitle": "Aucun contenu pour le moment",
+  "@communityEmptyTitle": {
+    "description": "Titre de l'état vide (community_screen.dart, CommunityScreen)."
+  },
+  "communityEmptyDescription": "Nos tutoriels et espaces communautaires seront bientôt disponibles ici.",
+  "@communityEmptyDescription": {
+    "description": "Description de l'état vide (community_screen.dart, CommunityScreen)."
+  },
+  "communityTutorialsTitle": "Tutoriels vidéo",
+  "@communityTutorialsTitle": {
+    "description": "Titre de la section tutoriels (community_screen.dart, CommunityScreen)."
+  },
+  "communityTutorialsSubtitle": "Apprends les parcours essentiels de Yadony.",
+  "@communityTutorialsSubtitle": {
+    "description": "Sous-titre de la section tutoriels (community_screen.dart, CommunityScreen)."
+  },
+  "profileLanguageFrench": "Français",
+  "@profileLanguageFrench": {
+    "description": "Libellé affiché de la langue parlée « Français » (profile_labels.dart, spokenLanguageLabel)."
+  },
+  "profileLanguageWolof": "Wolof",
+  "@profileLanguageWolof": {
+    "description": "Libellé affiché de la langue parlée « Wolof » (profile_labels.dart, spokenLanguageLabel)."
+  },
+  "profileLanguageBambara": "Bambara",
+  "@profileLanguageBambara": {
+    "description": "Libellé affiché de la langue parlée « Bambara » (profile_labels.dart, spokenLanguageLabel)."
+  },
+  "profileLanguageEnglish": "Anglais",
+  "@profileLanguageEnglish": {
+    "description": "Libellé affiché de la langue parlée « Anglais » (profile_labels.dart, spokenLanguageLabel)."
+  },
+  "profileLanguageSpanish": "Espagnol",
+  "@profileLanguageSpanish": {
+    "description": "Libellé affiché de la langue parlée « Espagnol » (profile_labels.dart, spokenLanguageLabel)."
+  },
+  "profileLanguageArabic": "Arabe",
+  "@profileLanguageArabic": {
+    "description": "Libellé affiché de la langue parlée « Arabe » (profile_labels.dart, spokenLanguageLabel)."
   }
 }

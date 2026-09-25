@@ -152,12 +152,10 @@ import 'package:dony/features/price_grid/data/datasources/price_grid_datasource.
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
-import 'package:dony/features/profile/bloc/pro_stats_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
 import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
-import 'package:dony/features/profile/data/pro_stats_repository.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
@@ -665,12 +663,6 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<UpgradeToProBloc>(
     () =>
         UpgradeToProBloc(getIt<ProfileRepository>(), getIt<AnalyticsService>()),
-  );
-  getIt.registerLazySingleton<ProStatsRepository>(
-    () => ProStatsRepository(getIt<ApiClient>()),
-  );
-  getIt.registerFactory<ProStatsBloc>(
-    () => ProStatsBloc(getIt<ProStatsRepository>()),
   );
   getIt.registerFactory<FaqBloc>(() => FaqBloc(getIt<AnalyticsService>()));
   getIt.registerLazySingleton<HelpCenterConfigSource>(

@@ -10587,4 +10587,413 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get kycOnboardingIdSelfieRequired =>
       'Pièce d\'identité + selfie requis';
+
+  @override
+  String get profileSectionAccount => 'MON COMPTE';
+
+  @override
+  String get profileSectionMoney => 'ARGENT';
+
+  @override
+  String get profileMoneyReceivePayments => 'Recevoir mes paiements';
+
+  @override
+  String get profileMoneyVerifyIdentityToActivate =>
+      'Vérifiez votre identité pour activer';
+
+  @override
+  String get profileMoneyMobileMoneyPayout => 'Versement mobile money';
+
+  @override
+  String get profileMoneyMobileMoneyPayoutSubtitle =>
+      'Zone CFA : Orange Money, Wave, MTN';
+
+  @override
+  String get profileMoneyCashCommissionCard => 'Carte commission espèces';
+
+  @override
+  String get profileSectionReputation => 'MA RÉPUTATION';
+
+  @override
+  String get profileReputationPublicProfile => 'Mon profil public';
+
+  @override
+  String get profileReputationPublicProfileSubtitle =>
+      'Ce que voient les autres';
+
+  @override
+  String get profileReputationMyReviews => 'Mes avis reçus';
+
+  @override
+  String get profileSectionAdvantages => 'MES AVANTAGES';
+
+  @override
+  String get profileAdvantagesProProfile => 'Mon profil PRO';
+
+  @override
+  String get profileAdvantagesUpgradeToPro => 'Passer en compte PRO';
+
+  @override
+  String get profileAdvantagesReferral => 'Parrainages';
+
+  @override
+  String get profileReferralZeroInvited => '0 invité';
+
+  @override
+  String get profileAdvantagesHaveReferralCode => 'J\'ai un code parrain';
+
+  @override
+  String get profileSectionTracking => 'SUIVI';
+
+  @override
+  String get profileTrackingDisputes => 'Mes litiges';
+
+  @override
+  String get profileTrackingDisputesSubtitle => 'Suivi de vos litiges';
+
+  @override
+  String get profileTrackingSubscriptions => 'Mes abonnements';
+
+  @override
+  String get profileTrackingSubscriptionsSubtitle =>
+      'Les voyageurs dont vous suivez les trajets';
+
+  @override
+  String get profileSectionHelp => 'AIDE';
+
+  @override
+  String get profileHelpFaq => 'FAQ & aide';
+
+  @override
+  String get profileHelpFaqSubtitle => 'Réponses aux questions fréquentes';
+
+  @override
+  String get profileHelpCommunity => 'Réseaux sociaux et tutoriels';
+
+  @override
+  String get profileHelpCommunitySubtitle => 'Vidéos et communauté Yadony';
+
+  @override
+  String get profileHelpContactSupport => 'Contacter le support';
+
+  @override
+  String get profileHelpContactSupportSubtitle =>
+      'Réponse généralement sous 24 h';
+
+  @override
+  String get profileContactTypePhone => 'TÉLÉPHONE';
+
+  @override
+  String get profileContactTypeEmail => 'E-MAIL';
+
+  @override
+  String get profileNotAdded => 'Non ajouté';
+
+  @override
+  String get profileAddBadge => '+ Ajouter';
+
+  @override
+  String get profileAccountIdentityDocuments => 'Documents d\'identité';
+
+  @override
+  String get profileKycVerifiedLabel => 'Vérifié';
+
+  @override
+  String get profileKycInProgressLabel => 'En cours';
+
+  @override
+  String get profileKycToVerifyLabel => 'Vérifier';
+
+  @override
+  String get profileCompletionVerifyIdentity => 'Vérifier mon identité';
+
+  @override
+  String get profileCompletionActivatePayments => 'Activer les paiements';
+
+  @override
+  String get profileFieldPhotoShort => 'Photo';
+
+  @override
+  String get profileFieldFirstName => 'Prénom';
+
+  @override
+  String get profileFieldLastNameShort => 'Nom';
+
+  @override
+  String get profileFieldEmailShort => 'Email';
+
+  @override
+  String get profileFieldPhone => 'Téléphone';
+
+  @override
+  String get profileFieldCity => 'Ville';
+
+  @override
+  String get profileFieldAbout => 'À propos';
+
+  @override
+  String profileCompletionSemantics(int percent) {
+    return 'Compte complété à $percent pour cent. Compléter maintenant.';
+  }
+
+  @override
+  String get profileCompletionCta => 'Complétez votre compte';
+
+  @override
+  String profileCompletionShort(int percent) {
+    return '$percent% complété · Compléter maintenant';
+  }
+
+  @override
+  String profileItemToComplete(String label) {
+    return '$label, à compléter';
+  }
+
+  @override
+  String get profileProBadge => 'PRO';
+
+  @override
+  String get profileChipPhoneVerified => 'Tél. ✓';
+
+  @override
+  String get profileChipPhoneMissing => 'Tél. manquant';
+
+  @override
+  String get profileChipEmailVerified => 'Email ✓';
+
+  @override
+  String get profileChipEmailMissing => 'Email manquant';
+
+  @override
+  String get profileChipIdentityVerified => 'Identité ✓';
+
+  @override
+  String get profileMenuEditProfile => 'Modifier le profil';
+
+  @override
+  String get profileMenuSettings => 'Paramètres';
+
+  @override
+  String get profileMenuAccountSection => 'Mon compte';
+
+  @override
+  String get profileMenuExportData => 'Télécharger mes données';
+
+  @override
+  String get profileMenuExportDataSubtitle => 'Export RGPD au format JSON';
+
+  @override
+  String get profileLogoutAction => 'Se déconnecter';
+
+  @override
+  String get profileMenuDeleteAccount => 'Supprimer mon compte';
+
+  @override
+  String get profileMenuDeleteAccountSubtitle =>
+      'Délai de rétractation de 30 jours';
+
+  @override
+  String get profileSkeletonLoadingSemantics => 'Chargement du profil';
+
+  @override
+  String get profileSkeletonUnavailableTitle => 'Profil indisponible';
+
+  @override
+  String get profileSkeletonUnavailableBody =>
+      'Impossible de charger votre compte. Vérifiez votre connexion, puis réessayez.';
+
+  @override
+  String profileDeletionScheduled(String date) {
+    return 'Suppression planifiée le $date';
+  }
+
+  @override
+  String get profileDeletionCancelAction => 'Annuler la suppression';
+
+  @override
+  String get profileDeletionRefundsNotice =>
+      'Les remboursements déjà lancés ne sont pas annulés.';
+
+  @override
+  String get profileWalletBalanceLabel => 'Solde';
+
+  @override
+  String get profileWalletTopUpSemantics => 'Recharger le portefeuille';
+
+  @override
+  String get profileWalletUnavailable => 'Solde indisponible';
+
+  @override
+  String get contactEditPhoneTitle => 'Modifier le numéro';
+
+  @override
+  String get contactSendCodeAction => 'Envoyer le code';
+
+  @override
+  String get contactVerifyAction => 'Vérifier';
+
+  @override
+  String get contactEditEmailTitle => 'Modifier l\'email';
+
+  @override
+  String get contactAddPhoneTitle => 'Ajouter un numéro';
+
+  @override
+  String get contactPhoneAddedSuccess => 'Numéro ajouté avec succès !';
+
+  @override
+  String get contactPhoneNumberLabel => 'NUMÉRO DE TÉLÉPHONE';
+
+  @override
+  String get contactPhoneOtpNotice =>
+      'Un code de vérification sera envoyé par SMS.';
+
+  @override
+  String get contactDialCodeTitle => 'Indicatif';
+
+  @override
+  String get contactAddEmailTitle => 'Ajouter un email';
+
+  @override
+  String get contactEmailVerifiedSuccess => 'Email vérifié avec succès !';
+
+  @override
+  String get contactEmailAddressLabel => 'ADRESSE EMAIL';
+
+  @override
+  String get contactEmailOtpNotice =>
+      'Un code de vérification sera envoyé à cet email.';
+
+  @override
+  String contactCodeSentTo(String destination) {
+    return 'Code envoyé à $destination';
+  }
+
+  @override
+  String get profileCommunityJoinTitle => 'Rejoindre la communauté';
+
+  @override
+  String get profileCommunityJoinSubtitle =>
+      'Retrouve les espaces officiels Yadony.';
+
+  @override
+  String get profileCommunityActionJoin => 'Rejoindre';
+
+  @override
+  String get profileCommunityActionFollow => 'Suivre';
+
+  @override
+  String get profileCommunityActionSubscribe => 'S’abonner';
+
+  @override
+  String get profileLogoutConfirmTitle => 'Se déconnecter ?';
+
+  @override
+  String get profileLogoutConfirmMessage =>
+      'Vous devrez vous reconnecter pour continuer.';
+
+  @override
+  String get profileMenuButtonTooltip => 'Menu';
+
+  @override
+  String get profileFooterVersion => 'Yadony v1.0.0 · Made with ❤️ in Paris';
+
+  @override
+  String get editProfileImageOnlyError =>
+      'Seules les images sont acceptées (pas de vidéo).';
+
+  @override
+  String editProfilePhotoTooLarge(int maxMb) {
+    return 'Photo trop lourde (max $maxMb Mo).';
+  }
+
+  @override
+  String get profileEditChangePhotoSemantics => 'Changer la photo de profil';
+
+  @override
+  String get profileEditChangePhotoLabel => 'Modifier la photo';
+
+  @override
+  String get profileEditSectionIdentity => 'Identité';
+
+  @override
+  String get profileEditLastNameFieldLabel => 'Nom de famille';
+
+  @override
+  String get profileEditNoBioPlaceholder => 'Aucune présentation';
+
+  @override
+  String get profileEditBioFieldLabel => 'Présentation';
+
+  @override
+  String get profileEditSectionContact => 'Coordonnées';
+
+  @override
+  String get profileFieldEmailAllCaps => 'EMAIL';
+
+  @override
+  String get profileEditSectionPersonalInfo => 'Informations personnelles';
+
+  @override
+  String get profileFieldCityAllCaps => 'VILLE';
+
+  @override
+  String get profileEditCityPlaceholder => 'Non renseignée';
+
+  @override
+  String get profileEditSectionPreferences => 'Préférences';
+
+  @override
+  String get profileFieldLanguagesAllCaps => 'LANGUES PARLÉES';
+
+  @override
+  String get profileEditLanguagesPlaceholder => 'Non renseignées';
+
+  @override
+  String get profileEditLanguagesFieldLabel => 'Langues parlées';
+
+  @override
+  String get profileEditCompletionGaugeTitle => 'Profil complet';
+
+  @override
+  String get profileEditCompletionGaugeSubtitle =>
+      'Photo, identité, coordonnées et informations complètent votre profil';
+
+  @override
+  String get profileEditNoNamePlaceholder => 'Ajoutez votre prénom et nom';
+
+  @override
+  String get profileAddBadgeAction => 'Ajouter';
+
+  @override
+  String get communityEmptyTitle => 'Aucun contenu pour le moment';
+
+  @override
+  String get communityEmptyDescription =>
+      'Nos tutoriels et espaces communautaires seront bientôt disponibles ici.';
+
+  @override
+  String get communityTutorialsTitle => 'Tutoriels vidéo';
+
+  @override
+  String get communityTutorialsSubtitle =>
+      'Apprends les parcours essentiels de Yadony.';
+
+  @override
+  String get profileLanguageFrench => 'Français';
+
+  @override
+  String get profileLanguageWolof => 'Wolof';
+
+  @override
+  String get profileLanguageBambara => 'Bambara';
+
+  @override
+  String get profileLanguageEnglish => 'Anglais';
+
+  @override
+  String get profileLanguageSpanish => 'Espagnol';
+
+  @override
+  String get profileLanguageArabic => 'Arabe';
 }

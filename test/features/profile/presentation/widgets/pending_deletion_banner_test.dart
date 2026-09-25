@@ -1,6 +1,8 @@
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
@@ -68,5 +70,31 @@ void main() {
     await tester.pump();
 
     expect(called, isTrue);
+  });
+
+  test(
+    'DateFormat.yMd(fr) rend le même texte que l\'ancien padLeft(2, "0")',
+    () {
+      // Ancien rendu : '${d.padLeft(2,'0')}/${m.padLeft(2,'0')}/$y'.
+      const oldRender = '05/06/2026';
+      final newRender = DateFormat.yMd('fr').format(DateTime(2026, 6, 5));
+      expect(newRender, oldRender);
+    },
+  );
+
+  testWidgets('date et bouton en anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        PendingDeletionBanner(
+          deletionRequestedAt: deletionDate,
+          onReactivate: () {},
+        ),
+      ),
+    );
+
+    // DateFormat.yMd('en') pour le 2026-06-05 : 6/5/2026.
+    expect(find.textContaining('6/5/2026'), findsOneWidget);
+    expect(find.text('Cancel deletion'), findsOneWidget);
   });
 }

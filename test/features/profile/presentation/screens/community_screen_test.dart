@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 const _emptyConfigJson = '''
@@ -181,6 +182,15 @@ void main() {
     expect(find.byKey(const Key('community-empty-state')), findsOneWidget);
     expect(find.text('Tutoriels vidéo'), findsNothing);
     expect(find.text('Rejoindre la communauté'), findsNothing);
+  });
+
+  testWidgets('titre et état vide en anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(_wrap());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Social media & tutorials'), findsOneWidget);
+    expect(find.text('No content yet'), findsOneWidget);
   });
 
   testWidgets(

@@ -180,6 +180,15 @@ const _sameInBothLanguages = <String>{
   'scanOfflineEventTransitLabel', // « transit » se dit pareil (tâche F2)
   'receptionConfirmTitle', // « Confirmation » se dit pareil (tâche F3)
   'receptionCodeOptionLabel', // « OPTION »/« CODE » se disent pareil (tâche F3)
+  'profileFieldPhotoShort', // « Photo » se dit pareil (tâche G2)
+  'profileFieldEmailShort', // « Email » se dit pareil (tâche G2)
+  'profileProBadge', // « PRO » se dit pareil (tâche G2)
+  'profileChipEmailVerified', // « Email ✓ » se dit pareil (tâche G2)
+  'profileMenuButtonTooltip', // « Menu » se dit pareil (tâche G2)
+  'profileFooterVersion', // pied de page déjà en anglais dans le fr d'origine (tâche G2)
+  'profileFieldEmailAllCaps', // « EMAIL » se dit pareil (tâche G2)
+  'profileLanguageWolof', // « Wolof » se dit pareil (tâche G2)
+  'profileLanguageBambara', // « Bambara » se dit pareil (tâche G2)
 };
 
 void main() {

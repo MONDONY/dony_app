@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -55,6 +56,7 @@ class _LoadedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final currency = wallet.currency;
     final shown = _multiCurrency ? wallet.estimatedTotal! : wallet.balance;
 
@@ -80,7 +82,9 @@ class _LoadedCard extends StatelessWidget {
               ),
               const SizedBox(width: DonySpacing.xs),
               Text(
-                _multiCurrency ? 'Total estimé' : 'Solde',
+                _multiCurrency
+                    ? l.walletEstimatedTotalLabel
+                    : l.profileWalletBalanceLabel,
                 style: tt.bodySmall?.copyWith(
                   color: Colors.white.withValues(alpha: 0.75),
                   fontWeight: FontWeight.w600,
@@ -170,7 +174,7 @@ class _RechargeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Recharger le portefeuille',
+      label: context.l10n.profileWalletTopUpSemantics,
       child: InkWell(
         borderRadius: BorderRadius.circular(DonyRadius.md),
         onTap: () async {
@@ -199,7 +203,7 @@ class _RechargeButton extends StatelessWidget {
               const DonyIcon('plus', color: Colors.white, size: 16),
               const SizedBox(width: DonySpacing.xs),
               Text(
-                'Recharger',
+                context.l10n.walletActionTopUp,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
@@ -261,20 +265,21 @@ class _ErrorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     return _CardShell(
       onTap: () => context.push('/payments/wallet'),
       child: Row(
         children: [
           Expanded(
             child: Text(
-              'Solde indisponible',
+              l.profileWalletUnavailable,
               style: tt.bodyMedium?.copyWith(color: Colors.white),
             ),
           ),
           IconButton(
             onPressed: onRetry,
             icon: const DonyIcon('refresh-cw', color: Colors.white, size: 18),
-            tooltip: 'Réessayer',
+            tooltip: l.commonRetry,
           ),
         ],
       ),
