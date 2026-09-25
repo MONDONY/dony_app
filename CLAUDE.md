@@ -189,6 +189,13 @@ Le verrouillage à l'ouverture suit la même règle : actif **si et seulement si
 - `POST /notifications/{id}/ack` pour toutes les notifications critiques (paiement, livraison, litige).
 - Handler background = fonction top-level annotée `@pragma('vm:entry-point')`.
 
+### 11. Langues — Français / English
+
+- L'app est disponible en français et en anglais (`lib/l10n/`, ARB `app_fr.arb`/`app_en.arb`). Par défaut, la langue est celle du téléphone : anglais si le téléphone est en anglais, français sinon (`AppL10n.resolve`).
+- L'utilisateur peut forcer un choix dans Réglages › Langue (« Langue du téléphone », « Français », « English ») ; le choix est stocké dans Hive (`UserPreferencesModel.languageCode`, `'system' | 'fr' | 'en'`) et synchronisé avec `preferredLanguage` côté backend.
+- `context.l10n` (jamais `AppLocalizations.of(context)!`) est obligatoire pour tout texte affiché. `AppL10n.current` uniquement pour du code sans `BuildContext`. Jamais de texte traduit en dur, jamais gardé dans un `State`/`initState`.
+- Garde-fou (`tool/check_hardcoded_strings.dart`) à 0 (seuil 0) — tout nouveau texte affiché doit passer par une clé ARB avant de committer.
+
 ---
 
 ## Git Workflow — OBLIGATOIRE

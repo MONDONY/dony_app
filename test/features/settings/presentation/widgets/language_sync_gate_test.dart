@@ -118,8 +118,11 @@ void main() {
     'kEnglishEnabled faux : locale manuelle « en » ramenée à fr, préférence déjà fr → aucun appel réseau',
     (tester) async {
       // Bout en bout avec un vrai LanguageSyncCubit (pas de mock) : seul le
-      // dépôt est simulé. Aucun `enableEnglish()` ici — c'est justement ce
-      // que ce test vérifie.
+      // dépôt est simulé. Interrupteur forcé à `false` (`kEnglishEnabled`
+      // vaut `true` depuis l'activation) — c'est justement ce que ce test
+      // vérifie.
+      AppL10n.debugEnglishEnabled = false;
+      addTearDown(() => AppL10n.debugEnglishEnabled = null);
       final repository = _MockUserLanguageRepository();
       when(() => repository.update(any())).thenAnswer((_) async => true);
       final realCubit = LanguageSyncCubit(

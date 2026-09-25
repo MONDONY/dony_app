@@ -9,6 +9,12 @@ void main() {
   tearDown(() => Intl.defaultLocale = null);
 
   group('AppL10n.resolve — anglais coupé', () {
+    // `kEnglishEnabled` vaut `true` depuis l'activation : ce groupe force
+    // explicitement l'interrupteur à `false` pour tester le comportement
+    // replié, plutôt que de dépendre de la valeur par défaut de la constante.
+    setUp(() => AppL10n.debugEnglishEnabled = false);
+    tearDown(() => AppL10n.debugEnglishEnabled = null);
+
     test('téléphone en anglais → français', () {
       expect(AppL10n.resolve(const [Locale('en', 'US')]), AppL10n.fr);
     });
@@ -58,6 +64,10 @@ void main() {
 
   group('AppL10n.effectiveChoice', () {
     test("anglais coupé : 'system' et 'fr' inchangés, 'en' → 'fr'", () {
+      // Interrupteur forcé à `false` : `kEnglishEnabled` vaut `true` depuis
+      // l'activation, ce test vérifie le comportement replié explicitement.
+      AppL10n.debugEnglishEnabled = false;
+      addTearDown(() => AppL10n.debugEnglishEnabled = null);
       expect(AppL10n.effectiveChoice('system'), 'system');
       expect(AppL10n.effectiveChoice('fr'), 'fr');
       expect(AppL10n.effectiveChoice('en'), 'fr');
@@ -67,6 +77,15 @@ void main() {
       addTearDown(() => AppL10n.debugEnglishEnabled = null);
       expect(AppL10n.effectiveChoice('en'), 'en');
     });
+
+    test(
+      "effectiveChoice('en') vaut 'en' (kEnglishEnabled réel, sans forcer)",
+      () {
+        // Aucun `debugEnglishEnabled` ici : vérifie directement la valeur
+        // réelle de `kEnglishEnabled` depuis l'activation, pas un flag simulé.
+        expect(AppL10n.effectiveChoice('en'), 'en');
+      },
+    );
   });
 
   group('AppL10n.currentLocale', () {
