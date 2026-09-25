@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/phone_dialer.dart';
@@ -162,11 +163,7 @@ class VoyageurContactCard extends StatelessWidget {
                       if (state is ContactRevealSuccess) {
                         unawaited(dialPhoneNumber(context, state.phoneNumber));
                       } else if (state is ContactRevealError) {
-                        DonySnackbar.show(
-                          context,
-                          message: state.error.message,
-                          type: DonySnackbarType.error,
-                        );
+                        ErrorPresenter.show(context, state.error);
                       }
                     },
                     builder: (context, state) {

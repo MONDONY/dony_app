@@ -4,6 +4,7 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_eligible_topups_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -223,7 +224,10 @@ class _ConfirmStickyBottom extends StatelessWidget {
             DonyStatusBanner(
               type: DonyStatusBannerType.error,
               iconAsset: 'circle-alert',
-              message: state.error!.message,
+              message: ErrorPresenter.resolve(
+                state.error,
+                l10n: context.l10n,
+              ).message,
             ),
             const SizedBox(height: DonySpacing.sm),
           ],

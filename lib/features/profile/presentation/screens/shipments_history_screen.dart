@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -31,7 +32,10 @@ class ShipmentsHistoryScreen extends StatelessWidget {
               mascotte: DonyMascotteType.erreurLegere,
               iconAsset: 'circle-alert',
               title: l.commonLoadError,
-              description: state.error.message,
+              description: ErrorPresenter.resolve(
+                state.error,
+                l10n: context.l10n,
+              ).message,
               actionLabel: l.commonRetry,
               onAction: () => context.read<BidBloc>().add(BidMyListRequested()),
             );

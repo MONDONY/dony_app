@@ -1,6 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
@@ -299,7 +299,12 @@ void main() {
     expect(find.textContaining('Aucun numéro disponible'), findsOneWidget);
   });
 
-  testWidgets('échec serveur → message d\'erreur remonté', (tester) async {
+  // K3 : `state.error.message` (detail brut du serveur, ici en français même
+  // en anglais) remplacé par ErrorPresenter.show, qui résout via ErrorCatalog.
+  testWidgets('échec serveur → message du catalogue, jamais le detail brut', (
+    tester,
+  ) async {
+    DonySnackbar.clearDedup();
     await _pump(
       tester,
       _bid(),
@@ -310,7 +315,11 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.textContaining('Numéro indisponible'), findsOneWidget);
+    expect(find.textContaining('Numéro indisponible'), findsNothing);
+    expect(
+      find.textContaining('Tu n\'as pas les droits nécessaires'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('anglais — rôle, nom et compteur d\'envois traduits', (
@@ -321,5 +330,27 @@ void main() {
     expect(find.text('SENDER'), findsOneWidget);
     expect(find.text('Mariama D.'), findsOneWidget);
     expect(find.textContaining('3 shipments'), findsOneWidget);
+  });
+
+  testWidgets('anglais — échec serveur affiche le texte anglais du catalogue', (
+    tester,
+  ) async {
+    useEnglish();
+    DonySnackbar.clearDedup();
+    await _pump(
+      tester,
+      _bid(),
+      reveal: _revealEmitting(
+        const ContactRevealError(ForbiddenException('Numéro indisponible')),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.textContaining('Numéro indisponible'), findsNothing);
+    expect(
+      find.textContaining('You don\'t have permission to do this.'),
+      findsOneWidget,
+    );
   });
 }

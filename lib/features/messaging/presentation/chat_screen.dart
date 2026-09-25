@@ -304,11 +304,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 if (state is ContactRevealSuccess) {
                   unawaited(dialPhoneNumber(context, state.phoneNumber));
                 } else if (state is ContactRevealError) {
-                  DonySnackbar.show(
-                    context,
-                    message: state.error.message,
-                    type: DonySnackbarType.error,
-                  );
+                  ErrorPresenter.show(context, state.error);
                 }
               },
               builder: (context, state) {

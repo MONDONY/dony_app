@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -46,11 +49,7 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
             }
           } else if (state is ConnectOnboardingError) {
             if (context.mounted) {
-              DonySnackbar.show(
-                context,
-                message: state.error.message,
-                type: DonySnackbarType.error,
-              );
+              unawaited(ErrorPresenter.show(context, state.error));
             }
           }
         },

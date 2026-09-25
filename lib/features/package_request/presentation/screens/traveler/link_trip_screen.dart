@@ -243,11 +243,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
           if (block == PaymentCapabilityBlock.cardCapabilityRequired) {
             showCardCapabilityRequiredSheet(context);
           } else {
-            DonySnackbar.show(
-              context,
-              message: state.error.message,
-              type: DonySnackbarType.error,
-            );
+            ErrorPresenter.show(context, state.error);
           }
         }
       },

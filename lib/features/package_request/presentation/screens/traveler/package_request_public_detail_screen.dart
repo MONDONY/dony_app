@@ -1017,11 +1017,7 @@ class _FirmPriceCta extends StatelessWidget {
                 type: DonySnackbarType.success,
               );
             } else if (state is NegotiationError) {
-              DonySnackbar.show(
-                ctx,
-                message: state.error.message,
-                type: DonySnackbarType.error,
-              );
+              ErrorPresenter.show(ctx, state.error);
             }
           },
           builder: (ctx, state) {

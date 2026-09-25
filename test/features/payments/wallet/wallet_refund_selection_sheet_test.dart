@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_eligible_topups_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_eligible_topup_model.dart';
@@ -239,4 +240,47 @@ void main() {
     expect(find.text('Select the top-up(s) to refund'), findsOneWidget);
     expect(find.textContaining('No top-up available'), findsOneWidget);
   });
+
+  // K3 : `state.error!.message` (detail brut du serveur) remplacé par
+  // ErrorPresenter.resolve, qui résout via ErrorCatalog selon la langue.
+  testWidgets(
+    'échec du chargement des recharges → message du catalogue, jamais le detail brut',
+    (tester) async {
+      when(() => _currentTopupsCubit.state).thenReturn(
+        const WalletEligibleTopupsState(
+          isLoading: false,
+          error: NetworkException('Erreur réseau'),
+        ),
+      );
+
+      await _openSheet(tester, refundCubit);
+
+      expect(find.text('Erreur réseau'), findsNothing);
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'en anglais : échec du chargement affiche le texte anglais du catalogue',
+    (tester) async {
+      useEnglish();
+      when(() => _currentTopupsCubit.state).thenReturn(
+        const WalletEligibleTopupsState(
+          isLoading: false,
+          error: NetworkException('Erreur réseau'),
+        ),
+      );
+
+      await _openSheet(tester, refundCubit);
+
+      expect(find.text('Erreur réseau'), findsNothing);
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+    },
+  );
 }

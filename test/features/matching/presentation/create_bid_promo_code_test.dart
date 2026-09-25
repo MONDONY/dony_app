@@ -28,6 +28,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
@@ -345,33 +347,81 @@ void main() {
 
   // ── 4. Erreur — code promo invalide ──────────────────────────────────────
 
-  testWidgets('code invalide → message d\'erreur rouge affiché', (
-    tester,
-  ) async {
-    await openSheet(tester);
-    await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+  // K3 : `state.error.message` (detail brut du serveur) remplacé par
+  // ErrorPresenter.resolve/.show, qui résolvent via ErrorCatalog. Un
+  // ServerException générique retombe sur le message « Erreur serveur » du
+  // catalogue, jamais sur le texte brut passé au constructeur.
+  testWidgets(
+    'code invalide → message du catalogue affiché, jamais le detail brut',
+    (tester) async {
+      await openSheet(tester);
+      await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
 
-    final promoField = find.ancestor(
-      of: find.text('Ex: WELCOME10'),
-      matching: find.byType(TextFormField),
-    );
-    await tester.enterText(promoField, 'BADCODE');
-    await tester.pump();
-    await tester.tap(find.widgetWithText(FilledButton, 'Appliquer'));
-    await tester.pump();
+      final promoField = find.ancestor(
+        of: find.text('Ex: WELCOME10'),
+        matching: find.byType(TextFormField),
+      );
+      await tester.enterText(promoField, 'BADCODE');
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Appliquer'));
+      await tester.pump();
 
-    // Le BLoC émet une erreur promo
-    bidStream.add(
-      BidPromoError(const ServerException('Code promo invalide ou expiré')),
-    );
-    await tester.pumpAndSettle();
+      // Le BLoC émet une erreur promo
+      bidStream.add(
+        BidPromoError(const ServerException('Code promo invalide ou expiré')),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Code promo invalide ou expiré'), findsOneWidget);
-    expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'circle-alert'),
-      findsOneWidget,
-    );
-  });
+      expect(find.text('Code promo invalide ou expiré'), findsNothing);
+      // Deux affichages simultanés du même message résolu : le bandeau en
+      // ligne (_quoteNotifier) et le snackbar (ErrorPresenter.show).
+      expect(
+        find.text(
+          "Quelque chose s'est mal passé de notre côté. On regarde ça, "
+          'réessaie dans un instant.',
+        ),
+        findsWidgets,
+      );
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name == 'circle-alert',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'en anglais : code invalide affiche le texte anglais du catalogue',
+    (tester) async {
+      useEnglish();
+      await openSheet(tester);
+      await scrollTo(tester, find.text('PROMO CODE (OPTIONAL)'));
+
+      final promoField = find.ancestor(
+        of: find.text('E.g. WELCOME10'),
+        matching: find.byType(TextFormField),
+      );
+      await tester.enterText(promoField, 'BADCODE');
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Apply'));
+      await tester.pump();
+
+      bidStream.add(
+        BidPromoError(const ServerException('Code promo invalide ou expiré')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Code promo invalide ou expiré'), findsNothing);
+      expect(
+        find.text(
+          "Something went wrong on our side. We're looking into it. "
+          'Try again in a moment.',
+        ),
+        findsWidgets,
+      );
+    },
+  );
 
   // ── 5. Chargement ──────────────────────────────────────────────────────────
 
@@ -428,7 +478,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Code WELCOME10 : 6 % de réduction'), findsNothing);
-    expect(find.text('Code expiré'), findsOneWidget);
+    expect(find.text('Code expiré'), findsNothing);
+    expect(
+      find.text(
+        "Quelque chose s'est mal passé de notre côté. On regarde ça, "
+        'réessaie dans un instant.',
+      ),
+      findsWidgets,
+    );
   });
 
   // ── 7. Total reflète la remise promo ─────────────────────────────────────

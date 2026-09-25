@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -548,36 +548,48 @@ void main() {
       expect(find.byKey(const Key('unlock-cash-payment-cta')), findsNothing);
     });
 
-    testWidgets('reason inconnue → snackbar générique (pas de sheet)', (
-      tester,
-    ) async {
-      final controller = StreamController<NegotiationState>.broadcast();
-      addTearDown(controller.close);
-      whenListen(
-        negotiationBloc,
-        controller.stream,
-        initialState: const NegotiationInitial(),
-      );
+    // K3 : le detail brut du serveur ('Some unrelated business error') ne doit
+    // plus jamais atteindre l'écran — ErrorPresenter.show retombe sur le
+    // message générique de validation du catalogue, jamais l'exception.
+    testWidgets(
+      'reason inconnue → snackbar générique du catalogue (pas de sheet, pas de texte brut)',
+      (tester) async {
+        final controller = StreamController<NegotiationState>.broadcast();
+        addTearDown(controller.close);
+        whenListen(
+          negotiationBloc,
+          controller.stream,
+          initialState: const NegotiationInitial(),
+        );
 
-      await pumpWithTripSelected(tester);
-      await tester.tap(find.text('Confirmer ce trajet'));
-      await tester.pump();
+        await pumpWithTripSelected(tester);
+        await tester.tap(find.text('Confirmer ce trajet'));
+        await tester.pump();
 
-      controller.add(
-        const NegotiationError(
-          ValidationException(
-            'Some unrelated business error',
-            code: 'some/other-code',
+        // Le dedup de DonySnackbar est un état statique partagé entre tests :
+        // sans ce reset, un warning déjà affiché ailleurs dans le fichier peut
+        // masquer silencieusement celui-ci.
+        DonySnackbar.clearDedup();
+        controller.add(
+          const NegotiationError(
+            ValidationException(
+              'Some unrelated business error',
+              code: 'some/other-code',
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Paiement carte requis'), findsNothing);
-      expect(find.text('Solde insuffisant'), findsNothing);
-      expect(find.text('Aucun moyen de paiement disponible'), findsNothing);
-      expect(find.text('Some unrelated business error'), findsOneWidget);
-    });
+        expect(find.text('Paiement carte requis'), findsNothing);
+        expect(find.text('Solde insuffisant'), findsNothing);
+        expect(find.text('Aucun moyen de paiement disponible'), findsNothing);
+        expect(find.text('Some unrelated business error'), findsNothing);
+        expect(
+          find.text('Vérifie les informations saisies puis réessaie.'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('en anglais', () {
@@ -604,6 +616,51 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Confirm this trip'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'reason inconnue → le texte anglais du catalogue s\'affiche, jamais le detail brut',
+      (tester) async {
+        useEnglish();
+        when(
+          () => packageRequestRepo.getById(any()),
+        ).thenAnswer((_) async => _packageRequest());
+        when(
+          () => announcementRepo.getMyAnnouncements(),
+        ).thenAnswer((_) async => (announcements: [_trip()], totalElements: 1));
+
+        final controller = StreamController<NegotiationState>.broadcast();
+        addTearDown(controller.close);
+        whenListen(
+          negotiationBloc,
+          controller.stream,
+          initialState: const NegotiationInitial(),
+        );
+
+        await tester.pumpWidget(_harness(_fakeThread()));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('trip-tile-select-inkwell')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Confirm this trip'));
+        await tester.pump();
+
+        DonySnackbar.clearDedup();
+        controller.add(
+          const NegotiationError(
+            ValidationException(
+              'Some unrelated business error',
+              code: 'some/other-code',
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Some unrelated business error'), findsNothing);
+        expect(
+          find.text('Check the information you entered and try again.'),
+          findsOneWidget,
+        );
       },
     );
   });
