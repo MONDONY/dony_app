@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 class MockPickupAddressBloc
     extends MockBloc<PickupAddressEvent, PickupAddressState>
     implements PickupAddressBloc {}
@@ -130,5 +132,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(find.text('Réessayer'));
     verify(() => bloc.add(any(that: isA<PickupAddressLoaded>()))).called(1);
+  });
+
+  testWidgets('en anglais : titre et onglets traduits', (tester) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(const PickupAddressState(status: PickupAddressStatus.success));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('My addresses'), findsOneWidget);
+    expect(find.textContaining('Drop-off'), findsOneWidget);
+    expect(find.textContaining('Delivery'), findsOneWidget);
   });
 }

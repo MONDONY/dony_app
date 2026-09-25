@@ -15211,5 +15211,614 @@
   "proDowngradeButton": "Revenir en compte standard",
   "@proDowngradeButton": {
     "description": "Bouton de retour en compte standard (upgrade_to_pro_screen.dart, _ProSubscriberView)."
+  },
+  "addressesTitle": "Mes adresses",
+  "@addressesTitle": {
+    "description": "Titre de l'écran combiné adresses de remise/livraison (pickup_addresses_screen.dart)."
+  },
+  "addressesAddPickupTooltip": "Ajouter une adresse de remise",
+  "@addressesAddPickupTooltip": {
+    "description": "Tooltip du bouton + de l'onglet Remise (pickup_addresses_screen.dart)."
+  },
+  "addressesAddDeliveryTooltip": "Ajouter une adresse de livraison",
+  "@addressesAddDeliveryTooltip": {
+    "description": "Tooltip du bouton + de l'onglet Livraison (pickup_addresses_screen.dart)."
+  },
+  "addressesTabPickup": "📦  Remise",
+  "@addressesTabPickup": {
+    "description": "Libellé de l'onglet Remise (pickup_addresses_screen.dart)."
+  },
+  "addressesTabDelivery": "🗺️  Livraison",
+  "@addressesTabDelivery": {
+    "description": "Libellé de l'onglet Livraison (pickup_addresses_screen.dart)."
+  },
+  "addressesEmptyPickupTitle": "Aucune adresse de remise",
+  "@addressesEmptyPickupTitle": {
+    "description": "Titre de l'état vide de l'onglet Remise (pickup_addresses_screen.dart)."
+  },
+  "addressesEmptyPickupDescription": "Ajoute l'adresse où tu souhaites recevoir les colis des expéditeurs.",
+  "@addressesEmptyPickupDescription": {
+    "description": "Description de l'état vide de l'onglet Remise (pickup_addresses_screen.dart)."
+  },
+  "addressesEmptyDeliveryTitle": "Aucune adresse de livraison",
+  "@addressesEmptyDeliveryTitle": {
+    "description": "Titre de l'état vide de l'onglet Livraison (pickup_addresses_screen.dart)."
+  },
+  "addressesEmptyDeliveryDescription": "Ajoute les adresses où tu déposes habituellement les colis.",
+  "@addressesEmptyDeliveryDescription": {
+    "description": "Description de l'état vide de l'onglet Livraison (pickup_addresses_screen.dart)."
+  },
+  "addressesAddButtonLabel": "Ajouter une adresse",
+  "@addressesAddButtonLabel": {
+    "description": "Bouton d'action des deux états vides (pickup_addresses_screen.dart)."
+  },
+  "addressesSetDefaultLabel": "Définir par défaut",
+  "@addressesSetDefaultLabel": {
+    "description": "Entrée de menu « Définir par défaut » des cartes adresse (pickup_addresses_screen.dart)."
+  },
+  "addressesDeleteTitle": "Supprimer l'adresse",
+  "@addressesDeleteTitle": {
+    "description": "Titre du dialogue de suppression d'une adresse (pickup_addresses_screen.dart)."
+  },
+  "addressesDeleteConfirmMessage": "Es-tu sûr de vouloir supprimer \"{label}\" ? Cette action est irréversible.",
+  "@addressesDeleteConfirmMessage": {
+    "description": "Message du dialogue de suppression d'une adresse, label = étiquette de l'adresse (pickup_addresses_screen.dart).",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "pickupAddressChipHome": "Maison",
+  "@pickupAddressChipHome": {
+    "description": "Suggestion d'étiquette adresse de remise (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressChipOffice": "Bureau",
+  "@pickupAddressChipOffice": {
+    "description": "Suggestion d'étiquette adresse de remise (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressChipWorkshop": "Atelier",
+  "@pickupAddressChipWorkshop": {
+    "description": "Suggestion d'étiquette adresse de remise (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressEditTitle": "Modifier l'adresse",
+  "@pickupAddressEditTitle": {
+    "description": "Titre de l'écran en mode édition (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressCreateTitle": "Nouvelle adresse de remise",
+  "@pickupAddressCreateTitle": {
+    "description": "Titre de l'écran en mode création (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressSaveButton": "Enregistrer l'adresse",
+  "@pickupAddressSaveButton": {
+    "description": "Bouton sticky de validation du formulaire (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressUpdatedMessage": "Adresse mise à jour",
+  "@pickupAddressUpdatedMessage": {
+    "description": "Snackbar de succès en mode édition (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressAddedMessage": "Adresse ajoutée",
+  "@pickupAddressAddedMessage": {
+    "description": "Snackbar de succès en mode création (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressLabelSectionTitle": "Étiquette",
+  "@pickupAddressLabelSectionTitle": {
+    "description": "Titre de section (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressNameFieldLabel": "Nom de l'adresse",
+  "@pickupAddressNameFieldLabel": {
+    "description": "Libellé du champ étiquette (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressNameFieldHint": "Ex : Maison, Bureau…",
+  "@pickupAddressNameFieldHint": {
+    "description": "Placeholder du champ étiquette (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressAddressSectionTitle": "Adresse",
+  "@pickupAddressAddressSectionTitle": {
+    "description": "Titre de section (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressStreetFieldLabel": "Rue et numéro",
+  "@pickupAddressStreetFieldLabel": {
+    "description": "Libellé du champ rue (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressPostalFieldLabel": "Code postal",
+  "@pickupAddressPostalFieldLabel": {
+    "description": "Libellé du champ code postal (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressCityFieldLabel": "Ville",
+  "@pickupAddressCityFieldLabel": {
+    "description": "Libellé du champ ville (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressFloorSectionTitle": "Étage / Appartement",
+  "@pickupAddressFloorSectionTitle": {
+    "description": "Titre de section et libellé du champ (identiques, réutilisés) (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressFloorFieldHint": "Optionnel (Ex : Bât. B, 3ème étage)",
+  "@pickupAddressFloorFieldHint": {
+    "description": "Placeholder du champ étage (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressInstructionsSectionTitle": "Instructions",
+  "@pickupAddressInstructionsSectionTitle": {
+    "description": "Titre de section (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressInstructionsHint": "Optionnel : digicode, horaires…",
+  "@pickupAddressInstructionsHint": {
+    "description": "Placeholder du champ instructions (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressDefaultSubtitle": "Pré-remplie lors de tes prochaines demandes",
+  "@pickupAddressDefaultSubtitle": {
+    "description": "Sous-titre du toggle « adresse par défaut » (pickup_address_edit_screen.dart)."
+  },
+  "deliveryAddressChipFamily": "Famille",
+  "@deliveryAddressChipFamily": {
+    "description": "Suggestion d'étiquette adresse de livraison (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressChipHome": "Maison",
+  "@deliveryAddressChipHome": {
+    "description": "Suggestion d'étiquette adresse de livraison (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressChipShop": "Boutique",
+  "@deliveryAddressChipShop": {
+    "description": "Suggestion d'étiquette adresse de livraison (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressEditTitle": "Modifier l'adresse",
+  "@deliveryAddressEditTitle": {
+    "description": "Titre de l'écran en mode édition (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressCreateTitle": "Nouvelle adresse de livraison",
+  "@deliveryAddressCreateTitle": {
+    "description": "Titre de l'écran en mode création (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressSaveButton": "Enregistrer l'adresse",
+  "@deliveryAddressSaveButton": {
+    "description": "Bouton sticky de validation du formulaire (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressUpdatedMessage": "Adresse mise à jour",
+  "@deliveryAddressUpdatedMessage": {
+    "description": "Snackbar de succès en mode édition (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressAddedMessage": "Adresse ajoutée",
+  "@deliveryAddressAddedMessage": {
+    "description": "Snackbar de succès en mode création (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressLabelSectionTitle": "Étiquette",
+  "@deliveryAddressLabelSectionTitle": {
+    "description": "Titre de section (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressNameFieldLabel": "Nom de l'adresse",
+  "@deliveryAddressNameFieldLabel": {
+    "description": "Libellé du champ étiquette (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressNameFieldHint": "Ex : Famille Dakar, Dépôt…",
+  "@deliveryAddressNameFieldHint": {
+    "description": "Placeholder du champ étiquette (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressCountrySectionTitle": "Pays",
+  "@deliveryAddressCountrySectionTitle": {
+    "description": "Titre de section (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressCountryPickerTitle": "Pays de destination",
+  "@deliveryAddressCountryPickerTitle": {
+    "description": "Titre de la bottom sheet de choix du pays (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressAddressSectionTitle": "Adresse",
+  "@deliveryAddressAddressSectionTitle": {
+    "description": "Titre de section (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressCityFieldLabel": "Ville",
+  "@deliveryAddressCityFieldLabel": {
+    "description": "Libellé du champ ville (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressCityFieldHint": "Ex : Dakar, Abidjan, Bamako…",
+  "@deliveryAddressCityFieldHint": {
+    "description": "Placeholder du champ ville (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressStreetFieldLabel": "Rue, quartier",
+  "@deliveryAddressStreetFieldLabel": {
+    "description": "Libellé du champ rue (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressStreetFieldHint": "Optionnel (ex : Rue 10, Almadies)",
+  "@deliveryAddressStreetFieldHint": {
+    "description": "Placeholder du champ rue (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressInstructionsSectionTitle": "Instructions",
+  "@deliveryAddressInstructionsSectionTitle": {
+    "description": "Titre de section (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressInstructionsHint": "Optionnel : appeler à l'arrivée, portail rouge…",
+  "@deliveryAddressInstructionsHint": {
+    "description": "Placeholder du champ instructions (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressDefaultSubtitle": "Pré-remplie lors de tes prochaines annonces",
+  "@deliveryAddressDefaultSubtitle": {
+    "description": "Sous-titre du toggle « adresse par défaut » (delivery_address_edit_screen.dart)."
+  },
+  "countryNameGn": "Guinée",
+  "@countryNameGn": {
+    "description": "Hors catalogue CountryCatalog, proposé uniquement par la liste fermée diaspora de delivery_address_edit_screen.dart (country_names.dart)."
+  },
+  "recipientListTitle": "Mes destinataires",
+  "@recipientListTitle": {
+    "description": "Titre de l'écran liste des destinataires (recipients_screen.dart)."
+  },
+  "recipientAddFabLabel": "Ajouter",
+  "@recipientAddFabLabel": {
+    "description": "Libellé du FAB d'ajout (recipients_screen.dart)."
+  },
+  "recipientEmptyTitle": "Aucun destinataire enregistré",
+  "@recipientEmptyTitle": {
+    "description": "Titre de l'état vide (recipients_screen.dart)."
+  },
+  "recipientEmptyDescription": "Ajoute tes proches en Afrique pour envoyer en 1 tap.",
+  "@recipientEmptyDescription": {
+    "description": "Description de l'état vide (recipients_screen.dart)."
+  },
+  "recipientEmptyActionLabel": "Ajouter mon premier destinataire",
+  "@recipientEmptyActionLabel": {
+    "description": "Bouton d'action de l'état vide (recipients_screen.dart)."
+  },
+  "recipientNoResultsLabel": "Aucun résultat",
+  "@recipientNoResultsLabel": {
+    "description": "Titre/texte affiché quand la recherche ne trouve rien, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42)."
+  },
+  "recipientSearchNoResultsDescription": "Aucun destinataire ne correspond à ta recherche.",
+  "@recipientSearchNoResultsDescription": {
+    "description": "Description de l'état vide de recherche (recipients_screen.dart)."
+  },
+  "recipientSearchHint": "Rechercher un destinataire…",
+  "@recipientSearchHint": {
+    "description": "Placeholder du champ de recherche, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42)."
+  },
+  "recipientClearSearchTooltip": "Effacer la recherche",
+  "@recipientClearSearchTooltip": {
+    "description": "Tooltip du bouton d'effacement de la recherche, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42)."
+  },
+  "recipientSetDefaultLabel": "Définir par défaut",
+  "@recipientSetDefaultLabel": {
+    "description": "Entrée de menu « Définir par défaut » (recipients_screen.dart)."
+  },
+  "recipientDeleteTitle": "Supprimer le destinataire",
+  "@recipientDeleteTitle": {
+    "description": "Titre du dialogue de suppression (recipients_screen.dart)."
+  },
+  "recipientDeleteConfirmMessage": "Es-tu sûr de vouloir supprimer \"{name}\" ? Cette action est irréversible.",
+  "@recipientDeleteConfirmMessage": {
+    "description": "Message du dialogue de suppression, name = nom complet du destinataire (recipients_screen.dart).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientEditTitle": "Modifier le destinataire",
+  "@recipientEditTitle": {
+    "description": "Titre de l'écran en mode édition (recipient_edit_screen.dart)."
+  },
+  "recipientCreateTitle": "Nouveau destinataire",
+  "@recipientCreateTitle": {
+    "description": "Titre de l'écran en mode création, réutilisé comme libellé de la tuile « Nouveau destinataire » de recipient_picker_sheet.dart (même feature, R42)."
+  },
+  "recipientFullNameFieldLabel": "Nom complet",
+  "@recipientFullNameFieldLabel": {
+    "description": "Libellé du champ nom complet (recipient_edit_screen.dart)."
+  },
+  "recipientPhoneFieldLabel": "Téléphone (E.164)",
+  "@recipientPhoneFieldLabel": {
+    "description": "Libellé du champ téléphone (recipient_edit_screen.dart)."
+  },
+  "recipientPhoneInvalidFormat": "Format invalide ({example})",
+  "@recipientPhoneInvalidFormat": {
+    "description": "Erreur de validation du champ téléphone, example = numéro d'exemple non traduit (recipient_edit_screen.dart).",
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientUpdatedMessage": "Destinataire mis à jour",
+  "@recipientUpdatedMessage": {
+    "description": "Snackbar de succès en mode édition (recipient_edit_screen.dart)."
+  },
+  "recipientAddedMessage": "Destinataire ajouté",
+  "@recipientAddedMessage": {
+    "description": "Snackbar de succès en mode création (recipient_edit_screen.dart)."
+  },
+  "recipientDefaultToggleTitle": "Destinataire par défaut",
+  "@recipientDefaultToggleTitle": {
+    "description": "Titre du toggle destinataire par défaut (recipient_edit_screen.dart)."
+  },
+  "recipientDefaultToggleSubtitle": "Présélectionné lors de tes prochains envois",
+  "@recipientDefaultToggleSubtitle": {
+    "description": "Sous-titre du toggle destinataire par défaut (recipient_edit_screen.dart)."
+  },
+  "recipientImportContactsAction": "Choisir dans mes contacts",
+  "@recipientImportContactsAction": {
+    "description": "Bouton d'import depuis les contacts du téléphone, réutilisé entre recipient_edit_screen.dart et recipient_picker_sheet.dart (même feature, R42)."
+  },
+  "recipientPickerTitle": "👤  Destinataire",
+  "@recipientPickerTitle": {
+    "description": "Titre de la bottom sheet de sélection (recipient_picker_sheet.dart)."
+  },
+  "recipientPickerSectionHeader": "MES DESTINATAIRES",
+  "@recipientPickerSectionHeader": {
+    "description": "En-tête de section de la liste des destinataires enregistrés (recipient_picker_sheet.dart)."
+  },
+  "recipientPickerConfirmButton": "Confirmer ce destinataire",
+  "@recipientPickerConfirmButton": {
+    "description": "Bouton de confirmation de la sélection (recipient_picker_sheet.dart)."
+  },
+  "recipientSectionPickerButton": "Choisir un destinataire",
+  "@recipientSectionPickerButton": {
+    "description": "Bouton d'ouverture du picker à l'état initial (recipient_section.dart)."
+  },
+  "recipientSectionChangeButton": "Changer",
+  "@recipientSectionChangeButton": {
+    "description": "Bouton de changement de destinataire sélectionné (recipient_section.dart)."
+  },
+  "recipientSectionSaveToggleTitle": "Enregistrer ce destinataire",
+  "@recipientSectionSaveToggleTitle": {
+    "description": "Titre du toggle de sauvegarde d'une saisie manuelle (recipient_section.dart)."
+  },
+  "recipientSectionSaveToggleSubtitle": "Sera ajouté à « Mes destinataires » pour tes prochains envois",
+  "@recipientSectionSaveToggleSubtitle": {
+    "description": "Sous-titre du toggle de sauvegarde d'une saisie manuelle (recipient_section.dart)."
+  },
+  "priceGridScreenTitle": "Ma grille de prix",
+  "@priceGridScreenTitle": {
+    "description": "Titre de l'AppBar (price_grid_screen.dart)."
+  },
+  "priceGridCommissionNotice": "Yadony ajoute {percent} % au prix que vous saisissez. Vous encaissez exactement votre montant.",
+  "@priceGridCommissionNotice": {
+    "description": "Note de commission en pied de liste, percent déjà formaté par commissionPercentLabel (price_grid_screen.dart).",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridReorderButton": "Réordonner",
+  "@priceGridReorderButton": {
+    "description": "Bouton de bascule en mode réorganisation (price_grid_screen.dart)."
+  },
+  "priceGridAddLabelButton": "Nouvelle étiquette",
+  "@priceGridAddLabelButton": {
+    "description": "Bouton d'ajout, réutilisé comme titre de la feuille de création (price_grid_screen.dart, price_grid_item_form_sheet.dart, même feature R42)."
+  },
+  "priceGridEmptyTitle": "Aucune étiquette",
+  "@priceGridEmptyTitle": {
+    "description": "Titre de l'état vide (price_grid_screen.dart)."
+  },
+  "priceGridEmptyDescription": "Fixez le prix des articles que vous transportez. Le même barème servira sur tous vos trajets.",
+  "@priceGridEmptyDescription": {
+    "description": "Description de l'état vide (price_grid_screen.dart)."
+  },
+  "priceGridScopeStampLabel": "Valable sur tous vos trajets",
+  "@priceGridScopeStampLabel": {
+    "description": "Tampon indiquant la portée du barème (price_grid_screen.dart)."
+  },
+  "priceGridDragHandleSemantics": "Déplacer {label}",
+  "@priceGridDragHandleSemantics": {
+    "description": "Libellé d'accessibilité de la poignée de réordonnancement, label = étiquette de l'article (price_grid_screen.dart).",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridItemMenuTooltip": "Options",
+  "@priceGridItemMenuTooltip": {
+    "description": "Tooltip du menu d'options d'une étiquette (price_grid_screen.dart)."
+  },
+  "priceGridYouReceive": "vous recevez {net}",
+  "@priceGridYouReceive": {
+    "description": "Légende du montant net encaissé sous le prix payé, net déjà formaté (price_grid_screen.dart).",
+    "placeholders": {
+      "net": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridItemSemantics": "{label}, l'expéditeur paie {paid}, vous recevez {net}",
+  "@priceGridItemSemantics": {
+    "description": "Libellé d'accessibilité complet d'une étiquette de la grille, paid/net déjà formatés (price_grid_screen.dart).",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "paid": {
+        "type": "String"
+      },
+      "net": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridDeleteItemTitle": "Supprimer l'étiquette ?",
+  "@priceGridDeleteItemTitle": {
+    "description": "Titre du dialogue de suppression d'une étiquette (price_grid_screen.dart)."
+  },
+  "priceGridDeleteItemMessage": "L'article \"{label}\" sera retiré de votre grille, sur tous vos trajets.",
+  "@priceGridDeleteItemMessage": {
+    "description": "Message du dialogue de suppression, label = libellé affiché de l'article (price_grid_screen.dart).",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridEditItemTitle": "Modifier l'étiquette",
+  "@priceGridEditItemTitle": {
+    "description": "Titre de la feuille en mode édition (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridAddToGridButton": "Ajouter à ma grille",
+  "@priceGridAddToGridButton": {
+    "description": "Bouton de validation en mode création (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridSearchFieldLabel": "Article",
+  "@priceGridSearchFieldLabel": {
+    "description": "Libellé du champ de recherche du catalogue (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridSearchFieldHint": "Chercher, ou écrire le vôtre",
+  "@priceGridSearchFieldHint": {
+    "description": "Placeholder du champ de recherche du catalogue (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridAllCatalogTakenMessage": "Tous les articles du catalogue sont déjà dans votre grille. Écrivez le vôtre pour en ajouter un autre.",
+  "@priceGridAllCatalogTakenMessage": {
+    "description": "Message affiché quand le catalogue filtré est vide sans possibilité d'ajout (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridAddCustomLabel": "Ajouter « {query} »",
+  "@priceGridAddCustomLabel": {
+    "description": "Ligne d'ajout d'un libellé libre non trouvé au catalogue. Espaces normales (U+0020) autour des guillemets, PAS les espaces insécables (U+00A0) de contentCategoryAdd : reprise à l'identique de l'ancien texte, non réutilisée pour ne pas changer le rendu (price_grid_item_form_sheet.dart)."
+    ,
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridChangeItemButton": "Changer",
+  "@priceGridChangeItemButton": {
+    "description": "Bouton de retour au catalogue depuis l'étape prix (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridYouReceiveLabel": "Ce que vous encaissez",
+  "@priceGridYouReceiveLabel": {
+    "description": "Libellé au-dessus du montant saisi (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridMaxPriceMessage": "Maximum {max} par article.",
+  "@priceGridMaxPriceMessage": {
+    "description": "Message d'écho quand le montant saisi dépasse le plafond, max déjà formaté (price_grid_item_form_sheet.dart).",
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridEnterAmountMessage": "Saisissez le montant que vous voulez toucher.",
+  "@priceGridEnterAmountMessage": {
+    "description": "Message d'écho invitant à saisir un montant (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridSenderWillPayMessage": "L'expéditeur paiera {paid}, commission Yadony de {percent} % comprise.",
+  "@priceGridSenderWillPayMessage": {
+    "description": "Message d'écho annonçant le montant payé par l'expéditeur, paid déjà formaté et percent déjà formaté par commissionPercentLabel (price_grid_item_form_sheet.dart).",
+    "placeholders": {
+      "paid": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "referralScreenTitle": "Parrainage",
+  "@referralScreenTitle": {
+    "description": "Titre de l'AppBar (referral_screen.dart)."
+  },
+  "referralStatInvited": "Invités",
+  "@referralStatInvited": {
+    "description": "Libellé de la stat « invités » (referral_screen.dart)."
+  },
+  "referralStatSignedUp": "Inscrits",
+  "@referralStatSignedUp": {
+    "description": "Libellé de la stat « inscrits » (referral_screen.dart)."
+  },
+  "referralStatRewarded": "Récompensés",
+  "@referralStatRewarded": {
+    "description": "Libellé de la stat « récompensés » (referral_screen.dart)."
+  },
+  "referralVouchers": "{count, plural, =1{🎁 Tu as un bon de -{percent}% sur ta prochaine commission} other{🎁 Tu as {count} bons de -{percent}% sur tes prochaines commissions}}",
+  "@referralVouchers": {
+    "description": "Bandeau de bons actifs, affiché seulement si activeVoucherCount >= 1 : la branche =1 peut donc écrire « un » en toutes lettres (referral_screen.dart).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "referralVoucherExpiresLabel": "Valable jusqu'au {date}",
+  "@referralVoucherExpiresLabel": {
+    "description": "Date d'expiration du bon le plus proche, date déjà formatée (referral_screen.dart).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "referralHeroTitleDefault": "Invite tes proches",
+  "@referralHeroTitleDefault": {
+    "description": "Titre de la hero card sans pourcentage connu (referral_screen.dart)."
+  },
+  "referralHeroTitlePercent": "Invite et gagne -{percent}%",
+  "@referralHeroTitlePercent": {
+    "description": "Titre de la hero card avec pourcentage connu (referral_screen.dart).",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "referralHeroSubtitleDefault": "Tu reçois un bon de réduction sur ta prochaine commission dès la première livraison de ton invité.",
+  "@referralHeroSubtitleDefault": {
+    "description": "Sous-titre de la hero card sans pourcentage connu (referral_screen.dart)."
+  },
+  "referralHeroSubtitlePercent": "Tu reçois un bon de -{percent}% sur ta prochaine commission dès la première livraison de ton invité.",
+  "@referralHeroSubtitlePercent": {
+    "description": "Sous-titre de la hero card avec pourcentage connu (referral_screen.dart).",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "referralCodeBoxLabel": "Ton code de parrainage",
+  "@referralCodeBoxLabel": {
+    "description": "Libellé au-dessus du code affiché (referral_screen.dart)."
+  },
+  "referralCopyCodeSemantics": "Copier le code de parrainage",
+  "@referralCopyCodeSemantics": {
+    "description": "Libellé d'accessibilité du bouton de copie du code (referral_screen.dart)."
+  },
+  "referralCodeCopiedMessage": "Code copié !",
+  "@referralCodeCopiedMessage": {
+    "description": "Snackbar de confirmation de copie du code (referral_screen.dart)."
+  },
+  "referralShareButtonLabel": "Partager mon code",
+  "@referralShareButtonLabel": {
+    "description": "Bouton sticky de partage (referral_screen.dart)."
+  },
+  "referralShareMessage": "Salut ! Utilise mon code Yadony : {code} pour t'inscrire, ça m'aide à gagner une réduction sur ma prochaine commission. {url}",
+  "@referralShareMessage": {
+    "description": "Texte réellement partagé via la feuille système, code et url non traduits (referral_screen.dart, construit par l'écran et transporté par ReferralShared jusqu'au bloc).",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "referralRedeemTitle": "Entrer un code parrain",
+  "@referralRedeemTitle": {
+    "description": "Titre de la bottom sheet de saisie d'un code parrain (redeem_code_bottom_sheet.dart)."
+  },
+  "referralRedeemSubtitle": "Tu as été invité par un ami ? Entre son code pour qu'il soit récompensé à ta première livraison.",
+  "@referralRedeemSubtitle": {
+    "description": "Sous-titre explicatif de la bottom sheet (redeem_code_bottom_sheet.dart)."
+  },
+  "referralRedeemCodeFieldLabel": "Code parrain",
+  "@referralRedeemCodeFieldLabel": {
+    "description": "Libellé du champ de saisie du code (redeem_code_bottom_sheet.dart)."
+  },
+  "referralRedeemCodeHint": "Ex : {example}",
+  "@referralRedeemCodeHint": {
+    "description": "Placeholder du champ code, example = code d'exemple non traduit (redeem_code_bottom_sheet.dart).",
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
   }
 }

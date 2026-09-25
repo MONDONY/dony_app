@@ -6,6 +6,7 @@ import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dar
 import 'package:dony/features/delivery_addresses/data/models/delivery_address.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/models/pickup_address.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -63,17 +64,18 @@ class _PickupAddressesScreenState extends State<PickupAddressesScreen>
     final tt = Theme.of(context).textTheme;
     final isLivraison = _tab.index == 1;
     final activeColor = isLivraison ? cs.secondary : cs.primary;
+    final l = context.l10n;
 
     return DonyPageScaffold(
-      title: 'Mes adresses',
+      title: l.addressesTitle,
       scrollable: false,
       padding: EdgeInsets.zero,
       appBarActions: [
         IconButton(
           icon: DonyIcon('plus', color: activeColor),
           tooltip: isLivraison
-              ? 'Ajouter une adresse de livraison'
-              : 'Ajouter une adresse de remise',
+              ? l.addressesAddDeliveryTooltip
+              : l.addressesAddPickupTooltip,
           color: activeColor,
           style: IconButton.styleFrom(
             backgroundColor: activeColor.withValues(alpha: 0.1),
@@ -90,9 +92,9 @@ class _PickupAddressesScreenState extends State<PickupAddressesScreen>
         labelStyle: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         unselectedLabelStyle: tt.titleSmall,
         dividerColor: cs.outline,
-        tabs: const [
-          Tab(text: '📦  Remise'),
-          Tab(text: '🗺️  Livraison'),
+        tabs: [
+          Tab(text: l.addressesTabPickup),
+          Tab(text: l.addressesTabDelivery),
         ],
       ),
       body: TabBarView(
@@ -110,6 +112,7 @@ class _RemiseTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return BlocBuilder<PickupAddressBloc, PickupAddressState>(
       builder: (context, state) {
         if (state.status == PickupAddressStatus.loading &&
@@ -125,9 +128,9 @@ class _RemiseTab extends StatelessWidget {
             mascotte: DonyMascotteType.erreurLegere,
             type: DonyEmptyStateType.error,
             iconAsset: 'circle-alert',
-            title: 'Erreur de chargement',
-            description: state.error ?? 'Une erreur est survenue.',
-            actionLabel: 'Réessayer',
+            title: l.commonLoadError,
+            description: state.error ?? l.commonSomethingWentWrongDot,
+            actionLabel: l.commonRetry,
             onAction: () => context.read<PickupAddressBloc>().add(
               const PickupAddressLoaded(),
             ),
@@ -136,10 +139,9 @@ class _RemiseTab extends StatelessWidget {
         if (state.addresses.isEmpty) {
           return DonyEmptyState(
             mascotte: DonyMascotteType.assis,
-            title: 'Aucune adresse de remise',
-            description:
-                'Ajoute l\'adresse où tu souhaites recevoir les colis des expéditeurs.',
-            actionLabel: 'Ajouter une adresse',
+            title: l.addressesEmptyPickupTitle,
+            description: l.addressesEmptyPickupDescription,
+            actionLabel: l.addressesAddButtonLabel,
             onAction: () async {
               final changed = await context.push<bool>(
                 '/profile/addresses/new',
@@ -182,6 +184,7 @@ class _LivraisonTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return BlocBuilder<DeliveryAddressBloc, DeliveryAddressState>(
       builder: (context, state) {
         if (state.status == DeliveryAddressStatus.loading &&
@@ -197,9 +200,9 @@ class _LivraisonTab extends StatelessWidget {
             mascotte: DonyMascotteType.erreurLegere,
             type: DonyEmptyStateType.error,
             iconAsset: 'circle-alert',
-            title: 'Erreur de chargement',
-            description: state.error ?? 'Une erreur est survenue.',
-            actionLabel: 'Réessayer',
+            title: l.commonLoadError,
+            description: state.error ?? l.commonSomethingWentWrongDot,
+            actionLabel: l.commonRetry,
             onAction: () => context.read<DeliveryAddressBloc>().add(
               const DeliveryAddressLoaded(),
             ),
@@ -208,10 +211,9 @@ class _LivraisonTab extends StatelessWidget {
         if (state.addresses.isEmpty) {
           return DonyEmptyState(
             mascotte: DonyMascotteType.enCourse,
-            title: 'Aucune adresse de livraison',
-            description:
-                'Ajoute les adresses où tu déposes habituellement les colis.',
-            actionLabel: 'Ajouter une adresse',
+            title: l.addressesEmptyDeliveryTitle,
+            description: l.addressesEmptyDeliveryDescription,
+            actionLabel: l.addressesAddButtonLabel,
             onAction: () async {
               final changed = await context.push<bool>(
                 '/profile/addresses/delivery/new',
@@ -258,6 +260,7 @@ class _PickupAddressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -323,7 +326,7 @@ class _PickupAddressCard extends StatelessWidget {
                               ),
                             ),
                             child: Text(
-                              'Par défaut',
+                              l.commonDefault,
                               style: tt.labelSmall?.copyWith(
                                 color: cs.success,
                                 fontWeight: FontWeight.w600,
@@ -373,6 +376,7 @@ class _DeliveryAddressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -440,7 +444,7 @@ class _DeliveryAddressCard extends StatelessWidget {
                               ),
                             ),
                             child: Text(
-                              'Par défaut',
+                              l.commonDefault,
                               style: tt.labelSmall?.copyWith(
                                 color: cs.success,
                                 fontWeight: FontWeight.w600,
@@ -492,6 +496,7 @@ class _PickupKebabMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return PopupMenuButton<_AddressAction>(
       icon: DonyIcon('ellipsis-vertical', color: cs.onSurfaceVariant, size: 20),
       shape: RoundedRectangleBorder(
@@ -515,11 +520,10 @@ class _PickupKebabMenu extends StatelessWidget {
           case _AddressAction.delete:
             final confirmed = await DonyDialog.show(
               context,
-              title: 'Supprimer l\'adresse',
-              message:
-                  'Es-tu sûr de vouloir supprimer "${address.label}" ? Cette action est irréversible.',
+              title: l.addressesDeleteTitle,
+              message: l.addressesDeleteConfirmMessage(address.label),
               iconAsset: 'trash-2',
-              confirmLabel: 'Supprimer',
+              confirmLabel: l.commonDelete,
               variant: DonyDialogVariant.destructive,
             );
             if ((confirmed ?? false) && context.mounted) {
@@ -531,23 +535,23 @@ class _PickupKebabMenu extends StatelessWidget {
       },
       itemBuilder: (_) => [
         if (!address.isDefault)
-          const PopupMenuItem(
+          PopupMenuItem(
             value: _AddressAction.setDefault,
             child: Row(
               children: [
-                DonyIcon('circle-check', size: 18),
-                SizedBox(width: DonySpacing.sm),
-                Text('Définir par défaut'),
+                const DonyIcon('circle-check', size: 18),
+                const SizedBox(width: DonySpacing.sm),
+                Text(l.addressesSetDefaultLabel),
               ],
             ),
           ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: _AddressAction.edit,
           child: Row(
             children: [
-              DonyIcon('square-pen', size: 18),
-              SizedBox(width: DonySpacing.sm),
-              Text('Modifier'),
+              const DonyIcon('square-pen', size: 18),
+              const SizedBox(width: DonySpacing.sm),
+              Text(l.commonEdit),
             ],
           ),
         ),
@@ -562,7 +566,7 @@ class _PickupKebabMenu extends StatelessWidget {
               ),
               const SizedBox(width: DonySpacing.sm),
               Text(
-                'Supprimer',
+                l.commonDelete,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],
@@ -581,6 +585,7 @@ class _DeliveryKebabMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return PopupMenuButton<_AddressAction>(
       icon: DonyIcon('ellipsis-vertical', color: cs.onSurfaceVariant, size: 20),
       shape: RoundedRectangleBorder(
@@ -604,11 +609,10 @@ class _DeliveryKebabMenu extends StatelessWidget {
           case _AddressAction.delete:
             final confirmed = await DonyDialog.show(
               context,
-              title: 'Supprimer l\'adresse',
-              message:
-                  'Es-tu sûr de vouloir supprimer "${address.label}" ? Cette action est irréversible.',
+              title: l.addressesDeleteTitle,
+              message: l.addressesDeleteConfirmMessage(address.label),
               iconAsset: 'trash-2',
-              confirmLabel: 'Supprimer',
+              confirmLabel: l.commonDelete,
               variant: DonyDialogVariant.destructive,
             );
             if ((confirmed ?? false) && context.mounted) {
@@ -620,23 +624,23 @@ class _DeliveryKebabMenu extends StatelessWidget {
       },
       itemBuilder: (_) => [
         if (!address.isDefault)
-          const PopupMenuItem(
+          PopupMenuItem(
             value: _AddressAction.setDefault,
             child: Row(
               children: [
-                DonyIcon('circle-check', size: 18),
-                SizedBox(width: DonySpacing.sm),
-                Text('Définir par défaut'),
+                const DonyIcon('circle-check', size: 18),
+                const SizedBox(width: DonySpacing.sm),
+                Text(l.addressesSetDefaultLabel),
               ],
             ),
           ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: _AddressAction.edit,
           child: Row(
             children: [
-              DonyIcon('square-pen', size: 18),
-              SizedBox(width: DonySpacing.sm),
-              Text('Modifier'),
+              const DonyIcon('square-pen', size: 18),
+              const SizedBox(width: DonySpacing.sm),
+              Text(l.commonEdit),
             ],
           ),
         ),
@@ -651,7 +655,7 @@ class _DeliveryKebabMenu extends StatelessWidget {
               ),
               const SizedBox(width: DonySpacing.sm),
               Text(
-                'Supprimer',
+                l.commonDelete,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],

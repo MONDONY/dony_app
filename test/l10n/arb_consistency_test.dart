@@ -213,6 +213,9 @@ const _sameInBothLanguages = <String>{
   'reportDescriptionLabel', // « Description » se dit pareil (tâche I1)
   'reportReasonSpam', // « Spam » se dit pareil (tâche I1)
   'followPushBadge', // « Push » se dit pareil (tâche I2)
+  'pickupAddressInstructionsSectionTitle', // « Instructions » se dit pareil (tâche I3)
+  'deliveryAddressInstructionsSectionTitle', // « Instructions » se dit pareil (tâche I3)
+  'priceGridItemMenuTooltip', // « Options » se dit pareil (tâche I3)
 };
 
 void main() {

@@ -12,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 class MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
     implements RecipientBloc {}
 
@@ -474,4 +476,47 @@ void main() {
       expect(nameField.controller!.text, isEmpty);
     },
   );
+
+  // ── Format de téléphone invalide ─────────────────────────────────────────
+
+  testWidgets('un numéro invalide affiche le message de format', (
+    tester,
+  ) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(const RecipientState(status: RecipientStatus.success));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Téléphone (E.164)').first,
+      '0612345678',
+    );
+    await tester.pump();
+
+    expect(find.text('Format invalide (+33612345678)'), findsOneWidget);
+  });
+
+  // ── Anglais ──────────────────────────────────────────────────────────────
+
+  testWidgets('en anglais : titres et libellés traduits', (tester) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(const RecipientState(status: RecipientStatus.success));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('New recipient'), findsOneWidget);
+    expect(find.text('Full name'), findsOneWidget);
+    expect(find.text('Phone (E.164)'), findsOneWidget);
+    expect(find.text('Choose from my contacts'), findsOneWidget);
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Phone (E.164)').first,
+      '0612345678',
+    );
+    await tester.pump();
+    expect(find.text('Invalid format (+33612345678)'), findsOneWidget);
+  });
 }

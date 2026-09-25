@@ -9,6 +9,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:dony/features/recipients/data/recipient_filter.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -137,6 +138,7 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final keyboard = MediaQuery.of(context).viewInsets.bottom;
+    final l = context.l10n;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
@@ -199,14 +201,14 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
                           // (le Spacer ne peut pas devenir négatif).
                           Expanded(
                             child: Text(
-                              '👤  Destinataire',
+                              l.recipientPickerTitle,
                               style: tt.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
                           IconButton(
-                            tooltip: 'Fermer',
+                            tooltip: l.commonClose,
                             icon: const DonyIcon('x'),
                             onPressed: () => Navigator.of(context).pop(),
                             style: IconButton.styleFrom(
@@ -240,12 +242,12 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
                               children: [
                                 _ActionTile(
                                   icon: 'plus',
-                                  label: 'Nouveau destinataire',
+                                  label: l.recipientCreateTitle,
                                   onTap: () => _createNew(source: 'new'),
                                 ),
                                 _ActionTile(
                                   icon: 'contact',
-                                  label: 'Choisir dans mes contacts',
+                                  label: l.recipientImportContactsAction,
                                   loading: _importing,
                                   onTap: _importing ? null : _pickFromPhone,
                                 ),
@@ -263,7 +265,7 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
                                       4,
                                     ),
                                     child: Text(
-                                      'MES DESTINATAIRES',
+                                      l.recipientPickerSectionHeader,
                                       style: tt.labelSmall?.copyWith(
                                         color: cs.onSurfaceVariant,
                                         letterSpacing: 0.08,
@@ -292,7 +294,7 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
                                     ),
                                     child: Center(
                                       child: Text(
-                                        'Aucun résultat',
+                                        l.recipientNoResultsLabel,
                                         style: tt.bodyMedium?.copyWith(
                                           color: cs.onSurfaceVariant,
                                         ),
@@ -312,7 +314,7 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
                           DonySpacing.md,
                         ),
                         child: DonyButton(
-                          label: 'Confirmer ce destinataire',
+                          label: l.recipientPickerConfirmButton,
                           onPressed: selected == null
                               ? null
                               : () {
@@ -408,6 +410,7 @@ class _RecipientRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final title = recipient.relationship?.isNotEmpty == true
         ? recipient.relationship!
         : recipient.fullName;
@@ -434,7 +437,7 @@ class _RecipientRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(99),
               ),
               child: Text(
-                'Par défaut',
+                l.commonDefault,
                 style: tt.labelSmall?.copyWith(
                   color: cs.primary,
                   fontWeight: FontWeight.w600,
@@ -486,12 +489,13 @@ class _SearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     return TextField(
       controller: controller,
       style: tt.bodyMedium?.copyWith(color: cs.onSurface),
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: 'Rechercher un destinataire…',
+        hintText: l.recipientSearchHint,
         hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         filled: true,
         fillColor: cs.surfaceContainerHighest,
@@ -505,7 +509,7 @@ class _SearchField extends StatelessWidget {
         prefixIconConstraints: const BoxConstraints(minWidth: 40),
         suffixIcon: controller.text.isNotEmpty
             ? IconButton(
-                tooltip: 'Effacer la recherche',
+                tooltip: l.recipientClearSearchTooltip,
                 icon: const DonyIcon('x', size: 16),
                 onPressed: () => controller.clear(),
               )

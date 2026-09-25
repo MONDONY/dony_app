@@ -13414,4 +13414,442 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get proDowngradeButton => 'Revenir en compte standard';
+
+  @override
+  String get addressesTitle => 'Mes adresses';
+
+  @override
+  String get addressesAddPickupTooltip => 'Ajouter une adresse de remise';
+
+  @override
+  String get addressesAddDeliveryTooltip => 'Ajouter une adresse de livraison';
+
+  @override
+  String get addressesTabPickup => '📦  Remise';
+
+  @override
+  String get addressesTabDelivery => '🗺️  Livraison';
+
+  @override
+  String get addressesEmptyPickupTitle => 'Aucune adresse de remise';
+
+  @override
+  String get addressesEmptyPickupDescription =>
+      'Ajoute l\'adresse où tu souhaites recevoir les colis des expéditeurs.';
+
+  @override
+  String get addressesEmptyDeliveryTitle => 'Aucune adresse de livraison';
+
+  @override
+  String get addressesEmptyDeliveryDescription =>
+      'Ajoute les adresses où tu déposes habituellement les colis.';
+
+  @override
+  String get addressesAddButtonLabel => 'Ajouter une adresse';
+
+  @override
+  String get addressesSetDefaultLabel => 'Définir par défaut';
+
+  @override
+  String get addressesDeleteTitle => 'Supprimer l\'adresse';
+
+  @override
+  String addressesDeleteConfirmMessage(String label) {
+    return 'Es-tu sûr de vouloir supprimer \"$label\" ? Cette action est irréversible.';
+  }
+
+  @override
+  String get pickupAddressChipHome => 'Maison';
+
+  @override
+  String get pickupAddressChipOffice => 'Bureau';
+
+  @override
+  String get pickupAddressChipWorkshop => 'Atelier';
+
+  @override
+  String get pickupAddressEditTitle => 'Modifier l\'adresse';
+
+  @override
+  String get pickupAddressCreateTitle => 'Nouvelle adresse de remise';
+
+  @override
+  String get pickupAddressSaveButton => 'Enregistrer l\'adresse';
+
+  @override
+  String get pickupAddressUpdatedMessage => 'Adresse mise à jour';
+
+  @override
+  String get pickupAddressAddedMessage => 'Adresse ajoutée';
+
+  @override
+  String get pickupAddressLabelSectionTitle => 'Étiquette';
+
+  @override
+  String get pickupAddressNameFieldLabel => 'Nom de l\'adresse';
+
+  @override
+  String get pickupAddressNameFieldHint => 'Ex : Maison, Bureau…';
+
+  @override
+  String get pickupAddressAddressSectionTitle => 'Adresse';
+
+  @override
+  String get pickupAddressStreetFieldLabel => 'Rue et numéro';
+
+  @override
+  String get pickupAddressPostalFieldLabel => 'Code postal';
+
+  @override
+  String get pickupAddressCityFieldLabel => 'Ville';
+
+  @override
+  String get pickupAddressFloorSectionTitle => 'Étage / Appartement';
+
+  @override
+  String get pickupAddressFloorFieldHint =>
+      'Optionnel (Ex : Bât. B, 3ème étage)';
+
+  @override
+  String get pickupAddressInstructionsSectionTitle => 'Instructions';
+
+  @override
+  String get pickupAddressInstructionsHint => 'Optionnel : digicode, horaires…';
+
+  @override
+  String get pickupAddressDefaultSubtitle =>
+      'Pré-remplie lors de tes prochaines demandes';
+
+  @override
+  String get deliveryAddressChipFamily => 'Famille';
+
+  @override
+  String get deliveryAddressChipHome => 'Maison';
+
+  @override
+  String get deliveryAddressChipShop => 'Boutique';
+
+  @override
+  String get deliveryAddressEditTitle => 'Modifier l\'adresse';
+
+  @override
+  String get deliveryAddressCreateTitle => 'Nouvelle adresse de livraison';
+
+  @override
+  String get deliveryAddressSaveButton => 'Enregistrer l\'adresse';
+
+  @override
+  String get deliveryAddressUpdatedMessage => 'Adresse mise à jour';
+
+  @override
+  String get deliveryAddressAddedMessage => 'Adresse ajoutée';
+
+  @override
+  String get deliveryAddressLabelSectionTitle => 'Étiquette';
+
+  @override
+  String get deliveryAddressNameFieldLabel => 'Nom de l\'adresse';
+
+  @override
+  String get deliveryAddressNameFieldHint => 'Ex : Famille Dakar, Dépôt…';
+
+  @override
+  String get deliveryAddressCountrySectionTitle => 'Pays';
+
+  @override
+  String get deliveryAddressCountryPickerTitle => 'Pays de destination';
+
+  @override
+  String get deliveryAddressAddressSectionTitle => 'Adresse';
+
+  @override
+  String get deliveryAddressCityFieldLabel => 'Ville';
+
+  @override
+  String get deliveryAddressCityFieldHint => 'Ex : Dakar, Abidjan, Bamako…';
+
+  @override
+  String get deliveryAddressStreetFieldLabel => 'Rue, quartier';
+
+  @override
+  String get deliveryAddressStreetFieldHint =>
+      'Optionnel (ex : Rue 10, Almadies)';
+
+  @override
+  String get deliveryAddressInstructionsSectionTitle => 'Instructions';
+
+  @override
+  String get deliveryAddressInstructionsHint =>
+      'Optionnel : appeler à l\'arrivée, portail rouge…';
+
+  @override
+  String get deliveryAddressDefaultSubtitle =>
+      'Pré-remplie lors de tes prochaines annonces';
+
+  @override
+  String get countryNameGn => 'Guinée';
+
+  @override
+  String get recipientListTitle => 'Mes destinataires';
+
+  @override
+  String get recipientAddFabLabel => 'Ajouter';
+
+  @override
+  String get recipientEmptyTitle => 'Aucun destinataire enregistré';
+
+  @override
+  String get recipientEmptyDescription =>
+      'Ajoute tes proches en Afrique pour envoyer en 1 tap.';
+
+  @override
+  String get recipientEmptyActionLabel => 'Ajouter mon premier destinataire';
+
+  @override
+  String get recipientNoResultsLabel => 'Aucun résultat';
+
+  @override
+  String get recipientSearchNoResultsDescription =>
+      'Aucun destinataire ne correspond à ta recherche.';
+
+  @override
+  String get recipientSearchHint => 'Rechercher un destinataire…';
+
+  @override
+  String get recipientClearSearchTooltip => 'Effacer la recherche';
+
+  @override
+  String get recipientSetDefaultLabel => 'Définir par défaut';
+
+  @override
+  String get recipientDeleteTitle => 'Supprimer le destinataire';
+
+  @override
+  String recipientDeleteConfirmMessage(String name) {
+    return 'Es-tu sûr de vouloir supprimer \"$name\" ? Cette action est irréversible.';
+  }
+
+  @override
+  String get recipientEditTitle => 'Modifier le destinataire';
+
+  @override
+  String get recipientCreateTitle => 'Nouveau destinataire';
+
+  @override
+  String get recipientFullNameFieldLabel => 'Nom complet';
+
+  @override
+  String get recipientPhoneFieldLabel => 'Téléphone (E.164)';
+
+  @override
+  String recipientPhoneInvalidFormat(String example) {
+    return 'Format invalide ($example)';
+  }
+
+  @override
+  String get recipientUpdatedMessage => 'Destinataire mis à jour';
+
+  @override
+  String get recipientAddedMessage => 'Destinataire ajouté';
+
+  @override
+  String get recipientDefaultToggleTitle => 'Destinataire par défaut';
+
+  @override
+  String get recipientDefaultToggleSubtitle =>
+      'Présélectionné lors de tes prochains envois';
+
+  @override
+  String get recipientImportContactsAction => 'Choisir dans mes contacts';
+
+  @override
+  String get recipientPickerTitle => '👤  Destinataire';
+
+  @override
+  String get recipientPickerSectionHeader => 'MES DESTINATAIRES';
+
+  @override
+  String get recipientPickerConfirmButton => 'Confirmer ce destinataire';
+
+  @override
+  String get recipientSectionPickerButton => 'Choisir un destinataire';
+
+  @override
+  String get recipientSectionChangeButton => 'Changer';
+
+  @override
+  String get recipientSectionSaveToggleTitle => 'Enregistrer ce destinataire';
+
+  @override
+  String get recipientSectionSaveToggleSubtitle =>
+      'Sera ajouté à « Mes destinataires » pour tes prochains envois';
+
+  @override
+  String get priceGridScreenTitle => 'Ma grille de prix';
+
+  @override
+  String priceGridCommissionNotice(String percent) {
+    return 'Yadony ajoute $percent % au prix que vous saisissez. Vous encaissez exactement votre montant.';
+  }
+
+  @override
+  String get priceGridReorderButton => 'Réordonner';
+
+  @override
+  String get priceGridAddLabelButton => 'Nouvelle étiquette';
+
+  @override
+  String get priceGridEmptyTitle => 'Aucune étiquette';
+
+  @override
+  String get priceGridEmptyDescription =>
+      'Fixez le prix des articles que vous transportez. Le même barème servira sur tous vos trajets.';
+
+  @override
+  String get priceGridScopeStampLabel => 'Valable sur tous vos trajets';
+
+  @override
+  String priceGridDragHandleSemantics(String label) {
+    return 'Déplacer $label';
+  }
+
+  @override
+  String get priceGridItemMenuTooltip => 'Options';
+
+  @override
+  String priceGridYouReceive(String net) {
+    return 'vous recevez $net';
+  }
+
+  @override
+  String priceGridItemSemantics(String label, String paid, String net) {
+    return '$label, l\'expéditeur paie $paid, vous recevez $net';
+  }
+
+  @override
+  String get priceGridDeleteItemTitle => 'Supprimer l\'étiquette ?';
+
+  @override
+  String priceGridDeleteItemMessage(String label) {
+    return 'L\'article \"$label\" sera retiré de votre grille, sur tous vos trajets.';
+  }
+
+  @override
+  String get priceGridEditItemTitle => 'Modifier l\'étiquette';
+
+  @override
+  String get priceGridAddToGridButton => 'Ajouter à ma grille';
+
+  @override
+  String get priceGridSearchFieldLabel => 'Article';
+
+  @override
+  String get priceGridSearchFieldHint => 'Chercher, ou écrire le vôtre';
+
+  @override
+  String get priceGridAllCatalogTakenMessage =>
+      'Tous les articles du catalogue sont déjà dans votre grille. Écrivez le vôtre pour en ajouter un autre.';
+
+  @override
+  String priceGridAddCustomLabel(String query) {
+    return 'Ajouter « $query »';
+  }
+
+  @override
+  String get priceGridChangeItemButton => 'Changer';
+
+  @override
+  String get priceGridYouReceiveLabel => 'Ce que vous encaissez';
+
+  @override
+  String priceGridMaxPriceMessage(String max) {
+    return 'Maximum $max par article.';
+  }
+
+  @override
+  String get priceGridEnterAmountMessage =>
+      'Saisissez le montant que vous voulez toucher.';
+
+  @override
+  String priceGridSenderWillPayMessage(String paid, String percent) {
+    return 'L\'expéditeur paiera $paid, commission Yadony de $percent % comprise.';
+  }
+
+  @override
+  String get referralScreenTitle => 'Parrainage';
+
+  @override
+  String get referralStatInvited => 'Invités';
+
+  @override
+  String get referralStatSignedUp => 'Inscrits';
+
+  @override
+  String get referralStatRewarded => 'Récompensés';
+
+  @override
+  String referralVouchers(int count, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '🎁 Tu as $count bons de -$percent% sur tes prochaines commissions',
+      one: '🎁 Tu as un bon de -$percent% sur ta prochaine commission',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String referralVoucherExpiresLabel(String date) {
+    return 'Valable jusqu\'au $date';
+  }
+
+  @override
+  String get referralHeroTitleDefault => 'Invite tes proches';
+
+  @override
+  String referralHeroTitlePercent(int percent) {
+    return 'Invite et gagne -$percent%';
+  }
+
+  @override
+  String get referralHeroSubtitleDefault =>
+      'Tu reçois un bon de réduction sur ta prochaine commission dès la première livraison de ton invité.';
+
+  @override
+  String referralHeroSubtitlePercent(int percent) {
+    return 'Tu reçois un bon de -$percent% sur ta prochaine commission dès la première livraison de ton invité.';
+  }
+
+  @override
+  String get referralCodeBoxLabel => 'Ton code de parrainage';
+
+  @override
+  String get referralCopyCodeSemantics => 'Copier le code de parrainage';
+
+  @override
+  String get referralCodeCopiedMessage => 'Code copié !';
+
+  @override
+  String get referralShareButtonLabel => 'Partager mon code';
+
+  @override
+  String referralShareMessage(String code, String url) {
+    return 'Salut ! Utilise mon code Yadony : $code pour t\'inscrire, ça m\'aide à gagner une réduction sur ma prochaine commission. $url';
+  }
+
+  @override
+  String get referralRedeemTitle => 'Entrer un code parrain';
+
+  @override
+  String get referralRedeemSubtitle =>
+      'Tu as été invité par un ami ? Entre son code pour qu\'il soit récompensé à ta première livraison.';
+
+  @override
+  String get referralRedeemCodeFieldLabel => 'Code parrain';
+
+  @override
+  String referralRedeemCodeHint(String example) {
+    return 'Ex : $example';
+  }
 }

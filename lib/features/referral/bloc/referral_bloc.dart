@@ -57,7 +57,8 @@ class ReferralBloc extends Bloc<ReferralEvent, ReferralState> {
     final current = state;
     if (current is ReferralLoaded) {
       await Share.share(
-        'Salut ! Utilise mon code Yadony : ${current.info.code} et reçois ton 1er envoi avec 5€ de réduction. ${current.info.shareUrl}',
+        event.message,
+        sharePositionOrigin: event.sharePositionOrigin,
       );
       unawaited(
         _analytics.logEvent(

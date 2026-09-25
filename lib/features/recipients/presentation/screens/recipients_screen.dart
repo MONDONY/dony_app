@@ -5,6 +5,8 @@ import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_c
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:dony/features/recipients/data/recipient_filter.dart';
+import 'package:dony/l10n/country_names.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -44,8 +46,9 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return DonyPageScaffold(
-      title: 'Mes destinataires',
+      title: l.recipientListTitle,
       scrollable: false,
       // Zéro horizontal ici : chaque ligne gère déjà son propre inset
       // (DonySpacing.lg) via _RecipientTile / _SearchField, comme
@@ -57,7 +60,7 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
           backgroundColor: cs.primary,
           foregroundColor: cs.onPrimary,
           icon: const Icon(Icons.add_rounded),
-          label: const Text('Ajouter'),
+          label: Text(l.recipientAddFabLabel),
           onPressed: () => _addRecipient(fabCtx),
         ),
       ),
@@ -88,9 +91,9 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
                     mascotte: DonyMascotteType.erreurLegere,
                     type: DonyEmptyStateType.error,
                     iconAsset: 'circle-alert',
-                    title: 'Erreur de chargement',
-                    description: state.error ?? 'Une erreur est survenue.',
-                    actionLabel: 'Réessayer',
+                    title: l.commonLoadError,
+                    description: state.error ?? l.commonSomethingWentWrongDot,
+                    actionLabel: l.commonRetry,
                     onAction: () => context.read<RecipientBloc>().add(
                       const RecipientLoaded(),
                     ),
@@ -99,10 +102,9 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
                 if (state.recipients.isEmpty) {
                   return DonyEmptyState(
                     mascotte: DonyMascotteType.assis,
-                    title: 'Aucun destinataire enregistré',
-                    description:
-                        'Ajoute tes proches en Afrique pour envoyer en 1 tap.',
-                    actionLabel: 'Ajouter mon premier destinataire',
+                    title: l.recipientEmptyTitle,
+                    description: l.recipientEmptyDescription,
+                    actionLabel: l.recipientEmptyActionLabel,
                     onAction: () => _addRecipient(context),
                   );
                 }
@@ -125,11 +127,11 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
                     ),
                     Expanded(
                       child: filtered.isEmpty
-                          ? const DonyEmptyState(
+                          ? DonyEmptyState(
                               mascotte: DonyMascotteType.assis,
-                              title: 'Aucun résultat',
+                              title: l.recipientNoResultsLabel,
                               description:
-                                  'Aucun destinataire ne correspond à ta recherche.',
+                                  l.recipientSearchNoResultsDescription,
                             )
                           : ListView.separated(
                               padding: const EdgeInsets.only(
@@ -167,12 +169,13 @@ class _SearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     return TextField(
       controller: controller,
       style: tt.bodyMedium?.copyWith(color: cs.onSurface),
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: 'Rechercher un destinataire…',
+        hintText: l.recipientSearchHint,
         hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         filled: true,
         fillColor: cs.surfaceContainerHighest,
@@ -186,7 +189,7 @@ class _SearchField extends StatelessWidget {
         prefixIconConstraints: const BoxConstraints(minWidth: 40),
         suffixIcon: controller.text.isNotEmpty
             ? IconButton(
-                tooltip: 'Effacer la recherche',
+                tooltip: l.recipientClearSearchTooltip,
                 icon: const DonyIcon('x', size: 16),
                 onPressed: () => controller.clear(),
               )
@@ -222,11 +225,12 @@ class _RecipientTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     final locationParts = [
       if (recipient.street != null) recipient.street!,
       if (recipient.city != null) recipient.city!,
-      _countryLabel(recipient.country),
+      countryName(l, recipient.country),
     ];
 
     return InkWell(
@@ -266,8 +270,8 @@ class _RecipientTile extends StatelessWidget {
                       ),
                       if (recipient.isDefault) ...[
                         const SizedBox(width: DonySpacing.xs),
-                        const DonyBadge(
-                          label: 'Par défaut',
+                        DonyBadge(
+                          label: l.commonDefault,
                           type: DonyBadgeType.success,
                         ),
                       ],
@@ -300,16 +304,6 @@ class _RecipientTile extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static String _countryLabel(String code) {
-    const labels = {
-      'SN': 'Sénégal',
-      'CI': "Côte d'Ivoire",
-      'ML': 'Mali',
-      'CM': 'Cameroun',
-    };
-    return labels[code] ?? code;
   }
 }
 
@@ -366,6 +360,7 @@ class _KebabMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return PopupMenuButton<_RecipientAction>(
       icon: DonyIcon('ellipsis-vertical', color: cs.onSurfaceVariant, size: 20),
@@ -388,11 +383,10 @@ class _KebabMenu extends StatelessWidget {
           case _RecipientAction.delete:
             final confirmed = await DonyDialog.show(
               context,
-              title: 'Supprimer le destinataire',
-              message:
-                  'Es-tu sûr de vouloir supprimer "${recipient.fullName}" ? Cette action est irréversible.',
+              title: l.recipientDeleteTitle,
+              message: l.recipientDeleteConfirmMessage(recipient.fullName),
               iconAsset: 'trash-2',
-              confirmLabel: 'Supprimer',
+              confirmLabel: l.commonDelete,
               variant: DonyDialogVariant.destructive,
             );
             if ((confirmed ?? false) && context.mounted) {
@@ -401,24 +395,24 @@ class _KebabMenu extends StatelessWidget {
         }
       },
       itemBuilder: (_) => [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: _RecipientAction.edit,
           child: Row(
             children: [
-              DonyIcon('square-pen', size: 18),
-              SizedBox(width: DonySpacing.sm),
-              Text('Modifier'),
+              const DonyIcon('square-pen', size: 18),
+              const SizedBox(width: DonySpacing.sm),
+              Text(l.commonEdit),
             ],
           ),
         ),
         if (!recipient.isDefault)
-          const PopupMenuItem(
+          PopupMenuItem(
             value: _RecipientAction.setDefault,
             child: Row(
               children: [
-                DonyIcon('star', size: 18),
-                SizedBox(width: DonySpacing.sm),
-                Text('Définir par défaut'),
+                const DonyIcon('star', size: 18),
+                const SizedBox(width: DonySpacing.sm),
+                Text(l.recipientSetDefaultLabel),
               ],
             ),
           ),
@@ -433,7 +427,7 @@ class _KebabMenu extends StatelessWidget {
               ),
               const SizedBox(width: DonySpacing.sm),
               Text(
-                'Supprimer',
+                l.commonDelete,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],

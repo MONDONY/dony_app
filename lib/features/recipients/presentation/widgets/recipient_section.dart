@@ -5,6 +5,7 @@ import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:dony/features/recipients/data/phone_validation.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_picker_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -181,9 +182,9 @@ class _RecipientSectionState extends State<RecipientSection> {
                   value: _save,
                   onChanged: (v) => setState(() => _save = v),
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Enregistrer ce destinataire'),
-                  subtitle: const Text(
-                    'Sera ajouté à « Mes destinataires » pour tes prochains envois',
+                  title: Text(context.l10n.recipientSectionSaveToggleTitle),
+                  subtitle: Text(
+                    context.l10n.recipientSectionSaveToggleSubtitle,
                   ),
                 ),
               ],
@@ -226,7 +227,7 @@ class _PickerButton extends StatelessWidget {
               // ligne seulement si besoin à 200 %.
               Expanded(
                 child: Text(
-                  'Choisir un destinataire',
+                  context.l10n.recipientSectionPickerButton,
                   style: tt.bodyMedium?.copyWith(
                     color: cs.primary,
                     fontWeight: FontWeight.w600,
@@ -287,7 +288,10 @@ class _SelectedCard extends StatelessWidget {
               ],
             ),
           ),
-          TextButton(onPressed: onChange, child: const Text('Changer')),
+          TextButton(
+            onPressed: onChange,
+            child: Text(context.l10n.recipientSectionChangeButton),
+          ),
         ],
       ),
     );

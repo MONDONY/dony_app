@@ -13326,4 +13326,442 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proDowngradeButton => 'Switch back to a standard account';
+
+  @override
+  String get addressesTitle => 'My addresses';
+
+  @override
+  String get addressesAddPickupTooltip => 'Add a drop-off address';
+
+  @override
+  String get addressesAddDeliveryTooltip => 'Add a delivery address';
+
+  @override
+  String get addressesTabPickup => '📦  Drop-off';
+
+  @override
+  String get addressesTabDelivery => '🗺️  Delivery';
+
+  @override
+  String get addressesEmptyPickupTitle => 'No drop-off address';
+
+  @override
+  String get addressesEmptyPickupDescription =>
+      'Add the address where you want to receive parcels from senders.';
+
+  @override
+  String get addressesEmptyDeliveryTitle => 'No delivery address';
+
+  @override
+  String get addressesEmptyDeliveryDescription =>
+      'Add the addresses where you usually drop off parcels.';
+
+  @override
+  String get addressesAddButtonLabel => 'Add an address';
+
+  @override
+  String get addressesSetDefaultLabel => 'Set as default';
+
+  @override
+  String get addressesDeleteTitle => 'Delete address';
+
+  @override
+  String addressesDeleteConfirmMessage(String label) {
+    return 'Are you sure you want to delete \"$label\"? This action is irreversible.';
+  }
+
+  @override
+  String get pickupAddressChipHome => 'Home';
+
+  @override
+  String get pickupAddressChipOffice => 'Office';
+
+  @override
+  String get pickupAddressChipWorkshop => 'Workshop';
+
+  @override
+  String get pickupAddressEditTitle => 'Edit address';
+
+  @override
+  String get pickupAddressCreateTitle => 'New drop-off address';
+
+  @override
+  String get pickupAddressSaveButton => 'Save address';
+
+  @override
+  String get pickupAddressUpdatedMessage => 'Address updated';
+
+  @override
+  String get pickupAddressAddedMessage => 'Address added';
+
+  @override
+  String get pickupAddressLabelSectionTitle => 'Label';
+
+  @override
+  String get pickupAddressNameFieldLabel => 'Address name';
+
+  @override
+  String get pickupAddressNameFieldHint => 'E.g. Home, Office…';
+
+  @override
+  String get pickupAddressAddressSectionTitle => 'Address';
+
+  @override
+  String get pickupAddressStreetFieldLabel => 'Street and number';
+
+  @override
+  String get pickupAddressPostalFieldLabel => 'Postal code';
+
+  @override
+  String get pickupAddressCityFieldLabel => 'City';
+
+  @override
+  String get pickupAddressFloorSectionTitle => 'Floor / Apartment';
+
+  @override
+  String get pickupAddressFloorFieldHint =>
+      'Optional (e.g. Building B, 3rd floor)';
+
+  @override
+  String get pickupAddressInstructionsSectionTitle => 'Instructions';
+
+  @override
+  String get pickupAddressInstructionsHint =>
+      'Optional: door code, opening hours…';
+
+  @override
+  String get pickupAddressDefaultSubtitle =>
+      'Pre-filled for your next requests';
+
+  @override
+  String get deliveryAddressChipFamily => 'Family';
+
+  @override
+  String get deliveryAddressChipHome => 'Home';
+
+  @override
+  String get deliveryAddressChipShop => 'Shop';
+
+  @override
+  String get deliveryAddressEditTitle => 'Edit address';
+
+  @override
+  String get deliveryAddressCreateTitle => 'New delivery address';
+
+  @override
+  String get deliveryAddressSaveButton => 'Save address';
+
+  @override
+  String get deliveryAddressUpdatedMessage => 'Address updated';
+
+  @override
+  String get deliveryAddressAddedMessage => 'Address added';
+
+  @override
+  String get deliveryAddressLabelSectionTitle => 'Label';
+
+  @override
+  String get deliveryAddressNameFieldLabel => 'Address name';
+
+  @override
+  String get deliveryAddressNameFieldHint => 'E.g. Family Dakar, Drop-off…';
+
+  @override
+  String get deliveryAddressCountrySectionTitle => 'Country';
+
+  @override
+  String get deliveryAddressCountryPickerTitle => 'Destination country';
+
+  @override
+  String get deliveryAddressAddressSectionTitle => 'Address';
+
+  @override
+  String get deliveryAddressCityFieldLabel => 'City';
+
+  @override
+  String get deliveryAddressCityFieldHint => 'E.g. Dakar, Abidjan, Bamako…';
+
+  @override
+  String get deliveryAddressStreetFieldLabel => 'Street, neighborhood';
+
+  @override
+  String get deliveryAddressStreetFieldHint =>
+      'Optional (e.g. Rue 10, Almadies)';
+
+  @override
+  String get deliveryAddressInstructionsSectionTitle => 'Instructions';
+
+  @override
+  String get deliveryAddressInstructionsHint =>
+      'Optional: call on arrival, red gate…';
+
+  @override
+  String get deliveryAddressDefaultSubtitle =>
+      'Pre-filled for your next listings';
+
+  @override
+  String get countryNameGn => 'Guinea';
+
+  @override
+  String get recipientListTitle => 'My recipients';
+
+  @override
+  String get recipientAddFabLabel => 'Add';
+
+  @override
+  String get recipientEmptyTitle => 'No recipients saved';
+
+  @override
+  String get recipientEmptyDescription =>
+      'Add your loved ones in Africa to send in 1 tap.';
+
+  @override
+  String get recipientEmptyActionLabel => 'Add my first recipient';
+
+  @override
+  String get recipientNoResultsLabel => 'No results';
+
+  @override
+  String get recipientSearchNoResultsDescription =>
+      'No recipient matches your search.';
+
+  @override
+  String get recipientSearchHint => 'Search for a recipient…';
+
+  @override
+  String get recipientClearSearchTooltip => 'Clear search';
+
+  @override
+  String get recipientSetDefaultLabel => 'Set as default';
+
+  @override
+  String get recipientDeleteTitle => 'Delete recipient';
+
+  @override
+  String recipientDeleteConfirmMessage(String name) {
+    return 'Are you sure you want to delete \"$name\"? This action is irreversible.';
+  }
+
+  @override
+  String get recipientEditTitle => 'Edit recipient';
+
+  @override
+  String get recipientCreateTitle => 'New recipient';
+
+  @override
+  String get recipientFullNameFieldLabel => 'Full name';
+
+  @override
+  String get recipientPhoneFieldLabel => 'Phone (E.164)';
+
+  @override
+  String recipientPhoneInvalidFormat(String example) {
+    return 'Invalid format ($example)';
+  }
+
+  @override
+  String get recipientUpdatedMessage => 'Recipient updated';
+
+  @override
+  String get recipientAddedMessage => 'Recipient added';
+
+  @override
+  String get recipientDefaultToggleTitle => 'Default recipient';
+
+  @override
+  String get recipientDefaultToggleSubtitle =>
+      'Preselected for your next shipments';
+
+  @override
+  String get recipientImportContactsAction => 'Choose from my contacts';
+
+  @override
+  String get recipientPickerTitle => '👤  Recipient';
+
+  @override
+  String get recipientPickerSectionHeader => 'MY RECIPIENTS';
+
+  @override
+  String get recipientPickerConfirmButton => 'Confirm this recipient';
+
+  @override
+  String get recipientSectionPickerButton => 'Choose a recipient';
+
+  @override
+  String get recipientSectionChangeButton => 'Change';
+
+  @override
+  String get recipientSectionSaveToggleTitle => 'Save this recipient';
+
+  @override
+  String get recipientSectionSaveToggleSubtitle =>
+      'Will be added to \"My recipients\" for your next shipments';
+
+  @override
+  String get priceGridScreenTitle => 'My price list';
+
+  @override
+  String priceGridCommissionNotice(String percent) {
+    return 'Yadony adds $percent% to the price you enter. You receive your exact amount.';
+  }
+
+  @override
+  String get priceGridReorderButton => 'Reorder';
+
+  @override
+  String get priceGridAddLabelButton => 'New label';
+
+  @override
+  String get priceGridEmptyTitle => 'No labels yet';
+
+  @override
+  String get priceGridEmptyDescription =>
+      'Set the price of the items you carry. The same price list applies to all your trips.';
+
+  @override
+  String get priceGridScopeStampLabel => 'Valid on all your trips';
+
+  @override
+  String priceGridDragHandleSemantics(String label) {
+    return 'Move $label';
+  }
+
+  @override
+  String get priceGridItemMenuTooltip => 'Options';
+
+  @override
+  String priceGridYouReceive(String net) {
+    return 'you receive $net';
+  }
+
+  @override
+  String priceGridItemSemantics(String label, String paid, String net) {
+    return '$label, the sender pays $paid, you receive $net';
+  }
+
+  @override
+  String get priceGridDeleteItemTitle => 'Delete label?';
+
+  @override
+  String priceGridDeleteItemMessage(String label) {
+    return 'The item \"$label\" will be removed from your price list, on all your trips.';
+  }
+
+  @override
+  String get priceGridEditItemTitle => 'Edit label';
+
+  @override
+  String get priceGridAddToGridButton => 'Add to my price list';
+
+  @override
+  String get priceGridSearchFieldLabel => 'Item';
+
+  @override
+  String get priceGridSearchFieldHint => 'Search, or write your own';
+
+  @override
+  String get priceGridAllCatalogTakenMessage =>
+      'All catalog items are already in your price list. Write your own to add another one.';
+
+  @override
+  String priceGridAddCustomLabel(String query) {
+    return 'Add \"$query\"';
+  }
+
+  @override
+  String get priceGridChangeItemButton => 'Change';
+
+  @override
+  String get priceGridYouReceiveLabel => 'What you receive';
+
+  @override
+  String priceGridMaxPriceMessage(String max) {
+    return 'Maximum $max per item.';
+  }
+
+  @override
+  String get priceGridEnterAmountMessage =>
+      'Enter the amount you want to receive.';
+
+  @override
+  String priceGridSenderWillPayMessage(String paid, String percent) {
+    return 'The sender will pay $paid, including Yadony\'s $percent% service fee.';
+  }
+
+  @override
+  String get referralScreenTitle => 'Referral';
+
+  @override
+  String get referralStatInvited => 'Invited';
+
+  @override
+  String get referralStatSignedUp => 'Signed up';
+
+  @override
+  String get referralStatRewarded => 'Rewarded';
+
+  @override
+  String referralVouchers(int count, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '🎁 You have $count $percent% vouchers on your next service fees',
+      one: '🎁 You have a $percent% voucher on your next service fee',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String referralVoucherExpiresLabel(String date) {
+    return 'Valid until $date';
+  }
+
+  @override
+  String get referralHeroTitleDefault => 'Invite your friends and family';
+
+  @override
+  String referralHeroTitlePercent(int percent) {
+    return 'Invite and get -$percent%';
+  }
+
+  @override
+  String get referralHeroSubtitleDefault =>
+      'You get a discount voucher on your next service fee as soon as your invitee\'s first delivery is completed.';
+
+  @override
+  String referralHeroSubtitlePercent(int percent) {
+    return 'You get a -$percent% voucher on your next service fee as soon as your invitee\'s first delivery is completed.';
+  }
+
+  @override
+  String get referralCodeBoxLabel => 'Your referral code';
+
+  @override
+  String get referralCopyCodeSemantics => 'Copy referral code';
+
+  @override
+  String get referralCodeCopiedMessage => 'Code copied!';
+
+  @override
+  String get referralShareButtonLabel => 'Share my code';
+
+  @override
+  String referralShareMessage(String code, String url) {
+    return 'Hi! Use my Yadony code $code to sign up, it helps me get a discount on my next service fee. $url';
+  }
+
+  @override
+  String get referralRedeemTitle => 'Enter a referral code';
+
+  @override
+  String get referralRedeemSubtitle =>
+      'Were you invited by a friend? Enter their code so they get rewarded at your first delivery.';
+
+  @override
+  String get referralRedeemCodeFieldLabel => 'Referral code';
+
+  @override
+  String referralRedeemCodeHint(String example) {
+    return 'E.g. $example';
+  }
 }

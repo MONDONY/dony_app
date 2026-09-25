@@ -12,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 class MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
     implements RecipientBloc {}
 
@@ -642,5 +644,21 @@ void main() {
 
     expect(results, isEmpty);
     verifyNever(() => bloc.add(const RecipientPicked('saved')));
+  });
+
+  testWidgets('en anglais : titre, actions et bouton traduits', (tester) async {
+    useEnglish();
+    final bloc = MockRecipientBloc();
+    when(() => bloc.state).thenReturn(
+      const RecipientState(status: RecipientStatus.success, recipients: [_r1]),
+    );
+    final results = <Recipient?>[];
+
+    await pumpSheet(tester, bloc, resultHolder: results);
+
+    expect(find.text('👤  Recipient'), findsOneWidget);
+    expect(find.text('New recipient'), findsOneWidget);
+    expect(find.text('Choose from my contacts'), findsOneWidget);
+    expect(find.text('Confirm this recipient'), findsOneWidget);
   });
 }

@@ -22309,6 +22309,768 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Revenir en compte standard'**
   String get proDowngradeButton;
+
+  /// Titre de l'écran combiné adresses de remise/livraison (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes adresses'**
+  String get addressesTitle;
+
+  /// Tooltip du bouton + de l'onglet Remise (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une adresse de remise'**
+  String get addressesAddPickupTooltip;
+
+  /// Tooltip du bouton + de l'onglet Livraison (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une adresse de livraison'**
+  String get addressesAddDeliveryTooltip;
+
+  /// Libellé de l'onglet Remise (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'📦  Remise'**
+  String get addressesTabPickup;
+
+  /// Libellé de l'onglet Livraison (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'🗺️  Livraison'**
+  String get addressesTabDelivery;
+
+  /// Titre de l'état vide de l'onglet Remise (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune adresse de remise'**
+  String get addressesEmptyPickupTitle;
+
+  /// Description de l'état vide de l'onglet Remise (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoute l\'adresse où tu souhaites recevoir les colis des expéditeurs.'**
+  String get addressesEmptyPickupDescription;
+
+  /// Titre de l'état vide de l'onglet Livraison (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune adresse de livraison'**
+  String get addressesEmptyDeliveryTitle;
+
+  /// Description de l'état vide de l'onglet Livraison (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoute les adresses où tu déposes habituellement les colis.'**
+  String get addressesEmptyDeliveryDescription;
+
+  /// Bouton d'action des deux états vides (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une adresse'**
+  String get addressesAddButtonLabel;
+
+  /// Entrée de menu « Définir par défaut » des cartes adresse (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Définir par défaut'**
+  String get addressesSetDefaultLabel;
+
+  /// Titre du dialogue de suppression d'une adresse (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer l\'adresse'**
+  String get addressesDeleteTitle;
+
+  /// Message du dialogue de suppression d'une adresse, label = étiquette de l'adresse (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Es-tu sûr de vouloir supprimer \"{label}\" ? Cette action est irréversible.'**
+  String addressesDeleteConfirmMessage(String label);
+
+  /// Suggestion d'étiquette adresse de remise (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Maison'**
+  String get pickupAddressChipHome;
+
+  /// Suggestion d'étiquette adresse de remise (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bureau'**
+  String get pickupAddressChipOffice;
+
+  /// Suggestion d'étiquette adresse de remise (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Atelier'**
+  String get pickupAddressChipWorkshop;
+
+  /// Titre de l'écran en mode édition (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'adresse'**
+  String get pickupAddressEditTitle;
+
+  /// Titre de l'écran en mode création (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle adresse de remise'**
+  String get pickupAddressCreateTitle;
+
+  /// Bouton sticky de validation du formulaire (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer l\'adresse'**
+  String get pickupAddressSaveButton;
+
+  /// Snackbar de succès en mode édition (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse mise à jour'**
+  String get pickupAddressUpdatedMessage;
+
+  /// Snackbar de succès en mode création (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse ajoutée'**
+  String get pickupAddressAddedMessage;
+
+  /// Titre de section (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étiquette'**
+  String get pickupAddressLabelSectionTitle;
+
+  /// Libellé du champ étiquette (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de l\'adresse'**
+  String get pickupAddressNameFieldLabel;
+
+  /// Placeholder du champ étiquette (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : Maison, Bureau…'**
+  String get pickupAddressNameFieldHint;
+
+  /// Titre de section (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse'**
+  String get pickupAddressAddressSectionTitle;
+
+  /// Libellé du champ rue (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rue et numéro'**
+  String get pickupAddressStreetFieldLabel;
+
+  /// Libellé du champ code postal (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code postal'**
+  String get pickupAddressPostalFieldLabel;
+
+  /// Libellé du champ ville (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville'**
+  String get pickupAddressCityFieldLabel;
+
+  /// Titre de section et libellé du champ (identiques, réutilisés) (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étage / Appartement'**
+  String get pickupAddressFloorSectionTitle;
+
+  /// Placeholder du champ étage (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Optionnel (Ex : Bât. B, 3ème étage)'**
+  String get pickupAddressFloorFieldHint;
+
+  /// Titre de section (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Instructions'**
+  String get pickupAddressInstructionsSectionTitle;
+
+  /// Placeholder du champ instructions (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Optionnel : digicode, horaires…'**
+  String get pickupAddressInstructionsHint;
+
+  /// Sous-titre du toggle « adresse par défaut » (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pré-remplie lors de tes prochaines demandes'**
+  String get pickupAddressDefaultSubtitle;
+
+  /// Suggestion d'étiquette adresse de livraison (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Famille'**
+  String get deliveryAddressChipFamily;
+
+  /// Suggestion d'étiquette adresse de livraison (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Maison'**
+  String get deliveryAddressChipHome;
+
+  /// Suggestion d'étiquette adresse de livraison (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Boutique'**
+  String get deliveryAddressChipShop;
+
+  /// Titre de l'écran en mode édition (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'adresse'**
+  String get deliveryAddressEditTitle;
+
+  /// Titre de l'écran en mode création (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle adresse de livraison'**
+  String get deliveryAddressCreateTitle;
+
+  /// Bouton sticky de validation du formulaire (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer l\'adresse'**
+  String get deliveryAddressSaveButton;
+
+  /// Snackbar de succès en mode édition (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse mise à jour'**
+  String get deliveryAddressUpdatedMessage;
+
+  /// Snackbar de succès en mode création (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse ajoutée'**
+  String get deliveryAddressAddedMessage;
+
+  /// Titre de section (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étiquette'**
+  String get deliveryAddressLabelSectionTitle;
+
+  /// Libellé du champ étiquette (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de l\'adresse'**
+  String get deliveryAddressNameFieldLabel;
+
+  /// Placeholder du champ étiquette (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : Famille Dakar, Dépôt…'**
+  String get deliveryAddressNameFieldHint;
+
+  /// Titre de section (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get deliveryAddressCountrySectionTitle;
+
+  /// Titre de la bottom sheet de choix du pays (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays de destination'**
+  String get deliveryAddressCountryPickerTitle;
+
+  /// Titre de section (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse'**
+  String get deliveryAddressAddressSectionTitle;
+
+  /// Libellé du champ ville (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville'**
+  String get deliveryAddressCityFieldLabel;
+
+  /// Placeholder du champ ville (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : Dakar, Abidjan, Bamako…'**
+  String get deliveryAddressCityFieldHint;
+
+  /// Libellé du champ rue (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rue, quartier'**
+  String get deliveryAddressStreetFieldLabel;
+
+  /// Placeholder du champ rue (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Optionnel (ex : Rue 10, Almadies)'**
+  String get deliveryAddressStreetFieldHint;
+
+  /// Titre de section (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Instructions'**
+  String get deliveryAddressInstructionsSectionTitle;
+
+  /// Placeholder du champ instructions (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Optionnel : appeler à l\'arrivée, portail rouge…'**
+  String get deliveryAddressInstructionsHint;
+
+  /// Sous-titre du toggle « adresse par défaut » (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pré-remplie lors de tes prochaines annonces'**
+  String get deliveryAddressDefaultSubtitle;
+
+  /// Hors catalogue CountryCatalog, proposé uniquement par la liste fermée diaspora de delivery_address_edit_screen.dart (country_names.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Guinée'**
+  String get countryNameGn;
+
+  /// Titre de l'écran liste des destinataires (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes destinataires'**
+  String get recipientListTitle;
+
+  /// Libellé du FAB d'ajout (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter'**
+  String get recipientAddFabLabel;
+
+  /// Titre de l'état vide (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun destinataire enregistré'**
+  String get recipientEmptyTitle;
+
+  /// Description de l'état vide (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoute tes proches en Afrique pour envoyer en 1 tap.'**
+  String get recipientEmptyDescription;
+
+  /// Bouton d'action de l'état vide (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter mon premier destinataire'**
+  String get recipientEmptyActionLabel;
+
+  /// Titre/texte affiché quand la recherche ne trouve rien, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun résultat'**
+  String get recipientNoResultsLabel;
+
+  /// Description de l'état vide de recherche (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun destinataire ne correspond à ta recherche.'**
+  String get recipientSearchNoResultsDescription;
+
+  /// Placeholder du champ de recherche, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un destinataire…'**
+  String get recipientSearchHint;
+
+  /// Tooltip du bouton d'effacement de la recherche, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer la recherche'**
+  String get recipientClearSearchTooltip;
+
+  /// Entrée de menu « Définir par défaut » (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Définir par défaut'**
+  String get recipientSetDefaultLabel;
+
+  /// Titre du dialogue de suppression (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer le destinataire'**
+  String get recipientDeleteTitle;
+
+  /// Message du dialogue de suppression, name = nom complet du destinataire (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Es-tu sûr de vouloir supprimer \"{name}\" ? Cette action est irréversible.'**
+  String recipientDeleteConfirmMessage(String name);
+
+  /// Titre de l'écran en mode édition (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le destinataire'**
+  String get recipientEditTitle;
+
+  /// Titre de l'écran en mode création, réutilisé comme libellé de la tuile « Nouveau destinataire » de recipient_picker_sheet.dart (même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau destinataire'**
+  String get recipientCreateTitle;
+
+  /// Libellé du champ nom complet (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom complet'**
+  String get recipientFullNameFieldLabel;
+
+  /// Libellé du champ téléphone (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone (E.164)'**
+  String get recipientPhoneFieldLabel;
+
+  /// Erreur de validation du champ téléphone, example = numéro d'exemple non traduit (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Format invalide ({example})'**
+  String recipientPhoneInvalidFormat(String example);
+
+  /// Snackbar de succès en mode édition (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire mis à jour'**
+  String get recipientUpdatedMessage;
+
+  /// Snackbar de succès en mode création (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire ajouté'**
+  String get recipientAddedMessage;
+
+  /// Titre du toggle destinataire par défaut (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire par défaut'**
+  String get recipientDefaultToggleTitle;
+
+  /// Sous-titre du toggle destinataire par défaut (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Présélectionné lors de tes prochains envois'**
+  String get recipientDefaultToggleSubtitle;
+
+  /// Bouton d'import depuis les contacts du téléphone, réutilisé entre recipient_edit_screen.dart et recipient_picker_sheet.dart (même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir dans mes contacts'**
+  String get recipientImportContactsAction;
+
+  /// Titre de la bottom sheet de sélection (recipient_picker_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'👤  Destinataire'**
+  String get recipientPickerTitle;
+
+  /// En-tête de section de la liste des destinataires enregistrés (recipient_picker_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'MES DESTINATAIRES'**
+  String get recipientPickerSectionHeader;
+
+  /// Bouton de confirmation de la sélection (recipient_picker_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer ce destinataire'**
+  String get recipientPickerConfirmButton;
+
+  /// Bouton d'ouverture du picker à l'état initial (recipient_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir un destinataire'**
+  String get recipientSectionPickerButton;
+
+  /// Bouton de changement de destinataire sélectionné (recipient_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer'**
+  String get recipientSectionChangeButton;
+
+  /// Titre du toggle de sauvegarde d'une saisie manuelle (recipient_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer ce destinataire'**
+  String get recipientSectionSaveToggleTitle;
+
+  /// Sous-titre du toggle de sauvegarde d'une saisie manuelle (recipient_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sera ajouté à « Mes destinataires » pour tes prochains envois'**
+  String get recipientSectionSaveToggleSubtitle;
+
+  /// Titre de l'AppBar (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ma grille de prix'**
+  String get priceGridScreenTitle;
+
+  /// Note de commission en pied de liste, percent déjà formaté par commissionPercentLabel (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony ajoute {percent} % au prix que vous saisissez. Vous encaissez exactement votre montant.'**
+  String priceGridCommissionNotice(String percent);
+
+  /// Bouton de bascule en mode réorganisation (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réordonner'**
+  String get priceGridReorderButton;
+
+  /// Bouton d'ajout, réutilisé comme titre de la feuille de création (price_grid_screen.dart, price_grid_item_form_sheet.dart, même feature R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle étiquette'**
+  String get priceGridAddLabelButton;
+
+  /// Titre de l'état vide (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune étiquette'**
+  String get priceGridEmptyTitle;
+
+  /// Description de l'état vide (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Fixez le prix des articles que vous transportez. Le même barème servira sur tous vos trajets.'**
+  String get priceGridEmptyDescription;
+
+  /// Tampon indiquant la portée du barème (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Valable sur tous vos trajets'**
+  String get priceGridScopeStampLabel;
+
+  /// Libellé d'accessibilité de la poignée de réordonnancement, label = étiquette de l'article (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Déplacer {label}'**
+  String priceGridDragHandleSemantics(String label);
+
+  /// Tooltip du menu d'options d'une étiquette (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Options'**
+  String get priceGridItemMenuTooltip;
+
+  /// Légende du montant net encaissé sous le prix payé, net déjà formaté (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'vous recevez {net}'**
+  String priceGridYouReceive(String net);
+
+  /// Libellé d'accessibilité complet d'une étiquette de la grille, paid/net déjà formatés (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, l\'expéditeur paie {paid}, vous recevez {net}'**
+  String priceGridItemSemantics(String label, String paid, String net);
+
+  /// Titre du dialogue de suppression d'une étiquette (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer l\'étiquette ?'**
+  String get priceGridDeleteItemTitle;
+
+  /// Message du dialogue de suppression, label = libellé affiché de l'article (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'article \"{label}\" sera retiré de votre grille, sur tous vos trajets.'**
+  String priceGridDeleteItemMessage(String label);
+
+  /// Titre de la feuille en mode édition (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'étiquette'**
+  String get priceGridEditItemTitle;
+
+  /// Bouton de validation en mode création (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter à ma grille'**
+  String get priceGridAddToGridButton;
+
+  /// Libellé du champ de recherche du catalogue (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Article'**
+  String get priceGridSearchFieldLabel;
+
+  /// Placeholder du champ de recherche du catalogue (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chercher, ou écrire le vôtre'**
+  String get priceGridSearchFieldHint;
+
+  /// Message affiché quand le catalogue filtré est vide sans possibilité d'ajout (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les articles du catalogue sont déjà dans votre grille. Écrivez le vôtre pour en ajouter un autre.'**
+  String get priceGridAllCatalogTakenMessage;
+
+  /// Ligne d'ajout d'un libellé libre non trouvé au catalogue. Espaces normales (U+0020) autour des guillemets, PAS les espaces insécables (U+00A0) de contentCategoryAdd : reprise à l'identique de l'ancien texte, non réutilisée pour ne pas changer le rendu (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter « {query} »'**
+  String priceGridAddCustomLabel(String query);
+
+  /// Bouton de retour au catalogue depuis l'étape prix (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer'**
+  String get priceGridChangeItemButton;
+
+  /// Libellé au-dessus du montant saisi (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que vous encaissez'**
+  String get priceGridYouReceiveLabel;
+
+  /// Message d'écho quand le montant saisi dépasse le plafond, max déjà formaté (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Maximum {max} par article.'**
+  String priceGridMaxPriceMessage(String max);
+
+  /// Message d'écho invitant à saisir un montant (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le montant que vous voulez toucher.'**
+  String get priceGridEnterAmountMessage;
+
+  /// Message d'écho annonçant le montant payé par l'expéditeur, paid déjà formaté et percent déjà formaté par commissionPercentLabel (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur paiera {paid}, commission Yadony de {percent} % comprise.'**
+  String priceGridSenderWillPayMessage(String paid, String percent);
+
+  /// Titre de l'AppBar (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Parrainage'**
+  String get referralScreenTitle;
+
+  /// Libellé de la stat « invités » (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Invités'**
+  String get referralStatInvited;
+
+  /// Libellé de la stat « inscrits » (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Inscrits'**
+  String get referralStatSignedUp;
+
+  /// Libellé de la stat « récompensés » (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Récompensés'**
+  String get referralStatRewarded;
+
+  /// Bandeau de bons actifs, affiché seulement si activeVoucherCount >= 1 : la branche =1 peut donc écrire « un » en toutes lettres (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{🎁 Tu as un bon de -{percent}% sur ta prochaine commission} other{🎁 Tu as {count} bons de -{percent}% sur tes prochaines commissions}}'**
+  String referralVouchers(int count, int percent);
+
+  /// Date d'expiration du bon le plus proche, date déjà formatée (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Valable jusqu\'au {date}'**
+  String referralVoucherExpiresLabel(String date);
+
+  /// Titre de la hero card sans pourcentage connu (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Invite tes proches'**
+  String get referralHeroTitleDefault;
+
+  /// Titre de la hero card avec pourcentage connu (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Invite et gagne -{percent}%'**
+  String referralHeroTitlePercent(int percent);
+
+  /// Sous-titre de la hero card sans pourcentage connu (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu reçois un bon de réduction sur ta prochaine commission dès la première livraison de ton invité.'**
+  String get referralHeroSubtitleDefault;
+
+  /// Sous-titre de la hero card avec pourcentage connu (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu reçois un bon de -{percent}% sur ta prochaine commission dès la première livraison de ton invité.'**
+  String referralHeroSubtitlePercent(int percent);
+
+  /// Libellé au-dessus du code affiché (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton code de parrainage'**
+  String get referralCodeBoxLabel;
+
+  /// Libellé d'accessibilité du bouton de copie du code (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le code de parrainage'**
+  String get referralCopyCodeSemantics;
+
+  /// Snackbar de confirmation de copie du code (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code copié !'**
+  String get referralCodeCopiedMessage;
+
+  /// Bouton sticky de partage (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager mon code'**
+  String get referralShareButtonLabel;
+
+  /// Texte réellement partagé via la feuille système, code et url non traduits (referral_screen.dart, construit par l'écran et transporté par ReferralShared jusqu'au bloc).
+  ///
+  /// In fr, this message translates to:
+  /// **'Salut ! Utilise mon code Yadony : {code} pour t\'inscrire, ça m\'aide à gagner une réduction sur ma prochaine commission. {url}'**
+  String referralShareMessage(String code, String url);
+
+  /// Titre de la bottom sheet de saisie d'un code parrain (redeem_code_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrer un code parrain'**
+  String get referralRedeemTitle;
+
+  /// Sous-titre explicatif de la bottom sheet (redeem_code_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu as été invité par un ami ? Entre son code pour qu\'il soit récompensé à ta première livraison.'**
+  String get referralRedeemSubtitle;
+
+  /// Libellé du champ de saisie du code (redeem_code_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code parrain'**
+  String get referralRedeemCodeFieldLabel;
+
+  /// Placeholder du champ code, example = code d'exemple non traduit (redeem_code_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : {example}'**
+  String referralRedeemCodeHint(String example);
 }
 
 class _AppLocalizationsDelegate

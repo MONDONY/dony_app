@@ -11,23 +11,34 @@ import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dar
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/address_suggest_field.dart';
+import 'package:dony/l10n/country_names.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Liste fermée diaspora (spec §6) : (code, emoji). Le nom affiché passe par
+/// [countryName], jamais stocké en dur ici — la valeur enregistrée reste le
+/// code.
 const _kDestinationCountries = [
-  ('SN', '🇸🇳', 'Sénégal'),
-  ('CI', '🇨🇮', "Côte d'Ivoire"),
-  ('ML', '🇲🇱', 'Mali'),
-  ('CM', '🇨🇲', 'Cameroun'),
-  ('GN', '🇬🇳', 'Guinée'),
-  ('BF', '🇧🇫', 'Burkina Faso'),
-  ('BJ', '🇧🇯', 'Bénin'),
-  ('TG', '🇹🇬', 'Togo'),
+  ('SN', '🇸🇳'),
+  ('CI', '🇨🇮'),
+  ('ML', '🇲🇱'),
+  ('CM', '🇨🇲'),
+  ('GN', '🇬🇳'),
+  ('BF', '🇧🇫'),
+  ('BJ', '🇧🇯'),
+  ('TG', '🇹🇬'),
 ];
 
-const _kLabelChips = ['Famille', 'Maison', 'Boutique'];
+/// Suggestions d'étiquette — préremplissent le champ libre, l'utilisateur
+/// enregistre ensuite la valeur affichée (donc traduite pour un anglophone).
+List<String> _labelChips(AppLocalizations l) => [
+  l.deliveryAddressChipFamily,
+  l.deliveryAddressChipHome,
+  l.deliveryAddressChipShop,
+];
 
 class DeliveryAddressEditScreen extends StatefulWidget {
   const DeliveryAddressEditScreen({super.key, this.addressId});
@@ -58,9 +69,6 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
 
   String get _countryFlag =>
       _kDestinationCountries.firstWhere((c) => c.$1 == _country).$2;
-
-  String get _countryName =>
-      _kDestinationCountries.firstWhere((c) => c.$1 == _country).$3;
 
   AddressLocationState get _locationState {
     if (_streetCtrl.text.trim().isEmpty) {
@@ -140,9 +148,10 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
 
   Future<void> _pickCountry(BuildContext context) async {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final picked = await DonyBottomSheet.show<String>(
       context,
-      title: 'Pays de destination',
+      title: l.deliveryAddressCountryPickerTitle,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: _kDestinationCountries.map((c) {
@@ -150,7 +159,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
           return ListTile(
             leading: Text(c.$2, style: const TextStyle(fontSize: 24)),
             title: Text(
-              c.$3,
+              countryName(l, c.$1),
               style: TextStyle(
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
@@ -204,7 +213,9 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
           setState(() => _hasSubmitted = false);
           DonySnackbar.show(
             context,
-            message: _isEditing ? 'Adresse mise à jour' : 'Adresse ajoutée',
+            message: _isEditing
+                ? context.l10n.deliveryAddressUpdatedMessage
+                : context.l10n.deliveryAddressAddedMessage,
             type: DonySnackbarType.success,
           );
           context.pop(true);
@@ -223,13 +234,14 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
       builder: (context, state) {
         final isLoading = state.status == DeliveryAddressStatus.loading;
         final cs = Theme.of(context).colorScheme;
+        final l = context.l10n;
 
         return DonyPageScaffold(
           title: _isEditing
-              ? "Modifier l'adresse"
-              : 'Nouvelle adresse de livraison',
+              ? l.deliveryAddressEditTitle
+              : l.deliveryAddressCreateTitle,
           stickyBottom: DonyButton(
-            label: "Enregistrer l'adresse",
+            label: l.deliveryAddressSaveButton,
             variant: DonyButtonVariant.secondary,
             onPressed: (_isValid && !isLoading) ? () => _submit(context) : null,
             isLoading: isLoading,
@@ -239,12 +251,12 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
             children:
                 [
                       // ── Étiquette ──────────────────────────────────────
-                      const AddressSectionLabel('Étiquette'),
+                      AddressSectionLabel(l.deliveryAddressLabelSectionTitle),
                       DonyTextField(
                         textInputAction: TextInputAction.next,
                         controller: _labelCtrl,
-                        label: "Nom de l'adresse",
-                        hint: 'Ex : Famille Dakar, Dépôt…',
+                        label: l.deliveryAddressNameFieldLabel,
+                        hint: l.deliveryAddressNameFieldHint,
                         prefixWidget: DonyIcon(
                           'tag',
                           size: 20,
@@ -255,14 +267,14 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                       const SizedBox(height: DonySpacing.sm),
                       AddressLabelChips(
                         controller: _labelCtrl,
-                        chips: _kLabelChips,
+                        chips: _labelChips(l),
                         accentColor: cs.secondary,
                         onSelected: () => setState(() {}),
                       ),
                       const SizedBox(height: DonySpacing.xl),
 
                       // ── Pays ───────────────────────────────────────────
-                      const AddressSectionLabel('Pays'),
+                      AddressSectionLabel(l.deliveryAddressCountrySectionTitle),
                       GestureDetector(
                         onTap: () => _pickCountry(context),
                         child: Container(
@@ -284,7 +296,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                               const SizedBox(width: DonySpacing.md),
                               Expanded(
                                 child: Text(
-                                  _countryName,
+                                  countryName(l, _country),
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ),
@@ -299,12 +311,12 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                       const SizedBox(height: DonySpacing.xl),
 
                       // ── Adresse ────────────────────────────────────────
-                      const AddressSectionLabel('Adresse'),
+                      AddressSectionLabel(l.deliveryAddressAddressSectionTitle),
                       DonyTextField(
                         textInputAction: TextInputAction.done,
                         controller: _cityCtrl,
-                        label: 'Ville',
-                        hint: 'Ex : Dakar, Abidjan, Bamako…',
+                        label: l.deliveryAddressCityFieldLabel,
+                        hint: l.deliveryAddressCityFieldHint,
                         prefixWidget: DonyIcon(
                           'building-2',
                           size: 20,
@@ -316,8 +328,8 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                       AddressSuggestField(
                         controller: _streetCtrl,
                         service: getIt<AddressAutocompleteService>(),
-                        label: 'Rue, quartier',
-                        hint: 'Optionnel (ex : Rue 10, Almadies)',
+                        label: l.deliveryAddressStreetFieldLabel,
+                        hint: l.deliveryAddressStreetFieldHint,
                         prefixIcon: Icons.search_rounded,
                         prefixIconColor: cs.secondary,
                         onChanged: (_) => setState(() {}),
@@ -331,14 +343,15 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                       const SizedBox(height: DonySpacing.xl),
 
                       // ── Instructions ───────────────────────────────────
-                      const AddressSectionLabel('Instructions'),
+                      AddressSectionLabel(
+                        l.deliveryAddressInstructionsSectionTitle,
+                      ),
                       TextFormField(
                         controller: _instructionsCtrl,
                         maxLines: 3,
                         onChanged: (_) => setState(() {}),
                         decoration: InputDecoration(
-                          hintText:
-                              "Optionnel : appeler à l'arrivée, portail rouge…",
+                          hintText: l.deliveryAddressInstructionsHint,
                           prefixIcon: Padding(
                             padding: const EdgeInsets.only(
                               left: DonySpacing.md,
@@ -366,7 +379,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                         value: _isDefault,
                         onChanged: (v) => setState(() => _isDefault = v),
                         activeColor: cs.secondary,
-                        subtitle: 'Pré-remplie lors de tes prochaines annonces',
+                        subtitle: l.deliveryAddressDefaultSubtitle,
                       ),
                     ]
                     .animate(interval: 40.ms)

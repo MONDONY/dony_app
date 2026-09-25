@@ -5,6 +5,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -21,12 +22,12 @@ abstract final class RedeemCodeBottomSheet {
     final notifier = ValueNotifier<bool>(false);
     final ctrl = TextEditingController();
     ctrl.addListener(() => notifier.value = ctrl.text.trim().isNotEmpty);
+    final l = context.l10n;
 
     return DonyBottomSheet.show<bool>(
       context,
-      title: 'Entrer un code parrain',
-      subtitle:
-          'Tu as été invité par un ami ? Entre son code pour qu\'il soit récompensé à ta première livraison.',
+      title: l.referralRedeemTitle,
+      subtitle: l.referralRedeemSubtitle,
       wrapper: (child) =>
           BlocProvider<ReferralBloc>.value(value: bloc, child: child),
       stickyBottom: ValueListenableBuilder<bool>(
@@ -34,7 +35,7 @@ abstract final class RedeemCodeBottomSheet {
         builder: (context, hasText, _) =>
             BlocBuilder<ReferralBloc, ReferralState>(
               builder: (context, state) => DonyButton(
-                label: 'Appliquer',
+                label: l.commonApply,
                 isLoading: state is ReferralRedeemLoading,
                 onPressed: hasText && state is! ReferralRedeemLoading
                     ? () => context.read<ReferralBloc>().add(
@@ -56,8 +57,10 @@ abstract final class RedeemCodeBottomSheet {
           padding: const EdgeInsets.only(bottom: DonySpacing.sm),
           child: DonyTextField(
             controller: ctrl,
-            label: 'Code parrain',
-            hint: 'Ex : JEAN0234',
+            label: l.referralRedeemCodeFieldLabel,
+            hint: l.referralRedeemCodeHint(
+              'JEAN0234', // i18n-ignore: exemple de saisie
+            ),
           ),
         ),
       ),
