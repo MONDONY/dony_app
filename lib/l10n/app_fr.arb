@@ -15668,8 +15668,7 @@
   },
   "priceGridAddCustomLabel": "Ajouter « {query} »",
   "@priceGridAddCustomLabel": {
-    "description": "Ligne d'ajout d'un libellé libre non trouvé au catalogue. Espaces normales (U+0020) autour des guillemets, PAS les espaces insécables (U+00A0) de contentCategoryAdd : reprise à l'identique de l'ancien texte, non réutilisée pour ne pas changer le rendu (price_grid_item_form_sheet.dart)."
-    ,
+    "description": "Ligne d'ajout d'un libellé libre non trouvé au catalogue. Espaces normales (U+0020) autour des guillemets, PAS les espaces insécables (U+00A0) de contentCategoryAdd : reprise à l'identique de l'ancien texte, non réutilisée pour ne pas changer le rendu (price_grid_item_form_sheet.dart).",
     "placeholders": {
       "query": {
         "type": "String"
@@ -15733,6 +15732,15 @@
         "type": "int"
       },
       "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "referralVouchersUnknownPercent": "{count, plural, =1{🎁 Tu as un bon de réduction sur ta prochaine commission} other{🎁 Tu as {count} bons de réduction sur tes prochaines commissions}}",
+  "@referralVouchersUnknownPercent": {
+    "description": "Même bandeau que referralVouchers, sans pourcentage : repli défensif quand le serveur ne renseigne pas voucherFactor (backend antérieur au lot 3). Affiché seulement si activeVoucherCount >= 1 (referral_screen.dart).",
+    "placeholders": {
+      "count": {
         "type": "int"
       }
     }

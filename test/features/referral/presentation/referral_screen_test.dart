@@ -234,6 +234,63 @@ void main() {
     expect(find.textContaining('-null%'), findsNothing);
   });
 
+  // 9 ter. Bon(s) actif(s) sans pourcentage connu (repli défensif) : le
+  // bandeau doit rester affiché (activeVoucherCount > 0) mais sans inventer
+  // de pourcentage — jamais de « -0% ».
+  testWidgets(
+    'shows the voucher banner without a percent when voucherFactor is '
+    'missing but a voucher is active',
+    (tester) async {
+      const info = ReferralInfo(
+        code: 'DONY-XYZ42',
+        shareUrl: 'https://dony.app/invite/DONY-XYZ42',
+        totalInvited: 4,
+        signedUp: 2,
+        rewarded: 1,
+        hasBeenReferred: false,
+        activeVoucherCount: 1,
+      );
+      when(() => bloc.state).thenReturn(const ReferralLoaded(info));
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text('🎁 Tu as un bon de réduction sur ta prochaine commission'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('%'), findsNothing);
+      expect(find.textContaining('-0'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'en anglais : bandeau sans pourcentage quand voucherFactor est absent',
+    (tester) async {
+      useEnglish();
+      const info = ReferralInfo(
+        code: 'DONY-XYZ42',
+        shareUrl: 'https://dony.app/invite/DONY-XYZ42',
+        totalInvited: 4,
+        signedUp: 2,
+        rewarded: 1,
+        hasBeenReferred: false,
+        activeVoucherCount: 1,
+      );
+      when(() => bloc.state).thenReturn(const ReferralLoaded(info));
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text('🎁 You have a discount voucher on your next service fee'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('%'), findsNothing);
+      expect(find.textContaining('-0'), findsNothing);
+    },
+  );
+
   // 10. Message d'erreur affiché dans l'error view
   testWidgets('shows error message text when ReferralError', (tester) async {
     when(

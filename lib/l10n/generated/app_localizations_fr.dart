@@ -13800,6 +13800,17 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String referralVouchersUnknownPercent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '🎁 Tu as $count bons de réduction sur tes prochaines commissions',
+      one: '🎁 Tu as un bon de réduction sur ta prochaine commission',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String referralVoucherExpiresLabel(String date) {
     return 'Valable jusqu\'au $date';
   }

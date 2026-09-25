@@ -13712,6 +13712,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String referralVouchersUnknownPercent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '🎁 You have $count discount vouchers on your next service fees',
+      one: '🎁 You have a discount voucher on your next service fee',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String referralVoucherExpiresLabel(String date) {
     return 'Valid until $date';
   }

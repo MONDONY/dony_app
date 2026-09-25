@@ -7519,6 +7519,7 @@
   "referralStatSignedUp": "Signed up",
   "referralStatRewarded": "Rewarded",
   "referralVouchers": "{count, plural, =1{🎁 You have a {percent}% voucher on your next service fee} other{🎁 You have {count} {percent}% vouchers on your next service fees}}",
+  "referralVouchersUnknownPercent": "{count, plural, =1{🎁 You have a discount voucher on your next service fee} other{🎁 You have {count} discount vouchers on your next service fees}}",
   "referralVoucherExpiresLabel": "Valid until {date}",
   "referralHeroTitleDefault": "Invite your friends and family",
   "referralHeroTitlePercent": "Invite and get -{percent}%",

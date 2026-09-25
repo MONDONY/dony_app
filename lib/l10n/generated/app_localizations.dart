@@ -22988,6 +22988,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{🎁 Tu as un bon de -{percent}% sur ta prochaine commission} other{🎁 Tu as {count} bons de -{percent}% sur tes prochaines commissions}}'**
   String referralVouchers(int count, int percent);
 
+  /// Même bandeau que referralVouchers, sans pourcentage : repli défensif quand le serveur ne renseigne pas voucherFactor (backend antérieur au lot 3). Affiché seulement si activeVoucherCount >= 1 (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{🎁 Tu as un bon de réduction sur ta prochaine commission} other{🎁 Tu as {count} bons de réduction sur tes prochaines commissions}}'**
+  String referralVouchersUnknownPercent(int count);
+
   /// Date d'expiration du bon le plus proche, date déjà formatée (referral_screen.dart).
   ///
   /// In fr, this message translates to:

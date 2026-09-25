@@ -151,10 +151,17 @@ class _LoadedBody extends StatelessWidget {
                     // Ce n'est plus un montant crédité mais un bon de réduction :
                     // jamais de devise à afficher, juste le pourcentage et son
                     // décompte (un bon = une transaction, jamais cumulables).
-                    l.referralVouchers(
-                      info.activeVoucherCount,
-                      info.voucherPercentOff ?? 0,
-                    ),
+                    // Comme _HeroCard : sans pourcentage connu (backend
+                    // antérieur au lot 3), on masque le chiffre plutôt que
+                    // d'afficher un « -0% » inventé.
+                    info.voucherPercentOff == null
+                        ? l.referralVouchersUnknownPercent(
+                            info.activeVoucherCount,
+                          )
+                        : l.referralVouchers(
+                            info.activeVoucherCount,
+                            info.voucherPercentOff!,
+                          ),
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: cs.success,
