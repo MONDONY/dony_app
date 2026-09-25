@@ -6,6 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/network/accept_language_interceptor.dart';
 import 'package:dony/core/network/metrics_interceptor.dart';
 import 'package:dony/core/network/offline_fast_fail_interceptor.dart';
 import 'package:dony/core/network/retry_on_rate_limit_interceptor.dart';
@@ -52,6 +53,7 @@ class ApiClient {
     _configureCertificatePinning();
     // Ajouté en tout premier : voir OfflineFastFailInterceptor.
     _dio.interceptors.add(OfflineFastFailInterceptor(Connectivity()));
+    _dio.interceptors.add(AcceptLanguageInterceptor());
     _dio.interceptors.add(_AuthInterceptor(deviceIdService));
 
     // Piste HTTP dans Sentry (breadcrumbs) — active en tout mode, mais no-op

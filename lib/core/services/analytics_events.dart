@@ -458,4 +458,8 @@ abstract final class AnalyticsEvents {
   // `PersonalInfoCubit.submit()` : le seul signal utile est que l'étape a
   // abouti, et le nom lui-même ne doit jamais partir dans l'analytics.
   static const onboardingIdentityDeclared = 'onboarding_identity_declared';
+
+  // Langue serveur — synchronisation de la langue effective de l'app avec
+  // `preferredLanguage` du compte (`LanguageSyncCubit`).
+  static const preferredLanguageSynced = 'preferred_language_synced';
 }

@@ -175,6 +175,7 @@ import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
+import 'package:dony/features/settings/bloc/language_sync_cubit.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/pin_status_cubit.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
@@ -185,10 +186,12 @@ import 'package:dony/features/settings/data/datasources/blocked_users_datasource
 import 'package:dony/features/settings/data/datasources/business_prefs_remote_datasource.dart';
 import 'package:dony/features/settings/data/datasources/notification_prefs_remote_datasource.dart';
 import 'package:dony/features/settings/data/datasources/privacy_settings_datasource.dart';
+import 'package:dony/features/settings/data/datasources/user_language_remote_datasource.dart';
 import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
 import 'package:dony/features/settings/data/repositories/business_prefs_repository.dart';
 import 'package:dony/features/settings/data/repositories/notification_prefs_repository.dart';
 import 'package:dony/features/settings/data/repositories/privacy_settings_repository.dart';
+import 'package:dony/features/settings/data/repositories/user_language_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/data/stripe_account_datasource.dart';
 import 'package:dony/features/stripe_account/data/stripe_account_repository.dart';
@@ -767,6 +770,21 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<BusinessPrefsRepository>(
     () => BusinessPrefsRepository(getIt<BusinessPrefsRemoteDatasource>()),
+  );
+
+  // Settings — langue du compte (envoyée au serveur, source de vérité entre
+  // clients : voir `AcceptLanguageInterceptor` pour l'en-tête HTTP).
+  getIt.registerLazySingleton<UserLanguageRemoteDatasource>(
+    () => UserLanguageRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<UserLanguageRepository>(
+    () => UserLanguageRepository(getIt<UserLanguageRemoteDatasource>()),
+  );
+  getIt.registerFactory<LanguageSyncCubit>(
+    () => LanguageSyncCubit(
+      getIt<UserLanguageRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerLazySingleton<BusinessPrefsBloc>(
     () => BusinessPrefsBloc(

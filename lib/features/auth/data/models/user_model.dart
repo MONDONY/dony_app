@@ -36,6 +36,11 @@ class UserModel extends Equatable {
   final List<String> languages;
   final double? averageRating;
 
+  /// Langue du compte côté serveur (`'fr'` ou `'en'`), lue depuis
+  /// `GET /auth/me`. `null` tant que le backend ne renvoie pas encore le
+  /// champ (compatibilité avec un backend plus ancien).
+  final String? preferredLanguage;
+
   const UserModel({
     required this.id,
     this.username,
@@ -60,6 +65,7 @@ class UserModel extends Equatable {
     this.avatarUrl,
     this.languages = const [],
     this.averageRating,
+    this.preferredLanguage,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -95,6 +101,7 @@ class UserModel extends Equatable {
             .toList() ??
         const [],
     averageRating: (json['averageRating'] as num?)?.toDouble(),
+    preferredLanguage: json['preferredLanguage'] as String?,
   );
 
   Map<String, dynamic> toJson() => {
@@ -121,6 +128,7 @@ class UserModel extends Equatable {
     'avatarUrl': avatarUrl,
     'languages': languages,
     'averageRating': averageRating,
+    'preferredLanguage': preferredLanguage,
   };
 
   UserModel copyWith({
@@ -147,6 +155,7 @@ class UserModel extends Equatable {
     String? avatarUrl,
     List<String>? languages,
     double? averageRating,
+    String? preferredLanguage,
   }) => UserModel(
     id: id ?? this.id,
     username: username ?? this.username,
@@ -171,6 +180,7 @@ class UserModel extends Equatable {
     avatarUrl: avatarUrl ?? this.avatarUrl,
     languages: languages ?? this.languages,
     averageRating: averageRating ?? this.averageRating,
+    preferredLanguage: preferredLanguage ?? this.preferredLanguage,
   );
 
   /// Nom affiché : prénom et nom si renseignés, sinon le [username] du compte.
@@ -262,5 +272,6 @@ class UserModel extends Equatable {
     avatarUrl,
     languages,
     averageRating,
+    preferredLanguage,
   ];
 }
