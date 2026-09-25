@@ -10,6 +10,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockAccountDeletionBloc
     extends MockBloc<AccountDeletionEvent, AccountDeletionState>
     implements AccountDeletionBloc {}
@@ -281,5 +283,30 @@ void main() {
         );
       },
     );
+  });
+
+  group('DeleteConfirmationSheet — anglais', () {
+    testWidgets('titre, avertissement, case à cocher et bouton traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Last step'), findsOneWidget);
+      expect(
+        find.textContaining(
+          'All your personal data will be erased immediately and '
+          'permanently. This action is irreversible.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text('I understand that this deletion is final and irreversible.'),
+        findsOneWidget,
+      );
+      expect(find.text('Delete permanently'), findsOneWidget);
+    });
   });
 }
