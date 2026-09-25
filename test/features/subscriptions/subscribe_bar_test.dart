@@ -2,6 +2,8 @@ import 'package:dony/features/subscriptions/presentation/widgets/subscribe_bar.d
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 void main() {
   Widget host({
     required bool subscribed,
@@ -93,5 +95,25 @@ void main() {
     await tester.tap(find.text('Se désabonner'));
     await tester.pumpAndSettle();
     expect(desabonne, isTrue);
+  });
+
+  testWidgets('anglais : libellés et bascule Push traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(host(subscribed: false, pushEnabled: false));
+    expect(
+      find.text("You'll be notified of each of their new trips."),
+      findsOneWidget,
+    );
+    expect(find.text('Follow'), findsOneWidget);
+
+    await tester.pumpWidget(host(subscribed: true, pushEnabled: false));
+    expect(find.text('Following ✓'), findsOneWidget);
+    expect(find.text('Push'), findsOneWidget);
+    expect(find.textContaining('their trips will only arrive'), findsOneWidget);
+
+    await tester.tap(find.text('Following ✓'));
+    await tester.pumpAndSettle();
+    expect(find.text('Unfollow?'), findsOneWidget);
+    expect(find.text('Unfollow'), findsWidgets);
   });
 }

@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 TripMatchModel _trip() => TripMatchModel(
   announcementId: 'ann-1',
   departureCity: 'Paris',
@@ -49,6 +51,36 @@ void main() {
     expect(tapped, isTrue);
   });
 
+  testWidgets(
+    'date de départ — fr : motif inchangé (DateFormat.MMMd == ancien \'d MMM\')',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(body: TripMatchCard(match: _trip(), index: 0)),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // DateTime(2026, 7, 10) → ancien DateFormat('d MMM', 'fr') rendait déjà
+      // « 10 juil. » ; DateFormat.MMMd('fr') rend le même texte (vérifié hors
+      // widget avec intl 0.20.2).
+      expect(find.text('10 juil.'), findsOneWidget);
+    },
+  );
+
+  testWidgets('date de départ — anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(body: TripMatchCard(match: _trip(), index: 0)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    // DateFormat.MMMd('en').format(...) → 'Jul 10'.
+    expect(find.text('Jul 10'), findsOneWidget);
+  });
+
   testWidgets('renders price per kg', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -81,6 +113,34 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Prix libre'), findsOneWidget);
+  });
+
+  testWidgets('anglais : « Trajet disponible » et prix libre traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    final trip = TripMatchModel(
+      announcementId: 'ann-3',
+      departureCity: 'Lyon',
+      arrivalCity: 'Abidjan',
+      departureDate: DateTime(2026, 8),
+      travelerId: 't-3',
+      travelerName: 'Kofi B.',
+      travelerInitials: 'KB',
+      travelerRating: 4.2,
+      availableKg: 8.0,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(body: TripMatchCard(match: trip, index: 2)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Trip available'), findsOneWidget);
+    expect(find.text('Open price'), findsOneWidget);
+    expect(find.text('8 kg available'), findsOneWidget);
   });
 
   testWidgets('renders traveler rating', (tester) async {

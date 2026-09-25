@@ -21079,6 +21079,2052 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Une question ? Notre équipe vous répond ici.'**
   String get supportConversationDefaultPreview;
+
+  /// Libellé du mode de notification instantané d'une alerte corridor (corridor_alert_labels.dart, extension sur AlertNotifyMode).
+  ///
+  /// In fr, this message translates to:
+  /// **'Instantanée'**
+  String get corridorAlertNotifyInstant;
+
+  /// Libellé du mode de notification quotidien d'une alerte corridor (corridor_alert_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Quotidienne'**
+  String get corridorAlertNotifyDaily;
+
+  /// Libellé du mode de notification silencieux d'une alerte corridor (corridor_alert_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Silencieuse'**
+  String get corridorAlertNotifySilent;
+
+  /// Phrase courte du mode instantané, bandeau des correspondances et champ du formulaire (corridor_alert_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Push instantané, digest à 9 h'**
+  String get corridorAlertNotifyInstantDescription;
+
+  /// Phrase courte du mode quotidien (corridor_alert_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Digest quotidien à 9 h'**
+  String get corridorAlertNotifyDailyDescription;
+
+  /// Phrase courte du mode silencieux (corridor_alert_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans notification, compteur seulement'**
+  String get corridorAlertNotifySilentDescription;
+
+  /// Motif intl DateFormat, pas un texte : date de début d'une alerte quand les deux bornes sont dans le même mois (corridor_alert_labels.dart, corridorAlertDateLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'d'**
+  String get corridorAlertSameMonthFromPattern;
+
+  /// Plage de dates d'une alerte corridor (corridor_alert_labels.dart, corridorAlertDateLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'{from} au {to}'**
+  String corridorAlertDateRange(String from, String to);
+
+  /// Alerte avec seulement une date de début (corridor_alert_labels.dart, corridorAlertDateLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'À partir du {date}'**
+  String corridorAlertDateFrom(String date);
+
+  /// Alerte avec seulement une date de fin (corridor_alert_labels.dart, corridorAlertDateLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Jusqu\'au {date}'**
+  String corridorAlertDateUntil(String date);
+
+  /// Alerte sans fenêtre de dates (corridor_alert_labels.dart, corridor_alert_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Toute date'**
+  String get corridorAlertAnyDate;
+
+  /// Alerte colis sans poids minimum (corridor_alert_labels.dart, corridorAlertWeightLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout poids'**
+  String get corridorAlertAnyWeight;
+
+  /// Tooltip du bouton menu « ⋯ » d'une carte d'alerte corridor (corridor_alert_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Options'**
+  String get corridorAlertCardMenuTooltip;
+
+  /// Ligne d'état d'une alerte en pause (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'En pause · aucune notification'**
+  String get corridorAlertPausedStatus;
+
+  /// Action « Reprendre » sur une alerte en pause (corridor_alert_card.dart, corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre'**
+  String get corridorAlertResume;
+
+  /// Ligne d'état d'une alerte expirée (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Expirée le {date}'**
+  String corridorAlertExpiredOn(String date);
+
+  /// Action « Prolonger » sur une alerte expirée (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prolonger'**
+  String get corridorAlertExtend;
+
+  /// Nombre de trajets nouveaux depuis la dernière consultation (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} nouveau trajet} other{{count} nouveaux trajets}}'**
+  String corridorAlertNewTrips(int count);
+
+  /// Nombre de colis nouveaux depuis la dernière consultation (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} nouveau colis} other{{count} nouveaux colis}}'**
+  String corridorAlertNewParcels(int count);
+
+  /// Action qui ouvre les correspondances depuis la carte (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir'**
+  String get corridorAlertSeeMatches;
+
+  /// Aucune correspondance trajet (corridor_alert_card.dart, corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet pour l\'instant'**
+  String get corridorAlertNoTripsYet;
+
+  /// Aucune correspondance colis (corridor_alert_card.dart, corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun colis pour l\'instant'**
+  String get corridorAlertNoParcelsYet;
+
+  /// Total de correspondances trajets sans nouveauté (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Rien de neuf · {count} trajet au total} other{Rien de neuf · {count} trajets au total}}'**
+  String corridorAlertNothingNewTrips(int count);
+
+  /// Total de correspondances colis sans nouveauté (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Rien de neuf · {count} colis au total} other{Rien de neuf · {count} colis au total}}'**
+  String corridorAlertNothingNewParcels(int count);
+
+  /// Titre de la feuille d'édition et tooltip du bouton crayon (corridor_alert_form_sheet.dart, corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'alerte'**
+  String get corridorAlertEditTitle;
+
+  /// Titre neutre (hub, toutes directions ou alerte pas encore chargée) (corridor_alert_list_screen.dart, corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes alertes'**
+  String get corridorAlertListTitleAll;
+
+  /// Sous-titre de l'état vide des correspondances trajet (corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet ne correspond à cette alerte pour l\'instant.'**
+  String get corridorAlertMatchesEmptyTripsDescription;
+
+  /// Sous-titre de l'état vide des correspondances colis (corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun colis ne correspond à cette alerte pour l\'instant.'**
+  String get corridorAlertMatchesEmptyParcelsDescription;
+
+  /// Titre du bandeau résumé d'une alerte en pause (corridor_alert_matches_screen.dart, _AlertSummaryBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alerte en pause'**
+  String get corridorAlertBannerPausedTitle;
+
+  /// Sous-titre du bandeau résumé d'une alerte en pause (corridor_alert_matches_screen.dart, _AlertSummaryBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune notification'**
+  String get corridorAlertBannerPausedSubtitle;
+
+  /// Titre du bandeau résumé d'une alerte expirée (corridor_alert_matches_screen.dart, _AlertSummaryBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alerte expirée'**
+  String get corridorAlertBannerExpiredTitle;
+
+  /// Sous-titre du bandeau résumé d'une alerte expirée (corridor_alert_matches_screen.dart, _AlertSummaryBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'La fenêtre de dates est passée'**
+  String get corridorAlertBannerExpiredSubtitle;
+
+  /// Titre du bandeau résumé d'une alerte active (corridor_alert_matches_screen.dart, _AlertSummaryBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alerte active'**
+  String get corridorAlertBannerActiveTitle;
+
+  /// En-tête de la section « Nouveaux » de la liste des correspondances ; {count} est déjà formaté (corridorAlertTripCount/ParcelCount) (corridor_alert_matches_screen.dart, _MatchList).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveaux · {count}'**
+  String corridorAlertNewSection(String count);
+
+  /// En-tête de la section « Déjà vus » de la liste des correspondances ; {count} est déjà formaté (corridor_alert_matches_screen.dart, _MatchList).
+  ///
+  /// In fr, this message translates to:
+  /// **'Déjà vus · {count}'**
+  String corridorAlertSeenSection(String count);
+
+  /// Compteur de correspondances trajets (corridor_alert_matches_screen.dart, _MatchList._count).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} trajet} other{{count} trajets}}'**
+  String corridorAlertTripCount(int count);
+
+  /// Compteur de correspondances colis (corridor_alert_matches_screen.dart, _MatchList._count).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} colis} other{{count} colis}}'**
+  String corridorAlertParcelCount(int count);
+
+  /// Titre de l'écran mono-direction colis (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes alertes colis'**
+  String get corridorAlertListTitlePackages;
+
+  /// Titre de l'écran mono-direction trajets (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes alertes trajets'**
+  String get corridorAlertListTitleTrips;
+
+  /// Bouton d'action flottant qui ouvre la création d'une alerte (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer'**
+  String get corridorAlertCreateFab;
+
+  /// Description de l'état vide, direction colis (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton corridor.'**
+  String get corridorAlertEmptyDescriptionPackages;
+
+  /// Description de l'état vide, direction trajets (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Crée une alerte pour être prévenu dès qu\'un trajet apparaît sur ton corridor.'**
+  String get corridorAlertEmptyDescriptionTrips;
+
+  /// Description de l'état vide, hub sans direction (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Crée une alerte pour être prévenu dès qu\'un trajet ou un colis apparaît sur ton corridor.'**
+  String get corridorAlertEmptyDescriptionAll;
+
+  /// Titre de l'état vide de la liste des alertes (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune alerte corridor'**
+  String get corridorAlertEmptyTitle;
+
+  /// CTA de l'état vide et titre de la feuille de création (corridor_alert_list_screen.dart, corridor_alert_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer une alerte'**
+  String get corridorAlertCreateAction;
+
+  /// En-tête de groupe « Trajets » du hub (corridor_alert_list_screen.dart, _GroupHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets surveillés'**
+  String get corridorAlertGroupTrips;
+
+  /// En-tête de groupe « Colis » du hub (corridor_alert_list_screen.dart, _GroupHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis surveillés'**
+  String get corridorAlertGroupPackages;
+
+  /// Sous-titre de l'action « Modifier » du menu d'une alerte (corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Corridor, dates et filtres'**
+  String get corridorAlertActionEditSubtitle;
+
+  /// Action « Dupliquer » du menu d'une alerte (corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dupliquer'**
+  String get corridorAlertDuplicate;
+
+  /// Sous-titre de l'action « Dupliquer » (corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Repartir de cette alerte pour en créer une autre'**
+  String get corridorAlertDuplicateSubtitle;
+
+  /// Action « Mettre en pause » du menu d'une alerte active (corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre en pause'**
+  String get corridorAlertPause;
+
+  /// Sous-titre de l'action « Mettre en pause » (corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus de notification, l\'alerte reste là'**
+  String get corridorAlertPauseSubtitle;
+
+  /// Sous-titre de l'action « Reprendre » du menu d'une alerte en pause (corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les notifications repartent'**
+  String get corridorAlertResumeSubtitle;
+
+  /// Message par défaut si l'enregistrement échoue sans détail serveur (corridor_alert_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'enregistrer l\'alerte'**
+  String get corridorAlertSaveError;
+
+  /// Libellé du bouton de soumission en création (corridor_alert_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer l\'alerte'**
+  String get corridorAlertSubmitCreate;
+
+  /// Titre du champ de fréquence de notification (corridor_alert_form_sheet.dart, _NotifyModeField).
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications'**
+  String get corridorAlertNotifyTitle;
+
+  /// Titre du toggle de zone de remise (corridor_alert_form_sheet.dart, _ZoneToggleRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Zone de remise sur la carte'**
+  String get corridorAlertZoneToggleTitle;
+
+  /// Sous-titre du toggle de zone de remise (corridor_alert_form_sheet.dart, _ZoneToggleRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Filtre par point de récupération (optionnel)'**
+  String get corridorAlertZoneToggleSubtitle;
+
+  /// Segment « Colis » du sélecteur de direction (corridor_alert_form_sheet.dart, _DirectionSegment).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get corridorAlertSegmentPackages;
+
+  /// Segment « Trajets » du sélecteur de direction (corridor_alert_form_sheet.dart, _DirectionSegment).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets'**
+  String get corridorAlertSegmentTrips;
+
+  /// Titre du champ de fenêtre de dates (corridor_alert_form_sheet.dart, _DateWindowField).
+  ///
+  /// In fr, this message translates to:
+  /// **'Fenêtre de dates (optionnel)'**
+  String get corridorAlertDateWindowLabel;
+
+  /// Libellé d'accessibilité du bouton qui efface la fenêtre de dates (corridor_alert_form_sheet.dart, _DateWindowField).
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer la période'**
+  String get corridorAlertClearDateRange;
+
+  /// Libellé du champ de poids minimum (corridor_alert_form_sheet.dart, _MinWeightField).
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids minimum (optionnel)'**
+  String get corridorAlertMinWeightLabel;
+
+  /// Titre du sélecteur de catégories de contenu (corridor_alert_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Types de contenu (optionnel)'**
+  String get corridorAlertContentTypesLabel;
+
+  /// Libellé du champ de recherche de ville du sélecteur de zone (zone_picker_field.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Centrer la zone sur une ville'**
+  String get corridorAlertZoneCityLabel;
+
+  /// Bouton de géolocalisation du sélecteur de zone (zone_picker_field.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Utiliser ma position'**
+  String get corridorAlertUseMyLocation;
+
+  /// Texte par défaut avant résolution du reverse-geocoding (zone_picker_field.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Point de remise sélectionné'**
+  String get corridorAlertZonePlaceholder;
+
+  /// Libellé du slider de rayon du sélecteur de zone (zone_picker_field.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rayon'**
+  String get corridorAlertRadiusLabel;
+
+  /// Micro-label de la carte de correspondance trajet (trip_match_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet disponible'**
+  String get corridorAlertTripAvailable;
+
+  /// Capacité disponible du trajet, {kg} déjà formaté sans décimale (trip_match_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} kg dispo'**
+  String corridorAlertAvailableKg(String kg);
+
+  /// Prix au kilo d'un trajet, {price} déjà formaté (montant + devise + « /kg ») et mis en gras via emphasizedSpans (trip_match_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix {price}'**
+  String corridorAlertMatchPrice(String price);
+
+  /// Trajet sans prix au kilo fixé (trip_match_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix libre'**
+  String get corridorAlertOpenPrice;
+
+  /// Titre de l'écran Favoris, capacité voyageur et expéditeur (favorites_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes favoris'**
+  String get favoritesTitle;
+
+  /// Onglet « Trajets » de l'écran Favoris (favorites_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets'**
+  String get favoritesTripsTab;
+
+  /// Onglet « Demandes » de l'écran Favoris (favorites_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes'**
+  String get favoritesRequestsTab;
+
+  /// Message de l'état vide de l'onglet Trajets (favorites_screen.dart, _TripsTab).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet favori pour l\'instant'**
+  String get favoritesEmptyTripsMessage;
+
+  /// Message de l'état vide de l'onglet Demandes (favorites_screen.dart, _RequestsTab).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande favorite pour l\'instant'**
+  String get favoritesEmptyRequestsMessage;
+
+  /// Titre de l'état vide partagé (favorites_screen.dart, _EmptyState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun favori pour l\'instant'**
+  String get favoritesEmptyTitle;
+
+  /// Sous-titre de l'état d'erreur partagé (favorites_screen.dart, _ErrorState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger vos favoris.'**
+  String get favoritesLoadErrorMessage;
+
+  /// Tooltip du signet quand l'élément est déjà favori (favorite_heart_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer des favoris'**
+  String get favoritesRemoveTooltip;
+
+  /// Tooltip du signet quand l'élément n'est pas encore favori (favorite_heart_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter aux favoris'**
+  String get favoritesAddTooltip;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Harcèlement ou comportement abusif'**
+  String get reportReasonHarassment;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Faux profil'**
+  String get reportReasonFakeProfile;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tentative d\'arnaque'**
+  String get reportReasonScamAttempt;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Objet interdit au transport'**
+  String get reportReasonProhibitedItem;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations fausses ou trompeuses'**
+  String get reportReasonFalseInformation;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu inapproprié'**
+  String get reportReasonInappropriateContent;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Spam'**
+  String get reportReasonSpam;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Problème de paiement'**
+  String get reportReasonPaymentIssue;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bug de l\'application'**
+  String get reportReasonAppBug;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get reportReasonOther;
+
+  /// Titre de l'écran de signalement (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler un problème'**
+  String get reportScreenTitle;
+
+  /// Snackbar de succès après envoi (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Signalement envoyé. Notre équipe va l\'examiner.'**
+  String get reportSentMessage;
+
+  /// Titre de la section des motifs (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif'**
+  String get reportReasonLabel;
+
+  /// Libellé du champ de description (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Description'**
+  String get reportDescriptionLabel;
+
+  /// Indication du champ de description (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez le problème rencontré…'**
+  String get reportDescriptionHint;
+
+  /// Titre de la section des captures d'écran (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Captures d\'écran (optionnel)'**
+  String get reportScreenshotsLabel;
+
+  /// Indication de la section des captures d'écran (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Jusqu\'à 4 images pour aider notre équipe à comprendre.'**
+  String get reportScreenshotsHint;
+
+  /// Bouton de soumission du formulaire (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le signalement'**
+  String get reportSendButton;
+
+  /// Libellé d'accessibilité du bouton d'ajout de capture (incident_photo_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une photo'**
+  String get reportAddPhotoLabel;
+
+  /// Libellé d'accessibilité du bouton de retrait d'une capture (incident_photo_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer cette photo'**
+  String get reportRemovePhotoLabel;
+
+  /// Snackbar générique quand la soumission échoue sans exception typée (incident_report_cubit.dart, IncidentReportError sans error).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'envoyer le signalement. Réessayez.'**
+  String get reportSendFailed;
+
+  /// Ancienneté de publication, cas immédiat ou futur (subscription_recency.dart, subscriptionRecencyLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'à l\'instant'**
+  String get followRecencyJustNow;
+
+  /// Ancienneté de publication en minutes (subscription_recency.dart, subscriptionRecencyLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {minutes} min'**
+  String followRecencyMinutes(int minutes);
+
+  /// Ancienneté de publication en heures (subscription_recency.dart, subscriptionRecencyLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {hours} h'**
+  String followRecencyHours(int hours);
+
+  /// Ancienneté de publication, la veille (subscription_recency.dart, subscriptionRecencyLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'hier'**
+  String get followRecencyYesterday;
+
+  /// Ancienneté de publication en jours (subscription_recency.dart, subscriptionRecencyLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {days} j'**
+  String followRecencyDays(int days);
+
+  /// Nombre de trajets en cours d'un voyageur suivi (subscription_tile.dart, _tripsLabel ; réutilisée comme titre d'état vide dans traveler_profile_hub_screen.dart avec count=0).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucun trajet en cours} =1{{count} trajet en cours} other{{count} trajets en cours}}'**
+  String followOngoingTrips(int count);
+
+  /// Libellé d'accessibilité de la carte quand le voyageur a publié depuis la dernière visite (subscription_tile.dart, SubscriptionTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau trajet publié par {name}'**
+  String followNewTripSemantics(String name);
+
+  /// Repli quand le voyageur suivi n'a aucun trajet publié (subscription_tile.dart, SubscriptionTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet publié pour le moment'**
+  String get followNoRecentTrip;
+
+  /// Date de départ du dernier trajet, déjà formatée (subscription_tile.dart, SubscriptionTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ {date}'**
+  String followDepartureLabel(String date);
+
+  /// Badge compte PRO sur la tuile d'un voyageur suivi (subscription_tile.dart, _ProTag ; R50, « Pro » en anglais).
+  ///
+  /// In fr, this message translates to:
+  /// **'PRO'**
+  String get followProBadge;
+
+  /// Libellé d'accessibilité de la ligne du dernier trajet, cible tactile distincte de la carte (subscription_tile.dart, _LastTripLine).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le trajet {trip} de {name}'**
+  String followViewTripSemantics(String trip, String name);
+
+  /// Libellé d'accessibilité de la cloche d'un voyageur suivi (subscription_tile.dart, _BellButton).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alertes push de {name}'**
+  String followPushSemanticsFor(String name);
+
+  /// Tooltip de la cloche quand les alertes push sont actives, partagé par subscribe_bar.dart et subscription_tile.dart (même feature, même sens).
+  ///
+  /// In fr, this message translates to:
+  /// **'Couper les alertes push'**
+  String get followPushOffTooltip;
+
+  /// Tooltip de la cloche quand les alertes push sont coupées, partagé par subscribe_bar.dart et subscription_tile.dart (même feature, même sens).
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer les alertes push'**
+  String get followPushOnTooltip;
+
+  /// Phrase d'accroche quand l'utilisateur n'est pas encore abonné (subscribe_bar.dart, SubscribeBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous serez prévenu de chacun de ses nouveaux trajets.'**
+  String get followSubscribeCaption;
+
+  /// Phrase d'état quand l'utilisateur est abonné avec les alertes push actives (subscribe_bar.dart, SubscribeBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alertes push activées : chaque nouveau trajet vous notifie.'**
+  String get followPushOnCaption;
+
+  /// Phrase d'état quand l'utilisateur est abonné sans les alertes push (subscribe_bar.dart, SubscribeBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans alerte push : ses trajets arriveront seulement dans vos notifications.'**
+  String get followPushOffCaption;
+
+  /// Message du dialogue de confirmation de désabonnement (subscribe_bar.dart, SubscribeBar._confirmUnsubscribe).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne serez plus prévenu de ses nouveaux trajets.'**
+  String get followUnsubscribeConfirmMessage;
+
+  /// Libellé d'accessibilité générique de la bascule push, sans nom de voyageur (subscribe_bar.dart, _PushToggle).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alertes push'**
+  String get followPushToggleSemantics;
+
+  /// Libellé court de la bascule push, « Push » se dit pareil dans les deux langues (subscribe_bar.dart, _PushToggle).
+  ///
+  /// In fr, this message translates to:
+  /// **'Push'**
+  String get followPushBadge;
+
+  /// Titre de l'écran des voyageurs suivis (mes_abonnements_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes abonnements'**
+  String get followScreenTitle;
+
+  /// Tooltip du bouton qui retire toutes les pastilles « nouveau » (mes_abonnements_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout marquer comme vu'**
+  String get followMarkAllSeenTooltip;
+
+  /// Titre de l'état vide, aucun voyageur suivi (mes_abonnements_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun abonnement'**
+  String get followEmptyTitle;
+
+  /// Description de l'état vide, aucun voyageur suivi (mes_abonnements_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Abonnez-vous à un voyageur depuis son profil : vous serez prévenu dès qu\'il publie un trajet.'**
+  String get followEmptyDescription;
+
+  /// Indication du champ de recherche, affiché à partir de 6 abonnements (mes_abonnements_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un voyageur…'**
+  String get followSearchHint;
+
+  /// Compteur du nombre de voyageurs suivis (mes_abonnements_screen.dart, _CountLine).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} voyageur suivi} other{{count} voyageurs suivis}}'**
+  String followTravelersCount(int count);
+
+  /// Compteur des voyageurs ayant publié depuis la dernière visite (mes_abonnements_screen.dart, _CountLine ; non affiché si 0).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} a publié depuis votre dernière visite} other{{count} ont publié depuis votre dernière visite}}'**
+  String followNewSinceLastVisit(int count);
+
+  /// Libellé court de l'action de balayage (mes_abonnements_screen.dart, _slidable) — distinct de followUnfollowButton, texte français différent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désabonner'**
+  String get followUnsubscribeSwipeLabel;
+
+  /// Titre du dialogue de confirmation de désabonnement, avec le nom du voyageur (mes_abonnements_screen.dart, _confirmUnsubscribe).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne plus suivre {name} ?'**
+  String followUnsubscribeConfirmTitle(String name);
+
+  /// Message du dialogue de confirmation de désabonnement de mes_abonnements_screen.dart (_confirmUnsubscribe) — texte distinct de followUnsubscribeConfirmMessage (subscribe_bar.dart), qui n'a qu'une phrase.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne serez plus prévenu de ses nouveaux trajets. Vous pourrez vous réabonner depuis son profil.'**
+  String get followUnsubscribeFullMessage;
+
+  /// Snackbar après activation des alertes push d'un voyageur (mes_abonnements_screen.dart, _togglePush).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alertes push activées pour {name}.'**
+  String followPushEnabledMessage(String name);
+
+  /// Snackbar après coupure des alertes push d'un voyageur (mes_abonnements_screen.dart, _togglePush).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alertes push coupées. Ses nouveaux trajets resteront visibles dans vos notifications.'**
+  String get followPushDisabledMessage;
+
+  /// Message quand la recherche ne trouve aucun voyageur suivi (mes_abonnements_screen.dart, _NoMatch).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun voyageur ne correspond à cette recherche.'**
+  String get followNoMatchMessage;
+
+  /// Erreur de chargement de l'en-tête du profil voyageur (traveler_profile_hub_screen.dart, _ProfileHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger le profil'**
+  String get followHubProfileLoadError;
+
+  /// Marque de confiance compte PRO dans l'en-tête (traveler_profile_hub_screen.dart, _TrustMarks).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte PRO'**
+  String get followHubProAccountLabel;
+
+  /// Marque de confiance identité vérifiée dans l'en-tête (traveler_profile_hub_screen.dart, _TrustMarks).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée'**
+  String get followHubVerifiedBadge;
+
+  /// Phrase de réputation, note moyenne déjà formatée (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).
+  ///
+  /// In fr, this message translates to:
+  /// **'{rating} de note'**
+  String followHubRating(String rating);
+
+  /// Phrase de réputation, nombre de livraisons (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} livraison} other{{count} livraisons}}'**
+  String followHubDeliveries(int count);
+
+  /// Phrase de réputation, délai de réponse moyen (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).
+  ///
+  /// In fr, this message translates to:
+  /// **'répond en {hours} h'**
+  String followHubRespondsIn(int hours);
+
+  /// Repli de la phrase de réputation quand le voyageur n'a ni note ni livraison (traveler_profile_hub_screen.dart, _StatSentence).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau sur Yadony'**
+  String get followHubNewOnYadony;
+
+  /// Onglet des trajets du voyageur (traveler_profile_hub_screen.dart, _StatsAndTabBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets'**
+  String get followHubTripsTab;
+
+  /// Onglet des avis du voyageur (traveler_profile_hub_screen.dart, _StatsAndTabBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Avis'**
+  String get followHubReviewsTab;
+
+  /// Description de l'état d'erreur de l'onglet Trajets (traveler_profile_hub_screen.dart, _TripsTab).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les trajets. Réessayez dans un instant.'**
+  String get followHubTripsLoadError;
+
+  /// Description de l'état vide de l'onglet Trajets (traveler_profile_hub_screen.dart, _TripsTab).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur n\'a pas encore publié de trajet.'**
+  String get followHubNoTripsDescription;
+
+  /// Titre de l'état d'erreur de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsTab).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les avis'**
+  String get followHubReviewsLoadError;
+
+  /// Titre de l'état vide de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsList).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun avis'**
+  String get followHubNoReviewsTitle;
+
+  /// Description de l'état vide de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsList).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur n\'a pas encore reçu d\'avis.'**
+  String get followHubNoReviewsDescription;
+
+  /// Nombre d'avis dans l'en-tête de l'onglet Avis ; invariant en français, pluralisé en anglais (traveler_profile_hub_screen.dart, _ReviewsList).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} avis} other{{count} avis}}'**
+  String followHubReviewsCount(int count);
+
+  /// Bouton de réservation d'un trajet du voyageur (traveler_announcement_card.dart, TravelerAnnouncementCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réserver'**
+  String get followHubReserveButton;
+
+  /// Badge quand le trajet n'a plus de kg disponible (traveler_announcement_card.dart, _MetaLine).
+  ///
+  /// In fr, this message translates to:
+  /// **'Complet'**
+  String get followHubFullBadge;
+
+  /// Poids disponible du trajet, déjà formaté (traveler_announcement_card.dart, _MetaLine).
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} kg disponibles'**
+  String followHubAvailableKg(String kg);
+
+  /// Message du bandeau d'abonnement PRO impayé (subscription_status_banner.dart, SubscriptionStatusBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre dernier paiement n\'a pas abouti. Sans régularisation, votre accès PRO sera suspendu.'**
+  String get proPastDueMessage;
+
+  /// Bouton d'action du bandeau d'abonnement PRO impayé (subscription_status_banner.dart, SubscriptionStatusBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Régler'**
+  String get proPayAction;
+
+  /// Bouton d'action du bandeau de grâce historique, renvoie vers le portail d'abonnement PRO (subscription_status_banner.dart, SubscriptionStatusBanner) — clé dédiée au domaine PRO, distincte de followFollowButton (R40).
+  ///
+  /// In fr, this message translates to:
+  /// **'S\'abonner'**
+  String get proSubscribeAction;
+
+  /// Message de grâce historique sans échéance connue (subscription_status_banner.dart, _legacyGraceMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre accès PRO gratuit prendra bientôt fin.'**
+  String get proFreeAccessEndingSoon;
+
+  /// Message de grâce historique dont l'échéance est déjà passée (subscription_status_banner.dart, _legacyGraceMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre accès PRO gratuit a pris fin.'**
+  String get proFreeAccessEnded;
+
+  /// Message de grâce historique avec échéance future (subscription_status_banner.dart, _legacyGraceMessage ; corrige l'accord « 0 jour » que l'ancien `days > 1 ? 's' : ''` produisait).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Votre accès PRO gratuit prend fin dans {count} jour.} other{Votre accès PRO gratuit prend fin dans {count} jours.}}'**
+  String proFreeAccessEndsInDays(int count);
+
+  /// Bouton d'action du bandeau d'abonnement PRO actif en résiliation programmée (subscription_status_banner.dart, SubscriptionStatusBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Gérer'**
+  String get proManageAction;
+
+  /// Message du bandeau d'abonnement PRO actif en résiliation programmée, date déjà formatée (subscription_status_banner.dart, _activeBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre abonnement PRO prend fin le {date}.'**
+  String proSubscriptionEndsOn(String date);
+
+  /// Statut de la carte d'abonnement PRO, actif avec résiliation programmée (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résiliation programmée'**
+  String get proStatusCancelScheduled;
+
+  /// Statut de la carte d'abonnement PRO, actif (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Actif'**
+  String get proStatusActive;
+
+  /// Statut de la carte d'abonnement PRO, impayé (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en attente'**
+  String get proStatusPastDue;
+
+  /// Statut de la carte d'abonnement PRO, grâce historique (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès gratuit temporaire'**
+  String get proStatusLegacyGrace;
+
+  /// Statut de la carte d'abonnement PRO, résilié (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résilié'**
+  String get proStatusCanceled;
+
+  /// Statut de la carte d'abonnement PRO, expiré (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Expiré'**
+  String get proStatusExpired;
+
+  /// Statut de la carte d'abonnement PRO, aucun abonnement (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun abonnement'**
+  String get proStatusNone;
+
+  /// Statut de la carte d'abonnement PRO, inconnu (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Statut inconnu'**
+  String get proStatusUnknown;
+
+  /// Rythme de facturation mensuel de la carte d'abonnement PRO (subscription_status_card.dart, _cycleLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Facturation mensuelle'**
+  String get proBillingMonthly;
+
+  /// Rythme de facturation annuel de la carte d'abonnement PRO (subscription_status_card.dart, _cycleLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Facturation annuelle'**
+  String get proBillingYearly;
+
+  /// Mention de grâce historique sur la carte d'abonnement PRO (subscription_status_card.dart, SubscriptionStatusCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre accès PRO est gratuit et temporaire.'**
+  String get proFreeTemporaryAccess;
+
+  /// Mention de résiliation programmée sur la carte d'abonnement PRO, date déjà formatée (subscription_status_card.dart, SubscriptionStatusCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résiliation programmée pour le {date}.'**
+  String proCancellationScheduledOn(String date);
+
+  /// Mention de prochain renouvellement sur la carte d'abonnement PRO, date déjà formatée (subscription_status_card.dart, SubscriptionStatusCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prochain renouvellement le {date}.'**
+  String proNextRenewalOn(String date);
+
+  /// Bouton de gestion sur la carte d'abonnement PRO (subscription_status_card.dart, SubscriptionStatusCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Gérer mon abonnement'**
+  String get proManageSubscriptionButton;
+
+  /// Message d'échec d'ouverture du portail PRO, partagé par l'écran Compte PRO (upgrade_to_pro_screen.dart) et le bandeau du Profil (subscription_banner_host.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'ouvrir la page. Réessayez, ou rendez-vous sur le site Yadony PRO depuis votre navigateur.'**
+  String get proPortalOpenFailedMessage;
+
+  /// Bouton unique du dialogue de limite PRO quand l'offre PRO est fermée (pro_limit_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compris'**
+  String get proLimitUnderstoodButton;
+
+  /// Bouton de confirmation du dialogue de limite PRO quand l'offre est ouverte (pro_limit_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer en PRO'**
+  String get proLimitUpgradeButton;
+
+  /// Titre de l'écran compte PRO, vues chargement et vente (upgrade_to_pro_screen.dart, _ProAuthPendingView, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte PRO'**
+  String get proAccountScreenTitle;
+
+  /// Message d'attente pendant la résolution de l'authentification (upgrade_to_pro_screen.dart, _ProAuthPendingView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chargement de votre compte.'**
+  String get proAccountLoadingMessage;
+
+  /// Titre de la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Passez en compte PRO'**
+  String get proPitchHeadline;
+
+  /// Description de la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le compte PRO met en avant votre activité de transporteur et vous donne accès aux avantages réservés aux professionnels.'**
+  String get proPitchDescription;
+
+  /// Libellé de section des avantages, page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'CE QUE COMPREND LE COMPTE PRO'**
+  String get proPitchIncludesLabel;
+
+  /// Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Badge Pro'**
+  String get proAdvantageBadge;
+
+  /// Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume illimité'**
+  String get proAdvantageUnlimitedVolume;
+
+  /// Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Priorité de mise en relation'**
+  String get proAdvantageMatchingPriority;
+
+  /// Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Support dédié'**
+  String get proAdvantageDedicatedSupport;
+
+  /// Libellé de section des tarifs, page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'TARIFS'**
+  String get proPitchPricingLabel;
+
+  /// Prix mensuel de l'abonnement PRO, déjà formaté par la devise (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'{price} par mois'**
+  String proPricePerMonth(String price);
+
+  /// Prix annuel de l'abonnement PRO, déjà formaté par la devise (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'{price} par an'**
+  String proPricePerYear(String price);
+
+  /// Économie annuelle de l'abonnement PRO, déjà formatée par la devise (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Soit {amount} d\'économie sur l\'année.'**
+  String proYearlySaving(String amount);
+
+  /// Bandeau d'information sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'abonnement se souscrit sur le site Yadony PRO, dans votre navigateur.'**
+  String get proPortalHint;
+
+  /// Bouton d'ouverture du portail web PRO, réutilisé par la vue vente et la vue abonnée (upgrade_to_pro_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'S\'abonner sur le site Yadony PRO'**
+  String get proPortalButtonLabel;
+
+  /// Indication sur où gérer et résilier l'abonnement PRO (upgrade_to_pro_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La gestion et la résiliation de votre abonnement se font sur le site Yadony PRO, dans votre navigateur. Une connexion vous y sera demandée.'**
+  String get proManageGuidance;
+
+  /// Message opposé au refus 409 active-stripe-subscription, guidance déjà traduite en paramètre (upgrade_to_pro_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre abonnement PRO est toujours actif. {guidance}'**
+  String proDowngradeBlockedMessage(String guidance);
+
+  /// Message quand le serveur n'accorde plus l'accès PRO (upgrade_to_pro_screen.dart, _ProSubscriberView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre accès PRO n\'est plus actif. Vous pouvez reprendre un abonnement sur le site Yadony PRO.'**
+  String get proAccessEndedMessage;
+
+  /// Message quand le statut est « none » (upgrade_to_pro_screen.dart, _ProSubscriberView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous n\'avez pas d\'abonnement PRO. Vous pouvez en souscrire un sur le site Yadony PRO.'**
+  String get proNoSubscriptionMessage;
+
+  /// Titre de l'écran compte PRO, vue abonnée (upgrade_to_pro_screen.dart, _ProSubscriberView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon compte PRO'**
+  String get proSubscriberScreenTitle;
+
+  /// Message d'erreur de chargement de l'abonnement PRO (upgrade_to_pro_screen.dart, _ProSubscriberView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger l\'état de votre abonnement pour le moment.'**
+  String get proLoadSubscriptionError;
+
+  /// Message quand aucune demande n'a encore été envoyée (upgrade_to_pro_screen.dart, _ProSubscriberView).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'état de votre abonnement n\'a pas encore été chargé.'**
+  String get proSubscriptionNotLoadedYet;
+
+  /// Titre du dialogue de confirmation de retour en compte standard (upgrade_to_pro_screen.dart, _confirmDowngrade).
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactiver le compte PRO'**
+  String get proDowngradeDialogTitle;
+
+  /// Message du dialogue de confirmation de retour en compte standard (upgrade_to_pro_screen.dart, _confirmDowngrade).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre badge PRO et vos avantages professionnels seront retirés de votre profil.'**
+  String get proDowngradeDialogMessage;
+
+  /// Bouton de confirmation du dialogue de retour en compte standard (upgrade_to_pro_screen.dart, _confirmDowngrade).
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactiver'**
+  String get proDowngradeConfirmButton;
+
+  /// Snackbar de succès après retour en compte standard (upgrade_to_pro_screen.dart, _UpgradeToProViewState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte PRO désactivé.'**
+  String get proDowngradeSuccessMessage;
+
+  /// Bouton de retour en compte standard (upgrade_to_pro_screen.dart, _ProSubscriberView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenir en compte standard'**
+  String get proDowngradeButton;
+
+  /// Titre de l'écran combiné adresses de remise/livraison (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes adresses'**
+  String get addressesTitle;
+
+  /// Tooltip du bouton + de l'onglet Remise (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une adresse de remise'**
+  String get addressesAddPickupTooltip;
+
+  /// Tooltip du bouton + de l'onglet Livraison (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une adresse de livraison'**
+  String get addressesAddDeliveryTooltip;
+
+  /// Libellé de l'onglet Remise (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'📦  Remise'**
+  String get addressesTabPickup;
+
+  /// Libellé de l'onglet Livraison (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'🗺️  Livraison'**
+  String get addressesTabDelivery;
+
+  /// Titre de l'état vide de l'onglet Remise (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune adresse de remise'**
+  String get addressesEmptyPickupTitle;
+
+  /// Description de l'état vide de l'onglet Remise (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoute l\'adresse où tu souhaites recevoir les colis des expéditeurs.'**
+  String get addressesEmptyPickupDescription;
+
+  /// Titre de l'état vide de l'onglet Livraison (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune adresse de livraison'**
+  String get addressesEmptyDeliveryTitle;
+
+  /// Description de l'état vide de l'onglet Livraison (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoute les adresses où tu déposes habituellement les colis.'**
+  String get addressesEmptyDeliveryDescription;
+
+  /// Bouton d'action des deux états vides (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une adresse'**
+  String get addressesAddButtonLabel;
+
+  /// Entrée de menu « Définir par défaut » des cartes adresse (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Définir par défaut'**
+  String get addressesSetDefaultLabel;
+
+  /// Titre du dialogue de suppression d'une adresse (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer l\'adresse'**
+  String get addressesDeleteTitle;
+
+  /// Message du dialogue de suppression d'une adresse, label = étiquette de l'adresse (pickup_addresses_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Es-tu sûr de vouloir supprimer \"{label}\" ? Cette action est irréversible.'**
+  String addressesDeleteConfirmMessage(String label);
+
+  /// Suggestion d'étiquette adresse de remise (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Maison'**
+  String get pickupAddressChipHome;
+
+  /// Suggestion d'étiquette adresse de remise (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bureau'**
+  String get pickupAddressChipOffice;
+
+  /// Suggestion d'étiquette adresse de remise (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Atelier'**
+  String get pickupAddressChipWorkshop;
+
+  /// Titre de l'écran en mode édition (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'adresse'**
+  String get pickupAddressEditTitle;
+
+  /// Titre de l'écran en mode création (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle adresse de remise'**
+  String get pickupAddressCreateTitle;
+
+  /// Bouton sticky de validation du formulaire (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer l\'adresse'**
+  String get pickupAddressSaveButton;
+
+  /// Snackbar de succès en mode édition (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse mise à jour'**
+  String get pickupAddressUpdatedMessage;
+
+  /// Snackbar de succès en mode création (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse ajoutée'**
+  String get pickupAddressAddedMessage;
+
+  /// Titre de section (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étiquette'**
+  String get pickupAddressLabelSectionTitle;
+
+  /// Libellé du champ étiquette (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de l\'adresse'**
+  String get pickupAddressNameFieldLabel;
+
+  /// Placeholder du champ étiquette (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : Maison, Bureau…'**
+  String get pickupAddressNameFieldHint;
+
+  /// Titre de section (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse'**
+  String get pickupAddressAddressSectionTitle;
+
+  /// Libellé du champ rue (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rue et numéro'**
+  String get pickupAddressStreetFieldLabel;
+
+  /// Libellé du champ code postal (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code postal'**
+  String get pickupAddressPostalFieldLabel;
+
+  /// Libellé du champ ville (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville'**
+  String get pickupAddressCityFieldLabel;
+
+  /// Titre de section et libellé du champ (identiques, réutilisés) (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étage / Appartement'**
+  String get pickupAddressFloorSectionTitle;
+
+  /// Placeholder du champ étage (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Optionnel (Ex : Bât. B, 3ème étage)'**
+  String get pickupAddressFloorFieldHint;
+
+  /// Titre de section (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Instructions'**
+  String get pickupAddressInstructionsSectionTitle;
+
+  /// Placeholder du champ instructions (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Optionnel : digicode, horaires…'**
+  String get pickupAddressInstructionsHint;
+
+  /// Sous-titre du toggle « adresse par défaut » (pickup_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pré-remplie lors de tes prochaines demandes'**
+  String get pickupAddressDefaultSubtitle;
+
+  /// Suggestion d'étiquette adresse de livraison (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Famille'**
+  String get deliveryAddressChipFamily;
+
+  /// Suggestion d'étiquette adresse de livraison (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Maison'**
+  String get deliveryAddressChipHome;
+
+  /// Suggestion d'étiquette adresse de livraison (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Boutique'**
+  String get deliveryAddressChipShop;
+
+  /// Titre de l'écran en mode édition (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'adresse'**
+  String get deliveryAddressEditTitle;
+
+  /// Titre de l'écran en mode création (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle adresse de livraison'**
+  String get deliveryAddressCreateTitle;
+
+  /// Bouton sticky de validation du formulaire (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer l\'adresse'**
+  String get deliveryAddressSaveButton;
+
+  /// Snackbar de succès en mode édition (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse mise à jour'**
+  String get deliveryAddressUpdatedMessage;
+
+  /// Snackbar de succès en mode création (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse ajoutée'**
+  String get deliveryAddressAddedMessage;
+
+  /// Titre de section (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étiquette'**
+  String get deliveryAddressLabelSectionTitle;
+
+  /// Libellé du champ étiquette (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de l\'adresse'**
+  String get deliveryAddressNameFieldLabel;
+
+  /// Placeholder du champ étiquette (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : Famille Dakar, Dépôt…'**
+  String get deliveryAddressNameFieldHint;
+
+  /// Titre de section (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get deliveryAddressCountrySectionTitle;
+
+  /// Titre de la bottom sheet de choix du pays (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays de destination'**
+  String get deliveryAddressCountryPickerTitle;
+
+  /// Titre de section (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse'**
+  String get deliveryAddressAddressSectionTitle;
+
+  /// Libellé du champ ville (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville'**
+  String get deliveryAddressCityFieldLabel;
+
+  /// Placeholder du champ ville (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : Dakar, Abidjan, Bamako…'**
+  String get deliveryAddressCityFieldHint;
+
+  /// Libellé du champ rue (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rue, quartier'**
+  String get deliveryAddressStreetFieldLabel;
+
+  /// Placeholder du champ rue (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Optionnel (ex : Rue 10, Almadies)'**
+  String get deliveryAddressStreetFieldHint;
+
+  /// Titre de section (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Instructions'**
+  String get deliveryAddressInstructionsSectionTitle;
+
+  /// Placeholder du champ instructions (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Optionnel : appeler à l\'arrivée, portail rouge…'**
+  String get deliveryAddressInstructionsHint;
+
+  /// Sous-titre du toggle « adresse par défaut » (delivery_address_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pré-remplie lors de tes prochaines annonces'**
+  String get deliveryAddressDefaultSubtitle;
+
+  /// Hors catalogue CountryCatalog, proposé uniquement par la liste fermée diaspora de delivery_address_edit_screen.dart (country_names.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Guinée'**
+  String get countryNameGn;
+
+  /// Titre de l'écran liste des destinataires (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes destinataires'**
+  String get recipientListTitle;
+
+  /// Libellé du FAB d'ajout (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter'**
+  String get recipientAddFabLabel;
+
+  /// Titre de l'état vide (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun destinataire enregistré'**
+  String get recipientEmptyTitle;
+
+  /// Description de l'état vide (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoute tes proches en Afrique pour envoyer en 1 tap.'**
+  String get recipientEmptyDescription;
+
+  /// Bouton d'action de l'état vide (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter mon premier destinataire'**
+  String get recipientEmptyActionLabel;
+
+  /// Titre/texte affiché quand la recherche ne trouve rien, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun résultat'**
+  String get recipientNoResultsLabel;
+
+  /// Description de l'état vide de recherche (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun destinataire ne correspond à ta recherche.'**
+  String get recipientSearchNoResultsDescription;
+
+  /// Placeholder du champ de recherche, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un destinataire…'**
+  String get recipientSearchHint;
+
+  /// Tooltip du bouton d'effacement de la recherche, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer la recherche'**
+  String get recipientClearSearchTooltip;
+
+  /// Entrée de menu « Définir par défaut » (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Définir par défaut'**
+  String get recipientSetDefaultLabel;
+
+  /// Titre du dialogue de suppression (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer le destinataire'**
+  String get recipientDeleteTitle;
+
+  /// Message du dialogue de suppression, name = nom complet du destinataire (recipients_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Es-tu sûr de vouloir supprimer \"{name}\" ? Cette action est irréversible.'**
+  String recipientDeleteConfirmMessage(String name);
+
+  /// Titre de l'écran en mode édition (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le destinataire'**
+  String get recipientEditTitle;
+
+  /// Titre de l'écran en mode création, réutilisé comme libellé de la tuile « Nouveau destinataire » de recipient_picker_sheet.dart (même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau destinataire'**
+  String get recipientCreateTitle;
+
+  /// Libellé du champ nom complet (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom complet'**
+  String get recipientFullNameFieldLabel;
+
+  /// Libellé du champ téléphone (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone (E.164)'**
+  String get recipientPhoneFieldLabel;
+
+  /// Erreur de validation du champ téléphone, example = numéro d'exemple non traduit (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Format invalide ({example})'**
+  String recipientPhoneInvalidFormat(String example);
+
+  /// Snackbar de succès en mode édition (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire mis à jour'**
+  String get recipientUpdatedMessage;
+
+  /// Snackbar de succès en mode création (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire ajouté'**
+  String get recipientAddedMessage;
+
+  /// Titre du toggle destinataire par défaut (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire par défaut'**
+  String get recipientDefaultToggleTitle;
+
+  /// Sous-titre du toggle destinataire par défaut (recipient_edit_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Présélectionné lors de tes prochains envois'**
+  String get recipientDefaultToggleSubtitle;
+
+  /// Bouton d'import depuis les contacts du téléphone, réutilisé entre recipient_edit_screen.dart et recipient_picker_sheet.dart (même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir dans mes contacts'**
+  String get recipientImportContactsAction;
+
+  /// Titre de la bottom sheet de sélection (recipient_picker_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'👤  Destinataire'**
+  String get recipientPickerTitle;
+
+  /// En-tête de section de la liste des destinataires enregistrés (recipient_picker_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'MES DESTINATAIRES'**
+  String get recipientPickerSectionHeader;
+
+  /// Bouton de confirmation de la sélection (recipient_picker_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer ce destinataire'**
+  String get recipientPickerConfirmButton;
+
+  /// Bouton d'ouverture du picker à l'état initial (recipient_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir un destinataire'**
+  String get recipientSectionPickerButton;
+
+  /// Bouton de changement de destinataire sélectionné (recipient_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer'**
+  String get recipientSectionChangeButton;
+
+  /// Titre du toggle de sauvegarde d'une saisie manuelle (recipient_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer ce destinataire'**
+  String get recipientSectionSaveToggleTitle;
+
+  /// Sous-titre du toggle de sauvegarde d'une saisie manuelle (recipient_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sera ajouté à « Mes destinataires » pour tes prochains envois'**
+  String get recipientSectionSaveToggleSubtitle;
+
+  /// Titre de l'AppBar (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ma grille de prix'**
+  String get priceGridScreenTitle;
+
+  /// Note de commission en pied de liste, percent déjà formaté par commissionPercentLabel (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony ajoute {percent} % au prix que vous saisissez. Vous encaissez exactement votre montant.'**
+  String priceGridCommissionNotice(String percent);
+
+  /// Bouton de bascule en mode réorganisation (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réordonner'**
+  String get priceGridReorderButton;
+
+  /// Bouton d'ajout, réutilisé comme titre de la feuille de création (price_grid_screen.dart, price_grid_item_form_sheet.dart, même feature R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle étiquette'**
+  String get priceGridAddLabelButton;
+
+  /// Titre de l'état vide (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune étiquette'**
+  String get priceGridEmptyTitle;
+
+  /// Description de l'état vide (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Fixez le prix des articles que vous transportez. Le même barème servira sur tous vos trajets.'**
+  String get priceGridEmptyDescription;
+
+  /// Tampon indiquant la portée du barème (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Valable sur tous vos trajets'**
+  String get priceGridScopeStampLabel;
+
+  /// Libellé d'accessibilité de la poignée de réordonnancement, label = étiquette de l'article (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Déplacer {label}'**
+  String priceGridDragHandleSemantics(String label);
+
+  /// Tooltip du menu d'options d'une étiquette (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Options'**
+  String get priceGridItemMenuTooltip;
+
+  /// Légende du montant net encaissé sous le prix payé, net déjà formaté (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'vous recevez {net}'**
+  String priceGridYouReceive(String net);
+
+  /// Libellé d'accessibilité complet d'une étiquette de la grille, paid/net déjà formatés (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, l\'expéditeur paie {paid}, vous recevez {net}'**
+  String priceGridItemSemantics(String label, String paid, String net);
+
+  /// Titre du dialogue de suppression d'une étiquette (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer l\'étiquette ?'**
+  String get priceGridDeleteItemTitle;
+
+  /// Message du dialogue de suppression, label = libellé affiché de l'article (price_grid_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'article \"{label}\" sera retiré de votre grille, sur tous vos trajets.'**
+  String priceGridDeleteItemMessage(String label);
+
+  /// Titre de la feuille en mode édition (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'étiquette'**
+  String get priceGridEditItemTitle;
+
+  /// Bouton de validation en mode création (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter à ma grille'**
+  String get priceGridAddToGridButton;
+
+  /// Libellé du champ de recherche du catalogue (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Article'**
+  String get priceGridSearchFieldLabel;
+
+  /// Placeholder du champ de recherche du catalogue (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chercher, ou écrire le vôtre'**
+  String get priceGridSearchFieldHint;
+
+  /// Message affiché quand le catalogue filtré est vide sans possibilité d'ajout (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tous les articles du catalogue sont déjà dans votre grille. Écrivez le vôtre pour en ajouter un autre.'**
+  String get priceGridAllCatalogTakenMessage;
+
+  /// Ligne d'ajout d'un libellé libre non trouvé au catalogue. Espaces normales (U+0020) autour des guillemets, PAS les espaces insécables (U+00A0) de contentCategoryAdd : reprise à l'identique de l'ancien texte, non réutilisée pour ne pas changer le rendu (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter « {query} »'**
+  String priceGridAddCustomLabel(String query);
+
+  /// Bouton de retour au catalogue depuis l'étape prix (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer'**
+  String get priceGridChangeItemButton;
+
+  /// Libellé au-dessus du montant saisi (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que vous encaissez'**
+  String get priceGridYouReceiveLabel;
+
+  /// Message d'écho quand le montant saisi dépasse le plafond, max déjà formaté (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Maximum {max} par article.'**
+  String priceGridMaxPriceMessage(String max);
+
+  /// Message d'écho invitant à saisir un montant (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le montant que vous voulez toucher.'**
+  String get priceGridEnterAmountMessage;
+
+  /// Message d'écho annonçant le montant payé par l'expéditeur, paid déjà formaté et percent déjà formaté par commissionPercentLabel (price_grid_item_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur paiera {paid}, commission Yadony de {percent} % comprise.'**
+  String priceGridSenderWillPayMessage(String paid, String percent);
+
+  /// Titre de l'AppBar (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Parrainage'**
+  String get referralScreenTitle;
+
+  /// Libellé de la stat « invités » (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Invités'**
+  String get referralStatInvited;
+
+  /// Libellé de la stat « inscrits » (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Inscrits'**
+  String get referralStatSignedUp;
+
+  /// Libellé de la stat « récompensés » (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Récompensés'**
+  String get referralStatRewarded;
+
+  /// Bandeau de bons actifs, affiché seulement si activeVoucherCount >= 1 : la branche =1 peut donc écrire « un » en toutes lettres (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{🎁 Tu as un bon de -{percent}% sur ta prochaine commission} other{🎁 Tu as {count} bons de -{percent}% sur tes prochaines commissions}}'**
+  String referralVouchers(int count, int percent);
+
+  /// Même bandeau que referralVouchers, sans pourcentage : repli défensif quand le serveur ne renseigne pas voucherFactor (backend antérieur au lot 3). Affiché seulement si activeVoucherCount >= 1 (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{🎁 Tu as un bon de réduction sur ta prochaine commission} other{🎁 Tu as {count} bons de réduction sur tes prochaines commissions}}'**
+  String referralVouchersUnknownPercent(int count);
+
+  /// Date d'expiration du bon le plus proche, date déjà formatée (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Valable jusqu\'au {date}'**
+  String referralVoucherExpiresLabel(String date);
+
+  /// Titre de la hero card sans pourcentage connu (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Invite tes proches'**
+  String get referralHeroTitleDefault;
+
+  /// Titre de la hero card avec pourcentage connu (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Invite et gagne -{percent}%'**
+  String referralHeroTitlePercent(int percent);
+
+  /// Sous-titre de la hero card sans pourcentage connu (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu reçois un bon de réduction sur ta prochaine commission dès la première livraison de ton invité.'**
+  String get referralHeroSubtitleDefault;
+
+  /// Sous-titre de la hero card avec pourcentage connu (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu reçois un bon de -{percent}% sur ta prochaine commission dès la première livraison de ton invité.'**
+  String referralHeroSubtitlePercent(int percent);
+
+  /// Libellé au-dessus du code affiché (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton code de parrainage'**
+  String get referralCodeBoxLabel;
+
+  /// Libellé d'accessibilité du bouton de copie du code (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le code de parrainage'**
+  String get referralCopyCodeSemantics;
+
+  /// Snackbar de confirmation de copie du code (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code copié !'**
+  String get referralCodeCopiedMessage;
+
+  /// Bouton sticky de partage (referral_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager mon code'**
+  String get referralShareButtonLabel;
+
+  /// Texte réellement partagé via la feuille système, code et url non traduits (referral_screen.dart, construit par l'écran et transporté par ReferralShared jusqu'au bloc).
+  ///
+  /// In fr, this message translates to:
+  /// **'Salut ! Utilise mon code Yadony : {code} pour t\'inscrire, ça m\'aide à gagner une réduction sur ma prochaine commission. {url}'**
+  String referralShareMessage(String code, String url);
+
+  /// Titre de la bottom sheet de saisie d'un code parrain (redeem_code_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrer un code parrain'**
+  String get referralRedeemTitle;
+
+  /// Sous-titre explicatif de la bottom sheet (redeem_code_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu as été invité par un ami ? Entre son code pour qu\'il soit récompensé à ta première livraison.'**
+  String get referralRedeemSubtitle;
+
+  /// Libellé du champ de saisie du code (redeem_code_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code parrain'**
+  String get referralRedeemCodeFieldLabel;
+
+  /// Placeholder du champ code, example = code d'exemple non traduit (redeem_code_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : {example}'**
+  String referralRedeemCodeHint(String example);
+
+  /// Titre du refus 422 `reason-not-applicable` (ReportService.java, error_catalog.dart) : le motif choisi ne s'applique pas au type de cible signalée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif invalide'**
+  String get errorReportReasonNotApplicableTitle;
+
+  /// Message du refus 422 `reason-not-applicable`.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce motif ne s\'applique pas à ce type de signalement.'**
+  String get errorReportReasonNotApplicableMessage;
+
+  /// Titre du refus 422 `cannot-report-self` (ReportService.java, error_catalog.dart) : un utilisateur ne peut pas se signaler lui-même.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signalement impossible'**
+  String get errorReportCannotReportSelfTitle;
+
+  /// Message du refus 422 `cannot-report-self`.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu ne peux pas te signaler toi-même.'**
+  String get errorReportCannotReportSelfMessage;
+
+  /// Titre du refus 422 `too-many-photos` (ReportService.java : MAX_PHOTOS = 5, error_catalog.dart). En pratique hors d'atteinte : le client plafonne déjà à 4 (IncidentPhotosCubit.maxPhotos).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de captures'**
+  String get errorReportTooManyPhotosTitle;
+
+  /// Message du refus 422 `too-many-photos`.
+  ///
+  /// In fr, this message translates to:
+  /// **'Maximum 5 captures d\'écran par signalement.'**
+  String get errorReportTooManyPhotosMessage;
+
+  /// Titre du refus 403 `photo-not-owned` (ReportService.java, error_catalog.dart) : une capture jointe n'appartient pas à l'auteur du signalement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signalement impossible'**
+  String get errorReportPhotoNotOwnedTitle;
+
+  /// Message du refus 403 `photo-not-owned`.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une des captures ne t\'appartient pas.'**
+  String get errorReportPhotoNotOwnedMessage;
 }
 
 class _AppLocalizationsDelegate

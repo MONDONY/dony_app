@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 class MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
     implements RecipientBloc {}
 
@@ -402,5 +404,13 @@ void main() {
     test('unknown prefix defaults to SN', () {
       expect(countryFromPhone('+33612345678'), 'SN');
     });
+  });
+
+  testWidgets('en anglais : bouton initial traduit', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(buildSut());
+    await tester.pump();
+
+    expect(find.text('Choose a recipient'), findsOneWidget);
   });
 }

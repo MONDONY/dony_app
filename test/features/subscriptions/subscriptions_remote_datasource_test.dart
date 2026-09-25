@@ -57,7 +57,7 @@ void main() {
   });
 
   test(
-    'getMySubscriptions fallback sur "Voyageur" si travelerName est null',
+    'getMySubscriptions fallback sur un nom vide si travelerName est null',
     () async {
       when(() => dio.get('/me/subscriptions')).thenAnswer(
         (_) async => _ok([
@@ -76,7 +76,7 @@ void main() {
 
       final list = await ds.getMySubscriptions();
       expect(list, hasLength(1));
-      expect(list.first.travelerName, 'Voyageur');
+      expect(list.first.travelerName, '');
       expect(list.first.avatarUrl, isNull);
     },
   );

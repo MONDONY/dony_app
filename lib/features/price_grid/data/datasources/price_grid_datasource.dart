@@ -10,7 +10,7 @@ class PriceGridDatasource {
     final response = await _apiClient.dio.get('/travelers/me/price-grid');
     final data = response.data;
     if (data is! List) {
-      throw const FormatException('Expected List from API');
+      throw const FormatException('Expected List from API'); // i18n-ignore
     }
     return data
         .map((e) => PriceGridItemModel.fromJson(e as Map<String, dynamic>))
@@ -27,7 +27,7 @@ class PriceGridDatasource {
     );
     final data = response.data;
     if (data is! Map<String, dynamic>) {
-      throw const FormatException('Expected Map from API');
+      throw const FormatException('Expected Map from API'); // i18n-ignore
     }
     return PriceGridItemModel.fromJson(data);
   }
@@ -43,7 +43,7 @@ class PriceGridDatasource {
     );
     final data = response.data;
     if (data is! Map<String, dynamic>) {
-      throw const FormatException('Expected Map from API');
+      throw const FormatException('Expected Map from API'); // i18n-ignore
     }
     return PriceGridItemModel.fromJson(data);
   }
@@ -58,7 +58,7 @@ class PriceGridDatasource {
     );
     final data = response.data;
     if (data is! List) {
-      throw const FormatException('Expected List from API');
+      throw const FormatException('Expected List from API'); // i18n-ignore
     }
     return data
         .map((e) => PriceGridItemModel.fromJson(e as Map<String, dynamic>))

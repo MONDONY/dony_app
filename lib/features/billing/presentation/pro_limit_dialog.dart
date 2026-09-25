@@ -1,5 +1,6 @@
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Dialogue « limite atteinte » renvoyé par le serveur (`pro-limit-reached`,
@@ -19,12 +20,13 @@ Future<bool> showProLimitReachedDialog(
   required String title,
   required String message,
 }) async {
+  final l = context.l10n;
   if (!proEnabledListenable.value) {
     await DonyDialog.show(
       context,
       title: title,
       message: message,
-      confirmLabel: 'Compris',
+      confirmLabel: l.proLimitUnderstoodButton,
       cancelLabel: null,
     );
     return false;
@@ -33,8 +35,8 @@ Future<bool> showProLimitReachedDialog(
     context,
     title: title,
     message: message,
-    confirmLabel: 'Passer en PRO',
-    cancelLabel: 'Plus tard',
+    confirmLabel: l.proLimitUpgradeButton,
+    cancelLabel: l.commonLater,
   );
   return confirmed == true;
 }

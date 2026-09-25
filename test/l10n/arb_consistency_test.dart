@@ -208,6 +208,14 @@ const _sameInBothLanguages = <String>{
   'notificationDetailFallbackTitle', // « Notification » se dit pareil (tâche H4)
   'supportScreenTitle', // « Support » se dit pareil (tâche H4)
   'supportCreateTicketMessageLabel', // « Message » se dit pareil (tâche H4)
+  'corridorAlertCardMenuTooltip', // « Options » se dit pareil (tâche I1)
+  'corridorAlertNotifyTitle', // « Notifications » se dit pareil (tâche I1)
+  'reportDescriptionLabel', // « Description » se dit pareil (tâche I1)
+  'reportReasonSpam', // « Spam » se dit pareil (tâche I1)
+  'followPushBadge', // « Push » se dit pareil (tâche I2)
+  'pickupAddressInstructionsSectionTitle', // « Instructions » se dit pareil (tâche I3)
+  'deliveryAddressInstructionsSectionTitle', // « Instructions » se dit pareil (tâche I3)
+  'priceGridItemMenuTooltip', // « Options » se dit pareil (tâche I3)
 };
 
 void main() {

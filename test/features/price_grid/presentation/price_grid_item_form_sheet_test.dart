@@ -170,6 +170,41 @@ void main() {
       },
     );
 
+    testWidgets(
+      'en anglais : taper "book" garde Books visible et n\'affiche pas '
+      'la ligne de création',
+      (tester) async {
+        useEnglish();
+        await _open(tester);
+
+        await tester.enterText(
+          find.byKey(const Key('price-grid-search')),
+          'book',
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Books'), findsOneWidget);
+        expect(find.byKey(const Key('price-grid-create-custom')), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'en anglais : taper "Livres" (libellé brut) trouve aussi la catégorie',
+      (tester) async {
+        useEnglish();
+        await _open(tester);
+
+        await tester.enterText(
+          find.byKey(const Key('price-grid-search')),
+          'Livres',
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Books'), findsOneWidget);
+        expect(find.byKey(const Key('price-grid-create-custom')), findsNothing);
+      },
+    );
+
     testWidgets('un libellé qui existe déjà ne propose pas de doublon', (
       tester,
     ) async {
@@ -183,6 +218,23 @@ void main() {
 
       expect(find.byKey(const Key('price-grid-create-custom')), findsNothing);
     });
+
+    testWidgets(
+      'en français : taper "Vêtements" trouve l\'article du catalogue et '
+      'n\'affiche pas la ligne de création',
+      (tester) async {
+        await _open(tester);
+
+        await tester.enterText(
+          find.byKey(const Key('price-grid-search')),
+          'Vêtements',
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Vêtements & tissus'), findsOneWidget);
+        expect(find.byKey(const Key('price-grid-create-custom')), findsNothing);
+      },
+    );
   });
 
   group('PriceGridItemFormSheet — étape prix', () {

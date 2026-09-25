@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 /// Durée suffisante pour laisser flutter_animate terminer ses délais internes
 /// (voir `upgrade_to_pro_screen_test.dart` : un `pumpAndSettle` boucle
 /// indéfiniment sur une animation répétée).
@@ -437,6 +439,48 @@ void main() {
           expect(rt.text.toPlainText(), isNot(contains('—')));
         }
       }
+    });
+
+    testWidgets('anglais : pastDue traduit, action « Pay »', (tester) async {
+      useEnglish();
+      await _pump(
+        tester,
+        SubscriptionStatusBanner(
+          subscription: _sub(
+            active: true,
+            status: ProSubscriptionStatus.pastDue,
+          ),
+          onAction: () {},
+        ),
+      );
+
+      expect(find.textContaining("didn't go through"), findsOneWidget);
+      expect(find.text('Pay'), findsOneWidget);
+    });
+
+    testWidgets('anglais : abonnement actif en résiliation, date localisée', (
+      tester,
+    ) async {
+      useEnglish();
+      final currentPeriodEnd = DateTime.utc(2026, 12, 24, 10);
+      await _pump(
+        tester,
+        SubscriptionStatusBanner(
+          subscription: _sub(
+            active: true,
+            status: ProSubscriptionStatus.active,
+            cancelAtPeriodEnd: true,
+            currentPeriodEnd: currentPeriodEnd,
+          ),
+          onAction: () {},
+        ),
+      );
+
+      final expectedDate = DateFormat.yMMMMd(
+        'en',
+      ).format(currentPeriodEnd.toLocal());
+      expect(find.textContaining(expectedDate), findsOneWidget);
+      expect(find.text('Manage'), findsOneWidget);
     });
   });
 }

@@ -10,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
@@ -302,6 +304,29 @@ void main() {
       final icon = tester.widget<Icon>(icons.first);
       expect(icon.icon, Icons.bookmark);
       expect(icon.color, DonyColors.primary);
+    });
+  });
+
+  group('FavoriteHeartButton — tooltip anglais', () {
+    testWidgets('« Save » / « Remove from saved » traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(FavoriteHeartButton(isFavorite: false, onToggle: () {})),
+      );
+      await tester.pump();
+      expect(
+        tester.widget<IconButton>(find.byType(IconButton)).tooltip,
+        'Save',
+      );
+
+      await tester.pumpWidget(
+        _wrap(FavoriteHeartButton(isFavorite: true, onToggle: () {})),
+      );
+      await tester.pump();
+      expect(
+        tester.widget<IconButton>(find.byType(IconButton)).tooltip,
+        'Remove from saved',
+      );
     });
   });
 }

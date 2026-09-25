@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 final _now = DateTime(2026, 9, 4);
 
 CorridorAlertModel _alert({
@@ -61,50 +63,6 @@ Widget _pump(CorridorAlertModel a, _Calls calls) => MaterialApp(
 
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));
-
-  group('dateLabel', () {
-    test('même mois : « 15 au 30 sept »', () {
-      expect(
-        CorridorAlertCard.dateLabel(
-          _alert(
-            dateFrom: DateTime(2026, 9, 15),
-            dateTo: DateTime(2026, 9, 30),
-          ),
-        ),
-        '15 au 30 sept.',
-      );
-    });
-
-    test('mois différents, borne seule, aucune borne', () {
-      expect(
-        CorridorAlertCard.dateLabel(
-          _alert(
-            dateFrom: DateTime(2026, 9, 28),
-            dateTo: DateTime(2026, 10, 3),
-          ),
-        ),
-        '28 sept. au 3 oct.',
-      );
-      expect(
-        CorridorAlertCard.dateLabel(_alert(dateFrom: DateTime(2026, 9, 15))),
-        'À partir du 15 sept.',
-      );
-      expect(
-        CorridorAlertCard.dateLabel(_alert(dateTo: DateTime(2026, 9, 30))),
-        'Jusqu\'au 30 sept.',
-      );
-      expect(CorridorAlertCard.dateLabel(_alert()), 'Toute date');
-    });
-
-    test('weightLabel', () {
-      expect(CorridorAlertCard.weightLabel(_alert()), 'Tout poids');
-      expect(CorridorAlertCard.weightLabel(_alert(minWeightKg: 3)), '≥ 3 kg');
-      expect(
-        CorridorAlertCard.weightLabel(_alert(minWeightKg: 2.5)),
-        '≥ 2.5 kg',
-      );
-    });
-  });
 
   testWidgets('trajets, rien de neuf : corridor, chips, total, menu', (
     tester,
@@ -210,5 +168,25 @@ void main() {
     );
     expect(find.textContaining('Expirée'), findsNothing);
     expect(find.text('Jusqu\'au 4 sept.'), findsOneWidget);
+  });
+
+  testWidgets('anglais : poids, catégorie et total traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _pump(
+        _alert(
+          direction: AlertDirection.travelerWantsPackages,
+          minWeightKg: 3,
+          categories: const ['Livres'],
+          matches: 1,
+        ),
+        _Calls(),
+      ),
+    );
+
+    expect(find.text('≥ 3 kg'), findsOneWidget);
+    // Catalogue AU CATALOGUE : « Livres » → « Books » (pas juste un mot traduit isolé).
+    expect(find.text('Books'), findsOneWidget);
+    expect(find.text('Nothing new · 1 parcel in total'), findsOneWidget);
   });
 }

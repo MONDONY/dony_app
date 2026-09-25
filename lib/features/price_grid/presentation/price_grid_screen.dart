@@ -3,6 +3,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_state.dart';
@@ -37,7 +38,7 @@ class PriceGridScreen extends StatelessWidget {
           appBar: AppBar(
             actions: const [DonyFeedbackButton()],
             leading: const DonyAppBarBackButton(),
-            title: const Text('Ma grille de prix'),
+            title: Text(context.l10n.priceGridScreenTitle),
             centerTitle: false,
             backgroundColor: cs.surfaceWarm,
           ),
@@ -107,6 +108,7 @@ class _ErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Center(
       child: Padding(
@@ -117,7 +119,7 @@ class _ErrorView extends StatelessWidget {
             DonyIcon('circle-alert', size: 48, color: cs.error),
             const SizedBox(height: DonySpacing.base),
             Text(
-              'Une erreur est survenue',
+              l.commonSomethingWentWrong,
               style: tt.titleLarge,
               textAlign: TextAlign.center,
             ),
@@ -129,7 +131,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.xl),
             DonyButton(
-              label: 'Réessayer',
+              label: l.commonRetry,
               onPressed: onRetry,
               variant: DonyButtonVariant.secondary,
             ),
@@ -166,6 +168,7 @@ class _LoadedViewState extends State<_LoadedView> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final items = widget.items;
 
     if (items.isEmpty) {
@@ -196,7 +199,9 @@ class _LoadedViewState extends State<_LoadedView> {
                   const SizedBox(width: DonySpacing.sm),
                   TextButton(
                     onPressed: () => _reordering.value = !reordering,
-                    child: Text(reordering ? 'Terminé' : 'Réordonner'),
+                    child: Text(
+                      reordering ? l.commonDone : l.priceGridReorderButton,
+                    ),
                   ),
                 ],
               ),
@@ -250,14 +255,13 @@ class _LoadedViewState extends State<_LoadedView> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Yadony ajoute ${commissionPercentLabel(context.l10n)} % au prix que '
-                    'vous saisissez. Vous encaissez exactement votre montant.',
+                    l.priceGridCommissionNotice(commissionPercentLabel(l)),
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: DonySpacing.md),
                   DonyButton(
-                    label: 'Nouvelle étiquette',
+                    label: l.priceGridAddLabelButton,
                     iconAsset: 'plus',
                     onPressed: () => _openAddSheet(context),
                   ),
@@ -314,7 +318,7 @@ class _ScopeStamp extends StatelessWidget {
           border: Border.all(color: cs.primary, width: 1.5),
         ),
         child: Text(
-          'Valable sur tous vos trajets',
+          context.l10n.priceGridScopeStampLabel,
           style: tt.labelMedium?.copyWith(
             color: cs.primary,
             letterSpacing: 0.8,
@@ -338,6 +342,7 @@ class _EmptyGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Center(
       child: Padding(
@@ -356,20 +361,19 @@ class _EmptyGrid extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
-              'Aucune étiquette',
+              l.priceGridEmptyTitle,
               style: tt.titleLarge,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Fixez le prix des articles que vous transportez. Le même '
-              'barème servira sur tous vos trajets.',
+              l.priceGridEmptyDescription,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DonySpacing.xl),
             DonyButton(
-              label: 'Nouvelle étiquette',
+              label: l.priceGridAddLabelButton,
               iconAsset: 'plus',
               onPressed: onAdd,
             ),
@@ -394,7 +398,7 @@ class _DragHandle extends StatelessWidget {
     return ReorderableDragStartListener(
       index: index,
       child: Semantics(
-        label: 'Déplacer $label',
+        label: context.l10n.priceGridDragHandleSemantics(label),
         button: true,
         container: true,
         excludeSemantics: true,
@@ -424,10 +428,11 @@ class _ItemMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return PopupMenuButton<String>(
       icon: DonyIcon('ellipsis-vertical', color: cs.onSurfaceVariant),
-      tooltip: 'Options',
+      tooltip: l.priceGridItemMenuTooltip,
       // Le rembourrage par défaut vole une vingtaine de points au libellé, qui
       // se met à s'ellipser sur les écrans étroits. La cible tactile est
       // préservée par les contraintes.
@@ -447,7 +452,7 @@ class _ItemMenu extends StatelessWidget {
             children: [
               DonyIcon('square-pen', size: 20, color: cs.primary),
               const SizedBox(width: DonySpacing.md),
-              const Text('Modifier'),
+              Text(l.commonEdit),
             ],
           ),
         ),
@@ -457,7 +462,7 @@ class _ItemMenu extends StatelessWidget {
             children: [
               DonyIcon('trash-2', size: 20, color: cs.error),
               const SizedBox(width: DonySpacing.md),
-              Text('Supprimer', style: TextStyle(color: cs.error)),
+              Text(l.commonDelete, style: TextStyle(color: cs.error)),
             ],
           ),
         ),
@@ -479,24 +484,26 @@ class _PriceGridItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     // Deux valeurs, cinq usages : le formatage passe par NumberFormat et n'a
     // aucune raison d'être refait à chaque lecture.
     final paid = formatPriceActive(item.unitPriceDisplay);
     final net = formatPriceActive(item.unitPriceNet);
+    // Valeur brute inchangée (envoyée/comparée) ; seul l'affichage traduit.
+    final displayLabel = contentCategoryDisplayName(l, item.label);
 
     return DonyPriceTag(
-      label: item.label,
+      label: displayLabel,
       emoji: emojiForLabel(item.label),
       price: paid,
-      caption: 'vous recevez $net',
+      caption: l.priceGridYouReceive(net),
       onTap: reordering ? null : () => _openEditSheet(context),
-      semanticLabel:
-          '${item.label}, l\'expéditeur paie $paid, vous recevez $net',
+      semanticLabel: l.priceGridItemSemantics(displayLabel, paid, net),
       trailing: reordering
-          ? _DragHandle(index: index, label: item.label)
+          ? _DragHandle(index: index, label: displayLabel)
           : _ItemMenu(
               onEdit: () => _openEditSheet(context),
-              onDelete: () => _confirmDelete(context),
+              onDelete: () => _confirmDelete(context, displayLabel),
             ),
     );
   }
@@ -505,14 +512,13 @@ class _PriceGridItemTile extends StatelessWidget {
     PriceGridItemFormSheet.show(context, item: item);
   }
 
-  void _confirmDelete(BuildContext context) {
+  void _confirmDelete(BuildContext context, String displayLabel) {
+    final l = context.l10n;
     DonyDialog.show(
       context,
-      title: 'Supprimer l\'étiquette ?',
-      message:
-          'L\'article "${item.label}" sera retiré de votre grille, sur tous '
-          'vos trajets.',
-      confirmLabel: 'Supprimer',
+      title: l.priceGridDeleteItemTitle,
+      message: l.priceGridDeleteItemMessage(displayLabel),
+      confirmLabel: l.commonDelete,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'trash-2',
     ).then((confirmed) {

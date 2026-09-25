@@ -17,6 +17,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockBillingRepository extends Mock implements BillingRepository {}
@@ -548,5 +549,29 @@ void main() {
         expect(find.byType(SnackBar), findsOneWidget);
       },
     );
+
+    testWidgets("anglais : échec d'ouverture du portail traduit", (
+      tester,
+    ) async {
+      useEnglish();
+      final states = StreamController<SubscriptionState>.broadcast();
+      addTearDown(states.close);
+      whenListen<SubscriptionState>(
+        mockBloc,
+        states.stream,
+        initialState: const SubscriptionLoaded(tPastDueSubscription),
+      );
+
+      await tester.pumpWidget(
+        _wrap(const SubscriptionBannerHost(isProAccount: true)),
+      );
+      await tester.pump(_kSettle);
+
+      states.add(const SubscriptionPortalLaunchFailed(tPastDueSubscription));
+      await tester.pump();
+      await tester.pump(_kSettle);
+
+      expect(find.textContaining("Couldn't open the page"), findsOneWidget);
+    });
   });
 }

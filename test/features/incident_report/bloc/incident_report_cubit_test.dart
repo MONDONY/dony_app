@@ -77,8 +77,8 @@ void main() {
       expect: () => [
         isA<IncidentReportSubmitting>(),
         isA<IncidentReportError>().having(
-          (s) => s.message,
-          'message',
+          (s) => s.error?.message,
+          'error.message',
           'Le motif est obligatoire',
         ),
       ],
@@ -102,7 +102,7 @@ void main() {
           cubit.submit(targetType: IncidentTargetType.app, reason: 'Autre'),
       expect: () => [
         isA<IncidentReportSubmitting>(),
-        isA<IncidentReportError>(),
+        isA<IncidentReportError>().having((s) => s.error, 'error', isNull),
       ],
     );
 

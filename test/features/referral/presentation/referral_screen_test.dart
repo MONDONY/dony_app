@@ -11,6 +11,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockReferralBloc extends MockBloc<ReferralEvent, ReferralState>
     implements ReferralBloc {}
 
@@ -232,6 +234,63 @@ void main() {
     expect(find.textContaining('-null%'), findsNothing);
   });
 
+  // 9 ter. Bon(s) actif(s) sans pourcentage connu (repli défensif) : le
+  // bandeau doit rester affiché (activeVoucherCount > 0) mais sans inventer
+  // de pourcentage — jamais de « -0% ».
+  testWidgets(
+    'shows the voucher banner without a percent when voucherFactor is '
+    'missing but a voucher is active',
+    (tester) async {
+      const info = ReferralInfo(
+        code: 'DONY-XYZ42',
+        shareUrl: 'https://dony.app/invite/DONY-XYZ42',
+        totalInvited: 4,
+        signedUp: 2,
+        rewarded: 1,
+        hasBeenReferred: false,
+        activeVoucherCount: 1,
+      );
+      when(() => bloc.state).thenReturn(const ReferralLoaded(info));
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text('🎁 Tu as un bon de réduction sur ta prochaine commission'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('%'), findsNothing);
+      expect(find.textContaining('-0'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'en anglais : bandeau sans pourcentage quand voucherFactor est absent',
+    (tester) async {
+      useEnglish();
+      const info = ReferralInfo(
+        code: 'DONY-XYZ42',
+        shareUrl: 'https://dony.app/invite/DONY-XYZ42',
+        totalInvited: 4,
+        signedUp: 2,
+        rewarded: 1,
+        hasBeenReferred: false,
+        activeVoucherCount: 1,
+      );
+      when(() => bloc.state).thenReturn(const ReferralLoaded(info));
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text('🎁 You have a discount voucher on your next service fee'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('%'), findsNothing);
+      expect(find.textContaining('-0'), findsNothing);
+    },
+  );
+
   // 10. Message d'erreur affiché dans l'error view
   testWidgets('shows error message text when ReferralError', (tester) async {
     when(
@@ -242,5 +301,138 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Une erreur est survenue'), findsOneWidget);
+  });
+
+  // 11. Trois bons actifs : le pluriel ICU reste identique à l'ancien texte.
+  testWidgets('affiche le décompte avec trois bons actifs', (tester) async {
+    final infoThreeVouchers = ReferralInfo(
+      code: 'DONY-XYZ42',
+      shareUrl: 'https://dony.app/invite/DONY-XYZ42',
+      totalInvited: 4,
+      signedUp: 2,
+      rewarded: 3,
+      hasBeenReferred: false,
+      activeVoucherCount: 3,
+      voucherFactor: 0.5,
+      nextVoucherExpiresAt: DateTime(2027, 1, 15),
+    );
+    when(() => bloc.state).thenReturn(ReferralLoaded(infoThreeVouchers));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      find.text('🎁 Tu as 3 bons de -50% sur tes prochaines commissions'),
+      findsOneWidget,
+    );
+  });
+
+  // 12. Le bouton « Partager mon code » dispatche ReferralShared avec le
+  // texte réellement partagé (recopié à l'identique en français).
+  testWidgets(
+    'le bouton de partage dispatche ReferralShared avec le message fr',
+    (tester) async {
+      when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.text('Partager mon code'));
+      await tester.pump();
+
+      final captured = verify(
+        () => bloc.add(captureAny(that: isA<ReferralShared>())),
+      ).captured.cast<ReferralShared>();
+      expect(captured, hasLength(1));
+      expect(
+        captured.single.message,
+        "Salut ! Utilise mon code Yadony : ${_testInfo.code} pour t'inscrire, "
+        'ça m\'aide à gagner une réduction sur ma prochaine commission. '
+        '${_testInfo.shareUrl}',
+      );
+    },
+  );
+
+  // ── Anglais ──────────────────────────────────────────────────────────────
+
+  testWidgets('en anglais : titre, stats et hero card traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Referral'), findsOneWidget);
+    expect(find.text('Invited'), findsOneWidget);
+    expect(find.text('Signed up'), findsOneWidget);
+    expect(find.text('Rewarded'), findsOneWidget);
+    expect(find.text('Invite and get -50%'), findsOneWidget);
+    expect(find.text('Share my code'), findsOneWidget);
+    expect(
+      find.text('🎁 You have a 50% voucher on your next service fee'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('en anglais : date d\'expiration du bon (yMMMMd)', (
+    tester,
+  ) async {
+    useEnglish();
+    when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // DateTime(2027, 1, 15) -> "January 15, 2027" (DateFormat.yMMMMd('en')).
+    expect(find.text('Valid until January 15, 2027'), findsOneWidget);
+  });
+
+  // 13. Non-régression du remplacement DateFormat('d MMMM yyyy') ->
+  // DateFormat.yMMMMd(locale) : même rendu fr, plus le cas en, sur la date
+  // canonique du chantier i18n.
+  testWidgets(
+    'date canonique 6 oct. 2026 : rendu fr identique à l\'ancien motif',
+    (tester) async {
+      final infoCanonicalDate = ReferralInfo(
+        code: _testInfo.code,
+        shareUrl: _testInfo.shareUrl,
+        totalInvited: _testInfo.totalInvited,
+        signedUp: _testInfo.signedUp,
+        rewarded: _testInfo.rewarded,
+        hasBeenReferred: _testInfo.hasBeenReferred,
+        activeVoucherCount: _testInfo.activeVoucherCount,
+        voucherFactor: _testInfo.voucherFactor,
+        nextVoucherExpiresAt: DateTime(2026, 10, 6, 14, 5),
+      );
+      when(() => bloc.state).thenReturn(ReferralLoaded(infoCanonicalDate));
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('Valable jusqu\'au 6 octobre 2026'), findsOneWidget);
+    },
+  );
+
+  testWidgets('date canonique 6 oct. 2026 : rendu en', (tester) async {
+    useEnglish();
+    final infoCanonicalDate = ReferralInfo(
+      code: _testInfo.code,
+      shareUrl: _testInfo.shareUrl,
+      totalInvited: _testInfo.totalInvited,
+      signedUp: _testInfo.signedUp,
+      rewarded: _testInfo.rewarded,
+      hasBeenReferred: _testInfo.hasBeenReferred,
+      activeVoucherCount: _testInfo.activeVoucherCount,
+      voucherFactor: _testInfo.voucherFactor,
+      nextVoucherExpiresAt: DateTime(2026, 10, 6, 14, 5),
+    );
+    when(() => bloc.state).thenReturn(ReferralLoaded(infoCanonicalDate));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Valid until October 6, 2026'), findsOneWidget);
   });
 }

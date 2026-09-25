@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/incident_report/bloc/incident_photo_upload.dart';
 import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -25,7 +26,7 @@ class IncidentPhotoSection extends StatelessWidget {
       if (context.mounted) {
         DonySnackbar.show(
           context,
-          message: 'Image non supportée ou trop volumineuse',
+          message: context.l10n.commonImageUnsupported,
           type: DonySnackbarType.error,
         );
       }
@@ -38,13 +39,14 @@ class IncidentPhotoSection extends StatelessWidget {
       useRootNavigator: true,
       builder: (sheetCtx) {
         final cs = Theme.of(context).colorScheme;
+        final l = context.l10n;
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
                 leading: Icon(Icons.photo_camera_rounded, color: cs.primary),
-                title: const Text('Prendre une photo'),
+                title: Text(l.commonTakePhoto),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
                   _pick(context, ImageSource.camera);
@@ -52,7 +54,7 @@ class IncidentPhotoSection extends StatelessWidget {
               ),
               ListTile(
                 leading: Icon(Icons.photo_library_rounded, color: cs.primary),
-                title: const Text('Choisir dans la galerie'),
+                title: Text(l.commonPickFromGallery),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
                   _pick(context, ImageSource.gallery);
@@ -86,7 +88,7 @@ class IncidentPhotoSection extends StatelessWidget {
                 button: true,
                 container: true,
                 excludeSemantics: true,
-                label: 'Ajouter une photo',
+                label: context.l10n.reportAddPhotoLabel,
                 child: GestureDetector(
                   onTap: () => _showSourceSheet(context),
                   child: Container(
@@ -172,7 +174,7 @@ class _PhotoThumb extends StatelessWidget {
               button: true,
               container: true,
               excludeSemantics: true,
-              label: 'Supprimer cette photo',
+              label: context.l10n.reportRemovePhotoLabel,
               child: GestureDetector(
                 onTap: onRemove,
                 behavior: HitTestBehavior.opaque,

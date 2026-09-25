@@ -14242,5 +14242,1623 @@
   "supportConversationDefaultPreview": "Une question ? Notre équipe vous répond ici.",
   "@supportConversationDefaultPreview": {
     "description": "Aperçu par défaut de la ligne épinglée support quand aucun message n'existe encore (support_conversation_tile.dart)."
+  },
+  "corridorAlertNotifyInstant": "Instantanée",
+  "@corridorAlertNotifyInstant": {
+    "description": "Libellé du mode de notification instantané d'une alerte corridor (corridor_alert_labels.dart, extension sur AlertNotifyMode)."
+  },
+  "corridorAlertNotifyDaily": "Quotidienne",
+  "@corridorAlertNotifyDaily": {
+    "description": "Libellé du mode de notification quotidien d'une alerte corridor (corridor_alert_labels.dart)."
+  },
+  "corridorAlertNotifySilent": "Silencieuse",
+  "@corridorAlertNotifySilent": {
+    "description": "Libellé du mode de notification silencieux d'une alerte corridor (corridor_alert_labels.dart)."
+  },
+  "corridorAlertNotifyInstantDescription": "Push instantané, digest à 9 h",
+  "@corridorAlertNotifyInstantDescription": {
+    "description": "Phrase courte du mode instantané, bandeau des correspondances et champ du formulaire (corridor_alert_labels.dart)."
+  },
+  "corridorAlertNotifyDailyDescription": "Digest quotidien à 9 h",
+  "@corridorAlertNotifyDailyDescription": {
+    "description": "Phrase courte du mode quotidien (corridor_alert_labels.dart)."
+  },
+  "corridorAlertNotifySilentDescription": "Sans notification, compteur seulement",
+  "@corridorAlertNotifySilentDescription": {
+    "description": "Phrase courte du mode silencieux (corridor_alert_labels.dart)."
+  },
+  "corridorAlertSameMonthFromPattern": "d",
+  "@corridorAlertSameMonthFromPattern": {
+    "description": "Motif intl DateFormat, pas un texte : date de début d'une alerte quand les deux bornes sont dans le même mois (corridor_alert_labels.dart, corridorAlertDateLabel)."
+  },
+  "corridorAlertDateRange": "{from} au {to}",
+  "@corridorAlertDateRange": {
+    "description": "Plage de dates d'une alerte corridor (corridor_alert_labels.dart, corridorAlertDateLabel).",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "corridorAlertDateFrom": "À partir du {date}",
+  "@corridorAlertDateFrom": {
+    "description": "Alerte avec seulement une date de début (corridor_alert_labels.dart, corridorAlertDateLabel).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "corridorAlertDateUntil": "Jusqu'au {date}",
+  "@corridorAlertDateUntil": {
+    "description": "Alerte avec seulement une date de fin (corridor_alert_labels.dart, corridorAlertDateLabel).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "corridorAlertAnyDate": "Toute date",
+  "@corridorAlertAnyDate": {
+    "description": "Alerte sans fenêtre de dates (corridor_alert_labels.dart, corridor_alert_form_sheet.dart)."
+  },
+  "corridorAlertAnyWeight": "Tout poids",
+  "@corridorAlertAnyWeight": {
+    "description": "Alerte colis sans poids minimum (corridor_alert_labels.dart, corridorAlertWeightLabel)."
+  },
+  "corridorAlertCardMenuTooltip": "Options",
+  "@corridorAlertCardMenuTooltip": {
+    "description": "Tooltip du bouton menu « ⋯ » d'une carte d'alerte corridor (corridor_alert_card.dart)."
+  },
+  "corridorAlertPausedStatus": "En pause · aucune notification",
+  "@corridorAlertPausedStatus": {
+    "description": "Ligne d'état d'une alerte en pause (corridor_alert_card.dart, _StatusRow)."
+  },
+  "corridorAlertResume": "Reprendre",
+  "@corridorAlertResume": {
+    "description": "Action « Reprendre » sur une alerte en pause (corridor_alert_card.dart, corridor_alert_actions_sheet.dart)."
+  },
+  "corridorAlertExpiredOn": "Expirée le {date}",
+  "@corridorAlertExpiredOn": {
+    "description": "Ligne d'état d'une alerte expirée (corridor_alert_card.dart, _StatusRow).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "corridorAlertExtend": "Prolonger",
+  "@corridorAlertExtend": {
+    "description": "Action « Prolonger » sur une alerte expirée (corridor_alert_card.dart, _StatusRow)."
+  },
+  "corridorAlertNewTrips": "{count, plural, =1{{count} nouveau trajet} other{{count} nouveaux trajets}}",
+  "@corridorAlertNewTrips": {
+    "description": "Nombre de trajets nouveaux depuis la dernière consultation (corridor_alert_card.dart, _StatusRow).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "corridorAlertNewParcels": "{count, plural, =1{{count} nouveau colis} other{{count} nouveaux colis}}",
+  "@corridorAlertNewParcels": {
+    "description": "Nombre de colis nouveaux depuis la dernière consultation (corridor_alert_card.dart, _StatusRow).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "corridorAlertSeeMatches": "Voir",
+  "@corridorAlertSeeMatches": {
+    "description": "Action qui ouvre les correspondances depuis la carte (corridor_alert_card.dart, _StatusRow)."
+  },
+  "corridorAlertNoTripsYet": "Aucun trajet pour l'instant",
+  "@corridorAlertNoTripsYet": {
+    "description": "Aucune correspondance trajet (corridor_alert_card.dart, corridor_alert_matches_screen.dart)."
+  },
+  "corridorAlertNoParcelsYet": "Aucun colis pour l'instant",
+  "@corridorAlertNoParcelsYet": {
+    "description": "Aucune correspondance colis (corridor_alert_card.dart, corridor_alert_matches_screen.dart)."
+  },
+  "corridorAlertNothingNewTrips": "{count, plural, =1{Rien de neuf · {count} trajet au total} other{Rien de neuf · {count} trajets au total}}",
+  "@corridorAlertNothingNewTrips": {
+    "description": "Total de correspondances trajets sans nouveauté (corridor_alert_card.dart, _StatusRow).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "corridorAlertNothingNewParcels": "{count, plural, =1{Rien de neuf · {count} colis au total} other{Rien de neuf · {count} colis au total}}",
+  "@corridorAlertNothingNewParcels": {
+    "description": "Total de correspondances colis sans nouveauté (corridor_alert_card.dart, _StatusRow).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "corridorAlertEditTitle": "Modifier l'alerte",
+  "@corridorAlertEditTitle": {
+    "description": "Titre de la feuille d'édition et tooltip du bouton crayon (corridor_alert_form_sheet.dart, corridor_alert_matches_screen.dart)."
+  },
+  "corridorAlertListTitleAll": "Mes alertes",
+  "@corridorAlertListTitleAll": {
+    "description": "Titre neutre (hub, toutes directions ou alerte pas encore chargée) (corridor_alert_list_screen.dart, corridor_alert_matches_screen.dart)."
+  },
+  "corridorAlertMatchesEmptyTripsDescription": "Aucun trajet ne correspond à cette alerte pour l'instant.",
+  "@corridorAlertMatchesEmptyTripsDescription": {
+    "description": "Sous-titre de l'état vide des correspondances trajet (corridor_alert_matches_screen.dart)."
+  },
+  "corridorAlertMatchesEmptyParcelsDescription": "Aucun colis ne correspond à cette alerte pour l'instant.",
+  "@corridorAlertMatchesEmptyParcelsDescription": {
+    "description": "Sous-titre de l'état vide des correspondances colis (corridor_alert_matches_screen.dart)."
+  },
+  "corridorAlertBannerPausedTitle": "Alerte en pause",
+  "@corridorAlertBannerPausedTitle": {
+    "description": "Titre du bandeau résumé d'une alerte en pause (corridor_alert_matches_screen.dart, _AlertSummaryBanner)."
+  },
+  "corridorAlertBannerPausedSubtitle": "Aucune notification",
+  "@corridorAlertBannerPausedSubtitle": {
+    "description": "Sous-titre du bandeau résumé d'une alerte en pause (corridor_alert_matches_screen.dart, _AlertSummaryBanner)."
+  },
+  "corridorAlertBannerExpiredTitle": "Alerte expirée",
+  "@corridorAlertBannerExpiredTitle": {
+    "description": "Titre du bandeau résumé d'une alerte expirée (corridor_alert_matches_screen.dart, _AlertSummaryBanner)."
+  },
+  "corridorAlertBannerExpiredSubtitle": "La fenêtre de dates est passée",
+  "@corridorAlertBannerExpiredSubtitle": {
+    "description": "Sous-titre du bandeau résumé d'une alerte expirée (corridor_alert_matches_screen.dart, _AlertSummaryBanner)."
+  },
+  "corridorAlertBannerActiveTitle": "Alerte active",
+  "@corridorAlertBannerActiveTitle": {
+    "description": "Titre du bandeau résumé d'une alerte active (corridor_alert_matches_screen.dart, _AlertSummaryBanner)."
+  },
+  "corridorAlertNewSection": "Nouveaux · {count}",
+  "@corridorAlertNewSection": {
+    "description": "En-tête de la section « Nouveaux » de la liste des correspondances ; {count} est déjà formaté (corridorAlertTripCount/ParcelCount) (corridor_alert_matches_screen.dart, _MatchList).",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "corridorAlertSeenSection": "Déjà vus · {count}",
+  "@corridorAlertSeenSection": {
+    "description": "En-tête de la section « Déjà vus » de la liste des correspondances ; {count} est déjà formaté (corridor_alert_matches_screen.dart, _MatchList).",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "corridorAlertTripCount": "{count, plural, =1{{count} trajet} other{{count} trajets}}",
+  "@corridorAlertTripCount": {
+    "description": "Compteur de correspondances trajets (corridor_alert_matches_screen.dart, _MatchList._count).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "corridorAlertParcelCount": "{count, plural, =1{{count} colis} other{{count} colis}}",
+  "@corridorAlertParcelCount": {
+    "description": "Compteur de correspondances colis (corridor_alert_matches_screen.dart, _MatchList._count).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "corridorAlertListTitlePackages": "Mes alertes colis",
+  "@corridorAlertListTitlePackages": {
+    "description": "Titre de l'écran mono-direction colis (corridor_alert_list_screen.dart)."
+  },
+  "corridorAlertListTitleTrips": "Mes alertes trajets",
+  "@corridorAlertListTitleTrips": {
+    "description": "Titre de l'écran mono-direction trajets (corridor_alert_list_screen.dart)."
+  },
+  "corridorAlertCreateFab": "Créer",
+  "@corridorAlertCreateFab": {
+    "description": "Bouton d'action flottant qui ouvre la création d'une alerte (corridor_alert_list_screen.dart)."
+  },
+  "corridorAlertEmptyDescriptionPackages": "Crée une alerte pour être prévenu dès qu'un colis apparaît sur ton corridor.",
+  "@corridorAlertEmptyDescriptionPackages": {
+    "description": "Description de l'état vide, direction colis (corridor_alert_list_screen.dart)."
+  },
+  "corridorAlertEmptyDescriptionTrips": "Crée une alerte pour être prévenu dès qu'un trajet apparaît sur ton corridor.",
+  "@corridorAlertEmptyDescriptionTrips": {
+    "description": "Description de l'état vide, direction trajets (corridor_alert_list_screen.dart)."
+  },
+  "corridorAlertEmptyDescriptionAll": "Crée une alerte pour être prévenu dès qu'un trajet ou un colis apparaît sur ton corridor.",
+  "@corridorAlertEmptyDescriptionAll": {
+    "description": "Description de l'état vide, hub sans direction (corridor_alert_list_screen.dart)."
+  },
+  "corridorAlertEmptyTitle": "Aucune alerte corridor",
+  "@corridorAlertEmptyTitle": {
+    "description": "Titre de l'état vide de la liste des alertes (corridor_alert_list_screen.dart)."
+  },
+  "corridorAlertCreateAction": "Créer une alerte",
+  "@corridorAlertCreateAction": {
+    "description": "CTA de l'état vide et titre de la feuille de création (corridor_alert_list_screen.dart, corridor_alert_form_sheet.dart)."
+  },
+  "corridorAlertGroupTrips": "Trajets surveillés",
+  "@corridorAlertGroupTrips": {
+    "description": "En-tête de groupe « Trajets » du hub (corridor_alert_list_screen.dart, _GroupHeader)."
+  },
+  "corridorAlertGroupPackages": "Colis surveillés",
+  "@corridorAlertGroupPackages": {
+    "description": "En-tête de groupe « Colis » du hub (corridor_alert_list_screen.dart, _GroupHeader)."
+  },
+  "corridorAlertActionEditSubtitle": "Corridor, dates et filtres",
+  "@corridorAlertActionEditSubtitle": {
+    "description": "Sous-titre de l'action « Modifier » du menu d'une alerte (corridor_alert_actions_sheet.dart)."
+  },
+  "corridorAlertDuplicate": "Dupliquer",
+  "@corridorAlertDuplicate": {
+    "description": "Action « Dupliquer » du menu d'une alerte (corridor_alert_actions_sheet.dart)."
+  },
+  "corridorAlertDuplicateSubtitle": "Repartir de cette alerte pour en créer une autre",
+  "@corridorAlertDuplicateSubtitle": {
+    "description": "Sous-titre de l'action « Dupliquer » (corridor_alert_actions_sheet.dart)."
+  },
+  "corridorAlertPause": "Mettre en pause",
+  "@corridorAlertPause": {
+    "description": "Action « Mettre en pause » du menu d'une alerte active (corridor_alert_actions_sheet.dart)."
+  },
+  "corridorAlertPauseSubtitle": "Plus de notification, l'alerte reste là",
+  "@corridorAlertPauseSubtitle": {
+    "description": "Sous-titre de l'action « Mettre en pause » (corridor_alert_actions_sheet.dart)."
+  },
+  "corridorAlertResumeSubtitle": "Les notifications repartent",
+  "@corridorAlertResumeSubtitle": {
+    "description": "Sous-titre de l'action « Reprendre » du menu d'une alerte en pause (corridor_alert_actions_sheet.dart)."
+  },
+  "corridorAlertSaveError": "Impossible d'enregistrer l'alerte",
+  "@corridorAlertSaveError": {
+    "description": "Message par défaut si l'enregistrement échoue sans détail serveur (corridor_alert_form_sheet.dart)."
+  },
+  "corridorAlertSubmitCreate": "Créer l'alerte",
+  "@corridorAlertSubmitCreate": {
+    "description": "Libellé du bouton de soumission en création (corridor_alert_form_sheet.dart)."
+  },
+  "corridorAlertNotifyTitle": "Notifications",
+  "@corridorAlertNotifyTitle": {
+    "description": "Titre du champ de fréquence de notification (corridor_alert_form_sheet.dart, _NotifyModeField)."
+  },
+  "corridorAlertZoneToggleTitle": "Zone de remise sur la carte",
+  "@corridorAlertZoneToggleTitle": {
+    "description": "Titre du toggle de zone de remise (corridor_alert_form_sheet.dart, _ZoneToggleRow)."
+  },
+  "corridorAlertZoneToggleSubtitle": "Filtre par point de récupération (optionnel)",
+  "@corridorAlertZoneToggleSubtitle": {
+    "description": "Sous-titre du toggle de zone de remise (corridor_alert_form_sheet.dart, _ZoneToggleRow)."
+  },
+  "corridorAlertSegmentPackages": "Colis",
+  "@corridorAlertSegmentPackages": {
+    "description": "Segment « Colis » du sélecteur de direction (corridor_alert_form_sheet.dart, _DirectionSegment)."
+  },
+  "corridorAlertSegmentTrips": "Trajets",
+  "@corridorAlertSegmentTrips": {
+    "description": "Segment « Trajets » du sélecteur de direction (corridor_alert_form_sheet.dart, _DirectionSegment)."
+  },
+  "corridorAlertDateWindowLabel": "Fenêtre de dates (optionnel)",
+  "@corridorAlertDateWindowLabel": {
+    "description": "Titre du champ de fenêtre de dates (corridor_alert_form_sheet.dart, _DateWindowField)."
+  },
+  "corridorAlertClearDateRange": "Effacer la période",
+  "@corridorAlertClearDateRange": {
+    "description": "Libellé d'accessibilité du bouton qui efface la fenêtre de dates (corridor_alert_form_sheet.dart, _DateWindowField)."
+  },
+  "corridorAlertMinWeightLabel": "Poids minimum (optionnel)",
+  "@corridorAlertMinWeightLabel": {
+    "description": "Libellé du champ de poids minimum (corridor_alert_form_sheet.dart, _MinWeightField)."
+  },
+  "corridorAlertContentTypesLabel": "Types de contenu (optionnel)",
+  "@corridorAlertContentTypesLabel": {
+    "description": "Titre du sélecteur de catégories de contenu (corridor_alert_form_sheet.dart)."
+  },
+  "corridorAlertZoneCityLabel": "Centrer la zone sur une ville",
+  "@corridorAlertZoneCityLabel": {
+    "description": "Libellé du champ de recherche de ville du sélecteur de zone (zone_picker_field.dart)."
+  },
+  "corridorAlertUseMyLocation": "Utiliser ma position",
+  "@corridorAlertUseMyLocation": {
+    "description": "Bouton de géolocalisation du sélecteur de zone (zone_picker_field.dart)."
+  },
+  "corridorAlertZonePlaceholder": "Point de remise sélectionné",
+  "@corridorAlertZonePlaceholder": {
+    "description": "Texte par défaut avant résolution du reverse-geocoding (zone_picker_field.dart)."
+  },
+  "corridorAlertRadiusLabel": "Rayon",
+  "@corridorAlertRadiusLabel": {
+    "description": "Libellé du slider de rayon du sélecteur de zone (zone_picker_field.dart)."
+  },
+  "corridorAlertTripAvailable": "Trajet disponible",
+  "@corridorAlertTripAvailable": {
+    "description": "Micro-label de la carte de correspondance trajet (trip_match_card.dart)."
+  },
+  "corridorAlertAvailableKg": "{kg} kg dispo",
+  "@corridorAlertAvailableKg": {
+    "description": "Capacité disponible du trajet, {kg} déjà formaté sans décimale (trip_match_card.dart).",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "corridorAlertMatchPrice": "Prix {price}",
+  "@corridorAlertMatchPrice": {
+    "description": "Prix au kilo d'un trajet, {price} déjà formaté (montant + devise + « /kg ») et mis en gras via emphasizedSpans (trip_match_card.dart).",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "corridorAlertOpenPrice": "Prix libre",
+  "@corridorAlertOpenPrice": {
+    "description": "Trajet sans prix au kilo fixé (trip_match_card.dart)."
+  },
+  "favoritesTitle": "Mes favoris",
+  "@favoritesTitle": {
+    "description": "Titre de l'écran Favoris, capacité voyageur et expéditeur (favorites_screen.dart)."
+  },
+  "favoritesTripsTab": "Trajets",
+  "@favoritesTripsTab": {
+    "description": "Onglet « Trajets » de l'écran Favoris (favorites_screen.dart)."
+  },
+  "favoritesRequestsTab": "Demandes",
+  "@favoritesRequestsTab": {
+    "description": "Onglet « Demandes » de l'écran Favoris (favorites_screen.dart)."
+  },
+  "favoritesEmptyTripsMessage": "Aucun trajet favori pour l'instant",
+  "@favoritesEmptyTripsMessage": {
+    "description": "Message de l'état vide de l'onglet Trajets (favorites_screen.dart, _TripsTab)."
+  },
+  "favoritesEmptyRequestsMessage": "Aucune demande favorite pour l'instant",
+  "@favoritesEmptyRequestsMessage": {
+    "description": "Message de l'état vide de l'onglet Demandes (favorites_screen.dart, _RequestsTab)."
+  },
+  "favoritesEmptyTitle": "Aucun favori pour l'instant",
+  "@favoritesEmptyTitle": {
+    "description": "Titre de l'état vide partagé (favorites_screen.dart, _EmptyState)."
+  },
+  "favoritesLoadErrorMessage": "Impossible de charger vos favoris.",
+  "@favoritesLoadErrorMessage": {
+    "description": "Sous-titre de l'état d'erreur partagé (favorites_screen.dart, _ErrorState)."
+  },
+  "favoritesRemoveTooltip": "Retirer des favoris",
+  "@favoritesRemoveTooltip": {
+    "description": "Tooltip du signet quand l'élément est déjà favori (favorite_heart_button.dart)."
+  },
+  "favoritesAddTooltip": "Ajouter aux favoris",
+  "@favoritesAddTooltip": {
+    "description": "Tooltip du signet quand l'élément n'est pas encore favori (favorite_heart_button.dart)."
+  },
+  "reportReasonHarassment": "Harcèlement ou comportement abusif",
+  "@reportReasonHarassment": {
+    "description": "Motif de signalement (report_reason_labels.dart)."
+  },
+  "reportReasonFakeProfile": "Faux profil",
+  "@reportReasonFakeProfile": {
+    "description": "Motif de signalement (report_reason_labels.dart)."
+  },
+  "reportReasonScamAttempt": "Tentative d'arnaque",
+  "@reportReasonScamAttempt": {
+    "description": "Motif de signalement (report_reason_labels.dart)."
+  },
+  "reportReasonProhibitedItem": "Objet interdit au transport",
+  "@reportReasonProhibitedItem": {
+    "description": "Motif de signalement (report_reason_labels.dart)."
+  },
+  "reportReasonFalseInformation": "Informations fausses ou trompeuses",
+  "@reportReasonFalseInformation": {
+    "description": "Motif de signalement (report_reason_labels.dart)."
+  },
+  "reportReasonInappropriateContent": "Contenu inapproprié",
+  "@reportReasonInappropriateContent": {
+    "description": "Motif de signalement (report_reason_labels.dart)."
+  },
+  "reportReasonSpam": "Spam",
+  "@reportReasonSpam": {
+    "description": "Motif de signalement (report_reason_labels.dart)."
+  },
+  "reportReasonPaymentIssue": "Problème de paiement",
+  "@reportReasonPaymentIssue": {
+    "description": "Motif de signalement (report_reason_labels.dart)."
+  },
+  "reportReasonAppBug": "Bug de l'application",
+  "@reportReasonAppBug": {
+    "description": "Motif de signalement (report_reason_labels.dart)."
+  },
+  "reportReasonOther": "Autre",
+  "@reportReasonOther": {
+    "description": "Motif de signalement (report_reason_labels.dart)."
+  },
+  "reportScreenTitle": "Signaler un problème",
+  "@reportScreenTitle": {
+    "description": "Titre de l'écran de signalement (incident_report_screen.dart)."
+  },
+  "reportSentMessage": "Signalement envoyé. Notre équipe va l'examiner.",
+  "@reportSentMessage": {
+    "description": "Snackbar de succès après envoi (incident_report_screen.dart)."
+  },
+  "reportReasonLabel": "Motif",
+  "@reportReasonLabel": {
+    "description": "Titre de la section des motifs (incident_report_screen.dart)."
+  },
+  "reportDescriptionLabel": "Description",
+  "@reportDescriptionLabel": {
+    "description": "Libellé du champ de description (incident_report_screen.dart)."
+  },
+  "reportDescriptionHint": "Décrivez le problème rencontré…",
+  "@reportDescriptionHint": {
+    "description": "Indication du champ de description (incident_report_screen.dart)."
+  },
+  "reportScreenshotsLabel": "Captures d'écran (optionnel)",
+  "@reportScreenshotsLabel": {
+    "description": "Titre de la section des captures d'écran (incident_report_screen.dart)."
+  },
+  "reportScreenshotsHint": "Jusqu'à 4 images pour aider notre équipe à comprendre.",
+  "@reportScreenshotsHint": {
+    "description": "Indication de la section des captures d'écran (incident_report_screen.dart)."
+  },
+  "reportSendButton": "Envoyer le signalement",
+  "@reportSendButton": {
+    "description": "Bouton de soumission du formulaire (incident_report_screen.dart)."
+  },
+  "reportAddPhotoLabel": "Ajouter une photo",
+  "@reportAddPhotoLabel": {
+    "description": "Libellé d'accessibilité du bouton d'ajout de capture (incident_photo_section.dart)."
+  },
+  "reportRemovePhotoLabel": "Supprimer cette photo",
+  "@reportRemovePhotoLabel": {
+    "description": "Libellé d'accessibilité du bouton de retrait d'une capture (incident_photo_section.dart)."
+  },
+  "reportSendFailed": "Impossible d'envoyer le signalement. Réessayez.",
+  "@reportSendFailed": {
+    "description": "Snackbar générique quand la soumission échoue sans exception typée (incident_report_cubit.dart, IncidentReportError sans error)."
+  },
+  "followRecencyJustNow": "à l'instant",
+  "@followRecencyJustNow": {
+    "description": "Ancienneté de publication, cas immédiat ou futur (subscription_recency.dart, subscriptionRecencyLabel)."
+  },
+  "followRecencyMinutes": "il y a {minutes} min",
+  "@followRecencyMinutes": {
+    "description": "Ancienneté de publication en minutes (subscription_recency.dart, subscriptionRecencyLabel).",
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "followRecencyHours": "il y a {hours} h",
+  "@followRecencyHours": {
+    "description": "Ancienneté de publication en heures (subscription_recency.dart, subscriptionRecencyLabel).",
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "followRecencyYesterday": "hier",
+  "@followRecencyYesterday": {
+    "description": "Ancienneté de publication, la veille (subscription_recency.dart, subscriptionRecencyLabel)."
+  },
+  "followRecencyDays": "il y a {days} j",
+  "@followRecencyDays": {
+    "description": "Ancienneté de publication en jours (subscription_recency.dart, subscriptionRecencyLabel).",
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "followOngoingTrips": "{count, plural, =0{Aucun trajet en cours} =1{{count} trajet en cours} other{{count} trajets en cours}}",
+  "@followOngoingTrips": {
+    "description": "Nombre de trajets en cours d'un voyageur suivi (subscription_tile.dart, _tripsLabel ; réutilisée comme titre d'état vide dans traveler_profile_hub_screen.dart avec count=0).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "followNewTripSemantics": "Nouveau trajet publié par {name}",
+  "@followNewTripSemantics": {
+    "description": "Libellé d'accessibilité de la carte quand le voyageur a publié depuis la dernière visite (subscription_tile.dart, SubscriptionTile).",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "followNoRecentTrip": "Aucun trajet publié pour le moment",
+  "@followNoRecentTrip": {
+    "description": "Repli quand le voyageur suivi n'a aucun trajet publié (subscription_tile.dart, SubscriptionTile)."
+  },
+  "followDepartureLabel": "Départ {date}",
+  "@followDepartureLabel": {
+    "description": "Date de départ du dernier trajet, déjà formatée (subscription_tile.dart, SubscriptionTile).",
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "followProBadge": "PRO",
+  "@followProBadge": {
+    "description": "Badge compte PRO sur la tuile d'un voyageur suivi (subscription_tile.dart, _ProTag ; R50, « Pro » en anglais)."
+  },
+  "followViewTripSemantics": "Voir le trajet {trip} de {name}",
+  "@followViewTripSemantics": {
+    "description": "Libellé d'accessibilité de la ligne du dernier trajet, cible tactile distincte de la carte (subscription_tile.dart, _LastTripLine).",
+    "placeholders": {
+      "trip": {"type": "String"},
+      "name": {"type": "String"}
+    }
+  },
+  "followPushSemanticsFor": "Alertes push de {name}",
+  "@followPushSemanticsFor": {
+    "description": "Libellé d'accessibilité de la cloche d'un voyageur suivi (subscription_tile.dart, _BellButton).",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "followPushOffTooltip": "Couper les alertes push",
+  "@followPushOffTooltip": {
+    "description": "Tooltip de la cloche quand les alertes push sont actives, partagé par subscribe_bar.dart et subscription_tile.dart (même feature, même sens)."
+  },
+  "followPushOnTooltip": "Activer les alertes push",
+  "@followPushOnTooltip": {
+    "description": "Tooltip de la cloche quand les alertes push sont coupées, partagé par subscribe_bar.dart et subscription_tile.dart (même feature, même sens)."
+  },
+  "followSubscribeCaption": "Vous serez prévenu de chacun de ses nouveaux trajets.",
+  "@followSubscribeCaption": {
+    "description": "Phrase d'accroche quand l'utilisateur n'est pas encore abonné (subscribe_bar.dart, SubscribeBar)."
+  },
+  "followPushOnCaption": "Alertes push activées : chaque nouveau trajet vous notifie.",
+  "@followPushOnCaption": {
+    "description": "Phrase d'état quand l'utilisateur est abonné avec les alertes push actives (subscribe_bar.dart, SubscribeBar)."
+  },
+  "followPushOffCaption": "Sans alerte push : ses trajets arriveront seulement dans vos notifications.",
+  "@followPushOffCaption": {
+    "description": "Phrase d'état quand l'utilisateur est abonné sans les alertes push (subscribe_bar.dart, SubscribeBar)."
+  },
+  "followUnsubscribeConfirmMessage": "Vous ne serez plus prévenu de ses nouveaux trajets.",
+  "@followUnsubscribeConfirmMessage": {
+    "description": "Message du dialogue de confirmation de désabonnement (subscribe_bar.dart, SubscribeBar._confirmUnsubscribe)."
+  },
+  "followPushToggleSemantics": "Alertes push",
+  "@followPushToggleSemantics": {
+    "description": "Libellé d'accessibilité générique de la bascule push, sans nom de voyageur (subscribe_bar.dart, _PushToggle)."
+  },
+  "followPushBadge": "Push",
+  "@followPushBadge": {
+    "description": "Libellé court de la bascule push, « Push » se dit pareil dans les deux langues (subscribe_bar.dart, _PushToggle)."
+  },
+  "followScreenTitle": "Mes abonnements",
+  "@followScreenTitle": {
+    "description": "Titre de l'écran des voyageurs suivis (mes_abonnements_screen.dart)."
+  },
+  "followMarkAllSeenTooltip": "Tout marquer comme vu",
+  "@followMarkAllSeenTooltip": {
+    "description": "Tooltip du bouton qui retire toutes les pastilles « nouveau » (mes_abonnements_screen.dart)."
+  },
+  "followEmptyTitle": "Aucun abonnement",
+  "@followEmptyTitle": {
+    "description": "Titre de l'état vide, aucun voyageur suivi (mes_abonnements_screen.dart)."
+  },
+  "followEmptyDescription": "Abonnez-vous à un voyageur depuis son profil : vous serez prévenu dès qu'il publie un trajet.",
+  "@followEmptyDescription": {
+    "description": "Description de l'état vide, aucun voyageur suivi (mes_abonnements_screen.dart)."
+  },
+  "followSearchHint": "Rechercher un voyageur…",
+  "@followSearchHint": {
+    "description": "Indication du champ de recherche, affiché à partir de 6 abonnements (mes_abonnements_screen.dart)."
+  },
+  "followTravelersCount": "{count, plural, =1{{count} voyageur suivi} other{{count} voyageurs suivis}}",
+  "@followTravelersCount": {
+    "description": "Compteur du nombre de voyageurs suivis (mes_abonnements_screen.dart, _CountLine).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "followNewSinceLastVisit": "{count, plural, =1{{count} a publié depuis votre dernière visite} other{{count} ont publié depuis votre dernière visite}}",
+  "@followNewSinceLastVisit": {
+    "description": "Compteur des voyageurs ayant publié depuis la dernière visite (mes_abonnements_screen.dart, _CountLine ; non affiché si 0).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "followUnsubscribeSwipeLabel": "Désabonner",
+  "@followUnsubscribeSwipeLabel": {
+    "description": "Libellé court de l'action de balayage (mes_abonnements_screen.dart, _slidable) — distinct de followUnfollowButton, texte français différent."
+  },
+  "followUnsubscribeConfirmTitle": "Ne plus suivre {name} ?",
+  "@followUnsubscribeConfirmTitle": {
+    "description": "Titre du dialogue de confirmation de désabonnement, avec le nom du voyageur (mes_abonnements_screen.dart, _confirmUnsubscribe).",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "followUnsubscribeFullMessage": "Vous ne serez plus prévenu de ses nouveaux trajets. Vous pourrez vous réabonner depuis son profil.",
+  "@followUnsubscribeFullMessage": {
+    "description": "Message du dialogue de confirmation de désabonnement de mes_abonnements_screen.dart (_confirmUnsubscribe) — texte distinct de followUnsubscribeConfirmMessage (subscribe_bar.dart), qui n'a qu'une phrase."
+  },
+  "followPushEnabledMessage": "Alertes push activées pour {name}.",
+  "@followPushEnabledMessage": {
+    "description": "Snackbar après activation des alertes push d'un voyageur (mes_abonnements_screen.dart, _togglePush).",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "followPushDisabledMessage": "Alertes push coupées. Ses nouveaux trajets resteront visibles dans vos notifications.",
+  "@followPushDisabledMessage": {
+    "description": "Snackbar après coupure des alertes push d'un voyageur (mes_abonnements_screen.dart, _togglePush)."
+  },
+  "followNoMatchMessage": "Aucun voyageur ne correspond à cette recherche.",
+  "@followNoMatchMessage": {
+    "description": "Message quand la recherche ne trouve aucun voyageur suivi (mes_abonnements_screen.dart, _NoMatch)."
+  },
+  "followHubProfileLoadError": "Impossible de charger le profil",
+  "@followHubProfileLoadError": {
+    "description": "Erreur de chargement de l'en-tête du profil voyageur (traveler_profile_hub_screen.dart, _ProfileHeader)."
+  },
+  "followHubProAccountLabel": "Compte PRO",
+  "@followHubProAccountLabel": {
+    "description": "Marque de confiance compte PRO dans l'en-tête (traveler_profile_hub_screen.dart, _TrustMarks)."
+  },
+  "followHubVerifiedBadge": "Identité vérifiée",
+  "@followHubVerifiedBadge": {
+    "description": "Marque de confiance identité vérifiée dans l'en-tête (traveler_profile_hub_screen.dart, _TrustMarks)."
+  },
+  "followHubRating": "{rating} de note",
+  "@followHubRating": {
+    "description": "Phrase de réputation, note moyenne déjà formatée (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).",
+    "placeholders": {
+      "rating": {"type": "String"}
+    }
+  },
+  "followHubDeliveries": "{count, plural, =1{{count} livraison} other{{count} livraisons}}",
+  "@followHubDeliveries": {
+    "description": "Phrase de réputation, nombre de livraisons (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "followHubRespondsIn": "répond en {hours} h",
+  "@followHubRespondsIn": {
+    "description": "Phrase de réputation, délai de réponse moyen (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).",
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "followHubNewOnYadony": "Nouveau sur Yadony",
+  "@followHubNewOnYadony": {
+    "description": "Repli de la phrase de réputation quand le voyageur n'a ni note ni livraison (traveler_profile_hub_screen.dart, _StatSentence)."
+  },
+  "followHubTripsTab": "Trajets",
+  "@followHubTripsTab": {
+    "description": "Onglet des trajets du voyageur (traveler_profile_hub_screen.dart, _StatsAndTabBar)."
+  },
+  "followHubReviewsTab": "Avis",
+  "@followHubReviewsTab": {
+    "description": "Onglet des avis du voyageur (traveler_profile_hub_screen.dart, _StatsAndTabBar)."
+  },
+  "followHubTripsLoadError": "Impossible de charger les trajets. Réessayez dans un instant.",
+  "@followHubTripsLoadError": {
+    "description": "Description de l'état d'erreur de l'onglet Trajets (traveler_profile_hub_screen.dart, _TripsTab)."
+  },
+  "followHubNoTripsDescription": "Ce voyageur n'a pas encore publié de trajet.",
+  "@followHubNoTripsDescription": {
+    "description": "Description de l'état vide de l'onglet Trajets (traveler_profile_hub_screen.dart, _TripsTab)."
+  },
+  "followHubReviewsLoadError": "Impossible de charger les avis",
+  "@followHubReviewsLoadError": {
+    "description": "Titre de l'état d'erreur de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsTab)."
+  },
+  "followHubNoReviewsTitle": "Aucun avis",
+  "@followHubNoReviewsTitle": {
+    "description": "Titre de l'état vide de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsList)."
+  },
+  "followHubNoReviewsDescription": "Ce voyageur n'a pas encore reçu d'avis.",
+  "@followHubNoReviewsDescription": {
+    "description": "Description de l'état vide de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsList)."
+  },
+  "followHubReviewsCount": "{count, plural, =1{{count} avis} other{{count} avis}}",
+  "@followHubReviewsCount": {
+    "description": "Nombre d'avis dans l'en-tête de l'onglet Avis ; invariant en français, pluralisé en anglais (traveler_profile_hub_screen.dart, _ReviewsList).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "followHubReserveButton": "Réserver",
+  "@followHubReserveButton": {
+    "description": "Bouton de réservation d'un trajet du voyageur (traveler_announcement_card.dart, TravelerAnnouncementCard)."
+  },
+  "followHubFullBadge": "Complet",
+  "@followHubFullBadge": {
+    "description": "Badge quand le trajet n'a plus de kg disponible (traveler_announcement_card.dart, _MetaLine)."
+  },
+  "followHubAvailableKg": "{kg} kg disponibles",
+  "@followHubAvailableKg": {
+    "description": "Poids disponible du trajet, déjà formaté (traveler_announcement_card.dart, _MetaLine).",
+    "placeholders": {
+      "kg": {"type": "String"}
+    }
+  },
+  "proPastDueMessage": "Votre dernier paiement n'a pas abouti. Sans régularisation, votre accès PRO sera suspendu.",
+  "@proPastDueMessage": {
+    "description": "Message du bandeau d'abonnement PRO impayé (subscription_status_banner.dart, SubscriptionStatusBanner)."
+  },
+  "proPayAction": "Régler",
+  "@proPayAction": {
+    "description": "Bouton d'action du bandeau d'abonnement PRO impayé (subscription_status_banner.dart, SubscriptionStatusBanner)."
+  },
+  "proSubscribeAction": "S'abonner",
+  "@proSubscribeAction": {
+    "description": "Bouton d'action du bandeau de grâce historique, renvoie vers le portail d'abonnement PRO (subscription_status_banner.dart, SubscriptionStatusBanner) — clé dédiée au domaine PRO, distincte de followFollowButton (R40)."
+  },
+  "proFreeAccessEndingSoon": "Votre accès PRO gratuit prendra bientôt fin.",
+  "@proFreeAccessEndingSoon": {
+    "description": "Message de grâce historique sans échéance connue (subscription_status_banner.dart, _legacyGraceMessage)."
+  },
+  "proFreeAccessEnded": "Votre accès PRO gratuit a pris fin.",
+  "@proFreeAccessEnded": {
+    "description": "Message de grâce historique dont l'échéance est déjà passée (subscription_status_banner.dart, _legacyGraceMessage)."
+  },
+  "proFreeAccessEndsInDays": "{count, plural, =1{Votre accès PRO gratuit prend fin dans {count} jour.} other{Votre accès PRO gratuit prend fin dans {count} jours.}}",
+  "@proFreeAccessEndsInDays": {
+    "description": "Message de grâce historique avec échéance future (subscription_status_banner.dart, _legacyGraceMessage ; corrige l'accord « 0 jour » que l'ancien `days > 1 ? 's' : ''` produisait).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "proManageAction": "Gérer",
+  "@proManageAction": {
+    "description": "Bouton d'action du bandeau d'abonnement PRO actif en résiliation programmée (subscription_status_banner.dart, SubscriptionStatusBanner)."
+  },
+  "proSubscriptionEndsOn": "Votre abonnement PRO prend fin le {date}.",
+  "@proSubscriptionEndsOn": {
+    "description": "Message du bandeau d'abonnement PRO actif en résiliation programmée, date déjà formatée (subscription_status_banner.dart, _activeBanner).",
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "proStatusCancelScheduled": "Résiliation programmée",
+  "@proStatusCancelScheduled": {
+    "description": "Statut de la carte d'abonnement PRO, actif avec résiliation programmée (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusActive": "Actif",
+  "@proStatusActive": {
+    "description": "Statut de la carte d'abonnement PRO, actif (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusPastDue": "Paiement en attente",
+  "@proStatusPastDue": {
+    "description": "Statut de la carte d'abonnement PRO, impayé (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusLegacyGrace": "Accès gratuit temporaire",
+  "@proStatusLegacyGrace": {
+    "description": "Statut de la carte d'abonnement PRO, grâce historique (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusCanceled": "Résilié",
+  "@proStatusCanceled": {
+    "description": "Statut de la carte d'abonnement PRO, résilié (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusExpired": "Expiré",
+  "@proStatusExpired": {
+    "description": "Statut de la carte d'abonnement PRO, expiré (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusNone": "Aucun abonnement",
+  "@proStatusNone": {
+    "description": "Statut de la carte d'abonnement PRO, aucun abonnement (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusUnknown": "Statut inconnu",
+  "@proStatusUnknown": {
+    "description": "Statut de la carte d'abonnement PRO, inconnu (subscription_status_card.dart, _statusLabel)."
+  },
+  "proBillingMonthly": "Facturation mensuelle",
+  "@proBillingMonthly": {
+    "description": "Rythme de facturation mensuel de la carte d'abonnement PRO (subscription_status_card.dart, _cycleLabel)."
+  },
+  "proBillingYearly": "Facturation annuelle",
+  "@proBillingYearly": {
+    "description": "Rythme de facturation annuel de la carte d'abonnement PRO (subscription_status_card.dart, _cycleLabel)."
+  },
+  "proFreeTemporaryAccess": "Votre accès PRO est gratuit et temporaire.",
+  "@proFreeTemporaryAccess": {
+    "description": "Mention de grâce historique sur la carte d'abonnement PRO (subscription_status_card.dart, SubscriptionStatusCard)."
+  },
+  "proCancellationScheduledOn": "Résiliation programmée pour le {date}.",
+  "@proCancellationScheduledOn": {
+    "description": "Mention de résiliation programmée sur la carte d'abonnement PRO, date déjà formatée (subscription_status_card.dart, SubscriptionStatusCard).",
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "proNextRenewalOn": "Prochain renouvellement le {date}.",
+  "@proNextRenewalOn": {
+    "description": "Mention de prochain renouvellement sur la carte d'abonnement PRO, date déjà formatée (subscription_status_card.dart, SubscriptionStatusCard).",
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "proManageSubscriptionButton": "Gérer mon abonnement",
+  "@proManageSubscriptionButton": {
+    "description": "Bouton de gestion sur la carte d'abonnement PRO (subscription_status_card.dart, SubscriptionStatusCard)."
+  },
+  "proPortalOpenFailedMessage": "Impossible d'ouvrir la page. Réessayez, ou rendez-vous sur le site Yadony PRO depuis votre navigateur.",
+  "@proPortalOpenFailedMessage": {
+    "description": "Message d'échec d'ouverture du portail PRO, partagé par l'écran Compte PRO (upgrade_to_pro_screen.dart) et le bandeau du Profil (subscription_banner_host.dart)."
+  },
+  "proLimitUnderstoodButton": "Compris",
+  "@proLimitUnderstoodButton": {
+    "description": "Bouton unique du dialogue de limite PRO quand l'offre PRO est fermée (pro_limit_dialog.dart)."
+  },
+  "proLimitUpgradeButton": "Passer en PRO",
+  "@proLimitUpgradeButton": {
+    "description": "Bouton de confirmation du dialogue de limite PRO quand l'offre est ouverte (pro_limit_dialog.dart)."
+  },
+  "proAccountScreenTitle": "Compte PRO",
+  "@proAccountScreenTitle": {
+    "description": "Titre de l'écran compte PRO, vues chargement et vente (upgrade_to_pro_screen.dart, _ProAuthPendingView, _ProPitchView)."
+  },
+  "proAccountLoadingMessage": "Chargement de votre compte.",
+  "@proAccountLoadingMessage": {
+    "description": "Message d'attente pendant la résolution de l'authentification (upgrade_to_pro_screen.dart, _ProAuthPendingView)."
+  },
+  "proPitchHeadline": "Passez en compte PRO",
+  "@proPitchHeadline": {
+    "description": "Titre de la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proPitchDescription": "Le compte PRO met en avant votre activité de transporteur et vous donne accès aux avantages réservés aux professionnels.",
+  "@proPitchDescription": {
+    "description": "Description de la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proPitchIncludesLabel": "CE QUE COMPREND LE COMPTE PRO",
+  "@proPitchIncludesLabel": {
+    "description": "Libellé de section des avantages, page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proAdvantageBadge": "Badge Pro",
+  "@proAdvantageBadge": {
+    "description": "Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proAdvantageUnlimitedVolume": "Volume illimité",
+  "@proAdvantageUnlimitedVolume": {
+    "description": "Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proAdvantageMatchingPriority": "Priorité de mise en relation",
+  "@proAdvantageMatchingPriority": {
+    "description": "Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proAdvantageDedicatedSupport": "Support dédié",
+  "@proAdvantageDedicatedSupport": {
+    "description": "Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proPitchPricingLabel": "TARIFS",
+  "@proPitchPricingLabel": {
+    "description": "Libellé de section des tarifs, page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proPricePerMonth": "{price} par mois",
+  "@proPricePerMonth": {
+    "description": "Prix mensuel de l'abonnement PRO, déjà formaté par la devise (upgrade_to_pro_screen.dart, _ProPitchView).",
+    "placeholders": {
+      "price": {"type": "String"}
+    }
+  },
+  "proPricePerYear": "{price} par an",
+  "@proPricePerYear": {
+    "description": "Prix annuel de l'abonnement PRO, déjà formaté par la devise (upgrade_to_pro_screen.dart, _ProPitchView).",
+    "placeholders": {
+      "price": {"type": "String"}
+    }
+  },
+  "proYearlySaving": "Soit {amount} d'économie sur l'année.",
+  "@proYearlySaving": {
+    "description": "Économie annuelle de l'abonnement PRO, déjà formatée par la devise (upgrade_to_pro_screen.dart, _ProPitchView).",
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "proPortalHint": "L'abonnement se souscrit sur le site Yadony PRO, dans votre navigateur.",
+  "@proPortalHint": {
+    "description": "Bandeau d'information sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proPortalButtonLabel": "S'abonner sur le site Yadony PRO",
+  "@proPortalButtonLabel": {
+    "description": "Bouton d'ouverture du portail web PRO, réutilisé par la vue vente et la vue abonnée (upgrade_to_pro_screen.dart)."
+  },
+  "proManageGuidance": "La gestion et la résiliation de votre abonnement se font sur le site Yadony PRO, dans votre navigateur. Une connexion vous y sera demandée.",
+  "@proManageGuidance": {
+    "description": "Indication sur où gérer et résilier l'abonnement PRO (upgrade_to_pro_screen.dart)."
+  },
+  "proDowngradeBlockedMessage": "Votre abonnement PRO est toujours actif. {guidance}",
+  "@proDowngradeBlockedMessage": {
+    "description": "Message opposé au refus 409 active-stripe-subscription, guidance déjà traduite en paramètre (upgrade_to_pro_screen.dart).",
+    "placeholders": {
+      "guidance": {"type": "String"}
+    }
+  },
+  "proAccessEndedMessage": "Votre accès PRO n'est plus actif. Vous pouvez reprendre un abonnement sur le site Yadony PRO.",
+  "@proAccessEndedMessage": {
+    "description": "Message quand le serveur n'accorde plus l'accès PRO (upgrade_to_pro_screen.dart, _ProSubscriberView)."
+  },
+  "proNoSubscriptionMessage": "Vous n'avez pas d'abonnement PRO. Vous pouvez en souscrire un sur le site Yadony PRO.",
+  "@proNoSubscriptionMessage": {
+    "description": "Message quand le statut est « none » (upgrade_to_pro_screen.dart, _ProSubscriberView)."
+  },
+  "proSubscriberScreenTitle": "Mon compte PRO",
+  "@proSubscriberScreenTitle": {
+    "description": "Titre de l'écran compte PRO, vue abonnée (upgrade_to_pro_screen.dart, _ProSubscriberView)."
+  },
+  "proLoadSubscriptionError": "Impossible de charger l'état de votre abonnement pour le moment.",
+  "@proLoadSubscriptionError": {
+    "description": "Message d'erreur de chargement de l'abonnement PRO (upgrade_to_pro_screen.dart, _ProSubscriberView)."
+  },
+  "proSubscriptionNotLoadedYet": "L'état de votre abonnement n'a pas encore été chargé.",
+  "@proSubscriptionNotLoadedYet": {
+    "description": "Message quand aucune demande n'a encore été envoyée (upgrade_to_pro_screen.dart, _ProSubscriberView)."
+  },
+  "proDowngradeDialogTitle": "Désactiver le compte PRO",
+  "@proDowngradeDialogTitle": {
+    "description": "Titre du dialogue de confirmation de retour en compte standard (upgrade_to_pro_screen.dart, _confirmDowngrade)."
+  },
+  "proDowngradeDialogMessage": "Votre badge PRO et vos avantages professionnels seront retirés de votre profil.",
+  "@proDowngradeDialogMessage": {
+    "description": "Message du dialogue de confirmation de retour en compte standard (upgrade_to_pro_screen.dart, _confirmDowngrade)."
+  },
+  "proDowngradeConfirmButton": "Désactiver",
+  "@proDowngradeConfirmButton": {
+    "description": "Bouton de confirmation du dialogue de retour en compte standard (upgrade_to_pro_screen.dart, _confirmDowngrade)."
+  },
+  "proDowngradeSuccessMessage": "Compte PRO désactivé.",
+  "@proDowngradeSuccessMessage": {
+    "description": "Snackbar de succès après retour en compte standard (upgrade_to_pro_screen.dart, _UpgradeToProViewState)."
+  },
+  "proDowngradeButton": "Revenir en compte standard",
+  "@proDowngradeButton": {
+    "description": "Bouton de retour en compte standard (upgrade_to_pro_screen.dart, _ProSubscriberView)."
+  },
+  "addressesTitle": "Mes adresses",
+  "@addressesTitle": {
+    "description": "Titre de l'écran combiné adresses de remise/livraison (pickup_addresses_screen.dart)."
+  },
+  "addressesAddPickupTooltip": "Ajouter une adresse de remise",
+  "@addressesAddPickupTooltip": {
+    "description": "Tooltip du bouton + de l'onglet Remise (pickup_addresses_screen.dart)."
+  },
+  "addressesAddDeliveryTooltip": "Ajouter une adresse de livraison",
+  "@addressesAddDeliveryTooltip": {
+    "description": "Tooltip du bouton + de l'onglet Livraison (pickup_addresses_screen.dart)."
+  },
+  "addressesTabPickup": "📦  Remise",
+  "@addressesTabPickup": {
+    "description": "Libellé de l'onglet Remise (pickup_addresses_screen.dart)."
+  },
+  "addressesTabDelivery": "🗺️  Livraison",
+  "@addressesTabDelivery": {
+    "description": "Libellé de l'onglet Livraison (pickup_addresses_screen.dart)."
+  },
+  "addressesEmptyPickupTitle": "Aucune adresse de remise",
+  "@addressesEmptyPickupTitle": {
+    "description": "Titre de l'état vide de l'onglet Remise (pickup_addresses_screen.dart)."
+  },
+  "addressesEmptyPickupDescription": "Ajoute l'adresse où tu souhaites recevoir les colis des expéditeurs.",
+  "@addressesEmptyPickupDescription": {
+    "description": "Description de l'état vide de l'onglet Remise (pickup_addresses_screen.dart)."
+  },
+  "addressesEmptyDeliveryTitle": "Aucune adresse de livraison",
+  "@addressesEmptyDeliveryTitle": {
+    "description": "Titre de l'état vide de l'onglet Livraison (pickup_addresses_screen.dart)."
+  },
+  "addressesEmptyDeliveryDescription": "Ajoute les adresses où tu déposes habituellement les colis.",
+  "@addressesEmptyDeliveryDescription": {
+    "description": "Description de l'état vide de l'onglet Livraison (pickup_addresses_screen.dart)."
+  },
+  "addressesAddButtonLabel": "Ajouter une adresse",
+  "@addressesAddButtonLabel": {
+    "description": "Bouton d'action des deux états vides (pickup_addresses_screen.dart)."
+  },
+  "addressesSetDefaultLabel": "Définir par défaut",
+  "@addressesSetDefaultLabel": {
+    "description": "Entrée de menu « Définir par défaut » des cartes adresse (pickup_addresses_screen.dart)."
+  },
+  "addressesDeleteTitle": "Supprimer l'adresse",
+  "@addressesDeleteTitle": {
+    "description": "Titre du dialogue de suppression d'une adresse (pickup_addresses_screen.dart)."
+  },
+  "addressesDeleteConfirmMessage": "Es-tu sûr de vouloir supprimer \"{label}\" ? Cette action est irréversible.",
+  "@addressesDeleteConfirmMessage": {
+    "description": "Message du dialogue de suppression d'une adresse, label = étiquette de l'adresse (pickup_addresses_screen.dart).",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "pickupAddressChipHome": "Maison",
+  "@pickupAddressChipHome": {
+    "description": "Suggestion d'étiquette adresse de remise (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressChipOffice": "Bureau",
+  "@pickupAddressChipOffice": {
+    "description": "Suggestion d'étiquette adresse de remise (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressChipWorkshop": "Atelier",
+  "@pickupAddressChipWorkshop": {
+    "description": "Suggestion d'étiquette adresse de remise (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressEditTitle": "Modifier l'adresse",
+  "@pickupAddressEditTitle": {
+    "description": "Titre de l'écran en mode édition (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressCreateTitle": "Nouvelle adresse de remise",
+  "@pickupAddressCreateTitle": {
+    "description": "Titre de l'écran en mode création (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressSaveButton": "Enregistrer l'adresse",
+  "@pickupAddressSaveButton": {
+    "description": "Bouton sticky de validation du formulaire (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressUpdatedMessage": "Adresse mise à jour",
+  "@pickupAddressUpdatedMessage": {
+    "description": "Snackbar de succès en mode édition (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressAddedMessage": "Adresse ajoutée",
+  "@pickupAddressAddedMessage": {
+    "description": "Snackbar de succès en mode création (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressLabelSectionTitle": "Étiquette",
+  "@pickupAddressLabelSectionTitle": {
+    "description": "Titre de section (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressNameFieldLabel": "Nom de l'adresse",
+  "@pickupAddressNameFieldLabel": {
+    "description": "Libellé du champ étiquette (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressNameFieldHint": "Ex : Maison, Bureau…",
+  "@pickupAddressNameFieldHint": {
+    "description": "Placeholder du champ étiquette (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressAddressSectionTitle": "Adresse",
+  "@pickupAddressAddressSectionTitle": {
+    "description": "Titre de section (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressStreetFieldLabel": "Rue et numéro",
+  "@pickupAddressStreetFieldLabel": {
+    "description": "Libellé du champ rue (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressPostalFieldLabel": "Code postal",
+  "@pickupAddressPostalFieldLabel": {
+    "description": "Libellé du champ code postal (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressCityFieldLabel": "Ville",
+  "@pickupAddressCityFieldLabel": {
+    "description": "Libellé du champ ville (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressFloorSectionTitle": "Étage / Appartement",
+  "@pickupAddressFloorSectionTitle": {
+    "description": "Titre de section et libellé du champ (identiques, réutilisés) (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressFloorFieldHint": "Optionnel (Ex : Bât. B, 3ème étage)",
+  "@pickupAddressFloorFieldHint": {
+    "description": "Placeholder du champ étage (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressInstructionsSectionTitle": "Instructions",
+  "@pickupAddressInstructionsSectionTitle": {
+    "description": "Titre de section (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressInstructionsHint": "Optionnel : digicode, horaires…",
+  "@pickupAddressInstructionsHint": {
+    "description": "Placeholder du champ instructions (pickup_address_edit_screen.dart)."
+  },
+  "pickupAddressDefaultSubtitle": "Pré-remplie lors de tes prochaines demandes",
+  "@pickupAddressDefaultSubtitle": {
+    "description": "Sous-titre du toggle « adresse par défaut » (pickup_address_edit_screen.dart)."
+  },
+  "deliveryAddressChipFamily": "Famille",
+  "@deliveryAddressChipFamily": {
+    "description": "Suggestion d'étiquette adresse de livraison (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressChipHome": "Maison",
+  "@deliveryAddressChipHome": {
+    "description": "Suggestion d'étiquette adresse de livraison (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressChipShop": "Boutique",
+  "@deliveryAddressChipShop": {
+    "description": "Suggestion d'étiquette adresse de livraison (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressEditTitle": "Modifier l'adresse",
+  "@deliveryAddressEditTitle": {
+    "description": "Titre de l'écran en mode édition (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressCreateTitle": "Nouvelle adresse de livraison",
+  "@deliveryAddressCreateTitle": {
+    "description": "Titre de l'écran en mode création (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressSaveButton": "Enregistrer l'adresse",
+  "@deliveryAddressSaveButton": {
+    "description": "Bouton sticky de validation du formulaire (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressUpdatedMessage": "Adresse mise à jour",
+  "@deliveryAddressUpdatedMessage": {
+    "description": "Snackbar de succès en mode édition (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressAddedMessage": "Adresse ajoutée",
+  "@deliveryAddressAddedMessage": {
+    "description": "Snackbar de succès en mode création (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressLabelSectionTitle": "Étiquette",
+  "@deliveryAddressLabelSectionTitle": {
+    "description": "Titre de section (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressNameFieldLabel": "Nom de l'adresse",
+  "@deliveryAddressNameFieldLabel": {
+    "description": "Libellé du champ étiquette (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressNameFieldHint": "Ex : Famille Dakar, Dépôt…",
+  "@deliveryAddressNameFieldHint": {
+    "description": "Placeholder du champ étiquette (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressCountrySectionTitle": "Pays",
+  "@deliveryAddressCountrySectionTitle": {
+    "description": "Titre de section (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressCountryPickerTitle": "Pays de destination",
+  "@deliveryAddressCountryPickerTitle": {
+    "description": "Titre de la bottom sheet de choix du pays (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressAddressSectionTitle": "Adresse",
+  "@deliveryAddressAddressSectionTitle": {
+    "description": "Titre de section (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressCityFieldLabel": "Ville",
+  "@deliveryAddressCityFieldLabel": {
+    "description": "Libellé du champ ville (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressCityFieldHint": "Ex : Dakar, Abidjan, Bamako…",
+  "@deliveryAddressCityFieldHint": {
+    "description": "Placeholder du champ ville (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressStreetFieldLabel": "Rue, quartier",
+  "@deliveryAddressStreetFieldLabel": {
+    "description": "Libellé du champ rue (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressStreetFieldHint": "Optionnel (ex : Rue 10, Almadies)",
+  "@deliveryAddressStreetFieldHint": {
+    "description": "Placeholder du champ rue (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressInstructionsSectionTitle": "Instructions",
+  "@deliveryAddressInstructionsSectionTitle": {
+    "description": "Titre de section (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressInstructionsHint": "Optionnel : appeler à l'arrivée, portail rouge…",
+  "@deliveryAddressInstructionsHint": {
+    "description": "Placeholder du champ instructions (delivery_address_edit_screen.dart)."
+  },
+  "deliveryAddressDefaultSubtitle": "Pré-remplie lors de tes prochaines annonces",
+  "@deliveryAddressDefaultSubtitle": {
+    "description": "Sous-titre du toggle « adresse par défaut » (delivery_address_edit_screen.dart)."
+  },
+  "countryNameGn": "Guinée",
+  "@countryNameGn": {
+    "description": "Hors catalogue CountryCatalog, proposé uniquement par la liste fermée diaspora de delivery_address_edit_screen.dart (country_names.dart)."
+  },
+  "recipientListTitle": "Mes destinataires",
+  "@recipientListTitle": {
+    "description": "Titre de l'écran liste des destinataires (recipients_screen.dart)."
+  },
+  "recipientAddFabLabel": "Ajouter",
+  "@recipientAddFabLabel": {
+    "description": "Libellé du FAB d'ajout (recipients_screen.dart)."
+  },
+  "recipientEmptyTitle": "Aucun destinataire enregistré",
+  "@recipientEmptyTitle": {
+    "description": "Titre de l'état vide (recipients_screen.dart)."
+  },
+  "recipientEmptyDescription": "Ajoute tes proches en Afrique pour envoyer en 1 tap.",
+  "@recipientEmptyDescription": {
+    "description": "Description de l'état vide (recipients_screen.dart)."
+  },
+  "recipientEmptyActionLabel": "Ajouter mon premier destinataire",
+  "@recipientEmptyActionLabel": {
+    "description": "Bouton d'action de l'état vide (recipients_screen.dart)."
+  },
+  "recipientNoResultsLabel": "Aucun résultat",
+  "@recipientNoResultsLabel": {
+    "description": "Titre/texte affiché quand la recherche ne trouve rien, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42)."
+  },
+  "recipientSearchNoResultsDescription": "Aucun destinataire ne correspond à ta recherche.",
+  "@recipientSearchNoResultsDescription": {
+    "description": "Description de l'état vide de recherche (recipients_screen.dart)."
+  },
+  "recipientSearchHint": "Rechercher un destinataire…",
+  "@recipientSearchHint": {
+    "description": "Placeholder du champ de recherche, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42)."
+  },
+  "recipientClearSearchTooltip": "Effacer la recherche",
+  "@recipientClearSearchTooltip": {
+    "description": "Tooltip du bouton d'effacement de la recherche, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42)."
+  },
+  "recipientSetDefaultLabel": "Définir par défaut",
+  "@recipientSetDefaultLabel": {
+    "description": "Entrée de menu « Définir par défaut » (recipients_screen.dart)."
+  },
+  "recipientDeleteTitle": "Supprimer le destinataire",
+  "@recipientDeleteTitle": {
+    "description": "Titre du dialogue de suppression (recipients_screen.dart)."
+  },
+  "recipientDeleteConfirmMessage": "Es-tu sûr de vouloir supprimer \"{name}\" ? Cette action est irréversible.",
+  "@recipientDeleteConfirmMessage": {
+    "description": "Message du dialogue de suppression, name = nom complet du destinataire (recipients_screen.dart).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientEditTitle": "Modifier le destinataire",
+  "@recipientEditTitle": {
+    "description": "Titre de l'écran en mode édition (recipient_edit_screen.dart)."
+  },
+  "recipientCreateTitle": "Nouveau destinataire",
+  "@recipientCreateTitle": {
+    "description": "Titre de l'écran en mode création, réutilisé comme libellé de la tuile « Nouveau destinataire » de recipient_picker_sheet.dart (même feature, R42)."
+  },
+  "recipientFullNameFieldLabel": "Nom complet",
+  "@recipientFullNameFieldLabel": {
+    "description": "Libellé du champ nom complet (recipient_edit_screen.dart)."
+  },
+  "recipientPhoneFieldLabel": "Téléphone (E.164)",
+  "@recipientPhoneFieldLabel": {
+    "description": "Libellé du champ téléphone (recipient_edit_screen.dart)."
+  },
+  "recipientPhoneInvalidFormat": "Format invalide ({example})",
+  "@recipientPhoneInvalidFormat": {
+    "description": "Erreur de validation du champ téléphone, example = numéro d'exemple non traduit (recipient_edit_screen.dart).",
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientUpdatedMessage": "Destinataire mis à jour",
+  "@recipientUpdatedMessage": {
+    "description": "Snackbar de succès en mode édition (recipient_edit_screen.dart)."
+  },
+  "recipientAddedMessage": "Destinataire ajouté",
+  "@recipientAddedMessage": {
+    "description": "Snackbar de succès en mode création (recipient_edit_screen.dart)."
+  },
+  "recipientDefaultToggleTitle": "Destinataire par défaut",
+  "@recipientDefaultToggleTitle": {
+    "description": "Titre du toggle destinataire par défaut (recipient_edit_screen.dart)."
+  },
+  "recipientDefaultToggleSubtitle": "Présélectionné lors de tes prochains envois",
+  "@recipientDefaultToggleSubtitle": {
+    "description": "Sous-titre du toggle destinataire par défaut (recipient_edit_screen.dart)."
+  },
+  "recipientImportContactsAction": "Choisir dans mes contacts",
+  "@recipientImportContactsAction": {
+    "description": "Bouton d'import depuis les contacts du téléphone, réutilisé entre recipient_edit_screen.dart et recipient_picker_sheet.dart (même feature, R42)."
+  },
+  "recipientPickerTitle": "👤  Destinataire",
+  "@recipientPickerTitle": {
+    "description": "Titre de la bottom sheet de sélection (recipient_picker_sheet.dart)."
+  },
+  "recipientPickerSectionHeader": "MES DESTINATAIRES",
+  "@recipientPickerSectionHeader": {
+    "description": "En-tête de section de la liste des destinataires enregistrés (recipient_picker_sheet.dart)."
+  },
+  "recipientPickerConfirmButton": "Confirmer ce destinataire",
+  "@recipientPickerConfirmButton": {
+    "description": "Bouton de confirmation de la sélection (recipient_picker_sheet.dart)."
+  },
+  "recipientSectionPickerButton": "Choisir un destinataire",
+  "@recipientSectionPickerButton": {
+    "description": "Bouton d'ouverture du picker à l'état initial (recipient_section.dart)."
+  },
+  "recipientSectionChangeButton": "Changer",
+  "@recipientSectionChangeButton": {
+    "description": "Bouton de changement de destinataire sélectionné (recipient_section.dart)."
+  },
+  "recipientSectionSaveToggleTitle": "Enregistrer ce destinataire",
+  "@recipientSectionSaveToggleTitle": {
+    "description": "Titre du toggle de sauvegarde d'une saisie manuelle (recipient_section.dart)."
+  },
+  "recipientSectionSaveToggleSubtitle": "Sera ajouté à « Mes destinataires » pour tes prochains envois",
+  "@recipientSectionSaveToggleSubtitle": {
+    "description": "Sous-titre du toggle de sauvegarde d'une saisie manuelle (recipient_section.dart)."
+  },
+  "priceGridScreenTitle": "Ma grille de prix",
+  "@priceGridScreenTitle": {
+    "description": "Titre de l'AppBar (price_grid_screen.dart)."
+  },
+  "priceGridCommissionNotice": "Yadony ajoute {percent} % au prix que vous saisissez. Vous encaissez exactement votre montant.",
+  "@priceGridCommissionNotice": {
+    "description": "Note de commission en pied de liste, percent déjà formaté par commissionPercentLabel (price_grid_screen.dart).",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridReorderButton": "Réordonner",
+  "@priceGridReorderButton": {
+    "description": "Bouton de bascule en mode réorganisation (price_grid_screen.dart)."
+  },
+  "priceGridAddLabelButton": "Nouvelle étiquette",
+  "@priceGridAddLabelButton": {
+    "description": "Bouton d'ajout, réutilisé comme titre de la feuille de création (price_grid_screen.dart, price_grid_item_form_sheet.dart, même feature R42)."
+  },
+  "priceGridEmptyTitle": "Aucune étiquette",
+  "@priceGridEmptyTitle": {
+    "description": "Titre de l'état vide (price_grid_screen.dart)."
+  },
+  "priceGridEmptyDescription": "Fixez le prix des articles que vous transportez. Le même barème servira sur tous vos trajets.",
+  "@priceGridEmptyDescription": {
+    "description": "Description de l'état vide (price_grid_screen.dart)."
+  },
+  "priceGridScopeStampLabel": "Valable sur tous vos trajets",
+  "@priceGridScopeStampLabel": {
+    "description": "Tampon indiquant la portée du barème (price_grid_screen.dart)."
+  },
+  "priceGridDragHandleSemantics": "Déplacer {label}",
+  "@priceGridDragHandleSemantics": {
+    "description": "Libellé d'accessibilité de la poignée de réordonnancement, label = étiquette de l'article (price_grid_screen.dart).",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridItemMenuTooltip": "Options",
+  "@priceGridItemMenuTooltip": {
+    "description": "Tooltip du menu d'options d'une étiquette (price_grid_screen.dart)."
+  },
+  "priceGridYouReceive": "vous recevez {net}",
+  "@priceGridYouReceive": {
+    "description": "Légende du montant net encaissé sous le prix payé, net déjà formaté (price_grid_screen.dart).",
+    "placeholders": {
+      "net": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridItemSemantics": "{label}, l'expéditeur paie {paid}, vous recevez {net}",
+  "@priceGridItemSemantics": {
+    "description": "Libellé d'accessibilité complet d'une étiquette de la grille, paid/net déjà formatés (price_grid_screen.dart).",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "paid": {
+        "type": "String"
+      },
+      "net": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridDeleteItemTitle": "Supprimer l'étiquette ?",
+  "@priceGridDeleteItemTitle": {
+    "description": "Titre du dialogue de suppression d'une étiquette (price_grid_screen.dart)."
+  },
+  "priceGridDeleteItemMessage": "L'article \"{label}\" sera retiré de votre grille, sur tous vos trajets.",
+  "@priceGridDeleteItemMessage": {
+    "description": "Message du dialogue de suppression, label = libellé affiché de l'article (price_grid_screen.dart).",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridEditItemTitle": "Modifier l'étiquette",
+  "@priceGridEditItemTitle": {
+    "description": "Titre de la feuille en mode édition (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridAddToGridButton": "Ajouter à ma grille",
+  "@priceGridAddToGridButton": {
+    "description": "Bouton de validation en mode création (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridSearchFieldLabel": "Article",
+  "@priceGridSearchFieldLabel": {
+    "description": "Libellé du champ de recherche du catalogue (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridSearchFieldHint": "Chercher, ou écrire le vôtre",
+  "@priceGridSearchFieldHint": {
+    "description": "Placeholder du champ de recherche du catalogue (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridAllCatalogTakenMessage": "Tous les articles du catalogue sont déjà dans votre grille. Écrivez le vôtre pour en ajouter un autre.",
+  "@priceGridAllCatalogTakenMessage": {
+    "description": "Message affiché quand le catalogue filtré est vide sans possibilité d'ajout (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridAddCustomLabel": "Ajouter « {query} »",
+  "@priceGridAddCustomLabel": {
+    "description": "Ligne d'ajout d'un libellé libre non trouvé au catalogue. Espaces normales (U+0020) autour des guillemets, PAS les espaces insécables (U+00A0) de contentCategoryAdd : reprise à l'identique de l'ancien texte, non réutilisée pour ne pas changer le rendu (price_grid_item_form_sheet.dart).",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridChangeItemButton": "Changer",
+  "@priceGridChangeItemButton": {
+    "description": "Bouton de retour au catalogue depuis l'étape prix (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridYouReceiveLabel": "Ce que vous encaissez",
+  "@priceGridYouReceiveLabel": {
+    "description": "Libellé au-dessus du montant saisi (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridMaxPriceMessage": "Maximum {max} par article.",
+  "@priceGridMaxPriceMessage": {
+    "description": "Message d'écho quand le montant saisi dépasse le plafond, max déjà formaté (price_grid_item_form_sheet.dart).",
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "priceGridEnterAmountMessage": "Saisissez le montant que vous voulez toucher.",
+  "@priceGridEnterAmountMessage": {
+    "description": "Message d'écho invitant à saisir un montant (price_grid_item_form_sheet.dart)."
+  },
+  "priceGridSenderWillPayMessage": "L'expéditeur paiera {paid}, commission Yadony de {percent} % comprise.",
+  "@priceGridSenderWillPayMessage": {
+    "description": "Message d'écho annonçant le montant payé par l'expéditeur, paid déjà formaté et percent déjà formaté par commissionPercentLabel (price_grid_item_form_sheet.dart).",
+    "placeholders": {
+      "paid": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "referralScreenTitle": "Parrainage",
+  "@referralScreenTitle": {
+    "description": "Titre de l'AppBar (referral_screen.dart)."
+  },
+  "referralStatInvited": "Invités",
+  "@referralStatInvited": {
+    "description": "Libellé de la stat « invités » (referral_screen.dart)."
+  },
+  "referralStatSignedUp": "Inscrits",
+  "@referralStatSignedUp": {
+    "description": "Libellé de la stat « inscrits » (referral_screen.dart)."
+  },
+  "referralStatRewarded": "Récompensés",
+  "@referralStatRewarded": {
+    "description": "Libellé de la stat « récompensés » (referral_screen.dart)."
+  },
+  "referralVouchers": "{count, plural, =1{🎁 Tu as un bon de -{percent}% sur ta prochaine commission} other{🎁 Tu as {count} bons de -{percent}% sur tes prochaines commissions}}",
+  "@referralVouchers": {
+    "description": "Bandeau de bons actifs, affiché seulement si activeVoucherCount >= 1 : la branche =1 peut donc écrire « un » en toutes lettres (referral_screen.dart).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "referralVouchersUnknownPercent": "{count, plural, =1{🎁 Tu as un bon de réduction sur ta prochaine commission} other{🎁 Tu as {count} bons de réduction sur tes prochaines commissions}}",
+  "@referralVouchersUnknownPercent": {
+    "description": "Même bandeau que referralVouchers, sans pourcentage : repli défensif quand le serveur ne renseigne pas voucherFactor (backend antérieur au lot 3). Affiché seulement si activeVoucherCount >= 1 (referral_screen.dart).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "referralVoucherExpiresLabel": "Valable jusqu'au {date}",
+  "@referralVoucherExpiresLabel": {
+    "description": "Date d'expiration du bon le plus proche, date déjà formatée (referral_screen.dart).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "referralHeroTitleDefault": "Invite tes proches",
+  "@referralHeroTitleDefault": {
+    "description": "Titre de la hero card sans pourcentage connu (referral_screen.dart)."
+  },
+  "referralHeroTitlePercent": "Invite et gagne -{percent}%",
+  "@referralHeroTitlePercent": {
+    "description": "Titre de la hero card avec pourcentage connu (referral_screen.dart).",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "referralHeroSubtitleDefault": "Tu reçois un bon de réduction sur ta prochaine commission dès la première livraison de ton invité.",
+  "@referralHeroSubtitleDefault": {
+    "description": "Sous-titre de la hero card sans pourcentage connu (referral_screen.dart)."
+  },
+  "referralHeroSubtitlePercent": "Tu reçois un bon de -{percent}% sur ta prochaine commission dès la première livraison de ton invité.",
+  "@referralHeroSubtitlePercent": {
+    "description": "Sous-titre de la hero card avec pourcentage connu (referral_screen.dart).",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "referralCodeBoxLabel": "Ton code de parrainage",
+  "@referralCodeBoxLabel": {
+    "description": "Libellé au-dessus du code affiché (referral_screen.dart)."
+  },
+  "referralCopyCodeSemantics": "Copier le code de parrainage",
+  "@referralCopyCodeSemantics": {
+    "description": "Libellé d'accessibilité du bouton de copie du code (referral_screen.dart)."
+  },
+  "referralCodeCopiedMessage": "Code copié !",
+  "@referralCodeCopiedMessage": {
+    "description": "Snackbar de confirmation de copie du code (referral_screen.dart)."
+  },
+  "referralShareButtonLabel": "Partager mon code",
+  "@referralShareButtonLabel": {
+    "description": "Bouton sticky de partage (referral_screen.dart)."
+  },
+  "referralShareMessage": "Salut ! Utilise mon code Yadony : {code} pour t'inscrire, ça m'aide à gagner une réduction sur ma prochaine commission. {url}",
+  "@referralShareMessage": {
+    "description": "Texte réellement partagé via la feuille système, code et url non traduits (referral_screen.dart, construit par l'écran et transporté par ReferralShared jusqu'au bloc).",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "referralRedeemTitle": "Entrer un code parrain",
+  "@referralRedeemTitle": {
+    "description": "Titre de la bottom sheet de saisie d'un code parrain (redeem_code_bottom_sheet.dart)."
+  },
+  "referralRedeemSubtitle": "Tu as été invité par un ami ? Entre son code pour qu'il soit récompensé à ta première livraison.",
+  "@referralRedeemSubtitle": {
+    "description": "Sous-titre explicatif de la bottom sheet (redeem_code_bottom_sheet.dart)."
+  },
+  "referralRedeemCodeFieldLabel": "Code parrain",
+  "@referralRedeemCodeFieldLabel": {
+    "description": "Libellé du champ de saisie du code (redeem_code_bottom_sheet.dart)."
+  },
+  "referralRedeemCodeHint": "Ex : {example}",
+  "@referralRedeemCodeHint": {
+    "description": "Placeholder du champ code, example = code d'exemple non traduit (redeem_code_bottom_sheet.dart).",
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "errorReportReasonNotApplicableTitle": "Motif invalide",
+  "@errorReportReasonNotApplicableTitle": {
+    "description": "Titre du refus 422 `reason-not-applicable` (ReportService.java, error_catalog.dart) : le motif choisi ne s'applique pas au type de cible signalée."
+  },
+  "errorReportReasonNotApplicableMessage": "Ce motif ne s'applique pas à ce type de signalement.",
+  "@errorReportReasonNotApplicableMessage": {
+    "description": "Message du refus 422 `reason-not-applicable`."
+  },
+  "errorReportCannotReportSelfTitle": "Signalement impossible",
+  "@errorReportCannotReportSelfTitle": {
+    "description": "Titre du refus 422 `cannot-report-self` (ReportService.java, error_catalog.dart) : un utilisateur ne peut pas se signaler lui-même."
+  },
+  "errorReportCannotReportSelfMessage": "Tu ne peux pas te signaler toi-même.",
+  "@errorReportCannotReportSelfMessage": {
+    "description": "Message du refus 422 `cannot-report-self`."
+  },
+  "errorReportTooManyPhotosTitle": "Trop de captures",
+  "@errorReportTooManyPhotosTitle": {
+    "description": "Titre du refus 422 `too-many-photos` (ReportService.java : MAX_PHOTOS = 5, error_catalog.dart). En pratique hors d'atteinte : le client plafonne déjà à 4 (IncidentPhotosCubit.maxPhotos)."
+  },
+  "errorReportTooManyPhotosMessage": "Maximum 5 captures d'écran par signalement.",
+  "@errorReportTooManyPhotosMessage": {
+    "description": "Message du refus 422 `too-many-photos`."
+  },
+  "errorReportPhotoNotOwnedTitle": "Signalement impossible",
+  "@errorReportPhotoNotOwnedTitle": {
+    "description": "Titre du refus 403 `photo-not-owned` (ReportService.java, error_catalog.dart) : une capture jointe n'appartient pas à l'auteur du signalement."
+  },
+  "errorReportPhotoNotOwnedMessage": "Une des captures ne t'appartient pas.",
+  "@errorReportPhotoNotOwnedMessage": {
+    "description": "Message du refus 403 `photo-not-owned`."
   }
 }

@@ -6,6 +6,7 @@ import 'package:dony/features/referral/presentation/widgets/redeem_code_bottom_s
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockReferralRepository extends Mock implements ReferralRepository {}
@@ -211,5 +212,17 @@ void main() {
     await tester.pumpAndSettle();
 
     verifyNever(() => mockRepo.redeemCode(any()));
+  });
+
+  // ── Anglais ──────────────────────────────────────────────────────────────
+
+  testWidgets('en anglais : titre, champ et bouton traduits', (tester) async {
+    useEnglish();
+    await openSheet(tester);
+
+    expect(find.text('Enter a referral code'), findsOneWidget);
+    expect(find.text('Referral code'), findsOneWidget);
+    expect(find.text('Apply'), findsOneWidget);
+    expect(find.textContaining('invited by a friend'), findsOneWidget);
   });
 }

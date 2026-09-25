@@ -1058,4 +1058,69 @@ void main() {
       );
     });
   });
+
+  group('ErrorCatalog — codes signalements (ReportService.java)', () {
+    test('reason-not-applicable (422) en français et en anglais', () {
+      const error = ValidationException('x', code: 'reason-not-applicable');
+
+      final pFr = ErrorCatalog.lookup(error);
+      expect(pFr.title, 'Motif invalide');
+      expect(
+        pFr.message,
+        "Ce motif ne s'applique pas à ce type de signalement.",
+      );
+
+      final pEn = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(pEn.title, 'Invalid reason');
+      expect(pEn.message, "This reason doesn't apply to this type of report.");
+    });
+
+    test('cannot-report-self (422) en français et en anglais', () {
+      const error = ValidationException('x', code: 'cannot-report-self');
+
+      final pFr = ErrorCatalog.lookup(error);
+      expect(pFr.title, 'Signalement impossible');
+      expect(pFr.message, 'Tu ne peux pas te signaler toi-même.');
+
+      final pEn = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(pEn.title, "Can't report yourself");
+      expect(pEn.message, "You can't report yourself.");
+    });
+
+    test('too-many-photos (422) en français et en anglais', () {
+      const error = ValidationException('x', code: 'too-many-photos');
+
+      final pFr = ErrorCatalog.lookup(error);
+      expect(pFr.title, 'Trop de captures');
+      expect(pFr.message, 'Maximum 5 captures d\'écran par signalement.');
+
+      final pEn = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(pEn.title, 'Too many screenshots');
+      expect(pEn.message, 'Maximum 5 screenshots per report.');
+    });
+
+    test('photo-not-owned (403) en français et en anglais', () {
+      const error = ForbiddenException('x', 'photo-not-owned');
+
+      final pFr = ErrorCatalog.lookup(error);
+      expect(pFr.title, 'Signalement impossible');
+      expect(pFr.message, "Une des captures ne t'appartient pas.");
+
+      final pEn = ErrorCatalog.lookup(
+        error,
+        l10n: lookupAppLocalizations(AppL10n.en),
+      );
+      expect(pEn.title, "Can't do this");
+      expect(pEn.message, "One of the screenshots isn't yours.");
+    });
+  });
 }

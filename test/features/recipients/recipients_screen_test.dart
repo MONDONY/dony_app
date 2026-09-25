@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
 import '../../helpers/mock_analytics_backend.dart';
 
 class MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
@@ -408,5 +409,21 @@ void main() {
         ).called(1);
       },
     );
+  });
+
+  testWidgets('en anglais : titre, FAB et badge traduits', (tester) async {
+    useEnglish();
+    when(() => bloc.state).thenReturn(
+      const RecipientState(
+        status: RecipientStatus.success,
+        recipients: [_r4Default],
+      ),
+    );
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('My recipients'), findsOneWidget);
+    expect(find.text('Add'), findsOneWidget);
+    expect(find.text('DEFAULT'), findsOneWidget);
   });
 }

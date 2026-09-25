@@ -7,15 +7,15 @@ List<Recipient> filterRecipients(List<Recipient> recipients, String query) {
   if (q.isEmpty) return recipients;
   return recipients.where((r) {
     final haystack = _fold(
-      '${r.fullName} ${r.relationship ?? ''} ${r.city ?? ''} ${r.phoneE164}',
+      '${r.fullName} ${r.relationship ?? ''} ${r.city ?? ''} ${r.phoneE164}', // i18n-ignore: texte de recherche composé de données
     );
     return haystack.contains(q);
   }).toList();
 }
 
 String _fold(String s) {
-  const from = 'àâäéèêëîïôöùûüç';
-  const to = 'aaaeeeeiioouuuc';
+  const from = 'àâäéèêëîïôöùûüç'; // i18n-ignore: table d'accents
+  const to = 'aaaeeeeiioouuuc'; // i18n-ignore: table d'accents
   var out = s.toLowerCase();
   for (var i = 0; i < from.length; i++) {
     out = out.replaceAll(from[i], to[i]);

@@ -21,6 +21,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockMatchesCubit extends MockCubit<CorridorAlertMatchesState>
     implements CorridorAlertMatchesCubit {}
 
@@ -336,4 +338,53 @@ void main() {
       expect(find.text('traveler-detail'), findsOneWidget);
     },
   );
+
+  testWidgets('anglais : bandeau et sections Nouveaux/Déjà vus traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    final seenAt = DateTime(2026, 9, 1, 8);
+    final fresh = TripMatchModel(
+      announcementId: 'ann-new',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2026, 9, 18),
+      travelerId: 't-2',
+      travelerName: 'Moussa D.',
+      travelerInitials: 'MD',
+      travelerRating: 4.9,
+      availableKg: 12.0,
+      publishedAt: DateTime(2026, 9, 3),
+    );
+    final old = TripMatchModel(
+      announcementId: 'ann-old',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2026, 9, 16),
+      travelerId: 't-3',
+      travelerName: 'Ibrahima N.',
+      travelerInitials: 'IN',
+      travelerRating: 4.2,
+      availableKg: 8.0,
+      publishedAt: DateTime(2026, 8, 20),
+    );
+    when(() => cubit.state).thenReturn(
+      CorridorAlertMatchesState(
+        status: CorridorAlertMatchesStatus.loaded,
+        alert: _alert(AlertDirection.senderWantsTrips),
+        thresholdKnown: true,
+        seenThreshold: seenAt,
+        result: CorridorAlertMatches(
+          direction: AlertDirection.senderWantsTrips,
+          trips: [old, fresh],
+        ),
+      ),
+    );
+    await tester.pumpWidget(pump(AlertDirection.senderWantsTrips));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Alert active'), findsOneWidget);
+    expect(find.text('New · 1 trip'), findsOneWidget);
+    expect(find.text('Already seen · 1 trip'), findsOneWidget);
+  });
 }

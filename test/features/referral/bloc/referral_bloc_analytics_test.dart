@@ -61,7 +61,7 @@ void main() {
       clearInteractions(backend);
 
       // Now share
-      bloc.add(const ReferralShared());
+      bloc.add(const ReferralShared('test message'));
       await Future<void>.delayed(const Duration(milliseconds: 200));
       verify(
         () => backend.capture(AnalyticsEvents.referralShared, any()),
@@ -76,7 +76,7 @@ void main() {
     final bloc = makeBloc(enabled: false);
     bloc.add(const ReferralLoadRequested());
     await bloc.stream.firstWhere((s) => s is ReferralLoaded);
-    bloc.add(const ReferralShared());
+    bloc.add(const ReferralShared('test message'));
     await Future<void>.delayed(const Duration(milliseconds: 200));
     verifyNever(() => backend.capture(any(), any()));
   });

@@ -39,9 +39,10 @@ abstract final class PriceGridItemFormSheet {
       item != null ? _formatInitial(item.unitPriceNet) : '',
     );
 
+    final l = context.l10n;
     return DonyBottomSheet.show<void>(
       context,
-      title: isEditing ? 'Modifier l\'étiquette' : 'Nouvelle étiquette',
+      title: isEditing ? l.priceGridEditItemTitle : l.priceGridAddLabelButton,
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       stickyBottom: _SubmitBar(
         label: label,
@@ -139,7 +140,9 @@ class _SubmitBar extends StatelessWidget {
         final price = _parse(raw.value);
         return DonyButton(
           key: const Key('price-grid-submit'),
-          label: isEditing ? 'Enregistrer' : 'Ajouter à ma grille',
+          label: isEditing
+              ? context.l10n.commonSave
+              : context.l10n.priceGridAddToGridButton,
           onPressed: price == null
               ? null
               : () => onSubmit(context, chosen, price),
@@ -238,6 +241,7 @@ class _CatalogStepState extends State<_CatalogStep> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return ListenableBuilder(
       listenable: _sources,
@@ -245,25 +249,42 @@ class _CatalogStepState extends State<_CatalogStep> {
         final query = _controller.text.trim();
         final lowered = query.toLowerCase();
 
-        // Une seule mise en minuscules par entrée, réutilisée par les deux
-        // filtres et par la détection de doublon plus bas.
+        // Une catégorie correspond si la saisie est contenue dans le libellé
+        // affiché OU le libellé brut (aligné sur content_category_selector.dart,
+        // lot B) : un anglophone qui tape « book » doit trouver « Livres »,
+        // affiché « Books ». `_taken` (déjà dans la grille) reste comparé au
+        // libellé brut, seule valeur stockée.
         final matches = <ContentCategory>[];
         var exact = false;
         for (final category in _catalog.value) {
-          final key = category.label.toLowerCase();
-          if (_taken.contains(key)) {
-            if (key == lowered) exact = true;
+          final rawKey = category.label.toLowerCase();
+          final displayKey = contentCategoryDisplayName(
+            l,
+            category.label,
+          ).toLowerCase();
+          final isExactMatch = rawKey == lowered || displayKey == lowered;
+          if (_taken.contains(rawKey)) {
+            if (isExactMatch) exact = true;
             continue;
           }
-          if (lowered.isEmpty || key.contains(lowered)) {
+          if (lowered.isEmpty ||
+              rawKey.contains(lowered) ||
+              displayKey.contains(lowered)) {
             matches.add(category);
-            if (key == lowered) exact = true;
+            if (isExactMatch) exact = true;
           }
         }
 
-        // « Ajouter "X" » dès qu'on tape quelque chose qui n'existe pas déjà,
-        // à l'identique, dans le catalogue ou dans la grille.
-        final canCreate = query.isNotEmpty && !exact && query.length <= 100;
+        // « Ajouter "X" » seulement quand la liste filtrée est vide (aligné
+        // sur le comportement par défaut de content_category_selector.dart,
+        // lot B) : tant qu'un article correspond encore (affiché ou brut),
+        // pas de doublon proposé — sinon un anglophone qui tape « book »
+        // verrait « Books » ET une ligne « Add "book" » redondante.
+        final canCreate =
+            query.isNotEmpty &&
+            !exact &&
+            matches.isEmpty &&
+            query.length <= 100;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -272,8 +293,8 @@ class _CatalogStepState extends State<_CatalogStep> {
             DonyTextField(
               key: const Key('price-grid-search'),
               controller: _controller,
-              label: 'Article',
-              hint: 'Chercher, ou écrire le vôtre',
+              label: l.priceGridSearchFieldLabel,
+              hint: l.priceGridSearchFieldHint,
               prefixWidget: DonyIcon(
                 'search',
                 size: 20,
@@ -287,8 +308,7 @@ class _CatalogStepState extends State<_CatalogStep> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),
                 child: Text(
-                  'Tous les articles du catalogue sont déjà dans votre '
-                  'grille. Écrivez le vôtre pour en ajouter un autre.',
+                  l.priceGridAllCatalogTakenMessage,
                   style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   textAlign: TextAlign.center,
                 ),
@@ -297,7 +317,7 @@ class _CatalogStepState extends State<_CatalogStep> {
             for (final category in matches)
               _CatalogRow(
                 emoji: category.emoji,
-                label: contentCategoryDisplayName(context.l10n, category.label),
+                label: contentCategoryDisplayName(l, category.label),
                 onTap: () => widget.onPicked(category.label),
               ),
 
@@ -305,7 +325,7 @@ class _CatalogStepState extends State<_CatalogStep> {
               _CatalogRow(
                 key: const Key('price-grid-create-custom'),
                 emoji: '➕',
-                label: 'Ajouter « $query »',
+                label: l.priceGridAddCustomLabel(query),
                 accent: true,
                 onTap: () => widget.onPicked(query),
               ),
@@ -389,6 +409,9 @@ class _PriceStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    // Valeur brute inchangée (envoyée à onPicked) ; seul l'affichage traduit.
+    final displayLabel = contentCategoryDisplayName(l, chosen);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -402,7 +425,7 @@ class _PriceStep extends StatelessWidget {
             const SizedBox(width: DonySpacing.md),
             Expanded(
               child: Text(
-                chosen,
+                displayLabel,
                 style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -411,14 +434,14 @@ class _PriceStep extends StatelessWidget {
             TextButton(
               key: const Key('price-grid-change-item'),
               onPressed: onChangeItem,
-              child: const Text('Changer'),
+              child: Text(l.priceGridChangeItemButton),
             ),
           ],
         ),
         const SizedBox(height: DonySpacing.md),
 
         Text(
-          'Ce que vous encaissez',
+          l.priceGridYouReceiveLabel,
           style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
@@ -493,6 +516,7 @@ class _Echo extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     final amount = _amount(raw);
     final price = _parse(raw);
@@ -510,18 +534,20 @@ class _Echo extends StatelessWidget {
       case _EchoKind.tooHigh:
         background = cs.errorLight;
         ink = cs.error;
-        message =
-            'Maximum ${formatPriceActive(maxUnitPriceActive)} par article.';
+        message = l.priceGridMaxPriceMessage(
+          formatPriceActive(maxUnitPriceActive),
+        );
       case _EchoKind.invite:
         background = cs.surfaceContainerHighest;
         ink = cs.onSurfaceVariant;
-        message = 'Saisissez le montant que vous voulez toucher.';
+        message = l.priceGridEnterAmountMessage;
       case _EchoKind.valid:
         background = cs.primaryContainer;
         ink = cs.primary;
-        message =
-            'L\'expéditeur paiera ${formatPriceActive(netToSenderPrice(price!))}, '
-            'commission Yadony de ${commissionPercentLabel(context.l10n)} % comprise.';
+        message = l.priceGridSenderWillPayMessage(
+          formatPriceActive(netToSenderPrice(price!)),
+          commissionPercentLabel(l),
+        );
     }
 
     return AnimatedSwitcher(

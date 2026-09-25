@@ -9,6 +9,7 @@ import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_aler
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -121,23 +122,23 @@ class _CorridorAlertListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     final emptyDescription = switch (direction) {
       AlertDirection.travelerWantsPackages =>
-        'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton corridor.',
-      AlertDirection.senderWantsTrips =>
-        'Crée une alerte pour être prévenu dès qu\'un trajet apparaît sur ton corridor.',
-      null =>
-        'Crée une alerte pour être prévenu dès qu\'un trajet ou un colis apparaît sur ton corridor.',
+        l.corridorAlertEmptyDescriptionPackages,
+      AlertDirection.senderWantsTrips => l.corridorAlertEmptyDescriptionTrips,
+      null => l.corridorAlertEmptyDescriptionAll,
     };
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: DonyAppBar(
         title: switch (direction) {
-          AlertDirection.travelerWantsPackages => 'Mes alertes colis',
-          AlertDirection.senderWantsTrips => 'Mes alertes trajets',
-          null => 'Mes alertes',
+          AlertDirection.travelerWantsPackages =>
+            l.corridorAlertListTitlePackages,
+          AlertDirection.senderWantsTrips => l.corridorAlertListTitleTrips,
+          null => l.corridorAlertListTitleAll,
         },
       ),
       floatingActionButton: Builder(
@@ -145,7 +146,7 @@ class _CorridorAlertListView extends StatelessWidget {
           backgroundColor: cs.primary,
           foregroundColor: cs.onPrimary,
           icon: const Icon(Icons.add_rounded),
-          label: const Text('Créer'),
+          label: Text(l.corridorAlertCreateFab),
           onPressed: () => _create(fabCtx),
         ),
       ),
@@ -193,19 +194,19 @@ class _CorridorAlertListView extends StatelessWidget {
                     mascotte: DonyMascotteType.erreurLegere,
                     type: DonyEmptyStateType.error,
                     iconAsset: 'circle-alert',
-                    title: 'Erreur de chargement',
+                    title: l.commonLoadError,
                     description:
-                        state.errorMessage ?? 'Une erreur est survenue.',
-                    actionLabel: 'Réessayer',
+                        state.errorMessage ?? l.commonSomethingWentWrongDot,
+                    actionLabel: l.commonRetry,
                     onAction: () => _reload(ctx),
                   );
                 }
                 if (visible.isEmpty) {
                   return DonyEmptyState(
                     mascotte: DonyMascotteType.assis,
-                    title: 'Aucune alerte corridor',
+                    title: l.corridorAlertEmptyTitle,
                     description: emptyDescription,
-                    actionLabel: 'Créer une alerte',
+                    actionLabel: l.corridorAlertCreateAction,
                     onAction: () => _create(ctx),
                   );
                 }
@@ -235,14 +236,14 @@ class _CorridorAlertListView extends StatelessWidget {
                   ),
                   children: [
                     if (trips.isNotEmpty) ...[
-                      if (grouped) const _GroupHeader('Trajets surveillés'),
+                      if (grouped) _GroupHeader(l.corridorAlertGroupTrips),
                       for (final a in trips) _row(ctx, a),
                     ],
                     if (packages.isNotEmpty) ...[
                       if (grouped) ...[
                         if (trips.isNotEmpty)
                           const SizedBox(height: DonySpacing.sm),
-                        const _GroupHeader('Colis surveillés'),
+                        _GroupHeader(l.corridorAlertGroupPackages),
                       ],
                       for (final a in packages) _row(ctx, a),
                     ],

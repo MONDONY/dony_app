@@ -4,6 +4,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/corridor_alerts/data/models/trip_match_model.dart';
 import 'package:dony/l10n/l10n.dart';
+import 'package:dony/l10n/rich_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -24,16 +25,17 @@ class TripMatchCard extends StatelessWidget {
   final int index;
   final VoidCallback? onTap;
 
+  static String _priceStr(TripMatchModel match) =>
+      '${formatPriceIn(match.pricePerKg!, match.currency)}/kg';
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final accent = cs.primary;
 
-    final dateStr = DateFormat(
-      'd MMM',
-      AppL10n.localeName,
-    ).format(match.departureDate).toLowerCase();
+    final dateStr = DateFormat.MMMd(l.localeName).format(match.departureDate);
 
     return Material(
           color: cs.surface,
@@ -74,7 +76,7 @@ class TripMatchCard extends StatelessWidget {
                                 const SizedBox(width: DonySpacing.xxs),
                                 Expanded(
                                   child: Text(
-                                    'Trajet disponible',
+                                    l.corridorAlertTripAvailable,
                                     overflow: TextOverflow.ellipsis,
                                     style: tt.labelSmall?.copyWith(
                                       fontWeight: FontWeight.w800,
@@ -132,7 +134,9 @@ class TripMatchCard extends StatelessWidget {
                                       const SizedBox(height: DonySpacing.xs),
                                       // Kg dispo
                                       Text(
-                                        '${match.availableKg.toStringAsFixed(0)} kg dispo',
+                                        l.corridorAlertAvailableKg(
+                                          match.availableKg.toStringAsFixed(0),
+                                        ),
                                         style: tt.bodySmall?.copyWith(
                                           color: cs.onSurfaceVariant,
                                           fontWeight: FontWeight.w600,
@@ -144,20 +148,16 @@ class TripMatchCard extends StatelessWidget {
                                       const SizedBox(height: DonySpacing.xs),
                                       // Prix/kg
                                       match.pricePerKg != null
-                                          ? Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.baseline,
-                                              textBaseline:
-                                                  TextBaseline.alphabetic,
-                                              children: [
-                                                Text(
-                                                  'Prix ',
-                                                  style: tt.bodySmall?.copyWith(
-                                                    color: cs.onSurfaceVariant,
-                                                  ),
+                                          ? Text.rich(
+                                              TextSpan(
+                                                style: tt.bodySmall?.copyWith(
+                                                  color: cs.onSurfaceVariant,
                                                 ),
-                                                Text(
-                                                  '${formatPriceIn(match.pricePerKg!, match.currency)}/kg',
+                                                children: emphasizedSpans(
+                                                  l.corridorAlertMatchPrice(
+                                                    _priceStr(match),
+                                                  ),
+                                                  _priceStr(match),
                                                   style: tt.titleMedium?.copyWith(
                                                     fontWeight: FontWeight.w800,
                                                     color: cs.primary,
@@ -167,10 +167,10 @@ class TripMatchCard extends StatelessWidget {
                                                     ],
                                                   ),
                                                 ),
-                                              ],
+                                              ),
                                             )
                                           : Text(
-                                              'Prix libre',
+                                              l.corridorAlertOpenPrice,
                                               style: tt.bodySmall?.copyWith(
                                                 color: cs.onSurfaceVariant,
                                                 fontWeight: FontWeight.w600,

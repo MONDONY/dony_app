@@ -30,19 +30,6 @@ extension ReportReasonApi on ReportReason {
     ReportReason.appBug => 'APP_BUG',
     ReportReason.other => 'OTHER',
   };
-
-  String get label => switch (this) {
-    ReportReason.harassment => 'Harcèlement ou comportement abusif',
-    ReportReason.fakeProfile => 'Faux profil',
-    ReportReason.scamAttempt => 'Tentative d\'arnaque',
-    ReportReason.prohibitedItem => 'Objet interdit au transport',
-    ReportReason.falseInformation => 'Informations fausses ou trompeuses',
-    ReportReason.inappropriateContent => 'Contenu inapproprié',
-    ReportReason.spam => 'Spam',
-    ReportReason.paymentIssue => 'Problème de paiement',
-    ReportReason.appBug => 'Bug de l\'application',
-    ReportReason.other => 'Autre',
-  };
 }
 
 /// Sous-ensemble catalogué applicable à chaque type de cible — doit rester

@@ -10,12 +10,19 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/address_suggest_field.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/models/pickup_address.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-const _kLabelChips = ['Maison', 'Bureau', 'Atelier'];
+/// Suggestions d'étiquette — préremplissent le champ libre, l'utilisateur
+/// enregistre ensuite la valeur affichée (donc traduite pour un anglophone).
+List<String> _labelChips(AppLocalizations l) => [
+  l.pickupAddressChipHome,
+  l.pickupAddressChipOffice,
+  l.pickupAddressChipWorkshop,
+];
 
 class PickupAddressEditScreen extends StatefulWidget {
   const PickupAddressEditScreen({super.key, this.addressId});
@@ -165,7 +172,9 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
           setState(() => _hasSubmitted = false);
           DonySnackbar.show(
             context,
-            message: _isEditing ? 'Adresse mise à jour' : 'Adresse ajoutée',
+            message: _isEditing
+                ? context.l10n.pickupAddressUpdatedMessage
+                : context.l10n.pickupAddressAddedMessage,
             type: DonySnackbarType.success,
           );
           context.pop(true);
@@ -184,13 +193,14 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
       builder: (context, state) {
         final isLoading = state.status == PickupAddressStatus.loading;
         final cs = Theme.of(context).colorScheme;
+        final l = context.l10n;
 
         return DonyPageScaffold(
           title: _isEditing
-              ? "Modifier l'adresse"
-              : 'Nouvelle adresse de remise',
+              ? l.pickupAddressEditTitle
+              : l.pickupAddressCreateTitle,
           stickyBottom: DonyButton(
-            label: "Enregistrer l'adresse",
+            label: l.pickupAddressSaveButton,
             onPressed: (_isValid && !isLoading) ? () => _submit(context) : null,
             isLoading: isLoading,
           ),
@@ -199,12 +209,12 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
             children:
                 [
                       // ── Étiquette ──────────────────────────────────────
-                      const AddressSectionLabel('Étiquette'),
+                      AddressSectionLabel(l.pickupAddressLabelSectionTitle),
                       DonyTextField(
                         textInputAction: TextInputAction.next,
                         controller: _labelCtrl,
-                        label: "Nom de l'adresse",
-                        hint: 'Ex : Maison, Bureau…',
+                        label: l.pickupAddressNameFieldLabel,
+                        hint: l.pickupAddressNameFieldHint,
                         prefixWidget: DonyIcon(
                           'tag',
                           size: 20,
@@ -215,19 +225,20 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                       const SizedBox(height: DonySpacing.sm),
                       AddressLabelChips(
                         controller: _labelCtrl,
-                        chips: _kLabelChips,
+                        chips: _labelChips(l),
                         accentColor: cs.primary,
                         onSelected: () => setState(() {}),
                       ),
                       const SizedBox(height: DonySpacing.xl),
 
                       // ── Adresse ────────────────────────────────────────
-                      const AddressSectionLabel('Adresse'),
+                      AddressSectionLabel(l.pickupAddressAddressSectionTitle),
                       AddressSuggestField(
                         controller: _streetCtrl,
                         service: getIt<AddressAutocompleteService>(),
-                        label: 'Rue et numéro',
-                        hint: '12 rue de la Paix',
+                        label: l.pickupAddressStreetFieldLabel,
+                        hint:
+                            '12 rue de la Paix', // i18n-ignore: exemple de saisie
                         prefixIcon: Icons.search_rounded,
                         prefixIconColor: cs.primary,
                         onChanged: (_) => setState(() {}),
@@ -246,8 +257,8 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                             child: DonyTextField(
                               textInputAction: TextInputAction.next,
                               controller: _postalCtrl,
-                              label: 'Code postal',
-                              hint: '75001',
+                              label: l.pickupAddressPostalFieldLabel,
+                              hint: '75001', // i18n-ignore: exemple de saisie
                               keyboardType: TextInputType.number,
                               onChanged: (_) => setState(() {}),
                             ),
@@ -258,8 +269,8 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                             child: DonyTextField(
                               textInputAction: TextInputAction.next,
                               controller: _cityCtrl,
-                              label: 'Ville',
-                              hint: 'Paris',
+                              label: l.pickupAddressCityFieldLabel,
+                              hint: 'Paris', // i18n-ignore: exemple de saisie
                               prefixWidget: DonyIcon(
                                 'building-2',
                                 size: 20,
@@ -273,12 +284,12 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                       const SizedBox(height: DonySpacing.xl),
 
                       // ── Étage ──────────────────────────────────────────
-                      const AddressSectionLabel('Étage / Appartement'),
+                      AddressSectionLabel(l.pickupAddressFloorSectionTitle),
                       DonyTextField(
                         textInputAction: TextInputAction.done,
                         controller: _floorCtrl,
-                        label: 'Étage / Appartement',
-                        hint: 'Optionnel (Ex : Bât. B, 3ème étage)',
+                        label: l.pickupAddressFloorSectionTitle,
+                        hint: l.pickupAddressFloorFieldHint,
                         prefixWidget: DonyIcon(
                           'door-open',
                           size: 20,
@@ -289,13 +300,15 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                       const SizedBox(height: DonySpacing.xl),
 
                       // ── Instructions ───────────────────────────────────
-                      const AddressSectionLabel('Instructions'),
+                      AddressSectionLabel(
+                        l.pickupAddressInstructionsSectionTitle,
+                      ),
                       TextFormField(
                         controller: _instructionsCtrl,
                         maxLines: 3,
                         onChanged: (_) => setState(() {}),
                         decoration: InputDecoration(
-                          hintText: 'Optionnel : digicode, horaires…',
+                          hintText: l.pickupAddressInstructionsHint,
                           prefixIcon: Padding(
                             padding: const EdgeInsets.only(
                               left: DonySpacing.md,
@@ -323,7 +336,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                         value: _isDefault,
                         onChanged: (v) => setState(() => _isDefault = v),
                         activeColor: cs.primary,
-                        subtitle: 'Pré-remplie lors de tes prochaines demandes',
+                        subtitle: l.pickupAddressDefaultSubtitle,
                       ),
                     ]
                     .animate(interval: 40.ms)

@@ -12,6 +12,7 @@ import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -65,6 +66,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
         final isTraveler = _isTravelerCapable(authState);
+        final l = context.l10n;
 
         if (isTraveler) {
           return DefaultTabController(
@@ -72,7 +74,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             child: Scaffold(
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               appBar: DonyAppBar(
-                title: 'Mes favoris',
+                title: l.favoritesTitle,
                 bottom: TabBar(
                   indicatorColor: Theme.of(context).colorScheme.primary,
                   labelColor: Theme.of(context).colorScheme.primary,
@@ -82,9 +84,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   unselectedLabelColor: Theme.of(
                     context,
                   ).colorScheme.onSurfaceVariant,
-                  tabs: const [
-                    Tab(text: 'Trajets'),
-                    Tab(text: 'Demandes'),
+                  tabs: [
+                    Tab(text: l.favoritesTripsTab),
+                    Tab(text: l.favoritesRequestsTab),
                   ],
                 ),
               ),
@@ -96,7 +98,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         // Sender role: trips only, no tab bar
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: const DonyAppBar(title: 'Mes favoris'),
+          appBar: DonyAppBar(title: l.favoritesTitle),
           body: const _TripsTab(),
         );
       },
@@ -130,9 +132,7 @@ class _TripsTab extends StatelessWidget {
         }
 
         if (state is FavoriteTripsEmpty) {
-          return const _EmptyState(
-            message: 'Aucun trajet favori pour l\'instant',
-          );
+          return _EmptyState(message: context.l10n.favoritesEmptyTripsMessage);
         }
 
         if (state is FavoriteTripsError) {
@@ -201,8 +201,8 @@ class _RequestsTab extends StatelessWidget {
         }
 
         if (state is FavoriteRequestsEmpty) {
-          return const _EmptyState(
-            message: 'Aucune demande favorite pour l\'instant',
+          return _EmptyState(
+            message: context.l10n.favoritesEmptyRequestsMessage,
           );
         }
 
@@ -270,7 +270,7 @@ class _EmptyState extends StatelessWidget {
                     ),
                     const SizedBox(height: DonySpacing.lg),
                     Text(
-                      'Aucun favori pour l\'instant',
+                      context.l10n.favoritesEmptyTitle,
                       style: Theme.of(
                         context,
                       ).textTheme.titleLarge?.copyWith(color: cs.onSurface),
@@ -302,6 +302,7 @@ class _ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(DonySpacing.xxl),
@@ -311,7 +312,7 @@ class _ErrorState extends StatelessWidget {
             Icon(Icons.error_outline_rounded, size: 48, color: cs.error),
             const SizedBox(height: DonySpacing.lg),
             Text(
-              'Une erreur est survenue',
+              l.commonSomethingWentWrong,
               style: Theme.of(
                 context,
               ).textTheme.titleLarge?.copyWith(color: cs.onSurface),
@@ -319,7 +320,7 @@ class _ErrorState extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.sm),
             Text(
-              'Impossible de charger vos favoris.',
+              l.favoritesLoadErrorMessage,
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
@@ -329,7 +330,7 @@ class _ErrorState extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Réessayer'),
+              label: Text(l.commonRetry),
             ),
           ],
         ),

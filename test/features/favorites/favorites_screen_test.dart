@@ -15,6 +15,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
@@ -312,6 +314,24 @@ void main() {
       await tester.pump();
 
       verify(() => idsCubit.load()).called(1);
+    });
+  });
+
+  group('FavoritesScreen — anglais', () {
+    testWidgets('titre « Saved » et onglets traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _buildScreen(
+          isTraveler: true,
+          tripsState: FavoriteTripsLoading(),
+          requestsState: FavoriteRequestsLoading(),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Saved'), findsOneWidget);
+      expect(find.text('Trips'), findsOneWidget);
+      expect(find.text('Requests'), findsOneWidget);
     });
   });
 }

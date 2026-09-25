@@ -9,6 +9,7 @@ import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dar
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_notify_mode.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/features/corridor_alerts/presentation/corridor_alert_labels.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/zone_picker_field.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -38,10 +39,13 @@ abstract final class CorridorAlertFormSheet {
       param1: (editing: alert, direction: initialDirection, prefill: prefill),
     );
     final canSubmitNotifier = ValueNotifier<bool>(cubit.state.isValid);
+    final l = context.l10n;
 
     return DonyBottomSheet.show<void>(
       context,
-      title: alert == null ? 'Créer une alerte' : 'Modifier l\'alerte',
+      title: alert == null
+          ? l.corridorAlertCreateAction
+          : l.corridorAlertEditTitle,
       wrapper: (content) => BlocProvider<CorridorAlertFormCubit>.value(
         value: cubit,
         child: BlocListener<CorridorAlertFormCubit, CorridorAlertFormState>(
@@ -54,8 +58,7 @@ abstract final class CorridorAlertFormSheet {
             } else if (state.status == CorridorAlertFormStatus.error) {
               DonySnackbar.show(
                 ctx,
-                message:
-                    state.errorMessage ?? 'Impossible d\'enregistrer l\'alerte',
+                message: state.errorMessage ?? ctx.l10n.corridorAlertSaveError,
                 type: DonySnackbarType.error,
               );
             }
@@ -72,7 +75,9 @@ abstract final class CorridorAlertFormSheet {
                     state.status == CorridorAlertFormStatus.submitting;
                 return DonyButton(
                   key: const Key('corridor-alert-submit'),
-                  label: alert == null ? 'Créer l\'alerte' : 'Enregistrer',
+                  label: alert == null
+                      ? bCtx.l10n.corridorAlertSubmitCreate
+                      : bCtx.l10n.commonSave,
                   isLoading: loading,
                   onPressed: (canSubmit && !loading)
                       ? () => bCtx.read<CorridorAlertFormCubit>().submit()
@@ -211,7 +216,7 @@ class _CorridorAlertFormBodyState extends State<_CorridorAlertFormBody> {
         if (showColisFilters) ...[
           const SizedBox(height: DonySpacing.lg),
           Text(
-            'Types de contenu (optionnel)',
+            context.l10n.corridorAlertContentTypesLabel,
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: DonySpacing.sm),
@@ -249,13 +254,14 @@ class _NotifyModeField extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Notifications', style: tt.titleSmall),
+        Text(l.corridorAlertNotifyTitle, style: tt.titleSmall),
         const SizedBox(height: DonySpacing.xs),
         Text(
-          value.description,
+          value.description(l),
           key: const Key('corridor-alert-notify-mode-hint'),
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
@@ -266,7 +272,7 @@ class _NotifyModeField extends StatelessWidget {
             for (final mode in AlertNotifyMode.values)
               DonyChip(
                 key: Key('notify-mode-${mode.name}'),
-                label: mode.label,
+                label: mode.label(l),
                 selected: mode == value,
                 onTap: () => onChanged(mode),
               ),
@@ -288,15 +294,16 @@ class _ZoneToggleRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     return Row(
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Zone de remise sur la carte', style: tt.titleSmall),
+              Text(l.corridorAlertZoneToggleTitle, style: tt.titleSmall),
               Text(
-                'Filtre par point de récupération (optionnel)',
+                l.corridorAlertZoneToggleSubtitle,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],
@@ -329,6 +336,7 @@ class _DirectionSegment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return Container(
       height: 44,
       decoration: BoxDecoration(
@@ -340,7 +348,7 @@ class _DirectionSegment extends StatelessWidget {
         children: [
           Expanded(
             child: _Pill(
-              label: 'Colis',
+              label: l.corridorAlertSegmentPackages,
               emoji: '📦',
               isActive: direction == AlertDirection.travelerWantsPackages,
               onTap: () => onChanged(AlertDirection.travelerWantsPackages),
@@ -348,7 +356,7 @@ class _DirectionSegment extends StatelessWidget {
           ),
           Expanded(
             child: _Pill(
-              label: 'Trajets',
+              label: l.corridorAlertSegmentTrips,
               emoji: '✈️',
               isActive: direction == AlertDirection.senderWantsTrips,
               onTap: () => onChanged(AlertDirection.senderWantsTrips),
@@ -423,24 +431,25 @@ class _DateWindowField extends StatelessWidget {
   final void Function(DateTime from, DateTime to) onPicked;
   final VoidCallback onClear;
 
-  String get _label {
+  String _label(AppLocalizations l) {
     if (dateFrom != null && dateTo != null) {
-      final fmt = DateFormat('d MMM', AppL10n.localeName);
+      final fmt = DateFormat.MMMd(l.localeName);
       return '${fmt.format(dateFrom!)} → ${fmt.format(dateTo!)}';
     }
-    return 'Toute date';
+    return l.corridorAlertAnyDate;
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final hasRange = dateFrom != null && dateTo != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Fenêtre de dates (optionnel)',
+          l.corridorAlertDateWindowLabel,
           style: Theme.of(context).textTheme.titleSmall,
         ),
         const SizedBox(height: DonySpacing.xs),
@@ -489,7 +498,7 @@ class _DateWindowField extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
-                    _label,
+                    _label(l),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: hasRange ? cs.onSurface : cs.onSurfaceVariant,
                     ),
@@ -500,7 +509,7 @@ class _DateWindowField extends StatelessWidget {
                     button: true,
                     container: true,
                     excludeSemantics: true,
-                    label: 'Effacer la période',
+                    label: l.corridorAlertClearDateRange,
                     child: GestureDetector(
                       key: const Key('corridor-alert-date-window-clear'),
                       onTap: onClear,
@@ -564,7 +573,7 @@ class _MinWeightFieldState extends State<_MinWeightField> {
   Widget build(BuildContext context) {
     return DonyTextField(
       controller: _controller,
-      label: 'Poids minimum (optionnel)',
+      label: context.l10n.corridorAlertMinWeightLabel,
       suffixIcon: const Padding(
         padding: EdgeInsets.only(right: DonySpacing.base),
         child: Align(widthFactor: 1, child: Text('kg')),

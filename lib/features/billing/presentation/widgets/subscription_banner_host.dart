@@ -3,8 +3,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/browser_return_refresh_mixin.dart';
 import 'package:dony/features/billing/bloc/subscription_bloc.dart';
-import 'package:dony/features/billing/presentation/pro_portal_copy.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_status_banner.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -84,7 +84,7 @@ class _SubscriptionBannerHostState extends State<SubscriptionBannerHost>
             clearBrowserLaunched();
             DonySnackbar.show(
               context,
-              message: kProPortalOpenFailedMessage,
+              message: context.l10n.proPortalOpenFailedMessage,
               type: DonySnackbarType.error,
             );
           }

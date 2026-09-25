@@ -9,10 +9,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 
-String _formatDate(DateTime date) =>
-    DateFormat('d MMMM yyyy', AppL10n.localeName).format(date);
+String _formatDate(AppLocalizations l, DateTime date) =>
+    DateFormat.yMMMMd(l.localeName).format(date);
 
 class ReferralScreen extends StatefulWidget {
   const ReferralScreen({super.key});
@@ -57,7 +56,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           appBar: AppBar(
             actions: const [DonyFeedbackButton()],
             title: Text(
-              'Parrainage',
+              context.l10n.referralScreenTitle,
               style: Theme.of(context).textTheme.headlineLarge,
             ),
             centerTitle: false,
@@ -91,6 +90,7 @@ class _LoadedBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -116,11 +116,20 @@ class _LoadedBody extends StatelessWidget {
           // Stats row
           Row(
             children: [
-              _StatBox(label: 'Invités', value: info.totalInvited.toString()),
+              _StatBox(
+                label: l.referralStatInvited,
+                value: info.totalInvited.toString(),
+              ),
               const SizedBox(width: DonySpacing.sm),
-              _StatBox(label: 'Inscrits', value: info.signedUp.toString()),
+              _StatBox(
+                label: l.referralStatSignedUp,
+                value: info.signedUp.toString(),
+              ),
               const SizedBox(width: DonySpacing.sm),
-              _StatBox(label: 'Récompensés', value: info.rewarded.toString()),
+              _StatBox(
+                label: l.referralStatRewarded,
+                value: info.rewarded.toString(),
+              ),
             ],
           ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
 
@@ -142,9 +151,17 @@ class _LoadedBody extends StatelessWidget {
                     // Ce n'est plus un montant crédité mais un bon de réduction :
                     // jamais de devise à afficher, juste le pourcentage et son
                     // décompte (un bon = une transaction, jamais cumulables).
-                    info.activeVoucherCount == 1
-                        ? '🎁 Tu as un bon de -${info.voucherPercentOff}% sur ta prochaine commission'
-                        : '🎁 Tu as ${info.activeVoucherCount} bons de -${info.voucherPercentOff}% sur tes prochaines commissions',
+                    // Comme _HeroCard : sans pourcentage connu (backend
+                    // antérieur au lot 3), on masque le chiffre plutôt que
+                    // d'afficher un « -0% » inventé.
+                    info.voucherPercentOff == null
+                        ? l.referralVouchersUnknownPercent(
+                            info.activeVoucherCount,
+                          )
+                        : l.referralVouchers(
+                            info.activeVoucherCount,
+                            info.voucherPercentOff!,
+                          ),
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: cs.success,
@@ -154,7 +171,9 @@ class _LoadedBody extends StatelessWidget {
                   if (info.nextVoucherExpiresAt != null) ...[
                     const SizedBox(height: DonySpacing.xs),
                     Text(
-                      'Valable jusqu\'au ${_formatDate(info.nextVoucherExpiresAt!)}',
+                      l.referralVoucherExpiresLabel(
+                        _formatDate(l, info.nextVoucherExpiresAt!),
+                      ),
                       textAlign: TextAlign.center,
                       style: Theme.of(
                         context,
@@ -186,6 +205,7 @@ class _HeroCard extends StatelessWidget {
     // (backend antérieur au lot 3, ou champ absent), on masque la promesse
     // chiffrée plutôt que d'annoncer un chiffre inventé.
     final percentOff = info.voucherPercentOff;
+    final l = context.l10n;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(DonySpacing.xl),
@@ -203,8 +223,8 @@ class _HeroCard extends StatelessWidget {
           const SizedBox(height: DonySpacing.md),
           Text(
             percentOff == null
-                ? 'Invite tes proches'
-                : 'Invite et gagne -$percentOff%',
+                ? l.referralHeroTitleDefault
+                : l.referralHeroTitlePercent(percentOff),
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w800,
@@ -214,8 +234,8 @@ class _HeroCard extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           Text(
             percentOff == null
-                ? 'Tu reçois un bon de réduction sur ta prochaine commission dès la première livraison de ton invité.'
-                : 'Tu reçois un bon de -$percentOff% sur ta prochaine commission dès la première livraison de ton invité.',
+                ? l.referralHeroSubtitleDefault
+                : l.referralHeroSubtitlePercent(percentOff),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.85),
             ),
@@ -239,6 +259,7 @@ class _CodeBox extends StatelessWidget {
     const greenAccent = DonyColors.referralGreenAccent;
     const greenDark = DonyColors.referralGreenDark;
     const greenPrimary = DonyColors.referralGreen;
+    final l = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.xl),
@@ -250,7 +271,7 @@ class _CodeBox extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Ton code de parrainage',
+            l.referralCodeBoxLabel,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -272,14 +293,14 @@ class _CodeBox extends StatelessWidget {
                 button: true,
                 container: true,
                 excludeSemantics: true,
-                label: 'Copier le code de parrainage',
+                label: l.referralCopyCodeSemantics,
                 child: GestureDetector(
                   onTap: () async {
                     await Clipboard.setData(ClipboardData(text: code));
                     if (context.mounted) {
                       DonySnackbar.show(
                         context,
-                        message: 'Code copié !',
+                        message: l.referralCodeCopiedMessage,
                         type: DonySnackbarType.success,
                       );
                     }
@@ -362,6 +383,7 @@ class _ShareButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -372,7 +394,7 @@ class _ShareButton extends StatelessWidget {
         ),
         child: FilledButton.icon(
           icon: const DonyIcon('share-2'),
-          label: const Text('Partager mon code'),
+          label: Text(l.referralShareButtonLabel),
           style: FilledButton.styleFrom(
             backgroundColor: DonyColors.referralGreen,
             minimumSize: const Size(double.infinity, 52),
@@ -380,12 +402,15 @@ class _ShareButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(DonyRadius.lg),
             ),
           ),
-          onPressed: () => Share.share(
-            // Le bon récompense qui invite, pas qui est invité — la promesse
-            // ne doit jamais laisser croire à l'inscrit qu'il gagne lui-même
-            // une réduction.
-            'Salut ! Utilise mon code Yadony : ${info.code} pour t\'inscrire, ça m\'aide à gagner une réduction sur ma prochaine commission. ${info.shareUrl}',
-            sharePositionOrigin: sharePositionOriginFor(context),
+          // Le bon récompense qui invite, pas qui est invité — la promesse
+          // ne doit jamais laisser croire à l'inscrit qu'il gagne lui-même
+          // une réduction. Le partage passe par le bloc (ReferralShared) pour
+          // que le tracking `referral_shared` (channel) se déclenche vraiment.
+          onPressed: () => context.read<ReferralBloc>().add(
+            ReferralShared(
+              l.referralShareMessage(info.code, info.shareUrl),
+              sharePositionOrigin: sharePositionOriginFor(context),
+            ),
           ),
         ),
       ),
@@ -401,6 +426,7 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(DonySpacing.xl),
@@ -413,7 +439,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
-              'Une erreur est survenue',
+              l.commonSomethingWentWrong,
               style: Theme.of(context).textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
@@ -426,7 +452,7 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: DonySpacing.xl),
             FilledButton.icon(
               icon: const DonyIcon('refresh-cw'),
-              label: const Text('Réessayer'),
+              label: Text(l.commonRetry),
               style: FilledButton.styleFrom(
                 backgroundColor: DonyColors.referralGreen,
               ),

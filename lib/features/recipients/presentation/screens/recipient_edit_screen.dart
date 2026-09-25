@@ -7,6 +7,7 @@ import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:dony/features/recipients/data/phone_validation.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart'
     show countryFromPhone;
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,7 +43,9 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
   final _notesCtrl = TextEditingController();
   bool _initialized = false;
   bool _submitted = false;
-  String? _phoneError;
+  // Le texte traduit ne se calcule qu'au build (jamais dans initState) : on
+  // ne garde ici que le fait générateur, pas un texte figé dans une langue.
+  bool _phoneInvalid = false;
   bool _isDefault = false;
   bool _importing = false;
 
@@ -56,9 +59,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
   void _validatePhone(String value) {
     final v = value.trim();
     setState(() {
-      _phoneError = v.isEmpty || _phoneRegex.hasMatch(v)
-          ? null
-          : 'Format invalide (+33612345678)';
+      _phoneInvalid = v.isNotEmpty && !_phoneRegex.hasMatch(v);
     });
   }
 
@@ -189,8 +190,8 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
           DonySnackbar.show(
             context,
             message: _isEditing
-                ? 'Destinataire mis à jour'
-                : 'Destinataire ajouté',
+                ? context.l10n.recipientUpdatedMessage
+                : context.l10n.recipientAddedMessage,
             type: DonySnackbarType.success,
           );
           context.pop(true);
@@ -206,13 +207,12 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
       builder: (context, state) {
         final isLoading = state.status == RecipientStatus.loading;
         final cs = Theme.of(context).colorScheme;
+        final l = context.l10n;
 
         return DonyPageScaffold(
-          title: _isEditing
-              ? 'Modifier le destinataire'
-              : 'Nouveau destinataire',
+          title: _isEditing ? l.recipientEditTitle : l.recipientCreateTitle,
           stickyBottom: DonyButton(
-            label: 'Enregistrer',
+            label: l.commonSave,
             onPressed: isLoading ? null : () => _submit(context),
             isLoading: isLoading,
           ),
@@ -228,8 +228,8 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
               ],
               DonyTextField(
                     controller: _fullNameCtrl,
-                    label: 'Nom complet',
-                    hint: 'Mamadou Diallo',
+                    label: l.recipientFullNameFieldLabel,
+                    hint: 'Mamadou Diallo', // i18n-ignore: exemple de saisie
                     onChanged: (_) => setState(() {}),
                   )
                   .animate()
@@ -238,14 +238,18 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
               const SizedBox(height: DonySpacing.base),
               DonyTextField(
                     controller: _phoneCtrl,
-                    label: 'Téléphone (E.164)',
-                    hint: '+22177123456',
+                    label: l.recipientPhoneFieldLabel,
+                    hint: '+22177123456', // i18n-ignore: exemple de saisie
                     keyboardType: TextInputType.phone,
                     onChanged: (v) {
                       _validatePhone(v);
                       setState(() {});
                     },
-                    errorText: _phoneError,
+                    errorText: _phoneInvalid
+                        ? l.recipientPhoneInvalidFormat(
+                            '+33612345678', // i18n-ignore: exemple de saisie
+                          )
+                        : null,
                   )
                   .animate()
                   .fadeIn(delay: 80.ms, duration: 280.ms)
@@ -261,10 +265,8 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: DonySpacing.base,
                 ),
-                title: const Text('Destinataire par défaut'),
-                subtitle: const Text(
-                  'Présélectionné lors de tes prochains envois',
-                ),
+                title: Text(l.recipientDefaultToggleTitle),
+                subtitle: Text(l.recipientDefaultToggleSubtitle),
               ).animate().fadeIn(delay: 120.ms, duration: 280.ms),
             ],
           ),
@@ -310,7 +312,7 @@ class _ContactImportButton extends StatelessWidget {
                 DonyIcon('contact', size: 18, color: cs.primary),
               const SizedBox(width: DonySpacing.sm),
               Text(
-                'Choisir dans mes contacts',
+                context.l10n.recipientImportContactsAction,
                 style: tt.bodyMedium?.copyWith(
                   color: cs.primary,
                   fontWeight: FontWeight.w600,

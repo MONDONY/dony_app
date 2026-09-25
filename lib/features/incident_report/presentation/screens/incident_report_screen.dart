@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/incident_report/bloc/incident_photo_upload.dart';
 import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
 import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
 import 'package:dony/features/incident_report/data/report_reasons.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
+import 'package:dony/features/incident_report/presentation/report_reason_labels.dart';
 import 'package:dony/features/incident_report/presentation/widgets/incident_photo_section.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -54,7 +59,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
         if (state is IncidentReportSuccess) {
           DonySnackbar.show(
             context,
-            message: 'Signalement envoyé. Notre équipe va l\'examiner.',
+            message: context.l10n.reportSentMessage,
             type: DonySnackbarType.success,
           );
           final navigator = Navigator.of(context);
@@ -62,17 +67,21 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
             navigator.pop();
           }
         } else if (state is IncidentReportError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          if (state.error != null) {
+            unawaited(ErrorPresenter.show(context, state.error));
+          } else {
+            DonySnackbar.show(
+              context,
+              message: context.l10n.reportSendFailed,
+              type: DonySnackbarType.error,
+            );
+          }
         }
       },
       child: Scaffold(
         appBar: AppBar(
           actions: const [DonyFeedbackButton()],
-          title: const Text('Signaler un problème'),
+          title: Text(context.l10n.reportScreenTitle),
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -81,7 +90,10 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Motif', style: Theme.of(context).textTheme.titleSmall),
+                Text(
+                  context.l10n.reportReasonLabel,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
                 const SizedBox(height: DonySpacing.sm),
                 Wrap(
                   spacing: DonySpacing.sm,
@@ -89,7 +101,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                   children: [
                     for (final reason in reportReasonsFor(widget.targetType))
                       ChoiceChip(
-                        label: Text(reason.label),
+                        label: Text(reason.label(context.l10n)),
                         selected: _reason == reason,
                         onSelected: (_) => setState(() => _reason = reason),
                       ),
@@ -98,18 +110,18 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                 const SizedBox(height: DonySpacing.lg),
                 DonyTextField(
                   controller: _descriptionController,
-                  label: 'Description',
-                  hint: 'Décrivez le problème rencontré…',
+                  label: context.l10n.reportDescriptionLabel,
+                  hint: context.l10n.reportDescriptionHint,
                   maxLines: 5,
                 ),
                 const SizedBox(height: DonySpacing.lg),
                 Text(
-                  'Captures d\'écran (optionnel)',
+                  context.l10n.reportScreenshotsLabel,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Jusqu\'à 4 images pour aider notre équipe à comprendre.',
+                  context.l10n.reportScreenshotsHint,
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -132,7 +144,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                         return SizedBox(
                           width: double.infinity,
                           child: DonyButton(
-                            label: 'Envoyer le signalement',
+                            label: context.l10n.reportSendButton,
                             isLoading: state is IncidentReportSubmitting,
                             onPressed: canSubmit
                                 ? () => _submit(context)

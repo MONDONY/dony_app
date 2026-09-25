@@ -3,6 +3,8 @@ import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 /// Monte un bouton qui ouvre le dialogue et capture sa valeur de retour :
 /// c'est elle que les appelants utilisent pour décider de naviguer.
 Widget _harness(void Function(bool) onResult) => MaterialApp(
@@ -86,5 +88,41 @@ void main() {
         expect(find.text('Limite de brouillons atteinte'), findsNothing);
       },
     );
+  });
+
+  group('anglais', () {
+    testWidgets('offre ouverte : « Upgrade to Pro » / « Later »', (
+      tester,
+    ) async {
+      useEnglish();
+      setProEnabled(true);
+      bool? result;
+      await tester.pumpWidget(_harness((r) => result = r));
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Upgrade to Pro'), findsOneWidget);
+      expect(find.text('Later'), findsOneWidget);
+
+      await tester.tap(find.text('Upgrade to Pro'));
+      await tester.pumpAndSettle();
+      expect(result, isTrue);
+    });
+
+    testWidgets('offre fermée : « Got it »', (tester) async {
+      useEnglish();
+      setProEnabled(false);
+      bool? result;
+      await tester.pumpWidget(_harness((r) => result = r));
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Got it'), findsOneWidget);
+      expect(find.text('Upgrade to Pro'), findsNothing);
+
+      await tester.tap(find.text('Got it'));
+      await tester.pumpAndSettle();
+      expect(result, isFalse);
+    });
   });
 }

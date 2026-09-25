@@ -11,6 +11,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 class _MockRepo extends Mock implements DeliveryAddressRepository {}
 
 class _MockDio extends Mock implements Dio {}
@@ -408,5 +410,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('localisée'), findsNothing);
+  });
+
+  // ── Anglais ──────────────────────────────────────────────────────────────
+
+  testWidgets('en anglais : titre, chips, pays et bouton traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('New delivery address'), findsOneWidget);
+    expect(find.text('Family'), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Shop'), findsOneWidget);
+    expect(find.text('Senegal'), findsOneWidget);
+    expect(find.text('Save address'), findsOneWidget);
   });
 }

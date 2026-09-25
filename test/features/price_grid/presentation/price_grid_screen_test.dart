@@ -10,6 +10,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class _MockPriceGridBloc extends MockBloc<PriceGridEvent, PriceGridState>
     implements PriceGridBloc {}
 
@@ -257,6 +259,26 @@ void main() {
 
       verifyNever(
         () => bloc.add(any(that: isA<PriceGridItemDeleteRequested>())),
+      );
+    });
+  });
+
+  group('PriceGridScreen — anglais', () {
+    testWidgets('titre, libellés canoniques et commission traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap(_blocWith(const PriceGridLoaded(_items))));
+      await tester.pumpAndSettle();
+
+      expect(find.text('My price list'), findsOneWidget);
+      // Catégorie canonique traduite ; le libellé libre reste tel quel.
+      expect(find.text('Shoes'), findsOneWidget);
+      expect(find.text('Phones & electronics'), findsOneWidget);
+      expect(find.textContaining('you receive'), findsNWidgets(3));
+      expect(
+        find.textContaining('You receive your exact amount'),
+        findsOneWidget,
       );
     });
   });

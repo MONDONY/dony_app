@@ -8,6 +8,7 @@ import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/matching/presentation/widgets/map_camera_math.dart';
 import 'package:dony/features/matching/presentation/widgets/map_styles.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
@@ -176,6 +177,7 @@ class _ZonePickerFieldState extends State<ZonePickerField> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,7 +186,7 @@ class _ZonePickerFieldState extends State<ZonePickerField> {
         BlocProvider(
           create: (_) => getIt<CitySearchBloc>(),
           child: CityAutocompleteField(
-            label: 'Centrer la zone sur une ville',
+            label: l.corridorAlertZoneCityLabel,
             fieldKey: const Key('zone-city-field'),
             prefixIcon: const Icon(Icons.place_outlined),
             onSelected: (CityModel c) =>
@@ -198,7 +200,7 @@ class _ZonePickerFieldState extends State<ZonePickerField> {
             key: const Key('zone-locate-me'),
             onPressed: _useMyLocation,
             icon: const Icon(Icons.my_location_rounded, size: 18),
-            label: const Text('Utiliser ma position'),
+            label: Text(l.corridorAlertUseMyLocation),
           ),
         ),
         const SizedBox(height: DonySpacing.sm),
@@ -248,7 +250,7 @@ class _ZonePickerFieldState extends State<ZonePickerField> {
             const SizedBox(width: DonySpacing.xs),
             Expanded(
               child: Text(
-                _label ?? 'Point de remise sélectionné',
+                _label ?? l.corridorAlertZonePlaceholder,
                 key: const Key('zone-label'),
                 style: tt.bodySmall?.copyWith(
                   color: cs.onSurface,
@@ -263,7 +265,7 @@ class _ZonePickerFieldState extends State<ZonePickerField> {
         Row(
           children: [
             Text(
-              'Rayon',
+              l.corridorAlertRadiusLabel,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const Spacer(),

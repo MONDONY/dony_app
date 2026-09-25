@@ -47,6 +47,9 @@ String countryName(AppLocalizations l, String code) => switch (code) {
   'TD' => l.countryNameTd,
   // Hors catalogue, proposé seulement par le sélecteur d'indicatif.
   'CD' => l.countryNameCd,
+  // Hors catalogue, proposé seulement par la liste fermée diaspora de
+  // delivery_address_edit_screen.dart (pas le même GN que GW/GQ).
+  'GN' => l.countryNameGn,
   _ => code,
 };
 

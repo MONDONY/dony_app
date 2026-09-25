@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -13,55 +15,24 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/billing/bloc/subscription_bloc.dart';
 import 'package:dony/features/billing/data/models/pro_subscription_model.dart';
-import 'package:dony/features/billing/presentation/pro_portal_copy.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_status_banner.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_status_card.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 // ── Copie sous contrat ──────────────────────────────────────────────────────
-// Les tarifs sont écrits une seule fois. L'économie annuelle est chiffrée en
-// euros et ne doit jamais être traduite en mois offerts : 11,98 € valent
-// 2,4 mois d'abonnement, tout arrondi en mois entiers serait faux.
-
-const String _kMonthlyPrice = '4,99 € par mois';
-const String _kYearlyPrice = '47,90 € par an';
-const String _kYearlySaving = "Soit 11,98 € d'économie sur l'année.";
-const String _kPortalHint =
-    "L'abonnement se souscrit sur le site Yadony PRO, dans votre navigateur.";
-const String _kPortalButtonLabel = "S'abonner sur le site Yadony PRO";
-
-/// Où gérer et résilier un abonnement, et à quoi s'attendre en arrivant.
-///
-/// La mention de la connexion n'est pas du remplissage : la page de vente est
-/// publique, la page de gestion ne l'est pas. Sans cet avertissement,
-/// l'utilisateur tombe sur une demande de code sans y avoir été préparé.
-const String _kManageGuidance =
-    'La gestion et la résiliation de votre abonnement se font sur le site '
-    'Yadony PRO, dans votre navigateur. Une connexion vous y sera demandée.';
-
-/// Message opposé au refus `409 active-stripe-subscription`. Le serveur ne
-/// laisse pas résilier un abonnement Stripe encore actif depuis l'app : le
-/// dire, plutôt que de rendre l'erreur brute, est la seule sortie utile.
-const String _kDowngradeBlockedMessage =
-    'Votre abonnement PRO est toujours actif. $_kManageGuidance';
-
-/// Le serveur n'accorde plus l'accès, alors que le drapeau PRO local dit
-/// encore le contraire. Voir `_loaded` sur pourquoi c'est `active` qui fait
-/// foi ici.
-const String _kAccessEndedMessage =
-    "Votre accès PRO n'est plus actif. Vous pouvez reprendre un abonnement "
-    'sur le site Yadony PRO.';
-
-/// `none` ne dit pas « votre accès a pris fin », il dit « aucun abonnement ».
-/// L'utilisateur n'en a peut-être jamais eu : lui annoncer une fin lui
-/// raconterait un passé qui n'a pas eu lieu.
-const String _kNoSubscriptionMessage =
-    "Vous n'avez pas d'abonnement PRO. Vous pouvez en souscrire un sur le "
-    'site Yadony PRO.';
+// Les tarifs sont écrits une seule fois, via les clés proPricePerMonth /
+// proPricePerYear / proYearlySaving (l10n/app_fr.arb). L'économie annuelle
+// est chiffrée en euros et ne doit jamais être traduite en mois offerts :
+// 11,98 € valent 2,4 mois d'abonnement, tout arrondi en mois entiers serait
+// faux.
+const double _kMonthlyPriceEur = 4.99;
+const double _kYearlyPriceEur = 47.90;
+const double _kYearlySavingEur = 11.98;
 
 /// Écran « compte PRO », en deux vues :
 ///
@@ -244,16 +215,15 @@ class _UpgradeToProViewState extends State<_UpgradeToProView>
   }
 
   Future<void> _confirmDowngrade(BuildContext context) async {
+    final l = context.l10n;
     final confirmed = await DonyDialog.show(
       context,
-      title: 'Désactiver le compte PRO',
-      message:
-          'Votre badge PRO et vos avantages professionnels seront retirés de '
-          'votre profil.',
+      title: l.proDowngradeDialogTitle,
+      message: l.proDowngradeDialogMessage,
       // Verbe explicite plutôt que « Confirmer » : sur une action
       // destructive, le bouton doit nommer ce qu'il déclenche, pas se
       // contenter d'acquiescer.
-      confirmLabel: 'Désactiver',
+      confirmLabel: l.proDowngradeConfirmButton,
       variant: DonyDialogVariant.destructive,
     );
     if (confirmed == true && context.mounted) {
@@ -300,7 +270,7 @@ class _UpgradeToProViewState extends State<_UpgradeToProView>
               context.read<AuthBloc>().add(const AuthCheckRequested());
               DonySnackbar.show(
                 context,
-                message: 'Compte PRO désactivé.',
+                message: context.l10n.proDowngradeSuccessMessage,
                 type: DonySnackbarType.success,
               );
               if (context.canPop()) context.pop();
@@ -311,9 +281,10 @@ class _UpgradeToProViewState extends State<_UpgradeToProView>
               // déjà ouvert. Le refus se reconnaît au `code` du ProblemDetail,
               // jamais au titre ni au détail, qui sont de la copie serveur.
               if (state.error.code == kActiveStripeSubscriptionCode) {
+                final l = context.l10n;
                 DonySnackbar.show(
                   context,
-                  message: _kDowngradeBlockedMessage,
+                  message: l.proDowngradeBlockedMessage(l.proManageGuidance),
                   type: DonySnackbarType.warning,
                 );
               } else {
@@ -330,7 +301,7 @@ class _UpgradeToProViewState extends State<_UpgradeToProView>
               clearBrowserLaunched();
               DonySnackbar.show(
                 context,
-                message: kProPortalOpenFailedMessage,
+                message: context.l10n.proPortalOpenFailedMessage,
                 type: DonySnackbarType.error,
               );
             }
@@ -372,10 +343,11 @@ class _ProAuthPendingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Compte PRO'),
+      appBar: DonyAppBar(title: l.proAccountScreenTitle),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -390,7 +362,7 @@ class _ProAuthPendingView extends StatelessWidget {
             // ouvert reste couvert par l'ambiguïté connue d'`AuthInitial`,
             // que ce lot ne prétend pas lever.
             Text(
-              'Chargement de votre compte.',
+              l.proAccountLoadingMessage,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
@@ -409,11 +381,24 @@ class _ProPitchView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final monthlyPrice = CurrencyFormatter.format(
+      _kMonthlyPriceEur,
+      SupportedCurrency.eur,
+    );
+    final yearlyPrice = CurrencyFormatter.format(
+      _kYearlyPriceEur,
+      SupportedCurrency.eur,
+    );
+    final yearlySaving = CurrencyFormatter.format(
+      _kYearlySavingEur,
+      SupportedCurrency.eur,
+    );
 
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Compte PRO'),
+      appBar: DonyAppBar(title: l.proAccountScreenTitle),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           DonySpacing.lg,
@@ -433,13 +418,12 @@ class _ProPitchView extends StatelessWidget {
             const SizedBox(height: DonySpacing.xl),
 
             Text(
-              'Passez en compte PRO',
+              l.proPitchHeadline,
               style: tt.displayLarge,
             ).animate().fadeIn(delay: 60.ms),
             const SizedBox(height: DonySpacing.md),
             Text(
-              'Le compte PRO met en avant votre activité de transporteur et '
-              'vous donne accès aux avantages réservés aux professionnels.',
+              l.proPitchDescription,
               style: tt.bodyLarge?.copyWith(
                 color: cs.onSurfaceVariant,
                 height: 1.55,
@@ -447,18 +431,18 @@ class _ProPitchView extends StatelessWidget {
             ).animate().fadeIn(delay: 100.ms),
             const SizedBox(height: DonySpacing.xxl),
 
-            const _SectionLabel('CE QUE COMPREND LE COMPTE PRO'),
+            _SectionLabel(l.proPitchIncludesLabel),
             const SizedBox(height: DonySpacing.md),
-            const _AdvantageRow(label: 'Badge Pro'),
+            _AdvantageRow(label: l.proAdvantageBadge),
             const SizedBox(height: DonySpacing.sm),
-            const _AdvantageRow(label: 'Volume illimité'),
+            _AdvantageRow(label: l.proAdvantageUnlimitedVolume),
             const SizedBox(height: DonySpacing.sm),
-            const _AdvantageRow(label: 'Priorité de mise en relation'),
+            _AdvantageRow(label: l.proAdvantageMatchingPriority),
             const SizedBox(height: DonySpacing.sm),
-            const _AdvantageRow(label: 'Support dédié'),
+            _AdvantageRow(label: l.proAdvantageDedicatedSupport),
             const SizedBox(height: DonySpacing.xxl),
 
-            const _SectionLabel('TARIFS'),
+            _SectionLabel(l.proPitchPricingLabel),
             const SizedBox(height: DonySpacing.md),
             DonyCard(
               child: Column(
@@ -466,17 +450,17 @@ class _ProPitchView extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    _kMonthlyPrice,
+                    l.proPricePerMonth(monthlyPrice),
                     style: tt.titleLarge?.copyWith(color: cs.onSurface),
                   ),
                   const SizedBox(height: DonySpacing.xs),
                   Text(
-                    _kYearlyPrice,
+                    l.proPricePerYear(yearlyPrice),
                     style: tt.titleLarge?.copyWith(color: cs.onSurface),
                   ),
                   const SizedBox(height: DonySpacing.xs),
                   Text(
-                    _kYearlySaving,
+                    l.proYearlySaving(yearlySaving),
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
@@ -484,15 +468,15 @@ class _ProPitchView extends StatelessWidget {
             ).animate().fadeIn(delay: 180.ms),
             const SizedBox(height: DonySpacing.lg),
 
-            const DonyStatusBanner(
+            DonyStatusBanner(
               type: DonyStatusBannerType.info,
               iconAsset: 'info',
-              message: _kPortalHint,
+              message: l.proPortalHint,
             ).animate().fadeIn(delay: 220.ms),
             const SizedBox(height: DonySpacing.xl),
 
             DonyButton(
-              label: _kPortalButtonLabel,
+              label: l.proPortalButtonLabel,
               iconRightAsset: 'external-link',
               onPressed: () => onOpenPortal(ProPortalTarget.upgrade),
             ).animate().fadeIn(delay: 260.ms),
@@ -529,8 +513,9 @@ class _ProSubscriberView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Mon compte PRO'),
+      appBar: DonyAppBar(title: l.proSubscriberScreenTitle),
       body: BlocBuilder<SubscriptionBloc, SubscriptionState>(
         builder: (context, state) {
           final subscription = _subscriptionOf(state);
@@ -555,9 +540,7 @@ class _ProSubscriberView extends StatelessWidget {
                   ..._retryableStatus(
                     context,
                     type: DonyStatusBannerType.error,
-                    message:
-                        "Impossible de charger l'état de votre abonnement "
-                        'pour le moment.',
+                    message: l.proLoadSubscriptionError,
                   )
                 else if (state is SubscriptionLoading)
                   // Une demande est en vol : elle se résoudra en `Loaded` ou
@@ -580,9 +563,7 @@ class _ProSubscriberView extends StatelessWidget {
                   ..._retryableStatus(
                     context,
                     type: DonyStatusBannerType.info,
-                    message:
-                        "L'état de votre abonnement n'a pas encore été "
-                        'chargé.',
+                    message: l.proSubscriptionNotLoadedYet,
                   ),
               ],
             ),
@@ -613,7 +594,7 @@ class _ProSubscriberView extends StatelessWidget {
   ];
 
   Widget _retryButton(BuildContext context) => DonyButton(
-    label: 'Réessayer',
+    label: context.l10n.commonRetry,
     variant: DonyButtonVariant.secondary,
     onPressed: () =>
         context.read<SubscriptionBloc>().add(const SubscriptionRequested()),
@@ -623,6 +604,7 @@ class _ProSubscriberView extends StatelessWidget {
     BuildContext context,
     ProSubscriptionModel subscription,
   ) {
+    final l = context.l10n;
     // `active` est le seul signal FRAIS dont dispose cet écran. Le drapeau PRO
     // local, lui, n'est rechargé qu'au démarrage à froid ou au retour du
     // navigateur : il reste vrai des jours après la fermeture d'un abonnement
@@ -684,21 +666,21 @@ class _ProSubscriberView extends StatelessWidget {
         DonyStatusBanner(
           type: DonyStatusBannerType.info,
           message: subscription.status == ProSubscriptionStatus.none
-              ? _kNoSubscriptionMessage
-              : _kAccessEndedMessage,
+              ? l.proNoSubscriptionMessage
+              : l.proAccessEndedMessage,
         ),
         const SizedBox(height: DonySpacing.lg),
         DonyButton(
-          label: _kPortalButtonLabel,
+          label: l.proPortalButtonLabel,
           iconRightAsset: 'external-link',
           onPressed: () => onOpenPortal(ProPortalTarget.upgrade),
         ),
       ],
       if (needsGuidance) ...[
         const SizedBox(height: DonySpacing.lg),
-        const DonyStatusBanner(
+        DonyStatusBanner(
           type: DonyStatusBannerType.info,
-          message: _kManageGuidance,
+          message: l.proManageGuidance,
         ),
       ],
       if (canDowngrade) ...[
@@ -707,7 +689,7 @@ class _ProSubscriberView extends StatelessWidget {
           builder: (context, state) {
             final isLoading = state is UpgradeToProLoading;
             return DonyButton(
-              label: 'Revenir en compte standard',
+              label: l.proDowngradeButton,
               variant: DonyButtonVariant.destructive,
               isLoading: isLoading,
               onPressed: isLoading ? null : onDowngrade,

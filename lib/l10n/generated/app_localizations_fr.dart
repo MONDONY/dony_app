@@ -12608,4 +12608,1287 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get supportConversationDefaultPreview =>
       'Une question ? Notre équipe vous répond ici.';
+
+  @override
+  String get corridorAlertNotifyInstant => 'Instantanée';
+
+  @override
+  String get corridorAlertNotifyDaily => 'Quotidienne';
+
+  @override
+  String get corridorAlertNotifySilent => 'Silencieuse';
+
+  @override
+  String get corridorAlertNotifyInstantDescription =>
+      'Push instantané, digest à 9 h';
+
+  @override
+  String get corridorAlertNotifyDailyDescription => 'Digest quotidien à 9 h';
+
+  @override
+  String get corridorAlertNotifySilentDescription =>
+      'Sans notification, compteur seulement';
+
+  @override
+  String get corridorAlertSameMonthFromPattern => 'd';
+
+  @override
+  String corridorAlertDateRange(String from, String to) {
+    return '$from au $to';
+  }
+
+  @override
+  String corridorAlertDateFrom(String date) {
+    return 'À partir du $date';
+  }
+
+  @override
+  String corridorAlertDateUntil(String date) {
+    return 'Jusqu\'au $date';
+  }
+
+  @override
+  String get corridorAlertAnyDate => 'Toute date';
+
+  @override
+  String get corridorAlertAnyWeight => 'Tout poids';
+
+  @override
+  String get corridorAlertCardMenuTooltip => 'Options';
+
+  @override
+  String get corridorAlertPausedStatus => 'En pause · aucune notification';
+
+  @override
+  String get corridorAlertResume => 'Reprendre';
+
+  @override
+  String corridorAlertExpiredOn(String date) {
+    return 'Expirée le $date';
+  }
+
+  @override
+  String get corridorAlertExtend => 'Prolonger';
+
+  @override
+  String corridorAlertNewTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nouveaux trajets',
+      one: '$count nouveau trajet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String corridorAlertNewParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nouveaux colis',
+      one: '$count nouveau colis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get corridorAlertSeeMatches => 'Voir';
+
+  @override
+  String get corridorAlertNoTripsYet => 'Aucun trajet pour l\'instant';
+
+  @override
+  String get corridorAlertNoParcelsYet => 'Aucun colis pour l\'instant';
+
+  @override
+  String corridorAlertNothingNewTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Rien de neuf · $count trajets au total',
+      one: 'Rien de neuf · $count trajet au total',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String corridorAlertNothingNewParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Rien de neuf · $count colis au total',
+      one: 'Rien de neuf · $count colis au total',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get corridorAlertEditTitle => 'Modifier l\'alerte';
+
+  @override
+  String get corridorAlertListTitleAll => 'Mes alertes';
+
+  @override
+  String get corridorAlertMatchesEmptyTripsDescription =>
+      'Aucun trajet ne correspond à cette alerte pour l\'instant.';
+
+  @override
+  String get corridorAlertMatchesEmptyParcelsDescription =>
+      'Aucun colis ne correspond à cette alerte pour l\'instant.';
+
+  @override
+  String get corridorAlertBannerPausedTitle => 'Alerte en pause';
+
+  @override
+  String get corridorAlertBannerPausedSubtitle => 'Aucune notification';
+
+  @override
+  String get corridorAlertBannerExpiredTitle => 'Alerte expirée';
+
+  @override
+  String get corridorAlertBannerExpiredSubtitle =>
+      'La fenêtre de dates est passée';
+
+  @override
+  String get corridorAlertBannerActiveTitle => 'Alerte active';
+
+  @override
+  String corridorAlertNewSection(String count) {
+    return 'Nouveaux · $count';
+  }
+
+  @override
+  String corridorAlertSeenSection(String count) {
+    return 'Déjà vus · $count';
+  }
+
+  @override
+  String corridorAlertTripCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trajets',
+      one: '$count trajet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String corridorAlertParcelCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis',
+      one: '$count colis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get corridorAlertListTitlePackages => 'Mes alertes colis';
+
+  @override
+  String get corridorAlertListTitleTrips => 'Mes alertes trajets';
+
+  @override
+  String get corridorAlertCreateFab => 'Créer';
+
+  @override
+  String get corridorAlertEmptyDescriptionPackages =>
+      'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton corridor.';
+
+  @override
+  String get corridorAlertEmptyDescriptionTrips =>
+      'Crée une alerte pour être prévenu dès qu\'un trajet apparaît sur ton corridor.';
+
+  @override
+  String get corridorAlertEmptyDescriptionAll =>
+      'Crée une alerte pour être prévenu dès qu\'un trajet ou un colis apparaît sur ton corridor.';
+
+  @override
+  String get corridorAlertEmptyTitle => 'Aucune alerte corridor';
+
+  @override
+  String get corridorAlertCreateAction => 'Créer une alerte';
+
+  @override
+  String get corridorAlertGroupTrips => 'Trajets surveillés';
+
+  @override
+  String get corridorAlertGroupPackages => 'Colis surveillés';
+
+  @override
+  String get corridorAlertActionEditSubtitle => 'Corridor, dates et filtres';
+
+  @override
+  String get corridorAlertDuplicate => 'Dupliquer';
+
+  @override
+  String get corridorAlertDuplicateSubtitle =>
+      'Repartir de cette alerte pour en créer une autre';
+
+  @override
+  String get corridorAlertPause => 'Mettre en pause';
+
+  @override
+  String get corridorAlertPauseSubtitle =>
+      'Plus de notification, l\'alerte reste là';
+
+  @override
+  String get corridorAlertResumeSubtitle => 'Les notifications repartent';
+
+  @override
+  String get corridorAlertSaveError => 'Impossible d\'enregistrer l\'alerte';
+
+  @override
+  String get corridorAlertSubmitCreate => 'Créer l\'alerte';
+
+  @override
+  String get corridorAlertNotifyTitle => 'Notifications';
+
+  @override
+  String get corridorAlertZoneToggleTitle => 'Zone de remise sur la carte';
+
+  @override
+  String get corridorAlertZoneToggleSubtitle =>
+      'Filtre par point de récupération (optionnel)';
+
+  @override
+  String get corridorAlertSegmentPackages => 'Colis';
+
+  @override
+  String get corridorAlertSegmentTrips => 'Trajets';
+
+  @override
+  String get corridorAlertDateWindowLabel => 'Fenêtre de dates (optionnel)';
+
+  @override
+  String get corridorAlertClearDateRange => 'Effacer la période';
+
+  @override
+  String get corridorAlertMinWeightLabel => 'Poids minimum (optionnel)';
+
+  @override
+  String get corridorAlertContentTypesLabel => 'Types de contenu (optionnel)';
+
+  @override
+  String get corridorAlertZoneCityLabel => 'Centrer la zone sur une ville';
+
+  @override
+  String get corridorAlertUseMyLocation => 'Utiliser ma position';
+
+  @override
+  String get corridorAlertZonePlaceholder => 'Point de remise sélectionné';
+
+  @override
+  String get corridorAlertRadiusLabel => 'Rayon';
+
+  @override
+  String get corridorAlertTripAvailable => 'Trajet disponible';
+
+  @override
+  String corridorAlertAvailableKg(String kg) {
+    return '$kg kg dispo';
+  }
+
+  @override
+  String corridorAlertMatchPrice(String price) {
+    return 'Prix $price';
+  }
+
+  @override
+  String get corridorAlertOpenPrice => 'Prix libre';
+
+  @override
+  String get favoritesTitle => 'Mes favoris';
+
+  @override
+  String get favoritesTripsTab => 'Trajets';
+
+  @override
+  String get favoritesRequestsTab => 'Demandes';
+
+  @override
+  String get favoritesEmptyTripsMessage =>
+      'Aucun trajet favori pour l\'instant';
+
+  @override
+  String get favoritesEmptyRequestsMessage =>
+      'Aucune demande favorite pour l\'instant';
+
+  @override
+  String get favoritesEmptyTitle => 'Aucun favori pour l\'instant';
+
+  @override
+  String get favoritesLoadErrorMessage => 'Impossible de charger vos favoris.';
+
+  @override
+  String get favoritesRemoveTooltip => 'Retirer des favoris';
+
+  @override
+  String get favoritesAddTooltip => 'Ajouter aux favoris';
+
+  @override
+  String get reportReasonHarassment => 'Harcèlement ou comportement abusif';
+
+  @override
+  String get reportReasonFakeProfile => 'Faux profil';
+
+  @override
+  String get reportReasonScamAttempt => 'Tentative d\'arnaque';
+
+  @override
+  String get reportReasonProhibitedItem => 'Objet interdit au transport';
+
+  @override
+  String get reportReasonFalseInformation =>
+      'Informations fausses ou trompeuses';
+
+  @override
+  String get reportReasonInappropriateContent => 'Contenu inapproprié';
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonPaymentIssue => 'Problème de paiement';
+
+  @override
+  String get reportReasonAppBug => 'Bug de l\'application';
+
+  @override
+  String get reportReasonOther => 'Autre';
+
+  @override
+  String get reportScreenTitle => 'Signaler un problème';
+
+  @override
+  String get reportSentMessage =>
+      'Signalement envoyé. Notre équipe va l\'examiner.';
+
+  @override
+  String get reportReasonLabel => 'Motif';
+
+  @override
+  String get reportDescriptionLabel => 'Description';
+
+  @override
+  String get reportDescriptionHint => 'Décrivez le problème rencontré…';
+
+  @override
+  String get reportScreenshotsLabel => 'Captures d\'écran (optionnel)';
+
+  @override
+  String get reportScreenshotsHint =>
+      'Jusqu\'à 4 images pour aider notre équipe à comprendre.';
+
+  @override
+  String get reportSendButton => 'Envoyer le signalement';
+
+  @override
+  String get reportAddPhotoLabel => 'Ajouter une photo';
+
+  @override
+  String get reportRemovePhotoLabel => 'Supprimer cette photo';
+
+  @override
+  String get reportSendFailed =>
+      'Impossible d\'envoyer le signalement. Réessayez.';
+
+  @override
+  String get followRecencyJustNow => 'à l\'instant';
+
+  @override
+  String followRecencyMinutes(int minutes) {
+    return 'il y a $minutes min';
+  }
+
+  @override
+  String followRecencyHours(int hours) {
+    return 'il y a $hours h';
+  }
+
+  @override
+  String get followRecencyYesterday => 'hier';
+
+  @override
+  String followRecencyDays(int days) {
+    return 'il y a $days j';
+  }
+
+  @override
+  String followOngoingTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trajets en cours',
+      one: '$count trajet en cours',
+      zero: 'Aucun trajet en cours',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String followNewTripSemantics(String name) {
+    return 'Nouveau trajet publié par $name';
+  }
+
+  @override
+  String get followNoRecentTrip => 'Aucun trajet publié pour le moment';
+
+  @override
+  String followDepartureLabel(String date) {
+    return 'Départ $date';
+  }
+
+  @override
+  String get followProBadge => 'PRO';
+
+  @override
+  String followViewTripSemantics(String trip, String name) {
+    return 'Voir le trajet $trip de $name';
+  }
+
+  @override
+  String followPushSemanticsFor(String name) {
+    return 'Alertes push de $name';
+  }
+
+  @override
+  String get followPushOffTooltip => 'Couper les alertes push';
+
+  @override
+  String get followPushOnTooltip => 'Activer les alertes push';
+
+  @override
+  String get followSubscribeCaption =>
+      'Vous serez prévenu de chacun de ses nouveaux trajets.';
+
+  @override
+  String get followPushOnCaption =>
+      'Alertes push activées : chaque nouveau trajet vous notifie.';
+
+  @override
+  String get followPushOffCaption =>
+      'Sans alerte push : ses trajets arriveront seulement dans vos notifications.';
+
+  @override
+  String get followUnsubscribeConfirmMessage =>
+      'Vous ne serez plus prévenu de ses nouveaux trajets.';
+
+  @override
+  String get followPushToggleSemantics => 'Alertes push';
+
+  @override
+  String get followPushBadge => 'Push';
+
+  @override
+  String get followScreenTitle => 'Mes abonnements';
+
+  @override
+  String get followMarkAllSeenTooltip => 'Tout marquer comme vu';
+
+  @override
+  String get followEmptyTitle => 'Aucun abonnement';
+
+  @override
+  String get followEmptyDescription =>
+      'Abonnez-vous à un voyageur depuis son profil : vous serez prévenu dès qu\'il publie un trajet.';
+
+  @override
+  String get followSearchHint => 'Rechercher un voyageur…';
+
+  @override
+  String followTravelersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs suivis',
+      one: '$count voyageur suivi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String followNewSinceLastVisit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ont publié depuis votre dernière visite',
+      one: '$count a publié depuis votre dernière visite',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get followUnsubscribeSwipeLabel => 'Désabonner';
+
+  @override
+  String followUnsubscribeConfirmTitle(String name) {
+    return 'Ne plus suivre $name ?';
+  }
+
+  @override
+  String get followUnsubscribeFullMessage =>
+      'Vous ne serez plus prévenu de ses nouveaux trajets. Vous pourrez vous réabonner depuis son profil.';
+
+  @override
+  String followPushEnabledMessage(String name) {
+    return 'Alertes push activées pour $name.';
+  }
+
+  @override
+  String get followPushDisabledMessage =>
+      'Alertes push coupées. Ses nouveaux trajets resteront visibles dans vos notifications.';
+
+  @override
+  String get followNoMatchMessage =>
+      'Aucun voyageur ne correspond à cette recherche.';
+
+  @override
+  String get followHubProfileLoadError => 'Impossible de charger le profil';
+
+  @override
+  String get followHubProAccountLabel => 'Compte PRO';
+
+  @override
+  String get followHubVerifiedBadge => 'Identité vérifiée';
+
+  @override
+  String followHubRating(String rating) {
+    return '$rating de note';
+  }
+
+  @override
+  String followHubDeliveries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count livraisons',
+      one: '$count livraison',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String followHubRespondsIn(int hours) {
+    return 'répond en $hours h';
+  }
+
+  @override
+  String get followHubNewOnYadony => 'Nouveau sur Yadony';
+
+  @override
+  String get followHubTripsTab => 'Trajets';
+
+  @override
+  String get followHubReviewsTab => 'Avis';
+
+  @override
+  String get followHubTripsLoadError =>
+      'Impossible de charger les trajets. Réessayez dans un instant.';
+
+  @override
+  String get followHubNoTripsDescription =>
+      'Ce voyageur n\'a pas encore publié de trajet.';
+
+  @override
+  String get followHubReviewsLoadError => 'Impossible de charger les avis';
+
+  @override
+  String get followHubNoReviewsTitle => 'Aucun avis';
+
+  @override
+  String get followHubNoReviewsDescription =>
+      'Ce voyageur n\'a pas encore reçu d\'avis.';
+
+  @override
+  String followHubReviewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count avis',
+      one: '$count avis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get followHubReserveButton => 'Réserver';
+
+  @override
+  String get followHubFullBadge => 'Complet';
+
+  @override
+  String followHubAvailableKg(String kg) {
+    return '$kg kg disponibles';
+  }
+
+  @override
+  String get proPastDueMessage =>
+      'Votre dernier paiement n\'a pas abouti. Sans régularisation, votre accès PRO sera suspendu.';
+
+  @override
+  String get proPayAction => 'Régler';
+
+  @override
+  String get proSubscribeAction => 'S\'abonner';
+
+  @override
+  String get proFreeAccessEndingSoon =>
+      'Votre accès PRO gratuit prendra bientôt fin.';
+
+  @override
+  String get proFreeAccessEnded => 'Votre accès PRO gratuit a pris fin.';
+
+  @override
+  String proFreeAccessEndsInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Votre accès PRO gratuit prend fin dans $count jours.',
+      one: 'Votre accès PRO gratuit prend fin dans $count jour.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get proManageAction => 'Gérer';
+
+  @override
+  String proSubscriptionEndsOn(String date) {
+    return 'Votre abonnement PRO prend fin le $date.';
+  }
+
+  @override
+  String get proStatusCancelScheduled => 'Résiliation programmée';
+
+  @override
+  String get proStatusActive => 'Actif';
+
+  @override
+  String get proStatusPastDue => 'Paiement en attente';
+
+  @override
+  String get proStatusLegacyGrace => 'Accès gratuit temporaire';
+
+  @override
+  String get proStatusCanceled => 'Résilié';
+
+  @override
+  String get proStatusExpired => 'Expiré';
+
+  @override
+  String get proStatusNone => 'Aucun abonnement';
+
+  @override
+  String get proStatusUnknown => 'Statut inconnu';
+
+  @override
+  String get proBillingMonthly => 'Facturation mensuelle';
+
+  @override
+  String get proBillingYearly => 'Facturation annuelle';
+
+  @override
+  String get proFreeTemporaryAccess =>
+      'Votre accès PRO est gratuit et temporaire.';
+
+  @override
+  String proCancellationScheduledOn(String date) {
+    return 'Résiliation programmée pour le $date.';
+  }
+
+  @override
+  String proNextRenewalOn(String date) {
+    return 'Prochain renouvellement le $date.';
+  }
+
+  @override
+  String get proManageSubscriptionButton => 'Gérer mon abonnement';
+
+  @override
+  String get proPortalOpenFailedMessage =>
+      'Impossible d\'ouvrir la page. Réessayez, ou rendez-vous sur le site Yadony PRO depuis votre navigateur.';
+
+  @override
+  String get proLimitUnderstoodButton => 'Compris';
+
+  @override
+  String get proLimitUpgradeButton => 'Passer en PRO';
+
+  @override
+  String get proAccountScreenTitle => 'Compte PRO';
+
+  @override
+  String get proAccountLoadingMessage => 'Chargement de votre compte.';
+
+  @override
+  String get proPitchHeadline => 'Passez en compte PRO';
+
+  @override
+  String get proPitchDescription =>
+      'Le compte PRO met en avant votre activité de transporteur et vous donne accès aux avantages réservés aux professionnels.';
+
+  @override
+  String get proPitchIncludesLabel => 'CE QUE COMPREND LE COMPTE PRO';
+
+  @override
+  String get proAdvantageBadge => 'Badge Pro';
+
+  @override
+  String get proAdvantageUnlimitedVolume => 'Volume illimité';
+
+  @override
+  String get proAdvantageMatchingPriority => 'Priorité de mise en relation';
+
+  @override
+  String get proAdvantageDedicatedSupport => 'Support dédié';
+
+  @override
+  String get proPitchPricingLabel => 'TARIFS';
+
+  @override
+  String proPricePerMonth(String price) {
+    return '$price par mois';
+  }
+
+  @override
+  String proPricePerYear(String price) {
+    return '$price par an';
+  }
+
+  @override
+  String proYearlySaving(String amount) {
+    return 'Soit $amount d\'économie sur l\'année.';
+  }
+
+  @override
+  String get proPortalHint =>
+      'L\'abonnement se souscrit sur le site Yadony PRO, dans votre navigateur.';
+
+  @override
+  String get proPortalButtonLabel => 'S\'abonner sur le site Yadony PRO';
+
+  @override
+  String get proManageGuidance =>
+      'La gestion et la résiliation de votre abonnement se font sur le site Yadony PRO, dans votre navigateur. Une connexion vous y sera demandée.';
+
+  @override
+  String proDowngradeBlockedMessage(String guidance) {
+    return 'Votre abonnement PRO est toujours actif. $guidance';
+  }
+
+  @override
+  String get proAccessEndedMessage =>
+      'Votre accès PRO n\'est plus actif. Vous pouvez reprendre un abonnement sur le site Yadony PRO.';
+
+  @override
+  String get proNoSubscriptionMessage =>
+      'Vous n\'avez pas d\'abonnement PRO. Vous pouvez en souscrire un sur le site Yadony PRO.';
+
+  @override
+  String get proSubscriberScreenTitle => 'Mon compte PRO';
+
+  @override
+  String get proLoadSubscriptionError =>
+      'Impossible de charger l\'état de votre abonnement pour le moment.';
+
+  @override
+  String get proSubscriptionNotLoadedYet =>
+      'L\'état de votre abonnement n\'a pas encore été chargé.';
+
+  @override
+  String get proDowngradeDialogTitle => 'Désactiver le compte PRO';
+
+  @override
+  String get proDowngradeDialogMessage =>
+      'Votre badge PRO et vos avantages professionnels seront retirés de votre profil.';
+
+  @override
+  String get proDowngradeConfirmButton => 'Désactiver';
+
+  @override
+  String get proDowngradeSuccessMessage => 'Compte PRO désactivé.';
+
+  @override
+  String get proDowngradeButton => 'Revenir en compte standard';
+
+  @override
+  String get addressesTitle => 'Mes adresses';
+
+  @override
+  String get addressesAddPickupTooltip => 'Ajouter une adresse de remise';
+
+  @override
+  String get addressesAddDeliveryTooltip => 'Ajouter une adresse de livraison';
+
+  @override
+  String get addressesTabPickup => '📦  Remise';
+
+  @override
+  String get addressesTabDelivery => '🗺️  Livraison';
+
+  @override
+  String get addressesEmptyPickupTitle => 'Aucune adresse de remise';
+
+  @override
+  String get addressesEmptyPickupDescription =>
+      'Ajoute l\'adresse où tu souhaites recevoir les colis des expéditeurs.';
+
+  @override
+  String get addressesEmptyDeliveryTitle => 'Aucune adresse de livraison';
+
+  @override
+  String get addressesEmptyDeliveryDescription =>
+      'Ajoute les adresses où tu déposes habituellement les colis.';
+
+  @override
+  String get addressesAddButtonLabel => 'Ajouter une adresse';
+
+  @override
+  String get addressesSetDefaultLabel => 'Définir par défaut';
+
+  @override
+  String get addressesDeleteTitle => 'Supprimer l\'adresse';
+
+  @override
+  String addressesDeleteConfirmMessage(String label) {
+    return 'Es-tu sûr de vouloir supprimer \"$label\" ? Cette action est irréversible.';
+  }
+
+  @override
+  String get pickupAddressChipHome => 'Maison';
+
+  @override
+  String get pickupAddressChipOffice => 'Bureau';
+
+  @override
+  String get pickupAddressChipWorkshop => 'Atelier';
+
+  @override
+  String get pickupAddressEditTitle => 'Modifier l\'adresse';
+
+  @override
+  String get pickupAddressCreateTitle => 'Nouvelle adresse de remise';
+
+  @override
+  String get pickupAddressSaveButton => 'Enregistrer l\'adresse';
+
+  @override
+  String get pickupAddressUpdatedMessage => 'Adresse mise à jour';
+
+  @override
+  String get pickupAddressAddedMessage => 'Adresse ajoutée';
+
+  @override
+  String get pickupAddressLabelSectionTitle => 'Étiquette';
+
+  @override
+  String get pickupAddressNameFieldLabel => 'Nom de l\'adresse';
+
+  @override
+  String get pickupAddressNameFieldHint => 'Ex : Maison, Bureau…';
+
+  @override
+  String get pickupAddressAddressSectionTitle => 'Adresse';
+
+  @override
+  String get pickupAddressStreetFieldLabel => 'Rue et numéro';
+
+  @override
+  String get pickupAddressPostalFieldLabel => 'Code postal';
+
+  @override
+  String get pickupAddressCityFieldLabel => 'Ville';
+
+  @override
+  String get pickupAddressFloorSectionTitle => 'Étage / Appartement';
+
+  @override
+  String get pickupAddressFloorFieldHint =>
+      'Optionnel (Ex : Bât. B, 3ème étage)';
+
+  @override
+  String get pickupAddressInstructionsSectionTitle => 'Instructions';
+
+  @override
+  String get pickupAddressInstructionsHint => 'Optionnel : digicode, horaires…';
+
+  @override
+  String get pickupAddressDefaultSubtitle =>
+      'Pré-remplie lors de tes prochaines demandes';
+
+  @override
+  String get deliveryAddressChipFamily => 'Famille';
+
+  @override
+  String get deliveryAddressChipHome => 'Maison';
+
+  @override
+  String get deliveryAddressChipShop => 'Boutique';
+
+  @override
+  String get deliveryAddressEditTitle => 'Modifier l\'adresse';
+
+  @override
+  String get deliveryAddressCreateTitle => 'Nouvelle adresse de livraison';
+
+  @override
+  String get deliveryAddressSaveButton => 'Enregistrer l\'adresse';
+
+  @override
+  String get deliveryAddressUpdatedMessage => 'Adresse mise à jour';
+
+  @override
+  String get deliveryAddressAddedMessage => 'Adresse ajoutée';
+
+  @override
+  String get deliveryAddressLabelSectionTitle => 'Étiquette';
+
+  @override
+  String get deliveryAddressNameFieldLabel => 'Nom de l\'adresse';
+
+  @override
+  String get deliveryAddressNameFieldHint => 'Ex : Famille Dakar, Dépôt…';
+
+  @override
+  String get deliveryAddressCountrySectionTitle => 'Pays';
+
+  @override
+  String get deliveryAddressCountryPickerTitle => 'Pays de destination';
+
+  @override
+  String get deliveryAddressAddressSectionTitle => 'Adresse';
+
+  @override
+  String get deliveryAddressCityFieldLabel => 'Ville';
+
+  @override
+  String get deliveryAddressCityFieldHint => 'Ex : Dakar, Abidjan, Bamako…';
+
+  @override
+  String get deliveryAddressStreetFieldLabel => 'Rue, quartier';
+
+  @override
+  String get deliveryAddressStreetFieldHint =>
+      'Optionnel (ex : Rue 10, Almadies)';
+
+  @override
+  String get deliveryAddressInstructionsSectionTitle => 'Instructions';
+
+  @override
+  String get deliveryAddressInstructionsHint =>
+      'Optionnel : appeler à l\'arrivée, portail rouge…';
+
+  @override
+  String get deliveryAddressDefaultSubtitle =>
+      'Pré-remplie lors de tes prochaines annonces';
+
+  @override
+  String get countryNameGn => 'Guinée';
+
+  @override
+  String get recipientListTitle => 'Mes destinataires';
+
+  @override
+  String get recipientAddFabLabel => 'Ajouter';
+
+  @override
+  String get recipientEmptyTitle => 'Aucun destinataire enregistré';
+
+  @override
+  String get recipientEmptyDescription =>
+      'Ajoute tes proches en Afrique pour envoyer en 1 tap.';
+
+  @override
+  String get recipientEmptyActionLabel => 'Ajouter mon premier destinataire';
+
+  @override
+  String get recipientNoResultsLabel => 'Aucun résultat';
+
+  @override
+  String get recipientSearchNoResultsDescription =>
+      'Aucun destinataire ne correspond à ta recherche.';
+
+  @override
+  String get recipientSearchHint => 'Rechercher un destinataire…';
+
+  @override
+  String get recipientClearSearchTooltip => 'Effacer la recherche';
+
+  @override
+  String get recipientSetDefaultLabel => 'Définir par défaut';
+
+  @override
+  String get recipientDeleteTitle => 'Supprimer le destinataire';
+
+  @override
+  String recipientDeleteConfirmMessage(String name) {
+    return 'Es-tu sûr de vouloir supprimer \"$name\" ? Cette action est irréversible.';
+  }
+
+  @override
+  String get recipientEditTitle => 'Modifier le destinataire';
+
+  @override
+  String get recipientCreateTitle => 'Nouveau destinataire';
+
+  @override
+  String get recipientFullNameFieldLabel => 'Nom complet';
+
+  @override
+  String get recipientPhoneFieldLabel => 'Téléphone (E.164)';
+
+  @override
+  String recipientPhoneInvalidFormat(String example) {
+    return 'Format invalide ($example)';
+  }
+
+  @override
+  String get recipientUpdatedMessage => 'Destinataire mis à jour';
+
+  @override
+  String get recipientAddedMessage => 'Destinataire ajouté';
+
+  @override
+  String get recipientDefaultToggleTitle => 'Destinataire par défaut';
+
+  @override
+  String get recipientDefaultToggleSubtitle =>
+      'Présélectionné lors de tes prochains envois';
+
+  @override
+  String get recipientImportContactsAction => 'Choisir dans mes contacts';
+
+  @override
+  String get recipientPickerTitle => '👤  Destinataire';
+
+  @override
+  String get recipientPickerSectionHeader => 'MES DESTINATAIRES';
+
+  @override
+  String get recipientPickerConfirmButton => 'Confirmer ce destinataire';
+
+  @override
+  String get recipientSectionPickerButton => 'Choisir un destinataire';
+
+  @override
+  String get recipientSectionChangeButton => 'Changer';
+
+  @override
+  String get recipientSectionSaveToggleTitle => 'Enregistrer ce destinataire';
+
+  @override
+  String get recipientSectionSaveToggleSubtitle =>
+      'Sera ajouté à « Mes destinataires » pour tes prochains envois';
+
+  @override
+  String get priceGridScreenTitle => 'Ma grille de prix';
+
+  @override
+  String priceGridCommissionNotice(String percent) {
+    return 'Yadony ajoute $percent % au prix que vous saisissez. Vous encaissez exactement votre montant.';
+  }
+
+  @override
+  String get priceGridReorderButton => 'Réordonner';
+
+  @override
+  String get priceGridAddLabelButton => 'Nouvelle étiquette';
+
+  @override
+  String get priceGridEmptyTitle => 'Aucune étiquette';
+
+  @override
+  String get priceGridEmptyDescription =>
+      'Fixez le prix des articles que vous transportez. Le même barème servira sur tous vos trajets.';
+
+  @override
+  String get priceGridScopeStampLabel => 'Valable sur tous vos trajets';
+
+  @override
+  String priceGridDragHandleSemantics(String label) {
+    return 'Déplacer $label';
+  }
+
+  @override
+  String get priceGridItemMenuTooltip => 'Options';
+
+  @override
+  String priceGridYouReceive(String net) {
+    return 'vous recevez $net';
+  }
+
+  @override
+  String priceGridItemSemantics(String label, String paid, String net) {
+    return '$label, l\'expéditeur paie $paid, vous recevez $net';
+  }
+
+  @override
+  String get priceGridDeleteItemTitle => 'Supprimer l\'étiquette ?';
+
+  @override
+  String priceGridDeleteItemMessage(String label) {
+    return 'L\'article \"$label\" sera retiré de votre grille, sur tous vos trajets.';
+  }
+
+  @override
+  String get priceGridEditItemTitle => 'Modifier l\'étiquette';
+
+  @override
+  String get priceGridAddToGridButton => 'Ajouter à ma grille';
+
+  @override
+  String get priceGridSearchFieldLabel => 'Article';
+
+  @override
+  String get priceGridSearchFieldHint => 'Chercher, ou écrire le vôtre';
+
+  @override
+  String get priceGridAllCatalogTakenMessage =>
+      'Tous les articles du catalogue sont déjà dans votre grille. Écrivez le vôtre pour en ajouter un autre.';
+
+  @override
+  String priceGridAddCustomLabel(String query) {
+    return 'Ajouter « $query »';
+  }
+
+  @override
+  String get priceGridChangeItemButton => 'Changer';
+
+  @override
+  String get priceGridYouReceiveLabel => 'Ce que vous encaissez';
+
+  @override
+  String priceGridMaxPriceMessage(String max) {
+    return 'Maximum $max par article.';
+  }
+
+  @override
+  String get priceGridEnterAmountMessage =>
+      'Saisissez le montant que vous voulez toucher.';
+
+  @override
+  String priceGridSenderWillPayMessage(String paid, String percent) {
+    return 'L\'expéditeur paiera $paid, commission Yadony de $percent % comprise.';
+  }
+
+  @override
+  String get referralScreenTitle => 'Parrainage';
+
+  @override
+  String get referralStatInvited => 'Invités';
+
+  @override
+  String get referralStatSignedUp => 'Inscrits';
+
+  @override
+  String get referralStatRewarded => 'Récompensés';
+
+  @override
+  String referralVouchers(int count, int percent) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '🎁 Tu as $count bons de -$percent% sur tes prochaines commissions',
+      one: '🎁 Tu as un bon de -$percent% sur ta prochaine commission',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String referralVouchersUnknownPercent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '🎁 Tu as $count bons de réduction sur tes prochaines commissions',
+      one: '🎁 Tu as un bon de réduction sur ta prochaine commission',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String referralVoucherExpiresLabel(String date) {
+    return 'Valable jusqu\'au $date';
+  }
+
+  @override
+  String get referralHeroTitleDefault => 'Invite tes proches';
+
+  @override
+  String referralHeroTitlePercent(int percent) {
+    return 'Invite et gagne -$percent%';
+  }
+
+  @override
+  String get referralHeroSubtitleDefault =>
+      'Tu reçois un bon de réduction sur ta prochaine commission dès la première livraison de ton invité.';
+
+  @override
+  String referralHeroSubtitlePercent(int percent) {
+    return 'Tu reçois un bon de -$percent% sur ta prochaine commission dès la première livraison de ton invité.';
+  }
+
+  @override
+  String get referralCodeBoxLabel => 'Ton code de parrainage';
+
+  @override
+  String get referralCopyCodeSemantics => 'Copier le code de parrainage';
+
+  @override
+  String get referralCodeCopiedMessage => 'Code copié !';
+
+  @override
+  String get referralShareButtonLabel => 'Partager mon code';
+
+  @override
+  String referralShareMessage(String code, String url) {
+    return 'Salut ! Utilise mon code Yadony : $code pour t\'inscrire, ça m\'aide à gagner une réduction sur ma prochaine commission. $url';
+  }
+
+  @override
+  String get referralRedeemTitle => 'Entrer un code parrain';
+
+  @override
+  String get referralRedeemSubtitle =>
+      'Tu as été invité par un ami ? Entre son code pour qu\'il soit récompensé à ta première livraison.';
+
+  @override
+  String get referralRedeemCodeFieldLabel => 'Code parrain';
+
+  @override
+  String referralRedeemCodeHint(String example) {
+    return 'Ex : $example';
+  }
+
+  @override
+  String get errorReportReasonNotApplicableTitle => 'Motif invalide';
+
+  @override
+  String get errorReportReasonNotApplicableMessage =>
+      'Ce motif ne s\'applique pas à ce type de signalement.';
+
+  @override
+  String get errorReportCannotReportSelfTitle => 'Signalement impossible';
+
+  @override
+  String get errorReportCannotReportSelfMessage =>
+      'Tu ne peux pas te signaler toi-même.';
+
+  @override
+  String get errorReportTooManyPhotosTitle => 'Trop de captures';
+
+  @override
+  String get errorReportTooManyPhotosMessage =>
+      'Maximum 5 captures d\'écran par signalement.';
+
+  @override
+  String get errorReportPhotoNotOwnedTitle => 'Signalement impossible';
+
+  @override
+  String get errorReportPhotoNotOwnedMessage =>
+      'Une des captures ne t\'appartient pas.';
 }

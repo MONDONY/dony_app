@@ -20,6 +20,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
@@ -381,5 +383,38 @@ void main() {
         );
       },
     );
+  });
+
+  group('FavoritesScreen — états traduits en anglais', () {
+    testWidgets('erreur : titre et message traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _buildScreen(
+          isTraveler: false,
+          tripsState: FavoriteTripsError('something'),
+          requestsState: FavoriteRequestsLoading(),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Something went wrong'), findsOneWidget);
+      expect(find.text("We couldn't load your saved items."), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
+    });
+
+    testWidgets('vide (trajets) : titre et message traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _buildScreen(
+          isTraveler: false,
+          tripsState: FavoriteTripsEmpty(),
+          requestsState: FavoriteRequestsLoading(),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Nothing saved yet'), findsOneWidget);
+      expect(find.text('No saved trips yet'), findsOneWidget);
+    });
   });
 }
