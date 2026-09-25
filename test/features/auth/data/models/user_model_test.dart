@@ -514,5 +514,88 @@ void main() {
         expect(user.isPendingDeletion, isFalse);
       });
     });
+
+    // ─── preferredLanguage ────────────────────────────────────────────────────
+
+    group('preferredLanguage', () {
+      test('fromJson avec preferredLanguage présent → valeur reprise', () {
+        final json = {
+          'id': 'u1',
+          'roles': ['SENDER'],
+          'kycStatus': 'PENDING',
+          'status': 'ACTIVE',
+          'preferredLanguage': 'en',
+        };
+        final user = UserModel.fromJson(json);
+        expect(user.preferredLanguage, 'en');
+      });
+
+      // Backend plus ancien qui ne renvoie pas encore le champ : ne doit pas
+      // faire planter fromJson.
+      test('fromJson sans preferredLanguage → null', () {
+        final json = {
+          'id': 'u1',
+          'roles': ['SENDER'],
+          'kycStatus': 'PENDING',
+          'status': 'ACTIVE',
+        };
+        final user = UserModel.fromJson(json);
+        expect(user.preferredLanguage, isNull);
+      });
+
+      test('toJson reprend preferredLanguage (aller-retour)', () {
+        const user = UserModel(
+          id: 'u1',
+          roles: ['SENDER'],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+          preferredLanguage: 'fr',
+        );
+        final json = user.toJson();
+        expect(json['preferredLanguage'], 'fr');
+        expect(UserModel.fromJson(json).preferredLanguage, 'fr');
+      });
+
+      test('toJson sans preferredLanguage → null', () {
+        const user = UserModel(
+          id: 'u1',
+          roles: ['SENDER'],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+        );
+        expect(user.toJson()['preferredLanguage'], isNull);
+      });
+
+      test('copyWith met à jour preferredLanguage', () {
+        const user = UserModel(
+          id: 'u1',
+          roles: ['SENDER'],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+          preferredLanguage: 'fr',
+        );
+        final updated = user.copyWith(preferredLanguage: 'en');
+        expect(updated.preferredLanguage, 'en');
+        expect(user.preferredLanguage, 'fr');
+      });
+
+      test('deux UserModel avec preferredLanguage différent → non égaux', () {
+        const user1 = UserModel(
+          id: 'u1',
+          roles: ['SENDER'],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+          preferredLanguage: 'fr',
+        );
+        const user2 = UserModel(
+          id: 'u1',
+          roles: ['SENDER'],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+          preferredLanguage: 'en',
+        );
+        expect(user1, isNot(equals(user2)));
+      });
+    });
   });
 }
