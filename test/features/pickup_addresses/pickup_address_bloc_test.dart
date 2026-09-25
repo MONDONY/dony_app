@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/models/pickup_address.dart';
 import 'package:dony/features/pickup_addresses/data/repositories/pickup_address_repository.dart';
@@ -68,7 +70,12 @@ void main() {
     blocTest<PickupAddressBloc, PickupAddressState>(
       'PickupAddressLoaded → error state when repository throws',
       build: () {
-        when(() => repository.getAll()).thenThrow(Exception('Network error'));
+        when(() => repository.getAll()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/pickup-addresses'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
         return PickupAddressBloc(repository);
       },
       act: (bloc) => bloc.add(const PickupAddressLoaded()),
@@ -80,7 +87,9 @@ void main() {
         ),
         isA<PickupAddressState>()
             .having((s) => s.status, 'status', PickupAddressStatus.error)
-            .having((s) => s.error, 'error', isNotNull),
+            // Verrouille unwrapDioError : une DioException connectionError
+            // devient une OfflineException, pas une erreur non typée.
+            .having((s) => s.error, 'error', isA<OfflineException>()),
       ],
     );
 

@@ -380,9 +380,9 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(400, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      when(() => profileBloc.state).thenReturn(
-        const ProfilePublicError(error: NetworkException('boom')),
-      );
+      when(
+        () => profileBloc.state,
+      ).thenReturn(const ProfilePublicError(error: NetworkException('boom')));
       when(
         () => hubBloc.state,
       ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));

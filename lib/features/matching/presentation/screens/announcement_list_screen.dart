@@ -213,7 +213,10 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
 
           if (state is AnnouncementError && _lastList.isEmpty) {
             return _ErrorView(
-              message: ErrorPresenter.resolve(state.error).message,
+              message: ErrorPresenter.resolve(
+                state.error,
+                l10n: context.l10n,
+              ).message,
             );
           }
 

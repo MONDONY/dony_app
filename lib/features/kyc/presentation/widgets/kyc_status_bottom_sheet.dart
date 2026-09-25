@@ -284,7 +284,10 @@ class _KycStatusContentState extends State<_KycStatusContent> {
                 _buildErrorContent(
                   cs,
                   tt,
-                  ErrorPresenter.resolve(effectiveState.error).message,
+                  ErrorPresenter.resolve(
+                    effectiveState.error,
+                    l10n: context.l10n,
+                  ).message,
                 ),
             ],
           ).animate().fadeIn(duration: 300.ms),

@@ -120,7 +120,10 @@ class _TrackingTimelineContent extends StatelessWidget {
         }
         if (state is TrackingEventsError) {
           return _ErrorView(
-            message: ErrorPresenter.resolve(state.error).message,
+            message: ErrorPresenter.resolve(
+              state.error,
+              l10n: context.l10n,
+            ).message,
             onRetry: () => context.read<TrackingBloc>().add(
               TrackingEventsRequested(bidId),
             ),

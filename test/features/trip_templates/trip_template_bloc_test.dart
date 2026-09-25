@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
@@ -73,7 +75,12 @@ void main() {
 
   blocTest<TripTemplateBloc, TripTemplateState>(
     'TripTemplateLoaded emits error on failure',
-    setUp: () => when(() => repo.getAll()).thenThrow(Exception('boom')),
+    setUp: () => when(() => repo.getAll()).thenThrow(
+      DioException(
+        requestOptions: RequestOptions(path: '/trip-templates'),
+        type: DioExceptionType.connectionError,
+      ),
+    ),
     build: () => TripTemplateBloc(repo),
     act: (b) => b.add(const TripTemplateLoaded()),
     expect: () => [
@@ -82,11 +89,11 @@ void main() {
         'status',
         TripTemplateStatus.loading,
       ),
-      isA<TripTemplateState>().having(
-        (s) => s.status,
-        'status',
-        TripTemplateStatus.error,
-      ),
+      isA<TripTemplateState>()
+          .having((s) => s.status, 'status', TripTemplateStatus.error)
+          // Verrouille unwrapDioError : une DioException connectionError
+          // devient une OfflineException, pas une erreur non typée.
+          .having((s) => s.error, 'error', isA<OfflineException>()),
     ],
   );
 

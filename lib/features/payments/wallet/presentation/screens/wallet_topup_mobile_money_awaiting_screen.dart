@@ -176,7 +176,10 @@ class _WalletTopupMobileMoneyAwaitingScreenState
                       // l'écran restait sur une roue infinie et sans bouton,
                       // le retour arrière pour seule issue.
                       final WalletTopupMobileMoneyError e => _FailedBody(
-                        message: ErrorPresenter.resolve(e.error).message,
+                        message: ErrorPresenter.resolve(
+                          e.error,
+                          l10n: context.l10n,
+                        ).message,
                       ),
                       _ => Center(
                         child: CircularProgressIndicator(color: cs.primary),

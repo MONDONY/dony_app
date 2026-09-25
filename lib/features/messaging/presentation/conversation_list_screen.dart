@@ -125,7 +125,10 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
         mascotte: DonyMascotteType.erreurLegere,
         iconAsset: 'wifi-off',
         title: l.commonLoadError,
-        description: ErrorPresenter.resolve(state.error).message,
+        description: ErrorPresenter.resolve(
+          state.error,
+          l10n: context.l10n,
+        ).message,
         actionLabel: l.commonRetry,
         onAction: () => context.read<ConversationListBloc>().add(
           const ConversationsLoadRequested(),

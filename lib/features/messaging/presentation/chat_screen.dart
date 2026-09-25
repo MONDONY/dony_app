@@ -470,6 +470,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         title: l.chatConnectionLostTitle,
                         description: ErrorPresenter.resolve(
                           state.error,
+                          l10n: context.l10n,
                         ).message,
                         actionLabel: l.commonRetry,
                         onAction: () => context.read<ChatBloc>().add(

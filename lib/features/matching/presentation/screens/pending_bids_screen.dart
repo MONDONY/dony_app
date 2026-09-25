@@ -419,7 +419,10 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
 
     if (state is BidError) {
       return BidListErrorView(
-        message: ErrorPresenter.resolve(state.error).message,
+        message: ErrorPresenter.resolve(
+          state.error,
+          l10n: context.l10n,
+        ).message,
         onRetry: () => context.read<BidBloc>().add(
           BidListRequested(widget.announcementId),
         ),

@@ -136,6 +136,7 @@ class _IntroView extends StatelessWidget {
     final error = state is ConnectOnboardingError
         ? ErrorPresenter.resolve(
             (state as ConnectOnboardingError).error,
+            l10n: context.l10n,
           ).message
         : null;
 

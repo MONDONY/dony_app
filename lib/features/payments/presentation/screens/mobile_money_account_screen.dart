@@ -572,7 +572,7 @@ class _NetworksSection extends StatelessWidget {
         else if (error != null)
           DonyStatusBanner(
             type: DonyStatusBannerType.error,
-            message: ErrorPresenter.resolve(error).message,
+            message: ErrorPresenter.resolve(error, l10n: context.l10n).message,
             action: TextButton(onPressed: onRetry, child: Text(l.commonRetry)),
           )
         else if (catalog != null && catalog.isEmpty)
@@ -870,7 +870,7 @@ class _ProvidersSheetContent extends StatelessWidget {
                   ),
           MobileMoneyAccountProvidersError(:final error) => DonyStatusBanner(
             type: DonyStatusBannerType.error,
-            message: ErrorPresenter.resolve(error).message,
+            message: ErrorPresenter.resolve(error, l10n: context.l10n).message,
             action: TextButton(
               onPressed: () => context.read<MobileMoneyAccountBloc>().add(
                 const MobileMoneyAccountProvidersRequested(),

@@ -109,7 +109,10 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       if (mounted) {
         // Passe par ErrorPresenter : sans ça l'exception brute (en anglais,
         // ex. « Connection refused… ») remonte telle quelle à l'utilisateur.
-        _errorNotifier.value = ErrorPresenter.resolve(e).message;
+        _errorNotifier.value = ErrorPresenter.resolve(
+          e,
+          l10n: context.l10n,
+        ).message;
         _loadingNotifier.value = false;
       }
     }

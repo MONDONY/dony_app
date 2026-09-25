@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_state.dart';
@@ -76,11 +78,25 @@ void main() {
     blocTest<PriceGridBloc, PriceGridState>(
       'PriceGridLoadRequested emits Error when repository throws',
       build: () {
-        when(() => repository.getItems()).thenThrow(Exception('network error'));
+        when(() => repository.getItems()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/price-grid'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
         return PriceGridBloc(repository);
       },
       act: (b) => b.add(const PriceGridLoadRequested()),
-      expect: () => [isA<PriceGridLoading>(), isA<PriceGridError>()],
+      expect: () => [
+        isA<PriceGridLoading>(),
+        // Verrouille unwrapDioError : une DioException connectionError
+        // devient une OfflineException, pas une erreur non typée.
+        isA<PriceGridError>().having(
+          (s) => s.error,
+          'error',
+          isA<OfflineException>(),
+        ),
+      ],
     );
 
     blocTest<PriceGridBloc, PriceGridState>(

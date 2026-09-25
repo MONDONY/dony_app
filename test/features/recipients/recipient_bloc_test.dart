@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
@@ -69,7 +71,12 @@ void main() {
     blocTest<RecipientBloc, RecipientState>(
       'RecipientLoaded → error state when repository throws',
       build: () {
-        when(() => repository.getAll()).thenThrow(Exception('Network error'));
+        when(() => repository.getAll()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/recipients'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
         return RecipientBloc(repository, analytics);
       },
       act: (bloc) => bloc.add(const RecipientLoaded()),
@@ -81,7 +88,9 @@ void main() {
         ),
         isA<RecipientState>()
             .having((s) => s.status, 'status', RecipientStatus.error)
-            .having((s) => s.error, 'error', isNotNull),
+            // Verrouille unwrapDioError : une DioException connectionError
+            // devient une OfflineException, pas une erreur non typée.
+            .having((s) => s.error, 'error', isA<OfflineException>()),
       ],
     );
 

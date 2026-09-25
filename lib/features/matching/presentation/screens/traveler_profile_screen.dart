@@ -48,7 +48,7 @@ class TravelerProfileLoaderScreen extends StatelessWidget {
           }
 
           final description = state is AnnouncementError
-              ? ErrorPresenter.resolve(state.error).message
+              ? ErrorPresenter.resolve(state.error, l10n: context.l10n).message
               : context.l10n.travelerProfileLoadErrorDescription;
           return Scaffold(
             appBar: const DonyAppBar(title: ''),

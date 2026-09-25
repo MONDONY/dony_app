@@ -331,9 +331,13 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                   const SizedBox(height: DonySpacing.md),
                   Text(
                     state is QrScanError
-                        ? ErrorPresenter.resolve(state.error).message
+                        ? ErrorPresenter.resolve(
+                            state.error,
+                            l10n: context.l10n,
+                          ).message
                         : ErrorPresenter.resolve(
                             (state as DeliveryConfirmError).error,
+                            l10n: context.l10n,
                           ).message,
                     style: tt.bodySmall?.copyWith(
                       color: cs.error,

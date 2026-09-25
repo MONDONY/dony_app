@@ -365,7 +365,10 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
             itemBuilder: (_, _) => const DonyUserCardSkeleton(),
           ),
           final TravelerBidsError s => BidListErrorView(
-            message: ErrorPresenter.resolve(s.error).message,
+            message: ErrorPresenter.resolve(
+              s.error,
+              l10n: context.l10n,
+            ).message,
             onRetry: _reload,
           ),
           final TravelerBidsLoaded s => _buildLoaded(context, s),

@@ -156,7 +156,10 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
                       type: DonyEmptyStateType.error,
                       mascotte: DonyMascotteType.erreurLegere,
                       title: context.l10n.commonLoadError,
-                      description: ErrorPresenter.resolve(state.error).message,
+                      description: ErrorPresenter.resolve(
+                        state.error,
+                        l10n: context.l10n,
+                      ).message,
                       actionLabel: context.l10n.commonRetry,
                       onAction: () => context.read<CancellationBloc>().add(
                         RematchSuggestionsRequested(widget.cancellationId),

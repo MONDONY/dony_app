@@ -128,7 +128,10 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
               body = const _LoadingView();
             } else if (!hasData && bidState is BidError) {
               body = _ErrorView(
-                message: ErrorPresenter.resolve(bidState.error).message,
+                message: ErrorPresenter.resolve(
+                  bidState.error,
+                  l10n: context.l10n,
+                ).message,
               );
             } else if (rawEmpty) {
               // Raw (unfiltered) list empty → full empty state with CTA

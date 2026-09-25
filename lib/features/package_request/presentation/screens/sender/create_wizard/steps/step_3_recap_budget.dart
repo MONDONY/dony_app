@@ -137,7 +137,10 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     } catch (e) {
       _quoteNotifier.value = code.isEmpty
           ? null
-          : ErrorPresenter.resolve(e).message;
+          : ErrorPresenter.resolve(
+              e,
+              l10n: mounted ? context.l10n : null,
+            ).message;
     } finally {
       _quoteLoadingNotifier.value = false;
     }

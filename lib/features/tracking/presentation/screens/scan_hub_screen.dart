@@ -101,7 +101,10 @@ class ScanHubView extends StatelessWidget {
               );
             case ScanHubError(:final error):
               return _ErrorState(
-                message: ErrorPresenter.resolve(error).message,
+                message: ErrorPresenter.resolve(
+                  error,
+                  l10n: context.l10n,
+                ).message,
                 onRetry: () => context.read<ScanHubCubit>().load(),
               );
             case ScanHubEmpty():
