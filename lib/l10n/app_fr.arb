@@ -12631,5 +12631,432 @@
     "placeholders": {
       "title": {"type": "String"}
     }
+  },
+
+  "settingsTitle": "Paramètres",
+  "@settingsTitle": {
+    "description": "Titre de l'AppBar (settings_screen.dart)"
+  },
+  "settingsSectionAppearance": "APPARENCE",
+  "@settingsSectionAppearance": {
+    "description": "En-tête de section (settings_screen.dart)"
+  },
+  "settingsThemeLabel": "Thème",
+  "@settingsThemeLabel": {
+    "description": "Libellé de la tuile de choix du thème (settings_screen.dart)"
+  },
+  "settingsThemeSubtitle": "Prioritaire sur le réglage système",
+  "@settingsThemeSubtitle": {
+    "description": "Sous-titre de la tuile de choix du thème (settings_screen.dart)"
+  },
+  "settingsThemeLight": "Clair",
+  "@settingsThemeLight": {
+    "description": "Option de thème clair, utilisée à la fois pour le libellé affiché et dans le sélecteur (settings_screen.dart)"
+  },
+  "settingsThemeDark": "Sombre",
+  "@settingsThemeDark": {
+    "description": "Option de thème sombre, utilisée à la fois pour le libellé affiché et dans le sélecteur (settings_screen.dart)"
+  },
+  "settingsThemeAuto": "Auto",
+  "@settingsThemeAuto": {
+    "description": "Option de thème système, utilisée à la fois pour le libellé affiché et dans le sélecteur (settings_screen.dart)"
+  },
+  "settingsSectionLanguage": "LANGUE & COMMUNICATION",
+  "@settingsSectionLanguage": {
+    "description": "En-tête de section (settings_screen.dart)"
+  },
+  "settingsSectionDestinations": "DESTINATIONS FAVORITES",
+  "@settingsSectionDestinations": {
+    "description": "En-tête de section (settings_screen.dart)"
+  },
+  "settingsDestinationsLabel": "Destinations",
+  "@settingsDestinationsLabel": {
+    "description": "Libellé de la tuile de sélection des destinations favorites (settings_screen.dart)"
+  },
+  "settingsNoDestination": "Aucune",
+  "@settingsNoDestination": {
+    "description": "Résumé affiché quand aucune destination favorite n'est sélectionnée (settings_screen.dart, _destinationsSummary)"
+  },
+  "settingsSectionSecurityData": "SÉCURITÉ & DONNÉES",
+  "@settingsSectionSecurityData": {
+    "description": "En-tête de section (settings_screen.dart)"
+  },
+  "securityTitle": "Sécurité",
+  "@securityTitle": {
+    "description": "Libellé de la tuile de navigation (settings_screen.dart) et titre de l'AppBar de l'écran de sécurité (security_settings_screen.dart) : même écran, un seul texte."
+  },
+  "settingsSecuritySubtitle": "Biométrie, PIN, sessions",
+  "@settingsSecuritySubtitle": {
+    "description": "Sous-titre de la tuile Sécurité (settings_screen.dart)"
+  },
+  "settingsPrivacyLabel": "Confidentialité",
+  "@settingsPrivacyLabel": {
+    "description": "Libellé de la tuile de navigation vers l'écran de confidentialité (settings_screen.dart)"
+  },
+  "settingsPrivacySubtitle": "Visibilité profil, numéro",
+  "@settingsPrivacySubtitle": {
+    "description": "Sous-titre de la tuile Confidentialité (settings_screen.dart)"
+  },
+  "settingsMyData": "Mes données",
+  "@settingsMyData": {
+    "description": "Libellé de la tuile de navigation (settings_screen.dart) et titre de l'AppBar de l'écran de données (data_settings_screen.dart) : même écran, un seul texte."
+  },
+  "settingsMyDataSubtitle": "Export RGPD",
+  "@settingsMyDataSubtitle": {
+    "description": "Sous-titre de la tuile Mes données (settings_screen.dart)"
+  },
+  "settingsSectionPersonalization": "PERSONNALISATION",
+  "@settingsSectionPersonalization": {
+    "description": "En-tête de section (settings_screen.dart)"
+  },
+  "settingsNotificationsLabel": "Notifications",
+  "@settingsNotificationsLabel": {
+    "description": "Libellé de la tuile de navigation vers les réglages de notifications (settings_screen.dart)"
+  },
+  "settingsNotificationsSubtitle": "Par type d'alerte",
+  "@settingsNotificationsSubtitle": {
+    "description": "Sous-titre de la tuile Notifications (settings_screen.dart)"
+  },
+  "settingsPreferencesLabel": "Préférences",
+  "@settingsPreferencesLabel": {
+    "description": "Libellé de la tuile de navigation vers les préférences métier (settings_screen.dart)"
+  },
+  "settingsPreferencesSubtitle": "kg/lbs, devise, rayon de collecte",
+  "@settingsPreferencesSubtitle": {
+    "description": "Sous-titre de la tuile Préférences (settings_screen.dart)"
+  },
+  "settingsAccessibilityLabel": "Accessibilité",
+  "@settingsAccessibilityLabel": {
+    "description": "Libellé de la tuile de navigation vers les réglages d'accessibilité (settings_screen.dart)"
+  },
+  "settingsAccessibilitySubtitle": "Contraste, taille de police",
+  "@settingsAccessibilitySubtitle": {
+    "description": "Sous-titre de la tuile Accessibilité (settings_screen.dart)"
+  },
+  "settingsResetGuidanceLabel": "Réafficher les suggestions",
+  "@settingsResetGuidanceLabel": {
+    "description": "Libellé de la tuile de réinitialisation des cartes de guidance (settings_screen.dart)"
+  },
+  "settingsResetGuidanceSubtitle": "Fait revenir les cartes fermées (écran Recherche)",
+  "@settingsResetGuidanceSubtitle": {
+    "description": "Sous-titre de la tuile de réinitialisation des cartes de guidance (settings_screen.dart)"
+  },
+  "settingsResetGuidanceSnackbar": "Suggestions et tutoriels réaffichés.",
+  "@settingsResetGuidanceSnackbar": {
+    "description": "Snackbar de confirmation après réinitialisation des cartes de guidance (settings_screen.dart, _resetGuidanceCards)"
+  },
+  "settingsSectionInformation": "INFORMATIONS",
+  "@settingsSectionInformation": {
+    "description": "En-tête de section (settings_screen.dart)"
+  },
+  "settingsTermsLabel": "CGU",
+  "@settingsTermsLabel": {
+    "description": "Libellé de la tuile de navigation vers les CGU (settings_screen.dart)"
+  },
+  "settingsPrivacyPolicyLabel": "Politique de confidentialité",
+  "@settingsPrivacyPolicyLabel": {
+    "description": "Libellé de la tuile de navigation vers la politique de confidentialité (settings_screen.dart)"
+  },
+  "settingsReportProblemLabel": "Signaler un problème",
+  "@settingsReportProblemLabel": {
+    "description": "Libellé de la tuile de signalement d'un problème (settings_screen.dart)"
+  },
+  "settingsReportProblemSubtitle": "Incident, bug, litige (avec captures)",
+  "@settingsReportProblemSubtitle": {
+    "description": "Sous-titre de la tuile de signalement d'un problème (settings_screen.dart)"
+  },
+  "diagnosticsTitle": "Diagnostics",
+  "@diagnosticsTitle": {
+    "description": "Libellé de la tuile de navigation (settings_screen.dart) et titre de l'AppBar de l'écran de diagnostics (diagnostics_screen.dart) : même écran, un seul texte."
+  },
+  "settingsDiagnosticsSubtitle": "Version, signaler un bug",
+  "@settingsDiagnosticsSubtitle": {
+    "description": "Sous-titre de la tuile Diagnostics (settings_screen.dart)"
+  },
+
+  "devicesTitle": "Appareils connectés",
+  "@devicesTitle": {
+    "description": "Libellé de la tuile de navigation (security_settings_screen.dart) et titre de l'AppBar de l'écran des appareils connectés (connected_devices_screen.dart) : même écran, un seul texte."
+  },
+  "devicesSubtitle": "Voir et révoquer les sessions actives",
+  "@devicesSubtitle": {
+    "description": "Sous-titre de la tuile Appareils connectés (security_settings_screen.dart)"
+  },
+  "pinRemovedMessage": "Code PIN retiré, l'app s'ouvrira sans code",
+  "@pinRemovedMessage": {
+    "description": "Snackbar après désactivation du code PIN (security_settings_screen.dart, _disablePin)"
+  },
+  "securitySectionPayments": "PAIEMENTS",
+  "@securitySectionPayments": {
+    "description": "En-tête de section (security_settings_screen.dart)"
+  },
+  "securityBiometricBeforePayment": "Biométrie avant paiement",
+  "@securityBiometricBeforePayment": {
+    "description": "Libellé de la tuile de bascule biométrie avant paiement (security_settings_screen.dart)"
+  },
+  "securityFingerprintOrFaceId": "Empreinte digitale ou Face ID",
+  "@securityFingerprintOrFaceId": {
+    "description": "Sous-titre de la tuile biométrie quand disponible (security_settings_screen.dart)"
+  },
+  "securityUnavailableOnDevice": "Non disponible sur cet appareil",
+  "@securityUnavailableOnDevice": {
+    "description": "Sous-titre affiché quand la biométrie n'est pas disponible, réutilisé pour les tuiles biométrie et verrouillage de l'app (security_settings_screen.dart)"
+  },
+  "securitySectionApplication": "APPLICATION",
+  "@securitySectionApplication": {
+    "description": "En-tête de section (security_settings_screen.dart) ; identique en anglais."
+  },
+  "securityAppLockTitle": "Verrouillage de l'app",
+  "@securityAppLockTitle": {
+    "description": "Libellé de la tuile de verrouillage de l'app (security_settings_screen.dart)"
+  },
+  "securityAppLockBiometricSubtitle": "Biométrie ou Face ID à l'ouverture",
+  "@securityAppLockBiometricSubtitle": {
+    "description": "Sous-titre du verrouillage de l'app quand un code PIN est configuré (security_settings_screen.dart)"
+  },
+  "securityAppLockNeedsPinSubtitle": "Nécessite d'activer le code PIN ci-dessous",
+  "@securityAppLockNeedsPinSubtitle": {
+    "description": "Sous-titre du verrouillage de l'app quand aucun code PIN n'est configuré (security_settings_screen.dart)"
+  },
+  "securitySectionAuthentication": "AUTHENTIFICATION",
+  "@securitySectionAuthentication": {
+    "description": "En-tête de section (security_settings_screen.dart)"
+  },
+  "securityPinOnLaunchTitle": "Code PIN à l'ouverture",
+  "@securityPinOnLaunchTitle": {
+    "description": "Libellé de la tuile de bascule du code PIN à l'ouverture (security_settings_screen.dart)"
+  },
+  "securityPinRequestedSubtitle": "Demandé à chaque ouverture de Yadony",
+  "@securityPinRequestedSubtitle": {
+    "description": "Sous-titre quand le code PIN est configuré (security_settings_screen.dart)"
+  },
+  "securityPinDisabledSubtitle": "Désactivé, l'app s'ouvre sans code",
+  "@securityPinDisabledSubtitle": {
+    "description": "Sous-titre quand le code PIN n'est pas configuré (security_settings_screen.dart)"
+  },
+  "pinChangeTitle": "Modifier le code PIN",
+  "@pinChangeTitle": {
+    "description": "Libellé de la tuile de navigation (security_settings_screen.dart) et titre de l'AppBar de l'écran de modification du code (change_pin_screen.dart, mode édition) : même écran, un seul texte."
+  },
+  "securityPinCodeLength": "Code à 6 chiffres",
+  "@securityPinCodeLength": {
+    "description": "Sous-titre de la tuile Modifier le code PIN (security_settings_screen.dart)"
+  },
+  "securitySectionSession": "SESSION",
+  "@securitySectionSession": {
+    "description": "En-tête de section (security_settings_screen.dart) ; identique en anglais."
+  },
+
+  "pinCreateTitle": "Créer un code PIN",
+  "@pinCreateTitle": {
+    "description": "Titre de l'AppBar en mode création (change_pin_screen.dart)"
+  },
+  "pinIncorrectCode": "Code incorrect",
+  "@pinIncorrectCode": {
+    "description": "Message d'erreur quand le code actuel saisi est invalide (change_pin_screen.dart)"
+  },
+  "pinCreatedMessage": "Code PIN activé, il sera demandé à l'ouverture",
+  "@pinCreatedMessage": {
+    "description": "Snackbar de succès en mode création (change_pin_screen.dart)"
+  },
+  "pinChangedMessage": "Code PIN modifié",
+  "@pinChangedMessage": {
+    "description": "Snackbar de succès en mode modification (change_pin_screen.dart)"
+  },
+  "pinCodesMismatch": "Les codes ne correspondent pas",
+  "@pinCodesMismatch": {
+    "description": "Message d'erreur quand la confirmation ne correspond pas au nouveau code (change_pin_screen.dart)"
+  },
+  "pinEnterCurrentSubtitle": "Saisissez votre code actuel",
+  "@pinEnterCurrentSubtitle": {
+    "description": "Sous-titre de l'étape de vérification du code actuel (change_pin_screen.dart)"
+  },
+  "pinCreateNewSubtitle": "Choisissez un code à 6 chiffres, il sera demandé à l'ouverture",
+  "@pinCreateNewSubtitle": {
+    "description": "Sous-titre de l'étape de saisie du nouveau code, en mode création (change_pin_screen.dart)"
+  },
+  "pinEnterNewSubtitle": "Créez votre nouveau code",
+  "@pinEnterNewSubtitle": {
+    "description": "Sous-titre de l'étape de saisie du nouveau code, en mode modification (change_pin_screen.dart)"
+  },
+  "pinConfirmCreateSubtitle": "Saisissez le même code pour confirmer",
+  "@pinConfirmCreateSubtitle": {
+    "description": "Sous-titre de l'étape de confirmation, en mode création (change_pin_screen.dart)"
+  },
+  "pinConfirmChangeSubtitle": "Confirmez le nouveau code",
+  "@pinConfirmChangeSubtitle": {
+    "description": "Sous-titre de l'étape de confirmation, en mode modification (change_pin_screen.dart)"
+  },
+
+  "devicesRevokeAllOthers": "Déconnecter tous les autres appareils",
+  "@devicesRevokeAllOthers": {
+    "description": "Bouton de déconnexion de tous les autres appareils (connected_devices_screen.dart)"
+  },
+  "devicesActiveNow": "Actif maintenant",
+  "@devicesActiveNow": {
+    "description": "Date relative : dernière activité il y a moins de 5 minutes (connected_devices_screen.dart, _formatDate)"
+  },
+  "devicesAgoMinutes": "il y a {minutes} min",
+  "@devicesAgoMinutes": {
+    "description": "Date relative en minutes (connected_devices_screen.dart, _formatDate)",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "devicesAgoHours": "il y a {hours} h",
+  "@devicesAgoHours": {
+    "description": "Date relative en heures (connected_devices_screen.dart, _formatDate)",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "devicesAgoDays": "{count, plural, =1{il y a {count} jour} other{il y a {count} jours}}",
+  "@devicesAgoDays": {
+    "description": "Date relative en jours (connected_devices_screen.dart, _formatDate). Correction d'accord déclarée : plus jamais « il y a 1 jours ».",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "devicesAgoYesterday": "hier",
+  "@devicesAgoYesterday": {
+    "description": "Date relative : dernière activité exactement la veille (connected_devices_screen.dart, _formatDate)"
+  },
+  "devicesThisDevice": "Cet appareil",
+  "@devicesThisDevice": {
+    "description": "Badge sur l'appareil courant dans la liste (connected_devices_screen.dart)"
+  },
+  "devicesRevoke": "Révoquer",
+  "@devicesRevoke": {
+    "description": "Bouton de révocation d'un appareil (connected_devices_screen.dart)"
+  },
+  "devicesSignedInCount": "{count, plural, =1{Tu es connecté sur {count} appareil} other{Tu es connecté sur {count} appareils}}",
+  "@devicesSignedInCount": {
+    "description": "Résumé du nombre d'appareils connectés (connected_devices_screen.dart). Correction d'accord déclarée : plus jamais « 2 appareil(s) ».",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "devicesLoadError": "Impossible de charger les appareils",
+  "@devicesLoadError": {
+    "description": "Message d'erreur du bloc, affiché par l'écran selon DevicesFailure.load (connected_devices_bloc.dart)"
+  },
+  "devicesRevokeError": "Erreur lors de la révocation",
+  "@devicesRevokeError": {
+    "description": "Message d'erreur du bloc, affiché par l'écran selon DevicesFailure.revoke (connected_devices_bloc.dart)"
+  },
+  "devicesRevokeAllError": "Erreur lors de la déconnexion",
+  "@devicesRevokeAllError": {
+    "description": "Message d'erreur du bloc, affiché par l'écran selon DevicesFailure.revokeAll (connected_devices_bloc.dart)"
+  },
+
+  "devicesUnknown": "Appareil inconnu",
+  "@devicesUnknown": {
+    "description": "Nom affiché quand device.deviceName est vide (device_model.dart garde '' ; l'écran affiche cette clé)"
+  },
+
+  "legalOpenInBrowser": "Ouvrir dans le navigateur",
+  "@legalOpenInBrowser": {
+    "description": "Tooltip du bouton d'ouverture externe (legal_web_view_screen.dart)"
+  },
+  "legalPageLoadError": "Impossible de charger la page",
+  "@legalPageLoadError": {
+    "description": "Titre de l'état d'erreur (legal_web_view_screen.dart)"
+  },
+  "legalPageLoadErrorHint": "Vérifie ta connexion et réessaie.",
+  "@legalPageLoadErrorHint": {
+    "description": "Description de l'état d'erreur (legal_web_view_screen.dart)"
+  },
+
+  "diagnosticsSectionApplication": "APPLICATION",
+  "@diagnosticsSectionApplication": {
+    "description": "En-tête de section (diagnostics_screen.dart) ; identique en anglais."
+  },
+  "diagnosticsVersionLabel": "Version",
+  "@diagnosticsVersionLabel": {
+    "description": "Libellé de la tuile de version (diagnostics_screen.dart) ; identique en anglais."
+  },
+  "diagnosticsSectionConnectivity": "CONNECTIVITÉ",
+  "@diagnosticsSectionConnectivity": {
+    "description": "En-tête de section (diagnostics_screen.dart)"
+  },
+  "diagnosticsApiStatusLabel": "Statut API",
+  "@diagnosticsApiStatusLabel": {
+    "description": "Libellé de la tuile de statut API (diagnostics_screen.dart)"
+  },
+  "diagnosticsSectionSupport": "SUPPORT",
+  "@diagnosticsSectionSupport": {
+    "description": "En-tête de section (diagnostics_screen.dart) ; identique en anglais."
+  },
+  "diagnosticsReportBugLabel": "Signaler un bug",
+  "@diagnosticsReportBugLabel": {
+    "description": "Libellé de la tuile de signalement de bug (diagnostics_screen.dart)"
+  },
+  "diagnosticsCopyUserIdLabel": "Copier mon ID utilisateur",
+  "@diagnosticsCopyUserIdLabel": {
+    "description": "Libellé de la tuile de copie de l'ID utilisateur (diagnostics_screen.dart)"
+  },
+  "diagnosticsCopyUserIdSubtitle": "Utile pour le support",
+  "@diagnosticsCopyUserIdSubtitle": {
+    "description": "Sous-titre de la tuile de copie de l'ID utilisateur (diagnostics_screen.dart)"
+  },
+  "diagnosticsOnline": "En ligne",
+  "@diagnosticsOnline": {
+    "description": "Statut API en ligne (diagnostics_screen.dart, _pingLabel)"
+  },
+  "diagnosticsOffline": "Hors ligne",
+  "@diagnosticsOffline": {
+    "description": "Statut API hors ligne (diagnostics_screen.dart, _pingLabel)"
+  },
+  "diagnosticsTest": "Tester",
+  "@diagnosticsTest": {
+    "description": "Statut API pas encore testé (diagnostics_screen.dart, _pingLabel)"
+  },
+  "diagnosticsIdCopiedMessage": "ID copie dans le presse-papier",
+  "@diagnosticsIdCopiedMessage": {
+    "description": "Snackbar après copie de l'ID utilisateur (diagnostics_screen.dart, _copyUserId). Faute d'accent recopiée telle quelle (« copié » manque son accent) : correction laissée à une PR dédiée, cf. règle du plan."
+  },
+
+  "dataSettingsSectionYourData": "VOS DONNÉES",
+  "@dataSettingsSectionYourData": {
+    "description": "En-tête de section (data_settings_screen.dart)"
+  },
+  "dataSettingsDownloadLabel": "Télécharger mes données",
+  "@dataSettingsDownloadLabel": {
+    "description": "Libellé de la tuile de téléchargement (data_settings_screen.dart)"
+  },
+  "dataSettingsDownloadSubtitle": "Export RGPD au format JSON",
+  "@dataSettingsDownloadSubtitle": {
+    "description": "Sous-titre de la tuile de téléchargement (data_settings_screen.dart)"
+  },
+  "dataSettingsExportStartedMessage": "Export lancé. Tu recevras un e-mail avec le lien de téléchargement sous 72h.",
+  "@dataSettingsExportStartedMessage": {
+    "description": "Snackbar de succès après lancement de l'export RGPD (data_settings_screen.dart)"
+  },
+
+  "pinConfirmSheetTitle": "Confirmez votre code PIN",
+  "@pinConfirmSheetTitle": {
+    "description": "Titre de la feuille de confirmation du code PIN (pin_confirm_bottom_sheet.dart)"
+  },
+  "pinConfirmSheetSubtitle": "Saisissez votre code pour confirmer",
+  "@pinConfirmSheetSubtitle": {
+    "description": "Sous-titre de la feuille de confirmation du code PIN (pin_confirm_bottom_sheet.dart)"
+  },
+  "pinAttemptsLeft": "{count, plural, =1{{count} tentative restante} other{{count} tentatives restantes}}",
+  "@pinAttemptsLeft": {
+    "description": "Tentatives restantes après un code PIN erroné (pin_confirm_bottom_sheet.dart). Correction d'accord déclarée : plus jamais « 2 tentative(s) restante(s) ».",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

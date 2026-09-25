@@ -26,7 +26,7 @@ class ConnectedDevicesBloc
       final devices = await _repository.fetchDevices();
       emit(ConnectedDevicesLoaded(devices));
     } catch (_) {
-      emit(const ConnectedDevicesError('Impossible de charger les appareils'));
+      emit(const ConnectedDevicesError(DevicesFailure.load));
     }
   }
 
@@ -44,7 +44,7 @@ class ConnectedDevicesBloc
       emit(
         current is ConnectedDevicesLoaded
             ? current
-            : const ConnectedDevicesError('Erreur lors de la révocation'),
+            : const ConnectedDevicesError(DevicesFailure.revoke),
       );
     }
   }
@@ -63,7 +63,7 @@ class ConnectedDevicesBloc
       emit(
         current is ConnectedDevicesLoaded
             ? current
-            : const ConnectedDevicesError('Erreur lors de la déconnexion'),
+            : const ConnectedDevicesError(DevicesFailure.revokeAll),
       );
     }
   }

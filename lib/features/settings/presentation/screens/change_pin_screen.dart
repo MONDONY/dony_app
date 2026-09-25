@@ -1,11 +1,16 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
 enum _PinStep { verifyOld, enterNew, confirmNew }
+
+/// Erreur affichée à l'écran : jamais de texte traduit gardé dans le `State`,
+/// seul ce code l'est. Le texte se calcule dans `build`, via `AppLocalizations`.
+enum _PinError { incorrectCode, mismatch }
 
 /// Création ou modification du code PIN.
 ///
@@ -36,7 +41,7 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
   String _pin = '';
   String? _newPin;
   bool _hasError = false;
-  String _errorMessage = '';
+  _PinError? _error;
   int _attemptsLeft = _maxAttempts;
 
   void _onDigit(String d) {
@@ -82,7 +87,7 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
           }
           setState(() {
             _hasError = true;
-            _errorMessage = 'Code incorrect';
+            _error = _PinError.incorrectCode;
             _pin = '';
           });
         }
@@ -101,15 +106,15 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
           DonySnackbar.show(
             context,
             message: widget.isCreation
-                ? "Code PIN activé, il sera demandé à l'ouverture"
-                : 'Code PIN modifié',
+                ? context.l10n.pinCreatedMessage
+                : context.l10n.pinChangedMessage,
             type: DonySnackbarType.success,
           );
           context.pop(true);
         } else {
           setState(() {
             _hasError = true;
-            _errorMessage = 'Les codes ne correspondent pas';
+            _error = _PinError.mismatch;
             _step = _PinStep.enterNew;
             _newPin = null;
             _pin = '';
@@ -118,16 +123,20 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
     }
   }
 
-  String get _subtitle => switch (_step) {
-    _PinStep.verifyOld => 'Saisissez votre code actuel',
+  String _subtitle(AppLocalizations l) => switch (_step) {
+    _PinStep.verifyOld => l.pinEnterCurrentSubtitle,
     _PinStep.enterNew =>
-      widget.isCreation
-          ? "Choisissez un code à 6 chiffres, il sera demandé à l'ouverture"
-          : 'Créez votre nouveau code',
+      widget.isCreation ? l.pinCreateNewSubtitle : l.pinEnterNewSubtitle,
     _PinStep.confirmNew =>
       widget.isCreation
-          ? 'Saisissez le même code pour confirmer'
-          : 'Confirmez le nouveau code',
+          ? l.pinConfirmCreateSubtitle
+          : l.pinConfirmChangeSubtitle,
+  };
+
+  String _errorText(AppLocalizations l) => switch (_error) {
+    _PinError.incorrectCode => l.pinIncorrectCode,
+    _PinError.mismatch => l.pinCodesMismatch,
+    null => '',
   };
 
   @override
@@ -135,10 +144,11 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final l = context.l10n;
 
     return Scaffold(
       appBar: DonyAppBar(
-        title: widget.isCreation ? 'Créer un code PIN' : 'Modifier le code PIN',
+        title: widget.isCreation ? l.pinCreateTitle : l.pinChangeTitle,
       ),
       body: SafeArea(
         child: DonyLayout.constrained(
@@ -163,7 +173,7 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
                             AnimatedSwitcher(
                               duration: const Duration(milliseconds: 250),
                               child: Text(
-                                _subtitle,
+                                _subtitle(l),
                                 key: ValueKey(_step),
                                 style: tt.headlineLarge?.copyWith(
                                   color: cs.onSurface,
@@ -190,7 +200,7 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
                       ? Padding(
                           padding: const EdgeInsets.only(top: DonySpacing.md),
                           child: Text(
-                            _errorMessage,
+                            _errorText(l),
                             style: tt.bodySmall?.copyWith(
                               color: cs.error,
                               fontWeight: FontWeight.w500,

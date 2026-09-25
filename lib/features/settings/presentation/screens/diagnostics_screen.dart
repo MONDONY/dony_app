@@ -3,6 +3,7 @@ import 'package:dony/features/incident_report/data/repositories/incident_report_
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,9 +29,10 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Diagnostics'),
+      appBar: DonyAppBar(title: l.diagnosticsTitle),
       body: BlocBuilder<DiagnosticsBloc, DiagnosticsState>(
         builder: (context, state) =>
             ListView(
@@ -42,14 +44,14 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
                   ),
                   children: [
                     // APPLICATION
-                    const SettingsSectionHeader('APPLICATION'),
+                    SettingsSectionHeader(l.diagnosticsSectionApplication),
                     SettingsFlatGroup(
                       children: [
                         DonyListTile(
                           iconAsset: 'info',
                           iconColor: cs.primary,
                           iconBgColor: cs.primaryContainer,
-                          label: 'Version',
+                          label: l.diagnosticsVersionLabel,
                           trailing: Text(
                             state.appVersion != null
                                 ? 'v${state.appVersion} (${state.buildNumber})'
@@ -65,14 +67,14 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
                     const SizedBox(height: DonySpacing.xl),
 
                     // CONNECTIVITE
-                    const SettingsSectionHeader('CONNECTIVITÉ'),
+                    SettingsSectionHeader(l.diagnosticsSectionConnectivity),
                     SettingsFlatGroup(
                       children: [
                         DonyListTile(
                           iconAsset: 'wifi',
                           iconColor: _pingIconColor(state, cs),
                           iconBgColor: _pingIconBg(state, cs),
-                          label: 'Statut API',
+                          label: l.diagnosticsApiStatusLabel,
                           trailing: state.isPinging
                               ? SizedBox(
                                   width: 18,
@@ -83,7 +85,7 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
                                   ),
                                 )
                               : Text(
-                                  _pingLabel(state),
+                                  _pingLabel(l, state),
                                   style: tt.labelMedium?.copyWith(
                                     color: _pingTextColor(state, cs),
                                     fontWeight: FontWeight.w600,
@@ -101,14 +103,14 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
                     const SizedBox(height: DonySpacing.xl),
 
                     // SUPPORT
-                    const SettingsSectionHeader('SUPPORT'),
+                    SettingsSectionHeader(l.diagnosticsSectionSupport),
                     SettingsFlatGroup(
                       children: [
                         DonyListTile(
                           iconAsset: 'bug',
                           iconColor: cs.primary,
                           iconBgColor: cs.primaryContainer,
-                          label: 'Signaler un bug',
+                          label: l.diagnosticsReportBugLabel,
                           onTap: () => context.push(
                             '/settings/report-incident',
                             extra: {'targetType': IncidentTargetType.app},
@@ -118,8 +120,8 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
                           iconAsset: 'copy',
                           iconColor: cs.onSurfaceVariant,
                           iconBgColor: cs.surfaceContainerHighest,
-                          label: 'Copier mon ID utilisateur',
-                          subtitle: 'Utile pour le support',
+                          label: l.diagnosticsCopyUserIdLabel,
+                          subtitle: l.diagnosticsCopyUserIdSubtitle,
                           showDivider: false,
                           onTap: () => _copyUserId(context),
                         ),
@@ -157,11 +159,12 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
         null => cs.onSurfaceVariant,
       };
 
-  String _pingLabel(DiagnosticsState state) => switch (state.apiOk) {
-    true => 'En ligne',
-    false => 'Hors ligne',
-    null => 'Tester',
-  };
+  String _pingLabel(AppLocalizations l, DiagnosticsState state) =>
+      switch (state.apiOk) {
+        true => l.diagnosticsOnline,
+        false => l.diagnosticsOffline,
+        null => l.diagnosticsTest,
+      };
 
   // Actions
 
@@ -173,7 +176,7 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
     }
     DonySnackbar.show(
       context,
-      message: 'ID copie dans le presse-papier',
+      message: context.l10n.diagnosticsIdCopiedMessage,
       type: DonySnackbarType.success,
     );
   }

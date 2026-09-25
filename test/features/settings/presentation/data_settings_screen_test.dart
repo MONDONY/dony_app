@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockDataExportBloc extends MockBloc<DataExportEvent, DataExportState>
     implements DataExportBloc {}
 
@@ -145,6 +147,18 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(errorMessage), findsOneWidget);
+    });
+
+    testWidgets('anglais : titre, section et tuile traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      expect(find.text('My data'), findsOneWidget);
+      expect(find.text('YOUR DATA'), findsOneWidget);
+      expect(find.text('Download my data'), findsOneWidget);
+      expect(find.text('GDPR export in JSON format'), findsOneWidget);
+      expect(find.text('Mes données'), findsNothing);
     });
   });
 }

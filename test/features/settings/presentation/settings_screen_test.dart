@@ -608,6 +608,28 @@ void main() {
       expect(find.text('Langue du téléphone'), findsNWidgets(2));
     });
 
+    testWidgets('anglais : titre, sections et tuiles traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Settings'), findsOneWidget);
+      expect(find.text('APPEARANCE'), findsOneWidget);
+      expect(find.text('Theme'), findsOneWidget);
+      expect(find.text('LANGUAGE & COMMUNICATION'), findsOneWidget);
+      expect(find.text('Security'), findsOneWidget);
+      expect(find.text('My data'), findsOneWidget);
+      expect(find.text('Paramètres'), findsNothing);
+    });
+
+    testWidgets('anglais : Aucune destination → None', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      expect(find.text('None'), findsOneWidget);
+    });
+
     testWidgets(
       'language picker — tap Langue du téléphone dispatches LanguageChanged(system)',
       (tester) async {

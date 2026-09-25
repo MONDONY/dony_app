@@ -6,6 +6,7 @@ import 'package:dony/features/settings/bloc/pin_status_cubit.dart';
 import 'package:dony/features/settings/presentation/widgets/pin_confirm_bottom_sheet.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -89,19 +90,17 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
     }
     await cubit.disable();
     if (context.mounted) {
-      DonySnackbar.show(
-        context,
-        message: "Code PIN retiré, l'app s'ouvrira sans code",
-      );
+      DonySnackbar.show(context, message: context.l10n.pinRemovedMessage);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Sécurité'),
+      appBar: DonyAppBar(title: l.securityTitle),
       body: FutureBuilder<bool>(
         future: _biometricFuture,
         builder: (context, snapshot) {
@@ -124,7 +123,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                   DonySpacing.huge,
                 ),
                 children: [
-                  const SettingsSectionHeader('PAIEMENTS'),
+                  SettingsSectionHeader(l.securitySectionPayments),
                   SettingsFlatGroup(
                     children: [
                       DonyListTile(
@@ -135,10 +134,10 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                         iconBgColor: biometricAvailable
                             ? cs.primaryContainer
                             : cs.surfaceContainerHighest,
-                        label: 'Biométrie avant paiement',
+                        label: l.securityBiometricBeforePayment,
                         subtitle: biometricAvailable
-                            ? 'Empreinte digitale ou Face ID'
-                            : 'Non disponible sur cet appareil',
+                            ? l.securityFingerprintOrFaceId
+                            : l.securityUnavailableOnDevice,
                         trailing: Switch(
                           value: biometricEnabled,
                           activeThumbColor: cs.primary,
@@ -166,7 +165,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                     ],
                   ),
                   const SizedBox(height: DonySpacing.lg),
-                  const SettingsSectionHeader('APPLICATION'),
+                  SettingsSectionHeader(l.securitySectionApplication),
                   SettingsFlatGroup(
                     children: [
                       DonyListTile(
@@ -177,16 +176,16 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                         iconBgColor: biometricAvailable
                             ? cs.primaryContainer
                             : cs.surfaceContainerHighest,
-                        label: "Verrouillage de l'app",
+                        label: l.securityAppLockTitle,
                         // Sans code PIN il n'y a aucun verrouillage à
                         // l'ouverture : la biométrie ne fait que remplacer la
                         // saisie du code. Le dire, plutôt que de laisser croire
                         // que l'app est protégée.
                         subtitle: !biometricAvailable
-                            ? 'Non disponible sur cet appareil'
+                            ? l.securityUnavailableOnDevice
                             : pinConfigured
-                            ? "Biométrie ou Face ID à l'ouverture"
-                            : "Nécessite d'activer le code PIN ci-dessous",
+                            ? l.securityAppLockBiometricSubtitle
+                            : l.securityAppLockNeedsPinSubtitle,
                         trailing: Switch(
                           value:
                               biometricAvailable &&
@@ -218,17 +217,17 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                     ],
                   ),
                   const SizedBox(height: DonySpacing.lg),
-                  const SettingsSectionHeader('AUTHENTIFICATION'),
+                  SettingsSectionHeader(l.securitySectionAuthentication),
                   SettingsFlatGroup(
                     children: [
                       DonyListTile(
                         iconAsset: 'key-round',
                         iconColor: cs.primary,
                         iconBgColor: cs.primaryContainer,
-                        label: "Code PIN à l'ouverture",
+                        label: l.securityPinOnLaunchTitle,
                         subtitle: pinConfigured
-                            ? 'Demandé à chaque ouverture de Yadony'
-                            : "Désactivé, l'app s'ouvre sans code",
+                            ? l.securityPinRequestedSubtitle
+                            : l.securityPinDisabledSubtitle,
                         trailing: Switch(
                           value: pinConfigured,
                           activeThumbColor: cs.primary,
@@ -252,8 +251,8 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                           iconAsset: 'shield-check',
                           iconColor: cs.primary,
                           iconBgColor: cs.primaryContainer,
-                          label: 'Modifier le code PIN',
-                          subtitle: 'Code à 6 chiffres',
+                          label: l.pinChangeTitle,
+                          subtitle: l.securityPinCodeLength,
                           showDivider: false,
                           onTap: () async {
                             await context.push<bool>(
@@ -264,15 +263,15 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                     ],
                   ),
                   const SizedBox(height: DonySpacing.lg),
-                  const SettingsSectionHeader('SESSION'),
+                  SettingsSectionHeader(l.securitySectionSession),
                   SettingsFlatGroup(
                     children: [
                       DonyListTile(
                         iconAsset: 'smartphone',
                         iconColor: cs.primary,
                         iconBgColor: cs.primaryContainer,
-                        label: 'Appareils connectés',
-                        subtitle: 'Voir et révoquer les sessions actives',
+                        label: l.devicesTitle,
+                        subtitle: l.devicesSubtitle,
                         showDivider: false,
                         onTap: () => context.push('/settings/security/devices'),
                       ),

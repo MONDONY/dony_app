@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockLocalAuthService extends Mock implements LocalAuthService {}
 
 /// Router avec une route parente pour permettre context.pop() depuis /change-pin.
@@ -172,5 +174,41 @@ void main() {
     expect(find.text('Les codes ne correspondent pas'), findsOneWidget);
     // Retour à étape 2
     expect(find.text('Créez votre nouveau code'), findsOneWidget);
+  });
+
+  testWidgets('anglais : titre et sous-titre traduits', (tester) async {
+    useEnglish();
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(MaterialApp.router(routerConfig: _router(svc)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Change PIN'), findsOneWidget);
+    expect(find.text('Modifier le code PIN'), findsNothing);
+  });
+
+  testWidgets('anglais : code incorrect traduit', (tester) async {
+    useEnglish();
+    tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    when(() => svc.validatePin(any())).thenAnswer((_) async => false);
+
+    await tester.pumpWidget(MaterialApp.router(routerConfig: _router(svc)));
+    await tester.pumpAndSettle();
+
+    for (final digit in ['1', '2', '3', '4', '5', '6']) {
+      await tester.tap(find.text(digit).last);
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pumpAndSettle(const Duration(milliseconds: 500));
+
+    expect(find.text('Incorrect code'), findsOneWidget);
   });
 }

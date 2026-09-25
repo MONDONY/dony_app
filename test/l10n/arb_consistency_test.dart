@@ -189,6 +189,15 @@ const _sameInBothLanguages = <String>{
   'profileLanguageWolof', // « Wolof » se dit pareil (tâche G2)
   'profileLanguageBambara', // « Bambara » se dit pareil (tâche G2)
   'profilePublicBadgesSectionLabel', // « BADGES » se dit pareil (tâche G3)
+  'settingsThemeAuto', // « Auto » se dit pareil (tâche H1)
+  'settingsDestinationsLabel', // « Destinations » se dit pareil (tâche H1)
+  'settingsNotificationsLabel', // « Notifications » se dit pareil (tâche H1)
+  'diagnosticsTitle', // « Diagnostics » se dit pareil (tâche H1)
+  'securitySectionApplication', // « APPLICATION » se dit pareil (tâche H1)
+  'securitySectionSession', // « SESSION » se dit pareil (tâche H1)
+  'diagnosticsSectionApplication', // « APPLICATION » se dit pareil (tâche H1)
+  'diagnosticsVersionLabel', // « Version » se dit pareil (tâche H1)
+  'diagnosticsSectionSupport', // « SUPPORT » se dit pareil (tâche H1)
 };
 
 void main() {

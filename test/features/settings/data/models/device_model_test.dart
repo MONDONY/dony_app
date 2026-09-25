@@ -17,10 +17,13 @@ void main() {
       expect(m.isCurrent, true);
     });
 
+    // deviceName garde '' quand le serveur ne renvoie rien : c'est l'écran
+    // (ConnectedDevicesScreen) qui affiche le libellé traduit `devicesUnknown`
+    // pour un nom vide, jamais ce modèle.
     test('utilise des fallbacks si champs null/absents', () {
       final m = DeviceModel.fromJson({});
       expect(m.deviceId, '');
-      expect(m.deviceName, 'Appareil inconnu');
+      expect(m.deviceName, '');
       expect(m.platform, 'android');
       expect(m.isCurrent, false);
       expect(m.lastSeenAt, isA<DateTime>());
@@ -35,7 +38,7 @@ void main() {
         'isCurrent': null,
       });
       expect(m.deviceId, '');
-      expect(m.deviceName, 'Appareil inconnu');
+      expect(m.deviceName, '');
       expect(m.platform, 'android');
       expect(m.isCurrent, false);
       expect(m.lastSeenAt, isA<DateTime>());

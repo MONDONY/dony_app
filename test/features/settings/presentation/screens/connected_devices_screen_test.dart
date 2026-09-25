@@ -8,6 +8,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockConnectedDevicesBloc
     extends MockBloc<ConnectedDevicesEvent, ConnectedDevicesState>
     implements ConnectedDevicesBloc {}
@@ -82,9 +84,9 @@ void main() {
   );
 
   testWidgets('Error → message + bouton Réessayer', (tester) async {
-    when(() => bloc.state).thenReturn(
-      const ConnectedDevicesError('Impossible de charger les appareils'),
-    );
+    when(
+      () => bloc.state,
+    ).thenReturn(const ConnectedDevicesError(DevicesFailure.load));
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump();
     expect(find.text('Impossible de charger les appareils'), findsOneWidget);
@@ -101,9 +103,9 @@ void main() {
   testWidgets('bouton Réessayer dispatche DevicesLoadRequested en état Error', (
     tester,
   ) async {
-    when(() => bloc.state).thenReturn(
-      const ConnectedDevicesError('Impossible de charger les appareils'),
-    );
+    when(
+      () => bloc.state,
+    ).thenReturn(const ConnectedDevicesError(DevicesFailure.load));
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump();
     await tester.tap(find.text('Réessayer'));
@@ -130,5 +132,69 @@ void main() {
     expect(find.text('Chrome sur Windows'), findsOneWidget);
     // Le tile doit s'afficher sans erreur de rendu
     expect(find.byType(ConnectedDevicesScreen), findsOneWidget);
+  });
+
+  testWidgets('Loaded avec un nom vide → affiche Appareil inconnu', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(
+      ConnectedDevicesLoaded([
+        DeviceModel(
+          deviceId: 'no-name',
+          deviceName: '',
+          platform: 'android',
+          lastSeenAt: DateTime(2026, 5, 22),
+          isCurrent: false,
+        ),
+      ]),
+    );
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Appareil inconnu'), findsOneWidget);
+  });
+
+  testWidgets('Error(revoke) → message dédié', (tester) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(const ConnectedDevicesError(DevicesFailure.revoke));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump();
+    expect(find.text('Erreur lors de la révocation'), findsOneWidget);
+  });
+
+  testWidgets('Error(revokeAll) → message dédié', (tester) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(const ConnectedDevicesError(DevicesFailure.revokeAll));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump();
+    expect(find.text('Erreur lors de la déconnexion'), findsOneWidget);
+  });
+
+  testWidgets('anglais : titre, liste et erreur traduits', (tester) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(ConnectedDevicesLoaded([_dev(current: true), _dev()]));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Signed-in devices'), findsOneWidget);
+    expect(find.text('This device'), findsOneWidget);
+    expect(find.text('Revoke'), findsOneWidget);
+    expect(find.text('Sign out of all other devices'), findsOneWidget);
+    expect(find.text('Appareils connectés'), findsNothing);
+  });
+
+  testWidgets('anglais : erreur de chargement traduite', (tester) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(const ConnectedDevicesError(DevicesFailure.load));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump();
+
+    expect(find.text("Couldn't load your devices"), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
   });
 }

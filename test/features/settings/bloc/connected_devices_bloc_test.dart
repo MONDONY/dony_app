@@ -42,7 +42,7 @@ void main() {
     );
 
     blocTest<ConnectedDevicesBloc, ConnectedDevicesState>(
-      'DevicesLoadRequested → Error si repo échoue',
+      'DevicesLoadRequested → Error(load) si repo échoue',
       build: () {
         when(() => repo.fetchDevices()).thenThrow(Exception('network'));
         return ConnectedDevicesBloc(repo);
@@ -50,7 +50,11 @@ void main() {
       act: (bloc) => bloc.add(const DevicesLoadRequested()),
       expect: () => [
         isA<ConnectedDevicesLoading>(),
-        isA<ConnectedDevicesError>(),
+        isA<ConnectedDevicesError>().having(
+          (s) => s.failure,
+          'failure',
+          DevicesFailure.load,
+        ),
       ],
     );
 
@@ -80,6 +84,23 @@ void main() {
     );
 
     blocTest<ConnectedDevicesBloc, ConnectedDevicesState>(
+      'DeviceRevokeRequested → Error(revoke) si repo échoue sans liste connue',
+      build: () {
+        when(() => repo.revokeDevice('dev-other')).thenThrow(Exception('net'));
+        return ConnectedDevicesBloc(repo);
+      },
+      act: (bloc) => bloc.add(const DeviceRevokeRequested('dev-other')),
+      expect: () => [
+        isA<DeviceRevoking>(),
+        isA<ConnectedDevicesError>().having(
+          (s) => s.failure,
+          'failure',
+          DevicesFailure.revoke,
+        ),
+      ],
+    );
+
+    blocTest<ConnectedDevicesBloc, ConnectedDevicesState>(
       'AllOthersRevokeRequested → Revoking(others) puis recharge',
       build: () {
         when(() => repo.revokeOthers()).thenAnswer((_) async {});
@@ -92,6 +113,23 @@ void main() {
       expect: () => [
         isA<DeviceRevoking>().having((s) => s.deviceId, 'deviceId', 'others'),
         isA<ConnectedDevicesLoaded>(),
+      ],
+    );
+
+    blocTest<ConnectedDevicesBloc, ConnectedDevicesState>(
+      'AllOthersRevokeRequested → Error(revokeAll) si repo échoue sans liste connue',
+      build: () {
+        when(() => repo.revokeOthers()).thenThrow(Exception('net'));
+        return ConnectedDevicesBloc(repo);
+      },
+      act: (bloc) => bloc.add(const AllOthersRevokeRequested()),
+      expect: () => [
+        isA<DeviceRevoking>(),
+        isA<ConnectedDevicesError>().having(
+          (s) => s.failure,
+          'failure',
+          DevicesFailure.revokeAll,
+        ),
       ],
     );
   });

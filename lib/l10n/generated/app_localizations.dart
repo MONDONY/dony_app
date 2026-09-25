@@ -18943,6 +18943,594 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Lire le tutoriel {title}'**
   String helpTutorialCardSemanticsLabel(String title);
+
+  /// Titre de l'AppBar (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paramètres'**
+  String get settingsTitle;
+
+  /// En-tête de section (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'APPARENCE'**
+  String get settingsSectionAppearance;
+
+  /// Libellé de la tuile de choix du thème (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Thème'**
+  String get settingsThemeLabel;
+
+  /// Sous-titre de la tuile de choix du thème (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prioritaire sur le réglage système'**
+  String get settingsThemeSubtitle;
+
+  /// Option de thème clair, utilisée à la fois pour le libellé affiché et dans le sélecteur (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Clair'**
+  String get settingsThemeLight;
+
+  /// Option de thème sombre, utilisée à la fois pour le libellé affiché et dans le sélecteur (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sombre'**
+  String get settingsThemeDark;
+
+  /// Option de thème système, utilisée à la fois pour le libellé affiché et dans le sélecteur (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Auto'**
+  String get settingsThemeAuto;
+
+  /// En-tête de section (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'LANGUE & COMMUNICATION'**
+  String get settingsSectionLanguage;
+
+  /// En-tête de section (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DESTINATIONS FAVORITES'**
+  String get settingsSectionDestinations;
+
+  /// Libellé de la tuile de sélection des destinations favorites (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinations'**
+  String get settingsDestinationsLabel;
+
+  /// Résumé affiché quand aucune destination favorite n'est sélectionnée (settings_screen.dart, _destinationsSummary)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune'**
+  String get settingsNoDestination;
+
+  /// En-tête de section (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'SÉCURITÉ & DONNÉES'**
+  String get settingsSectionSecurityData;
+
+  /// Libellé de la tuile de navigation (settings_screen.dart) et titre de l'AppBar de l'écran de sécurité (security_settings_screen.dart) : même écran, un seul texte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sécurité'**
+  String get securityTitle;
+
+  /// Sous-titre de la tuile Sécurité (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Biométrie, PIN, sessions'**
+  String get settingsSecuritySubtitle;
+
+  /// Libellé de la tuile de navigation vers l'écran de confidentialité (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confidentialité'**
+  String get settingsPrivacyLabel;
+
+  /// Sous-titre de la tuile Confidentialité (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Visibilité profil, numéro'**
+  String get settingsPrivacySubtitle;
+
+  /// Libellé de la tuile de navigation (settings_screen.dart) et titre de l'AppBar de l'écran de données (data_settings_screen.dart) : même écran, un seul texte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes données'**
+  String get settingsMyData;
+
+  /// Sous-titre de la tuile Mes données (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Export RGPD'**
+  String get settingsMyDataSubtitle;
+
+  /// En-tête de section (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PERSONNALISATION'**
+  String get settingsSectionPersonalization;
+
+  /// Libellé de la tuile de navigation vers les réglages de notifications (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotificationsLabel;
+
+  /// Sous-titre de la tuile Notifications (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Par type d\'alerte'**
+  String get settingsNotificationsSubtitle;
+
+  /// Libellé de la tuile de navigation vers les préférences métier (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Préférences'**
+  String get settingsPreferencesLabel;
+
+  /// Sous-titre de la tuile Préférences (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'kg/lbs, devise, rayon de collecte'**
+  String get settingsPreferencesSubtitle;
+
+  /// Libellé de la tuile de navigation vers les réglages d'accessibilité (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Accessibilité'**
+  String get settingsAccessibilityLabel;
+
+  /// Sous-titre de la tuile Accessibilité (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Contraste, taille de police'**
+  String get settingsAccessibilitySubtitle;
+
+  /// Libellé de la tuile de réinitialisation des cartes de guidance (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réafficher les suggestions'**
+  String get settingsResetGuidanceLabel;
+
+  /// Sous-titre de la tuile de réinitialisation des cartes de guidance (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Fait revenir les cartes fermées (écran Recherche)'**
+  String get settingsResetGuidanceSubtitle;
+
+  /// Snackbar de confirmation après réinitialisation des cartes de guidance (settings_screen.dart, _resetGuidanceCards)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suggestions et tutoriels réaffichés.'**
+  String get settingsResetGuidanceSnackbar;
+
+  /// En-tête de section (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'INFORMATIONS'**
+  String get settingsSectionInformation;
+
+  /// Libellé de la tuile de navigation vers les CGU (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'CGU'**
+  String get settingsTermsLabel;
+
+  /// Libellé de la tuile de navigation vers la politique de confidentialité (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Politique de confidentialité'**
+  String get settingsPrivacyPolicyLabel;
+
+  /// Libellé de la tuile de signalement d'un problème (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler un problème'**
+  String get settingsReportProblemLabel;
+
+  /// Sous-titre de la tuile de signalement d'un problème (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Incident, bug, litige (avec captures)'**
+  String get settingsReportProblemSubtitle;
+
+  /// Libellé de la tuile de navigation (settings_screen.dart) et titre de l'AppBar de l'écran de diagnostics (diagnostics_screen.dart) : même écran, un seul texte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Diagnostics'**
+  String get diagnosticsTitle;
+
+  /// Sous-titre de la tuile Diagnostics (settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Version, signaler un bug'**
+  String get settingsDiagnosticsSubtitle;
+
+  /// Libellé de la tuile de navigation (security_settings_screen.dart) et titre de l'AppBar de l'écran des appareils connectés (connected_devices_screen.dart) : même écran, un seul texte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appareils connectés'**
+  String get devicesTitle;
+
+  /// Sous-titre de la tuile Appareils connectés (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir et révoquer les sessions actives'**
+  String get devicesSubtitle;
+
+  /// Snackbar après désactivation du code PIN (security_settings_screen.dart, _disablePin)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code PIN retiré, l\'app s\'ouvrira sans code'**
+  String get pinRemovedMessage;
+
+  /// En-tête de section (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PAIEMENTS'**
+  String get securitySectionPayments;
+
+  /// Libellé de la tuile de bascule biométrie avant paiement (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Biométrie avant paiement'**
+  String get securityBiometricBeforePayment;
+
+  /// Sous-titre de la tuile biométrie quand disponible (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Empreinte digitale ou Face ID'**
+  String get securityFingerprintOrFaceId;
+
+  /// Sous-titre affiché quand la biométrie n'est pas disponible, réutilisé pour les tuiles biométrie et verrouillage de l'app (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Non disponible sur cet appareil'**
+  String get securityUnavailableOnDevice;
+
+  /// En-tête de section (security_settings_screen.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'APPLICATION'**
+  String get securitySectionApplication;
+
+  /// Libellé de la tuile de verrouillage de l'app (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Verrouillage de l\'app'**
+  String get securityAppLockTitle;
+
+  /// Sous-titre du verrouillage de l'app quand un code PIN est configuré (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Biométrie ou Face ID à l\'ouverture'**
+  String get securityAppLockBiometricSubtitle;
+
+  /// Sous-titre du verrouillage de l'app quand aucun code PIN n'est configuré (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nécessite d\'activer le code PIN ci-dessous'**
+  String get securityAppLockNeedsPinSubtitle;
+
+  /// En-tête de section (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'AUTHENTIFICATION'**
+  String get securitySectionAuthentication;
+
+  /// Libellé de la tuile de bascule du code PIN à l'ouverture (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code PIN à l\'ouverture'**
+  String get securityPinOnLaunchTitle;
+
+  /// Sous-titre quand le code PIN est configuré (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandé à chaque ouverture de Yadony'**
+  String get securityPinRequestedSubtitle;
+
+  /// Sous-titre quand le code PIN n'est pas configuré (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactivé, l\'app s\'ouvre sans code'**
+  String get securityPinDisabledSubtitle;
+
+  /// Libellé de la tuile de navigation (security_settings_screen.dart) et titre de l'AppBar de l'écran de modification du code (change_pin_screen.dart, mode édition) : même écran, un seul texte.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le code PIN'**
+  String get pinChangeTitle;
+
+  /// Sous-titre de la tuile Modifier le code PIN (security_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code à 6 chiffres'**
+  String get securityPinCodeLength;
+
+  /// En-tête de section (security_settings_screen.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'SESSION'**
+  String get securitySectionSession;
+
+  /// Titre de l'AppBar en mode création (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer un code PIN'**
+  String get pinCreateTitle;
+
+  /// Message d'erreur quand le code actuel saisi est invalide (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code incorrect'**
+  String get pinIncorrectCode;
+
+  /// Snackbar de succès en mode création (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code PIN activé, il sera demandé à l\'ouverture'**
+  String get pinCreatedMessage;
+
+  /// Snackbar de succès en mode modification (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code PIN modifié'**
+  String get pinChangedMessage;
+
+  /// Message d'erreur quand la confirmation ne correspond pas au nouveau code (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les codes ne correspondent pas'**
+  String get pinCodesMismatch;
+
+  /// Sous-titre de l'étape de vérification du code actuel (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez votre code actuel'**
+  String get pinEnterCurrentSubtitle;
+
+  /// Sous-titre de l'étape de saisie du nouveau code, en mode création (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un code à 6 chiffres, il sera demandé à l\'ouverture'**
+  String get pinCreateNewSubtitle;
+
+  /// Sous-titre de l'étape de saisie du nouveau code, en mode modification (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Créez votre nouveau code'**
+  String get pinEnterNewSubtitle;
+
+  /// Sous-titre de l'étape de confirmation, en mode création (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le même code pour confirmer'**
+  String get pinConfirmCreateSubtitle;
+
+  /// Sous-titre de l'étape de confirmation, en mode modification (change_pin_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmez le nouveau code'**
+  String get pinConfirmChangeSubtitle;
+
+  /// Bouton de déconnexion de tous les autres appareils (connected_devices_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Déconnecter tous les autres appareils'**
+  String get devicesRevokeAllOthers;
+
+  /// Date relative : dernière activité il y a moins de 5 minutes (connected_devices_screen.dart, _formatDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'Actif maintenant'**
+  String get devicesActiveNow;
+
+  /// Date relative en minutes (connected_devices_screen.dart, _formatDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {minutes} min'**
+  String devicesAgoMinutes(int minutes);
+
+  /// Date relative en heures (connected_devices_screen.dart, _formatDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {hours} h'**
+  String devicesAgoHours(int hours);
+
+  /// Date relative en jours (connected_devices_screen.dart, _formatDate). Correction d'accord déclarée : plus jamais « il y a 1 jours ».
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{il y a {count} jour} other{il y a {count} jours}}'**
+  String devicesAgoDays(int count);
+
+  /// Date relative : dernière activité exactement la veille (connected_devices_screen.dart, _formatDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'hier'**
+  String get devicesAgoYesterday;
+
+  /// Badge sur l'appareil courant dans la liste (connected_devices_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Cet appareil'**
+  String get devicesThisDevice;
+
+  /// Bouton de révocation d'un appareil (connected_devices_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Révoquer'**
+  String get devicesRevoke;
+
+  /// Résumé du nombre d'appareils connectés (connected_devices_screen.dart). Correction d'accord déclarée : plus jamais « 2 appareil(s) ».
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Tu es connecté sur {count} appareil} other{Tu es connecté sur {count} appareils}}'**
+  String devicesSignedInCount(int count);
+
+  /// Message d'erreur du bloc, affiché par l'écran selon DevicesFailure.load (connected_devices_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les appareils'**
+  String get devicesLoadError;
+
+  /// Message d'erreur du bloc, affiché par l'écran selon DevicesFailure.revoke (connected_devices_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur lors de la révocation'**
+  String get devicesRevokeError;
+
+  /// Message d'erreur du bloc, affiché par l'écran selon DevicesFailure.revokeAll (connected_devices_bloc.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur lors de la déconnexion'**
+  String get devicesRevokeAllError;
+
+  /// Nom affiché quand device.deviceName est vide (device_model.dart garde '' ; l'écran affiche cette clé)
+  ///
+  /// In fr, this message translates to:
+  /// **'Appareil inconnu'**
+  String get devicesUnknown;
+
+  /// Tooltip du bouton d'ouverture externe (legal_web_view_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir dans le navigateur'**
+  String get legalOpenInBrowser;
+
+  /// Titre de l'état d'erreur (legal_web_view_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger la page'**
+  String get legalPageLoadError;
+
+  /// Description de l'état d'erreur (legal_web_view_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifie ta connexion et réessaie.'**
+  String get legalPageLoadErrorHint;
+
+  /// En-tête de section (diagnostics_screen.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'APPLICATION'**
+  String get diagnosticsSectionApplication;
+
+  /// Libellé de la tuile de version (diagnostics_screen.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'Version'**
+  String get diagnosticsVersionLabel;
+
+  /// En-tête de section (diagnostics_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'CONNECTIVITÉ'**
+  String get diagnosticsSectionConnectivity;
+
+  /// Libellé de la tuile de statut API (diagnostics_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Statut API'**
+  String get diagnosticsApiStatusLabel;
+
+  /// En-tête de section (diagnostics_screen.dart) ; identique en anglais.
+  ///
+  /// In fr, this message translates to:
+  /// **'SUPPORT'**
+  String get diagnosticsSectionSupport;
+
+  /// Libellé de la tuile de signalement de bug (diagnostics_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler un bug'**
+  String get diagnosticsReportBugLabel;
+
+  /// Libellé de la tuile de copie de l'ID utilisateur (diagnostics_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier mon ID utilisateur'**
+  String get diagnosticsCopyUserIdLabel;
+
+  /// Sous-titre de la tuile de copie de l'ID utilisateur (diagnostics_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Utile pour le support'**
+  String get diagnosticsCopyUserIdSubtitle;
+
+  /// Statut API en ligne (diagnostics_screen.dart, _pingLabel)
+  ///
+  /// In fr, this message translates to:
+  /// **'En ligne'**
+  String get diagnosticsOnline;
+
+  /// Statut API hors ligne (diagnostics_screen.dart, _pingLabel)
+  ///
+  /// In fr, this message translates to:
+  /// **'Hors ligne'**
+  String get diagnosticsOffline;
+
+  /// Statut API pas encore testé (diagnostics_screen.dart, _pingLabel)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tester'**
+  String get diagnosticsTest;
+
+  /// Snackbar après copie de l'ID utilisateur (diagnostics_screen.dart, _copyUserId). Faute d'accent recopiée telle quelle (« copié » manque son accent) : correction laissée à une PR dédiée, cf. règle du plan.
+  ///
+  /// In fr, this message translates to:
+  /// **'ID copie dans le presse-papier'**
+  String get diagnosticsIdCopiedMessage;
+
+  /// En-tête de section (data_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'VOS DONNÉES'**
+  String get dataSettingsSectionYourData;
+
+  /// Libellé de la tuile de téléchargement (data_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Télécharger mes données'**
+  String get dataSettingsDownloadLabel;
+
+  /// Sous-titre de la tuile de téléchargement (data_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Export RGPD au format JSON'**
+  String get dataSettingsDownloadSubtitle;
+
+  /// Snackbar de succès après lancement de l'export RGPD (data_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Export lancé. Tu recevras un e-mail avec le lien de téléchargement sous 72h.'**
+  String get dataSettingsExportStartedMessage;
+
+  /// Titre de la feuille de confirmation du code PIN (pin_confirm_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmez votre code PIN'**
+  String get pinConfirmSheetTitle;
+
+  /// Sous-titre de la feuille de confirmation du code PIN (pin_confirm_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez votre code pour confirmer'**
+  String get pinConfirmSheetSubtitle;
+
+  /// Tentatives restantes après un code PIN erroné (pin_confirm_bottom_sheet.dart). Correction d'accord déclarée : plus jamais « 2 tentative(s) restante(s) ».
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} tentative restante} other{{count} tentatives restantes}}'**
+  String pinAttemptsLeft(int count);
 }
 
 class _AppLocalizationsDelegate

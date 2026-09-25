@@ -11292,4 +11292,336 @@ class AppLocalizationsEn extends AppLocalizations {
   String helpTutorialCardSemanticsLabel(String title) {
     return 'Watch the tutorial $title';
   }
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsSectionAppearance => 'APPEARANCE';
+
+  @override
+  String get settingsThemeLabel => 'Theme';
+
+  @override
+  String get settingsThemeSubtitle => 'Overrides the system setting';
+
+  @override
+  String get settingsThemeLight => 'Light';
+
+  @override
+  String get settingsThemeDark => 'Dark';
+
+  @override
+  String get settingsThemeAuto => 'Auto';
+
+  @override
+  String get settingsSectionLanguage => 'LANGUAGE & COMMUNICATION';
+
+  @override
+  String get settingsSectionDestinations => 'FAVORITE DESTINATIONS';
+
+  @override
+  String get settingsDestinationsLabel => 'Destinations';
+
+  @override
+  String get settingsNoDestination => 'None';
+
+  @override
+  String get settingsSectionSecurityData => 'SECURITY & DATA';
+
+  @override
+  String get securityTitle => 'Security';
+
+  @override
+  String get settingsSecuritySubtitle => 'Biometrics, PIN, sessions';
+
+  @override
+  String get settingsPrivacyLabel => 'Privacy';
+
+  @override
+  String get settingsPrivacySubtitle => 'Profile visibility, phone number';
+
+  @override
+  String get settingsMyData => 'My data';
+
+  @override
+  String get settingsMyDataSubtitle => 'GDPR export';
+
+  @override
+  String get settingsSectionPersonalization => 'PERSONALIZATION';
+
+  @override
+  String get settingsNotificationsLabel => 'Notifications';
+
+  @override
+  String get settingsNotificationsSubtitle => 'By alert type';
+
+  @override
+  String get settingsPreferencesLabel => 'Preferences';
+
+  @override
+  String get settingsPreferencesSubtitle => 'kg/lbs, currency, pickup radius';
+
+  @override
+  String get settingsAccessibilityLabel => 'Accessibility';
+
+  @override
+  String get settingsAccessibilitySubtitle => 'Contrast, font size';
+
+  @override
+  String get settingsResetGuidanceLabel => 'Show suggestions again';
+
+  @override
+  String get settingsResetGuidanceSubtitle =>
+      'Brings back the closed cards (Search screen)';
+
+  @override
+  String get settingsResetGuidanceSnackbar =>
+      'Suggestions and tutorials shown again.';
+
+  @override
+  String get settingsSectionInformation => 'INFORMATION';
+
+  @override
+  String get settingsTermsLabel => 'Terms of Use';
+
+  @override
+  String get settingsPrivacyPolicyLabel => 'Privacy Policy';
+
+  @override
+  String get settingsReportProblemLabel => 'Report a problem';
+
+  @override
+  String get settingsReportProblemSubtitle =>
+      'Incident, bug, dispute (with screenshots)';
+
+  @override
+  String get diagnosticsTitle => 'Diagnostics';
+
+  @override
+  String get settingsDiagnosticsSubtitle => 'Version, report a bug';
+
+  @override
+  String get devicesTitle => 'Signed-in devices';
+
+  @override
+  String get devicesSubtitle => 'View and revoke active sessions';
+
+  @override
+  String get pinRemovedMessage =>
+      'PIN removed, the app will open without a code';
+
+  @override
+  String get securitySectionPayments => 'PAYMENTS';
+
+  @override
+  String get securityBiometricBeforePayment => 'Biometrics before payment';
+
+  @override
+  String get securityFingerprintOrFaceId => 'Fingerprint or Face ID';
+
+  @override
+  String get securityUnavailableOnDevice => 'Not available on this device';
+
+  @override
+  String get securitySectionApplication => 'APPLICATION';
+
+  @override
+  String get securityAppLockTitle => 'App lock';
+
+  @override
+  String get securityAppLockBiometricSubtitle =>
+      'Biometrics or Face ID on launch';
+
+  @override
+  String get securityAppLockNeedsPinSubtitle =>
+      'Requires enabling the PIN code below';
+
+  @override
+  String get securitySectionAuthentication => 'AUTHENTICATION';
+
+  @override
+  String get securityPinOnLaunchTitle => 'PIN on launch';
+
+  @override
+  String get securityPinRequestedSubtitle =>
+      'Requested every time you open Yadony';
+
+  @override
+  String get securityPinDisabledSubtitle =>
+      'Disabled, the app opens without a code';
+
+  @override
+  String get pinChangeTitle => 'Change PIN';
+
+  @override
+  String get securityPinCodeLength => '6-digit code';
+
+  @override
+  String get securitySectionSession => 'SESSION';
+
+  @override
+  String get pinCreateTitle => 'Create a PIN';
+
+  @override
+  String get pinIncorrectCode => 'Incorrect code';
+
+  @override
+  String get pinCreatedMessage => 'PIN enabled, it will be requested on launch';
+
+  @override
+  String get pinChangedMessage => 'PIN changed';
+
+  @override
+  String get pinCodesMismatch => 'The codes don\'t match';
+
+  @override
+  String get pinEnterCurrentSubtitle => 'Enter your current code';
+
+  @override
+  String get pinCreateNewSubtitle =>
+      'Choose a 6-digit code, it will be requested on launch';
+
+  @override
+  String get pinEnterNewSubtitle => 'Create your new code';
+
+  @override
+  String get pinConfirmCreateSubtitle => 'Enter the same code to confirm';
+
+  @override
+  String get pinConfirmChangeSubtitle => 'Confirm the new code';
+
+  @override
+  String get devicesRevokeAllOthers => 'Sign out of all other devices';
+
+  @override
+  String get devicesActiveNow => 'Active now';
+
+  @override
+  String devicesAgoMinutes(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String devicesAgoHours(int hours) {
+    return '$hours h ago';
+  }
+
+  @override
+  String devicesAgoDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: '$count day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesAgoYesterday => 'yesterday';
+
+  @override
+  String get devicesThisDevice => 'This device';
+
+  @override
+  String get devicesRevoke => 'Revoke';
+
+  @override
+  String devicesSignedInCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You\'re signed in on $count devices',
+      one: 'You\'re signed in on $count device',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesLoadError => 'Couldn\'t load your devices';
+
+  @override
+  String get devicesRevokeError => 'Error while revoking';
+
+  @override
+  String get devicesRevokeAllError => 'Error while signing out';
+
+  @override
+  String get devicesUnknown => 'Unknown device';
+
+  @override
+  String get legalOpenInBrowser => 'Open in browser';
+
+  @override
+  String get legalPageLoadError => 'Couldn\'t load the page';
+
+  @override
+  String get legalPageLoadErrorHint => 'Check your connection and try again.';
+
+  @override
+  String get diagnosticsSectionApplication => 'APPLICATION';
+
+  @override
+  String get diagnosticsVersionLabel => 'Version';
+
+  @override
+  String get diagnosticsSectionConnectivity => 'CONNECTIVITY';
+
+  @override
+  String get diagnosticsApiStatusLabel => 'API status';
+
+  @override
+  String get diagnosticsSectionSupport => 'SUPPORT';
+
+  @override
+  String get diagnosticsReportBugLabel => 'Report a bug';
+
+  @override
+  String get diagnosticsCopyUserIdLabel => 'Copy my user ID';
+
+  @override
+  String get diagnosticsCopyUserIdSubtitle => 'Useful for support';
+
+  @override
+  String get diagnosticsOnline => 'Online';
+
+  @override
+  String get diagnosticsOffline => 'Offline';
+
+  @override
+  String get diagnosticsTest => 'Test';
+
+  @override
+  String get diagnosticsIdCopiedMessage => 'ID copied to clipboard';
+
+  @override
+  String get dataSettingsSectionYourData => 'YOUR DATA';
+
+  @override
+  String get dataSettingsDownloadLabel => 'Download my data';
+
+  @override
+  String get dataSettingsDownloadSubtitle => 'GDPR export in JSON format';
+
+  @override
+  String get dataSettingsExportStartedMessage =>
+      'Export started. You\'ll receive an email with the download link within 72h.';
+
+  @override
+  String get pinConfirmSheetTitle => 'Confirm your PIN';
+
+  @override
+  String get pinConfirmSheetSubtitle => 'Enter your code to confirm';
+
+  @override
+  String pinAttemptsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attempts left',
+      one: '$count attempt left',
+    );
+    return '$_temp0';
+  }
 }

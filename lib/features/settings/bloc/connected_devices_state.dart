@@ -21,11 +21,15 @@ class ConnectedDevicesLoaded extends ConnectedDevicesState {
   List<Object?> get props => [devices];
 }
 
+/// Catégorie d'échec du bloc : l'écran choisit le texte via `AppLocalizations`
+/// (le bloc ne porte aucun texte traduit dans son état).
+enum DevicesFailure { load, revoke, revokeAll }
+
 class ConnectedDevicesError extends ConnectedDevicesState {
-  final String message;
-  const ConnectedDevicesError(this.message);
+  final DevicesFailure failure;
+  const ConnectedDevicesError(this.failure);
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [failure];
 }
 
 class DeviceRevoking extends ConnectedDevicesState {

@@ -20,18 +20,19 @@ class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   static const _destinations = [
-    ('SN', '🇸🇳', 'Dakar'),
-    ('CI', '🇨🇮', 'Abidjan'),
-    ('ML', '🇲🇱', 'Bamako'),
-    ('CM', '🇨🇲', 'Douala'),
+    ('SN', '🇸🇳', 'Dakar'), // i18n-ignore: nom de ville (donnée)
+    ('CI', '🇨🇮', 'Abidjan'), // i18n-ignore: nom de ville (donnée)
+    ('ML', '🇲🇱', 'Bamako'), // i18n-ignore: nom de ville (donnée)
+    ('CM', '🇨🇲', 'Douala'), // i18n-ignore: nom de ville (donnée)
   ];
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Paramètres'),
+      appBar: DonyAppBar(title: l.settingsTitle),
       body: BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
         builder: (context, prefsState) {
           final prefs = prefsState.preferences;
@@ -44,19 +45,19 @@ class SettingsScreen extends StatelessWidget {
             ),
             children: [
               // ── APPARENCE ──────────────────────────────────────────────
-              const SettingsSectionHeader('APPARENCE'),
+              SettingsSectionHeader(l.settingsSectionAppearance),
               SettingsFlatGroup(
                 children: [
                   DonyListTile(
                     iconAsset: _themeIcon(prefs.themeMode),
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
-                    label: 'Thème',
-                    subtitle: 'Prioritaire sur le réglage système',
+                    label: l.settingsThemeLabel,
+                    subtitle: l.settingsThemeSubtitle,
                     showDivider: false,
                     trailing: _disclosure(
                       context,
-                      _themeLabel(prefs.themeMode),
+                      _themeLabel(l, prefs.themeMode),
                     ),
                     onTap: () => _showThemePicker(context, prefs.themeMode),
                   ),
@@ -64,14 +65,14 @@ class SettingsScreen extends StatelessWidget {
               ),
 
               // ── LANGUE & COMMUNICATION ─────────────────────────────────
-              const SettingsSectionHeader('LANGUE & COMMUNICATION'),
+              SettingsSectionHeader(l.settingsSectionLanguage),
               SettingsFlatGroup(
                 children: [
                   DonyListTile(
                     iconAsset: 'languages',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
-                    label: context.l10n.settingsLanguageTitle,
+                    label: l.settingsLanguageTitle,
                     showDivider: false,
                     trailing: _disclosure(
                       context,
@@ -84,18 +85,18 @@ class SettingsScreen extends StatelessWidget {
               ),
 
               // ── DESTINATIONS FAVORITES ─────────────────────────────────
-              const SettingsSectionHeader('DESTINATIONS FAVORITES'),
+              SettingsSectionHeader(l.settingsSectionDestinations),
               SettingsFlatGroup(
                 children: [
                   DonyListTile(
                     iconAsset: 'map-pin',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
-                    label: 'Destinations',
+                    label: l.settingsDestinationsLabel,
                     showDivider: false,
                     trailing: _disclosure(
                       context,
-                      _destinationsSummary(prefs.favDestinations),
+                      _destinationsSummary(l, prefs.favDestinations),
                     ),
                     onTap: () => _showDestinationsPicker(context),
                   ),
@@ -103,31 +104,31 @@ class SettingsScreen extends StatelessWidget {
               ),
 
               // ── SÉCURITÉ & DONNÉES ─────────────────────────────────────
-              const SettingsSectionHeader('SÉCURITÉ & DONNÉES'),
+              SettingsSectionHeader(l.settingsSectionSecurityData),
               SettingsFlatGroup(
                 children: [
                   DonyListTile(
                     iconAsset: 'lock',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
-                    label: 'Sécurité',
-                    subtitle: 'Biométrie, PIN, sessions',
+                    label: l.securityTitle,
+                    subtitle: l.settingsSecuritySubtitle,
                     onTap: () => context.push('/settings/security'),
                   ),
                   DonyListTile(
                     iconAsset: 'eye-off',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
-                    label: 'Confidentialité',
-                    subtitle: 'Visibilité profil, numéro',
+                    label: l.settingsPrivacyLabel,
+                    subtitle: l.settingsPrivacySubtitle,
                     onTap: () => context.push('/settings/privacy'),
                   ),
                   DonyListTile(
                     iconAsset: 'folder',
                     iconColor: cs.error,
                     iconBgColor: cs.errorContainer,
-                    label: 'Mes données',
-                    subtitle: 'Export RGPD',
+                    label: l.settingsMyData,
+                    subtitle: l.settingsMyDataSubtitle,
                     showDivider: false,
                     onTap: () => context.push('/settings/data'),
                   ),
@@ -135,40 +136,39 @@ class SettingsScreen extends StatelessWidget {
               ),
 
               // ── PERSONNALISATION ───────────────────────────────────────
-              const SettingsSectionHeader('PERSONNALISATION'),
+              SettingsSectionHeader(l.settingsSectionPersonalization),
               SettingsFlatGroup(
                 children: [
                   DonyListTile(
                     iconAsset: 'bell',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
-                    label: 'Notifications',
-                    subtitle: "Par type d'alerte",
+                    label: l.settingsNotificationsLabel,
+                    subtitle: l.settingsNotificationsSubtitle,
                     onTap: () => context.push('/settings/notifications'),
                   ),
                   DonyListTile(
                     iconAsset: 'sliders-horizontal',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
-                    label: 'Préférences',
-                    subtitle: 'kg/lbs, devise, rayon de collecte',
+                    label: l.settingsPreferencesLabel,
+                    subtitle: l.settingsPreferencesSubtitle,
                     onTap: () => context.push('/settings/preferences'),
                   ),
                   DonyListTile(
                     iconAsset: 'accessibility',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
-                    label: 'Accessibilité',
-                    subtitle: 'Contraste, taille de police',
+                    label: l.settingsAccessibilityLabel,
+                    subtitle: l.settingsAccessibilitySubtitle,
                     onTap: () => context.push('/settings/accessibility'),
                   ),
                   DonyListTile(
                     iconAsset: 'refresh-cw',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
-                    label: 'Réafficher les suggestions',
-                    subtitle:
-                        'Fait revenir les cartes fermées (écran Recherche)',
+                    label: l.settingsResetGuidanceLabel,
+                    subtitle: l.settingsResetGuidanceSubtitle,
                     showDivider: false,
                     onTap: () => _resetGuidanceCards(context),
                   ),
@@ -176,37 +176,37 @@ class SettingsScreen extends StatelessWidget {
               ),
 
               // ── INFORMATIONS ───────────────────────────────────────────
-              const SettingsSectionHeader('INFORMATIONS'),
+              SettingsSectionHeader(l.settingsSectionInformation),
               SettingsFlatGroup(
                 children: [
                   DonyListTile(
                     iconAsset: 'file-text',
                     iconColor: cs.onSurfaceVariant,
                     iconBgColor: cs.surfaceContainerHighest,
-                    label: 'CGU',
+                    label: l.settingsTermsLabel,
                     onTap: () => context.push('/legal/terms'),
                   ),
                   DonyListTile(
                     iconAsset: 'file-badge',
                     iconColor: cs.onSurfaceVariant,
                     iconBgColor: cs.surfaceContainerHighest,
-                    label: 'Politique de confidentialité',
+                    label: l.settingsPrivacyPolicyLabel,
                     onTap: () => context.push('/legal/privacy'),
                   ),
                   DonyListTile(
                     iconAsset: 'flag',
                     iconColor: cs.onSurfaceVariant,
                     iconBgColor: cs.surfaceContainerHighest,
-                    label: 'Signaler un problème',
-                    subtitle: 'Incident, bug, litige (avec captures)',
+                    label: l.settingsReportProblemLabel,
+                    subtitle: l.settingsReportProblemSubtitle,
                     onTap: () => context.push('/settings/report-incident'),
                   ),
                   DonyListTile(
                     iconAsset: 'bug',
                     iconColor: cs.onSurfaceVariant,
                     iconBgColor: cs.surfaceContainerHighest,
-                    label: 'Diagnostics',
-                    subtitle: 'Version, signaler un bug',
+                    label: l.diagnosticsTitle,
+                    subtitle: l.settingsDiagnosticsSubtitle,
                     showDivider: false,
                     onTap: () => context.push('/settings/diagnostics'),
                   ),
@@ -249,7 +249,7 @@ class SettingsScreen extends StatelessWidget {
     }
     DonySnackbar.show(
       context,
-      message: 'Suggestions et tutoriels réaffichés.',
+      message: context.l10n.settingsResetGuidanceSnackbar,
       type: DonySnackbarType.success,
     );
   }
@@ -261,22 +261,24 @@ class SettingsScreen extends StatelessWidget {
     _ => 'sun-moon',
   };
 
-  String _themeLabel(String mode) => switch (mode) {
-    'light' => 'Clair',
-    'dark' => 'Sombre',
-    _ => 'Auto',
+  String _themeLabel(AppLocalizations l, String mode) => switch (mode) {
+    'light' => l.settingsThemeLight,
+    'dark' => l.settingsThemeDark,
+    _ => l.settingsThemeAuto,
   };
 
-  String _languageLabel(BuildContext context, String stored) =>
-      switch (AppL10n.effectiveChoice(stored)) {
-        'fr' => 'Français',
-        'en' => 'English',
-        _ => context.l10n.settingsLanguagePhone,
-      };
+  String _languageLabel(
+    BuildContext context,
+    String stored,
+  ) => switch (AppL10n.effectiveChoice(stored)) {
+    'fr' => 'Français', // i18n-ignore: nom de la langue dans sa propre langue
+    'en' => 'English', // i18n-ignore: nom de la langue dans sa propre langue
+    _ => context.l10n.settingsLanguagePhone,
+  };
 
-  String _destinationsSummary(List<String> codes) {
+  String _destinationsSummary(AppLocalizations l, List<String> codes) {
     if (codes.isEmpty) {
-      return 'Aucune';
+      return l.settingsNoDestination;
     }
     final names = _destinations
         .where((d) => codes.contains(d.$1))
@@ -306,6 +308,7 @@ class SettingsScreen extends StatelessWidget {
 
   void _showThemePicker(BuildContext context, String current) {
     final bloc = context.read<AppPreferencesBloc>();
+    final l = context.l10n;
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -313,10 +316,10 @@ class SettingsScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            for (final opt in const [
-              ('light', 'Clair'),
-              ('dark', 'Sombre'),
-              ('system', 'Auto'),
+            for (final opt in [
+              ('light', l.settingsThemeLight),
+              ('dark', l.settingsThemeDark),
+              ('system', l.settingsThemeAuto),
             ])
               ListTile(
                 title: Text(opt.$2),
@@ -386,8 +389,15 @@ class SettingsScreen extends StatelessWidget {
                 UserPreferencesModel.kLanguageSystem,
                 sheetCtx.l10n.settingsLanguagePhone,
               ),
-              ('fr', 'Français'),
-              if (AppL10n.englishEnabled) ('en', 'English'),
+              (
+                'fr',
+                'Français', // i18n-ignore: nom de la langue dans sa propre langue
+              ),
+              if (AppL10n.englishEnabled)
+                (
+                  'en',
+                  'English', // i18n-ignore: nom de la langue dans sa propre langue
+                ),
             ])
               ListTile(
                 title: Text(opt.$2),
