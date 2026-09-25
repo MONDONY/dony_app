@@ -95,7 +95,7 @@ void main() {
     });
   });
 
-  testWidgets('title and status timeline are translated in English', (
+  testWidgets('title and search form are translated in English', (
     tester,
   ) async {
     useEnglish();
@@ -106,5 +106,21 @@ void main() {
     expect(find.text('Track a parcel'), findsOneWidget);
     expect(find.text('Tracking number'), findsWidgets);
     expect(find.text('Search'), findsOneWidget);
+  });
+
+  // Régression finale F (Mineur 8 de la relecture) : le test précédent
+  // affirmait tester la frise de statut sur TrackingInitial, où elle n'est
+  // jamais rendue. La frise (_StepTimeline) n'apparaît qu'avec un résultat
+  // chargé.
+  testWidgets('status timeline steps are translated in English', (
+    tester,
+  ) async {
+    useEnglish();
+    when(() => bloc.state).thenReturn(TrackingSearchLoaded(_result()));
+
+    await _pump(tester, bloc);
+
+    expect(find.text('Dropped off'), findsOneWidget);
+    expect(find.text('Delivered'), findsOneWidget);
   });
 }

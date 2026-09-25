@@ -121,7 +121,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       listener: (context, state) {
         if (state is QrScanSuccess) {
           context.pop(); // close sheet
-          _showSuccessDialog(state.event.stepLabel(l));
+          _showSuccessDialog(state.event.eventType, state.event.stepLabel(l));
         } else if (state is QrScanQueued) {
           context.pop(); // close sheet
           _showQueuedDialog();
@@ -453,11 +453,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     );
   }
 
-  void _showSuccessDialog(String label) {
+  void _showSuccessDialog(String eventType, String label) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
-    final isFinal = isFinalDeliveryStep(label);
+    final isFinal = isFinalDeliveryStep(eventType);
     final mascotteType = isFinal
         ? DonyMascotteType.securise
         : DonyMascotteType.confiant;
@@ -515,15 +515,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   }
 }
 
-/// Renvoie true si le label correspond à une étape de livraison finale.
+/// Renvoie true si le code d'étape correspond à une livraison finale.
 ///
-/// Le `stepLabel` est une chaîne libre côté serveur ; ce matching est
-/// pragmatique pour le MVP. Si un enum d'événement est exposé plus tard,
-/// migrer vers un match d'enum.
-bool isFinalDeliveryStep(String label) {
-  final l = label.toLowerCase();
-  return l.contains('livr') || l.contains('remis') || l.contains('deliver');
-}
+/// Compare `eventType`, la donnée serveur (`DEPART`/`TRANSIT`/`ARRIVEE`),
+/// jamais le libellé traduit affiché à l'écran.
+bool isFinalDeliveryStep(String eventType) => eventType == 'ARRIVEE';
 
 // ── Scan frame overlay ────────────────────────────────────────────────────────
 

@@ -9601,11 +9601,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Pour ta sécurité, garde les échanges et le paiement sur Yadony. Le partage de coordonnées est interdit.';
 
   @override
-  String get chatBlockedIban =>
+  String get chatBlockedBanking =>
       'Le partage de coordonnées bancaires est interdit.';
 
   @override
-  String get chatBlockedLink =>
+  String get chatBlockedUrl =>
       'Les liens externes ne sont pas autorisés dans la messagerie.';
 
   @override
@@ -9797,17 +9797,6 @@ class AppLocalizationsFr extends AppLocalizations {
       locale: localeName,
       other: '$count lectures en attente de synchro',
       one: '$count lecture en attente de synchro',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String scanOfflineCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count lectures hors-ligne',
-      one: '$count lecture hors-ligne',
     );
     return '$_temp0';
   }
@@ -10379,6 +10368,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ratingMyReviewsTitle => 'Mes avis reçus';
+
+  @override
+  String get ratingAuthorFallbackName => 'Utilisateur Yadony';
 
   @override
   String get ratingEmptyTitle => 'Tu n\'as pas encore reçu d\'avis';

@@ -53,26 +53,25 @@ void main() {
     });
   });
 
+  // Régression finale F (Important 6 de la relecture) : la fonction comparait
+  // le libellé traduit (`event.stepLabel(l)`), donc ne reconnaissait jamais
+  // l'étape finale en anglais. Elle compare maintenant `eventType`, le code
+  // d'étape serveur — indépendant de la langue affichée.
   group('isFinalDeliveryStep', () {
-    test('reconnaît "livré" / "livraison" / "Colis livré"', () {
-      expect(isFinalDeliveryStep('Colis livré'), isTrue);
-      expect(isFinalDeliveryStep('Livraison terminée'), isTrue);
-      expect(isFinalDeliveryStep('LIVRÉ'), isTrue);
+    test('reconnaît le code ARRIVEE', () {
+      expect(isFinalDeliveryStep('ARRIVEE'), isTrue);
     });
 
-    test('reconnaît "remis"', () {
-      expect(isFinalDeliveryStep('Remis au destinataire'), isTrue);
-    });
-
-    test('reconnaît "delivered" (fallback EN)', () {
-      expect(isFinalDeliveryStep('Package delivered'), isTrue);
-    });
-
-    test('renvoie false pour étapes intermédiaires', () {
-      expect(isFinalDeliveryStep('Embarqué'), isFalse);
-      expect(isFinalDeliveryStep('En vol'), isFalse);
-      expect(isFinalDeliveryStep('Retiré au point relais'), isFalse);
+    test('renvoie false pour les codes intermédiaires', () {
+      expect(isFinalDeliveryStep('DEPART'), isFalse);
+      expect(isFinalDeliveryStep('TRANSIT'), isFalse);
       expect(isFinalDeliveryStep(''), isFalse);
+    });
+
+    test('indépendant de la langue affichée (anglais)', () {
+      useEnglish();
+      expect(isFinalDeliveryStep('ARRIVEE'), isTrue);
+      expect(isFinalDeliveryStep('DEPART'), isFalse);
     });
   });
 }

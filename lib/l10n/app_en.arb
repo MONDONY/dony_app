@@ -5306,12 +5306,12 @@
   "@chatBlockedContact": {
     "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'contact' de ChatMessageValidator."
   },
-  "chatBlockedIban": "Sharing bank details isn't allowed.",
-  "@chatBlockedIban": {
+  "chatBlockedBanking": "Sharing bank details isn't allowed.",
+  "@chatBlockedBanking": {
     "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'banking' de ChatMessageValidator."
   },
-  "chatBlockedLink": "External links aren't allowed in messages.",
-  "@chatBlockedLink": {
+  "chatBlockedUrl": "External links aren't allowed in messages.",
+  "@chatBlockedUrl": {
     "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'url' de ChatMessageValidator."
   },
   "chatBlockedProfanity": "Keep it polite: this message contains banned words.",
@@ -5412,7 +5412,7 @@
   "@conversationListArchivedTooltip": {
     "description": "Tooltip du bouton d'accès aux archives de conversation_list_screen.dart."
   },
-  "conversationListSearchHint": "Search a conversation…",
+  "conversationListSearchHint": "Search conversations…",
   "@conversationListSearchHint": {
     "description": "Texte indicatif de la barre de recherche de conversation_list_screen.dart."
   },
@@ -5560,15 +5560,6 @@
       }
     }
   },
-  "scanOfflineCount": "{count, plural, =1{{count} offline scan} other{{count} offline scans}}",
-  "@scanOfflineCount": {
-    "description": "Titre de la feuille de file d'attente hors-ligne (offline_queue_bottom_sheet.dart).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "scanQueueSafe": "{count, plural, =1{{count} scan pending. We'll send it as soon as you're back online.} other{{count} scans pending. We'll send them as soon as you're back online.}}",
   "@scanQueueSafe": {
     "description": "Bandeau d'alerte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _AlertBanner) : corrige l'accord faux à 1 (\"1 lectures\").",
@@ -5689,7 +5680,7 @@
   "@scanRemovePhotoSemantics": {
     "description": "Libellé Semantics du bouton de suppression de la photo prise (qr_scanner_screen.dart, _ScanConfirmSheet)."
   },
-  "scanGpsLocationSaved": "GPS location saved",
+  "scanGpsLocationSaved": "GPS location recorded",
   "@scanGpsLocationSaved": {
     "description": "Repli affiché quand une position GPS est enregistrée sans libellé de lieu résolu (qr_scanner_screen.dart, scan_confirm_screen.dart)."
   },
@@ -5798,7 +5789,7 @@
   "@scanHistorySectionTitle": {
     "description": "Titre de la section historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection)."
   },
-  "scanNoHistoryYet": "No scan yet",
+  "scanNoHistoryYet": "No scans yet",
   "@scanNoHistoryYet": {
     "description": "Message vide de l'historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection)."
   },
@@ -5862,7 +5853,7 @@
   "@scanQrPickerHint": {
     "description": "Texte d'aide de l'écran de lecture QR générique (qr_picker_screen.dart)."
   },
-  "scanOfflineEventPickupLabel": "pickup",
+  "scanOfflineEventPickupLabel": "collection",
   "@scanOfflineEventPickupLabel": {
     "description": "Libellé court de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
   },
@@ -5878,7 +5869,7 @@
   "@scanOfflineEventDefaultLabel": {
     "description": "Libellé court de repli pour un événement non reconnu dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
   },
-  "scanOfflineDescPickup": "Pickup recorded",
+  "scanOfflineDescPickup": "Collection recorded",
   "@scanOfflineDescPickup": {
     "description": "Description de l'événement PICKUP dans la file d'attente hors-ligne (offline_scan_queue_screen.dart)."
   },
@@ -6152,7 +6143,7 @@
   "@deliveryNoShowTravelerNotDeliveringTitle": {
     "description": "Titre de la cellule côté expéditeur (delivery_noshow_cta_cell.dart, isSender: true)."
   },
-  "deliveryNoShowReportAbsentRecipientTitle": "Report the recipient's absence",
+  "deliveryNoShowReportAbsentRecipientTitle": "Report the recipient's no-show",
   "@deliveryNoShowReportAbsentRecipientTitle": {
     "description": "Titre de la cellule côté voyageur (delivery_noshow_cta_cell.dart, isSender: false)."
   },
@@ -6164,11 +6155,11 @@
   "@deliveryNoShowReportAbsentRecipientSubtitle": {
     "description": "Sous-titre de la cellule côté voyageur (delivery_noshow_cta_cell.dart, isSender: false)."
   },
-  "deliveryNoShowTravelerAbsentSheetTitle": "Didn't the traveler show up for the handover?",
+  "deliveryNoShowTravelerAbsentSheetTitle": "The traveler didn't show up for the handover?",
   "@deliveryNoShowTravelerAbsentSheetTitle": {
     "description": "Titre de la sheet de confirmation côté expéditeur (delivery_noshow_cta_cell.dart, _showSheet, isSender: true)."
   },
-  "deliveryNoShowRecipientAbsentSheetTitle": "Didn't the recipient show up for the handover?",
+  "deliveryNoShowRecipientAbsentSheetTitle": "The recipient didn't show up for the handover?",
   "@deliveryNoShowRecipientAbsentSheetTitle": {
     "description": "Titre de la sheet de confirmation côté voyageur (delivery_noshow_cta_cell.dart, _showSheet, isSender: false)."
   },
@@ -6251,7 +6242,7 @@
   "@ratingSubtitle": {
     "description": "Sous-titre de la sheet RatingBottomSheet.show (rating_bottom_sheet.dart)."
   },
-  "ratingSubmitAction": "Send review",
+  "ratingSubmitAction": "Send rating",
   "@ratingSubmitAction": {
     "description": "Bouton sticky de la sheet RatingBottomSheet.show (rating_bottom_sheet.dart)."
   },
@@ -6263,7 +6254,7 @@
   "@ratingCommentHint": {
     "description": "Hint du champ commentaire (rating_bottom_sheet.dart)."
   },
-  "ratingThanksSnackbar": "Thanks for your review!",
+  "ratingThanksSnackbar": "Thanks for your rating!",
   "@ratingThanksSnackbar": {
     "description": "Snackbar de succès après soumission d'un avis (rating_bottom_sheet.dart)."
   },
@@ -6285,9 +6276,13 @@
       }
     }
   },
-  "ratingMyReviewsTitle": "My reviews",
+  "ratingMyReviewsTitle": "Reviews received",
   "@ratingMyReviewsTitle": {
     "description": "Titre de l'écran MyReviewsScreen (my_reviews_screen.dart)."
+  },
+  "ratingAuthorFallbackName": "Yadony user",
+  "@ratingAuthorFallbackName": {
+    "description": "Nom de repli d'un auteur d'avis sans nom (my_reviews_screen.dart, _ReviewItem). Clé dédiée : distincte de requestSenderFallbackName (R40, préfixe non partagé)."
   },
   "ratingEmptyTitle": "You haven't received any reviews yet",
   "@ratingEmptyTitle": {
@@ -6342,7 +6337,7 @@
       }
     }
   },
-  "ratingQuotedComment": "\"{comment}\"",
+  "ratingQuotedComment": "“{comment}”",
   "@ratingQuotedComment": {
     "description": "Commentaire d'un avis entre guillemets (my_reviews_screen.dart, _ReviewItem).",
     "placeholders": {

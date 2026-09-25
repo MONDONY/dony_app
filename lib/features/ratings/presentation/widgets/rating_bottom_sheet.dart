@@ -22,7 +22,7 @@ class RatingBottomSheet extends StatefulWidget {
 
   final String bidId;
   // Nullable : un appelant qui évalue l'expéditeur (isTravelerRating: true)
-  // n'a pas besoin de fournir de nom, le titre complet vient de F3.
+  // n'a pas besoin de fournir de nom, le titre complet est fixe (ratingRateSender).
   final String? travelerName;
   final ValueNotifier<int>? starsNotifier;
   final void Function(VoidCallback)? onSubmitReady;
@@ -34,6 +34,10 @@ class RatingBottomSheet extends StatefulWidget {
     String? travelerName,
     bool isTravelerRating = false,
   }) {
+    assert(
+      isTravelerRating || travelerName != null,
+      'travelerName est requis quand isTravelerRating est false (le titre affiche le nom du voyageur).', // i18n-ignore
+    );
     final ratingBloc = context.read<RatingBloc>();
     final l = context.l10n;
     final starsNotifier = ValueNotifier<int>(0);

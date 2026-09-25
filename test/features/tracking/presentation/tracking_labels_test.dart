@@ -78,18 +78,6 @@ void main() {
     });
   });
 
-  group('scanOfflineCount', () {
-    test('0 — fr (égal à l\'ancien code)', () {
-      expect(fr.scanOfflineCount(0), '0 lecture hors-ligne');
-    });
-    test('1 — fr', () {
-      expect(fr.scanOfflineCount(1), '1 lecture hors-ligne');
-    });
-    test('3 — fr (égal à l\'ancien code)', () {
-      expect(fr.scanOfflineCount(3), '3 lectures hors-ligne');
-    });
-  });
-
   group('scanQueueSafe', () {
     test('1 — fr (nouveau rendu, accord corrigé)', () {
       expect(

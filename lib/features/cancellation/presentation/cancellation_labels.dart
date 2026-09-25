@@ -10,11 +10,12 @@ import 'package:dony/l10n/l10n.dart';
 String cancellationReasonLabel(AppLocalizations l, String reason) {
   return switch (reason) {
     'Vol annulé' => l.cancellationReasonFlightCanceled, // i18n-ignore
-    'Urgence personnelle' => l.cancellationReasonPersonalEmergency,
+    'Urgence personnelle' => // i18n-ignore
+    l.cancellationReasonPersonalEmergency,
     'Problème de santé' => l.cancellationReasonHealthIssue, // i18n-ignore
     "Changement d'itinéraire" => // i18n-ignore
     l.cancellationReasonItineraryChange,
-    'Autre' => l.cancellationReasonOther,
+    'Autre' => l.cancellationReasonOther, // i18n-ignore
     _ => reason,
   };
 }

@@ -89,7 +89,6 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
       return _otherCtrl.text.trim();
     }
     if (_selectedReason == 'Autre') {
-      // i18n-ignore
       return null; // require text when "Autre"
     }
     return _selectedReason;
@@ -193,7 +192,6 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
 
           // "Autre" text field
           if (_selectedReason == 'Autre') ...[
-            // i18n-ignore
             const SizedBox(height: DonySpacing.md),
             DonyTextField(
               controller: _otherCtrl,

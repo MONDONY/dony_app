@@ -10423,12 +10423,12 @@
   "@chatBlockedContact": {
     "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'contact' de ChatMessageValidator."
   },
-  "chatBlockedIban": "Le partage de coordonnées bancaires est interdit.",
-  "@chatBlockedIban": {
+  "chatBlockedBanking": "Le partage de coordonnées bancaires est interdit.",
+  "@chatBlockedBanking": {
     "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'banking' de ChatMessageValidator."
   },
-  "chatBlockedLink": "Les liens externes ne sont pas autorisés dans la messagerie.",
-  "@chatBlockedLink": {
+  "chatBlockedUrl": "Les liens externes ne sont pas autorisés dans la messagerie.",
+  "@chatBlockedUrl": {
     "description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'url' de ChatMessageValidator."
   },
   "chatBlockedProfanity": "Reste courtois : ce message contient des termes interdits.",
@@ -10671,15 +10671,6 @@
   "scanPendingSync": "{count, plural, =1{{count} lecture en attente de synchro} other{{count} lectures en attente de synchro}}",
   "@scanPendingSync": {
     "description": "Bandeau de synchro du hub Scan & Suivi (scan_hub_screen.dart, _SyncBanner).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "scanOfflineCount": "{count, plural, =1{{count} lecture hors-ligne} other{{count} lectures hors-ligne}}",
-  "@scanOfflineCount": {
-    "description": "Titre de la feuille de file d'attente hors-ligne (offline_queue_bottom_sheet.dart).",
     "placeholders": {
       "count": {
         "type": "int"
@@ -11405,6 +11396,10 @@
   "ratingMyReviewsTitle": "Mes avis reçus",
   "@ratingMyReviewsTitle": {
     "description": "Titre de l'écran MyReviewsScreen (my_reviews_screen.dart)."
+  },
+  "ratingAuthorFallbackName": "Utilisateur Yadony",
+  "@ratingAuthorFallbackName": {
+    "description": "Nom de repli d'un auteur d'avis sans nom (my_reviews_screen.dart, _ReviewItem). Clé dédiée : distincte de requestSenderFallbackName (R40, préfixe non partagé)."
   },
   "ratingEmptyTitle": "Tu n'as pas encore reçu d'avis",
   "@ratingEmptyTitle": {

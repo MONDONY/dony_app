@@ -10,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
@@ -40,6 +41,25 @@ final _summaryWithReviews = RatingSummary(
       excluded: false,
     ),
     RatingItem(stars: 4, createdAt: DateTime.utc(2026, 4), excluded: false),
+  ],
+  page: 0,
+  totalPages: 1,
+);
+
+// Régression finale F : 'd MMM yyyy' fixe (AppL10n.localeName) + toUpperCase
+// → DateFormat.yMMMd(l.localeName).toUpperCase(). Rendu fr identique à
+// l'ancien motif.
+final _summaryWithDatedReview = RatingSummary(
+  averageRating: 5,
+  ratingCount: 1,
+  distribution: const {1: 0, 2: 0, 3: 0, 4: 0, 5: 1},
+  ratings: [
+    RatingItem(
+      stars: 5,
+      comment: 'Très bien !',
+      createdAt: DateTime(2026, 10, 6, 14, 5),
+      excluded: false,
+    ),
   ],
   page: 0,
   totalPages: 1,
@@ -130,6 +150,32 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('4.5'), findsOneWidget);
+  });
+
+  testWidgets('shows review date like the old fr pattern', (tester) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(MyReviewsLoaded(summary: _summaryWithDatedReview));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('6 OCT. 2026'), findsOneWidget);
+  });
+
+  testWidgets('shows review date in English', (tester) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(MyReviewsLoaded(summary: _summaryWithDatedReview));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    final expected = DateFormat.yMMMd(
+      'en',
+    ).format(DateTime(2026, 10, 6, 14, 5)).toUpperCase();
+    expect(find.text(expected), findsOneWidget);
   });
 
   // 5. Affiche les barres de distribution
@@ -223,10 +269,10 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('My reviews'), findsOneWidget);
+    expect(find.text('Reviews received'), findsOneWidget);
     expect(find.text('REVIEWS RECEIVED'), findsOneWidget);
     expect(find.text('From 3 reviews'), findsOneWidget);
-    expect(find.text('"Excellent envoi !"'), findsOneWidget);
+    expect(find.text('“Excellent envoi !”'), findsOneWidget);
     expect(find.text('« Excellent envoi ! »'), findsNothing);
   });
 

@@ -457,28 +457,36 @@ class _StepTimeline extends StatelessWidget {
           dotColor = cs.outline;
         }
 
-        return Column(
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: dotColor,
-                border: isActive
-                    ? Border.all(color: cs.primary, width: 2)
-                    : null,
+        // Expanded (comme les connecteurs) : un libellé anglais plus long
+        // (« Dropped off », « Confirmed ») dépassait sinon la largeur de la
+        // ligne, jamais atteint en français (régression finale F).
+        return Expanded(
+          child: Column(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: dotColor,
+                  border: isActive
+                      ? Border.all(color: cs.primary, width: 2)
+                      : null,
+                ),
               ),
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            Text(
-              steps[stepIdx].$2,
-              style: tt.labelSmall?.copyWith(
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-                color: isActive ? cs.primary : cs.onSurfaceVariant,
+              const SizedBox(height: DonySpacing.sm),
+              Text(
+                steps[stepIdx].$2,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: tt.labelSmall?.copyWith(
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+                  color: isActive ? cs.primary : cs.onSurfaceVariant,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       }),
     );

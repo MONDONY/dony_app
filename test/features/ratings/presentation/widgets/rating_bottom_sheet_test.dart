@@ -150,7 +150,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Rate the sender'), findsOneWidget);
-    expect(find.text('Send review'), findsOneWidget);
+    expect(find.text('Send rating'), findsOneWidget);
   });
 
   testWidgets('titre "Rate {name}" en anglais sans isTravelerRating', (

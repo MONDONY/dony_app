@@ -29,8 +29,8 @@ String chatBlockedMessage(AppLocalizations l, String reason) {
     'duplicate' => l.chatBlockedDuplicate,
     'rate' => l.chatBlockedRate,
     'contact' => l.chatBlockedContact,
-    'banking' => l.chatBlockedIban,
-    'url' => l.chatBlockedLink,
+    'banking' => l.chatBlockedBanking,
+    'url' => l.chatBlockedUrl,
     'profanity' => l.chatBlockedProfanity,
     _ => '',
   };

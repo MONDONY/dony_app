@@ -42,12 +42,13 @@ MessageModel _makeMsg({
   required String body,
   String senderId = 'uid-1',
   MessageType type = MessageType.text,
+  DateTime? sentAt,
 }) => MessageModel(
   id: id,
   senderId: senderId,
   body: body,
   type: type,
-  sentAt: DateTime(2026, 4, 29, 10),
+  sentAt: sentAt ?? DateTime(2026, 4, 29, 10),
 );
 
 Future<void> _pump(WidgetTester tester, ChatBloc bloc) async {
@@ -154,6 +155,37 @@ void main() {
       await _pump(tester, bloc);
 
       expect(find.text('Bonjour, colis reçu !'), findsOneWidget);
+    });
+
+    // Régression finale F : 'd MMMM y' + 'HH:mm' fixes (AppL10n.localeName)
+    // → DateFormat.yMMMMd/.jm(l.localeName). Rendu fr identique à l'ancien
+    // motif pour le séparateur de date et l'horodatage du message.
+    testWidgets(
+      'date separator and message time render like the old fr pattern',
+      (tester) async {
+        final date = DateTime(2026, 10, 6, 14, 5);
+        when(() => bloc.state).thenReturn(
+          ChatLoaded([_makeMsg(id: 'm1', body: 'Bien reçu', sentAt: date)]),
+        );
+        await _pump(tester, bloc);
+
+        expect(find.text('6 octobre 2026'), findsOneWidget);
+        expect(find.text('14:05'), findsOneWidget);
+      },
+    );
+
+    testWidgets('date separator and message time render in English', (
+      tester,
+    ) async {
+      useEnglish();
+      final date = DateTime(2026, 10, 6, 14, 5);
+      when(() => bloc.state).thenReturn(
+        ChatLoaded([_makeMsg(id: 'm1', body: 'Got it', sentAt: date)]),
+      );
+      await _pump(tester, bloc);
+
+      expect(find.text(DateFormat.yMMMMd('en').format(date)), findsOneWidget);
+      expect(find.text(DateFormat.jm('en').format(date)), findsOneWidget);
     });
 
     testWidgets('shows participant name in app bar', (tester) async {

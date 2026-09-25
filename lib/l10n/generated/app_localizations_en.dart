@@ -9542,10 +9542,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'For your safety, keep conversations and payment on Yadony. Sharing contact details isn\'t allowed.';
 
   @override
-  String get chatBlockedIban => 'Sharing bank details isn\'t allowed.';
+  String get chatBlockedBanking => 'Sharing bank details isn\'t allowed.';
 
   @override
-  String get chatBlockedLink => 'External links aren\'t allowed in messages.';
+  String get chatBlockedUrl => 'External links aren\'t allowed in messages.';
 
   @override
   String get chatBlockedProfanity =>
@@ -9621,7 +9621,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get conversationListArchivedTooltip => 'View archived conversations';
 
   @override
-  String get conversationListSearchHint => 'Search a conversation…';
+  String get conversationListSearchHint => 'Search conversations…';
 
   @override
   String get conversationListEmptyResultsTitle => 'No results';
@@ -9740,17 +9740,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String scanOfflineCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count offline scans',
-      one: '$count offline scan',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String scanQueueSafe(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -9845,7 +9834,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanRemovePhotoSemantics => 'Remove the photo';
 
   @override
-  String get scanGpsLocationSaved => 'GPS location saved';
+  String get scanGpsLocationSaved => 'GPS location recorded';
 
   @override
   String get scanPhotoTooLargeFixed =>
@@ -9929,7 +9918,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanHistorySectionTitle => 'SCAN HISTORY';
 
   @override
-  String get scanNoHistoryYet => 'No scan yet';
+  String get scanNoHistoryYet => 'No scans yet';
 
   @override
   String get scanIdentifyTitle => 'Identify the parcel';
@@ -9977,7 +9966,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanQrPickerHint => 'Point at the parcel\'s QR code';
 
   @override
-  String get scanOfflineEventPickupLabel => 'pickup';
+  String get scanOfflineEventPickupLabel => 'collection';
 
   @override
   String get scanOfflineEventTransitLabel => 'transit';
@@ -9989,7 +9978,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanOfflineEventDefaultLabel => 'queued';
 
   @override
-  String get scanOfflineDescPickup => 'Pickup recorded';
+  String get scanOfflineDescPickup => 'Collection recorded';
 
   @override
   String get scanOfflineDescTransit => 'Transit saved';
@@ -10195,7 +10184,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deliveryNoShowReportAbsentRecipientTitle =>
-      'Report the recipient\'s absence';
+      'Report the recipient\'s no-show';
 
   @override
   String get deliveryNoShowTravelerNotDeliveringSubtitle =>
@@ -10207,11 +10196,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deliveryNoShowTravelerAbsentSheetTitle =>
-      'Didn\'t the traveler show up for the handover?';
+      'The traveler didn\'t show up for the handover?';
 
   @override
   String get deliveryNoShowRecipientAbsentSheetTitle =>
-      'Didn\'t the recipient show up for the handover?';
+      'The recipient didn\'t show up for the handover?';
 
   @override
   String get deliveryNoShowConfirmReportAction => 'Confirm the report';
@@ -10285,7 +10274,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ratingSubtitle => 'Your review helps the Yadony community';
 
   @override
-  String get ratingSubmitAction => 'Send review';
+  String get ratingSubmitAction => 'Send rating';
 
   @override
   String get ratingCommentLabel => 'Comment (optional)';
@@ -10294,7 +10283,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ratingCommentHint => 'Share your experience…';
 
   @override
-  String get ratingThanksSnackbar => 'Thanks for your review!';
+  String get ratingThanksSnackbar => 'Thanks for your rating!';
 
   @override
   String ratingStarsSemantics(int index) {
@@ -10313,7 +10302,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get ratingMyReviewsTitle => 'My reviews';
+  String get ratingMyReviewsTitle => 'Reviews received';
+
+  @override
+  String get ratingAuthorFallbackName => 'Yadony user';
 
   @override
   String get ratingEmptyTitle => 'You haven\'t received any reviews yet';
@@ -10360,7 +10352,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String ratingQuotedComment(String comment) {
-    return '\"$comment\"';
+    return '“$comment”';
   }
 
   @override

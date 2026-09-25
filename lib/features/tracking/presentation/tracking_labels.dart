@@ -17,10 +17,7 @@ String trackingStepLabel(AppLocalizations l, String eventType) {
 }
 
 /// Ancienneté d'une lecture hors-ligne, affichée dans la file d'attente
-/// (`offline_scan_queue_screen.dart`, `offline_queue_bottom_sheet.dart`).
-///
-/// Les deux écrans avaient chacun leur propre copie de ce calcul, au
-/// caractère près.
+/// (`offline_scan_queue_screen.dart`).
 String scanRelativeTime(AppLocalizations l, Duration diff) {
   if (diff.inMinutes < 1) return l.scanAgoUnderMinute;
   if (diff.inMinutes < 60) return l.scanAgoMinutes(diff.inMinutes);

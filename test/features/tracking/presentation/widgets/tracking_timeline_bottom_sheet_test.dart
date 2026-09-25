@@ -7,6 +7,8 @@ import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
@@ -15,13 +17,14 @@ class _MockTrackingBloc extends Mock implements TrackingBloc {}
 
 class _FakeTrackingEvent extends Fake implements TrackingEvent {}
 
-TrackingEventModel _event(String type) => TrackingEventModel(
-  id: 'evt-$type',
-  bidId: 'bid-1',
-  eventType: type,
-  scannedAt: DateTime(2026, 6, 20, 10),
-  createdAt: DateTime(2026, 6, 20, 10),
-);
+TrackingEventModel _event(String type, {DateTime? scannedAt}) =>
+    TrackingEventModel(
+      id: 'evt-$type',
+      bidId: 'bid-1',
+      eventType: type,
+      scannedAt: scannedAt ?? DateTime(2026, 6, 20, 10),
+      createdAt: scannedAt ?? DateTime(2026, 6, 20, 10),
+    );
 
 /// Ouvre la sheet de suivi avec un TrackingBloc mocké injecté via GetIt
 /// (c'est `showTrackingTimelineSheet` qui l'instancie lui-même).
@@ -70,8 +73,9 @@ Future<void> _openSheet(
 }
 
 void main() {
-  setUpAll(() {
+  setUpAll(() async {
     registerFallbackValue(_FakeTrackingEvent());
+    await initializeDateFormatting('fr');
   });
 
   late TrackingBloc bloc;
@@ -100,6 +104,35 @@ void main() {
 
     expect(find.byType(RouteMapCard), findsOneWidget);
     expect(find.text('ÉTAPES'), findsOneWidget);
+  });
+
+  // Régression finale F : 'dd/MM/yyyy à HH:mm' fixe → commonDateAtTime avec
+  // DateFormat.yMd/.jm(localeName). Rendu fr identique à l'ancien motif.
+  testWidgets('event date and time render like the old fr pattern', (
+    tester,
+  ) async {
+    final date = DateTime(2026, 10, 6, 14, 5);
+    when(
+      () => bloc.state,
+    ).thenReturn(TrackingEventsLoaded([_event('DEPART', scannedAt: date)]));
+
+    await _openSheet(tester, bloc);
+
+    expect(find.text('06/10/2026 à 14:05'), findsOneWidget);
+  });
+
+  testWidgets('event date and time render in English', (tester) async {
+    useEnglish();
+    final date = DateTime(2026, 10, 6, 14, 5);
+    when(
+      () => bloc.state,
+    ).thenReturn(TrackingEventsLoaded([_event('DEPART', scannedAt: date)]));
+
+    await _openSheet(tester, bloc);
+
+    final expected =
+        '${DateFormat.yMd('en').format(date)} at ${DateFormat.jm('en').format(date)}';
+    expect(find.text(expected), findsOneWidget);
   });
 
   group('instructions de retrait', () {

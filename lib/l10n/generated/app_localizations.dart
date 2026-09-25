@@ -15930,13 +15930,13 @@ abstract class AppLocalizations {
   ///
   /// In fr, this message translates to:
   /// **'Le partage de coordonnées bancaires est interdit.'**
-  String get chatBlockedIban;
+  String get chatBlockedBanking;
 
   /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'url' de ChatMessageValidator.
   ///
   /// In fr, this message translates to:
   /// **'Les liens externes ne sont pas autorisés dans la messagerie.'**
-  String get chatBlockedLink;
+  String get chatBlockedUrl;
 
   /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'profanity' de ChatMessageValidator.
   ///
@@ -16261,12 +16261,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{count, plural, =1{{count} lecture en attente de synchro} other{{count} lectures en attente de synchro}}'**
   String scanPendingSync(int count);
-
-  /// Titre de la feuille de file d'attente hors-ligne (offline_queue_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{{count} lecture hors-ligne} other{{count} lectures hors-ligne}}'**
-  String scanOfflineCount(int count);
 
   /// Bandeau d'alerte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _AlertBanner) : corrige l'accord faux à 1 ("1 lectures").
   ///
@@ -17233,6 +17227,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Mes avis reçus'**
   String get ratingMyReviewsTitle;
+
+  /// Nom de repli d'un auteur d'avis sans nom (my_reviews_screen.dart, _ReviewItem). Clé dédiée : distincte de requestSenderFallbackName (R40, préfixe non partagé).
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateur Yadony'**
+  String get ratingAuthorFallbackName;
 
   /// Titre de l'état vide de MyReviewsScreen (my_reviews_screen.dart, _EmptyView).
   ///

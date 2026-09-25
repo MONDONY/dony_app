@@ -7,6 +7,7 @@ import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
+import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_hub_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
@@ -89,20 +91,23 @@ class _FakePathProviderPlatform extends PathProviderPlatform {
   Future<String?> getDownloadsPath() async => '.dart_tool/test_hive';
 }
 
-AnnouncementModel _trip(String id, {String status = 'IN_PROGRESS'}) =>
-    AnnouncementModel(
-      id: id,
-      travelerId: 'traveler-1',
-      status: status,
-      departureDate: DateTime(2026, 6, 22),
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      availableKg: 10,
-      totalKg: 20,
-      pricePerKg: 5,
-      createdAt: DateTime(2026),
-      updatedAt: DateTime(2026),
-    );
+AnnouncementModel _trip(
+  String id, {
+  String status = 'IN_PROGRESS',
+  DateTime? departureDate,
+}) => AnnouncementModel(
+  id: id,
+  travelerId: 'traveler-1',
+  status: status,
+  departureDate: departureDate ?? DateTime(2026, 6, 22),
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  availableKg: 10,
+  totalKg: 20,
+  pricePerKg: 5,
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
+);
 
 BidModel _bid(String id, String status, {String? recipientName}) => BidModel(
   id: id,
@@ -207,13 +212,14 @@ void main() {
     List<AnnouncementModel>? trips,
     String? selectedTripId,
     Map<String, List<BidModel>>? bidsByTrip,
+    List<TripScanHistoryEntryModel>? scanHistory,
   }) {
     final resolvedTrips = trips ?? [_trip('trip-1')];
     return ScanHubLoaded(
       trips: resolvedTrips,
       selectedTripId: selectedTripId ?? resolvedTrips.first.id,
       bidsByTrip: bidsByTrip ?? {resolvedTrips.first.id: []},
-      scanHistory: const [],
+      scanHistory: scanHistory ?? const [],
     );
   }
 
@@ -246,6 +252,49 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Paris'), findsOneWidget);
     expect(find.textContaining('Dakar'), findsOneWidget);
+  });
+
+  // Régression finale F : 'd MMMM yyyy' + 'HH:mm' fixes (AppL10n.localeName)
+  // → DateFormat.yMMMMd/.jm(l.localeName). Rendu fr identique à l'ancien
+  // motif pour la date de départ du hero et l'historique des scans.
+  testWidgets(
+    'departure date and scan history time render like the old fr pattern',
+    (tester) async {
+      final date = DateTime(2026, 10, 6, 14, 5);
+      when(() => cubit.state).thenReturn(
+        loadedState(
+          trips: [_trip('trip-1', departureDate: date)],
+          scanHistory: [
+            TripScanHistoryEntryModel(eventType: 'DEPART', scannedAt: date),
+          ],
+        ),
+      );
+      await tester.pumpWidget(_wrap(cubit));
+      await tester.pumpAndSettle();
+
+      expect(find.text('6 octobre 2026'), findsOneWidget);
+      expect(find.text('14:05'), findsOneWidget);
+    },
+  );
+
+  testWidgets('departure date and scan history time render in English', (
+    tester,
+  ) async {
+    useEnglish();
+    final date = DateTime(2026, 10, 6, 14, 5);
+    when(() => cubit.state).thenReturn(
+      loadedState(
+        trips: [_trip('trip-1', departureDate: date)],
+        scanHistory: [
+          TripScanHistoryEntryModel(eventType: 'DEPART', scannedAt: date),
+        ],
+      ),
+    );
+    await tester.pumpWidget(_wrap(cubit));
+    await tester.pumpAndSettle();
+
+    expect(find.text(DateFormat.yMMMMd('en').format(date)), findsOneWidget);
+    expect(find.text(DateFormat.jm('en').format(date)), findsOneWidget);
   });
 
   testWidgets('affiche état vide quand ScanHubEmpty', (tester) async {

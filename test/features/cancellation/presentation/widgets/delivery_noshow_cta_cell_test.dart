@@ -144,12 +144,12 @@ void main() {
         bloc,
       ),
     );
-    expect(find.text("Report the recipient's absence"), findsOneWidget);
+    expect(find.text("Report the recipient's no-show"), findsOneWidget);
 
-    await tester.tap(find.text("Report the recipient's absence"));
+    await tester.tap(find.text("Report the recipient's no-show"));
     await tester.pumpAndSettle();
     expect(
-      find.text("Didn't the recipient show up for the handover?"),
+      find.text("The recipient didn't show up for the handover?"),
       findsOneWidget,
     );
     expect(find.text('Confirm the report'), findsOneWidget);

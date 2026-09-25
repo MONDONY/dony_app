@@ -432,7 +432,7 @@ class _ReviewItem extends StatelessWidget {
     ).format(item.createdAt).toUpperCase();
     final name = (item.authorName?.trim().isNotEmpty ?? false)
         ? item.authorName!.trim()
-        : l.requestSenderFallbackName;
+        : l.ratingAuthorFallbackName;
     final corridor = _corridor;
 
     return Padding(
