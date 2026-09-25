@@ -10,6 +10,12 @@ void main() {
       expect(formatWeightKg(l, 4.5), '4,5 kg');
     });
 
+    test('fr : cas limite, un poids qui s\'arrondit à un entier perd sa '
+        'décimale (4,04 → « 4 kg », déclaré en PR)', () {
+      final l = lookupAppLocalizations(AppL10n.fr);
+      expect(formatWeightKg(l, 4.04), '4 kg');
+    });
+
     test('en : entier sans décimale, décimale avec point', () {
       final l = lookupAppLocalizations(AppL10n.en);
       expect(formatWeightKg(l, 4.0), '4 kg');

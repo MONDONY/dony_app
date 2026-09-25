@@ -293,7 +293,7 @@ void main() {
 
       final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
       expect(semantics.value, 'Step 3 of 5');
-      expect(semantics.label, startsWith('Signup progress'));
+      expect(semantics.label, startsWith('Sign-up progress'));
     });
 
     testWidgets('total atteint, 0 / 1 / 2', (tester) async {

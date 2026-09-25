@@ -34,7 +34,8 @@ class ForceUpdateScreen extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     // Cet écran peut s'afficher avant que la langue de l'app ne soit connue
     // (bloquant, planté avant tout parcours) : context.l10n retombe alors
-    // sur AppL10n.current (français) plutôt que de planter.
+    // sur AppL10n.current (langue effective, pas systématiquement le
+    // français) plutôt que de planter.
     final l = context.l10n;
 
     return PopScope(

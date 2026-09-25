@@ -1,5 +1,6 @@
 import 'package:dony/core/currency/converted_price.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -114,7 +115,7 @@ void main() {
       convertedCurrency: 'XOF',
     );
 
-    expect(find.textContaining('about'), findsOneWidget);
+    expect(find.text('about ${formatPriceIn(6560, 'XOF')}/kg'), findsOneWidget);
     expect(find.textContaining('environ'), findsNothing);
   });
 }

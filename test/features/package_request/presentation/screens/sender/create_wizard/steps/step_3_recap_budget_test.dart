@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
@@ -568,6 +569,41 @@ void main() {
         find.textContaining('les voyageurs sur ce trajet sont prévenus'),
         findsOneWidget,
       );
+    });
+
+    group('commission au taux décimal — virgule fr, point en', () {
+      // Décimale au point en anglais (avant ce correctif, la virgule
+      // française restait figée par un `toStringAsFixed(1).replaceFirst('.',
+      // ',')`).
+      setUp(() => setDonyCommissionRate(0.125));
+      tearDown(() => setDonyCommissionRate(kDonyCommissionRateDefault));
+
+      testWidgets('fr : « Commission Yadony (12,5 %) »', (tester) async {
+        const seed = PackageRequestFormState(totalBudgetEur: 40);
+        await tester.pumpWidget(
+          wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+        );
+        await tester.pump();
+
+        expect(
+          find.textContaining('Commission Yadony (12,5 %)'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('en : « Yadony service fee (12.5%) »', (tester) async {
+        useEnglish();
+        const seed = PackageRequestFormState(totalBudgetEur: 40);
+        await tester.pumpWidget(
+          wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+        );
+        await tester.pump();
+
+        expect(
+          find.textContaining('Yadony service fee (12.5%)'),
+          findsOneWidget,
+        );
+      });
     });
   });
 }

@@ -13828,7 +13828,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dsConfirmSelection => 'Confirm selection';
 
   @override
-  String get dsSignupProgress => 'Signup progress';
+  String get dsSignupProgress => 'Sign-up progress';
 
   @override
   String dsGaugeCurrentStep(int index, int total) {
@@ -14003,7 +14003,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get currencyPublishBannerDescriptionUnknown =>
-      'The posting currency is verified by Yadony before publishing.';
+      'The posting currency is verified by Yadony before posting.';
 
   @override
   String currencyPublishBannerSemanticsKnown(
@@ -14016,7 +14016,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get currencyPublishBannerSemanticsUnknown =>
-      'Posting currency to be confirmed by Yadony before publishing.';
+      'Posting currency to be confirmed by Yadony before posting.';
 
   @override
   String currencyApprox(String amount) {

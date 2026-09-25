@@ -46,6 +46,12 @@ class ContentCategory {
 /// Catalogue embarqué, identique au catalogue backend
 /// (`GET /config/content-categories`). Filet de sécurité hors ligne : utilisé
 /// quand l'appel réseau échoue, pour ne jamais bloquer un formulaire.
+///
+/// Chaque `label` est une valeur de donnée (comparée, stockée, envoyée au
+/// serveur) : elle ne s'affiche jamais telle quelle, seulement via
+/// [contentCategoryDisplayName]. Tous les libellés ci-dessous sont donc des
+/// faux positifs du garde-fou, même ceux sans accent que `// i18n-ignore` ne
+/// marque pas un par un.
 const List<ContentCategory> fallbackCatalog = [
   ContentCategory(
     code: 'DOCUMENTS',

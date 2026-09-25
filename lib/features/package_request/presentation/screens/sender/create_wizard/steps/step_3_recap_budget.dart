@@ -25,6 +25,7 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 /// Étape 3 / 3 — Budget & photo (match maquette `v3/expéditeur_publie`).
 ///
@@ -717,7 +718,7 @@ class _BudgetBreakdown extends StatelessWidget {
     final promoApplied = quote?.promoApplied ?? false;
     final boost = promoApplied ? net - netBase : 0.0;
     final hasRealBoost = boost > 0.005;
-    final ratePct = _ratePercentLabel(rate);
+    final ratePct = _ratePercentLabel(l10n, rate);
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -800,12 +801,11 @@ class _BudgetBreakdown extends StatelessWidget {
     ],
   );
 
-  /// Libellé pourcentage : entier si rond, sinon 1 décimale virgule FR.
-  String _ratePercentLabel(double rate) {
+  /// Libellé pourcentage à la langue effective : entier si rond, sinon 1
+  /// décimale (virgule en français, point en anglais).
+  String _ratePercentLabel(AppLocalizations l10n, double rate) {
     final pct = rate * 100;
-    return pct % 1 == 0
-        ? pct.toStringAsFixed(0)
-        : pct.toStringAsFixed(1).replaceFirst('.', ',');
+    return NumberFormat('#0.#', l10n.localeName).format(pct);
   }
 }
 

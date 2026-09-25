@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
@@ -630,6 +631,30 @@ void main() {
       expect(find.text('Pay securely'), findsOneWidget);
       expect(find.text('Total to settle'), findsOneWidget);
       expect(find.textContaining('Pay ('), findsOneWidget);
+    });
+  });
+
+  group('commission au taux décimal — virgule fr, point en', () {
+    // Décimale au point en anglais (avant ce correctif, la virgule française
+    // restait figée par un `toStringAsFixed(1).replaceFirst('.', ',')`).
+    setUp(() => setDonyCommissionRate(0.125));
+    tearDown(() => setDonyCommissionRate(kDonyCommissionRateDefault));
+
+    testWidgets('fr : « Commission Yadony (12,5 %) »', (tester) async {
+      await tester.pumpWidget(_buildApp(bloc: bloc, grossPriceEur: 39.20));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Commission Yadony (12,5 %)'), findsOneWidget);
+    });
+
+    testWidgets('en : « Yadony service fee (12.5%) »', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_buildApp(bloc: bloc, grossPriceEur: 39.20));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Yadony service fee (12.5%)'), findsOneWidget);
     });
   });
 }

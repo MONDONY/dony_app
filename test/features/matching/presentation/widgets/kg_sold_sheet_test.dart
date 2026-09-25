@@ -182,6 +182,9 @@ void main() {
     // régression qui laisserait « Départ le » en anglais passerait
     // inaperçue avec un seul textContaining('Sep 12').
     expect(find.textContaining('Departed Sep 12'), findsOneWidget);
+    // Décimale au point en anglais (avant ce correctif, la virgule
+    // française restait figée par un `replaceAll('.', ',')`).
+    expect(find.text('2.5 kg'), findsOneWidget);
   });
 
   testWidgets('erreur : « Détail indisponible », « Réessayer » recharge', (

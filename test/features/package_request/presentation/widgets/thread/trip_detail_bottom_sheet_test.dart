@@ -3,6 +3,7 @@ import 'package:dony/features/package_request/data/models/linked_trip_summary.da
 import 'package:dony/features/package_request/presentation/widgets/thread/trip_detail_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
 
@@ -63,6 +64,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Date de départ'), findsOneWidget);
     });
+
+    testWidgets(
+      'fr : rendu historique du mois abrégé sans point (« 6 oct 2026 »)',
+      (tester) async {
+        await tester.pumpWidget(_buildApp(_trip(date: '2026-10-06')));
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
+        expect(find.text('6 oct 2026'), findsOneWidget);
+      },
+    );
 
     testWidgets('shows departure time when provided', (tester) async {
       await tester.pumpWidget(_buildApp(_trip(time: '10:30')));
@@ -173,6 +184,17 @@ void main() {
       expect(find.text('Drop-off address'), findsOneWidget);
       expect(find.text('Delivery address'), findsOneWidget);
       expect(find.text('Decline this trip'), findsOneWidget);
+    });
+
+    testWidgets('en : la date passe par DateFormat.yMMMd', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_buildApp(_trip(date: '2026-10-06')));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(DateFormat.yMMMd('en').format(DateTime(2026, 10, 6))),
+        findsOneWidget,
+      );
     });
   });
 }

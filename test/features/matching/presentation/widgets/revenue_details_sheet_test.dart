@@ -364,6 +364,58 @@ void main() {
     },
   );
 
+  testWidgets(
+    'en anglais, poids arrondi : 2.04 kg affiche « 2 kg », 2.46 kg affiche « 2.5 kg »',
+    (tester) async {
+      await initializeDateFormatting('en');
+      useEnglish();
+      final weightDetails = RevenueDetailsModel(
+        period: '30d',
+        deliveries: 2,
+        groups: [
+          RevenueGroupModel(
+            currency: 'EUR',
+            total: 200,
+            deliveries: 2,
+            items: [
+              RevenueItemModel(
+                departureCity: 'Paris',
+                arrivalCity: 'Dakar',
+                date: DateTime(2026, 9),
+                weightKg: 2.04,
+                rail: RevenueRail.card,
+                amount: 100,
+              ),
+              RevenueItemModel(
+                departureCity: 'Lyon',
+                arrivalCity: 'Abidjan',
+                date: DateTime(2026, 9, 2),
+                weightKg: 2.46,
+                rail: RevenueRail.card,
+                amount: 100,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      whenListen(
+        cubit,
+        const Stream<RevenueDetailsState>.empty(),
+        initialState: RevenueDetailsState(
+          status: RevenueDetailsStatus.loaded,
+          details: weightDetails,
+        ),
+      );
+
+      await tester.pumpWidget(_harness(cubit));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('2 kg ·'), findsOneWidget);
+      expect(find.textContaining('2.5 kg ·'), findsOneWidget);
+    },
+  );
+
   testWidgets('aucune livraison : état vide', (tester) async {
     whenListen(
       cubit,
@@ -400,10 +452,9 @@ void main() {
     expect(find.text('3 deliveries'), findsOneWidget);
     expect(find.text('2 deliveries'), findsOneWidget);
     expect(find.textContaining('4 kg · Card'), findsOneWidget);
-    // `_kg` garde une virgule décimale quelle que soit la langue (même bug
-    // que `formatWeightKg`, confié au lot E des paiements par la Ruling R30
-    // de progress.md) : non corrigé ici, hors périmètre de cette tâche.
-    expect(find.textContaining('2,5 kg · Cash'), findsOneWidget);
+    // Décimale au point en anglais : `_kg` délègue désormais à
+    // `formatWeightKg`, qui suit la langue (relecture finale du lot J).
+    expect(find.textContaining('2.5 kg · Cash'), findsOneWidget);
   });
 
   testWidgets(
