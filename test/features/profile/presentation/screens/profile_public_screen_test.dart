@@ -19,6 +19,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
 class MockProfilePublicBloc
@@ -75,6 +77,32 @@ ProfilePublicModel profileWith({
     languages: languages,
   );
 }
+
+const _profileOneReview = ProfilePublicModel(
+  userId: _userId,
+  displayName: 'Fatou Diallo',
+  kycVerified: false,
+  isProAccount: false,
+  isKiloPro: false,
+  completedBidsCount: 3,
+  averageRating: 4.5,
+  ratingCount: 1,
+  memberSince: 'mars 2025',
+  badges: [],
+);
+
+const _profileTwelveReviews = ProfilePublicModel(
+  userId: _userId,
+  displayName: 'Fatou Diallo',
+  kycVerified: false,
+  isProAccount: false,
+  isKiloPro: false,
+  completedBidsCount: 3,
+  averageRating: 4.5,
+  ratingCount: 12,
+  memberSince: 'mars 2025',
+  badges: [],
+);
 
 final _ratingSummary = RatingSummary(
   averageRating: 4.8,
@@ -859,5 +887,72 @@ void main() {
 
       expect(find.text(entry.value, skipOffstage: false), findsOneWidget);
     }
+  });
+
+  // ── 12. Ligne méta (rating/avis/memberSince) ──────────────────────────────
+
+  testWidgets('ligne méta : singulier "1 avis" en français', (tester) async {
+    await tester.pumpWidget(_wrapLoaded(profile: _profileOneReview));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      find.textContaining('4,5 · 1 avis · mars 2025', skipOffstage: false),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('ligne méta : "12 avis" en français (pas de forme spéciale)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrapLoaded(profile: _profileTwelveReviews));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      find.textContaining('4,5 · 12 avis · mars 2025', skipOffstage: false),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'anglais : ligne méta, pastilles PRO/vérifié et statistiques traduites',
+    (tester) async {
+      useEnglish();
+      const profile = ProfilePublicModel(
+        userId: _userId,
+        displayName: 'Fatou Diallo',
+        kycVerified: true,
+        isProAccount: true,
+        isKiloPro: false,
+        completedBidsCount: 3,
+        averageRating: 4.5,
+        ratingCount: 1,
+        memberSince: 'mars 2025',
+        badges: [],
+      );
+
+      await tester.pumpWidget(_wrapLoaded(profile: profile));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.textContaining('4.5 · 1 review · mars 2025', skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(find.text('✓ Verified', skipOffstage: false), findsOneWidget);
+      expect(find.text('Pro', skipOffstage: false), findsOneWidget);
+      expect(find.text('Rating', skipOffstage: false), findsOneWidget);
+      expect(find.text('Deliveries', skipOffstage: false), findsOneWidget);
+    },
+  );
+
+  testWidgets('anglais : douze avis traduits en "12 reviews"', (tester) async {
+    useEnglish();
+
+    await tester.pumpWidget(_wrapLoaded(profile: _profileTwelveReviews));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      find.textContaining('4.5 · 12 reviews · mars 2025', skipOffstage: false),
+      findsOneWidget,
+    );
   });
 }

@@ -189,6 +189,7 @@ const _sameInBothLanguages = <String>{
   'profileFieldEmailAllCaps', // « EMAIL » se dit pareil (tâche G2)
   'profileLanguageWolof', // « Wolof » se dit pareil (tâche G2)
   'profileLanguageBambara', // « Bambara » se dit pareil (tâche G2)
+  'profilePublicBadgesSectionLabel', // « BADGES » se dit pareil (tâche G3)
 };
 
 void main() {

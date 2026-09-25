@@ -19,136 +19,130 @@ class FaqScreen extends StatefulWidget {
 }
 
 class _FaqScreenState extends State<FaqScreen> {
-  // `final` (pas `const`) : les réponses de tarification interpolent les
-  // valeurs courantes chargées depuis le backend.
-  static List<_FaqSectionData> get _sections => <_FaqSectionData>[
-    const _FaqSectionData(
+  // Fonction (pas un champ figé) : les réponses de tarification interpolent
+  // les valeurs courantes chargées depuis le backend, et tout le contenu suit
+  // la langue active — jamais de texte traduit gardé dans le State.
+  static List<_FaqSectionData> _sections(
+    AppLocalizations l,
+  ) => <_FaqSectionData>[
+    _FaqSectionData(
       id: 'account',
-      title: 'Compte & identité',
+      title: l.faqAccountTitle,
       iconAsset: 'shield-check',
       items: [
         _FaqItem(
           id: 'identity_required',
-          q: 'Pourquoi la vérification d\'identité est-elle obligatoire ?',
-          a: 'Elle peut être demandée par nos partenaires de paiement et par les obligations applicables à certaines transactions. Elle nous permet aussi de lutter contre la fraude et de protéger les utilisateurs de Yadony.',
+          q: l.faqAccountIdentityRequiredQ,
+          a: l.faqAccountIdentityRequiredA,
         ),
         _FaqItem(
           id: 'identity_delay',
-          q: 'Combien de temps prend la validation ?',
-          a: 'La validation est souvent réalisée en quelques minutes. Si une vérification manuelle est nécessaire, le délai peut être plus long.',
+          q: l.faqAccountIdentityDelayQ,
+          a: l.faqAccountIdentityDelayA,
         ),
         _FaqItem(
           id: 'identity_documents',
-          q: 'Quels documents sont acceptés ?',
-          a: "Carte nationale d'identité, passeport ou titre de séjour en cours de validité. Le document doit être lisible et non expiré.",
+          q: l.faqAccountIdentityDocumentsQ,
+          a: l.faqAccountIdentityDocumentsA,
         ),
         _FaqItem(
           id: 'without_identity',
-          q: 'Puis-je utiliser Yadony sans vérifier mon identité ?',
-          a: 'Tu peux explorer les annonces sans vérifier ton identité. Certaines actions, notamment envoyer, transporter ou recevoir des paiements, peuvent nécessiter une vérification.',
+          q: l.faqAccountWithoutIdentityQ,
+          a: l.faqAccountWithoutIdentityA,
         ),
       ],
     ),
-    const _FaqSectionData(
+    _FaqSectionData(
       id: 'announcements',
-      title: 'Annonces & demandes',
+      title: l.faqAnnouncementsTitle,
       iconAsset: 'package',
       items: [
         _FaqItem(
           id: 'publish_trip',
-          q: 'Comment publier un trajet en tant que voyageur ?',
-          a: 'Depuis Accueil ou Activités, choisis "Publier un trajet". Renseigne la ville de départ, la destination, la date et la capacité disponible.',
+          q: l.faqAnnouncementsPublishTripQ,
+          a: l.faqAnnouncementsPublishTripA,
         ),
         _FaqItem(
           id: 'publish_request',
-          q: 'Comment publier une demande d\'envoi ?',
-          a: 'Depuis Accueil ou Activités, choisis "Publier un colis". Décris le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.',
+          q: l.faqAnnouncementsPublishRequestQ,
+          a: l.faqAnnouncementsPublishRequestA,
         ),
         _FaqItem(
           id: 'edit_request',
-          q: 'Puis-je modifier ma demande après publication ?',
-          a: 'Tu peux modifier une demande tant qu\'aucune offre n\'a été acceptée. Après acceptation, contacte le support si une information importante doit être corrigée.',
+          q: l.faqAnnouncementsEditRequestQ,
+          a: l.faqAnnouncementsEditRequestA,
         ),
       ],
     ),
     _FaqSectionData(
       id: 'payments',
-      title: 'Paiements & remboursements',
+      title: l.faqPaymentsTitle,
       iconAsset: 'banknote',
       items: [
-        const _FaqItem(
+        _FaqItem(
           id: 'payment_timing',
-          q: 'Quand suis-je débité ?',
-          a: 'Pour un paiement par carte, les fonds sont sécurisés lors de l\'acceptation puis libérés selon l\'avancement de la livraison. Pour les espèces et le Mobile Money, suis les indications affichées au moment de choisir le moyen de paiement.',
+          q: l.faqPaymentsPaymentTimingQ,
+          a: l.faqPaymentsPaymentTimingA,
         ),
-        const _FaqItem(
+        _FaqItem(
           id: 'refund',
-          q: 'Comment se passe le remboursement en cas d\'annulation ?',
-          a: 'Le remboursement dépend du moyen de paiement et du moment de l\'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l\'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement.',
+          q: l.faqPaymentsRefundQ,
+          a: l.faqPaymentsRefundA,
         ),
         _FaqItem(
           id: 'commission',
-          q:
-              'Pourquoi une commission de '
-              '${commissionPercentLabel(AppL10n.current)} % ?',
-          a: 'La commission contribue aux frais de paiement, au support, à la prévention de la fraude et au développement de la plateforme.',
+          q: l.faqPaymentsCommissionQ(commissionPercentLabel(l)),
+          a: l.faqPaymentsCommissionA,
         ),
-        const _FaqItem(
+        _FaqItem(
           id: 'payment_security',
-          q: 'Les paiements sont-ils sécurisés ?',
-          a: 'Les paiements en ligne sont traités par les prestataires indiqués dans l\'application. Yadony ne stocke pas les données complètes de ta carte. Un paiement en espèces n\'est pas placé sous séquestre : ne paie jamais en dehors du parcours convenu dans l\'application.',
+          q: l.faqPaymentsPaymentSecurityQ,
+          a: l.faqPaymentsPaymentSecurityA,
         ),
       ],
     ),
-    const _FaqSectionData(
+    _FaqSectionData(
       id: 'delivery',
-      title: 'Suivi & livraison',
+      title: l.faqDeliveryTitle,
       iconAsset: 'package',
       items: [
         _FaqItem(
           id: 'handover_qr',
-          q: 'Comment fonctionne le QR de remise ?',
-          a: 'À la remise du colis, le QR code confirme la prise en charge et déclenche le suivi. Sans connexion, la lecture est mémorisée sur l\'appareil puis synchronisée à la reconnexion.',
+          q: l.faqDeliveryHandoverQrQ,
+          a: l.faqDeliveryHandoverQrA,
         ),
         _FaqItem(
           id: 'parcel_missing',
-          q: 'Que faire si le colis n\'arrive pas ?',
-          a: 'Ouvre un litige depuis "Mes litiges" dès que tu constates le problème. Ajoute les photos, messages et informations de suivi disponibles. Les délais applicables sont rappelés dans le parcours de signalement.',
+          q: l.faqDeliveryParcelMissingQ,
+          a: l.faqDeliveryParcelMissingA,
         ),
         _FaqItem(
           id: 'delivery_delay',
-          q: 'Quel est le délai de livraison moyen ?',
-          a: 'Le délai dépend du trajet choisi et de la date annoncée par le voyageur. Vérifie toujours les informations du trajet avant d\'accepter une offre.',
+          q: l.faqDeliveryDeliveryDelayQ,
+          a: l.faqDeliveryDeliveryDelayA,
         ),
       ],
     ),
     _FaqSectionData(
       id: 'safety',
-      title: 'Sécurité & données',
+      title: l.faqSafetyTitle,
       iconAsset: 'shield-check',
       items: [
         _FaqItem(
           id: 'lost_parcel',
-          q: 'Que se passe-t-il si mon colis est perdu ?',
-          a:
-              'Yadony ne couvre pas automatiquement la perte d\'un colis. Après investigation, un remboursement jusqu\'à '
-              '${reimbursementCapLabel(AppL10n.current)}'
-              ' € peut être accordé si toutes les conditions sont respectées :\n\n• paiement par carte effectué dans Yadony ;\n• aucun paiement ou accord conclu hors plateforme ;\n• QR codes de dépôt et de remise utilisés ;\n• litige ouvert dans les 15 jours suivant la date prévue ;\n• contenu conforme aux objets autorisés.\n\nToute décision reste soumise à la validation de l\'équipe Yadony.',
+          q: l.faqSafetyLostParcelQ,
+          a: l.faqSafetyLostParcelA(reimbursementCapLabel(l)),
         ),
-        const _FaqItem(
-          id: 'dispute',
-          q: 'Que faire en cas de litige avec un voyageur ?',
-          a: 'Ouvre "Mes litiges" depuis ton profil et fournis les éléments utiles : photos, messages et suivi. Notre équipe examine ensuite le dossier et te tient informé dans l\'application.',
-        ),
-        const _FaqItem(
+        _FaqItem(id: 'dispute', q: l.faqSafetyDisputeQ, a: l.faqSafetyDisputeA),
+        _FaqItem(
           id: 'personal_data',
-          q: 'Mes données personnelles sont-elles protégées ?',
-          a: 'Yadony applique des mesures de sécurité pour protéger les données et ne vend pas tes informations personnelles. Tu peux consulter la politique de confidentialité et gérer tes préférences dans Paramètres.',
+          q: l.faqSafetyPersonalDataQ,
+          a: l.faqSafetyPersonalDataA,
         ),
-        const _FaqItem(
+        _FaqItem(
           id: 'delete_account',
-          q: 'Comment supprimer mon compte ?',
-          a: 'Dans Paramètres → Données et compte → Supprimer mon compte, tu peux choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.',
+          q: l.faqSafetyDeleteAccountQ,
+          a: l.faqSafetyDeleteAccountA,
         ),
       ],
     ),
@@ -168,13 +162,17 @@ class _FaqScreenState extends State<FaqScreen> {
         .replaceAll(RegExp('[ýÿ]'), 'y');
   }
 
-  static List<_FaqSectionData> _filterSections(String rawQuery) {
+  static List<_FaqSectionData> _filterSections(
+    String rawQuery,
+    AppLocalizations l,
+  ) {
+    final sections = _sections(l);
     final query = _normalize(rawQuery);
     if (query.isEmpty) {
-      return _sections;
+      return sections;
     }
 
-    return _sections
+    return sections
         .map((section) {
           final sectionMatches = _normalize(section.title).contains(query);
           final items = sectionMatches
@@ -206,19 +204,20 @@ class _FaqScreenState extends State<FaqScreen> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return ValueListenableBuilder<double>(
       valueListenable: donyReimbursementCapListenable,
       builder: (context, _, _) => BlocBuilder<FaqBloc, FaqState>(
         builder: (context, state) {
-          final sections = _filterSections(state.query);
+          final sections = _filterSections(state.query, l);
           return DonyPageScaffold(
-            title: 'FAQ & aide',
+            title: l.profileHelpFaq,
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Trouver une réponse',
+                  l.faqFindAnswerTitle,
                   style: tt.titleLarge?.copyWith(
                     color: cs.onSurface,
                     fontWeight: FontWeight.w800,
@@ -226,13 +225,13 @@ class _FaqScreenState extends State<FaqScreen> {
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Recherche une réponse ou parcours les catégories.',
+                  l.faqFindAnswerSubtitle,
                   style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: DonySpacing.base),
                 DonyTextField(
                   key: const Key('faq-search-field'),
-                  hint: 'Rechercher dans l’aide',
+                  hint: l.faqSearchHint,
                   prefixWidget: Padding(
                     padding: const EdgeInsets.all(DonySpacing.md),
                     child: DonyIcon(
@@ -429,12 +428,12 @@ class _FaqEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.base),
           Text(
-            'Aucun résultat',
+            context.l10n.faqEmptyResultsTitle,
             style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            'Essaie avec d\'autres mots-clés ou contacte notre équipe.',
+            context.l10n.faqEmptyResultsDescription,
             textAlign: TextAlign.center,
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
@@ -472,7 +471,7 @@ class _ContactSupportCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Tu n’as pas trouvé ta réponse ?',
+                      context.l10n.faqContactCardTitle,
                       style: tt.titleSmall?.copyWith(
                         color: cs.onSurface,
                         fontWeight: FontWeight.w700,
@@ -480,7 +479,7 @@ class _ContactSupportCard extends StatelessWidget {
                     ),
                     const SizedBox(height: DonySpacing.xs),
                     Text(
-                      'Notre équipe est là pour t’aider.',
+                      context.l10n.faqContactCardSubtitle,
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
@@ -490,7 +489,7 @@ class _ContactSupportCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.base),
           DonyButton(
-            label: 'Contacter le support',
+            label: context.l10n.profileHelpContactSupport,
             variant: DonyButtonVariant.secondary,
             iconAsset: 'mail',
             onPressed: () {

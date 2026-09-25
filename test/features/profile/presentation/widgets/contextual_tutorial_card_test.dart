@@ -14,6 +14,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 class _MockHiveService extends Mock implements HiveService {}
@@ -175,6 +176,20 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('TutorialStub:negotiation_basics'), findsOneWidget);
+  });
+
+  testWidgets('anglais : texte et tooltip traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        context: TutorialContext.negotiation,
+        configJson: _negotiationConfigJson,
+      ),
+    );
+    await _settleCard(tester);
+
+    expect(find.text('Need help? Watch the tutorial'), findsOneWidget);
+    expect(find.byTooltip('Hide this tip'), findsOneWidget);
   });
 
   testWidgets('dispatches the analytics event with the contextual source', (

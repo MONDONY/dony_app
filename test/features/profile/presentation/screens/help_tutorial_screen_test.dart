@@ -15,6 +15,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 const _tutorialConfigJson = '''
@@ -297,6 +298,33 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(session.closed, isTrue);
+  });
+
+  testWidgets('anglais : tutoriel introuvable', (tester) async {
+    useEnglish();
+    final harness = _TutorialHarness(tutorialId: 'unknown');
+
+    await tester.pumpWidget(harness.build());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tutorial not found'), findsOneWidget);
+    expect(find.text('This tutorial is no longer available.'), findsOneWidget);
+  });
+
+  testWidgets('anglais : les actions de secours sont traduites', (
+    tester,
+  ) async {
+    useEnglish();
+    final harness = _TutorialHarness();
+    await tester.pumpWidget(harness.build());
+    await tester.pumpAndSettle();
+
+    harness.sessions.single.emit(HelpTutorialPlayerEvent.error);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Playback unavailable'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
+    expect(find.text('Open in YouTube'), findsOneWidget);
   });
 
   testWidgets('reste sans overflow avec un facteur de texte 2.0', (

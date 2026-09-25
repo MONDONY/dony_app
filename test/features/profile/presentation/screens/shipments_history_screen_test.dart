@@ -12,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class FakeBidEvent extends Fake implements BidEvent {}
@@ -159,6 +161,78 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text("Aujourd'hui"), findsOneWidget);
+  });
+
+  testWidgets('il y a 2 jours affiche "Il y a 2 jours"', (tester) async {
+    final bid = BidModel(
+      id: 'two-days',
+      announcementId: 'ann-1',
+      senderId: 'user-1',
+      senderKycVerified: true,
+      weightKg: 1.0,
+      status: 'COMPLETED',
+      voyageurConfirmed: true,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now().subtract(const Duration(days: 2)),
+      travelerName: 'Ibrahima Sow',
+      travelerKycVerified: true,
+    );
+
+    when(() => bloc.state).thenReturn(BidListLoaded([bid]));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Il y a 2 jours'), findsOneWidget);
+  });
+
+  testWidgets('il y a 5 jours affiche "Il y a 5 jours"', (tester) async {
+    final bid = BidModel(
+      id: 'five-days',
+      announcementId: 'ann-1',
+      senderId: 'user-1',
+      senderKycVerified: true,
+      weightKg: 1.0,
+      status: 'COMPLETED',
+      voyageurConfirmed: true,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now().subtract(const Duration(days: 5)),
+      travelerName: 'Kadiatou Barry',
+      travelerKycVerified: true,
+    );
+
+    when(() => bloc.state).thenReturn(BidListLoaded([bid]));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Il y a 5 jours'), findsOneWidget);
+  });
+
+  testWidgets('anglais : titre, jours et bouton traduits', (tester) async {
+    useEnglish();
+    final bid = BidModel(
+      id: 'two-days-en',
+      announcementId: 'ann-1',
+      senderId: 'user-1',
+      senderKycVerified: true,
+      weightKg: 1.0,
+      status: 'COMPLETED',
+      voyageurConfirmed: true,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now().subtract(const Duration(days: 2)),
+      travelerName: 'Ibrahima Sow',
+      travelerKycVerified: true,
+    );
+
+    when(() => bloc.state).thenReturn(BidListLoaded([bid]));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Delivery history'), findsOneWidget);
+    expect(find.text('2 days ago'), findsOneWidget);
+    expect(find.text('See details'), findsOneWidget);
   });
 
   testWidgets(

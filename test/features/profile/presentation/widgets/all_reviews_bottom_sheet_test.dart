@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockUserReviewsCubit extends Mock implements UserReviewsCubit {}
 
 RatingItem _item({
@@ -188,5 +190,32 @@ void main() {
 
     expect(find.text('Awa Diop'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  testWidgets('anglais : titre, repli auteur et état vide traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    stubState(UserReviewsLoaded(summary: _summary(), allRatings: const []));
+
+    await openSheet(tester);
+
+    expect(find.text('Reviews'), findsOneWidget);
+    expect(find.text('No reviews yet.'), findsOneWidget);
+  });
+
+  testWidgets('anglais : auteur anonyme repli "User"', (tester) async {
+    useEnglish();
+    final items = [_item()];
+    stubState(
+      UserReviewsLoaded(
+        summary: _summary(ratings: items),
+        allRatings: items,
+      ),
+    );
+
+    await openSheet(tester);
+
+    expect(find.text('User'), findsOneWidget);
   });
 }

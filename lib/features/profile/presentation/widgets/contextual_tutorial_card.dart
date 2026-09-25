@@ -6,6 +6,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -102,6 +103,7 @@ class _ContextualTutorialCardState extends State<ContextualTutorialCard> {
   Widget _buildCard(BuildContext context, HelpTutorial tutorial) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     void openTutorial() {
       context.read<HelpCenterBloc>().add(
@@ -122,7 +124,7 @@ class _ContextualTutorialCardState extends State<ContextualTutorialCard> {
                 Expanded(
                   child: Semantics(
                     button: true,
-                    label: 'Besoin d’aide ? Voir le tutoriel ${tutorial.title}',
+                    label: l.helpContextualCardSemanticsLabel(tutorial.title),
                     onTap: openTutorial,
                     child: ExcludeSemantics(
                       child: InkWell(
@@ -150,7 +152,7 @@ class _ContextualTutorialCardState extends State<ContextualTutorialCard> {
                             const SizedBox(width: DonySpacing.md),
                             Expanded(
                               child: Text(
-                                'Besoin d\'aide ? Voir le tutoriel',
+                                l.helpContextualCardLabel,
                                 style: tt.titleSmall?.copyWith(
                                   color: cs.onSurface,
                                   fontWeight: FontWeight.w700,
@@ -166,7 +168,7 @@ class _ContextualTutorialCardState extends State<ContextualTutorialCard> {
                 IconButton(
                   key: const Key('contextual-tutorial-card-dismiss'),
                   onPressed: () => _dismiss(tutorial.id),
-                  tooltip: 'Masquer ce conseil',
+                  tooltip: l.helpContextualCardDismissTooltip,
                   visualDensity: VisualDensity.compact,
                   icon: DonyIcon('x', size: 16, color: cs.onSurfaceVariant),
                 ),

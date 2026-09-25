@@ -18361,6 +18361,588 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Arabe'**
   String get profileLanguageArabic;
+
+  /// Titre de l'app bar en mode « mon profil » (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que les autres voient'**
+  String get profilePublicOwnProfileTitle;
+
+  /// Titre de repli de l'app bar tant que le profil consulté n'est pas chargé (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil'**
+  String get profilePublicTitleFallback;
+
+  /// Tooltip du menu ⋯ (Signaler/Bloquer) de l'app bar (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus d\'options'**
+  String get profilePublicMoreOptionsTooltip;
+
+  /// Entrée du menu ⋯ quand le nom de la personne consultée n'est pas encore connu (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler'**
+  String get profilePublicReportAction;
+
+  /// Entrée du menu ⋯ une fois le nom de la personne consultée connu (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler {name}'**
+  String profilePublicReportUserAction(String name);
+
+  /// Entrée du menu ⋯ pour bloquer la personne consultée (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloquer {name}'**
+  String profilePublicBlockUserAction(String name);
+
+  /// Titre de l'état d'erreur de chargement du profil public (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger le profil'**
+  String get profilePublicLoadErrorTitle;
+
+  /// Ligne méta du hero : note (déjà formatée), nombre d'avis et ancienneté envoyée par le serveur (profile_public_screen.dart, _ProfileHero)
+  ///
+  /// In fr, this message translates to:
+  /// **'⭐ {rating} · {count, plural, =1{{count} avis} other{{count} avis}} · {memberSince}'**
+  String profilePublicRatingLine(String rating, int count, String memberSince);
+
+  /// Pastille KYC vérifié du hero (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'✓ Vérifié'**
+  String get profilePublicVerified;
+
+  /// Pastille compte PRO du hero (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PRO'**
+  String get profilePublicProBadge;
+
+  /// Libellé de la statistique note moyenne (profile_public_screen.dart, _StatsRow)
+  ///
+  /// In fr, this message translates to:
+  /// **'Note'**
+  String get profilePublicStatRatingLabel;
+
+  /// Libellé de la statistique nombre de livraisons (profile_public_screen.dart, _StatsRow)
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraisons'**
+  String get profilePublicStatDeliveriesLabel;
+
+  /// Titre de la section bio (profile_public_screen.dart, _AboutSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'À PROPOS'**
+  String get profilePublicAboutSectionLabel;
+
+  /// Titre de la section langues parlées (profile_public_screen.dart, _TravelerInfoSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'LANGUES'**
+  String get profilePublicLanguagesSectionLabel;
+
+  /// Titre de la section badges, identique dans les deux langues (profile_public_screen.dart, _BadgesSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'BADGES'**
+  String get profilePublicBadgesSectionLabel;
+
+  /// Puce de disponibilité : contactMode == call (profile_public_screen.dart, _ContactInfoSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'Joignable par appel'**
+  String get profilePublicContactCallLabel;
+
+  /// Puce de disponibilité : contactMode == message (profile_public_screen.dart, _ContactInfoSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'Joignable par message'**
+  String get profilePublicContactMessageLabel;
+
+  /// Puce de disponibilité : contactMode == both (profile_public_screen.dart, _ContactInfoSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel & message'**
+  String get profilePublicContactBothLabel;
+
+  /// Titre de la section disponibilité (profile_public_screen.dart, _ContactInfoSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'DISPONIBILITÉ'**
+  String get profilePublicAvailabilitySectionLabel;
+
+  /// Puce du délai de réponse moyen (profile_public_screen.dart, _ContactInfoSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'Répond en < {hours}h'**
+  String profilePublicRespondsWithin(int hours);
+
+  /// Titre de la section avis récents (profile_public_screen.dart, _RecentReviewsSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'AVIS RÉCENTS'**
+  String get profilePublicRecentReviewsSectionLabel;
+
+  /// Message d'état vide des avis, partagé par l'aperçu et la feuille « tous les avis » (profile_public_screen.dart, all_reviews_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun avis pour le moment.'**
+  String get profilePublicNoReviewsYet;
+
+  /// Lien vers la feuille « tous les avis » (profile_public_screen.dart, _RecentReviewsSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir tous les avis ({count}) ›'**
+  String profilePublicSeeAllReviews(int count);
+
+  /// Nom de repli d'un auteur d'avis sans displayName (profile_public_screen.dart, all_reviews_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateur'**
+  String get profileUserFallback;
+
+  /// Bouton d'abonnement à un voyageur, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'S\'abonner'**
+  String get followFollowButton;
+
+  /// État abonné du bouton d'abonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Abonné ✓'**
+  String get followFollowingButton;
+
+  /// Titre du dialog de confirmation de désabonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Se désabonner ?'**
+  String get followUnfollowDialogTitle;
+
+  /// Bouton de confirmation du désabonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Se désabonner'**
+  String get followUnfollowButton;
+
+  /// Message du dialog de confirmation de désabonnement (profile_public_screen.dart, _SubscribeAction)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne recevrez plus les notifications de ce voyageur.'**
+  String get profilePublicUnfollowDialogMessage;
+
+  /// Tooltip de la cloche quand les alertes push sont coupées (profile_public_screen.dart, _SubscribeAction)
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer les notifications'**
+  String get profilePublicEnablePushTooltip;
+
+  /// Tooltip de la cloche quand les alertes push sont actives (profile_public_screen.dart, _SubscribeAction)
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactiver les notifications'**
+  String get profilePublicDisablePushTooltip;
+
+  /// Titre de l'écran (shipments_history_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique des livraisons'**
+  String get shipmentsHistoryTitle;
+
+  /// Titre de l'état vide (shipments_history_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune livraison terminée'**
+  String get shipmentsHistoryEmptyTitle;
+
+  /// Description de l'état vide (shipments_history_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tes livraisons terminées s\'afficheront ici.'**
+  String get shipmentsHistoryEmptyDescription;
+
+  /// Date relative d'une livraison (2 à 6 jours) (shipments_history_screen.dart, _DeliveryCard._relativeDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Il y a {count} jour} other{Il y a {count} jours}}'**
+  String shipmentsHistoryDaysAgo(int count);
+
+  /// Bouton d'ouverture du détail d'une livraison (shipments_history_screen.dart, _DeliveryCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir détails'**
+  String get shipmentsHistoryDetailsButton;
+
+  /// Titre de la bottom sheet « tous les avis » (all_reviews_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Avis'**
+  String get allReviewsSheetTitle;
+
+  /// Titre de la section recherche (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trouver une réponse'**
+  String get faqFindAnswerTitle;
+
+  /// Sous-titre de la section recherche (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Recherche une réponse ou parcours les catégories.'**
+  String get faqFindAnswerSubtitle;
+
+  /// Placeholder du champ de recherche (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher dans l’aide'**
+  String get faqSearchHint;
+
+  /// Titre de l'état vide de la recherche FAQ (faq_screen.dart, _FaqEmptyState)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun résultat'**
+  String get faqEmptyResultsTitle;
+
+  /// Description de l'état vide de la recherche FAQ (faq_screen.dart, _FaqEmptyState)
+  ///
+  /// In fr, this message translates to:
+  /// **'Essaie avec d\'autres mots-clés ou contacte notre équipe.'**
+  String get faqEmptyResultsDescription;
+
+  /// Titre de la carte de contact support (faq_screen.dart, _ContactSupportCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu n’as pas trouvé ta réponse ?'**
+  String get faqContactCardTitle;
+
+  /// Sous-titre de la carte de contact support (faq_screen.dart, _ContactSupportCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Notre équipe est là pour t’aider.'**
+  String get faqContactCardSubtitle;
+
+  /// Titre de la section FAQ « account » (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte & identité'**
+  String get faqAccountTitle;
+
+  /// Titre de la section FAQ « announcements » (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Annonces & demandes'**
+  String get faqAnnouncementsTitle;
+
+  /// Titre de la section FAQ « payments » (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiements & remboursements'**
+  String get faqPaymentsTitle;
+
+  /// Titre de la section FAQ « delivery » (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi & livraison'**
+  String get faqDeliveryTitle;
+
+  /// Titre de la section FAQ « safety » (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sécurité & données'**
+  String get faqSafetyTitle;
+
+  /// Question FAQ account/identity_required (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pourquoi la vérification d\'identité est-elle obligatoire ?'**
+  String get faqAccountIdentityRequiredQ;
+
+  /// Réponse FAQ account/identity_required (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Elle peut être demandée par nos partenaires de paiement et par les obligations applicables à certaines transactions. Elle nous permet aussi de lutter contre la fraude et de protéger les utilisateurs de Yadony.'**
+  String get faqAccountIdentityRequiredA;
+
+  /// Question FAQ account/identity_delay (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Combien de temps prend la validation ?'**
+  String get faqAccountIdentityDelayQ;
+
+  /// Réponse FAQ account/identity_delay (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La validation est souvent réalisée en quelques minutes. Si une vérification manuelle est nécessaire, le délai peut être plus long.'**
+  String get faqAccountIdentityDelayA;
+
+  /// Question FAQ account/identity_documents (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Quels documents sont acceptés ?'**
+  String get faqAccountIdentityDocumentsQ;
+
+  /// Réponse FAQ account/identity_documents (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte nationale d\'identité, passeport ou titre de séjour en cours de validité. Le document doit être lisible et non expiré.'**
+  String get faqAccountIdentityDocumentsA;
+
+  /// Question FAQ account/without_identity (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Puis-je utiliser Yadony sans vérifier mon identité ?'**
+  String get faqAccountWithoutIdentityQ;
+
+  /// Réponse FAQ account/without_identity (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu peux explorer les annonces sans vérifier ton identité. Certaines actions, notamment envoyer, transporter ou recevoir des paiements, peuvent nécessiter une vérification.'**
+  String get faqAccountWithoutIdentityA;
+
+  /// Question FAQ announcements/publish_trip (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment publier un trajet en tant que voyageur ?'**
+  String get faqAnnouncementsPublishTripQ;
+
+  /// Réponse FAQ announcements/publish_trip (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Depuis Accueil ou Activités, choisis \"Publier un trajet\". Renseigne la ville de départ, la destination, la date et la capacité disponible.'**
+  String get faqAnnouncementsPublishTripA;
+
+  /// Question FAQ announcements/publish_request (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment publier une demande d\'envoi ?'**
+  String get faqAnnouncementsPublishRequestQ;
+
+  /// Réponse FAQ announcements/publish_request (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Depuis Accueil ou Activités, choisis \"Publier un colis\". Décris le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.'**
+  String get faqAnnouncementsPublishRequestA;
+
+  /// Question FAQ announcements/edit_request (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Puis-je modifier ma demande après publication ?'**
+  String get faqAnnouncementsEditRequestQ;
+
+  /// Réponse FAQ announcements/edit_request (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu peux modifier une demande tant qu\'aucune offre n\'a été acceptée. Après acceptation, contacte le support si une information importante doit être corrigée.'**
+  String get faqAnnouncementsEditRequestA;
+
+  /// Question FAQ payments/payment_timing (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand suis-je débité ?'**
+  String get faqPaymentsPaymentTimingQ;
+
+  /// Réponse FAQ payments/payment_timing (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour un paiement par carte, les fonds sont sécurisés lors de l\'acceptation puis libérés selon l\'avancement de la livraison. Pour les espèces et le Mobile Money, suis les indications affichées au moment de choisir le moyen de paiement.'**
+  String get faqPaymentsPaymentTimingA;
+
+  /// Question FAQ payments/refund (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment se passe le remboursement en cas d\'annulation ?'**
+  String get faqPaymentsRefundQ;
+
+  /// Réponse FAQ payments/refund (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le remboursement dépend du moyen de paiement et du moment de l\'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l\'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement.'**
+  String get faqPaymentsRefundA;
+
+  /// Question FAQ payments/commission, percent déjà formaté par commissionPercentLabel (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pourquoi une commission de {percent} % ?'**
+  String faqPaymentsCommissionQ(String percent);
+
+  /// Réponse FAQ payments/commission (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La commission contribue aux frais de paiement, au support, à la prévention de la fraude et au développement de la plateforme.'**
+  String get faqPaymentsCommissionA;
+
+  /// Question FAQ payments/payment_security (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les paiements sont-ils sécurisés ?'**
+  String get faqPaymentsPaymentSecurityQ;
+
+  /// Réponse FAQ payments/payment_security (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les paiements en ligne sont traités par les prestataires indiqués dans l\'application. Yadony ne stocke pas les données complètes de ta carte. Un paiement en espèces n\'est pas placé sous séquestre : ne paie jamais en dehors du parcours convenu dans l\'application.'**
+  String get faqPaymentsPaymentSecurityA;
+
+  /// Question FAQ delivery/handover_qr (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment fonctionne le QR de remise ?'**
+  String get faqDeliveryHandoverQrQ;
+
+  /// Réponse FAQ delivery/handover_qr (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À la remise du colis, le QR code confirme la prise en charge et déclenche le suivi. Sans connexion, la lecture est mémorisée sur l\'appareil puis synchronisée à la reconnexion.'**
+  String get faqDeliveryHandoverQrA;
+
+  /// Question FAQ delivery/parcel_missing (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Que faire si le colis n\'arrive pas ?'**
+  String get faqDeliveryParcelMissingQ;
+
+  /// Réponse FAQ delivery/parcel_missing (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvre un litige depuis \"Mes litiges\" dès que tu constates le problème. Ajoute les photos, messages et informations de suivi disponibles. Les délais applicables sont rappelés dans le parcours de signalement.'**
+  String get faqDeliveryParcelMissingA;
+
+  /// Question FAQ delivery/delivery_delay (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Quel est le délai de livraison moyen ?'**
+  String get faqDeliveryDeliveryDelayQ;
+
+  /// Réponse FAQ delivery/delivery_delay (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le délai dépend du trajet choisi et de la date annoncée par le voyageur. Vérifie toujours les informations du trajet avant d\'accepter une offre.'**
+  String get faqDeliveryDeliveryDelayA;
+
+  /// Question FAQ safety/lost_parcel (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Que se passe-t-il si mon colis est perdu ?'**
+  String get faqSafetyLostParcelQ;
+
+  /// Réponse FAQ safety/lost_parcel, cap déjà formaté par reimbursementCapLabel (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony ne couvre pas automatiquement la perte d\'un colis. Après investigation, un remboursement jusqu\'à {cap} € peut être accordé si toutes les conditions sont respectées :\n\n• paiement par carte effectué dans Yadony ;\n• aucun paiement ou accord conclu hors plateforme ;\n• QR codes de dépôt et de remise utilisés ;\n• litige ouvert dans les 15 jours suivant la date prévue ;\n• contenu conforme aux objets autorisés.\n\nToute décision reste soumise à la validation de l\'équipe Yadony.'**
+  String faqSafetyLostParcelA(String cap);
+
+  /// Question FAQ safety/dispute (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Que faire en cas de litige avec un voyageur ?'**
+  String get faqSafetyDisputeQ;
+
+  /// Réponse FAQ safety/dispute (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvre \"Mes litiges\" depuis ton profil et fournis les éléments utiles : photos, messages et suivi. Notre équipe examine ensuite le dossier et te tient informé dans l\'application.'**
+  String get faqSafetyDisputeA;
+
+  /// Question FAQ safety/personal_data (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes données personnelles sont-elles protégées ?'**
+  String get faqSafetyPersonalDataQ;
+
+  /// Réponse FAQ safety/personal_data (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony applique des mesures de sécurité pour protéger les données et ne vend pas tes informations personnelles. Tu peux consulter la politique de confidentialité et gérer tes préférences dans Paramètres.'**
+  String get faqSafetyPersonalDataA;
+
+  /// Question FAQ safety/delete_account (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment supprimer mon compte ?'**
+  String get faqSafetyDeleteAccountQ;
+
+  /// Réponse FAQ safety/delete_account (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans Paramètres → Données et compte → Supprimer mon compte, tu peux choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.'**
+  String get faqSafetyDeleteAccountA;
+
+  /// Titre de l'écran lecteur de tutoriel, dans ses 3 états (help_tutorial_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tutoriel vidéo'**
+  String get helpTutorialScreenTitle;
+
+  /// Titre de l'état tutoriel introuvable (help_tutorial_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tutoriel introuvable'**
+  String get helpTutorialNotFoundTitle;
+
+  /// Description de l'état tutoriel introuvable (help_tutorial_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce tutoriel n’est plus disponible.'**
+  String get helpTutorialNotFoundDescription;
+
+  /// Bouton vers la chaîne YouTube Yadony, sous le lecteur (help_tutorial_screen.dart, _HelpTutorialContent)
+  ///
+  /// In fr, this message translates to:
+  /// **'S’abonner à la chaîne'**
+  String get helpTutorialSubscribeChannelButton;
+
+  /// Semantics label du cadre du lecteur vidéo (help_tutorial_screen.dart, _buildPlayerFrame)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecteur vidéo : {title}'**
+  String helpTutorialPlayerSemanticsLabel(String title);
+
+  /// Titre de la carte d'erreur de lecture (help_tutorial_screen.dart, _PlayerErrorCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture impossible'**
+  String get helpTutorialPlaybackErrorTitle;
+
+  /// Description de la carte d'erreur de lecture (help_tutorial_screen.dart, _PlayerErrorCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifie ta connexion ou ouvre la vidéo directement dans YouTube.'**
+  String get helpTutorialPlaybackErrorDescription;
+
+  /// Bouton de repli vers YouTube externe (help_tutorial_screen.dart, _PlayerErrorCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir dans YouTube'**
+  String get helpTutorialOpenInYoutubeButton;
+
+  /// Semantics label de la carte suggestion de tutoriel contextuel (contextual_tutorial_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Besoin d’aide ? Voir le tutoriel {title}'**
+  String helpContextualCardSemanticsLabel(String title);
+
+  /// Texte visible de la carte suggestion de tutoriel contextuel, sans le titre (contextual_tutorial_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Besoin d\'aide ? Voir le tutoriel'**
+  String get helpContextualCardLabel;
+
+  /// Tooltip du bouton de fermeture (X) de la carte suggestion (contextual_tutorial_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Masquer ce conseil'**
+  String get helpContextualCardDismissTooltip;
+
+  /// Semantics label de la carte tutoriel de la Communauté (help_tutorial_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire le tutoriel {title}'**
+  String helpTutorialCardSemanticsLabel(String title);
 }
 
 class _AppLocalizationsDelegate

@@ -10996,4 +10996,365 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profileLanguageArabic => 'Arabe';
+
+  @override
+  String get profilePublicOwnProfileTitle => 'Ce que les autres voient';
+
+  @override
+  String get profilePublicTitleFallback => 'Profil';
+
+  @override
+  String get profilePublicMoreOptionsTooltip => 'Plus d\'options';
+
+  @override
+  String get profilePublicReportAction => 'Signaler';
+
+  @override
+  String profilePublicReportUserAction(String name) {
+    return 'Signaler $name';
+  }
+
+  @override
+  String profilePublicBlockUserAction(String name) {
+    return 'Bloquer $name';
+  }
+
+  @override
+  String get profilePublicLoadErrorTitle => 'Impossible de charger le profil';
+
+  @override
+  String profilePublicRatingLine(String rating, int count, String memberSince) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count avis',
+      one: '$count avis',
+    );
+    return '⭐ $rating · $_temp0 · $memberSince';
+  }
+
+  @override
+  String get profilePublicVerified => '✓ Vérifié';
+
+  @override
+  String get profilePublicProBadge => 'PRO';
+
+  @override
+  String get profilePublicStatRatingLabel => 'Note';
+
+  @override
+  String get profilePublicStatDeliveriesLabel => 'Livraisons';
+
+  @override
+  String get profilePublicAboutSectionLabel => 'À PROPOS';
+
+  @override
+  String get profilePublicLanguagesSectionLabel => 'LANGUES';
+
+  @override
+  String get profilePublicBadgesSectionLabel => 'BADGES';
+
+  @override
+  String get profilePublicContactCallLabel => 'Joignable par appel';
+
+  @override
+  String get profilePublicContactMessageLabel => 'Joignable par message';
+
+  @override
+  String get profilePublicContactBothLabel => 'Appel & message';
+
+  @override
+  String get profilePublicAvailabilitySectionLabel => 'DISPONIBILITÉ';
+
+  @override
+  String profilePublicRespondsWithin(int hours) {
+    return 'Répond en < ${hours}h';
+  }
+
+  @override
+  String get profilePublicRecentReviewsSectionLabel => 'AVIS RÉCENTS';
+
+  @override
+  String get profilePublicNoReviewsYet => 'Aucun avis pour le moment.';
+
+  @override
+  String profilePublicSeeAllReviews(int count) {
+    return 'Voir tous les avis ($count) ›';
+  }
+
+  @override
+  String get profileUserFallback => 'Utilisateur';
+
+  @override
+  String get followFollowButton => 'S\'abonner';
+
+  @override
+  String get followFollowingButton => 'Abonné ✓';
+
+  @override
+  String get followUnfollowDialogTitle => 'Se désabonner ?';
+
+  @override
+  String get followUnfollowButton => 'Se désabonner';
+
+  @override
+  String get profilePublicUnfollowDialogMessage =>
+      'Vous ne recevrez plus les notifications de ce voyageur.';
+
+  @override
+  String get profilePublicEnablePushTooltip => 'Activer les notifications';
+
+  @override
+  String get profilePublicDisablePushTooltip => 'Désactiver les notifications';
+
+  @override
+  String get shipmentsHistoryTitle => 'Historique des livraisons';
+
+  @override
+  String get shipmentsHistoryEmptyTitle => 'Aucune livraison terminée';
+
+  @override
+  String get shipmentsHistoryEmptyDescription =>
+      'Tes livraisons terminées s\'afficheront ici.';
+
+  @override
+  String shipmentsHistoryDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Il y a $count jours',
+      one: 'Il y a $count jour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shipmentsHistoryDetailsButton => 'Voir détails';
+
+  @override
+  String get allReviewsSheetTitle => 'Avis';
+
+  @override
+  String get faqFindAnswerTitle => 'Trouver une réponse';
+
+  @override
+  String get faqFindAnswerSubtitle =>
+      'Recherche une réponse ou parcours les catégories.';
+
+  @override
+  String get faqSearchHint => 'Rechercher dans l’aide';
+
+  @override
+  String get faqEmptyResultsTitle => 'Aucun résultat';
+
+  @override
+  String get faqEmptyResultsDescription =>
+      'Essaie avec d\'autres mots-clés ou contacte notre équipe.';
+
+  @override
+  String get faqContactCardTitle => 'Tu n’as pas trouvé ta réponse ?';
+
+  @override
+  String get faqContactCardSubtitle => 'Notre équipe est là pour t’aider.';
+
+  @override
+  String get faqAccountTitle => 'Compte & identité';
+
+  @override
+  String get faqAnnouncementsTitle => 'Annonces & demandes';
+
+  @override
+  String get faqPaymentsTitle => 'Paiements & remboursements';
+
+  @override
+  String get faqDeliveryTitle => 'Suivi & livraison';
+
+  @override
+  String get faqSafetyTitle => 'Sécurité & données';
+
+  @override
+  String get faqAccountIdentityRequiredQ =>
+      'Pourquoi la vérification d\'identité est-elle obligatoire ?';
+
+  @override
+  String get faqAccountIdentityRequiredA =>
+      'Elle peut être demandée par nos partenaires de paiement et par les obligations applicables à certaines transactions. Elle nous permet aussi de lutter contre la fraude et de protéger les utilisateurs de Yadony.';
+
+  @override
+  String get faqAccountIdentityDelayQ =>
+      'Combien de temps prend la validation ?';
+
+  @override
+  String get faqAccountIdentityDelayA =>
+      'La validation est souvent réalisée en quelques minutes. Si une vérification manuelle est nécessaire, le délai peut être plus long.';
+
+  @override
+  String get faqAccountIdentityDocumentsQ => 'Quels documents sont acceptés ?';
+
+  @override
+  String get faqAccountIdentityDocumentsA =>
+      'Carte nationale d\'identité, passeport ou titre de séjour en cours de validité. Le document doit être lisible et non expiré.';
+
+  @override
+  String get faqAccountWithoutIdentityQ =>
+      'Puis-je utiliser Yadony sans vérifier mon identité ?';
+
+  @override
+  String get faqAccountWithoutIdentityA =>
+      'Tu peux explorer les annonces sans vérifier ton identité. Certaines actions, notamment envoyer, transporter ou recevoir des paiements, peuvent nécessiter une vérification.';
+
+  @override
+  String get faqAnnouncementsPublishTripQ =>
+      'Comment publier un trajet en tant que voyageur ?';
+
+  @override
+  String get faqAnnouncementsPublishTripA =>
+      'Depuis Accueil ou Activités, choisis \"Publier un trajet\". Renseigne la ville de départ, la destination, la date et la capacité disponible.';
+
+  @override
+  String get faqAnnouncementsPublishRequestQ =>
+      'Comment publier une demande d\'envoi ?';
+
+  @override
+  String get faqAnnouncementsPublishRequestA =>
+      'Depuis Accueil ou Activités, choisis \"Publier un colis\". Décris le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.';
+
+  @override
+  String get faqAnnouncementsEditRequestQ =>
+      'Puis-je modifier ma demande après publication ?';
+
+  @override
+  String get faqAnnouncementsEditRequestA =>
+      'Tu peux modifier une demande tant qu\'aucune offre n\'a été acceptée. Après acceptation, contacte le support si une information importante doit être corrigée.';
+
+  @override
+  String get faqPaymentsPaymentTimingQ => 'Quand suis-je débité ?';
+
+  @override
+  String get faqPaymentsPaymentTimingA =>
+      'Pour un paiement par carte, les fonds sont sécurisés lors de l\'acceptation puis libérés selon l\'avancement de la livraison. Pour les espèces et le Mobile Money, suis les indications affichées au moment de choisir le moyen de paiement.';
+
+  @override
+  String get faqPaymentsRefundQ =>
+      'Comment se passe le remboursement en cas d\'annulation ?';
+
+  @override
+  String get faqPaymentsRefundA =>
+      'Le remboursement dépend du moyen de paiement et du moment de l\'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l\'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement.';
+
+  @override
+  String faqPaymentsCommissionQ(String percent) {
+    return 'Pourquoi une commission de $percent % ?';
+  }
+
+  @override
+  String get faqPaymentsCommissionA =>
+      'La commission contribue aux frais de paiement, au support, à la prévention de la fraude et au développement de la plateforme.';
+
+  @override
+  String get faqPaymentsPaymentSecurityQ =>
+      'Les paiements sont-ils sécurisés ?';
+
+  @override
+  String get faqPaymentsPaymentSecurityA =>
+      'Les paiements en ligne sont traités par les prestataires indiqués dans l\'application. Yadony ne stocke pas les données complètes de ta carte. Un paiement en espèces n\'est pas placé sous séquestre : ne paie jamais en dehors du parcours convenu dans l\'application.';
+
+  @override
+  String get faqDeliveryHandoverQrQ => 'Comment fonctionne le QR de remise ?';
+
+  @override
+  String get faqDeliveryHandoverQrA =>
+      'À la remise du colis, le QR code confirme la prise en charge et déclenche le suivi. Sans connexion, la lecture est mémorisée sur l\'appareil puis synchronisée à la reconnexion.';
+
+  @override
+  String get faqDeliveryParcelMissingQ =>
+      'Que faire si le colis n\'arrive pas ?';
+
+  @override
+  String get faqDeliveryParcelMissingA =>
+      'Ouvre un litige depuis \"Mes litiges\" dès que tu constates le problème. Ajoute les photos, messages et informations de suivi disponibles. Les délais applicables sont rappelés dans le parcours de signalement.';
+
+  @override
+  String get faqDeliveryDeliveryDelayQ =>
+      'Quel est le délai de livraison moyen ?';
+
+  @override
+  String get faqDeliveryDeliveryDelayA =>
+      'Le délai dépend du trajet choisi et de la date annoncée par le voyageur. Vérifie toujours les informations du trajet avant d\'accepter une offre.';
+
+  @override
+  String get faqSafetyLostParcelQ =>
+      'Que se passe-t-il si mon colis est perdu ?';
+
+  @override
+  String faqSafetyLostParcelA(String cap) {
+    return 'Yadony ne couvre pas automatiquement la perte d\'un colis. Après investigation, un remboursement jusqu\'à $cap € peut être accordé si toutes les conditions sont respectées :\n\n• paiement par carte effectué dans Yadony ;\n• aucun paiement ou accord conclu hors plateforme ;\n• QR codes de dépôt et de remise utilisés ;\n• litige ouvert dans les 15 jours suivant la date prévue ;\n• contenu conforme aux objets autorisés.\n\nToute décision reste soumise à la validation de l\'équipe Yadony.';
+  }
+
+  @override
+  String get faqSafetyDisputeQ =>
+      'Que faire en cas de litige avec un voyageur ?';
+
+  @override
+  String get faqSafetyDisputeA =>
+      'Ouvre \"Mes litiges\" depuis ton profil et fournis les éléments utiles : photos, messages et suivi. Notre équipe examine ensuite le dossier et te tient informé dans l\'application.';
+
+  @override
+  String get faqSafetyPersonalDataQ =>
+      'Mes données personnelles sont-elles protégées ?';
+
+  @override
+  String get faqSafetyPersonalDataA =>
+      'Yadony applique des mesures de sécurité pour protéger les données et ne vend pas tes informations personnelles. Tu peux consulter la politique de confidentialité et gérer tes préférences dans Paramètres.';
+
+  @override
+  String get faqSafetyDeleteAccountQ => 'Comment supprimer mon compte ?';
+
+  @override
+  String get faqSafetyDeleteAccountA =>
+      'Dans Paramètres → Données et compte → Supprimer mon compte, tu peux choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.';
+
+  @override
+  String get helpTutorialScreenTitle => 'Tutoriel vidéo';
+
+  @override
+  String get helpTutorialNotFoundTitle => 'Tutoriel introuvable';
+
+  @override
+  String get helpTutorialNotFoundDescription =>
+      'Ce tutoriel n’est plus disponible.';
+
+  @override
+  String get helpTutorialSubscribeChannelButton => 'S’abonner à la chaîne';
+
+  @override
+  String helpTutorialPlayerSemanticsLabel(String title) {
+    return 'Lecteur vidéo : $title';
+  }
+
+  @override
+  String get helpTutorialPlaybackErrorTitle => 'Lecture impossible';
+
+  @override
+  String get helpTutorialPlaybackErrorDescription =>
+      'Vérifie ta connexion ou ouvre la vidéo directement dans YouTube.';
+
+  @override
+  String get helpTutorialOpenInYoutubeButton => 'Ouvrir dans YouTube';
+
+  @override
+  String helpContextualCardSemanticsLabel(String title) {
+    return 'Besoin d’aide ? Voir le tutoriel $title';
+  }
+
+  @override
+  String get helpContextualCardLabel => 'Besoin d\'aide ? Voir le tutoriel';
+
+  @override
+  String get helpContextualCardDismissTooltip => 'Masquer ce conseil';
+
+  @override
+  String helpTutorialCardSemanticsLabel(String title) {
+    return 'Lire le tutoriel $title';
+  }
 }

@@ -12208,5 +12208,428 @@
   "profileLanguageArabic": "Arabe",
   "@profileLanguageArabic": {
     "description": "Libellé affiché de la langue parlée « Arabe » (profile_labels.dart, spokenLanguageLabel)."
+  },
+  "profilePublicOwnProfileTitle": "Ce que les autres voient",
+  "@profilePublicOwnProfileTitle": {
+    "description": "Titre de l'app bar en mode « mon profil » (profile_public_screen.dart)"
+  },
+  "profilePublicTitleFallback": "Profil",
+  "@profilePublicTitleFallback": {
+    "description": "Titre de repli de l'app bar tant que le profil consulté n'est pas chargé (profile_public_screen.dart)"
+  },
+  "profilePublicMoreOptionsTooltip": "Plus d'options",
+  "@profilePublicMoreOptionsTooltip": {
+    "description": "Tooltip du menu ⋯ (Signaler/Bloquer) de l'app bar (profile_public_screen.dart)"
+  },
+  "profilePublicReportAction": "Signaler",
+  "@profilePublicReportAction": {
+    "description": "Entrée du menu ⋯ quand le nom de la personne consultée n'est pas encore connu (profile_public_screen.dart)"
+  },
+  "profilePublicReportUserAction": "Signaler {name}",
+  "@profilePublicReportUserAction": {
+    "description": "Entrée du menu ⋯ une fois le nom de la personne consultée connu (profile_public_screen.dart)",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "profilePublicBlockUserAction": "Bloquer {name}",
+  "@profilePublicBlockUserAction": {
+    "description": "Entrée du menu ⋯ pour bloquer la personne consultée (profile_public_screen.dart)",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "profilePublicLoadErrorTitle": "Impossible de charger le profil",
+  "@profilePublicLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur de chargement du profil public (profile_public_screen.dart)"
+  },
+  "profilePublicRatingLine": "⭐ {rating} · {count, plural, =1{{count} avis} other{{count} avis}} · {memberSince}",
+  "@profilePublicRatingLine": {
+    "description": "Ligne méta du hero : note (déjà formatée), nombre d'avis et ancienneté envoyée par le serveur (profile_public_screen.dart, _ProfileHero)",
+    "placeholders": {
+      "rating": {"type": "String"},
+      "count": {"type": "int"},
+      "memberSince": {"type": "String"}
+    }
+  },
+  "profilePublicVerified": "✓ Vérifié",
+  "@profilePublicVerified": {
+    "description": "Pastille KYC vérifié du hero (profile_public_screen.dart)"
+  },
+  "profilePublicProBadge": "PRO",
+  "@profilePublicProBadge": {
+    "description": "Pastille compte PRO du hero (profile_public_screen.dart)"
+  },
+  "profilePublicStatRatingLabel": "Note",
+  "@profilePublicStatRatingLabel": {
+    "description": "Libellé de la statistique note moyenne (profile_public_screen.dart, _StatsRow)"
+  },
+  "profilePublicStatDeliveriesLabel": "Livraisons",
+  "@profilePublicStatDeliveriesLabel": {
+    "description": "Libellé de la statistique nombre de livraisons (profile_public_screen.dart, _StatsRow)"
+  },
+  "profilePublicAboutSectionLabel": "À PROPOS",
+  "@profilePublicAboutSectionLabel": {
+    "description": "Titre de la section bio (profile_public_screen.dart, _AboutSection)"
+  },
+  "profilePublicLanguagesSectionLabel": "LANGUES",
+  "@profilePublicLanguagesSectionLabel": {
+    "description": "Titre de la section langues parlées (profile_public_screen.dart, _TravelerInfoSection)"
+  },
+  "profilePublicBadgesSectionLabel": "BADGES",
+  "@profilePublicBadgesSectionLabel": {
+    "description": "Titre de la section badges, identique dans les deux langues (profile_public_screen.dart, _BadgesSection)"
+  },
+  "profilePublicContactCallLabel": "Joignable par appel",
+  "@profilePublicContactCallLabel": {
+    "description": "Puce de disponibilité : contactMode == call (profile_public_screen.dart, _ContactInfoSection)"
+  },
+  "profilePublicContactMessageLabel": "Joignable par message",
+  "@profilePublicContactMessageLabel": {
+    "description": "Puce de disponibilité : contactMode == message (profile_public_screen.dart, _ContactInfoSection)"
+  },
+  "profilePublicContactBothLabel": "Appel & message",
+  "@profilePublicContactBothLabel": {
+    "description": "Puce de disponibilité : contactMode == both (profile_public_screen.dart, _ContactInfoSection)"
+  },
+  "profilePublicAvailabilitySectionLabel": "DISPONIBILITÉ",
+  "@profilePublicAvailabilitySectionLabel": {
+    "description": "Titre de la section disponibilité (profile_public_screen.dart, _ContactInfoSection)"
+  },
+  "profilePublicRespondsWithin": "Répond en < {hours}h",
+  "@profilePublicRespondsWithin": {
+    "description": "Puce du délai de réponse moyen (profile_public_screen.dart, _ContactInfoSection)",
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "profilePublicRecentReviewsSectionLabel": "AVIS RÉCENTS",
+  "@profilePublicRecentReviewsSectionLabel": {
+    "description": "Titre de la section avis récents (profile_public_screen.dart, _RecentReviewsSection)"
+  },
+  "profilePublicNoReviewsYet": "Aucun avis pour le moment.",
+  "@profilePublicNoReviewsYet": {
+    "description": "Message d'état vide des avis, partagé par l'aperçu et la feuille « tous les avis » (profile_public_screen.dart, all_reviews_bottom_sheet.dart)"
+  },
+  "profilePublicSeeAllReviews": "Voir tous les avis ({count}) ›",
+  "@profilePublicSeeAllReviews": {
+    "description": "Lien vers la feuille « tous les avis » (profile_public_screen.dart, _RecentReviewsSection)",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "profileUserFallback": "Utilisateur",
+  "@profileUserFallback": {
+    "description": "Nom de repli d'un auteur d'avis sans displayName (profile_public_screen.dart, all_reviews_bottom_sheet.dart)"
+  },
+  "followFollowButton": "S'abonner",
+  "@followFollowButton": {
+    "description": "Bouton d'abonnement à un voyageur, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)"
+  },
+  "followFollowingButton": "Abonné ✓",
+  "@followFollowingButton": {
+    "description": "État abonné du bouton d'abonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)"
+  },
+  "followUnfollowDialogTitle": "Se désabonner ?",
+  "@followUnfollowDialogTitle": {
+    "description": "Titre du dialog de confirmation de désabonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)"
+  },
+  "followUnfollowButton": "Se désabonner",
+  "@followUnfollowButton": {
+    "description": "Bouton de confirmation du désabonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)"
+  },
+  "profilePublicUnfollowDialogMessage": "Vous ne recevrez plus les notifications de ce voyageur.",
+  "@profilePublicUnfollowDialogMessage": {
+    "description": "Message du dialog de confirmation de désabonnement (profile_public_screen.dart, _SubscribeAction)"
+  },
+  "profilePublicEnablePushTooltip": "Activer les notifications",
+  "@profilePublicEnablePushTooltip": {
+    "description": "Tooltip de la cloche quand les alertes push sont coupées (profile_public_screen.dart, _SubscribeAction)"
+  },
+  "profilePublicDisablePushTooltip": "Désactiver les notifications",
+  "@profilePublicDisablePushTooltip": {
+    "description": "Tooltip de la cloche quand les alertes push sont actives (profile_public_screen.dart, _SubscribeAction)"
+  },
+  "shipmentsHistoryTitle": "Historique des livraisons",
+  "@shipmentsHistoryTitle": {
+    "description": "Titre de l'écran (shipments_history_screen.dart)"
+  },
+  "shipmentsHistoryEmptyTitle": "Aucune livraison terminée",
+  "@shipmentsHistoryEmptyTitle": {
+    "description": "Titre de l'état vide (shipments_history_screen.dart)"
+  },
+  "shipmentsHistoryEmptyDescription": "Tes livraisons terminées s'afficheront ici.",
+  "@shipmentsHistoryEmptyDescription": {
+    "description": "Description de l'état vide (shipments_history_screen.dart)"
+  },
+  "shipmentsHistoryDaysAgo": "{count, plural, =1{Il y a {count} jour} other{Il y a {count} jours}}",
+  "@shipmentsHistoryDaysAgo": {
+    "description": "Date relative d'une livraison (2 à 6 jours) (shipments_history_screen.dart, _DeliveryCard._relativeDate)",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "shipmentsHistoryDetailsButton": "Voir détails",
+  "@shipmentsHistoryDetailsButton": {
+    "description": "Bouton d'ouverture du détail d'une livraison (shipments_history_screen.dart, _DeliveryCard)"
+  },
+  "allReviewsSheetTitle": "Avis",
+  "@allReviewsSheetTitle": {
+    "description": "Titre de la bottom sheet « tous les avis » (all_reviews_bottom_sheet.dart)"
+  },
+  "faqFindAnswerTitle": "Trouver une réponse",
+  "@faqFindAnswerTitle": {
+    "description": "Titre de la section recherche (faq_screen.dart)"
+  },
+  "faqFindAnswerSubtitle": "Recherche une réponse ou parcours les catégories.",
+  "@faqFindAnswerSubtitle": {
+    "description": "Sous-titre de la section recherche (faq_screen.dart)"
+  },
+  "faqSearchHint": "Rechercher dans l’aide",
+  "@faqSearchHint": {
+    "description": "Placeholder du champ de recherche (faq_screen.dart)"
+  },
+  "faqEmptyResultsTitle": "Aucun résultat",
+  "@faqEmptyResultsTitle": {
+    "description": "Titre de l'état vide de la recherche FAQ (faq_screen.dart, _FaqEmptyState)"
+  },
+  "faqEmptyResultsDescription": "Essaie avec d'autres mots-clés ou contacte notre équipe.",
+  "@faqEmptyResultsDescription": {
+    "description": "Description de l'état vide de la recherche FAQ (faq_screen.dart, _FaqEmptyState)"
+  },
+  "faqContactCardTitle": "Tu n’as pas trouvé ta réponse ?",
+  "@faqContactCardTitle": {
+    "description": "Titre de la carte de contact support (faq_screen.dart, _ContactSupportCard)"
+  },
+  "faqContactCardSubtitle": "Notre équipe est là pour t’aider.",
+  "@faqContactCardSubtitle": {
+    "description": "Sous-titre de la carte de contact support (faq_screen.dart, _ContactSupportCard)"
+  },
+  "faqAccountTitle": "Compte & identité",
+  "@faqAccountTitle": {
+    "description": "Titre de la section FAQ « account » (faq_screen.dart)"
+  },
+  "faqAnnouncementsTitle": "Annonces & demandes",
+  "@faqAnnouncementsTitle": {
+    "description": "Titre de la section FAQ « announcements » (faq_screen.dart)"
+  },
+  "faqPaymentsTitle": "Paiements & remboursements",
+  "@faqPaymentsTitle": {
+    "description": "Titre de la section FAQ « payments » (faq_screen.dart)"
+  },
+  "faqDeliveryTitle": "Suivi & livraison",
+  "@faqDeliveryTitle": {
+    "description": "Titre de la section FAQ « delivery » (faq_screen.dart)"
+  },
+  "faqSafetyTitle": "Sécurité & données",
+  "@faqSafetyTitle": {
+    "description": "Titre de la section FAQ « safety » (faq_screen.dart)"
+  },
+  "faqAccountIdentityRequiredQ": "Pourquoi la vérification d'identité est-elle obligatoire ?",
+  "@faqAccountIdentityRequiredQ": {
+    "description": "Question FAQ account/identity_required (faq_screen.dart)"
+  },
+  "faqAccountIdentityRequiredA": "Elle peut être demandée par nos partenaires de paiement et par les obligations applicables à certaines transactions. Elle nous permet aussi de lutter contre la fraude et de protéger les utilisateurs de Yadony.",
+  "@faqAccountIdentityRequiredA": {
+    "description": "Réponse FAQ account/identity_required (faq_screen.dart)"
+  },
+  "faqAccountIdentityDelayQ": "Combien de temps prend la validation ?",
+  "@faqAccountIdentityDelayQ": {
+    "description": "Question FAQ account/identity_delay (faq_screen.dart)"
+  },
+  "faqAccountIdentityDelayA": "La validation est souvent réalisée en quelques minutes. Si une vérification manuelle est nécessaire, le délai peut être plus long.",
+  "@faqAccountIdentityDelayA": {
+    "description": "Réponse FAQ account/identity_delay (faq_screen.dart)"
+  },
+  "faqAccountIdentityDocumentsQ": "Quels documents sont acceptés ?",
+  "@faqAccountIdentityDocumentsQ": {
+    "description": "Question FAQ account/identity_documents (faq_screen.dart)"
+  },
+  "faqAccountIdentityDocumentsA": "Carte nationale d'identité, passeport ou titre de séjour en cours de validité. Le document doit être lisible et non expiré.",
+  "@faqAccountIdentityDocumentsA": {
+    "description": "Réponse FAQ account/identity_documents (faq_screen.dart)"
+  },
+  "faqAccountWithoutIdentityQ": "Puis-je utiliser Yadony sans vérifier mon identité ?",
+  "@faqAccountWithoutIdentityQ": {
+    "description": "Question FAQ account/without_identity (faq_screen.dart)"
+  },
+  "faqAccountWithoutIdentityA": "Tu peux explorer les annonces sans vérifier ton identité. Certaines actions, notamment envoyer, transporter ou recevoir des paiements, peuvent nécessiter une vérification.",
+  "@faqAccountWithoutIdentityA": {
+    "description": "Réponse FAQ account/without_identity (faq_screen.dart)"
+  },
+  "faqAnnouncementsPublishTripQ": "Comment publier un trajet en tant que voyageur ?",
+  "@faqAnnouncementsPublishTripQ": {
+    "description": "Question FAQ announcements/publish_trip (faq_screen.dart)"
+  },
+  "faqAnnouncementsPublishTripA": "Depuis Accueil ou Activités, choisis \"Publier un trajet\". Renseigne la ville de départ, la destination, la date et la capacité disponible.",
+  "@faqAnnouncementsPublishTripA": {
+    "description": "Réponse FAQ announcements/publish_trip (faq_screen.dart)"
+  },
+  "faqAnnouncementsPublishRequestQ": "Comment publier une demande d'envoi ?",
+  "@faqAnnouncementsPublishRequestQ": {
+    "description": "Question FAQ announcements/publish_request (faq_screen.dart)"
+  },
+  "faqAnnouncementsPublishRequestA": "Depuis Accueil ou Activités, choisis \"Publier un colis\". Décris le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.",
+  "@faqAnnouncementsPublishRequestA": {
+    "description": "Réponse FAQ announcements/publish_request (faq_screen.dart)"
+  },
+  "faqAnnouncementsEditRequestQ": "Puis-je modifier ma demande après publication ?",
+  "@faqAnnouncementsEditRequestQ": {
+    "description": "Question FAQ announcements/edit_request (faq_screen.dart)"
+  },
+  "faqAnnouncementsEditRequestA": "Tu peux modifier une demande tant qu'aucune offre n'a été acceptée. Après acceptation, contacte le support si une information importante doit être corrigée.",
+  "@faqAnnouncementsEditRequestA": {
+    "description": "Réponse FAQ announcements/edit_request (faq_screen.dart)"
+  },
+  "faqPaymentsPaymentTimingQ": "Quand suis-je débité ?",
+  "@faqPaymentsPaymentTimingQ": {
+    "description": "Question FAQ payments/payment_timing (faq_screen.dart)"
+  },
+  "faqPaymentsPaymentTimingA": "Pour un paiement par carte, les fonds sont sécurisés lors de l'acceptation puis libérés selon l'avancement de la livraison. Pour les espèces et le Mobile Money, suis les indications affichées au moment de choisir le moyen de paiement.",
+  "@faqPaymentsPaymentTimingA": {
+    "description": "Réponse FAQ payments/payment_timing (faq_screen.dart)"
+  },
+  "faqPaymentsRefundQ": "Comment se passe le remboursement en cas d'annulation ?",
+  "@faqPaymentsRefundQ": {
+    "description": "Question FAQ payments/refund (faq_screen.dart)"
+  },
+  "faqPaymentsRefundA": "Le remboursement dépend du moyen de paiement et du moment de l'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement.",
+  "@faqPaymentsRefundA": {
+    "description": "Réponse FAQ payments/refund (faq_screen.dart)"
+  },
+  "faqPaymentsCommissionQ": "Pourquoi une commission de {percent} % ?",
+  "@faqPaymentsCommissionQ": {
+    "description": "Question FAQ payments/commission, percent déjà formaté par commissionPercentLabel (faq_screen.dart)",
+    "placeholders": {
+      "percent": {"type": "String"}
+    }
+  },
+  "faqPaymentsCommissionA": "La commission contribue aux frais de paiement, au support, à la prévention de la fraude et au développement de la plateforme.",
+  "@faqPaymentsCommissionA": {
+    "description": "Réponse FAQ payments/commission (faq_screen.dart)"
+  },
+  "faqPaymentsPaymentSecurityQ": "Les paiements sont-ils sécurisés ?",
+  "@faqPaymentsPaymentSecurityQ": {
+    "description": "Question FAQ payments/payment_security (faq_screen.dart)"
+  },
+  "faqPaymentsPaymentSecurityA": "Les paiements en ligne sont traités par les prestataires indiqués dans l'application. Yadony ne stocke pas les données complètes de ta carte. Un paiement en espèces n'est pas placé sous séquestre : ne paie jamais en dehors du parcours convenu dans l'application.",
+  "@faqPaymentsPaymentSecurityA": {
+    "description": "Réponse FAQ payments/payment_security (faq_screen.dart)"
+  },
+  "faqDeliveryHandoverQrQ": "Comment fonctionne le QR de remise ?",
+  "@faqDeliveryHandoverQrQ": {
+    "description": "Question FAQ delivery/handover_qr (faq_screen.dart)"
+  },
+  "faqDeliveryHandoverQrA": "À la remise du colis, le QR code confirme la prise en charge et déclenche le suivi. Sans connexion, la lecture est mémorisée sur l'appareil puis synchronisée à la reconnexion.",
+  "@faqDeliveryHandoverQrA": {
+    "description": "Réponse FAQ delivery/handover_qr (faq_screen.dart)"
+  },
+  "faqDeliveryParcelMissingQ": "Que faire si le colis n'arrive pas ?",
+  "@faqDeliveryParcelMissingQ": {
+    "description": "Question FAQ delivery/parcel_missing (faq_screen.dart)"
+  },
+  "faqDeliveryParcelMissingA": "Ouvre un litige depuis \"Mes litiges\" dès que tu constates le problème. Ajoute les photos, messages et informations de suivi disponibles. Les délais applicables sont rappelés dans le parcours de signalement.",
+  "@faqDeliveryParcelMissingA": {
+    "description": "Réponse FAQ delivery/parcel_missing (faq_screen.dart)"
+  },
+  "faqDeliveryDeliveryDelayQ": "Quel est le délai de livraison moyen ?",
+  "@faqDeliveryDeliveryDelayQ": {
+    "description": "Question FAQ delivery/delivery_delay (faq_screen.dart)"
+  },
+  "faqDeliveryDeliveryDelayA": "Le délai dépend du trajet choisi et de la date annoncée par le voyageur. Vérifie toujours les informations du trajet avant d'accepter une offre.",
+  "@faqDeliveryDeliveryDelayA": {
+    "description": "Réponse FAQ delivery/delivery_delay (faq_screen.dart)"
+  },
+  "faqSafetyLostParcelQ": "Que se passe-t-il si mon colis est perdu ?",
+  "@faqSafetyLostParcelQ": {
+    "description": "Question FAQ safety/lost_parcel (faq_screen.dart)"
+  },
+  "faqSafetyLostParcelA": "Yadony ne couvre pas automatiquement la perte d'un colis. Après investigation, un remboursement jusqu'à {cap} € peut être accordé si toutes les conditions sont respectées :\n\n• paiement par carte effectué dans Yadony ;\n• aucun paiement ou accord conclu hors plateforme ;\n• QR codes de dépôt et de remise utilisés ;\n• litige ouvert dans les 15 jours suivant la date prévue ;\n• contenu conforme aux objets autorisés.\n\nToute décision reste soumise à la validation de l'équipe Yadony.",
+  "@faqSafetyLostParcelA": {
+    "description": "Réponse FAQ safety/lost_parcel, cap déjà formaté par reimbursementCapLabel (faq_screen.dart)",
+    "placeholders": {
+      "cap": {"type": "String"}
+    }
+  },
+  "faqSafetyDisputeQ": "Que faire en cas de litige avec un voyageur ?",
+  "@faqSafetyDisputeQ": {
+    "description": "Question FAQ safety/dispute (faq_screen.dart)"
+  },
+  "faqSafetyDisputeA": "Ouvre \"Mes litiges\" depuis ton profil et fournis les éléments utiles : photos, messages et suivi. Notre équipe examine ensuite le dossier et te tient informé dans l'application.",
+  "@faqSafetyDisputeA": {
+    "description": "Réponse FAQ safety/dispute (faq_screen.dart)"
+  },
+  "faqSafetyPersonalDataQ": "Mes données personnelles sont-elles protégées ?",
+  "@faqSafetyPersonalDataQ": {
+    "description": "Question FAQ safety/personal_data (faq_screen.dart)"
+  },
+  "faqSafetyPersonalDataA": "Yadony applique des mesures de sécurité pour protéger les données et ne vend pas tes informations personnelles. Tu peux consulter la politique de confidentialité et gérer tes préférences dans Paramètres.",
+  "@faqSafetyPersonalDataA": {
+    "description": "Réponse FAQ safety/personal_data (faq_screen.dart)"
+  },
+  "faqSafetyDeleteAccountQ": "Comment supprimer mon compte ?",
+  "@faqSafetyDeleteAccountQ": {
+    "description": "Question FAQ safety/delete_account (faq_screen.dart)"
+  },
+  "faqSafetyDeleteAccountA": "Dans Paramètres → Données et compte → Supprimer mon compte, tu peux choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.",
+  "@faqSafetyDeleteAccountA": {
+    "description": "Réponse FAQ safety/delete_account (faq_screen.dart)"
+  },
+  "helpTutorialScreenTitle": "Tutoriel vidéo",
+  "@helpTutorialScreenTitle": {
+    "description": "Titre de l'écran lecteur de tutoriel, dans ses 3 états (help_tutorial_screen.dart)"
+  },
+  "helpTutorialNotFoundTitle": "Tutoriel introuvable",
+  "@helpTutorialNotFoundTitle": {
+    "description": "Titre de l'état tutoriel introuvable (help_tutorial_screen.dart)"
+  },
+  "helpTutorialNotFoundDescription": "Ce tutoriel n’est plus disponible.",
+  "@helpTutorialNotFoundDescription": {
+    "description": "Description de l'état tutoriel introuvable (help_tutorial_screen.dart)"
+  },
+  "helpTutorialSubscribeChannelButton": "S’abonner à la chaîne",
+  "@helpTutorialSubscribeChannelButton": {
+    "description": "Bouton vers la chaîne YouTube Yadony, sous le lecteur (help_tutorial_screen.dart, _HelpTutorialContent)"
+  },
+  "helpTutorialPlayerSemanticsLabel": "Lecteur vidéo : {title}",
+  "@helpTutorialPlayerSemanticsLabel": {
+    "description": "Semantics label du cadre du lecteur vidéo (help_tutorial_screen.dart, _buildPlayerFrame)",
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "helpTutorialPlaybackErrorTitle": "Lecture impossible",
+  "@helpTutorialPlaybackErrorTitle": {
+    "description": "Titre de la carte d'erreur de lecture (help_tutorial_screen.dart, _PlayerErrorCard)"
+  },
+  "helpTutorialPlaybackErrorDescription": "Vérifie ta connexion ou ouvre la vidéo directement dans YouTube.",
+  "@helpTutorialPlaybackErrorDescription": {
+    "description": "Description de la carte d'erreur de lecture (help_tutorial_screen.dart, _PlayerErrorCard)"
+  },
+  "helpTutorialOpenInYoutubeButton": "Ouvrir dans YouTube",
+  "@helpTutorialOpenInYoutubeButton": {
+    "description": "Bouton de repli vers YouTube externe (help_tutorial_screen.dart, _PlayerErrorCard)"
+  },
+  "helpContextualCardSemanticsLabel": "Besoin d’aide ? Voir le tutoriel {title}",
+  "@helpContextualCardSemanticsLabel": {
+    "description": "Semantics label de la carte suggestion de tutoriel contextuel (contextual_tutorial_card.dart)",
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "helpContextualCardLabel": "Besoin d'aide ? Voir le tutoriel",
+  "@helpContextualCardLabel": {
+    "description": "Texte visible de la carte suggestion de tutoriel contextuel, sans le titre (contextual_tutorial_card.dart)"
+  },
+  "helpContextualCardDismissTooltip": "Masquer ce conseil",
+  "@helpContextualCardDismissTooltip": {
+    "description": "Tooltip du bouton de fermeture (X) de la carte suggestion (contextual_tutorial_card.dart)"
+  },
+  "helpTutorialCardSemanticsLabel": "Lire le tutoriel {title}",
+  "@helpTutorialCardSemanticsLabel": {
+    "description": "Semantics label de la carte tutoriel de la Communauté (help_tutorial_card.dart)",
+    "placeholders": {
+      "title": {"type": "String"}
+    }
   }
 }

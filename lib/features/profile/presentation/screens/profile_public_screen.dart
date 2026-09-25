@@ -14,6 +14,7 @@ import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -92,6 +93,8 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
     final isOwnProfile = currentUserId != null && currentUserId == viewedUserId;
     final showButton = widget.showSubscribe && !isOwnProfile;
 
+    final l = context.l10n;
+
     return BlocBuilder<ProfilePublicBloc, ProfilePublicState>(
       builder: (context, state) {
         // Nom affiché de la personne consultée, connu seulement une fois le
@@ -110,11 +113,11 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
         // Other user, loading/error → "Profil"
         final String appBarTitle;
         if (isOwnProfile) {
-          appBarTitle = 'Ce que les autres voient';
+          appBarTitle = l.profilePublicOwnProfileTitle;
         } else if (viewedName != null) {
           appBarTitle = viewedName;
         } else {
-          appBarTitle = 'Profil';
+          appBarTitle = l.profilePublicTitleFallback;
         }
 
         Widget body;
@@ -122,7 +125,9 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
           body = const DonyDetailSkeleton();
         } else if (state is ProfilePublicError) {
           body = _ErrorView(
+            title: l.profilePublicLoadErrorTitle,
             message: state.message,
+            retryLabel: l.commonRetry,
             onRetry: () => context.read<ProfilePublicBloc>().add(
               ProfilePublicRequested(viewedUserId),
             ),
@@ -151,7 +156,7 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
                     // icônes alignées dans l'app bar transformeraient deux
                     // actions rares en bruit permanent.
                     PopupMenuButton<String>(
-                      tooltip: 'Plus d\'options',
+                      tooltip: l.profilePublicMoreOptionsTooltip,
                       icon: DonyIcon('ellipsis', color: cs.onSurfaceVariant),
                       onSelected: (value) {
                         switch (value) {
@@ -182,8 +187,8 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
                           child: _MenuRow(
                             iconAsset: 'flag',
                             label: viewedName == null
-                                ? 'Signaler'
-                                : 'Signaler $viewedName',
+                                ? l.profilePublicReportAction
+                                : l.profilePublicReportUserAction(viewedName),
                           ),
                         ),
                         if (viewedName != null)
@@ -191,7 +196,7 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
                             value: 'block',
                             child: _MenuRow(
                               iconAsset: 'ban',
-                              label: 'Bloquer $viewedName',
+                              label: l.profilePublicBlockUserAction(viewedName),
                             ),
                           ),
                       ],
@@ -236,9 +241,16 @@ class _MenuRow extends StatelessWidget {
 // ─── Error state ─────────────────────────────────────────────────────────────
 
 class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message, required this.onRetry});
+  const _ErrorView({
+    required this.title,
+    required this.message,
+    required this.retryLabel,
+    required this.onRetry,
+  });
 
+  final String title;
   final String message;
+  final String retryLabel;
   final VoidCallback onRetry;
 
   @override
@@ -247,9 +259,9 @@ class _ErrorView extends StatelessWidget {
       type: DonyEmptyStateType.error,
       mascotte: DonyMascotteType.erreurLegere,
       iconAsset: 'circle-alert',
-      title: 'Impossible de charger le profil',
+      title: title,
       description: message,
-      actionLabel: 'Réessayer',
+      actionLabel: retryLabel,
       onAction: onRetry,
     );
   }
@@ -385,12 +397,16 @@ class _ProfileHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     final ratingStr = profile.averageRating > 0
-        ? profile.averageRating.toStringAsFixed(1)
+        ? formatOneDecimal(l, profile.averageRating)
         : '-';
-    final metaLine =
-        '⭐ $ratingStr · ${profile.ratingCount} avis · ${profile.memberSince}';
+    final metaLine = l.profilePublicRatingLine(
+      ratingStr,
+      profile.ratingCount,
+      profile.memberSince,
+    );
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -427,9 +443,13 @@ class _ProfileHero extends StatelessWidget {
               spacing: DonySpacing.xs,
               runSpacing: DonySpacing.xs,
               children: [
-                if (profile.kycVerified) const _HeroPill(label: '✓ Vérifié'),
-                if (profile.isProAccount) const _HeroPill(label: 'PRO'),
-                if (profile.isKiloPro) const _HeroPill(label: 'Kilo Pro'),
+                if (profile.kycVerified)
+                  _HeroPill(label: l.profilePublicVerified),
+                if (profile.isProAccount)
+                  _HeroPill(label: l.profilePublicProBadge),
+                // Nom propre affiché tel quel dans les deux langues.
+                if (profile.isKiloPro)
+                  const _HeroPill(label: 'Kilo Pro'), // i18n-ignore
               ],
             ),
           ],
@@ -606,6 +626,7 @@ class _StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return IntrinsicHeight(
       child: Row(
@@ -613,9 +634,9 @@ class _StatsRow extends StatelessWidget {
           Expanded(
             child: _StatItem(
               value: profile.averageRating > 0
-                  ? profile.averageRating.toStringAsFixed(1)
+                  ? formatOneDecimal(l, profile.averageRating)
                   : '-',
-              label: 'Note',
+              label: l.profilePublicStatRatingLabel,
               iconAsset: 'star',
               iconColor: DonyColors.warning500,
             ),
@@ -628,7 +649,7 @@ class _StatsRow extends StatelessWidget {
           Expanded(
             child: _StatItem(
               value: '${profile.completedBidsCount}',
-              label: 'Livraisons',
+              label: l.profilePublicStatDeliveriesLabel,
               iconAsset: 'package',
               iconColor: cs.primary,
             ),
@@ -723,7 +744,7 @@ class _AboutSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionLabel('À PROPOS'),
+        _SectionLabel(context.l10n.profilePublicAboutSectionLabel),
         const SizedBox(height: DonySpacing.sm),
         Text(
           bio,
@@ -754,7 +775,7 @@ class _TravelerInfoSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _SectionLabel('LANGUES'),
+                _SectionLabel(context.l10n.profilePublicLanguagesSectionLabel),
                 const SizedBox(height: DonySpacing.sm),
                 Wrap(
                   spacing: DonySpacing.xs,
@@ -806,7 +827,7 @@ class _BadgesSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionLabel('BADGES'),
+        _SectionLabel(context.l10n.profilePublicBadgesSectionLabel),
         const SizedBox(height: DonySpacing.sm),
         Wrap(
           spacing: DonySpacing.sm,
@@ -848,25 +869,26 @@ class _ContactInfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     String? contactLabel;
     String? contactIcon;
     switch (profile.contactMode) {
       case 'call':
-        contactLabel = 'Joignable par appel';
+        contactLabel = l.profilePublicContactCallLabel;
         contactIcon = 'phone';
       case 'message':
-        contactLabel = 'Joignable par message';
+        contactLabel = l.profilePublicContactMessageLabel;
         contactIcon = 'message-circle';
       case 'both':
-        contactLabel = 'Appel & message';
+        contactLabel = l.profilePublicContactBothLabel;
         contactIcon = 'messages-square';
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionLabel('DISPONIBILITÉ'),
+        _SectionLabel(l.profilePublicAvailabilitySectionLabel),
         const SizedBox(height: DonySpacing.sm),
         Wrap(
           spacing: DonySpacing.sm,
@@ -877,7 +899,9 @@ class _ContactInfoSection extends StatelessWidget {
             if (profile.responseDelayHours != null)
               _InfoChip(
                 iconAsset: 'timer',
-                label: 'Répond en < ${profile.responseDelayHours}h',
+                label: l.profilePublicRespondsWithin(
+                  profile.responseDelayHours!,
+                ),
                 cs: cs,
               ),
           ],
@@ -940,19 +964,20 @@ class _RecentReviewsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     final recentItems = summary.ratings.take(3).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionLabel('AVIS RÉCENTS'),
+        _SectionLabel(l.profilePublicRecentReviewsSectionLabel),
         const SizedBox(height: DonySpacing.sm),
         if (recentItems.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
             child: Text(
-              'Aucun avis pour le moment.',
+              l.profilePublicNoReviewsYet,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           )
@@ -987,7 +1012,7 @@ class _RecentReviewsSection extends StatelessWidget {
               // Ensure min 44pt touch area
               padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
               child: Text(
-                'Voir tous les avis (${summary.ratingCount}) ›',
+                l.profilePublicSeeAllReviews(summary.ratingCount),
                 style: tt.bodyMedium?.copyWith(
                   color: cs.primary,
                   fontWeight: FontWeight.w800,
@@ -1021,10 +1046,11 @@ class _FlatReviewRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     final authorName = item.authorName?.isNotEmpty == true
         ? item.authorName!
-        : 'Utilisateur';
+        : l.profileUserFallback;
     final hasCorridor = item.departureCity != null && item.arrivalCity != null;
     final initials = _initials(authorName);
 
@@ -1063,7 +1089,7 @@ class _FlatReviewRow extends StatelessWidget {
                     ),
                     const SizedBox(width: DonySpacing.xs),
                     Text(
-                      DateFormat('dd/MM/yyyy').format(item.createdAt),
+                      DateFormat.yMd(l.localeName).format(item.createdAt),
                       style: tt.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                         fontFeatures: const [FontFeature.tabularFigures()],
@@ -1190,11 +1216,12 @@ class _SubscribeAction extends StatelessWidget {
   const _SubscribeAction();
 
   Future<void> _confirmUnsubscribe(BuildContext context) async {
+    final l = context.l10n;
     final confirmed = await DonyDialog.show(
       context,
-      title: 'Se désabonner ?',
-      message: 'Vous ne recevrez plus les notifications de ce voyageur.',
-      confirmLabel: 'Se désabonner',
+      title: l.followUnfollowDialogTitle,
+      message: l.profilePublicUnfollowDialogMessage,
+      confirmLabel: l.followUnfollowButton,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'bell-off',
     );
@@ -1206,6 +1233,7 @@ class _SubscribeAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return BlocBuilder<TravelerSubscribeBloc, TravelerSubscribeState>(
       builder: (context, state) {
@@ -1218,7 +1246,7 @@ class _SubscribeAction extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               DonyButton(
-                label: 'Abonné ✓',
+                label: l.followFollowingButton,
                 variant: DonyButtonVariant.secondary,
                 fullWidth: false,
                 isLoading: isLoading,
@@ -1229,8 +1257,8 @@ class _SubscribeAction extends StatelessWidget {
               const SizedBox(width: DonySpacing.sm),
               IconButton(
                 tooltip: state.pushEnabled
-                    ? 'Désactiver les notifications'
-                    : 'Activer les notifications',
+                    ? l.profilePublicDisablePushTooltip
+                    : l.profilePublicEnablePushTooltip,
                 icon: DonyIcon(
                   state.pushEnabled ? 'bell' : 'bell-off',
                   color: cs.primary,
@@ -1246,7 +1274,7 @@ class _SubscribeAction extends StatelessWidget {
         }
 
         return DonyButton(
-          label: "S'abonner",
+          label: l.followFollowButton,
           iconAsset: 'plus',
           fullWidth: false,
           isLoading: isLoading,

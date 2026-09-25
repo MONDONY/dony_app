@@ -216,7 +216,7 @@ final class _YoutubeTutorialPlayerSession implements HelpTutorialPlayerSession {
     try {
       if (configuration.autoPlay) {
         throw StateError(
-          'Les tutoriels d’aide ne peuvent pas démarrer automatiquement.',
+          'Les tutoriels d’aide ne peuvent pas démarrer automatiquement.', // i18n-ignore
         );
       }
       final didBecomeReady = await Future.any<bool>([
@@ -341,7 +341,8 @@ final class _PackageYoutubeController implements HelpTutorialYoutubeController {
   YoutubePlayerController? _controller;
 
   YoutubePlayerController get _activeController =>
-      _controller ?? (throw StateError('Le lecteur YouTube a déjà été fermé.'));
+      _controller ??
+      (throw StateError('Le lecteur YouTube a déjà été fermé.')); // i18n-ignore
 
   @override
   Stream<YoutubePlayerValue> get values => _activeController.stream;

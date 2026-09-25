@@ -11,6 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 const _emptyConfigJson = '''
@@ -264,6 +265,25 @@ void main() {
       expect(find.text('Trouver une réponse'), findsOneWidget);
       expect(find.text('Tutoriels vidéo'), findsNothing);
       expect(find.text('Rejoindre la communauté'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'anglais : titre, section et question traduits, id inchangés pour '
+    "l'analytics",
+    (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap());
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('FAQ & help'), findsOneWidget);
+      expect(find.text('Account & identity'), findsOneWidget);
+      expect(
+        find.text('Why is identity verification required?'),
+        findsOneWidget,
+      );
+      expect(find.text('Find an answer'), findsOneWidget);
+      expect(find.text('Contact support'), findsOneWidget);
     },
   );
 
