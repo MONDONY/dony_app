@@ -23,8 +23,8 @@ class PriceGridLoaded extends PriceGridState {
 }
 
 class PriceGridError extends PriceGridState {
-  final String message;
-  const PriceGridError(this.message);
+  final Object error;
+  const PriceGridError(this.error);
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [error];
 }

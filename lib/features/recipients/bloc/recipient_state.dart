@@ -11,12 +11,12 @@ class RecipientState {
 
   final RecipientStatus status;
   final List<Recipient> recipients;
-  final String? error;
+  final Object? error;
 
   RecipientState copyWith({
     RecipientStatus? status,
     List<Recipient>? recipients,
-    String? error,
+    Object? error,
   }) => RecipientState(
     status: status ?? this.status,
     recipients: recipients ?? this.recipients,

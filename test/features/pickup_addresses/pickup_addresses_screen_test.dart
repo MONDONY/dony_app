@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/models/pickup_address.dart';
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addresses_screen.dart';
@@ -146,4 +147,26 @@ void main() {
     expect(find.textContaining('Drop-off'), findsOneWidget);
     expect(find.textContaining('Delivery'), findsOneWidget);
   });
+
+  testWidgets(
+    'en anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        const PickupAddressState(
+          status: PickupAddressStatus.error,
+          error: NetworkException('raw technical detail'),
+        ),
+      );
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 }

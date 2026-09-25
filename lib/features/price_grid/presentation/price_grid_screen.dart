@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/pricing/pricing_labels.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -23,11 +26,7 @@ class PriceGridScreen extends StatelessWidget {
     return BlocConsumer<PriceGridBloc, PriceGridState>(
       listener: (context, state) {
         if (state is PriceGridError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          unawaited(ErrorPresenter.show(context, state.error));
         }
       },
       builder: (context, state) {
@@ -63,7 +62,10 @@ class PriceGridScreen extends StatelessWidget {
 
     if (state is PriceGridError) {
       return _ErrorView(
-        message: state.message,
+        message: ErrorPresenter.resolve(
+          state.error,
+          l10n: context.l10n,
+        ).message,
         onRetry: () =>
             context.read<PriceGridBloc>().add(const PriceGridLoadRequested()),
       );

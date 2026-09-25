@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_state.dart';
 import 'package:dony/features/trip_templates/data/repositories/trip_recurrence_repository.dart';
@@ -26,7 +27,10 @@ class TripRecurrenceBloc
       );
     } catch (e) {
       emit(
-        state.copyWith(status: TripRecurrenceStatus.error, error: e.toString()),
+        state.copyWith(
+          status: TripRecurrenceStatus.error,
+          error: unwrapDioError(e),
+        ),
       );
     }
   }
@@ -46,7 +50,10 @@ class TripRecurrenceBloc
       );
     } catch (e) {
       emit(
-        state.copyWith(status: TripRecurrenceStatus.error, error: e.toString()),
+        state.copyWith(
+          status: TripRecurrenceStatus.error,
+          error: unwrapDioError(e),
+        ),
       );
     }
   }
@@ -66,7 +73,10 @@ class TripRecurrenceBloc
       );
     } catch (e) {
       emit(
-        state.copyWith(status: TripRecurrenceStatus.error, error: e.toString()),
+        state.copyWith(
+          status: TripRecurrenceStatus.error,
+          error: unwrapDioError(e),
+        ),
       );
     }
   }
@@ -83,7 +93,10 @@ class TripRecurrenceBloc
       );
     } catch (e) {
       emit(
-        state.copyWith(status: TripRecurrenceStatus.error, error: e.toString()),
+        state.copyWith(
+          status: TripRecurrenceStatus.error,
+          error: unwrapDioError(e),
+        ),
       );
     }
   }

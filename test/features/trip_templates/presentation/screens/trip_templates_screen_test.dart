@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
@@ -135,6 +136,28 @@ void main() {
     expect(find.text('Aucun modèle'), findsOneWidget);
   });
 
+  testWidgets('erreur : bouton Réessayer, jamais le message brut '
+      '(ErrorPresenter résout un texte générique depuis l\'AppException)', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(
+      const TripTemplateState(
+        status: TripTemplateStatus.error,
+        error: NetworkException('detail technique brut'),
+      ),
+    );
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Réessayer'), findsOneWidget);
+    expect(
+      find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+      findsOneWidget,
+    );
+    expect(find.text('detail technique brut'), findsNothing);
+  });
+
   testWidgets('anglais : titre et état vide traduits', (tester) async {
     useEnglish();
     when(
@@ -147,4 +170,27 @@ void main() {
     expect(find.text('My trip templates'), findsOneWidget);
     expect(find.text('No templates'), findsOneWidget);
   });
+
+  testWidgets(
+    'en anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        const TripTemplateState(
+          status: TripTemplateStatus.error,
+          error: NetworkException('raw technical detail'),
+        ),
+      );
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 }

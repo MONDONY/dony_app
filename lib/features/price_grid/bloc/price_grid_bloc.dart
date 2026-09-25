@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_state.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
@@ -24,7 +25,7 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
       final items = await _repository.getItems();
       emit(PriceGridLoaded(items));
     } catch (e) {
-      emit(PriceGridError(e.toString()));
+      emit(PriceGridError(unwrapDioError(e)));
     }
   }
 
@@ -46,7 +47,7 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
       await action();
       emit(PriceGridLoaded(await _repository.getItems()));
     } catch (e) {
-      emit(PriceGridError(e.toString()));
+      emit(PriceGridError(unwrapDioError(e)));
       if (previous != null) emit(PriceGridLoaded(previous));
     }
   }
@@ -105,7 +106,7 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
       final items = await _repository.reorder(event.orderedIds);
       emit(PriceGridLoaded(items));
     } catch (e) {
-      emit(PriceGridError(e.toString()));
+      emit(PriceGridError(unwrapDioError(e)));
       // L'ordre serveur n'a pas changé : on remet la liste telle qu'elle
       // était, après l'état d'erreur qui déclenche le message à l'écran.
       if (previous != null) emit(PriceGridLoaded(previous));

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
@@ -519,4 +520,31 @@ void main() {
     await tester.pump();
     expect(find.text('Invalid format (+33612345678)'), findsOneWidget);
   });
+
+  testWidgets(
+    'en anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      whenListen<RecipientState>(
+        bloc,
+        Stream.value(
+          const RecipientState(
+            status: RecipientStatus.error,
+            error: NetworkException('raw technical detail'),
+          ),
+        ),
+        initialState: const RecipientState(status: RecipientStatus.success),
+      );
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 }

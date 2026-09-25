@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_state.dart';
@@ -68,14 +69,25 @@ void main() {
       expect(find.byType(DonyPriceTagSkeleton), findsWidgets);
     });
 
-    testWidgets('erreur : message et bouton Réessayer', (tester) async {
+    testWidgets('erreur : bouton Réessayer, jamais le message brut '
+        '(ErrorPresenter résout un texte générique depuis l\'AppException)', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        _wrap(_blocWith(const PriceGridError('Réseau indisponible'))),
+        _wrap(
+          _blocWith(
+            const PriceGridError(NetworkException('detail technique brut')),
+          ),
+        ),
       );
       await tester.pump();
 
       expect(find.text('Réessayer'), findsOneWidget);
-      expect(find.text('Réseau indisponible'), findsOneWidget);
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
+      expect(find.text('detail technique brut'), findsNothing);
     });
 
     testWidgets('grille vide : invite à créer une étiquette', (tester) async {
@@ -280,6 +292,24 @@ void main() {
         find.textContaining('You receive your exact amount'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('erreur réseau : texte anglais du catalogue', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(
+          _blocWith(
+            const PriceGridError(NetworkException('raw technical detail')),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
     });
   });
 }

@@ -6,6 +6,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_event.dart';
@@ -169,4 +170,36 @@ void main() {
 
     expect(letters, ['M', 'T', 'W', 'T', 'F', 'S', 'S']);
   });
+
+  testWidgets(
+    'en anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      whenListen<TripRecurrenceState>(
+        bloc,
+        Stream.value(
+          const TripRecurrenceState(
+            status: TripRecurrenceStatus.error,
+            error: NetworkException('raw technical detail'),
+          ),
+        ),
+        initialState: const TripRecurrenceState(),
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          TripRecurrenceEditScreen(template: _template(pricePerKg: 8.0)),
+          bloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 }

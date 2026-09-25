@@ -1,8 +1,13 @@
+import 'dart:async';
+
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
+import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dart';
 import 'package:dony/features/delivery_addresses/data/models/delivery_address.dart';
 import 'package:dony/features/delivery_addresses/data/repositories/delivery_address_repository.dart';
 import 'package:dony/features/delivery_addresses/presentation/screens/delivery_address_edit_screen.dart';
@@ -16,6 +21,10 @@ import '../../helpers/l10n_test_helpers.dart';
 class _MockRepo extends Mock implements DeliveryAddressRepository {}
 
 class _MockDio extends Mock implements Dio {}
+
+class _MockDeliveryAddressBloc
+    extends MockBloc<DeliveryAddressEvent, DeliveryAddressState>
+    implements DeliveryAddressBloc {}
 
 Widget _wrap(DeliveryAddressBloc bloc, {String? addressId}) => MaterialApp(
   home: MediaQuery(
@@ -49,6 +58,7 @@ void main() {
         () => AddressAutocompleteService(dio: _MockDio()),
       );
     }
+    registerFallbackValue(const DeliveryAddressLoaded());
   });
 
   setUp(() {
@@ -428,4 +438,50 @@ void main() {
     expect(find.text('Senegal'), findsOneWidget);
     expect(find.text('Save address'), findsOneWidget);
   });
+
+  testWidgets(
+    'en anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      final mockBloc = _MockDeliveryAddressBloc();
+      final states = StreamController<DeliveryAddressState>();
+      addTearDown(states.close);
+      whenListen<DeliveryAddressState>(
+        mockBloc,
+        states.stream,
+        initialState: const DeliveryAddressState(),
+      );
+
+      await tester.pumpWidget(_wrap(mockBloc));
+      await tester.pump();
+
+      await tester.tap(find.text('Family'));
+      await tester.pump();
+      await tester.enterText(find.byType(EditableText).at(1), 'Dakar');
+      await tester.pump();
+      // Arme `_hasSubmitted` avant que la réponse n'arrive par le stream,
+      // exactement comme un vrai bloc l'aurait fait.
+      await tester.tap(find.text('Save address'));
+      await tester.pump();
+
+      states.add(
+        const DeliveryAddressState(status: DeliveryAddressStatus.loading),
+      );
+      await tester.pump();
+      states.add(
+        const DeliveryAddressState(
+          status: DeliveryAddressStatus.error,
+          error: NetworkException('raw technical detail'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 }

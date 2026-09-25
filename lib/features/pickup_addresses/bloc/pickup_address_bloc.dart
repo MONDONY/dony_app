@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/pickup_addresses/data/models/pickup_address.dart';
 import 'package:dony/features/pickup_addresses/data/repositories/pickup_address_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,7 +32,10 @@ class PickupAddressBloc extends Bloc<PickupAddressEvent, PickupAddressState> {
       );
     } catch (e) {
       emit(
-        state.copyWith(status: PickupAddressStatus.error, error: e.toString()),
+        state.copyWith(
+          status: PickupAddressStatus.error,
+          error: unwrapDioError(e),
+        ),
       );
     }
   }
@@ -70,7 +74,10 @@ class PickupAddressBloc extends Bloc<PickupAddressEvent, PickupAddressState> {
       );
     } catch (e) {
       emit(
-        state.copyWith(status: PickupAddressStatus.error, error: e.toString()),
+        state.copyWith(
+          status: PickupAddressStatus.error,
+          error: unwrapDioError(e),
+        ),
       );
     }
   }
@@ -112,7 +119,10 @@ class PickupAddressBloc extends Bloc<PickupAddressEvent, PickupAddressState> {
       );
     } catch (e) {
       emit(
-        state.copyWith(status: PickupAddressStatus.error, error: e.toString()),
+        state.copyWith(
+          status: PickupAddressStatus.error,
+          error: unwrapDioError(e),
+        ),
       );
     }
   }
@@ -134,7 +144,10 @@ class PickupAddressBloc extends Bloc<PickupAddressEvent, PickupAddressState> {
       );
     } catch (e) {
       emit(
-        state.copyWith(status: PickupAddressStatus.error, error: e.toString()),
+        state.copyWith(
+          status: PickupAddressStatus.error,
+          error: unwrapDioError(e),
+        ),
       );
     }
   }
@@ -156,7 +169,10 @@ class PickupAddressBloc extends Bloc<PickupAddressEvent, PickupAddressState> {
       );
     } catch (e) {
       emit(
-        state.copyWith(status: PickupAddressStatus.error, error: e.toString()),
+        state.copyWith(
+          status: PickupAddressStatus.error,
+          error: unwrapDioError(e),
+        ),
       );
     }
   }

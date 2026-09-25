@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
@@ -426,4 +427,26 @@ void main() {
     expect(find.text('Add'), findsOneWidget);
     expect(find.text('DEFAULT'), findsOneWidget);
   });
+
+  testWidgets(
+    'en anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        const RecipientState(
+          status: RecipientStatus.error,
+          error: NetworkException('raw technical detail'),
+        ),
+      );
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 }
