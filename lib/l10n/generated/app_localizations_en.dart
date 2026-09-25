@@ -12529,4 +12529,385 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get supportConversationDefaultPreview =>
       'A question? Our team will get back to you here.';
+
+  @override
+  String get corridorAlertNotifyInstant => 'Instant';
+
+  @override
+  String get corridorAlertNotifyDaily => 'Daily';
+
+  @override
+  String get corridorAlertNotifySilent => 'Silent';
+
+  @override
+  String get corridorAlertNotifyInstantDescription =>
+      'Instant push, 9 AM digest';
+
+  @override
+  String get corridorAlertNotifyDailyDescription => 'Daily digest at 9 AM';
+
+  @override
+  String get corridorAlertNotifySilentDescription =>
+      'No notifications, counter only';
+
+  @override
+  String get corridorAlertSameMonthFromPattern => 'MMM d';
+
+  @override
+  String corridorAlertDateRange(String from, String to) {
+    return '$from to $to';
+  }
+
+  @override
+  String corridorAlertDateFrom(String date) {
+    return 'From $date';
+  }
+
+  @override
+  String corridorAlertDateUntil(String date) {
+    return 'Until $date';
+  }
+
+  @override
+  String get corridorAlertAnyDate => 'Any date';
+
+  @override
+  String get corridorAlertAnyWeight => 'Any weight';
+
+  @override
+  String get corridorAlertCardMenuTooltip => 'Options';
+
+  @override
+  String get corridorAlertPausedStatus => 'Paused · no notifications';
+
+  @override
+  String get corridorAlertResume => 'Resume';
+
+  @override
+  String corridorAlertExpiredOn(String date) {
+    return 'Expired on $date';
+  }
+
+  @override
+  String get corridorAlertExtend => 'Extend';
+
+  @override
+  String corridorAlertNewTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new trips',
+      one: '$count new trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String corridorAlertNewParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new parcels',
+      one: '$count new parcel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get corridorAlertSeeMatches => 'View';
+
+  @override
+  String get corridorAlertNoTripsYet => 'No trips yet';
+
+  @override
+  String get corridorAlertNoParcelsYet => 'No parcels yet';
+
+  @override
+  String corridorAlertNothingNewTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Nothing new · $count trips in total',
+      one: 'Nothing new · $count trip in total',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String corridorAlertNothingNewParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Nothing new · $count parcels in total',
+      one: 'Nothing new · $count parcel in total',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get corridorAlertEditTitle => 'Edit alert';
+
+  @override
+  String get corridorAlertListTitleAll => 'My alerts';
+
+  @override
+  String get corridorAlertMatchesEmptyTripsDescription =>
+      'No trips match this alert yet.';
+
+  @override
+  String get corridorAlertMatchesEmptyParcelsDescription =>
+      'No parcels match this alert yet.';
+
+  @override
+  String get corridorAlertBannerPausedTitle => 'Alert paused';
+
+  @override
+  String get corridorAlertBannerPausedSubtitle => 'No notifications';
+
+  @override
+  String get corridorAlertBannerExpiredTitle => 'Alert expired';
+
+  @override
+  String get corridorAlertBannerExpiredSubtitle => 'The date window has passed';
+
+  @override
+  String get corridorAlertBannerActiveTitle => 'Alert active';
+
+  @override
+  String corridorAlertNewSection(String count) {
+    return 'New · $count';
+  }
+
+  @override
+  String corridorAlertSeenSection(String count) {
+    return 'Already seen · $count';
+  }
+
+  @override
+  String corridorAlertTripCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trips',
+      one: '$count trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String corridorAlertParcelCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels',
+      one: '$count parcel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get corridorAlertListTitlePackages => 'My parcel alerts';
+
+  @override
+  String get corridorAlertListTitleTrips => 'My trip alerts';
+
+  @override
+  String get corridorAlertCreateFab => 'Create';
+
+  @override
+  String get corridorAlertEmptyDescriptionPackages =>
+      'Create an alert to get notified as soon as a parcel appears on your route.';
+
+  @override
+  String get corridorAlertEmptyDescriptionTrips =>
+      'Create an alert to get notified as soon as a trip appears on your route.';
+
+  @override
+  String get corridorAlertEmptyDescriptionAll =>
+      'Create an alert to get notified as soon as a trip or parcel appears on your route.';
+
+  @override
+  String get corridorAlertEmptyTitle => 'No route alerts';
+
+  @override
+  String get corridorAlertCreateAction => 'Create an alert';
+
+  @override
+  String get corridorAlertGroupTrips => 'Watched trips';
+
+  @override
+  String get corridorAlertGroupPackages => 'Watched parcels';
+
+  @override
+  String get corridorAlertActionEditSubtitle => 'Route, dates and filters';
+
+  @override
+  String get corridorAlertDuplicate => 'Duplicate';
+
+  @override
+  String get corridorAlertDuplicateSubtitle =>
+      'Start from this alert to create another one';
+
+  @override
+  String get corridorAlertPause => 'Pause';
+
+  @override
+  String get corridorAlertPauseSubtitle =>
+      'No more notifications, the alert stays';
+
+  @override
+  String get corridorAlertResumeSubtitle => 'Notifications resume';
+
+  @override
+  String get corridorAlertSaveError => 'Couldn\'t save the alert';
+
+  @override
+  String get corridorAlertSubmitCreate => 'Create the alert';
+
+  @override
+  String get corridorAlertNotifyTitle => 'Notifications';
+
+  @override
+  String get corridorAlertZoneToggleTitle => 'Drop-off zone on the map';
+
+  @override
+  String get corridorAlertZoneToggleSubtitle =>
+      'Filter by pickup point (optional)';
+
+  @override
+  String get corridorAlertSegmentPackages => 'Parcels';
+
+  @override
+  String get corridorAlertSegmentTrips => 'Trips';
+
+  @override
+  String get corridorAlertDateWindowLabel => 'Date window (optional)';
+
+  @override
+  String get corridorAlertClearDateRange => 'Clear the period';
+
+  @override
+  String get corridorAlertMinWeightLabel => 'Minimum weight (optional)';
+
+  @override
+  String get corridorAlertContentTypesLabel => 'Content types (optional)';
+
+  @override
+  String get corridorAlertZoneCityLabel => 'Center the zone on a city';
+
+  @override
+  String get corridorAlertUseMyLocation => 'Use my location';
+
+  @override
+  String get corridorAlertZonePlaceholder => 'Selected drop-off point';
+
+  @override
+  String get corridorAlertRadiusLabel => 'Radius';
+
+  @override
+  String get corridorAlertTripAvailable => 'Trip available';
+
+  @override
+  String corridorAlertAvailableKg(String kg) {
+    return '$kg kg available';
+  }
+
+  @override
+  String corridorAlertMatchPrice(String price) {
+    return 'Price $price';
+  }
+
+  @override
+  String get corridorAlertOpenPrice => 'Open price';
+
+  @override
+  String get favoritesTitle => 'Saved';
+
+  @override
+  String get favoritesTripsTab => 'Trips';
+
+  @override
+  String get favoritesRequestsTab => 'Requests';
+
+  @override
+  String get favoritesEmptyTripsMessage => 'No saved trips yet';
+
+  @override
+  String get favoritesEmptyRequestsMessage => 'No saved requests yet';
+
+  @override
+  String get favoritesEmptyTitle => 'Nothing saved yet';
+
+  @override
+  String get favoritesLoadErrorMessage => 'We couldn\'t load your saved items.';
+
+  @override
+  String get favoritesRemoveTooltip => 'Remove from saved';
+
+  @override
+  String get favoritesAddTooltip => 'Save';
+
+  @override
+  String get reportReasonHarassment => 'Harassment or abusive behavior';
+
+  @override
+  String get reportReasonFakeProfile => 'Fake profile';
+
+  @override
+  String get reportReasonScamAttempt => 'Scam attempt';
+
+  @override
+  String get reportReasonProhibitedItem => 'Prohibited item';
+
+  @override
+  String get reportReasonFalseInformation => 'False or misleading information';
+
+  @override
+  String get reportReasonInappropriateContent => 'Inappropriate content';
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonPaymentIssue => 'Payment issue';
+
+  @override
+  String get reportReasonAppBug => 'App bug';
+
+  @override
+  String get reportReasonOther => 'Other';
+
+  @override
+  String get reportScreenTitle => 'Report a problem';
+
+  @override
+  String get reportSentMessage => 'Report sent. Our team will review it.';
+
+  @override
+  String get reportReasonLabel => 'Reason';
+
+  @override
+  String get reportDescriptionLabel => 'Description';
+
+  @override
+  String get reportDescriptionHint => 'Describe the problem you encountered…';
+
+  @override
+  String get reportScreenshotsLabel => 'Screenshots (optional)';
+
+  @override
+  String get reportScreenshotsHint =>
+      'Up to 4 images to help our team understand.';
+
+  @override
+  String get reportSendButton => 'Send report';
+
+  @override
+  String get reportAddPhotoLabel => 'Add a photo';
+
+  @override
+  String get reportRemovePhotoLabel => 'Remove this photo';
+
+  @override
+  String get reportSendFailed => 'Couldn\'t send the report. Try again.';
 }

@@ -21079,6 +21079,618 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Une question ? Notre équipe vous répond ici.'**
   String get supportConversationDefaultPreview;
+
+  /// Libellé du mode de notification instantané d'une alerte corridor (corridor_alert_labels.dart, extension sur AlertNotifyMode).
+  ///
+  /// In fr, this message translates to:
+  /// **'Instantanée'**
+  String get corridorAlertNotifyInstant;
+
+  /// Libellé du mode de notification quotidien d'une alerte corridor (corridor_alert_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Quotidienne'**
+  String get corridorAlertNotifyDaily;
+
+  /// Libellé du mode de notification silencieux d'une alerte corridor (corridor_alert_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Silencieuse'**
+  String get corridorAlertNotifySilent;
+
+  /// Phrase courte du mode instantané, bandeau des correspondances et champ du formulaire (corridor_alert_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Push instantané, digest à 9 h'**
+  String get corridorAlertNotifyInstantDescription;
+
+  /// Phrase courte du mode quotidien (corridor_alert_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Digest quotidien à 9 h'**
+  String get corridorAlertNotifyDailyDescription;
+
+  /// Phrase courte du mode silencieux (corridor_alert_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans notification, compteur seulement'**
+  String get corridorAlertNotifySilentDescription;
+
+  /// Motif intl DateFormat, pas un texte : date de début d'une alerte quand les deux bornes sont dans le même mois (corridor_alert_labels.dart, corridorAlertDateLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'d'**
+  String get corridorAlertSameMonthFromPattern;
+
+  /// Plage de dates d'une alerte corridor (corridor_alert_labels.dart, corridorAlertDateLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'{from} au {to}'**
+  String corridorAlertDateRange(String from, String to);
+
+  /// Alerte avec seulement une date de début (corridor_alert_labels.dart, corridorAlertDateLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'À partir du {date}'**
+  String corridorAlertDateFrom(String date);
+
+  /// Alerte avec seulement une date de fin (corridor_alert_labels.dart, corridorAlertDateLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Jusqu\'au {date}'**
+  String corridorAlertDateUntil(String date);
+
+  /// Alerte sans fenêtre de dates (corridor_alert_labels.dart, corridor_alert_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Toute date'**
+  String get corridorAlertAnyDate;
+
+  /// Alerte colis sans poids minimum (corridor_alert_labels.dart, corridorAlertWeightLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout poids'**
+  String get corridorAlertAnyWeight;
+
+  /// Tooltip du bouton menu « ⋯ » d'une carte d'alerte corridor (corridor_alert_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Options'**
+  String get corridorAlertCardMenuTooltip;
+
+  /// Ligne d'état d'une alerte en pause (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'En pause · aucune notification'**
+  String get corridorAlertPausedStatus;
+
+  /// Action « Reprendre » sur une alerte en pause (corridor_alert_card.dart, corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre'**
+  String get corridorAlertResume;
+
+  /// Ligne d'état d'une alerte expirée (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Expirée le {date}'**
+  String corridorAlertExpiredOn(String date);
+
+  /// Action « Prolonger » sur une alerte expirée (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prolonger'**
+  String get corridorAlertExtend;
+
+  /// Nombre de trajets nouveaux depuis la dernière consultation (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} nouveau trajet} other{{count} nouveaux trajets}}'**
+  String corridorAlertNewTrips(int count);
+
+  /// Nombre de colis nouveaux depuis la dernière consultation (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} nouveau colis} other{{count} nouveaux colis}}'**
+  String corridorAlertNewParcels(int count);
+
+  /// Action qui ouvre les correspondances depuis la carte (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir'**
+  String get corridorAlertSeeMatches;
+
+  /// Aucune correspondance trajet (corridor_alert_card.dart, corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet pour l\'instant'**
+  String get corridorAlertNoTripsYet;
+
+  /// Aucune correspondance colis (corridor_alert_card.dart, corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun colis pour l\'instant'**
+  String get corridorAlertNoParcelsYet;
+
+  /// Total de correspondances trajets sans nouveauté (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Rien de neuf · {count} trajet au total} other{Rien de neuf · {count} trajets au total}}'**
+  String corridorAlertNothingNewTrips(int count);
+
+  /// Total de correspondances colis sans nouveauté (corridor_alert_card.dart, _StatusRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Rien de neuf · {count} colis au total} other{Rien de neuf · {count} colis au total}}'**
+  String corridorAlertNothingNewParcels(int count);
+
+  /// Titre de la feuille d'édition et tooltip du bouton crayon (corridor_alert_form_sheet.dart, corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'alerte'**
+  String get corridorAlertEditTitle;
+
+  /// Titre neutre (hub, toutes directions ou alerte pas encore chargée) (corridor_alert_list_screen.dart, corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes alertes'**
+  String get corridorAlertListTitleAll;
+
+  /// Sous-titre de l'état vide des correspondances trajet (corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet ne correspond à cette alerte pour l\'instant.'**
+  String get corridorAlertMatchesEmptyTripsDescription;
+
+  /// Sous-titre de l'état vide des correspondances colis (corridor_alert_matches_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun colis ne correspond à cette alerte pour l\'instant.'**
+  String get corridorAlertMatchesEmptyParcelsDescription;
+
+  /// Titre du bandeau résumé d'une alerte en pause (corridor_alert_matches_screen.dart, _AlertSummaryBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alerte en pause'**
+  String get corridorAlertBannerPausedTitle;
+
+  /// Sous-titre du bandeau résumé d'une alerte en pause (corridor_alert_matches_screen.dart, _AlertSummaryBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune notification'**
+  String get corridorAlertBannerPausedSubtitle;
+
+  /// Titre du bandeau résumé d'une alerte expirée (corridor_alert_matches_screen.dart, _AlertSummaryBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alerte expirée'**
+  String get corridorAlertBannerExpiredTitle;
+
+  /// Sous-titre du bandeau résumé d'une alerte expirée (corridor_alert_matches_screen.dart, _AlertSummaryBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'La fenêtre de dates est passée'**
+  String get corridorAlertBannerExpiredSubtitle;
+
+  /// Titre du bandeau résumé d'une alerte active (corridor_alert_matches_screen.dart, _AlertSummaryBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alerte active'**
+  String get corridorAlertBannerActiveTitle;
+
+  /// En-tête de la section « Nouveaux » de la liste des correspondances ; {count} est déjà formaté (corridorAlertTripCount/ParcelCount) (corridor_alert_matches_screen.dart, _MatchList).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveaux · {count}'**
+  String corridorAlertNewSection(String count);
+
+  /// En-tête de la section « Déjà vus » de la liste des correspondances ; {count} est déjà formaté (corridor_alert_matches_screen.dart, _MatchList).
+  ///
+  /// In fr, this message translates to:
+  /// **'Déjà vus · {count}'**
+  String corridorAlertSeenSection(String count);
+
+  /// Compteur de correspondances trajets (corridor_alert_matches_screen.dart, _MatchList._count).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} trajet} other{{count} trajets}}'**
+  String corridorAlertTripCount(int count);
+
+  /// Compteur de correspondances colis (corridor_alert_matches_screen.dart, _MatchList._count).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} colis} other{{count} colis}}'**
+  String corridorAlertParcelCount(int count);
+
+  /// Titre de l'écran mono-direction colis (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes alertes colis'**
+  String get corridorAlertListTitlePackages;
+
+  /// Titre de l'écran mono-direction trajets (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes alertes trajets'**
+  String get corridorAlertListTitleTrips;
+
+  /// Bouton d'action flottant qui ouvre la création d'une alerte (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer'**
+  String get corridorAlertCreateFab;
+
+  /// Description de l'état vide, direction colis (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton corridor.'**
+  String get corridorAlertEmptyDescriptionPackages;
+
+  /// Description de l'état vide, direction trajets (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Crée une alerte pour être prévenu dès qu\'un trajet apparaît sur ton corridor.'**
+  String get corridorAlertEmptyDescriptionTrips;
+
+  /// Description de l'état vide, hub sans direction (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Crée une alerte pour être prévenu dès qu\'un trajet ou un colis apparaît sur ton corridor.'**
+  String get corridorAlertEmptyDescriptionAll;
+
+  /// Titre de l'état vide de la liste des alertes (corridor_alert_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune alerte corridor'**
+  String get corridorAlertEmptyTitle;
+
+  /// CTA de l'état vide et titre de la feuille de création (corridor_alert_list_screen.dart, corridor_alert_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer une alerte'**
+  String get corridorAlertCreateAction;
+
+  /// En-tête de groupe « Trajets » du hub (corridor_alert_list_screen.dart, _GroupHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets surveillés'**
+  String get corridorAlertGroupTrips;
+
+  /// En-tête de groupe « Colis » du hub (corridor_alert_list_screen.dart, _GroupHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis surveillés'**
+  String get corridorAlertGroupPackages;
+
+  /// Sous-titre de l'action « Modifier » du menu d'une alerte (corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Corridor, dates et filtres'**
+  String get corridorAlertActionEditSubtitle;
+
+  /// Action « Dupliquer » du menu d'une alerte (corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dupliquer'**
+  String get corridorAlertDuplicate;
+
+  /// Sous-titre de l'action « Dupliquer » (corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Repartir de cette alerte pour en créer une autre'**
+  String get corridorAlertDuplicateSubtitle;
+
+  /// Action « Mettre en pause » du menu d'une alerte active (corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre en pause'**
+  String get corridorAlertPause;
+
+  /// Sous-titre de l'action « Mettre en pause » (corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus de notification, l\'alerte reste là'**
+  String get corridorAlertPauseSubtitle;
+
+  /// Sous-titre de l'action « Reprendre » du menu d'une alerte en pause (corridor_alert_actions_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les notifications repartent'**
+  String get corridorAlertResumeSubtitle;
+
+  /// Message par défaut si l'enregistrement échoue sans détail serveur (corridor_alert_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'enregistrer l\'alerte'**
+  String get corridorAlertSaveError;
+
+  /// Libellé du bouton de soumission en création (corridor_alert_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer l\'alerte'**
+  String get corridorAlertSubmitCreate;
+
+  /// Titre du champ de fréquence de notification (corridor_alert_form_sheet.dart, _NotifyModeField).
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications'**
+  String get corridorAlertNotifyTitle;
+
+  /// Titre du toggle de zone de remise (corridor_alert_form_sheet.dart, _ZoneToggleRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Zone de remise sur la carte'**
+  String get corridorAlertZoneToggleTitle;
+
+  /// Sous-titre du toggle de zone de remise (corridor_alert_form_sheet.dart, _ZoneToggleRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Filtre par point de récupération (optionnel)'**
+  String get corridorAlertZoneToggleSubtitle;
+
+  /// Segment « Colis » du sélecteur de direction (corridor_alert_form_sheet.dart, _DirectionSegment).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get corridorAlertSegmentPackages;
+
+  /// Segment « Trajets » du sélecteur de direction (corridor_alert_form_sheet.dart, _DirectionSegment).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets'**
+  String get corridorAlertSegmentTrips;
+
+  /// Titre du champ de fenêtre de dates (corridor_alert_form_sheet.dart, _DateWindowField).
+  ///
+  /// In fr, this message translates to:
+  /// **'Fenêtre de dates (optionnel)'**
+  String get corridorAlertDateWindowLabel;
+
+  /// Libellé d'accessibilité du bouton qui efface la fenêtre de dates (corridor_alert_form_sheet.dart, _DateWindowField).
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer la période'**
+  String get corridorAlertClearDateRange;
+
+  /// Libellé du champ de poids minimum (corridor_alert_form_sheet.dart, _MinWeightField).
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids minimum (optionnel)'**
+  String get corridorAlertMinWeightLabel;
+
+  /// Titre du sélecteur de catégories de contenu (corridor_alert_form_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Types de contenu (optionnel)'**
+  String get corridorAlertContentTypesLabel;
+
+  /// Libellé du champ de recherche de ville du sélecteur de zone (zone_picker_field.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Centrer la zone sur une ville'**
+  String get corridorAlertZoneCityLabel;
+
+  /// Bouton de géolocalisation du sélecteur de zone (zone_picker_field.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Utiliser ma position'**
+  String get corridorAlertUseMyLocation;
+
+  /// Texte par défaut avant résolution du reverse-geocoding (zone_picker_field.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Point de remise sélectionné'**
+  String get corridorAlertZonePlaceholder;
+
+  /// Libellé du slider de rayon du sélecteur de zone (zone_picker_field.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rayon'**
+  String get corridorAlertRadiusLabel;
+
+  /// Micro-label de la carte de correspondance trajet (trip_match_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet disponible'**
+  String get corridorAlertTripAvailable;
+
+  /// Capacité disponible du trajet, {kg} déjà formaté sans décimale (trip_match_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} kg dispo'**
+  String corridorAlertAvailableKg(String kg);
+
+  /// Prix au kilo d'un trajet, {price} déjà formaté (montant + devise + « /kg ») et mis en gras via emphasizedSpans (trip_match_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix {price}'**
+  String corridorAlertMatchPrice(String price);
+
+  /// Trajet sans prix au kilo fixé (trip_match_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix libre'**
+  String get corridorAlertOpenPrice;
+
+  /// Titre de l'écran Favoris, capacité voyageur et expéditeur (favorites_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes favoris'**
+  String get favoritesTitle;
+
+  /// Onglet « Trajets » de l'écran Favoris (favorites_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets'**
+  String get favoritesTripsTab;
+
+  /// Onglet « Demandes » de l'écran Favoris (favorites_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes'**
+  String get favoritesRequestsTab;
+
+  /// Message de l'état vide de l'onglet Trajets (favorites_screen.dart, _TripsTab).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet favori pour l\'instant'**
+  String get favoritesEmptyTripsMessage;
+
+  /// Message de l'état vide de l'onglet Demandes (favorites_screen.dart, _RequestsTab).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande favorite pour l\'instant'**
+  String get favoritesEmptyRequestsMessage;
+
+  /// Titre de l'état vide partagé (favorites_screen.dart, _EmptyState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun favori pour l\'instant'**
+  String get favoritesEmptyTitle;
+
+  /// Sous-titre de l'état d'erreur partagé (favorites_screen.dart, _ErrorState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger vos favoris.'**
+  String get favoritesLoadErrorMessage;
+
+  /// Tooltip du signet quand l'élément est déjà favori (favorite_heart_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer des favoris'**
+  String get favoritesRemoveTooltip;
+
+  /// Tooltip du signet quand l'élément n'est pas encore favori (favorite_heart_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter aux favoris'**
+  String get favoritesAddTooltip;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Harcèlement ou comportement abusif'**
+  String get reportReasonHarassment;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Faux profil'**
+  String get reportReasonFakeProfile;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tentative d\'arnaque'**
+  String get reportReasonScamAttempt;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Objet interdit au transport'**
+  String get reportReasonProhibitedItem;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations fausses ou trompeuses'**
+  String get reportReasonFalseInformation;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu inapproprié'**
+  String get reportReasonInappropriateContent;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Spam'**
+  String get reportReasonSpam;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Problème de paiement'**
+  String get reportReasonPaymentIssue;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bug de l\'application'**
+  String get reportReasonAppBug;
+
+  /// Motif de signalement (report_reason_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get reportReasonOther;
+
+  /// Titre de l'écran de signalement (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler un problème'**
+  String get reportScreenTitle;
+
+  /// Snackbar de succès après envoi (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Signalement envoyé. Notre équipe va l\'examiner.'**
+  String get reportSentMessage;
+
+  /// Titre de la section des motifs (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif'**
+  String get reportReasonLabel;
+
+  /// Libellé du champ de description (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Description'**
+  String get reportDescriptionLabel;
+
+  /// Indication du champ de description (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez le problème rencontré…'**
+  String get reportDescriptionHint;
+
+  /// Titre de la section des captures d'écran (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Captures d\'écran (optionnel)'**
+  String get reportScreenshotsLabel;
+
+  /// Indication de la section des captures d'écran (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Jusqu\'à 4 images pour aider notre équipe à comprendre.'**
+  String get reportScreenshotsHint;
+
+  /// Bouton de soumission du formulaire (incident_report_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le signalement'**
+  String get reportSendButton;
+
+  /// Libellé d'accessibilité du bouton d'ajout de capture (incident_photo_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une photo'**
+  String get reportAddPhotoLabel;
+
+  /// Libellé d'accessibilité du bouton de retrait d'une capture (incident_photo_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer cette photo'**
+  String get reportRemovePhotoLabel;
+
+  /// Snackbar générique quand la soumission échoue sans exception typée (incident_report_cubit.dart, IncidentReportError sans error).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'envoyer le signalement. Réessayez.'**
+  String get reportSendFailed;
 }
 
 class _AppLocalizationsDelegate

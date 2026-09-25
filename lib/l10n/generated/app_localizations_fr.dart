@@ -12608,4 +12608,391 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get supportConversationDefaultPreview =>
       'Une question ? Notre équipe vous répond ici.';
+
+  @override
+  String get corridorAlertNotifyInstant => 'Instantanée';
+
+  @override
+  String get corridorAlertNotifyDaily => 'Quotidienne';
+
+  @override
+  String get corridorAlertNotifySilent => 'Silencieuse';
+
+  @override
+  String get corridorAlertNotifyInstantDescription =>
+      'Push instantané, digest à 9 h';
+
+  @override
+  String get corridorAlertNotifyDailyDescription => 'Digest quotidien à 9 h';
+
+  @override
+  String get corridorAlertNotifySilentDescription =>
+      'Sans notification, compteur seulement';
+
+  @override
+  String get corridorAlertSameMonthFromPattern => 'd';
+
+  @override
+  String corridorAlertDateRange(String from, String to) {
+    return '$from au $to';
+  }
+
+  @override
+  String corridorAlertDateFrom(String date) {
+    return 'À partir du $date';
+  }
+
+  @override
+  String corridorAlertDateUntil(String date) {
+    return 'Jusqu\'au $date';
+  }
+
+  @override
+  String get corridorAlertAnyDate => 'Toute date';
+
+  @override
+  String get corridorAlertAnyWeight => 'Tout poids';
+
+  @override
+  String get corridorAlertCardMenuTooltip => 'Options';
+
+  @override
+  String get corridorAlertPausedStatus => 'En pause · aucune notification';
+
+  @override
+  String get corridorAlertResume => 'Reprendre';
+
+  @override
+  String corridorAlertExpiredOn(String date) {
+    return 'Expirée le $date';
+  }
+
+  @override
+  String get corridorAlertExtend => 'Prolonger';
+
+  @override
+  String corridorAlertNewTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nouveaux trajets',
+      one: '$count nouveau trajet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String corridorAlertNewParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nouveaux colis',
+      one: '$count nouveau colis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get corridorAlertSeeMatches => 'Voir';
+
+  @override
+  String get corridorAlertNoTripsYet => 'Aucun trajet pour l\'instant';
+
+  @override
+  String get corridorAlertNoParcelsYet => 'Aucun colis pour l\'instant';
+
+  @override
+  String corridorAlertNothingNewTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Rien de neuf · $count trajets au total',
+      one: 'Rien de neuf · $count trajet au total',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String corridorAlertNothingNewParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Rien de neuf · $count colis au total',
+      one: 'Rien de neuf · $count colis au total',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get corridorAlertEditTitle => 'Modifier l\'alerte';
+
+  @override
+  String get corridorAlertListTitleAll => 'Mes alertes';
+
+  @override
+  String get corridorAlertMatchesEmptyTripsDescription =>
+      'Aucun trajet ne correspond à cette alerte pour l\'instant.';
+
+  @override
+  String get corridorAlertMatchesEmptyParcelsDescription =>
+      'Aucun colis ne correspond à cette alerte pour l\'instant.';
+
+  @override
+  String get corridorAlertBannerPausedTitle => 'Alerte en pause';
+
+  @override
+  String get corridorAlertBannerPausedSubtitle => 'Aucune notification';
+
+  @override
+  String get corridorAlertBannerExpiredTitle => 'Alerte expirée';
+
+  @override
+  String get corridorAlertBannerExpiredSubtitle =>
+      'La fenêtre de dates est passée';
+
+  @override
+  String get corridorAlertBannerActiveTitle => 'Alerte active';
+
+  @override
+  String corridorAlertNewSection(String count) {
+    return 'Nouveaux · $count';
+  }
+
+  @override
+  String corridorAlertSeenSection(String count) {
+    return 'Déjà vus · $count';
+  }
+
+  @override
+  String corridorAlertTripCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trajets',
+      one: '$count trajet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String corridorAlertParcelCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis',
+      one: '$count colis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get corridorAlertListTitlePackages => 'Mes alertes colis';
+
+  @override
+  String get corridorAlertListTitleTrips => 'Mes alertes trajets';
+
+  @override
+  String get corridorAlertCreateFab => 'Créer';
+
+  @override
+  String get corridorAlertEmptyDescriptionPackages =>
+      'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton corridor.';
+
+  @override
+  String get corridorAlertEmptyDescriptionTrips =>
+      'Crée une alerte pour être prévenu dès qu\'un trajet apparaît sur ton corridor.';
+
+  @override
+  String get corridorAlertEmptyDescriptionAll =>
+      'Crée une alerte pour être prévenu dès qu\'un trajet ou un colis apparaît sur ton corridor.';
+
+  @override
+  String get corridorAlertEmptyTitle => 'Aucune alerte corridor';
+
+  @override
+  String get corridorAlertCreateAction => 'Créer une alerte';
+
+  @override
+  String get corridorAlertGroupTrips => 'Trajets surveillés';
+
+  @override
+  String get corridorAlertGroupPackages => 'Colis surveillés';
+
+  @override
+  String get corridorAlertActionEditSubtitle => 'Corridor, dates et filtres';
+
+  @override
+  String get corridorAlertDuplicate => 'Dupliquer';
+
+  @override
+  String get corridorAlertDuplicateSubtitle =>
+      'Repartir de cette alerte pour en créer une autre';
+
+  @override
+  String get corridorAlertPause => 'Mettre en pause';
+
+  @override
+  String get corridorAlertPauseSubtitle =>
+      'Plus de notification, l\'alerte reste là';
+
+  @override
+  String get corridorAlertResumeSubtitle => 'Les notifications repartent';
+
+  @override
+  String get corridorAlertSaveError => 'Impossible d\'enregistrer l\'alerte';
+
+  @override
+  String get corridorAlertSubmitCreate => 'Créer l\'alerte';
+
+  @override
+  String get corridorAlertNotifyTitle => 'Notifications';
+
+  @override
+  String get corridorAlertZoneToggleTitle => 'Zone de remise sur la carte';
+
+  @override
+  String get corridorAlertZoneToggleSubtitle =>
+      'Filtre par point de récupération (optionnel)';
+
+  @override
+  String get corridorAlertSegmentPackages => 'Colis';
+
+  @override
+  String get corridorAlertSegmentTrips => 'Trajets';
+
+  @override
+  String get corridorAlertDateWindowLabel => 'Fenêtre de dates (optionnel)';
+
+  @override
+  String get corridorAlertClearDateRange => 'Effacer la période';
+
+  @override
+  String get corridorAlertMinWeightLabel => 'Poids minimum (optionnel)';
+
+  @override
+  String get corridorAlertContentTypesLabel => 'Types de contenu (optionnel)';
+
+  @override
+  String get corridorAlertZoneCityLabel => 'Centrer la zone sur une ville';
+
+  @override
+  String get corridorAlertUseMyLocation => 'Utiliser ma position';
+
+  @override
+  String get corridorAlertZonePlaceholder => 'Point de remise sélectionné';
+
+  @override
+  String get corridorAlertRadiusLabel => 'Rayon';
+
+  @override
+  String get corridorAlertTripAvailable => 'Trajet disponible';
+
+  @override
+  String corridorAlertAvailableKg(String kg) {
+    return '$kg kg dispo';
+  }
+
+  @override
+  String corridorAlertMatchPrice(String price) {
+    return 'Prix $price';
+  }
+
+  @override
+  String get corridorAlertOpenPrice => 'Prix libre';
+
+  @override
+  String get favoritesTitle => 'Mes favoris';
+
+  @override
+  String get favoritesTripsTab => 'Trajets';
+
+  @override
+  String get favoritesRequestsTab => 'Demandes';
+
+  @override
+  String get favoritesEmptyTripsMessage =>
+      'Aucun trajet favori pour l\'instant';
+
+  @override
+  String get favoritesEmptyRequestsMessage =>
+      'Aucune demande favorite pour l\'instant';
+
+  @override
+  String get favoritesEmptyTitle => 'Aucun favori pour l\'instant';
+
+  @override
+  String get favoritesLoadErrorMessage => 'Impossible de charger vos favoris.';
+
+  @override
+  String get favoritesRemoveTooltip => 'Retirer des favoris';
+
+  @override
+  String get favoritesAddTooltip => 'Ajouter aux favoris';
+
+  @override
+  String get reportReasonHarassment => 'Harcèlement ou comportement abusif';
+
+  @override
+  String get reportReasonFakeProfile => 'Faux profil';
+
+  @override
+  String get reportReasonScamAttempt => 'Tentative d\'arnaque';
+
+  @override
+  String get reportReasonProhibitedItem => 'Objet interdit au transport';
+
+  @override
+  String get reportReasonFalseInformation =>
+      'Informations fausses ou trompeuses';
+
+  @override
+  String get reportReasonInappropriateContent => 'Contenu inapproprié';
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonPaymentIssue => 'Problème de paiement';
+
+  @override
+  String get reportReasonAppBug => 'Bug de l\'application';
+
+  @override
+  String get reportReasonOther => 'Autre';
+
+  @override
+  String get reportScreenTitle => 'Signaler un problème';
+
+  @override
+  String get reportSentMessage =>
+      'Signalement envoyé. Notre équipe va l\'examiner.';
+
+  @override
+  String get reportReasonLabel => 'Motif';
+
+  @override
+  String get reportDescriptionLabel => 'Description';
+
+  @override
+  String get reportDescriptionHint => 'Décrivez le problème rencontré…';
+
+  @override
+  String get reportScreenshotsLabel => 'Captures d\'écran (optionnel)';
+
+  @override
+  String get reportScreenshotsHint =>
+      'Jusqu\'à 4 images pour aider notre équipe à comprendre.';
+
+  @override
+  String get reportSendButton => 'Envoyer le signalement';
+
+  @override
+  String get reportAddPhotoLabel => 'Ajouter une photo';
+
+  @override
+  String get reportRemovePhotoLabel => 'Supprimer cette photo';
+
+  @override
+  String get reportSendFailed =>
+      'Impossible d\'envoyer le signalement. Réessayez.';
 }

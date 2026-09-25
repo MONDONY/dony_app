@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 enum CorridorAlertAction { edit, duplicate, pause, resume, delete }
@@ -27,6 +28,7 @@ class _Actions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     void choose(CorridorAlertAction a) => Navigator.of(context).pop(a);
 
     return Column(
@@ -37,8 +39,8 @@ class _Actions extends StatelessWidget {
           iconAsset: 'square-pen',
           iconColor: cs.primary,
           iconBgColor: cs.primaryContainer,
-          label: 'Modifier',
-          subtitle: 'Corridor, dates et filtres',
+          label: l.commonEdit,
+          subtitle: l.corridorAlertActionEditSubtitle,
           onTap: () => choose(CorridorAlertAction.edit),
         ),
         DonyListTile(
@@ -46,8 +48,8 @@ class _Actions extends StatelessWidget {
           iconAsset: 'copy',
           iconColor: cs.primary,
           iconBgColor: cs.primaryContainer,
-          label: 'Dupliquer',
-          subtitle: 'Repartir de cette alerte pour en créer une autre',
+          label: l.corridorAlertDuplicate,
+          subtitle: l.corridorAlertDuplicateSubtitle,
           onTap: () => choose(CorridorAlertAction.duplicate),
         ),
         if (active)
@@ -56,8 +58,8 @@ class _Actions extends StatelessWidget {
             iconAsset: 'bell-off',
             iconColor: cs.onSurfaceVariant,
             iconBgColor: cs.surfaceContainerHighest,
-            label: 'Mettre en pause',
-            subtitle: 'Plus de notification, l\'alerte reste là',
+            label: l.corridorAlertPause,
+            subtitle: l.corridorAlertPauseSubtitle,
             onTap: () => choose(CorridorAlertAction.pause),
           )
         else
@@ -66,14 +68,14 @@ class _Actions extends StatelessWidget {
             iconAsset: 'bell',
             iconColor: cs.primary,
             iconBgColor: cs.primaryContainer,
-            label: 'Reprendre',
-            subtitle: 'Les notifications repartent',
+            label: l.corridorAlertResume,
+            subtitle: l.corridorAlertResumeSubtitle,
             onTap: () => choose(CorridorAlertAction.resume),
           ),
         DonyListTile(
           key: const Key('alert-action-delete'),
           iconAsset: 'trash-2',
-          label: 'Supprimer',
+          label: l.commonDelete,
           destructive: true,
           showDivider: false,
           onTap: () => choose(CorridorAlertAction.delete),

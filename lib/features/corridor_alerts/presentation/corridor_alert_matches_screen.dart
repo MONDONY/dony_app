@@ -7,11 +7,13 @@ import 'package:dony/features/corridor_alerts/bloc/corridor_alert_matches_cubit.
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/data/models/trip_match_model.dart';
+import 'package:dony/features/corridor_alerts/presentation/corridor_alert_labels.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_card.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/trip_match_card.dart';
 import 'package:dony/features/package_request/data/models/matching_request.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,7 +26,10 @@ import 'package:go_router/go_router.dart';
 /// tête sous « Nouveaux », le reste sous « Déjà vus », atténué.
 class CorridorAlertMatchesScreen extends StatelessWidget {
   const CorridorAlertMatchesScreen({super.key, this.alert, String? alertId})
-    : assert(alert != null || alertId != null, 'alert ou alertId requis'),
+    : assert(
+        alert != null || alertId != null,
+        'alert ou alertId requis',
+      ), // i18n-ignore
       _alertId = alertId;
 
   final CorridorAlertModel? alert;
@@ -54,6 +59,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final state = context.watch<CorridorAlertMatchesCubit>().state;
     final alert = state.alert ?? initialAlert;
     final isTrip =
@@ -82,7 +88,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Text(
-          alert?.corridorLabel ?? 'Mes alertes',
+          alert?.corridorLabel ?? l.corridorAlertListTitleAll,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
@@ -90,7 +96,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
         actions: [
           if (alert != null)
             IconButton(
-              tooltip: 'Modifier l\'alerte',
+              tooltip: l.corridorAlertEditTitle,
               icon: DonyIcon('square-pen', size: 22, color: cs.primary),
               onPressed: () => CorridorAlertFormSheet.show(
                 context,
@@ -115,9 +121,10 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                 mascotte: DonyMascotteType.erreurLegere,
                 type: DonyEmptyStateType.error,
                 iconAsset: 'circle-alert',
-                title: 'Erreur de chargement',
-                description: state.errorMessage ?? 'Une erreur est survenue.',
-                actionLabel: 'Réessayer',
+                title: l.commonLoadError,
+                description:
+                    state.errorMessage ?? l.commonSomethingWentWrongDot,
+                actionLabel: l.commonRetry,
                 onAction: () => ctx.read<CorridorAlertMatchesCubit>().load(),
               );
             case CorridorAlertMatchesStatus.empty:
@@ -149,8 +156,8 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                             const SizedBox(height: DonySpacing.base),
                             Text(
                               isTrip
-                                  ? 'Aucun trajet pour l\'instant'
-                                  : 'Aucun colis pour l\'instant',
+                                  ? l.corridorAlertNoTripsYet
+                                  : l.corridorAlertNoParcelsYet,
                               textAlign: TextAlign.center,
                               style: tt.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w700,
@@ -159,8 +166,8 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                             const SizedBox(height: DonySpacing.sm),
                             Text(
                               isTrip
-                                  ? 'Aucun trajet ne correspond à cette alerte pour l\'instant.'
-                                  : 'Aucun colis ne correspond à cette alerte pour l\'instant.',
+                                  ? l.corridorAlertMatchesEmptyTripsDescription
+                                  : l.corridorAlertMatchesEmptyParcelsDescription,
                               textAlign: TextAlign.center,
                               style: tt.bodyMedium?.copyWith(
                                 color: cs.onSurfaceVariant,
@@ -178,7 +185,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                   ? _MatchList<TripMatchModel>(
                       alert: alert,
                       items: state.result!.trips,
-                      noun: 'trajet',
+                      isTrips: true,
                       isNew: (t) => state.isNew(t.publishedAt),
                       keyOf: (t) => t.announcementId,
                       itemBuilder: (lCtx, t, i) => TripMatchCard(
@@ -190,7 +197,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                   : _MatchList<MatchingRequestModel>(
                       alert: alert,
                       items: state.result!.packages,
-                      noun: 'colis',
+                      isTrips: false,
                       isNew: (m) => state.isNew(m.requestedAt),
                       keyOf: (m) => m.id,
                       itemBuilder: (lCtx, m, i) =>
@@ -236,11 +243,18 @@ class _AlertSummaryBanner extends StatelessWidget {
     final (iconAsset, iconBg, iconFg) = isTrips
         ? ('plane', cs.primaryContainer, cs.primary)
         : ('package', cs.secondaryContainer, cs.secondary);
+    final l = context.l10n;
     final (title, subtitle) = !alert.active
-        ? ('Alerte en pause', 'Aucune notification')
+        ? (
+            l.corridorAlertBannerPausedTitle,
+            l.corridorAlertBannerPausedSubtitle,
+          )
         : alert.isExpired
-        ? ('Alerte expirée', 'La fenêtre de dates est passée')
-        : ('Alerte active', alert.notifyMode.description);
+        ? (
+            l.corridorAlertBannerExpiredTitle,
+            l.corridorAlertBannerExpiredSubtitle,
+          )
+        : (l.corridorAlertBannerActiveTitle, alert.notifyMode.description(l));
 
     return DonyCard(
       key: const Key('alert-summary-banner'),
@@ -285,7 +299,7 @@ class _MatchList<T> extends StatelessWidget {
   const _MatchList({
     required this.alert,
     required this.items,
-    required this.noun,
+    required this.isTrips,
     required this.isNew,
     required this.keyOf,
     required this.itemBuilder,
@@ -293,17 +307,19 @@ class _MatchList<T> extends StatelessWidget {
 
   final CorridorAlertModel? alert;
   final List<T> items;
-  final String noun;
+  final bool isTrips;
   final bool Function(T) isNew;
   final String Function(T) keyOf;
   final Widget Function(BuildContext, T, int) itemBuilder;
 
-  String _count(int n) => '$n $noun${noun == 'colis' || n == 1 ? '' : 's'}';
+  String _count(AppLocalizations l, int n) =>
+      isTrips ? l.corridorAlertTripCount(n) : l.corridorAlertParcelCount(n);
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final fresh = items.where(isNew).toList();
     final seen = items.where((i) => !isNew(i)).toList();
     final split = fresh.isNotEmpty && seen.isNotEmpty;
@@ -355,12 +371,15 @@ class _MatchList<T> extends StatelessWidget {
 
     if (split) {
       children.add(
-        header('Nouveaux · ${_count(fresh.length)}', highlight: true),
+        header(
+          l.corridorAlertNewSection(_count(l, fresh.length)),
+          highlight: true,
+        ),
       );
       for (final f in fresh) {
         children.add(row(f, faded: false));
       }
-      children.add(header('Déjà vus · ${_count(seen.length)}'));
+      children.add(header(l.corridorAlertSeenSection(_count(l, seen.length))));
       for (final s in seen) {
         children.add(row(s, faded: true));
       }
@@ -368,7 +387,9 @@ class _MatchList<T> extends StatelessWidget {
       final onlyNew = fresh.isNotEmpty;
       children.add(
         header(
-          onlyNew ? 'Nouveaux · ${_count(items.length)}' : _count(items.length),
+          onlyNew
+              ? l.corridorAlertNewSection(_count(l, items.length))
+              : _count(l, items.length),
           highlight: onlyNew,
         ),
       );

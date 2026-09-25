@@ -10,6 +10,8 @@ import 'package:get_it/get_it.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
 
@@ -124,5 +126,17 @@ void main() {
 
     expect(find.byKey(const Key('zone-radius-label')), findsOneWidget);
     expect(find.text('40 km'), findsOneWidget);
+  });
+
+  testWidgets('anglais : libellés traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _host(geocode: (lat, lng) async => null, onChanged: (_, _, _, _) {}),
+    );
+    await tester.pump();
+
+    expect(find.text('Use my location'), findsOneWidget);
+    expect(find.text('Selected drop-off point'), findsOneWidget);
+    expect(find.text('Radius'), findsOneWidget);
   });
 }

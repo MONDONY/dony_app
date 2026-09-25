@@ -1,5 +1,6 @@
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Bouton favori (signet) — pur visuel, stateless.
@@ -94,8 +95,8 @@ class _FavoriteHeartButtonState extends State<FavoriteHeartButton>
         ),
         onPressed: _handleToggle,
         tooltip: widget.isFavorite
-            ? 'Retirer des favoris'
-            : 'Ajouter aux favoris',
+            ? context.l10n.favoritesRemoveTooltip
+            : context.l10n.favoritesAddTooltip,
       ),
     );
   }

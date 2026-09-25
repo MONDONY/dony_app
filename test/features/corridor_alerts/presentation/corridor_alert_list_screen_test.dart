@@ -15,6 +15,7 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockListBloc
@@ -343,5 +344,20 @@ void main() {
     await t.pump(const Duration(milliseconds: 600));
     expect(find.text('COLIS SURVEILLÉS'), findsOneWidget);
     expect(find.text('TRAJETS SURVEILLÉS'), findsNothing);
+  });
+
+  testWidgets('anglais : titres, vide et bouton créer traduits', (t) async {
+    useEnglish();
+    when(() => bloc.state).thenReturn(
+      const CorridorAlertListState(status: CorridorAlertListStatus.loaded),
+    );
+    await t.pumpWidget(pump());
+    await t.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('My parcel alerts'), findsOneWidget);
+    expect(find.byType(DonyEmptyState), findsOneWidget);
+    expect(find.text('No route alerts'), findsOneWidget);
+    expect(find.text('Create an alert'), findsOneWidget);
+    expect(find.text('Create'), findsOneWidget);
   });
 }

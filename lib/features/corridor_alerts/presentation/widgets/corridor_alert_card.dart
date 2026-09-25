@@ -1,7 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/features/corridor_alerts/presentation/corridor_alert_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -33,33 +35,6 @@ class CorridorAlertCard extends StatelessWidget {
 
   /// Horloge injectable pour les tests ; `DateTime.now()` sinon.
   final DateTime? now;
-
-  static String _d(DateTime d) =>
-      DateFormat('d MMM', AppL10n.localeName).format(d);
-
-  /// « 15 au 30 sept », « À partir du 15 sept », « Jusqu'au 30 sept » ou
-  /// « Toute date ».
-  static String dateLabel(CorridorAlertModel a) {
-    final from = a.dateFrom;
-    final to = a.dateTo;
-    if (from != null && to != null) {
-      final sameMonth = from.year == to.year && from.month == to.month;
-      return sameMonth
-          ? '${from.day} au ${_d(to)}'
-          : '${_d(from)} au ${_d(to)}';
-    }
-    if (from != null) return 'À partir du ${_d(from)}';
-    if (to != null) return 'Jusqu\'au ${_d(to)}';
-    return 'Toute date';
-  }
-
-  /// « ≥ 3 kg » ou « Tout poids » (alertes colis uniquement).
-  static String weightLabel(CorridorAlertModel a) {
-    final kg = a.minWeightKg;
-    if (kg == null) return 'Tout poids';
-    final display = kg == kg.truncateToDouble() ? '${kg.toInt()} kg' : '$kg kg';
-    return '≥ $display';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +75,7 @@ class CorridorAlertCard extends StatelessWidget {
               ),
               IconButton(
                 key: Key('alert-card-menu-${alert.id}'),
-                tooltip: 'Options',
+                tooltip: context.l10n.corridorAlertCardMenuTooltip,
                 visualDensity: VisualDensity.compact,
                 icon: DonyIcon(
                   'ellipsis-vertical',
@@ -145,6 +120,7 @@ class CorridorAlertFilterChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final isTrips = alert.direction == AlertDirection.senderWantsTrips;
     return Wrap(
       spacing: DonySpacing.xs + 2,
@@ -152,7 +128,7 @@ class CorridorAlertFilterChips extends StatelessWidget {
       children: [
         _FilterChip(
           iconAsset: 'calendar',
-          label: CorridorAlertCard.dateLabel(alert),
+          label: corridorAlertDateLabel(l, alert),
         ),
         if (isTrips && alert.hasPickupZone)
           _FilterChip(
@@ -166,10 +142,11 @@ class CorridorAlertFilterChips extends StatelessWidget {
         if (!isTrips)
           _FilterChip(
             iconAsset: 'scale',
-            label: CorridorAlertCard.weightLabel(alert),
+            label: corridorAlertWeightLabel(l, alert),
           ),
         if (!isTrips)
-          for (final c in alert.contentCategories) _FilterChip(label: c),
+          for (final c in alert.contentCategories)
+            _FilterChip(label: contentCategoryDisplayName(l, c)),
       ],
     );
   }
@@ -198,8 +175,7 @@ class _StatusRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final noun = isTrips ? 'trajet' : 'colis';
-    String plural(int n) => isTrips && n > 1 ? '${noun}s' : noun;
+    final l = context.l10n;
 
     if (paused) {
       return Row(
@@ -208,11 +184,11 @@ class _StatusRow extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              'En pause · aucune notification',
+              l.corridorAlertPausedStatus,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
-          _InlineAction(label: 'Reprendre', onPressed: onResume),
+          _InlineAction(label: l.corridorAlertResume, onPressed: onResume),
         ],
       );
     }
@@ -224,7 +200,9 @@ class _StatusRow extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              'Expirée le ${CorridorAlertCard._d(alert.dateTo!)}',
+              l.corridorAlertExpiredOn(
+                DateFormat.MMMd(l.localeName).format(alert.dateTo!),
+              ),
               style: tt.bodySmall?.copyWith(
                 color: cs.warning,
                 fontWeight: FontWeight.w600,
@@ -232,7 +210,7 @@ class _StatusRow extends StatelessWidget {
             ),
           ),
           _InlineAction(
-            label: 'Prolonger',
+            label: l.corridorAlertExtend,
             iconAsset: 'refresh-cw',
             onPressed: onExtend,
           ),
@@ -242,7 +220,9 @@ class _StatusRow extends StatelessWidget {
 
     if (alert.hasNews) {
       final n = alert.newMatchCount;
-      final label = '$n nouveau${n > 1 ? 'x' : ''} ${plural(n)}';
+      final label = isTrips
+          ? l.corridorAlertNewTrips(n)
+          : l.corridorAlertNewParcels(n);
       return Row(
         children: [
           Container(
@@ -266,7 +246,7 @@ class _StatusRow extends StatelessWidget {
             ),
           ),
           _InlineAction(
-            label: 'Voir',
+            label: l.corridorAlertSeeMatches,
             iconAsset: 'arrow-right',
             onPressed: onTap,
           ),
@@ -276,8 +256,10 @@ class _StatusRow extends StatelessWidget {
 
     final total = alert.matchCount;
     final quiet = total == 0
-        ? 'Aucun $noun pour l\'instant'
-        : 'Rien de neuf · $total ${plural(total)} au total';
+        ? (isTrips ? l.corridorAlertNoTripsYet : l.corridorAlertNoParcelsYet)
+        : (isTrips
+              ? l.corridorAlertNothingNewTrips(total)
+              : l.corridorAlertNothingNewParcels(total));
     return Row(
       children: [
         Expanded(

@@ -16,6 +16,7 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_recent_city_store.dart';
 
 class MockFormCubit extends MockCubit<CorridorAlertFormState>
@@ -642,5 +643,15 @@ void main() {
     expect(received?.prefill?.departureCity, 'Lyon');
     // La direction du brouillon prime sur celle déduite des rôles.
     expect(received?.direction, AlertDirection.senderWantsTrips);
+  });
+
+  testWidgets('anglais : titre, notifications et bouton traduits', (t) async {
+    useEnglish();
+    await _pumpSheet(t, isSender: true);
+
+    expect(find.text('Create an alert'), findsOneWidget);
+    expect(find.text('Notifications'), findsOneWidget);
+    expect(find.text('Instant push, 9 AM digest'), findsOneWidget);
+    expect(find.text('Create the alert'), findsOneWidget);
   });
 }

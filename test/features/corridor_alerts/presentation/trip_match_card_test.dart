@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 TripMatchModel _trip() => TripMatchModel(
   announcementId: 'ann-1',
   departureCity: 'Paris',
@@ -81,6 +83,34 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Prix libre'), findsOneWidget);
+  });
+
+  testWidgets('anglais : « Trajet disponible » et prix libre traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    final trip = TripMatchModel(
+      announcementId: 'ann-3',
+      departureCity: 'Lyon',
+      arrivalCity: 'Abidjan',
+      departureDate: DateTime(2026, 8),
+      travelerId: 't-3',
+      travelerName: 'Kofi B.',
+      travelerInitials: 'KB',
+      travelerRating: 4.2,
+      availableKg: 8.0,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(body: TripMatchCard(match: trip, index: 2)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Trip available'), findsOneWidget);
+    expect(find.text('Open price'), findsOneWidget);
+    expect(find.text('8 kg available'), findsOneWidget);
   });
 
   testWidgets('renders traveler rating', (tester) async {

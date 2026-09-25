@@ -17,9 +17,12 @@ class IncidentReportSuccess extends IncidentReportState {
   IncidentReportSuccess(this.reportId);
 }
 
+/// [error] porte l'exception typée à présenter via `ErrorPresenter` ; `null`
+/// pour une exception inconnue, auquel cas l'écran affiche
+/// [AppLocalizations.reportSendFailed] sans relayer de message serveur brut.
 class IncidentReportError extends IncidentReportState {
-  final String message;
-  IncidentReportError(this.message);
+  final AppException? error;
+  IncidentReportError({this.error});
 }
 
 /// Soumission d'un signalement d'incident.
@@ -60,11 +63,9 @@ class IncidentReportCubit extends Cubit<IncidentReportState> {
       );
       emit(IncidentReportSuccess(id));
     } on AppException catch (e) {
-      emit(IncidentReportError(e.message));
+      emit(IncidentReportError(error: e));
     } catch (_) {
-      emit(
-        IncidentReportError('Impossible d\'envoyer le signalement. Réessayez.'),
-      );
+      emit(IncidentReportError());
     }
   }
 }
