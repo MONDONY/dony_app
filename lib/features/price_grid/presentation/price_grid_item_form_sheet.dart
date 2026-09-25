@@ -13,6 +13,7 @@ import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart'
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 /// Feuille de création ou de modification d'une étiquette de la grille.
 ///
@@ -34,12 +35,14 @@ abstract final class PriceGridItemFormSheet {
 
     // Article retenu. `null` tant qu'on est dans le catalogue.
     final label = ValueNotifier<String?>(item?.label);
-    // Saisie brute du montant, virgule comprise, pour laisser taper « 15, ».
-    final raw = ValueNotifier<String>(
-      item != null ? _formatInitial(item.unitPriceNet) : '',
-    );
 
     final l = context.l10n;
+    final sep = NumberFormat.decimalPattern(l.localeName).symbols.DECIMAL_SEP;
+    // Saisie brute du montant, séparateur décimal de la langue compris, pour
+    // laisser taper « 15, » (fr) ou « 15. » (en).
+    final raw = ValueNotifier<String>(
+      item != null ? _formatInitial(item.unitPriceNet, sep) : '',
+    );
     return DonyBottomSheet.show<void>(
       context,
       title: isEditing ? l.priceGridEditItemTitle : l.priceGridAddLabelButton,
@@ -80,24 +83,29 @@ abstract final class PriceGridItemFormSheet {
     });
   }
 
-  static String _formatInitial(double value) {
+  static String _formatInitial(double value, String sep) {
     final fixed = value.toStringAsFixed(2);
-    // 12.00 se ressaisit plus vite depuis « 12 » que depuis « 12,00 ».
+    // 12.00 se ressaisit plus vite depuis « 12 » que depuis « 12,00 »/« 12.00 ».
     final trimmed = fixed.endsWith('.00')
         ? fixed.substring(0, fixed.length - 3)
         : fixed;
-    return trimmed.replaceAll('.', ',');
+    return trimmed.replaceAll('.', sep);
   }
 }
 
 /// Montant que la saisie représente, hors toute règle métier, ou `null` si ce
 /// n'est pas encore un nombre.
 ///
-/// Une virgule en fin de saisie est ignorée plutôt que rejetée : « 15, » est
-/// un état de frappe normal, et griser le bouton à cet instant donnerait
-/// l'impression que le montant est refusé.
+/// Un séparateur décimal en fin de saisie est ignoré plutôt que rejeté :
+/// « 15, » ou « 15. » est un état de frappe normal, et griser le bouton à cet
+/// instant donnerait l'impression que le montant est refusé. Les deux
+/// séparateurs (`,` et `.`) sont acceptés quelle que soit la langue affichée :
+/// un clavier physique ou un copier-coller peut en apporter un différent de
+/// celui du clavier numérique de l'app.
 double? _amount(String raw) {
-  final trimmed = raw.endsWith(',') ? raw.substring(0, raw.length - 1) : raw;
+  final trimmed = (raw.endsWith(',') || raw.endsWith('.'))
+      ? raw.substring(0, raw.length - 1)
+      : raw;
   if (trimmed.isEmpty) return null;
   return double.tryParse(trimmed.replaceAll(',', '.'));
 }
@@ -412,6 +420,7 @@ class _PriceStep extends StatelessWidget {
     final l = context.l10n;
     // Valeur brute inchangée (envoyée à onPicked) ; seul l'affichage traduit.
     final displayLabel = contentCategoryDisplayName(l, chosen);
+    final sep = NumberFormat.decimalPattern(l.localeName).symbols.DECIMAL_SEP;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -475,8 +484,9 @@ class _PriceStep extends StatelessWidget {
           // À taille pleine, la dernière rangée tombe sous la ligne de
           // flottaison de la feuille et n'est atteignable qu'en défilant.
           compact: true,
-          onDigit: (d) => raw.value = _append(raw.value, d),
-          onDecimal: () => raw.value = _appendDecimal(raw.value),
+          decimalSeparator: sep,
+          onDigit: (d) => raw.value = _append(raw.value, d, sep),
+          onDecimal: () => raw.value = _appendDecimal(raw.value, sep),
           onDelete: () => raw.value = raw.value.isEmpty
               ? ''
               : raw.value.substring(0, raw.value.length - 1),
@@ -487,19 +497,21 @@ class _PriceStep extends StatelessWidget {
   }
 
   /// Ajoute un chiffre en refusant ce qui ne peut pas être un montant :
-  /// plus de deux décimales, ou un zéro de tête sans virgule derrière.
-  static String _append(String current, String digit) {
-    final comma = current.indexOf(',');
+  /// plus de deux décimales, ou un zéro de tête sans séparateur derrière.
+  /// [sep] est le séparateur décimal de la langue (`,` en fr, `.` en en) :
+  /// la saisie au clavier numérique de l'app n'en produit jamais qu'un seul.
+  static String _append(String current, String digit, String sep) {
+    final comma = current.indexOf(sep);
     if (comma >= 0 && current.length - comma > 2) return current;
     if (current == '0') return digit;
-    if (current.replaceAll(',', '').length >= 6) return current;
+    if (current.replaceAll(sep, '').length >= 6) return current;
     return current + digit;
   }
 
-  static String _appendDecimal(String current) {
-    if (current.contains(',')) return current;
-    if (current.isEmpty) return '0,';
-    return '$current,';
+  static String _appendDecimal(String current, String sep) {
+    if (current.contains(sep)) return current;
+    if (current.isEmpty) return '0$sep';
+    return '$current$sep';
   }
 }
 
