@@ -5,6 +5,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/escrow_block_dialog.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -25,14 +26,14 @@ class DeleteConfirmationSheet extends StatefulWidget {
     return DonyBottomSheet.show(
       context,
       isDanger: true,
-      title: 'Dernière étape',
+      title: context.l10n.deletionFinalStepTitle,
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       stickyBottom: ValueListenableBuilder<bool>(
         valueListenable: checkboxNotifier,
         builder: (context, checked, child) =>
             BlocBuilder<AccountDeletionBloc, AccountDeletionState>(
               builder: (ctx, state) => DonyButton(
-                label: 'Supprimer définitivement',
+                label: ctx.l10n.deletionModeHardTitle,
                 variant: DonyButtonVariant.destructive,
                 isLoading: state is AccountDeletionLoading,
                 onPressed: !checked || state is AccountDeletionLoading
@@ -66,6 +67,7 @@ class _DeleteConfirmationSheetState extends State<DeleteConfirmationSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
@@ -99,7 +101,7 @@ class _DeleteConfirmationSheetState extends State<DeleteConfirmationSheet> {
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
-                    'Toutes vos données personnelles seront effacées immédiatement et définitivement. Cette action est irréversible.',
+                    l.deletionFinalStepWarning,
                     style: tt.bodySmall?.copyWith(color: cs.error),
                   ),
                 ),
@@ -126,7 +128,7 @@ class _DeleteConfirmationSheetState extends State<DeleteConfirmationSheet> {
                     child: Padding(
                       padding: const EdgeInsets.only(top: DonySpacing.md),
                       child: Text(
-                        'Je comprends que cette suppression est définitive et irréversible.',
+                        l.deletionFinalStepAcknowledgement,
                         style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                       ),
                     ),

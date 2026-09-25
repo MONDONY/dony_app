@@ -12059,4 +12059,153 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get prefsResponseDelayHint => 'e.g. 3';
+
+  @override
+  String get deletionSheetTitle => 'Delete my account';
+
+  @override
+  String get deletionSoftConfirmLabel => 'Confirm the pause';
+
+  @override
+  String get deletionSoftConfirmDialogMessage =>
+      'Your account will be suspended for 30 days. You can reactivate it from your profile.';
+
+  @override
+  String get deletionRequestedSnackbar =>
+      'Your account will be deleted in 30 days. You can cancel from your profile. Refunds already started won\'t be canceled.';
+
+  @override
+  String get deletionModeSoftTitle => '30-day pause';
+
+  @override
+  String get deletionModeSoftBadge => 'REVERSIBLE';
+
+  @override
+  String get deletionModeSoftDescription =>
+      'Your account is suspended. You can come back at any time within 30 days. After that, your personal data is pseudonymized (GDPR).';
+
+  @override
+  String get deletionModeHardTitle => 'Delete permanently';
+
+  @override
+  String get deletionModeHardBadge => 'IRREVERSIBLE';
+
+  @override
+  String get deletionModeHardDescription =>
+      'All your personal data is erased immediately. This action is final and cannot be undone.';
+
+  @override
+  String get deletionReasonSectionTitle => 'Reason (optional)';
+
+  @override
+  String get deletionReasonNotUsing => 'I no longer use the service';
+
+  @override
+  String get deletionReasonPrivacy => 'Privacy concern';
+
+  @override
+  String get deletionReasonTooManyNotifications => 'Too many notifications';
+
+  @override
+  String get deletionReasonOther => 'Other reason';
+
+  @override
+  String get deletionContinueArrow => 'Continue →';
+
+  @override
+  String deletionWalletRefundRequestedMessage(String amounts) {
+    return 'Request sent for $amounts. A team member will contact you about the refund.';
+  }
+
+  @override
+  String get deletionWalletBalanceInfo =>
+      'You have an available balance. It will automatically be refunded after your account is deleted. You can also request it now.';
+
+  @override
+  String get deletionRequestRefundNowButton => 'Request refund now';
+
+  @override
+  String deletionManualRailMessage(String amount) {
+    return 'Balance of $amount: a team member will contact you about the refund.';
+  }
+
+  @override
+  String deletionRefundableOnCardMessage(String amount) {
+    return '$amount will be refunded to your card as soon as you request deletion.';
+  }
+
+  @override
+  String deletionInFlightMessage(String amount) {
+    return '$amount is already being refunded.';
+  }
+
+  @override
+  String deletionBonusLostLabel(String amount) {
+    return 'Referral bonus lost: $amount';
+  }
+
+  @override
+  String deletionBonusForfeitedMessage(String amount) {
+    return '$amount in bonus will be permanently lost when the account is deleted.';
+  }
+
+  @override
+  String deletionBalanceAbsorbedByFeesMessage(String amount) {
+    return 'Balance of $amount not refundable: the payment provider\'s fees absorb it entirely.';
+  }
+
+  @override
+  String deletionRefundableWithFeeMessage(String refundable, String fee) {
+    return '$refundable refundable, $fee in fees';
+  }
+
+  @override
+  String deletionFeelessDestinationMessage(String destination) {
+    return 'To $destination, no fees';
+  }
+
+  @override
+  String deletionSettlementRefundedOnRequest(String amounts) {
+    return '$amounts will be refunded as soon as you request it.';
+  }
+
+  @override
+  String deletionSettlementBonusLost(String amounts) {
+    return '$amounts in bonus will be permanently lost when the account is deleted.';
+  }
+
+  @override
+  String get deletionBlockedActiveTransactions =>
+      'You have a shipment being delivered, with funds on hold. You can delete your account once the delivery is confirmed.';
+
+  @override
+  String get deletionBlockedGeneric => 'Deletion isn\'t possible right now.';
+
+  @override
+  String get deletionFinalStepTitle => 'Last step';
+
+  @override
+  String get deletionFinalStepWarning =>
+      'All your personal data will be erased immediately and permanently. This action is irreversible.';
+
+  @override
+  String get deletionFinalStepAcknowledgement =>
+      'I understand that this deletion is final and irreversible.';
+
+  @override
+  String get deletionEscrowBlockedTitle => 'Deletion isn\'t possible right now';
+
+  @override
+  String get deletionEscrowBlockedMessage =>
+      'One of your shipments is being delivered and its funds are on hold. You can delete your account once the delivery has been confirmed.';
+
+  @override
+  String get deletionEscrowBlockedCta => 'View my shipments';
+
+  @override
+  String get errorEscrowBlockedTitle => 'Can\'t delete your account yet';
+
+  @override
+  String get errorEscrowBlockedMessage =>
+      'You have a payment in progress. You can delete your account once the delivery is confirmed.';
 }

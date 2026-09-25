@@ -13583,5 +13583,220 @@
   "prefsResponseDelayHint": "ex. 3",
   "@prefsResponseDelayHint": {
     "description": "Placeholder du champ de délai de réponse personnalisé (business_prefs_screen.dart)"
+  },
+
+  "deletionSheetTitle": "Supprimer mon compte",
+  "@deletionSheetTitle": {
+    "description": "Titre de la bottom sheet de suppression de compte (delete_account_bottom_sheet.dart)."
+  },
+  "deletionSoftConfirmLabel": "Confirmer la pause",
+  "@deletionSoftConfirmLabel": {
+    "description": "Titre du dialogue de confirmation de la pause 30 jours ET libellé du bouton de validation quand ce mode est sélectionné (delete_account_bottom_sheet.dart, même texte aux deux endroits, R42)."
+  },
+  "deletionSoftConfirmDialogMessage": "Votre compte sera suspendu pendant 30 jours. Vous pourrez le réactiver depuis votre profil.",
+  "@deletionSoftConfirmDialogMessage": {
+    "description": "Message du dialogue de confirmation de la pause 30 jours (delete_account_bottom_sheet.dart)."
+  },
+  "deletionRequestedSnackbar": "Votre compte sera supprimé dans 30 jours. Vous pouvez annuler depuis votre profil. Les remboursements déjà lancés ne sont pas annulés.",
+  "@deletionRequestedSnackbar": {
+    "description": "Snackbar affiché après la demande de pause 30 jours (delete_account_bottom_sheet.dart)."
+  },
+  "deletionModeSoftTitle": "Pause 30 jours",
+  "@deletionModeSoftTitle": {
+    "description": "Titre de la carte de mode « pause » (delete_account_bottom_sheet.dart _ModeCard)."
+  },
+  "deletionModeSoftBadge": "RÉVERSIBLE",
+  "@deletionModeSoftBadge": {
+    "description": "Badge de la carte de mode « pause » (delete_account_bottom_sheet.dart _ModeCard)."
+  },
+  "deletionModeSoftDescription": "Votre compte est suspendu. Vous pouvez revenir à tout moment dans les 30 jours. Après ce délai, vos données personnelles sont pseudonymisées (RGPD).",
+  "@deletionModeSoftDescription": {
+    "description": "Description de la carte de mode « pause » (delete_account_bottom_sheet.dart _ModeCard)."
+  },
+  "deletionModeHardTitle": "Supprimer définitivement",
+  "@deletionModeHardTitle": {
+    "description": "Titre de la carte de mode « suppression définitive » (delete_account_bottom_sheet.dart _ModeCard), réutilisé comme libellé du bouton de validation en mode hard et comme libellé du bouton final de delete_confirmation_sheet.dart (même texte, même feature, R42)."
+  },
+  "deletionModeHardBadge": "IRRÉVERSIBLE",
+  "@deletionModeHardBadge": {
+    "description": "Badge de la carte de mode « suppression définitive » (delete_account_bottom_sheet.dart _ModeCard)."
+  },
+  "deletionModeHardDescription": "Toutes vos données personnelles sont effacées immédiatement. Cette action est définitive et ne peut pas être annulée.",
+  "@deletionModeHardDescription": {
+    "description": "Description de la carte de mode « suppression définitive » (delete_account_bottom_sheet.dart _ModeCard)."
+  },
+  "deletionReasonSectionTitle": "Raison (optionnel)",
+  "@deletionReasonSectionTitle": {
+    "description": "Titre de la section des motifs de suppression (delete_account_bottom_sheet.dart)."
+  },
+  "deletionReasonNotUsing": "Je n'utilise plus le service",
+  "@deletionReasonNotUsing": {
+    "description": "Libellé affiché du motif de suppression « je n'utilise plus le service » (delete_account_bottom_sheet.dart) — la valeur envoyée au serveur (DonyRadioOption.value) reste le texte français, // i18n-ignore."
+  },
+  "deletionReasonPrivacy": "Problème de confidentialité",
+  "@deletionReasonPrivacy": {
+    "description": "Libellé affiché du motif de suppression « problème de confidentialité » (delete_account_bottom_sheet.dart) — la valeur envoyée au serveur reste le texte français."
+  },
+  "deletionReasonTooManyNotifications": "Trop de notifications",
+  "@deletionReasonTooManyNotifications": {
+    "description": "Libellé affiché du motif de suppression « trop de notifications » (delete_account_bottom_sheet.dart) — la valeur envoyée au serveur reste le texte français."
+  },
+  "deletionReasonOther": "Autre raison",
+  "@deletionReasonOther": {
+    "description": "Libellé affiché du motif de suppression « autre raison » (delete_account_bottom_sheet.dart) — la valeur envoyée au serveur reste le texte français."
+  },
+  "deletionContinueArrow": "Continuer →",
+  "@deletionContinueArrow": {
+    "description": "Libellé du bouton de validation en mode suppression définitive, avant l'étape finale (delete_account_bottom_sheet.dart _DeleteActions)."
+  },
+  "deletionWalletRefundRequestedMessage": "Demande envoyée pour {amounts}. Un membre de l'équipe vous recontacte pour le remboursement.",
+  "@deletionWalletRefundRequestedMessage": {
+    "description": "Bandeau de confirmation après une demande de remboursement du solde wallet, avant suppression (delete_account_bottom_sheet.dart _WalletRefundRequestCta). {amounts} déjà formatés dans leur devise, joints par une simple virgule.",
+    "placeholders": {
+      "amounts": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionWalletBalanceInfo": "Vous avez un solde disponible. Il sera automatiquement remboursé après la suppression de votre compte. Vous pouvez aussi le demander dès maintenant.",
+  "@deletionWalletBalanceInfo": {
+    "description": "Bandeau informatif proposant le remboursement anticipé du solde wallet (delete_account_bottom_sheet.dart _WalletRefundRequestCta). Tiret cadratin de l'ancien texte remplacé par un point (deux phrases), signalé en PR."
+  },
+  "deletionRequestRefundNowButton": "Demander le remboursement maintenant",
+  "@deletionRequestRefundNowButton": {
+    "description": "Bouton de demande de remboursement anticipé du solde wallet (delete_account_bottom_sheet.dart _WalletRefundRequestCta)."
+  },
+  "deletionManualRailMessage": "Solde de {amount} : un membre de l'équipe vous recontacte pour le remboursement.",
+  "@deletionManualRailMessage": {
+    "description": "Ligne du récapitulatif de règlement pour une devise au rail MANUAL (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionRefundableOnCardMessage": "{amount} seront remboursés sur votre carte dès la demande de suppression.",
+  "@deletionRefundableOnCardMessage": {
+    "description": "Ligne du récapitulatif de règlement, ancien contrat sans détail des frais (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionInFlightMessage": "{amount} sont déjà en cours de remboursement.",
+  "@deletionInFlightMessage": {
+    "description": "Ligne du récapitulatif de règlement pour un montant déjà en cours de remboursement (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionBonusLostLabel": "Bonus parrainage perdu : {amount}",
+  "@deletionBonusLostLabel": {
+    "description": "Ligne rouge du récapitulatif de règlement, nouveau contrat (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionBonusForfeitedMessage": "{amount} de bonus seront perdus définitivement à la suppression du compte.",
+  "@deletionBonusForfeitedMessage": {
+    "description": "Bandeau de bonus perdu, ancien contrat (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionBalanceAbsorbedByFeesMessage": "Solde de {amount} non remboursable : les frais du prestataire de paiement l'absorbent entièrement.",
+  "@deletionBalanceAbsorbedByFeesMessage": {
+    "description": "Bandeau affiché quand les frais absorbent tout le solde remboursable d'une devise (delete_account_bottom_sheet.dart _RailAmountBlock). {amount} déjà formaté dans sa devise.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionRefundableWithFeeMessage": "{refundable} remboursables, {fee} de frais",
+  "@deletionRefundableWithFeeMessage": {
+    "description": "Détail des frais sous le montant net d'une devise au nouveau contrat (delete_account_bottom_sheet.dart _RailAmountBlock). Montants déjà formatés dans leur devise.",
+    "placeholders": {
+      "refundable": {
+        "type": "String"
+      },
+      "fee": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionFeelessDestinationMessage": "Vers {destination}, sans frais",
+  "@deletionFeelessDestinationMessage": {
+    "description": "Détail sous le montant net d'un versement mobile money sans frais (delete_account_bottom_sheet.dart _RailAmountBlock). {destination} est un numéro masqué renvoyé par le serveur, affiché tel quel.",
+    "placeholders": {
+      "destination": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionSettlementRefundedOnRequest": "{amounts} seront remboursés dès la demande.",
+  "@deletionSettlementRefundedOnRequest": {
+    "description": "Première phrase du bandeau récapitulatif combinant toutes les devises au nouveau contrat (delete_account_bottom_sheet.dart _SettlementBanner). {amounts} joints par joinList.",
+    "placeholders": {
+      "amounts": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionSettlementBonusLost": "{amounts} de bonus seront perdus définitivement à la suppression.",
+  "@deletionSettlementBonusLost": {
+    "description": "Seconde phrase du bandeau récapitulatif, si des bonus sont perdus (delete_account_bottom_sheet.dart _SettlementBanner). {amounts} joints par joinList.",
+    "placeholders": {
+      "amounts": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionBlockedActiveTransactions": "Vous avez un envoi en cours de livraison, avec des fonds bloqués en séquestre. Vous pourrez supprimer votre compte dès que la livraison sera confirmée.",
+  "@deletionBlockedActiveTransactions": {
+    "description": "Message affiché à côté du bouton de suppression quand le serveur renvoie le code active-transactions (deletion_labels.dart deletionBlockedMessage, deletion_eligibility_cubit.dart)."
+  },
+  "deletionBlockedGeneric": "La suppression n'est pas possible pour l'instant.",
+  "@deletionBlockedGeneric": {
+    "description": "Repli affiché pour tout code de blocage inconnu ou absent (deletion_labels.dart deletionBlockedMessage, deletion_eligibility_cubit.dart)."
+  },
+  "deletionFinalStepTitle": "Dernière étape",
+  "@deletionFinalStepTitle": {
+    "description": "Titre de la bottom sheet de confirmation finale de suppression immédiate (delete_confirmation_sheet.dart)."
+  },
+  "deletionFinalStepWarning": "Toutes vos données personnelles seront effacées immédiatement et définitivement. Cette action est irréversible.",
+  "@deletionFinalStepWarning": {
+    "description": "Bandeau d'avertissement de la confirmation finale (delete_confirmation_sheet.dart)."
+  },
+  "deletionFinalStepAcknowledgement": "Je comprends que cette suppression est définitive et irréversible.",
+  "@deletionFinalStepAcknowledgement": {
+    "description": "Texte de la case à cocher de la confirmation finale (delete_confirmation_sheet.dart)."
+  },
+  "deletionEscrowBlockedTitle": "Suppression impossible pour l'instant",
+  "@deletionEscrowBlockedTitle": {
+    "description": "Titre du dialogue affiché quand la suppression est bloquée par un séquestre actif (escrow_block_dialog.dart). Distinct de errorEscrowBlockedTitle : deux textes indépendants pour deux affichages différents (voir account_deletion_bloc.dart)."
+  },
+  "deletionEscrowBlockedMessage": "Un de vos envois est en cours de livraison et ses fonds sont bloqués en séquestre. Vous pourrez supprimer votre compte dès que la livraison aura été confirmée.",
+  "@deletionEscrowBlockedMessage": {
+    "description": "Message du dialogue de blocage par séquestre actif (escrow_block_dialog.dart)."
+  },
+  "deletionEscrowBlockedCta": "Voir mes envois",
+  "@deletionEscrowBlockedCta": {
+    "description": "Bouton de confirmation du dialogue de blocage par séquestre actif, vers la liste des envois (escrow_block_dialog.dart)."
+  },
+  "errorEscrowBlockedTitle": "Suppression impossible pour l'instant",
+  "@errorEscrowBlockedTitle": {
+    "description": "Titre ErrorCatalog du code escrow-blocked (account_deletion_bloc.dart, RequestDeletion/ConfirmImmediateDeletion) — n'atteint l'utilisateur que si AccountDeletionError parvient jusqu'à ErrorPresenter (profile_screen.dart), les deux sheets de suppression interceptant isEscrowBlocked avant avec leur propre texte (escrow_block_dialog.dart)."
+  },
+  "errorEscrowBlockedMessage": "Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.",
+  "@errorEscrowBlockedMessage": {
+    "description": "Message ErrorCatalog du code escrow-blocked."
   }
 }

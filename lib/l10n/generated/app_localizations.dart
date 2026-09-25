@@ -20287,6 +20287,240 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'ex. 3'**
   String get prefsResponseDelayHint;
+
+  /// Titre de la bottom sheet de suppression de compte (delete_account_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer mon compte'**
+  String get deletionSheetTitle;
+
+  /// Titre du dialogue de confirmation de la pause 30 jours ET libellé du bouton de validation quand ce mode est sélectionné (delete_account_bottom_sheet.dart, même texte aux deux endroits, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la pause'**
+  String get deletionSoftConfirmLabel;
+
+  /// Message du dialogue de confirmation de la pause 30 jours (delete_account_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte sera suspendu pendant 30 jours. Vous pourrez le réactiver depuis votre profil.'**
+  String get deletionSoftConfirmDialogMessage;
+
+  /// Snackbar affiché après la demande de pause 30 jours (delete_account_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte sera supprimé dans 30 jours. Vous pouvez annuler depuis votre profil. Les remboursements déjà lancés ne sont pas annulés.'**
+  String get deletionRequestedSnackbar;
+
+  /// Titre de la carte de mode « pause » (delete_account_bottom_sheet.dart _ModeCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pause 30 jours'**
+  String get deletionModeSoftTitle;
+
+  /// Badge de la carte de mode « pause » (delete_account_bottom_sheet.dart _ModeCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'RÉVERSIBLE'**
+  String get deletionModeSoftBadge;
+
+  /// Description de la carte de mode « pause » (delete_account_bottom_sheet.dart _ModeCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte est suspendu. Vous pouvez revenir à tout moment dans les 30 jours. Après ce délai, vos données personnelles sont pseudonymisées (RGPD).'**
+  String get deletionModeSoftDescription;
+
+  /// Titre de la carte de mode « suppression définitive » (delete_account_bottom_sheet.dart _ModeCard), réutilisé comme libellé du bouton de validation en mode hard et comme libellé du bouton final de delete_confirmation_sheet.dart (même texte, même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer définitivement'**
+  String get deletionModeHardTitle;
+
+  /// Badge de la carte de mode « suppression définitive » (delete_account_bottom_sheet.dart _ModeCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'IRRÉVERSIBLE'**
+  String get deletionModeHardBadge;
+
+  /// Description de la carte de mode « suppression définitive » (delete_account_bottom_sheet.dart _ModeCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes vos données personnelles sont effacées immédiatement. Cette action est définitive et ne peut pas être annulée.'**
+  String get deletionModeHardDescription;
+
+  /// Titre de la section des motifs de suppression (delete_account_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Raison (optionnel)'**
+  String get deletionReasonSectionTitle;
+
+  /// Libellé affiché du motif de suppression « je n'utilise plus le service » (delete_account_bottom_sheet.dart) — la valeur envoyée au serveur (DonyRadioOption.value) reste le texte français, // i18n-ignore.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je n\'utilise plus le service'**
+  String get deletionReasonNotUsing;
+
+  /// Libellé affiché du motif de suppression « problème de confidentialité » (delete_account_bottom_sheet.dart) — la valeur envoyée au serveur reste le texte français.
+  ///
+  /// In fr, this message translates to:
+  /// **'Problème de confidentialité'**
+  String get deletionReasonPrivacy;
+
+  /// Libellé affiché du motif de suppression « trop de notifications » (delete_account_bottom_sheet.dart) — la valeur envoyée au serveur reste le texte français.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de notifications'**
+  String get deletionReasonTooManyNotifications;
+
+  /// Libellé affiché du motif de suppression « autre raison » (delete_account_bottom_sheet.dart) — la valeur envoyée au serveur reste le texte français.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre raison'**
+  String get deletionReasonOther;
+
+  /// Libellé du bouton de validation en mode suppression définitive, avant l'étape finale (delete_account_bottom_sheet.dart _DeleteActions).
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer →'**
+  String get deletionContinueArrow;
+
+  /// Bandeau de confirmation après une demande de remboursement du solde wallet, avant suppression (delete_account_bottom_sheet.dart _WalletRefundRequestCta). {amounts} déjà formatés dans leur devise, joints par une simple virgule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée pour {amounts}. Un membre de l\'équipe vous recontacte pour le remboursement.'**
+  String deletionWalletRefundRequestedMessage(String amounts);
+
+  /// Bandeau informatif proposant le remboursement anticipé du solde wallet (delete_account_bottom_sheet.dart _WalletRefundRequestCta). Tiret cadratin de l'ancien texte remplacé par un point (deux phrases), signalé en PR.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez un solde disponible. Il sera automatiquement remboursé après la suppression de votre compte. Vous pouvez aussi le demander dès maintenant.'**
+  String get deletionWalletBalanceInfo;
+
+  /// Bouton de demande de remboursement anticipé du solde wallet (delete_account_bottom_sheet.dart _WalletRefundRequestCta).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander le remboursement maintenant'**
+  String get deletionRequestRefundNowButton;
+
+  /// Ligne du récapitulatif de règlement pour une devise au rail MANUAL (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde de {amount} : un membre de l\'équipe vous recontacte pour le remboursement.'**
+  String deletionManualRailMessage(String amount);
+
+  /// Ligne du récapitulatif de règlement, ancien contrat sans détail des frais (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} seront remboursés sur votre carte dès la demande de suppression.'**
+  String deletionRefundableOnCardMessage(String amount);
+
+  /// Ligne du récapitulatif de règlement pour un montant déjà en cours de remboursement (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} sont déjà en cours de remboursement.'**
+  String deletionInFlightMessage(String amount);
+
+  /// Ligne rouge du récapitulatif de règlement, nouveau contrat (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonus parrainage perdu : {amount}'**
+  String deletionBonusLostLabel(String amount);
+
+  /// Bandeau de bonus perdu, ancien contrat (delete_account_bottom_sheet.dart _WalletSettlementSummary). {amount} déjà formaté dans sa devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} de bonus seront perdus définitivement à la suppression du compte.'**
+  String deletionBonusForfeitedMessage(String amount);
+
+  /// Bandeau affiché quand les frais absorbent tout le solde remboursable d'une devise (delete_account_bottom_sheet.dart _RailAmountBlock). {amount} déjà formaté dans sa devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde de {amount} non remboursable : les frais du prestataire de paiement l\'absorbent entièrement.'**
+  String deletionBalanceAbsorbedByFeesMessage(String amount);
+
+  /// Détail des frais sous le montant net d'une devise au nouveau contrat (delete_account_bottom_sheet.dart _RailAmountBlock). Montants déjà formatés dans leur devise.
+  ///
+  /// In fr, this message translates to:
+  /// **'{refundable} remboursables, {fee} de frais'**
+  String deletionRefundableWithFeeMessage(String refundable, String fee);
+
+  /// Détail sous le montant net d'un versement mobile money sans frais (delete_account_bottom_sheet.dart _RailAmountBlock). {destination} est un numéro masqué renvoyé par le serveur, affiché tel quel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vers {destination}, sans frais'**
+  String deletionFeelessDestinationMessage(String destination);
+
+  /// Première phrase du bandeau récapitulatif combinant toutes les devises au nouveau contrat (delete_account_bottom_sheet.dart _SettlementBanner). {amounts} joints par joinList.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amounts} seront remboursés dès la demande.'**
+  String deletionSettlementRefundedOnRequest(String amounts);
+
+  /// Seconde phrase du bandeau récapitulatif, si des bonus sont perdus (delete_account_bottom_sheet.dart _SettlementBanner). {amounts} joints par joinList.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amounts} de bonus seront perdus définitivement à la suppression.'**
+  String deletionSettlementBonusLost(String amounts);
+
+  /// Message affiché à côté du bouton de suppression quand le serveur renvoie le code active-transactions (deletion_labels.dart deletionBlockedMessage, deletion_eligibility_cubit.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez un envoi en cours de livraison, avec des fonds bloqués en séquestre. Vous pourrez supprimer votre compte dès que la livraison sera confirmée.'**
+  String get deletionBlockedActiveTransactions;
+
+  /// Repli affiché pour tout code de blocage inconnu ou absent (deletion_labels.dart deletionBlockedMessage, deletion_eligibility_cubit.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La suppression n\'est pas possible pour l\'instant.'**
+  String get deletionBlockedGeneric;
+
+  /// Titre de la bottom sheet de confirmation finale de suppression immédiate (delete_confirmation_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernière étape'**
+  String get deletionFinalStepTitle;
+
+  /// Bandeau d'avertissement de la confirmation finale (delete_confirmation_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes vos données personnelles seront effacées immédiatement et définitivement. Cette action est irréversible.'**
+  String get deletionFinalStepWarning;
+
+  /// Texte de la case à cocher de la confirmation finale (delete_confirmation_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Je comprends que cette suppression est définitive et irréversible.'**
+  String get deletionFinalStepAcknowledgement;
+
+  /// Titre du dialogue affiché quand la suppression est bloquée par un séquestre actif (escrow_block_dialog.dart). Distinct de errorEscrowBlockedTitle : deux textes indépendants pour deux affichages différents (voir account_deletion_bloc.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suppression impossible pour l\'instant'**
+  String get deletionEscrowBlockedTitle;
+
+  /// Message du dialogue de blocage par séquestre actif (escrow_block_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un de vos envois est en cours de livraison et ses fonds sont bloqués en séquestre. Vous pourrez supprimer votre compte dès que la livraison aura été confirmée.'**
+  String get deletionEscrowBlockedMessage;
+
+  /// Bouton de confirmation du dialogue de blocage par séquestre actif, vers la liste des envois (escrow_block_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mes envois'**
+  String get deletionEscrowBlockedCta;
+
+  /// Titre ErrorCatalog du code escrow-blocked (account_deletion_bloc.dart, RequestDeletion/ConfirmImmediateDeletion) — n'atteint l'utilisateur que si AccountDeletionError parvient jusqu'à ErrorPresenter (profile_screen.dart), les deux sheets de suppression interceptant isEscrowBlocked avant avec leur propre texte (escrow_block_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suppression impossible pour l\'instant'**
+  String get errorEscrowBlockedTitle;
+
+  /// Message ErrorCatalog du code escrow-blocked.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.'**
+  String get errorEscrowBlockedMessage;
 }
 
 class _AppLocalizationsDelegate

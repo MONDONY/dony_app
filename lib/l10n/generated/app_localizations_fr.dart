@@ -12135,4 +12135,157 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get prefsResponseDelayHint => 'ex. 3';
+
+  @override
+  String get deletionSheetTitle => 'Supprimer mon compte';
+
+  @override
+  String get deletionSoftConfirmLabel => 'Confirmer la pause';
+
+  @override
+  String get deletionSoftConfirmDialogMessage =>
+      'Votre compte sera suspendu pendant 30 jours. Vous pourrez le réactiver depuis votre profil.';
+
+  @override
+  String get deletionRequestedSnackbar =>
+      'Votre compte sera supprimé dans 30 jours. Vous pouvez annuler depuis votre profil. Les remboursements déjà lancés ne sont pas annulés.';
+
+  @override
+  String get deletionModeSoftTitle => 'Pause 30 jours';
+
+  @override
+  String get deletionModeSoftBadge => 'RÉVERSIBLE';
+
+  @override
+  String get deletionModeSoftDescription =>
+      'Votre compte est suspendu. Vous pouvez revenir à tout moment dans les 30 jours. Après ce délai, vos données personnelles sont pseudonymisées (RGPD).';
+
+  @override
+  String get deletionModeHardTitle => 'Supprimer définitivement';
+
+  @override
+  String get deletionModeHardBadge => 'IRRÉVERSIBLE';
+
+  @override
+  String get deletionModeHardDescription =>
+      'Toutes vos données personnelles sont effacées immédiatement. Cette action est définitive et ne peut pas être annulée.';
+
+  @override
+  String get deletionReasonSectionTitle => 'Raison (optionnel)';
+
+  @override
+  String get deletionReasonNotUsing => 'Je n\'utilise plus le service';
+
+  @override
+  String get deletionReasonPrivacy => 'Problème de confidentialité';
+
+  @override
+  String get deletionReasonTooManyNotifications => 'Trop de notifications';
+
+  @override
+  String get deletionReasonOther => 'Autre raison';
+
+  @override
+  String get deletionContinueArrow => 'Continuer →';
+
+  @override
+  String deletionWalletRefundRequestedMessage(String amounts) {
+    return 'Demande envoyée pour $amounts. Un membre de l\'équipe vous recontacte pour le remboursement.';
+  }
+
+  @override
+  String get deletionWalletBalanceInfo =>
+      'Vous avez un solde disponible. Il sera automatiquement remboursé après la suppression de votre compte. Vous pouvez aussi le demander dès maintenant.';
+
+  @override
+  String get deletionRequestRefundNowButton =>
+      'Demander le remboursement maintenant';
+
+  @override
+  String deletionManualRailMessage(String amount) {
+    return 'Solde de $amount : un membre de l\'équipe vous recontacte pour le remboursement.';
+  }
+
+  @override
+  String deletionRefundableOnCardMessage(String amount) {
+    return '$amount seront remboursés sur votre carte dès la demande de suppression.';
+  }
+
+  @override
+  String deletionInFlightMessage(String amount) {
+    return '$amount sont déjà en cours de remboursement.';
+  }
+
+  @override
+  String deletionBonusLostLabel(String amount) {
+    return 'Bonus parrainage perdu : $amount';
+  }
+
+  @override
+  String deletionBonusForfeitedMessage(String amount) {
+    return '$amount de bonus seront perdus définitivement à la suppression du compte.';
+  }
+
+  @override
+  String deletionBalanceAbsorbedByFeesMessage(String amount) {
+    return 'Solde de $amount non remboursable : les frais du prestataire de paiement l\'absorbent entièrement.';
+  }
+
+  @override
+  String deletionRefundableWithFeeMessage(String refundable, String fee) {
+    return '$refundable remboursables, $fee de frais';
+  }
+
+  @override
+  String deletionFeelessDestinationMessage(String destination) {
+    return 'Vers $destination, sans frais';
+  }
+
+  @override
+  String deletionSettlementRefundedOnRequest(String amounts) {
+    return '$amounts seront remboursés dès la demande.';
+  }
+
+  @override
+  String deletionSettlementBonusLost(String amounts) {
+    return '$amounts de bonus seront perdus définitivement à la suppression.';
+  }
+
+  @override
+  String get deletionBlockedActiveTransactions =>
+      'Vous avez un envoi en cours de livraison, avec des fonds bloqués en séquestre. Vous pourrez supprimer votre compte dès que la livraison sera confirmée.';
+
+  @override
+  String get deletionBlockedGeneric =>
+      'La suppression n\'est pas possible pour l\'instant.';
+
+  @override
+  String get deletionFinalStepTitle => 'Dernière étape';
+
+  @override
+  String get deletionFinalStepWarning =>
+      'Toutes vos données personnelles seront effacées immédiatement et définitivement. Cette action est irréversible.';
+
+  @override
+  String get deletionFinalStepAcknowledgement =>
+      'Je comprends que cette suppression est définitive et irréversible.';
+
+  @override
+  String get deletionEscrowBlockedTitle =>
+      'Suppression impossible pour l\'instant';
+
+  @override
+  String get deletionEscrowBlockedMessage =>
+      'Un de vos envois est en cours de livraison et ses fonds sont bloqués en séquestre. Vous pourrez supprimer votre compte dès que la livraison aura été confirmée.';
+
+  @override
+  String get deletionEscrowBlockedCta => 'Voir mes envois';
+
+  @override
+  String get errorEscrowBlockedTitle =>
+      'Suppression impossible pour l\'instant';
+
+  @override
+  String get errorEscrowBlockedMessage =>
+      'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.';
 }
