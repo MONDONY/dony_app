@@ -1037,7 +1037,13 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
             emit(
               NegotiationError(
                 ValidationException(
-                  c.error ?? 'Confirmation du règlement échouée', // i18n-ignore
+                  // `c.error` (detail serveur) n'est jamais traduit : exclu
+                  // de `_serverDetailCodes`, `ErrorCatalog.lookup` l'ignore
+                  // pour ce code et affiche toujours
+                  // `errorCommissionConfirmFailedMessage` (relecture finale
+                  // du lot K). Ce repli ne sert donc plus qu'au journal de
+                  // debug d'`ErrorPresenter.show`.
+                  c.error ?? 'commission/confirm-failed',
                   code: 'commission/confirm-failed',
                 ),
               ),

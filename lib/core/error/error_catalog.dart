@@ -549,13 +549,14 @@ abstract final class ErrorCatalog {
     // ─── Négociation ─────────────────────────────────────────────────
     // Trois codes déjà portés par `negotiation_bloc._handleCommissionResponse`
     // pour le règlement (par le voyageur) de la commission d'un accord cash.
-    // `commission/failed` NE va PAS dans `_serverDetailCodes` : contrairement
-    // à `commission/confirm-failed` (detail rédigé en prose côté serveur),
-    // `r.error` y porte un code machine kebab-case
+    // `commission/failed` NE va PAS dans `_serverDetailCodes` : `r.error` y
+    // porte un code machine kebab-case
     // (`CashCommissionService.settleNegotiationCommission` : no-commission-card,
     // card-status-<statut Stripe>, card-declined, stripe-error) qui ne doit
     // jamais atteindre l'utilisateur brut (Ruling R35) — `lookup()` le traduit
-    // via `_commissionFailureMessage` avant affichage.
+    // via `_commissionFailureMessage` avant affichage. `commission/confirm-failed`
+    // n'y va pas non plus (voir `_serverDetailCodes`) : son detail est une
+    // phrase serveur non traduite, jamais un code machine.
     'commission/confirm-failed': _Entry(
       title: (l) => l.errorCommissionConfirmFailedTitle,
       message: (l) => l.errorCommissionConfirmFailedMessage,
@@ -986,11 +987,14 @@ abstract final class ErrorCatalog {
     'mobile-money-account-unsupported',
     'topup-amount-out-of-range',
     'topup-phone-unsupported',
-    // `ConfirmAcceptanceResponse.fail(...)` (confirmNegotiationCommissionAcceptance)
-    // rédige une phrase ("PaymentIntent status: ...", "Erreur Stripe : ..."),
-    // jamais un code machine — contrairement à `commission/failed` ci-dessous,
-    // traité à part dans `lookup()`.
-    'commission/confirm-failed',
+    // `commission/confirm-failed` EXCLU (relecture finale du lot K) :
+    // `ConfirmAcceptanceResponse.fail(...)` (`CashCommissionService`, back)
+    // rédige une phrase ("PaymentIntent status: ...", "Erreur Stripe : ...")
+    // qui ne passe jamais par `messagesResolver`, contrairement aux trois
+    // codes ci-dessus (mobile money / recharge, traduits côté back). La
+    // relayer afficherait du français à un utilisateur anglais : ce code
+    // garde donc le texte fixe du catalogue
+    // (`errorCommissionConfirmFailedMessage`).
   };
 
   /// Codes connus du catalogue, pour les tests de traduction.

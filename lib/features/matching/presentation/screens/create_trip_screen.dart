@@ -1789,7 +1789,10 @@ class _TripFormContentState extends State<_TripFormContent> {
               final goPro = await showProLimitReachedDialog(
                 context,
                 title: context.l10n.tripPublishMonthlyLimitTitle,
-                message: state.message,
+                message: ErrorPresenter.resolve(
+                  state.error,
+                  l10n: context.l10n,
+                ).message,
               );
               if (goPro && context.mounted) {
                 unawaited(context.push('/profile/upgrade-to-pro'));
@@ -1801,7 +1804,10 @@ class _TripFormContentState extends State<_TripFormContent> {
               final goPro = await showProLimitReachedDialog(
                 context,
                 title: context.l10n.tripPublishDraftLimitTitle,
-                message: state.message,
+                message: ErrorPresenter.resolve(
+                  state.error,
+                  l10n: context.l10n,
+                ).message,
               );
               if (goPro && context.mounted) {
                 unawaited(context.push('/profile/upgrade-to-pro'));

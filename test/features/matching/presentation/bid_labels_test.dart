@@ -147,6 +147,23 @@ void main() {
       expect(state.displayMessage(en), 'Confirmation failed');
     });
 
+    // Relecture finale du lot K : le `serverMessage` de `confirmFailed` vient
+    // de `ConfirmAcceptanceResponse.fail(...)` (back), jamais traduit —
+    // contrairement à celui de `refused`. Il est donc toujours ignoré, même
+    // non vide, pour ne jamais afficher de français à un utilisateur anglais.
+    test(
+      'serverMessage non vide ignoré pour confirmFailed (jamais traduit côté back)',
+      () {
+        final state = BidFailed(
+          serverMessage: 'PaymentIntent status: requires_payment_method',
+          reason: BidFailureReason.confirmFailed,
+        );
+        expect(state.displayMessage(l), 'Confirmation échouée');
+        expect(state.displayMessage(en), 'Confirmation failed');
+        expect(state.displayMessage(en), isNot(contains('PaymentIntent')));
+      },
+    );
+
     test('serverMessage null : clé bankAuthInterrupted', () {
       final state = BidFailed(reason: BidFailureReason.bankAuthInterrupted);
       expect(state.displayMessage(l), 'Authentification bancaire interrompue');

@@ -680,7 +680,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Limite de brouillons atteinte'), findsOneWidget);
-    expect(find.text('Limite de 1 brouillon(s) atteinte.'), findsOneWidget);
+    // Relecture finale du lot K, constat 1 : le detail brut du serveur
+    // n'est plus affiché, seulement le texte traduit du catalogue (le
+    // chiffre de la limite disparaît, cf. errorDraftLimitReachedMessage).
+    expect(
+      find.text('Passe en PRO pour créer davantage de brouillons.'),
+      findsOneWidget,
+    );
+    expect(find.text('Limite de 1 brouillon(s) atteinte.'), findsNothing);
     expect(find.byType(DonySuccessScreen), findsNothing);
 
     await tester.tap(find.text('Passer en PRO'));
@@ -688,6 +695,37 @@ void main() {
 
     expect(find.text('UpgradeToProStub'), findsOneWidget);
   });
+
+  testWidgets(
+    'limite de brouillons atteinte, anglais : texte du catalogue, jamais le detail serveur',
+    (tester) async {
+      useEnglish();
+      when(createCall(saveAsDraft: true)).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/package-requests'),
+          error: const ForbiddenException(
+            'Limite de 1 brouillon(s) atteinte.',
+            'draft-limit-reached',
+          ),
+        ),
+      );
+
+      await driveToStep3(tester);
+
+      await tester.tap(find.text('Preview'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('preview-save-draft')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Draft limit reached'), findsOneWidget);
+      expect(
+        find.text('Upgrade to Pro to create more drafts.'),
+        findsOneWidget,
+      );
+      expect(find.text('Limite de 1 brouillon(s) atteinte.'), findsNothing);
+    },
+  );
 
   testWidgets('titre de l\'étape 1 traduit en anglais (création)', (
     tester,

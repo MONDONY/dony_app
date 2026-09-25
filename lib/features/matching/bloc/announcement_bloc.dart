@@ -93,10 +93,10 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       // ne voyait qu'un vague « Action non autorisée » au lieu de l'invite PRO.
       final error = unwrapDioError(e);
       if (error is ForbiddenException && error.code == 'draft-limit-reached') {
-        emit(AnnouncementDraftLimitReached(error.message));
+        emit(AnnouncementDraftLimitReached(error));
       } else if (error is ForbiddenException &&
           error.code == 'pro-limit-reached') {
-        emit(AnnouncementProLimitReached(error.message));
+        emit(AnnouncementProLimitReached(error));
       } else {
         emit(AnnouncementError(error));
       }
@@ -117,12 +117,12 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     } catch (e) {
       final error = unwrapDioError(e);
       if (error is ForbiddenException && error.code == 'kyc-not-verified') {
-        emit(AnnouncementKycRequired(error.message));
+        emit(AnnouncementKycRequired(error));
       } else if (error is ForbiddenException &&
           error.code == 'pro-limit-reached') {
-        emit(AnnouncementProLimitReached(error.message));
+        emit(AnnouncementProLimitReached(error));
       } else if (error.code == 'departure-date-passed') {
-        emit(AnnouncementDepartureDatePassed(error.message));
+        emit(AnnouncementDepartureDatePassed(error));
       } else {
         emit(AnnouncementError(error));
       }

@@ -223,7 +223,8 @@ void main() {
         predicate<AnnouncementState>(
           (s) =>
               s is AnnouncementProLimitReached &&
-              s.message.contains('limite de 2 annonces'),
+              s.error.code == 'pro-limit-reached' &&
+              s.error.message.contains('limite de 2 annonces'),
         ),
       ],
     );
@@ -273,7 +274,8 @@ void main() {
         predicate<AnnouncementState>(
           (s) =>
               s is AnnouncementProLimitReached &&
-              s.message.contains('quota mensuel'),
+              s.error.code == 'pro-limit-reached' &&
+              s.error.message.contains('quota mensuel'),
         ),
       ],
     );
@@ -587,7 +589,8 @@ void main() {
         predicate<AnnouncementState>(
           (s) =>
               s is AnnouncementDraftLimitReached &&
-              s.message.contains('Limite de brouillons'),
+              s.error.code == 'draft-limit-reached' &&
+              s.error.message.contains('Limite de brouillons'),
         ),
       ],
     );
@@ -649,7 +652,9 @@ void main() {
         isA<AnnouncementLoading>(),
         predicate<AnnouncementState>(
           (s) =>
-              s is AnnouncementKycRequired && s.message.contains('KYC requis'),
+              s is AnnouncementKycRequired &&
+              s.error.code == 'kyc-not-verified' &&
+              s.error.message.contains('KYC requis'),
         ),
       ],
     );

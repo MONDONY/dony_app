@@ -818,8 +818,14 @@ void main() {
         },
       );
 
+      // Relecture finale du lot K : `ConfirmAcceptanceResponse.fail(...)`
+      // (back, `CashCommissionService`) ne passe jamais par
+      // `messagesResolver`. Relayer son detail afficherait du français à un
+      // utilisateur anglais — `commission/confirm-failed` est donc sorti de
+      // `_serverDetailCodes` et rend toujours le texte du catalogue, même
+      // avec un detail serveur par ailleurs exploitable.
       test(
-        'commission/confirm-failed relaie un detail serveur court exploitable',
+        'commission/confirm-failed ignore le detail serveur, même exploitable (fr)',
         () {
           const error = ValidationException(
             'PaymentIntent status: requires_payment_method',
@@ -829,7 +835,27 @@ void main() {
           final p = ErrorCatalog.lookup(error);
 
           expect(p.title, 'Règlement non confirmé');
-          expect(p.message, 'PaymentIntent status: requires_payment_method');
+          expect(p.message, 'Confirmation du règlement échouée');
+          expect(p.message, isNot(contains('PaymentIntent')));
+        },
+      );
+
+      test(
+        'commission/confirm-failed ignore le detail serveur, même exploitable (en)',
+        () {
+          const error = ValidationException(
+            'PaymentIntent status: requires_payment_method',
+            code: 'commission/confirm-failed',
+          );
+
+          final p = ErrorCatalog.lookup(
+            error,
+            l10n: lookupAppLocalizations(AppL10n.en),
+          );
+
+          expect(p.title, 'Payment not confirmed');
+          expect(p.message, "We couldn't confirm the payment");
+          expect(p.message, isNot(contains('PaymentIntent')));
         },
       );
 
