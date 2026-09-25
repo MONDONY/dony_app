@@ -13,6 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
@@ -138,7 +139,10 @@ Widget _harness({
 }
 
 void main() {
-  setUpAll(() => initializeDateFormatting('fr'));
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
+    await initializeDateFormatting('en');
+  });
 
   testWidgets('liste : card avec type, statut, corridor, autre partie', (
     tester,
@@ -159,6 +163,37 @@ void main() {
     expect(find.textContaining('Lyon'), findsNWidgets(2));
     expect(find.textContaining('Voyageur : Awa K.'), findsNWidgets(2));
   });
+
+  // Non-régression du remplacement de DateFormat('d MMM yyyy', ...) par
+  // DateFormat.yMMMd(...) dans dispute_card.dart.
+  testWidgets(
+    'dates de la carte : rendu français identique à l\'ancien motif "d MMM yyyy"',
+    (tester) async {
+      await tester.pumpWidget(
+        _harness(
+          state: DisputeListLoaded([_dispute(), _dispute(status: 'RESOLVED')]),
+        ),
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      // createdAt: DateTime(2026, 7, 12) — ancien rendu 'd MMM yyyy' : "12 juil. 2026".
+      expect(
+        DateFormat.yMMMd('fr').format(DateTime(2026, 7, 12)),
+        '12 juil. 2026',
+      );
+      expect(find.text('Ouvert le 12 juil. 2026'), findsOneWidget);
+      // resolvedAt: DateTime(2026, 6, 4) — ancien rendu 'd MMM yyyy' : "4 juin 2026".
+      expect(
+        DateFormat.yMMMd('fr').format(DateTime(2026, 6, 4)),
+        '4 juin 2026',
+      );
+      expect(
+        find.text('Ouvert le 12 juil. 2026 · Résolu le 4 juin 2026'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('bandeau gel visible seulement si refundFrozen && OPEN', (
     tester,
@@ -236,9 +271,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('My disputes'), findsOneWidget);
-    expect(find.text('No-show contest'), findsOneWidget);
+    expect(find.text('No-show contested'), findsOneWidget);
     expect(find.text('Under review'), findsOneWidget);
     expect(find.textContaining('Traveler: Awa K.'), findsOneWidget);
+    final expectedDate = DateFormat.yMMMd('en').format(DateTime(2026, 7, 12));
+    expect(find.text('Opened on $expectedDate'), findsOneWidget);
   });
 
   testWidgets('anglais : état vide traduit', (tester) async {

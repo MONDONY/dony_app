@@ -6,7 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/l10n_test_helpers.dart';
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
@@ -58,7 +61,10 @@ Widget _harness(DisputeModel dispute) {
 void main() {
   late _MockAnalyticsService mockAnalytics;
 
-  setUpAll(() => initializeDateFormatting('fr'));
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
+    await initializeDateFormatting('en');
+  });
 
   setUp(() {
     mockAnalytics = _MockAnalyticsService();
@@ -183,4 +189,61 @@ void main() {
       expect(find.text('ListeStub'), findsOneWidget);
     },
   );
+
+  // Non-régression du remplacement de DateFormat('d MMM yyyy', ...) par
+  // DateFormat.yMMMd(...) dans dispute_timeline.dart.
+  testWidgets(
+    'dates de la frise : rendu français identique à l\'ancien motif "d MMM yyyy"',
+    (tester) async {
+      await tester.pumpWidget(
+        _harness(_dispute(status: 'RESOLVED', isBeneficiary: true)),
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      // createdAt: DateTime(2026, 7, 12) — ancien rendu 'd MMM yyyy' : "12 juil. 2026".
+      expect(
+        DateFormat.yMMMd('fr').format(DateTime(2026, 7, 12)),
+        '12 juil. 2026',
+      );
+      expect(
+        find.textContaining(
+          "12 juil. 2026 · vous avez contesté l'absence du voyageur",
+        ),
+        findsOneWidget,
+      );
+      // resolvedAt: DateTime(2026, 6, 4) — ancien rendu 'd MMM yyyy' : "4 juin 2026".
+      expect(
+        DateFormat.yMMMd('fr').format(DateTime(2026, 6, 4)),
+        '4 juin 2026',
+      );
+      expect(find.text('4 juin 2026'), findsOneWidget);
+    },
+  );
+
+  testWidgets('anglais : titre, frise et CTA support traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _harness(_dispute(status: 'RESOLVED', isBeneficiary: true)),
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dispute'), findsOneWidget);
+    expect(find.text('No-show contested'), findsOneWidget);
+    expect(find.text('TRACKING'), findsOneWidget);
+    expect(find.text('DECISION'), findsOneWidget);
+    expect(find.text('Resolved in your favor'), findsOneWidget);
+    expect(find.text('Compensation paid'), findsOneWidget);
+    expect(find.text('Contact support'), findsOneWidget);
+    expect(
+      find.textContaining("you contested the traveler's no-show"),
+      findsOneWidget,
+    );
+    expect(find.text('Decision made'), findsOneWidget);
+    final expectedResolvedDate = DateFormat.yMMMd(
+      'en',
+    ).format(DateTime(2026, 6, 4));
+    expect(find.text(expectedResolvedDate), findsOneWidget);
+  });
 }

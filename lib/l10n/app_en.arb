@@ -7143,7 +7143,7 @@
   "disputeListEmptyDescription": "Good news! A dispute opens automatically if you contest a traveler's no-show at drop-off.",
   "disputeListEmptyAction": "A problem with a shipment?",
 
-  "disputeTypeContestedNoShow": "No-show contest",
+  "disputeTypeContestedNoShow": "No-show contested",
   "disputeTypeRecipientNoShow": "Recipient no-show",
   "disputeTypeDeliveryFailure": "Delivery failure",
   "disputeStatusOpen": "Under review",

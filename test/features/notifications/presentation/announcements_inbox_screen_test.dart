@@ -10,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class _MockBloc extends Mock implements AnnouncementsInboxBloc {}
 
 class _FakeEvent extends Fake implements AnnouncementsInboxEvent {}
@@ -141,5 +143,29 @@ void main() {
         ),
       ),
     ).called(1);
+  });
+
+  testWidgets('anglais : titre et état vide traduits', (tester) async {
+    useEnglish();
+    stub(const AnnouncementsInboxLoaded([]));
+
+    await pump(tester);
+
+    expect(find.text('Yadony announcements'), findsOneWidget);
+    expect(find.text('No announcements'), findsOneWidget);
+    expect(
+      find.text('News and information from Yadony will appear here.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('anglais : erreur de chargement traduite', (tester) async {
+    useEnglish();
+    stub(const AnnouncementsInboxError(NetworkException('Hors ligne')));
+
+    await pump(tester);
+
+    expect(find.text('Loading error'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
   });
 }

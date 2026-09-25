@@ -12357,7 +12357,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get disputeListEmptyAction => 'A problem with a shipment?';
 
   @override
-  String get disputeTypeContestedNoShow => 'No-show contest';
+  String get disputeTypeContestedNoShow => 'No-show contested';
 
   @override
   String get disputeTypeRecipientNoShow => 'Recipient no-show';

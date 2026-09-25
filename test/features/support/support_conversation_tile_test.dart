@@ -2,6 +2,8 @@ import 'package:dony/features/support/presentation/widgets/support_conversation_
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
@@ -45,5 +47,18 @@ void main() {
     );
 
     expect(find.text('0'), findsNothing);
+  });
+
+  testWidgets('anglais : invitation par défaut traduite', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      wrap(const SupportConversationTile(unreadCount: 0, preview: '')),
+    );
+
+    expect(find.text('Support Yadony'), findsOneWidget);
+    expect(
+      find.text('A question? Our team will get back to you here.'),
+      findsOneWidget,
+    );
   });
 }

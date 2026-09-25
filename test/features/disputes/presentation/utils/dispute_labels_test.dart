@@ -62,7 +62,10 @@ void main() {
       disputeTypeLabel(en, 'TRAVELER_DELIVERY_NO_SHOW'),
       'Delivery failure',
     );
-    expect(disputeTypeLabel(en, 'SENDER_NO_SHOW_CONTESTED'), 'No-show contest');
+    expect(
+      disputeTypeLabel(en, 'SENDER_NO_SHOW_CONTESTED'),
+      'No-show contested',
+    );
     expect(disputeStatusLabel(en, 'OPEN'), 'Under review');
     expect(disputeStatusLabel(en, 'RESOLVED'), 'Resolved');
     expect(en.disputeOtherParty('SENDER', 'Awa K.'), 'Traveler: Awa K.');
