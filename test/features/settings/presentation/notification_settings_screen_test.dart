@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockNotificationPrefsBloc
     extends MockBloc<NotificationPrefsEvent, NotificationPrefsState>
     implements NotificationPrefsBloc {}
@@ -53,7 +55,7 @@ Widget _wrapWithBloc(MockNotificationPrefsBloc mockBloc) {
 MockNotificationPrefsBloc _buildMockBloc([
   Map<String, bool>? customPrefs,
   bool? packageMatchAlert,
-  String? errorMessage,
+  bool hasSyncError = false,
 ]) {
   final mockBloc = MockNotificationPrefsBloc();
   final prefs =
@@ -69,7 +71,7 @@ MockNotificationPrefsBloc _buildMockBloc([
   final state = NotificationPrefsState(
     prefs: prefs,
     packageMatchAlert: packageMatchAlert,
-    errorMessage: errorMessage,
+    hasSyncError: hasSyncError,
   );
   when(() => mockBloc.state).thenReturn(state);
   whenListen<NotificationPrefsState>(
@@ -298,11 +300,7 @@ void main() {
     });
 
     testWidgets('un échec d\'écriture affiche un bandeau', (tester) async {
-      final mockBloc = _buildMockBloc(
-        null,
-        null,
-        'Impossible de synchroniser. Réessayez.',
-      );
+      final mockBloc = _buildMockBloc(null, null, true);
       addTearDown(mockBloc.close);
 
       await tester.pumpWidget(_wrapWithBloc(mockBloc));
@@ -312,6 +310,18 @@ void main() {
         find.text('Impossible de synchroniser. Réessayez.'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('en anglais : bandeau d\'erreur traduit', (tester) async {
+      useEnglish();
+      final mockBloc = _buildMockBloc(null, null, true);
+      addTearDown(mockBloc.close);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Couldn't sync. Try again."), findsOneWidget);
+      expect(find.text('Delivery confirmed'), findsOneWidget);
     });
 
     testWidgets('sans erreur, aucun bandeau', (tester) async {

@@ -3,6 +3,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -37,8 +38,9 @@ class _NotificationSettingsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Notifications'),
+      appBar: DonyAppBar(title: l.notificationSettingsTitle),
       body: BlocBuilder<NotificationPrefsBloc, NotificationPrefsState>(
         builder: (context, state) {
           return ListView(
@@ -49,13 +51,13 @@ class _NotificationSettingsScreenState
                   DonySpacing.huge,
                 ),
                 children: [
-                  if (state.errorMessage != null) ...[
-                    _SyncErrorBanner(message: state.errorMessage!),
+                  if (state.hasSyncError) ...[
+                    _SyncErrorBanner(message: l.settingsSyncFailed),
                     const SizedBox(height: DonySpacing.lg),
                   ],
                   // ── Section 1 : Protections critiques ──────────────────────
                   SettingsSectionHeader(
-                    'PROTECTIONS CRITIQUES',
+                    l.notificationSettingsSectionCritical,
                     color: Theme.of(context).colorScheme.error,
                   ),
                   SettingsFlatGroup(
@@ -63,20 +65,20 @@ class _NotificationSettingsScreenState
                       _buildLockedTile(
                         context,
                         iconAsset: 'badge-check',
-                        label: 'Livraison confirmée',
-                        subtitle: 'SMS automatique si push non reçu',
+                        label: l.notificationSettingsDeliveryConfirmedLabel,
+                        subtitle: l.notificationSettingsSmsFallbackSubtitle,
                       ),
                       _buildLockedTile(
                         context,
                         iconAsset: 'banknote',
-                        label: 'Paiement reçu',
-                        subtitle: 'SMS automatique si push non reçu',
+                        label: l.notificationSettingsPaymentReceivedLabel,
+                        subtitle: l.notificationSettingsSmsFallbackSubtitle,
                       ),
                       _buildLockedTile(
                         context,
                         iconAsset: 'gavel',
-                        label: 'Litige ouvert',
-                        subtitle: 'SMS automatique si push non reçu',
+                        label: l.notificationSettingsDisputeOpenedLabel,
+                        subtitle: l.notificationSettingsSmsFallbackSubtitle,
                       ),
                     ],
                   ),
@@ -85,15 +87,15 @@ class _NotificationSettingsScreenState
                   const SizedBox(height: DonySpacing.xl),
                   // ── Section 2 : Activité ────────────────────────────────────
                   SettingsSectionHeader(
-                    'ACTIVITÉ',
+                    l.notificationSettingsSectionActivity,
                     color: Theme.of(context).colorScheme.warning,
                   ),
                   SettingsFlatGroup(
                     children: [
                       _buildTile(
                         context,
-                        label: 'Matchs & enchères',
-                        subtitle: 'Demandes, acceptations, remise, annulation…',
+                        label: l.notificationSettingsBidsLabel,
+                        subtitle: l.notificationSettingsBidsSubtitle,
                         key: 'push_activity_bids',
                         prefs: state.prefs,
                         onToggle: (key) => _toggle(context, key),
@@ -105,24 +107,24 @@ class _NotificationSettingsScreenState
                       // corridor, sans qu'aucune tuile ne permette de l'atteindre.
                       _buildTile(
                         context,
-                        label: 'Nouveaux trajets',
-                        subtitle: 'Alertes corridor et voyageurs suivis',
+                        label: l.notificationSettingsCorridorLabel,
+                        subtitle: l.notificationSettingsCorridorSubtitle,
                         key: 'push_corridor_alerts',
                         prefs: state.prefs,
                         onToggle: (key) => _toggle(context, key),
                       ),
                       _buildTile(
                         context,
-                        label: 'Discussions de prix',
-                        subtitle: 'Propositions, contre-offres, paiements…',
+                        label: l.notificationSettingsNegotiationsLabel,
+                        subtitle: l.notificationSettingsNegotiationsSubtitle,
                         key: 'push_activity_negotiations',
                         prefs: state.prefs,
                         onToggle: (key) => _toggle(context, key),
                       ),
                       _buildTile(
                         context,
-                        label: 'Messages',
-                        subtitle: 'Nouveaux messages reçus',
+                        label: l.notificationSettingsMessagesLabel,
+                        subtitle: l.notificationSettingsMessagesSubtitle,
                         key: 'push_messages',
                         prefs: state.prefs,
                         onToggle: (key) => _toggle(context, key),
@@ -174,7 +176,7 @@ class _NotificationSettingsScreenState
           borderRadius: BorderRadius.circular(6),
         ),
         child: Text(
-          'Toujours actif',
+          context.l10n.notificationSettingsAlwaysOnBadge,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
             color: cs.onErrorContainer,
             fontWeight: FontWeight.w600,
@@ -200,8 +202,7 @@ class _NotificationSettingsScreenState
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              'Ces notifications protègent vos transactions. '
-              'Elles ne peuvent pas être désactivées.',
+              context.l10n.notificationSettingsCriticalBannerText,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: cs.onSurface.withValues(alpha: 0.7),
               ),
@@ -226,8 +227,8 @@ class _NotificationSettingsScreenState
       iconBgColor: isOn
           ? cs.primaryContainer
           : cs.onSurfaceVariant.withValues(alpha: 0.12),
-      label: 'Nouveaux colis compatibles',
-      subtitle: 'Quand un colis correspond à un de tes trajets',
+      label: context.l10n.notificationSettingsPackageMatchLabel,
+      subtitle: context.l10n.notificationSettingsPackageMatchSubtitle,
       enabled: isKnown,
       trailing: IgnorePointer(
         child: Switch(value: isOn, onChanged: isKnown ? (_) {} : null),

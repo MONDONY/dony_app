@@ -1,14 +1,15 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Libellé long affiché dans la sheet de choix, un par option : c'est là que
 /// l'utilisateur décide, il a besoin du sens complet ('Suivre le téléphone'
 /// plutôt que 'Automatique' explicite ce que fait réellement ce choix).
-String a11yModeLabel(String mode) => switch (mode) {
-  AccessibilityMode.on => 'Toujours activé',
-  AccessibilityMode.off => 'Toujours désactivé',
-  _ => 'Suivre le téléphone',
+String a11yModeLabel(AppLocalizations l, String mode) => switch (mode) {
+  AccessibilityMode.on => l.a11yModeOn,
+  AccessibilityMode.off => l.a11yModeOff,
+  _ => l.a11yModeSystem,
 };
 
 /// Libellé court affiché comme valeur de fin de ligne (avant ouverture de la
@@ -16,10 +17,10 @@ String a11yModeLabel(String mode) => switch (mode) {
 /// tenir sur un mot, là où le choix complet a besoin d'une phrase — les
 /// fusionner forcerait soit une phrase entière en bout de ligne (déborde),
 /// soit un mot unique dans la sheet (perd le sens).
-String a11yModeShortLabel(String mode) => switch (mode) {
-  AccessibilityMode.on => 'Activé',
-  AccessibilityMode.off => 'Désactivé',
-  _ => 'Automatique',
+String a11yModeShortLabel(AppLocalizations l, String mode) => switch (mode) {
+  AccessibilityMode.on => l.a11yModeOnShort,
+  AccessibilityMode.off => l.a11yModeOffShort,
+  _ => l.a11yModeSystemShort,
 };
 
 /// Largeur maximale du bloc de fin (libellé court de mode + chevron) de
@@ -81,6 +82,7 @@ class A11yTristateRow extends StatelessWidget {
   final bool showDivider;
 
   Future<void> _open(BuildContext context) async {
+    final l = context.l10n;
     final picked = await DonyBottomSheet.show<String>(
       context,
       title: sheetTitle,
@@ -93,21 +95,21 @@ class A11yTristateRow extends StatelessWidget {
               Navigator.of(context, rootNavigator: true).pop(v);
             }
           },
-          options: const [
+          options: [
             DonyRadioOption(
               value: AccessibilityMode.system,
-              label: 'Suivre le téléphone',
-              subtitle: 'Utilise le réglage défini dans votre téléphone',
+              label: a11yModeLabel(l, AccessibilityMode.system),
+              subtitle: l.a11yModeSystemSubtitle,
             ),
             DonyRadioOption(
               value: AccessibilityMode.on,
-              label: 'Toujours activé',
-              subtitle: 'Quel que soit le réglage du téléphone',
+              label: a11yModeLabel(l, AccessibilityMode.on),
+              subtitle: l.a11yModeFixedSubtitle,
             ),
             DonyRadioOption(
               value: AccessibilityMode.off,
-              label: 'Toujours désactivé',
-              subtitle: 'Quel que soit le réglage du téléphone',
+              label: a11yModeLabel(l, AccessibilityMode.off),
+              subtitle: l.a11yModeFixedSubtitle,
             ),
           ],
         ),
@@ -140,7 +142,7 @@ class A11yTristateRow extends StatelessWidget {
           children: [
             Flexible(
               child: Text(
-                a11yModeShortLabel(value),
+                a11yModeShortLabel(context.l10n, value),
                 textAlign: TextAlign.end,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),

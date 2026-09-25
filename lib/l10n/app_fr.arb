@@ -13058,5 +13058,530 @@
         "type": "int"
       }
     }
+  },
+
+  "privacyTitle": "Confidentialité",
+  "@privacyTitle": {
+    "description": "Titre de l'écran (privacy_settings_screen.dart)"
+  },
+  "privacySaveFailedMessage": "Réglage non enregistré, vérifie ta connexion.",
+  "@privacySaveFailedMessage": {
+    "description": "Snackbar d'échec d'enregistrement optimiste (privacy_settings_screen.dart)"
+  },
+  "privacySectionWhoCanContact": "QUI PEUT ME CONTACTER",
+  "@privacySectionWhoCanContact": {
+    "description": "En-tête de section (privacy_settings_screen.dart)"
+  },
+  "privacyKycOnlyLabel": "Profils vérifiés uniquement",
+  "@privacyKycOnlyLabel": {
+    "description": "Libellé du réglage contactKycOnly (privacy_settings_screen.dart)"
+  },
+  "privacyKycOnlySubtitle": "Seuls les utilisateurs ayant validé leur identité peuvent t'envoyer une offre",
+  "@privacyKycOnlySubtitle": {
+    "description": "Sous-titre du réglage contactKycOnly (privacy_settings_screen.dart)"
+  },
+  "privacyHidePhoneLabel": "Masquer mon numéro",
+  "@privacyHidePhoneLabel": {
+    "description": "Libellé du réglage hidePhoneNumber (privacy_settings_screen.dart)"
+  },
+  "privacyHidePhoneSubtitle": "Ton numéro n'est jamais communiqué, même après une offre acceptée. Tes échanges passent par la messagerie Yadony.",
+  "@privacyHidePhoneSubtitle": {
+    "description": "Sous-titre du réglage hidePhoneNumber (privacy_settings_screen.dart). Fusion de deux fragments concaténés."
+  },
+  "privacySectionBlocking": "BLOCAGE",
+  "@privacySectionBlocking": {
+    "description": "En-tête de section (privacy_settings_screen.dart)"
+  },
+  "privacySectionAppImprovement": "AMÉLIORATION DE L'APP",
+  "@privacySectionAppImprovement": {
+    "description": "En-tête de section (privacy_settings_screen.dart)"
+  },
+  "privacyDataFooterNote": "Pour télécharger tes données ou supprimer ton compte, va dans Paramètres › Données.",
+  "@privacyDataFooterNote": {
+    "description": "Note de pied de page vers Données (privacy_settings_screen.dart)"
+  },
+  "privacyBannerPhoneHiddenTitle": "Ton numéro reste masqué",
+  "@privacyBannerPhoneHiddenTitle": {
+    "description": "Titre du bandeau vert quand le numéro est masqué (privacy_settings_screen.dart)"
+  },
+  "privacyBannerPhoneProtectedTitle": "Ton numéro est protégé",
+  "@privacyBannerPhoneProtectedTitle": {
+    "description": "Titre du bandeau vert quand le numéro n'est pas masqué (privacy_settings_screen.dart)"
+  },
+  "privacyBannerPhoneHiddenBody": "Ton numéro n'est communiqué à personne, même une fois l'accord conclu. Tes partenaires te joignent par la messagerie Yadony, et tu peux toujours appeler le leur.",
+  "@privacyBannerPhoneHiddenBody": {
+    "description": "Corps du bandeau vert quand le numéro est masqué (privacy_settings_screen.dart). Fusion de trois fragments concaténés."
+  },
+  "privacyBannerPhoneProtectedBody": "Personne ne voit ton numéro tant qu'une offre n'est pas acceptée. Une fois l'accord conclu, toi et ton partenaire échangez vos numéros pour organiser la remise.",
+  "@privacyBannerPhoneProtectedBody": {
+    "description": "Corps du bandeau vert quand le numéro n'est pas masqué (privacy_settings_screen.dart). Fusion de trois fragments concaténés."
+  },
+  "privacyUnverifiedExposureNotice": "Les profils non vérifiés peuvent te faire des demandes. Yadony n'est pas responsable des difficultés rencontrées avec eux.",
+  "@privacyUnverifiedExposureNotice": {
+    "description": "Rappel persistant affiché quand contactKycOnly est désactivé (privacy_settings_screen.dart). Fusion de deux fragments concaténés."
+  },
+  "privacyAnalyticsConsentLabel": "Statistiques d'utilisation",
+  "@privacyAnalyticsConsentLabel": {
+    "description": "Libellé du consentement analytics (privacy_settings_screen.dart)"
+  },
+  "privacyAnalyticsConsentSubtitle": "Mesure anonyme de l'usage pour améliorer l'app. Jamais tes paiements ni ton identité.",
+  "@privacyAnalyticsConsentSubtitle": {
+    "description": "Sous-titre du consentement analytics (privacy_settings_screen.dart). Fusion de deux fragments concaténés."
+  },
+  "blockedUsersTitle": "Utilisateurs bloqués",
+  "@blockedUsersTitle": {
+    "description": "Titre de la carte blocage (privacy_settings_screen.dart) et de l'AppBar (blocked_users_screen.dart) : même texte, même écran cible (R42)."
+  },
+  "blockedUsersCardSubtitle": "Gérer les personnes que tu as bloquées",
+  "@blockedUsersCardSubtitle": {
+    "description": "Sous-titre de la carte blocage (privacy_settings_screen.dart)"
+  },
+  "blockedUsersListIntro": "Une personne bloquée ne voit plus tes annonces et ne peut plus t'envoyer d'offre. Tu ne vois plus les siennes non plus.",
+  "@blockedUsersListIntro": {
+    "description": "Bandeau explicatif en tête de liste (blocked_users_screen.dart)"
+  },
+  "blockedUsersToday": "Bloqué aujourd'hui",
+  "@blockedUsersToday": {
+    "description": "Date relative : bloqué aujourd'hui (blocked_users_screen.dart, _formatDate)"
+  },
+  "blockedUsersYesterday": "Bloqué hier",
+  "@blockedUsersYesterday": {
+    "description": "Date relative : bloqué hier (blocked_users_screen.dart, _formatDate)"
+  },
+  "blockedUsersDaysAgo": "{count, plural, =1{Bloqué il y a {count} jour} other{Bloqué il y a {count} jours}}",
+  "@blockedUsersDaysAgo": {
+    "description": "Date relative : bloqué il y a N jours, 2 à 6 jours (blocked_users_screen.dart, _formatDate)"
+  },
+  "blockedUsersWeeksAgo": "{count, plural, =1{Bloqué il y a {count} semaine} other{Bloqué il y a {count} semaines}}",
+  "@blockedUsersWeeksAgo": {
+    "description": "Date relative : bloqué il y a N semaines, 7 à 29 jours (blocked_users_screen.dart, _formatDate)"
+  },
+  "blockedUsersOnDate": "Bloqué le {date}",
+  "@blockedUsersOnDate": {
+    "description": "Date relative au-delà de 29 jours, date déjà formatée à la langue (blocked_users_screen.dart, _formatDate)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "blockedUsersUnblock": "Débloquer",
+  "@blockedUsersUnblock": {
+    "description": "Bouton de déblocage d'une ligne (blocked_users_screen.dart)"
+  },
+  "blockedUsersEmptyTitle": "Tu n'as bloqué personne",
+  "@blockedUsersEmptyTitle": {
+    "description": "Titre de l'état vide (blocked_users_screen.dart)"
+  },
+  "blockedUsersEmptySubtitle": "Les personnes que tu bloques apparaîtront ici.",
+  "@blockedUsersEmptySubtitle": {
+    "description": "Sous-titre de l'état vide (blocked_users_screen.dart)"
+  },
+  "blockedUsersLoadError": "Impossible de charger les utilisateurs bloqués",
+  "@blockedUsersLoadError": {
+    "description": "Message d'échec de chargement (blocked_users_bloc.dart, BlockedUsersError), rendu par blocked_users_screen.dart"
+  },
+  "blockConfirmError": "Une erreur est survenue. Réessaie plus tard.",
+  "@blockConfirmError": {
+    "description": "Message d'échec du blocage (blocked_users_bloc.dart, BlockedUserBlockFailure), rendu par block_user_action.dart (dialog de confirmation)"
+  },
+  "settingsSyncFailed": "Impossible de synchroniser. Réessayez.",
+  "@settingsSyncFailed": {
+    "description": "Message d'échec de synchro serveur, partagé par business_prefs_bloc.dart (2 sites) et notification_prefs_bloc.dart (1 site) ; rendu par business_prefs_screen.dart et notification_settings_screen.dart"
+  },
+  "a11yTitle": "Accessibilité",
+  "@a11yTitle": {
+    "description": "Titre de l'écran (accessibility_settings_screen.dart)"
+  },
+  "a11ySectionText": "TEXTE",
+  "@a11ySectionText": {
+    "description": "En-tête de section (accessibility_settings_screen.dart)"
+  },
+  "a11yFollowSystemLabel": "Suivre les réglages du téléphone",
+  "@a11yFollowSystemLabel": {
+    "description": "Libellé du réglage followSystemTextScale (accessibility_settings_screen.dart)"
+  },
+  "a11yFollowSystemSubtitle": "La taille du texte suit celle définie dans votre téléphone",
+  "@a11yFollowSystemSubtitle": {
+    "description": "Sous-titre du réglage followSystemTextScale (accessibility_settings_screen.dart)"
+  },
+  "a11yBoldTextLabel": "Texte en gras",
+  "@a11yBoldTextLabel": {
+    "description": "Libellé du réglage boldText (accessibility_settings_screen.dart)"
+  },
+  "a11yBoldTextSubtitle": "Épaissit tous les textes de l'application",
+  "@a11yBoldTextSubtitle": {
+    "description": "Sous-titre du réglage boldText (accessibility_settings_screen.dart)"
+  },
+  "a11ySectionDisplay": "AFFICHAGE",
+  "@a11ySectionDisplay": {
+    "description": "En-tête de section (accessibility_settings_screen.dart)"
+  },
+  "a11yHighContrastLabel": "Contraste élevé",
+  "@a11yHighContrastLabel": {
+    "description": "Libellé de ligne et titre de sheet du réglage highContrast (accessibility_settings_screen.dart) : même texte, même écran cible (R42)."
+  },
+  "a11yHighContrastSubtitle": "Renforce le texte, les bordures et les séparateurs",
+  "@a11yHighContrastSubtitle": {
+    "description": "Sous-titre du réglage highContrast (accessibility_settings_screen.dart)"
+  },
+  "a11yUnderlineLinksLabel": "Souligner les liens",
+  "@a11yUnderlineLinksLabel": {
+    "description": "Libellé du réglage underlineLinks (accessibility_settings_screen.dart)"
+  },
+  "a11yUnderlineLinksSubtitle": "Les liens ne sont plus signalés par la couleur seule",
+  "@a11yUnderlineLinksSubtitle": {
+    "description": "Sous-titre du réglage underlineLinks (accessibility_settings_screen.dart)"
+  },
+  "a11yReinforceLabelsLabel": "Renforcer les étiquettes",
+  "@a11yReinforceLabelsLabel": {
+    "description": "Libellé du réglage reinforceLabels (accessibility_settings_screen.dart)"
+  },
+  "a11yReinforceLabelsSubtitle": "Ajoute une icône et un mot aux statuts signalés par une couleur",
+  "@a11yReinforceLabelsSubtitle": {
+    "description": "Sous-titre du réglage reinforceLabels (accessibility_settings_screen.dart)"
+  },
+  "a11ySectionMotion": "MOUVEMENT",
+  "@a11ySectionMotion": {
+    "description": "En-tête de section (accessibility_settings_screen.dart)"
+  },
+  "a11yReduceMotionLabel": "Réduire les animations",
+  "@a11yReduceMotionLabel": {
+    "description": "Libellé de ligne et titre de sheet du réglage reduceMotion (accessibility_settings_screen.dart) : même texte, même écran cible (R42)."
+  },
+  "a11yReduceMotionSubtitle": "Supprime les transitions, les apparitions et les effets de chargement",
+  "@a11yReduceMotionSubtitle": {
+    "description": "Sous-titre du réglage reduceMotion (accessibility_settings_screen.dart)"
+  },
+  "a11ySectionMessagesActions": "MESSAGES ET ACTIONS",
+  "@a11ySectionMessagesActions": {
+    "description": "En-tête de section (accessibility_settings_screen.dart)"
+  },
+  "a11yPersistentMessagesLabel": "Garder les messages affichés",
+  "@a11yPersistentMessagesLabel": {
+    "description": "Libellé du réglage persistentMessages (accessibility_settings_screen.dart)"
+  },
+  "a11yPersistentMessagesSubtitle": "Les messages restent visibles jusqu'à ce que vous les fermiez",
+  "@a11yPersistentMessagesSubtitle": {
+    "description": "Sous-titre du réglage persistentMessages (accessibility_settings_screen.dart)"
+  },
+  "a11yConfirmActionsLabel": "Confirmer les actions importantes",
+  "@a11yConfirmActionsLabel": {
+    "description": "Libellé du réglage confirmImportantActions (accessibility_settings_screen.dart)"
+  },
+  "a11yConfirmActionsSubtitle": "Demande une confirmation avant un paiement, une annulation ou une suppression",
+  "@a11yConfirmActionsSubtitle": {
+    "description": "Sous-titre du réglage confirmImportantActions (accessibility_settings_screen.dart)"
+  },
+  "a11yOpenSystemSettingsLabel": "Ouvrir les réglages du téléphone",
+  "@a11yOpenSystemSettingsLabel": {
+    "description": "Libellé de la tuile vers les réglages système (accessibility_settings_screen.dart)"
+  },
+  "a11yOpenSystemSettingsSubtitle": "Taille de texte, contraste et animations du système",
+  "@a11yOpenSystemSettingsSubtitle": {
+    "description": "Sous-titre de la tuile vers les réglages système (accessibility_settings_screen.dart)"
+  },
+  "a11yResetAll": "Tout réinitialiser",
+  "@a11yResetAll": {
+    "description": "Bouton et titre du dialog de réinitialisation (accessibility_settings_screen.dart) : même texte, même écran cible (R42)."
+  },
+  "a11yResetAllMessage": "Tous les réglages d'accessibilité reviendront à leur valeur d'origine.",
+  "@a11yResetAllMessage": {
+    "description": "Message du dialog de confirmation de réinitialisation (accessibility_settings_screen.dart)"
+  },
+  "a11yPreviewLabel": "Aperçu",
+  "@a11yPreviewLabel": {
+    "description": "Libellé au-dessus de l'aperçu en direct (a11y_preview_card.dart)"
+  },
+  "a11yPreviewUrgentLabel": "Urgent",
+  "@a11yPreviewUrgentLabel": {
+    "description": "Semantics label du badge urgent fictif de l'aperçu (a11y_preview_card.dart) ; identique en anglais."
+  },
+  "a11yTextSizeLabel": "Taille du texte",
+  "@a11yTextSizeLabel": {
+    "description": "Libellé de la ligne de taille de texte, réutilisé pour le Semantics label (a11y_slider_row.dart)"
+  },
+  "a11yPercent": "{percent} %",
+  "@a11yPercent": {
+    "description": "Pourcentage de taille de texte, avec espace en français (a11y_slider_row.dart)",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yTextSizeDisabledSemantics": "Taille du texte, {percent}, désactivé",
+  "@a11yTextSizeDisabledSemantics": {
+    "description": "Semantics label quand le curseur est désactivé, {percent} déjà formaté via a11yPercent (a11y_slider_row.dart)",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yModeSystem": "Suivre le téléphone",
+  "@a11yModeSystem": {
+    "description": "Libellé long du mode système, option de sheet (a11y_tristate_row.dart, a11yModeLabel)"
+  },
+  "a11yModeOn": "Toujours activé",
+  "@a11yModeOn": {
+    "description": "Libellé long du mode toujours activé, option de sheet (a11y_tristate_row.dart, a11yModeLabel)"
+  },
+  "a11yModeOff": "Toujours désactivé",
+  "@a11yModeOff": {
+    "description": "Libellé long du mode toujours désactivé, option de sheet (a11y_tristate_row.dart, a11yModeLabel)"
+  },
+  "a11yModeSystemShort": "Automatique",
+  "@a11yModeSystemShort": {
+    "description": "Libellé court du mode système, valeur de fin de ligne (a11y_tristate_row.dart, a11yModeShortLabel)"
+  },
+  "a11yModeOnShort": "Activé",
+  "@a11yModeOnShort": {
+    "description": "Libellé court du mode toujours activé, valeur de fin de ligne (a11y_tristate_row.dart, a11yModeShortLabel)"
+  },
+  "a11yModeOffShort": "Désactivé",
+  "@a11yModeOffShort": {
+    "description": "Libellé court du mode toujours désactivé, valeur de fin de ligne (a11y_tristate_row.dart, a11yModeShortLabel)"
+  },
+  "a11yModeSystemSubtitle": "Utilise le réglage défini dans votre téléphone",
+  "@a11yModeSystemSubtitle": {
+    "description": "Sous-titre de l'option système dans la sheet (a11y_tristate_row.dart)"
+  },
+  "a11yModeFixedSubtitle": "Quel que soit le réglage du téléphone",
+  "@a11yModeFixedSubtitle": {
+    "description": "Sous-titre des options « toujours activé »/« toujours désactivé » dans la sheet (a11y_tristate_row.dart) : même texte pour les deux options (R42)."
+  },
+  "privacyUnverifiedWarningTitle": "Accepter les profils non vérifiés ?",
+  "@privacyUnverifiedWarningTitle": {
+    "description": "Titre de la sheet d'avertissement (unverified_contact_warning_sheet.dart)"
+  },
+  "privacyUnverifiedWarningSubtitle": "Cette option n'est pas recommandée par Yadony.",
+  "@privacyUnverifiedWarningSubtitle": {
+    "description": "Sous-titre de la sheet d'avertissement (unverified_contact_warning_sheet.dart)"
+  },
+  "privacyUnverifiedWarningAccept": "Accepter quand même",
+  "@privacyUnverifiedWarningAccept": {
+    "description": "Bouton de confirmation de la sheet (unverified_contact_warning_sheet.dart)"
+  },
+  "privacyUnverifiedWarningConsequence1": "Tous les utilisateurs pourront t'envoyer une demande, qu'ils aient vérifié leur identité ou non.",
+  "@privacyUnverifiedWarningConsequence1": {
+    "description": "Première conséquence listée (unverified_contact_warning_sheet.dart). Fusion de deux fragments concaténés."
+  },
+  "privacyUnverifiedWarningConsequence2": "Yadony ne peut pas confirmer l'identité d'un profil non vérifié, ni son nom, ni ses papiers.",
+  "@privacyUnverifiedWarningConsequence2": {
+    "description": "Deuxième conséquence listée (unverified_contact_warning_sheet.dart). Fusion de deux fragments concaténés."
+  },
+  "privacyUnverifiedWarningConsequence3": "Yadony n'est pas responsable des difficultés que tu pourrais rencontrer avec un profil non vérifié.",
+  "@privacyUnverifiedWarningConsequence3": {
+    "description": "Troisième conséquence listée (unverified_contact_warning_sheet.dart). Fusion de deux fragments concaténés."
+  },
+  "privacyUnverifiedWarningReversible": "Tu peux réactiver ce réglage à tout moment. Les demandes déjà reçues ne sont pas affectées.",
+  "@privacyUnverifiedWarningReversible": {
+    "description": "Note de réversibilité (unverified_contact_warning_sheet.dart). Fusion de deux fragments concaténés."
+  },
+  "privacyUnverifiedWarningCheckbox": "J'ai compris et j'accepte d'assumer ce risque.",
+  "@privacyUnverifiedWarningCheckbox": {
+    "description": "Texte de la case à cocher de confirmation (unverified_contact_warning_sheet.dart)"
+  },
+  "notificationSettingsTitle": "Notifications",
+  "@notificationSettingsTitle": {
+    "description": "Titre de l'écran (notification_settings_screen.dart) ; identique en anglais."
+  },
+  "notificationSettingsSectionCritical": "PROTECTIONS CRITIQUES",
+  "@notificationSettingsSectionCritical": {
+    "description": "En-tête de section (notification_settings_screen.dart)"
+  },
+  "notificationSettingsDeliveryConfirmedLabel": "Livraison confirmée",
+  "@notificationSettingsDeliveryConfirmedLabel": {
+    "description": "Libellé de la tuile verrouillée « Livraison confirmée » (notification_settings_screen.dart)"
+  },
+  "notificationSettingsSmsFallbackSubtitle": "SMS automatique si push non reçu",
+  "@notificationSettingsSmsFallbackSubtitle": {
+    "description": "Sous-titre des trois tuiles verrouillées de la section Protections critiques (notification_settings_screen.dart) : même texte, même écran (R42)."
+  },
+  "notificationSettingsPaymentReceivedLabel": "Paiement reçu",
+  "@notificationSettingsPaymentReceivedLabel": {
+    "description": "Libellé de la tuile verrouillée « Paiement reçu » (notification_settings_screen.dart)"
+  },
+  "notificationSettingsDisputeOpenedLabel": "Litige ouvert",
+  "@notificationSettingsDisputeOpenedLabel": {
+    "description": "Libellé de la tuile verrouillée « Litige ouvert » (notification_settings_screen.dart)"
+  },
+  "notificationSettingsSectionActivity": "ACTIVITÉ",
+  "@notificationSettingsSectionActivity": {
+    "description": "En-tête de section (notification_settings_screen.dart)"
+  },
+  "notificationSettingsBidsLabel": "Matchs & enchères",
+  "@notificationSettingsBidsLabel": {
+    "description": "Libellé de la tuile push_activity_bids (notification_settings_screen.dart)"
+  },
+  "notificationSettingsBidsSubtitle": "Demandes, acceptations, remise, annulation…",
+  "@notificationSettingsBidsSubtitle": {
+    "description": "Sous-titre de la tuile push_activity_bids (notification_settings_screen.dart)"
+  },
+  "notificationSettingsCorridorLabel": "Nouveaux trajets",
+  "@notificationSettingsCorridorLabel": {
+    "description": "Libellé de la tuile push_corridor_alerts (notification_settings_screen.dart)"
+  },
+  "notificationSettingsCorridorSubtitle": "Alertes corridor et voyageurs suivis",
+  "@notificationSettingsCorridorSubtitle": {
+    "description": "Sous-titre de la tuile push_corridor_alerts (notification_settings_screen.dart)"
+  },
+  "notificationSettingsNegotiationsLabel": "Discussions de prix",
+  "@notificationSettingsNegotiationsLabel": {
+    "description": "Libellé de la tuile push_activity_negotiations (notification_settings_screen.dart)"
+  },
+  "notificationSettingsNegotiationsSubtitle": "Propositions, contre-offres, paiements…",
+  "@notificationSettingsNegotiationsSubtitle": {
+    "description": "Sous-titre de la tuile push_activity_negotiations (notification_settings_screen.dart)"
+  },
+  "notificationSettingsMessagesLabel": "Messages",
+  "@notificationSettingsMessagesLabel": {
+    "description": "Libellé de la tuile push_messages (notification_settings_screen.dart) ; identique en anglais."
+  },
+  "notificationSettingsMessagesSubtitle": "Nouveaux messages reçus",
+  "@notificationSettingsMessagesSubtitle": {
+    "description": "Sous-titre de la tuile push_messages (notification_settings_screen.dart)"
+  },
+  "notificationSettingsAlwaysOnBadge": "Toujours actif",
+  "@notificationSettingsAlwaysOnBadge": {
+    "description": "Badge des tuiles verrouillées (notification_settings_screen.dart)"
+  },
+  "notificationSettingsCriticalBannerText": "Ces notifications protègent vos transactions. Elles ne peuvent pas être désactivées.",
+  "@notificationSettingsCriticalBannerText": {
+    "description": "Bandeau sous la section Protections critiques (notification_settings_screen.dart). Fusion de deux fragments concaténés."
+  },
+  "notificationSettingsPackageMatchLabel": "Nouveaux colis compatibles",
+  "@notificationSettingsPackageMatchLabel": {
+    "description": "Libellé de la cloche colis compatibles (notification_settings_screen.dart)"
+  },
+  "notificationSettingsPackageMatchSubtitle": "Quand un colis correspond à un de tes trajets",
+  "@notificationSettingsPackageMatchSubtitle": {
+    "description": "Sous-titre de la cloche colis compatibles (notification_settings_screen.dart)"
+  },
+  "prefsTitle": "Préférences",
+  "@prefsTitle": {
+    "description": "Titre de l'écran (business_prefs_screen.dart)"
+  },
+  "prefsSectionUnits": "UNITÉS",
+  "@prefsSectionUnits": {
+    "description": "En-tête de section (business_prefs_screen.dart)"
+  },
+  "prefsWeightUnitLabel": "Unité de poids",
+  "@prefsWeightUnitLabel": {
+    "description": "Libellé du sélecteur d'unité de poids (business_prefs_screen.dart)"
+  },
+  "prefsSectionCurrency": "DEVISE",
+  "@prefsSectionCurrency": {
+    "description": "En-tête de section (business_prefs_screen.dart)"
+  },
+  "prefsCountryLabel": "Pays",
+  "@prefsCountryLabel": {
+    "description": "Libellé de la tuile pays et titre de la sheet de sélection (business_prefs_screen.dart) : même texte, même écran cible (R42)."
+  },
+  "prefsCountryLockedSubtitle": "Verrouillé : un envoi est en cours ou votre compte de paiement est créé",
+  "@prefsCountryLockedSubtitle": {
+    "description": "Sous-titre quand le pays est verrouillé (business_prefs_screen.dart)"
+  },
+  "prefsCountryPlaceholder": "Choisir mon pays",
+  "@prefsCountryPlaceholder": {
+    "description": "Valeur affichée tant qu'aucun pays n'est choisi (business_prefs_screen.dart)"
+  },
+  "prefsCurrencyLabel": "Devise",
+  "@prefsCurrencyLabel": {
+    "description": "Libellé de la tuile devise (business_prefs_screen.dart)"
+  },
+  "prefsCurrencyLockedSubtitle": "Verrouillée : videz votre portefeuille pour en changer",
+  "@prefsCurrencyLockedSubtitle": {
+    "description": "Sous-titre quand la devise est verrouillée (business_prefs_screen.dart)"
+  },
+  "prefsDisplayCurrencyLabel": "Devise d'affichage",
+  "@prefsDisplayCurrencyLabel": {
+    "description": "Libellé de la tuile devise d'affichage et titre de la sheet de sélection (business_prefs_screen.dart) : même texte, même écran cible (R42)."
+  },
+  "prefsDisplayCurrencySubtitle": "Les prix publiés dans une autre devise sont convertis à titre indicatif",
+  "@prefsDisplayCurrencySubtitle": {
+    "description": "Sous-titre de la tuile devise d'affichage (business_prefs_screen.dart). Fusion de deux fragments concaténés."
+  },
+  "prefsAutoLabel": "Automatique",
+  "@prefsAutoLabel": {
+    "description": "Valeur affichée pour la devise d'affichage AUTO, tuile et sheet (business_prefs_screen.dart) : même texte, même écran cible (R42)."
+  },
+  "prefsSectionGeolocation": "GÉOLOCALISATION",
+  "@prefsSectionGeolocation": {
+    "description": "En-tête de section (business_prefs_screen.dart)"
+  },
+  "prefsPickupRadiusLabel": "Rayon de collecte",
+  "@prefsPickupRadiusLabel": {
+    "description": "Libellé du curseur de rayon de collecte (business_prefs_screen.dart)"
+  },
+  "prefsCountrySearchHint": "Rechercher un pays",
+  "@prefsCountrySearchHint": {
+    "description": "Placeholder du champ de recherche de pays (business_prefs_screen.dart)"
+  },
+  "prefsCountryNotFound": "Aucun pays trouvé",
+  "@prefsCountryNotFound": {
+    "description": "État vide de la recherche de pays (business_prefs_screen.dart)"
+  },
+  "prefsAutoCurrencySubtitle": "Suivre la devise de mon compte",
+  "@prefsAutoCurrencySubtitle": {
+    "description": "Sous-titre de l'option Automatique dans la sheet de devise d'affichage (business_prefs_screen.dart)"
+  },
+  "prefsSectionMyTrips": "MES TRAJETS",
+  "@prefsSectionMyTrips": {
+    "description": "En-tête de section voyageur (business_prefs_screen.dart)"
+  },
+  "prefsTravelerBadge": "Voyageur",
+  "@prefsTravelerBadge": {
+    "description": "Badge de rôle à côté de « Mes trajets » (business_prefs_screen.dart)"
+  },
+  "prefsDefaultWeightLabel": "Poids par défaut",
+  "@prefsDefaultWeightLabel": {
+    "description": "Libellé du curseur de poids par défaut (business_prefs_screen.dart)"
+  },
+  "prefsDefaultWeightSubtitle": "Pré-remplit vos annonces",
+  "@prefsDefaultWeightSubtitle": {
+    "description": "Sous-titre du curseur de poids par défaut (business_prefs_screen.dart)"
+  },
+  "prefsMinPriceLabel": "Prix minimum",
+  "@prefsMinPriceLabel": {
+    "description": "Libellé du curseur de prix minimum (business_prefs_screen.dart)"
+  },
+  "prefsMinPriceNone": "0 {symbol} = aucun filtre",
+  "@prefsMinPriceNone": {
+    "description": "Sous-titre du curseur de prix minimum à 0 (business_prefs_screen.dart)",
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "prefsMinPriceValueNone": "Aucun",
+  "@prefsMinPriceValueNone": {
+    "description": "Valeur affichée quand le prix minimum est à 0 (business_prefs_screen.dart)"
+  },
+  "prefsContactModeLabel": "Mode de contact",
+  "@prefsContactModeLabel": {
+    "description": "Libellé du sélecteur de mode de contact (business_prefs_screen.dart)"
+  },
+  "prefsContactModeCall": "Appel",
+  "@prefsContactModeCall": {
+    "description": "Option « call » du mode de contact (business_prefs_screen.dart)"
+  },
+  "prefsContactModeMessage": "Message",
+  "@prefsContactModeMessage": {
+    "description": "Option « message » du mode de contact (business_prefs_screen.dart) ; identique en anglais."
+  },
+  "prefsContactModeBoth": "Les deux",
+  "@prefsContactModeBoth": {
+    "description": "Option « both » du mode de contact (business_prefs_screen.dart)"
+  },
+  "prefsResponseDelayLabel": "Délai de réponse",
+  "@prefsResponseDelayLabel": {
+    "description": "Libellé du champ de délai de réponse (business_prefs_screen.dart)"
+  },
+  "prefsResponseDelayHint": "ex. 3",
+  "@prefsResponseDelayHint": {
+    "description": "Placeholder du champ de délai de réponse personnalisé (business_prefs_screen.dart)"
   }
 }

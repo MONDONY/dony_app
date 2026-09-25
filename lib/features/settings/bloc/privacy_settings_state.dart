@@ -51,14 +51,10 @@ class PrivacySettingsLoaded extends PrivacySettingsState {
   int get hashCode => Object.hash(contactKycOnly, hidePhoneNumber, saveFailed);
 }
 
+/// Échec de chargement sans cache disponible. Marqueur sans donnée : ce
+/// message n'est actuellement affiché nulle part (l'écran ne branche pas sur
+/// cet état), donc aucun texte à traduire ici — seule l'énumération d'échec
+/// (implicite : ce type d'état lui-même) doit sortir du bloc.
 class PrivacySettingsError extends PrivacySettingsState {
-  final String message;
-  const PrivacySettingsError(this.message);
-
-  @override
-  bool operator ==(Object other) =>
-      other is PrivacySettingsError && other.message == message;
-
-  @override
-  int get hashCode => message.hashCode;
+  const PrivacySettingsError();
 }

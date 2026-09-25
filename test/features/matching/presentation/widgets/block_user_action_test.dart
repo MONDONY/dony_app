@@ -123,4 +123,18 @@ void main() {
     expect(find.text('Cancel'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, 'Block'), findsOneWidget);
   });
+
+  testWidgets('en anglais : message d\'erreur du dialog traduit', (
+    tester,
+  ) async {
+    useEnglish();
+    when(() => mockRepo.blockUser('u1')).thenThrow(Exception('Server'));
+
+    await openDialog(tester);
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Block'));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Something went wrong. Try again later.'), findsOneWidget);
+  });
 }

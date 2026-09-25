@@ -12,6 +12,7 @@ import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
 import 'package:dony/features/settings/presentation/widgets/unverified_contact_warning_sheet.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -43,6 +44,7 @@ class PrivacySettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Scaffold(
       backgroundColor: cs.surface == Colors.white
@@ -54,7 +56,7 @@ class PrivacySettingsScreen extends StatelessWidget {
         backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text('Confidentialité', style: tt.headlineLarge),
+        title: Text(l.privacyTitle, style: tt.headlineLarge),
         centerTitle: false,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -66,7 +68,7 @@ class PrivacySettingsScreen extends StatelessWidget {
           if (state is PrivacySettingsLoaded && state.saveFailed) {
             DonySnackbar.show(
               context,
-              message: 'Réglage non enregistré, vérifie ta connexion.',
+              message: l.privacySaveFailedMessage,
               type: DonySnackbarType.error,
             );
           }
@@ -92,15 +94,14 @@ class PrivacySettingsScreen extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xl),
 
                 // ── 2. Section "QUI PEUT ME CONTACTER" ───────────────────
-                const SettingsSectionHeader('QUI PEUT ME CONTACTER'),
+                SettingsSectionHeader(l.privacySectionWhoCanContact),
                 SettingsFlatGroup(
                   children: [
                     _SettingsToggleRow(
                       emoji: '✅',
                       emojiBackground: const Color(0xFFE8F5EE),
-                      title: 'Profils vérifiés uniquement',
-                      subtitle:
-                          "Seuls les utilisateurs ayant validé leur identité peuvent t'envoyer une offre",
+                      title: l.privacyKycOnlyLabel,
+                      subtitle: l.privacyKycOnlySubtitle,
                       // Défaut à true, comme la colonne côté serveur : afficher
                       // « désactivé » tant que le chargement n'a pas abouti
                       // ferait croire à tort que le compte est ouvert à tous.
@@ -114,10 +115,8 @@ class PrivacySettingsScreen extends StatelessWidget {
                     _SettingsToggleRow(
                       emoji: '📵',
                       emojiBackground: const Color(0xFFEAF1FF),
-                      title: 'Masquer mon numéro',
-                      subtitle:
-                          "Ton numéro n'est jamais communiqué, même après une offre acceptée. "
-                          'Tes échanges passent par la messagerie Yadony.',
+                      title: l.privacyHidePhoneLabel,
+                      subtitle: l.privacyHidePhoneSubtitle,
                       value: loaded?.hidePhoneNumber ?? false,
                       onChanged: isLoading
                           ? null
@@ -137,18 +136,18 @@ class PrivacySettingsScreen extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xl),
 
                 // ── 3. Section "BLOCAGE" ──────────────────────────────────
-                const SettingsSectionHeader('BLOCAGE'),
+                SettingsSectionHeader(l.privacySectionBlocking),
                 const _BlockedUsersCard(),
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── 4. Section "AMÉLIORATION DE L'APP" ────────────────────
-                const SettingsSectionHeader("AMÉLIORATION DE L'APP"),
+                SettingsSectionHeader(l.privacySectionAppImprovement),
                 const _AnalyticsConsentCard(),
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── 5. Lien textuel vers Données ──────────────────────────
                 Text(
-                  'Pour télécharger tes données ou supprimer ton compte, va dans Paramètres › Données.',
+                  l.privacyDataFooterNote,
                   style: tt.bodySmall?.copyWith(
                     color: cs.onSurfaceVariant.withValues(alpha: 0.6),
                     fontSize: 11,
@@ -176,6 +175,7 @@ class _ProtectedNumberBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Container(
       width: double.infinity,
@@ -199,8 +199,8 @@ class _ProtectedNumberBanner extends StatelessWidget {
               children: [
                 Text(
                   phoneHidden
-                      ? 'Ton numéro reste masqué'
-                      : 'Ton numéro est protégé',
+                      ? l.privacyBannerPhoneHiddenTitle
+                      : l.privacyBannerPhoneProtectedTitle,
                   style: tt.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -210,12 +210,8 @@ class _ProtectedNumberBanner extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xs),
                 Text(
                   phoneHidden
-                      ? "Ton numéro n'est communiqué à personne, même une fois "
-                            "l'accord conclu. Tes partenaires te joignent par la "
-                            'messagerie Yadony, et tu peux toujours appeler le leur.'
-                      : "Personne ne voit ton numéro tant qu'une offre n'est pas "
-                            "acceptée. Une fois l'accord conclu, toi et ton "
-                            'partenaire échangez vos numéros pour organiser la remise.',
+                      ? l.privacyBannerPhoneHiddenBody
+                      : l.privacyBannerPhoneProtectedBody,
                   style: tt.bodySmall?.copyWith(
                     color: Colors.white.withValues(alpha: 0.85),
                     fontSize: 12,
@@ -255,8 +251,7 @@ class _UnverifiedExposureNotice extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              'Les profils non vérifiés peuvent te faire des demandes. '
-              "Yadony n'est pas responsable des difficultés rencontrées avec eux.",
+              context.l10n.privacyUnverifiedExposureNotice,
               style: tt.bodySmall?.copyWith(
                 color: cs.onSurface,
                 fontSize: 11,
@@ -390,10 +385,8 @@ class _AnalyticsConsentCard extends StatelessWidget {
             _SettingsToggleRow(
               emoji: '📊',
               emojiBackground: const Color(0xFFEAF1FF),
-              title: "Statistiques d'utilisation",
-              subtitle:
-                  "Mesure anonyme de l'usage pour améliorer l'app. "
-                  'Jamais tes paiements ni ton identité.',
+              title: context.l10n.privacyAnalyticsConsentLabel,
+              subtitle: context.l10n.privacyAnalyticsConsentSubtitle,
               value: enabled,
               onChanged: (v) async {
                 // await requis : setConsent() active/désactive le SDK natif
@@ -532,7 +525,7 @@ class _BlockedUsersCardView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Utilisateurs bloqués',
+                        context.l10n.blockedUsersTitle,
                         style: tt.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                           fontSize: 15,
@@ -540,7 +533,7 @@ class _BlockedUsersCardView extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Gérer les personnes que tu as bloquées',
+                        context.l10n.blockedUsersCardSubtitle,
                         style: tt.bodySmall?.copyWith(
                           fontSize: 11,
                           color: cs.onSurfaceVariant,

@@ -11691,4 +11691,448 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get privacyTitle => 'Confidentialité';
+
+  @override
+  String get privacySaveFailedMessage =>
+      'Réglage non enregistré, vérifie ta connexion.';
+
+  @override
+  String get privacySectionWhoCanContact => 'QUI PEUT ME CONTACTER';
+
+  @override
+  String get privacyKycOnlyLabel => 'Profils vérifiés uniquement';
+
+  @override
+  String get privacyKycOnlySubtitle =>
+      'Seuls les utilisateurs ayant validé leur identité peuvent t\'envoyer une offre';
+
+  @override
+  String get privacyHidePhoneLabel => 'Masquer mon numéro';
+
+  @override
+  String get privacyHidePhoneSubtitle =>
+      'Ton numéro n\'est jamais communiqué, même après une offre acceptée. Tes échanges passent par la messagerie Yadony.';
+
+  @override
+  String get privacySectionBlocking => 'BLOCAGE';
+
+  @override
+  String get privacySectionAppImprovement => 'AMÉLIORATION DE L\'APP';
+
+  @override
+  String get privacyDataFooterNote =>
+      'Pour télécharger tes données ou supprimer ton compte, va dans Paramètres › Données.';
+
+  @override
+  String get privacyBannerPhoneHiddenTitle => 'Ton numéro reste masqué';
+
+  @override
+  String get privacyBannerPhoneProtectedTitle => 'Ton numéro est protégé';
+
+  @override
+  String get privacyBannerPhoneHiddenBody =>
+      'Ton numéro n\'est communiqué à personne, même une fois l\'accord conclu. Tes partenaires te joignent par la messagerie Yadony, et tu peux toujours appeler le leur.';
+
+  @override
+  String get privacyBannerPhoneProtectedBody =>
+      'Personne ne voit ton numéro tant qu\'une offre n\'est pas acceptée. Une fois l\'accord conclu, toi et ton partenaire échangez vos numéros pour organiser la remise.';
+
+  @override
+  String get privacyUnverifiedExposureNotice =>
+      'Les profils non vérifiés peuvent te faire des demandes. Yadony n\'est pas responsable des difficultés rencontrées avec eux.';
+
+  @override
+  String get privacyAnalyticsConsentLabel => 'Statistiques d\'utilisation';
+
+  @override
+  String get privacyAnalyticsConsentSubtitle =>
+      'Mesure anonyme de l\'usage pour améliorer l\'app. Jamais tes paiements ni ton identité.';
+
+  @override
+  String get blockedUsersTitle => 'Utilisateurs bloqués';
+
+  @override
+  String get blockedUsersCardSubtitle =>
+      'Gérer les personnes que tu as bloquées';
+
+  @override
+  String get blockedUsersListIntro =>
+      'Une personne bloquée ne voit plus tes annonces et ne peut plus t\'envoyer d\'offre. Tu ne vois plus les siennes non plus.';
+
+  @override
+  String get blockedUsersToday => 'Bloqué aujourd\'hui';
+
+  @override
+  String get blockedUsersYesterday => 'Bloqué hier';
+
+  @override
+  String blockedUsersDaysAgo(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Bloqué il y a $count jours',
+      one: 'Bloqué il y a $count jour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String blockedUsersWeeksAgo(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Bloqué il y a $count semaines',
+      one: 'Bloqué il y a $count semaine',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String blockedUsersOnDate(String date) {
+    return 'Bloqué le $date';
+  }
+
+  @override
+  String get blockedUsersUnblock => 'Débloquer';
+
+  @override
+  String get blockedUsersEmptyTitle => 'Tu n\'as bloqué personne';
+
+  @override
+  String get blockedUsersEmptySubtitle =>
+      'Les personnes que tu bloques apparaîtront ici.';
+
+  @override
+  String get blockedUsersLoadError =>
+      'Impossible de charger les utilisateurs bloqués';
+
+  @override
+  String get blockConfirmError =>
+      'Une erreur est survenue. Réessaie plus tard.';
+
+  @override
+  String get settingsSyncFailed => 'Impossible de synchroniser. Réessayez.';
+
+  @override
+  String get a11yTitle => 'Accessibilité';
+
+  @override
+  String get a11ySectionText => 'TEXTE';
+
+  @override
+  String get a11yFollowSystemLabel => 'Suivre les réglages du téléphone';
+
+  @override
+  String get a11yFollowSystemSubtitle =>
+      'La taille du texte suit celle définie dans votre téléphone';
+
+  @override
+  String get a11yBoldTextLabel => 'Texte en gras';
+
+  @override
+  String get a11yBoldTextSubtitle =>
+      'Épaissit tous les textes de l\'application';
+
+  @override
+  String get a11ySectionDisplay => 'AFFICHAGE';
+
+  @override
+  String get a11yHighContrastLabel => 'Contraste élevé';
+
+  @override
+  String get a11yHighContrastSubtitle =>
+      'Renforce le texte, les bordures et les séparateurs';
+
+  @override
+  String get a11yUnderlineLinksLabel => 'Souligner les liens';
+
+  @override
+  String get a11yUnderlineLinksSubtitle =>
+      'Les liens ne sont plus signalés par la couleur seule';
+
+  @override
+  String get a11yReinforceLabelsLabel => 'Renforcer les étiquettes';
+
+  @override
+  String get a11yReinforceLabelsSubtitle =>
+      'Ajoute une icône et un mot aux statuts signalés par une couleur';
+
+  @override
+  String get a11ySectionMotion => 'MOUVEMENT';
+
+  @override
+  String get a11yReduceMotionLabel => 'Réduire les animations';
+
+  @override
+  String get a11yReduceMotionSubtitle =>
+      'Supprime les transitions, les apparitions et les effets de chargement';
+
+  @override
+  String get a11ySectionMessagesActions => 'MESSAGES ET ACTIONS';
+
+  @override
+  String get a11yPersistentMessagesLabel => 'Garder les messages affichés';
+
+  @override
+  String get a11yPersistentMessagesSubtitle =>
+      'Les messages restent visibles jusqu\'à ce que vous les fermiez';
+
+  @override
+  String get a11yConfirmActionsLabel => 'Confirmer les actions importantes';
+
+  @override
+  String get a11yConfirmActionsSubtitle =>
+      'Demande une confirmation avant un paiement, une annulation ou une suppression';
+
+  @override
+  String get a11yOpenSystemSettingsLabel => 'Ouvrir les réglages du téléphone';
+
+  @override
+  String get a11yOpenSystemSettingsSubtitle =>
+      'Taille de texte, contraste et animations du système';
+
+  @override
+  String get a11yResetAll => 'Tout réinitialiser';
+
+  @override
+  String get a11yResetAllMessage =>
+      'Tous les réglages d\'accessibilité reviendront à leur valeur d\'origine.';
+
+  @override
+  String get a11yPreviewLabel => 'Aperçu';
+
+  @override
+  String get a11yPreviewUrgentLabel => 'Urgent';
+
+  @override
+  String get a11yTextSizeLabel => 'Taille du texte';
+
+  @override
+  String a11yPercent(int percent) {
+    return '$percent %';
+  }
+
+  @override
+  String a11yTextSizeDisabledSemantics(String percent) {
+    return 'Taille du texte, $percent, désactivé';
+  }
+
+  @override
+  String get a11yModeSystem => 'Suivre le téléphone';
+
+  @override
+  String get a11yModeOn => 'Toujours activé';
+
+  @override
+  String get a11yModeOff => 'Toujours désactivé';
+
+  @override
+  String get a11yModeSystemShort => 'Automatique';
+
+  @override
+  String get a11yModeOnShort => 'Activé';
+
+  @override
+  String get a11yModeOffShort => 'Désactivé';
+
+  @override
+  String get a11yModeSystemSubtitle =>
+      'Utilise le réglage défini dans votre téléphone';
+
+  @override
+  String get a11yModeFixedSubtitle => 'Quel que soit le réglage du téléphone';
+
+  @override
+  String get privacyUnverifiedWarningTitle =>
+      'Accepter les profils non vérifiés ?';
+
+  @override
+  String get privacyUnverifiedWarningSubtitle =>
+      'Cette option n\'est pas recommandée par Yadony.';
+
+  @override
+  String get privacyUnverifiedWarningAccept => 'Accepter quand même';
+
+  @override
+  String get privacyUnverifiedWarningConsequence1 =>
+      'Tous les utilisateurs pourront t\'envoyer une demande, qu\'ils aient vérifié leur identité ou non.';
+
+  @override
+  String get privacyUnverifiedWarningConsequence2 =>
+      'Yadony ne peut pas confirmer l\'identité d\'un profil non vérifié, ni son nom, ni ses papiers.';
+
+  @override
+  String get privacyUnverifiedWarningConsequence3 =>
+      'Yadony n\'est pas responsable des difficultés que tu pourrais rencontrer avec un profil non vérifié.';
+
+  @override
+  String get privacyUnverifiedWarningReversible =>
+      'Tu peux réactiver ce réglage à tout moment. Les demandes déjà reçues ne sont pas affectées.';
+
+  @override
+  String get privacyUnverifiedWarningCheckbox =>
+      'J\'ai compris et j\'accepte d\'assumer ce risque.';
+
+  @override
+  String get notificationSettingsTitle => 'Notifications';
+
+  @override
+  String get notificationSettingsSectionCritical => 'PROTECTIONS CRITIQUES';
+
+  @override
+  String get notificationSettingsDeliveryConfirmedLabel =>
+      'Livraison confirmée';
+
+  @override
+  String get notificationSettingsSmsFallbackSubtitle =>
+      'SMS automatique si push non reçu';
+
+  @override
+  String get notificationSettingsPaymentReceivedLabel => 'Paiement reçu';
+
+  @override
+  String get notificationSettingsDisputeOpenedLabel => 'Litige ouvert';
+
+  @override
+  String get notificationSettingsSectionActivity => 'ACTIVITÉ';
+
+  @override
+  String get notificationSettingsBidsLabel => 'Matchs & enchères';
+
+  @override
+  String get notificationSettingsBidsSubtitle =>
+      'Demandes, acceptations, remise, annulation…';
+
+  @override
+  String get notificationSettingsCorridorLabel => 'Nouveaux trajets';
+
+  @override
+  String get notificationSettingsCorridorSubtitle =>
+      'Alertes corridor et voyageurs suivis';
+
+  @override
+  String get notificationSettingsNegotiationsLabel => 'Discussions de prix';
+
+  @override
+  String get notificationSettingsNegotiationsSubtitle =>
+      'Propositions, contre-offres, paiements…';
+
+  @override
+  String get notificationSettingsMessagesLabel => 'Messages';
+
+  @override
+  String get notificationSettingsMessagesSubtitle => 'Nouveaux messages reçus';
+
+  @override
+  String get notificationSettingsAlwaysOnBadge => 'Toujours actif';
+
+  @override
+  String get notificationSettingsCriticalBannerText =>
+      'Ces notifications protègent vos transactions. Elles ne peuvent pas être désactivées.';
+
+  @override
+  String get notificationSettingsPackageMatchLabel =>
+      'Nouveaux colis compatibles';
+
+  @override
+  String get notificationSettingsPackageMatchSubtitle =>
+      'Quand un colis correspond à un de tes trajets';
+
+  @override
+  String get prefsTitle => 'Préférences';
+
+  @override
+  String get prefsSectionUnits => 'UNITÉS';
+
+  @override
+  String get prefsWeightUnitLabel => 'Unité de poids';
+
+  @override
+  String get prefsSectionCurrency => 'DEVISE';
+
+  @override
+  String get prefsCountryLabel => 'Pays';
+
+  @override
+  String get prefsCountryLockedSubtitle =>
+      'Verrouillé : un envoi est en cours ou votre compte de paiement est créé';
+
+  @override
+  String get prefsCountryPlaceholder => 'Choisir mon pays';
+
+  @override
+  String get prefsCurrencyLabel => 'Devise';
+
+  @override
+  String get prefsCurrencyLockedSubtitle =>
+      'Verrouillée : videz votre portefeuille pour en changer';
+
+  @override
+  String get prefsDisplayCurrencyLabel => 'Devise d\'affichage';
+
+  @override
+  String get prefsDisplayCurrencySubtitle =>
+      'Les prix publiés dans une autre devise sont convertis à titre indicatif';
+
+  @override
+  String get prefsAutoLabel => 'Automatique';
+
+  @override
+  String get prefsSectionGeolocation => 'GÉOLOCALISATION';
+
+  @override
+  String get prefsPickupRadiusLabel => 'Rayon de collecte';
+
+  @override
+  String get prefsCountrySearchHint => 'Rechercher un pays';
+
+  @override
+  String get prefsCountryNotFound => 'Aucun pays trouvé';
+
+  @override
+  String get prefsAutoCurrencySubtitle => 'Suivre la devise de mon compte';
+
+  @override
+  String get prefsSectionMyTrips => 'MES TRAJETS';
+
+  @override
+  String get prefsTravelerBadge => 'Voyageur';
+
+  @override
+  String get prefsDefaultWeightLabel => 'Poids par défaut';
+
+  @override
+  String get prefsDefaultWeightSubtitle => 'Pré-remplit vos annonces';
+
+  @override
+  String get prefsMinPriceLabel => 'Prix minimum';
+
+  @override
+  String prefsMinPriceNone(String symbol) {
+    return '0 $symbol = aucun filtre';
+  }
+
+  @override
+  String get prefsMinPriceValueNone => 'Aucun';
+
+  @override
+  String get prefsContactModeLabel => 'Mode de contact';
+
+  @override
+  String get prefsContactModeCall => 'Appel';
+
+  @override
+  String get prefsContactModeMessage => 'Message';
+
+  @override
+  String get prefsContactModeBoth => 'Les deux';
+
+  @override
+  String get prefsResponseDelayLabel => 'Délai de réponse';
+
+  @override
+  String get prefsResponseDelayHint => 'ex. 3';
 }

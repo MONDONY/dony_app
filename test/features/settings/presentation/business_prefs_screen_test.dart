@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/currency_test_doubles.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
@@ -108,17 +109,28 @@ void main() {
     expect(find.text('MES TRAJETS'), findsNothing);
   });
 
-  testWidgets('banner erreur affiché si errorMessage non null', (tester) async {
-    when(() => mockPrefsBloc.state).thenReturn(
-      const BusinessPrefsState(
-        errorMessage: 'Impossible de synchroniser. Réessayez.',
-      ),
-    );
+  testWidgets('banner erreur affiché si hasSyncError est vrai', (tester) async {
+    when(
+      () => mockPrefsBloc.state,
+    ).thenReturn(const BusinessPrefsState(hasSyncError: true));
     when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
     await tester.pumpWidget(buildScreen());
     await tester.pumpAndSettle();
 
     expect(find.text('Impossible de synchroniser. Réessayez.'), findsOneWidget);
+  });
+
+  testWidgets('en anglais : banner erreur traduit', (tester) async {
+    useEnglish();
+    when(
+      () => mockPrefsBloc.state,
+    ).thenReturn(const BusinessPrefsState(hasSyncError: true));
+    when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+    await tester.pumpWidget(buildScreen());
+    await tester.pumpAndSettle();
+
+    expect(find.text("Couldn't sync. Try again."), findsOneWidget);
+    expect(find.text('Preferences'), findsOneWidget);
   });
 
   testWidgets('la tuile Pays affiche le pays et la devise associée', (

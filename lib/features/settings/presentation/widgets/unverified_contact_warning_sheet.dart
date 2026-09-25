@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Avertissement affiché avant de désactiver « Profils vérifiés uniquement ».
@@ -19,16 +20,17 @@ class UnverifiedContactWarningSheet extends StatefulWidget {
 
   static Future<bool?> show(BuildContext context) {
     final acceptedNotifier = ValueNotifier<bool>(false);
+    final l = context.l10n;
 
     return DonyBottomSheet.show<bool>(
       context,
       isDanger: true,
-      title: 'Accepter les profils non vérifiés ?',
-      subtitle: "Cette option n'est pas recommandée par Yadony.",
+      title: l.privacyUnverifiedWarningTitle,
+      subtitle: l.privacyUnverifiedWarningSubtitle,
       stickyBottom: ValueListenableBuilder<bool>(
         valueListenable: acceptedNotifier,
         builder: (context, accepted, _) => DonyButton(
-          label: 'Accepter quand même',
+          label: l.privacyUnverifiedWarningAccept,
           variant: DonyButtonVariant.destructive,
           onPressed: accepted
               ? () => Navigator.of(context, rootNavigator: true).pop(true)
@@ -46,31 +48,20 @@ class UnverifiedContactWarningSheet extends StatefulWidget {
 
 class _UnverifiedContactWarningSheetState
     extends State<UnverifiedContactWarningSheet> {
-  static const _consequences = [
-    (
-      icon: 'user-x',
-      text:
-          "Tous les utilisateurs pourront t'envoyer une demande, "
-          "qu'ils aient vérifié leur identité ou non.",
-    ),
-    (
-      icon: 'shield',
-      text:
-          "Yadony ne peut pas confirmer l'identité d'un profil non vérifié, "
-          'ni son nom, ni ses papiers.',
-    ),
-    (
-      icon: 'triangle-alert',
-      text:
-          "Yadony n'est pas responsable des difficultés que tu pourrais "
-          'rencontrer avec un profil non vérifié.',
-    ),
+  /// Fonction (pas une constante) : les textes dépendent de la langue
+  /// courante, calculée à chaque `build`.
+  List<({String icon, String text})> _consequences(AppLocalizations l) => [
+    (icon: 'user-x', text: l.privacyUnverifiedWarningConsequence1),
+    (icon: 'shield', text: l.privacyUnverifiedWarningConsequence2),
+    (icon: 'triangle-alert', text: l.privacyUnverifiedWarningConsequence3),
   ];
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    final consequences = _consequences(l);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,7 +76,7 @@ class _UnverifiedContactWarningSheetState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final item in _consequences) ...[
+              for (final item in consequences) ...[
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -102,7 +93,7 @@ class _UnverifiedContactWarningSheetState
                     ),
                   ],
                 ),
-                if (item != _consequences.last)
+                if (item != consequences.last)
                   const SizedBox(height: DonySpacing.md),
               ],
             ],
@@ -110,8 +101,7 @@ class _UnverifiedContactWarningSheetState
         ),
         const SizedBox(height: DonySpacing.base),
         Text(
-          'Tu peux réactiver ce réglage à tout moment. Les demandes déjà reçues '
-          'ne sont pas affectées.',
+          l.privacyUnverifiedWarningReversible,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.lg),
@@ -133,7 +123,7 @@ class _UnverifiedContactWarningSheetState
                   child: Padding(
                     padding: const EdgeInsets.only(top: DonySpacing.md),
                     child: Text(
-                      "J'ai compris et j'accepte d'assumer ce risque.",
+                      l.privacyUnverifiedWarningCheckbox,
                       style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                     ),
                   ),

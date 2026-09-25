@@ -14,6 +14,7 @@ class BlockedUsersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -23,7 +24,7 @@ class BlockedUsersScreen extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Text(
-          'Utilisateurs bloqués',
+          l.blockedUsersTitle,
           style: GoogleFonts.plusJakartaSans(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -54,7 +55,7 @@ class BlockedUsersScreen extends StatelessWidget {
           }
           if (state is BlockedUsersError) {
             return _ErrorView(
-              message: state.message,
+              message: l.blockedUsersLoadError,
               onRetry: () => context.read<BlockedUsersBloc>().add(
                 const BlockedUsersLoadRequested(),
               ),
@@ -93,7 +94,7 @@ class _UserList extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
           child: Text(
-            'Une personne bloquée ne voit plus tes annonces et ne peut plus t\'envoyer d\'offre. Tu ne vois plus les siennes non plus.',
+            context.l10n.blockedUsersListIntro,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
               color: const Color(0xFF6B7A8D),
@@ -133,22 +134,25 @@ class _UserTile extends StatelessWidget {
     return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(AppLocalizations l, DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
-    if (diff.inDays == 0) return "Bloqué aujourd'hui";
-    if (diff.inDays == 1) return 'Bloqué hier';
-    if (diff.inDays < 7) return 'Bloqué il y a ${diff.inDays} jours';
-    if (diff.inDays < 14) return 'Bloqué il y a 1 semaine';
+    if (diff.inDays == 0) return l.blockedUsersToday;
+    if (diff.inDays == 1) return l.blockedUsersYesterday;
+    if (diff.inDays < 7) return l.blockedUsersDaysAgo(diff.inDays);
     if (diff.inDays < 30) {
-      return 'Bloqué il y a ${(diff.inDays / 7).floor()} semaines';
+      return l.blockedUsersWeeksAgo((diff.inDays / 7).floor());
     }
-    return 'Bloqué le ${DateFormat('d MMM yyyy', AppL10n.localeName).format(date)}';
+    return l.blockedUsersOnDate(DateFormat.yMMMd(l.localeName).format(date));
   }
 
   @override
   Widget build(BuildContext context) {
-    final initials = _initials(user.displayName);
+    final l = context.l10n;
+    final displayName = user.displayName.isEmpty
+        ? l.profileUserFallback
+        : user.displayName;
+    final initials = _initials(displayName);
 
     return Container(
       decoration: BoxDecoration(
@@ -184,7 +188,7 @@ class _UserTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  user.displayName,
+                  displayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.plusJakartaSans(
@@ -195,7 +199,7 @@ class _UserTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _formatDate(user.blockedAt),
+                  _formatDate(l, user.blockedAt),
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11,
                     color: const Color(0xFF6B7A8D),
@@ -229,7 +233,7 @@ class _UserTile extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      'Débloquer',
+                      l.blockedUsersUnblock,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -259,7 +263,7 @@ class _EmptyView extends StatelessWidget {
                     const Text('🚫', style: TextStyle(fontSize: 48)),
                     const SizedBox(height: 16),
                     Text(
-                      "Tu n'as bloqué personne",
+                      context.l10n.blockedUsersEmptyTitle,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -269,7 +273,7 @@ class _EmptyView extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Les personnes que tu bloques apparaîtront ici.',
+                      context.l10n.blockedUsersEmptySubtitle,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,
                         color: const Color(0xFF6B7A8D),
@@ -315,7 +319,7 @@ class _ErrorView extends StatelessWidget {
             TextButton(
               onPressed: onRetry,
               child: Text(
-                'Réessayer',
+                context.l10n.commonRetry,
                 style: GoogleFonts.plusJakartaSans(
                   color: const Color(0xFF1A6B3C),
                   fontWeight: FontWeight.w600,

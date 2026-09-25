@@ -122,7 +122,7 @@ void main() {
         isA<BusinessPrefsState>().having((s) => s.isSyncing, 'isSyncing', true),
         isA<BusinessPrefsState>()
             .having((s) => s.displayCurrencyCode, 'displayCurrencyCode', 'AUTO')
-            .having((s) => s.errorMessage, 'errorMessage', isNotNull),
+            .having((s) => s.hasSyncError, 'hasSyncError', isTrue),
       ],
       verify: (_) {
         // Le rollback réécrit aussi Hive avec l'état précédent (AUTO).

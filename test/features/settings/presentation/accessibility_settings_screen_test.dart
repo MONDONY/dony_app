@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockAccessibilityBloc
     extends MockBloc<AccessibilityEvent, AccessibilityState>
     implements AccessibilityBloc {}
@@ -181,6 +183,39 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('AccessibilitySettingsScreen — anglais', () {
+    testWidgets('titre, sections et réglages traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Accessibility'), findsOneWidget);
+      expect(find.text('TEXT'), findsOneWidget);
+      expect(find.text('DISPLAY'), findsOneWidget);
+      expect(find.text('MOTION'), findsOneWidget);
+      expect(find.text('MESSAGES AND ACTIONS'), findsOneWidget);
+      expect(find.text('Follow phone settings'), findsOneWidget);
+      expect(find.text('High contrast'), findsOneWidget);
+      expect(find.text('Reset all'), findsOneWidget);
+    });
+
+    testWidgets('le dialog de réinitialisation est traduit', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Reset all'));
+      await tester.tap(find.text('Reset all'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'All accessibility settings will return to their original value.',
+        ),
+        findsOneWidget,
+      );
     });
   });
 }

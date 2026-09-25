@@ -198,6 +198,10 @@ const _sameInBothLanguages = <String>{
   'diagnosticsSectionApplication', // « APPLICATION » se dit pareil (tâche H1)
   'diagnosticsVersionLabel', // « Version » se dit pareil (tâche H1)
   'diagnosticsSectionSupport', // « SUPPORT » se dit pareil (tâche H1)
+  'a11yPreviewUrgentLabel', // « Urgent » se dit pareil (tâche H2)
+  'notificationSettingsTitle', // « Notifications » se dit pareil (tâche H2)
+  'notificationSettingsMessagesLabel', // « Messages » se dit pareil (tâche H2)
+  'prefsContactModeMessage', // « Message » se dit pareil (tâche H2)
 };
 
 void main() {

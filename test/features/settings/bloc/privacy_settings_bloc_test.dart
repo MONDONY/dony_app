@@ -209,11 +209,7 @@ void main() {
       act: (bloc) => bloc.add(const PrivacySettingsLoadRequested()),
       expect: () => [
         isA<PrivacySettingsLoading>(),
-        isA<PrivacySettingsError>().having(
-          (s) => s.message,
-          'message',
-          'Impossible de charger les préférences',
-        ),
+        isA<PrivacySettingsError>(),
       ],
     );
 
@@ -452,11 +448,9 @@ void main() {
     });
 
     test('PrivacySettingsError equality est correcte', () {
-      const a = PrivacySettingsError('msg');
-      const b = PrivacySettingsError('msg');
-      const c = PrivacySettingsError('autre');
+      const a = PrivacySettingsError();
+      const b = PrivacySettingsError();
       expect(a, equals(b));
-      expect(a, isNot(equals(c)));
     });
 
     test('copyWith ne touche que le champ fourni', () {
