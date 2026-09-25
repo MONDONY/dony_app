@@ -15,6 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 const _emptyHelpConfigJson = '''
@@ -226,5 +227,29 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Réessayer'));
     verify(() => bloc.add(const DisputesLoadRequested())).called(1);
+  });
+
+  testWidgets('anglais : titre, type et statut traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(_harness(state: DisputeListLoaded([_dispute()])));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('My disputes'), findsOneWidget);
+    expect(find.text('No-show contest'), findsOneWidget);
+    expect(find.text('Under review'), findsOneWidget);
+    expect(find.textContaining('Traveler: Awa K.'), findsOneWidget);
+  });
+
+  testWidgets('anglais : état vide traduit', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(_harness(state: const DisputeListLoaded([])));
+    await tester.pump();
+
+    expect(find.text('No disputes'), findsOneWidget);
+    expect(find.text('A problem with a shipment?'), findsOneWidget);
+
+    // Drain les timers en vol (HelpCenterBloc) avant la fin du test.
+    await tester.pumpAndSettle();
   });
 }
