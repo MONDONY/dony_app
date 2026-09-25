@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
@@ -56,11 +57,7 @@ abstract final class CorridorAlertFormSheet {
             if (state.status == CorridorAlertFormStatus.success) {
               ctx.pop();
             } else if (state.status == CorridorAlertFormStatus.error) {
-              DonySnackbar.show(
-                ctx,
-                message: state.errorMessage ?? ctx.l10n.corridorAlertSaveError,
-                type: DonySnackbarType.error,
-              );
+              unawaited(ErrorPresenter.show(ctx, state.errorMessage));
             }
           },
           child: content,

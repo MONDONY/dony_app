@@ -1,4 +1,5 @@
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
 import 'package:dony/features/profile/presentation/widgets/all_reviews_bottom_sheet.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
@@ -112,13 +113,41 @@ void main() {
     expect(find.text('Aucun avis pour le moment.'), findsNothing);
   });
 
-  testWidgets('état erreur : message du serveur affiché', (tester) async {
-    stubState(const UserReviewsError(message: 'Connexion perdue'));
+  testWidgets(
+    'état erreur : texte du catalogue affiché, jamais le message brut',
+    (tester) async {
+      stubState(
+        const UserReviewsError(error: NetworkException('Connexion perdue')),
+      );
 
-    await openSheet(tester);
+      await openSheet(tester);
 
-    expect(find.text('Connexion perdue'), findsOneWidget);
-  });
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
+      expect(find.text('Connexion perdue'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      stubState(
+        const UserReviewsError(error: NetworkException('raw technical detail')),
+      );
+
+      await openSheet(tester);
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 
   testWidgets('liste vide : message dédié, pas de ligne d’avis', (
     tester,

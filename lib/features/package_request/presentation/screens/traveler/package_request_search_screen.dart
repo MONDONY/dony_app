@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -142,7 +143,12 @@ class _SearchViewState extends State<_SearchView> {
                         child: Padding(
                           padding: const EdgeInsets.all(40),
                           child: Text(
-                            state.errorMessage ?? l.requestListErrorFallback,
+                            state.errorMessage != null
+                                ? ErrorPresenter.resolve(
+                                    state.errorMessage,
+                                    l10n: l,
+                                  ).message
+                                : l.requestListErrorFallback,
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyMedium!
                                 .copyWith(fontSize: 14, color: kError),

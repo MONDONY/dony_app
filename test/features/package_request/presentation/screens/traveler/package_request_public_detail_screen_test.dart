@@ -24,6 +24,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 class _MockPackageRequestRepository extends Mock
@@ -263,6 +265,55 @@ void main() {
       // Pile propre : `/` en dessous, `/package-requests/:id` au sommet — la
       // vue publique a bien été retirée (pop), pas simplement recouverte.
       expect(router.canPop(), isTrue);
+    },
+  );
+
+  // ── Échec de chargement ───────────────────────────────────────────────────
+  testWidgets(
+    'échec de chargement → texte du catalogue affiché, jamais le message brut',
+    (tester) async {
+      when(() => repo.getById(any())).thenThrow(Exception('boom'));
+      when(() => authBloc.state).thenReturn(const AuthGuestSessionReady());
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthGuestSessionReady(),
+      );
+
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
+      expect(find.text('boom'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'anglais : échec de chargement affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      when(
+        () => repo.getById(any()),
+      ).thenThrow(Exception('raw technical detail'));
+      when(() => authBloc.state).thenReturn(const AuthGuestSessionReady());
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthGuestSessionReady(),
+      );
+
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
     },
   );
 

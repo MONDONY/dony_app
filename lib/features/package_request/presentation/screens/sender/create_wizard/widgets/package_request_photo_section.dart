@@ -131,11 +131,7 @@ class PackageRequestPhotoSection extends StatelessWidget {
                           .remove(p.localId),
                       onTapFailed: () => DonySnackbar.show(
                         context,
-                        message: p.error == null
-                            ? l10n.requestCreatePhotoUploadFailed
-                            : l10n.requestCreatePhotoUploadFailedWithReason(
-                                p.error!,
-                              ),
+                        message: l10n.requestCreatePhotoUploadFailed,
                         type: DonySnackbarType.error,
                       ),
                     ),

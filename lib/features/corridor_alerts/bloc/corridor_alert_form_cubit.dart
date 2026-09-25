@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -41,7 +42,7 @@ class CorridorAlertFormState extends Equatable {
   final double? minWeightKg;
   final List<String> contentCategories;
   final CorridorAlertFormStatus status;
-  final String? errorMessage;
+  final Object? errorMessage;
   final AlertDirection direction;
   final AlertNotifyMode notifyMode;
 
@@ -101,7 +102,7 @@ class CorridorAlertFormState extends Equatable {
     status: status ?? this.status,
     errorMessage: identical(errorMessage, _unset)
         ? this.errorMessage
-        : errorMessage as String?,
+        : errorMessage,
     direction: direction ?? this.direction,
     notifyMode: notifyMode ?? this.notifyMode,
     centerLat: identical(centerLat, _unset)
@@ -311,7 +312,7 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
       emit(
         state.copyWith(
           status: CorridorAlertFormStatus.error,
-          errorMessage: err.toString(),
+          errorMessage: unwrapDioError(err),
         ),
       );
     }

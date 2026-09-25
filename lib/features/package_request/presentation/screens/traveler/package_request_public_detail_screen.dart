@@ -4,6 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/currency/converted_price.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
@@ -44,7 +46,7 @@ class PackageRequestPublicDetailScreen extends StatefulWidget {
 class _PackageRequestPublicDetailScreenState
     extends State<PackageRequestPublicDetailScreen> {
   PackageRequest? _request;
-  String? _error;
+  Object? _error;
   bool _loading = true;
 
   /// L'écran a déjà été quitté au profit de l'écran propriétaire (« Ma
@@ -83,7 +85,7 @@ class _PackageRequestPublicDetailScreenState
       }
     } catch (e) {
       if (mounted && !silent) {
-        setState(() => _error = e.toString());
+        setState(() => _error = unwrapDioError(e));
       }
     } finally {
       if (mounted) {
@@ -255,7 +257,7 @@ class _PackageRequestPublicDetailScreenState
                 child: Padding(
                   padding: const EdgeInsets.all(40),
                   child: Text(
-                    _error!,
+                    ErrorPresenter.resolve(_error, l10n: context.l10n).message,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 14,

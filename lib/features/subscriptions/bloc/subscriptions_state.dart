@@ -5,7 +5,7 @@ enum SubscriptionsStatus { initial, loading, success, error }
 class SubscriptionsState {
   final SubscriptionsStatus status;
   final List<SubscriptionItem> items;
-  final String? error;
+  final Object? error;
   const SubscriptionsState({
     this.status = SubscriptionsStatus.initial,
     this.items = const [],
@@ -15,7 +15,7 @@ class SubscriptionsState {
   SubscriptionsState copyWith({
     SubscriptionsStatus? status,
     List<SubscriptionItem>? items,
-    String? error,
+    Object? error,
   }) => SubscriptionsState(
     status: status ?? this.status,
     items: items ?? this.items,

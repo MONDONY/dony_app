@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -40,7 +41,7 @@ class PackageRequestState extends Equatable {
 
   final PackageRequestListStatus status;
   final List<PackageRequest> requests;
-  final String? errorMessage;
+  final Object? errorMessage;
 
   /// Horodatage du dernier chargement réussi.
   final DateTime fetchedAt;
@@ -48,7 +49,7 @@ class PackageRequestState extends Equatable {
   PackageRequestState copyWith({
     PackageRequestListStatus? status,
     List<PackageRequest>? requests,
-    String? errorMessage,
+    Object? errorMessage,
     DateTime? fetchedAt,
   }) => PackageRequestState(
     status: status ?? this.status,
@@ -93,7 +94,7 @@ class PackageRequestBloc
       emit(
         state.copyWith(
           status: PackageRequestListStatus.error,
-          errorMessage: err.toString(),
+          errorMessage: unwrapDioError(err),
         ),
       );
     }
@@ -117,7 +118,7 @@ class PackageRequestBloc
       emit(
         state.copyWith(
           status: PackageRequestListStatus.error,
-          errorMessage: err.toString(),
+          errorMessage: unwrapDioError(err),
         ),
       );
     }
@@ -143,7 +144,7 @@ class PackageRequestBloc
       emit(
         state.copyWith(
           status: PackageRequestListStatus.error,
-          errorMessage: err.toString(),
+          errorMessage: unwrapDioError(err),
         ),
       );
     }

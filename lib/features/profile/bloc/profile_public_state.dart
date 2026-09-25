@@ -24,7 +24,7 @@ class ProfilePublicLoaded extends ProfilePublicState {
 }
 
 class ProfilePublicError extends ProfilePublicState {
-  const ProfilePublicError({required this.message});
+  const ProfilePublicError({required this.error});
 
-  final String message;
+  final Object error;
 }

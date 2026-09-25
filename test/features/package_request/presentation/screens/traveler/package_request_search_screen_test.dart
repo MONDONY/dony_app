@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -104,6 +105,55 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('erreur : texte du catalogue affiché, jamais le message brut', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(
+      const PackageRequestSearchState(
+        status: SearchStatus.error,
+        errorMessage: NetworkException('boom'),
+      ),
+    );
+    when(
+      () => bloc.stream,
+    ).thenAnswer((_) => const Stream<PackageRequestSearchState>.empty());
+
+    await tester.pumpWidget(wrap());
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+      findsOneWidget,
+    );
+    expect(find.text('boom'), findsNothing);
+  });
+
+  testWidgets(
+    'anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        const PackageRequestSearchState(
+          status: SearchStatus.error,
+          errorMessage: NetworkException('raw technical detail'),
+        ),
+      );
+      when(
+        () => bloc.stream,
+      ).thenAnswer((_) => const Stream<PackageRequestSearchState>.empty());
+
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 
   testWidgets('en anglais : titre, champs, catégorie et budget traduits', (
     tester,

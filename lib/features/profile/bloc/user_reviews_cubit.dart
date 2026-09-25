@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
@@ -48,9 +49,9 @@ class UserReviewsLoaded extends UserReviewsState {
 }
 
 class UserReviewsError extends UserReviewsState {
-  const UserReviewsError({required this.message});
+  const UserReviewsError({required this.error});
 
-  final String message;
+  final Object error;
 }
 
 // ─── Cubit ───────────────────────────────────────────────────────────────────
@@ -100,7 +101,7 @@ class UserReviewsCubit extends Cubit<UserReviewsState> {
       );
       _fireOpenedEvent(summary.ratingCount);
     } catch (e) {
-      emit(UserReviewsError(message: e.toString()));
+      emit(UserReviewsError(error: unwrapDioError(e)));
     }
   }
 

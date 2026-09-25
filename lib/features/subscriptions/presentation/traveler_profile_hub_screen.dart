@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
@@ -584,7 +585,10 @@ class _ReviewsTab extends StatelessWidget {
             mascotte: DonyMascotteType.erreur,
             iconAsset: 'circle-alert',
             title: context.l10n.followHubReviewsLoadError,
-            description: state.message,
+            description: ErrorPresenter.resolve(
+              state.error,
+              l10n: context.l10n,
+            ).message,
           );
         }
 

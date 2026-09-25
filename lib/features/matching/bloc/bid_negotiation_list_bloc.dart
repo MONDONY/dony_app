@@ -35,12 +35,12 @@ class BidNegotiationListState extends Equatable {
 
   final BidNegotiationListStatus status;
   final List<BidNegotiationSummary> summaries;
-  final String? errorMessage;
+  final Object? errorMessage;
 
   BidNegotiationListState copyWith({
     BidNegotiationListStatus? status,
     List<BidNegotiationSummary>? summaries,
-    String? errorMessage,
+    Object? errorMessage,
   }) => BidNegotiationListState(
     status: status ?? this.status,
     summaries: summaries ?? this.summaries,
@@ -88,7 +88,7 @@ class BidNegotiationListBloc
       emit(
         state.copyWith(
           status: BidNegotiationListStatus.error,
-          errorMessage: unwrapDioError(e).message,
+          errorMessage: unwrapDioError(e),
         ),
       );
     }

@@ -2803,16 +2803,7 @@
   },
   "requestCreatePhotoUploadFailed": "Échec de l'upload de la photo",
   "@requestCreatePhotoUploadFailed": {
-    "description": "Message d'échec d'upload sans raison connue (package_request_photo_section.dart)"
-  },
-  "requestCreatePhotoUploadFailedWithReason": "Échec : {reason}",
-  "@requestCreatePhotoUploadFailedWithReason": {
-    "description": "Message d'échec d'upload avec raison connue (package_request_photo_section.dart)",
-    "placeholders": {
-      "reason": {
-        "type": "String"
-      }
-    }
+    "description": "Message d'échec d'upload, sans le détail technique brut (package_request_photo_section.dart)"
   },
   "requestCreateRetryPhotoUpload": "Réessayer l'envoi de la photo",
   "@requestCreateRetryPhotoUpload": {
@@ -14517,10 +14508,6 @@
   "corridorAlertResumeSubtitle": "Les notifications repartent",
   "@corridorAlertResumeSubtitle": {
     "description": "Sous-titre de l'action « Reprendre » du menu d'une alerte en pause (corridor_alert_actions_sheet.dart)."
-  },
-  "corridorAlertSaveError": "Impossible d'enregistrer l'alerte",
-  "@corridorAlertSaveError": {
-    "description": "Message par défaut si l'enregistrement échoue sans détail serveur (corridor_alert_form_sheet.dart)."
   },
   "corridorAlertSubmitCreate": "Créer l'alerte",
   "@corridorAlertSubmitCreate": {

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_event.dart';
@@ -39,7 +40,7 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
             return const _LoadingView();
           }
           if (state is MyReviewsError) {
-            return _ErrorView(message: state.message);
+            return _ErrorView(error: state.error);
           }
           if (state is MyReviewsLoaded) {
             if (state.summary.ratingCount == 0) {
@@ -107,9 +108,9 @@ class _EmptyView extends StatelessWidget {
 // ─── Error state ─────────────────────────────────────────────────────────────
 
 class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message});
+  const _ErrorView({required this.error});
 
-  final String message;
+  final Object error;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +119,7 @@ class _ErrorView extends StatelessWidget {
       type: DonyEmptyStateType.error,
       iconAsset: 'circle-alert',
       title: context.l10n.ratingLoadErrorTitle,
-      description: message,
+      description: ErrorPresenter.resolve(error, l10n: context.l10n).message,
       actionLabel: context.l10n.commonRetry,
       onAction: () =>
           context.read<MyReviewsBloc>().add(const MyReviewsRequested()),

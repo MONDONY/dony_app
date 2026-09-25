@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -40,7 +41,7 @@ class NegotiationListState extends Equatable {
 
   final NegotiationListStatus status;
   final List<NegotiationThread> threads;
-  final String? errorMessage;
+  final Object? errorMessage;
 
   /// Horodatage du dernier chargement réussi.
   final DateTime fetchedAt;
@@ -65,7 +66,7 @@ class NegotiationListState extends Equatable {
   NegotiationListState copyWith({
     NegotiationListStatus? status,
     List<NegotiationThread>? threads,
-    String? errorMessage,
+    Object? errorMessage,
     DateTime? fetchedAt,
   }) => NegotiationListState(
     status: status ?? this.status,
@@ -105,7 +106,7 @@ class NegotiationListBloc
       emit(
         state.copyWith(
           status: NegotiationListStatus.error,
-          errorMessage: err.toString(),
+          errorMessage: unwrapDioError(err),
         ),
       );
     }
@@ -129,7 +130,7 @@ class NegotiationListBloc
       emit(
         state.copyWith(
           status: NegotiationListStatus.error,
-          errorMessage: err.toString(),
+          errorMessage: unwrapDioError(err),
         ),
       );
     }
