@@ -58,6 +58,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
+import 'package:intl/date_symbol_data_local.dart';
+// `intl` exporte son propre TextDirection (LTR/RTL/UNKNOWN) qui masquerait
+// celui de dart:ui (TextDirection.ltr) déjà utilisé plus bas dans ce fichier.
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -3062,6 +3066,75 @@ void main() {
         () =>
             announcementBloc.add(any(that: isA<AnnouncementSearchRequested>())),
       ).called(1);
+    });
+  });
+
+  // ── Feuille « Date de départ » (_DatePresetSheet) ─────────────────────────
+  //
+  // K3 : la date choisie via le calendrier natif s'affiche dans l'option
+  // « date précise » de la feuille selon l'ordre de la langue (motif fixe
+  // 'EEE d MMM' en fr, squelette MMMEd en en).
+  group('feuille de date personnalisée', () {
+    setUpAll(() async {
+      await initializeDateFormatting('fr');
+      await initializeDateFormatting('en');
+    });
+
+    // Choisit un jour du calendrier natif garanti visible dans le mois
+    // affiché par défaut (celui d'aujourd'hui) et sélectionnable
+    // (firstDate: DateTime.now()) : le lendemain, ou aujourd'hui même si le
+    // mois se termine ce jour-là (jamais de bascule de mois qui rendrait le
+    // jour cible invisible dans la grille ouverte).
+    Future<DateTime> choisirDemain(
+      WidgetTester tester, {
+      required String choisirLabel,
+    }) async {
+      final today = DateTime.now();
+      final daysInMonth = DateTime(today.year, today.month + 1, 0).day;
+      final targetDay = today.day < daysInMonth ? today.day + 1 : today.day;
+      final expected = DateTime(today.year, today.month, targetDay);
+
+      await tester.tap(find.byKey(const Key('chip-date')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(choisirLabel));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('$targetDay').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      return expected;
+    }
+
+    testWidgets(
+      'fr non-régression : option « date précise » au motif EEE d MMM inchangé',
+      (tester) async {
+        await pumpHome(tester);
+        final date = await choisirDemain(
+          tester,
+          choisirLabel: 'Choisir une date',
+        );
+
+        expect(
+          find.textContaining(DateFormat('EEE d MMM', 'fr').format(date)),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('en anglais : option « date précise » dans l\'ordre anglais', (
+      tester,
+    ) async {
+      useEnglish();
+      await pumpHome(tester);
+      final date = await choisirDemain(tester, choisirLabel: 'Choose a date');
+
+      expect(
+        find.textContaining(DateFormat.MMMEd('en').format(date)),
+        findsOneWidget,
+      );
     });
   });
 }

@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/features/trip_templates/data/repositories/trip_template_repository.dart';
@@ -28,7 +29,10 @@ class TripTemplateBloc extends Bloc<TripTemplateEvent, TripTemplateState> {
       );
     } catch (e) {
       emit(
-        state.copyWith(status: TripTemplateStatus.error, error: e.toString()),
+        state.copyWith(
+          status: TripTemplateStatus.error,
+          error: unwrapDioError(e),
+        ),
       );
     }
   }
@@ -48,7 +52,10 @@ class TripTemplateBloc extends Bloc<TripTemplateEvent, TripTemplateState> {
       );
     } catch (e) {
       emit(
-        state.copyWith(status: TripTemplateStatus.error, error: e.toString()),
+        state.copyWith(
+          status: TripTemplateStatus.error,
+          error: unwrapDioError(e),
+        ),
       );
     }
   }
@@ -71,7 +78,10 @@ class TripTemplateBloc extends Bloc<TripTemplateEvent, TripTemplateState> {
       );
     } catch (e) {
       emit(
-        state.copyWith(status: TripTemplateStatus.error, error: e.toString()),
+        state.copyWith(
+          status: TripTemplateStatus.error,
+          error: unwrapDioError(e),
+        ),
       );
     }
   }
@@ -91,7 +101,10 @@ class TripTemplateBloc extends Bloc<TripTemplateEvent, TripTemplateState> {
       );
     } catch (e) {
       emit(
-        state.copyWith(status: TripTemplateStatus.error, error: e.toString()),
+        state.copyWith(
+          status: TripTemplateStatus.error,
+          error: unwrapDioError(e),
+        ),
       );
     }
   }

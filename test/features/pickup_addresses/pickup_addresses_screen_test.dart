@@ -1,4 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
+import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
+import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/models/pickup_address.dart';
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addresses_screen.dart';
@@ -13,6 +17,10 @@ import '../../helpers/l10n_test_helpers.dart';
 class MockPickupAddressBloc
     extends MockBloc<PickupAddressEvent, PickupAddressState>
     implements PickupAddressBloc {}
+
+class MockDeliveryAddressBloc
+    extends MockBloc<DeliveryAddressEvent, DeliveryAddressState>
+    implements DeliveryAddressBloc {}
 
 class FakePickupAddressEvent extends Fake implements PickupAddressEvent {}
 
@@ -36,24 +44,38 @@ const _addr2 = PickupAddress(
   isDefault: false,
 );
 
-Widget _wrap(PickupAddressBloc bloc) => BlocProvider<PickupAddressBloc>.value(
-  value: bloc,
-  child: MaterialApp.router(
-    routerConfig: GoRouter(
-      routes: [
-        GoRoute(path: '/', builder: (_, _) => const PickupAddressesScreen()),
-        GoRoute(
-          path: '/profile/addresses/new',
-          builder: (_, _) => const Scaffold(body: Text('New Address')),
-        ),
-        GoRoute(
-          path: '/profile/addresses/:id',
-          builder: (_, _) => const Scaffold(body: Text('Edit Address')),
-        ),
-      ],
+Widget _wrap(PickupAddressBloc bloc, {DeliveryAddressBloc? deliveryBloc}) {
+  final delivery = deliveryBloc ?? _defaultDeliveryBloc();
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<PickupAddressBloc>.value(value: bloc),
+      BlocProvider<DeliveryAddressBloc>.value(value: delivery),
+    ],
+    child: MaterialApp.router(
+      routerConfig: GoRouter(
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => const PickupAddressesScreen()),
+          GoRoute(
+            path: '/profile/addresses/new',
+            builder: (_, _) => const Scaffold(body: Text('New Address')),
+          ),
+          GoRoute(
+            path: '/profile/addresses/:id',
+            builder: (_, _) => const Scaffold(body: Text('Edit Address')),
+          ),
+        ],
+      ),
     ),
-  ),
-);
+  );
+}
+
+/// Bloc de secours pour les tests qui ne visitent jamais l'onglet Livraison :
+/// jamais lu, mais requis par le `BlocProvider` ambiant que l'écran attend.
+DeliveryAddressBloc _defaultDeliveryBloc() {
+  final bloc = MockDeliveryAddressBloc();
+  when(() => bloc.state).thenReturn(const DeliveryAddressState());
+  return bloc;
+}
 
 void main() {
   late MockPickupAddressBloc bloc;
@@ -146,4 +168,53 @@ void main() {
     expect(find.textContaining('Drop-off'), findsOneWidget);
     expect(find.textContaining('Delivery'), findsOneWidget);
   });
+
+  testWidgets(
+    'en anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        const PickupAddressState(
+          status: PickupAddressStatus.error,
+          error: NetworkException('raw technical detail'),
+        ),
+      );
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'en anglais : onglet Livraison, erreur réseau affiche le texte du '
+    'catalogue, jamais le message brut',
+    (tester) async {
+      useEnglish();
+      final deliveryBloc = MockDeliveryAddressBloc();
+      when(() => deliveryBloc.state).thenReturn(
+        const DeliveryAddressState(
+          status: DeliveryAddressStatus.error,
+          error: NetworkException('raw technical detail'),
+        ),
+      );
+
+      await tester.pumpWidget(_wrap(bloc, deliveryBloc: deliveryBloc));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      await tester.tap(find.text('🗺️  Delivery'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 }

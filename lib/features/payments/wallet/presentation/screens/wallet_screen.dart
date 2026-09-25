@@ -5,6 +5,7 @@ import 'package:dony/core/currency/currency_labels.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -64,7 +65,12 @@ class _WalletScreenState extends State<WalletScreen> {
         builder: (context, state) {
           return switch (state) {
             WalletInitial() || WalletLoading() => const _LoadingView(),
-            WalletError(:final message) => _ErrorView(message: message),
+            WalletError(:final error) => _ErrorView(
+              message: ErrorPresenter.resolve(
+                error,
+                l10n: context.l10n,
+              ).message,
+            ),
             WalletLoaded(:final wallet) => _LoadedView(
               wallet: wallet,
               topupBanner: _topupBanner,
@@ -577,9 +583,7 @@ class _HeroHeader extends StatelessWidget {
                         );
                       }
                       if (state.error != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(state.error!.message)),
-                        );
+                        ErrorPresenter.show(context, state.error);
                       }
                     },
                     builder: (context, refundState) => _buildActions(context),

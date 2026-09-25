@@ -534,8 +534,7 @@ class _HeroCorridorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final dateStr = DateFormat(
-      'EEE d MMM yyyy',
+    final dateStr = DateFormat.yMMMEd(
       l.localeName,
     ).format(announcement.departureDate);
     final kgLabel = announcement.isKgFree
@@ -671,7 +670,7 @@ class _StatCardsRow extends StatelessWidget {
             const SizedBox(width: DonySpacing.sm),
             Expanded(
               child: _StatCard(
-                value: DateFormat('EEE d MMM', l.localeName).format(deadline),
+                value: DateFormat.MMMEd(l.localeName).format(deadline),
                 label: l.listingDepositDeadlineLabel,
               ),
             ),

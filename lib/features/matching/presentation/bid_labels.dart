@@ -45,16 +45,26 @@ String senderShipmentsCount(AppLocalizations l, int count) =>
 /// Texte à afficher pour un [BidFailed] : le detail serveur (`serverMessage`)
 /// prime quand il existe, sinon la clé de la raison — le bloc ne transporte
 /// jamais de texte traduit.
+///
+/// Exception : [BidFailureReason.confirmFailed]. Son `serverMessage` vient de
+/// `ConfirmAcceptanceResponse.fail(...)` (`CashCommissionService`, back), qui
+/// ne passe jamais par `messagesResolver` — contrairement au `serverMessage`
+/// de [BidFailureReason.refused] (`AcceptBidResponse.failed`, traduit). Un
+/// utilisateur anglais verrait donc du français : on ignore ce
+/// `serverMessage` et on affiche toujours le texte du catalogue (relecture
+/// finale du lot K).
 extension BidFailedDisplay on BidFailed {
   String displayMessage(AppLocalizations l) {
-    final sm = serverMessage;
-    if (sm != null && sm.trim().isNotEmpty) return sm;
     switch (reason) {
       case BidFailureReason.confirmFailed:
         return l.bidAcceptConfirmFailed;
       case BidFailureReason.bankAuthInterrupted:
+        final sm = serverMessage;
+        if (sm != null && sm.trim().isNotEmpty) return sm;
         return l.bidAcceptBankAuthInterrupted;
       case BidFailureReason.refused:
+        final sm = serverMessage;
+        if (sm != null && sm.trim().isNotEmpty) return sm;
         return l.bidAcceptRefused;
     }
   }

@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -199,18 +200,51 @@ void main() {
       expect(find.text('Aucune négociation'), findsOneWidget);
     });
 
-    testWidgets('affiche l\'état erreur avec un message', (tester) async {
-      when(() => bloc.state).thenReturn(
-        NegotiationListState(
-          status: NegotiationListStatus.error,
-          errorMessage: 'Connexion impossible',
-        ),
-      );
-      await tester.pumpWidget(wrap());
-      await tester.pump();
-      expect(find.text('Connexion impossible'), findsOneWidget);
-      expect(find.text('Réessayer'), findsOneWidget);
-    });
+    testWidgets(
+      'affiche l\'état erreur avec le texte du catalogue, jamais le message '
+      'brut',
+      (tester) async {
+        when(() => bloc.state).thenReturn(
+          NegotiationListState(
+            status: NegotiationListStatus.error,
+            errorMessage: const NetworkException('Connexion impossible'),
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pump();
+        expect(
+          find.text(
+            'Une erreur est survenue. Vérifie ta connexion et réessaie.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Connexion impossible'), findsNothing);
+        expect(find.text('Réessayer'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'anglais : erreur réseau affiche le texte du catalogue, jamais le '
+      'message brut',
+      (tester) async {
+        useEnglish();
+        when(() => bloc.state).thenReturn(
+          NegotiationListState(
+            status: NegotiationListStatus.error,
+            errorMessage: const NetworkException('raw technical detail'),
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pump();
+        expect(
+          find.text(
+            'Something went wrong. Check your connection and try again.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('raw technical detail'), findsNothing);
+      },
+    );
 
     testWidgets('affiche les threads chargés', (tester) async {
       when(() => bloc.state).thenReturn(

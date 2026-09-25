@@ -32,6 +32,17 @@ const _existing = PriceGridItemModel(
   position: 1,
 );
 
+/// Montant décimal, pour distinguer le rendu du séparateur selon la langue
+/// (« 12,5 » en fr, « 12.5 » en en) — `_existing` (15.0) est un entier et ne
+/// le montrerait pas.
+const _existingDecimal = PriceGridItemModel(
+  id: 'a2',
+  label: 'Livres',
+  unitPriceNet: 12.5,
+  unitPriceDisplay: 12.5,
+  position: 2,
+);
+
 /// Monte un écran minimal doté d'un bouton qui ouvre la feuille.
 Future<PriceGridBloc> _open(
   WidgetTester tester, {
@@ -333,6 +344,29 @@ void main() {
       expect(btn.onPressed, isNotNull);
     });
 
+    testWidgets(
+      'en anglais : le point s\'affiche et se saisit au lieu de la virgule',
+      (tester) async {
+        useEnglish();
+        await _open(tester);
+        // Catégorie canonique affichée traduite ; le libellé brut envoyé au
+        // serveur reste « Chaussures » (contentCategoryDisplayName).
+        await tester.tap(find.text('Shoes'));
+        await tester.pumpAndSettle();
+
+        // Le clavier numérique affiche « . », plus « , ».
+        expect(find.widgetWithText(InkWell, '.'), findsOneWidget);
+        expect(find.widgetWithText(InkWell, ','), findsNothing);
+
+        await _type(tester, '12');
+        await tester.tap(find.widgetWithText(InkWell, '.').last);
+        await tester.pump();
+        await _type(tester, '5');
+
+        expect(find.text('12.5'), findsOneWidget);
+      },
+    );
+
     testWidgets('« Changer » ramène au catalogue', (tester) async {
       await _open(tester);
       await tester.tap(find.text('Chaussures'));
@@ -405,6 +439,28 @@ void main() {
 
       expect(captured.single.unitPriceNet, 12.5);
     });
+
+    testWidgets('en anglais : le point est accepté comme séparateur décimal', (
+      tester,
+    ) async {
+      useEnglish();
+      final bloc = await _open(tester);
+
+      await tester.tap(find.text('Shoes'));
+      await tester.pumpAndSettle();
+      await _type(tester, '12');
+      await tester.tap(find.widgetWithText(InkWell, '.').last);
+      await tester.pump();
+      await _type(tester, '50');
+      await tester.tap(find.byKey(const Key('price-grid-submit')));
+      await tester.pumpAndSettle();
+
+      final captured = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<PriceGridItemAddRequested>().toList();
+
+      expect(captured.single.unitPriceNet, 12.5);
+    });
   });
 
   group('PriceGridItemFormSheet — modification', () {
@@ -418,6 +474,26 @@ void main() {
       // 15.00 se réécrit plus vite depuis « 15 ».
       expect(find.text('15'), findsOneWidget);
     });
+
+    testWidgets('pré-remplissage fr : la virgule sépare la partie décimale', (
+      tester,
+    ) async {
+      await _open(tester, item: _existingDecimal);
+
+      expect(find.text('12,50'), findsOneWidget);
+      expect(find.text('12.50'), findsNothing);
+    });
+
+    testWidgets(
+      'pré-remplissage en anglais : le point sépare la partie décimale',
+      (tester) async {
+        useEnglish();
+        await _open(tester, item: _existingDecimal);
+
+        expect(find.text('12.50'), findsOneWidget);
+        expect(find.text('12,50'), findsNothing);
+      },
+    );
 
     testWidgets('enregistrer envoie une mise à jour, pas un ajout', (
       tester,

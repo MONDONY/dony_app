@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -42,12 +43,12 @@ class CorridorAlertListState extends Equatable {
 
   final CorridorAlertListStatus status;
   final List<CorridorAlertModel> alerts;
-  final String? errorMessage;
+  final Object? errorMessage;
 
   CorridorAlertListState copyWith({
     CorridorAlertListStatus? status,
     List<CorridorAlertModel>? alerts,
-    String? errorMessage,
+    Object? errorMessage,
   }) => CorridorAlertListState(
     status: status ?? this.status,
     alerts: alerts ?? this.alerts,
@@ -101,7 +102,7 @@ class CorridorAlertListBloc
       emit(
         state.copyWith(
           status: CorridorAlertListStatus.error,
-          errorMessage: err.toString(),
+          errorMessage: unwrapDioError(err),
         ),
       );
     }
@@ -166,7 +167,7 @@ class CorridorAlertListBloc
         state.copyWith(
           status: CorridorAlertListStatus.error,
           alerts: previous,
-          errorMessage: err.toString(),
+          errorMessage: unwrapDioError(err),
         ),
       );
     }
@@ -187,7 +188,7 @@ class CorridorAlertListBloc
         state.copyWith(
           status: CorridorAlertListStatus.error,
           alerts: previous,
-          errorMessage: err.toString(),
+          errorMessage: unwrapDioError(err),
         ),
       );
     }

@@ -290,7 +290,12 @@ class _PackageRequestCreateScreenState
       );
     } else if (state.submissionStatus == FormSubmissionStatus.error &&
         state.draftLimitMessage != null) {
-      unawaited(_handleDraftLimitReached(context, state.draftLimitMessage!));
+      unawaited(
+        _handleDraftLimitReached(
+          context,
+          ErrorPresenter.resolve(state.error, l10n: context.l10n).message,
+        ),
+      );
     } else if (state.submissionStatus == FormSubmissionStatus.error &&
         state.formError == PackageRequestFormError.budgetRequired) {
       // Erreur connue de l'app elle-même (pas du serveur) : sa traduction,

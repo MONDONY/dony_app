@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_event.dart';
@@ -232,6 +233,28 @@ void main() {
       () => bloc.add(const LoadSubscriptions()),
     ).called(greaterThanOrEqualTo(1));
   });
+
+  testWidgets(
+    'anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        const SubscriptionsState(
+          status: SubscriptionsStatus.error,
+          error: NetworkException('raw technical detail'),
+        ),
+      );
+      await tester.pumpWidget(pump());
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 
   // ─── Bascule des alertes push ──────────────────────────────────────────────
 

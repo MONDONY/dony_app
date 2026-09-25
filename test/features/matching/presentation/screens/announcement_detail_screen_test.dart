@@ -16,6 +16,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
@@ -36,6 +37,7 @@ class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 AnnouncementModel _makeAnnouncement({
   DateTime? handoverDeadline,
+  DateTime? departureDate,
   String status = 'ACTIVE',
   int bidsCount = 0,
   String currency = 'EUR',
@@ -44,7 +46,7 @@ AnnouncementModel _makeAnnouncement({
   travelerId: 'trav-001',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  departureDate: DateTime(2026, 7),
+  departureDate: departureDate ?? DateTime(2026, 7),
   availableKg: 10,
   totalKg: 23,
   pricePerKg: 8,
@@ -254,6 +256,48 @@ void main() {
     // Une seule date, préfixée : plus de plage « début → fin ».
     expect(find.textContaining('Jusqu\'au'), findsOneWidget);
     expect(find.textContaining('→'), findsNothing);
+  });
+
+  // ── Date de départ (bandeau hero) ─────────────────────────────────────────
+
+  testWidgets(
+    'date de départ fr non-régression (motif EEEE d MMMM yyyy inchangé)',
+    (tester) async {
+      final date = DateTime(2026, 10, 6, 14, 5);
+      final announcement = _makeAnnouncement(departureDate: date);
+
+      await _pump(
+        tester,
+        announcement: announcement,
+        annBloc: annBloc,
+        cancelBloc: cancelBloc,
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining(DateFormat('EEEE d MMMM yyyy', 'fr').format(date)),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('date de départ en anglais (ordre anglais)', (tester) async {
+    useEnglish();
+    final date = DateTime(2026, 10, 6, 14, 5);
+    final announcement = _makeAnnouncement(departureDate: date);
+
+    await _pump(
+      tester,
+      announcement: announcement,
+      annBloc: annBloc,
+      cancelBloc: cancelBloc,
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining(DateFormat.yMMMMEEEEd('en').format(date)),
+      findsOneWidget,
+    );
   });
 
   // ── en anglais ─────────────────────────────────────────────────────────────

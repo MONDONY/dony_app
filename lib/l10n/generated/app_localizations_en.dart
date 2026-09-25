@@ -3713,11 +3713,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestCreatePhotoUploadFailed => 'Photo upload failed';
 
   @override
-  String requestCreatePhotoUploadFailedWithReason(String reason) {
-    return 'Failed: $reason';
-  }
-
-  @override
   String get requestCreateRetryPhotoUpload => 'Retry sending the photo';
 
   @override
@@ -12758,9 +12753,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get corridorAlertResumeSubtitle => 'Notifications resume';
-
-  @override
-  String get corridorAlertSaveError => 'Couldn\'t save the alert';
 
   @override
   String get corridorAlertSubmitCreate => 'Create the alert';

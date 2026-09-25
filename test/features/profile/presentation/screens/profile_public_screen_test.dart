@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -398,9 +399,9 @@ void main() {
   // ── 5. Error + retry ──────────────────────────────────────────────────────
 
   testWidgets('shows retry button on error', (tester) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(const ProfilePublicError(message: 'Serveur indisponible'));
+    when(() => bloc.state).thenReturn(
+      const ProfilePublicError(error: NetworkException('Serveur indisponible')),
+    );
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -409,9 +410,9 @@ void main() {
   });
 
   testWidgets('retry button dispatches ProfilePublicRequested', (tester) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(const ProfilePublicError(message: 'Serveur indisponible'));
+    when(() => bloc.state).thenReturn(
+      const ProfilePublicError(error: NetworkException('Serveur indisponible')),
+    );
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -419,6 +420,28 @@ void main() {
     await tester.tap(find.text('Réessayer'));
     verify(() => bloc.add(any(that: isA<ProfilePublicRequested>()))).called(1);
   });
+
+  testWidgets(
+    'anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        const ProfilePublicError(
+          error: NetworkException('raw technical detail'),
+        ),
+      );
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 
   // ── 6. À propos + langues ─────────────────────────────────────────────────
 

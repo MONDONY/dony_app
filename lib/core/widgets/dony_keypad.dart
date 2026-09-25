@@ -9,6 +9,7 @@ class DonyKeypad extends StatelessWidget {
     required this.onDelete,
     this.onBiometric,
     this.onDecimal,
+    this.decimalSeparator = ',',
     this.compact = false,
     this.enabled = true,
   }) : assert(
@@ -27,6 +28,11 @@ class DonyKeypad extends StatelessWidget {
   /// Occupe le slot bas-gauche pour un séparateur décimal, quand le pavé sert
   /// à saisir un montant et non un code. Exclusif avec [onBiometric].
   final VoidCallback? onDecimal;
+
+  /// Caractère affiché sur la touche de [onDecimal] : `,` en français,
+  /// `.` en anglais. Par défaut `,` pour ne rien changer chez les appelants
+  /// existants qui ne passent pas ce paramètre.
+  final String decimalSeparator;
 
   /// Touches resserrées, pour les feuilles où le pavé partage la hauteur avec
   /// un en-tête et un bouton collé en bas. À taille pleine, la dernière rangée
@@ -63,7 +69,7 @@ class DonyKeypad extends StatelessWidget {
               child: onBiometric != null
                   ? const DonyIcon('fingerprint', size: 28)
                   : onDecimal != null
-                  ? const Text(',')
+                  ? Text(decimalSeparator)
                   : const SizedBox.shrink(),
             ),
             SizedBox(width: _gap),

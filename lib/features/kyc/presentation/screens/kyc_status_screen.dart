@@ -219,6 +219,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
                                         tt,
                                         ErrorPresenter.resolve(
                                           state.error,
+                                          l10n: context.l10n,
                                         ).message,
                                       ),
                                   ],

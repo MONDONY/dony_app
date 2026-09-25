@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
@@ -31,12 +32,17 @@ class _ReferralScreenState extends State<ReferralScreen> {
     });
   }
 
-  Widget _buildBody(ReferralState state) {
+  Widget _buildBody(BuildContext context, ReferralState state) {
     if (state is ReferralLoading || state is ReferralInitial) {
       return const DonyDetailSkeleton();
     }
     if (state is ReferralError) {
-      return _ErrorView(message: state.error.message);
+      return _ErrorView(
+        message: ErrorPresenter.resolve(
+          state.error,
+          l10n: context.l10n,
+        ).message,
+      );
     }
     if (state is ReferralLoaded) {
       return _LoadedBody(info: state.info);
@@ -71,7 +77,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
               ),
             ),
           ),
-          body: _buildBody(state),
+          body: _buildBody(context, state),
           bottomNavigationBar: state is ReferralLoaded
               ? _ShareButton(info: state.info)
               : null,

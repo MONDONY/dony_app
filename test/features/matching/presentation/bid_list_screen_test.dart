@@ -605,7 +605,10 @@ void main() {
     },
   );
 
-  testWidgets('subtitle : date de départ en anglais (motif fixe, locale en)', (
+  // en : ordre anglais (jour de semaine, mois puis quantième), squelette
+  // MMMMEEEEd — plus aucun motif français appliqué tel quel à la locale en
+  // (K3).
+  testWidgets('subtitle : date de départ en anglais (ordre anglais)', (
     tester,
   ) async {
     useEnglish();
@@ -624,8 +627,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.textContaining(DateFormat('EEE d MMMM', 'en').format(date)),
+      find.textContaining(DateFormat.MMMMEEEEd('en').format(date)),
       findsOneWidget,
+    );
+    expect(
+      find.textContaining(DateFormat('EEE d MMMM', 'en').format(date)),
+      findsNothing,
     );
   });
 

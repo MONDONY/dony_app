@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
@@ -358,9 +359,9 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(400, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      when(
-        () => profileBloc.state,
-      ).thenReturn(const ProfilePublicError(message: 'Not found'));
+      when(() => profileBloc.state).thenReturn(
+        const ProfilePublicError(error: NetworkException('Not found')),
+      );
       when(
         () => hubBloc.state,
       ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
@@ -369,6 +370,63 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(find.text('Impossible de charger le profil'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'onglet Avis, erreur réseau : texte du catalogue affiché, jamais le '
+    'message brut',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(400, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      when(
+        () => profileBloc.state,
+      ).thenReturn(const ProfilePublicError(error: NetworkException('boom')));
+      when(
+        () => hubBloc.state,
+      ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
+
+      await tester.pumpWidget(pump());
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.text('Avis'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
+      expect(find.text('boom'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'anglais : onglet Avis, erreur réseau affiche le texte du catalogue, '
+    'jamais le message brut',
+    (tester) async {
+      useEnglish();
+      await tester.binding.setSurfaceSize(const Size(400, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      when(() => profileBloc.state).thenReturn(
+        const ProfilePublicError(error: NetworkException('raw detail')),
+      );
+      when(
+        () => hubBloc.state,
+      ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
+
+      await tester.pumpWidget(pump());
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.text('Reviews'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw detail'), findsNothing);
     },
   );
 

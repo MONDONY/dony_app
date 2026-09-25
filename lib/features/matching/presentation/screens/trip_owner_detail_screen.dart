@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -276,19 +277,25 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
             } else if (state is AnnouncementKycRequired) {
               DonySnackbar.show(
                 context,
-                message: state.message,
+                message: ErrorPresenter.resolve(
+                  state.error,
+                  l10n: context.l10n,
+                ).message,
                 type: DonySnackbarType.warning,
               );
               context.push('/kyc/status');
             } else if (state is AnnouncementDepartureDatePassed) {
               DonySnackbar.show(
                 context,
-                message: state.message,
+                message: ErrorPresenter.resolve(
+                  state.error,
+                  l10n: context.l10n,
+                ).message,
                 type: DonySnackbarType.warning,
               );
               unawaited(_onDepartureDatePassed(context));
             } else if (state is AnnouncementProLimitReached) {
-              unawaited(_onProLimitReached(context, state.message));
+              unawaited(_onProLimitReached(context, state.error));
             } else if (state is AnnouncementError) {
               ErrorPresenter.show(context, state.error);
             }
@@ -422,11 +429,14 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
 
   /// Limite mensuelle de trajets PRO atteinte — invite à passer PRO (pattern
   /// repris de [CreateTripScreen]).
-  Future<void> _onProLimitReached(BuildContext context, String message) async {
+  Future<void> _onProLimitReached(
+    BuildContext context,
+    AppException error,
+  ) async {
     final goPro = await showProLimitReachedDialog(
       context,
       title: context.l10n.tripOwnerProLimitTitle,
-      message: message,
+      message: ErrorPresenter.resolve(error, l10n: context.l10n).message,
     );
     if (goPro && context.mounted) {
       unawaited(context.push('/profile/upgrade-to-pro'));

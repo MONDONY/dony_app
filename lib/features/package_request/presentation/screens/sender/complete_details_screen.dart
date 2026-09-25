@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
@@ -150,12 +153,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
               PaymentMethod.stripe;
           context.pop(method);
         } else if (state.status == CompleteDetailsStatus.error) {
-          DonySnackbar.show(
-            context,
-            message:
-                state.errorMessage ?? context.l10n.requestListErrorFallback,
-            type: DonySnackbarType.error,
-          );
+          unawaited(ErrorPresenter.show(context, state.errorMessage));
         }
       },
       builder: (context, state) {

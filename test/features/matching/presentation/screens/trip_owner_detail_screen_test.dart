@@ -6,6 +6,7 @@ import 'package:dony/core/design/widgets/dony_app_bar.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -119,6 +120,18 @@ Future<void> _pump(
           ],
           child: const TripOwnerDetailScreen(announcementId: 'ann-trip-001'),
         ),
+      ),
+      // Destinations poussées après les snackbars d'erreur typée (KYC,
+      // limite PRO) — de simples écrans muets, jamais vérifiés par ces
+      // tests, juste nécessaires pour que le `context.push` ne lève pas de
+      // GoException faute de route déclarée.
+      GoRoute(
+        path: '/kyc/status',
+        builder: (ctx, _) => const Scaffold(body: Text('KYC_STATUS')),
+      ),
+      GoRoute(
+        path: '/profile/upgrade-to-pro',
+        builder: (ctx, _) => const Scaffold(body: Text('UPGRADE_TO_PRO')),
       ),
     ],
   );
@@ -602,6 +615,102 @@ void main() {
       expect(find.text('Arrived at destination'), findsOneWidget);
       expect(find.text('Trajet'), findsNothing);
     });
+
+    // Relecture finale du lot K, constat 1 : ces snackbars affichaient le
+    // `detail` français brut du serveur (`error.message`, via l'ancien champ
+    // `String message`), jamais traduit en anglais. Ils passent désormais
+    // par `ErrorPresenter.resolve`, qui route sur le code de l'exception et
+    // rend le texte du catalogue.
+    testWidgets(
+      'en anglais : KYC requise affiche le texte du catalogue, jamais le detail serveur',
+      (tester) async {
+        useEnglish();
+        final announcement = _makeAnnouncement();
+        when(
+          () => annBloc.state,
+        ).thenReturn(AnnouncementDetailLoaded(announcement));
+        whenListen(
+          annBloc,
+          Stream<AnnouncementState>.fromIterable([
+            AnnouncementDetailLoaded(announcement),
+            AnnouncementKycRequired(
+              const ForbiddenException(
+                'Vous devez vérifier votre identité pour continuer.',
+                'kyc-not-verified',
+              ),
+            ),
+          ]),
+          initialState: AnnouncementDetailLoaded(announcement),
+        );
+
+        await _pump(
+          tester,
+          annBloc: annBloc,
+          bidBloc: bidBloc,
+          cancelBloc: cancelBloc,
+          authBloc: authBloc,
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Verify your identity before posting a trip.'),
+          findsOneWidget,
+        );
+        expect(
+          find.text('Vous devez vérifier votre identité pour continuer.'),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'en anglais : date de départ passée affiche le texte du catalogue, jamais le detail serveur',
+      (tester) async {
+        useEnglish();
+        final announcement = _makeAnnouncement();
+        when(
+          () => annBloc.state,
+        ).thenReturn(AnnouncementDetailLoaded(announcement));
+        whenListen(
+          annBloc,
+          // Un seul item (pas de doublon AnnouncementDetailLoaded avant) :
+          // `_current` reste `null`, donc `_onDepartureDatePassed` s'arrête
+          // avant de pousser `/trips/create` (route absente de ce routeur de
+          // test, qui n'en a pas besoin pour vérifier le seul texte affiché).
+          Stream<AnnouncementState>.fromIterable([
+            AnnouncementDepartureDatePassed(
+              const ValidationException(
+                'La date de départ de ce trajet est déjà passée.',
+                code: 'departure-date-passed',
+              ),
+            ),
+          ]),
+          initialState: AnnouncementDetailLoaded(announcement),
+        );
+
+        await _pump(
+          tester,
+          annBloc: annBloc,
+          bidBloc: bidBloc,
+          cancelBloc: cancelBloc,
+          authBloc: authBloc,
+        );
+        // Pas de `pumpAndSettle` : `_current` reste `null` (voir plus haut),
+        // donc le corps affiche `DonyDetailSkeleton`, dont le shimmer tourne
+        // en boucle (`AnimationController.repeat()`) et ferait timeout.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(
+          find.text('Change the departure date before posting this trip.'),
+          findsOneWidget,
+        );
+        expect(
+          find.text('La date de départ de ce trajet est déjà passée.'),
+          findsNothing,
+        );
+      },
+    );
   });
 
   group('tripArrivalCtaFor', () {

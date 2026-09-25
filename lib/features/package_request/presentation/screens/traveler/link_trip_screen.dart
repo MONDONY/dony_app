@@ -109,7 +109,10 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       if (mounted) {
         // Passe par ErrorPresenter : sans ça l'exception brute (en anglais,
         // ex. « Connection refused… ») remonte telle quelle à l'utilisateur.
-        _errorNotifier.value = ErrorPresenter.resolve(e).message;
+        _errorNotifier.value = ErrorPresenter.resolve(
+          e,
+          l10n: context.l10n,
+        ).message;
         _loadingNotifier.value = false;
       }
     }
@@ -240,11 +243,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
           if (block == PaymentCapabilityBlock.cardCapabilityRequired) {
             showCardCapabilityRequiredSheet(context);
           } else {
-            DonySnackbar.show(
-              context,
-              message: state.error.message,
-              type: DonySnackbarType.error,
-            );
+            ErrorPresenter.show(context, state.error);
           }
         }
       },

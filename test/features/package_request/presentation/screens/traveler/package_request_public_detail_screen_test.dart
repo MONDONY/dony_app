@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -23,6 +24,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../../helpers/l10n_test_helpers.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -54,7 +57,11 @@ const _sender = UserModel(
   status: 'ACTIVE',
 );
 
-PackageRequest _makeRequest({String? viewerThreadId}) => PackageRequest(
+PackageRequest _makeRequest({
+  String? viewerThreadId,
+  bool negotiable = true,
+  double? targetPriceEur,
+}) => PackageRequest(
   id: 'pr-owner-test',
   senderId: _senderId,
   departureCity: 'Paris',
@@ -68,6 +75,8 @@ PackageRequest _makeRequest({String? viewerThreadId}) => PackageRequest(
   status: PackageRequestStatus.open,
   createdAt: DateTime(2026, 6),
   viewerThreadId: viewerThreadId,
+  negotiable: negotiable,
+  targetPriceEur: targetPriceEur,
 );
 
 // ── Pump helper (pile navigable) ─────────────────────────────────────────────
@@ -266,6 +275,55 @@ void main() {
     },
   );
 
+  // ── Échec de chargement ───────────────────────────────────────────────────
+  testWidgets(
+    'échec de chargement → texte du catalogue affiché, jamais le message brut',
+    (tester) async {
+      when(() => repo.getById(any())).thenThrow(Exception('boom'));
+      when(() => authBloc.state).thenReturn(const AuthGuestSessionReady());
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthGuestSessionReady(),
+      );
+
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
+      expect(find.text('boom'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'anglais : échec de chargement affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      when(
+        () => repo.getById(any()),
+      ).thenThrow(Exception('raw technical detail'));
+      when(() => authBloc.state).thenReturn(const AuthGuestSessionReady());
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthGuestSessionReady(),
+      );
+
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
+
   // ── Voyageur : CTA rechargé à la fermeture de la sheet d'offre ────────────
   //
   // Bug terrain (2026-09-18) : le détail n'était chargé qu'une fois. Après
@@ -374,6 +432,69 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Voir ma négociation'), findsOneWidget);
         expect(find.text('Proposer mon trajet'), findsNothing);
+      },
+    );
+  });
+
+  // ── Voyageur : prix ferme (_FirmPriceCta) — erreur passée par le catalogue ──
+  //
+  // K3 : `state.error.message` (NegotiationError, brut) remplacé par
+  // ErrorPresenter.show, qui résout via ErrorCatalog selon la langue.
+  group('voyageur, prix ferme (_FirmPriceCta)', () {
+    late _MockNegotiationBloc negoBloc;
+
+    setUpAll(() async {
+      await initializeDateFormatting('fr');
+    });
+
+    setUp(() {
+      negoBloc = _MockNegotiationBloc();
+      when(() => negoBloc.state).thenReturn(const NegotiationInitial());
+      whenListen(
+        negoBloc,
+        Stream<NegotiationState>.value(
+          const NegotiationError(OfflineException()),
+        ),
+        initialState: const NegotiationInitial(),
+      );
+      if (getIt.isRegistered<NegotiationBloc>()) {
+        getIt.unregister<NegotiationBloc>();
+      }
+      getIt.registerFactory<NegotiationBloc>(() => negoBloc);
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<NegotiationBloc>()) {
+        getIt.unregister<NegotiationBloc>();
+      }
+    });
+
+    testWidgets(
+      'en anglais : une erreur réseau affiche le texte anglais du catalogue',
+      (tester) async {
+        useEnglish();
+        const visitor = UserModel(
+          id: 'visitor-firm-price',
+          roles: [],
+          kycStatus: 'VERIFIED',
+          status: 'ACTIVE',
+        );
+        when(() => repo.getById(any())).thenAnswer(
+          (_) async => _makeRequest(negotiable: false, targetPriceEur: 50),
+        );
+        when(() => authBloc.state).thenReturn(const AuthAuthenticated(visitor));
+        whenListen(
+          authBloc,
+          const Stream<AuthState>.empty(),
+          initialState: const AuthAuthenticated(visitor),
+        );
+
+        DonySnackbar.clearDedup();
+        await _pumpRouted(tester, authBloc: authBloc);
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('No connection'), findsOneWidget);
+        expect(find.textContaining('Pas de connexion'), findsNothing);
       },
     );
   });

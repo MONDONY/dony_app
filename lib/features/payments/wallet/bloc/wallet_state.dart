@@ -27,8 +27,4 @@ class WalletError extends WalletState {
   final AppException error;
 
   WalletError(this.error);
-
-  /// Détail brut du serveur. À NE JAMAIS afficher tel quel : passer l'état
-  /// (ou `error`) à `ErrorPresenter`, qui résout le code via `ErrorCatalog`.
-  String get message => error.message;
 }

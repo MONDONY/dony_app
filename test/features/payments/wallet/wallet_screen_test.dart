@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
-import 'package:dony/core/design/widgets/dony_skeleton.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
@@ -144,18 +144,48 @@ void main() {
     expect(find.text('Recharger'), findsOneWidget);
   });
 
-  testWidgets('affiche un message erreur quand WalletError', (tester) async {
-    whenListen(
-      bloc,
-      Stream.value(WalletError(const NetworkException('Erreur réseau'))),
-      initialState: WalletInitial(),
-    );
+  // K3 : `state.error.message` (detail brut du serveur) remplacé par
+  // ErrorPresenter.resolve, qui résout via ErrorCatalog selon la langue.
+  testWidgets(
+    'affiche le message du catalogue quand WalletError, jamais le detail brut',
+    (tester) async {
+      whenListen(
+        bloc,
+        Stream.value(WalletError(const NetworkException('Erreur réseau'))),
+        initialState: WalletInitial(),
+      );
 
-    await tester.pumpWidget(buildSubject(bloc, prefsBloc));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Erreur réseau'), findsOneWidget);
-  });
+      expect(find.text('Erreur réseau'), findsNothing);
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'en anglais : WalletError affiche le texte anglais du catalogue',
+    (tester) async {
+      useEnglish();
+      whenListen(
+        bloc,
+        Stream.value(WalletError(const NetworkException('Erreur réseau'))),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Erreur réseau'), findsNothing);
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('affiche les transactions quand non vide', (tester) async {
     final tx = WalletTransactionModel(
@@ -732,6 +762,56 @@ void main() {
 
       expect(find.text('Rembourser mon solde'), findsOneWidget);
       expect(find.text('Choisir une recharge'), findsNothing);
+    },
+  );
+
+  // K3 : `state.error!.message` (detail brut du serveur) remplacé par
+  // ErrorPresenter.show, qui résout via ErrorCatalog selon la langue.
+  testWidgets(
+    'en anglais : échec de la demande de remboursement affiche le texte '
+    'anglais du catalogue',
+    (tester) async {
+      useEnglish();
+      DonySnackbar.clearDedup();
+      const wallet = WalletModel(
+        balance: 40,
+        currency: 'EUR',
+        transactions: [],
+        refundEligible: true,
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 40,
+            active: true,
+            refundEligible: true,
+            refundableAmount: 35,
+            nonRefundableAmount: 5,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+      whenListen(
+        refundCubit,
+        Stream.value(
+          const WalletRefundRequestState(
+            error: NetworkException('Erreur réseau'),
+          ),
+        ),
+        initialState: const WalletRefundRequestState(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Erreur réseau'), findsNothing);
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
     },
   );
 

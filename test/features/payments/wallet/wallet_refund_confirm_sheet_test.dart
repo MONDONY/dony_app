@@ -175,34 +175,78 @@ void main() {
     expect(find.text(expectedButtonLabel), findsNothing);
   });
 
-  testWidgets('affiche l\'erreur et reste ouverte quand la demande échoue', (
-    tester,
-  ) async {
-    final controller = StreamController<WalletRefundRequestState>.broadcast();
-    addTearDown(controller.close);
-    when(() => cubit.stream).thenAnswer(
-      (_) => controller.stream.map((state) {
-        when(() => cubit.state).thenReturn(state);
-        return state;
-      }),
-    );
+  // K3 : `state.error!.message` (detail brut du serveur) remplacé par
+  // ErrorPresenter.resolve, qui résout via ErrorCatalog selon la langue.
+  testWidgets(
+    'affiche le message du catalogue et reste ouverte quand la demande échoue, '
+    'jamais le detail brut',
+    (tester) async {
+      final controller = StreamController<WalletRefundRequestState>.broadcast();
+      addTearDown(controller.close);
+      when(() => cubit.stream).thenAnswer(
+        (_) => controller.stream.map((state) {
+          when(() => cubit.state).thenReturn(state);
+          return state;
+        }),
+      );
 
-    await tester.pumpWidget(host(refundable: 35, nonRefundable: 0));
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(host(refundable: 35, nonRefundable: 0));
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
 
-    controller.add(const WalletRefundRequestState(isSubmitting: true));
-    await tester.pump();
-    controller.add(
-      const WalletRefundRequestState(error: NetworkException('Erreur réseau')),
-    );
-    await tester.pumpAndSettle();
+      controller.add(const WalletRefundRequestState(isSubmitting: true));
+      await tester.pump();
+      controller.add(
+        const WalletRefundRequestState(
+          error: NetworkException('Erreur réseau'),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Erreur réseau'), findsOneWidget);
-    expect(find.text(expectedButtonLabel), findsOneWidget);
-    // La sheet est toujours affichée (pas de pop) : son titre reste visible.
-    expect(find.text('Rembourser mon solde'), findsOneWidget);
-  });
+      expect(find.text('Erreur réseau'), findsNothing);
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
+      expect(find.text(expectedButtonLabel), findsOneWidget);
+      // La sheet est toujours affichée (pas de pop) : son titre reste visible.
+      expect(find.text('Rembourser mon solde'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'en anglais : échec de la demande affiche le texte anglais du catalogue',
+    (tester) async {
+      useEnglish();
+      final controller = StreamController<WalletRefundRequestState>.broadcast();
+      addTearDown(controller.close);
+      when(() => cubit.stream).thenAnswer(
+        (_) => controller.stream.map((state) {
+          when(() => cubit.state).thenReturn(state);
+          return state;
+        }),
+      );
+
+      await tester.pumpWidget(host(refundable: 35, nonRefundable: 0));
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      controller.add(const WalletRefundRequestState(isSubmitting: true));
+      await tester.pump();
+      controller.add(
+        const WalletRefundRequestState(
+          error: NetworkException('Erreur réseau'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Erreur réseau'), findsNothing);
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets(
     'succès alors qu\'une route est empilée par-dessus : ne dépop pas la route du dessus',

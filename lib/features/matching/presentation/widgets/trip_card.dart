@@ -106,8 +106,7 @@ class TripCard extends StatelessWidget {
     final today = DateUtils.dateOnly(DateTime.now());
     final d = DateUtils.dateOnly(announcement.departureDate);
     final diff = d.difference(today).inDays;
-    final dateStr = DateFormat(
-      'd MMM',
+    final dateStr = DateFormat.MMMd(
       l.localeName,
     ).format(announcement.departureDate);
     if (diff == 0) {
@@ -119,10 +118,7 @@ class TripCard extends StatelessWidget {
     if (diff > 1 && diff <= 6) {
       return l.listingDateInDaysLabel(diff, dateStr);
     }
-    return DateFormat(
-      'EEE d MMM yyyy',
-      l.localeName,
-    ).format(announcement.departureDate);
+    return DateFormat.yMMMEd(l.localeName).format(announcement.departureDate);
   }
 
   /// Formats a kg value: drops .0 suffix for whole numbers.

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/disputes/bloc/dispute_list_bloc.dart';
 import 'package:dony/features/disputes/bloc/dispute_list_event.dart';
 import 'package:dony/features/disputes/bloc/dispute_list_state.dart';
@@ -45,7 +46,7 @@ class DisputeListScreen extends StatelessWidget {
                 DisputeListError(:final error) => DonyEmptyState(
                   type: DonyEmptyStateType.error,
                   title: l.disputeListLoadErrorTitle,
-                  description: error.message,
+                  description: ErrorPresenter.resolve(error, l10n: l).message,
                   actionLabel: l.commonRetry,
                   onAction: () => context.read<DisputeListBloc>().add(
                     const DisputesLoadRequested(),

@@ -264,6 +264,50 @@ void main() {
     verify(() => bloc.add(const DisputesLoadRequested())).called(1);
   });
 
+  // K3 : `error.message` (detail brut du serveur, déstructuré depuis
+  // DisputeListError) remplacé par ErrorPresenter.resolve, qui résout via
+  // ErrorCatalog selon la langue.
+  testWidgets('erreur → message du catalogue affiché, jamais le detail brut', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _harness(
+        state: const DisputeListError(
+          NetworkException('Erreur', code: 'network-error'),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Erreur'), findsNothing);
+    expect(
+      find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('en anglais : erreur affiche le texte anglais du catalogue', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _harness(
+        state: const DisputeListError(
+          NetworkException('Erreur', code: 'network-error'),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Erreur'), findsNothing);
+    expect(
+      find.text('Something went wrong. Check your connection and try again.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('anglais : titre, type et statut traduits', (tester) async {
     useEnglish();
     await tester.pumpWidget(_harness(state: DisputeListLoaded([_dispute()])));

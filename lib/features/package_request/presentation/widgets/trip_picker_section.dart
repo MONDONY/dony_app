@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -60,7 +61,7 @@ class TripPickerSection extends StatefulWidget {
 
 class TripPickerSectionState extends State<TripPickerSection> {
   final _loadingNotifier = ValueNotifier<bool>(true);
-  final _errorNotifier = ValueNotifier<String?>(null);
+  final _errorNotifier = ValueNotifier<Object?>(null);
   final _matchingTripsNotifier = ValueNotifier<List<AnnouncementModel>>(
     const [],
   );
@@ -144,7 +145,7 @@ class TripPickerSectionState extends State<TripPickerSection> {
       }
     } catch (e) {
       if (mounted) {
-        _errorNotifier.value = e.toString();
+        _errorNotifier.value = unwrapDioError(e);
         _loadingNotifier.value = false;
       }
     }
@@ -159,7 +160,7 @@ class TripPickerSectionState extends State<TripPickerSection> {
         if (loading) {
           return Center(child: CircularProgressIndicator(color: cs.primary));
         }
-        return ValueListenableBuilder<String?>(
+        return ValueListenableBuilder<Object?>(
           valueListenable: _errorNotifier,
           builder: (context, error, _) {
             if (error != null) {

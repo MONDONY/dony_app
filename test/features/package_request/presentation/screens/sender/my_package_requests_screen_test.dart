@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
@@ -95,20 +96,46 @@ void main() {
       expect(find.text('Tu n\'as encore rien envoyé'), findsOneWidget);
     });
 
-    testWidgets('affiche le texte d\'erreur quand status = error', (
-      tester,
-    ) async {
+    testWidgets('affiche le texte du catalogue quand status = error, jamais le '
+        'message brut', (tester) async {
       when(() => bloc.state).thenReturn(
         PackageRequestState(
           status: PackageRequestListStatus.error,
-          errorMessage: 'Erreur réseau',
+          errorMessage: const NetworkException('Erreur réseau'),
         ),
       );
       await tester.pumpWidget(wrap());
       await tester.pump();
-      expect(find.text('Erreur réseau'), findsOneWidget);
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
+      expect(find.text('Erreur réseau'), findsNothing);
       expect(find.text('Réessayer'), findsOneWidget);
     });
+
+    testWidgets(
+      'anglais : erreur réseau affiche le texte du catalogue, jamais le '
+      'message brut',
+      (tester) async {
+        useEnglish();
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.error,
+            errorMessage: const NetworkException('raw technical detail'),
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pump();
+        expect(
+          find.text(
+            'Something went wrong. Check your connection and try again.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('raw technical detail'), findsNothing);
+      },
+    );
 
     testWidgets('affiche les cards quand des demandes existent', (
       tester,

@@ -1,13 +1,15 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
-import 'package:dony/core/design/widgets/dony_keyboard_scope.dart';
-import 'package:dony/core/design/widgets/dony_skeleton.dart';
+import 'package:dony/core/config/sms_auth_flag.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
@@ -28,6 +30,10 @@ import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockChatBloc extends MockBloc<ChatEvent, ChatState> implements ChatBloc {}
+
+class _MockContactRevealBloc
+    extends MockBloc<ContactRevealEvent, ContactRevealState>
+    implements ContactRevealBloc {}
 
 const _participant = ParticipantModel(id: 'uid-1', name: 'Modibo Coulibaly');
 const _conversation = ConversationModel(
@@ -456,5 +462,62 @@ void main() {
 
       expect(routes, isEmpty);
     });
+  });
+
+  // K3 : `state.error.message` (detail brut du serveur) remplacé par
+  // ErrorPresenter.show, qui résout via ErrorCatalog selon la langue.
+  group('appel — erreur ContactReveal', () {
+    setUp(() => setSmsAuthEnabled(true));
+    tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
+
+    testWidgets(
+      'en anglais : échec serveur affiche le texte anglais du catalogue',
+      (tester) async {
+        useEnglish();
+        DonySnackbar.clearDedup();
+        when(() => bloc.state).thenReturn(const ChatLoaded([]));
+
+        const participant = ParticipantModel(
+          id: 'uid-2',
+          name: 'Fatou Ba',
+          phoneAvailable: true,
+        );
+        const conversation = ConversationModel(
+          id: 'conv-2',
+          bidId: 'bid-2',
+          firestoreConversationId: 'conv_bid-2',
+          otherParticipant: participant,
+        );
+
+        final reveal = _MockContactRevealBloc();
+        whenListen(
+          reveal,
+          Stream<ContactRevealState>.fromIterable([
+            const ContactRevealError(ForbiddenException('Numéro indisponible')),
+          ]),
+          initialState: const ContactRevealInitial(),
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light(),
+            home: MultiBlocProvider(
+              providers: [
+                BlocProvider<ChatBloc>.value(value: bloc),
+                BlocProvider<ContactRevealBloc>.value(value: reveal),
+              ],
+              child: const ChatScreen(conversation: conversation),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.textContaining('Numéro indisponible'), findsNothing);
+        expect(
+          find.textContaining('You don\'t have permission to do this.'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

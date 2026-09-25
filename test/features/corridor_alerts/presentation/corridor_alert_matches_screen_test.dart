@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -387,4 +388,45 @@ void main() {
     expect(find.text('New · 1 trip'), findsOneWidget);
     expect(find.text('Already seen · 1 trip'), findsOneWidget);
   });
+
+  testWidgets('erreur : texte du catalogue affiché, jamais le message brut', (
+    tester,
+  ) async {
+    when(() => cubit.state).thenReturn(
+      const CorridorAlertMatchesState(
+        status: CorridorAlertMatchesStatus.error,
+        errorMessage: NetworkException('boom'),
+      ),
+    );
+    await tester.pumpWidget(pump(AlertDirection.travelerWantsPackages));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+      findsOneWidget,
+    );
+    expect(find.text('boom'), findsNothing);
+  });
+
+  testWidgets(
+    'anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      when(() => cubit.state).thenReturn(
+        const CorridorAlertMatchesState(
+          status: CorridorAlertMatchesStatus.error,
+          errorMessage: NetworkException('raw technical detail'),
+        ),
+      );
+      await tester.pumpWidget(pump(AlertDirection.travelerWantsPackages));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 }

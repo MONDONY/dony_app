@@ -389,6 +389,27 @@ void main() {
     expect(find.text('Valid until January 15, 2027'), findsOneWidget);
   });
 
+  // K3 : `state.error.message` (detail brut du serveur) remplacé par
+  // ErrorPresenter.resolve, qui résout via ErrorCatalog selon la langue.
+  testWidgets(
+    'en anglais : ReferralError affiche le texte anglais du catalogue',
+    (tester) async {
+      useEnglish();
+      when(
+        () => bloc.state,
+      ).thenReturn(const ReferralError(NetworkException('Erreur réseau')));
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('Erreur réseau'), findsNothing);
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+    },
+  );
+
   // 13. Non-régression du remplacement DateFormat('d MMMM yyyy') ->
   // DateFormat.yMMMMd(locale) : même rendu fr, plus le cas en, sur la date
   // canonique du chantier i18n.

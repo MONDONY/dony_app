@@ -117,7 +117,10 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
                           }
                           if (state is TrackingSearchError) {
                             return _buildError(
-                              ErrorPresenter.resolve(state.error).message,
+                              ErrorPresenter.resolve(
+                                state.error,
+                                l10n: context.l10n,
+                              ).message,
                               cs,
                               context,
                             );

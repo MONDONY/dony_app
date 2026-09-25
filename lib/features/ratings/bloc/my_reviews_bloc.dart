@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_event.dart';
@@ -27,7 +28,7 @@ class MyReviewsBloc extends Bloc<MyReviewsEvent, MyReviewsState> {
       final summary = await _repository.findMineReceived();
       emit(MyReviewsLoaded(summary: summary));
     } catch (e) {
-      emit(MyReviewsError(message: e.toString()));
+      emit(MyReviewsError(error: unwrapDioError(e)));
     }
   }
 

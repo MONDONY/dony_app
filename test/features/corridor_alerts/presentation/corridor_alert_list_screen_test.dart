@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
@@ -138,32 +139,38 @@ void main() {
     expect(find.byType(CorridorAlertCard), findsNothing);
   });
 
-  testWidgets('erreur sans donnée → état d\'erreur, Réessayer recharge', (
-    t,
-  ) async {
-    when(() => bloc.state).thenReturn(
-      const CorridorAlertListState(
-        status: CorridorAlertListStatus.error,
-        errorMessage: 'boom',
-      ),
-    );
-    await t.pumpWidget(pump());
-    await t.pump(const Duration(milliseconds: 600));
-    expect(find.text('Erreur de chargement'), findsOneWidget);
-    expect(find.text('boom'), findsOneWidget);
+  testWidgets(
+    'erreur sans donnée → texte du catalogue, jamais le message brut, '
+    'Réessayer recharge',
+    (t) async {
+      when(() => bloc.state).thenReturn(
+        const CorridorAlertListState(
+          status: CorridorAlertListStatus.error,
+          errorMessage: NetworkException('boom'),
+        ),
+      );
+      await t.pumpWidget(pump());
+      await t.pump(const Duration(milliseconds: 600));
+      expect(find.text('Erreur de chargement'), findsOneWidget);
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
+      expect(find.text('boom'), findsNothing);
 
-    await t.tap(find.text('Réessayer'));
-    await t.pump();
-    final captured = verify(() => bloc.add(captureAny())).captured;
-    expect(captured.any((e) => e is CorridorAlertListRequested), isTrue);
-  });
+      await t.tap(find.text('Réessayer'));
+      await t.pump();
+      final captured = verify(() => bloc.add(captureAny())).captured;
+      expect(captured.any((e) => e is CorridorAlertListRequested), isTrue);
+    },
+  );
 
   testWidgets('erreur avec données déjà là → les cartes restent', (t) async {
     when(() => bloc.state).thenReturn(
       CorridorAlertListState(
         status: CorridorAlertListStatus.error,
         alerts: [_alert('a1')],
-        errorMessage: 'boom',
+        errorMessage: const NetworkException('boom'),
       ),
     );
     await t.pumpWidget(pump());
@@ -360,4 +367,26 @@ void main() {
     expect(find.text('Create an alert'), findsOneWidget);
     expect(find.text('Create'), findsOneWidget);
   });
+
+  testWidgets(
+    'anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (t) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        const CorridorAlertListState(
+          status: CorridorAlertListStatus.error,
+          errorMessage: NetworkException('raw technical detail'),
+        ),
+      );
+      await t.pumpWidget(pump());
+      await t.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 }

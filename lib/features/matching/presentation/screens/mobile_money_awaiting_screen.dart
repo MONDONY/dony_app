@@ -621,7 +621,10 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
                 else if (widget.state.error != null)
                   DonyStatusBanner(
                     type: DonyStatusBannerType.error,
-                    message: ErrorPresenter.resolve(widget.state.error).message,
+                    message: ErrorPresenter.resolve(
+                      widget.state.error,
+                      l10n: context.l10n,
+                    ).message,
                     action: TextButton(
                       onPressed: () =>
                           widget.onPhoneConfirmed(widget.state.payerPhone),

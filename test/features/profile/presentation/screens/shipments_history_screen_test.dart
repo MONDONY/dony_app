@@ -274,6 +274,28 @@ void main() {
     expect(find.text('Réessayer'), findsOneWidget);
   });
 
+  // K3 : `state.error.message` (detail brut du serveur) remplacé par
+  // ErrorPresenter.resolve, qui résout via ErrorCatalog selon la langue.
+  testWidgets('en anglais : BidError affiche le texte anglais du catalogue', (
+    tester,
+  ) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(BidError(const ServerException('Erreur serveur')));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Erreur serveur'), findsNothing);
+    expect(
+      find.textContaining(
+        "Something went wrong on our side. We're looking into it.",
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('retry button dispatches BidMyListRequested', (tester) async {
     when(
       () => bloc.state,

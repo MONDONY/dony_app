@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -59,7 +60,7 @@ class CompleteDetailsState extends Equatable {
   });
 
   final CompleteDetailsStatus status;
-  final String? errorMessage;
+  final Object? errorMessage;
 
   /// The loaded request — used to render the read-only recap and to constrain
   /// the payment-method picker to the server-computed SET
@@ -77,7 +78,7 @@ class CompleteDetailsState extends Equatable {
 
   CompleteDetailsState copyWith({
     CompleteDetailsStatus? status,
-    String? errorMessage,
+    Object? errorMessage,
     PackageRequest? request,
     bool? loaded,
   }) => CompleteDetailsState(
@@ -131,7 +132,7 @@ class CompleteDetailsBloc
       emit(
         state.copyWith(
           status: CompleteDetailsStatus.error,
-          errorMessage: err.toString(),
+          errorMessage: unwrapDioError(err),
         ),
       );
     }

@@ -833,7 +833,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     } else if (state is BidQuoteLoaded) {
       _quoteNotifier.value = state.quote;
     } else if (state is BidPromoError) {
-      _quoteNotifier.value = state.error.message;
+      _quoteNotifier.value = ErrorPresenter.resolve(
+        state.error,
+        l10n: context.l10n,
+      ).message;
       ErrorPresenter.show(context, state.error);
     } else if (state is BidError) {
       ErrorPresenter.show(context, state.error);

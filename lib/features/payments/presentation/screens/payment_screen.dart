@@ -159,7 +159,10 @@ class _PaymentSummaryView extends StatelessWidget {
     final l = context.l10n;
     final isLoading = state is PaymentLoading;
     final error = state is PaymentError
-        ? ErrorPresenter.resolve((state as PaymentError).error).message
+        ? ErrorPresenter.resolve(
+            (state as PaymentError).error,
+            l10n: context.l10n,
+          ).message
         : null;
 
     return Scaffold(

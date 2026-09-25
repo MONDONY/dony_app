@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
@@ -129,7 +130,9 @@ class _RemiseTab extends StatelessWidget {
             type: DonyEmptyStateType.error,
             iconAsset: 'circle-alert',
             title: l.commonLoadError,
-            description: state.error ?? l.commonSomethingWentWrongDot,
+            description: state.error != null
+                ? ErrorPresenter.resolve(state.error, l10n: l).message
+                : l.commonSomethingWentWrongDot,
             actionLabel: l.commonRetry,
             onAction: () => context.read<PickupAddressBloc>().add(
               const PickupAddressLoaded(),
@@ -201,7 +204,9 @@ class _LivraisonTab extends StatelessWidget {
             type: DonyEmptyStateType.error,
             iconAsset: 'circle-alert',
             title: l.commonLoadError,
-            description: state.error ?? l.commonSomethingWentWrongDot,
+            description: state.error != null
+                ? ErrorPresenter.resolve(state.error, l10n: l).message
+                : l.commonSomethingWentWrongDot,
             actionLabel: l.commonRetry,
             onAction: () => context.read<DeliveryAddressBloc>().add(
               const DeliveryAddressLoaded(),

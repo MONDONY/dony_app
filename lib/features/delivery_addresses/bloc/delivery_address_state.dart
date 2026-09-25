@@ -11,12 +11,12 @@ class DeliveryAddressState {
 
   final DeliveryAddressStatus status;
   final List<DeliveryAddress> addresses;
-  final String? error;
+  final Object? error;
 
   DeliveryAddressState copyWith({
     DeliveryAddressStatus? status,
     List<DeliveryAddress>? addresses,
-    String? error,
+    Object? error,
   }) => DeliveryAddressState(
     status: status ?? this.status,
     addresses: addresses ?? this.addresses,

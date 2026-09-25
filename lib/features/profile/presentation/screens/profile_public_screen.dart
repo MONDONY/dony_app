@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -127,7 +128,7 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
         } else if (state is ProfilePublicError) {
           body = _ErrorView(
             title: l.profilePublicLoadErrorTitle,
-            message: state.message,
+            error: state.error,
             retryLabel: l.commonRetry,
             onRetry: () => context.read<ProfilePublicBloc>().add(
               ProfilePublicRequested(viewedUserId),
@@ -244,13 +245,13 @@ class _MenuRow extends StatelessWidget {
 class _ErrorView extends StatelessWidget {
   const _ErrorView({
     required this.title,
-    required this.message,
+    required this.error,
     required this.retryLabel,
     required this.onRetry,
   });
 
   final String title;
-  final String message;
+  final Object error;
   final String retryLabel;
   final VoidCallback onRetry;
 
@@ -261,7 +262,7 @@ class _ErrorView extends StatelessWidget {
       mascotte: DonyMascotteType.erreurLegere,
       iconAsset: 'circle-alert',
       title: title,
-      description: message,
+      description: ErrorPresenter.resolve(error, l10n: context.l10n).message,
       actionLabel: retryLabel,
       onAction: onRetry,
     );

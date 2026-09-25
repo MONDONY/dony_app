@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
@@ -197,11 +200,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
           context.pop(true);
         }
         if (state.status == RecipientStatus.error && state.error != null) {
-          DonySnackbar.show(
-            context,
-            message: state.error!,
-            type: DonySnackbarType.error,
-          );
+          unawaited(ErrorPresenter.show(context, state.error));
         }
       },
       builder: (context, state) {

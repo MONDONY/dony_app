@@ -320,7 +320,10 @@ class _QrErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final presentation = ErrorPresenter.resolve(state.error);
+    final presentation = ErrorPresenter.resolve(
+      state.error,
+      l10n: context.l10n,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),

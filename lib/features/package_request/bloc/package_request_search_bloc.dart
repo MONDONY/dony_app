@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -96,7 +97,7 @@ class PackageRequestSearchState extends Equatable {
   final List<PackageRequestSearchItem> results;
   final int page;
   final bool hasMore;
-  final String? errorMessage;
+  final Object? errorMessage;
   final String? departure;
   final String? arrival;
   final DateTime? dateFrom;
@@ -116,7 +117,7 @@ class PackageRequestSearchState extends Equatable {
     List<PackageRequestSearchItem>? results,
     int? page,
     bool? hasMore,
-    String? errorMessage,
+    Object? errorMessage,
     String? departure,
     String? arrival,
     DateTime? dateFrom,
@@ -245,7 +246,7 @@ class PackageRequestSearchBloc
       emit(
         state.copyWith(
           status: SearchStatus.error,
-          errorMessage: err.toString(),
+          errorMessage: unwrapDioError(err),
         ),
       );
     }
@@ -285,7 +286,7 @@ class PackageRequestSearchBloc
       emit(
         state.copyWith(
           status: SearchStatus.error,
-          errorMessage: err.toString(),
+          errorMessage: unwrapDioError(err),
         ),
       );
     }

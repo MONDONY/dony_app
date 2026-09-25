@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/models/pickup_address.dart';
@@ -15,6 +19,12 @@ class _MockRepo extends Mock implements PickupAddressRepository {}
 
 class _MockAutocompleteService extends Mock
     implements AddressAutocompleteService {}
+
+class _MockPickupAddressBloc
+    extends MockBloc<PickupAddressEvent, PickupAddressState>
+    implements PickupAddressBloc {}
+
+class _FakePickupAddressEvent extends Fake implements PickupAddressEvent {}
 
 Widget _wrap(PickupAddressBloc bloc, {String? addressId}) => MaterialApp(
   home: MediaQuery(
@@ -50,6 +60,7 @@ void main() {
         _MockAutocompleteService(),
       );
     }
+    registerFallbackValue(_FakePickupAddressEvent());
   });
 
   setUp(() {
@@ -409,6 +420,50 @@ void main() {
     // L'écran doit toujours être visible (pas de pop)
     expect(find.text("Enregistrer l'adresse"), findsOneWidget);
   });
+
+  testWidgets(
+    'en anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      final mockBloc = _MockPickupAddressBloc();
+      final states = StreamController<PickupAddressState>();
+      addTearDown(states.close);
+      whenListen<PickupAddressState>(
+        mockBloc,
+        states.stream,
+        initialState: const PickupAddressState(),
+      );
+
+      await tester.pumpWidget(_wrap(mockBloc));
+      await tester.pump();
+
+      await tester.tap(find.text('Home'));
+      await tester.pump();
+      await tester.enterText(find.byType(EditableText).at(3), 'Paris');
+      await tester.pump();
+      // Arme `_hasSubmitted` avant que la réponse n'arrive par le stream,
+      // exactement comme un vrai bloc l'aurait fait.
+      await tester.tap(find.text('Save address'));
+      await tester.pump();
+
+      states.add(const PickupAddressState(status: PickupAddressStatus.loading));
+      await tester.pump();
+      states.add(
+        const PickupAddressState(
+          status: PickupAddressStatus.error,
+          error: NetworkException('raw technical detail'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 
   // ── Anglais ──────────────────────────────────────────────────────────────
 

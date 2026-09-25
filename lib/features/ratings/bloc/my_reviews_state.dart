@@ -33,7 +33,7 @@ class MyReviewsLoaded extends MyReviewsState {
 }
 
 class MyReviewsError extends MyReviewsState {
-  const MyReviewsError({required this.message});
+  const MyReviewsError({required this.error});
 
-  final String message;
+  final Object error;
 }

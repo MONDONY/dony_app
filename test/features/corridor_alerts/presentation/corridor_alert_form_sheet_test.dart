@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
@@ -220,6 +223,142 @@ void main() {
     await t.pump();
     verify(() => cubit.submit()).called(1);
   });
+
+  // ---------------------------------------------------------------------------
+  // Erreur de soumission : texte du catalogue, jamais le message brut
+  // ---------------------------------------------------------------------------
+
+  testWidgets(
+    'échec de soumission : texte du catalogue affiché, jamais le message brut',
+    (t) async {
+      final cubit = MockFormCubit();
+      final cityBloc = MockCitySearchBloc();
+      when(() => cityBloc.state).thenReturn(const CitySearchInitial());
+      when(() => cubit.isEditing).thenReturn(false);
+      const initial = CorridorAlertFormState(
+        departureCity: 'Paris',
+        arrivalCity: 'Bamako',
+      );
+      final states = StreamController<CorridorAlertFormState>();
+      addTearDown(states.close);
+      whenListen<CorridorAlertFormState>(
+        cubit,
+        states.stream,
+        initialState: initial,
+      );
+
+      GetIt.I.registerFactoryParam<
+        CorridorAlertFormCubit,
+        ({
+          CorridorAlertModel? editing,
+          AlertDirection direction,
+          CorridorAlertDraft? prefill,
+        }),
+        void
+      >((params, _) => cubit);
+      GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
+
+      await t.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Builder(
+            builder: (ctx) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () =>
+                      CorridorAlertFormSheet.show(ctx, isTraveler: true),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('open'));
+      await t.pumpAndSettle();
+
+      states.add(
+        initial.copyWith(
+          status: CorridorAlertFormStatus.error,
+          errorMessage: const NetworkException('détail technique brut'),
+        ),
+      );
+      await t.pumpAndSettle();
+
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
+      expect(find.text('détail technique brut'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'anglais : échec de soumission affiche le texte du catalogue, jamais le '
+    'message brut',
+    (t) async {
+      useEnglish();
+      final cubit = MockFormCubit();
+      final cityBloc = MockCitySearchBloc();
+      when(() => cityBloc.state).thenReturn(const CitySearchInitial());
+      when(() => cubit.isEditing).thenReturn(false);
+      const initial = CorridorAlertFormState(
+        departureCity: 'Paris',
+        arrivalCity: 'Bamako',
+      );
+      final states = StreamController<CorridorAlertFormState>();
+      addTearDown(states.close);
+      whenListen<CorridorAlertFormState>(
+        cubit,
+        states.stream,
+        initialState: initial,
+      );
+
+      GetIt.I.registerFactoryParam<
+        CorridorAlertFormCubit,
+        ({
+          CorridorAlertModel? editing,
+          AlertDirection direction,
+          CorridorAlertDraft? prefill,
+        }),
+        void
+      >((params, _) => cubit);
+      GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
+
+      await t.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Builder(
+            builder: (ctx) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () =>
+                      CorridorAlertFormSheet.show(ctx, isTraveler: true),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('open'));
+      await t.pumpAndSettle();
+
+      states.add(
+        initial.copyWith(
+          status: CorridorAlertFormStatus.error,
+          errorMessage: const NetworkException('raw technical detail'),
+        ),
+      );
+      await t.pumpAndSettle();
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 
   // ---------------------------------------------------------------------------
   // Fix 1 — date-window field

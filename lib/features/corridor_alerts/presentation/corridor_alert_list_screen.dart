@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
@@ -195,8 +196,12 @@ class _CorridorAlertListView extends StatelessWidget {
                     type: DonyEmptyStateType.error,
                     iconAsset: 'circle-alert',
                     title: l.commonLoadError,
-                    description:
-                        state.errorMessage ?? l.commonSomethingWentWrongDot,
+                    description: state.errorMessage != null
+                        ? ErrorPresenter.resolve(
+                            state.errorMessage,
+                            l10n: l,
+                          ).message
+                        : l.commonSomethingWentWrongDot,
                     actionLabel: l.commonRetry,
                     onAction: () => _reload(ctx),
                   );

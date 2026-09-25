@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
@@ -32,7 +33,7 @@ class ProfilePublicBloc extends Bloc<ProfilePublicEvent, ProfilePublicState> {
         ),
       );
     } catch (e) {
-      emit(ProfilePublicError(message: e.toString()));
+      emit(ProfilePublicError(error: unwrapDioError(e)));
     }
   }
 }

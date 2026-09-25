@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -152,7 +153,9 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
               type: DonyEmptyStateType.error,
               iconAsset: 'circle-alert',
               title: l.commonLoadError,
-              description: state.error ?? l.commonSomethingWentWrongDot,
+              description: state.error != null
+                  ? ErrorPresenter.resolve(state.error, l10n: l).message
+                  : l.commonSomethingWentWrongDot,
               actionLabel: l.commonRetry,
               onAction: () => context.read<SubscriptionsBloc>().add(
                 const LoadSubscriptions(),

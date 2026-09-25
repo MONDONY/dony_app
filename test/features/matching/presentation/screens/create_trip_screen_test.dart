@@ -2101,6 +2101,160 @@ void main() {
       await tester.pump(); // laisser le BlocListener réagir
       expect(find.byType(SnackBar), findsOneWidget);
     });
+
+    // Relecture finale du lot K, constat 1 : ces deux dialogues affichaient
+    // le `detail` français brut du serveur (`error.message`), jamais traduit
+    // en anglais. Ils passent désormais par `ErrorPresenter.resolve`, qui
+    // route sur le code de l'exception et rend le texte du catalogue.
+    testWidgets(
+      'AnnouncementProLimitReached, anglais : texte du catalogue, jamais le detail serveur',
+      (tester) async {
+        setupViewport(tester);
+        useEnglish();
+
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => Scaffold(
+                body: Builder(
+                  builder: (ctx) => ElevatedButton(
+                    onPressed: () => ctx.push('/trips/create'),
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: '/trips/create',
+              builder: (_, _) => MultiBlocProvider(
+                providers: [
+                  BlocProvider<StripeAccountBloc>.value(
+                    value: _makeStripeBloc(),
+                  ),
+                  BlocProvider<HelpCenterBloc>(
+                    create: (_) => HelpCenterBloc(
+                      HelpCenterRepository(
+                        const _StaticHelpCenterSource(_emptyHelpConfigJson),
+                        fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                      ),
+                      makeDisabledAnalytics(MockAnalyticsBackend()),
+                    )..add(const HelpCenterLoadRequested()),
+                  ),
+                ],
+                child: const CreateTripScreen(),
+              ),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+        );
+        await tester.pump();
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(CreateTripScreen), findsOneWidget);
+
+        annStreamCtrl.add(
+          AnnouncementProLimitReached(
+            const ForbiddenException(
+              'Vous avez atteint votre limite mensuelle de 2 annonces.',
+              'pro-limit-reached',
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(find.text('Monthly limit reached'), findsOneWidget);
+        expect(
+          find.text(
+            "You've reached your listing limit for this month. Upgrade to "
+            'Pro to post without limits.',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.text('Vous avez atteint votre limite mensuelle de 2 annonces.'),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'AnnouncementDraftLimitReached, anglais : texte du catalogue, jamais le detail serveur',
+      (tester) async {
+        setupViewport(tester);
+        useEnglish();
+
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => Scaffold(
+                body: Builder(
+                  builder: (ctx) => ElevatedButton(
+                    onPressed: () => ctx.push('/trips/create'),
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: '/trips/create',
+              builder: (_, _) => MultiBlocProvider(
+                providers: [
+                  BlocProvider<StripeAccountBloc>.value(
+                    value: _makeStripeBloc(),
+                  ),
+                  BlocProvider<HelpCenterBloc>(
+                    create: (_) => HelpCenterBloc(
+                      HelpCenterRepository(
+                        const _StaticHelpCenterSource(_emptyHelpConfigJson),
+                        fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                      ),
+                      makeDisabledAnalytics(MockAnalyticsBackend()),
+                    )..add(const HelpCenterLoadRequested()),
+                  ),
+                ],
+                child: const CreateTripScreen(),
+              ),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+        );
+        await tester.pump();
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(CreateTripScreen), findsOneWidget);
+
+        annStreamCtrl.add(
+          AnnouncementDraftLimitReached(
+            const ForbiddenException(
+              'Limite de 2 brouillon(s) atteinte.',
+              'draft-limit-reached',
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(find.text('Draft limit reached'), findsOneWidget);
+        expect(
+          find.text('Upgrade to Pro to create more drafts.'),
+          findsOneWidget,
+        );
+        expect(find.text('Limite de 2 brouillon(s) atteinte.'), findsNothing);
+      },
+    );
   });
 
   // ── Group: Navigation ─────────────────────────────────────────────────────────

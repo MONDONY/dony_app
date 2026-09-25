@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -128,9 +129,12 @@ class _ListContentState extends State<_ListContent> {
                 }
                 if (state.status == PackageRequestListStatus.error) {
                   return _ErrorView(
-                    message:
-                        state.errorMessage ??
-                        context.l10n.requestListErrorFallback,
+                    message: state.errorMessage != null
+                        ? ErrorPresenter.resolve(
+                            state.errorMessage,
+                            l10n: context.l10n,
+                          ).message
+                        : context.l10n.requestListErrorFallback,
                     onRetry: () => context.read<PackageRequestBloc>().add(
                       const FetchMyRequests(),
                     ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
@@ -52,7 +53,7 @@ class SubscriptionsBloc extends Bloc<SubscriptionsEvent, SubscriptionsState> {
       emit(
         state.copyWith(
           status: SubscriptionsStatus.error,
-          error: err.toString(),
+          error: unwrapDioError(err),
         ),
       );
     }
@@ -76,7 +77,7 @@ class SubscriptionsBloc extends Bloc<SubscriptionsEvent, SubscriptionsState> {
       emit(
         state.copyWith(
           status: SubscriptionsStatus.error,
-          error: err.toString(),
+          error: unwrapDioError(err),
         ),
       );
     }
@@ -135,7 +136,7 @@ class SubscriptionsBloc extends Bloc<SubscriptionsEvent, SubscriptionsState> {
       emit(
         state.copyWith(
           status: SubscriptionsStatus.error,
-          error: err.toString(),
+          error: unwrapDioError(err),
         ),
       );
     }

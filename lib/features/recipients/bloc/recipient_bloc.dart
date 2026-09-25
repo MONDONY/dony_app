@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
@@ -34,7 +35,9 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
         state.copyWith(status: RecipientStatus.success, recipients: recipients),
       );
     } catch (e) {
-      emit(state.copyWith(status: RecipientStatus.error, error: e.toString()));
+      emit(
+        state.copyWith(status: RecipientStatus.error, error: unwrapDioError(e)),
+      );
     }
   }
 
@@ -69,7 +72,9 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
       );
       unawaited(_analytics.logEvent(AnalyticsEvents.recipientCreated));
     } catch (e) {
-      emit(state.copyWith(status: RecipientStatus.error, error: e.toString()));
+      emit(
+        state.copyWith(status: RecipientStatus.error, error: unwrapDioError(e)),
+      );
     }
   }
 
@@ -103,7 +108,9 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(status: RecipientStatus.error, error: e.toString()));
+      emit(
+        state.copyWith(status: RecipientStatus.error, error: unwrapDioError(e)),
+      );
     }
   }
 
@@ -123,7 +130,9 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(status: RecipientStatus.error, error: e.toString()));
+      emit(
+        state.copyWith(status: RecipientStatus.error, error: unwrapDioError(e)),
+      );
     }
   }
 
@@ -160,7 +169,9 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
       );
       unawaited(_analytics.logEvent(AnalyticsEvents.recipientDefaultSet));
     } catch (e) {
-      emit(state.copyWith(status: RecipientStatus.error, error: e.toString()));
+      emit(
+        state.copyWith(status: RecipientStatus.error, error: unwrapDioError(e)),
+      );
     }
   }
 

@@ -212,7 +212,10 @@ class _OnboardingView extends StatelessWidget {
     final isLoading = state is PaymentLoading;
     final isPending = state is PaymentOnboardingPending || startedOnServer;
     final error = state is PaymentError
-        ? ErrorPresenter.resolve((state as PaymentError).error).message
+        ? ErrorPresenter.resolve(
+            (state as PaymentError).error,
+            l10n: context.l10n,
+          ).message
         : null;
 
     return Scaffold(

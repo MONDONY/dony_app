@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
@@ -92,7 +93,9 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
                     type: DonyEmptyStateType.error,
                     iconAsset: 'circle-alert',
                     title: l.commonLoadError,
-                    description: state.error ?? l.commonSomethingWentWrongDot,
+                    description: state.error != null
+                        ? ErrorPresenter.resolve(state.error, l10n: l).message
+                        : l.commonSomethingWentWrongDot,
                     actionLabel: l.commonRetry,
                     onAction: () => context.read<RecipientBloc>().add(
                       const RecipientLoaded(),

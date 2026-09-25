@@ -392,7 +392,10 @@ class _MobileMoneySection extends StatelessWidget {
               ),
             final WalletTopupMobileMoneyError e => DonyStatusBanner(
               type: DonyStatusBannerType.error,
-              message: ErrorPresenter.resolve(e.error).message,
+              message: ErrorPresenter.resolve(
+                e.error,
+                l10n: context.l10n,
+              ).message,
               action: TextButton(
                 onPressed: onRetry,
                 child: Text(l.commonRetry),

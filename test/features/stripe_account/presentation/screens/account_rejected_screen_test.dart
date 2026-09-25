@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
@@ -81,24 +82,33 @@ void main() {
     expect(find.text('Contacter le support Yadony'), findsOneWidget);
   });
 
-  testWidgets('affiche un SnackBar quand ConnectOnboardingError est émis', (
-    tester,
-  ) async {
-    const errorMessage = 'Impossible de générer le lien';
-    whenListen(
-      mockOnboardingBloc,
-      Stream.fromIterable([
-        const ConnectOnboardingInitial(),
-        const ConnectOnboardingError(
-          NetworkException(errorMessage, code: 'link-failed'),
-        ),
-      ]),
-      initialState: const ConnectOnboardingInitial(),
-    );
-    await tester.pumpWidget(buildWidget());
-    await tester.pump();
-    expect(find.text(errorMessage), findsOneWidget);
-  });
+  // K3 : `state.error.message` (detail brut du serveur) remplacé par
+  // ErrorPresenter.show, qui résout via ErrorCatalog selon la langue.
+  testWidgets(
+    'affiche un SnackBar avec le message du catalogue, jamais le detail brut',
+    (tester) async {
+      DonySnackbar.clearDedup();
+      const errorMessage = 'Impossible de générer le lien';
+      whenListen(
+        mockOnboardingBloc,
+        Stream.fromIterable([
+          const ConnectOnboardingInitial(),
+          const ConnectOnboardingError(
+            NetworkException(errorMessage, code: 'link-failed'),
+          ),
+        ]),
+        initialState: const ConnectOnboardingInitial(),
+      );
+      await tester.pumpWidget(buildWidget());
+      await tester.pump();
+
+      expect(find.text(errorMessage), findsNothing);
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('en anglais : titre et raison traduits', (tester) async {
     useEnglish();
@@ -107,4 +117,33 @@ void main() {
     expect(find.text('Reason: Documents invalides'), findsOneWidget);
     expect(find.text('Set up my account again'), findsOneWidget);
   });
+
+  testWidgets(
+    'en anglais : ConnectOnboardingError affiche le texte anglais du catalogue',
+    (tester) async {
+      useEnglish();
+      DonySnackbar.clearDedup();
+      whenListen(
+        mockOnboardingBloc,
+        Stream.fromIterable([
+          const ConnectOnboardingInitial(),
+          const ConnectOnboardingError(
+            NetworkException(
+              'Impossible de générer le lien',
+              code: 'link-failed',
+            ),
+          ),
+        ]),
+        initialState: const ConnectOnboardingInitial(),
+      );
+      await tester.pumpWidget(buildWidget());
+      await tester.pump();
+
+      expect(find.text('Impossible de générer le lien'), findsNothing);
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+    },
+  );
 }

@@ -1,7 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
@@ -717,6 +718,35 @@ void main() {
 
         expect(find.textContaining('+33600000000'), findsOneWidget);
         expect(find.text('Copier'), findsOneWidget);
+      },
+    );
+
+    // K3 : `state.error.message` (detail brut du serveur) remplacé par
+    // ErrorPresenter.show, qui résout via ErrorCatalog selon la langue.
+    testWidgets(
+      'en anglais : échec serveur affiche le texte anglais du catalogue',
+      (tester) async {
+        useEnglish();
+        DonySnackbar.clearDedup();
+        final bid = _bid(travelerPhoneAvailable: true);
+        final reveal = _MockContactRevealBloc();
+        whenListen(
+          reveal,
+          Stream<ContactRevealState>.fromIterable([
+            const ContactRevealError(ForbiddenException('Numéro indisponible')),
+          ]),
+          initialState: const ContactRevealInitial(),
+        );
+
+        await tester.pumpWidget(_hostVoyageur(bid, bloc, reveal: reveal));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(find.textContaining('Numéro indisponible'), findsNothing);
+        expect(
+          find.textContaining('You don\'t have permission to do this.'),
+          findsOneWidget,
+        );
       },
     );
   });

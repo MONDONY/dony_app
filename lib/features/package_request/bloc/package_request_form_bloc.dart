@@ -268,6 +268,7 @@ class PackageRequestFormBloc
           state.copyWith(
             submissionStatus: FormSubmissionStatus.error,
             draftLimitMessage: error.message,
+            error: error,
           ),
         );
       } else {

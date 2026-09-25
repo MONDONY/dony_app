@@ -11,12 +11,12 @@ class TripTemplateState {
 
   final TripTemplateStatus status;
   final List<TripTemplate> templates;
-  final String? error;
+  final Object? error;
 
   TripTemplateState copyWith({
     TripTemplateStatus? status,
     List<TripTemplate>? templates,
-    String? error,
+    Object? error,
   }) => TripTemplateState(
     status: status ?? this.status,
     templates: templates ?? this.templates,

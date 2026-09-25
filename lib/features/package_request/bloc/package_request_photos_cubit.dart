@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/package_request/bloc/package_request_photo_upload.dart';
@@ -85,7 +86,7 @@ class PackageRequestPhotosCubit extends Cubit<List<PackageRequestPhotoUpload>> {
           if (p.localId == id)
             p.copyWith(
               status: PackageRequestPhotoUploadStatus.failed,
-              error: e.toString(),
+              error: unwrapDioError(e),
             )
           else
             p,

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
@@ -26,7 +27,7 @@ class CorridorAlertMatchesState extends Equatable {
   /// ou chargée par son id quand on arrive d'un push.
   final CorridorAlertModel? alert;
   final CorridorAlertMatches? result;
-  final String? errorMessage;
+  final Object? errorMessage;
 
   /// Dernière consultation AVANT cette ouverture : c'est elle qui sépare
   /// « nouveaux » et « déjà vus ». Figée au chargement, elle ne bouge pas
@@ -50,7 +51,7 @@ class CorridorAlertMatchesState extends Equatable {
     CorridorAlertMatchesStatus? status,
     CorridorAlertModel? alert,
     CorridorAlertMatches? result,
-    String? errorMessage,
+    Object? errorMessage,
     DateTime? seenThreshold,
     bool? thresholdKnown,
   }) => CorridorAlertMatchesState(
@@ -131,7 +132,7 @@ class CorridorAlertMatchesCubit extends Cubit<CorridorAlertMatchesState> {
       emit(
         state.copyWith(
           status: CorridorAlertMatchesStatus.error,
-          errorMessage: err.toString(),
+          errorMessage: unwrapDioError(err),
         ),
       );
     }

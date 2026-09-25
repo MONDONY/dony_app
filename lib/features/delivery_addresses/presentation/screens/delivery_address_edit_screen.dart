@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/widgets/address/address_default_toggle.dart';
 import 'package:dony/core/widgets/address/address_label_chips.dart';
@@ -224,11 +227,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
             state.error != null &&
             _hasSubmitted) {
           setState(() => _hasSubmitted = false);
-          DonySnackbar.show(
-            context,
-            message: state.error!,
-            type: DonySnackbarType.error,
-          );
+          unawaited(ErrorPresenter.show(context, state.error));
         }
       },
       builder: (context, state) {

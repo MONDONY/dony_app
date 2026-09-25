@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dart';
 import 'package:dony/features/delivery_addresses/data/repositories/delivery_address_repository.dart';
@@ -32,7 +33,7 @@ class DeliveryAddressBloc
       emit(
         state.copyWith(
           status: DeliveryAddressStatus.error,
-          error: e.toString(),
+          error: unwrapDioError(e),
         ),
       );
     }
@@ -70,7 +71,7 @@ class DeliveryAddressBloc
       emit(
         state.copyWith(
           status: DeliveryAddressStatus.error,
-          error: e.toString(),
+          error: unwrapDioError(e),
         ),
       );
     }
@@ -108,7 +109,7 @@ class DeliveryAddressBloc
       emit(
         state.copyWith(
           status: DeliveryAddressStatus.error,
-          error: e.toString(),
+          error: unwrapDioError(e),
         ),
       );
     }
@@ -136,7 +137,7 @@ class DeliveryAddressBloc
       emit(
         state.copyWith(
           status: DeliveryAddressStatus.error,
-          error: e.toString(),
+          error: unwrapDioError(e),
         ),
       );
     }
@@ -159,7 +160,7 @@ class DeliveryAddressBloc
       emit(
         state.copyWith(
           status: DeliveryAddressStatus.error,
-          error: e.toString(),
+          error: unwrapDioError(e),
         ),
       );
     }

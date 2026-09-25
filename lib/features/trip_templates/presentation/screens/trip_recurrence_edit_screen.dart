@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -121,11 +124,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
         }
         if (state.status == TripRecurrenceStatus.error && state.error != null) {
           _submitted = false;
-          DonySnackbar.show(
-            context,
-            message: state.error!,
-            type: DonySnackbarType.error,
-          );
+          unawaited(ErrorPresenter.show(context, state.error));
         }
       },
       builder: (context, state) {

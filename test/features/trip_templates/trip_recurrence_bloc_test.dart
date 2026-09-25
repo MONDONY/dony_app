@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_state.dart';
@@ -114,7 +116,12 @@ void main() {
 
   blocTest<TripRecurrenceBloc, TripRecurrenceState>(
     'TripRecurrenceLoaded emits error on failure',
-    setUp: () => when(() => repo.getAll()).thenThrow(Exception('boom')),
+    setUp: () => when(() => repo.getAll()).thenThrow(
+      DioException(
+        requestOptions: RequestOptions(path: '/trip-recurrences'),
+        type: DioExceptionType.connectionError,
+      ),
+    ),
     build: () => TripRecurrenceBloc(repo),
     act: (b) => b.add(const TripRecurrenceLoaded()),
     expect: () => [
@@ -123,11 +130,11 @@ void main() {
         'status',
         TripRecurrenceStatus.loading,
       ),
-      isA<TripRecurrenceState>().having(
-        (s) => s.status,
-        'status',
-        TripRecurrenceStatus.error,
-      ),
+      isA<TripRecurrenceState>()
+          .having((s) => s.status, 'status', TripRecurrenceStatus.error)
+          // Verrouille unwrapDioError : une DioException connectionError
+          // devient une OfflineException, pas une erreur non typée.
+          .having((s) => s.error, 'error', isA<OfflineException>()),
     ],
   );
 }

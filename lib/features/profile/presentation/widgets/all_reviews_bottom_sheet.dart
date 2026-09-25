@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
@@ -93,7 +94,7 @@ class _AllReviewsSheetBodyState extends State<_AllReviewsSheetBody> {
 
         if (state is UserReviewsError) {
           return _ErrorBody(
-            message: state.message,
+            error: state.error,
             onRetry: () => context.read<UserReviewsCubit>().load(
               widget.userId,
               seed: widget.initialSummary,
@@ -387,9 +388,9 @@ class _CorridorChip extends StatelessWidget {
 // ─── Error body ───────────────────────────────────────────────────────────────
 
 class _ErrorBody extends StatelessWidget {
-  const _ErrorBody({required this.message, required this.onRetry});
+  const _ErrorBody({required this.error, required this.onRetry});
 
-  final String message;
+  final Object error;
   final VoidCallback onRetry;
 
   @override
@@ -411,7 +412,7 @@ class _ErrorBody extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            message,
+            ErrorPresenter.resolve(error, l10n: context.l10n).message,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),

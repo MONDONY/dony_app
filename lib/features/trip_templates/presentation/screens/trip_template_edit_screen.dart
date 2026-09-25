@@ -4,6 +4,7 @@ import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
@@ -376,11 +377,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
           }
           if (state.status == TripTemplateStatus.error && state.error != null) {
             _submitted = false;
-            DonySnackbar.show(
-              context,
-              message: state.error!,
-              type: DonySnackbarType.error,
-            );
+            unawaited(ErrorPresenter.show(context, state.error));
           }
         },
         builder: (context, state) {

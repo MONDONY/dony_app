@@ -11,8 +11,13 @@ class PackageRequestPhotoUpload {
   /// une photo locale en cours d'upload (affichée depuis [localPath]).
   final String? remoteUrl;
 
-  /// Message d'erreur si [status] == failed (pour diagnostic / affichage).
-  final String? error;
+  /// Exception typée si [status] == failed — jamais affichée telle quelle
+  /// (l'écran montre un texte fixe traduit, `requestCreatePhotoUploadFailed`) :
+  /// sert uniquement au diagnostic (debug, Sentry éventuel), jamais rendue à
+  /// l'utilisateur. `Object?` plutôt que `String?` depuis la relecture finale
+  /// du lot K : un `e.toString()` pouvait fuiter dans la langue de l'appareil
+  /// plutôt que celle de l'app.
+  final Object? error;
 
   const PackageRequestPhotoUpload({
     required this.localId,
@@ -31,7 +36,7 @@ class PackageRequestPhotoUpload {
     PackageRequestPhotoUploadStatus? status,
     String? remoteKey,
     String? remoteUrl,
-    String? error,
+    Object? error,
   }) => PackageRequestPhotoUpload(
     localId: localId,
     localPath: localPath,

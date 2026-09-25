@@ -13,6 +13,7 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -808,5 +809,33 @@ void main() {
       expect(find.text('New template'), findsOneWidget);
       expect(find.text('Continue'), findsOneWidget);
     });
+
+    testWidgets(
+      'erreur réseau affiche le texte du catalogue, jamais le message brut',
+      (tester) async {
+        useEnglish();
+        whenListen<TripTemplateState>(
+          bloc,
+          Stream.value(
+            const TripTemplateState(
+              status: TripTemplateStatus.error,
+              error: NetworkException('raw technical detail'),
+            ),
+          ),
+          initialState: const TripTemplateState(),
+        );
+
+        await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text(
+            'Something went wrong. Check your connection and try again.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('raw technical detail'), findsNothing);
+      },
+    );
   });
 }

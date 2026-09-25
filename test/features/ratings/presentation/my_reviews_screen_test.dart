@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_event.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_state.dart';
@@ -194,9 +195,9 @@ void main() {
 
   // 6. Bouton "Réessayer" quand MyReviewsError
   testWidgets('shows retry button on MyReviewsError', (tester) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(const MyReviewsError(message: 'Erreur réseau'));
+    when(() => bloc.state).thenReturn(
+      const MyReviewsError(error: NetworkException('Erreur réseau')),
+    );
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -205,9 +206,9 @@ void main() {
   });
 
   testWidgets('retry button dispatches MyReviewsRequested', (tester) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(const MyReviewsError(message: 'Erreur réseau'));
+    when(() => bloc.state).thenReturn(
+      const MyReviewsError(error: NetworkException('Erreur réseau')),
+    );
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -216,6 +217,26 @@ void main() {
     await tester.tap(find.text('Réessayer'));
     verify(() => bloc.add(any(that: isA<MyReviewsRequested>()))).called(1);
   });
+
+  testWidgets(
+    'anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      when(() => bloc.state).thenReturn(
+        const MyReviewsError(error: NetworkException('raw technical detail')),
+      );
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 
   // 8. Tap sur une ligne de distribution → MyReviewsStarFilterToggled
   testWidgets('tapping a distribution row dispatches star filter', (

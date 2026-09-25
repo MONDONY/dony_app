@@ -6278,17 +6278,11 @@ abstract class AppLocalizations {
   /// **'Ajouter une photo du colis'**
   String get requestCreateAddPhotoSemantic;
 
-  /// Message d'échec d'upload sans raison connue (package_request_photo_section.dart)
+  /// Message d'échec d'upload, sans le détail technique brut (package_request_photo_section.dart)
   ///
   /// In fr, this message translates to:
   /// **'Échec de l\'upload de la photo'**
   String get requestCreatePhotoUploadFailed;
-
-  /// Message d'échec d'upload avec raison connue (package_request_photo_section.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Échec : {reason}'**
-  String requestCreatePhotoUploadFailedWithReason(String reason);
 
   /// Libellé d'accessibilité du bouton de réessai d'une photo en échec (package_request_photo_section.dart)
   ///
@@ -21397,12 +21391,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les notifications repartent'**
   String get corridorAlertResumeSubtitle;
-
-  /// Message par défaut si l'enregistrement échoue sans détail serveur (corridor_alert_form_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Impossible d\'enregistrer l\'alerte'**
-  String get corridorAlertSaveError;
 
   /// Libellé du bouton de soumission en création (corridor_alert_form_sheet.dart).
   ///

@@ -65,8 +65,8 @@ class AnnouncementSurplusOpened extends AnnouncementState {
 }
 
 class AnnouncementProLimitReached extends AnnouncementState {
-  final String message;
-  AnnouncementProLimitReached(this.message);
+  final AppException error;
+  AnnouncementProLimitReached(this.error);
 }
 
 /// Émis après la publication réussie d'un trajet (brouillon → ACTIF).
@@ -77,21 +77,21 @@ class AnnouncementPublished extends AnnouncementState {
 
 /// Le compte a atteint sa limite de brouillons (voyageur non-PRO).
 class AnnouncementDraftLimitReached extends AnnouncementState {
-  final String message;
-  AnnouncementDraftLimitReached(this.message);
+  final AppException error;
+  AnnouncementDraftLimitReached(this.error);
 }
 
 /// La publication requiert une identité vérifiée (KYC) au préalable.
 class AnnouncementKycRequired extends AnnouncementState {
-  final String message;
-  AnnouncementKycRequired(this.message);
+  final AppException error;
+  AnnouncementKycRequired(this.error);
 }
 
 /// La date de départ du trajet est passée : publication refusée tant que
 /// l'utilisateur n'a pas corrigé la date.
 class AnnouncementDepartureDatePassed extends AnnouncementState {
-  final String message;
-  AnnouncementDepartureDatePassed(this.message);
+  final AppException error;
+  AnnouncementDepartureDatePassed(this.error);
 }
 
 /// Émis après le marquage groupé « Arrivé à destination » d'un trajet.

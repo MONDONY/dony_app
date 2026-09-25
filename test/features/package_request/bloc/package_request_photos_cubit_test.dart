@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/package_request/bloc/package_request_photo_upload.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -40,6 +41,10 @@ void main() {
     await cubit.add('/tmp/1.jpg');
     expect(cubit.state.single.status, PackageRequestPhotoUploadStatus.failed);
     expect(cubit.readyKeys, isEmpty);
+    // Relecture finale du lot K, mineur 2 : `error` porte l'exception typée
+    // (jamais un `e.toString()` brut), même si l'écran n'affiche plus qu'un
+    // texte fixe traduit — il ne sert plus qu'au diagnostic.
+    expect(cubit.state.single.error, isA<AppException>());
   });
 
   test('caps at 4 photos', () async {

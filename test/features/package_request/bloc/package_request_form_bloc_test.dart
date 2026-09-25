@@ -667,7 +667,19 @@ void main() {
             'draftLimitMessage',
             'Limite de 1 brouillon(s) atteinte.',
           )
-          .having((s) => s.errorMessage, 'errorMessage', isNull),
+          .having((s) => s.errorMessage, 'errorMessage', isNull)
+          // Relecture finale du lot K : l'exception typée doit être posée,
+          // pour que l'écran puisse la résoudre via ErrorPresenter/le
+          // catalogue au lieu d'afficher le detail brut du serveur.
+          .having(
+            (s) => s.error,
+            'error',
+            isA<ForbiddenException>().having(
+              (e) => e.code,
+              'code',
+              'draft-limit-reached',
+            ),
+          ),
     ],
   );
 

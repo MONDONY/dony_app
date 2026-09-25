@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/complete_details_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -289,6 +290,54 @@ void main() {
     // Still on the form — no pop on error.
     expect(find.text('Continuer vers le paiement'), findsOneWidget);
   });
+
+  testWidgets(
+    'anglais : erreur réseau affiche le texte du catalogue, jamais le '
+    'message brut',
+    (tester) async {
+      useEnglish();
+      final loadedState = CompleteDetailsState(
+        loaded: true,
+        request: _fakeRequest(),
+      );
+      final errorState = loadedState.copyWith(
+        status: CompleteDetailsStatus.error,
+        errorMessage: const NetworkException('raw technical detail'),
+      );
+      final stateController = StreamController<CompleteDetailsState>();
+      addTearDown(stateController.close);
+
+      when(() => completeDetailsBloc.state).thenReturn(loadedState);
+      whenListen(
+        completeDetailsBloc,
+        stateController.stream,
+        initialState: loadedState,
+      );
+
+      await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
+      final homeContext = tester.element(find.text('HOME'));
+      unawaited(GoRouter.of(homeContext).push('/complete/pr-1'));
+      await tester.pumpAndSettle();
+
+      final fields = find.byType(TextFormField);
+      await tester.enterText(fields.at(0), 'Fatou Ndiaye');
+      await tester.enterText(fields.at(1), '+221771112233');
+      await tester.pump();
+
+      await tester.tap(find.text('Continue to payment'));
+      await tester.pump();
+
+      stateController.add(errorState);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Something went wrong. Check your connection and try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('raw technical detail'), findsNothing);
+    },
+  );
 
   group('payment method picker constrained to the SET (Task 8)', () {
     Future<void> pumpLoadedWithThread(

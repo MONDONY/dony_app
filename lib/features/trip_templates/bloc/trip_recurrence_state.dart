@@ -11,12 +11,12 @@ class TripRecurrenceState {
 
   final TripRecurrenceStatus status;
   final List<TripRecurrence> recurrences;
-  final String? error;
+  final Object? error;
 
   TripRecurrenceState copyWith({
     TripRecurrenceStatus? status,
     List<TripRecurrence>? recurrences,
-    String? error,
+    Object? error,
   }) => TripRecurrenceState(
     status: status ?? this.status,
     recurrences: recurrences ?? this.recurrences,

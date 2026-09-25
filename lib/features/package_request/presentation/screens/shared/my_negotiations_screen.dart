@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -152,11 +153,15 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
                         );
                       }
                       if (bothEmpty && anyError) {
+                        final errorObj =
+                            state.errorMessage ?? tripState.errorMessage;
                         return _ErrorState(
-                          message:
-                              state.errorMessage ??
-                              tripState.errorMessage ??
-                              context.l10n.requestListErrorFallback,
+                          message: errorObj != null
+                              ? ErrorPresenter.resolve(
+                                  errorObj,
+                                  l10n: context.l10n,
+                                ).message
+                              : context.l10n.requestListErrorFallback,
                           onRetry: () {
                             context.read<NegotiationListBloc>().add(
                               const NegotiationListRefreshRequested(),

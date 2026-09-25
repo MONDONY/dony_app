@@ -203,7 +203,10 @@ class _BidNegotiationThreadScreenState
                       BidNegotiationError(:final error) => DonyEmptyState(
                         key: const Key('nego-error'),
                         title: context.l10n.negotiationThreadErrorTitle,
-                        description: ErrorPresenter.resolve(error).message,
+                        description: ErrorPresenter.resolve(
+                          error,
+                          l10n: context.l10n,
+                        ).message,
                         type: DonyEmptyStateType.error,
                         actionLabel: context.l10n.commonRetry,
                         onAction: () => context.read<BidNegotiationBloc>().add(
