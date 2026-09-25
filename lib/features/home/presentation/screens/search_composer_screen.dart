@@ -163,15 +163,20 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
             children: [
-              SearchSectionLabel(l.homeComposerSectionPhrase, optional: true),
-              SearchPhraseField(
-                controller: _phraseController,
-                onSubmitted: _submitPhrase,
-                isParsing: state.isParsing,
-              ).animate().fadeIn(duration: 250.ms),
-              if (state.recognized.isNotEmpty)
-                ParsedRecapCard(state.recognized),
-              for (final item in state.unresolved) UnresolvedQuestion(item),
+              // Le parseur serveur (/search/parse) ne comprend que le
+              // français : la saisie en une phrase n'est proposée qu'en
+              // français, les filtres au doigt restent disponibles partout.
+              if (l.localeName == 'fr') ...[
+                SearchSectionLabel(l.homeComposerSectionPhrase, optional: true),
+                SearchPhraseField(
+                  controller: _phraseController,
+                  onSubmitted: _submitPhrase,
+                  isParsing: state.isParsing,
+                ).animate().fadeIn(duration: 250.ms),
+                if (state.recognized.isNotEmpty)
+                  ParsedRecapCard(state.recognized),
+                for (final item in state.unresolved) UnresolvedQuestion(item),
+              ],
 
               SearchSectionLabel(l.homeComposerSectionWhere),
               CityCorridorFields(

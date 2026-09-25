@@ -25,6 +25,7 @@ import 'package:dony/features/home/data/repositories/search_parse_repository.dar
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/screens/search_composer_screen.dart';
+import 'package:dony/features/home/presentation/widgets/search_phrase_field.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter/material.dart';
@@ -544,8 +545,6 @@ void main() {
 
       expect(find.text('Filter trips'), findsOneWidget);
       expect(find.text('Clear all'), findsOneWidget);
-      expect(find.text('IN ONE SENTENCE'), findsOneWidget);
-      expect(find.text('Optional'), findsOneWidget);
       expect(find.text('WHERE'), findsOneWidget);
       expect(find.text('Search (3)'), findsOneWidget);
     });
@@ -563,13 +562,20 @@ void main() {
       expect(find.text('Around me'), findsOneWidget);
     });
 
-    testWidgets('récapitulatif de phrase traduit', (tester) async {
+    // Le parseur serveur ne comprend que le français : le bloc « En une
+    // phrase » et son récapitulatif sont masqués en anglais.
+    testWidgets('bloc de phrase masqué, filtres au doigt présents', (
+      tester,
+    ) async {
       useEnglish();
       await tester.pumpWidget(const _Harness(withRecognizedArrival: true));
       await tester.pumpAndSettle();
 
-      expect(find.text('Arrival: Bamako'), findsOneWidget);
-      expect(find.text('SET FROM YOUR SENTENCE'), findsOneWidget);
+      expect(find.text('IN ONE SENTENCE'), findsNothing);
+      expect(find.text('Optional'), findsNothing);
+      expect(find.text('SET FROM YOUR SENTENCE'), findsNothing);
+      expect(find.byType(SearchPhraseField), findsNothing);
+      expect(find.text('WHERE'), findsOneWidget);
     });
   });
 }
