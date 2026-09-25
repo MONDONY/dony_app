@@ -121,7 +121,7 @@ void main() {
         const SupportState(homeStatus: SupportViewStatus.loading),
         const SupportState(
           homeStatus: SupportViewStatus.failure,
-          errorMessage: 'Une erreur est survenue. Réessayez.',
+          failure: SupportFailure.generic,
         ),
       ],
     );
@@ -207,7 +207,7 @@ void main() {
         const SupportState(createStatus: SupportActionStatus.submitting),
         const SupportState(
           createStatus: SupportActionStatus.failure,
-          errorMessage: 'Une erreur est survenue. Réessayez.',
+          failure: SupportFailure.generic,
         ),
       ],
     );
@@ -257,7 +257,7 @@ void main() {
         const SupportState(detailStatus: SupportViewStatus.loading),
         const SupportState(
           detailStatus: SupportViewStatus.failure,
-          errorMessage: 'Une erreur est survenue. Réessayez.',
+          failure: SupportFailure.generic,
         ),
       ],
     );
@@ -334,8 +334,7 @@ void main() {
           detailStatus: SupportViewStatus.ready,
           ticket: _resolvedTicket,
           sendStatus: SupportActionStatus.failure,
-          errorMessage:
-              'Ce ticket est résolu. Ouvrez-en un nouveau pour un autre problème.',
+          failure: SupportFailure.ticketResolved,
         ),
       ],
       verify: (_) {
@@ -371,7 +370,7 @@ void main() {
           detailStatus: SupportViewStatus.ready,
           ticket: _ticket,
           sendStatus: SupportActionStatus.failure,
-          errorMessage: 'Une erreur est survenue. Réessayez.',
+          failure: SupportFailure.generic,
         ),
       ],
     );

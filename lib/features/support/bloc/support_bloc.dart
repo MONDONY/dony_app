@@ -52,7 +52,8 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
       emit(
         state.copyWith(
           homeStatus: SupportViewStatus.failure,
-          errorMessage: _message(e),
+          failure: SupportFailure.generic,
+          serverDetail: _serverDetail(e),
         ),
       );
     }
@@ -86,7 +87,8 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
       emit(
         state.copyWith(
           createStatus: SupportActionStatus.failure,
-          errorMessage: _message(e),
+          failure: SupportFailure.generic,
+          serverDetail: _serverDetail(e),
         ),
       );
     }
@@ -116,7 +118,8 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
       emit(
         state.copyWith(
           detailStatus: SupportViewStatus.failure,
-          errorMessage: _message(e),
+          failure: SupportFailure.generic,
+          serverDetail: _serverDetail(e),
         ),
       );
     }
@@ -131,8 +134,7 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
       emit(
         state.copyWith(
           sendStatus: SupportActionStatus.failure,
-          errorMessage:
-              'Ce ticket est résolu. Ouvrez-en un nouveau pour un autre problème.',
+          failure: SupportFailure.ticketResolved,
         ),
       );
       return;
@@ -162,7 +164,8 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
       emit(
         state.copyWith(
           sendStatus: SupportActionStatus.failure,
-          errorMessage: _message(e),
+          failure: SupportFailure.generic,
+          serverDetail: _serverDetail(e),
         ),
       );
     }
@@ -222,9 +225,11 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
     );
   }
 
-  /// Extrait le `detail` RFC 7807 renvoyé par le backend, sinon un message
-  /// générique. Jamais de stack trace ni de message technique à l'écran.
-  static String _message(Object error) {
+  /// Extrait le `detail` RFC 7807 renvoyé par le backend, `null` sinon : dans
+  /// ce cas la présentation retombe sur un message générique localisé
+  /// (`supportErrorMessage`). Jamais de stack trace ni de message technique
+  /// à l'écran.
+  static String? _serverDetail(Object error) {
     if (error is DioException) {
       final data = error.response?.data;
       if (data is Map<String, dynamic>) {
@@ -234,6 +239,6 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
         }
       }
     }
-    return 'Une erreur est survenue. Réessayez.';
+    return null;
   }
 }

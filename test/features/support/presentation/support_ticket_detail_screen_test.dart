@@ -282,7 +282,7 @@ void main() {
     stubState(
       const SupportState(
         detailStatus: SupportViewStatus.failure,
-        errorMessage: 'Ticket support introuvable',
+        serverDetail: 'Ticket support introuvable',
       ),
     );
 

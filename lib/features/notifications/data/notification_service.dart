@@ -14,6 +14,7 @@ import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:dony/features/subscriptions/data/subscription_badge_consumer.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -33,6 +34,14 @@ const _criticalTypes = {
   'DISPUTE_OPENED',
   'HANDOVER_REMINDER_H2',
 };
+
+/// Jamais affiché à l'utilisateur : remonté à Sentry uniquement.
+const _fcmTokenUnavailableMessage =
+    'FCM token null — appareil non enregistré'; // i18n-ignore
+
+/// Jamais affiché à l'utilisateur : remonté à Sentry uniquement.
+const _permissionDeniedMessage =
+    'Notifications refusées dans les réglages système'; // i18n-ignore
 
 /// Accuse réception d'une notification critique depuis l'isolate d'arrière-plan.
 ///
@@ -76,7 +85,9 @@ Future<void> ackCriticalFromBackground(
     final dio = dioOverride ?? Dio(BaseOptions(baseUrl: kApiBaseUrl));
     await dio.post<void>(
       '/notifications/$notificationId/ack',
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'}, // i18n-ignore
+      ),
     );
     if (kDebugMode) {
       debugPrint('[FCM] ACK arrière-plan envoyé pour $type / $notificationId');
@@ -163,17 +174,24 @@ class NotificationService {
   final _newNotificationController = StreamController<void>.broadcast();
   Stream<void> get newNotificationStream => _newNotificationController.stream;
 
-  static const _androidChannel = AndroidNotificationChannel(
-    'dony_transactional',
-    'Notifications Yadony',
-    description: 'Paiements, livraisons et mises à jour de vos envois',
-    importance: Importance.high,
-  );
+  /// Résolus à la création (pas de `BuildContext` disponible ici) : Android ne
+  /// renomme un canal existant qu'en le recréant avec le même identifiant, ce
+  /// qui n'arrive qu'au prochain démarrage de l'app — un changement de langue
+  /// en cours de session ne renomme donc pas les canaux déjà créés.
+  static AndroidNotificationChannel _androidChannel(AppLocalizations l) =>
+      AndroidNotificationChannel(
+        'dony_transactional',
+        l.notificationChannelTransactionalName,
+        description: l.notificationChannelTransactionalDescription,
+        importance: Importance.high,
+      );
 
-  static const _androidGeneralChannel = AndroidNotificationChannel(
+  static AndroidNotificationChannel _androidGeneralChannel(
+    AppLocalizations l,
+  ) => AndroidNotificationChannel(
     'dony_general',
-    'Actualités Yadony',
-    description: 'Correspondances, invitations et informations générales',
+    l.notificationChannelGeneralName,
+    description: l.notificationChannelGeneralDescription,
   );
 
   /// Prépare les canaux Android, le plugin de notifications locales et le
@@ -186,13 +204,14 @@ class NotificationService {
   /// une fois la session ouverte.
   Future<void> initialize() async {
     // Create Android notification channel
+    final l = AppL10n.current;
     final androidNotifications = _localNotifications
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
-    await androidNotifications?.createNotificationChannel(_androidChannel);
+    await androidNotifications?.createNotificationChannel(_androidChannel(l));
     await androidNotifications?.createNotificationChannel(
-      _androidGeneralChannel,
+      _androidGeneralChannel(l),
     );
 
     // Init flutter_local_notifications
@@ -313,7 +332,7 @@ class NotificationService {
       }
       unawaited(
         _errorReporter?.report(
-              StateError('FCM token null — appareil non enregistré'),
+              StateError(_fcmTokenUnavailableMessage),
               operation: 'notifications.fcm_token_unavailable',
               context: diagnosticContext,
             ) ??
@@ -362,7 +381,7 @@ class NotificationService {
         if (_permissionDeniedReported) return;
         _permissionDeniedReported = true;
         await (_errorReporter?.report(
-              StateError('Notifications refusées dans les réglages système'),
+              StateError(_permissionDeniedMessage),
               operation: 'notifications.permission_denied',
               context: {
                 'feature': 'notifications',
@@ -443,7 +462,7 @@ class NotificationService {
     Duration retryDelay = uploadRetryDelay,
     void Function(int attempt)? onAttempt,
   }) async {
-    assert(maxAttempts >= 1, 'maxAttempts must be at least 1');
+    assert(maxAttempts >= 1, 'maxAttempts must be at least 1'); // i18n-ignore
     Object? lastError;
     StackTrace? lastStackTrace;
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -578,7 +597,7 @@ class NotificationService {
         return (name, 'android');
       }
     } catch (_) {
-      return ('Appareil', Platform.isIOS ? 'ios' : 'android');
+      return ('Appareil', Platform.isIOS ? 'ios' : 'android'); // i18n-ignore
     }
   }
 
@@ -592,7 +611,7 @@ class NotificationService {
     if (mfr.isEmpty || mdl.toLowerCase().startsWith(mfr.toLowerCase())) {
       return mdl;
     }
-    return '${_capitalize(mfr)} $mdl';
+    return '${_capitalize(mfr)} $mdl'; // i18n-ignore — nom d'appareil envoyé au serveur
   }
 
   static String _capitalize(String s) =>
@@ -646,15 +665,16 @@ class NotificationService {
     final notification = message.notification;
     if (notification == null) return;
 
+    final channel = _androidChannel(AppL10n.current);
     _localNotifications.show(
       notification.hashCode,
       notification.title,
       notification.body,
       NotificationDetails(
         android: AndroidNotificationDetails(
-          _androidChannel.id,
-          _androidChannel.name,
-          channelDescription: _androidChannel.description,
+          channel.id,
+          channel.name,
+          channelDescription: channel.description,
           importance: Importance.high,
           priority: Priority.high,
           icon: '@mipmap/ic_launcher',

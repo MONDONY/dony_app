@@ -12208,4 +12208,328 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorEscrowBlockedMessage =>
       'You have a payment in progress. You can delete your account once the delivery is confirmed.';
+
+  @override
+  String get notificationChannelTransactionalName => 'Yadony notifications';
+
+  @override
+  String get notificationChannelTransactionalDescription =>
+      'Payments, deliveries and updates on your shipments';
+
+  @override
+  String get notificationChannelGeneralName => 'Yadony news';
+
+  @override
+  String get notificationChannelGeneralDescription =>
+      'Matches, invitations and general information';
+
+  @override
+  String get notificationAgeNow => 'now';
+
+  @override
+  String notificationAgeMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String notificationAgeHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String notificationAgeDays(int days) {
+    return '${days}d';
+  }
+
+  @override
+  String get notificationSectionNew => 'New';
+
+  @override
+  String get notificationSectionEarlier => 'Earlier';
+
+  @override
+  String get notificationSheetTitle => 'Notifications';
+
+  @override
+  String get notificationMarkAllRead => 'Read all';
+
+  @override
+  String get notificationLoadErrorTitle => 'Loading error';
+
+  @override
+  String get notificationLoadErrorDescription =>
+      'We couldn\'t load your notifications.';
+
+  @override
+  String get notificationEmptyTitle => 'No notifications';
+
+  @override
+  String get notificationEmptyDescription =>
+      'Your notifications will appear here.';
+
+  @override
+  String get notificationRouteMissing =>
+      'This notification doesn\'t lead anywhere anymore.';
+
+  @override
+  String get notificationAnnouncementsCardTitle => 'Yadony announcements';
+
+  @override
+  String get notificationAnnouncementsLoadErrorDescription =>
+      'We couldn\'t load the announcements.';
+
+  @override
+  String get notificationAnnouncementsEmptyTitle => 'No announcements';
+
+  @override
+  String get notificationAnnouncementsEmptyDescription =>
+      'News and information from Yadony will appear here.';
+
+  @override
+  String get notificationDetailFallbackTitle => 'Notification';
+
+  @override
+  String get notificationDetailAnnouncementTitle => 'Yadony announcement';
+
+  @override
+  String get notificationDetailNotFoundTitle => 'Notification not found';
+
+  @override
+  String get notificationDetailNotFoundDescription =>
+      'It may have been deleted, or the network is unavailable.';
+
+  @override
+  String get disputeDetailTitle => 'Dispute';
+
+  @override
+  String disputeOtherParty(String role, String name) {
+    String _temp0 = intl.Intl.selectLogic(role, {
+      'SENDER': 'Traveler: $name',
+      'other': 'Sender: $name',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get disputeShipmentDeleted => 'Shipment deleted';
+
+  @override
+  String disputeParcelWeight(String kg) {
+    return 'Shipment $kg kg';
+  }
+
+  @override
+  String get disputeDetailFrozenNotice =>
+      'Refund on hold during the review. The Yadony team decides within 72 business hours.';
+
+  @override
+  String get disputeDetailTimelineSectionTitle => 'TRACKING';
+
+  @override
+  String get disputeDetailDecisionSectionTitle => 'DECISION';
+
+  @override
+  String get disputeDetailResolvedInFavor => 'Resolved in your favor';
+
+  @override
+  String get disputeDetailResolved => 'Dispute resolved';
+
+  @override
+  String get disputeDetailCompensationPaid => 'Compensation paid';
+
+  @override
+  String get disputeDetailContactSupport => 'Contact support';
+
+  @override
+  String get disputeListTitle => 'My disputes';
+
+  @override
+  String get disputeListLoadErrorTitle => 'We couldn\'t load your disputes';
+
+  @override
+  String get disputeListEmptyTitle => 'No disputes';
+
+  @override
+  String get disputeListEmptyDescription =>
+      'Good news! A dispute opens automatically if you contest a traveler\'s no-show at drop-off.';
+
+  @override
+  String get disputeListEmptyAction => 'A problem with a shipment?';
+
+  @override
+  String get disputeTypeContestedNoShow => 'No-show contest';
+
+  @override
+  String get disputeTypeRecipientNoShow => 'Recipient no-show';
+
+  @override
+  String get disputeTypeDeliveryFailure => 'Delivery failure';
+
+  @override
+  String get disputeStatusOpen => 'Under review';
+
+  @override
+  String get disputeStatusResolved => 'Resolved';
+
+  @override
+  String disputeOpenedOn(String date) {
+    return 'Opened on $date';
+  }
+
+  @override
+  String disputeOpenedAndResolved(String opened, String resolved) {
+    return 'Opened on $opened · Resolved on $resolved';
+  }
+
+  @override
+  String get disputeCardFrozenNotice =>
+      'Refund on hold during the review. Response within 72h.';
+
+  @override
+  String get disputeTimelineOpenedTitle => 'Dispute opened';
+
+  @override
+  String disputeTimelineContestedTraveler(String date) {
+    return '$date · you contested the traveler\'s no-show';
+  }
+
+  @override
+  String disputeTimelineContestedSender(String date) {
+    return '$date · the sender contested a no-show at drop-off';
+  }
+
+  @override
+  String get disputeTimelineReviewedSubtitle => 'reviewed by the Yadony team';
+
+  @override
+  String get disputeTimelineUnderReviewSubtitle =>
+      'currently under review by the Yadony team';
+
+  @override
+  String get disputeTimelineDecisionTitleDone => 'Decision made';
+
+  @override
+  String get disputeTimelineDecisionTitlePending => 'Decision';
+
+  @override
+  String get disputeTimelineDecisionEta => 'within 72h';
+
+  @override
+  String get supportCategoryAccount => 'Account';
+
+  @override
+  String get supportCategoryKyc => 'Identity verification';
+
+  @override
+  String get supportCategoryPayment => 'Payment';
+
+  @override
+  String get supportCategoryTrip => 'Trip';
+
+  @override
+  String get supportCategoryPackage => 'Parcel';
+
+  @override
+  String get supportCategoryDelivery => 'Delivery';
+
+  @override
+  String get supportCategoryOther => 'Other';
+
+  @override
+  String get supportStatusNew => 'New';
+
+  @override
+  String get supportStatusAssigned => 'In progress';
+
+  @override
+  String get supportStatusWaitingUser => 'Reply received';
+
+  @override
+  String get supportStatusWaitingSupport => 'Awaiting support';
+
+  @override
+  String get supportStatusResolved => 'Resolved';
+
+  @override
+  String get supportTicketResolvedError =>
+      'This ticket is resolved. Open a new one for another issue.';
+
+  @override
+  String get supportGenericError => 'Something went wrong. Try again.';
+
+  @override
+  String get supportScreenTitle => 'Support';
+
+  @override
+  String get supportHomeLoadErrorTitle => 'We couldn\'t load support';
+
+  @override
+  String get supportConnectionCheckFallback =>
+      'Check your connection and try again.';
+
+  @override
+  String get supportHomeFaqTitle => 'Frequently asked questions';
+
+  @override
+  String get supportHomeFaqSubtitle =>
+      'The answer might already be there. If not, open a ticket.';
+
+  @override
+  String get supportHomeMyTicketsTitle => 'My tickets';
+
+  @override
+  String get supportHomeNoTicketsMessage =>
+      'No tickets yet. A problem the assistant couldn\'t solve? Open a ticket, the Yadony team will get back to you.';
+
+  @override
+  String get supportContactCta => 'Contact support';
+
+  @override
+  String get supportCreateTicketCategoryLabel => 'Category';
+
+  @override
+  String get supportCreateTicketSubjectLabel => 'Subject';
+
+  @override
+  String get supportCreateTicketSubjectHint => 'Summarize your problem';
+
+  @override
+  String get supportCreateTicketMessageLabel => 'Message';
+
+  @override
+  String get supportCreateTicketMessageHint => 'Describe what\'s happening';
+
+  @override
+  String get supportTicketFallbackTitle => 'Support ticket';
+
+  @override
+  String get supportTicketNotFoundTitle => 'Ticket not found';
+
+  @override
+  String get supportBrandName => 'Support Yadony';
+
+  @override
+  String get supportViewImageLabel => 'View image fullscreen';
+
+  @override
+  String supportPhotoIndex(int index, int count) {
+    return 'Photo $index of $count';
+  }
+
+  @override
+  String get supportResolvedBannerMessage =>
+      'This ticket is resolved. Another issue? Open a new ticket from the Support page.';
+
+  @override
+  String get supportMessageHint => 'Your message';
+
+  @override
+  String get supportAttachTooltip => 'Attach an image';
+
+  @override
+  String get supportRemoveAttachmentLabel => 'Remove this image';
+
+  @override
+  String get supportConversationDefaultPreview =>
+      'A question? Our team will get back to you here.';
 }

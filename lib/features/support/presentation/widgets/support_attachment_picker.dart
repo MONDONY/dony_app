@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/data/support_attachment.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -35,7 +36,7 @@ class SupportAttachmentPicker extends StatelessWidget {
       if (context.mounted) {
         DonySnackbar.show(
           context,
-          message: 'Image non supportée ou trop volumineuse',
+          message: context.l10n.commonImageUnsupported,
           type: DonySnackbarType.error,
         );
       }
@@ -47,6 +48,7 @@ class SupportAttachmentPicker extends StatelessWidget {
       context: context,
       useRootNavigator: true,
       builder: (sheetCtx) {
+        final l = context.l10n;
         final cs = Theme.of(context).colorScheme;
         return SafeArea(
           child: Column(
@@ -54,7 +56,7 @@ class SupportAttachmentPicker extends StatelessWidget {
             children: [
               ListTile(
                 leading: Icon(Icons.photo_camera_rounded, color: cs.primary),
-                title: const Text('Prendre une photo'),
+                title: Text(l.commonTakePhoto),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
                   _pick(context, ImageSource.camera);
@@ -62,7 +64,7 @@ class SupportAttachmentPicker extends StatelessWidget {
               ),
               ListTile(
                 leading: Icon(Icons.photo_library_rounded, color: cs.primary),
-                title: const Text('Choisir dans la galerie'),
+                title: Text(l.commonPickFromGallery),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
                   _pick(context, ImageSource.gallery);
@@ -86,7 +88,7 @@ class SupportAttachmentPicker extends StatelessWidget {
 
         if (attachments.isEmpty) {
           return IconButton(
-            tooltip: 'Joindre une image',
+            tooltip: context.l10n.supportAttachTooltip,
             onPressed: canAdd ? () => _showSourceSheet(context) : null,
             icon: const Icon(Icons.attach_file_rounded),
           );
@@ -115,7 +117,7 @@ class SupportAttachmentPicker extends StatelessWidget {
                   // Bouton d'ajout inline quand la liste n'est pas pleine
                   if (canAdd)
                     IconButton(
-                      tooltip: 'Joindre une image',
+                      tooltip: context.l10n.supportAttachTooltip,
                       onPressed: () => _showSourceSheet(context),
                       icon: const Icon(Icons.attach_file_rounded),
                     ),
@@ -215,7 +217,7 @@ class _AttachmentThumb extends StatelessWidget {
               button: true,
               container: true,
               excludeSemantics: true,
-              label: 'Retirer cette image',
+              label: context.l10n.supportRemoveAttachmentLabel,
               child: GestureDetector(
                 key: Key('remove-attachment-${upload.localId}'),
                 onTap: onRemove,

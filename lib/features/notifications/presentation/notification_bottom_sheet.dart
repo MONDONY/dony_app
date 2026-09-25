@@ -44,13 +44,9 @@ bool notificationRouteExists(GoRouter router, String route) {
 
 /// Sections temporelles du feed. Une section vide ne s'affiche pas.
 enum NotificationSection {
-  nouveau('Nouveau'),
-  cetteSemaine('Cette semaine'),
-  plusTot('Plus tôt');
-
-  const NotificationSection(this.label);
-
-  final String label;
+  nouveau,
+  cetteSemaine,
+  plusTot;
 
   /// Moins de 24 h : nouveau ; moins de 7 jours : cette semaine ; sinon plus tôt.
   static NotificationSection of(DateTime createdAt, DateTime now) {
@@ -59,19 +55,33 @@ enum NotificationSection {
     if (age < const Duration(days: 7)) return cetteSemaine;
     return plusTot;
   }
+
+  /// Libellé affiché : « Cette semaine » réutilise la clé commune partagée
+  /// avec les autres filtres par date de l'app.
+  String label(AppLocalizations l) => switch (this) {
+    NotificationSection.nouveau => l.notificationSectionNew,
+    NotificationSection.cetteSemaine => l.commonDateThisWeek,
+    NotificationSection.plusTot => l.notificationSectionEarlier,
+  };
 }
 
 /// Horodatage compact d'une ligne : « 2 min », « 3 h », « 2 j », « 28 août ».
 /// Il ne se comprime jamais, c'est le titre qui cède.
-String formatNotificationAge(DateTime createdAt, DateTime now) {
+String formatNotificationAge(
+  AppLocalizations l,
+  DateTime createdAt,
+  DateTime now,
+) {
   final local = createdAt.isUtc ? createdAt.toLocal() : createdAt;
   final diff = now.difference(local);
-  if (diff.inMinutes < 1) return 'maintenant';
-  if (diff.inMinutes < 60) return '${diff.inMinutes} min';
-  if (diff.inHours < 24) return '${diff.inHours} h';
-  if (diff.inDays < 7) return '${diff.inDays} j';
-  final pattern = local.year == now.year ? 'd MMM' : 'd MMM yyyy';
-  return DateFormat(pattern, AppL10n.localeName).format(local);
+  if (diff.inMinutes < 1) return l.notificationAgeNow;
+  if (diff.inMinutes < 60) return l.notificationAgeMinutes(diff.inMinutes);
+  if (diff.inHours < 24) return l.notificationAgeHours(diff.inHours);
+  if (diff.inDays < 7) return l.notificationAgeDays(diff.inDays);
+  final formatted = local.year == now.year
+      ? DateFormat.MMMd(l.localeName).format(local)
+      : DateFormat.yMMMd(l.localeName).format(local);
+  return formatted;
 }
 
 void showNotificationBottomSheet(BuildContext context) {
@@ -103,6 +113,7 @@ class _NotificationBottomSheetState extends State<NotificationBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final screenHeight = MediaQuery.of(context).size.height;
@@ -137,7 +148,7 @@ class _NotificationBottomSheetState extends State<NotificationBottomSheet> {
               children: [
                 Expanded(
                   child: Text(
-                    'Notifications',
+                    l.notificationSheetTitle,
                     style: tt.headlineSmall?.copyWith(color: cs.onSurface),
                   ),
                 ),
@@ -149,7 +160,7 @@ class _NotificationBottomSheetState extends State<NotificationBottomSheet> {
                           const NotificationsMarkAllReadRequested(),
                         ),
                         child: Text(
-                          'Tout lire',
+                          context.l10n.notificationMarkAllRead,
                           style: tt.titleMedium?.copyWith(
                             color: cs.primary,
                             fontWeight: FontWeight.w700,
@@ -174,6 +185,7 @@ class _NotificationBottomSheetState extends State<NotificationBottomSheet> {
 class _NotificationList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
 
     return BlocBuilder<NotificationBloc, NotificationState>(
@@ -187,9 +199,9 @@ class _NotificationList extends StatelessWidget {
             mascotte: DonyMascotteType.erreurLegere,
             type: DonyEmptyStateType.error,
             iconAsset: 'wifi-off',
-            title: 'Erreur de chargement',
-            description: 'Impossible de charger vos notifications.',
-            actionLabel: 'Réessayer',
+            title: l.notificationLoadErrorTitle,
+            description: l.notificationLoadErrorDescription,
+            actionLabel: l.commonRetry,
             onAction: () => context.read<NotificationBloc>().add(
               const NotificationsLoadRequested(),
             ),
@@ -207,11 +219,11 @@ class _NotificationList extends StatelessWidget {
             return Column(
               children: [
                 ?card,
-                const Expanded(
+                Expanded(
                   child: DonyEmptyState(
                     mascotte: DonyMascotteType.assis,
-                    title: 'Aucune notification',
-                    description: 'Vos notifications apparaîtront ici.',
+                    title: l.notificationEmptyTitle,
+                    description: l.notificationEmptyDescription,
                   ),
                 ),
               ],
@@ -292,7 +304,7 @@ class _NotificationList extends StatelessWidget {
             DonyIcon('trash-2', color: cs.onError, size: 26),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Supprimer',
+              context.l10n.commonDelete,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: cs.onError,
                 fontWeight: FontWeight.w600,
@@ -324,7 +336,7 @@ class _NotificationList extends StatelessWidget {
       // plutôt que d'ouvrir une page vide, et le sheet reste ouvert.
       DonySnackbar.show(
         context,
-        message: 'Cette notification ne mène plus nulle part.',
+        message: context.l10n.notificationRouteMissing,
         type: DonySnackbarType.error,
       );
       return;
@@ -435,7 +447,7 @@ class _AnnouncementsCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Annonces Yadony',
+                        context.l10n.notificationAnnouncementsCardTitle,
                         style: tt.titleLarge?.copyWith(color: cs.onSurface),
                       ),
                       if (summary.latestTitle != null) ...[
@@ -508,7 +520,7 @@ class _SectionHeader extends StatelessWidget {
         border: Border(top: BorderSide(color: cs.outline)),
       ),
       child: Text(
-        section.label.toUpperCase(),
+        section.label(context.l10n).toUpperCase(),
         style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
       ),
     );
@@ -531,6 +543,7 @@ class _NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -588,6 +601,7 @@ class _NotificationTile extends StatelessWidget {
                       const SizedBox(width: DonySpacing.sm),
                       Text(
                         formatNotificationAge(
+                          l,
                           notification.createdAt,
                           DateTime.now(),
                         ),

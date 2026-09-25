@@ -13798,5 +13798,453 @@
   "errorEscrowBlockedMessage": "Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.",
   "@errorEscrowBlockedMessage": {
     "description": "Message ErrorCatalog du code escrow-blocked."
+  },
+
+  "notificationChannelTransactionalName": "Notifications Yadony",
+  "@notificationChannelTransactionalName": {
+    "description": "Nom du canal Android transactionnel, résolu sans BuildContext à la création (notification_service.dart, AppL10n.current)."
+  },
+  "notificationChannelTransactionalDescription": "Paiements, livraisons et mises à jour de vos envois",
+  "@notificationChannelTransactionalDescription": {
+    "description": "Description du canal Android transactionnel (notification_service.dart)."
+  },
+  "notificationChannelGeneralName": "Actualités Yadony",
+  "@notificationChannelGeneralName": {
+    "description": "Nom du canal Android général, résolu sans BuildContext à la création (notification_service.dart)."
+  },
+  "notificationChannelGeneralDescription": "Correspondances, invitations et informations générales",
+  "@notificationChannelGeneralDescription": {
+    "description": "Description du canal Android général (notification_service.dart)."
+  },
+
+  "notificationAgeNow": "maintenant",
+  "@notificationAgeNow": {
+    "description": "Horodatage compact d'une notification, moins d'une minute (notification_bottom_sheet.dart, formatNotificationAge)."
+  },
+  "notificationAgeMinutes": "{minutes} min",
+  "@notificationAgeMinutes": {
+    "description": "Horodatage compact en minutes (notification_bottom_sheet.dart). Identique en anglais : _sameInBothLanguages.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationAgeHours": "{hours} h",
+  "@notificationAgeHours": {
+    "description": "Horodatage compact en heures (notification_bottom_sheet.dart). Identique en anglais : _sameInBothLanguages.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationAgeDays": "{days} j",
+  "@notificationAgeDays": {
+    "description": "Horodatage compact en jours (notification_bottom_sheet.dart).",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationSectionNew": "Nouveau",
+  "@notificationSectionNew": {
+    "description": "Titre de section du feed de notifications, moins de 24 h (notification_bottom_sheet.dart, NotificationSection.label)."
+  },
+  "notificationSectionEarlier": "Plus tôt",
+  "@notificationSectionEarlier": {
+    "description": "Titre de section du feed de notifications, plus de 7 jours (notification_bottom_sheet.dart)."
+  },
+  "notificationSheetTitle": "Notifications",
+  "@notificationSheetTitle": {
+    "description": "Titre du sheet de notifications (notification_bottom_sheet.dart). Identique en anglais : _sameInBothLanguages."
+  },
+  "notificationMarkAllRead": "Tout lire",
+  "@notificationMarkAllRead": {
+    "description": "Bouton qui marque toutes les notifications comme lues (notification_bottom_sheet.dart)."
+  },
+  "notificationLoadErrorTitle": "Erreur de chargement",
+  "@notificationLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur du feed de notifications (notification_bottom_sheet.dart). Réutilisé tel quel par announcements_inbox_screen.dart (même feature, même texte, R42)."
+  },
+  "notificationLoadErrorDescription": "Impossible de charger vos notifications.",
+  "@notificationLoadErrorDescription": {
+    "description": "Description de l'état d'erreur du feed de notifications (notification_bottom_sheet.dart)."
+  },
+  "notificationEmptyTitle": "Aucune notification",
+  "@notificationEmptyTitle": {
+    "description": "Titre de l'état vide du feed de notifications (notification_bottom_sheet.dart)."
+  },
+  "notificationEmptyDescription": "Vos notifications apparaîtront ici.",
+  "@notificationEmptyDescription": {
+    "description": "Description de l'état vide du feed de notifications (notification_bottom_sheet.dart)."
+  },
+  "notificationRouteMissing": "Cette notification ne mène plus nulle part.",
+  "@notificationRouteMissing": {
+    "description": "Snackbar affichée quand le deeplink d'une notification est périmé ou inconnu du routeur (notification_bottom_sheet.dart)."
+  },
+  "notificationAnnouncementsCardTitle": "Annonces Yadony",
+  "@notificationAnnouncementsCardTitle": {
+    "description": "Titre de la carte « Annonces Yadony » du feed (notification_bottom_sheet.dart). Réutilisé tel quel comme titre de app bar par announcements_inbox_screen.dart (même feature, même texte, R42)."
+  },
+
+  "notificationAnnouncementsLoadErrorDescription": "Impossible de charger les annonces.",
+  "@notificationAnnouncementsLoadErrorDescription": {
+    "description": "Description de l'état d'erreur de la boîte « Annonces Yadony » (announcements_inbox_screen.dart)."
+  },
+  "notificationAnnouncementsEmptyTitle": "Aucune annonce",
+  "@notificationAnnouncementsEmptyTitle": {
+    "description": "Titre de l'état vide de la boîte « Annonces Yadony » (announcements_inbox_screen.dart)."
+  },
+  "notificationAnnouncementsEmptyDescription": "Les nouveautés et informations de Yadony apparaîtront ici.",
+  "@notificationAnnouncementsEmptyDescription": {
+    "description": "Description de l'état vide de la boîte « Annonces Yadony » (announcements_inbox_screen.dart)."
+  },
+
+  "notificationDetailFallbackTitle": "Notification",
+  "@notificationDetailFallbackTitle": {
+    "description": "Titre générique de l'écran de détail hors annonce (notification_detail_screen.dart). Identique en anglais : _sameInBothLanguages."
+  },
+  "notificationDetailAnnouncementTitle": "Annonce Yadony",
+  "@notificationDetailAnnouncementTitle": {
+    "description": "Titre de l'écran de détail pour une annonce plateforme (notification_detail_screen.dart)."
+  },
+  "notificationDetailNotFoundTitle": "Notification introuvable",
+  "@notificationDetailNotFoundTitle": {
+    "description": "Titre de l'état d'erreur de l'écran de détail (notification_detail_screen.dart)."
+  },
+  "notificationDetailNotFoundDescription": "Elle a peut-être été supprimée, ou le réseau est indisponible.",
+  "@notificationDetailNotFoundDescription": {
+    "description": "Description de l'état d'erreur de l'écran de détail (notification_detail_screen.dart)."
+  },
+
+  "disputeDetailTitle": "Litige",
+  "@disputeDetailTitle": {
+    "description": "Titre de l'app bar du détail d'un litige (dispute_detail_screen.dart)."
+  },
+  "disputeOtherParty": "{role, select, SENDER{Voyageur : {name}} other{Expéditeur : {name}}}",
+  "@disputeOtherParty": {
+    "description": "Autre partie d'un litige, selon le rôle du viewer (dispute_detail_screen.dart, dispute_card.dart : même texte, même feature, R42). role = myRole du litige (SENDER/TRAVELER).",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "disputeShipmentDeleted": "Envoi supprimé",
+  "@disputeShipmentDeleted": {
+    "description": "Remplace la ligne autre-partie quand otherPartyName est absent (dispute_detail_screen.dart, dispute_card.dart : même texte, même feature, R42)."
+  },
+  "disputeParcelWeight": "Envoi {kg} kg",
+  "@disputeParcelWeight": {
+    "description": "Poids de l'envoi d'un litige, {kg} déjà formaté (entier ou une décimale via formatOneDecimal) (dispute_detail_screen.dart, dispute_card.dart : même texte, même feature, R42).",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "disputeDetailFrozenNotice": "Remboursement gelé le temps de l'instruction. L'équipe Yadony tranche sous 72 h ouvrées.",
+  "@disputeDetailFrozenNotice": {
+    "description": "Bandeau de gel du remboursement pendant l'instruction (dispute_detail_screen.dart). Tiret cadratin d'origine remplacé par un point (deux phrases), signalé en PR."
+  },
+  "disputeDetailTimelineSectionTitle": "SUIVI",
+  "@disputeDetailTimelineSectionTitle": {
+    "description": "En-tête de section au-dessus de la frise (dispute_detail_screen.dart)."
+  },
+  "disputeDetailDecisionSectionTitle": "DÉCISION",
+  "@disputeDetailDecisionSectionTitle": {
+    "description": "En-tête de section au-dessus du bloc décision (dispute_detail_screen.dart)."
+  },
+  "disputeDetailResolvedInFavor": "Résolu en votre faveur",
+  "@disputeDetailResolvedInFavor": {
+    "description": "Verdict affiché quand l'utilisateur est bénéficiaire de la décision (dispute_detail_screen.dart)."
+  },
+  "disputeDetailResolved": "Litige résolu",
+  "@disputeDetailResolved": {
+    "description": "Verdict neutre affiché quand l'utilisateur n'est pas bénéficiaire (dispute_detail_screen.dart)."
+  },
+  "disputeDetailCompensationPaid": "Indemnisation versée",
+  "@disputeDetailCompensationPaid": {
+    "description": "Libellé du montant d'indemnisation versé (dispute_detail_screen.dart)."
+  },
+  "disputeDetailContactSupport": "Contacter le support",
+  "@disputeDetailContactSupport": {
+    "description": "CTA en bas du détail d'un litige, vers /support (dispute_detail_screen.dart)."
+  },
+
+  "disputeListTitle": "Mes litiges",
+  "@disputeListTitle": {
+    "description": "Titre de l'app bar de la liste des litiges (dispute_list_screen.dart)."
+  },
+  "disputeListLoadErrorTitle": "Impossible de charger vos litiges",
+  "@disputeListLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur de la liste des litiges (dispute_list_screen.dart)."
+  },
+  "disputeListEmptyTitle": "Aucun litige",
+  "@disputeListEmptyTitle": {
+    "description": "Titre de l'état vide de la liste des litiges (dispute_list_screen.dart)."
+  },
+  "disputeListEmptyDescription": "Tant mieux ! Un litige s'ouvre automatiquement si vous contestez l'absence d'un voyageur lors d'une remise.",
+  "@disputeListEmptyDescription": {
+    "description": "Description de l'état vide de la liste des litiges (dispute_list_screen.dart)."
+  },
+  "disputeListEmptyAction": "Un problème avec un envoi ?",
+  "@disputeListEmptyAction": {
+    "description": "CTA de l'état vide de la liste des litiges, vers /support (dispute_list_screen.dart)."
+  },
+
+  "disputeTypeContestedNoShow": "Contestation d'absence",
+  "@disputeTypeContestedNoShow": {
+    "description": "Libellé du type SENDER_NO_SHOW_CONTESTED (dispute_labels.dart, disputeTypeLabel)."
+  },
+  "disputeTypeRecipientNoShow": "Absence du destinataire",
+  "@disputeTypeRecipientNoShow": {
+    "description": "Libellé des types RECIPIENT_NO_SHOW(_CONTESTED) (dispute_labels.dart)."
+  },
+  "disputeTypeDeliveryFailure": "Défaut de livraison",
+  "@disputeTypeDeliveryFailure": {
+    "description": "Libellé des types TRAVELER_DELIVERY_NO_SHOW(_CONTESTED) (dispute_labels.dart)."
+  },
+  "disputeStatusOpen": "En instruction",
+  "@disputeStatusOpen": {
+    "description": "Libellé du statut OPEN (dispute_labels.dart, disputeStatusLabel). Réutilisé tel quel comme titre de l'étape « en instruction » de la frise (dispute_timeline.dart, même feature, même texte, R42)."
+  },
+  "disputeStatusResolved": "Résolu",
+  "@disputeStatusResolved": {
+    "description": "Libellé du statut RESOLVED (dispute_labels.dart)."
+  },
+
+  "disputeOpenedOn": "Ouvert le {date}",
+  "@disputeOpenedOn": {
+    "description": "Date d'ouverture d'un litige encore en cours (dispute_card.dart).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "disputeOpenedAndResolved": "Ouvert le {opened} · Résolu le {resolved}",
+  "@disputeOpenedAndResolved": {
+    "description": "Dates d'ouverture et de résolution d'un litige résolu (dispute_card.dart).",
+    "placeholders": {
+      "opened": {
+        "type": "String"
+      },
+      "resolved": {
+        "type": "String"
+      }
+    }
+  },
+  "disputeCardFrozenNotice": "Remboursement gelé le temps de l'instruction. Réponse sous 72 h.",
+  "@disputeCardFrozenNotice": {
+    "description": "Bandeau de gel du remboursement, version compacte de la carte liste (dispute_card.dart). Tiret cadratin d'origine remplacé par un point (deux phrases), signalé en PR."
+  },
+
+  "disputeTimelineOpenedTitle": "Litige ouvert",
+  "@disputeTimelineOpenedTitle": {
+    "description": "Titre de la première étape de la frise (dispute_timeline.dart)."
+  },
+  "disputeTimelineContestedTraveler": "{date} · vous avez contesté l'absence du voyageur",
+  "@disputeTimelineContestedTraveler": {
+    "description": "Sous-titre de la première étape côté expéditeur (dispute_timeline.dart).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "disputeTimelineContestedSender": "{date} · l'expéditeur a contesté une absence à la remise",
+  "@disputeTimelineContestedSender": {
+    "description": "Sous-titre de la première étape côté voyageur (dispute_timeline.dart).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "disputeTimelineReviewedSubtitle": "examiné par l'équipe Yadony",
+  "@disputeTimelineReviewedSubtitle": {
+    "description": "Sous-titre de l'étape « en instruction » une fois le litige résolu (dispute_timeline.dart)."
+  },
+  "disputeTimelineUnderReviewSubtitle": "en cours d'examen par l'équipe Yadony",
+  "@disputeTimelineUnderReviewSubtitle": {
+    "description": "Sous-titre de l'étape « en instruction » tant que le litige est ouvert (dispute_timeline.dart)."
+  },
+  "disputeTimelineDecisionTitleDone": "Décision rendue",
+  "@disputeTimelineDecisionTitleDone": {
+    "description": "Titre de la dernière étape une fois la décision rendue (dispute_timeline.dart)."
+  },
+  "disputeTimelineDecisionTitlePending": "Décision",
+  "@disputeTimelineDecisionTitlePending": {
+    "description": "Titre de la dernière étape tant que le litige est ouvert (dispute_timeline.dart)."
+  },
+  "disputeTimelineDecisionEta": "sous 72 h",
+  "@disputeTimelineDecisionEta": {
+    "description": "Sous-titre de la dernière étape tant que le litige est ouvert (dispute_timeline.dart)."
+  },
+
+  "supportCategoryAccount": "Compte",
+  "@supportCategoryAccount": {
+    "description": "Libellé de la catégorie backend ACCOUNT (support_home_screen.dart, SupportLabels.category)."
+  },
+  "supportCategoryKyc": "Vérification d'identité",
+  "@supportCategoryKyc": {
+    "description": "Libellé de la catégorie backend KYC (support_home_screen.dart)."
+  },
+  "supportCategoryPayment": "Paiement",
+  "@supportCategoryPayment": {
+    "description": "Libellé de la catégorie backend PAYMENT (support_home_screen.dart)."
+  },
+  "supportCategoryTrip": "Trajet",
+  "@supportCategoryTrip": {
+    "description": "Libellé de la catégorie backend TRIP (support_home_screen.dart)."
+  },
+  "supportCategoryPackage": "Colis",
+  "@supportCategoryPackage": {
+    "description": "Libellé de la catégorie backend PACKAGE (support_home_screen.dart)."
+  },
+  "supportCategoryDelivery": "Livraison",
+  "@supportCategoryDelivery": {
+    "description": "Libellé de la catégorie backend DELIVERY (support_home_screen.dart)."
+  },
+  "supportCategoryOther": "Autre",
+  "@supportCategoryOther": {
+    "description": "Libellé de la catégorie backend OTHER (support_home_screen.dart)."
+  },
+  "supportStatusNew": "Nouveau",
+  "@supportStatusNew": {
+    "description": "Libellé du statut backend NEW (support_home_screen.dart, SupportLabels.status)."
+  },
+  "supportStatusAssigned": "Pris en charge",
+  "@supportStatusAssigned": {
+    "description": "Libellé du statut backend ASSIGNED (support_home_screen.dart)."
+  },
+  "supportStatusWaitingUser": "Réponse reçue",
+  "@supportStatusWaitingUser": {
+    "description": "Libellé du statut backend WAITING_USER (support_home_screen.dart)."
+  },
+  "supportStatusWaitingSupport": "En attente du support",
+  "@supportStatusWaitingSupport": {
+    "description": "Libellé du statut backend WAITING_SUPPORT (support_home_screen.dart)."
+  },
+  "supportStatusResolved": "Résolu",
+  "@supportStatusResolved": {
+    "description": "Libellé du statut backend RESOLVED (support_home_screen.dart)."
+  },
+  "supportTicketResolvedError": "Ce ticket est résolu. Ouvrez-en un nouveau pour un autre problème.",
+  "@supportTicketResolvedError": {
+    "description": "Message affiché quand un envoi est refusé localement car le ticket est déjà résolu (support_home_screen.dart, supportErrorMessage ; SupportState.failure == ticketResolved)."
+  },
+  "supportGenericError": "Une erreur est survenue. Réessayez.",
+  "@supportGenericError": {
+    "description": "Repli générique affiché quand un échec support n'a pas de detail serveur (support_home_screen.dart, supportErrorMessage ; SupportState.failure == generic)."
+  },
+  "supportScreenTitle": "Support",
+  "@supportScreenTitle": {
+    "description": "Titre de l'app bar de l'accueil support (support_home_screen.dart). Identique en anglais : _sameInBothLanguages."
+  },
+  "supportHomeLoadErrorTitle": "Impossible de charger le support",
+  "@supportHomeLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur de l'accueil support (support_home_screen.dart)."
+  },
+  "supportConnectionCheckFallback": "Vérifiez votre connexion et réessayez.",
+  "@supportConnectionCheckFallback": {
+    "description": "Repli de description d'un état d'erreur support sans message serveur (support_home_screen.dart, support_ticket_detail_screen.dart : même feature, même texte, R42)."
+  },
+  "supportHomeFaqTitle": "Questions fréquentes",
+  "@supportHomeFaqTitle": {
+    "description": "Titre de la section des réponses prédéfinies (support_home_screen.dart)."
+  },
+  "supportHomeFaqSubtitle": "La réponse est peut-être déjà là. Sinon, ouvrez un ticket.",
+  "@supportHomeFaqSubtitle": {
+    "description": "Sous-titre de la section des réponses prédéfinies (support_home_screen.dart)."
+  },
+  "supportHomeMyTicketsTitle": "Mes tickets",
+  "@supportHomeMyTicketsTitle": {
+    "description": "Titre de la section des tickets de l'utilisateur (support_home_screen.dart)."
+  },
+  "supportHomeNoTicketsMessage": "Aucun ticket pour le moment. Un problème non résolu par l'assistant ? Ouvrez un ticket, l'équipe Yadony vous répond.",
+  "@supportHomeNoTicketsMessage": {
+    "description": "Message affiché quand l'utilisateur n'a aucun ticket (support_home_screen.dart)."
+  },
+  "supportContactCta": "Contacter le support",
+  "@supportContactCta": {
+    "description": "Bouton d'accueil support et titre de la sheet de création de ticket (support_home_screen.dart, même texte deux usages)."
+  },
+  "supportCreateTicketCategoryLabel": "Catégorie",
+  "@supportCreateTicketCategoryLabel": {
+    "description": "Libellé du sélecteur de catégorie de la sheet de création de ticket (support_home_screen.dart)."
+  },
+  "supportCreateTicketSubjectLabel": "Sujet",
+  "@supportCreateTicketSubjectLabel": {
+    "description": "Libellé du champ sujet de la sheet de création de ticket (support_home_screen.dart)."
+  },
+  "supportCreateTicketSubjectHint": "Résumez votre problème",
+  "@supportCreateTicketSubjectHint": {
+    "description": "Texte d'indication du champ sujet (support_home_screen.dart)."
+  },
+  "supportCreateTicketMessageLabel": "Message",
+  "@supportCreateTicketMessageLabel": {
+    "description": "Libellé du champ message de la sheet de création de ticket (support_home_screen.dart). Identique en anglais : _sameInBothLanguages."
+  },
+  "supportCreateTicketMessageHint": "Décrivez ce qui vous arrive",
+  "@supportCreateTicketMessageHint": {
+    "description": "Texte d'indication du champ message (support_home_screen.dart)."
+  },
+
+  "supportTicketFallbackTitle": "Ticket support",
+  "@supportTicketFallbackTitle": {
+    "description": "Titre de l'app bar du détail d'un ticket tant que le sujet n'est pas chargé (support_ticket_detail_screen.dart)."
+  },
+  "supportTicketNotFoundTitle": "Ticket introuvable",
+  "@supportTicketNotFoundTitle": {
+    "description": "Titre de l'état d'erreur du détail d'un ticket (support_ticket_detail_screen.dart)."
+  },
+  "supportBrandName": "Support Yadony",
+  "@supportBrandName": {
+    "description": "Nom affiché de l'équipe support, en-tête des messages admin et ligne épinglée des conversations (support_ticket_detail_screen.dart, support_conversation_tile.dart : même feature, même texte, R42). Identique en anglais : _sameInBothLanguages."
+  },
+  "supportViewImageLabel": "Voir l'image en plein écran",
+  "@supportViewImageLabel": {
+    "description": "Libellé d'accessibilité d'une vignette d'image jointe dans le fil (support_ticket_detail_screen.dart)."
+  },
+  "supportPhotoIndex": "Photo {index} / {count}",
+  "@supportPhotoIndex": {
+    "description": "Compteur de la visionneuse plein écran des pièces jointes (support_ticket_detail_screen.dart).",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "supportResolvedBannerMessage": "Ce ticket est résolu. Un autre problème ? Ouvrez un nouveau ticket depuis la page Support.",
+  "@supportResolvedBannerMessage": {
+    "description": "Bandeau affiché à la place du champ de réponse quand le ticket est résolu (support_ticket_detail_screen.dart, _ResolvedBanner)."
+  },
+  "supportMessageHint": "Votre message",
+  "@supportMessageHint": {
+    "description": "Texte d'indication du champ de réponse d'un ticket (support_ticket_detail_screen.dart)."
+  },
+
+  "supportAttachTooltip": "Joindre une image",
+  "@supportAttachTooltip": {
+    "description": "Tooltip du bouton trombone, sans et avec vignettes déjà présentes (support_attachment_picker.dart, deux usages)."
+  },
+  "supportRemoveAttachmentLabel": "Retirer cette image",
+  "@supportRemoveAttachmentLabel": {
+    "description": "Libellé d'accessibilité du bouton de retrait d'une vignette en attente d'envoi (support_attachment_picker.dart)."
+  },
+
+  "supportConversationDefaultPreview": "Une question ? Notre équipe vous répond ici.",
+  "@supportConversationDefaultPreview": {
+    "description": "Aperçu par défaut de la ligne épinglée support quand aucun message n'existe encore (support_conversation_tile.dart)."
   }
 }

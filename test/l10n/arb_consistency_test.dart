@@ -202,6 +202,13 @@ const _sameInBothLanguages = <String>{
   'notificationSettingsTitle', // « Notifications » se dit pareil (tâche H2)
   'notificationSettingsMessagesLabel', // « Messages » se dit pareil (tâche H2)
   'prefsContactModeMessage', // « Message » se dit pareil (tâche H2)
+  'notificationAgeMinutes', // gabarit identique, seul {minutes} varie (tâche H4)
+  'notificationAgeHours', // gabarit identique, seul {hours} varie (tâche H4)
+  'notificationSheetTitle', // « Notifications » se dit pareil (tâche H4)
+  'notificationDetailFallbackTitle', // « Notification » se dit pareil (tâche H4)
+  'supportScreenTitle', // « Support » se dit pareil (tâche H4)
+  'supportCreateTicketMessageLabel', // « Message » se dit pareil (tâche H4)
+  'supportBrandName', // « Support Yadony » : marque, identique en anglais (tâche H4)
 };
 
 void main() {

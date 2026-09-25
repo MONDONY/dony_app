@@ -6,6 +6,7 @@ import 'package:dony/features/support/data/support_attachment.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/presentation/screens/support_home_screen.dart';
 import 'package:dony/features/support/presentation/widgets/support_attachment_picker.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -43,19 +44,22 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
         actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
         title: BlocBuilder<SupportBloc, SupportState>(
-          builder: (context, state) =>
-              Text(state.ticket?.subject ?? 'Ticket support'),
+          builder: (context, state) => Text(
+            state.ticket?.subject ?? context.l10n.supportTicketFallbackTitle,
+          ),
         ),
       ),
       body: BlocConsumer<SupportBloc, SupportState>(
         listener: (context, state) {
-          if (state.sendStatus == SupportActionStatus.failure &&
-              state.errorMessage != null) {
-            DonySnackbar.show(
-              context,
-              message: state.errorMessage!,
-              type: DonySnackbarType.error,
-            );
+          if (state.sendStatus == SupportActionStatus.failure) {
+            final message = supportErrorMessage(context.l10n, state);
+            if (message != null) {
+              DonySnackbar.show(
+                context,
+                message: message,
+                type: DonySnackbarType.error,
+              );
+            }
           }
           if (state.sendStatus == SupportActionStatus.success) {
             _messageController.clear();
@@ -78,10 +82,11 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
             const Center(child: CircularProgressIndicator()),
           SupportViewStatus.failure => DonyEmptyState(
             type: DonyEmptyStateType.error,
-            title: 'Ticket introuvable',
+            title: context.l10n.supportTicketNotFoundTitle,
             description:
-                state.errorMessage ?? 'Vérifiez votre connexion et réessayez.',
-            actionLabel: 'Réessayer',
+                supportErrorMessage(context.l10n, state) ??
+                context.l10n.supportConnectionCheckFallback,
+            actionLabel: context.l10n.commonRetry,
             onAction: () => context.read<SupportBloc>().add(
               SupportTicketDetailRequested(widget.ticketId),
             ),
@@ -123,13 +128,13 @@ class _TicketThread extends StatelessWidget {
           child: Row(
             children: [
               DonyBadge(
-                label: SupportLabels.status(ticket.status),
+                label: SupportLabels.status(context.l10n, ticket.status),
                 type: SupportLabels.statusBadge(ticket.status),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  SupportLabels.category(ticket.category),
+                  SupportLabels.category(context.l10n, ticket.category),
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -193,7 +198,7 @@ class _MessageBubble extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 2),
                 child: Text(
-                  'Support Yadony',
+                  context.l10n.supportBrandName,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: cs.primary,
                     fontWeight: FontWeight.w700,
@@ -245,7 +250,7 @@ class _AttachmentsGrid extends StatelessWidget {
         for (final att in attachments)
           Semantics(
             button: true,
-            label: 'Voir l\'image en plein écran',
+            label: context.l10n.supportViewImageLabel,
             child: GestureDetector(
               onTap: () => _openViewer(context, attachments, att.id),
               child: ClipRRect(
@@ -345,6 +350,7 @@ class _SupportImageViewerState extends State<_SupportImageViewer> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final count = widget.attachments.length;
     return GestureDetector(
@@ -369,7 +375,7 @@ class _SupportImageViewerState extends State<_SupportImageViewer> {
                       ValueListenableBuilder<int>(
                         valueListenable: _index,
                         builder: (_, i, _) => Text(
-                          'Photo ${i + 1} / $count',
+                          l.supportPhotoIndex(i + 1, count),
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             color: cs.onSurface,
@@ -381,7 +387,7 @@ class _SupportImageViewerState extends State<_SupportImageViewer> {
                         button: true,
                         container: true,
                         excludeSemantics: true,
-                        label: 'Fermer',
+                        label: l.commonClose,
                         child: GestureDetector(
                           onTap: () => Navigator.of(context).pop(),
                           behavior: HitTestBehavior.opaque,
@@ -490,8 +496,7 @@ class _ResolvedBanner extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          'Ce ticket est résolu. Un autre problème ? Ouvrez un nouveau '
-          'ticket depuis la page Support.',
+          context.l10n.supportResolvedBannerMessage,
           textAlign: TextAlign.center,
           style: Theme.of(
             context,
@@ -581,7 +586,7 @@ class _MessageComposerState extends State<_MessageComposer> {
                     Expanded(
                       child: DonyTextField(
                         controller: widget.controller,
-                        hint: 'Votre message',
+                        hint: context.l10n.supportMessageHint,
                         minLines: 1,
                         maxLines: 4,
                         onSubmitted: (_) => _send(context, state),
@@ -605,7 +610,7 @@ class _MessageComposerState extends State<_MessageComposer> {
                               onPressed: canSend
                                   ? () => _send(context, state)
                                   : null,
-                              tooltip: 'Envoyer',
+                              tooltip: context.l10n.commonSend,
                               icon: Icon(
                                 Icons.send_rounded,
                                 color: cs.onPrimary,

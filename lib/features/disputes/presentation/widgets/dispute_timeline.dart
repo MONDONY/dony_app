@@ -10,9 +10,10 @@ class DisputeTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final df = DateFormat('d MMM yyyy', AppL10n.localeName);
+    final df = DateFormat.yMMMd(l.localeName);
     final resolved = dispute.isResolved;
 
     Widget step({
@@ -89,27 +90,33 @@ class DisputeTimeline extends StatelessWidget {
         children: [
           step(
             dotColor: cs.primary,
-            title: 'Litige ouvert',
+            title: l.disputeTimelineOpenedTitle,
             subtitle: dispute.myRole == 'SENDER'
-                ? "${df.format(dispute.createdAt)} · vous avez contesté l'absence du voyageur"
-                : "${df.format(dispute.createdAt)} · l'expéditeur a contesté une absence à la remise",
+                ? l.disputeTimelineContestedTraveler(
+                    df.format(dispute.createdAt),
+                  )
+                : l.disputeTimelineContestedSender(
+                    df.format(dispute.createdAt),
+                  ),
           ),
           step(
             dotColor: resolved ? cs.primary : cs.warning,
-            title: 'En instruction',
+            title: l.disputeStatusOpen,
             subtitle: resolved
-                ? 'examiné par l\'équipe Yadony'
-                : 'en cours d\'examen par l\'équipe Yadony',
+                ? l.disputeTimelineReviewedSubtitle
+                : l.disputeTimelineUnderReviewSubtitle,
           ),
           step(
             dotColor: cs.success,
             hollow: !resolved,
             last: true,
-            title: resolved ? 'Décision rendue' : 'Décision',
+            title: resolved
+                ? l.disputeTimelineDecisionTitleDone
+                : l.disputeTimelineDecisionTitlePending,
             titleColor: resolved ? null : cs.onSurfaceVariant,
             subtitle: resolved && dispute.resolvedAt != null
                 ? df.format(dispute.resolvedAt!)
-                : 'sous 72 h',
+                : l.disputeTimelineDecisionEta,
           ),
         ],
       ),

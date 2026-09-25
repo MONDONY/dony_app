@@ -6,6 +6,7 @@ import 'package:dony/features/notifications/bloc/announcements_inbox_state.dart'
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/presentation/notification_bottom_sheet.dart';
 import 'package:dony/features/notifications/presentation/notification_detail_screen.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -37,6 +38,7 @@ class _AnnouncementsInboxView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Scaffold(
@@ -48,7 +50,10 @@ class _AnnouncementsInboxView extends StatelessWidget {
         scrolledUnderElevation: 0,
         centerTitle: false,
         leading: const DonyAppBarBackButton(),
-        title: Text('Annonces Yadony', style: tt.headlineLarge),
+        title: Text(
+          l.notificationAnnouncementsCardTitle,
+          style: tt.headlineLarge,
+        ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(color: cs.outline, height: 1),
@@ -63,21 +68,19 @@ class _AnnouncementsInboxView extends StatelessWidget {
             mascotte: DonyMascotteType.erreurLegere,
             type: DonyEmptyStateType.error,
             iconAsset: 'wifi-off',
-            title: 'Erreur de chargement',
-            description: 'Impossible de charger les annonces.',
-            actionLabel: 'Réessayer',
+            title: l.notificationLoadErrorTitle,
+            description: l.notificationAnnouncementsLoadErrorDescription,
+            actionLabel: l.commonRetry,
             onAction: () => context.read<AnnouncementsInboxBloc>().add(
               const AnnouncementsInboxLoadRequested(),
             ),
           ),
           AnnouncementsInboxLoaded(:final announcements) =>
             announcements.isEmpty
-                ? const DonyEmptyState(
+                ? DonyEmptyState(
                     mascotte: DonyMascotteType.assis,
-                    title: 'Aucune annonce',
-                    description:
-                        'Les nouveautés et informations de Yadony '
-                        'apparaîtront ici.',
+                    title: l.notificationAnnouncementsEmptyTitle,
+                    description: l.notificationAnnouncementsEmptyDescription,
                   )
                 : _AnnouncementsList(announcements: announcements),
         },
@@ -146,6 +149,7 @@ class _AnnouncementTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return InkWell(
@@ -200,6 +204,7 @@ class _AnnouncementTile extends StatelessWidget {
                       const SizedBox(width: DonySpacing.sm),
                       Text(
                         formatNotificationAge(
+                          l,
                           announcement.createdAt,
                           DateTime.now(),
                         ),

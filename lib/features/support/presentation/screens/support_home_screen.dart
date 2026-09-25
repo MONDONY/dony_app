@@ -1,32 +1,44 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/data/support_models.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Libellés français des catégories et statuts backend. Énumérations
-/// fermées côté serveur (`SupportCategory`, `SupportTicketStatus`).
+/// Libellés des catégories et statuts backend. Énumérations fermées côté
+/// serveur (`SupportCategory`, `SupportTicketStatus`) : les codes restent les
+/// clés, seul l'affichage est traduit.
 abstract final class SupportLabels {
-  static const categories = <String, String>{
-    'ACCOUNT': 'Compte',
-    'KYC': "Vérification d'identité",
-    'PAYMENT': 'Paiement',
-    'TRIP': 'Trajet',
-    'PACKAGE': 'Colis',
-    'DELIVERY': 'Livraison',
-    'OTHER': 'Autre',
+  /// Codes de catégorie, dans l'ordre d'affichage du sélecteur de création.
+  static const categoryCodes = <String>[
+    'ACCOUNT',
+    'KYC',
+    'PAYMENT',
+    'TRIP',
+    'PACKAGE',
+    'DELIVERY',
+    'OTHER',
+  ];
+
+  static String category(AppLocalizations l, String code) => switch (code) {
+    'ACCOUNT' => l.supportCategoryAccount,
+    'KYC' => l.supportCategoryKyc,
+    'PAYMENT' => l.supportCategoryPayment,
+    'TRIP' => l.supportCategoryTrip,
+    'PACKAGE' => l.supportCategoryPackage,
+    'DELIVERY' => l.supportCategoryDelivery,
+    'OTHER' => l.supportCategoryOther,
+    _ => code,
   };
 
-  static String category(String code) => categories[code] ?? code;
-
-  static String status(String code) => switch (code) {
-    SupportTicketStatuses.newTicket => 'Nouveau',
-    SupportTicketStatuses.assigned => 'Pris en charge',
-    SupportTicketStatuses.waitingUser => 'Réponse reçue',
-    SupportTicketStatuses.waitingSupport => 'En attente du support',
-    SupportTicketStatuses.resolved => 'Résolu',
+  static String status(AppLocalizations l, String code) => switch (code) {
+    SupportTicketStatuses.newTicket => l.supportStatusNew,
+    SupportTicketStatuses.assigned => l.supportStatusAssigned,
+    SupportTicketStatuses.waitingUser => l.supportStatusWaitingUser,
+    SupportTicketStatuses.waitingSupport => l.supportStatusWaitingSupport,
+    SupportTicketStatuses.resolved => l.supportStatusResolved,
     _ => code,
   };
 
@@ -34,6 +46,19 @@ abstract final class SupportLabels {
     SupportTicketStatuses.waitingUser => DonyBadgeType.warning,
     SupportTicketStatuses.resolved => DonyBadgeType.success,
     _ => DonyBadgeType.info,
+  };
+}
+
+/// Message d'erreur à afficher : le `detail` serveur relayé tel quel s'il
+/// existe (donnée, jamais traduite), sinon un texte fixe selon la cause de
+/// l'échec. `null` hors échec.
+String? supportErrorMessage(AppLocalizations l, SupportState state) {
+  final detail = state.serverDetail;
+  if (detail != null) return detail; // i18n-ignore
+  return switch (state.failure) {
+    SupportFailure.ticketResolved => l.supportTicketResolvedError,
+    SupportFailure.generic => l.supportGenericError,
+    null => null,
   };
 }
 
@@ -49,17 +74,19 @@ class SupportHomeScreen extends StatelessWidget {
       appBar: AppBar(
         actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
-        title: const Text('Support'),
+        title: Text(context.l10n.supportScreenTitle),
       ),
       body: BlocConsumer<SupportBloc, SupportState>(
         listener: (context, state) async {
-          if (state.createStatus == SupportActionStatus.failure &&
-              state.errorMessage != null) {
-            DonySnackbar.show(
-              context,
-              message: state.errorMessage!,
-              type: DonySnackbarType.error,
-            );
+          if (state.createStatus == SupportActionStatus.failure) {
+            final message = supportErrorMessage(context.l10n, state);
+            if (message != null) {
+              DonySnackbar.show(
+                context,
+                message: message,
+                type: DonySnackbarType.error,
+              );
+            }
           }
           if (state.createStatus == SupportActionStatus.success &&
               state.createdTicketId != null) {
@@ -76,10 +103,11 @@ class SupportHomeScreen extends StatelessWidget {
             const Center(child: CircularProgressIndicator()),
           SupportViewStatus.failure => DonyEmptyState(
             type: DonyEmptyStateType.error,
-            title: 'Impossible de charger le support',
+            title: context.l10n.supportHomeLoadErrorTitle,
             description:
-                state.errorMessage ?? 'Vérifiez votre connexion et réessayez.',
-            actionLabel: 'Réessayer',
+                supportErrorMessage(context.l10n, state) ??
+                context.l10n.supportConnectionCheckFallback,
+            actionLabel: context.l10n.commonRetry,
             onAction: () =>
                 context.read<SupportBloc>().add(const SupportHomeRequested()),
           ),
@@ -97,18 +125,19 @@ class _SupportHomeBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
       children: [
         if (state.replies.isNotEmpty) ...[
           Text(
-            'Questions fréquentes',
+            l.supportHomeFaqTitle,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
           Text(
-            'La réponse est peut-être déjà là. Sinon, ouvrez un ticket.',
+            l.supportHomeFaqSubtitle,
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -124,15 +153,17 @@ class _SupportHomeBody extends StatelessWidget {
           ),
           const SizedBox(height: 24),
         ],
-        Text('Mes tickets', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          l.supportHomeMyTicketsTitle,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const SizedBox(height: 12),
         if (state.tickets.isEmpty)
           DonyCard(
             child: Padding(
               padding: const EdgeInsets.all(4),
               child: Text(
-                'Aucun ticket pour le moment. Un problème non résolu par '
-                "l'assistant ? Ouvrez un ticket, l'équipe Yadony vous répond.",
+                l.supportHomeNoTicketsMessage,
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
@@ -148,7 +179,7 @@ class _SupportHomeBody extends StatelessWidget {
           ),
         const SizedBox(height: 24),
         DonyButton(
-          label: 'Contacter le support',
+          label: l.supportContactCta,
           iconAsset: 'mail',
           onPressed: () => _openCreateTicketSheet(context),
         ),
@@ -227,14 +258,14 @@ class _TicketCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               DonyBadge(
-                label: SupportLabels.status(ticket.status),
+                label: SupportLabels.status(context.l10n, ticket.status),
                 type: SupportLabels.statusBadge(ticket.status),
               ),
             ],
           ),
           const SizedBox(height: 6),
           Text(
-            SupportLabels.category(ticket.category),
+            SupportLabels.category(context.l10n, ticket.category),
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -257,18 +288,20 @@ class _TicketCard extends StatelessWidget {
 /// Le [State] n'est disposé qu'au retrait effectif de la route.
 Future<void> _openCreateTicketSheet(BuildContext context) {
   final bloc = context.read<SupportBloc>();
+  final title = context.l10n.supportContactCta;
+  final sendLabel = context.l10n.commonSend;
   final canSubmit = ValueNotifier<bool>(false);
   VoidCallback? submit;
 
   return DonyBottomSheet.show<void>(
     context,
-    title: 'Contacter le support',
+    title: title,
     wrapper: (child) => BlocProvider.value(value: bloc, child: child),
     stickyBottom: ValueListenableBuilder<bool>(
       valueListenable: canSubmit,
       builder: (context, ready, _) => BlocBuilder<SupportBloc, SupportState>(
         builder: (context, state) => DonyButton(
-          label: 'Envoyer',
+          label: sendLabel,
           isLoading: state.createStatus == SupportActionStatus.submitting,
           onPressed: ready ? () => submit?.call() : null,
         ),
@@ -338,23 +371,27 @@ class _CreateTicketFormState extends State<_CreateTicketForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('Catégorie', style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          l.supportCreateTicketCategoryLabel,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
         ValueListenableBuilder<String?>(
           valueListenable: selectedCategory,
           builder: (context, selected, _) => Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: SupportLabels.categories.entries
+            children: SupportLabels.categoryCodes
                 .map(
-                  (entry) => ChoiceChip(
-                    label: Text(entry.value),
-                    selected: selected == entry.key,
-                    onSelected: (_) => selectedCategory.value = entry.key,
+                  (code) => ChoiceChip(
+                    label: Text(SupportLabels.category(l, code)),
+                    selected: selected == code,
+                    onSelected: (_) => selectedCategory.value = code,
                   ),
                 )
                 .toList(),
@@ -363,15 +400,15 @@ class _CreateTicketFormState extends State<_CreateTicketForm> {
         const SizedBox(height: 16),
         DonyTextField(
           controller: subjectController,
-          label: 'Sujet',
-          hint: 'Résumez votre problème',
+          label: l.supportCreateTicketSubjectLabel,
+          hint: l.supportCreateTicketSubjectHint,
           onChanged: (_) => _recompute(),
         ),
         const SizedBox(height: 12),
         DonyTextField(
           controller: messageController,
-          label: 'Message',
-          hint: 'Décrivez ce qui vous arrive',
+          label: l.supportCreateTicketMessageLabel,
+          hint: l.supportCreateTicketMessageHint,
           maxLines: 5,
           minLines: 3,
           onChanged: (_) => _recompute(),

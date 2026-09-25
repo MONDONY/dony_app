@@ -166,7 +166,7 @@ void main() {
     stubState(
       const SupportState(
         homeStatus: SupportViewStatus.failure,
-        errorMessage: 'Une erreur est survenue. Réessayez.',
+        failure: SupportFailure.generic,
       ),
     );
 

@@ -20521,6 +20521,570 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.'**
   String get errorEscrowBlockedMessage;
+
+  /// Nom du canal Android transactionnel, résolu sans BuildContext à la création (notification_service.dart, AppL10n.current).
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications Yadony'**
+  String get notificationChannelTransactionalName;
+
+  /// Description du canal Android transactionnel (notification_service.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiements, livraisons et mises à jour de vos envois'**
+  String get notificationChannelTransactionalDescription;
+
+  /// Nom du canal Android général, résolu sans BuildContext à la création (notification_service.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Actualités Yadony'**
+  String get notificationChannelGeneralName;
+
+  /// Description du canal Android général (notification_service.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Correspondances, invitations et informations générales'**
+  String get notificationChannelGeneralDescription;
+
+  /// Horodatage compact d'une notification, moins d'une minute (notification_bottom_sheet.dart, formatNotificationAge).
+  ///
+  /// In fr, this message translates to:
+  /// **'maintenant'**
+  String get notificationAgeNow;
+
+  /// Horodatage compact en minutes (notification_bottom_sheet.dart). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'{minutes} min'**
+  String notificationAgeMinutes(int minutes);
+
+  /// Horodatage compact en heures (notification_bottom_sheet.dart). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'{hours} h'**
+  String notificationAgeHours(int hours);
+
+  /// Horodatage compact en jours (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{days} j'**
+  String notificationAgeDays(int days);
+
+  /// Titre de section du feed de notifications, moins de 24 h (notification_bottom_sheet.dart, NotificationSection.label).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau'**
+  String get notificationSectionNew;
+
+  /// Titre de section du feed de notifications, plus de 7 jours (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tôt'**
+  String get notificationSectionEarlier;
+
+  /// Titre du sheet de notifications (notification_bottom_sheet.dart). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications'**
+  String get notificationSheetTitle;
+
+  /// Bouton qui marque toutes les notifications comme lues (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout lire'**
+  String get notificationMarkAllRead;
+
+  /// Titre de l'état d'erreur du feed de notifications (notification_bottom_sheet.dart). Réutilisé tel quel par announcements_inbox_screen.dart (même feature, même texte, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur de chargement'**
+  String get notificationLoadErrorTitle;
+
+  /// Description de l'état d'erreur du feed de notifications (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger vos notifications.'**
+  String get notificationLoadErrorDescription;
+
+  /// Titre de l'état vide du feed de notifications (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune notification'**
+  String get notificationEmptyTitle;
+
+  /// Description de l'état vide du feed de notifications (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos notifications apparaîtront ici.'**
+  String get notificationEmptyDescription;
+
+  /// Snackbar affichée quand le deeplink d'une notification est périmé ou inconnu du routeur (notification_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette notification ne mène plus nulle part.'**
+  String get notificationRouteMissing;
+
+  /// Titre de la carte « Annonces Yadony » du feed (notification_bottom_sheet.dart). Réutilisé tel quel comme titre de app bar par announcements_inbox_screen.dart (même feature, même texte, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annonces Yadony'**
+  String get notificationAnnouncementsCardTitle;
+
+  /// Description de l'état d'erreur de la boîte « Annonces Yadony » (announcements_inbox_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les annonces.'**
+  String get notificationAnnouncementsLoadErrorDescription;
+
+  /// Titre de l'état vide de la boîte « Annonces Yadony » (announcements_inbox_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune annonce'**
+  String get notificationAnnouncementsEmptyTitle;
+
+  /// Description de l'état vide de la boîte « Annonces Yadony » (announcements_inbox_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les nouveautés et informations de Yadony apparaîtront ici.'**
+  String get notificationAnnouncementsEmptyDescription;
+
+  /// Titre générique de l'écran de détail hors annonce (notification_detail_screen.dart). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Notification'**
+  String get notificationDetailFallbackTitle;
+
+  /// Titre de l'écran de détail pour une annonce plateforme (notification_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annonce Yadony'**
+  String get notificationDetailAnnouncementTitle;
+
+  /// Titre de l'état d'erreur de l'écran de détail (notification_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Notification introuvable'**
+  String get notificationDetailNotFoundTitle;
+
+  /// Description de l'état d'erreur de l'écran de détail (notification_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Elle a peut-être été supprimée, ou le réseau est indisponible.'**
+  String get notificationDetailNotFoundDescription;
+
+  /// Titre de l'app bar du détail d'un litige (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Litige'**
+  String get disputeDetailTitle;
+
+  /// Autre partie d'un litige, selon le rôle du viewer (dispute_detail_screen.dart, dispute_card.dart : même texte, même feature, R42). role = myRole du litige (SENDER/TRAVELER).
+  ///
+  /// In fr, this message translates to:
+  /// **'{role, select, SENDER{Voyageur : {name}} other{Expéditeur : {name}}}'**
+  String disputeOtherParty(String role, String name);
+
+  /// Remplace la ligne autre-partie quand otherPartyName est absent (dispute_detail_screen.dart, dispute_card.dart : même texte, même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi supprimé'**
+  String get disputeShipmentDeleted;
+
+  /// Poids de l'envoi d'un litige, {kg} déjà formaté (entier ou une décimale via formatOneDecimal) (dispute_detail_screen.dart, dispute_card.dart : même texte, même feature, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi {kg} kg'**
+  String disputeParcelWeight(String kg);
+
+  /// Bandeau de gel du remboursement pendant l'instruction (dispute_detail_screen.dart). Tiret cadratin d'origine remplacé par un point (deux phrases), signalé en PR.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement gelé le temps de l\'instruction. L\'équipe Yadony tranche sous 72 h ouvrées.'**
+  String get disputeDetailFrozenNotice;
+
+  /// En-tête de section au-dessus de la frise (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'SUIVI'**
+  String get disputeDetailTimelineSectionTitle;
+
+  /// En-tête de section au-dessus du bloc décision (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'DÉCISION'**
+  String get disputeDetailDecisionSectionTitle;
+
+  /// Verdict affiché quand l'utilisateur est bénéficiaire de la décision (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résolu en votre faveur'**
+  String get disputeDetailResolvedInFavor;
+
+  /// Verdict neutre affiché quand l'utilisateur n'est pas bénéficiaire (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Litige résolu'**
+  String get disputeDetailResolved;
+
+  /// Libellé du montant d'indemnisation versé (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indemnisation versée'**
+  String get disputeDetailCompensationPaid;
+
+  /// CTA en bas du détail d'un litige, vers /support (dispute_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter le support'**
+  String get disputeDetailContactSupport;
+
+  /// Titre de l'app bar de la liste des litiges (dispute_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes litiges'**
+  String get disputeListTitle;
+
+  /// Titre de l'état d'erreur de la liste des litiges (dispute_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger vos litiges'**
+  String get disputeListLoadErrorTitle;
+
+  /// Titre de l'état vide de la liste des litiges (dispute_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun litige'**
+  String get disputeListEmptyTitle;
+
+  /// Description de l'état vide de la liste des litiges (dispute_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tant mieux ! Un litige s\'ouvre automatiquement si vous contestez l\'absence d\'un voyageur lors d\'une remise.'**
+  String get disputeListEmptyDescription;
+
+  /// CTA de l'état vide de la liste des litiges, vers /support (dispute_list_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un problème avec un envoi ?'**
+  String get disputeListEmptyAction;
+
+  /// Libellé du type SENDER_NO_SHOW_CONTESTED (dispute_labels.dart, disputeTypeLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contestation d\'absence'**
+  String get disputeTypeContestedNoShow;
+
+  /// Libellé des types RECIPIENT_NO_SHOW(_CONTESTED) (dispute_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Absence du destinataire'**
+  String get disputeTypeRecipientNoShow;
+
+  /// Libellé des types TRAVELER_DELIVERY_NO_SHOW(_CONTESTED) (dispute_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Défaut de livraison'**
+  String get disputeTypeDeliveryFailure;
+
+  /// Libellé du statut OPEN (dispute_labels.dart, disputeStatusLabel). Réutilisé tel quel comme titre de l'étape « en instruction » de la frise (dispute_timeline.dart, même feature, même texte, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'En instruction'**
+  String get disputeStatusOpen;
+
+  /// Libellé du statut RESOLVED (dispute_labels.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résolu'**
+  String get disputeStatusResolved;
+
+  /// Date d'ouverture d'un litige encore en cours (dispute_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvert le {date}'**
+  String disputeOpenedOn(String date);
+
+  /// Dates d'ouverture et de résolution d'un litige résolu (dispute_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvert le {opened} · Résolu le {resolved}'**
+  String disputeOpenedAndResolved(String opened, String resolved);
+
+  /// Bandeau de gel du remboursement, version compacte de la carte liste (dispute_card.dart). Tiret cadratin d'origine remplacé par un point (deux phrases), signalé en PR.
+  ///
+  /// In fr, this message translates to:
+  /// **'Remboursement gelé le temps de l\'instruction. Réponse sous 72 h.'**
+  String get disputeCardFrozenNotice;
+
+  /// Titre de la première étape de la frise (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Litige ouvert'**
+  String get disputeTimelineOpenedTitle;
+
+  /// Sous-titre de la première étape côté expéditeur (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} · vous avez contesté l\'absence du voyageur'**
+  String disputeTimelineContestedTraveler(String date);
+
+  /// Sous-titre de la première étape côté voyageur (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} · l\'expéditeur a contesté une absence à la remise'**
+  String disputeTimelineContestedSender(String date);
+
+  /// Sous-titre de l'étape « en instruction » une fois le litige résolu (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'examiné par l\'équipe Yadony'**
+  String get disputeTimelineReviewedSubtitle;
+
+  /// Sous-titre de l'étape « en instruction » tant que le litige est ouvert (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'en cours d\'examen par l\'équipe Yadony'**
+  String get disputeTimelineUnderReviewSubtitle;
+
+  /// Titre de la dernière étape une fois la décision rendue (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Décision rendue'**
+  String get disputeTimelineDecisionTitleDone;
+
+  /// Titre de la dernière étape tant que le litige est ouvert (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Décision'**
+  String get disputeTimelineDecisionTitlePending;
+
+  /// Sous-titre de la dernière étape tant que le litige est ouvert (dispute_timeline.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'sous 72 h'**
+  String get disputeTimelineDecisionEta;
+
+  /// Libellé de la catégorie backend ACCOUNT (support_home_screen.dart, SupportLabels.category).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte'**
+  String get supportCategoryAccount;
+
+  /// Libellé de la catégorie backend KYC (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification d\'identité'**
+  String get supportCategoryKyc;
+
+  /// Libellé de la catégorie backend PAYMENT (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement'**
+  String get supportCategoryPayment;
+
+  /// Libellé de la catégorie backend TRIP (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet'**
+  String get supportCategoryTrip;
+
+  /// Libellé de la catégorie backend PACKAGE (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get supportCategoryPackage;
+
+  /// Libellé de la catégorie backend DELIVERY (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraison'**
+  String get supportCategoryDelivery;
+
+  /// Libellé de la catégorie backend OTHER (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get supportCategoryOther;
+
+  /// Libellé du statut backend NEW (support_home_screen.dart, SupportLabels.status).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau'**
+  String get supportStatusNew;
+
+  /// Libellé du statut backend ASSIGNED (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pris en charge'**
+  String get supportStatusAssigned;
+
+  /// Libellé du statut backend WAITING_USER (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse reçue'**
+  String get supportStatusWaitingUser;
+
+  /// Libellé du statut backend WAITING_SUPPORT (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente du support'**
+  String get supportStatusWaitingSupport;
+
+  /// Libellé du statut backend RESOLVED (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résolu'**
+  String get supportStatusResolved;
+
+  /// Message affiché quand un envoi est refusé localement car le ticket est déjà résolu (support_home_screen.dart, supportErrorMessage ; SupportState.failure == ticketResolved).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce ticket est résolu. Ouvrez-en un nouveau pour un autre problème.'**
+  String get supportTicketResolvedError;
+
+  /// Repli générique affiché quand un échec support n'a pas de detail serveur (support_home_screen.dart, supportErrorMessage ; SupportState.failure == generic).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue. Réessayez.'**
+  String get supportGenericError;
+
+  /// Titre de l'app bar de l'accueil support (support_home_screen.dart). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Support'**
+  String get supportScreenTitle;
+
+  /// Titre de l'état d'erreur de l'accueil support (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger le support'**
+  String get supportHomeLoadErrorTitle;
+
+  /// Repli de description d'un état d'erreur support sans message serveur (support_home_screen.dart, support_ticket_detail_screen.dart : même feature, même texte, R42).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre connexion et réessayez.'**
+  String get supportConnectionCheckFallback;
+
+  /// Titre de la section des réponses prédéfinies (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Questions fréquentes'**
+  String get supportHomeFaqTitle;
+
+  /// Sous-titre de la section des réponses prédéfinies (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La réponse est peut-être déjà là. Sinon, ouvrez un ticket.'**
+  String get supportHomeFaqSubtitle;
+
+  /// Titre de la section des tickets de l'utilisateur (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes tickets'**
+  String get supportHomeMyTicketsTitle;
+
+  /// Message affiché quand l'utilisateur n'a aucun ticket (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun ticket pour le moment. Un problème non résolu par l\'assistant ? Ouvrez un ticket, l\'équipe Yadony vous répond.'**
+  String get supportHomeNoTicketsMessage;
+
+  /// Bouton d'accueil support et titre de la sheet de création de ticket (support_home_screen.dart, même texte deux usages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter le support'**
+  String get supportContactCta;
+
+  /// Libellé du sélecteur de catégorie de la sheet de création de ticket (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Catégorie'**
+  String get supportCreateTicketCategoryLabel;
+
+  /// Libellé du champ sujet de la sheet de création de ticket (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sujet'**
+  String get supportCreateTicketSubjectLabel;
+
+  /// Texte d'indication du champ sujet (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résumez votre problème'**
+  String get supportCreateTicketSubjectHint;
+
+  /// Libellé du champ message de la sheet de création de ticket (support_home_screen.dart). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Message'**
+  String get supportCreateTicketMessageLabel;
+
+  /// Texte d'indication du champ message (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez ce qui vous arrive'**
+  String get supportCreateTicketMessageHint;
+
+  /// Titre de l'app bar du détail d'un ticket tant que le sujet n'est pas chargé (support_ticket_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ticket support'**
+  String get supportTicketFallbackTitle;
+
+  /// Titre de l'état d'erreur du détail d'un ticket (support_ticket_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ticket introuvable'**
+  String get supportTicketNotFoundTitle;
+
+  /// Nom affiché de l'équipe support, en-tête des messages admin et ligne épinglée des conversations (support_ticket_detail_screen.dart, support_conversation_tile.dart : même feature, même texte, R42). Identique en anglais : _sameInBothLanguages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Support Yadony'**
+  String get supportBrandName;
+
+  /// Libellé d'accessibilité d'une vignette d'image jointe dans le fil (support_ticket_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir l\'image en plein écran'**
+  String get supportViewImageLabel;
+
+  /// Compteur de la visionneuse plein écran des pièces jointes (support_ticket_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo {index} / {count}'**
+  String supportPhotoIndex(int index, int count);
+
+  /// Bandeau affiché à la place du champ de réponse quand le ticket est résolu (support_ticket_detail_screen.dart, _ResolvedBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce ticket est résolu. Un autre problème ? Ouvrez un nouveau ticket depuis la page Support.'**
+  String get supportResolvedBannerMessage;
+
+  /// Texte d'indication du champ de réponse d'un ticket (support_ticket_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre message'**
+  String get supportMessageHint;
+
+  /// Tooltip du bouton trombone, sans et avec vignettes déjà présentes (support_attachment_picker.dart, deux usages).
+  ///
+  /// In fr, this message translates to:
+  /// **'Joindre une image'**
+  String get supportAttachTooltip;
+
+  /// Libellé d'accessibilité du bouton de retrait d'une vignette en attente d'envoi (support_attachment_picker.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer cette image'**
+  String get supportRemoveAttachmentLabel;
+
+  /// Aperçu par défaut de la ligne épinglée support quand aucun message n'existe encore (support_conversation_tile.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Une question ? Notre équipe vous répond ici.'**
+  String get supportConversationDefaultPreview;
 }
 
 class _AppLocalizationsDelegate

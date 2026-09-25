@@ -32,6 +32,7 @@ class _NotificationDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Scaffold(
@@ -47,8 +48,8 @@ class _NotificationDetailView extends StatelessWidget {
           builder: (context, state) => Text(
             state is NotificationDetailLoaded &&
                     state.detail.category == 'annonce'
-                ? 'Annonce Yadony'
-                : 'Notification',
+                ? context.l10n.notificationDetailAnnouncementTitle
+                : context.l10n.notificationDetailFallbackTitle,
             style: tt.headlineLarge,
           ),
         ),
@@ -66,10 +67,9 @@ class _NotificationDetailView extends StatelessWidget {
             mascotte: DonyMascotteType.erreurLegere,
             type: DonyEmptyStateType.error,
             iconAsset: 'wifi-off',
-            title: 'Notification introuvable',
-            description:
-                'Elle a peut-être été supprimée, ou le réseau est indisponible.',
-            actionLabel: 'Réessayer',
+            title: l.notificationDetailNotFoundTitle,
+            description: l.notificationDetailNotFoundDescription,
+            actionLabel: l.commonRetry,
             onAction: () => context.read<NotificationDetailCubit>().load(id),
           ),
           NotificationDetailLoaded(:final detail) => SingleChildScrollView(
@@ -91,10 +91,14 @@ class _NotificationDetailView extends StatelessWidget {
                         ),
                         const SizedBox(height: DonySpacing.sm),
                         Text(
-                          DateFormat(
-                            "d MMMM yyyy 'à' HH:mm",
-                            AppL10n.localeName,
-                          ).format(detail.createdAt.toLocal()),
+                          l.commonDateAtTime(
+                            DateFormat.yMMMMd(
+                              l.localeName,
+                            ).format(detail.createdAt.toLocal()),
+                            DateFormat.jm(
+                              l.localeName,
+                            ).format(detail.createdAt.toLocal()),
+                          ),
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
                           ),

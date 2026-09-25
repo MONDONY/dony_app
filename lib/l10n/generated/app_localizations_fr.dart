@@ -12288,4 +12288,328 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorEscrowBlockedMessage =>
       'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.';
+
+  @override
+  String get notificationChannelTransactionalName => 'Notifications Yadony';
+
+  @override
+  String get notificationChannelTransactionalDescription =>
+      'Paiements, livraisons et mises à jour de vos envois';
+
+  @override
+  String get notificationChannelGeneralName => 'Actualités Yadony';
+
+  @override
+  String get notificationChannelGeneralDescription =>
+      'Correspondances, invitations et informations générales';
+
+  @override
+  String get notificationAgeNow => 'maintenant';
+
+  @override
+  String notificationAgeMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String notificationAgeHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String notificationAgeDays(int days) {
+    return '$days j';
+  }
+
+  @override
+  String get notificationSectionNew => 'Nouveau';
+
+  @override
+  String get notificationSectionEarlier => 'Plus tôt';
+
+  @override
+  String get notificationSheetTitle => 'Notifications';
+
+  @override
+  String get notificationMarkAllRead => 'Tout lire';
+
+  @override
+  String get notificationLoadErrorTitle => 'Erreur de chargement';
+
+  @override
+  String get notificationLoadErrorDescription =>
+      'Impossible de charger vos notifications.';
+
+  @override
+  String get notificationEmptyTitle => 'Aucune notification';
+
+  @override
+  String get notificationEmptyDescription =>
+      'Vos notifications apparaîtront ici.';
+
+  @override
+  String get notificationRouteMissing =>
+      'Cette notification ne mène plus nulle part.';
+
+  @override
+  String get notificationAnnouncementsCardTitle => 'Annonces Yadony';
+
+  @override
+  String get notificationAnnouncementsLoadErrorDescription =>
+      'Impossible de charger les annonces.';
+
+  @override
+  String get notificationAnnouncementsEmptyTitle => 'Aucune annonce';
+
+  @override
+  String get notificationAnnouncementsEmptyDescription =>
+      'Les nouveautés et informations de Yadony apparaîtront ici.';
+
+  @override
+  String get notificationDetailFallbackTitle => 'Notification';
+
+  @override
+  String get notificationDetailAnnouncementTitle => 'Annonce Yadony';
+
+  @override
+  String get notificationDetailNotFoundTitle => 'Notification introuvable';
+
+  @override
+  String get notificationDetailNotFoundDescription =>
+      'Elle a peut-être été supprimée, ou le réseau est indisponible.';
+
+  @override
+  String get disputeDetailTitle => 'Litige';
+
+  @override
+  String disputeOtherParty(String role, String name) {
+    String _temp0 = intl.Intl.selectLogic(role, {
+      'SENDER': 'Voyageur : $name',
+      'other': 'Expéditeur : $name',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get disputeShipmentDeleted => 'Envoi supprimé';
+
+  @override
+  String disputeParcelWeight(String kg) {
+    return 'Envoi $kg kg';
+  }
+
+  @override
+  String get disputeDetailFrozenNotice =>
+      'Remboursement gelé le temps de l\'instruction. L\'équipe Yadony tranche sous 72 h ouvrées.';
+
+  @override
+  String get disputeDetailTimelineSectionTitle => 'SUIVI';
+
+  @override
+  String get disputeDetailDecisionSectionTitle => 'DÉCISION';
+
+  @override
+  String get disputeDetailResolvedInFavor => 'Résolu en votre faveur';
+
+  @override
+  String get disputeDetailResolved => 'Litige résolu';
+
+  @override
+  String get disputeDetailCompensationPaid => 'Indemnisation versée';
+
+  @override
+  String get disputeDetailContactSupport => 'Contacter le support';
+
+  @override
+  String get disputeListTitle => 'Mes litiges';
+
+  @override
+  String get disputeListLoadErrorTitle => 'Impossible de charger vos litiges';
+
+  @override
+  String get disputeListEmptyTitle => 'Aucun litige';
+
+  @override
+  String get disputeListEmptyDescription =>
+      'Tant mieux ! Un litige s\'ouvre automatiquement si vous contestez l\'absence d\'un voyageur lors d\'une remise.';
+
+  @override
+  String get disputeListEmptyAction => 'Un problème avec un envoi ?';
+
+  @override
+  String get disputeTypeContestedNoShow => 'Contestation d\'absence';
+
+  @override
+  String get disputeTypeRecipientNoShow => 'Absence du destinataire';
+
+  @override
+  String get disputeTypeDeliveryFailure => 'Défaut de livraison';
+
+  @override
+  String get disputeStatusOpen => 'En instruction';
+
+  @override
+  String get disputeStatusResolved => 'Résolu';
+
+  @override
+  String disputeOpenedOn(String date) {
+    return 'Ouvert le $date';
+  }
+
+  @override
+  String disputeOpenedAndResolved(String opened, String resolved) {
+    return 'Ouvert le $opened · Résolu le $resolved';
+  }
+
+  @override
+  String get disputeCardFrozenNotice =>
+      'Remboursement gelé le temps de l\'instruction. Réponse sous 72 h.';
+
+  @override
+  String get disputeTimelineOpenedTitle => 'Litige ouvert';
+
+  @override
+  String disputeTimelineContestedTraveler(String date) {
+    return '$date · vous avez contesté l\'absence du voyageur';
+  }
+
+  @override
+  String disputeTimelineContestedSender(String date) {
+    return '$date · l\'expéditeur a contesté une absence à la remise';
+  }
+
+  @override
+  String get disputeTimelineReviewedSubtitle => 'examiné par l\'équipe Yadony';
+
+  @override
+  String get disputeTimelineUnderReviewSubtitle =>
+      'en cours d\'examen par l\'équipe Yadony';
+
+  @override
+  String get disputeTimelineDecisionTitleDone => 'Décision rendue';
+
+  @override
+  String get disputeTimelineDecisionTitlePending => 'Décision';
+
+  @override
+  String get disputeTimelineDecisionEta => 'sous 72 h';
+
+  @override
+  String get supportCategoryAccount => 'Compte';
+
+  @override
+  String get supportCategoryKyc => 'Vérification d\'identité';
+
+  @override
+  String get supportCategoryPayment => 'Paiement';
+
+  @override
+  String get supportCategoryTrip => 'Trajet';
+
+  @override
+  String get supportCategoryPackage => 'Colis';
+
+  @override
+  String get supportCategoryDelivery => 'Livraison';
+
+  @override
+  String get supportCategoryOther => 'Autre';
+
+  @override
+  String get supportStatusNew => 'Nouveau';
+
+  @override
+  String get supportStatusAssigned => 'Pris en charge';
+
+  @override
+  String get supportStatusWaitingUser => 'Réponse reçue';
+
+  @override
+  String get supportStatusWaitingSupport => 'En attente du support';
+
+  @override
+  String get supportStatusResolved => 'Résolu';
+
+  @override
+  String get supportTicketResolvedError =>
+      'Ce ticket est résolu. Ouvrez-en un nouveau pour un autre problème.';
+
+  @override
+  String get supportGenericError => 'Une erreur est survenue. Réessayez.';
+
+  @override
+  String get supportScreenTitle => 'Support';
+
+  @override
+  String get supportHomeLoadErrorTitle => 'Impossible de charger le support';
+
+  @override
+  String get supportConnectionCheckFallback =>
+      'Vérifiez votre connexion et réessayez.';
+
+  @override
+  String get supportHomeFaqTitle => 'Questions fréquentes';
+
+  @override
+  String get supportHomeFaqSubtitle =>
+      'La réponse est peut-être déjà là. Sinon, ouvrez un ticket.';
+
+  @override
+  String get supportHomeMyTicketsTitle => 'Mes tickets';
+
+  @override
+  String get supportHomeNoTicketsMessage =>
+      'Aucun ticket pour le moment. Un problème non résolu par l\'assistant ? Ouvrez un ticket, l\'équipe Yadony vous répond.';
+
+  @override
+  String get supportContactCta => 'Contacter le support';
+
+  @override
+  String get supportCreateTicketCategoryLabel => 'Catégorie';
+
+  @override
+  String get supportCreateTicketSubjectLabel => 'Sujet';
+
+  @override
+  String get supportCreateTicketSubjectHint => 'Résumez votre problème';
+
+  @override
+  String get supportCreateTicketMessageLabel => 'Message';
+
+  @override
+  String get supportCreateTicketMessageHint => 'Décrivez ce qui vous arrive';
+
+  @override
+  String get supportTicketFallbackTitle => 'Ticket support';
+
+  @override
+  String get supportTicketNotFoundTitle => 'Ticket introuvable';
+
+  @override
+  String get supportBrandName => 'Support Yadony';
+
+  @override
+  String get supportViewImageLabel => 'Voir l\'image en plein écran';
+
+  @override
+  String supportPhotoIndex(int index, int count) {
+    return 'Photo $index / $count';
+  }
+
+  @override
+  String get supportResolvedBannerMessage =>
+      'Ce ticket est résolu. Un autre problème ? Ouvrez un nouveau ticket depuis la page Support.';
+
+  @override
+  String get supportMessageHint => 'Votre message';
+
+  @override
+  String get supportAttachTooltip => 'Joindre une image';
+
+  @override
+  String get supportRemoveAttachmentLabel => 'Retirer cette image';
+
+  @override
+  String get supportConversationDefaultPreview =>
+      'Une question ? Notre équipe vous répond ici.';
 }
