@@ -17353,6 +17353,1596 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Excellent !'**
   String get ratingStarExcellent;
+
+  /// Message de refus KYC pour le code Didit 'document_expired' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre pièce d\'identité est expirée. Utilisez un document valide et réessayez.'**
+  String get kycRejectionDocumentExpired;
+
+  /// Message de refus KYC pour le code Didit 'document_type_not_supported' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce type de document n\'est pas accepté. Utilisez une carte d\'identité, un passeport ou un permis de conduire.'**
+  String get kycRejectionDocumentTypeNotSupported;
+
+  /// Message de refus KYC pour le code Didit 'document_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le document fourni n\'a pas pu être lu ou vérifié. Assurez-vous qu\'il est net, complet et bien éclairé, puis réessayez.'**
+  String get kycRejectionDocumentUnverifiedOther;
+
+  /// Message de refus KYC pour le code Didit 'country_not_supported' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le pays de votre document n\'est pas pris en charge pour la vérification.'**
+  String get kycRejectionCountryNotSupported;
+
+  /// Message de refus KYC partagé par les codes Didit 'id_number_insufficient_document_data', 'id_number_mismatch' et 'id_number_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les informations de votre document n\'ont pas pu être confirmées. Vérifiez qu\'elles sont bien lisibles et réessayez.'**
+  String get kycRejectionIdNumberMismatch;
+
+  /// Message de refus KYC pour le code Didit 'selfie_document_missing_photo' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'La photo sur votre document n\'a pas pu être comparée à votre selfie. Réessayez avec une pièce d\'identité comportant une photo nette.'**
+  String get kycRejectionSelfieDocumentMissingPhoto;
+
+  /// Message de refus KYC pour le code Didit 'selfie_face_mismatch' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre selfie ne correspond pas à la photo du document. Reprenez la vérification dans de bonnes conditions de lumière.'**
+  String get kycRejectionSelfieFaceMismatch;
+
+  /// Message de refus KYC partagé par les codes Didit 'selfie_manipulated' et 'selfie_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre selfie n\'a pas pu être vérifié. Réessayez dans un endroit bien éclairé, sans lunettes ni couvre-chef.'**
+  String get kycRejectionSelfieUnverified;
+
+  /// Message de refus KYC pour le code Didit 'under_supported_age' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'La vérification d\'identité est réservée aux personnes majeures.'**
+  String get kycRejectionUnderSupportedAge;
+
+  /// Message de refus KYC pour le code Didit 'consent_declined' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez refusé de donner votre consentement, indispensable pour vérifier votre identité.'**
+  String get kycRejectionConsentDeclined;
+
+  /// Message de refus KYC pour le code Didit 'session_canceled' (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'La vérification a été fermée avant d\'être terminée.'**
+  String get kycRejectionSessionCanceled;
+
+  /// Message de repli pour un code de refus KYC inconnu ou absent (kyc_rejection_messages.dart, kycRejectionMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous n\'avons pas pu vérifier votre identité. Assurez-vous que votre document est lisible et réessayez.'**
+  String get kycRejectionGeneric;
+
+  /// Titre de l'écran/la feuille de vérification d'identité (kyc_status_bottom_sheet.dart, KycStatusBottomSheet.show ; kyc_webview_screen.dart, KycWebViewScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification d\'identité'**
+  String get kycVerificationTitle;
+
+  /// Titre de l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildNotStartedContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification non démarrée'**
+  String get kycStatusNotStartedTitle;
+
+  /// Texte de l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildNotStartedContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous devez vérifier votre identité pour utiliser toutes les fonctionnalités de Yadony.'**
+  String get kycStatusNotStartedBody;
+
+  /// Titre de l'état VERIFIED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildVerifiedContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée ✓'**
+  String get kycStatusVerifiedTitle;
+
+  /// Texte de l'état VERIFIED depuis l'écran plein, qui redirige vers l'étape suivante (kyc_status_screen.dart, _buildVerifiedContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre identité a été vérifiée avec succès. Redirection en cours…'**
+  String get kycStatusVerifiedBodyRedirecting;
+
+  /// Texte de l'état VERIFIED depuis la feuille, qui se referme automatiquement (kyc_status_bottom_sheet.dart, _buildVerifiedContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre identité a été vérifiée avec succès. Fermeture en cours…'**
+  String get kycStatusVerifiedBodyClosing;
+
+  /// Titre de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification en cours'**
+  String get kycStatusPendingTitle;
+
+  /// Texte de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Cela prend généralement moins d\'une minute, parfois quelques minutes. Vous pouvez fermer cet écran, vous serez notifié du résultat.'**
+  String get kycStatusPendingBody;
+
+  /// Titre de l'état atteint après le délai d'attente de 5 minutes (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildTimedOutContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'La vérification prend plus de temps que prévu'**
+  String get kycStatusTimedOutTitle;
+
+  /// Texte de l'état atteint après le délai d'attente de 5 minutes (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildTimedOutContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pouvez fermer cet écran et revenir plus tard. Votre badge ✓ apparaîtra automatiquement dès que la vérification sera terminée.'**
+  String get kycStatusTimedOutBody;
+
+  /// Titre de l'état REJECTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildRejectedContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification échouée'**
+  String get kycStatusRejectedTitle;
+
+  /// Texte sous l'indicateur de poll pendant l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _PollingIndicator).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification automatique en cours'**
+  String get kycStatusPollingIndicator;
+
+  /// Bouton pour démarrer la vérification depuis l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Commencer la vérification'**
+  String get kycStatusStartAction;
+
+  /// Bouton pour relancer la vérification depuis l'état REJECTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer la vérification'**
+  String get kycStatusRetryAction;
+
+  /// Bouton pour rouvrir une session PENDING non terminée par Stripe/Didit, avec ou sans délai d'attente dépassé (kyc_status_screen.dart, _actionsFor).
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprendre la vérification'**
+  String get kycStatusResumeAction;
+
+  /// Lien de sortie une fois le délai d'attente de 5 minutes dépassé (kyc_status_screen.dart et kyc_status_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour à l\'app'**
+  String get kycStatusBackToApp;
+
+  /// Lien de sortie pendant l'état PENDING, avant le délai d'attente (kyc_status_screen.dart et kyc_status_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer plus tard'**
+  String get kycStatusContinueLater;
+
+  /// Message d'erreur si la page de vérification distante échoue à charger (kyc_webview_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger la page de vérification'**
+  String get kycWebviewLoadError;
+
+  /// Titre de la feuille de vérification requise (kyc_required_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification requise'**
+  String get kycRequiredTitle;
+
+  /// Message de la feuille de vérification requise, statut par défaut/non démarré (kyc_required_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour envoyer un colis, votre identité doit être vérifiée.'**
+  String get kycRequiredMessageNotStarted;
+
+  /// Message de la feuille de vérification requise, statut REJECTED (kyc_required_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre vérification a échoué. Réessayez pour pouvoir envoyer un colis.'**
+  String get kycRequiredMessageRejected;
+
+  /// Message de la feuille de vérification requise, statut PENDING (kyc_required_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre vérification est en cours. Vous pourrez envoyer une fois votre identité validée.'**
+  String get kycRequiredMessagePending;
+
+  /// Bouton principal de la feuille de vérification requise (kyc_required_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier mon identité'**
+  String get kycRequiredVerifyAction;
+
+  /// Ligne d'info sur la durée de la vérification (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification en 2 à 5 minutes'**
+  String get kycInfoDuration;
+
+  /// Ligne d'info sur la sécurité du processus (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Processus de vérification sécurisé'**
+  String get kycInfoSecureProcess;
+
+  /// Titre de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre identité'**
+  String get kycOnboardingTitle;
+
+  /// Sous-titre de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Requis pour publier des annonces sur Yadony'**
+  String get kycOnboardingSubtitle;
+
+  /// Bouton principal de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Démarrer la vérification'**
+  String get kycOnboardingStartAction;
+
+  /// Ligne d'info sur les pièces nécessaires (kyc_onboarding_bottom_sheet.dart, _InfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pièce d\'identité + selfie requis'**
+  String get kycOnboardingIdSelfieRequired;
+
+  /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileAccountSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'MON COMPTE'**
+  String get profileSectionAccount;
+
+  /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileMoneySection).
+  ///
+  /// In fr, this message translates to:
+  /// **'ARGENT'**
+  String get profileSectionMoney;
+
+  /// Tuile de la section ARGENT, active seulement identité vérifiée (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevoir mes paiements'**
+  String get profileMoneyReceivePayments;
+
+  /// Sous-titre de la tuile « Recevoir mes paiements » quand l'identité n'est pas vérifiée (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre identité pour activer'**
+  String get profileMoneyVerifyIdentityToActivate;
+
+  /// Tuile de la section ARGENT (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Versement mobile money'**
+  String get profileMoneyMobileMoneyPayout;
+
+  /// Sous-titre de la tuile « Versement mobile money » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Zone CFA : Orange Money, Wave, MTN'**
+  String get profileMoneyMobileMoneyPayoutSubtitle;
+
+  /// Tuile de la section ARGENT (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte commission espèces'**
+  String get profileMoneyCashCommissionCard;
+
+  /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileReputationSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'MA RÉPUTATION'**
+  String get profileSectionReputation;
+
+  /// Tuile de la section MA RÉPUTATION (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon profil public'**
+  String get profileReputationPublicProfile;
+
+  /// Sous-titre de la tuile « Mon profil public » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que voient les autres'**
+  String get profileReputationPublicProfileSubtitle;
+
+  /// Tuile de la section MA RÉPUTATION (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes avis reçus'**
+  String get profileReputationMyReviews;
+
+  /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileAdvantagesSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'MES AVANTAGES'**
+  String get profileSectionAdvantages;
+
+  /// Tuile PRO de la section MES AVANTAGES, compte déjà PRO (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon profil PRO'**
+  String get profileAdvantagesProProfile;
+
+  /// Tuile PRO de la section MES AVANTAGES, compte pas encore PRO (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer en compte PRO'**
+  String get profileAdvantagesUpgradeToPro;
+
+  /// Tuile de la section MES AVANTAGES (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Parrainages'**
+  String get profileAdvantagesReferral;
+
+  /// Libellé fixe à droite de la tuile « Parrainages », jamais mis à jour avec le vrai nombre — défaut probable signalé en PR (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'0 invité'**
+  String get profileReferralZeroInvited;
+
+  /// Tuile de la section MES AVANTAGES (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ai un code parrain'**
+  String get profileAdvantagesHaveReferralCode;
+
+  /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileFollowUpSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'SUIVI'**
+  String get profileSectionTracking;
+
+  /// Tuile de la section SUIVI (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes litiges'**
+  String get profileTrackingDisputes;
+
+  /// Sous-titre de la tuile « Mes litiges » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi de vos litiges'**
+  String get profileTrackingDisputesSubtitle;
+
+  /// Tuile de la section SUIVI, voyageurs suivis (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes abonnements'**
+  String get profileTrackingSubscriptions;
+
+  /// Sous-titre de la tuile « Mes abonnements » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les voyageurs dont vous suivez les trajets'**
+  String get profileTrackingSubscriptionsSubtitle;
+
+  /// Libellé de section de l'onglet Moi (profile_sections.dart, ProfileHelpSection).
+  ///
+  /// In fr, this message translates to:
+  /// **'AIDE'**
+  String get profileSectionHelp;
+
+  /// Tuile de la section AIDE (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'FAQ & aide'**
+  String get profileHelpFaq;
+
+  /// Sous-titre de la tuile « FAQ & aide » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponses aux questions fréquentes'**
+  String get profileHelpFaqSubtitle;
+
+  /// Tuile de la section AIDE (profile_sections.dart) ; réutilisé comme titre de l'écran (community_screen.dart, même feature, même texte).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réseaux sociaux et tutoriels'**
+  String get profileHelpCommunity;
+
+  /// Sous-titre de la tuile « Réseaux sociaux et tutoriels » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vidéos et communauté Yadony'**
+  String get profileHelpCommunitySubtitle;
+
+  /// Tuile de la section AIDE (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter le support'**
+  String get profileHelpContactSupport;
+
+  /// Sous-titre de la tuile « Contacter le support » (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse généralement sous 24 h'**
+  String get profileHelpContactSupportSubtitle;
+
+  /// Type de ligne « à renseigner » dans MON COMPTE (profile_sections.dart, _ContactRow) ; réutilisé pour le libellé TÉLÉPHONE de edit_profile_screen.dart (même feature, même texte).
+  ///
+  /// In fr, this message translates to:
+  /// **'TÉLÉPHONE'**
+  String get profileContactTypePhone;
+
+  /// Type de ligne « à renseigner » dans MON COMPTE (profile_sections.dart, _ContactRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'E-MAIL'**
+  String get profileContactTypeEmail;
+
+  /// Valeur affichée pour un contact non renseigné (profile_sections.dart, _ContactRow) ; réutilisé dans edit_profile_screen.dart (même feature, même texte).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non ajouté'**
+  String get profileNotAdded;
+
+  /// Badge d'action de la ligne « à renseigner » (profile_sections.dart, _StatusBadge).
+  ///
+  /// In fr, this message translates to:
+  /// **'+ Ajouter'**
+  String get profileAddBadge;
+
+  /// Tuile KYC de MON COMPTE (profile_sections.dart, kycTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Documents d\'identité'**
+  String get profileAccountIdentityDocuments;
+
+  /// Statut affiché de la tuile KYC quand VERIFIED (profile_sections.dart, kycTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifié'**
+  String get profileKycVerifiedLabel;
+
+  /// Statut affiché de la tuile KYC quand PENDING (profile_sections.dart, kycTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours'**
+  String get profileKycInProgressLabel;
+
+  /// Statut affiché de la tuile KYC par défaut / NOT_STARTED (profile_sections.dart, kycTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier'**
+  String get profileKycToVerifyLabel;
+
+  /// Case manquante de la bannière de complétion (profile_sections.dart, ProfileCompletionBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier mon identité'**
+  String get profileCompletionVerifyIdentity;
+
+  /// Case manquante de la bannière de complétion (profile_sections.dart, ProfileCompletionBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer les paiements'**
+  String get profileCompletionActivatePayments;
+
+  /// Case manquante « Photo » de la bannière de complétion (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo'**
+  String get profileFieldPhotoShort;
+
+  /// Case manquante « Prénom » de la bannière de complétion (profile_sections.dart) ; réutilisé comme libellé de champ (edit_profile_screen.dart, même feature).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prénom'**
+  String get profileFieldFirstName;
+
+  /// Case manquante « Nom » de la bannière de complétion (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get profileFieldLastNameShort;
+
+  /// Case manquante « Email » de la bannière de complétion (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Email'**
+  String get profileFieldEmailShort;
+
+  /// Case manquante « Téléphone » de la bannière de complétion (profile_sections.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone'**
+  String get profileFieldPhone;
+
+  /// Case manquante « Ville » de la bannière de complétion (profile_sections.dart) ; réutilisé comme libellé de champ (edit_profile_screen.dart, même feature).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville'**
+  String get profileFieldCity;
+
+  /// Case manquante « À propos » de la bannière de complétion (profile_sections.dart) ; réutilisé comme libellé de section (edit_profile_screen.dart, même feature).
+  ///
+  /// In fr, this message translates to:
+  /// **'À propos'**
+  String get profileFieldAbout;
+
+  /// Semantics du bandeau de complétion (profile_sections.dart, ProfileCompletionBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte complété à {percent} pour cent. Compléter maintenant.'**
+  String profileCompletionSemantics(int percent);
+
+  /// Titre du bandeau de complétion (profile_sections.dart, ProfileCompletionBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Complétez votre compte'**
+  String get profileCompletionCta;
+
+  /// Sous-titre du bandeau de complétion (profile_sections.dart, ProfileCompletionBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'{percent}% complété · Compléter maintenant'**
+  String profileCompletionShort(int percent);
+
+  /// Semantics d'une case manquante de la bannière de complétion (profile_sections.dart, _MissingChip).
+  ///
+  /// In fr, this message translates to:
+  /// **'{label}, à compléter'**
+  String profileItemToComplete(String label);
+
+  /// Badge PRO à côté du nom (profile_header.dart, _ProBadge).
+  ///
+  /// In fr, this message translates to:
+  /// **'PRO'**
+  String get profileProBadge;
+
+  /// Chip téléphone vérifié du header (profile_header.dart, _ContactChips).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tél. ✓'**
+  String get profileChipPhoneVerified;
+
+  /// Chip téléphone manquant du header (profile_header.dart, _ContactChips).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tél. manquant'**
+  String get profileChipPhoneMissing;
+
+  /// Chip email vérifié du header (profile_header.dart, _ContactChips).
+  ///
+  /// In fr, this message translates to:
+  /// **'Email ✓'**
+  String get profileChipEmailVerified;
+
+  /// Chip email manquant du header (profile_header.dart, _ContactChips).
+  ///
+  /// In fr, this message translates to:
+  /// **'Email manquant'**
+  String get profileChipEmailMissing;
+
+  /// Chip identité vérifiée du header (profile_header.dart, _ContactChips).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité ✓'**
+  String get profileChipIdentityVerified;
+
+  /// Raccourci « Modifier le profil » de la feuille de menu (profile_menu_sheet.dart) ; réutilisé comme titre de l'écran (edit_profile_screen.dart, même feature, même texte).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le profil'**
+  String get profileMenuEditProfile;
+
+  /// Raccourci « Paramètres » de la feuille de menu (profile_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paramètres'**
+  String get profileMenuSettings;
+
+  /// Libellé de section de la feuille de menu (profile_menu_sheet.dart, _SectionLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon compte'**
+  String get profileMenuAccountSection;
+
+  /// Entrée de la feuille de menu (profile_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Télécharger mes données'**
+  String get profileMenuExportData;
+
+  /// Sous-titre de l'entrée « Télécharger mes données » (profile_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Export RGPD au format JSON'**
+  String get profileMenuExportDataSubtitle;
+
+  /// Entrée « Se déconnecter » de la feuille de menu (profile_menu_sheet.dart) ; réutilisé pour le bouton de confirmation (profile_screen.dart, même feature, même texte).
+  ///
+  /// In fr, this message translates to:
+  /// **'Se déconnecter'**
+  String get profileLogoutAction;
+
+  /// Entrée de la feuille de menu (profile_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer mon compte'**
+  String get profileMenuDeleteAccount;
+
+  /// Sous-titre de l'entrée « Supprimer mon compte » (profile_menu_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Délai de rétractation de 30 jours'**
+  String get profileMenuDeleteAccountSubtitle;
+
+  /// Semantics du squelette de l'onglet Moi (profile_skeleton.dart, ProfileScreenSkeleton).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chargement du profil'**
+  String get profileSkeletonLoadingSemantics;
+
+  /// Titre de la carte « Réessayer » du squelette (profile_skeleton.dart, _RetryCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil indisponible'**
+  String get profileSkeletonUnavailableTitle;
+
+  /// Corps de la carte « Réessayer » du squelette (profile_skeleton.dart, _RetryCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger votre compte. Vérifiez votre connexion, puis réessayez.'**
+  String get profileSkeletonUnavailableBody;
+
+  /// Bannière de suppression planifiée (pending_deletion_banner.dart). `date` est formatée par DateFormat.yMd(locale).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suppression planifiée le {date}'**
+  String profileDeletionScheduled(String date);
+
+  /// Bouton de la bannière de suppression planifiée (pending_deletion_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la suppression'**
+  String get profileDeletionCancelAction;
+
+  /// Note de la bannière de suppression planifiée (pending_deletion_banner.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les remboursements déjà lancés ne sont pas annulés.'**
+  String get profileDeletionRefundsNotice;
+
+  /// Libellé de la carte portefeuille de l'onglet Moi, devise unique (wallet_balance_card.dart, _LoadedCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde'**
+  String get profileWalletBalanceLabel;
+
+  /// Semantics du bouton de recharge de la carte portefeuille (wallet_balance_card.dart, _RechargeButton).
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharger le portefeuille'**
+  String get profileWalletTopUpSemantics;
+
+  /// État d'erreur de la carte portefeuille de l'onglet Moi (wallet_balance_card.dart, _ErrorCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Solde indisponible'**
+  String get profileWalletUnavailable;
+
+  /// Titre de l'écran plein écran d'édition du téléphone (add_contact_sheets.dart, EditPhoneScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le numéro'**
+  String get contactEditPhoneTitle;
+
+  /// Bouton d'envoi du code OTP (add_contact_sheets.dart), étape saisie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le code'**
+  String get contactSendCodeAction;
+
+  /// Bouton de vérification du code OTP (add_contact_sheets.dart), étape code.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier'**
+  String get contactVerifyAction;
+
+  /// Titre de l'écran plein écran d'édition de l'email (add_contact_sheets.dart, EditEmailScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'email'**
+  String get contactEditEmailTitle;
+
+  /// Titre de la feuille d'ajout de numéro (add_contact_sheets.dart, AddPhoneSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un numéro'**
+  String get contactAddPhoneTitle;
+
+  /// Message de succès après ajout du numéro (add_contact_sheets.dart, _AddPhoneContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro ajouté avec succès !'**
+  String get contactPhoneAddedSuccess;
+
+  /// Libellé du champ numéro (add_contact_sheets.dart, _PhoneInputStep).
+  ///
+  /// In fr, this message translates to:
+  /// **'NUMÉRO DE TÉLÉPHONE'**
+  String get contactPhoneNumberLabel;
+
+  /// Note sous le champ numéro (add_contact_sheets.dart, _PhoneInputStep).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un code de vérification sera envoyé par SMS.'**
+  String get contactPhoneOtpNotice;
+
+  /// Titre de la feuille de sélection d'indicatif (add_contact_sheets.dart, _PhoneInputStep).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indicatif'**
+  String get contactDialCodeTitle;
+
+  /// Titre de la feuille d'ajout d'email (add_contact_sheets.dart, AddEmailSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un email'**
+  String get contactAddEmailTitle;
+
+  /// Message de succès après ajout de l'email (add_contact_sheets.dart, _AddEmailContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Email vérifié avec succès !'**
+  String get contactEmailVerifiedSuccess;
+
+  /// Libellé du champ email (add_contact_sheets.dart, _EmailInputStep).
+  ///
+  /// In fr, this message translates to:
+  /// **'ADRESSE EMAIL'**
+  String get contactEmailAddressLabel;
+
+  /// Note sous le champ email (add_contact_sheets.dart, _EmailInputStep).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un code de vérification sera envoyé à cet email.'**
+  String get contactEmailOtpNotice;
+
+  /// Phrase avec le contact en gras via emphasizedSpans (add_contact_sheets.dart, _OtpStep).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code envoyé à {destination}'**
+  String contactCodeSentTo(String destination);
+
+  /// Titre de la section communauté (social_community_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rejoindre la communauté'**
+  String get profileCommunityJoinTitle;
+
+  /// Sous-titre de la section communauté (social_community_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retrouve les espaces officiels Yadony.'**
+  String get profileCommunityJoinSubtitle;
+
+  /// Libellé d'action des réseaux « à rejoindre » (WhatsApp, Facebook) (social_community_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rejoindre'**
+  String get profileCommunityActionJoin;
+
+  /// Libellé d'action des réseaux « à suivre » (Instagram, TikTok) (social_community_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre'**
+  String get profileCommunityActionFollow;
+
+  /// Libellé d'action YouTube (social_community_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'S’abonner'**
+  String get profileCommunityActionSubscribe;
+
+  /// Titre du dialogue de confirmation de déconnexion (profile_screen.dart, _confirmLogout).
+  ///
+  /// In fr, this message translates to:
+  /// **'Se déconnecter ?'**
+  String get profileLogoutConfirmTitle;
+
+  /// Message du dialogue de confirmation de déconnexion (profile_screen.dart, _confirmLogout).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous devrez vous reconnecter pour continuer.'**
+  String get profileLogoutConfirmMessage;
+
+  /// Tooltip et semantics du bouton burger de l'onglet Moi (profile_screen.dart, _appBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Menu'**
+  String get profileMenuButtonTooltip;
+
+  /// Pied de page de l'onglet Moi (profile_screen.dart, _sections).
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony v1.0.0 · Made with ❤️ in Paris'**
+  String get profileFooterVersion;
+
+  /// Erreur d'upload de l'avatar, type de fichier non supporté (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Seules les images sont acceptées (pas de vidéo).'**
+  String get editProfileImageOnlyError;
+
+  /// Erreur d'upload de l'avatar, fichier trop volumineux (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo trop lourde (max {maxMb} Mo).'**
+  String editProfilePhotoTooLarge(int maxMb);
+
+  /// Semantics du geste sur l'avatar (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer la photo de profil'**
+  String get profileEditChangePhotoSemantics;
+
+  /// Libellé sous l'avatar (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier la photo'**
+  String get profileEditChangePhotoLabel;
+
+  /// Libellé de section (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase()).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité'**
+  String get profileEditSectionIdentity;
+
+  /// Libellé du champ nom de famille en édition (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de famille'**
+  String get profileEditLastNameFieldLabel;
+
+  /// Placeholder de la bio en lecture, vide (edit_profile_screen.dart, _StaticInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune présentation'**
+  String get profileEditNoBioPlaceholder;
+
+  /// Libellé du champ bio en édition (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Présentation'**
+  String get profileEditBioFieldLabel;
+
+  /// Libellé de section (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase()).
+  ///
+  /// In fr, this message translates to:
+  /// **'Coordonnées'**
+  String get profileEditSectionContact;
+
+  /// Libellé de la ligne email, toujours en lecture (edit_profile_screen.dart, _ContactInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'EMAIL'**
+  String get profileFieldEmailAllCaps;
+
+  /// Libellé de section (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase()).
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations personnelles'**
+  String get profileEditSectionPersonalInfo;
+
+  /// Libellé de la ville en lecture (edit_profile_screen.dart, _StaticInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'VILLE'**
+  String get profileFieldCityAllCaps;
+
+  /// Placeholder de la ville en lecture, vide (edit_profile_screen.dart, _StaticInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non renseignée'**
+  String get profileEditCityPlaceholder;
+
+  /// Libellé de section, voyageurs uniquement (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase()).
+  ///
+  /// In fr, this message translates to:
+  /// **'Préférences'**
+  String get profileEditSectionPreferences;
+
+  /// Libellé des langues parlées en lecture (edit_profile_screen.dart, _StaticInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'LANGUES PARLÉES'**
+  String get profileFieldLanguagesAllCaps;
+
+  /// Placeholder des langues parlées en lecture, vide (edit_profile_screen.dart, _StaticInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Non renseignées'**
+  String get profileEditLanguagesPlaceholder;
+
+  /// Libellé au-dessus des chips de langues en édition (edit_profile_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Langues parlées'**
+  String get profileEditLanguagesFieldLabel;
+
+  /// Titre de la jauge de complétion (edit_profile_screen.dart, _CompletionGauge).
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil complet'**
+  String get profileEditCompletionGaugeTitle;
+
+  /// Sous-titre de la jauge de complétion (edit_profile_screen.dart, _CompletionGauge).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo, identité, coordonnées et informations complètent votre profil'**
+  String get profileEditCompletionGaugeSubtitle;
+
+  /// Placeholder du nom en lecture, vide (edit_profile_screen.dart, _NameView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez votre prénom et nom'**
+  String get profileEditNoNamePlaceholder;
+
+  /// Badge d'action de la ligne contact en édition, valeur absente (edit_profile_screen.dart, _ContactInfoRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter'**
+  String get profileAddBadgeAction;
+
+  /// Titre de l'état vide (community_screen.dart, CommunityScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun contenu pour le moment'**
+  String get communityEmptyTitle;
+
+  /// Description de l'état vide (community_screen.dart, CommunityScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nos tutoriels et espaces communautaires seront bientôt disponibles ici.'**
+  String get communityEmptyDescription;
+
+  /// Titre de la section tutoriels (community_screen.dart, CommunityScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tutoriels vidéo'**
+  String get communityTutorialsTitle;
+
+  /// Sous-titre de la section tutoriels (community_screen.dart, CommunityScreen).
+  ///
+  /// In fr, this message translates to:
+  /// **'Apprends les parcours essentiels de Yadony.'**
+  String get communityTutorialsSubtitle;
+
+  /// Libellé affiché de la langue parlée « Français » (profile_labels.dart, spokenLanguageLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Français'**
+  String get profileLanguageFrench;
+
+  /// Libellé affiché de la langue parlée « Wolof » (profile_labels.dart, spokenLanguageLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Wolof'**
+  String get profileLanguageWolof;
+
+  /// Libellé affiché de la langue parlée « Bambara » (profile_labels.dart, spokenLanguageLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bambara'**
+  String get profileLanguageBambara;
+
+  /// Libellé affiché de la langue parlée « Anglais » (profile_labels.dart, spokenLanguageLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Anglais'**
+  String get profileLanguageEnglish;
+
+  /// Libellé affiché de la langue parlée « Espagnol » (profile_labels.dart, spokenLanguageLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Espagnol'**
+  String get profileLanguageSpanish;
+
+  /// Libellé affiché de la langue parlée « Arabe » (profile_labels.dart, spokenLanguageLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arabe'**
+  String get profileLanguageArabic;
+
+  /// Titre de l'app bar en mode « mon profil » (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que les autres voient'**
+  String get profilePublicOwnProfileTitle;
+
+  /// Titre de repli de l'app bar tant que le profil consulté n'est pas chargé (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil'**
+  String get profilePublicTitleFallback;
+
+  /// Tooltip du menu ⋯ (Signaler/Bloquer) de l'app bar (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus d\'options'**
+  String get profilePublicMoreOptionsTooltip;
+
+  /// Entrée du menu ⋯ quand le nom de la personne consultée n'est pas encore connu (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler'**
+  String get profilePublicReportAction;
+
+  /// Entrée du menu ⋯ une fois le nom de la personne consultée connu (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler {name}'**
+  String profilePublicReportUserAction(String name);
+
+  /// Entrée du menu ⋯ pour bloquer la personne consultée (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Bloquer {name}'**
+  String profilePublicBlockUserAction(String name);
+
+  /// Titre de l'état d'erreur de chargement du profil public (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger le profil'**
+  String get profilePublicLoadErrorTitle;
+
+  /// Ligne méta du hero : note (déjà formatée), nombre d'avis et ancienneté envoyée par le serveur (profile_public_screen.dart, _ProfileHero)
+  ///
+  /// In fr, this message translates to:
+  /// **'⭐ {rating} · {count, plural, =1{{count} avis} other{{count} avis}} · {memberSince}'**
+  String profilePublicRatingLine(String rating, int count, String memberSince);
+
+  /// Pastille KYC vérifié du hero (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'✓ Vérifié'**
+  String get profilePublicVerified;
+
+  /// Pastille compte PRO du hero (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'PRO'**
+  String get profilePublicProBadge;
+
+  /// Libellé de la statistique note moyenne (profile_public_screen.dart, _StatsRow)
+  ///
+  /// In fr, this message translates to:
+  /// **'Note'**
+  String get profilePublicStatRatingLabel;
+
+  /// Libellé de la statistique nombre de livraisons (profile_public_screen.dart, _StatsRow)
+  ///
+  /// In fr, this message translates to:
+  /// **'Livraisons'**
+  String get profilePublicStatDeliveriesLabel;
+
+  /// Titre de la section bio (profile_public_screen.dart, _AboutSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'À PROPOS'**
+  String get profilePublicAboutSectionLabel;
+
+  /// Titre de la section langues parlées (profile_public_screen.dart, _TravelerInfoSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'LANGUES'**
+  String get profilePublicLanguagesSectionLabel;
+
+  /// Titre de la section badges, identique dans les deux langues (profile_public_screen.dart, _BadgesSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'BADGES'**
+  String get profilePublicBadgesSectionLabel;
+
+  /// Puce de disponibilité : contactMode == call (profile_public_screen.dart, _ContactInfoSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'Joignable par appel'**
+  String get profilePublicContactCallLabel;
+
+  /// Puce de disponibilité : contactMode == message (profile_public_screen.dart, _ContactInfoSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'Joignable par message'**
+  String get profilePublicContactMessageLabel;
+
+  /// Puce de disponibilité : contactMode == both (profile_public_screen.dart, _ContactInfoSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel & message'**
+  String get profilePublicContactBothLabel;
+
+  /// Titre de la section disponibilité (profile_public_screen.dart, _ContactInfoSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'DISPONIBILITÉ'**
+  String get profilePublicAvailabilitySectionLabel;
+
+  /// Puce du délai de réponse moyen (profile_public_screen.dart, _ContactInfoSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'Répond en < {hours}h'**
+  String profilePublicRespondsWithin(int hours);
+
+  /// Titre de la section avis récents (profile_public_screen.dart, _RecentReviewsSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'AVIS RÉCENTS'**
+  String get profilePublicRecentReviewsSectionLabel;
+
+  /// Message d'état vide des avis, partagé par l'aperçu et la feuille « tous les avis » (profile_public_screen.dart, all_reviews_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun avis pour le moment.'**
+  String get profilePublicNoReviewsYet;
+
+  /// Lien vers la feuille « tous les avis » (profile_public_screen.dart, _RecentReviewsSection)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir tous les avis ({count}) ›'**
+  String profilePublicSeeAllReviews(int count);
+
+  /// Nom de repli d'un auteur d'avis sans displayName (profile_public_screen.dart, all_reviews_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateur'**
+  String get profileUserFallback;
+
+  /// Bouton d'abonnement à un voyageur, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'S\'abonner'**
+  String get followFollowButton;
+
+  /// État abonné du bouton d'abonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Abonné ✓'**
+  String get followFollowingButton;
+
+  /// Titre du dialog de confirmation de désabonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Se désabonner ?'**
+  String get followUnfollowDialogTitle;
+
+  /// Bouton de confirmation du désabonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Se désabonner'**
+  String get followUnfollowButton;
+
+  /// Message du dialog de confirmation de désabonnement (profile_public_screen.dart, _SubscribeAction)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne recevrez plus les notifications de ce voyageur.'**
+  String get profilePublicUnfollowDialogMessage;
+
+  /// Tooltip de la cloche quand les alertes push sont coupées (profile_public_screen.dart, _SubscribeAction)
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer les notifications'**
+  String get profilePublicEnablePushTooltip;
+
+  /// Tooltip de la cloche quand les alertes push sont actives (profile_public_screen.dart, _SubscribeAction)
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactiver les notifications'**
+  String get profilePublicDisablePushTooltip;
+
+  /// Titre de l'écran (shipments_history_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique des livraisons'**
+  String get shipmentsHistoryTitle;
+
+  /// Titre de l'état vide (shipments_history_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune livraison terminée'**
+  String get shipmentsHistoryEmptyTitle;
+
+  /// Description de l'état vide (shipments_history_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tes livraisons terminées s\'afficheront ici.'**
+  String get shipmentsHistoryEmptyDescription;
+
+  /// Date relative d'une livraison (2 à 6 jours) (shipments_history_screen.dart, _DeliveryCard._relativeDate)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Il y a {count} jour} other{Il y a {count} jours}}'**
+  String shipmentsHistoryDaysAgo(int count);
+
+  /// Bouton d'ouverture du détail d'une livraison (shipments_history_screen.dart, _DeliveryCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir détails'**
+  String get shipmentsHistoryDetailsButton;
+
+  /// Titre de la bottom sheet « tous les avis » (all_reviews_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Avis'**
+  String get allReviewsSheetTitle;
+
+  /// Titre de la section recherche (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trouver une réponse'**
+  String get faqFindAnswerTitle;
+
+  /// Sous-titre de la section recherche (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Recherche une réponse ou parcours les catégories.'**
+  String get faqFindAnswerSubtitle;
+
+  /// Placeholder du champ de recherche (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher dans l’aide'**
+  String get faqSearchHint;
+
+  /// Titre de l'état vide de la recherche FAQ (faq_screen.dart, _FaqEmptyState)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun résultat'**
+  String get faqEmptyResultsTitle;
+
+  /// Description de l'état vide de la recherche FAQ (faq_screen.dart, _FaqEmptyState)
+  ///
+  /// In fr, this message translates to:
+  /// **'Essaie avec d\'autres mots-clés ou contacte notre équipe.'**
+  String get faqEmptyResultsDescription;
+
+  /// Titre de la carte de contact support (faq_screen.dart, _ContactSupportCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu n’as pas trouvé ta réponse ?'**
+  String get faqContactCardTitle;
+
+  /// Sous-titre de la carte de contact support (faq_screen.dart, _ContactSupportCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Notre équipe est là pour t’aider.'**
+  String get faqContactCardSubtitle;
+
+  /// Titre de la section FAQ « account » (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte & identité'**
+  String get faqAccountTitle;
+
+  /// Titre de la section FAQ « announcements » (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Annonces & demandes'**
+  String get faqAnnouncementsTitle;
+
+  /// Titre de la section FAQ « payments » (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiements & remboursements'**
+  String get faqPaymentsTitle;
+
+  /// Titre de la section FAQ « delivery » (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi & livraison'**
+  String get faqDeliveryTitle;
+
+  /// Titre de la section FAQ « safety » (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Sécurité & données'**
+  String get faqSafetyTitle;
+
+  /// Question FAQ account/identity_required (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pourquoi la vérification d\'identité est-elle obligatoire ?'**
+  String get faqAccountIdentityRequiredQ;
+
+  /// Réponse FAQ account/identity_required (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Elle peut être demandée par nos partenaires de paiement et par les obligations applicables à certaines transactions. Elle nous permet aussi de lutter contre la fraude et de protéger les utilisateurs de Yadony.'**
+  String get faqAccountIdentityRequiredA;
+
+  /// Question FAQ account/identity_delay (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Combien de temps prend la validation ?'**
+  String get faqAccountIdentityDelayQ;
+
+  /// Réponse FAQ account/identity_delay (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La validation est souvent réalisée en quelques minutes. Si une vérification manuelle est nécessaire, le délai peut être plus long.'**
+  String get faqAccountIdentityDelayA;
+
+  /// Question FAQ account/identity_documents (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Quels documents sont acceptés ?'**
+  String get faqAccountIdentityDocumentsQ;
+
+  /// Réponse FAQ account/identity_documents (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte nationale d\'identité, passeport ou titre de séjour en cours de validité. Le document doit être lisible et non expiré.'**
+  String get faqAccountIdentityDocumentsA;
+
+  /// Question FAQ account/without_identity (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Puis-je utiliser Yadony sans vérifier mon identité ?'**
+  String get faqAccountWithoutIdentityQ;
+
+  /// Réponse FAQ account/without_identity (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu peux explorer les annonces sans vérifier ton identité. Certaines actions, notamment envoyer, transporter ou recevoir des paiements, peuvent nécessiter une vérification.'**
+  String get faqAccountWithoutIdentityA;
+
+  /// Question FAQ announcements/publish_trip (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment publier un trajet en tant que voyageur ?'**
+  String get faqAnnouncementsPublishTripQ;
+
+  /// Réponse FAQ announcements/publish_trip (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Depuis Accueil ou Activités, choisis \"Publier un trajet\". Renseigne la ville de départ, la destination, la date et la capacité disponible.'**
+  String get faqAnnouncementsPublishTripA;
+
+  /// Question FAQ announcements/publish_request (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment publier une demande d\'envoi ?'**
+  String get faqAnnouncementsPublishRequestQ;
+
+  /// Réponse FAQ announcements/publish_request (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Depuis Accueil ou Activités, choisis \"Publier un colis\". Décris le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.'**
+  String get faqAnnouncementsPublishRequestA;
+
+  /// Question FAQ announcements/edit_request (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Puis-je modifier ma demande après publication ?'**
+  String get faqAnnouncementsEditRequestQ;
+
+  /// Réponse FAQ announcements/edit_request (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu peux modifier une demande tant qu\'aucune offre n\'a été acceptée. Après acceptation, contacte le support si une information importante doit être corrigée.'**
+  String get faqAnnouncementsEditRequestA;
+
+  /// Question FAQ payments/payment_timing (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand suis-je débité ?'**
+  String get faqPaymentsPaymentTimingQ;
+
+  /// Réponse FAQ payments/payment_timing (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour un paiement par carte, les fonds sont sécurisés lors de l\'acceptation puis libérés selon l\'avancement de la livraison. Pour les espèces et le Mobile Money, suis les indications affichées au moment de choisir le moyen de paiement.'**
+  String get faqPaymentsPaymentTimingA;
+
+  /// Question FAQ payments/refund (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment se passe le remboursement en cas d\'annulation ?'**
+  String get faqPaymentsRefundQ;
+
+  /// Réponse FAQ payments/refund (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le remboursement dépend du moyen de paiement et du moment de l\'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l\'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement.'**
+  String get faqPaymentsRefundA;
+
+  /// Question FAQ payments/commission, percent déjà formaté par commissionPercentLabel (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pourquoi une commission de {percent} % ?'**
+  String faqPaymentsCommissionQ(String percent);
+
+  /// Réponse FAQ payments/commission (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'La commission contribue aux frais de paiement, au support, à la prévention de la fraude et au développement de la plateforme.'**
+  String get faqPaymentsCommissionA;
+
+  /// Question FAQ payments/payment_security (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les paiements sont-ils sécurisés ?'**
+  String get faqPaymentsPaymentSecurityQ;
+
+  /// Réponse FAQ payments/payment_security (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les paiements en ligne sont traités par les prestataires indiqués dans l\'application. Yadony ne stocke pas les données complètes de ta carte. Un paiement en espèces n\'est pas placé sous séquestre : ne paie jamais en dehors du parcours convenu dans l\'application.'**
+  String get faqPaymentsPaymentSecurityA;
+
+  /// Question FAQ delivery/handover_qr (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment fonctionne le QR de remise ?'**
+  String get faqDeliveryHandoverQrQ;
+
+  /// Réponse FAQ delivery/handover_qr (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'À la remise du colis, le QR code confirme la prise en charge et déclenche le suivi. Sans connexion, la lecture est mémorisée sur l\'appareil puis synchronisée à la reconnexion.'**
+  String get faqDeliveryHandoverQrA;
+
+  /// Question FAQ delivery/parcel_missing (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Que faire si le colis n\'arrive pas ?'**
+  String get faqDeliveryParcelMissingQ;
+
+  /// Réponse FAQ delivery/parcel_missing (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvre un litige depuis \"Mes litiges\" dès que tu constates le problème. Ajoute les photos, messages et informations de suivi disponibles. Les délais applicables sont rappelés dans le parcours de signalement.'**
+  String get faqDeliveryParcelMissingA;
+
+  /// Question FAQ delivery/delivery_delay (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Quel est le délai de livraison moyen ?'**
+  String get faqDeliveryDeliveryDelayQ;
+
+  /// Réponse FAQ delivery/delivery_delay (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le délai dépend du trajet choisi et de la date annoncée par le voyageur. Vérifie toujours les informations du trajet avant d\'accepter une offre.'**
+  String get faqDeliveryDeliveryDelayA;
+
+  /// Question FAQ safety/lost_parcel (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Que se passe-t-il si mon colis est perdu ?'**
+  String get faqSafetyLostParcelQ;
+
+  /// Réponse FAQ safety/lost_parcel, cap déjà formaté par reimbursementCapLabel (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony ne couvre pas automatiquement la perte d\'un colis. Après investigation, un remboursement jusqu\'à {cap} € peut être accordé si toutes les conditions sont respectées :\n\n• paiement par carte effectué dans Yadony ;\n• aucun paiement ou accord conclu hors plateforme ;\n• QR codes de dépôt et de remise utilisés ;\n• litige ouvert dans les 15 jours suivant la date prévue ;\n• contenu conforme aux objets autorisés.\n\nToute décision reste soumise à la validation de l\'équipe Yadony.'**
+  String faqSafetyLostParcelA(String cap);
+
+  /// Question FAQ safety/dispute (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Que faire en cas de litige avec un voyageur ?'**
+  String get faqSafetyDisputeQ;
+
+  /// Réponse FAQ safety/dispute (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvre \"Mes litiges\" depuis ton profil et fournis les éléments utiles : photos, messages et suivi. Notre équipe examine ensuite le dossier et te tient informé dans l\'application.'**
+  String get faqSafetyDisputeA;
+
+  /// Question FAQ safety/personal_data (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes données personnelles sont-elles protégées ?'**
+  String get faqSafetyPersonalDataQ;
+
+  /// Réponse FAQ safety/personal_data (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony applique des mesures de sécurité pour protéger les données et ne vend pas tes informations personnelles. Tu peux consulter la politique de confidentialité et gérer tes préférences dans Paramètres.'**
+  String get faqSafetyPersonalDataA;
+
+  /// Question FAQ safety/delete_account (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment supprimer mon compte ?'**
+  String get faqSafetyDeleteAccountQ;
+
+  /// Réponse FAQ safety/delete_account (faq_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans Paramètres → Données et compte → Supprimer mon compte, tu peux choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.'**
+  String get faqSafetyDeleteAccountA;
+
+  /// Titre de l'écran lecteur de tutoriel, dans ses 3 états (help_tutorial_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tutoriel vidéo'**
+  String get helpTutorialScreenTitle;
+
+  /// Titre de l'état tutoriel introuvable (help_tutorial_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tutoriel introuvable'**
+  String get helpTutorialNotFoundTitle;
+
+  /// Description de l'état tutoriel introuvable (help_tutorial_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce tutoriel n’est plus disponible.'**
+  String get helpTutorialNotFoundDescription;
+
+  /// Bouton vers la chaîne YouTube Yadony, sous le lecteur (help_tutorial_screen.dart, _HelpTutorialContent)
+  ///
+  /// In fr, this message translates to:
+  /// **'S’abonner à la chaîne'**
+  String get helpTutorialSubscribeChannelButton;
+
+  /// Semantics label du cadre du lecteur vidéo (help_tutorial_screen.dart, _buildPlayerFrame)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecteur vidéo : {title}'**
+  String helpTutorialPlayerSemanticsLabel(String title);
+
+  /// Titre de la carte d'erreur de lecture (help_tutorial_screen.dart, _PlayerErrorCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture impossible'**
+  String get helpTutorialPlaybackErrorTitle;
+
+  /// Description de la carte d'erreur de lecture (help_tutorial_screen.dart, _PlayerErrorCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifie ta connexion ou ouvre la vidéo directement dans YouTube.'**
+  String get helpTutorialPlaybackErrorDescription;
+
+  /// Bouton de repli vers YouTube externe (help_tutorial_screen.dart, _PlayerErrorCard)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir dans YouTube'**
+  String get helpTutorialOpenInYoutubeButton;
+
+  /// Semantics label de la carte suggestion de tutoriel contextuel (contextual_tutorial_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Besoin d’aide ? Voir le tutoriel {title}'**
+  String helpContextualCardSemanticsLabel(String title);
+
+  /// Texte visible de la carte suggestion de tutoriel contextuel, sans le titre (contextual_tutorial_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Besoin d\'aide ? Voir le tutoriel'**
+  String get helpContextualCardLabel;
+
+  /// Tooltip du bouton de fermeture (X) de la carte suggestion (contextual_tutorial_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Masquer ce conseil'**
+  String get helpContextualCardDismissTooltip;
+
+  /// Semantics label de la carte tutoriel de la Communauté (help_tutorial_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lire le tutoriel {title}'**
+  String helpTutorialCardSemanticsLabel(String title);
 }
 
 class _AppLocalizationsDelegate

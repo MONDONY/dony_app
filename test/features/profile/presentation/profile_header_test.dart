@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 
 Widget _buildHeader({
   bool isTraveler = false,
@@ -225,6 +226,24 @@ void main() {
       await tester.pump();
       final avatar = tester.widget<DonyAvatar>(find.byType(DonyAvatar));
       expect(avatar.imageUrl, isNull);
+    });
+
+    testWidgets('chips en anglais', (tester) async {
+      useEnglish();
+      setSmsAuthEnabled(true);
+      await tester.pumpWidget(
+        _buildHeader(
+          phoneNumber: '+33612345678',
+          email: 'test@example.com',
+          isKycVerified: true,
+          isProAccount: true,
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Phone ✓'), findsOneWidget);
+      expect(find.text('Identity ✓'), findsOneWidget);
+      expect(find.text('Pro'), findsOneWidget);
     });
   });
 }

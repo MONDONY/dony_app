@@ -65,7 +65,7 @@ class DonyGlassOnBrand extends StatelessWidget {
 
 // ─── Pattern B · DonyGlassDarkSheet ────────────────────────────────────────
 //
-// Existant : `pro_stats_bottom_sheet.dart:149` (bottom sheet immersif).
+// Bottom sheet immersif (glass sombre plein écran ou quasi).
 // Background: gradient ink-900→blue-900 α=0.80-0.90 · Blur: 12×12 · Text: white.
 class DonyGlassDarkSheet extends StatelessWidget {
   const DonyGlassDarkSheet({

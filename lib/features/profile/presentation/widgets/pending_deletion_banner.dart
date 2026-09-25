@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class PendingDeletionBanner extends StatelessWidget {
   final DateTime deletionRequestedAt;
@@ -16,10 +18,9 @@ class PendingDeletionBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     final deletionDate = deletionRequestedAt.add(const Duration(days: 30));
-    final d = deletionDate.day.toString().padLeft(2, '0');
-    final m = deletionDate.month.toString().padLeft(2, '0');
-    final y = deletionDate.year;
+    final formattedDate = DateFormat.yMd(l.localeName).format(deletionDate);
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -44,7 +45,7 @@ class PendingDeletionBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Suppression planifiée le $d/$m/$y',
+                  l.profileDeletionScheduled(formattedDate),
                   style: tt.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
@@ -58,7 +59,7 @@ class PendingDeletionBanner extends StatelessWidget {
                   ),
                   onPressed: onReactivate,
                   child: Text(
-                    'Annuler la suppression',
+                    l.profileDeletionCancelAction,
                     style: tt.bodySmall?.copyWith(
                       color: cs.error,
                       fontWeight: FontWeight.w600,
@@ -67,7 +68,7 @@ class PendingDeletionBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Les remboursements déjà lancés ne sont pas annulés.',
+                  l.profileDeletionRefundsNotice,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],

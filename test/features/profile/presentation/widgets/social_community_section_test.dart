@@ -15,6 +15,7 @@ import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 import '../../../../a11y/contrast_helpers.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 const _socialConfigJson = '''
@@ -108,6 +109,17 @@ void main() {
     expect(find.text('Rejoindre'), findsOneWidget);
     expect(find.text('Suivre'), findsNWidgets(2));
     expect(find.text('S’abonner'), findsOneWidget);
+  });
+
+  testWidgets('titres et actions en anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(_wrap(backend: backend, launcher: launcher));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Join the community'), findsOneWidget);
+    expect(find.text('Join'), findsOneWidget);
+    expect(find.text('Follow'), findsNWidgets(2));
+    expect(find.text('Subscribe'), findsOneWidget);
   });
 
   testWidgets('ouvre le bon lien social et trace le réseau sans PII', (

@@ -5,6 +5,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,8 +17,9 @@ class ShipmentsHistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return DonyPageScaffold(
-      title: 'Historique des livraisons',
+      title: l.shipmentsHistoryTitle,
       body: BlocBuilder<BidBloc, BidState>(
         builder: (context, state) {
           if (state is BidLoading) {
@@ -28,9 +30,9 @@ class ShipmentsHistoryScreen extends StatelessWidget {
               type: DonyEmptyStateType.error,
               mascotte: DonyMascotteType.erreurLegere,
               iconAsset: 'circle-alert',
-              title: 'Erreur de chargement',
+              title: l.commonLoadError,
               description: state.error.message,
-              actionLabel: 'Réessayer',
+              actionLabel: l.commonRetry,
               onAction: () => context.read<BidBloc>().add(BidMyListRequested()),
             );
           }
@@ -42,10 +44,10 @@ class ShipmentsHistoryScreen extends StatelessWidget {
                   ..sort((a, b) => (b.updatedAt).compareTo(a.updatedAt));
 
             if (delivered.isEmpty) {
-              return const DonyEmptyState(
+              return DonyEmptyState(
                 mascotte: DonyMascotteType.assis,
-                title: 'Aucune livraison terminée',
-                description: 'Tes livraisons terminées s\'afficheront ici.',
+                title: l.shipmentsHistoryEmptyTitle,
+                description: l.shipmentsHistoryEmptyDescription,
               );
             }
             return _DeliveredList(bids: delivered);
@@ -85,20 +87,21 @@ class _DeliveryCard extends StatelessWidget {
 
   final BidModel bid;
 
-  String _relativeDate(DateTime date) {
+  String _relativeDate(AppLocalizations l, DateTime date) {
     final diff = DateTime.now().difference(date);
-    if (diff.inDays == 0) return 'Aujourd\'hui';
-    if (diff.inDays == 1) return 'Hier';
-    if (diff.inDays < 7) return 'Il y a ${diff.inDays} jours';
-    return DateFormat('dd/MM/yyyy').format(date);
+    if (diff.inDays == 0) return l.commonDateToday;
+    if (diff.inDays == 1) return l.commonDateYesterday;
+    if (diff.inDays < 7) return l.shipmentsHistoryDaysAgo(diff.inDays);
+    return DateFormat.yMd(l.localeName).format(date);
   }
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
-    final travelerName = bid.travelerName ?? 'Voyageur';
+    final travelerName = bid.travelerName ?? l.tripTravelerFallbackName;
     final route = [
       bid.departureCity,
       bid.arrivalCity,
@@ -164,7 +167,7 @@ class _DeliveryCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  _relativeDate(bid.updatedAt),
+                  _relativeDate(l, bid.updatedAt),
                   style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
@@ -210,7 +213,7 @@ class _DeliveryCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 DonyButton(
-                  label: 'Voir détails',
+                  label: l.shipmentsHistoryDetailsButton,
                   variant: DonyButtonVariant.ghost,
                   fullWidth: false,
                   onPressed: () => context.push('/bids/${bid.id}', extra: bid),

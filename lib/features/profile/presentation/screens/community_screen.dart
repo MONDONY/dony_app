@@ -3,6 +3,7 @@ import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/help_tutorial_card.dart';
 import 'package:dony/features/profile/presentation/widgets/social_community_section.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +20,7 @@ class CommunityScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return BlocBuilder<HelpCenterBloc, HelpCenterState>(
       builder: (context, state) {
@@ -35,13 +37,12 @@ class CommunityScreen extends StatelessWidget {
             .toList();
 
         return DonyPageScaffold(
-          title: 'Réseaux sociaux et tutoriels',
+          title: l.profileHelpCommunity,
           body: tutorials.isEmpty && socialLinks.isEmpty
-              ? const DonyEmptyState(
-                  key: Key('community-empty-state'),
-                  title: 'Aucun contenu pour le moment',
-                  description:
-                      'Nos tutoriels et espaces communautaires seront bientôt disponibles ici.',
+              ? DonyEmptyState(
+                  key: const Key('community-empty-state'),
+                  title: l.communityEmptyTitle,
+                  description: l.communityEmptyDescription,
                   mascotte: DonyMascotteType.assis,
                 )
               : Column(
@@ -54,7 +55,7 @@ class CommunityScreen extends StatelessWidget {
                       if (socialLinks.isNotEmpty)
                         const SizedBox(height: DonySpacing.xxl),
                       Text(
-                        'Tutoriels vidéo',
+                        l.communityTutorialsTitle,
                         style: tt.titleLarge?.copyWith(
                           color: cs.onSurface,
                           fontWeight: FontWeight.w800,
@@ -62,7 +63,7 @@ class CommunityScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: DonySpacing.xs),
                       Text(
-                        'Apprends les parcours essentiels de Yadony.',
+                        l.communityTutorialsSubtitle,
                         style: tt.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),

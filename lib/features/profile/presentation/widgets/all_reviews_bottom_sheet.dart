@@ -29,7 +29,7 @@ abstract final class AllReviewsBottomSheet {
     final cubit = GetIt.instance<UserReviewsCubit>();
     return DonyBottomSheet.show<void>(
       context,
-      title: 'Avis',
+      title: context.l10n.allReviewsSheetTitle,
       wrapper: (child) =>
           BlocProvider<UserReviewsCubit>.value(value: cubit, child: child),
       child: _AllReviewsSheetBody(
@@ -142,7 +142,7 @@ class _LoadedBody extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),
             child: Text(
-              'Aucun avis pour le moment.',
+              context.l10n.profilePublicNoReviewsYet,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -183,13 +183,13 @@ class _ReviewRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final dateStr = DateFormat(
-      'd MMM yyyy',
-      AppL10n.localeName,
+    final l = context.l10n;
+    final dateStr = DateFormat.yMMMd(
+      l.localeName,
     ).format(item.createdAt.toLocal());
     final authorName = item.authorName?.isNotEmpty == true
         ? item.authorName!
-        : 'Utilisateur';
+        : l.profileUserFallback;
 
     // Build initials for avatar fallback.
     final parts = authorName.trim().split(' ');
@@ -405,7 +405,7 @@ class _ErrorBody extends StatelessWidget {
           DonyIcon('circle-alert', size: 40, color: cs.error),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Impossible de charger les avis',
+            context.l10n.ratingLoadErrorTitle,
             style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             textAlign: TextAlign.center,
           ),
@@ -416,7 +416,7 @@ class _ErrorBody extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DonySpacing.base),
-          TextButton(onPressed: onRetry, child: const Text('Réessayer')),
+          TextButton(onPressed: onRetry, child: Text(context.l10n.commonRetry)),
         ],
       ),
     );

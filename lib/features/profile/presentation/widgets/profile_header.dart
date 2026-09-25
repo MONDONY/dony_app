@@ -1,6 +1,7 @@
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 class ProfileHeader extends StatelessWidget {
@@ -150,7 +151,7 @@ class _ProBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
-        'PRO',
+        context.l10n.profileProBadge,
         style: tt.labelSmall?.copyWith(
           color: DonyColors.amberDark,
           fontWeight: FontWeight.w800,
@@ -178,6 +179,7 @@ class _ContactChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasPhone = phoneNumber != null && phoneNumber!.isNotEmpty;
     final hasEmail = email != null && email!.isNotEmpty;
+    final l = context.l10n;
 
     return ValueListenableBuilder<bool>(
       valueListenable: smsAuthEnabledListenable,
@@ -190,36 +192,36 @@ class _ContactChips extends StatelessWidget {
           // relance permanente pour une action devenue impossible.
           if (phoneAuthEnabled)
             if (hasPhone)
-              const _Chip(
-                label: 'Tél. ✓',
+              _Chip(
+                label: l.profileChipPhoneVerified,
                 iconAsset: 'phone',
                 bg: DonyColors.success50,
                 fg: DonyColors.success700,
               )
             else
-              const _Chip(
-                label: 'Tél. manquant',
+              _Chip(
+                label: l.profileChipPhoneMissing,
                 iconAsset: 'phone',
                 bg: DonyColors.neutral100,
                 fg: DonyColors.neutral500,
               ),
           if (hasEmail)
-            const _Chip(
-              label: 'Email ✓',
+            _Chip(
+              label: l.profileChipEmailVerified,
               iconAsset: 'mail',
               bg: DonyColors.success50,
               fg: DonyColors.success700,
             )
           else
-            const _Chip(
-              label: 'Email manquant',
+            _Chip(
+              label: l.profileChipEmailMissing,
               iconAsset: 'mail',
               bg: DonyColors.warning50,
               fg: DonyColors.warning700,
             ),
           if (isKycVerified)
-            const _Chip(
-              label: 'Identité ✓',
+            _Chip(
+              label: l.profileChipIdentityVerified,
               iconAsset: 'shield-check',
               bg: DonyColors.blue50,
               fg: DonyColors.blue700,

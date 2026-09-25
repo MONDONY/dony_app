@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -21,7 +22,7 @@ class HelpTutorialCard extends StatelessWidget {
 
     return Semantics(
           button: true,
-          label: 'Lire le tutoriel ${tutorial.title}',
+          label: context.l10n.helpTutorialCardSemanticsLabel(tutorial.title),
           onTap: onTap,
           child: ExcludeSemantics(
             child: DonyCard(

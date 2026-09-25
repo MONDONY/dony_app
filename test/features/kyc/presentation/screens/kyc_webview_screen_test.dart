@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../../helpers/fake_web_view_platform.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 
 void main() {
   setUpAll(() {
@@ -18,6 +19,12 @@ void main() {
     testWidgets('affiche le titre de vérification', (tester) async {
       await tester.pumpWidget(wrap());
       expect(find.text('Vérification d\'identité'), findsOneWidget);
+    });
+
+    testWidgets('affiche le titre en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(wrap());
+      expect(find.text('Identity verification'), findsOneWidget);
     });
 
     // Régression : la WebView occupait toute la hauteur, barre de navigation

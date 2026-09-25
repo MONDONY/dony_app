@@ -6389,5 +6389,435 @@
   "ratingStarExcellent": "Excellent!",
   "@ratingStarExcellent": {
     "description": "Libellé affiché pour 5 étoiles (rating_labels.dart, ratingStarLabel)."
-  }
+  },
+  "kycRejectionDocumentExpired": "Your ID document has expired. Use a valid document and try again.",
+  "@kycRejectionDocumentExpired": {
+    "description": "Message de refus KYC pour le code Didit 'document_expired' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionDocumentTypeNotSupported": "This document type is not accepted. Use an ID card, a passport, or a driver's license.",
+  "@kycRejectionDocumentTypeNotSupported": {
+    "description": "Message de refus KYC pour le code Didit 'document_type_not_supported' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionDocumentUnverifiedOther": "The document provided could not be read or verified. Make sure it is sharp, complete, and well lit, then try again.",
+  "@kycRejectionDocumentUnverifiedOther": {
+    "description": "Message de refus KYC pour le code Didit 'document_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionCountryNotSupported": "Your document's country is not supported for verification.",
+  "@kycRejectionCountryNotSupported": {
+    "description": "Message de refus KYC pour le code Didit 'country_not_supported' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionIdNumberMismatch": "The information on your document could not be confirmed. Make sure it is clearly legible and try again.",
+  "@kycRejectionIdNumberMismatch": {
+    "description": "Message de refus KYC partagé par les codes Didit 'id_number_insufficient_document_data', 'id_number_mismatch' et 'id_number_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionSelfieDocumentMissingPhoto": "The photo on your document could not be compared with your selfie. Try again with an ID document that has a clear photo.",
+  "@kycRejectionSelfieDocumentMissingPhoto": {
+    "description": "Message de refus KYC pour le code Didit 'selfie_document_missing_photo' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionSelfieFaceMismatch": "Your selfie does not match the photo on the document. Retry the verification in good lighting conditions.",
+  "@kycRejectionSelfieFaceMismatch": {
+    "description": "Message de refus KYC pour le code Didit 'selfie_face_mismatch' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionSelfieUnverified": "Your selfie could not be verified. Try again in a well-lit place, without glasses or headwear.",
+  "@kycRejectionSelfieUnverified": {
+    "description": "Message de refus KYC partagé par les codes Didit 'selfie_manipulated' et 'selfie_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionUnderSupportedAge": "Identity verification is reserved for adults.",
+  "@kycRejectionUnderSupportedAge": {
+    "description": "Message de refus KYC pour le code Didit 'under_supported_age' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionConsentDeclined": "You declined to give your consent, which is required to verify your identity.",
+  "@kycRejectionConsentDeclined": {
+    "description": "Message de refus KYC pour le code Didit 'consent_declined' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionSessionCanceled": "The verification was closed before it was completed.",
+  "@kycRejectionSessionCanceled": {
+    "description": "Message de refus KYC pour le code Didit 'session_canceled' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionGeneric": "We could not verify your identity. Make sure your document is legible and try again.",
+  "@kycRejectionGeneric": {
+    "description": "Message de repli pour un code de refus KYC inconnu ou absent (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycVerificationTitle": "Identity verification",
+  "@kycVerificationTitle": {
+    "description": "Titre de l'écran/la feuille de vérification d'identité (kyc_status_bottom_sheet.dart, KycStatusBottomSheet.show ; kyc_webview_screen.dart, KycWebViewScreen)."
+  },
+  "kycStatusNotStartedTitle": "Verification not started",
+  "@kycStatusNotStartedTitle": {
+    "description": "Titre de l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildNotStartedContent)."
+  },
+  "kycStatusNotStartedBody": "You need to verify your identity to use all of Yadony's features.",
+  "@kycStatusNotStartedBody": {
+    "description": "Texte de l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildNotStartedContent)."
+  },
+  "kycStatusVerifiedTitle": "Identity verified ✓",
+  "@kycStatusVerifiedTitle": {
+    "description": "Titre de l'état VERIFIED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildVerifiedContent)."
+  },
+  "kycStatusVerifiedBodyRedirecting": "Your identity has been successfully verified. Redirecting…",
+  "@kycStatusVerifiedBodyRedirecting": {
+    "description": "Texte de l'état VERIFIED depuis l'écran plein, qui redirige vers l'étape suivante (kyc_status_screen.dart, _buildVerifiedContent)."
+  },
+  "kycStatusVerifiedBodyClosing": "Your identity has been successfully verified. Closing…",
+  "@kycStatusVerifiedBodyClosing": {
+    "description": "Texte de l'état VERIFIED depuis la feuille, qui se referme automatiquement (kyc_status_bottom_sheet.dart, _buildVerifiedContent)."
+  },
+  "kycStatusPendingTitle": "Verification in progress",
+  "@kycStatusPendingTitle": {
+    "description": "Titre de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent)."
+  },
+  "kycStatusPendingBody": "This usually takes less than a minute, sometimes a few minutes. You can close this screen, you'll be notified of the result.",
+  "@kycStatusPendingBody": {
+    "description": "Texte de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent)."
+  },
+  "kycStatusTimedOutTitle": "Verification is taking longer than expected",
+  "@kycStatusTimedOutTitle": {
+    "description": "Titre de l'état atteint après le délai d'attente de 5 minutes (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildTimedOutContent)."
+  },
+  "kycStatusTimedOutBody": "You can close this screen and come back later. Your ✓ badge will appear automatically once the verification is complete.",
+  "@kycStatusTimedOutBody": {
+    "description": "Texte de l'état atteint après le délai d'attente de 5 minutes (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildTimedOutContent)."
+  },
+  "kycStatusRejectedTitle": "Verification failed",
+  "@kycStatusRejectedTitle": {
+    "description": "Titre de l'état REJECTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildRejectedContent)."
+  },
+  "kycStatusPollingIndicator": "Automatic verification in progress",
+  "@kycStatusPollingIndicator": {
+    "description": "Texte sous l'indicateur de poll pendant l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _PollingIndicator)."
+  },
+  "kycStatusStartAction": "Start verification",
+  "@kycStatusStartAction": {
+    "description": "Bouton pour démarrer la vérification depuis l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart)."
+  },
+  "kycStatusRetryAction": "Retry verification",
+  "@kycStatusRetryAction": {
+    "description": "Bouton pour relancer la vérification depuis l'état REJECTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart)."
+  },
+  "kycStatusResumeAction": "Resume verification",
+  "@kycStatusResumeAction": {
+    "description": "Bouton pour rouvrir une session PENDING non terminée par Stripe/Didit, avec ou sans délai d'attente dépassé (kyc_status_screen.dart, _actionsFor)."
+  },
+  "kycStatusBackToApp": "Back to the app",
+  "@kycStatusBackToApp": {
+    "description": "Lien de sortie une fois le délai d'attente de 5 minutes dépassé (kyc_status_screen.dart et kyc_status_bottom_sheet.dart)."
+  },
+  "kycStatusContinueLater": "Continue later",
+  "@kycStatusContinueLater": {
+    "description": "Lien de sortie pendant l'état PENDING, avant le délai d'attente (kyc_status_screen.dart et kyc_status_bottom_sheet.dart)."
+  },
+  "kycWebviewLoadError": "Unable to load the verification page",
+  "@kycWebviewLoadError": {
+    "description": "Message d'erreur si la page de vérification distante échoue à charger (kyc_webview_screen.dart)."
+  },
+  "kycRequiredTitle": "Verification required",
+  "@kycRequiredTitle": {
+    "description": "Titre de la feuille de vérification requise (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredMessageNotStarted": "To send a parcel, your identity must be verified.",
+  "@kycRequiredMessageNotStarted": {
+    "description": "Message de la feuille de vérification requise, statut par défaut/non démarré (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredMessageRejected": "Your verification failed. Try again so you can send a parcel.",
+  "@kycRequiredMessageRejected": {
+    "description": "Message de la feuille de vérification requise, statut REJECTED (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredMessagePending": "Your verification is in progress. You'll be able to send once your identity is validated.",
+  "@kycRequiredMessagePending": {
+    "description": "Message de la feuille de vérification requise, statut PENDING (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredVerifyAction": "Verify my identity",
+  "@kycRequiredVerifyAction": {
+    "description": "Bouton principal de la feuille de vérification requise (kyc_required_bottom_sheet.dart)."
+  },
+  "kycInfoDuration": "Verification takes 2 to 5 minutes",
+  "@kycInfoDuration": {
+    "description": "Ligne d'info sur la durée de la vérification (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow)."
+  },
+  "kycInfoSecureProcess": "Secure verification process",
+  "@kycInfoSecureProcess": {
+    "description": "Ligne d'info sur la sécurité du processus (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow)."
+  },
+  "kycOnboardingTitle": "Verify your identity",
+  "@kycOnboardingTitle": {
+    "description": "Titre de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart)."
+  },
+  "kycOnboardingSubtitle": "Required to post listings on Yadony",
+  "@kycOnboardingSubtitle": {
+    "description": "Sous-titre de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart)."
+  },
+  "kycOnboardingStartAction": "Start verification",
+  "@kycOnboardingStartAction": {
+    "description": "Bouton principal de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart)."
+  },
+  "kycOnboardingIdSelfieRequired": "ID document + selfie required",
+  "@kycOnboardingIdSelfieRequired": {
+    "description": "Ligne d'info sur les pièces nécessaires (kyc_onboarding_bottom_sheet.dart, _InfoRow)."
+  },
+  "profileSectionAccount": "MY ACCOUNT",
+  "profileSectionMoney": "MONEY",
+  "profileMoneyReceivePayments": "Get paid",
+  "profileMoneyVerifyIdentityToActivate": "Verify your identity to activate",
+  "profileMoneyMobileMoneyPayout": "Mobile money payout",
+  "profileMoneyMobileMoneyPayoutSubtitle": "CFA zone: Orange Money, Wave, MTN",
+  "profileMoneyCashCommissionCard": "Cash service fee card",
+  "profileSectionReputation": "MY REPUTATION",
+  "profileReputationPublicProfile": "My public profile",
+  "profileReputationPublicProfileSubtitle": "What others see",
+  "profileReputationMyReviews": "Reviews received",
+  "profileSectionAdvantages": "MY BENEFITS",
+  "profileAdvantagesProProfile": "My Pro profile",
+  "profileAdvantagesUpgradeToPro": "Upgrade to a Pro account",
+  "profileAdvantagesReferral": "Referrals",
+  "profileReferralZeroInvited": "0 invited",
+  "profileAdvantagesHaveReferralCode": "I have a referral code",
+  "profileSectionTracking": "TRACKING",
+  "profileTrackingDisputes": "My disputes",
+  "profileTrackingDisputesSubtitle": "Track your disputes",
+  "profileTrackingSubscriptions": "Following",
+  "profileTrackingSubscriptionsSubtitle": "The travelers whose trips you follow",
+  "profileSectionHelp": "HELP",
+  "profileHelpFaq": "FAQ & help",
+  "profileHelpFaqSubtitle": "Answers to frequently asked questions",
+  "profileHelpCommunity": "Social media & tutorials",
+  "profileHelpCommunitySubtitle": "Yadony videos and community",
+  "profileHelpContactSupport": "Contact support",
+  "profileHelpContactSupportSubtitle": "Response usually within 24 hours",
+  "profileContactTypePhone": "PHONE",
+  "profileContactTypeEmail": "EMAIL",
+  "profileNotAdded": "Not added",
+  "profileAddBadge": "+ Add",
+  "profileAccountIdentityDocuments": "ID documents",
+  "profileKycVerifiedLabel": "Verified",
+  "profileKycInProgressLabel": "In progress",
+  "profileKycToVerifyLabel": "Verify",
+  "profileCompletionVerifyIdentity": "Verify my identity",
+  "profileCompletionActivatePayments": "Activate payments",
+  "profileFieldPhotoShort": "Photo",
+  "profileFieldFirstName": "First name",
+  "profileFieldLastNameShort": "Last name",
+  "profileFieldEmailShort": "Email",
+  "profileFieldPhone": "Phone",
+  "profileFieldCity": "City",
+  "profileFieldAbout": "About",
+  "profileCompletionSemantics": "Account {percent} percent complete. Complete now.",
+  "@profileCompletionSemantics": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileCompletionCta": "Complete your account",
+  "profileCompletionShort": "{percent}% complete · Complete now",
+  "@profileCompletionShort": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileItemToComplete": "{label}, to complete",
+  "@profileItemToComplete": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "profileProBadge": "Pro",
+  "profileChipPhoneVerified": "Phone ✓",
+  "profileChipPhoneMissing": "Phone missing",
+  "profileChipEmailVerified": "Email ✓",
+  "profileChipEmailMissing": "Email missing",
+  "profileChipIdentityVerified": "Identity ✓",
+  "profileMenuEditProfile": "Edit profile",
+  "profileMenuSettings": "Settings",
+  "profileMenuAccountSection": "My account",
+  "profileMenuExportData": "Download my data",
+  "profileMenuExportDataSubtitle": "GDPR export in JSON format",
+  "profileLogoutAction": "Sign out",
+  "profileMenuDeleteAccount": "Delete my account",
+  "profileMenuDeleteAccountSubtitle": "30-day withdrawal period",
+  "profileSkeletonLoadingSemantics": "Loading profile",
+  "profileSkeletonUnavailableTitle": "Profile unavailable",
+  "profileSkeletonUnavailableBody": "Unable to load your account. Check your connection, then try again.",
+  "profileDeletionScheduled": "Deletion scheduled for {date}",
+  "@profileDeletionScheduled": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "profileDeletionCancelAction": "Cancel deletion",
+  "profileDeletionRefundsNotice": "Refunds already in progress are not canceled.",
+  "profileWalletBalanceLabel": "Balance",
+  "profileWalletTopUpSemantics": "Top up wallet",
+  "profileWalletUnavailable": "Balance unavailable",
+  "contactEditPhoneTitle": "Edit phone number",
+  "contactSendCodeAction": "Send code",
+  "contactVerifyAction": "Verify",
+  "contactEditEmailTitle": "Edit email",
+  "contactAddPhoneTitle": "Add a phone number",
+  "contactPhoneAddedSuccess": "Number added successfully!",
+  "contactPhoneNumberLabel": "PHONE NUMBER",
+  "contactPhoneOtpNotice": "A verification code will be sent by SMS.",
+  "contactDialCodeTitle": "Country code",
+  "contactAddEmailTitle": "Add an email",
+  "contactEmailVerifiedSuccess": "Email verified successfully!",
+  "contactEmailAddressLabel": "EMAIL ADDRESS",
+  "contactEmailOtpNotice": "A verification code will be sent to this email.",
+  "contactCodeSentTo": "Code sent to {destination}",
+  "@contactCodeSentTo": {
+    "placeholders": {
+      "destination": {
+        "type": "String"
+      }
+    }
+  },
+  "profileCommunityJoinTitle": "Join the community",
+  "profileCommunityJoinSubtitle": "Find Yadony's official spaces.",
+  "profileCommunityActionJoin": "Join",
+  "profileCommunityActionFollow": "Follow",
+  "profileCommunityActionSubscribe": "Subscribe",
+  "profileLogoutConfirmTitle": "Sign out?",
+  "profileLogoutConfirmMessage": "You'll need to sign in again to continue.",
+  "profileMenuButtonTooltip": "Menu",
+  "profileFooterVersion": "Yadony v1.0.0 · Made with ❤️ in Paris",
+  "editProfileImageOnlyError": "Only images are accepted (no video).",
+  "editProfilePhotoTooLarge": "Photo too large (max {maxMb} MB).",
+  "@editProfilePhotoTooLarge": {
+    "placeholders": {
+      "maxMb": {
+        "type": "int"
+      }
+    }
+  },
+  "profileEditChangePhotoSemantics": "Change profile photo",
+  "profileEditChangePhotoLabel": "Change photo",
+  "profileEditSectionIdentity": "Identity",
+  "profileEditLastNameFieldLabel": "Last name",
+  "profileEditNoBioPlaceholder": "No bio",
+  "profileEditBioFieldLabel": "Bio",
+  "profileEditSectionContact": "Contact details",
+  "profileFieldEmailAllCaps": "EMAIL",
+  "profileEditSectionPersonalInfo": "Personal information",
+  "profileFieldCityAllCaps": "CITY",
+  "profileEditCityPlaceholder": "Not provided",
+  "profileEditSectionPreferences": "Preferences",
+  "profileFieldLanguagesAllCaps": "LANGUAGES SPOKEN",
+  "profileEditLanguagesPlaceholder": "Not provided",
+  "profileEditLanguagesFieldLabel": "Languages spoken",
+  "profileEditCompletionGaugeTitle": "Profile complete",
+  "profileEditCompletionGaugeSubtitle": "Photo, identity, contact details and information complete your profile",
+  "profileEditNoNamePlaceholder": "Add your first and last name",
+  "profileAddBadgeAction": "Add",
+  "communityEmptyTitle": "No content yet",
+  "communityEmptyDescription": "Our tutorials and community spaces will be available here soon.",
+  "communityTutorialsTitle": "Video tutorials",
+  "communityTutorialsSubtitle": "Learn the essential Yadony journeys.",
+  "profileLanguageFrench": "French",
+  "profileLanguageWolof": "Wolof",
+  "profileLanguageBambara": "Bambara",
+  "profileLanguageEnglish": "English",
+  "profileLanguageSpanish": "Spanish",
+  "profileLanguageArabic": "Arabic",
+  "profilePublicOwnProfileTitle": "What others see",
+  "profilePublicTitleFallback": "Profile",
+  "profilePublicMoreOptionsTooltip": "More options",
+  "profilePublicReportAction": "Report",
+  "profilePublicReportUserAction": "Report {name}",
+  "profilePublicBlockUserAction": "Block {name}",
+  "profilePublicLoadErrorTitle": "Couldn't load profile",
+  "profilePublicRatingLine": "⭐ {rating} · {count, plural, =1{{count} review} other{{count} reviews}} · {memberSince}",
+  "profilePublicVerified": "✓ Verified",
+  "profilePublicProBadge": "Pro",
+  "profilePublicStatRatingLabel": "Rating",
+  "profilePublicStatDeliveriesLabel": "Deliveries",
+  "profilePublicAboutSectionLabel": "ABOUT",
+  "profilePublicLanguagesSectionLabel": "LANGUAGES",
+  "profilePublicBadgesSectionLabel": "BADGES",
+  "profilePublicContactCallLabel": "Reachable by call",
+  "profilePublicContactMessageLabel": "Reachable by message",
+  "profilePublicContactBothLabel": "Call & message",
+  "profilePublicAvailabilitySectionLabel": "AVAILABILITY",
+  "profilePublicRespondsWithin": "Replies in < {hours}h",
+  "profilePublicRecentReviewsSectionLabel": "RECENT REVIEWS",
+  "profilePublicNoReviewsYet": "No reviews yet.",
+  "profilePublicSeeAllReviews": "See all reviews ({count}) ›",
+  "profileUserFallback": "User",
+  "followFollowButton": "Follow",
+  "followFollowingButton": "Following ✓",
+  "followUnfollowDialogTitle": "Unfollow?",
+  "followUnfollowButton": "Unfollow",
+  "profilePublicUnfollowDialogMessage": "You will no longer receive this traveler's notifications.",
+  "profilePublicEnablePushTooltip": "Turn on notifications",
+  "profilePublicDisablePushTooltip": "Turn off notifications",
+  "shipmentsHistoryTitle": "Delivery history",
+  "shipmentsHistoryEmptyTitle": "No completed deliveries",
+  "shipmentsHistoryEmptyDescription": "Your completed deliveries will appear here.",
+  "shipmentsHistoryDaysAgo": "{count, plural, =1{{count} day ago} other{{count} days ago}}",
+  "shipmentsHistoryDetailsButton": "See details",
+  "allReviewsSheetTitle": "Reviews",
+  "faqFindAnswerTitle": "Find an answer",
+  "faqFindAnswerSubtitle": "Search for an answer or browse categories.",
+  "faqSearchHint": "Search help",
+  "faqEmptyResultsTitle": "No results",
+  "faqEmptyResultsDescription": "Try different keywords or contact our team.",
+  "faqContactCardTitle": "Didn't find your answer?",
+  "faqContactCardSubtitle": "Our team is here to help.",
+  "faqAccountTitle": "Account & identity",
+  "faqAnnouncementsTitle": "Listings & requests",
+  "faqPaymentsTitle": "Payments & refunds",
+  "faqDeliveryTitle": "Tracking & delivery",
+  "faqSafetyTitle": "Security & data",
+  "faqAccountIdentityRequiredQ": "Why is identity verification required?",
+  "faqAccountIdentityRequiredA": "It may be required by our payment partners and by regulations that apply to certain transactions. It also helps us fight fraud and protect Yadony users.",
+  "faqAccountIdentityDelayQ": "How long does verification take?",
+  "faqAccountIdentityDelayA": "Verification is often completed within minutes. If a manual review is needed, it can take longer.",
+  "faqAccountIdentityDocumentsQ": "Which documents are accepted?",
+  "faqAccountIdentityDocumentsA": "National ID card, passport, or a valid residence permit. The document must be legible and not expired.",
+  "faqAccountWithoutIdentityQ": "Can I use Yadony without verifying my identity?",
+  "faqAccountWithoutIdentityA": "You can browse listings without verifying your identity. Some actions, such as sending, carrying parcels, or receiving payments, may require verification.",
+  "faqAnnouncementsPublishTripQ": "How do I post a trip as a traveler?",
+  "faqAnnouncementsPublishTripA": "From Home or Activity, choose \"Post a trip\". Enter the departure city, the destination, the date and the available capacity.",
+  "faqAnnouncementsPublishRequestQ": "How do I post a parcel request?",
+  "faqAnnouncementsPublishRequestA": "From Home or Activity, choose \"Post a parcel\". Describe the parcel, its estimated weight and the recipient. Matching travelers will then be able to make an offer.",
+  "faqAnnouncementsEditRequestQ": "Can I edit my request after posting it?",
+  "faqAnnouncementsEditRequestA": "You can edit a request as long as no offer has been accepted. Once one is accepted, contact support if important information needs to be corrected.",
+  "faqPaymentsPaymentTimingQ": "When am I charged?",
+  "faqPaymentsPaymentTimingA": "For a card payment, the funds are held and secured when the offer is accepted, then released as the delivery progresses. For cash and Mobile Money, follow the instructions shown when you choose your payment method.",
+  "faqPaymentsRefundQ": "How does the refund work if I cancel?",
+  "faqPaymentsRefundA": "The refund depends on the payment method and when the cancellation happens. A card payment is credited back to the original method after processing. For Mobile Money, the timing depends on the operator. In cash, Yadony doesn't hold the funds and can't process the refund automatically.",
+  "faqPaymentsCommissionQ": "Why is there a {percent}% service fee?",
+  "faqPaymentsCommissionA": "The service fee covers payment costs, support, fraud prevention and the development of the platform.",
+  "faqPaymentsPaymentSecurityQ": "Are payments secure?",
+  "faqPaymentsPaymentSecurityA": "Online payments are processed by the providers listed in the app. Yadony doesn't store your full card details. A cash payment isn't held and secured: never pay outside the process set up in the app.",
+  "faqDeliveryHandoverQrQ": "How does the drop-off QR code work?",
+  "faqDeliveryHandoverQrA": "At drop-off, the QR code confirms the parcel was taken in charge and starts tracking. Without a connection, the scan is stored on the device and synced once you're back online.",
+  "faqDeliveryParcelMissingQ": "What should I do if the parcel doesn't arrive?",
+  "faqDeliveryParcelMissingA": "Open a dispute from \"My disputes\" as soon as you notice the problem. Add the photos, messages and tracking information available. The applicable deadlines are shown in the reporting flow.",
+  "faqDeliveryDeliveryDelayQ": "What's the average delivery time?",
+  "faqDeliveryDeliveryDelayA": "The delay depends on the chosen trip and the date announced by the traveler. Always check the trip details before accepting an offer.",
+  "faqSafetyLostParcelQ": "What happens if my parcel is lost?",
+  "faqSafetyLostParcelA": "Yadony doesn't automatically cover the loss of a parcel. After investigation, a refund of up to {cap} € may be granted if all conditions are met:\n\n• card payment made within Yadony;\n• no payment or agreement made outside the platform;\n• drop-off and handover QR codes used;\n• dispute opened within 15 days of the expected date;\n• content complying with allowed items.\n\nAny decision remains subject to approval by the Yadony team.",
+  "faqSafetyDisputeQ": "What should I do if I have a dispute with a traveler?",
+  "faqSafetyDisputeA": "Open \"My disputes\" from your profile and provide the relevant details: photos, messages and tracking. Our team then reviews the case and keeps you informed in the app.",
+  "faqSafetyPersonalDataQ": "Is my personal data protected?",
+  "faqSafetyPersonalDataA": "Yadony applies security measures to protect your data and doesn't sell your personal information. You can review the privacy policy and manage your preferences in Settings.",
+  "faqSafetyDeleteAccountQ": "How do I delete my account?",
+  "faqSafetyDeleteAccountA": "In Settings → Data and account → Delete my account, you can choose a reversible 30-day pause or an immediate, permanent deletion. An ongoing transaction may temporarily block deletion.",
+  "helpTutorialScreenTitle": "Video tutorial",
+  "helpTutorialNotFoundTitle": "Tutorial not found",
+  "helpTutorialNotFoundDescription": "This tutorial is no longer available.",
+  "helpTutorialSubscribeChannelButton": "Subscribe to the channel",
+  "helpTutorialPlayerSemanticsLabel": "Video player: {title}",
+  "helpTutorialPlaybackErrorTitle": "Playback unavailable",
+  "helpTutorialPlaybackErrorDescription": "Check your connection or open the video directly in YouTube.",
+  "helpTutorialOpenInYoutubeButton": "Open in YouTube",
+  "helpContextualCardSemanticsLabel": "Need help? Watch the tutorial {title}",
+  "helpContextualCardLabel": "Need help? Watch the tutorial",
+  "helpContextualCardDismissTooltip": "Hide this tip",
+  "helpTutorialCardSemanticsLabel": "Watch the tutorial {title}"
 }

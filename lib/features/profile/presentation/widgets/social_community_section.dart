@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,12 +22,13 @@ class SocialCommunitySection extends StatelessWidget {
 
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Rejoindre la communauté',
+          l.profileCommunityJoinTitle,
           style: tt.titleLarge?.copyWith(
             color: cs.onSurface,
             fontWeight: FontWeight.w800,
@@ -34,7 +36,7 @@ class SocialCommunitySection extends StatelessWidget {
         ),
         const SizedBox(height: DonySpacing.xs),
         Text(
-          'Retrouve les espaces officiels Yadony.',
+          l.profileCommunityJoinSubtitle,
           style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.base),
@@ -127,6 +129,8 @@ class _SocialCommunityCard extends StatelessWidget {
 
     return Semantics(
       button: true,
+      // Format sans mot supplémentaire : les deux segments sont déjà traduits
+      // (actionLabel) ou une marque laissée telle quelle (networkLabel).
       label: '${style.actionLabel} ${style.networkLabel}',
       onTap: openLink,
       child: ExcludeSemantics(
@@ -161,39 +165,40 @@ class _SocialCommunityCard extends StatelessWidget {
 _SocialStyle _styleFor(BuildContext context, SocialNetwork network) {
   final cs = Theme.of(context).colorScheme;
   final isLight = Theme.of(context).brightness == Brightness.light;
+  final l = context.l10n;
 
   return switch (network) {
     SocialNetwork.whatsapp => _SocialStyle(
-      networkLabel: 'WhatsApp',
-      actionLabel: 'Rejoindre',
+      networkLabel: 'WhatsApp', // i18n-ignore — nom de marque
+      actionLabel: l.profileCommunityActionJoin,
       logoAsset: 'whatsapp',
       foreground: isLight ? DonyColors.success500 : DonyColors.successDark500,
       background: isLight ? DonyColors.success50 : DonyColors.successDark50,
     ),
     SocialNetwork.facebook => _SocialStyle(
-      networkLabel: 'Facebook',
-      actionLabel: 'Rejoindre',
+      networkLabel: 'Facebook', // i18n-ignore — nom de marque
+      actionLabel: l.profileCommunityActionJoin,
       logoAsset: 'facebook',
       foreground: cs.primary,
       background: cs.primaryContainer,
     ),
     SocialNetwork.instagram => _SocialStyle(
-      networkLabel: 'Instagram',
-      actionLabel: 'Suivre',
+      networkLabel: 'Instagram', // i18n-ignore — nom de marque
+      actionLabel: l.profileCommunityActionFollow,
       logoAsset: 'instagram',
       foreground: isLight ? DonyColors.accent : DonyColors.terraDark500,
       background: cs.secondaryContainer,
     ),
     SocialNetwork.tiktok => _SocialStyle(
-      networkLabel: 'TikTok',
-      actionLabel: 'Suivre',
+      networkLabel: 'TikTok', // i18n-ignore — nom de marque
+      actionLabel: l.profileCommunityActionFollow,
       logoAsset: 'tiktok',
       foreground: cs.onSurface,
       background: cs.surfaceContainerHighest,
     ),
     SocialNetwork.youtube => _SocialStyle(
-      networkLabel: 'YouTube',
-      actionLabel: 'S’abonner',
+      networkLabel: 'YouTube', // i18n-ignore — nom de marque
+      actionLabel: l.profileCommunityActionSubscribe,
       logoAsset: 'youtube',
       foreground: cs.error,
       background: cs.errorContainer,

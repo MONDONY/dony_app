@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Squelette de l'écran « Moi », rendu tant que le profil n'est pas connu.
@@ -62,7 +63,7 @@ class ProfileScreenSkeleton extends StatelessWidget {
       );
     }
     return Semantics(
-      label: 'Chargement du profil',
+      label: context.l10n.profileSkeletonLoadingSemantics,
       excludeSemantics: true,
       child: SingleChildScrollView(
         physics: const NeverScrollableScrollPhysics(),
@@ -237,6 +238,7 @@ class _RetryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return DonyCard(
       child: Column(
@@ -255,7 +257,7 @@ class _RetryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Profil indisponible',
+                      l.profileSkeletonUnavailableTitle,
                       style: tt.titleSmall?.copyWith(
                         color: cs.onSurface,
                         fontWeight: FontWeight.w700,
@@ -263,8 +265,7 @@ class _RetryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: DonySpacing.xxs),
                     Text(
-                      'Impossible de charger votre compte. Vérifiez votre '
-                      'connexion, puis réessayez.',
+                      l.profileSkeletonUnavailableBody,
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
@@ -274,7 +275,7 @@ class _RetryCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.md),
           DonyButton(
-            label: 'Réessayer',
+            label: l.commonRetry,
             iconAsset: 'refresh-cw',
             variant: DonyButtonVariant.secondary,
             onPressed: onRetry,

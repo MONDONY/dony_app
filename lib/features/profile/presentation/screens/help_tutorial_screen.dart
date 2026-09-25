@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/screens/help_tutorial_player.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,6 +25,7 @@ class HelpTutorialScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return BlocBuilder<HelpCenterBloc, HelpCenterState>(
       builder: (context, state) {
         final config = switch (state) {
@@ -33,18 +35,20 @@ class HelpTutorialScreen extends StatelessWidget {
         };
         final tutorial = config?.tutorialById(tutorialId);
         return switch ((state, tutorial)) {
-          (HelpCenterInitial() || HelpCenterLoading(), _) =>
-            const DonyPageScaffold(
-              title: 'Tutoriel vidéo',
-              scrollable: false,
-              body: DonyEmptyState(type: DonyEmptyStateType.loading, title: ''),
+          (HelpCenterInitial() || HelpCenterLoading(), _) => DonyPageScaffold(
+            title: l.helpTutorialScreenTitle,
+            scrollable: false,
+            body: const DonyEmptyState(
+              type: DonyEmptyStateType.loading,
+              title: '',
             ),
-          (_, null) => const DonyPageScaffold(
-            title: 'Tutoriel vidéo',
+          ),
+          (_, null) => DonyPageScaffold(
+            title: l.helpTutorialScreenTitle,
             scrollable: false,
             body: DonyEmptyState(
-              title: 'Tutoriel introuvable',
-              description: 'Ce tutoriel n’est plus disponible.',
+              title: l.helpTutorialNotFoundTitle,
+              description: l.helpTutorialNotFoundDescription,
               iconAsset: 'circle-help',
             ),
           ),
@@ -126,7 +130,7 @@ class _HelpTutorialContent extends StatelessWidget {
         if (youtubeChannelUrl case final channelUrl?) ...[
           const SizedBox(height: DonySpacing.xl),
           DonyButton(
-            label: 'S’abonner à la chaîne',
+            label: context.l10n.helpTutorialSubscribeChannelButton,
             iconAsset: 'circle-play',
             variant: DonyButtonVariant.secondary,
             onPressed: () => context.read<HelpCenterBloc>().add(
@@ -339,7 +343,7 @@ class _HelpTutorialExperienceState extends State<_HelpTutorialExperience> {
     Widget? player,
   }) {
     return DonyPageScaffold(
-      title: 'Tutoriel vidéo',
+      title: context.l10n.helpTutorialScreenTitle,
       body: _HelpTutorialContent(
         tutorial: widget.tutorial,
         youtubeChannelUrl: widget.youtubeChannelUrl,
@@ -369,7 +373,9 @@ class _HelpTutorialExperienceState extends State<_HelpTutorialExperience> {
     return Semantics(
       key: const ValueKey('help-tutorial-player-frame'),
       container: true,
-      label: 'Lecteur vidéo : ${widget.tutorial.title}',
+      label: context.l10n.helpTutorialPlayerSemanticsLabel(
+        widget.tutorial.title,
+      ),
       child: AspectRatio(
         key: const Key('help-tutorial-player-aspect-ratio'),
         aspectRatio: _configuration.aspectRatio,
@@ -434,6 +440,7 @@ class _PlayerErrorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return DonyCard(
       key: const ValueKey('help-tutorial-player-error'),
@@ -448,25 +455,25 @@ class _PlayerErrorCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.base),
           Text(
-            'Lecture impossible',
+            l.helpTutorialPlaybackErrorTitle,
             style: tt.titleLarge?.copyWith(color: cs.onSurface),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Vérifie ta connexion ou ouvre la vidéo directement dans YouTube.',
+            l.helpTutorialPlaybackErrorDescription,
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DonySpacing.xl),
           DonyButton(
-            label: 'Réessayer',
+            label: l.commonRetry,
             iconAsset: 'refresh-cw',
             onPressed: onRetry,
           ),
           const SizedBox(height: DonySpacing.md),
           DonyButton(
-            label: 'Ouvrir dans YouTube',
+            label: l.helpTutorialOpenInYoutubeButton,
             iconAsset: 'external-link',
             variant: DonyButtonVariant.secondary,
             onPressed: onOpenExternal,

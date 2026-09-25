@@ -10440,4 +10440,921 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ratingStarExcellent => 'Excellent !';
+
+  @override
+  String get kycRejectionDocumentExpired =>
+      'Votre pièce d\'identité est expirée. Utilisez un document valide et réessayez.';
+
+  @override
+  String get kycRejectionDocumentTypeNotSupported =>
+      'Ce type de document n\'est pas accepté. Utilisez une carte d\'identité, un passeport ou un permis de conduire.';
+
+  @override
+  String get kycRejectionDocumentUnverifiedOther =>
+      'Le document fourni n\'a pas pu être lu ou vérifié. Assurez-vous qu\'il est net, complet et bien éclairé, puis réessayez.';
+
+  @override
+  String get kycRejectionCountryNotSupported =>
+      'Le pays de votre document n\'est pas pris en charge pour la vérification.';
+
+  @override
+  String get kycRejectionIdNumberMismatch =>
+      'Les informations de votre document n\'ont pas pu être confirmées. Vérifiez qu\'elles sont bien lisibles et réessayez.';
+
+  @override
+  String get kycRejectionSelfieDocumentMissingPhoto =>
+      'La photo sur votre document n\'a pas pu être comparée à votre selfie. Réessayez avec une pièce d\'identité comportant une photo nette.';
+
+  @override
+  String get kycRejectionSelfieFaceMismatch =>
+      'Votre selfie ne correspond pas à la photo du document. Reprenez la vérification dans de bonnes conditions de lumière.';
+
+  @override
+  String get kycRejectionSelfieUnverified =>
+      'Votre selfie n\'a pas pu être vérifié. Réessayez dans un endroit bien éclairé, sans lunettes ni couvre-chef.';
+
+  @override
+  String get kycRejectionUnderSupportedAge =>
+      'La vérification d\'identité est réservée aux personnes majeures.';
+
+  @override
+  String get kycRejectionConsentDeclined =>
+      'Vous avez refusé de donner votre consentement, indispensable pour vérifier votre identité.';
+
+  @override
+  String get kycRejectionSessionCanceled =>
+      'La vérification a été fermée avant d\'être terminée.';
+
+  @override
+  String get kycRejectionGeneric =>
+      'Nous n\'avons pas pu vérifier votre identité. Assurez-vous que votre document est lisible et réessayez.';
+
+  @override
+  String get kycVerificationTitle => 'Vérification d\'identité';
+
+  @override
+  String get kycStatusNotStartedTitle => 'Vérification non démarrée';
+
+  @override
+  String get kycStatusNotStartedBody =>
+      'Vous devez vérifier votre identité pour utiliser toutes les fonctionnalités de Yadony.';
+
+  @override
+  String get kycStatusVerifiedTitle => 'Identité vérifiée ✓';
+
+  @override
+  String get kycStatusVerifiedBodyRedirecting =>
+      'Votre identité a été vérifiée avec succès. Redirection en cours…';
+
+  @override
+  String get kycStatusVerifiedBodyClosing =>
+      'Votre identité a été vérifiée avec succès. Fermeture en cours…';
+
+  @override
+  String get kycStatusPendingTitle => 'Vérification en cours';
+
+  @override
+  String get kycStatusPendingBody =>
+      'Cela prend généralement moins d\'une minute, parfois quelques minutes. Vous pouvez fermer cet écran, vous serez notifié du résultat.';
+
+  @override
+  String get kycStatusTimedOutTitle =>
+      'La vérification prend plus de temps que prévu';
+
+  @override
+  String get kycStatusTimedOutBody =>
+      'Vous pouvez fermer cet écran et revenir plus tard. Votre badge ✓ apparaîtra automatiquement dès que la vérification sera terminée.';
+
+  @override
+  String get kycStatusRejectedTitle => 'Vérification échouée';
+
+  @override
+  String get kycStatusPollingIndicator => 'Vérification automatique en cours';
+
+  @override
+  String get kycStatusStartAction => 'Commencer la vérification';
+
+  @override
+  String get kycStatusRetryAction => 'Réessayer la vérification';
+
+  @override
+  String get kycStatusResumeAction => 'Reprendre la vérification';
+
+  @override
+  String get kycStatusBackToApp => 'Retour à l\'app';
+
+  @override
+  String get kycStatusContinueLater => 'Continuer plus tard';
+
+  @override
+  String get kycWebviewLoadError =>
+      'Impossible de charger la page de vérification';
+
+  @override
+  String get kycRequiredTitle => 'Vérification requise';
+
+  @override
+  String get kycRequiredMessageNotStarted =>
+      'Pour envoyer un colis, votre identité doit être vérifiée.';
+
+  @override
+  String get kycRequiredMessageRejected =>
+      'Votre vérification a échoué. Réessayez pour pouvoir envoyer un colis.';
+
+  @override
+  String get kycRequiredMessagePending =>
+      'Votre vérification est en cours. Vous pourrez envoyer une fois votre identité validée.';
+
+  @override
+  String get kycRequiredVerifyAction => 'Vérifier mon identité';
+
+  @override
+  String get kycInfoDuration => 'Vérification en 2 à 5 minutes';
+
+  @override
+  String get kycInfoSecureProcess => 'Processus de vérification sécurisé';
+
+  @override
+  String get kycOnboardingTitle => 'Vérifiez votre identité';
+
+  @override
+  String get kycOnboardingSubtitle =>
+      'Requis pour publier des annonces sur Yadony';
+
+  @override
+  String get kycOnboardingStartAction => 'Démarrer la vérification';
+
+  @override
+  String get kycOnboardingIdSelfieRequired =>
+      'Pièce d\'identité + selfie requis';
+
+  @override
+  String get profileSectionAccount => 'MON COMPTE';
+
+  @override
+  String get profileSectionMoney => 'ARGENT';
+
+  @override
+  String get profileMoneyReceivePayments => 'Recevoir mes paiements';
+
+  @override
+  String get profileMoneyVerifyIdentityToActivate =>
+      'Vérifiez votre identité pour activer';
+
+  @override
+  String get profileMoneyMobileMoneyPayout => 'Versement mobile money';
+
+  @override
+  String get profileMoneyMobileMoneyPayoutSubtitle =>
+      'Zone CFA : Orange Money, Wave, MTN';
+
+  @override
+  String get profileMoneyCashCommissionCard => 'Carte commission espèces';
+
+  @override
+  String get profileSectionReputation => 'MA RÉPUTATION';
+
+  @override
+  String get profileReputationPublicProfile => 'Mon profil public';
+
+  @override
+  String get profileReputationPublicProfileSubtitle =>
+      'Ce que voient les autres';
+
+  @override
+  String get profileReputationMyReviews => 'Mes avis reçus';
+
+  @override
+  String get profileSectionAdvantages => 'MES AVANTAGES';
+
+  @override
+  String get profileAdvantagesProProfile => 'Mon profil PRO';
+
+  @override
+  String get profileAdvantagesUpgradeToPro => 'Passer en compte PRO';
+
+  @override
+  String get profileAdvantagesReferral => 'Parrainages';
+
+  @override
+  String get profileReferralZeroInvited => '0 invité';
+
+  @override
+  String get profileAdvantagesHaveReferralCode => 'J\'ai un code parrain';
+
+  @override
+  String get profileSectionTracking => 'SUIVI';
+
+  @override
+  String get profileTrackingDisputes => 'Mes litiges';
+
+  @override
+  String get profileTrackingDisputesSubtitle => 'Suivi de vos litiges';
+
+  @override
+  String get profileTrackingSubscriptions => 'Mes abonnements';
+
+  @override
+  String get profileTrackingSubscriptionsSubtitle =>
+      'Les voyageurs dont vous suivez les trajets';
+
+  @override
+  String get profileSectionHelp => 'AIDE';
+
+  @override
+  String get profileHelpFaq => 'FAQ & aide';
+
+  @override
+  String get profileHelpFaqSubtitle => 'Réponses aux questions fréquentes';
+
+  @override
+  String get profileHelpCommunity => 'Réseaux sociaux et tutoriels';
+
+  @override
+  String get profileHelpCommunitySubtitle => 'Vidéos et communauté Yadony';
+
+  @override
+  String get profileHelpContactSupport => 'Contacter le support';
+
+  @override
+  String get profileHelpContactSupportSubtitle =>
+      'Réponse généralement sous 24 h';
+
+  @override
+  String get profileContactTypePhone => 'TÉLÉPHONE';
+
+  @override
+  String get profileContactTypeEmail => 'E-MAIL';
+
+  @override
+  String get profileNotAdded => 'Non ajouté';
+
+  @override
+  String get profileAddBadge => '+ Ajouter';
+
+  @override
+  String get profileAccountIdentityDocuments => 'Documents d\'identité';
+
+  @override
+  String get profileKycVerifiedLabel => 'Vérifié';
+
+  @override
+  String get profileKycInProgressLabel => 'En cours';
+
+  @override
+  String get profileKycToVerifyLabel => 'Vérifier';
+
+  @override
+  String get profileCompletionVerifyIdentity => 'Vérifier mon identité';
+
+  @override
+  String get profileCompletionActivatePayments => 'Activer les paiements';
+
+  @override
+  String get profileFieldPhotoShort => 'Photo';
+
+  @override
+  String get profileFieldFirstName => 'Prénom';
+
+  @override
+  String get profileFieldLastNameShort => 'Nom';
+
+  @override
+  String get profileFieldEmailShort => 'Email';
+
+  @override
+  String get profileFieldPhone => 'Téléphone';
+
+  @override
+  String get profileFieldCity => 'Ville';
+
+  @override
+  String get profileFieldAbout => 'À propos';
+
+  @override
+  String profileCompletionSemantics(int percent) {
+    return 'Compte complété à $percent pour cent. Compléter maintenant.';
+  }
+
+  @override
+  String get profileCompletionCta => 'Complétez votre compte';
+
+  @override
+  String profileCompletionShort(int percent) {
+    return '$percent% complété · Compléter maintenant';
+  }
+
+  @override
+  String profileItemToComplete(String label) {
+    return '$label, à compléter';
+  }
+
+  @override
+  String get profileProBadge => 'PRO';
+
+  @override
+  String get profileChipPhoneVerified => 'Tél. ✓';
+
+  @override
+  String get profileChipPhoneMissing => 'Tél. manquant';
+
+  @override
+  String get profileChipEmailVerified => 'Email ✓';
+
+  @override
+  String get profileChipEmailMissing => 'Email manquant';
+
+  @override
+  String get profileChipIdentityVerified => 'Identité ✓';
+
+  @override
+  String get profileMenuEditProfile => 'Modifier le profil';
+
+  @override
+  String get profileMenuSettings => 'Paramètres';
+
+  @override
+  String get profileMenuAccountSection => 'Mon compte';
+
+  @override
+  String get profileMenuExportData => 'Télécharger mes données';
+
+  @override
+  String get profileMenuExportDataSubtitle => 'Export RGPD au format JSON';
+
+  @override
+  String get profileLogoutAction => 'Se déconnecter';
+
+  @override
+  String get profileMenuDeleteAccount => 'Supprimer mon compte';
+
+  @override
+  String get profileMenuDeleteAccountSubtitle =>
+      'Délai de rétractation de 30 jours';
+
+  @override
+  String get profileSkeletonLoadingSemantics => 'Chargement du profil';
+
+  @override
+  String get profileSkeletonUnavailableTitle => 'Profil indisponible';
+
+  @override
+  String get profileSkeletonUnavailableBody =>
+      'Impossible de charger votre compte. Vérifiez votre connexion, puis réessayez.';
+
+  @override
+  String profileDeletionScheduled(String date) {
+    return 'Suppression planifiée le $date';
+  }
+
+  @override
+  String get profileDeletionCancelAction => 'Annuler la suppression';
+
+  @override
+  String get profileDeletionRefundsNotice =>
+      'Les remboursements déjà lancés ne sont pas annulés.';
+
+  @override
+  String get profileWalletBalanceLabel => 'Solde';
+
+  @override
+  String get profileWalletTopUpSemantics => 'Recharger le portefeuille';
+
+  @override
+  String get profileWalletUnavailable => 'Solde indisponible';
+
+  @override
+  String get contactEditPhoneTitle => 'Modifier le numéro';
+
+  @override
+  String get contactSendCodeAction => 'Envoyer le code';
+
+  @override
+  String get contactVerifyAction => 'Vérifier';
+
+  @override
+  String get contactEditEmailTitle => 'Modifier l\'email';
+
+  @override
+  String get contactAddPhoneTitle => 'Ajouter un numéro';
+
+  @override
+  String get contactPhoneAddedSuccess => 'Numéro ajouté avec succès !';
+
+  @override
+  String get contactPhoneNumberLabel => 'NUMÉRO DE TÉLÉPHONE';
+
+  @override
+  String get contactPhoneOtpNotice =>
+      'Un code de vérification sera envoyé par SMS.';
+
+  @override
+  String get contactDialCodeTitle => 'Indicatif';
+
+  @override
+  String get contactAddEmailTitle => 'Ajouter un email';
+
+  @override
+  String get contactEmailVerifiedSuccess => 'Email vérifié avec succès !';
+
+  @override
+  String get contactEmailAddressLabel => 'ADRESSE EMAIL';
+
+  @override
+  String get contactEmailOtpNotice =>
+      'Un code de vérification sera envoyé à cet email.';
+
+  @override
+  String contactCodeSentTo(String destination) {
+    return 'Code envoyé à $destination';
+  }
+
+  @override
+  String get profileCommunityJoinTitle => 'Rejoindre la communauté';
+
+  @override
+  String get profileCommunityJoinSubtitle =>
+      'Retrouve les espaces officiels Yadony.';
+
+  @override
+  String get profileCommunityActionJoin => 'Rejoindre';
+
+  @override
+  String get profileCommunityActionFollow => 'Suivre';
+
+  @override
+  String get profileCommunityActionSubscribe => 'S’abonner';
+
+  @override
+  String get profileLogoutConfirmTitle => 'Se déconnecter ?';
+
+  @override
+  String get profileLogoutConfirmMessage =>
+      'Vous devrez vous reconnecter pour continuer.';
+
+  @override
+  String get profileMenuButtonTooltip => 'Menu';
+
+  @override
+  String get profileFooterVersion => 'Yadony v1.0.0 · Made with ❤️ in Paris';
+
+  @override
+  String get editProfileImageOnlyError =>
+      'Seules les images sont acceptées (pas de vidéo).';
+
+  @override
+  String editProfilePhotoTooLarge(int maxMb) {
+    return 'Photo trop lourde (max $maxMb Mo).';
+  }
+
+  @override
+  String get profileEditChangePhotoSemantics => 'Changer la photo de profil';
+
+  @override
+  String get profileEditChangePhotoLabel => 'Modifier la photo';
+
+  @override
+  String get profileEditSectionIdentity => 'Identité';
+
+  @override
+  String get profileEditLastNameFieldLabel => 'Nom de famille';
+
+  @override
+  String get profileEditNoBioPlaceholder => 'Aucune présentation';
+
+  @override
+  String get profileEditBioFieldLabel => 'Présentation';
+
+  @override
+  String get profileEditSectionContact => 'Coordonnées';
+
+  @override
+  String get profileFieldEmailAllCaps => 'EMAIL';
+
+  @override
+  String get profileEditSectionPersonalInfo => 'Informations personnelles';
+
+  @override
+  String get profileFieldCityAllCaps => 'VILLE';
+
+  @override
+  String get profileEditCityPlaceholder => 'Non renseignée';
+
+  @override
+  String get profileEditSectionPreferences => 'Préférences';
+
+  @override
+  String get profileFieldLanguagesAllCaps => 'LANGUES PARLÉES';
+
+  @override
+  String get profileEditLanguagesPlaceholder => 'Non renseignées';
+
+  @override
+  String get profileEditLanguagesFieldLabel => 'Langues parlées';
+
+  @override
+  String get profileEditCompletionGaugeTitle => 'Profil complet';
+
+  @override
+  String get profileEditCompletionGaugeSubtitle =>
+      'Photo, identité, coordonnées et informations complètent votre profil';
+
+  @override
+  String get profileEditNoNamePlaceholder => 'Ajoutez votre prénom et nom';
+
+  @override
+  String get profileAddBadgeAction => 'Ajouter';
+
+  @override
+  String get communityEmptyTitle => 'Aucun contenu pour le moment';
+
+  @override
+  String get communityEmptyDescription =>
+      'Nos tutoriels et espaces communautaires seront bientôt disponibles ici.';
+
+  @override
+  String get communityTutorialsTitle => 'Tutoriels vidéo';
+
+  @override
+  String get communityTutorialsSubtitle =>
+      'Apprends les parcours essentiels de Yadony.';
+
+  @override
+  String get profileLanguageFrench => 'Français';
+
+  @override
+  String get profileLanguageWolof => 'Wolof';
+
+  @override
+  String get profileLanguageBambara => 'Bambara';
+
+  @override
+  String get profileLanguageEnglish => 'Anglais';
+
+  @override
+  String get profileLanguageSpanish => 'Espagnol';
+
+  @override
+  String get profileLanguageArabic => 'Arabe';
+
+  @override
+  String get profilePublicOwnProfileTitle => 'Ce que les autres voient';
+
+  @override
+  String get profilePublicTitleFallback => 'Profil';
+
+  @override
+  String get profilePublicMoreOptionsTooltip => 'Plus d\'options';
+
+  @override
+  String get profilePublicReportAction => 'Signaler';
+
+  @override
+  String profilePublicReportUserAction(String name) {
+    return 'Signaler $name';
+  }
+
+  @override
+  String profilePublicBlockUserAction(String name) {
+    return 'Bloquer $name';
+  }
+
+  @override
+  String get profilePublicLoadErrorTitle => 'Impossible de charger le profil';
+
+  @override
+  String profilePublicRatingLine(String rating, int count, String memberSince) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count avis',
+      one: '$count avis',
+    );
+    return '⭐ $rating · $_temp0 · $memberSince';
+  }
+
+  @override
+  String get profilePublicVerified => '✓ Vérifié';
+
+  @override
+  String get profilePublicProBadge => 'PRO';
+
+  @override
+  String get profilePublicStatRatingLabel => 'Note';
+
+  @override
+  String get profilePublicStatDeliveriesLabel => 'Livraisons';
+
+  @override
+  String get profilePublicAboutSectionLabel => 'À PROPOS';
+
+  @override
+  String get profilePublicLanguagesSectionLabel => 'LANGUES';
+
+  @override
+  String get profilePublicBadgesSectionLabel => 'BADGES';
+
+  @override
+  String get profilePublicContactCallLabel => 'Joignable par appel';
+
+  @override
+  String get profilePublicContactMessageLabel => 'Joignable par message';
+
+  @override
+  String get profilePublicContactBothLabel => 'Appel & message';
+
+  @override
+  String get profilePublicAvailabilitySectionLabel => 'DISPONIBILITÉ';
+
+  @override
+  String profilePublicRespondsWithin(int hours) {
+    return 'Répond en < ${hours}h';
+  }
+
+  @override
+  String get profilePublicRecentReviewsSectionLabel => 'AVIS RÉCENTS';
+
+  @override
+  String get profilePublicNoReviewsYet => 'Aucun avis pour le moment.';
+
+  @override
+  String profilePublicSeeAllReviews(int count) {
+    return 'Voir tous les avis ($count) ›';
+  }
+
+  @override
+  String get profileUserFallback => 'Utilisateur';
+
+  @override
+  String get followFollowButton => 'S\'abonner';
+
+  @override
+  String get followFollowingButton => 'Abonné ✓';
+
+  @override
+  String get followUnfollowDialogTitle => 'Se désabonner ?';
+
+  @override
+  String get followUnfollowButton => 'Se désabonner';
+
+  @override
+  String get profilePublicUnfollowDialogMessage =>
+      'Vous ne recevrez plus les notifications de ce voyageur.';
+
+  @override
+  String get profilePublicEnablePushTooltip => 'Activer les notifications';
+
+  @override
+  String get profilePublicDisablePushTooltip => 'Désactiver les notifications';
+
+  @override
+  String get shipmentsHistoryTitle => 'Historique des livraisons';
+
+  @override
+  String get shipmentsHistoryEmptyTitle => 'Aucune livraison terminée';
+
+  @override
+  String get shipmentsHistoryEmptyDescription =>
+      'Tes livraisons terminées s\'afficheront ici.';
+
+  @override
+  String shipmentsHistoryDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Il y a $count jours',
+      one: 'Il y a $count jour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shipmentsHistoryDetailsButton => 'Voir détails';
+
+  @override
+  String get allReviewsSheetTitle => 'Avis';
+
+  @override
+  String get faqFindAnswerTitle => 'Trouver une réponse';
+
+  @override
+  String get faqFindAnswerSubtitle =>
+      'Recherche une réponse ou parcours les catégories.';
+
+  @override
+  String get faqSearchHint => 'Rechercher dans l’aide';
+
+  @override
+  String get faqEmptyResultsTitle => 'Aucun résultat';
+
+  @override
+  String get faqEmptyResultsDescription =>
+      'Essaie avec d\'autres mots-clés ou contacte notre équipe.';
+
+  @override
+  String get faqContactCardTitle => 'Tu n’as pas trouvé ta réponse ?';
+
+  @override
+  String get faqContactCardSubtitle => 'Notre équipe est là pour t’aider.';
+
+  @override
+  String get faqAccountTitle => 'Compte & identité';
+
+  @override
+  String get faqAnnouncementsTitle => 'Annonces & demandes';
+
+  @override
+  String get faqPaymentsTitle => 'Paiements & remboursements';
+
+  @override
+  String get faqDeliveryTitle => 'Suivi & livraison';
+
+  @override
+  String get faqSafetyTitle => 'Sécurité & données';
+
+  @override
+  String get faqAccountIdentityRequiredQ =>
+      'Pourquoi la vérification d\'identité est-elle obligatoire ?';
+
+  @override
+  String get faqAccountIdentityRequiredA =>
+      'Elle peut être demandée par nos partenaires de paiement et par les obligations applicables à certaines transactions. Elle nous permet aussi de lutter contre la fraude et de protéger les utilisateurs de Yadony.';
+
+  @override
+  String get faqAccountIdentityDelayQ =>
+      'Combien de temps prend la validation ?';
+
+  @override
+  String get faqAccountIdentityDelayA =>
+      'La validation est souvent réalisée en quelques minutes. Si une vérification manuelle est nécessaire, le délai peut être plus long.';
+
+  @override
+  String get faqAccountIdentityDocumentsQ => 'Quels documents sont acceptés ?';
+
+  @override
+  String get faqAccountIdentityDocumentsA =>
+      'Carte nationale d\'identité, passeport ou titre de séjour en cours de validité. Le document doit être lisible et non expiré.';
+
+  @override
+  String get faqAccountWithoutIdentityQ =>
+      'Puis-je utiliser Yadony sans vérifier mon identité ?';
+
+  @override
+  String get faqAccountWithoutIdentityA =>
+      'Tu peux explorer les annonces sans vérifier ton identité. Certaines actions, notamment envoyer, transporter ou recevoir des paiements, peuvent nécessiter une vérification.';
+
+  @override
+  String get faqAnnouncementsPublishTripQ =>
+      'Comment publier un trajet en tant que voyageur ?';
+
+  @override
+  String get faqAnnouncementsPublishTripA =>
+      'Depuis Accueil ou Activités, choisis \"Publier un trajet\". Renseigne la ville de départ, la destination, la date et la capacité disponible.';
+
+  @override
+  String get faqAnnouncementsPublishRequestQ =>
+      'Comment publier une demande d\'envoi ?';
+
+  @override
+  String get faqAnnouncementsPublishRequestA =>
+      'Depuis Accueil ou Activités, choisis \"Publier un colis\". Décris le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.';
+
+  @override
+  String get faqAnnouncementsEditRequestQ =>
+      'Puis-je modifier ma demande après publication ?';
+
+  @override
+  String get faqAnnouncementsEditRequestA =>
+      'Tu peux modifier une demande tant qu\'aucune offre n\'a été acceptée. Après acceptation, contacte le support si une information importante doit être corrigée.';
+
+  @override
+  String get faqPaymentsPaymentTimingQ => 'Quand suis-je débité ?';
+
+  @override
+  String get faqPaymentsPaymentTimingA =>
+      'Pour un paiement par carte, les fonds sont sécurisés lors de l\'acceptation puis libérés selon l\'avancement de la livraison. Pour les espèces et le Mobile Money, suis les indications affichées au moment de choisir le moyen de paiement.';
+
+  @override
+  String get faqPaymentsRefundQ =>
+      'Comment se passe le remboursement en cas d\'annulation ?';
+
+  @override
+  String get faqPaymentsRefundA =>
+      'Le remboursement dépend du moyen de paiement et du moment de l\'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l\'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement.';
+
+  @override
+  String faqPaymentsCommissionQ(String percent) {
+    return 'Pourquoi une commission de $percent % ?';
+  }
+
+  @override
+  String get faqPaymentsCommissionA =>
+      'La commission contribue aux frais de paiement, au support, à la prévention de la fraude et au développement de la plateforme.';
+
+  @override
+  String get faqPaymentsPaymentSecurityQ =>
+      'Les paiements sont-ils sécurisés ?';
+
+  @override
+  String get faqPaymentsPaymentSecurityA =>
+      'Les paiements en ligne sont traités par les prestataires indiqués dans l\'application. Yadony ne stocke pas les données complètes de ta carte. Un paiement en espèces n\'est pas placé sous séquestre : ne paie jamais en dehors du parcours convenu dans l\'application.';
+
+  @override
+  String get faqDeliveryHandoverQrQ => 'Comment fonctionne le QR de remise ?';
+
+  @override
+  String get faqDeliveryHandoverQrA =>
+      'À la remise du colis, le QR code confirme la prise en charge et déclenche le suivi. Sans connexion, la lecture est mémorisée sur l\'appareil puis synchronisée à la reconnexion.';
+
+  @override
+  String get faqDeliveryParcelMissingQ =>
+      'Que faire si le colis n\'arrive pas ?';
+
+  @override
+  String get faqDeliveryParcelMissingA =>
+      'Ouvre un litige depuis \"Mes litiges\" dès que tu constates le problème. Ajoute les photos, messages et informations de suivi disponibles. Les délais applicables sont rappelés dans le parcours de signalement.';
+
+  @override
+  String get faqDeliveryDeliveryDelayQ =>
+      'Quel est le délai de livraison moyen ?';
+
+  @override
+  String get faqDeliveryDeliveryDelayA =>
+      'Le délai dépend du trajet choisi et de la date annoncée par le voyageur. Vérifie toujours les informations du trajet avant d\'accepter une offre.';
+
+  @override
+  String get faqSafetyLostParcelQ =>
+      'Que se passe-t-il si mon colis est perdu ?';
+
+  @override
+  String faqSafetyLostParcelA(String cap) {
+    return 'Yadony ne couvre pas automatiquement la perte d\'un colis. Après investigation, un remboursement jusqu\'à $cap € peut être accordé si toutes les conditions sont respectées :\n\n• paiement par carte effectué dans Yadony ;\n• aucun paiement ou accord conclu hors plateforme ;\n• QR codes de dépôt et de remise utilisés ;\n• litige ouvert dans les 15 jours suivant la date prévue ;\n• contenu conforme aux objets autorisés.\n\nToute décision reste soumise à la validation de l\'équipe Yadony.';
+  }
+
+  @override
+  String get faqSafetyDisputeQ =>
+      'Que faire en cas de litige avec un voyageur ?';
+
+  @override
+  String get faqSafetyDisputeA =>
+      'Ouvre \"Mes litiges\" depuis ton profil et fournis les éléments utiles : photos, messages et suivi. Notre équipe examine ensuite le dossier et te tient informé dans l\'application.';
+
+  @override
+  String get faqSafetyPersonalDataQ =>
+      'Mes données personnelles sont-elles protégées ?';
+
+  @override
+  String get faqSafetyPersonalDataA =>
+      'Yadony applique des mesures de sécurité pour protéger les données et ne vend pas tes informations personnelles. Tu peux consulter la politique de confidentialité et gérer tes préférences dans Paramètres.';
+
+  @override
+  String get faqSafetyDeleteAccountQ => 'Comment supprimer mon compte ?';
+
+  @override
+  String get faqSafetyDeleteAccountA =>
+      'Dans Paramètres → Données et compte → Supprimer mon compte, tu peux choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.';
+
+  @override
+  String get helpTutorialScreenTitle => 'Tutoriel vidéo';
+
+  @override
+  String get helpTutorialNotFoundTitle => 'Tutoriel introuvable';
+
+  @override
+  String get helpTutorialNotFoundDescription =>
+      'Ce tutoriel n’est plus disponible.';
+
+  @override
+  String get helpTutorialSubscribeChannelButton => 'S’abonner à la chaîne';
+
+  @override
+  String helpTutorialPlayerSemanticsLabel(String title) {
+    return 'Lecteur vidéo : $title';
+  }
+
+  @override
+  String get helpTutorialPlaybackErrorTitle => 'Lecture impossible';
+
+  @override
+  String get helpTutorialPlaybackErrorDescription =>
+      'Vérifie ta connexion ou ouvre la vidéo directement dans YouTube.';
+
+  @override
+  String get helpTutorialOpenInYoutubeButton => 'Ouvrir dans YouTube';
+
+  @override
+  String helpContextualCardSemanticsLabel(String title) {
+    return 'Besoin d’aide ? Voir le tutoriel $title';
+  }
+
+  @override
+  String get helpContextualCardLabel => 'Besoin d\'aide ? Voir le tutoriel';
+
+  @override
+  String get helpContextualCardDismissTooltip => 'Masquer ce conseil';
+
+  @override
+  String helpTutorialCardSemanticsLabel(String title) {
+    return 'Lire le tutoriel $title';
+  }
 }

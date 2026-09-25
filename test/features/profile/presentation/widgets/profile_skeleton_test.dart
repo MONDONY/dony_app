@@ -3,6 +3,7 @@ import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 
 Widget _build({bool hasError = false, VoidCallback? onRetry}) {
   return MaterialApp(
@@ -68,6 +69,15 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('erreur en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_build(hasError: true));
+      await tester.pump();
+
+      expect(find.text('Profile unavailable'), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
     });
   });
 }

@@ -16,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -259,6 +260,45 @@ void main() {
         expect(chip.selected, isTrue);
       },
     );
+
+    testWidgets('anglais : puces de langue traduites, valeur sauvegardée reste '
+        '"Anglais" (donnée jamais traduite)', (tester) async {
+      useEnglish();
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(_travelerUser),
+      );
+
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+      // `_enterEditMode` cible le libellé français « Modifier » — le
+      // bouton du bas dit « Edit » une fois l'anglais actif.
+      await tester.tap(find.widgetWithText(DonyButton, 'Edit'));
+      await tester.pumpAndSettle();
+
+      // Puces affichées en anglais.
+      expect(find.text('French'), findsOneWidget);
+      expect(find.text('English'), findsOneWidget);
+      expect(find.text('Wolof'), findsOneWidget);
+      expect(find.text('Français'), findsNothing);
+
+      // Sélection : le libellé anglais ajoute la valeur française brute.
+      await tester.ensureVisible(find.text('English'));
+      await tester.tap(find.text('English'), warnIfMissed: false);
+      await tester.pump();
+      await tester.tap(find.widgetWithText(DonyButton, 'Save'));
+      await tester.pump();
+
+      final captured = verify(
+        () => mockAuthBloc.add(
+          captureAny(that: isA<AuthUpdateProfileRequested>()),
+        ),
+      ).captured;
+      final event = captured.single as AuthUpdateProfileRequested;
+      expect(event.languages, containsAll(['Français', 'Wolof', 'Anglais']));
+      expect(event.languages, isNot(contains('English')));
+    });
   });
 
   // ── Email et téléphone : toujours à part, jamais de saisie directe ────────

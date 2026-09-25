@@ -8,8 +8,10 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/profile/presentation/profile_labels.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart'
     show profileCompletionTierColor;
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -69,13 +71,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   DonyMediaService get _mediaService =>
       widget._mediaService ?? getIt<DonyMediaService>();
 
+  // Valeurs enregistrées dans le profil (sélection, sauvegarde, comparaison
+  // dans `_selectedLanguages`) : elles restent en français quelle que soit la
+  // langue de l'app. Seul l'affichage (`spokenLanguageLabel`) est traduit.
   static const _kAvailableLanguages = [
-    'Français',
-    'Wolof',
-    'Bambara',
-    'Anglais',
-    'Espagnol',
-    'Arabe',
+    'Français', // i18n-ignore — valeur de donnée
+    'Wolof', // i18n-ignore — valeur de donnée
+    'Bambara', // i18n-ignore — valeur de donnée
+    'Anglais', // i18n-ignore — valeur de donnée
+    'Espagnol', // i18n-ignore — valeur de donnée
+    'Arabe', // i18n-ignore — valeur de donnée
   ];
 
   @override
@@ -148,7 +153,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
       DonySnackbar.show(
         context,
-        message: 'Seules les images sont acceptées (pas de vidéo).',
+        message: context.l10n.editProfileImageOnlyError,
         type: DonySnackbarType.error,
       );
     } on MediaFileTooLargeException catch (e) {
@@ -157,7 +162,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
       DonySnackbar.show(
         context,
-        message: 'Photo trop lourde (max ${e.maxMb} Mo).',
+        message: context.l10n.editProfilePhotoTooLarge(e.maxMb),
         type: DonySnackbarType.error,
       );
     } finally {
@@ -195,10 +200,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _initFromUser(user);
         }
 
+        final l = context.l10n;
+
         if (user == null) {
-          return const Scaffold(
-            appBar: DonyAppBar(title: 'Modifier le profil'),
-            body: SizedBox.shrink(),
+          return Scaffold(
+            appBar: DonyAppBar(title: l.profileMenuEditProfile),
+            body: const SizedBox.shrink(),
           );
         }
 
@@ -211,7 +218,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         return Scaffold(
           resizeToAvoidBottomInset: true,
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: const DonyAppBar(title: 'Modifier le profil'),
+          appBar: DonyAppBar(title: l.profileMenuEditProfile),
           // Bouton du bas dans `body` (pas `bottomNavigationBar`) :
           // Flutter ne remonte pas fiablement `bottomNavigationBar` au-dessus
           // du clavier, ce qui le cachait derrière avec plusieurs champs texte
@@ -264,7 +271,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               container: true,
                               excludeSemantics: true,
                               enabled: !isLoading,
-                              label: 'Changer la photo de profil',
+                              label: l.profileEditChangePhotoSemantics,
                               child: GestureDetector(
                                 key: const ValueKey('avatar_pick_gesture'),
                                 onTap: isLoading ? null : _pickAndUploadAvatar,
@@ -343,7 +350,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             ),
                             const SizedBox(height: DonySpacing.sm),
                             Text(
-                              'Modifier la photo',
+                              l.profileEditChangePhotoLabel,
                               style: Theme.of(context).textTheme.labelMedium
                                   ?.copyWith(
                                     color: Theme.of(
@@ -357,7 +364,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       const SizedBox(height: DonySpacing.xxl),
 
                       // ── Section Identité ─────────────────────────────────────
-                      const _SectionLabel(label: 'Identité'),
+                      _SectionLabel(label: l.profileEditSectionIdentity),
                       const SizedBox(height: DonySpacing.md),
                       if (!_editing)
                         _NameView(user: user)
@@ -365,7 +372,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         DonyTextField(
                           textInputAction: TextInputAction.next,
                           controller: _firstNameCtrl,
-                          label: 'Prénom',
+                          label: l.profileFieldFirstName,
                           prefixWidget: DonyIcon(
                             'user',
                             size: 20,
@@ -379,7 +386,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         DonyTextField(
                           textInputAction: TextInputAction.next,
                           controller: _lastNameCtrl,
-                          label: 'Nom de famille',
+                          label: l.profileEditLastNameFieldLabel,
                           prefixWidget: DonyIcon(
                             'user',
                             size: 20,
@@ -393,13 +400,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       const SizedBox(height: DonySpacing.xxl),
 
                       // ── Section À propos ─────────────────────────────────────
-                      const _SectionLabel(label: 'À propos'),
+                      _SectionLabel(label: l.profileFieldAbout),
                       const SizedBox(height: DonySpacing.md),
                       if (!_editing)
                         _StaticInfoRow(
                           label: null,
                           value: user.bio,
-                          placeholder: 'Aucune présentation',
+                          placeholder: l.profileEditNoBioPlaceholder,
                           bodyStyle: true,
                         )
                       else
@@ -408,9 +415,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           enabled: !isSaving,
                           maxLines: 4,
                           maxLength: 280,
-                          decoration: const InputDecoration(
-                            labelText: 'Présentation',
-                            contentPadding: EdgeInsets.symmetric(
+                          decoration: InputDecoration(
+                            labelText: l.profileEditBioFieldLabel,
+                            contentPadding: const EdgeInsets.symmetric(
                               horizontal: DonySpacing.base,
                               vertical: DonySpacing.md,
                             ),
@@ -423,7 +430,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       // édition : leur modification exige un code OTP, jamais une
                       // saisie libre — le tap ouvre un écran dédié (preuve de
                       // possession avant écriture), sans passer par "Enregistrer".
-                      const _SectionLabel(label: 'Coordonnées'),
+                      _SectionLabel(label: l.profileEditSectionContact),
                       const SizedBox(height: DonySpacing.md),
                       ValueListenableBuilder<bool>(
                         valueListenable: smsAuthEnabledListenable,
@@ -432,7 +439,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           children: [
                             _ContactInfoRow(
                               iconAsset: 'mail',
-                              label: 'EMAIL',
+                              label: l.profileFieldEmailAllCaps,
                               value: user.email,
                               editing: _editing,
                               onTap: () => context.push('/profile/edit/email'),
@@ -441,7 +448,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               const SizedBox(height: DonySpacing.md),
                               _ContactInfoRow(
                                 iconAsset: 'phone',
-                                label: 'TÉLÉPHONE',
+                                label: l.profileContactTypePhone,
                                 value: user.phoneNumber,
                                 editing: _editing,
                                 onTap: () =>
@@ -454,7 +461,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       const SizedBox(height: DonySpacing.xxl),
 
                       // ── Section Informations personnelles ────────────────────
-                      const _SectionLabel(label: 'Informations personnelles'),
+                      _SectionLabel(label: l.profileEditSectionPersonalInfo),
                       const SizedBox(height: DonySpacing.md),
                       // La ville seule, et rien de plus : elle situe le
                       // membre pour les autres, alors que l'adresse postale
@@ -462,9 +469,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       // qui les demande lui-même.
                       if (!_editing)
                         _StaticInfoRow(
-                          label: 'VILLE',
+                          label: l.profileFieldCityAllCaps,
                           value: user.city,
-                          placeholder: 'Non renseignée',
+                          placeholder: l.profileEditCityPlaceholder,
                         )
                       else
                         DonyTextField(
@@ -473,7 +480,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           // doit conclure, pas proposer d'avancer vers rien.
                           textInputAction: TextInputAction.done,
                           controller: _cityCtrl,
-                          label: 'Ville',
+                          label: l.profileFieldCity,
                           // `building-2`, comme les deux autres écrans qui
                           // affichent une ville (adresses de retrait et de
                           // livraison) — `map-pin` y désigne une adresse
@@ -491,21 +498,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                       // ── Section Préférences (voyageurs uniquement) ───────────
                       if (isTraveler) ...[
-                        const _SectionLabel(label: 'Préférences'),
+                        _SectionLabel(label: l.profileEditSectionPreferences),
                         const SizedBox(height: DonySpacing.md),
 
                         if (!_editing)
                           _StaticInfoRow(
-                            label: 'LANGUES PARLÉES',
+                            label: l.profileFieldLanguagesAllCaps,
                             value: _selectedLanguages.isEmpty
                                 ? null
-                                : _selectedLanguages.join(', '),
-                            placeholder: 'Non renseignées',
+                                : _selectedLanguages
+                                      .map(
+                                        (lang) => spokenLanguageLabel(l, lang),
+                                      )
+                                      .join(', '),
+                            placeholder: l.profileEditLanguagesPlaceholder,
                           )
                         else ...[
                           // Langues parlées
                           Text(
-                            'Langues parlées',
+                            l.profileEditLanguagesFieldLabel,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   color: Theme.of(
@@ -523,7 +534,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 lang,
                               );
                               return FilterChip(
-                                label: Text(lang),
+                                label: Text(spokenLanguageLabel(l, lang)),
                                 selected: selected,
                                 onSelected: isSaving
                                     ? null
@@ -547,7 +558,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     DonySpacing.base,
                   ),
                   child: DonyButton(
-                    label: _editing ? 'Enregistrer' : 'Modifier',
+                    label: _editing ? l.commonSave : l.commonEdit,
                     isLoading: isSaving,
                     onPressed: isLoading
                         ? null
@@ -600,7 +611,7 @@ class _CompletionGauge extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Profil complet',
+                context.l10n.profileEditCompletionGaugeTitle,
                 style: tt.bodyMedium?.copyWith(
                   color: cs.onSurface,
                   fontWeight: FontWeight.w600,
@@ -629,7 +640,7 @@ class _CompletionGauge extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            'Photo, identité, coordonnées et informations complètent votre profil',
+            context.l10n.profileEditCompletionGaugeSubtitle,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
@@ -651,7 +662,7 @@ class _NameView extends StatelessWidget {
     final hasName = user.displayName.trim().isNotEmpty;
 
     return Text(
-      hasName ? user.displayName : 'Ajoutez votre prénom et nom',
+      hasName ? user.displayName : context.l10n.profileEditNoNamePlaceholder,
       style: tt.titleLarge?.copyWith(
         color: hasName ? cs.onSurface : cs.onSurfaceVariant,
         fontWeight: FontWeight.w800,
@@ -743,12 +754,13 @@ class _ContactInfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasValue = value != null && value!.isNotEmpty;
+    final l = context.l10n;
 
     if (!editing) {
       return _StaticInfoRow(
         label: label,
         value: value,
-        placeholder: 'Non ajouté',
+        placeholder: l.profileNotAdded,
       );
     }
 
@@ -759,7 +771,10 @@ class _ContactInfoRow extends StatelessWidget {
       button: true,
       container: true,
       excludeSemantics: true,
-      label: '$label, ${hasValue ? value : 'non ajouté'}',
+      // Format sans mot supplémentaire : `label` (déjà traduit) et la valeur
+      // (donnée brute, ou le placeholder `profileNotAdded` déjà traduit) sont
+      // simplement juxtaposés — rien à assembler en langue naturelle ici.
+      label: '$label, ${hasValue ? value! : l.profileNotAdded}',
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -791,7 +806,7 @@ class _ContactInfoRow extends StatelessWidget {
                     ),
                     const SizedBox(height: DonySpacing.xxs),
                     Text(
-                      hasValue ? value! : 'Non ajouté',
+                      hasValue ? value! : l.profileNotAdded,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: tt.bodyMedium?.copyWith(
@@ -815,7 +830,7 @@ class _ContactInfoRow extends StatelessWidget {
                   borderRadius: BorderRadius.circular(DonyRadius.full),
                 ),
                 child: Text(
-                  hasValue ? 'Modifier' : 'Ajouter',
+                  hasValue ? l.commonEdit : l.profileAddBadgeAction,
                   style: tt.labelSmall?.copyWith(
                     color: cs.primary,
                     fontWeight: FontWeight.w700,

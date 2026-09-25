@@ -6,6 +6,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/dial_code_picker.dart';
+import 'package:dony/l10n/l10n.dart';
+import 'package:dony/l10n/rich_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -33,7 +35,7 @@ class EditPhoneScreen extends StatelessWidget {
     VoidCallback? submit;
 
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Modifier le numéro'),
+      appBar: DonyAppBar(title: context.l10n.contactEditPhoneTitle),
       body: Column(
         children: [
           Expanded(
@@ -55,8 +57,8 @@ class EditPhoneScreen extends StatelessWidget {
                 builder: (_, step, _) => BlocBuilder<AuthBloc, AuthState>(
                   builder: (ctx, state) => DonyButton(
                     label: step == _ContactStep.input
-                        ? 'Envoyer le code'
-                        : 'Vérifier',
+                        ? ctx.l10n.contactSendCodeAction
+                        : ctx.l10n.contactVerifyAction,
                     isLoading: state is AuthLoading,
                     onPressed: state is AuthLoading
                         ? null
@@ -81,7 +83,7 @@ class EditEmailScreen extends StatelessWidget {
     VoidCallback? submit;
 
     return Scaffold(
-      appBar: const DonyAppBar(title: "Modifier l'email"),
+      appBar: DonyAppBar(title: context.l10n.contactEditEmailTitle),
       body: Column(
         children: [
           Expanded(
@@ -103,8 +105,8 @@ class EditEmailScreen extends StatelessWidget {
                 builder: (_, step, _) => BlocBuilder<AuthBloc, AuthState>(
                   builder: (ctx, state) => DonyButton(
                     label: step == _ContactStep.input
-                        ? 'Envoyer le code'
-                        : 'Vérifier',
+                        ? ctx.l10n.contactSendCodeAction
+                        : ctx.l10n.contactVerifyAction,
                     isLoading: state is AuthLoading,
                     onPressed: state is AuthLoading
                         ? null
@@ -132,13 +134,15 @@ abstract final class AddPhoneSheet {
 
     return DonyBottomSheet.show<void>(
       context,
-      title: 'Ajouter un numéro',
+      title: context.l10n.contactAddPhoneTitle,
       wrapper: (child) => BlocProvider.value(value: authBloc, child: child),
       stickyBottom: ValueListenableBuilder<_ContactStep>(
         valueListenable: stepNotifier,
         builder: (_, step, _) => BlocBuilder<AuthBloc, AuthState>(
           builder: (ctx, state) => DonyButton(
-            label: step == _ContactStep.input ? 'Envoyer le code' : 'Vérifier',
+            label: step == _ContactStep.input
+                ? ctx.l10n.contactSendCodeAction
+                : ctx.l10n.contactVerifyAction,
             isLoading: state is AuthLoading,
             onPressed: state is AuthLoading ? null : () => submit?.call(),
           ),
@@ -229,7 +233,7 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
         } else if (state is AuthProfileUpdated) {
           DonySnackbar.show(
             context,
-            message: 'Numéro ajouté avec succès !',
+            message: context.l10n.contactPhoneAddedSuccess,
             type: DonySnackbarType.success,
           );
           Navigator.of(context, rootNavigator: true).pop();
@@ -290,7 +294,7 @@ class _PhoneInputStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'NUMÉRO DE TÉLÉPHONE',
+            context.l10n.contactPhoneNumberLabel,
             style: tt.labelMedium?.copyWith(
               color: cs.onSurfaceVariant,
               letterSpacing: 0.8,
@@ -362,7 +366,7 @@ class _PhoneInputStep extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Un code de vérification sera envoyé par SMS.',
+            context.l10n.contactPhoneOtpNotice,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
@@ -373,7 +377,7 @@ class _PhoneInputStep extends StatelessWidget {
   void _showCodePicker(BuildContext context) {
     DonyBottomSheet.show<void>(
       context,
-      title: 'Indicatif',
+      title: context.l10n.contactDialCodeTitle,
       child: Builder(
         builder: (innerContext) => DialCodePicker(
           selectedCode: country.code,
@@ -399,13 +403,15 @@ abstract final class AddEmailSheet {
 
     return DonyBottomSheet.show<void>(
       context,
-      title: 'Ajouter un email',
+      title: context.l10n.contactAddEmailTitle,
       wrapper: (child) => BlocProvider.value(value: authBloc, child: child),
       stickyBottom: ValueListenableBuilder<_ContactStep>(
         valueListenable: stepNotifier,
         builder: (_, step, _) => BlocBuilder<AuthBloc, AuthState>(
           builder: (ctx, state) => DonyButton(
-            label: step == _ContactStep.input ? 'Envoyer le code' : 'Vérifier',
+            label: step == _ContactStep.input
+                ? ctx.l10n.contactSendCodeAction
+                : ctx.l10n.contactVerifyAction,
             isLoading: state is AuthLoading,
             onPressed: state is AuthLoading ? null : () => submit?.call(),
           ),
@@ -497,7 +503,7 @@ class _AddEmailContentState extends State<_AddEmailContent> {
         } else if (state is AuthProfileUpdated) {
           DonySnackbar.show(
             context,
-            message: 'Email vérifié avec succès !',
+            message: context.l10n.contactEmailVerifiedSuccess,
             type: DonySnackbarType.success,
           );
           Navigator.of(context, rootNavigator: true).pop();
@@ -548,7 +554,7 @@ class _EmailInputStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'ADRESSE EMAIL',
+            context.l10n.contactEmailAddressLabel,
             style: tt.labelMedium?.copyWith(
               color: cs.onSurfaceVariant,
               letterSpacing: 0.8,
@@ -584,7 +590,7 @@ class _EmailInputStep extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Un code de vérification sera envoyé à cet email.',
+            context.l10n.contactEmailOtpNotice,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
@@ -614,6 +620,7 @@ class _OtpStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final message = context.l10n.contactCodeSentTo(contact);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -630,16 +637,14 @@ class _OtpStep extends StatelessWidget {
                 color: cs.onSurfaceVariant,
                 height: 1.5,
               ),
-              children: [
-                const TextSpan(text: 'Code envoyé à '),
-                TextSpan(
-                  text: contact,
-                  style: tt.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: cs.primary,
-                  ),
+              children: emphasizedSpans(
+                message,
+                contact,
+                style: tt.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: cs.primary,
                 ),
-              ],
+              ),
             ),
           ),
           const SizedBox(height: DonySpacing.xl),

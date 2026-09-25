@@ -16,6 +16,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
 
@@ -114,5 +116,15 @@ void main() {
         expect(find.text('Vérification d\'identité'), findsNothing);
       },
     );
+
+    testWidgets('affiche le titre et le bouton en anglais', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(wrap());
+      await tester.tap(find.text('Open'));
+      await settle(tester);
+
+      expect(find.text('Identity verification'), findsOneWidget);
+      expect(find.text('Continue later'), findsOneWidget);
+    });
   });
 }

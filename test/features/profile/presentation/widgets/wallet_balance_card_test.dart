@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/currency_test_doubles.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 
 class MockWalletBloc extends MockBloc<WalletEvent, WalletState>
     implements WalletBloc {}
@@ -306,5 +307,22 @@ void main() {
     await tester.pump();
 
     verify(() => bloc.add(any(that: isA<WalletLoadRequested>()))).called(1);
+  });
+
+  testWidgets('état chargé en anglais : Balance et Top up', (tester) async {
+    useEnglish();
+    whenListen<WalletState>(
+      bloc,
+      const Stream.empty(),
+      initialState: WalletLoaded(
+        const WalletModel(balance: 128.5, currency: 'EUR', transactions: []),
+      ),
+    );
+
+    await tester.pumpWidget(_wrap(bloc, prefsBloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Balance'), findsOneWidget);
+    expect(find.text('Top up'), findsOneWidget);
   });
 }

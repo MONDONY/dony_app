@@ -10387,4 +10387,909 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ratingStarExcellent => 'Excellent!';
+
+  @override
+  String get kycRejectionDocumentExpired =>
+      'Your ID document has expired. Use a valid document and try again.';
+
+  @override
+  String get kycRejectionDocumentTypeNotSupported =>
+      'This document type is not accepted. Use an ID card, a passport, or a driver\'s license.';
+
+  @override
+  String get kycRejectionDocumentUnverifiedOther =>
+      'The document provided could not be read or verified. Make sure it is sharp, complete, and well lit, then try again.';
+
+  @override
+  String get kycRejectionCountryNotSupported =>
+      'Your document\'s country is not supported for verification.';
+
+  @override
+  String get kycRejectionIdNumberMismatch =>
+      'The information on your document could not be confirmed. Make sure it is clearly legible and try again.';
+
+  @override
+  String get kycRejectionSelfieDocumentMissingPhoto =>
+      'The photo on your document could not be compared with your selfie. Try again with an ID document that has a clear photo.';
+
+  @override
+  String get kycRejectionSelfieFaceMismatch =>
+      'Your selfie does not match the photo on the document. Retry the verification in good lighting conditions.';
+
+  @override
+  String get kycRejectionSelfieUnverified =>
+      'Your selfie could not be verified. Try again in a well-lit place, without glasses or headwear.';
+
+  @override
+  String get kycRejectionUnderSupportedAge =>
+      'Identity verification is reserved for adults.';
+
+  @override
+  String get kycRejectionConsentDeclined =>
+      'You declined to give your consent, which is required to verify your identity.';
+
+  @override
+  String get kycRejectionSessionCanceled =>
+      'The verification was closed before it was completed.';
+
+  @override
+  String get kycRejectionGeneric =>
+      'We could not verify your identity. Make sure your document is legible and try again.';
+
+  @override
+  String get kycVerificationTitle => 'Identity verification';
+
+  @override
+  String get kycStatusNotStartedTitle => 'Verification not started';
+
+  @override
+  String get kycStatusNotStartedBody =>
+      'You need to verify your identity to use all of Yadony\'s features.';
+
+  @override
+  String get kycStatusVerifiedTitle => 'Identity verified ✓';
+
+  @override
+  String get kycStatusVerifiedBodyRedirecting =>
+      'Your identity has been successfully verified. Redirecting…';
+
+  @override
+  String get kycStatusVerifiedBodyClosing =>
+      'Your identity has been successfully verified. Closing…';
+
+  @override
+  String get kycStatusPendingTitle => 'Verification in progress';
+
+  @override
+  String get kycStatusPendingBody =>
+      'This usually takes less than a minute, sometimes a few minutes. You can close this screen, you\'ll be notified of the result.';
+
+  @override
+  String get kycStatusTimedOutTitle =>
+      'Verification is taking longer than expected';
+
+  @override
+  String get kycStatusTimedOutBody =>
+      'You can close this screen and come back later. Your ✓ badge will appear automatically once the verification is complete.';
+
+  @override
+  String get kycStatusRejectedTitle => 'Verification failed';
+
+  @override
+  String get kycStatusPollingIndicator => 'Automatic verification in progress';
+
+  @override
+  String get kycStatusStartAction => 'Start verification';
+
+  @override
+  String get kycStatusRetryAction => 'Retry verification';
+
+  @override
+  String get kycStatusResumeAction => 'Resume verification';
+
+  @override
+  String get kycStatusBackToApp => 'Back to the app';
+
+  @override
+  String get kycStatusContinueLater => 'Continue later';
+
+  @override
+  String get kycWebviewLoadError => 'Unable to load the verification page';
+
+  @override
+  String get kycRequiredTitle => 'Verification required';
+
+  @override
+  String get kycRequiredMessageNotStarted =>
+      'To send a parcel, your identity must be verified.';
+
+  @override
+  String get kycRequiredMessageRejected =>
+      'Your verification failed. Try again so you can send a parcel.';
+
+  @override
+  String get kycRequiredMessagePending =>
+      'Your verification is in progress. You\'ll be able to send once your identity is validated.';
+
+  @override
+  String get kycRequiredVerifyAction => 'Verify my identity';
+
+  @override
+  String get kycInfoDuration => 'Verification takes 2 to 5 minutes';
+
+  @override
+  String get kycInfoSecureProcess => 'Secure verification process';
+
+  @override
+  String get kycOnboardingTitle => 'Verify your identity';
+
+  @override
+  String get kycOnboardingSubtitle => 'Required to post listings on Yadony';
+
+  @override
+  String get kycOnboardingStartAction => 'Start verification';
+
+  @override
+  String get kycOnboardingIdSelfieRequired => 'ID document + selfie required';
+
+  @override
+  String get profileSectionAccount => 'MY ACCOUNT';
+
+  @override
+  String get profileSectionMoney => 'MONEY';
+
+  @override
+  String get profileMoneyReceivePayments => 'Get paid';
+
+  @override
+  String get profileMoneyVerifyIdentityToActivate =>
+      'Verify your identity to activate';
+
+  @override
+  String get profileMoneyMobileMoneyPayout => 'Mobile money payout';
+
+  @override
+  String get profileMoneyMobileMoneyPayoutSubtitle =>
+      'CFA zone: Orange Money, Wave, MTN';
+
+  @override
+  String get profileMoneyCashCommissionCard => 'Cash service fee card';
+
+  @override
+  String get profileSectionReputation => 'MY REPUTATION';
+
+  @override
+  String get profileReputationPublicProfile => 'My public profile';
+
+  @override
+  String get profileReputationPublicProfileSubtitle => 'What others see';
+
+  @override
+  String get profileReputationMyReviews => 'Reviews received';
+
+  @override
+  String get profileSectionAdvantages => 'MY BENEFITS';
+
+  @override
+  String get profileAdvantagesProProfile => 'My Pro profile';
+
+  @override
+  String get profileAdvantagesUpgradeToPro => 'Upgrade to a Pro account';
+
+  @override
+  String get profileAdvantagesReferral => 'Referrals';
+
+  @override
+  String get profileReferralZeroInvited => '0 invited';
+
+  @override
+  String get profileAdvantagesHaveReferralCode => 'I have a referral code';
+
+  @override
+  String get profileSectionTracking => 'TRACKING';
+
+  @override
+  String get profileTrackingDisputes => 'My disputes';
+
+  @override
+  String get profileTrackingDisputesSubtitle => 'Track your disputes';
+
+  @override
+  String get profileTrackingSubscriptions => 'Following';
+
+  @override
+  String get profileTrackingSubscriptionsSubtitle =>
+      'The travelers whose trips you follow';
+
+  @override
+  String get profileSectionHelp => 'HELP';
+
+  @override
+  String get profileHelpFaq => 'FAQ & help';
+
+  @override
+  String get profileHelpFaqSubtitle => 'Answers to frequently asked questions';
+
+  @override
+  String get profileHelpCommunity => 'Social media & tutorials';
+
+  @override
+  String get profileHelpCommunitySubtitle => 'Yadony videos and community';
+
+  @override
+  String get profileHelpContactSupport => 'Contact support';
+
+  @override
+  String get profileHelpContactSupportSubtitle =>
+      'Response usually within 24 hours';
+
+  @override
+  String get profileContactTypePhone => 'PHONE';
+
+  @override
+  String get profileContactTypeEmail => 'EMAIL';
+
+  @override
+  String get profileNotAdded => 'Not added';
+
+  @override
+  String get profileAddBadge => '+ Add';
+
+  @override
+  String get profileAccountIdentityDocuments => 'ID documents';
+
+  @override
+  String get profileKycVerifiedLabel => 'Verified';
+
+  @override
+  String get profileKycInProgressLabel => 'In progress';
+
+  @override
+  String get profileKycToVerifyLabel => 'Verify';
+
+  @override
+  String get profileCompletionVerifyIdentity => 'Verify my identity';
+
+  @override
+  String get profileCompletionActivatePayments => 'Activate payments';
+
+  @override
+  String get profileFieldPhotoShort => 'Photo';
+
+  @override
+  String get profileFieldFirstName => 'First name';
+
+  @override
+  String get profileFieldLastNameShort => 'Last name';
+
+  @override
+  String get profileFieldEmailShort => 'Email';
+
+  @override
+  String get profileFieldPhone => 'Phone';
+
+  @override
+  String get profileFieldCity => 'City';
+
+  @override
+  String get profileFieldAbout => 'About';
+
+  @override
+  String profileCompletionSemantics(int percent) {
+    return 'Account $percent percent complete. Complete now.';
+  }
+
+  @override
+  String get profileCompletionCta => 'Complete your account';
+
+  @override
+  String profileCompletionShort(int percent) {
+    return '$percent% complete · Complete now';
+  }
+
+  @override
+  String profileItemToComplete(String label) {
+    return '$label, to complete';
+  }
+
+  @override
+  String get profileProBadge => 'Pro';
+
+  @override
+  String get profileChipPhoneVerified => 'Phone ✓';
+
+  @override
+  String get profileChipPhoneMissing => 'Phone missing';
+
+  @override
+  String get profileChipEmailVerified => 'Email ✓';
+
+  @override
+  String get profileChipEmailMissing => 'Email missing';
+
+  @override
+  String get profileChipIdentityVerified => 'Identity ✓';
+
+  @override
+  String get profileMenuEditProfile => 'Edit profile';
+
+  @override
+  String get profileMenuSettings => 'Settings';
+
+  @override
+  String get profileMenuAccountSection => 'My account';
+
+  @override
+  String get profileMenuExportData => 'Download my data';
+
+  @override
+  String get profileMenuExportDataSubtitle => 'GDPR export in JSON format';
+
+  @override
+  String get profileLogoutAction => 'Sign out';
+
+  @override
+  String get profileMenuDeleteAccount => 'Delete my account';
+
+  @override
+  String get profileMenuDeleteAccountSubtitle => '30-day withdrawal period';
+
+  @override
+  String get profileSkeletonLoadingSemantics => 'Loading profile';
+
+  @override
+  String get profileSkeletonUnavailableTitle => 'Profile unavailable';
+
+  @override
+  String get profileSkeletonUnavailableBody =>
+      'Unable to load your account. Check your connection, then try again.';
+
+  @override
+  String profileDeletionScheduled(String date) {
+    return 'Deletion scheduled for $date';
+  }
+
+  @override
+  String get profileDeletionCancelAction => 'Cancel deletion';
+
+  @override
+  String get profileDeletionRefundsNotice =>
+      'Refunds already in progress are not canceled.';
+
+  @override
+  String get profileWalletBalanceLabel => 'Balance';
+
+  @override
+  String get profileWalletTopUpSemantics => 'Top up wallet';
+
+  @override
+  String get profileWalletUnavailable => 'Balance unavailable';
+
+  @override
+  String get contactEditPhoneTitle => 'Edit phone number';
+
+  @override
+  String get contactSendCodeAction => 'Send code';
+
+  @override
+  String get contactVerifyAction => 'Verify';
+
+  @override
+  String get contactEditEmailTitle => 'Edit email';
+
+  @override
+  String get contactAddPhoneTitle => 'Add a phone number';
+
+  @override
+  String get contactPhoneAddedSuccess => 'Number added successfully!';
+
+  @override
+  String get contactPhoneNumberLabel => 'PHONE NUMBER';
+
+  @override
+  String get contactPhoneOtpNotice =>
+      'A verification code will be sent by SMS.';
+
+  @override
+  String get contactDialCodeTitle => 'Country code';
+
+  @override
+  String get contactAddEmailTitle => 'Add an email';
+
+  @override
+  String get contactEmailVerifiedSuccess => 'Email verified successfully!';
+
+  @override
+  String get contactEmailAddressLabel => 'EMAIL ADDRESS';
+
+  @override
+  String get contactEmailOtpNotice =>
+      'A verification code will be sent to this email.';
+
+  @override
+  String contactCodeSentTo(String destination) {
+    return 'Code sent to $destination';
+  }
+
+  @override
+  String get profileCommunityJoinTitle => 'Join the community';
+
+  @override
+  String get profileCommunityJoinSubtitle => 'Find Yadony\'s official spaces.';
+
+  @override
+  String get profileCommunityActionJoin => 'Join';
+
+  @override
+  String get profileCommunityActionFollow => 'Follow';
+
+  @override
+  String get profileCommunityActionSubscribe => 'Subscribe';
+
+  @override
+  String get profileLogoutConfirmTitle => 'Sign out?';
+
+  @override
+  String get profileLogoutConfirmMessage =>
+      'You\'ll need to sign in again to continue.';
+
+  @override
+  String get profileMenuButtonTooltip => 'Menu';
+
+  @override
+  String get profileFooterVersion => 'Yadony v1.0.0 · Made with ❤️ in Paris';
+
+  @override
+  String get editProfileImageOnlyError =>
+      'Only images are accepted (no video).';
+
+  @override
+  String editProfilePhotoTooLarge(int maxMb) {
+    return 'Photo too large (max $maxMb MB).';
+  }
+
+  @override
+  String get profileEditChangePhotoSemantics => 'Change profile photo';
+
+  @override
+  String get profileEditChangePhotoLabel => 'Change photo';
+
+  @override
+  String get profileEditSectionIdentity => 'Identity';
+
+  @override
+  String get profileEditLastNameFieldLabel => 'Last name';
+
+  @override
+  String get profileEditNoBioPlaceholder => 'No bio';
+
+  @override
+  String get profileEditBioFieldLabel => 'Bio';
+
+  @override
+  String get profileEditSectionContact => 'Contact details';
+
+  @override
+  String get profileFieldEmailAllCaps => 'EMAIL';
+
+  @override
+  String get profileEditSectionPersonalInfo => 'Personal information';
+
+  @override
+  String get profileFieldCityAllCaps => 'CITY';
+
+  @override
+  String get profileEditCityPlaceholder => 'Not provided';
+
+  @override
+  String get profileEditSectionPreferences => 'Preferences';
+
+  @override
+  String get profileFieldLanguagesAllCaps => 'LANGUAGES SPOKEN';
+
+  @override
+  String get profileEditLanguagesPlaceholder => 'Not provided';
+
+  @override
+  String get profileEditLanguagesFieldLabel => 'Languages spoken';
+
+  @override
+  String get profileEditCompletionGaugeTitle => 'Profile complete';
+
+  @override
+  String get profileEditCompletionGaugeSubtitle =>
+      'Photo, identity, contact details and information complete your profile';
+
+  @override
+  String get profileEditNoNamePlaceholder => 'Add your first and last name';
+
+  @override
+  String get profileAddBadgeAction => 'Add';
+
+  @override
+  String get communityEmptyTitle => 'No content yet';
+
+  @override
+  String get communityEmptyDescription =>
+      'Our tutorials and community spaces will be available here soon.';
+
+  @override
+  String get communityTutorialsTitle => 'Video tutorials';
+
+  @override
+  String get communityTutorialsSubtitle =>
+      'Learn the essential Yadony journeys.';
+
+  @override
+  String get profileLanguageFrench => 'French';
+
+  @override
+  String get profileLanguageWolof => 'Wolof';
+
+  @override
+  String get profileLanguageBambara => 'Bambara';
+
+  @override
+  String get profileLanguageEnglish => 'English';
+
+  @override
+  String get profileLanguageSpanish => 'Spanish';
+
+  @override
+  String get profileLanguageArabic => 'Arabic';
+
+  @override
+  String get profilePublicOwnProfileTitle => 'What others see';
+
+  @override
+  String get profilePublicTitleFallback => 'Profile';
+
+  @override
+  String get profilePublicMoreOptionsTooltip => 'More options';
+
+  @override
+  String get profilePublicReportAction => 'Report';
+
+  @override
+  String profilePublicReportUserAction(String name) {
+    return 'Report $name';
+  }
+
+  @override
+  String profilePublicBlockUserAction(String name) {
+    return 'Block $name';
+  }
+
+  @override
+  String get profilePublicLoadErrorTitle => 'Couldn\'t load profile';
+
+  @override
+  String profilePublicRatingLine(String rating, int count, String memberSince) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews',
+      one: '$count review',
+    );
+    return '⭐ $rating · $_temp0 · $memberSince';
+  }
+
+  @override
+  String get profilePublicVerified => '✓ Verified';
+
+  @override
+  String get profilePublicProBadge => 'Pro';
+
+  @override
+  String get profilePublicStatRatingLabel => 'Rating';
+
+  @override
+  String get profilePublicStatDeliveriesLabel => 'Deliveries';
+
+  @override
+  String get profilePublicAboutSectionLabel => 'ABOUT';
+
+  @override
+  String get profilePublicLanguagesSectionLabel => 'LANGUAGES';
+
+  @override
+  String get profilePublicBadgesSectionLabel => 'BADGES';
+
+  @override
+  String get profilePublicContactCallLabel => 'Reachable by call';
+
+  @override
+  String get profilePublicContactMessageLabel => 'Reachable by message';
+
+  @override
+  String get profilePublicContactBothLabel => 'Call & message';
+
+  @override
+  String get profilePublicAvailabilitySectionLabel => 'AVAILABILITY';
+
+  @override
+  String profilePublicRespondsWithin(int hours) {
+    return 'Replies in < ${hours}h';
+  }
+
+  @override
+  String get profilePublicRecentReviewsSectionLabel => 'RECENT REVIEWS';
+
+  @override
+  String get profilePublicNoReviewsYet => 'No reviews yet.';
+
+  @override
+  String profilePublicSeeAllReviews(int count) {
+    return 'See all reviews ($count) ›';
+  }
+
+  @override
+  String get profileUserFallback => 'User';
+
+  @override
+  String get followFollowButton => 'Follow';
+
+  @override
+  String get followFollowingButton => 'Following ✓';
+
+  @override
+  String get followUnfollowDialogTitle => 'Unfollow?';
+
+  @override
+  String get followUnfollowButton => 'Unfollow';
+
+  @override
+  String get profilePublicUnfollowDialogMessage =>
+      'You will no longer receive this traveler\'s notifications.';
+
+  @override
+  String get profilePublicEnablePushTooltip => 'Turn on notifications';
+
+  @override
+  String get profilePublicDisablePushTooltip => 'Turn off notifications';
+
+  @override
+  String get shipmentsHistoryTitle => 'Delivery history';
+
+  @override
+  String get shipmentsHistoryEmptyTitle => 'No completed deliveries';
+
+  @override
+  String get shipmentsHistoryEmptyDescription =>
+      'Your completed deliveries will appear here.';
+
+  @override
+  String shipmentsHistoryDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: '$count day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shipmentsHistoryDetailsButton => 'See details';
+
+  @override
+  String get allReviewsSheetTitle => 'Reviews';
+
+  @override
+  String get faqFindAnswerTitle => 'Find an answer';
+
+  @override
+  String get faqFindAnswerSubtitle =>
+      'Search for an answer or browse categories.';
+
+  @override
+  String get faqSearchHint => 'Search help';
+
+  @override
+  String get faqEmptyResultsTitle => 'No results';
+
+  @override
+  String get faqEmptyResultsDescription =>
+      'Try different keywords or contact our team.';
+
+  @override
+  String get faqContactCardTitle => 'Didn\'t find your answer?';
+
+  @override
+  String get faqContactCardSubtitle => 'Our team is here to help.';
+
+  @override
+  String get faqAccountTitle => 'Account & identity';
+
+  @override
+  String get faqAnnouncementsTitle => 'Listings & requests';
+
+  @override
+  String get faqPaymentsTitle => 'Payments & refunds';
+
+  @override
+  String get faqDeliveryTitle => 'Tracking & delivery';
+
+  @override
+  String get faqSafetyTitle => 'Security & data';
+
+  @override
+  String get faqAccountIdentityRequiredQ =>
+      'Why is identity verification required?';
+
+  @override
+  String get faqAccountIdentityRequiredA =>
+      'It may be required by our payment partners and by regulations that apply to certain transactions. It also helps us fight fraud and protect Yadony users.';
+
+  @override
+  String get faqAccountIdentityDelayQ => 'How long does verification take?';
+
+  @override
+  String get faqAccountIdentityDelayA =>
+      'Verification is often completed within minutes. If a manual review is needed, it can take longer.';
+
+  @override
+  String get faqAccountIdentityDocumentsQ => 'Which documents are accepted?';
+
+  @override
+  String get faqAccountIdentityDocumentsA =>
+      'National ID card, passport, or a valid residence permit. The document must be legible and not expired.';
+
+  @override
+  String get faqAccountWithoutIdentityQ =>
+      'Can I use Yadony without verifying my identity?';
+
+  @override
+  String get faqAccountWithoutIdentityA =>
+      'You can browse listings without verifying your identity. Some actions, such as sending, carrying parcels, or receiving payments, may require verification.';
+
+  @override
+  String get faqAnnouncementsPublishTripQ =>
+      'How do I post a trip as a traveler?';
+
+  @override
+  String get faqAnnouncementsPublishTripA =>
+      'From Home or Activity, choose \"Post a trip\". Enter the departure city, the destination, the date and the available capacity.';
+
+  @override
+  String get faqAnnouncementsPublishRequestQ =>
+      'How do I post a parcel request?';
+
+  @override
+  String get faqAnnouncementsPublishRequestA =>
+      'From Home or Activity, choose \"Post a parcel\". Describe the parcel, its estimated weight and the recipient. Matching travelers will then be able to make an offer.';
+
+  @override
+  String get faqAnnouncementsEditRequestQ =>
+      'Can I edit my request after posting it?';
+
+  @override
+  String get faqAnnouncementsEditRequestA =>
+      'You can edit a request as long as no offer has been accepted. Once one is accepted, contact support if important information needs to be corrected.';
+
+  @override
+  String get faqPaymentsPaymentTimingQ => 'When am I charged?';
+
+  @override
+  String get faqPaymentsPaymentTimingA =>
+      'For a card payment, the funds are held and secured when the offer is accepted, then released as the delivery progresses. For cash and Mobile Money, follow the instructions shown when you choose your payment method.';
+
+  @override
+  String get faqPaymentsRefundQ => 'How does the refund work if I cancel?';
+
+  @override
+  String get faqPaymentsRefundA =>
+      'The refund depends on the payment method and when the cancellation happens. A card payment is credited back to the original method after processing. For Mobile Money, the timing depends on the operator. In cash, Yadony doesn\'t hold the funds and can\'t process the refund automatically.';
+
+  @override
+  String faqPaymentsCommissionQ(String percent) {
+    return 'Why is there a $percent% service fee?';
+  }
+
+  @override
+  String get faqPaymentsCommissionA =>
+      'The service fee covers payment costs, support, fraud prevention and the development of the platform.';
+
+  @override
+  String get faqPaymentsPaymentSecurityQ => 'Are payments secure?';
+
+  @override
+  String get faqPaymentsPaymentSecurityA =>
+      'Online payments are processed by the providers listed in the app. Yadony doesn\'t store your full card details. A cash payment isn\'t held and secured: never pay outside the process set up in the app.';
+
+  @override
+  String get faqDeliveryHandoverQrQ => 'How does the drop-off QR code work?';
+
+  @override
+  String get faqDeliveryHandoverQrA =>
+      'At drop-off, the QR code confirms the parcel was taken in charge and starts tracking. Without a connection, the scan is stored on the device and synced once you\'re back online.';
+
+  @override
+  String get faqDeliveryParcelMissingQ =>
+      'What should I do if the parcel doesn\'t arrive?';
+
+  @override
+  String get faqDeliveryParcelMissingA =>
+      'Open a dispute from \"My disputes\" as soon as you notice the problem. Add the photos, messages and tracking information available. The applicable deadlines are shown in the reporting flow.';
+
+  @override
+  String get faqDeliveryDeliveryDelayQ => 'What\'s the average delivery time?';
+
+  @override
+  String get faqDeliveryDeliveryDelayA =>
+      'The delay depends on the chosen trip and the date announced by the traveler. Always check the trip details before accepting an offer.';
+
+  @override
+  String get faqSafetyLostParcelQ => 'What happens if my parcel is lost?';
+
+  @override
+  String faqSafetyLostParcelA(String cap) {
+    return 'Yadony doesn\'t automatically cover the loss of a parcel. After investigation, a refund of up to $cap € may be granted if all conditions are met:\n\n• card payment made within Yadony;\n• no payment or agreement made outside the platform;\n• drop-off and handover QR codes used;\n• dispute opened within 15 days of the expected date;\n• content complying with allowed items.\n\nAny decision remains subject to approval by the Yadony team.';
+  }
+
+  @override
+  String get faqSafetyDisputeQ =>
+      'What should I do if I have a dispute with a traveler?';
+
+  @override
+  String get faqSafetyDisputeA =>
+      'Open \"My disputes\" from your profile and provide the relevant details: photos, messages and tracking. Our team then reviews the case and keeps you informed in the app.';
+
+  @override
+  String get faqSafetyPersonalDataQ => 'Is my personal data protected?';
+
+  @override
+  String get faqSafetyPersonalDataA =>
+      'Yadony applies security measures to protect your data and doesn\'t sell your personal information. You can review the privacy policy and manage your preferences in Settings.';
+
+  @override
+  String get faqSafetyDeleteAccountQ => 'How do I delete my account?';
+
+  @override
+  String get faqSafetyDeleteAccountA =>
+      'In Settings → Data and account → Delete my account, you can choose a reversible 30-day pause or an immediate, permanent deletion. An ongoing transaction may temporarily block deletion.';
+
+  @override
+  String get helpTutorialScreenTitle => 'Video tutorial';
+
+  @override
+  String get helpTutorialNotFoundTitle => 'Tutorial not found';
+
+  @override
+  String get helpTutorialNotFoundDescription =>
+      'This tutorial is no longer available.';
+
+  @override
+  String get helpTutorialSubscribeChannelButton => 'Subscribe to the channel';
+
+  @override
+  String helpTutorialPlayerSemanticsLabel(String title) {
+    return 'Video player: $title';
+  }
+
+  @override
+  String get helpTutorialPlaybackErrorTitle => 'Playback unavailable';
+
+  @override
+  String get helpTutorialPlaybackErrorDescription =>
+      'Check your connection or open the video directly in YouTube.';
+
+  @override
+  String get helpTutorialOpenInYoutubeButton => 'Open in YouTube';
+
+  @override
+  String helpContextualCardSemanticsLabel(String title) {
+    return 'Need help? Watch the tutorial $title';
+  }
+
+  @override
+  String get helpContextualCardLabel => 'Need help? Watch the tutorial';
+
+  @override
+  String get helpContextualCardDismissTooltip => 'Hide this tip';
+
+  @override
+  String helpTutorialCardSemanticsLabel(String title) {
+    return 'Watch the tutorial $title';
+  }
 }

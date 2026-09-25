@@ -11506,5 +11506,1130 @@
   "ratingStarExcellent": "Excellent !",
   "@ratingStarExcellent": {
     "description": "Libellé affiché pour 5 étoiles (rating_labels.dart, ratingStarLabel)."
+  },
+  "kycRejectionDocumentExpired": "Votre pièce d'identité est expirée. Utilisez un document valide et réessayez.",
+  "@kycRejectionDocumentExpired": {
+    "description": "Message de refus KYC pour le code Didit 'document_expired' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionDocumentTypeNotSupported": "Ce type de document n'est pas accepté. Utilisez une carte d'identité, un passeport ou un permis de conduire.",
+  "@kycRejectionDocumentTypeNotSupported": {
+    "description": "Message de refus KYC pour le code Didit 'document_type_not_supported' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionDocumentUnverifiedOther": "Le document fourni n'a pas pu être lu ou vérifié. Assurez-vous qu'il est net, complet et bien éclairé, puis réessayez.",
+  "@kycRejectionDocumentUnverifiedOther": {
+    "description": "Message de refus KYC pour le code Didit 'document_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionCountryNotSupported": "Le pays de votre document n'est pas pris en charge pour la vérification.",
+  "@kycRejectionCountryNotSupported": {
+    "description": "Message de refus KYC pour le code Didit 'country_not_supported' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionIdNumberMismatch": "Les informations de votre document n'ont pas pu être confirmées. Vérifiez qu'elles sont bien lisibles et réessayez.",
+  "@kycRejectionIdNumberMismatch": {
+    "description": "Message de refus KYC partagé par les codes Didit 'id_number_insufficient_document_data', 'id_number_mismatch' et 'id_number_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionSelfieDocumentMissingPhoto": "La photo sur votre document n'a pas pu être comparée à votre selfie. Réessayez avec une pièce d'identité comportant une photo nette.",
+  "@kycRejectionSelfieDocumentMissingPhoto": {
+    "description": "Message de refus KYC pour le code Didit 'selfie_document_missing_photo' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionSelfieFaceMismatch": "Votre selfie ne correspond pas à la photo du document. Reprenez la vérification dans de bonnes conditions de lumière.",
+  "@kycRejectionSelfieFaceMismatch": {
+    "description": "Message de refus KYC pour le code Didit 'selfie_face_mismatch' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionSelfieUnverified": "Votre selfie n'a pas pu être vérifié. Réessayez dans un endroit bien éclairé, sans lunettes ni couvre-chef.",
+  "@kycRejectionSelfieUnverified": {
+    "description": "Message de refus KYC partagé par les codes Didit 'selfie_manipulated' et 'selfie_unverified_other' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionUnderSupportedAge": "La vérification d'identité est réservée aux personnes majeures.",
+  "@kycRejectionUnderSupportedAge": {
+    "description": "Message de refus KYC pour le code Didit 'under_supported_age' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionConsentDeclined": "Vous avez refusé de donner votre consentement, indispensable pour vérifier votre identité.",
+  "@kycRejectionConsentDeclined": {
+    "description": "Message de refus KYC pour le code Didit 'consent_declined' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionSessionCanceled": "La vérification a été fermée avant d'être terminée.",
+  "@kycRejectionSessionCanceled": {
+    "description": "Message de refus KYC pour le code Didit 'session_canceled' (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycRejectionGeneric": "Nous n'avons pas pu vérifier votre identité. Assurez-vous que votre document est lisible et réessayez.",
+  "@kycRejectionGeneric": {
+    "description": "Message de repli pour un code de refus KYC inconnu ou absent (kyc_rejection_messages.dart, kycRejectionMessage)."
+  },
+  "kycVerificationTitle": "Vérification d'identité",
+  "@kycVerificationTitle": {
+    "description": "Titre de l'écran/la feuille de vérification d'identité (kyc_status_bottom_sheet.dart, KycStatusBottomSheet.show ; kyc_webview_screen.dart, KycWebViewScreen)."
+  },
+  "kycStatusNotStartedTitle": "Vérification non démarrée",
+  "@kycStatusNotStartedTitle": {
+    "description": "Titre de l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildNotStartedContent)."
+  },
+  "kycStatusNotStartedBody": "Vous devez vérifier votre identité pour utiliser toutes les fonctionnalités de Yadony.",
+  "@kycStatusNotStartedBody": {
+    "description": "Texte de l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildNotStartedContent)."
+  },
+  "kycStatusVerifiedTitle": "Identité vérifiée ✓",
+  "@kycStatusVerifiedTitle": {
+    "description": "Titre de l'état VERIFIED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildVerifiedContent)."
+  },
+  "kycStatusVerifiedBodyRedirecting": "Votre identité a été vérifiée avec succès. Redirection en cours…",
+  "@kycStatusVerifiedBodyRedirecting": {
+    "description": "Texte de l'état VERIFIED depuis l'écran plein, qui redirige vers l'étape suivante (kyc_status_screen.dart, _buildVerifiedContent)."
+  },
+  "kycStatusVerifiedBodyClosing": "Votre identité a été vérifiée avec succès. Fermeture en cours…",
+  "@kycStatusVerifiedBodyClosing": {
+    "description": "Texte de l'état VERIFIED depuis la feuille, qui se referme automatiquement (kyc_status_bottom_sheet.dart, _buildVerifiedContent)."
+  },
+  "kycStatusPendingTitle": "Vérification en cours",
+  "@kycStatusPendingTitle": {
+    "description": "Titre de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent)."
+  },
+  "kycStatusPendingBody": "Cela prend généralement moins d'une minute, parfois quelques minutes. Vous pouvez fermer cet écran, vous serez notifié du résultat.",
+  "@kycStatusPendingBody": {
+    "description": "Texte de l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildPendingContent)."
+  },
+  "kycStatusTimedOutTitle": "La vérification prend plus de temps que prévu",
+  "@kycStatusTimedOutTitle": {
+    "description": "Titre de l'état atteint après le délai d'attente de 5 minutes (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildTimedOutContent)."
+  },
+  "kycStatusTimedOutBody": "Vous pouvez fermer cet écran et revenir plus tard. Votre badge ✓ apparaîtra automatiquement dès que la vérification sera terminée.",
+  "@kycStatusTimedOutBody": {
+    "description": "Texte de l'état atteint après le délai d'attente de 5 minutes (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildTimedOutContent)."
+  },
+  "kycStatusRejectedTitle": "Vérification échouée",
+  "@kycStatusRejectedTitle": {
+    "description": "Titre de l'état REJECTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _buildRejectedContent)."
+  },
+  "kycStatusPollingIndicator": "Vérification automatique en cours",
+  "@kycStatusPollingIndicator": {
+    "description": "Texte sous l'indicateur de poll pendant l'état PENDING (kyc_status_screen.dart et kyc_status_bottom_sheet.dart, _PollingIndicator)."
+  },
+  "kycStatusStartAction": "Commencer la vérification",
+  "@kycStatusStartAction": {
+    "description": "Bouton pour démarrer la vérification depuis l'état NOT_STARTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart)."
+  },
+  "kycStatusRetryAction": "Réessayer la vérification",
+  "@kycStatusRetryAction": {
+    "description": "Bouton pour relancer la vérification depuis l'état REJECTED (kyc_status_screen.dart et kyc_status_bottom_sheet.dart)."
+  },
+  "kycStatusResumeAction": "Reprendre la vérification",
+  "@kycStatusResumeAction": {
+    "description": "Bouton pour rouvrir une session PENDING non terminée par Stripe/Didit, avec ou sans délai d'attente dépassé (kyc_status_screen.dart, _actionsFor)."
+  },
+  "kycStatusBackToApp": "Retour à l'app",
+  "@kycStatusBackToApp": {
+    "description": "Lien de sortie une fois le délai d'attente de 5 minutes dépassé (kyc_status_screen.dart et kyc_status_bottom_sheet.dart)."
+  },
+  "kycStatusContinueLater": "Continuer plus tard",
+  "@kycStatusContinueLater": {
+    "description": "Lien de sortie pendant l'état PENDING, avant le délai d'attente (kyc_status_screen.dart et kyc_status_bottom_sheet.dart)."
+  },
+  "kycWebviewLoadError": "Impossible de charger la page de vérification",
+  "@kycWebviewLoadError": {
+    "description": "Message d'erreur si la page de vérification distante échoue à charger (kyc_webview_screen.dart)."
+  },
+  "kycRequiredTitle": "Vérification requise",
+  "@kycRequiredTitle": {
+    "description": "Titre de la feuille de vérification requise (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredMessageNotStarted": "Pour envoyer un colis, votre identité doit être vérifiée.",
+  "@kycRequiredMessageNotStarted": {
+    "description": "Message de la feuille de vérification requise, statut par défaut/non démarré (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredMessageRejected": "Votre vérification a échoué. Réessayez pour pouvoir envoyer un colis.",
+  "@kycRequiredMessageRejected": {
+    "description": "Message de la feuille de vérification requise, statut REJECTED (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredMessagePending": "Votre vérification est en cours. Vous pourrez envoyer une fois votre identité validée.",
+  "@kycRequiredMessagePending": {
+    "description": "Message de la feuille de vérification requise, statut PENDING (kyc_required_bottom_sheet.dart)."
+  },
+  "kycRequiredVerifyAction": "Vérifier mon identité",
+  "@kycRequiredVerifyAction": {
+    "description": "Bouton principal de la feuille de vérification requise (kyc_required_bottom_sheet.dart)."
+  },
+  "kycInfoDuration": "Vérification en 2 à 5 minutes",
+  "@kycInfoDuration": {
+    "description": "Ligne d'info sur la durée de la vérification (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow)."
+  },
+  "kycInfoSecureProcess": "Processus de vérification sécurisé",
+  "@kycInfoSecureProcess": {
+    "description": "Ligne d'info sur la sécurité du processus (kyc_required_bottom_sheet.dart et kyc_onboarding_bottom_sheet.dart, _InfoRow)."
+  },
+  "kycOnboardingTitle": "Vérifiez votre identité",
+  "@kycOnboardingTitle": {
+    "description": "Titre de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart)."
+  },
+  "kycOnboardingSubtitle": "Requis pour publier des annonces sur Yadony",
+  "@kycOnboardingSubtitle": {
+    "description": "Sous-titre de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart)."
+  },
+  "kycOnboardingStartAction": "Démarrer la vérification",
+  "@kycOnboardingStartAction": {
+    "description": "Bouton principal de la feuille de vérification d'identité proposée pendant la publication (kyc_onboarding_bottom_sheet.dart)."
+  },
+  "kycOnboardingIdSelfieRequired": "Pièce d'identité + selfie requis",
+  "@kycOnboardingIdSelfieRequired": {
+    "description": "Ligne d'info sur les pièces nécessaires (kyc_onboarding_bottom_sheet.dart, _InfoRow)."
+  },
+  "profileSectionAccount": "MON COMPTE",
+  "@profileSectionAccount": {
+    "description": "Libellé de section de l'onglet Moi (profile_sections.dart, ProfileAccountSection)."
+  },
+  "profileSectionMoney": "ARGENT",
+  "@profileSectionMoney": {
+    "description": "Libellé de section de l'onglet Moi (profile_sections.dart, ProfileMoneySection)."
+  },
+  "profileMoneyReceivePayments": "Recevoir mes paiements",
+  "@profileMoneyReceivePayments": {
+    "description": "Tuile de la section ARGENT, active seulement identité vérifiée (profile_sections.dart)."
+  },
+  "profileMoneyVerifyIdentityToActivate": "Vérifiez votre identité pour activer",
+  "@profileMoneyVerifyIdentityToActivate": {
+    "description": "Sous-titre de la tuile « Recevoir mes paiements » quand l'identité n'est pas vérifiée (profile_sections.dart)."
+  },
+  "profileMoneyMobileMoneyPayout": "Versement mobile money",
+  "@profileMoneyMobileMoneyPayout": {
+    "description": "Tuile de la section ARGENT (profile_sections.dart)."
+  },
+  "profileMoneyMobileMoneyPayoutSubtitle": "Zone CFA : Orange Money, Wave, MTN",
+  "@profileMoneyMobileMoneyPayoutSubtitle": {
+    "description": "Sous-titre de la tuile « Versement mobile money » (profile_sections.dart)."
+  },
+  "profileMoneyCashCommissionCard": "Carte commission espèces",
+  "@profileMoneyCashCommissionCard": {
+    "description": "Tuile de la section ARGENT (profile_sections.dart)."
+  },
+  "profileSectionReputation": "MA RÉPUTATION",
+  "@profileSectionReputation": {
+    "description": "Libellé de section de l'onglet Moi (profile_sections.dart, ProfileReputationSection)."
+  },
+  "profileReputationPublicProfile": "Mon profil public",
+  "@profileReputationPublicProfile": {
+    "description": "Tuile de la section MA RÉPUTATION (profile_sections.dart)."
+  },
+  "profileReputationPublicProfileSubtitle": "Ce que voient les autres",
+  "@profileReputationPublicProfileSubtitle": {
+    "description": "Sous-titre de la tuile « Mon profil public » (profile_sections.dart)."
+  },
+  "profileReputationMyReviews": "Mes avis reçus",
+  "@profileReputationMyReviews": {
+    "description": "Tuile de la section MA RÉPUTATION (profile_sections.dart)."
+  },
+  "profileSectionAdvantages": "MES AVANTAGES",
+  "@profileSectionAdvantages": {
+    "description": "Libellé de section de l'onglet Moi (profile_sections.dart, ProfileAdvantagesSection)."
+  },
+  "profileAdvantagesProProfile": "Mon profil PRO",
+  "@profileAdvantagesProProfile": {
+    "description": "Tuile PRO de la section MES AVANTAGES, compte déjà PRO (profile_sections.dart)."
+  },
+  "profileAdvantagesUpgradeToPro": "Passer en compte PRO",
+  "@profileAdvantagesUpgradeToPro": {
+    "description": "Tuile PRO de la section MES AVANTAGES, compte pas encore PRO (profile_sections.dart)."
+  },
+  "profileAdvantagesReferral": "Parrainages",
+  "@profileAdvantagesReferral": {
+    "description": "Tuile de la section MES AVANTAGES (profile_sections.dart)."
+  },
+  "profileReferralZeroInvited": "0 invité",
+  "@profileReferralZeroInvited": {
+    "description": "Libellé fixe à droite de la tuile « Parrainages », jamais mis à jour avec le vrai nombre — défaut probable signalé en PR (profile_sections.dart)."
+  },
+  "profileAdvantagesHaveReferralCode": "J'ai un code parrain",
+  "@profileAdvantagesHaveReferralCode": {
+    "description": "Tuile de la section MES AVANTAGES (profile_sections.dart)."
+  },
+  "profileSectionTracking": "SUIVI",
+  "@profileSectionTracking": {
+    "description": "Libellé de section de l'onglet Moi (profile_sections.dart, ProfileFollowUpSection)."
+  },
+  "profileTrackingDisputes": "Mes litiges",
+  "@profileTrackingDisputes": {
+    "description": "Tuile de la section SUIVI (profile_sections.dart)."
+  },
+  "profileTrackingDisputesSubtitle": "Suivi de vos litiges",
+  "@profileTrackingDisputesSubtitle": {
+    "description": "Sous-titre de la tuile « Mes litiges » (profile_sections.dart)."
+  },
+  "profileTrackingSubscriptions": "Mes abonnements",
+  "@profileTrackingSubscriptions": {
+    "description": "Tuile de la section SUIVI, voyageurs suivis (profile_sections.dart)."
+  },
+  "profileTrackingSubscriptionsSubtitle": "Les voyageurs dont vous suivez les trajets",
+  "@profileTrackingSubscriptionsSubtitle": {
+    "description": "Sous-titre de la tuile « Mes abonnements » (profile_sections.dart)."
+  },
+  "profileSectionHelp": "AIDE",
+  "@profileSectionHelp": {
+    "description": "Libellé de section de l'onglet Moi (profile_sections.dart, ProfileHelpSection)."
+  },
+  "profileHelpFaq": "FAQ & aide",
+  "@profileHelpFaq": {
+    "description": "Tuile de la section AIDE (profile_sections.dart)."
+  },
+  "profileHelpFaqSubtitle": "Réponses aux questions fréquentes",
+  "@profileHelpFaqSubtitle": {
+    "description": "Sous-titre de la tuile « FAQ & aide » (profile_sections.dart)."
+  },
+  "profileHelpCommunity": "Réseaux sociaux et tutoriels",
+  "@profileHelpCommunity": {
+    "description": "Tuile de la section AIDE (profile_sections.dart) ; réutilisé comme titre de l'écran (community_screen.dart, même feature, même texte)."
+  },
+  "profileHelpCommunitySubtitle": "Vidéos et communauté Yadony",
+  "@profileHelpCommunitySubtitle": {
+    "description": "Sous-titre de la tuile « Réseaux sociaux et tutoriels » (profile_sections.dart)."
+  },
+  "profileHelpContactSupport": "Contacter le support",
+  "@profileHelpContactSupport": {
+    "description": "Tuile de la section AIDE (profile_sections.dart)."
+  },
+  "profileHelpContactSupportSubtitle": "Réponse généralement sous 24 h",
+  "@profileHelpContactSupportSubtitle": {
+    "description": "Sous-titre de la tuile « Contacter le support » (profile_sections.dart)."
+  },
+  "profileContactTypePhone": "TÉLÉPHONE",
+  "@profileContactTypePhone": {
+    "description": "Type de ligne « à renseigner » dans MON COMPTE (profile_sections.dart, _ContactRow) ; réutilisé pour le libellé TÉLÉPHONE de edit_profile_screen.dart (même feature, même texte)."
+  },
+  "profileContactTypeEmail": "E-MAIL",
+  "@profileContactTypeEmail": {
+    "description": "Type de ligne « à renseigner » dans MON COMPTE (profile_sections.dart, _ContactRow)."
+  },
+  "profileNotAdded": "Non ajouté",
+  "@profileNotAdded": {
+    "description": "Valeur affichée pour un contact non renseigné (profile_sections.dart, _ContactRow) ; réutilisé dans edit_profile_screen.dart (même feature, même texte)."
+  },
+  "profileAddBadge": "+ Ajouter",
+  "@profileAddBadge": {
+    "description": "Badge d'action de la ligne « à renseigner » (profile_sections.dart, _StatusBadge)."
+  },
+  "profileAccountIdentityDocuments": "Documents d'identité",
+  "@profileAccountIdentityDocuments": {
+    "description": "Tuile KYC de MON COMPTE (profile_sections.dart, kycTile)."
+  },
+  "profileKycVerifiedLabel": "Vérifié",
+  "@profileKycVerifiedLabel": {
+    "description": "Statut affiché de la tuile KYC quand VERIFIED (profile_sections.dart, kycTile)."
+  },
+  "profileKycInProgressLabel": "En cours",
+  "@profileKycInProgressLabel": {
+    "description": "Statut affiché de la tuile KYC quand PENDING (profile_sections.dart, kycTile)."
+  },
+  "profileKycToVerifyLabel": "Vérifier",
+  "@profileKycToVerifyLabel": {
+    "description": "Statut affiché de la tuile KYC par défaut / NOT_STARTED (profile_sections.dart, kycTile)."
+  },
+  "profileCompletionVerifyIdentity": "Vérifier mon identité",
+  "@profileCompletionVerifyIdentity": {
+    "description": "Case manquante de la bannière de complétion (profile_sections.dart, ProfileCompletionBanner)."
+  },
+  "profileCompletionActivatePayments": "Activer les paiements",
+  "@profileCompletionActivatePayments": {
+    "description": "Case manquante de la bannière de complétion (profile_sections.dart, ProfileCompletionBanner)."
+  },
+  "profileFieldPhotoShort": "Photo",
+  "@profileFieldPhotoShort": {
+    "description": "Case manquante « Photo » de la bannière de complétion (profile_sections.dart)."
+  },
+  "profileFieldFirstName": "Prénom",
+  "@profileFieldFirstName": {
+    "description": "Case manquante « Prénom » de la bannière de complétion (profile_sections.dart) ; réutilisé comme libellé de champ (edit_profile_screen.dart, même feature)."
+  },
+  "profileFieldLastNameShort": "Nom",
+  "@profileFieldLastNameShort": {
+    "description": "Case manquante « Nom » de la bannière de complétion (profile_sections.dart)."
+  },
+  "profileFieldEmailShort": "Email",
+  "@profileFieldEmailShort": {
+    "description": "Case manquante « Email » de la bannière de complétion (profile_sections.dart)."
+  },
+  "profileFieldPhone": "Téléphone",
+  "@profileFieldPhone": {
+    "description": "Case manquante « Téléphone » de la bannière de complétion (profile_sections.dart)."
+  },
+  "profileFieldCity": "Ville",
+  "@profileFieldCity": {
+    "description": "Case manquante « Ville » de la bannière de complétion (profile_sections.dart) ; réutilisé comme libellé de champ (edit_profile_screen.dart, même feature)."
+  },
+  "profileFieldAbout": "À propos",
+  "@profileFieldAbout": {
+    "description": "Case manquante « À propos » de la bannière de complétion (profile_sections.dart) ; réutilisé comme libellé de section (edit_profile_screen.dart, même feature)."
+  },
+  "profileCompletionSemantics": "Compte complété à {percent} pour cent. Compléter maintenant.",
+  "@profileCompletionSemantics": {
+    "description": "Semantics du bandeau de complétion (profile_sections.dart, ProfileCompletionBanner).",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileCompletionCta": "Complétez votre compte",
+  "@profileCompletionCta": {
+    "description": "Titre du bandeau de complétion (profile_sections.dart, ProfileCompletionBanner)."
+  },
+  "profileCompletionShort": "{percent}% complété · Compléter maintenant",
+  "@profileCompletionShort": {
+    "description": "Sous-titre du bandeau de complétion (profile_sections.dart, ProfileCompletionBanner).",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileItemToComplete": "{label}, à compléter",
+  "@profileItemToComplete": {
+    "description": "Semantics d'une case manquante de la bannière de complétion (profile_sections.dart, _MissingChip).",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "profileProBadge": "PRO",
+  "@profileProBadge": {
+    "description": "Badge PRO à côté du nom (profile_header.dart, _ProBadge)."
+  },
+  "profileChipPhoneVerified": "Tél. ✓",
+  "@profileChipPhoneVerified": {
+    "description": "Chip téléphone vérifié du header (profile_header.dart, _ContactChips)."
+  },
+  "profileChipPhoneMissing": "Tél. manquant",
+  "@profileChipPhoneMissing": {
+    "description": "Chip téléphone manquant du header (profile_header.dart, _ContactChips)."
+  },
+  "profileChipEmailVerified": "Email ✓",
+  "@profileChipEmailVerified": {
+    "description": "Chip email vérifié du header (profile_header.dart, _ContactChips)."
+  },
+  "profileChipEmailMissing": "Email manquant",
+  "@profileChipEmailMissing": {
+    "description": "Chip email manquant du header (profile_header.dart, _ContactChips)."
+  },
+  "profileChipIdentityVerified": "Identité ✓",
+  "@profileChipIdentityVerified": {
+    "description": "Chip identité vérifiée du header (profile_header.dart, _ContactChips)."
+  },
+  "profileMenuEditProfile": "Modifier le profil",
+  "@profileMenuEditProfile": {
+    "description": "Raccourci « Modifier le profil » de la feuille de menu (profile_menu_sheet.dart) ; réutilisé comme titre de l'écran (edit_profile_screen.dart, même feature, même texte)."
+  },
+  "profileMenuSettings": "Paramètres",
+  "@profileMenuSettings": {
+    "description": "Raccourci « Paramètres » de la feuille de menu (profile_menu_sheet.dart)."
+  },
+  "profileMenuAccountSection": "Mon compte",
+  "@profileMenuAccountSection": {
+    "description": "Libellé de section de la feuille de menu (profile_menu_sheet.dart, _SectionLabel)."
+  },
+  "profileMenuExportData": "Télécharger mes données",
+  "@profileMenuExportData": {
+    "description": "Entrée de la feuille de menu (profile_menu_sheet.dart)."
+  },
+  "profileMenuExportDataSubtitle": "Export RGPD au format JSON",
+  "@profileMenuExportDataSubtitle": {
+    "description": "Sous-titre de l'entrée « Télécharger mes données » (profile_menu_sheet.dart)."
+  },
+  "profileLogoutAction": "Se déconnecter",
+  "@profileLogoutAction": {
+    "description": "Entrée « Se déconnecter » de la feuille de menu (profile_menu_sheet.dart) ; réutilisé pour le bouton de confirmation (profile_screen.dart, même feature, même texte)."
+  },
+  "profileMenuDeleteAccount": "Supprimer mon compte",
+  "@profileMenuDeleteAccount": {
+    "description": "Entrée de la feuille de menu (profile_menu_sheet.dart)."
+  },
+  "profileMenuDeleteAccountSubtitle": "Délai de rétractation de 30 jours",
+  "@profileMenuDeleteAccountSubtitle": {
+    "description": "Sous-titre de l'entrée « Supprimer mon compte » (profile_menu_sheet.dart)."
+  },
+  "profileSkeletonLoadingSemantics": "Chargement du profil",
+  "@profileSkeletonLoadingSemantics": {
+    "description": "Semantics du squelette de l'onglet Moi (profile_skeleton.dart, ProfileScreenSkeleton)."
+  },
+  "profileSkeletonUnavailableTitle": "Profil indisponible",
+  "@profileSkeletonUnavailableTitle": {
+    "description": "Titre de la carte « Réessayer » du squelette (profile_skeleton.dart, _RetryCard)."
+  },
+  "profileSkeletonUnavailableBody": "Impossible de charger votre compte. Vérifiez votre connexion, puis réessayez.",
+  "@profileSkeletonUnavailableBody": {
+    "description": "Corps de la carte « Réessayer » du squelette (profile_skeleton.dart, _RetryCard)."
+  },
+  "profileDeletionScheduled": "Suppression planifiée le {date}",
+  "@profileDeletionScheduled": {
+    "description": "Bannière de suppression planifiée (pending_deletion_banner.dart). `date` est formatée par DateFormat.yMd(locale).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "profileDeletionCancelAction": "Annuler la suppression",
+  "@profileDeletionCancelAction": {
+    "description": "Bouton de la bannière de suppression planifiée (pending_deletion_banner.dart)."
+  },
+  "profileDeletionRefundsNotice": "Les remboursements déjà lancés ne sont pas annulés.",
+  "@profileDeletionRefundsNotice": {
+    "description": "Note de la bannière de suppression planifiée (pending_deletion_banner.dart)."
+  },
+  "profileWalletBalanceLabel": "Solde",
+  "@profileWalletBalanceLabel": {
+    "description": "Libellé de la carte portefeuille de l'onglet Moi, devise unique (wallet_balance_card.dart, _LoadedCard)."
+  },
+  "profileWalletTopUpSemantics": "Recharger le portefeuille",
+  "@profileWalletTopUpSemantics": {
+    "description": "Semantics du bouton de recharge de la carte portefeuille (wallet_balance_card.dart, _RechargeButton)."
+  },
+  "profileWalletUnavailable": "Solde indisponible",
+  "@profileWalletUnavailable": {
+    "description": "État d'erreur de la carte portefeuille de l'onglet Moi (wallet_balance_card.dart, _ErrorCard)."
+  },
+  "contactEditPhoneTitle": "Modifier le numéro",
+  "@contactEditPhoneTitle": {
+    "description": "Titre de l'écran plein écran d'édition du téléphone (add_contact_sheets.dart, EditPhoneScreen)."
+  },
+  "contactSendCodeAction": "Envoyer le code",
+  "@contactSendCodeAction": {
+    "description": "Bouton d'envoi du code OTP (add_contact_sheets.dart), étape saisie."
+  },
+  "contactVerifyAction": "Vérifier",
+  "@contactVerifyAction": {
+    "description": "Bouton de vérification du code OTP (add_contact_sheets.dart), étape code."
+  },
+  "contactEditEmailTitle": "Modifier l'email",
+  "@contactEditEmailTitle": {
+    "description": "Titre de l'écran plein écran d'édition de l'email (add_contact_sheets.dart, EditEmailScreen)."
+  },
+  "contactAddPhoneTitle": "Ajouter un numéro",
+  "@contactAddPhoneTitle": {
+    "description": "Titre de la feuille d'ajout de numéro (add_contact_sheets.dart, AddPhoneSheet)."
+  },
+  "contactPhoneAddedSuccess": "Numéro ajouté avec succès !",
+  "@contactPhoneAddedSuccess": {
+    "description": "Message de succès après ajout du numéro (add_contact_sheets.dart, _AddPhoneContent)."
+  },
+  "contactPhoneNumberLabel": "NUMÉRO DE TÉLÉPHONE",
+  "@contactPhoneNumberLabel": {
+    "description": "Libellé du champ numéro (add_contact_sheets.dart, _PhoneInputStep)."
+  },
+  "contactPhoneOtpNotice": "Un code de vérification sera envoyé par SMS.",
+  "@contactPhoneOtpNotice": {
+    "description": "Note sous le champ numéro (add_contact_sheets.dart, _PhoneInputStep)."
+  },
+  "contactDialCodeTitle": "Indicatif",
+  "@contactDialCodeTitle": {
+    "description": "Titre de la feuille de sélection d'indicatif (add_contact_sheets.dart, _PhoneInputStep)."
+  },
+  "contactAddEmailTitle": "Ajouter un email",
+  "@contactAddEmailTitle": {
+    "description": "Titre de la feuille d'ajout d'email (add_contact_sheets.dart, AddEmailSheet)."
+  },
+  "contactEmailVerifiedSuccess": "Email vérifié avec succès !",
+  "@contactEmailVerifiedSuccess": {
+    "description": "Message de succès après ajout de l'email (add_contact_sheets.dart, _AddEmailContent)."
+  },
+  "contactEmailAddressLabel": "ADRESSE EMAIL",
+  "@contactEmailAddressLabel": {
+    "description": "Libellé du champ email (add_contact_sheets.dart, _EmailInputStep)."
+  },
+  "contactEmailOtpNotice": "Un code de vérification sera envoyé à cet email.",
+  "@contactEmailOtpNotice": {
+    "description": "Note sous le champ email (add_contact_sheets.dart, _EmailInputStep)."
+  },
+  "contactCodeSentTo": "Code envoyé à {destination}",
+  "@contactCodeSentTo": {
+    "description": "Phrase avec le contact en gras via emphasizedSpans (add_contact_sheets.dart, _OtpStep).",
+    "placeholders": {
+      "destination": {
+        "type": "String"
+      }
+    }
+  },
+  "profileCommunityJoinTitle": "Rejoindre la communauté",
+  "@profileCommunityJoinTitle": {
+    "description": "Titre de la section communauté (social_community_section.dart)."
+  },
+  "profileCommunityJoinSubtitle": "Retrouve les espaces officiels Yadony.",
+  "@profileCommunityJoinSubtitle": {
+    "description": "Sous-titre de la section communauté (social_community_section.dart)."
+  },
+  "profileCommunityActionJoin": "Rejoindre",
+  "@profileCommunityActionJoin": {
+    "description": "Libellé d'action des réseaux « à rejoindre » (WhatsApp, Facebook) (social_community_section.dart)."
+  },
+  "profileCommunityActionFollow": "Suivre",
+  "@profileCommunityActionFollow": {
+    "description": "Libellé d'action des réseaux « à suivre » (Instagram, TikTok) (social_community_section.dart)."
+  },
+  "profileCommunityActionSubscribe": "S’abonner",
+  "@profileCommunityActionSubscribe": {
+    "description": "Libellé d'action YouTube (social_community_section.dart)."
+  },
+  "profileLogoutConfirmTitle": "Se déconnecter ?",
+  "@profileLogoutConfirmTitle": {
+    "description": "Titre du dialogue de confirmation de déconnexion (profile_screen.dart, _confirmLogout)."
+  },
+  "profileLogoutConfirmMessage": "Vous devrez vous reconnecter pour continuer.",
+  "@profileLogoutConfirmMessage": {
+    "description": "Message du dialogue de confirmation de déconnexion (profile_screen.dart, _confirmLogout)."
+  },
+  "profileMenuButtonTooltip": "Menu",
+  "@profileMenuButtonTooltip": {
+    "description": "Tooltip et semantics du bouton burger de l'onglet Moi (profile_screen.dart, _appBar)."
+  },
+  "profileFooterVersion": "Yadony v1.0.0 · Made with ❤️ in Paris",
+  "@profileFooterVersion": {
+    "description": "Pied de page de l'onglet Moi (profile_screen.dart, _sections)."
+  },
+  "editProfileImageOnlyError": "Seules les images sont acceptées (pas de vidéo).",
+  "@editProfileImageOnlyError": {
+    "description": "Erreur d'upload de l'avatar, type de fichier non supporté (edit_profile_screen.dart)."
+  },
+  "editProfilePhotoTooLarge": "Photo trop lourde (max {maxMb} Mo).",
+  "@editProfilePhotoTooLarge": {
+    "description": "Erreur d'upload de l'avatar, fichier trop volumineux (edit_profile_screen.dart).",
+    "placeholders": {
+      "maxMb": {
+        "type": "int"
+      }
+    }
+  },
+  "profileEditChangePhotoSemantics": "Changer la photo de profil",
+  "@profileEditChangePhotoSemantics": {
+    "description": "Semantics du geste sur l'avatar (edit_profile_screen.dart)."
+  },
+  "profileEditChangePhotoLabel": "Modifier la photo",
+  "@profileEditChangePhotoLabel": {
+    "description": "Libellé sous l'avatar (edit_profile_screen.dart)."
+  },
+  "profileEditSectionIdentity": "Identité",
+  "@profileEditSectionIdentity": {
+    "description": "Libellé de section (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase())."
+  },
+  "profileEditLastNameFieldLabel": "Nom de famille",
+  "@profileEditLastNameFieldLabel": {
+    "description": "Libellé du champ nom de famille en édition (edit_profile_screen.dart)."
+  },
+  "profileEditNoBioPlaceholder": "Aucune présentation",
+  "@profileEditNoBioPlaceholder": {
+    "description": "Placeholder de la bio en lecture, vide (edit_profile_screen.dart, _StaticInfoRow)."
+  },
+  "profileEditBioFieldLabel": "Présentation",
+  "@profileEditBioFieldLabel": {
+    "description": "Libellé du champ bio en édition (edit_profile_screen.dart)."
+  },
+  "profileEditSectionContact": "Coordonnées",
+  "@profileEditSectionContact": {
+    "description": "Libellé de section (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase())."
+  },
+  "profileFieldEmailAllCaps": "EMAIL",
+  "@profileFieldEmailAllCaps": {
+    "description": "Libellé de la ligne email, toujours en lecture (edit_profile_screen.dart, _ContactInfoRow)."
+  },
+  "profileEditSectionPersonalInfo": "Informations personnelles",
+  "@profileEditSectionPersonalInfo": {
+    "description": "Libellé de section (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase())."
+  },
+  "profileFieldCityAllCaps": "VILLE",
+  "@profileFieldCityAllCaps": {
+    "description": "Libellé de la ville en lecture (edit_profile_screen.dart, _StaticInfoRow)."
+  },
+  "profileEditCityPlaceholder": "Non renseignée",
+  "@profileEditCityPlaceholder": {
+    "description": "Placeholder de la ville en lecture, vide (edit_profile_screen.dart, _StaticInfoRow)."
+  },
+  "profileEditSectionPreferences": "Préférences",
+  "@profileEditSectionPreferences": {
+    "description": "Libellé de section, voyageurs uniquement (edit_profile_screen.dart, _SectionLabel — rendu en majuscules par toUpperCase())."
+  },
+  "profileFieldLanguagesAllCaps": "LANGUES PARLÉES",
+  "@profileFieldLanguagesAllCaps": {
+    "description": "Libellé des langues parlées en lecture (edit_profile_screen.dart, _StaticInfoRow)."
+  },
+  "profileEditLanguagesPlaceholder": "Non renseignées",
+  "@profileEditLanguagesPlaceholder": {
+    "description": "Placeholder des langues parlées en lecture, vide (edit_profile_screen.dart, _StaticInfoRow)."
+  },
+  "profileEditLanguagesFieldLabel": "Langues parlées",
+  "@profileEditLanguagesFieldLabel": {
+    "description": "Libellé au-dessus des chips de langues en édition (edit_profile_screen.dart)."
+  },
+  "profileEditCompletionGaugeTitle": "Profil complet",
+  "@profileEditCompletionGaugeTitle": {
+    "description": "Titre de la jauge de complétion (edit_profile_screen.dart, _CompletionGauge)."
+  },
+  "profileEditCompletionGaugeSubtitle": "Photo, identité, coordonnées et informations complètent votre profil",
+  "@profileEditCompletionGaugeSubtitle": {
+    "description": "Sous-titre de la jauge de complétion (edit_profile_screen.dart, _CompletionGauge)."
+  },
+  "profileEditNoNamePlaceholder": "Ajoutez votre prénom et nom",
+  "@profileEditNoNamePlaceholder": {
+    "description": "Placeholder du nom en lecture, vide (edit_profile_screen.dart, _NameView)."
+  },
+  "profileAddBadgeAction": "Ajouter",
+  "@profileAddBadgeAction": {
+    "description": "Badge d'action de la ligne contact en édition, valeur absente (edit_profile_screen.dart, _ContactInfoRow)."
+  },
+  "communityEmptyTitle": "Aucun contenu pour le moment",
+  "@communityEmptyTitle": {
+    "description": "Titre de l'état vide (community_screen.dart, CommunityScreen)."
+  },
+  "communityEmptyDescription": "Nos tutoriels et espaces communautaires seront bientôt disponibles ici.",
+  "@communityEmptyDescription": {
+    "description": "Description de l'état vide (community_screen.dart, CommunityScreen)."
+  },
+  "communityTutorialsTitle": "Tutoriels vidéo",
+  "@communityTutorialsTitle": {
+    "description": "Titre de la section tutoriels (community_screen.dart, CommunityScreen)."
+  },
+  "communityTutorialsSubtitle": "Apprends les parcours essentiels de Yadony.",
+  "@communityTutorialsSubtitle": {
+    "description": "Sous-titre de la section tutoriels (community_screen.dart, CommunityScreen)."
+  },
+  "profileLanguageFrench": "Français",
+  "@profileLanguageFrench": {
+    "description": "Libellé affiché de la langue parlée « Français » (profile_labels.dart, spokenLanguageLabel)."
+  },
+  "profileLanguageWolof": "Wolof",
+  "@profileLanguageWolof": {
+    "description": "Libellé affiché de la langue parlée « Wolof » (profile_labels.dart, spokenLanguageLabel)."
+  },
+  "profileLanguageBambara": "Bambara",
+  "@profileLanguageBambara": {
+    "description": "Libellé affiché de la langue parlée « Bambara » (profile_labels.dart, spokenLanguageLabel)."
+  },
+  "profileLanguageEnglish": "Anglais",
+  "@profileLanguageEnglish": {
+    "description": "Libellé affiché de la langue parlée « Anglais » (profile_labels.dart, spokenLanguageLabel)."
+  },
+  "profileLanguageSpanish": "Espagnol",
+  "@profileLanguageSpanish": {
+    "description": "Libellé affiché de la langue parlée « Espagnol » (profile_labels.dart, spokenLanguageLabel)."
+  },
+  "profileLanguageArabic": "Arabe",
+  "@profileLanguageArabic": {
+    "description": "Libellé affiché de la langue parlée « Arabe » (profile_labels.dart, spokenLanguageLabel)."
+  },
+  "profilePublicOwnProfileTitle": "Ce que les autres voient",
+  "@profilePublicOwnProfileTitle": {
+    "description": "Titre de l'app bar en mode « mon profil » (profile_public_screen.dart)"
+  },
+  "profilePublicTitleFallback": "Profil",
+  "@profilePublicTitleFallback": {
+    "description": "Titre de repli de l'app bar tant que le profil consulté n'est pas chargé (profile_public_screen.dart)"
+  },
+  "profilePublicMoreOptionsTooltip": "Plus d'options",
+  "@profilePublicMoreOptionsTooltip": {
+    "description": "Tooltip du menu ⋯ (Signaler/Bloquer) de l'app bar (profile_public_screen.dart)"
+  },
+  "profilePublicReportAction": "Signaler",
+  "@profilePublicReportAction": {
+    "description": "Entrée du menu ⋯ quand le nom de la personne consultée n'est pas encore connu (profile_public_screen.dart)"
+  },
+  "profilePublicReportUserAction": "Signaler {name}",
+  "@profilePublicReportUserAction": {
+    "description": "Entrée du menu ⋯ une fois le nom de la personne consultée connu (profile_public_screen.dart)",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "profilePublicBlockUserAction": "Bloquer {name}",
+  "@profilePublicBlockUserAction": {
+    "description": "Entrée du menu ⋯ pour bloquer la personne consultée (profile_public_screen.dart)",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "profilePublicLoadErrorTitle": "Impossible de charger le profil",
+  "@profilePublicLoadErrorTitle": {
+    "description": "Titre de l'état d'erreur de chargement du profil public (profile_public_screen.dart)"
+  },
+  "profilePublicRatingLine": "⭐ {rating} · {count, plural, =1{{count} avis} other{{count} avis}} · {memberSince}",
+  "@profilePublicRatingLine": {
+    "description": "Ligne méta du hero : note (déjà formatée), nombre d'avis et ancienneté envoyée par le serveur (profile_public_screen.dart, _ProfileHero)",
+    "placeholders": {
+      "rating": {"type": "String"},
+      "count": {"type": "int"},
+      "memberSince": {"type": "String"}
+    }
+  },
+  "profilePublicVerified": "✓ Vérifié",
+  "@profilePublicVerified": {
+    "description": "Pastille KYC vérifié du hero (profile_public_screen.dart)"
+  },
+  "profilePublicProBadge": "PRO",
+  "@profilePublicProBadge": {
+    "description": "Pastille compte PRO du hero (profile_public_screen.dart)"
+  },
+  "profilePublicStatRatingLabel": "Note",
+  "@profilePublicStatRatingLabel": {
+    "description": "Libellé de la statistique note moyenne (profile_public_screen.dart, _StatsRow)"
+  },
+  "profilePublicStatDeliveriesLabel": "Livraisons",
+  "@profilePublicStatDeliveriesLabel": {
+    "description": "Libellé de la statistique nombre de livraisons (profile_public_screen.dart, _StatsRow)"
+  },
+  "profilePublicAboutSectionLabel": "À PROPOS",
+  "@profilePublicAboutSectionLabel": {
+    "description": "Titre de la section bio (profile_public_screen.dart, _AboutSection)"
+  },
+  "profilePublicLanguagesSectionLabel": "LANGUES",
+  "@profilePublicLanguagesSectionLabel": {
+    "description": "Titre de la section langues parlées (profile_public_screen.dart, _TravelerInfoSection)"
+  },
+  "profilePublicBadgesSectionLabel": "BADGES",
+  "@profilePublicBadgesSectionLabel": {
+    "description": "Titre de la section badges, identique dans les deux langues (profile_public_screen.dart, _BadgesSection)"
+  },
+  "profilePublicContactCallLabel": "Joignable par appel",
+  "@profilePublicContactCallLabel": {
+    "description": "Puce de disponibilité : contactMode == call (profile_public_screen.dart, _ContactInfoSection)"
+  },
+  "profilePublicContactMessageLabel": "Joignable par message",
+  "@profilePublicContactMessageLabel": {
+    "description": "Puce de disponibilité : contactMode == message (profile_public_screen.dart, _ContactInfoSection)"
+  },
+  "profilePublicContactBothLabel": "Appel & message",
+  "@profilePublicContactBothLabel": {
+    "description": "Puce de disponibilité : contactMode == both (profile_public_screen.dart, _ContactInfoSection)"
+  },
+  "profilePublicAvailabilitySectionLabel": "DISPONIBILITÉ",
+  "@profilePublicAvailabilitySectionLabel": {
+    "description": "Titre de la section disponibilité (profile_public_screen.dart, _ContactInfoSection)"
+  },
+  "profilePublicRespondsWithin": "Répond en < {hours}h",
+  "@profilePublicRespondsWithin": {
+    "description": "Puce du délai de réponse moyen (profile_public_screen.dart, _ContactInfoSection)",
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "profilePublicRecentReviewsSectionLabel": "AVIS RÉCENTS",
+  "@profilePublicRecentReviewsSectionLabel": {
+    "description": "Titre de la section avis récents (profile_public_screen.dart, _RecentReviewsSection)"
+  },
+  "profilePublicNoReviewsYet": "Aucun avis pour le moment.",
+  "@profilePublicNoReviewsYet": {
+    "description": "Message d'état vide des avis, partagé par l'aperçu et la feuille « tous les avis » (profile_public_screen.dart, all_reviews_bottom_sheet.dart)"
+  },
+  "profilePublicSeeAllReviews": "Voir tous les avis ({count}) ›",
+  "@profilePublicSeeAllReviews": {
+    "description": "Lien vers la feuille « tous les avis » (profile_public_screen.dart, _RecentReviewsSection)",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "profileUserFallback": "Utilisateur",
+  "@profileUserFallback": {
+    "description": "Nom de repli d'un auteur d'avis sans displayName (profile_public_screen.dart, all_reviews_bottom_sheet.dart)"
+  },
+  "followFollowButton": "S'abonner",
+  "@followFollowButton": {
+    "description": "Bouton d'abonnement à un voyageur, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)"
+  },
+  "followFollowingButton": "Abonné ✓",
+  "@followFollowingButton": {
+    "description": "État abonné du bouton d'abonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)"
+  },
+  "followUnfollowDialogTitle": "Se désabonner ?",
+  "@followUnfollowDialogTitle": {
+    "description": "Titre du dialog de confirmation de désabonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)"
+  },
+  "followUnfollowButton": "Se désabonner",
+  "@followUnfollowButton": {
+    "description": "Bouton de confirmation du désabonnement, partagé avec la barre d'abonnement (profile_public_screen.dart, subscribe_bar.dart)"
+  },
+  "profilePublicUnfollowDialogMessage": "Vous ne recevrez plus les notifications de ce voyageur.",
+  "@profilePublicUnfollowDialogMessage": {
+    "description": "Message du dialog de confirmation de désabonnement (profile_public_screen.dart, _SubscribeAction)"
+  },
+  "profilePublicEnablePushTooltip": "Activer les notifications",
+  "@profilePublicEnablePushTooltip": {
+    "description": "Tooltip de la cloche quand les alertes push sont coupées (profile_public_screen.dart, _SubscribeAction)"
+  },
+  "profilePublicDisablePushTooltip": "Désactiver les notifications",
+  "@profilePublicDisablePushTooltip": {
+    "description": "Tooltip de la cloche quand les alertes push sont actives (profile_public_screen.dart, _SubscribeAction)"
+  },
+  "shipmentsHistoryTitle": "Historique des livraisons",
+  "@shipmentsHistoryTitle": {
+    "description": "Titre de l'écran (shipments_history_screen.dart)"
+  },
+  "shipmentsHistoryEmptyTitle": "Aucune livraison terminée",
+  "@shipmentsHistoryEmptyTitle": {
+    "description": "Titre de l'état vide (shipments_history_screen.dart)"
+  },
+  "shipmentsHistoryEmptyDescription": "Tes livraisons terminées s'afficheront ici.",
+  "@shipmentsHistoryEmptyDescription": {
+    "description": "Description de l'état vide (shipments_history_screen.dart)"
+  },
+  "shipmentsHistoryDaysAgo": "{count, plural, =1{Il y a {count} jour} other{Il y a {count} jours}}",
+  "@shipmentsHistoryDaysAgo": {
+    "description": "Date relative d'une livraison (2 à 6 jours) (shipments_history_screen.dart, _DeliveryCard._relativeDate)",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "shipmentsHistoryDetailsButton": "Voir détails",
+  "@shipmentsHistoryDetailsButton": {
+    "description": "Bouton d'ouverture du détail d'une livraison (shipments_history_screen.dart, _DeliveryCard)"
+  },
+  "allReviewsSheetTitle": "Avis",
+  "@allReviewsSheetTitle": {
+    "description": "Titre de la bottom sheet « tous les avis » (all_reviews_bottom_sheet.dart)"
+  },
+  "faqFindAnswerTitle": "Trouver une réponse",
+  "@faqFindAnswerTitle": {
+    "description": "Titre de la section recherche (faq_screen.dart)"
+  },
+  "faqFindAnswerSubtitle": "Recherche une réponse ou parcours les catégories.",
+  "@faqFindAnswerSubtitle": {
+    "description": "Sous-titre de la section recherche (faq_screen.dart)"
+  },
+  "faqSearchHint": "Rechercher dans l’aide",
+  "@faqSearchHint": {
+    "description": "Placeholder du champ de recherche (faq_screen.dart)"
+  },
+  "faqEmptyResultsTitle": "Aucun résultat",
+  "@faqEmptyResultsTitle": {
+    "description": "Titre de l'état vide de la recherche FAQ (faq_screen.dart, _FaqEmptyState)"
+  },
+  "faqEmptyResultsDescription": "Essaie avec d'autres mots-clés ou contacte notre équipe.",
+  "@faqEmptyResultsDescription": {
+    "description": "Description de l'état vide de la recherche FAQ (faq_screen.dart, _FaqEmptyState)"
+  },
+  "faqContactCardTitle": "Tu n’as pas trouvé ta réponse ?",
+  "@faqContactCardTitle": {
+    "description": "Titre de la carte de contact support (faq_screen.dart, _ContactSupportCard)"
+  },
+  "faqContactCardSubtitle": "Notre équipe est là pour t’aider.",
+  "@faqContactCardSubtitle": {
+    "description": "Sous-titre de la carte de contact support (faq_screen.dart, _ContactSupportCard)"
+  },
+  "faqAccountTitle": "Compte & identité",
+  "@faqAccountTitle": {
+    "description": "Titre de la section FAQ « account » (faq_screen.dart)"
+  },
+  "faqAnnouncementsTitle": "Annonces & demandes",
+  "@faqAnnouncementsTitle": {
+    "description": "Titre de la section FAQ « announcements » (faq_screen.dart)"
+  },
+  "faqPaymentsTitle": "Paiements & remboursements",
+  "@faqPaymentsTitle": {
+    "description": "Titre de la section FAQ « payments » (faq_screen.dart)"
+  },
+  "faqDeliveryTitle": "Suivi & livraison",
+  "@faqDeliveryTitle": {
+    "description": "Titre de la section FAQ « delivery » (faq_screen.dart)"
+  },
+  "faqSafetyTitle": "Sécurité & données",
+  "@faqSafetyTitle": {
+    "description": "Titre de la section FAQ « safety » (faq_screen.dart)"
+  },
+  "faqAccountIdentityRequiredQ": "Pourquoi la vérification d'identité est-elle obligatoire ?",
+  "@faqAccountIdentityRequiredQ": {
+    "description": "Question FAQ account/identity_required (faq_screen.dart)"
+  },
+  "faqAccountIdentityRequiredA": "Elle peut être demandée par nos partenaires de paiement et par les obligations applicables à certaines transactions. Elle nous permet aussi de lutter contre la fraude et de protéger les utilisateurs de Yadony.",
+  "@faqAccountIdentityRequiredA": {
+    "description": "Réponse FAQ account/identity_required (faq_screen.dart)"
+  },
+  "faqAccountIdentityDelayQ": "Combien de temps prend la validation ?",
+  "@faqAccountIdentityDelayQ": {
+    "description": "Question FAQ account/identity_delay (faq_screen.dart)"
+  },
+  "faqAccountIdentityDelayA": "La validation est souvent réalisée en quelques minutes. Si une vérification manuelle est nécessaire, le délai peut être plus long.",
+  "@faqAccountIdentityDelayA": {
+    "description": "Réponse FAQ account/identity_delay (faq_screen.dart)"
+  },
+  "faqAccountIdentityDocumentsQ": "Quels documents sont acceptés ?",
+  "@faqAccountIdentityDocumentsQ": {
+    "description": "Question FAQ account/identity_documents (faq_screen.dart)"
+  },
+  "faqAccountIdentityDocumentsA": "Carte nationale d'identité, passeport ou titre de séjour en cours de validité. Le document doit être lisible et non expiré.",
+  "@faqAccountIdentityDocumentsA": {
+    "description": "Réponse FAQ account/identity_documents (faq_screen.dart)"
+  },
+  "faqAccountWithoutIdentityQ": "Puis-je utiliser Yadony sans vérifier mon identité ?",
+  "@faqAccountWithoutIdentityQ": {
+    "description": "Question FAQ account/without_identity (faq_screen.dart)"
+  },
+  "faqAccountWithoutIdentityA": "Tu peux explorer les annonces sans vérifier ton identité. Certaines actions, notamment envoyer, transporter ou recevoir des paiements, peuvent nécessiter une vérification.",
+  "@faqAccountWithoutIdentityA": {
+    "description": "Réponse FAQ account/without_identity (faq_screen.dart)"
+  },
+  "faqAnnouncementsPublishTripQ": "Comment publier un trajet en tant que voyageur ?",
+  "@faqAnnouncementsPublishTripQ": {
+    "description": "Question FAQ announcements/publish_trip (faq_screen.dart)"
+  },
+  "faqAnnouncementsPublishTripA": "Depuis Accueil ou Activités, choisis \"Publier un trajet\". Renseigne la ville de départ, la destination, la date et la capacité disponible.",
+  "@faqAnnouncementsPublishTripA": {
+    "description": "Réponse FAQ announcements/publish_trip (faq_screen.dart)"
+  },
+  "faqAnnouncementsPublishRequestQ": "Comment publier une demande d'envoi ?",
+  "@faqAnnouncementsPublishRequestQ": {
+    "description": "Question FAQ announcements/publish_request (faq_screen.dart)"
+  },
+  "faqAnnouncementsPublishRequestA": "Depuis Accueil ou Activités, choisis \"Publier un colis\". Décris le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.",
+  "@faqAnnouncementsPublishRequestA": {
+    "description": "Réponse FAQ announcements/publish_request (faq_screen.dart)"
+  },
+  "faqAnnouncementsEditRequestQ": "Puis-je modifier ma demande après publication ?",
+  "@faqAnnouncementsEditRequestQ": {
+    "description": "Question FAQ announcements/edit_request (faq_screen.dart)"
+  },
+  "faqAnnouncementsEditRequestA": "Tu peux modifier une demande tant qu'aucune offre n'a été acceptée. Après acceptation, contacte le support si une information importante doit être corrigée.",
+  "@faqAnnouncementsEditRequestA": {
+    "description": "Réponse FAQ announcements/edit_request (faq_screen.dart)"
+  },
+  "faqPaymentsPaymentTimingQ": "Quand suis-je débité ?",
+  "@faqPaymentsPaymentTimingQ": {
+    "description": "Question FAQ payments/payment_timing (faq_screen.dart)"
+  },
+  "faqPaymentsPaymentTimingA": "Pour un paiement par carte, les fonds sont sécurisés lors de l'acceptation puis libérés selon l'avancement de la livraison. Pour les espèces et le Mobile Money, suis les indications affichées au moment de choisir le moyen de paiement.",
+  "@faqPaymentsPaymentTimingA": {
+    "description": "Réponse FAQ payments/payment_timing (faq_screen.dart)"
+  },
+  "faqPaymentsRefundQ": "Comment se passe le remboursement en cas d'annulation ?",
+  "@faqPaymentsRefundQ": {
+    "description": "Question FAQ payments/refund (faq_screen.dart)"
+  },
+  "faqPaymentsRefundA": "Le remboursement dépend du moyen de paiement et du moment de l'annulation. Un paiement par carte est recrédité sur le moyen utilisé après traitement. Pour le Mobile Money, le délai dépend de l'opérateur. En espèces, Yadony ne détient pas les fonds et ne peut pas effectuer automatiquement le remboursement.",
+  "@faqPaymentsRefundA": {
+    "description": "Réponse FAQ payments/refund (faq_screen.dart)"
+  },
+  "faqPaymentsCommissionQ": "Pourquoi une commission de {percent} % ?",
+  "@faqPaymentsCommissionQ": {
+    "description": "Question FAQ payments/commission, percent déjà formaté par commissionPercentLabel (faq_screen.dart)",
+    "placeholders": {
+      "percent": {"type": "String"}
+    }
+  },
+  "faqPaymentsCommissionA": "La commission contribue aux frais de paiement, au support, à la prévention de la fraude et au développement de la plateforme.",
+  "@faqPaymentsCommissionA": {
+    "description": "Réponse FAQ payments/commission (faq_screen.dart)"
+  },
+  "faqPaymentsPaymentSecurityQ": "Les paiements sont-ils sécurisés ?",
+  "@faqPaymentsPaymentSecurityQ": {
+    "description": "Question FAQ payments/payment_security (faq_screen.dart)"
+  },
+  "faqPaymentsPaymentSecurityA": "Les paiements en ligne sont traités par les prestataires indiqués dans l'application. Yadony ne stocke pas les données complètes de ta carte. Un paiement en espèces n'est pas placé sous séquestre : ne paie jamais en dehors du parcours convenu dans l'application.",
+  "@faqPaymentsPaymentSecurityA": {
+    "description": "Réponse FAQ payments/payment_security (faq_screen.dart)"
+  },
+  "faqDeliveryHandoverQrQ": "Comment fonctionne le QR de remise ?",
+  "@faqDeliveryHandoverQrQ": {
+    "description": "Question FAQ delivery/handover_qr (faq_screen.dart)"
+  },
+  "faqDeliveryHandoverQrA": "À la remise du colis, le QR code confirme la prise en charge et déclenche le suivi. Sans connexion, la lecture est mémorisée sur l'appareil puis synchronisée à la reconnexion.",
+  "@faqDeliveryHandoverQrA": {
+    "description": "Réponse FAQ delivery/handover_qr (faq_screen.dart)"
+  },
+  "faqDeliveryParcelMissingQ": "Que faire si le colis n'arrive pas ?",
+  "@faqDeliveryParcelMissingQ": {
+    "description": "Question FAQ delivery/parcel_missing (faq_screen.dart)"
+  },
+  "faqDeliveryParcelMissingA": "Ouvre un litige depuis \"Mes litiges\" dès que tu constates le problème. Ajoute les photos, messages et informations de suivi disponibles. Les délais applicables sont rappelés dans le parcours de signalement.",
+  "@faqDeliveryParcelMissingA": {
+    "description": "Réponse FAQ delivery/parcel_missing (faq_screen.dart)"
+  },
+  "faqDeliveryDeliveryDelayQ": "Quel est le délai de livraison moyen ?",
+  "@faqDeliveryDeliveryDelayQ": {
+    "description": "Question FAQ delivery/delivery_delay (faq_screen.dart)"
+  },
+  "faqDeliveryDeliveryDelayA": "Le délai dépend du trajet choisi et de la date annoncée par le voyageur. Vérifie toujours les informations du trajet avant d'accepter une offre.",
+  "@faqDeliveryDeliveryDelayA": {
+    "description": "Réponse FAQ delivery/delivery_delay (faq_screen.dart)"
+  },
+  "faqSafetyLostParcelQ": "Que se passe-t-il si mon colis est perdu ?",
+  "@faqSafetyLostParcelQ": {
+    "description": "Question FAQ safety/lost_parcel (faq_screen.dart)"
+  },
+  "faqSafetyLostParcelA": "Yadony ne couvre pas automatiquement la perte d'un colis. Après investigation, un remboursement jusqu'à {cap} € peut être accordé si toutes les conditions sont respectées :\n\n• paiement par carte effectué dans Yadony ;\n• aucun paiement ou accord conclu hors plateforme ;\n• QR codes de dépôt et de remise utilisés ;\n• litige ouvert dans les 15 jours suivant la date prévue ;\n• contenu conforme aux objets autorisés.\n\nToute décision reste soumise à la validation de l'équipe Yadony.",
+  "@faqSafetyLostParcelA": {
+    "description": "Réponse FAQ safety/lost_parcel, cap déjà formaté par reimbursementCapLabel (faq_screen.dart)",
+    "placeholders": {
+      "cap": {"type": "String"}
+    }
+  },
+  "faqSafetyDisputeQ": "Que faire en cas de litige avec un voyageur ?",
+  "@faqSafetyDisputeQ": {
+    "description": "Question FAQ safety/dispute (faq_screen.dart)"
+  },
+  "faqSafetyDisputeA": "Ouvre \"Mes litiges\" depuis ton profil et fournis les éléments utiles : photos, messages et suivi. Notre équipe examine ensuite le dossier et te tient informé dans l'application.",
+  "@faqSafetyDisputeA": {
+    "description": "Réponse FAQ safety/dispute (faq_screen.dart)"
+  },
+  "faqSafetyPersonalDataQ": "Mes données personnelles sont-elles protégées ?",
+  "@faqSafetyPersonalDataQ": {
+    "description": "Question FAQ safety/personal_data (faq_screen.dart)"
+  },
+  "faqSafetyPersonalDataA": "Yadony applique des mesures de sécurité pour protéger les données et ne vend pas tes informations personnelles. Tu peux consulter la politique de confidentialité et gérer tes préférences dans Paramètres.",
+  "@faqSafetyPersonalDataA": {
+    "description": "Réponse FAQ safety/personal_data (faq_screen.dart)"
+  },
+  "faqSafetyDeleteAccountQ": "Comment supprimer mon compte ?",
+  "@faqSafetyDeleteAccountQ": {
+    "description": "Question FAQ safety/delete_account (faq_screen.dart)"
+  },
+  "faqSafetyDeleteAccountA": "Dans Paramètres → Données et compte → Supprimer mon compte, tu peux choisir une pause réversible de 30 jours ou une suppression immédiate définitive. Une transaction en cours peut temporairement bloquer la suppression.",
+  "@faqSafetyDeleteAccountA": {
+    "description": "Réponse FAQ safety/delete_account (faq_screen.dart)"
+  },
+  "helpTutorialScreenTitle": "Tutoriel vidéo",
+  "@helpTutorialScreenTitle": {
+    "description": "Titre de l'écran lecteur de tutoriel, dans ses 3 états (help_tutorial_screen.dart)"
+  },
+  "helpTutorialNotFoundTitle": "Tutoriel introuvable",
+  "@helpTutorialNotFoundTitle": {
+    "description": "Titre de l'état tutoriel introuvable (help_tutorial_screen.dart)"
+  },
+  "helpTutorialNotFoundDescription": "Ce tutoriel n’est plus disponible.",
+  "@helpTutorialNotFoundDescription": {
+    "description": "Description de l'état tutoriel introuvable (help_tutorial_screen.dart)"
+  },
+  "helpTutorialSubscribeChannelButton": "S’abonner à la chaîne",
+  "@helpTutorialSubscribeChannelButton": {
+    "description": "Bouton vers la chaîne YouTube Yadony, sous le lecteur (help_tutorial_screen.dart, _HelpTutorialContent)"
+  },
+  "helpTutorialPlayerSemanticsLabel": "Lecteur vidéo : {title}",
+  "@helpTutorialPlayerSemanticsLabel": {
+    "description": "Semantics label du cadre du lecteur vidéo (help_tutorial_screen.dart, _buildPlayerFrame)",
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "helpTutorialPlaybackErrorTitle": "Lecture impossible",
+  "@helpTutorialPlaybackErrorTitle": {
+    "description": "Titre de la carte d'erreur de lecture (help_tutorial_screen.dart, _PlayerErrorCard)"
+  },
+  "helpTutorialPlaybackErrorDescription": "Vérifie ta connexion ou ouvre la vidéo directement dans YouTube.",
+  "@helpTutorialPlaybackErrorDescription": {
+    "description": "Description de la carte d'erreur de lecture (help_tutorial_screen.dart, _PlayerErrorCard)"
+  },
+  "helpTutorialOpenInYoutubeButton": "Ouvrir dans YouTube",
+  "@helpTutorialOpenInYoutubeButton": {
+    "description": "Bouton de repli vers YouTube externe (help_tutorial_screen.dart, _PlayerErrorCard)"
+  },
+  "helpContextualCardSemanticsLabel": "Besoin d’aide ? Voir le tutoriel {title}",
+  "@helpContextualCardSemanticsLabel": {
+    "description": "Semantics label de la carte suggestion de tutoriel contextuel (contextual_tutorial_card.dart)",
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "helpContextualCardLabel": "Besoin d'aide ? Voir le tutoriel",
+  "@helpContextualCardLabel": {
+    "description": "Texte visible de la carte suggestion de tutoriel contextuel, sans le titre (contextual_tutorial_card.dart)"
+  },
+  "helpContextualCardDismissTooltip": "Masquer ce conseil",
+  "@helpContextualCardDismissTooltip": {
+    "description": "Tooltip du bouton de fermeture (X) de la carte suggestion (contextual_tutorial_card.dart)"
+  },
+  "helpTutorialCardSemanticsLabel": "Lire le tutoriel {title}",
+  "@helpTutorialCardSemanticsLabel": {
+    "description": "Semantics label de la carte tutoriel de la Communauté (help_tutorial_card.dart)",
+    "placeholders": {
+      "title": {"type": "String"}
+    }
   }
 }

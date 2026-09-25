@@ -10,7 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/l10n_test_helpers.dart';
 
 class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
@@ -20,6 +23,7 @@ BidModel _bid({
   required String id,
   required String status,
   String? travelerName,
+  DateTime? updatedAt,
 }) => BidModel(
   id: id,
   announcementId: 'ann-1',
@@ -28,7 +32,7 @@ BidModel _bid({
   weightKg: 2.0,
   status: status,
   createdAt: DateTime(2025, 3, 10),
-  updatedAt: DateTime(2025, 3, 12),
+  updatedAt: updatedAt ?? DateTime(2025, 3, 12),
   travelerKycVerified: true,
   travelerName: travelerName,
 );
@@ -161,6 +165,78 @@ void main() {
     expect(find.text("Aujourd'hui"), findsOneWidget);
   });
 
+  testWidgets('il y a 2 jours affiche "Il y a 2 jours"', (tester) async {
+    final bid = BidModel(
+      id: 'two-days',
+      announcementId: 'ann-1',
+      senderId: 'user-1',
+      senderKycVerified: true,
+      weightKg: 1.0,
+      status: 'COMPLETED',
+      voyageurConfirmed: true,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now().subtract(const Duration(days: 2)),
+      travelerName: 'Ibrahima Sow',
+      travelerKycVerified: true,
+    );
+
+    when(() => bloc.state).thenReturn(BidListLoaded([bid]));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Il y a 2 jours'), findsOneWidget);
+  });
+
+  testWidgets('il y a 5 jours affiche "Il y a 5 jours"', (tester) async {
+    final bid = BidModel(
+      id: 'five-days',
+      announcementId: 'ann-1',
+      senderId: 'user-1',
+      senderKycVerified: true,
+      weightKg: 1.0,
+      status: 'COMPLETED',
+      voyageurConfirmed: true,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now().subtract(const Duration(days: 5)),
+      travelerName: 'Kadiatou Barry',
+      travelerKycVerified: true,
+    );
+
+    when(() => bloc.state).thenReturn(BidListLoaded([bid]));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Il y a 5 jours'), findsOneWidget);
+  });
+
+  testWidgets('anglais : titre, jours et bouton traduits', (tester) async {
+    useEnglish();
+    final bid = BidModel(
+      id: 'two-days-en',
+      announcementId: 'ann-1',
+      senderId: 'user-1',
+      senderKycVerified: true,
+      weightKg: 1.0,
+      status: 'COMPLETED',
+      voyageurConfirmed: true,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now().subtract(const Duration(days: 2)),
+      travelerName: 'Ibrahima Sow',
+      travelerKycVerified: true,
+    );
+
+    when(() => bloc.state).thenReturn(BidListLoaded([bid]));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Delivery history'), findsOneWidget);
+    expect(find.text('2 days ago'), findsOneWidget);
+    expect(find.text('See details'), findsOneWidget);
+  });
+
   testWidgets(
     'régression : un bid DELIVERED (legacy) est exclu, un bid COMPLETED s\'affiche',
     (tester) async {
@@ -209,4 +285,48 @@ void main() {
     await tester.tap(find.text('Réessayer'));
     verify(() => bloc.add(any(that: isA<BidMyListRequested>()))).called(1);
   });
+
+  // ── Non-régression : remplacement de 'dd/MM/yyyy' par DateFormat.yMd ──────
+  //
+  // _relativeDate bascule sur DateFormat.yMd(locale) uniquement à partir de
+  // 7 jours d'écart avec DateTime.now(). On pilote donc une date relative
+  // (il y a 20 jours) et on vérifie le rendu réel du widget, plutôt que le
+  // motif de formatage isolément.
+
+  testWidgets(
+    "affiche la date au-delà de 7 jours au format DateFormat.yMd('fr')",
+    (tester) async {
+      final date = DateTime.now().subtract(const Duration(days: 20));
+      when(() => bloc.state).thenReturn(
+        BidListLoaded([_bid(id: 'b1', status: 'COMPLETED', updatedAt: date)]),
+      );
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text(DateFormat.yMd('fr').format(date), skipOffstage: false),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    "anglais : affiche la date au-delà de 7 jours au format DateFormat.yMd('en')",
+    (tester) async {
+      useEnglish();
+      final date = DateTime.now().subtract(const Duration(days: 20));
+      when(() => bloc.state).thenReturn(
+        BidListLoaded([_bid(id: 'b1', status: 'COMPLETED', updatedAt: date)]),
+      );
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(
+        find.text(DateFormat.yMd('en').format(date), skipOffstage: false),
+        findsOneWidget,
+      );
+    },
+  );
 }

@@ -2,6 +2,7 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_menu_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 
 void main() {
   /// Monte un écran minimal dont le seul bouton ouvre la feuille, et retient
@@ -111,5 +112,19 @@ void main() {
     expect(find.text('Mes litiges'), findsNothing);
     expect(find.text('FAQ & aide'), findsNothing);
     expect(find.text('Parrainages'), findsNothing);
+  });
+
+  testWidgets('porte les libellés du compte en anglais', (tester) async {
+    useEnglish();
+    await pumpSheet(tester, onClosed: (_) {});
+
+    expect(find.text('Edit profile'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('My account'), findsOneWidget);
+    expect(find.text('Download my data'), findsOneWidget);
+    expect(find.text('GDPR export in JSON format'), findsOneWidget);
+    expect(find.text('Sign out'), findsOneWidget);
+    expect(find.text('Delete my account'), findsOneWidget);
+    expect(find.text('30-day withdrawal period'), findsOneWidget);
   });
 }

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Action retenue dans la feuille de menu de l'onglet Moi.
@@ -46,6 +47,7 @@ class _ProfileMenuContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -62,17 +64,17 @@ class _ProfileMenuContent extends StatelessWidget {
                 child: _QuickAction(
                   key: const Key('profile-menu-edit'),
                   iconAsset: 'square-pen',
-                  label: 'Modifier le profil',
+                  label: l.profileMenuEditProfile,
                   color: cs.primary,
                   action: ProfileMenuAction.editProfile,
                 ),
               ),
               const SizedBox(width: DonySpacing.md),
-              const Expanded(
+              Expanded(
                 child: _QuickAction(
-                  key: Key('profile-menu-settings'),
+                  key: const Key('profile-menu-settings'),
                   iconAsset: 'sliders-horizontal',
-                  label: 'Paramètres',
+                  label: l.profileMenuSettings,
                   color: DonyColors.neutral600,
                   action: ProfileMenuAction.settings,
                 ),
@@ -80,19 +82,19 @@ class _ProfileMenuContent extends StatelessWidget {
             ],
           ),
         ),
-        const _SectionLabel(label: 'Mon compte'),
+        _SectionLabel(label: l.profileMenuAccountSection),
         _MenuTile(
           itemKey: const Key('profile-menu-export'),
           iconAsset: 'download',
-          label: 'Télécharger mes données',
-          subtitle: 'Export RGPD au format JSON',
+          label: l.profileMenuExportData,
+          subtitle: l.profileMenuExportDataSubtitle,
           color: cs.primary,
           action: ProfileMenuAction.exportData,
         ),
         _MenuTile(
           itemKey: const Key('profile-menu-logout'),
           iconAsset: 'log-out',
-          label: 'Se déconnecter',
+          label: l.profileLogoutAction,
           color: DonyColors.neutral600,
           action: ProfileMenuAction.logout,
           showDivider: canDeleteAccount,
@@ -101,8 +103,8 @@ class _ProfileMenuContent extends StatelessWidget {
           _MenuTile(
             itemKey: const Key('profile-menu-delete'),
             iconAsset: 'trash',
-            label: 'Supprimer mon compte',
-            subtitle: 'Délai de rétractation de 30 jours',
+            label: l.profileMenuDeleteAccount,
+            subtitle: l.profileMenuDeleteAccountSubtitle,
             color: cs.error,
             action: ProfileMenuAction.deleteAccount,
             destructive: true,

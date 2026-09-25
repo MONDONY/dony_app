@@ -38,6 +38,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/currency_test_doubles.dart';
+import '../../../helpers/l10n_test_helpers.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -470,6 +471,15 @@ void main() {
       expect(find.text('Mes négociations'), findsNothing);
       expect(find.text('Mes colis'), findsNothing);
       expect(find.text('Mes trajets et colis'), findsNothing);
+    });
+
+    testWidgets('la section ARGENT est traduite en anglais', (tester) async {
+      useEnglish();
+      await pumpWith(tester, _dualRoleUser);
+
+      await _scrollTo(tester, find.text('MONEY'));
+      expect(find.text('MONEY'), findsOneWidget);
+      expect(find.text('ARGENT'), findsNothing);
     });
   });
 
@@ -1178,6 +1188,26 @@ void main() {
         ).called(1);
       },
     );
+
+    testWidgets('anglais : le dialogue de déconnexion affiche "Sign out?"', (
+      tester,
+    ) async {
+      useEnglish();
+      await openMenu(tester, _dualRoleUser);
+
+      await tester.tap(find.byKey(const Key('profile-menu-logout')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sign out?'), findsOneWidget);
+      expect(
+        find.text("You'll need to sign in again to continue."),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Sign out').last);
+      await tester.pumpAndSettle();
+
+      verify(() => authBloc.add(const AuthLogoutRequested())).called(1);
+    });
 
     testWidgets('« Supprimer mon compte » ouvre la feuille de suppression', (
       tester,

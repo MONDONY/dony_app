@@ -12,7 +12,7 @@ class KycRepository {
       );
       if (response.data == null) {
         throw const NetworkException(
-          'Réponse invalide du serveur de vérification d\'identité',
+          'Réponse invalide du serveur de vérification d\'identité', // i18n-ignore
         );
       }
       return response.data!;
@@ -28,7 +28,7 @@ class KycRepository {
       );
       if (response.data == null) {
         throw const NetworkException(
-          'Réponse invalide du serveur de vérification d\'identité',
+          'Réponse invalide du serveur de vérification d\'identité', // i18n-ignore
         );
       }
       return response.data!;

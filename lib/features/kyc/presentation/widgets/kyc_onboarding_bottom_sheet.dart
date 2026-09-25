@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -26,7 +27,7 @@ class KycOnboardingBottomSheet extends StatelessWidget {
             builder: (ctx, state) {
               final isLoading = state is KycLoading;
               return DonyButton(
-                label: 'Démarrer la vérification',
+                label: ctx.l10n.kycOnboardingStartAction,
                 isLoading: isLoading,
                 onPressed: isLoading
                     ? null
@@ -37,7 +38,7 @@ class KycOnboardingBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           DonyButton(
-            label: 'Plus tard',
+            label: context.l10n.commonLater,
             variant: DonyButtonVariant.ghost,
             onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           ),
@@ -65,40 +66,41 @@ class KycOnboardingBottomSheet extends StatelessWidget {
         }
       },
       builder: (context, state) {
+        final l = context.l10n;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             DonyIcon('id-card', size: 48, color: cs.primary),
             const SizedBox(height: DonySpacing.base),
             Text(
-              'Vérifiez votre identité',
+              l.kycOnboardingTitle,
               style: tt.headlineSmall,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Requis pour publier des annonces sur Yadony',
+              l.kycOnboardingSubtitle,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DonySpacing.xl),
             _InfoRow(
               iconAsset: 'shield-check',
-              text: 'Processus de vérification sécurisé',
+              text: l.kycInfoSecureProcess,
               cs: cs,
               tt: tt,
             ),
             const SizedBox(height: DonySpacing.sm),
             _InfoRow(
               iconAsset: 'camera',
-              text: "Pièce d'identité + selfie requis",
+              text: l.kycOnboardingIdSelfieRequired,
               cs: cs,
               tt: tt,
             ),
             const SizedBox(height: DonySpacing.sm),
             _InfoRow(
               iconAsset: 'clock',
-              text: 'Vérification en 2 à 5 minutes',
+              text: l.kycInfoDuration,
               cs: cs,
               tt: tt,
             ),
