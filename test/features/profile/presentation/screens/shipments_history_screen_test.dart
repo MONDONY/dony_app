@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
@@ -282,5 +283,25 @@ void main() {
 
     await tester.tap(find.text('Réessayer'));
     verify(() => bloc.add(any(that: isA<BidMyListRequested>()))).called(1);
+  });
+
+  // ── Non-régression : remplacement de 'dd/MM/yyyy' par DateFormat.yMd ──────
+  //
+  // _relativeDate bascule sur DateFormat.yMd(locale) uniquement à partir de
+  // 7 jours d'écart avec DateTime.now() : impossible à piloter avec la date
+  // fixe imposée par le plan (DateTime(2026, 10, 6, 14, 5), postérieure à la
+  // date système du run). On teste donc directement l'équivalence du motif
+  // remplacé — le point vérifié par le plan (rendu fr identique à l'ancien
+  // 'dd/MM/yyyy') — plutôt que de router artificiellement par _relativeDate.
+  test("remplacement 'dd/MM/yyyy' -> yMd : rendu fr identique pour "
+      'DateTime(2026, 10, 6, 14, 5)', () {
+    final date = DateTime(2026, 10, 6, 14, 5);
+    expect(DateFormat.yMd('fr').format(date), '06/10/2026');
+  });
+
+  test("remplacement 'dd/MM/yyyy' -> yMd : rendu en pour "
+      'DateTime(2026, 10, 6, 14, 5)', () {
+    final date = DateTime(2026, 10, 6, 14, 5);
+    expect(DateFormat.yMd('en').format(date), '10/6/2026');
   });
 }

@@ -955,4 +955,74 @@ void main() {
       findsOneWidget,
     );
   });
+
+  // ── 13. Non-régression date d'avis (remplacement dd/MM/yyyy -> yMd) ──────
+
+  testWidgets(
+    'date d\'avis au format français (non-régression, DateTime(2026, 10, 6, 14, 5))',
+    (tester) async {
+      final summaryWithFixedDate = RatingSummary(
+        averageRating: 4.5,
+        ratingCount: 1,
+        distribution: const {1: 0, 2: 0, 3: 0, 4: 0, 5: 1},
+        ratings: [
+          RatingItem(
+            stars: 5,
+            createdAt: DateTime(2026, 10, 6, 14, 5),
+            excluded: false,
+            authorName: 'Fixed Date',
+          ),
+        ],
+        page: 0,
+        totalPages: 1,
+      );
+      final b = MockProfilePublicBloc();
+      final loadedState = ProfilePublicLoaded(
+        profile: _profile,
+        recentRatings: summaryWithFixedDate,
+      );
+      when(() => b.state).thenReturn(loadedState);
+      when(() => b.stream).thenAnswer((_) => Stream.value(loadedState));
+
+      await tester.pumpWidget(_wrap(b));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      // Ancien motif 'dd/MM/yyyy' : rendu identique après passage à
+      // DateFormat.yMd(locale).
+      expect(find.text('06/10/2026', skipOffstage: false), findsOneWidget);
+    },
+  );
+
+  testWidgets('date d\'avis au format anglais (DateTime(2026, 10, 6, 14, 5))', (
+    tester,
+  ) async {
+    useEnglish();
+    final summaryWithFixedDate = RatingSummary(
+      averageRating: 4.5,
+      ratingCount: 1,
+      distribution: const {1: 0, 2: 0, 3: 0, 4: 0, 5: 1},
+      ratings: [
+        RatingItem(
+          stars: 5,
+          createdAt: DateTime(2026, 10, 6, 14, 5),
+          excluded: false,
+          authorName: 'Fixed Date',
+        ),
+      ],
+      page: 0,
+      totalPages: 1,
+    );
+    final b = MockProfilePublicBloc();
+    final loadedState = ProfilePublicLoaded(
+      profile: _profile,
+      recentRatings: summaryWithFixedDate,
+    );
+    when(() => b.state).thenReturn(loadedState);
+    when(() => b.stream).thenAnswer((_) => Stream.value(loadedState));
+
+    await tester.pumpWidget(_wrap(b));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('10/6/2026', skipOffstage: false), findsOneWidget);
+  });
 }
