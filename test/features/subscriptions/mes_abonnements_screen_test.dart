@@ -11,6 +11,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 class MockSubscriptionsBloc
     extends MockBloc<SubscriptionsEvent, SubscriptionsState>
     implements SubscriptionsBloc {}
@@ -356,5 +358,30 @@ void main() {
 
     final apres = verify(() => bloc.add(captureAny())).captured;
     expect(apres.any((e) => e is UnsubscribeTraveler), isTrue);
+  });
+
+  // ─── Anglais ────────────────────────────────────────────────────────────────
+
+  testWidgets('anglais : titre, compteur et état vide traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    givenItems([_item('Awa'), _item('Ibou', hasNew: true, last: _last())]);
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Following'), findsOneWidget);
+    expect(find.text('Following 2 travelers'), findsOneWidget);
+    expect(find.text('1 posted since your last visit'), findsOneWidget);
+  });
+
+  testWidgets('anglais : aucun abonnement', (tester) async {
+    useEnglish();
+    when(
+      () => bloc.state,
+    ).thenReturn(const SubscriptionsState(status: SubscriptionsStatus.success));
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('Not following anyone yet'), findsOneWidget);
   });
 }

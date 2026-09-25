@@ -21691,6 +21691,624 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Impossible d\'envoyer le signalement. Réessayez.'**
   String get reportSendFailed;
+
+  /// Ancienneté de publication, cas immédiat ou futur (subscription_recency.dart, subscriptionRecencyLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'à l\'instant'**
+  String get followRecencyJustNow;
+
+  /// Ancienneté de publication en minutes (subscription_recency.dart, subscriptionRecencyLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {minutes} min'**
+  String followRecencyMinutes(int minutes);
+
+  /// Ancienneté de publication en heures (subscription_recency.dart, subscriptionRecencyLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {hours} h'**
+  String followRecencyHours(int hours);
+
+  /// Ancienneté de publication, la veille (subscription_recency.dart, subscriptionRecencyLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'hier'**
+  String get followRecencyYesterday;
+
+  /// Ancienneté de publication en jours (subscription_recency.dart, subscriptionRecencyLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'il y a {days} j'**
+  String followRecencyDays(int days);
+
+  /// Nombre de trajets en cours d'un voyageur suivi (subscription_tile.dart, _tripsLabel ; réutilisée comme titre d'état vide dans traveler_profile_hub_screen.dart avec count=0).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucun trajet en cours} =1{{count} trajet en cours} other{{count} trajets en cours}}'**
+  String followOngoingTrips(int count);
+
+  /// Libellé d'accessibilité de la carte quand le voyageur a publié depuis la dernière visite (subscription_tile.dart, SubscriptionTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau trajet publié par {name}'**
+  String followNewTripSemantics(String name);
+
+  /// Repli quand le voyageur suivi n'a aucun trajet publié (subscription_tile.dart, SubscriptionTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun trajet publié pour le moment'**
+  String get followNoRecentTrip;
+
+  /// Date de départ du dernier trajet, déjà formatée (subscription_tile.dart, SubscriptionTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ {date}'**
+  String followDepartureLabel(String date);
+
+  /// Badge compte PRO sur la tuile d'un voyageur suivi (subscription_tile.dart, _ProTag ; R50, « Pro » en anglais).
+  ///
+  /// In fr, this message translates to:
+  /// **'PRO'**
+  String get followProBadge;
+
+  /// Libellé d'accessibilité de la ligne du dernier trajet, cible tactile distincte de la carte (subscription_tile.dart, _LastTripLine).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le trajet {trip} de {name}'**
+  String followViewTripSemantics(String trip, String name);
+
+  /// Libellé d'accessibilité de la cloche d'un voyageur suivi (subscription_tile.dart, _BellButton).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alertes push de {name}'**
+  String followPushSemanticsFor(String name);
+
+  /// Tooltip de la cloche quand les alertes push sont actives, partagé par subscribe_bar.dart et subscription_tile.dart (même feature, même sens).
+  ///
+  /// In fr, this message translates to:
+  /// **'Couper les alertes push'**
+  String get followPushOffTooltip;
+
+  /// Tooltip de la cloche quand les alertes push sont coupées, partagé par subscribe_bar.dart et subscription_tile.dart (même feature, même sens).
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer les alertes push'**
+  String get followPushOnTooltip;
+
+  /// Phrase d'accroche quand l'utilisateur n'est pas encore abonné (subscribe_bar.dart, SubscribeBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous serez prévenu de chacun de ses nouveaux trajets.'**
+  String get followSubscribeCaption;
+
+  /// Phrase d'état quand l'utilisateur est abonné avec les alertes push actives (subscribe_bar.dart, SubscribeBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alertes push activées : chaque nouveau trajet vous notifie.'**
+  String get followPushOnCaption;
+
+  /// Phrase d'état quand l'utilisateur est abonné sans les alertes push (subscribe_bar.dart, SubscribeBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans alerte push : ses trajets arriveront seulement dans vos notifications.'**
+  String get followPushOffCaption;
+
+  /// Message du dialogue de confirmation de désabonnement (subscribe_bar.dart, SubscribeBar._confirmUnsubscribe).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne serez plus prévenu de ses nouveaux trajets.'**
+  String get followUnsubscribeConfirmMessage;
+
+  /// Libellé d'accessibilité générique de la bascule push, sans nom de voyageur (subscribe_bar.dart, _PushToggle).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alertes push'**
+  String get followPushToggleSemantics;
+
+  /// Libellé court de la bascule push, « Push » se dit pareil dans les deux langues (subscribe_bar.dart, _PushToggle).
+  ///
+  /// In fr, this message translates to:
+  /// **'Push'**
+  String get followPushBadge;
+
+  /// Titre de l'écran des voyageurs suivis (mes_abonnements_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes abonnements'**
+  String get followScreenTitle;
+
+  /// Tooltip du bouton qui retire toutes les pastilles « nouveau » (mes_abonnements_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout marquer comme vu'**
+  String get followMarkAllSeenTooltip;
+
+  /// Titre de l'état vide, aucun voyageur suivi (mes_abonnements_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun abonnement'**
+  String get followEmptyTitle;
+
+  /// Description de l'état vide, aucun voyageur suivi (mes_abonnements_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Abonnez-vous à un voyageur depuis son profil : vous serez prévenu dès qu\'il publie un trajet.'**
+  String get followEmptyDescription;
+
+  /// Indication du champ de recherche, affiché à partir de 6 abonnements (mes_abonnements_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un voyageur…'**
+  String get followSearchHint;
+
+  /// Compteur du nombre de voyageurs suivis (mes_abonnements_screen.dart, _CountLine).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} voyageur suivi} other{{count} voyageurs suivis}}'**
+  String followTravelersCount(int count);
+
+  /// Compteur des voyageurs ayant publié depuis la dernière visite (mes_abonnements_screen.dart, _CountLine ; non affiché si 0).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} a publié depuis votre dernière visite} other{{count} ont publié depuis votre dernière visite}}'**
+  String followNewSinceLastVisit(int count);
+
+  /// Libellé court de l'action de balayage (mes_abonnements_screen.dart, _slidable) — distinct de followUnfollowButton, texte français différent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désabonner'**
+  String get followUnsubscribeSwipeLabel;
+
+  /// Titre du dialogue de confirmation de désabonnement, avec le nom du voyageur (mes_abonnements_screen.dart, _confirmUnsubscribe).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne plus suivre {name} ?'**
+  String followUnsubscribeConfirmTitle(String name);
+
+  /// Message du dialogue de confirmation de désabonnement de mes_abonnements_screen.dart (_confirmUnsubscribe) — texte distinct de followUnsubscribeConfirmMessage (subscribe_bar.dart), qui n'a qu'une phrase.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne serez plus prévenu de ses nouveaux trajets. Vous pourrez vous réabonner depuis son profil.'**
+  String get followUnsubscribeFullMessage;
+
+  /// Snackbar après activation des alertes push d'un voyageur (mes_abonnements_screen.dart, _togglePush).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alertes push activées pour {name}.'**
+  String followPushEnabledMessage(String name);
+
+  /// Snackbar après coupure des alertes push d'un voyageur (mes_abonnements_screen.dart, _togglePush).
+  ///
+  /// In fr, this message translates to:
+  /// **'Alertes push coupées. Ses nouveaux trajets resteront visibles dans vos notifications.'**
+  String get followPushDisabledMessage;
+
+  /// Message quand la recherche ne trouve aucun voyageur suivi (mes_abonnements_screen.dart, _NoMatch).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun voyageur ne correspond à cette recherche.'**
+  String get followNoMatchMessage;
+
+  /// Erreur de chargement de l'en-tête du profil voyageur (traveler_profile_hub_screen.dart, _ProfileHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger le profil'**
+  String get followHubProfileLoadError;
+
+  /// Marque de confiance compte PRO dans l'en-tête (traveler_profile_hub_screen.dart, _TrustMarks).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte PRO'**
+  String get followHubProAccountLabel;
+
+  /// Marque de confiance identité vérifiée dans l'en-tête (traveler_profile_hub_screen.dart, _TrustMarks).
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée'**
+  String get followHubVerifiedBadge;
+
+  /// Phrase de réputation, note moyenne déjà formatée (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).
+  ///
+  /// In fr, this message translates to:
+  /// **'{rating} de note'**
+  String followHubRating(String rating);
+
+  /// Phrase de réputation, nombre de livraisons (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} livraison} other{{count} livraisons}}'**
+  String followHubDeliveries(int count);
+
+  /// Phrase de réputation, délai de réponse moyen (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).
+  ///
+  /// In fr, this message translates to:
+  /// **'répond en {hours} h'**
+  String followHubRespondsIn(int hours);
+
+  /// Repli de la phrase de réputation quand le voyageur n'a ni note ni livraison (traveler_profile_hub_screen.dart, _StatSentence).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau sur Yadony'**
+  String get followHubNewOnYadony;
+
+  /// Onglet des trajets du voyageur (traveler_profile_hub_screen.dart, _StatsAndTabBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajets'**
+  String get followHubTripsTab;
+
+  /// Onglet des avis du voyageur (traveler_profile_hub_screen.dart, _StatsAndTabBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Avis'**
+  String get followHubReviewsTab;
+
+  /// Description de l'état d'erreur de l'onglet Trajets (traveler_profile_hub_screen.dart, _TripsTab).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les trajets. Réessayez dans un instant.'**
+  String get followHubTripsLoadError;
+
+  /// Description de l'état vide de l'onglet Trajets (traveler_profile_hub_screen.dart, _TripsTab).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur n\'a pas encore publié de trajet.'**
+  String get followHubNoTripsDescription;
+
+  /// Titre de l'état d'erreur de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsTab).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les avis'**
+  String get followHubReviewsLoadError;
+
+  /// Titre de l'état vide de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsList).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun avis'**
+  String get followHubNoReviewsTitle;
+
+  /// Description de l'état vide de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsList).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur n\'a pas encore reçu d\'avis.'**
+  String get followHubNoReviewsDescription;
+
+  /// Nombre d'avis dans l'en-tête de l'onglet Avis ; invariant en français, pluralisé en anglais (traveler_profile_hub_screen.dart, _ReviewsList).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} avis} other{{count} avis}}'**
+  String followHubReviewsCount(int count);
+
+  /// Bouton de réservation d'un trajet du voyageur (traveler_announcement_card.dart, TravelerAnnouncementCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Réserver'**
+  String get followHubReserveButton;
+
+  /// Badge quand le trajet n'a plus de kg disponible (traveler_announcement_card.dart, _MetaLine).
+  ///
+  /// In fr, this message translates to:
+  /// **'Complet'**
+  String get followHubFullBadge;
+
+  /// Poids disponible du trajet, déjà formaté (traveler_announcement_card.dart, _MetaLine).
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} kg disponibles'**
+  String followHubAvailableKg(String kg);
+
+  /// Message du bandeau d'abonnement PRO impayé (subscription_status_banner.dart, SubscriptionStatusBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre dernier paiement n\'a pas abouti. Sans régularisation, votre accès PRO sera suspendu.'**
+  String get proPastDueMessage;
+
+  /// Bouton d'action du bandeau d'abonnement PRO impayé (subscription_status_banner.dart, SubscriptionStatusBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Régler'**
+  String get proPayAction;
+
+  /// Bouton d'action du bandeau de grâce historique, renvoie vers le portail d'abonnement PRO (subscription_status_banner.dart, SubscriptionStatusBanner) — clé dédiée au domaine PRO, distincte de followFollowButton (R40).
+  ///
+  /// In fr, this message translates to:
+  /// **'S\'abonner'**
+  String get proSubscribeAction;
+
+  /// Message de grâce historique sans échéance connue (subscription_status_banner.dart, _legacyGraceMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre accès PRO gratuit prendra bientôt fin.'**
+  String get proFreeAccessEndingSoon;
+
+  /// Message de grâce historique dont l'échéance est déjà passée (subscription_status_banner.dart, _legacyGraceMessage).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre accès PRO gratuit a pris fin.'**
+  String get proFreeAccessEnded;
+
+  /// Message de grâce historique avec échéance future (subscription_status_banner.dart, _legacyGraceMessage ; corrige l'accord « 0 jour » que l'ancien `days > 1 ? 's' : ''` produisait).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Votre accès PRO gratuit prend fin dans {count} jour.} other{Votre accès PRO gratuit prend fin dans {count} jours.}}'**
+  String proFreeAccessEndsInDays(int count);
+
+  /// Bouton d'action du bandeau d'abonnement PRO actif en résiliation programmée (subscription_status_banner.dart, SubscriptionStatusBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Gérer'**
+  String get proManageAction;
+
+  /// Message du bandeau d'abonnement PRO actif en résiliation programmée, date déjà formatée (subscription_status_banner.dart, _activeBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre abonnement PRO prend fin le {date}.'**
+  String proSubscriptionEndsOn(String date);
+
+  /// Statut de la carte d'abonnement PRO, actif avec résiliation programmée (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résiliation programmée'**
+  String get proStatusCancelScheduled;
+
+  /// Statut de la carte d'abonnement PRO, actif (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Actif'**
+  String get proStatusActive;
+
+  /// Statut de la carte d'abonnement PRO, impayé (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement en attente'**
+  String get proStatusPastDue;
+
+  /// Statut de la carte d'abonnement PRO, grâce historique (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès gratuit temporaire'**
+  String get proStatusLegacyGrace;
+
+  /// Statut de la carte d'abonnement PRO, résilié (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résilié'**
+  String get proStatusCanceled;
+
+  /// Statut de la carte d'abonnement PRO, expiré (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Expiré'**
+  String get proStatusExpired;
+
+  /// Statut de la carte d'abonnement PRO, aucun abonnement (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun abonnement'**
+  String get proStatusNone;
+
+  /// Statut de la carte d'abonnement PRO, inconnu (subscription_status_card.dart, _statusLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Statut inconnu'**
+  String get proStatusUnknown;
+
+  /// Rythme de facturation mensuel de la carte d'abonnement PRO (subscription_status_card.dart, _cycleLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Facturation mensuelle'**
+  String get proBillingMonthly;
+
+  /// Rythme de facturation annuel de la carte d'abonnement PRO (subscription_status_card.dart, _cycleLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'Facturation annuelle'**
+  String get proBillingYearly;
+
+  /// Mention de grâce historique sur la carte d'abonnement PRO (subscription_status_card.dart, SubscriptionStatusCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre accès PRO est gratuit et temporaire.'**
+  String get proFreeTemporaryAccess;
+
+  /// Mention de résiliation programmée sur la carte d'abonnement PRO, date déjà formatée (subscription_status_card.dart, SubscriptionStatusCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Résiliation programmée pour le {date}.'**
+  String proCancellationScheduledOn(String date);
+
+  /// Mention de prochain renouvellement sur la carte d'abonnement PRO, date déjà formatée (subscription_status_card.dart, SubscriptionStatusCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prochain renouvellement le {date}.'**
+  String proNextRenewalOn(String date);
+
+  /// Bouton de gestion sur la carte d'abonnement PRO (subscription_status_card.dart, SubscriptionStatusCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Gérer mon abonnement'**
+  String get proManageSubscriptionButton;
+
+  /// Message d'échec d'ouverture du portail PRO, partagé par l'écran Compte PRO et le bandeau du Profil (pro_portal_copy.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'ouvrir la page. Réessayez, ou rendez-vous sur le site Yadony PRO depuis votre navigateur.'**
+  String get proPortalOpenFailedMessage;
+
+  /// Bouton unique du dialogue de limite PRO quand l'offre PRO est fermée (pro_limit_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compris'**
+  String get proLimitUnderstoodButton;
+
+  /// Bouton de confirmation du dialogue de limite PRO quand l'offre est ouverte (pro_limit_dialog.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer en PRO'**
+  String get proLimitUpgradeButton;
+
+  /// Titre de l'écran compte PRO, vues chargement et vente (upgrade_to_pro_screen.dart, _ProAuthPendingView, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte PRO'**
+  String get proAccountScreenTitle;
+
+  /// Message d'attente pendant la résolution de l'authentification (upgrade_to_pro_screen.dart, _ProAuthPendingView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chargement de votre compte.'**
+  String get proAccountLoadingMessage;
+
+  /// Titre de la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Passez en compte PRO'**
+  String get proPitchHeadline;
+
+  /// Description de la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le compte PRO met en avant votre activité de transporteur et vous donne accès aux avantages réservés aux professionnels.'**
+  String get proPitchDescription;
+
+  /// Libellé de section des avantages, page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'CE QUE COMPREND LE COMPTE PRO'**
+  String get proPitchIncludesLabel;
+
+  /// Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Badge Pro'**
+  String get proAdvantageBadge;
+
+  /// Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Volume illimité'**
+  String get proAdvantageUnlimitedVolume;
+
+  /// Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Priorité de mise en relation'**
+  String get proAdvantageMatchingPriority;
+
+  /// Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Support dédié'**
+  String get proAdvantageDedicatedSupport;
+
+  /// Libellé de section des tarifs, page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'TARIFS'**
+  String get proPitchPricingLabel;
+
+  /// Prix mensuel de l'abonnement PRO, déjà formaté par la devise (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'{price} par mois'**
+  String proPricePerMonth(String price);
+
+  /// Prix annuel de l'abonnement PRO, déjà formaté par la devise (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'{price} par an'**
+  String proPricePerYear(String price);
+
+  /// Économie annuelle de l'abonnement PRO, déjà formatée par la devise (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Soit {amount} d\'économie sur l\'année.'**
+  String proYearlySaving(String amount);
+
+  /// Bandeau d'information sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'abonnement se souscrit sur le site Yadony PRO, dans votre navigateur.'**
+  String get proPortalHint;
+
+  /// Bouton d'ouverture du portail web PRO, réutilisé par la vue vente et la vue abonnée (upgrade_to_pro_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'S\'abonner sur le site Yadony PRO'**
+  String get proPortalButtonLabel;
+
+  /// Indication sur où gérer et résilier l'abonnement PRO (upgrade_to_pro_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La gestion et la résiliation de votre abonnement se font sur le site Yadony PRO, dans votre navigateur. Une connexion vous y sera demandée.'**
+  String get proManageGuidance;
+
+  /// Message opposé au refus 409 active-stripe-subscription, guidance déjà traduite en paramètre (upgrade_to_pro_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre abonnement PRO est toujours actif. {guidance}'**
+  String proDowngradeBlockedMessage(String guidance);
+
+  /// Message quand le serveur n'accorde plus l'accès PRO (upgrade_to_pro_screen.dart, _ProSubscriberView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre accès PRO n\'est plus actif. Vous pouvez reprendre un abonnement sur le site Yadony PRO.'**
+  String get proAccessEndedMessage;
+
+  /// Message quand le statut est « none » (upgrade_to_pro_screen.dart, _ProSubscriberView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous n\'avez pas d\'abonnement PRO. Vous pouvez en souscrire un sur le site Yadony PRO.'**
+  String get proNoSubscriptionMessage;
+
+  /// Titre de l'écran compte PRO, vue abonnée (upgrade_to_pro_screen.dart, _ProSubscriberView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon compte PRO'**
+  String get proSubscriberScreenTitle;
+
+  /// Message d'erreur de chargement de l'abonnement PRO (upgrade_to_pro_screen.dart, _ProSubscriberView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger l\'état de votre abonnement pour le moment.'**
+  String get proLoadSubscriptionError;
+
+  /// Message quand aucune demande n'a encore été envoyée (upgrade_to_pro_screen.dart, _ProSubscriberView).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'état de votre abonnement n\'a pas encore été chargé.'**
+  String get proSubscriptionNotLoadedYet;
+
+  /// Titre du dialogue de confirmation de retour en compte standard (upgrade_to_pro_screen.dart, _confirmDowngrade).
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactiver le compte PRO'**
+  String get proDowngradeDialogTitle;
+
+  /// Message du dialogue de confirmation de retour en compte standard (upgrade_to_pro_screen.dart, _confirmDowngrade).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre badge PRO et vos avantages professionnels seront retirés de votre profil.'**
+  String get proDowngradeDialogMessage;
+
+  /// Bouton de confirmation du dialogue de retour en compte standard (upgrade_to_pro_screen.dart, _confirmDowngrade).
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactiver'**
+  String get proDowngradeConfirmButton;
+
+  /// Snackbar de succès après retour en compte standard (upgrade_to_pro_screen.dart, _UpgradeToProViewState).
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte PRO désactivé.'**
+  String get proDowngradeSuccessMessage;
+
+  /// Bouton de retour en compte standard (upgrade_to_pro_screen.dart, _ProSubscriberView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenir en compte standard'**
+  String get proDowngradeButton;
 }
 
 class _AppLocalizationsDelegate

@@ -4,6 +4,8 @@ import 'package:dony/features/subscriptions/presentation/widgets/subscription_ti
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 SubscriptionItem _item({
   String name = 'Awa',
   bool pro = false,
@@ -257,5 +259,38 @@ void main() {
     await tester.pumpWidget(host(_item(last: trajet())));
     expect(find.text('il y a 2 h'), findsOneWidget);
     expect(find.textContaining('Départ'), findsNothing);
+  });
+
+  // ─── Anglais ────────────────────────────────────────────────────────────────
+
+  testWidgets(
+    'anglais : trajets en cours, ancienneté, PRO et repli sans trajet traduits',
+    (tester) async {
+      useEnglish();
+      await tester.pumpWidget(host(_item(last: trajet())));
+      expect(find.text('2 h ago'), findsOneWidget);
+      expect(find.text('1 ongoing trip'), findsNothing);
+
+      await tester.pumpWidget(host(_item(ongoing: 0)));
+      expect(find.text('No ongoing trips'), findsOneWidget);
+      expect(find.text('No trip posted yet'), findsOneWidget);
+
+      await tester.pumpWidget(host(_item(pro: true)));
+      expect(find.text('Pro'), findsOneWidget);
+    },
+  );
+
+  testWidgets('anglais : nouveau trajet annoncé aux lecteurs d\'écran', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(host(_item(name: 'Ibou', hasNew: true)));
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is Semantics && w.properties.label == 'New trip posted by Ibou',
+      ),
+      findsOneWidget,
+    );
   });
 }

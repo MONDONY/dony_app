@@ -22,6 +22,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockProfileRepository extends Mock implements ProfileRepository {}
@@ -40,8 +41,12 @@ const _kSettle = Duration(milliseconds: 600);
 // Regroupés ici parce que plusieurs tests les partagent : un changement de
 // copie doit se voir en un seul endroit du fichier de test.
 
-const _kMonthlyPrice = '4,99 € par mois';
-const _kYearlyPrice = '47,90 € par an';
+// L'espace avant « € » est une espace insécable (U+00A0) : `CurrencyFormatter`
+// (NumberFormat.currency, locale fr_FR) en insère une entre le montant et le
+// symbole, partout dans l'app. Une espace normale ne matcherait jamais ce
+// rendu.
+const _kMonthlyPrice = '4,99\u{00A0}€ par mois';
+const _kYearlyPrice = '47,90\u{00A0}€ par an';
 const _kPortalButton = "S'abonner sur le site Yadony PRO";
 const _kManageButton = 'Gérer mon abonnement';
 const _kDowngradeButton = 'Revenir en compte standard';
@@ -345,7 +350,7 @@ void main() {
       (tester) async {
         await pumpScreen(tester);
 
-        expect(find.textContaining('11,98 €'), findsOneWidget);
+        expect(find.textContaining('11,98\u{00A0}€'), findsOneWidget);
         // 11,98 € font 2,4 mois : toute formulation en mois entiers mentirait.
         for (final text in _renderedTexts(tester)) {
           expect(
@@ -1166,6 +1171,57 @@ void main() {
         reason: 'La marque doit être nommée « Yadony » sur la vue de vente.',
       );
     });
+
+    testWidgets('anglais : titre, tarifs et bouton du portail traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      authAs(_nonProUser());
+      subscriptionState(const SubscriptionInitial());
+      await pumpScreen(tester);
+
+      expect(find.text('Pro account'), findsOneWidget);
+      expect(find.text('Upgrade to a Pro account'), findsOneWidget);
+      expect(find.text('4,99\u{00A0}€ per month'), findsOneWidget);
+      expect(find.text('47,90\u{00A0}€ per year'), findsOneWidget);
+      expect(
+        find.text("That's 11,98\u{00A0}€ saved over the year."),
+        findsOneWidget,
+      );
+      expect(find.text('Subscribe on the Yadony Pro site'), findsOneWidget);
+      expect(find.text('Unlimited volume'), findsOneWidget);
+    });
+
+    testWidgets(
+      'anglais : titre "My Pro account", statut et bouton de résiliation '
+      'traduits, dialogue et confirmation en anglais',
+      (tester) async {
+        useEnglish();
+        when(() => mockRepo.downgradePro()).thenAnswer((_) async {});
+        authAs(_proUser());
+        subscriptionState(const SubscriptionLoaded(_tAdminGrant));
+        await pumpScreen(tester);
+
+        expect(find.text('My Pro account'), findsOneWidget);
+        expect(find.text('Switch back to a standard account'), findsOneWidget);
+
+        await tester.tap(find.text('Switch back to a standard account'));
+        await tester.pumpAndSettle();
+        expect(find.text('Deactivate Pro account'), findsOneWidget);
+        expect(
+          find.text(
+            'Your Pro badge and professional benefits will be removed '
+            'from your profile.',
+          ),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.text('Deactivate'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Pro account deactivated.'), findsOneWidget);
+      },
+    );
 
     testWidgets('vue abonnée : pas de tiret cadratin, jamais « Dony »', (
       tester,

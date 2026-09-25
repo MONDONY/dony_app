@@ -122,7 +122,10 @@ class SubscriptionItem {
   factory SubscriptionItem.fromJson(Map<String, dynamic> json) =>
       SubscriptionItem(
         travelerId: json['travelerId'] as String,
-        travelerName: json['travelerName'] as String? ?? 'Voyageur',
+        // Nom vide plutôt qu'un « Voyageur » figé en français : l'affichage
+        // choisit son repli traduit lui-même, via
+        // `SubscriptionItemL10n.displayName` (tripTravelerFallbackName).
+        travelerName: json['travelerName'] as String? ?? '',
         avatarUrl: json['avatarUrl'] as String?,
         isProAccount: json['isProAccount'] as bool? ?? false,
         averageRating: (json['averageRating'] as num?)?.toDouble(),

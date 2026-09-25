@@ -17,6 +17,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 // ─── Mock BLoCs ───────────────────────────────────────────────────────────────
 
 class MockProfilePublicBloc
@@ -66,7 +68,10 @@ TravelerAnnouncement _fakeAnnouncement() => TravelerAnnouncement(
 // ─── Test setup ───────────────────────────────────────────────────────────────
 
 void main() {
-  setUpAll(() => initializeDateFormatting('fr'));
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
+    await initializeDateFormatting('en');
+  });
 
   late MockProfilePublicBloc profileBloc;
   late MockTravelerHubBloc hubBloc;
@@ -267,6 +272,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Excellent voyageur !'), findsOneWidget);
+    // Date de l'avis : `DateFormat('dd/MM/yyyy')` sans locale (bogue de
+    // pollution `Intl.defaultLocale`) remplacé par `DateFormat.yMd(l)` — même
+    // rendu français, zéros de tête compris.
+    expect(find.text('10/03/2026'), findsOneWidget);
+    // Note moyenne du résumé : `toStringAsFixed(1)` affichait un point même en
+    // français (« 4.7 ») ; `formatOneDecimal` corrige l'accord (R46).
+    expect(find.text('4,7'), findsOneWidget);
   });
 
   // ─── Test 7: Avis tab empty ratings ──────────────────────────────────────
@@ -614,5 +626,142 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Identité vérifiée'), findsOneWidget);
+  });
+
+  // ─── Anglais ────────────────────────────────────────────────────────────────
+
+  testWidgets(
+    'anglais : onglets, réputation (partie en gras stylée) et badges traduits',
+    (tester) async {
+      useEnglish();
+      await tester.binding.setSurfaceSize(const Size(400, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      when(() => profileBloc.state).thenReturn(
+        ProfilePublicLoaded(
+          profile: const ProfilePublicModel(
+            userId: 'u1',
+            displayName: 'Ibou Pro',
+            kycVerified: true,
+            isProAccount: true,
+            isKiloPro: false,
+            completedBidsCount: 12,
+            averageRating: 4.7,
+            ratingCount: 8,
+            memberSince: '2024-01',
+            badges: [],
+            responseDelayHours: 2,
+          ),
+          recentRatings: _fakeRatings(),
+        ),
+      );
+
+      when(
+        () => hubBloc.state,
+      ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
+
+      await tester.pumpWidget(pump());
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('Trips'), findsOneWidget);
+      expect(find.text('Reviews'), findsOneWidget);
+      expect(find.text('Pro account'), findsOneWidget);
+      expect(find.text('Verified identity'), findsOneWidget);
+      expect(find.textContaining('rating', findRichText: true), findsOneWidget);
+      expect(
+        find.textContaining('12 deliveries', findRichText: true),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('replies in', findRichText: true),
+        findsOneWidget,
+      );
+
+      // La partie en gras (emphasizedSpans) reste bien un span distinct, pas
+      // seulement un texte traduit : les deliveries doivent porter un style
+      // différent du texte environnant.
+      final richTexts = tester.widgetList<RichText>(find.byType(RichText));
+      final hasStyledSpan = richTexts.any((rt) {
+        final spans = <InlineSpan>[];
+        rt.text.visitChildren((s) {
+          spans.add(s);
+          return true;
+        });
+        return spans.whereType<TextSpan>().any(
+          (s) => s.text == '12' && s.style?.fontWeight == FontWeight.w800,
+        );
+      });
+      expect(hasStyledSpan, isTrue);
+    },
+  );
+
+  testWidgets('anglais : note du résumé (point) et date de l\'avis (M/d/y)', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final rating = RatingItem(
+      stars: 5,
+      comment: 'Great traveler!',
+      createdAt: DateTime(2026, 3, 10),
+      excluded: false,
+    );
+
+    when(() => profileBloc.state).thenReturn(
+      ProfilePublicLoaded(
+        profile: _fakeProfile(),
+        recentRatings: _fakeRatings(ratings: [rating]),
+      ),
+    );
+    when(() => hubBloc.state).thenReturn(
+      TravelerHubState(
+        status: TravelerHubStatus.success,
+        announcements: [_fakeAnnouncement()],
+      ),
+    );
+
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.tap(find.text('Reviews'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('4.7'), findsOneWidget);
+    expect(find.text('3/10/2026'), findsOneWidget);
+  });
+
+  testWidgets('anglais : « New on Yadony » sans historique', (tester) async {
+    useEnglish();
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    when(() => profileBloc.state).thenReturn(
+      ProfilePublicLoaded(
+        profile: const ProfilePublicModel(
+          userId: 'u2',
+          displayName: 'New Traveler',
+          kycVerified: false,
+          isProAccount: false,
+          isKiloPro: false,
+          completedBidsCount: 0,
+          averageRating: 0.0,
+          ratingCount: 0,
+          memberSince: '2026-01',
+          badges: [],
+        ),
+        recentRatings: _fakeRatings(),
+      ),
+    );
+
+    when(
+      () => hubBloc.state,
+    ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
+
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('New on Yadony'), findsOneWidget);
   });
 }

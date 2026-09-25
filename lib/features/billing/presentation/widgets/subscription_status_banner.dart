@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/billing/data/models/pro_subscription_model.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_date_format.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Nombre de jours pleins restants avant [instant], arrondi vers le haut.
@@ -71,18 +72,17 @@ class SubscriptionStatusBanner extends StatelessWidget {
     if (!subscriptionHasVisibleAlert(subscription)) {
       return const SizedBox.shrink();
     }
+    final l = context.l10n;
     return switch (subscription.status) {
       ProSubscriptionStatus.pastDue => DonyStatusBanner(
         type: DonyStatusBannerType.error,
-        message:
-            "Votre dernier paiement n'a pas abouti. Sans régularisation, "
-            'votre accès PRO sera suspendu.',
-        action: _actionButton(context, 'Régler'),
+        message: l.proPastDueMessage,
+        action: _actionButton(context, l.proPayAction),
       ),
       ProSubscriptionStatus.legacyGrace => DonyStatusBanner(
         type: DonyStatusBannerType.warning,
-        message: _legacyGraceMessage(),
-        action: _actionButton(context, "S'abonner"),
+        message: _legacyGraceMessage(l),
+        action: _actionButton(context, l.proSubscribeAction),
       ),
       // Seule valeur qui reste possible ici : la garde ci-dessus a déjà
       // écarté `none`/`canceled`/`expired`/`unknown`, qui ne portent jamais
@@ -91,42 +91,44 @@ class SubscriptionStatusBanner extends StatelessWidget {
       // redeviendraient du code mort, jamais atteignable, donc jamais
       // couvrable par un test — exactement la duplication que la garde
       // existe pour supprimer.
-      _ => _activeBanner(context),
+      _ => _activeBanner(context, l),
     };
   }
 
-  String _legacyGraceMessage() {
+  String _legacyGraceMessage(AppLocalizations l) {
     final expiry = subscription.graceExpiresAt;
     if (expiry == null) {
-      return 'Votre accès PRO gratuit prendra bientôt fin.';
+      return l.proFreeAccessEndingSoon;
     }
     // Le cron de bascule des grâces historiques est désactivé par défaut : un
     // statut `legacyGrace` survit donc à sa propre échéance. Sans ce garde,
     // `daysUntil` bornant à 0, l'écran afficherait « prend fin dans 0 jour »
     // indéfiniment APRÈS la date, ce qui est faux au présent comme au futur.
     if (!expiry.toUtc().isAfter(DateTime.now().toUtc())) {
-      return 'Votre accès PRO gratuit a pris fin.';
+      return l.proFreeAccessEnded;
     }
     // L'échéance est strictement dans le futur et `daysUntil` arrondit vers le
     // haut : le compte vaut donc toujours 1 au minimum, et « 0 jour » est
-    // désormais inatteignable.
+    // désormais inatteignable. Le pluriel ICU corrige de lui-même l'ancien
+    // accord faux (`days > 1 ? 's' : ''` donnait « 0 jour » à 0, jamais
+    // atteignable ici de toute façon).
     final days = daysUntil(expiry) ?? 1;
-    final plural = days > 1 ? 's' : '';
-    return 'Votre accès PRO gratuit prend fin dans $days jour$plural.';
+    return l.proFreeAccessEndsInDays(days);
   }
 
-  Widget _activeBanner(BuildContext context) {
+  Widget _activeBanner(BuildContext context, AppLocalizations l) {
     // La garde de `build` a déjà établi `cancelAtPeriodEnd` vrai et
     // `currentPeriodEnd` non nul pour atteindre ce point : la retester ici
     // recréerait la copie que `subscriptionHasVisibleAlert` existe pour
     // supprimer.
     final dateStr = formatSubscriptionDate(
+      l,
       subscription.currentPeriodEnd!.toLocal(),
     );
     return DonyStatusBanner(
       type: DonyStatusBannerType.info,
-      message: 'Votre abonnement PRO prend fin le $dateStr.',
-      action: _actionButton(context, 'Gérer'),
+      message: l.proSubscriptionEndsOn(dateStr),
+      action: _actionButton(context, l.proManageAction),
     );
   }
 

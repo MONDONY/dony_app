@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/billing/data/models/pro_subscription_model.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_date_format.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Carte de statut de l'abonnement PRO : état courant, rythme de
@@ -19,15 +20,17 @@ class SubscriptionStatusCard extends StatelessWidget {
   final ProSubscriptionModel subscription;
   final VoidCallback? onManage;
 
-  String get _statusLabel => switch (subscription.status) {
+  String _statusLabel(AppLocalizations l) => switch (subscription.status) {
     ProSubscriptionStatus.active =>
-      subscription.cancelAtPeriodEnd ? 'Résiliation programmée' : 'Actif',
-    ProSubscriptionStatus.pastDue => 'Paiement en attente',
-    ProSubscriptionStatus.legacyGrace => 'Accès gratuit temporaire',
-    ProSubscriptionStatus.canceled => 'Résilié',
-    ProSubscriptionStatus.expired => 'Expiré',
-    ProSubscriptionStatus.none => 'Aucun abonnement',
-    ProSubscriptionStatus.unknown => 'Statut inconnu',
+      subscription.cancelAtPeriodEnd
+          ? l.proStatusCancelScheduled
+          : l.proStatusActive,
+    ProSubscriptionStatus.pastDue => l.proStatusPastDue,
+    ProSubscriptionStatus.legacyGrace => l.proStatusLegacyGrace,
+    ProSubscriptionStatus.canceled => l.proStatusCanceled,
+    ProSubscriptionStatus.expired => l.proStatusExpired,
+    ProSubscriptionStatus.none => l.proStatusNone,
+    ProSubscriptionStatus.unknown => l.proStatusUnknown,
   };
 
   /// `null` quand [ProSubscriptionModel.billingCycle] est nul (octroi
@@ -38,7 +41,7 @@ class SubscriptionStatusCard extends StatelessWidget {
   /// Le backend ne produit que `MONTHLY` et `YEARLY` (comparés sans tenir
   /// compte de la casse) ; toute autre valeur retombe silencieusement sur
   /// l'absence de libellé plutôt que d'inventer un rythme non prouvé.
-  String? get _cycleLabel {
+  String? _cycleLabel(AppLocalizations l) {
     // Un abonnement dont l'accès n'est plus accordé (résilié, expiré, ou
     // inexistant) ne sera plus prélevé : annoncer « Facturation mensuelle »
     // y décrirait un prélèvement qui n'aura pas lieu.
@@ -47,9 +50,9 @@ class SubscriptionStatusCard extends StatelessWidget {
     }
     switch (subscription.billingCycle?.toUpperCase()) {
       case 'MONTHLY':
-        return 'Facturation mensuelle';
+        return l.proBillingMonthly;
       case 'YEARLY':
-        return 'Facturation annuelle';
+        return l.proBillingYearly;
       default:
         return null;
     }
@@ -57,9 +60,10 @@ class SubscriptionStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final cycleLabel = _cycleLabel;
+    final cycleLabel = _cycleLabel(l);
     final periodEnd = subscription.currentPeriodEnd?.toLocal();
     final isLegacyGrace =
         subscription.status == ProSubscriptionStatus.legacyGrace;
@@ -71,7 +75,7 @@ class SubscriptionStatusCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            _statusLabel,
+            _statusLabel(l),
             style: tt.titleLarge?.copyWith(color: cs.onSurface),
           ),
           if (cycleLabel != null) ...[
@@ -84,28 +88,29 @@ class SubscriptionStatusCard extends StatelessWidget {
           if (isLegacyGrace) ...[
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Votre accès PRO est gratuit et temporaire.',
+              l.proFreeTemporaryAccess,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
           if (isCanceling) ...[
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Résiliation programmée pour le '
-              '${formatSubscriptionDate(periodEnd)}.',
+              l.proCancellationScheduledOn(
+                formatSubscriptionDate(l, periodEnd),
+              ),
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ] else if (periodEnd != null) ...[
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Prochain renouvellement le ${formatSubscriptionDate(periodEnd)}.',
+              l.proNextRenewalOn(formatSubscriptionDate(l, periodEnd)),
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
           if (onManage != null) ...[
             const SizedBox(height: DonySpacing.base),
             DonyButton(
-              label: 'Gérer mon abonnement',
+              label: l.proManageSubscriptionButton,
               variant: DonyButtonVariant.secondary,
               fullWidth: false,
               onPressed: onManage,

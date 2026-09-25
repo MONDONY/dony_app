@@ -12910,4 +12910,420 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportSendFailed => 'Couldn\'t send the report. Try again.';
+
+  @override
+  String get followRecencyJustNow => 'just now';
+
+  @override
+  String followRecencyMinutes(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String followRecencyHours(int hours) {
+    return '$hours h ago';
+  }
+
+  @override
+  String get followRecencyYesterday => 'yesterday';
+
+  @override
+  String followRecencyDays(int days) {
+    return '${days}d ago';
+  }
+
+  @override
+  String followOngoingTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ongoing trips',
+      one: '$count ongoing trip',
+      zero: 'No ongoing trips',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String followNewTripSemantics(String name) {
+    return 'New trip posted by $name';
+  }
+
+  @override
+  String get followNoRecentTrip => 'No trip posted yet';
+
+  @override
+  String followDepartureLabel(String date) {
+    return 'Departure $date';
+  }
+
+  @override
+  String get followProBadge => 'Pro';
+
+  @override
+  String followViewTripSemantics(String trip, String name) {
+    return 'View $name\'s trip $trip';
+  }
+
+  @override
+  String followPushSemanticsFor(String name) {
+    return 'Push alerts for $name';
+  }
+
+  @override
+  String get followPushOffTooltip => 'Turn off push alerts';
+
+  @override
+  String get followPushOnTooltip => 'Turn on push alerts';
+
+  @override
+  String get followSubscribeCaption =>
+      'You\'ll be notified of each of their new trips.';
+
+  @override
+  String get followPushOnCaption =>
+      'Push alerts on: every new trip notifies you.';
+
+  @override
+  String get followPushOffCaption =>
+      'Without push alerts: their trips will only arrive in your notifications.';
+
+  @override
+  String get followUnsubscribeConfirmMessage =>
+      'You won\'t be notified of their new trips anymore.';
+
+  @override
+  String get followPushToggleSemantics => 'Push alerts';
+
+  @override
+  String get followPushBadge => 'Push';
+
+  @override
+  String get followScreenTitle => 'Following';
+
+  @override
+  String get followMarkAllSeenTooltip => 'Mark all as seen';
+
+  @override
+  String get followEmptyTitle => 'Not following anyone yet';
+
+  @override
+  String get followEmptyDescription =>
+      'Follow a traveler from their profile: you\'ll be notified as soon as they post a trip.';
+
+  @override
+  String get followSearchHint => 'Search for a traveler…';
+
+  @override
+  String followTravelersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Following $count travelers',
+      one: 'Following $count traveler',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String followNewSinceLastVisit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count posted since your last visit',
+      one: '$count posted since your last visit',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get followUnsubscribeSwipeLabel => 'Unfollow';
+
+  @override
+  String followUnsubscribeConfirmTitle(String name) {
+    return 'Stop following $name?';
+  }
+
+  @override
+  String get followUnsubscribeFullMessage =>
+      'You won\'t be notified of their new trips anymore. You can follow them again from their profile.';
+
+  @override
+  String followPushEnabledMessage(String name) {
+    return 'Push alerts turned on for $name.';
+  }
+
+  @override
+  String get followPushDisabledMessage =>
+      'Push alerts turned off. Their new trips will still show up in your notifications.';
+
+  @override
+  String get followNoMatchMessage => 'No traveler matches this search.';
+
+  @override
+  String get followHubProfileLoadError => 'Unable to load the profile';
+
+  @override
+  String get followHubProAccountLabel => 'Pro account';
+
+  @override
+  String get followHubVerifiedBadge => 'Verified identity';
+
+  @override
+  String followHubRating(String rating) {
+    return '$rating rating';
+  }
+
+  @override
+  String followHubDeliveries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count deliveries',
+      one: '$count delivery',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String followHubRespondsIn(int hours) {
+    return 'replies in $hours h';
+  }
+
+  @override
+  String get followHubNewOnYadony => 'New on Yadony';
+
+  @override
+  String get followHubTripsTab => 'Trips';
+
+  @override
+  String get followHubReviewsTab => 'Reviews';
+
+  @override
+  String get followHubTripsLoadError =>
+      'Unable to load trips. Try again in a moment.';
+
+  @override
+  String get followHubNoTripsDescription =>
+      'This traveler hasn\'t posted a trip yet.';
+
+  @override
+  String get followHubReviewsLoadError => 'Unable to load reviews';
+
+  @override
+  String get followHubNoReviewsTitle => 'No reviews';
+
+  @override
+  String get followHubNoReviewsDescription =>
+      'This traveler hasn\'t received any reviews yet.';
+
+  @override
+  String followHubReviewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews',
+      one: '$count review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get followHubReserveButton => 'Book';
+
+  @override
+  String get followHubFullBadge => 'Full';
+
+  @override
+  String followHubAvailableKg(String kg) {
+    return '$kg kg available';
+  }
+
+  @override
+  String get proPastDueMessage =>
+      'Your last payment didn\'t go through. Without payment, your Pro access will be suspended.';
+
+  @override
+  String get proPayAction => 'Pay';
+
+  @override
+  String get proSubscribeAction => 'Subscribe';
+
+  @override
+  String get proFreeAccessEndingSoon => 'Your free Pro access will end soon.';
+
+  @override
+  String get proFreeAccessEnded => 'Your free Pro access has ended.';
+
+  @override
+  String proFreeAccessEndsInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Your free Pro access ends in $count days.',
+      one: 'Your free Pro access ends in $count day.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get proManageAction => 'Manage';
+
+  @override
+  String proSubscriptionEndsOn(String date) {
+    return 'Your Pro subscription ends on $date.';
+  }
+
+  @override
+  String get proStatusCancelScheduled => 'Cancellation scheduled';
+
+  @override
+  String get proStatusActive => 'Active';
+
+  @override
+  String get proStatusPastDue => 'Payment pending';
+
+  @override
+  String get proStatusLegacyGrace => 'Temporary free access';
+
+  @override
+  String get proStatusCanceled => 'Canceled';
+
+  @override
+  String get proStatusExpired => 'Expired';
+
+  @override
+  String get proStatusNone => 'No subscription';
+
+  @override
+  String get proStatusUnknown => 'Unknown status';
+
+  @override
+  String get proBillingMonthly => 'Monthly billing';
+
+  @override
+  String get proBillingYearly => 'Yearly billing';
+
+  @override
+  String get proFreeTemporaryAccess => 'Your Pro access is free and temporary.';
+
+  @override
+  String proCancellationScheduledOn(String date) {
+    return 'Cancellation scheduled for $date.';
+  }
+
+  @override
+  String proNextRenewalOn(String date) {
+    return 'Next renewal on $date.';
+  }
+
+  @override
+  String get proManageSubscriptionButton => 'Manage my subscription';
+
+  @override
+  String get proPortalOpenFailedMessage =>
+      'Couldn\'t open the page. Try again, or go to the Yadony Pro site from your browser.';
+
+  @override
+  String get proLimitUnderstoodButton => 'Got it';
+
+  @override
+  String get proLimitUpgradeButton => 'Upgrade to Pro';
+
+  @override
+  String get proAccountScreenTitle => 'Pro account';
+
+  @override
+  String get proAccountLoadingMessage => 'Loading your account.';
+
+  @override
+  String get proPitchHeadline => 'Upgrade to a Pro account';
+
+  @override
+  String get proPitchDescription =>
+      'A Pro account highlights your activity as a traveler and gives you access to benefits reserved for professionals.';
+
+  @override
+  String get proPitchIncludesLabel => 'WHAT\'S INCLUDED WITH A PRO ACCOUNT';
+
+  @override
+  String get proAdvantageBadge => 'Pro badge';
+
+  @override
+  String get proAdvantageUnlimitedVolume => 'Unlimited volume';
+
+  @override
+  String get proAdvantageMatchingPriority => 'Priority matching';
+
+  @override
+  String get proAdvantageDedicatedSupport => 'Dedicated support';
+
+  @override
+  String get proPitchPricingLabel => 'PRICING';
+
+  @override
+  String proPricePerMonth(String price) {
+    return '$price per month';
+  }
+
+  @override
+  String proPricePerYear(String price) {
+    return '$price per year';
+  }
+
+  @override
+  String proYearlySaving(String amount) {
+    return 'That\'s $amount saved over the year.';
+  }
+
+  @override
+  String get proPortalHint =>
+      'You subscribe on the Yadony Pro site, in your browser.';
+
+  @override
+  String get proPortalButtonLabel => 'Subscribe on the Yadony Pro site';
+
+  @override
+  String get proManageGuidance =>
+      'You manage and cancel your subscription on the Yadony Pro site, in your browser. You\'ll be asked to sign in there.';
+
+  @override
+  String proDowngradeBlockedMessage(String guidance) {
+    return 'Your Pro subscription is still active. $guidance';
+  }
+
+  @override
+  String get proAccessEndedMessage =>
+      'Your Pro access is no longer active. You can subscribe again on the Yadony Pro site.';
+
+  @override
+  String get proNoSubscriptionMessage =>
+      'You don\'t have a Pro subscription. You can subscribe on the Yadony Pro site.';
+
+  @override
+  String get proSubscriberScreenTitle => 'My Pro account';
+
+  @override
+  String get proLoadSubscriptionError =>
+      'Unable to load your subscription status right now.';
+
+  @override
+  String get proSubscriptionNotLoadedYet =>
+      'Your subscription status hasn\'t been loaded yet.';
+
+  @override
+  String get proDowngradeDialogTitle => 'Deactivate Pro account';
+
+  @override
+  String get proDowngradeDialogMessage =>
+      'Your Pro badge and professional benefits will be removed from your profile.';
+
+  @override
+  String get proDowngradeConfirmButton => 'Deactivate';
+
+  @override
+  String get proDowngradeSuccessMessage => 'Pro account deactivated.';
+
+  @override
+  String get proDowngradeButton => 'Switch back to a standard account';
 }

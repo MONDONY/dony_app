@@ -212,6 +212,7 @@ const _sameInBothLanguages = <String>{
   'corridorAlertNotifyTitle', // « Notifications » se dit pareil (tâche I1)
   'reportDescriptionLabel', // « Description » se dit pareil (tâche I1)
   'reportReasonSpam', // « Spam » se dit pareil (tâche I1)
+  'followPushBadge', // « Push » se dit pareil (tâche I2)
 };
 
 void main() {

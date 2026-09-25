@@ -12995,4 +12995,423 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get reportSendFailed =>
       'Impossible d\'envoyer le signalement. Réessayez.';
+
+  @override
+  String get followRecencyJustNow => 'à l\'instant';
+
+  @override
+  String followRecencyMinutes(int minutes) {
+    return 'il y a $minutes min';
+  }
+
+  @override
+  String followRecencyHours(int hours) {
+    return 'il y a $hours h';
+  }
+
+  @override
+  String get followRecencyYesterday => 'hier';
+
+  @override
+  String followRecencyDays(int days) {
+    return 'il y a $days j';
+  }
+
+  @override
+  String followOngoingTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trajets en cours',
+      one: '$count trajet en cours',
+      zero: 'Aucun trajet en cours',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String followNewTripSemantics(String name) {
+    return 'Nouveau trajet publié par $name';
+  }
+
+  @override
+  String get followNoRecentTrip => 'Aucun trajet publié pour le moment';
+
+  @override
+  String followDepartureLabel(String date) {
+    return 'Départ $date';
+  }
+
+  @override
+  String get followProBadge => 'PRO';
+
+  @override
+  String followViewTripSemantics(String trip, String name) {
+    return 'Voir le trajet $trip de $name';
+  }
+
+  @override
+  String followPushSemanticsFor(String name) {
+    return 'Alertes push de $name';
+  }
+
+  @override
+  String get followPushOffTooltip => 'Couper les alertes push';
+
+  @override
+  String get followPushOnTooltip => 'Activer les alertes push';
+
+  @override
+  String get followSubscribeCaption =>
+      'Vous serez prévenu de chacun de ses nouveaux trajets.';
+
+  @override
+  String get followPushOnCaption =>
+      'Alertes push activées : chaque nouveau trajet vous notifie.';
+
+  @override
+  String get followPushOffCaption =>
+      'Sans alerte push : ses trajets arriveront seulement dans vos notifications.';
+
+  @override
+  String get followUnsubscribeConfirmMessage =>
+      'Vous ne serez plus prévenu de ses nouveaux trajets.';
+
+  @override
+  String get followPushToggleSemantics => 'Alertes push';
+
+  @override
+  String get followPushBadge => 'Push';
+
+  @override
+  String get followScreenTitle => 'Mes abonnements';
+
+  @override
+  String get followMarkAllSeenTooltip => 'Tout marquer comme vu';
+
+  @override
+  String get followEmptyTitle => 'Aucun abonnement';
+
+  @override
+  String get followEmptyDescription =>
+      'Abonnez-vous à un voyageur depuis son profil : vous serez prévenu dès qu\'il publie un trajet.';
+
+  @override
+  String get followSearchHint => 'Rechercher un voyageur…';
+
+  @override
+  String followTravelersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs suivis',
+      one: '$count voyageur suivi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String followNewSinceLastVisit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ont publié depuis votre dernière visite',
+      one: '$count a publié depuis votre dernière visite',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get followUnsubscribeSwipeLabel => 'Désabonner';
+
+  @override
+  String followUnsubscribeConfirmTitle(String name) {
+    return 'Ne plus suivre $name ?';
+  }
+
+  @override
+  String get followUnsubscribeFullMessage =>
+      'Vous ne serez plus prévenu de ses nouveaux trajets. Vous pourrez vous réabonner depuis son profil.';
+
+  @override
+  String followPushEnabledMessage(String name) {
+    return 'Alertes push activées pour $name.';
+  }
+
+  @override
+  String get followPushDisabledMessage =>
+      'Alertes push coupées. Ses nouveaux trajets resteront visibles dans vos notifications.';
+
+  @override
+  String get followNoMatchMessage =>
+      'Aucun voyageur ne correspond à cette recherche.';
+
+  @override
+  String get followHubProfileLoadError => 'Impossible de charger le profil';
+
+  @override
+  String get followHubProAccountLabel => 'Compte PRO';
+
+  @override
+  String get followHubVerifiedBadge => 'Identité vérifiée';
+
+  @override
+  String followHubRating(String rating) {
+    return '$rating de note';
+  }
+
+  @override
+  String followHubDeliveries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count livraisons',
+      one: '$count livraison',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String followHubRespondsIn(int hours) {
+    return 'répond en $hours h';
+  }
+
+  @override
+  String get followHubNewOnYadony => 'Nouveau sur Yadony';
+
+  @override
+  String get followHubTripsTab => 'Trajets';
+
+  @override
+  String get followHubReviewsTab => 'Avis';
+
+  @override
+  String get followHubTripsLoadError =>
+      'Impossible de charger les trajets. Réessayez dans un instant.';
+
+  @override
+  String get followHubNoTripsDescription =>
+      'Ce voyageur n\'a pas encore publié de trajet.';
+
+  @override
+  String get followHubReviewsLoadError => 'Impossible de charger les avis';
+
+  @override
+  String get followHubNoReviewsTitle => 'Aucun avis';
+
+  @override
+  String get followHubNoReviewsDescription =>
+      'Ce voyageur n\'a pas encore reçu d\'avis.';
+
+  @override
+  String followHubReviewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count avis',
+      one: '$count avis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get followHubReserveButton => 'Réserver';
+
+  @override
+  String get followHubFullBadge => 'Complet';
+
+  @override
+  String followHubAvailableKg(String kg) {
+    return '$kg kg disponibles';
+  }
+
+  @override
+  String get proPastDueMessage =>
+      'Votre dernier paiement n\'a pas abouti. Sans régularisation, votre accès PRO sera suspendu.';
+
+  @override
+  String get proPayAction => 'Régler';
+
+  @override
+  String get proSubscribeAction => 'S\'abonner';
+
+  @override
+  String get proFreeAccessEndingSoon =>
+      'Votre accès PRO gratuit prendra bientôt fin.';
+
+  @override
+  String get proFreeAccessEnded => 'Votre accès PRO gratuit a pris fin.';
+
+  @override
+  String proFreeAccessEndsInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Votre accès PRO gratuit prend fin dans $count jours.',
+      one: 'Votre accès PRO gratuit prend fin dans $count jour.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get proManageAction => 'Gérer';
+
+  @override
+  String proSubscriptionEndsOn(String date) {
+    return 'Votre abonnement PRO prend fin le $date.';
+  }
+
+  @override
+  String get proStatusCancelScheduled => 'Résiliation programmée';
+
+  @override
+  String get proStatusActive => 'Actif';
+
+  @override
+  String get proStatusPastDue => 'Paiement en attente';
+
+  @override
+  String get proStatusLegacyGrace => 'Accès gratuit temporaire';
+
+  @override
+  String get proStatusCanceled => 'Résilié';
+
+  @override
+  String get proStatusExpired => 'Expiré';
+
+  @override
+  String get proStatusNone => 'Aucun abonnement';
+
+  @override
+  String get proStatusUnknown => 'Statut inconnu';
+
+  @override
+  String get proBillingMonthly => 'Facturation mensuelle';
+
+  @override
+  String get proBillingYearly => 'Facturation annuelle';
+
+  @override
+  String get proFreeTemporaryAccess =>
+      'Votre accès PRO est gratuit et temporaire.';
+
+  @override
+  String proCancellationScheduledOn(String date) {
+    return 'Résiliation programmée pour le $date.';
+  }
+
+  @override
+  String proNextRenewalOn(String date) {
+    return 'Prochain renouvellement le $date.';
+  }
+
+  @override
+  String get proManageSubscriptionButton => 'Gérer mon abonnement';
+
+  @override
+  String get proPortalOpenFailedMessage =>
+      'Impossible d\'ouvrir la page. Réessayez, ou rendez-vous sur le site Yadony PRO depuis votre navigateur.';
+
+  @override
+  String get proLimitUnderstoodButton => 'Compris';
+
+  @override
+  String get proLimitUpgradeButton => 'Passer en PRO';
+
+  @override
+  String get proAccountScreenTitle => 'Compte PRO';
+
+  @override
+  String get proAccountLoadingMessage => 'Chargement de votre compte.';
+
+  @override
+  String get proPitchHeadline => 'Passez en compte PRO';
+
+  @override
+  String get proPitchDescription =>
+      'Le compte PRO met en avant votre activité de transporteur et vous donne accès aux avantages réservés aux professionnels.';
+
+  @override
+  String get proPitchIncludesLabel => 'CE QUE COMPREND LE COMPTE PRO';
+
+  @override
+  String get proAdvantageBadge => 'Badge Pro';
+
+  @override
+  String get proAdvantageUnlimitedVolume => 'Volume illimité';
+
+  @override
+  String get proAdvantageMatchingPriority => 'Priorité de mise en relation';
+
+  @override
+  String get proAdvantageDedicatedSupport => 'Support dédié';
+
+  @override
+  String get proPitchPricingLabel => 'TARIFS';
+
+  @override
+  String proPricePerMonth(String price) {
+    return '$price par mois';
+  }
+
+  @override
+  String proPricePerYear(String price) {
+    return '$price par an';
+  }
+
+  @override
+  String proYearlySaving(String amount) {
+    return 'Soit $amount d\'économie sur l\'année.';
+  }
+
+  @override
+  String get proPortalHint =>
+      'L\'abonnement se souscrit sur le site Yadony PRO, dans votre navigateur.';
+
+  @override
+  String get proPortalButtonLabel => 'S\'abonner sur le site Yadony PRO';
+
+  @override
+  String get proManageGuidance =>
+      'La gestion et la résiliation de votre abonnement se font sur le site Yadony PRO, dans votre navigateur. Une connexion vous y sera demandée.';
+
+  @override
+  String proDowngradeBlockedMessage(String guidance) {
+    return 'Votre abonnement PRO est toujours actif. $guidance';
+  }
+
+  @override
+  String get proAccessEndedMessage =>
+      'Votre accès PRO n\'est plus actif. Vous pouvez reprendre un abonnement sur le site Yadony PRO.';
+
+  @override
+  String get proNoSubscriptionMessage =>
+      'Vous n\'avez pas d\'abonnement PRO. Vous pouvez en souscrire un sur le site Yadony PRO.';
+
+  @override
+  String get proSubscriberScreenTitle => 'Mon compte PRO';
+
+  @override
+  String get proLoadSubscriptionError =>
+      'Impossible de charger l\'état de votre abonnement pour le moment.';
+
+  @override
+  String get proSubscriptionNotLoadedYet =>
+      'L\'état de votre abonnement n\'a pas encore été chargé.';
+
+  @override
+  String get proDowngradeDialogTitle => 'Désactiver le compte PRO';
+
+  @override
+  String get proDowngradeDialogMessage =>
+      'Votre badge PRO et vos avantages professionnels seront retirés de votre profil.';
+
+  @override
+  String get proDowngradeConfirmButton => 'Désactiver';
+
+  @override
+  String get proDowngradeSuccessMessage => 'Compte PRO désactivé.';
+
+  @override
+  String get proDowngradeButton => 'Revenir en compte standard';
 }

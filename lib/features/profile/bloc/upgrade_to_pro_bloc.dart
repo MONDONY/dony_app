@@ -17,7 +17,8 @@ part 'upgrade_to_pro_state.dart';
 /// Le serveur porte ce code dans la propriété `code` du `ProblemDetail`, en
 /// plus de `type`. Ne jamais se raccrocher à `title` ou `detail`, qui sont de
 /// la copie et peuvent changer sans préavis.
-const String kActiveStripeSubscriptionCode = 'active-stripe-subscription';
+const String kActiveStripeSubscriptionCode =
+    'active-stripe-subscription'; // i18n-ignore (code métier comparé, jamais affiché)
 
 /// Ne pilote plus qu'un seul geste : le retour en compte standard.
 ///

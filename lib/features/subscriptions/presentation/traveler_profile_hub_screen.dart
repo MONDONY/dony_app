@@ -9,6 +9,8 @@ import 'package:dony/features/subscriptions/bloc/traveler_hub_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_state.dart';
 import 'package:dony/features/subscriptions/presentation/widgets/subscribe_bar.dart';
 import 'package:dony/features/subscriptions/presentation/widgets/traveler_announcement_card.dart';
+import 'package:dony/l10n/l10n.dart';
+import 'package:dony/l10n/rich_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -110,7 +112,7 @@ class _ProfileHeader extends StatelessWidget {
           if (state is ProfilePublicError) {
             return Center(
               child: Text(
-                'Impossible de charger le profil',
+                context.l10n.followHubProfileLoadError,
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
@@ -207,6 +209,7 @@ class _TrustMarks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final style = tt.labelMedium?.copyWith(
@@ -216,13 +219,22 @@ class _TrustMarks extends StatelessWidget {
 
     final marques = <Widget>[
       if (profile.isProAccount)
-        _Mark(icon: 'star', label: 'Compte PRO', color: cs.primary, bold: true),
+        _Mark(
+          icon: 'star',
+          label: l.followHubProAccountLabel,
+          color: cs.primary,
+          bold: true,
+        ),
       if (profile.isKiloPro)
-        _Mark(icon: 'package', label: 'Kilo Pro', color: cs.onSurfaceVariant),
+        _Mark(
+          icon: 'package',
+          label: 'Kilo Pro', // i18n-ignore
+          color: cs.onSurfaceVariant,
+        ),
       if (profile.kycVerified)
         _Mark(
           icon: 'badge-check',
-          label: 'Identité vérifiée',
+          label: l.followHubVerifiedBadge,
           color: cs.onSurfaceVariant,
         ),
     ];
@@ -285,6 +297,7 @@ class _StatSentence extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final style = tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant);
@@ -303,6 +316,7 @@ class _StatSentence extends StatelessWidget {
     }
 
     if (profile.averageRating > 0) {
+      final ratingStr = formatOneDecimal(l, profile.averageRating);
       ajouter([
         WidgetSpan(
           alignment: PlaceholderAlignment.middle,
@@ -312,33 +326,45 @@ class _StatSentence extends StatelessWidget {
           ),
         ),
         TextSpan(
-          text: profile.averageRating.toStringAsFixed(1).replaceAll('.', ','),
-          style: fort,
+          style: style,
+          children: emphasizedSpans(
+            l.followHubRating(ratingStr),
+            ratingStr,
+            style: fort,
+          ),
         ),
-        TextSpan(text: ' de note', style: style),
       ]);
     }
 
     final livraisons = profile.completedBidsCount;
     ajouter([
-      TextSpan(text: '$livraisons', style: fort),
       TextSpan(
-        text: livraisons > 1 ? ' livraisons' : ' livraison',
         style: style,
+        children: emphasizedSpans(
+          l.followHubDeliveries(livraisons),
+          '$livraisons',
+          style: fort,
+        ),
       ),
     ]);
 
     final delai = profile.responseDelayHours;
     if (delai != null) {
       ajouter([
-        TextSpan(text: 'répond en ', style: style),
-        TextSpan(text: '$delai h', style: fort),
+        TextSpan(
+          style: style,
+          children: emphasizedSpans(
+            l.followHubRespondsIn(delai),
+            '$delai h',
+            style: fort,
+          ),
+        ),
       ]);
     }
 
     // Aucun historique : le dire franchement vaut mieux qu'aligner des zéros.
     if (profile.averageRating <= 0 && livraisons == 0) {
-      return Text('Nouveau sur Yadony', style: style);
+      return Text(l.followHubNewOnYadony, style: style);
     }
 
     return Text.rich(TextSpan(children: morceaux));
@@ -403,6 +429,7 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
 
     return Container(
@@ -412,9 +439,9 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       child: TabBar(
         controller: controller,
-        tabs: const [
-          Tab(text: 'Trajets'),
-          Tab(text: 'Avis'),
+        tabs: [
+          Tab(text: l.followHubTripsTab),
+          Tab(text: l.followHubReviewsTab),
         ],
       ),
     );
@@ -464,6 +491,7 @@ class _TripsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<TravelerHubBloc, TravelerHubState>(
       builder: (context, state) {
+        final l = context.l10n;
         if (state.status == TravelerHubStatus.loading ||
             state.status == TravelerHubStatus.initial) {
           return ListView.separated(
@@ -485,10 +513,9 @@ class _TripsTab extends StatelessWidget {
               type: DonyEmptyStateType.error,
               mascotte: DonyMascotteType.erreurLegere,
               iconAsset: 'circle-alert',
-              title: 'Erreur de chargement',
-              description:
-                  'Impossible de charger les trajets. Réessayez dans un instant.',
-              actionLabel: 'Réessayer',
+              title: l.commonLoadError,
+              description: l.followHubTripsLoadError,
+              actionLabel: l.commonRetry,
               onAction: () => context.read<TravelerHubBloc>().add(
                 LoadTravelerHub(context.read<TravelerHubBloc>().travelerId),
               ),
@@ -499,11 +526,11 @@ class _TripsTab extends StatelessWidget {
         final announcements = state.announcements;
 
         if (announcements.isEmpty) {
-          return const DonyEmptyState(
+          return DonyEmptyState(
             mascotte: DonyMascotteType.assis,
             iconAsset: 'plane-takeoff',
-            title: 'Aucun trajet en cours',
-            description: 'Ce voyageur n\'a pas encore publié de trajet.',
+            title: l.followOngoingTrips(0),
+            description: l.followHubNoTripsDescription,
           );
         }
 
@@ -556,7 +583,7 @@ class _ReviewsTab extends StatelessWidget {
             type: DonyEmptyStateType.error,
             mascotte: DonyMascotteType.erreur,
             iconAsset: 'circle-alert',
-            title: 'Impossible de charger les avis',
+            title: context.l10n.followHubReviewsLoadError,
             description: state.message,
           );
         }
@@ -578,16 +605,17 @@ class _ReviewsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final items = summary.ratings;
 
     if (items.isEmpty) {
-      return const DonyEmptyState(
+      return DonyEmptyState(
         mascotte: DonyMascotteType.assis,
         iconAsset: 'star',
-        title: 'Aucun avis',
-        description: 'Ce voyageur n\'a pas encore reçu d\'avis.',
+        title: l.followHubNoReviewsTitle,
+        description: l.followHubNoReviewsDescription,
       );
     }
 
@@ -615,14 +643,14 @@ class _ReviewsList extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    summary.averageRating.toStringAsFixed(1),
+                    formatOneDecimal(l, summary.averageRating),
                     style: tt.headlineLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: cs.onSurface,
                     ),
                   ),
                   Text(
-                    '${summary.ratingCount} avis',
+                    l.followHubReviewsCount(summary.ratingCount),
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
@@ -674,7 +702,7 @@ class _ReviewCard extends StatelessWidget {
               }),
               const Spacer(),
               Text(
-                DateFormat('dd/MM/yyyy').format(item.createdAt),
+                DateFormat.yMd(context.l10n.localeName).format(item.createdAt),
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],

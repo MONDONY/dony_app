@@ -24,6 +24,7 @@ class TravelerAnnouncementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final isFull = announcement.availableKg <= 0;
@@ -91,7 +92,7 @@ class TravelerAnnouncementCard extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                child: const Text('Réserver'),
+                child: Text(l.followHubReserveButton),
               ),
             ],
           ),
@@ -156,6 +157,7 @@ class _MetaLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final style = tt.bodySmall?.copyWith(color: cs.onSurfaceVariant);
@@ -166,10 +168,7 @@ class _MetaLine extends StatelessWidget {
         const SizedBox(width: DonySpacing.xs),
         Flexible(
           child: Text(
-            DateFormat(
-              'd MMM yyyy',
-              AppL10n.localeName,
-            ).format(announcement.departureDate),
+            DateFormat.yMMMd(l.localeName).format(announcement.departureDate),
             style: style,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -178,8 +177,10 @@ class _MetaLine extends StatelessWidget {
         Text(' · ', style: style),
         Text(
           isFull
-              ? 'Complet'
-              : '${announcement.availableKg.toStringAsFixed(0)} kg disponibles',
+              ? l.followHubFullBadge
+              : l.followHubAvailableKg(
+                  announcement.availableKg.toStringAsFixed(0),
+                ),
           style: isFull
               ? style?.copyWith(color: cs.error, fontWeight: FontWeight.w700)
               : style,

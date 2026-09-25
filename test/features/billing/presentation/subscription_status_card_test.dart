@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 const _kSettle = Duration(milliseconds: 600);
 
 ProSubscriptionModel _sub({
@@ -215,5 +217,37 @@ void main() {
         }
       }
     });
+
+    testWidgets(
+      'anglais : statut, rythme, résiliation et bouton de gestion traduits',
+      (tester) async {
+        useEnglish();
+        final currentPeriodEnd = DateTime.utc(2026, 10, 5, 12);
+        await _pump(
+          tester,
+          SubscriptionStatusCard(
+            subscription: _sub(
+              status: ProSubscriptionStatus.active,
+              source: ProSubscriptionSource.stripe,
+              billingCycle: 'MONTHLY',
+              cancelAtPeriodEnd: true,
+              currentPeriodEnd: currentPeriodEnd,
+            ),
+            onManage: () {},
+          ),
+        );
+
+        expect(find.textContaining('Monthly billing'), findsOneWidget);
+        // Deux occurrences : le statut ("Cancellation scheduled") et la
+        // phrase avec la date ("Cancellation scheduled for {date}.").
+        expect(find.textContaining('Cancellation scheduled'), findsWidgets);
+        final expectedDate = DateFormat.yMMMMd(
+          'en',
+        ).format(currentPeriodEnd.toLocal());
+        final texts = tester.widgetList<Text>(find.byType(Text));
+        expect(texts.any((t) => (t.data ?? '').contains(expectedDate)), isTrue);
+        expect(find.text('Manage my subscription'), findsOneWidget);
+      },
+    );
   });
 }

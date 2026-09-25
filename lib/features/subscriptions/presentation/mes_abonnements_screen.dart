@@ -9,7 +9,9 @@ import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_event.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_state.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
+import 'package:dony/features/subscriptions/presentation/subscription_labels.dart';
 import 'package:dony/features/subscriptions/presentation/widgets/subscription_tile.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -59,13 +61,12 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
     BuildContext context,
     SubscriptionItem item,
   ) async {
+    final l = context.l10n;
     final confirmed = await DonyDialog.show(
       context,
-      title: 'Ne plus suivre ${item.travelerName} ?',
-      message:
-          'Vous ne serez plus prévenu de ses nouveaux trajets. '
-          'Vous pourrez vous réabonner depuis son profil.',
-      confirmLabel: 'Se désabonner',
+      title: l.followUnsubscribeConfirmTitle(item.displayName(l)),
+      message: l.followUnsubscribeFullMessage,
+      confirmLabel: l.followUnfollowButton,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'bell-off',
     );
@@ -77,6 +78,7 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
   }
 
   void _togglePush(BuildContext context, SubscriptionItem item) {
+    final l = context.l10n;
     final enabling = !item.pushEnabled;
     context.read<SubscriptionsBloc>().add(
       ToggleSubscriptionPush(item.travelerId, enabling),
@@ -84,19 +86,19 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
     DonySnackbar.show(
       context,
       message: enabling
-          ? 'Alertes push activées pour ${item.travelerName}.'
-          : 'Alertes push coupées. Ses nouveaux trajets resteront visibles '
-                'dans vos notifications.',
+          ? l.followPushEnabledMessage(item.displayName(l))
+          : l.followPushDisabledMessage,
       type: enabling ? DonySnackbarType.success : DonySnackbarType.info,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
       appBar: AppBar(
         leading: const DonyAppBarBackButton(),
-        title: const Text('Mes abonnements'),
+        title: Text(l.followScreenTitle),
         actions: [
           BlocBuilder<SubscriptionsBloc, SubscriptionsState>(
             buildWhen: (a, b) =>
@@ -106,7 +108,7 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
                 return const SizedBox.shrink();
               }
               return IconButton(
-                tooltip: 'Tout marquer comme vu',
+                tooltip: l.followMarkAllSeenTooltip,
                 icon: const DonyIcon('check-check'),
                 onPressed: () => context.read<SubscriptionsBloc>().add(
                   const MarkAllSubscriptionsSeen(),
@@ -140,21 +142,19 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
               mascotte: DonyMascotteType.erreurLegere,
               type: DonyEmptyStateType.error,
               iconAsset: 'circle-alert',
-              title: 'Erreur de chargement',
-              description: state.error ?? 'Une erreur est survenue.',
-              actionLabel: 'Réessayer',
+              title: l.commonLoadError,
+              description: state.error ?? l.commonSomethingWentWrongDot,
+              actionLabel: l.commonRetry,
               onAction: () => context.read<SubscriptionsBloc>().add(
                 const LoadSubscriptions(),
               ),
             );
           }
           if (state.items.isEmpty) {
-            return const DonyEmptyState(
+            return DonyEmptyState(
               mascotte: DonyMascotteType.assis,
-              title: 'Aucun abonnement',
-              description:
-                  'Abonnez-vous à un voyageur depuis son profil : vous serez '
-                  'prévenu dès qu\'il publie un trajet.',
+              title: l.followEmptyTitle,
+              description: l.followEmptyDescription,
             );
           }
 
@@ -183,7 +183,7 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
                       DonySpacing.xs,
                     ),
                     child: DonySearchField(
-                      hint: 'Rechercher un voyageur…',
+                      hint: l.followSearchHint,
                       onChanged: (v) => setState(() => _query = v),
                     ),
                   ),
@@ -248,7 +248,7 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
                 const DonyIcon('bell-off', color: Colors.white),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Désabonner',
+                  context.l10n.followUnsubscribeSwipeLabel,
                   textAlign: TextAlign.center,
                   style: Theme.of(
                     context,
@@ -291,14 +291,11 @@ class _CountLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final suivis = total == 1 ? '1 voyageur suivi' : '$total voyageurs suivis';
-    final nouveaux = newCount == 0
-        ? null
-        : (newCount == 1
-              ? '1 a publié depuis votre dernière visite'
-              : '$newCount ont publié depuis votre dernière visite');
+    final suivis = l.followTravelersCount(total);
+    final nouveaux = newCount == 0 ? null : l.followNewSinceLastVisit(newCount);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -349,7 +346,7 @@ class _NoMatch extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(DonySpacing.xl),
         child: Text(
-          'Aucun voyageur ne correspond à cette recherche.',
+          context.l10n.followNoMatchMessage,
           textAlign: TextAlign.center,
           style: Theme.of(
             context,

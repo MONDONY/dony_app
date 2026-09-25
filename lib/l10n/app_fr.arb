@@ -14723,5 +14723,493 @@
   "reportSendFailed": "Impossible d'envoyer le signalement. Réessayez.",
   "@reportSendFailed": {
     "description": "Snackbar générique quand la soumission échoue sans exception typée (incident_report_cubit.dart, IncidentReportError sans error)."
+  },
+  "followRecencyJustNow": "à l'instant",
+  "@followRecencyJustNow": {
+    "description": "Ancienneté de publication, cas immédiat ou futur (subscription_recency.dart, subscriptionRecencyLabel)."
+  },
+  "followRecencyMinutes": "il y a {minutes} min",
+  "@followRecencyMinutes": {
+    "description": "Ancienneté de publication en minutes (subscription_recency.dart, subscriptionRecencyLabel).",
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "followRecencyHours": "il y a {hours} h",
+  "@followRecencyHours": {
+    "description": "Ancienneté de publication en heures (subscription_recency.dart, subscriptionRecencyLabel).",
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "followRecencyYesterday": "hier",
+  "@followRecencyYesterday": {
+    "description": "Ancienneté de publication, la veille (subscription_recency.dart, subscriptionRecencyLabel)."
+  },
+  "followRecencyDays": "il y a {days} j",
+  "@followRecencyDays": {
+    "description": "Ancienneté de publication en jours (subscription_recency.dart, subscriptionRecencyLabel).",
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "followOngoingTrips": "{count, plural, =0{Aucun trajet en cours} =1{{count} trajet en cours} other{{count} trajets en cours}}",
+  "@followOngoingTrips": {
+    "description": "Nombre de trajets en cours d'un voyageur suivi (subscription_tile.dart, _tripsLabel ; réutilisée comme titre d'état vide dans traveler_profile_hub_screen.dart avec count=0).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "followNewTripSemantics": "Nouveau trajet publié par {name}",
+  "@followNewTripSemantics": {
+    "description": "Libellé d'accessibilité de la carte quand le voyageur a publié depuis la dernière visite (subscription_tile.dart, SubscriptionTile).",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "followNoRecentTrip": "Aucun trajet publié pour le moment",
+  "@followNoRecentTrip": {
+    "description": "Repli quand le voyageur suivi n'a aucun trajet publié (subscription_tile.dart, SubscriptionTile)."
+  },
+  "followDepartureLabel": "Départ {date}",
+  "@followDepartureLabel": {
+    "description": "Date de départ du dernier trajet, déjà formatée (subscription_tile.dart, SubscriptionTile).",
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "followProBadge": "PRO",
+  "@followProBadge": {
+    "description": "Badge compte PRO sur la tuile d'un voyageur suivi (subscription_tile.dart, _ProTag ; R50, « Pro » en anglais)."
+  },
+  "followViewTripSemantics": "Voir le trajet {trip} de {name}",
+  "@followViewTripSemantics": {
+    "description": "Libellé d'accessibilité de la ligne du dernier trajet, cible tactile distincte de la carte (subscription_tile.dart, _LastTripLine).",
+    "placeholders": {
+      "trip": {"type": "String"},
+      "name": {"type": "String"}
+    }
+  },
+  "followPushSemanticsFor": "Alertes push de {name}",
+  "@followPushSemanticsFor": {
+    "description": "Libellé d'accessibilité de la cloche d'un voyageur suivi (subscription_tile.dart, _BellButton).",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "followPushOffTooltip": "Couper les alertes push",
+  "@followPushOffTooltip": {
+    "description": "Tooltip de la cloche quand les alertes push sont actives, partagé par subscribe_bar.dart et subscription_tile.dart (même feature, même sens)."
+  },
+  "followPushOnTooltip": "Activer les alertes push",
+  "@followPushOnTooltip": {
+    "description": "Tooltip de la cloche quand les alertes push sont coupées, partagé par subscribe_bar.dart et subscription_tile.dart (même feature, même sens)."
+  },
+  "followSubscribeCaption": "Vous serez prévenu de chacun de ses nouveaux trajets.",
+  "@followSubscribeCaption": {
+    "description": "Phrase d'accroche quand l'utilisateur n'est pas encore abonné (subscribe_bar.dart, SubscribeBar)."
+  },
+  "followPushOnCaption": "Alertes push activées : chaque nouveau trajet vous notifie.",
+  "@followPushOnCaption": {
+    "description": "Phrase d'état quand l'utilisateur est abonné avec les alertes push actives (subscribe_bar.dart, SubscribeBar)."
+  },
+  "followPushOffCaption": "Sans alerte push : ses trajets arriveront seulement dans vos notifications.",
+  "@followPushOffCaption": {
+    "description": "Phrase d'état quand l'utilisateur est abonné sans les alertes push (subscribe_bar.dart, SubscribeBar)."
+  },
+  "followUnsubscribeConfirmMessage": "Vous ne serez plus prévenu de ses nouveaux trajets.",
+  "@followUnsubscribeConfirmMessage": {
+    "description": "Message du dialogue de confirmation de désabonnement (subscribe_bar.dart, SubscribeBar._confirmUnsubscribe)."
+  },
+  "followPushToggleSemantics": "Alertes push",
+  "@followPushToggleSemantics": {
+    "description": "Libellé d'accessibilité générique de la bascule push, sans nom de voyageur (subscribe_bar.dart, _PushToggle)."
+  },
+  "followPushBadge": "Push",
+  "@followPushBadge": {
+    "description": "Libellé court de la bascule push, « Push » se dit pareil dans les deux langues (subscribe_bar.dart, _PushToggle)."
+  },
+  "followScreenTitle": "Mes abonnements",
+  "@followScreenTitle": {
+    "description": "Titre de l'écran des voyageurs suivis (mes_abonnements_screen.dart)."
+  },
+  "followMarkAllSeenTooltip": "Tout marquer comme vu",
+  "@followMarkAllSeenTooltip": {
+    "description": "Tooltip du bouton qui retire toutes les pastilles « nouveau » (mes_abonnements_screen.dart)."
+  },
+  "followEmptyTitle": "Aucun abonnement",
+  "@followEmptyTitle": {
+    "description": "Titre de l'état vide, aucun voyageur suivi (mes_abonnements_screen.dart)."
+  },
+  "followEmptyDescription": "Abonnez-vous à un voyageur depuis son profil : vous serez prévenu dès qu'il publie un trajet.",
+  "@followEmptyDescription": {
+    "description": "Description de l'état vide, aucun voyageur suivi (mes_abonnements_screen.dart)."
+  },
+  "followSearchHint": "Rechercher un voyageur…",
+  "@followSearchHint": {
+    "description": "Indication du champ de recherche, affiché à partir de 6 abonnements (mes_abonnements_screen.dart)."
+  },
+  "followTravelersCount": "{count, plural, =1{{count} voyageur suivi} other{{count} voyageurs suivis}}",
+  "@followTravelersCount": {
+    "description": "Compteur du nombre de voyageurs suivis (mes_abonnements_screen.dart, _CountLine).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "followNewSinceLastVisit": "{count, plural, =1{{count} a publié depuis votre dernière visite} other{{count} ont publié depuis votre dernière visite}}",
+  "@followNewSinceLastVisit": {
+    "description": "Compteur des voyageurs ayant publié depuis la dernière visite (mes_abonnements_screen.dart, _CountLine ; non affiché si 0).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "followUnsubscribeSwipeLabel": "Désabonner",
+  "@followUnsubscribeSwipeLabel": {
+    "description": "Libellé court de l'action de balayage (mes_abonnements_screen.dart, _slidable) — distinct de followUnfollowButton, texte français différent."
+  },
+  "followUnsubscribeConfirmTitle": "Ne plus suivre {name} ?",
+  "@followUnsubscribeConfirmTitle": {
+    "description": "Titre du dialogue de confirmation de désabonnement, avec le nom du voyageur (mes_abonnements_screen.dart, _confirmUnsubscribe).",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "followUnsubscribeFullMessage": "Vous ne serez plus prévenu de ses nouveaux trajets. Vous pourrez vous réabonner depuis son profil.",
+  "@followUnsubscribeFullMessage": {
+    "description": "Message du dialogue de confirmation de désabonnement de mes_abonnements_screen.dart (_confirmUnsubscribe) — texte distinct de followUnsubscribeConfirmMessage (subscribe_bar.dart), qui n'a qu'une phrase."
+  },
+  "followPushEnabledMessage": "Alertes push activées pour {name}.",
+  "@followPushEnabledMessage": {
+    "description": "Snackbar après activation des alertes push d'un voyageur (mes_abonnements_screen.dart, _togglePush).",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "followPushDisabledMessage": "Alertes push coupées. Ses nouveaux trajets resteront visibles dans vos notifications.",
+  "@followPushDisabledMessage": {
+    "description": "Snackbar après coupure des alertes push d'un voyageur (mes_abonnements_screen.dart, _togglePush)."
+  },
+  "followNoMatchMessage": "Aucun voyageur ne correspond à cette recherche.",
+  "@followNoMatchMessage": {
+    "description": "Message quand la recherche ne trouve aucun voyageur suivi (mes_abonnements_screen.dart, _NoMatch)."
+  },
+  "followHubProfileLoadError": "Impossible de charger le profil",
+  "@followHubProfileLoadError": {
+    "description": "Erreur de chargement de l'en-tête du profil voyageur (traveler_profile_hub_screen.dart, _ProfileHeader)."
+  },
+  "followHubProAccountLabel": "Compte PRO",
+  "@followHubProAccountLabel": {
+    "description": "Marque de confiance compte PRO dans l'en-tête (traveler_profile_hub_screen.dart, _TrustMarks)."
+  },
+  "followHubVerifiedBadge": "Identité vérifiée",
+  "@followHubVerifiedBadge": {
+    "description": "Marque de confiance identité vérifiée dans l'en-tête (traveler_profile_hub_screen.dart, _TrustMarks)."
+  },
+  "followHubRating": "{rating} de note",
+  "@followHubRating": {
+    "description": "Phrase de réputation, note moyenne déjà formatée (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).",
+    "placeholders": {
+      "rating": {"type": "String"}
+    }
+  },
+  "followHubDeliveries": "{count, plural, =1{{count} livraison} other{{count} livraisons}}",
+  "@followHubDeliveries": {
+    "description": "Phrase de réputation, nombre de livraisons (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "followHubRespondsIn": "répond en {hours} h",
+  "@followHubRespondsIn": {
+    "description": "Phrase de réputation, délai de réponse moyen (traveler_profile_hub_screen.dart, _StatSentence ; mis en forme par emphasizedSpans).",
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "followHubNewOnYadony": "Nouveau sur Yadony",
+  "@followHubNewOnYadony": {
+    "description": "Repli de la phrase de réputation quand le voyageur n'a ni note ni livraison (traveler_profile_hub_screen.dart, _StatSentence)."
+  },
+  "followHubTripsTab": "Trajets",
+  "@followHubTripsTab": {
+    "description": "Onglet des trajets du voyageur (traveler_profile_hub_screen.dart, _StatsAndTabBar)."
+  },
+  "followHubReviewsTab": "Avis",
+  "@followHubReviewsTab": {
+    "description": "Onglet des avis du voyageur (traveler_profile_hub_screen.dart, _StatsAndTabBar)."
+  },
+  "followHubTripsLoadError": "Impossible de charger les trajets. Réessayez dans un instant.",
+  "@followHubTripsLoadError": {
+    "description": "Description de l'état d'erreur de l'onglet Trajets (traveler_profile_hub_screen.dart, _TripsTab)."
+  },
+  "followHubNoTripsDescription": "Ce voyageur n'a pas encore publié de trajet.",
+  "@followHubNoTripsDescription": {
+    "description": "Description de l'état vide de l'onglet Trajets (traveler_profile_hub_screen.dart, _TripsTab)."
+  },
+  "followHubReviewsLoadError": "Impossible de charger les avis",
+  "@followHubReviewsLoadError": {
+    "description": "Titre de l'état d'erreur de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsTab)."
+  },
+  "followHubNoReviewsTitle": "Aucun avis",
+  "@followHubNoReviewsTitle": {
+    "description": "Titre de l'état vide de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsList)."
+  },
+  "followHubNoReviewsDescription": "Ce voyageur n'a pas encore reçu d'avis.",
+  "@followHubNoReviewsDescription": {
+    "description": "Description de l'état vide de l'onglet Avis (traveler_profile_hub_screen.dart, _ReviewsList)."
+  },
+  "followHubReviewsCount": "{count, plural, =1{{count} avis} other{{count} avis}}",
+  "@followHubReviewsCount": {
+    "description": "Nombre d'avis dans l'en-tête de l'onglet Avis ; invariant en français, pluralisé en anglais (traveler_profile_hub_screen.dart, _ReviewsList).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "followHubReserveButton": "Réserver",
+  "@followHubReserveButton": {
+    "description": "Bouton de réservation d'un trajet du voyageur (traveler_announcement_card.dart, TravelerAnnouncementCard)."
+  },
+  "followHubFullBadge": "Complet",
+  "@followHubFullBadge": {
+    "description": "Badge quand le trajet n'a plus de kg disponible (traveler_announcement_card.dart, _MetaLine)."
+  },
+  "followHubAvailableKg": "{kg} kg disponibles",
+  "@followHubAvailableKg": {
+    "description": "Poids disponible du trajet, déjà formaté (traveler_announcement_card.dart, _MetaLine).",
+    "placeholders": {
+      "kg": {"type": "String"}
+    }
+  },
+  "proPastDueMessage": "Votre dernier paiement n'a pas abouti. Sans régularisation, votre accès PRO sera suspendu.",
+  "@proPastDueMessage": {
+    "description": "Message du bandeau d'abonnement PRO impayé (subscription_status_banner.dart, SubscriptionStatusBanner)."
+  },
+  "proPayAction": "Régler",
+  "@proPayAction": {
+    "description": "Bouton d'action du bandeau d'abonnement PRO impayé (subscription_status_banner.dart, SubscriptionStatusBanner)."
+  },
+  "proSubscribeAction": "S'abonner",
+  "@proSubscribeAction": {
+    "description": "Bouton d'action du bandeau de grâce historique, renvoie vers le portail d'abonnement PRO (subscription_status_banner.dart, SubscriptionStatusBanner) — clé dédiée au domaine PRO, distincte de followFollowButton (R40)."
+  },
+  "proFreeAccessEndingSoon": "Votre accès PRO gratuit prendra bientôt fin.",
+  "@proFreeAccessEndingSoon": {
+    "description": "Message de grâce historique sans échéance connue (subscription_status_banner.dart, _legacyGraceMessage)."
+  },
+  "proFreeAccessEnded": "Votre accès PRO gratuit a pris fin.",
+  "@proFreeAccessEnded": {
+    "description": "Message de grâce historique dont l'échéance est déjà passée (subscription_status_banner.dart, _legacyGraceMessage)."
+  },
+  "proFreeAccessEndsInDays": "{count, plural, =1{Votre accès PRO gratuit prend fin dans {count} jour.} other{Votre accès PRO gratuit prend fin dans {count} jours.}}",
+  "@proFreeAccessEndsInDays": {
+    "description": "Message de grâce historique avec échéance future (subscription_status_banner.dart, _legacyGraceMessage ; corrige l'accord « 0 jour » que l'ancien `days > 1 ? 's' : ''` produisait).",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "proManageAction": "Gérer",
+  "@proManageAction": {
+    "description": "Bouton d'action du bandeau d'abonnement PRO actif en résiliation programmée (subscription_status_banner.dart, SubscriptionStatusBanner)."
+  },
+  "proSubscriptionEndsOn": "Votre abonnement PRO prend fin le {date}.",
+  "@proSubscriptionEndsOn": {
+    "description": "Message du bandeau d'abonnement PRO actif en résiliation programmée, date déjà formatée (subscription_status_banner.dart, _activeBanner).",
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "proStatusCancelScheduled": "Résiliation programmée",
+  "@proStatusCancelScheduled": {
+    "description": "Statut de la carte d'abonnement PRO, actif avec résiliation programmée (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusActive": "Actif",
+  "@proStatusActive": {
+    "description": "Statut de la carte d'abonnement PRO, actif (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusPastDue": "Paiement en attente",
+  "@proStatusPastDue": {
+    "description": "Statut de la carte d'abonnement PRO, impayé (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusLegacyGrace": "Accès gratuit temporaire",
+  "@proStatusLegacyGrace": {
+    "description": "Statut de la carte d'abonnement PRO, grâce historique (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusCanceled": "Résilié",
+  "@proStatusCanceled": {
+    "description": "Statut de la carte d'abonnement PRO, résilié (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusExpired": "Expiré",
+  "@proStatusExpired": {
+    "description": "Statut de la carte d'abonnement PRO, expiré (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusNone": "Aucun abonnement",
+  "@proStatusNone": {
+    "description": "Statut de la carte d'abonnement PRO, aucun abonnement (subscription_status_card.dart, _statusLabel)."
+  },
+  "proStatusUnknown": "Statut inconnu",
+  "@proStatusUnknown": {
+    "description": "Statut de la carte d'abonnement PRO, inconnu (subscription_status_card.dart, _statusLabel)."
+  },
+  "proBillingMonthly": "Facturation mensuelle",
+  "@proBillingMonthly": {
+    "description": "Rythme de facturation mensuel de la carte d'abonnement PRO (subscription_status_card.dart, _cycleLabel)."
+  },
+  "proBillingYearly": "Facturation annuelle",
+  "@proBillingYearly": {
+    "description": "Rythme de facturation annuel de la carte d'abonnement PRO (subscription_status_card.dart, _cycleLabel)."
+  },
+  "proFreeTemporaryAccess": "Votre accès PRO est gratuit et temporaire.",
+  "@proFreeTemporaryAccess": {
+    "description": "Mention de grâce historique sur la carte d'abonnement PRO (subscription_status_card.dart, SubscriptionStatusCard)."
+  },
+  "proCancellationScheduledOn": "Résiliation programmée pour le {date}.",
+  "@proCancellationScheduledOn": {
+    "description": "Mention de résiliation programmée sur la carte d'abonnement PRO, date déjà formatée (subscription_status_card.dart, SubscriptionStatusCard).",
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "proNextRenewalOn": "Prochain renouvellement le {date}.",
+  "@proNextRenewalOn": {
+    "description": "Mention de prochain renouvellement sur la carte d'abonnement PRO, date déjà formatée (subscription_status_card.dart, SubscriptionStatusCard).",
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "proManageSubscriptionButton": "Gérer mon abonnement",
+  "@proManageSubscriptionButton": {
+    "description": "Bouton de gestion sur la carte d'abonnement PRO (subscription_status_card.dart, SubscriptionStatusCard)."
+  },
+  "proPortalOpenFailedMessage": "Impossible d'ouvrir la page. Réessayez, ou rendez-vous sur le site Yadony PRO depuis votre navigateur.",
+  "@proPortalOpenFailedMessage": {
+    "description": "Message d'échec d'ouverture du portail PRO, partagé par l'écran Compte PRO et le bandeau du Profil (pro_portal_copy.dart)."
+  },
+  "proLimitUnderstoodButton": "Compris",
+  "@proLimitUnderstoodButton": {
+    "description": "Bouton unique du dialogue de limite PRO quand l'offre PRO est fermée (pro_limit_dialog.dart)."
+  },
+  "proLimitUpgradeButton": "Passer en PRO",
+  "@proLimitUpgradeButton": {
+    "description": "Bouton de confirmation du dialogue de limite PRO quand l'offre est ouverte (pro_limit_dialog.dart)."
+  },
+  "proAccountScreenTitle": "Compte PRO",
+  "@proAccountScreenTitle": {
+    "description": "Titre de l'écran compte PRO, vues chargement et vente (upgrade_to_pro_screen.dart, _ProAuthPendingView, _ProPitchView)."
+  },
+  "proAccountLoadingMessage": "Chargement de votre compte.",
+  "@proAccountLoadingMessage": {
+    "description": "Message d'attente pendant la résolution de l'authentification (upgrade_to_pro_screen.dart, _ProAuthPendingView)."
+  },
+  "proPitchHeadline": "Passez en compte PRO",
+  "@proPitchHeadline": {
+    "description": "Titre de la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proPitchDescription": "Le compte PRO met en avant votre activité de transporteur et vous donne accès aux avantages réservés aux professionnels.",
+  "@proPitchDescription": {
+    "description": "Description de la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proPitchIncludesLabel": "CE QUE COMPREND LE COMPTE PRO",
+  "@proPitchIncludesLabel": {
+    "description": "Libellé de section des avantages, page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proAdvantageBadge": "Badge Pro",
+  "@proAdvantageBadge": {
+    "description": "Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proAdvantageUnlimitedVolume": "Volume illimité",
+  "@proAdvantageUnlimitedVolume": {
+    "description": "Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proAdvantageMatchingPriority": "Priorité de mise en relation",
+  "@proAdvantageMatchingPriority": {
+    "description": "Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proAdvantageDedicatedSupport": "Support dédié",
+  "@proAdvantageDedicatedSupport": {
+    "description": "Avantage listé sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proPitchPricingLabel": "TARIFS",
+  "@proPitchPricingLabel": {
+    "description": "Libellé de section des tarifs, page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proPricePerMonth": "{price} par mois",
+  "@proPricePerMonth": {
+    "description": "Prix mensuel de l'abonnement PRO, déjà formaté par la devise (upgrade_to_pro_screen.dart, _ProPitchView).",
+    "placeholders": {
+      "price": {"type": "String"}
+    }
+  },
+  "proPricePerYear": "{price} par an",
+  "@proPricePerYear": {
+    "description": "Prix annuel de l'abonnement PRO, déjà formaté par la devise (upgrade_to_pro_screen.dart, _ProPitchView).",
+    "placeholders": {
+      "price": {"type": "String"}
+    }
+  },
+  "proYearlySaving": "Soit {amount} d'économie sur l'année.",
+  "@proYearlySaving": {
+    "description": "Économie annuelle de l'abonnement PRO, déjà formatée par la devise (upgrade_to_pro_screen.dart, _ProPitchView).",
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "proPortalHint": "L'abonnement se souscrit sur le site Yadony PRO, dans votre navigateur.",
+  "@proPortalHint": {
+    "description": "Bandeau d'information sur la page de vente du compte PRO (upgrade_to_pro_screen.dart, _ProPitchView)."
+  },
+  "proPortalButtonLabel": "S'abonner sur le site Yadony PRO",
+  "@proPortalButtonLabel": {
+    "description": "Bouton d'ouverture du portail web PRO, réutilisé par la vue vente et la vue abonnée (upgrade_to_pro_screen.dart)."
+  },
+  "proManageGuidance": "La gestion et la résiliation de votre abonnement se font sur le site Yadony PRO, dans votre navigateur. Une connexion vous y sera demandée.",
+  "@proManageGuidance": {
+    "description": "Indication sur où gérer et résilier l'abonnement PRO (upgrade_to_pro_screen.dart)."
+  },
+  "proDowngradeBlockedMessage": "Votre abonnement PRO est toujours actif. {guidance}",
+  "@proDowngradeBlockedMessage": {
+    "description": "Message opposé au refus 409 active-stripe-subscription, guidance déjà traduite en paramètre (upgrade_to_pro_screen.dart).",
+    "placeholders": {
+      "guidance": {"type": "String"}
+    }
+  },
+  "proAccessEndedMessage": "Votre accès PRO n'est plus actif. Vous pouvez reprendre un abonnement sur le site Yadony PRO.",
+  "@proAccessEndedMessage": {
+    "description": "Message quand le serveur n'accorde plus l'accès PRO (upgrade_to_pro_screen.dart, _ProSubscriberView)."
+  },
+  "proNoSubscriptionMessage": "Vous n'avez pas d'abonnement PRO. Vous pouvez en souscrire un sur le site Yadony PRO.",
+  "@proNoSubscriptionMessage": {
+    "description": "Message quand le statut est « none » (upgrade_to_pro_screen.dart, _ProSubscriberView)."
+  },
+  "proSubscriberScreenTitle": "Mon compte PRO",
+  "@proSubscriberScreenTitle": {
+    "description": "Titre de l'écran compte PRO, vue abonnée (upgrade_to_pro_screen.dart, _ProSubscriberView)."
+  },
+  "proLoadSubscriptionError": "Impossible de charger l'état de votre abonnement pour le moment.",
+  "@proLoadSubscriptionError": {
+    "description": "Message d'erreur de chargement de l'abonnement PRO (upgrade_to_pro_screen.dart, _ProSubscriberView)."
+  },
+  "proSubscriptionNotLoadedYet": "L'état de votre abonnement n'a pas encore été chargé.",
+  "@proSubscriptionNotLoadedYet": {
+    "description": "Message quand aucune demande n'a encore été envoyée (upgrade_to_pro_screen.dart, _ProSubscriberView)."
+  },
+  "proDowngradeDialogTitle": "Désactiver le compte PRO",
+  "@proDowngradeDialogTitle": {
+    "description": "Titre du dialogue de confirmation de retour en compte standard (upgrade_to_pro_screen.dart, _confirmDowngrade)."
+  },
+  "proDowngradeDialogMessage": "Votre badge PRO et vos avantages professionnels seront retirés de votre profil.",
+  "@proDowngradeDialogMessage": {
+    "description": "Message du dialogue de confirmation de retour en compte standard (upgrade_to_pro_screen.dart, _confirmDowngrade)."
+  },
+  "proDowngradeConfirmButton": "Désactiver",
+  "@proDowngradeConfirmButton": {
+    "description": "Bouton de confirmation du dialogue de retour en compte standard (upgrade_to_pro_screen.dart, _confirmDowngrade)."
+  },
+  "proDowngradeSuccessMessage": "Compte PRO désactivé.",
+  "@proDowngradeSuccessMessage": {
+    "description": "Snackbar de succès après retour en compte standard (upgrade_to_pro_screen.dart, _UpgradeToProViewState)."
+  },
+  "proDowngradeButton": "Revenir en compte standard",
+  "@proDowngradeButton": {
+    "description": "Bouton de retour en compte standard (upgrade_to_pro_screen.dart, _ProSubscriberView)."
   }
 }

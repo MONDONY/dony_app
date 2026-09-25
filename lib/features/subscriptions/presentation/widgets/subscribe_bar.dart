@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Barre d'abonnement à un voyageur, partagée par la fiche voyageur du
@@ -18,7 +19,7 @@ class SubscribeBar extends StatelessWidget {
     required this.onSubscribe,
     required this.onUnsubscribe,
     required this.onTogglePush,
-    this.subscribeLabel = "S'abonner",
+    this.subscribeLabel,
   });
 
   final bool subscribed;
@@ -26,24 +27,26 @@ class SubscribeBar extends StatelessWidget {
   final VoidCallback onSubscribe;
   final VoidCallback onUnsubscribe;
   final ValueChanged<bool> onTogglePush;
-  final String subscribeLabel;
 
-  String get _caption {
+  /// `null` pour le libellé partagé ([AppLocalizations.followFollowButton]) ;
+  /// certains appelants (fiche voyageur du matching) le remplacent par une
+  /// phrase plus longue.
+  final String? subscribeLabel;
+
+  String _caption(AppLocalizations l) {
     if (!subscribed) {
-      return 'Vous serez prévenu de chacun de ses nouveaux trajets.';
+      return l.followSubscribeCaption;
     }
-    return pushEnabled
-        ? 'Alertes push activées : chaque nouveau trajet vous notifie.'
-        : 'Sans alerte push : ses trajets arriveront seulement dans vos '
-              'notifications.';
+    return pushEnabled ? l.followPushOnCaption : l.followPushOffCaption;
   }
 
   Future<void> _confirmUnsubscribe(BuildContext context) async {
+    final l = context.l10n;
     final confirmed = await DonyDialog.show(
       context,
-      title: 'Se désabonner ?',
-      message: 'Vous ne serez plus prévenu de ses nouveaux trajets.',
-      confirmLabel: 'Se désabonner',
+      title: l.followUnfollowDialogTitle,
+      message: l.followUnsubscribeConfirmMessage,
+      confirmLabel: l.followUnfollowButton,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'bell-off',
     );
@@ -52,6 +55,7 @@ class SubscribeBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -62,7 +66,7 @@ class SubscribeBar extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: DonySpacing.sm),
           child: Text(
-            _caption,
+            _caption(l),
             style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ),
@@ -71,7 +75,7 @@ class SubscribeBar extends StatelessWidget {
             children: [
               Expanded(
                 child: DonyButton(
-                  label: 'Abonné ✓',
+                  label: l.followFollowingButton,
                   variant: DonyButtonVariant.secondary,
                   fullWidth: false,
                   onPressed: () => _confirmUnsubscribe(context),
@@ -86,7 +90,7 @@ class SubscribeBar extends StatelessWidget {
           )
         else
           DonyButton(
-            label: subscribeLabel,
+            label: subscribeLabel ?? l.followFollowButton,
             iconAsset: 'bell',
             onPressed: onSubscribe,
           ),
@@ -105,17 +109,16 @@ class _PushToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final fg = enabled ? cs.primary : cs.onSurfaceVariant;
 
     return Semantics(
       toggled: enabled,
-      label: 'Alertes push',
+      label: l.followPushToggleSemantics,
       child: Tooltip(
-        message: enabled
-            ? 'Couper les alertes push'
-            : 'Activer les alertes push',
+        message: enabled ? l.followPushOffTooltip : l.followPushOnTooltip,
         child: Material(
           color: enabled ? cs.primary.withValues(alpha: 0.08) : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.lg),
@@ -142,7 +145,7 @@ class _PushToggle extends StatelessWidget {
                   DonyIcon(enabled ? 'bell' : 'bell-off', size: 18, color: fg),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
-                    'Push',
+                    l.followPushBadge,
                     style: tt.labelMedium?.copyWith(
                       color: fg,
                       fontWeight: FontWeight.w700,

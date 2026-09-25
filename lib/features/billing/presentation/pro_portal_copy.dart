@@ -6,12 +6,13 @@
 /// copie non couverte par un test dérive sans que rien ne le signale.
 library;
 
+import 'package:dony/l10n/l10n.dart';
+
 /// Échec d'ouverture du navigateur.
 ///
 /// N'accuse pas le réseau : ouvrir un navigateur n'en consomme pas, et
 /// l'échec vient d'une URL mal configurée ou de l'absence d'application
 /// capable de l'ouvrir. Envoyer l'utilisateur vérifier sa connexion
 /// l'enverrait chercher là où rien ne cloche.
-const String kProPortalOpenFailedMessage =
-    "Impossible d'ouvrir la page. Réessayez, ou rendez-vous sur le site "
-    'Yadony PRO depuis votre navigateur.';
+String proPortalOpenFailedMessage(AppLocalizations l) =>
+    l.proPortalOpenFailedMessage;

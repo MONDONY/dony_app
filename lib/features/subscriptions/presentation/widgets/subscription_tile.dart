@@ -3,7 +3,9 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
+import 'package:dony/features/subscriptions/presentation/subscription_labels.dart';
 import 'package:dony/features/subscriptions/presentation/widgets/subscription_recency.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Carte d'un voyageur suivi.
@@ -35,24 +37,21 @@ class SubscriptionTile extends StatelessWidget {
   /// Injectée par les tests pour figer les libellés d'ancienneté.
   final DateTime? now;
 
-  String get _tripsLabel => switch (item.ongoingTripsCount) {
-    0 => 'Aucun trajet en cours',
-    1 => '1 trajet en cours',
-    final n => '$n trajets en cours',
-  };
+  String _tripsLabel(AppLocalizations l) =>
+      l.followOngoingTrips(item.ongoingTripsCount);
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final last = item.lastAnnouncement;
+    final name = item.displayName(l);
 
     return Semantics(
       // Le « nouveau » est signalé visuellement par une pastille sur l'avatar :
       // sans ce label, un lecteur d'écran ne le percevrait pas du tout.
-      label: item.hasNew
-          ? 'Nouveau trajet publié par ${item.travelerName}'
-          : null,
+      label: item.hasNew ? l.followNewTripSemantics(name) : null,
       child: DonyCard(
         onTap: onTap,
         padding: const EdgeInsets.all(DonySpacing.base),
@@ -69,7 +68,7 @@ class SubscriptionTile extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          item.travelerName,
+                          name,
                           style: tt.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -87,18 +86,18 @@ class SubscriptionTile extends StatelessWidget {
                     _LastTripLine(
                       last: last,
                       highlight: item.hasNew,
-                      travelerName: item.travelerName,
+                      travelerName: name,
                       onOpen: onOpenLastTrip,
                     )
                   else
                     Text(
-                      'Aucun trajet publié pour le moment',
+                      l.followNoRecentTrip,
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   const SizedBox(height: DonySpacing.xs),
                   _MetaLine(
                     rating: item.averageRating,
-                    tripsLabel: _tripsLabel,
+                    tripsLabel: _tripsLabel(l),
                     // La date de départ prime sur l'ancienneté de la
                     // publication : c'est elle qui décide si l'expéditeur peut
                     // confier son colis. L'ancienneté ne reste qu'en repli,
@@ -106,8 +105,15 @@ class SubscriptionTile extends StatelessWidget {
                     dateLabel: last == null
                         ? null
                         : (last.departureDate != null
-                              ? 'Départ ${subscriptionDepartureLabel(last.departureDate!, now: now)}'
+                              ? l.followDepartureLabel(
+                                  subscriptionDepartureLabel(
+                                    l,
+                                    last.departureDate!,
+                                    now: now,
+                                  ),
+                                )
                               : subscriptionRecencyLabel(
+                                  l,
                                   last.publishedAt,
                                   now: now,
                                 )),
@@ -117,7 +123,7 @@ class SubscriptionTile extends StatelessWidget {
             ),
             _BellButton(
               pushEnabled: item.pushEnabled,
-              travelerName: item.travelerName,
+              travelerName: name,
               onPressed: onToggleBell,
             ),
           ],
@@ -139,7 +145,7 @@ class _AvatarWithNewDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final avatar = DonyAvatar(
-      name: item.travelerName,
+      name: item.displayName(context.l10n),
       imageUrl: item.avatarUrl,
       pro: item.isProAccount,
     );
@@ -182,7 +188,7 @@ class _ProTag extends StatelessWidget {
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
-        'PRO',
+        context.l10n.followProBadge,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: cs.primary,
           fontWeight: FontWeight.w800,
@@ -214,6 +220,7 @@ class _LastTripLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final currency = SupportedCurrency.fromCodeOrDefault(last.currency);
@@ -269,7 +276,7 @@ class _LastTripLine extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: 'Voir le trajet $trajet de $travelerName',
+      label: l.followViewTripSemantics(trajet, travelerName),
       child: Material(
         color: highlight
             ? DonyColors.accent.withValues(alpha: 0.07)
@@ -312,6 +319,7 @@ class _MetaLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final style = tt.labelSmall?.copyWith(color: cs.onSurfaceVariant);
@@ -325,7 +333,7 @@ class _MetaLine extends StatelessWidget {
           DonyIcon('star', size: 12, color: cs.warning),
           const SizedBox(width: 3),
           Text(
-            rating!.toStringAsFixed(1).replaceAll('.', ','),
+            formatOneDecimal(l, rating!),
             style: style?.copyWith(
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
@@ -374,14 +382,13 @@ class _BellButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cs = Theme.of(context).colorScheme;
     return Semantics(
       toggled: pushEnabled,
-      label: 'Alertes push de $travelerName',
+      label: l.followPushSemanticsFor(travelerName),
       child: IconButton(
-        tooltip: pushEnabled
-            ? 'Couper les alertes push'
-            : 'Activer les alertes push',
+        tooltip: pushEnabled ? l.followPushOffTooltip : l.followPushOnTooltip,
         onPressed: onPressed,
         icon: DonyIcon(
           pushEnabled ? 'bell' : 'bell-off',

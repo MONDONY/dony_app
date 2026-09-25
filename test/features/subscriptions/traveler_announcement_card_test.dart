@@ -5,13 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../helpers/l10n_test_helpers.dart';
+
 void main() {
   // Épingle le taux de commission : ces tests assertent des montants
   // calculés à 12 % (indépendants du défaut kDonyCommissionRateDefault).
   setUpAll(() => setDonyCommissionRate(0.12));
   tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
 
-  setUpAll(() => initializeDateFormatting('fr'));
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
+    await initializeDateFormatting('en');
+  });
 
   Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
@@ -193,5 +198,34 @@ void main() {
 
     // Si RenderFlex overflow, le test lève une exception
     expect(tester.takeException(), isNull);
+  });
+
+  // ─── Anglais ────────────────────────────────────────────────────────────────
+
+  testWidgets('anglais : date, kg disponibles, Complet et Réserver traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      wrap(
+        TravelerAnnouncementCard(
+          announcement: announcement(availableKg: 7),
+          onReserve: () {},
+        ),
+      ),
+    );
+    expect(find.text('Jun 1, 2026'), findsOneWidget);
+    expect(find.text('7 kg available'), findsOneWidget);
+    expect(find.text('Book'), findsOneWidget);
+
+    await tester.pumpWidget(
+      wrap(
+        TravelerAnnouncementCard(
+          announcement: announcement(availableKg: 0),
+          onReserve: () {},
+        ),
+      ),
+    );
+    expect(find.text('Full'), findsOneWidget);
   });
 }
