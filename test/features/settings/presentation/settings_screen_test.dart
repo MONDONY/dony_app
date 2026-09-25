@@ -6,10 +6,12 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/data/models/user_preferences_model.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
@@ -65,6 +67,60 @@ Widget _wrap({UserPreferencesModel? prefs}) {
   );
 
   return MaterialApp.router(routerConfig: router);
+}
+
+/// Câblage réel (`AppPreferencesBloc` non moqué + locale effective) : même
+/// montage que `MaterialApp.router` dans `lib/app/app.dart`, pour vérifier
+/// bout en bout qu'un changement de langue dans Réglages se propage au
+/// texte affiché sans reconstruire l'arbre de widgets.
+Widget _wrapReal(AppPreferencesBloc bloc) {
+  final router = GoRouter(
+    routes: [
+      GoRoute(path: '/', builder: (_, _) => const SettingsScreen()),
+      GoRoute(path: '/settings/security', builder: (_, _) => const Scaffold()),
+      GoRoute(path: '/settings/privacy', builder: (_, _) => const Scaffold()),
+      GoRoute(path: '/settings/data', builder: (_, _) => const Scaffold()),
+      GoRoute(
+        path: '/settings/notifications',
+        builder: (_, _) => const Scaffold(),
+      ),
+      GoRoute(
+        path: '/settings/preferences',
+        builder: (_, _) => const Scaffold(),
+      ),
+      GoRoute(
+        path: '/settings/accessibility',
+        builder: (_, _) => const Scaffold(),
+      ),
+      GoRoute(path: '/legal/terms', builder: (_, _) => const Scaffold()),
+      GoRoute(path: '/legal/privacy', builder: (_, _) => const Scaffold()),
+      GoRoute(
+        path: '/settings/diagnostics',
+        builder: (_, _) => const Scaffold(),
+      ),
+    ],
+  );
+
+  return BlocProvider<AppPreferencesBloc>.value(
+    value: bloc,
+    child: BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
+      builder: (context, state) => MaterialApp.router(
+        locale:
+            state.preferences.languageCode ==
+                UserPreferencesModel.kLanguageSystem
+            ? null
+            : Locale(state.preferences.languageCode),
+        localeListResolutionCallback: AppL10n.localeListResolution,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) {
+          AppL10n.syncIntl(Localizations.localeOf(context));
+          return child!;
+        },
+        routerConfig: router,
+      ),
+    ),
+  );
 }
 
 void main() {
@@ -265,6 +321,10 @@ void main() {
     });
 
     testWidgets('languageCode en, anglais coupé → Français', (tester) async {
+      // Interrupteur forcé à `false` : `kEnglishEnabled` vaut `true` depuis
+      // l'activation, ce test vérifie le comportement replié explicitement.
+      AppL10n.debugEnglishEnabled = false;
+      addTearDown(() => AppL10n.debugEnglishEnabled = null);
       await tester.pumpWidget(
         _wrap(prefs: const UserPreferencesModel(languageCode: 'en')),
       );
@@ -596,9 +656,52 @@ void main() {
       },
     );
 
+    testWidgets(
+      'Réglages : la liste contient English et la sélection change la '
+      'langue sans redémarrer',
+      (tester) async {
+        // Câblage identique à `MaterialApp.router` dans `lib/app/app.dart` :
+        // un vrai AppPreferencesBloc, pas de mock, pour vérifier que le
+        // changement de langue se propage jusqu'au texte affiché sans
+        // reconstruire l'arbre de widgets (pas de redémarrage).
+        final box = MockBox();
+        when(
+          () => box.get(any(), defaultValue: any(named: 'defaultValue')),
+        ).thenAnswer((inv) => inv.namedArguments[#defaultValue]);
+        when(
+          () => box.get(
+            HiveService.kLanguageCode,
+            defaultValue: any(named: 'defaultValue'),
+          ),
+        ).thenReturn('fr');
+        when(() => box.put(any(), any())).thenAnswer((_) async {});
+        final bloc = AppPreferencesBloc(box);
+        addTearDown(bloc.close);
+        addTearDown(() => Intl.defaultLocale = null);
+
+        await tester.pumpWidget(_wrapReal(bloc));
+        await tester.pumpAndSettle();
+        expect(find.text('Paramètres'), findsOneWidget);
+
+        await tester.tap(find.text('Langue'));
+        await tester.pumpAndSettle();
+        expect(find.text('English'), findsOneWidget);
+
+        await tester.tap(find.text('English'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Settings'), findsOneWidget);
+        expect(find.text('Paramètres'), findsNothing);
+      },
+    );
+
     testWidgets('language picker — anglais coupé : pas de choix English', (
       tester,
     ) async {
+      // Interrupteur forcé à `false` : `kEnglishEnabled` vaut `true` depuis
+      // l'activation, ce test vérifie le comportement replié explicitement.
+      AppL10n.debugEnglishEnabled = false;
+      addTearDown(() => AppL10n.debugEnglishEnabled = null);
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
       await tester.tap(find.text('Langue'));

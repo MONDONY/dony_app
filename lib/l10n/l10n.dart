@@ -6,10 +6,10 @@ export 'package:dony/l10n/generated/app_localizations.dart';
 
 /// Interrupteur de mise en service de l'anglais.
 ///
-/// Reste à `false` tant que tous les écrans ne sont pas traduits : la langue
-/// résolue est alors toujours le français et le choix « English » est masqué
-/// dans Réglages. La dernière PR du chantier i18n le passe à `true`.
-const bool kEnglishEnabled = false;
+/// `true` depuis la PR d'activation du chantier i18n : tous les écrans sont
+/// traduits, la langue du téléphone (anglais si elle l'est, français sinon)
+/// est résolue normalement et le choix « English » apparaît dans Réglages.
+const bool kEnglishEnabled = true;
 
 /// Point d'entrée unique de la langue de l'app.
 abstract final class AppL10n {

@@ -14,6 +14,14 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<!-- Sans cette clé, iOS ne propose que la langue de développement dans
+	     Réglages > Yadony > Langue, et la Locale système peut être rabattue
+	     dessus au lieu des langues réellement embarquées par l'app. -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>fr</string>
+		<string>en</string>
+	</array>
 	<key>CFBundleName</key>
 	<string>Yadony</string>
 	<key>CFBundlePackageType</key>

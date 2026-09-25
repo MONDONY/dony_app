@@ -24,6 +24,10 @@ void main() {
   testWidgets('anglais coupé : choix manuel en → reste en français', (
     tester,
   ) async {
+    // Interrupteur forcé à `false` : `kEnglishEnabled` vaut `true` depuis
+    // l'activation, ce test vérifie le comportement replié explicitement.
+    AppL10n.debugEnglishEnabled = false;
+    addTearDown(() => AppL10n.debugEnglishEnabled = null);
     await tester.pumpWidget(_app(AppL10n.en));
     expect(find.text('Fermer'), findsOneWidget);
     expect(Intl.defaultLocale, 'fr');
@@ -46,12 +50,46 @@ void main() {
     expect(find.text('Close'), findsOneWidget);
   });
 
+  testWidgets('téléphone en_US, préférence system : l\'app est en anglais', (
+    tester,
+  ) async {
+    // Anglais réellement activé (pas de flag forcé) : c'est le
+    // comportement par défaut depuis l'activation du chantier i18n.
+    tester.platformDispatcher.localesTestValue = const [Locale('en', 'US')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    await tester.pumpWidget(_app(null));
+    expect(find.text('Close'), findsOneWidget);
+    expect(Intl.defaultLocale, 'en');
+  });
+
   testWidgets('anglais activé : téléphone en wolof → français', (tester) async {
     enableEnglish();
     tester.platformDispatcher.localesTestValue = const [Locale('wo', 'SN')];
     addTearDown(tester.platformDispatcher.clearLocalesTestValue);
     await tester.pumpWidget(_app(null));
     expect(find.text('Fermer'), findsOneWidget);
+  });
+
+  testWidgets('téléphone es_ES : l\'app est en français', (tester) async {
+    // Anglais réellement activé (pas de flag forcé) : seul l'espagnol,
+    // langue non gérée, doit retomber sur le français.
+    tester.platformDispatcher.localesTestValue = const [Locale('es', 'ES')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    await tester.pumpWidget(_app(null));
+    expect(find.text('Fermer'), findsOneWidget);
+    expect(Intl.defaultLocale, 'fr');
+  });
+
+  testWidgets('téléphone fr_FR, préférence en : l\'app est en anglais', (
+    tester,
+  ) async {
+    // Anglais réellement activé (pas de flag forcé) : un choix manuel
+    // « English » prime sur un téléphone en français.
+    tester.platformDispatcher.localesTestValue = const [Locale('fr', 'FR')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    await tester.pumpWidget(_app(AppL10n.en));
+    expect(find.text('Close'), findsOneWidget);
+    expect(Intl.defaultLocale, 'en');
   });
 
   testWidgets(
