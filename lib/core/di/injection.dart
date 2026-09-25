@@ -175,6 +175,7 @@ import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
+import 'package:dony/features/settings/bloc/language_sync_cubit.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/pin_status_cubit.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
@@ -778,6 +779,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<UserLanguageRepository>(
     () => UserLanguageRepository(getIt<UserLanguageRemoteDatasource>()),
+  );
+  getIt.registerFactory<LanguageSyncCubit>(
+    () => LanguageSyncCubit(
+      getIt<UserLanguageRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerLazySingleton<BusinessPrefsBloc>(
     () => BusinessPrefsBloc(

@@ -39,8 +39,10 @@ import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/settings/bloc/language_sync_cubit.dart';
 import 'package:dony/features/settings/data/models/user_preferences_model.dart';
 import 'package:dony/features/settings/data/repositories/privacy_settings_repository.dart';
+import 'package:dony/features/settings/presentation/widgets/language_sync_gate.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -319,6 +321,12 @@ class _DonyAppState extends State<DonyApp> {
                 BlocProvider<LocalAuthBloc>(
                   create: (_) => getIt<LocalAuthBloc>(),
                 ),
+                // Synchronise la langue effective avec `preferredLanguage`
+                // du compte (voir `LanguageSyncGate`, sous `Localizations`
+                // dans le `builder` de `MaterialApp.router`).
+                BlocProvider<LanguageSyncCubit>(
+                  create: (_) => getIt<LanguageSyncCubit>(),
+                ),
                 BlocProvider<KycBloc>(create: (_) => getIt<KycBloc>()),
                 BlocProvider<AnnouncementBloc>(
                   create: (_) => getIt<AnnouncementBloc>(),
@@ -514,8 +522,10 @@ class _DonyAppState extends State<DonyApp> {
                                   // seulement les onglets du shell.
                                   const ConnectivityBanner(),
                                   Expanded(
-                                    child: AnalyticsConsentGate(
-                                      child: child ?? const SizedBox.shrink(),
+                                    child: LanguageSyncGate(
+                                      child: AnalyticsConsentGate(
+                                        child: child ?? const SizedBox.shrink(),
+                                      ),
                                     ),
                                   ),
                                 ],

@@ -505,6 +505,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `search_phrase_parsed` | SearchComposerBloc._onPhraseSubmitted() — après un appel réussi au parseur serveur (`SearchParseRepository.parse`), que la phrase soit reconnue ou non (propriétés `recognized_count`, `unresolved_count`). La phrase elle-même n'est jamais envoyée |
 | `search_parse_failed` | SearchComposerBloc._onPhraseSubmitted() — la phrase parsée par le serveur ne reconnaît aucun champ (`result.recognized` vide), sous-cas de `search_phrase_parsed` (propriété `unresolved_kinds`) |
 | `search_submitted` | HomeScreen._onFiltersChanged() — à chaque application de filtres sur l'écran Rechercher (retour de l'écran de composition, mais aussi tout autre changement de filtre : chips, sheets de date/prix/poids/note, bascule « Pour mes trajets »), seul point de sortie de tout changement de filtre (propriétés `mode`, `filter_count`, `came_from_phrase` — cette dernière mesure la part des recherches qui passent par la phrase plutôt que par les filtres au doigt, elle décidera du sort du bloc « En une phrase ») |
+| `preferred_language_synced` | LanguageSyncCubit.sync() — langue effective de l'app (`fr`/`en` résolue, jamais `system`) écrite avec succès dans `preferredLanguage` du compte serveur, au démarrage, à la connexion ou à un changement de langue (propriété `language`). Non émis quand la langue était déjà à jour côté serveur, sur un backend ancien (404) ou en cas d'échec réseau |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---
