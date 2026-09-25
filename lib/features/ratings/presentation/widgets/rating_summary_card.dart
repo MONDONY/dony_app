@@ -49,7 +49,7 @@ class RatingSummaryCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    averageRating.toStringAsFixed(1),
+                    formatOneDecimal(context.l10n, averageRating),
                     style: tt.displaySmall?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: cs.onSurface,

@@ -6144,14 +6144,9 @@
   "@cancellationConfirmDialogMessage": {
     "description": "Message du dialogue de confirmation finale (cancellation_bottom_sheet.dart)."
   },
-  "cancellationRefundedSenders": "{count, plural, =1{Trip canceled · {count} sender refunded} other{Trip canceled · {count} senders refunded}}",
-  "@cancellationRefundedSenders": {
-    "description": "Snackbar de succès de l'annulation (cancellation_bottom_sheet.dart), avec le nombre d'expéditeurs remboursés porté par CancellationModel.affectedBidsCount.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
+  "cancellationTripCanceledSnackbar": "Trip canceled",
+  "@cancellationTripCanceledSnackbar": {
+    "description": "Snackbar de succès de l'annulation (cancellation_bottom_sheet.dart). Texte fixe, identique au code vivant d'avant migration — pas de compteur."
   },
   "deliveryNoShowTravelerNotDeliveringTitle": "The traveler isn't delivering",
   "@deliveryNoShowTravelerNotDeliveringTitle": {

@@ -23,6 +23,39 @@ void main() {
     expect(find.text('3 avis'), findsOneWidget);
   });
 
+  // Correction R46 (fix round 1) : l'ancien code (`toStringAsFixed(1)`)
+  // affichait un point même en français ("4.5"). `formatOneDecimal` rend
+  // désormais la virgule française ("4,5"), déclarée ici comme accord.
+  testWidgets('note moyenne avec virgule française', (tester) async {
+    await tester.pumpWidget(
+      wrap(
+        const RatingSummaryCard(
+          averageRating: 4.5,
+          ratingCount: 3,
+          distribution: distribution,
+        ),
+      ),
+    );
+
+    expect(find.text('4,5'), findsOneWidget);
+    expect(find.text('4.5'), findsNothing);
+  });
+
+  testWidgets('note moyenne avec point anglais', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      wrap(
+        const RatingSummaryCard(
+          averageRating: 4.5,
+          ratingCount: 3,
+          distribution: distribution,
+        ),
+      ),
+    );
+
+    expect(find.text('4.5'), findsOneWidget);
+  });
+
   testWidgets('nombre d\'avis traduit en anglais', (tester) async {
     useEnglish();
     await tester.pumpWidget(

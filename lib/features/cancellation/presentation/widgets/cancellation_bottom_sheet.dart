@@ -139,9 +139,7 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
         if (state is CancellationSuccess) {
           DonySnackbar.show(
             context,
-            message: l.cancellationRefundedSenders(
-              state.cancellation.affectedBidsCount,
-            ),
+            message: l.cancellationTripCanceledSnackbar,
             type: DonySnackbarType.success,
           );
           context.go('/announcements');

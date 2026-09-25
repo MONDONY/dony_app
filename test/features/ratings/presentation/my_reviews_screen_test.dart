@@ -101,7 +101,27 @@ void main() {
   });
 
   // 4. Affiche le score moyen quand des avis existent
-  testWidgets('shows average score when reviews exist', (tester) async {
+  // Correction R46 (fix round 1) : l'ancien code (`toStringAsFixed(1)`)
+  // affichait un point même en français ("4.5"). `formatOneDecimal` rend
+  // désormais la virgule française ("4,5"), déclarée ici comme accord.
+  testWidgets('shows average score with French comma when reviews exist', (
+    tester,
+  ) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(MyReviewsLoaded(summary: _summaryWithReviews));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('4,5'), findsOneWidget);
+    expect(find.text('4.5'), findsNothing);
+  });
+
+  testWidgets('shows average score with English dot when reviews exist', (
+    tester,
+  ) async {
+    useEnglish();
     when(
       () => bloc.state,
     ).thenReturn(MyReviewsLoaded(summary: _summaryWithReviews));

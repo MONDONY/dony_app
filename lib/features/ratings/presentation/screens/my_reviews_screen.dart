@@ -264,7 +264,7 @@ class _HeaderSummary extends StatelessWidget {
       children: [
         // Score géant (display) — calme, couleur encre.
         Text(
-          summary.averageRating.toStringAsFixed(1),
+          formatOneDecimal(context.l10n, summary.averageRating),
           style: tt.displayLarge?.copyWith(
             color: cs.onSurface,
             fontWeight: FontWeight.w800,

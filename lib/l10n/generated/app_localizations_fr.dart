@@ -10252,15 +10252,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette action annulera votre trajet et remboursera automatiquement tous les expéditeurs concernés.';
 
   @override
-  String cancellationRefundedSenders(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Trajet annulé · $count expéditeurs remboursés',
-      one: 'Trajet annulé · $count expéditeur remboursé',
-    );
-    return '$_temp0';
-  }
+  String get cancellationTripCanceledSnackbar => 'Trajet annulé';
 
   @override
   String get deliveryNoShowTravelerNotDeliveringTitle =>

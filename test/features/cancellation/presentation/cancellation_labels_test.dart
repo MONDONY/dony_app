@@ -65,30 +65,12 @@ void main() {
     });
   });
 
-  group('cancellationRefundedSenders', () {
-    test('1 — fr (égal à l\'ancien code)', () {
-      expect(
-        fr.cancellationRefundedSenders(1),
-        'Trajet annulé · 1 expéditeur remboursé',
-      );
+  group('cancellationTripCanceledSnackbar', () {
+    test('fr (égal au code vivant d\'avant migration)', () {
+      expect(fr.cancellationTripCanceledSnackbar, 'Trajet annulé');
     });
-    test('1 — en', () {
-      expect(
-        en.cancellationRefundedSenders(1),
-        'Trip canceled · 1 sender refunded',
-      );
-    });
-    test('3 — fr (égal à l\'ancien code)', () {
-      expect(
-        fr.cancellationRefundedSenders(3),
-        'Trajet annulé · 3 expéditeurs remboursés',
-      );
-    });
-    test('3 — en', () {
-      expect(
-        en.cancellationRefundedSenders(3),
-        'Trip canceled · 3 senders refunded',
-      );
+    test('en', () {
+      expect(en.cancellationTripCanceledSnackbar, 'Trip canceled');
     });
   });
 }

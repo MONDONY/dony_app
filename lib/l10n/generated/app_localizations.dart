@@ -17054,11 +17054,11 @@ abstract class AppLocalizations {
   /// **'Cette action annulera votre trajet et remboursera automatiquement tous les expéditeurs concernés.'**
   String get cancellationConfirmDialogMessage;
 
-  /// Snackbar de succès de l'annulation (cancellation_bottom_sheet.dart), avec le nombre d'expéditeurs remboursés porté par CancellationModel.affectedBidsCount.
+  /// Snackbar de succès de l'annulation (cancellation_bottom_sheet.dart). Texte fixe, identique au code vivant d'avant migration — pas de compteur.
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{Trajet annulé · {count} expéditeur remboursé} other{Trajet annulé · {count} expéditeurs remboursés}}'**
-  String cancellationRefundedSenders(int count);
+  /// **'Trajet annulé'**
+  String get cancellationTripCanceledSnackbar;
 
   /// Titre de la cellule côté expéditeur (delivery_noshow_cta_cell.dart, isSender: true).
   ///

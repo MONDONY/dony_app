@@ -10187,15 +10187,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'This will cancel your trip and automatically refund all affected senders.';
 
   @override
-  String cancellationRefundedSenders(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Trip canceled · $count senders refunded',
-      one: 'Trip canceled · $count sender refunded',
-    );
-    return '$_temp0';
-  }
+  String get cancellationTripCanceledSnackbar => 'Trip canceled';
 
   @override
   String get deliveryNoShowTravelerNotDeliveringTitle =>
