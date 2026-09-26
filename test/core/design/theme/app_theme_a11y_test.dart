@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Ratio de contraste WCAG entre deux couleurs opaques.
 double contrastRatio(Color a, Color b) {
@@ -29,7 +28,6 @@ double contrastRatio(Color a, Color b) {
 void main() {
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
-    GoogleFonts.config.allowRuntimeFetching = false;
   });
 
   group('AppTheme — variantes d\'accessibilité', () {

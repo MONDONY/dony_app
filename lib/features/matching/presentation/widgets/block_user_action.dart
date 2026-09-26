@@ -1,11 +1,10 @@
-import 'package:dony/core/design/widgets/dony_snackbar.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Affiche le menu ⋯ (feuille à une seule entrée « Bloquer ») puis, au tap,
 /// le dialog de confirmation de blocage.
@@ -45,9 +44,10 @@ void showBlockMenu(
             leading: const DonyIcon('ban', color: Color(0xFFE53935)),
             title: Text(
               context.l10n.blockMenuEntryLabel(displayName),
-              style: GoogleFonts.plusJakartaSans(
+              style: const TextStyle(
+                fontFamily: DonyTypography.fontBody,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFFE53935),
+                color: Color(0xFFE53935),
               ),
             ),
             onTap: () {
@@ -142,18 +142,20 @@ class _BlockConfirmDialogView extends StatelessWidget {
           children: [
             Text(
               context.l10n.blockConfirmTitle(firstName),
-              style: GoogleFonts.plusJakartaSans(
+              style: const TextStyle(
+                fontFamily: DonyTypography.fontBody,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF0D1B2A),
+                color: Color(0xFF0D1B2A),
               ),
             ),
             const SizedBox(height: 10),
             Text(
               context.l10n.blockConfirmBody,
-              style: GoogleFonts.plusJakartaSans(
+              style: const TextStyle(
+                fontFamily: DonyTypography.fontBody,
                 fontSize: 13,
-                color: const Color(0xFF6B7A8D),
+                color: Color(0xFF6B7A8D),
                 height: 1.6,
               ),
             ),
@@ -168,9 +170,10 @@ class _BlockConfirmDialogView extends StatelessWidget {
                 ),
                 child: Text(
                   context.l10n.blockConfirmError,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: const TextStyle(
+                    fontFamily: DonyTypography.fontBody,
                     fontSize: 12,
-                    color: const Color(0xFFE53935),
+                    color: Color(0xFFE53935),
                   ),
                 ),
               ),
@@ -192,9 +195,10 @@ class _BlockConfirmDialogView extends StatelessWidget {
                     ),
                     child: Text(
                       context.l10n.commonCancel,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: const TextStyle(
+                        fontFamily: DonyTypography.fontBody,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF0D1B2A),
+                        color: Color(0xFF0D1B2A),
                       ),
                     ),
                   ),
@@ -227,7 +231,8 @@ class _BlockConfirmDialogView extends StatelessWidget {
                           )
                         : Text(
                             context.l10n.blockConfirmButton,
-                            style: GoogleFonts.plusJakartaSans(
+                            style: const TextStyle(
+                              fontFamily: DonyTypography.fontBody,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

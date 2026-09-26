@@ -660,7 +660,7 @@ Avant de naviguer vers un écran fils, se poser ces questions :
 | Package | Usage |
 |---------|-------|
 | `flutter_animate` | Micro-animations et transitions |
-| `google_fonts` | **Plus Jakarta Sans** — tous les textes |
+| _(polices embarquées)_ | **Plus Jakarta Sans**, Hanken Grotesk, Caveat — fichiers dans `assets/fonts/`, déclarés en `fonts:` dans le pubspec. `google_fonts` a été retiré : il les téléchargeait au premier lancement et l'échec remontait en erreur fatale (Sentry FLUTTER-2) |
 | `pinput` | Champ PIN/OTP |
 | `flutter_secure_storage` | Stockage PIN (Keystore/Keychain) |
 
@@ -684,7 +684,7 @@ const kSuccess       = Color(0xFF16A34A);
 
 ### Règles HIG obligatoires
 
-**Typographie :** `GoogleFonts.plusJakartaSans` partout. `fontSize < 12` interdit. Contraste ≥ 4.5:1.
+**Typographie :** `Theme.of(context).textTheme.X` partout, jamais de `fontFamily` en dur. `fontSize < 12` interdit. Contraste ≥ 4.5:1.
 - Grand titre : `28–32 / w800 / letterSpacing -0.5`
 - Titre nav : `17–18 / w700` · Section : `15–16 / w600` · Corps : `14–15 / w400` · Caption : `12–13 / w500`
 

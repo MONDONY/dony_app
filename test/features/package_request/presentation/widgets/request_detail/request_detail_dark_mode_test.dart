@@ -15,7 +15,6 @@ import 'package:dony/features/package_request/presentation/widgets/request_detai
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_travelers_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 /// Vérifie que la pastille de statut et le billet sans photo lisent leurs
@@ -25,10 +24,9 @@ import 'package:intl/date_symbol_data_local.dart';
 void main() {
   setUpAll(() {
     // Comme test/core/design/theme/app_theme_test.dart : AppTheme.X() charge
-    // des polices via google_fonts, à appeler uniquement depuis un
+    // le thème complet, à appeler uniquement depuis un
     // testWidgets (zone d'erreurs gérée), jamais depuis setUpAll lui-même.
     TestWidgetsFlutterBinding.ensureInitialized();
-    GoogleFonts.config.allowRuntimeFetching = false;
     initializeDateFormatting('fr');
   });
 

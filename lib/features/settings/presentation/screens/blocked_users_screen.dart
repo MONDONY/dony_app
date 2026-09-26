@@ -6,7 +6,6 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class BlockedUsersScreen extends StatelessWidget {
@@ -25,10 +24,11 @@ class BlockedUsersScreen extends StatelessWidget {
         scrolledUnderElevation: 0,
         title: Text(
           l.blockedUsersTitle,
-          style: GoogleFonts.plusJakartaSans(
+          style: const TextStyle(
+            fontFamily: DonyTypography.fontBody,
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF0D1B2A),
+            color: Color(0xFF0D1B2A),
           ),
         ),
         centerTitle: false,
@@ -95,9 +95,10 @@ class _UserList extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
           child: Text(
             context.l10n.blockedUsersListIntro,
-            style: GoogleFonts.plusJakartaSans(
+            style: const TextStyle(
+              fontFamily: DonyTypography.fontBody,
               fontSize: 12,
-              color: const Color(0xFF6B7A8D),
+              color: Color(0xFF6B7A8D),
               height: 1.5,
             ),
           ),
@@ -174,10 +175,11 @@ class _UserTile extends StatelessWidget {
             child: Center(
               child: Text(
                 initials,
-                style: GoogleFonts.plusJakartaSans(
+                style: const TextStyle(
+                  fontFamily: DonyTypography.fontBody,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF4338CA),
+                  color: Color(0xFF4338CA),
                 ),
               ),
             ),
@@ -191,18 +193,20 @@ class _UserTile extends StatelessWidget {
                   displayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: const TextStyle(
+                    fontFamily: DonyTypography.fontBody,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF0D1B2A),
+                    color: Color(0xFF0D1B2A),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   _formatDate(l, user.blockedAt),
-                  style: GoogleFonts.plusJakartaSans(
+                  style: const TextStyle(
+                    fontFamily: DonyTypography.fontBody,
                     fontSize: 11,
-                    color: const Color(0xFF6B7A8D),
+                    color: Color(0xFF6B7A8D),
                   ),
                 ),
               ],
@@ -234,10 +238,11 @@ class _UserTile extends StatelessWidget {
                     ),
                     child: Text(
                       l.blockedUsersUnblock,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: const TextStyle(
+                        fontFamily: DonyTypography.fontBody,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1A6B3C),
+                        color: Color(0xFF1A6B3C),
                       ),
                     ),
                   ),
@@ -264,19 +269,21 @@ class _EmptyView extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       context.l10n.blockedUsersEmptyTitle,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: const TextStyle(
+                        fontFamily: DonyTypography.fontBody,
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0D1B2A),
+                        color: Color(0xFF0D1B2A),
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       context.l10n.blockedUsersEmptySubtitle,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: const TextStyle(
+                        fontFamily: DonyTypography.fontBody,
                         fontSize: 13,
-                        color: const Color(0xFF6B7A8D),
+                        color: Color(0xFF6B7A8D),
                         height: 1.5,
                       ),
                       textAlign: TextAlign.center,
@@ -309,9 +316,10 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               message,
-              style: GoogleFonts.plusJakartaSans(
+              style: const TextStyle(
+                fontFamily: DonyTypography.fontBody,
                 fontSize: 14,
-                color: const Color(0xFF6B7A8D),
+                color: Color(0xFF6B7A8D),
               ),
               textAlign: TextAlign.center,
             ),
@@ -320,8 +328,9 @@ class _ErrorView extends StatelessWidget {
               onPressed: onRetry,
               child: Text(
                 context.l10n.commonRetry,
-                style: GoogleFonts.plusJakartaSans(
-                  color: const Color(0xFF1A6B3C),
+                style: const TextStyle(
+                  fontFamily: DonyTypography.fontBody,
+                  color: Color(0xFF1A6B3C),
                   fontWeight: FontWeight.w600,
                 ),
               ),

@@ -4,7 +4,6 @@ import 'package:dony/features/package_request/data/models/linked_trip_summary.da
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 /// Opens a confirmation bottom sheet asking the sender for a refusal reason.
@@ -82,7 +81,8 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
               Expanded(
                 child: Text(
                   l.negotiationRefuseTripWarning,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: const TextStyle(
+                    fontFamily: DonyTypography.fontBody,
                     fontSize: 13,
                     color: kError,
                     fontWeight: FontWeight.w500,
@@ -95,7 +95,8 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
         const SizedBox(height: DonySpacing.lg),
         Text(
           l.negotiationRefusalReasonLabel,
-          style: GoogleFonts.plusJakartaSans(
+          style: TextStyle(
+            fontFamily: DonyTypography.fontBody,
             fontSize: 13,
             fontWeight: FontWeight.w600,
             color: cs.onSurfaceVariant,
@@ -109,7 +110,8 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
           maxLines: 3,
           decoration: InputDecoration(
             hintText: l.negotiationRefusalReasonHint,
-            hintStyle: GoogleFonts.plusJakartaSans(
+            hintStyle: const TextStyle(
+              fontFamily: DonyTypography.fontBody,
               fontSize: 14,
               color: kTextHint,
             ),
@@ -124,7 +126,8 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
               borderSide: BorderSide(color: cs.primary, width: 1.5),
             ),
             contentPadding: const EdgeInsets.all(DonySpacing.md),
-            counterStyle: GoogleFonts.plusJakartaSans(
+            counterStyle: const TextStyle(
+              fontFamily: DonyTypography.fontBody,
               fontSize: 11,
               color: kTextHint,
             ),

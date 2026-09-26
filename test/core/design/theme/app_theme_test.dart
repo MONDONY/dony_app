@@ -2,12 +2,10 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
-    GoogleFonts.config.allowRuntimeFetching = false;
   });
 
   group('AppTheme', () {

@@ -1,85 +1,115 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 abstract final class DonyTypography {
-  static TextTheme get textTheme => TextTheme(
-    displayLarge: GoogleFonts.hankenGrotesk(
+  /// Familles embarquées, déclarées dans la table `fonts:` du pubspec.
+  ///
+  /// Elles passaient par google_fonts, qui téléchargeait chaque variante au
+  /// premier lancement : sur un réseau faible l'échec remontait en erreur fatale
+  /// non capturée et le texte s'affichait en police de repli (Sentry FLUTTER-2).
+  ///
+  /// Déclarer les fichiers en `assets:` aurait suffi à google_fonts, mais il les
+  /// aurait alors chargés dans les tests de widgets aussi, de façon asynchrone :
+  /// le rendu des tests changeait de police en cours de route et un test
+  /// d'accessibilité qui échantillonne les pixels peints passait en local mais
+  /// échouait en CI. Le moteur, lui, ne charge la table `fonts:` qu'en
+  /// production ; les tests gardent leur police de repli déterministe.
+  static const String fontDisplay = 'HankenGrotesk';
+  static const String fontBody = 'PlusJakartaSans';
+  static const String fontAccent = 'Caveat';
+
+  static TextTheme get textTheme => const TextTheme(
+    displayLarge: TextStyle(
+      fontFamily: fontDisplay,
       fontSize: 32,
       fontWeight: FontWeight.w800,
       letterSpacing: -0.64,
       height: 1.10,
     ),
-    displayMedium: GoogleFonts.hankenGrotesk(
+    displayMedium: TextStyle(
+      fontFamily: fontDisplay,
       fontSize: 26,
       fontWeight: FontWeight.w800,
       letterSpacing: -0.52,
       height: 1.15,
     ),
-    displaySmall: GoogleFonts.hankenGrotesk(
+    displaySmall: TextStyle(
+      fontFamily: fontDisplay,
       fontSize: 22,
       fontWeight: FontWeight.w700,
       letterSpacing: -0.44,
       height: 1.20,
     ),
-    headlineLarge: GoogleFonts.hankenGrotesk(
+    headlineLarge: TextStyle(
+      fontFamily: fontDisplay,
       fontSize: 22,
       fontWeight: FontWeight.w700,
       letterSpacing: -0.22,
       height: 1.25,
     ),
-    headlineMedium: GoogleFonts.hankenGrotesk(
+    headlineMedium: TextStyle(
+      fontFamily: fontDisplay,
       fontSize: 18,
       fontWeight: FontWeight.w700,
       letterSpacing: -0.18,
       height: 1.30,
     ),
-    headlineSmall: GoogleFonts.hankenGrotesk(
+    headlineSmall: TextStyle(
+      fontFamily: fontDisplay,
       fontSize: 16,
       fontWeight: FontWeight.w600,
       height: 1.35,
     ),
-    titleLarge: GoogleFonts.plusJakartaSans(
+    titleLarge: TextStyle(
+      fontFamily: fontBody,
       fontSize: 15,
       fontWeight: FontWeight.w700,
       height: 1.35,
     ),
-    titleMedium: GoogleFonts.plusJakartaSans(
+    titleMedium: TextStyle(
+      fontFamily: fontBody,
       fontSize: 14,
       fontWeight: FontWeight.w600,
       height: 1.40,
     ),
-    titleSmall: GoogleFonts.plusJakartaSans(
+    titleSmall: TextStyle(
+      fontFamily: fontBody,
       fontSize: 13,
       fontWeight: FontWeight.w600,
       height: 1.40,
     ),
-    bodyLarge: GoogleFonts.plusJakartaSans(
+    bodyLarge: TextStyle(
+      fontFamily: fontBody,
       fontSize: 16,
       fontWeight: FontWeight.w400,
       height: 1.50,
     ),
-    bodyMedium: GoogleFonts.plusJakartaSans(
+    bodyMedium: TextStyle(
+      fontFamily: fontBody,
       fontSize: 14,
       fontWeight: FontWeight.w400,
       height: 1.50,
     ),
-    bodySmall: GoogleFonts.plusJakartaSans(
+    bodySmall: TextStyle(
+      fontFamily: fontBody,
       fontSize: 12,
       fontWeight: FontWeight.w400,
       height: 1.50,
     ),
-    labelLarge: GoogleFonts.plusJakartaSans(
+    labelLarge: TextStyle(
+      fontFamily: fontBody,
       fontSize: 14,
       fontWeight: FontWeight.w700,
       height: 1.20,
     ),
-    labelMedium: GoogleFonts.plusJakartaSans(
+    labelMedium: TextStyle(
+      fontFamily: fontBody,
       fontSize: 11,
       fontWeight: FontWeight.w600,
       height: 1.20,
       letterSpacing: 0.8,
     ),
-    labelSmall: GoogleFonts.plusJakartaSans(
+    labelSmall: TextStyle(
+      fontFamily: fontBody,
       fontSize: 10,
       fontWeight: FontWeight.w600,
       height: 1.20,
@@ -92,7 +122,8 @@ abstract final class DonyTypography {
     double fontSize = 22,
     FontWeight fontWeight = FontWeight.w600,
     Color? color,
-  }) => GoogleFonts.caveat(
+  }) => TextStyle(
+    fontFamily: fontAccent,
     fontSize: fontSize,
     fontWeight: fontWeight,
     color: color,

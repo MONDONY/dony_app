@@ -15,7 +15,6 @@ import 'package:dony/features/ratings/presentation/widgets/rating_summary_card.d
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Ouvre un modal sheet (90 % écran) affichant le profil complet d'un expéditeur.
 void showSenderProfileSheet(BuildContext context, BidModel bid) {
@@ -182,7 +181,8 @@ class _SenderProfileSheet extends StatelessWidget {
                       else
                         Text(
                           context.l10n.senderProfilePhoneHiddenLabel,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: TextStyle(
+                            fontFamily: DonyTypography.fontBody,
                             fontSize: 12,
                             color: cs.onSurfaceVariant,
                             fontStyle: FontStyle.italic,

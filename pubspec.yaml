@@ -87,7 +87,6 @@ dependencies:
   # Voir lib/core/design/dony_icons.dart.
   pinput: ^5.0.0
   flutter_secure_storage: ^9.2.2
-  google_fonts: ^6.2.1
 
   # WebView (Stripe Identity, KYC)
   webview_flutter: ^4.10.0
@@ -208,6 +207,7 @@ flutter:
     enable-lldb-debugging: false
   uses-material-design: true
   assets:
+    - assets/fonts/licenses/
     - assets/logos/
     - assets/logos/store/
     - assets/logos/payment/
@@ -218,3 +218,38 @@ flutter:
     - assets/icons/
     - assets/icons_3d/
     - assets/config/help_center_config.default.json
+
+  # Polices embarquees, declarees en `fonts:` et NON en `assets:`.
+  #
+  # Les deux marchent en production, mais pas dans les tests. Declarees en
+  # ressources, google_fonts les trouve dans le manifeste et les charge avec son
+  # propre FontLoader, y compris sous `flutter test` : le rendu des tests de
+  # widgets change alors de police en cours de route, de facon asynchrone donc
+  # dependante du minutage. Un test d'accessibilite qui echantillonne les pixels
+  # peints (textContrastGuideline) passait en local et echouait en CI.
+  #
+  # Declarees ici, elles sont embarquees par le moteur en production et absentes
+  # des tests de widgets, qui gardent leur police de repli deterministe.
+  fonts:
+    - family: HankenGrotesk
+      fonts:
+        - asset: assets/fonts/HankenGrotesk-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/HankenGrotesk-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/HankenGrotesk-ExtraBold.ttf
+          weight: 800
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/PlusJakartaSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/PlusJakartaSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/PlusJakartaSans-Bold.ttf
+          weight: 700
+    - family: Caveat
+      fonts:
+        - asset: assets/fonts/Caveat-SemiBold.ttf
+          weight: 600

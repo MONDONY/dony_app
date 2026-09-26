@@ -7,8 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  // ColorScheme minimal calé sur les tokens Yadony — évite google_fonts (réseau)
-  // tout en garantissant cs.primary == DonyColors.primary pour les assertions.
+  // ColorScheme minimal calé sur les tokens Yadony — évite de construire tout le
+  // thème tout en garantissant cs.primary == DonyColors.primary pour les assertions.
   const scheme = ColorScheme.light(
     primary: DonyColors.primary,
     onSurfaceVariant: DonyColors.textSubtle,
