@@ -53,6 +53,15 @@ void _openRoute(BuildContext context, String event, String route) {
   context.push(route);
 }
 
+/// Bouton de la tuile « Mes colis ». Passe d'abord par l'écran d'intro
+/// (conditions + responsabilités) ; c'est lui qui applique le gate KYC et
+/// ouvre le wizard une fois vérifié.
+void _openSendIntro(BuildContext context) => _openRoute(
+  context,
+  AnalyticsEvents.activitesHubRequestCreateOpened,
+  '/parcels/send-intro',
+);
+
 /// Compteur « Colis en route » — partagé entre la tuile et la détection
 /// d'activité, pour que les deux restent alignés sur [kEnvoisEnCours].
 int envoisEnCours(BidState state) => state is BidListLoaded
@@ -325,13 +334,6 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     );
   }
 
-  void _onNewRequest() {
-    _logEvent(AnalyticsEvents.activitesHubRequestCreateOpened);
-    // Passe d'abord par l'écran d'intro (conditions + responsabilités) ; c'est
-    // lui qui applique le gate KYC et ouvre le wizard une fois vérifié.
-    context.push('/parcels/send-intro');
-  }
-
   /// Vrai dès qu'un compteur ou une statistique est non nul. Tant que tout est
   /// à zéro, la section Statistiques est masquée : « Revenus 0 € » n'apprend
   /// rien à un nouvel utilisateur et fait tableau de bord mort.
@@ -407,14 +409,6 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                         context: TutorialContext.activities,
                       ),
                       const SizedBox(height: DonySpacing.base),
-                      _ActionRow(
-                        onPublishTrip: () => _open(
-                          AnalyticsEvents.activitesHubTripCreateOpened,
-                          '/trips/publish-intro',
-                        ),
-                        onNewRequest: _onNewRequest,
-                      ),
-                      const SizedBox(height: DonySpacing.xl),
                       Text(l.activitySectionCurrent, style: tt.titleMedium),
                       const SizedBox(height: DonySpacing.md),
                       const _ActivityGrid(),
@@ -459,7 +453,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           iconName: 'bookmark',
                           label: l.activityToolTitleTemplates,
                           subtitle: l.activityToolSubtitleTemplates,
-                          color: DonyColors.violet,
+                          color: cs.secondary,
                           badge: _toolBadge(
                             toolsState,
                             ToolKey.tripTemplates,
@@ -516,7 +510,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           iconName: 'contact',
                           label: l.activityToolTitleRecipients,
                           subtitle: l.activityToolSubtitleRecipients,
-                          color: DonyColors.violet,
+                          color: cs.secondary,
                           badge: _toolBadge(
                             toolsState,
                             ToolKey.recipients,
@@ -544,7 +538,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           iconName: 'circle-help',
                           label: l.activityHelpTitleHub,
                           subtitle: l.activityHelpSubtitle,
-                          color: DonyColors.amberDark,
+                          color: cs.primary,
                           onTap: () => _open(
                             AnalyticsEvents.activitesHubHelpOpened,
                             '/profile/help/faq',
@@ -663,54 +657,6 @@ class _IntroCard extends StatelessWidget {
   }
 }
 
-// ── Actions ──────────────────────────────────────────────────────────────────
-
-class _ActionRow extends StatelessWidget {
-  const _ActionRow({required this.onPublishTrip, required this.onNewRequest});
-
-  final VoidCallback onPublishTrip;
-  final VoidCallback onNewRequest;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-
-    return Row(
-      children: [
-        Expanded(
-          child: FilledButton.icon(
-            key: const Key('hub-publish-trip'),
-            onPressed: onPublishTrip,
-            icon: DonyIcon('send', size: 16, color: cs.onPrimary),
-            label: Text(l.tripPublishTitle),
-          ),
-        ),
-        const SizedBox(width: DonySpacing.md),
-        Expanded(
-          // Terracotta plein sur fond clair, comme la maquette : le bouton
-          // contouré par défaut du thème porte une bordure grise qui le
-          // rapprochait trop du fond.
-          child: OutlinedButton.icon(
-            key: const Key('hub-new-request'),
-            onPressed: onNewRequest,
-            icon: DonyIcon('package', size: 16, color: cs.secondary),
-            label: Text(l.activityPublishParcelCta),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: cs.secondary,
-              backgroundColor: cs.secondaryContainer,
-              side: BorderSide(color: cs.secondary.withValues(alpha: 0.35)),
-              // Le rembourrage par défaut d'OutlinedButton.icon fait passer le
-              // libellé sur deux lignes une fois la largeur partagée en deux.
-              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 // ── Grille d'activité ────────────────────────────────────────────────────────
 
 class _ActivityGrid extends StatelessWidget {
@@ -721,23 +667,38 @@ class _ActivityGrid extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
 
+    // Deux couleurs seulement, celles de la marque : bleu pour tout ce qui
+    // relève du voyage, terracotta pour tout ce qui relève de l'envoi. Un
+    // bêta testeur trouvait l'ancienne grille (bleu, terracotta, ambre,
+    // violet) trop colorée pour qu'une tuile ressorte.
+    final travel = cs.primary;
+    final send = cs.secondary;
+
     // Un BlocBuilder par tuile, pas un global : une erreur sur les statistiques
     // ne doit pas vider les trois autres compteurs.
     final trips = BlocBuilder<TripsSummaryCubit, TripsSummaryState>(
-      builder: (context, state) => ActivityTile(
+      builder: (context, state) => ActivityHeroTile(
         key: const Key('hub-tile-trips'),
         iconName: 'plane',
-        iconColor: cs.primary,
+        color: travel,
         value: state.summary?.activeTrips ?? 0,
         label: l.activityTileTripsLabel,
         subtitle: l.activityTileTripsSubtitle,
-        emptyHint: l.activityTileTripsEmptyHint,
+        emptyLabel: l.activityHeroTravelTitle,
+        emptySubtitle: l.activityHeroTravelPitch,
+        ctaLabel: l.tripPublishTitle,
+        ctaKey: const Key('hub-publish-trip'),
         isLoading: state.status == TripsSummaryStatus.loading,
         hasError: state.status == TripsSummaryStatus.hidden,
         onTap: () => _openRoute(
           context,
           AnalyticsEvents.activitesHubTripsOpened,
           '/announcements/trips',
+        ),
+        onCtaTap: () => _openRoute(
+          context,
+          AnalyticsEvents.activitesHubTripCreateOpened,
+          '/trips/publish-intro',
         ),
       ),
     );
@@ -753,14 +714,17 @@ class _ActivityGrid extends StatelessWidget {
             .select<NegotiationListBloc, NegotiationListState>((b) => b.state);
         final negociations = negosNonLuesSurMesColis(requestState, negoState);
         final count = envoisEnCours(state) + colisPublies(requestState);
-        return ActivityTile(
+        return ActivityHeroTile(
           key: const Key('hub-tile-shipments'),
           iconName: 'package',
-          iconColor: cs.secondary,
+          color: send,
           value: count,
           label: l.activityTileShipmentsLabel,
           subtitle: l.activityTileShipmentsSubtitle,
-          emptyHint: l.activityTileShipmentsEmptyHint,
+          emptyLabel: l.activityHeroSendTitle,
+          emptySubtitle: l.activityHeroSendPitch,
+          ctaLabel: l.activityHeroSendCta,
+          ctaKey: const Key('hub-new-request'),
           isLoading: state is BidLoading,
           hasError: state is BidError,
           // Une discussion de prix attend une décision de l'expéditeur : le
@@ -771,6 +735,7 @@ class _ActivityGrid extends StatelessWidget {
             AnalyticsEvents.activitesHubEnvoisOpened,
             '/envois',
           ),
+          onCtaTap: () => _openSendIntro(context),
         );
       },
     );
@@ -778,20 +743,16 @@ class _ActivityGrid extends StatelessWidget {
     final requests = BlocBuilder<TravelerBidsBloc, TravelerBidsState>(
       builder: (context, state) {
         final loaded = state is TravelerBidsLoaded ? state : null;
-        final count = loaded?.pendingCount ?? 0;
         return ActivityTile(
           key: const Key('hub-tile-requests'),
           iconName: 'bell',
-          // Ambre, pas rouge : une demande reçue est une opportunité qui
-          // attend une réponse, pas une erreur — cs.error criait au problème.
-          iconColor: DonyColors.amberDark,
-          value: count,
+          color: travel,
+          value: loaded?.pendingCount ?? 0,
           label: l.activityTileRequestsLabel,
           subtitle: l.activityTileRequestsSubtitle,
           emptyHint: l.activityTileRequestsEmptyHint,
           isLoading: state is TravelerBidsLoading,
           hasError: state is TravelerBidsError,
-          showNotificationDot: count > 0,
           onTap: () => _openRoute(
             context,
             AnalyticsEvents.activitesHubDemandesOpened,
@@ -802,30 +763,26 @@ class _ActivityGrid extends StatelessWidget {
     );
 
     final negotiations = BlocBuilder<NegotiationListBloc, NegotiationListState>(
-      builder: (context, state) {
-        final count = state.activeCount;
-        return ActivityTile(
-          key: const Key('hub-tile-negotiations'),
-          iconName: 'arrow-left-right',
-          // Violet : la seule des quatre tuiles hors palette de marque, pour
-          // séparer la négociation des trois domaines bleu/terracotta/rouge.
-          iconColor: DonyColors.violet,
-          value: count,
-          label: l.activityTileNegotiationsLabel,
-          subtitle: l.activityTileNegotiationsSubtitle,
-          emptyHint: l.activityTileNegotiationsEmptyHint,
-          isLoading: state.status == NegotiationListStatus.loading,
-          hasError: state.status == NegotiationListStatus.error,
-          showNotificationDot: count > 0,
-          onTap: () => _openRoute(
-            context,
-            AnalyticsEvents.activitesHubNegotiationsOpened,
-            '/negotiations',
-          ),
-        );
-      },
+      builder: (context, state) => ActivityTile(
+        key: const Key('hub-tile-negotiations'),
+        iconName: 'arrow-left-right',
+        color: send,
+        value: state.activeCount,
+        label: l.activityTileNegotiationsLabel,
+        subtitle: l.activityTileNegotiationsSubtitle,
+        emptyHint: l.activityTileNegotiationsEmptyHint,
+        isLoading: state.status == NegotiationListStatus.loading,
+        hasError: state.status == NegotiationListStatus.error,
+        onTap: () => _openRoute(
+          context,
+          AnalyticsEvents.activitesHubNegotiationsOpened,
+          '/negotiations',
+        ),
+      ),
     );
 
+    // Les deux tuiles principales portent chacune leur bouton de publication ;
+    // les deux secondaires, plates, ne ressortent qu'avec leur pastille rouge.
     return Column(
       children: [
         _TileRow(left: trips, right: shipments),
@@ -931,8 +888,8 @@ class _StatsRow extends StatelessWidget {
           }
         }
 
-        // Même code couleur que les tuiles d'activité : vert = gains, bleu =
-        // volume, violet = trajets, terracotta = envois.
+        // Même code couleur que les tuiles d'activité : bleu pour le voyage
+        // (kg, trajets), terracotta pour l'envoi ; le vert reste aux gains.
         final tiles = <Widget>[
           StatTile(
             iconName: 'euro',
@@ -971,7 +928,7 @@ class _StatsRow extends StatelessWidget {
             value: summary?.tripsPublished == null
                 ? '-'
                 : l.activityStatTripsPublished(summary!.tripsPublished!),
-            color: DonyColors.violet,
+            color: cs.primary,
             isLoading: loading,
             onTap: () => _openRoute(
               context,
@@ -1027,7 +984,8 @@ class _OtherTile extends StatelessWidget {
   final String iconName;
   final String label;
 
-  /// Couleur de la catégorie : remplit la pastille d'icône (icône blanche).
+  /// Couleur de la catégorie, bleu ou terracotta : teinte l'icône et son
+  /// fond, sans aplat plein, pour ne pas concurrencer la grille d'activité.
   final Color color;
   final String? subtitle;
 
@@ -1062,8 +1020,8 @@ class _OtherTile extends StatelessWidget {
                   DonyIconContainer(
                     iconAsset: iconName,
                     size: DonyIconContainerSize.sm,
-                    backgroundColor: color,
-                    iconColor: DonyColors.neutral0,
+                    backgroundColor: color.withValues(alpha: 0.12),
+                    iconColor: color,
                     borderRadius: DonyRadius.iconBtn,
                   ),
                   if (showNotificationDot)

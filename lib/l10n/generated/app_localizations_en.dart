@@ -8252,16 +8252,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Send your parcels with trusted travelers, or carry parcels during your trips to earn money. Everything is tracked from this screen.';
 
   @override
-  String get activityPublishParcelCta => 'Post a parcel';
-
-  @override
   String get activityTileTripsLabel => 'Active trips';
 
   @override
   String get activityTileTripsSubtitle => 'Your upcoming trips';
-
-  @override
-  String get activityTileTripsEmptyHint => 'Post a trip';
 
   @override
   String get activityTileShipmentsLabel => 'My parcels';
@@ -8270,7 +8264,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityTileShipmentsSubtitle => 'Posted, negotiated, on the way';
 
   @override
-  String get activityTileShipmentsEmptyHint => 'Send a parcel';
+  String get activityHeroTravelTitle => 'I\'m traveling';
+
+  @override
+  String get activityHeroTravelPitch => 'Earn from your spare kilos';
+
+  @override
+  String get activityHeroSendTitle => 'I\'m sending';
+
+  @override
+  String get activityHeroSendPitch => 'Hand your parcel to a traveler';
+
+  @override
+  String get activityHeroSendCta => 'Send a parcel';
 
   @override
   String get activityTileRequestsLabel => 'Requests received';

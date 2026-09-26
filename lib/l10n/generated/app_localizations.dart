@@ -13869,12 +13869,6 @@ abstract class AppLocalizations {
   /// **'Envoyez vos colis avec des voyageurs de confiance, ou transportez des colis pendant vos trajets pour gagner de l\'argent. Tout se suit depuis cet écran.'**
   String get activityIntroBody;
 
-  /// Bouton Publier un colis de la rangée d'actions du hub (activites_hub_screen.dart _ActionRow) ; Publier un trajet réutilise tripPublishTitle (R40, préfixe partagé trip…).
-  ///
-  /// In fr, this message translates to:
-  /// **'Publier un colis'**
-  String get activityPublishParcelCta;
-
   /// Libellé de la tuile Trajets actifs de la grille d'activité (activites_hub_screen.dart).
   ///
   /// In fr, this message translates to:
@@ -13886,12 +13880,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vos voyages à venir'**
   String get activityTileTripsSubtitle;
-
-  /// Invite affichée quand le compteur de trajets actifs est à zéro.
-  ///
-  /// In fr, this message translates to:
-  /// **'Publiez un trajet'**
-  String get activityTileTripsEmptyHint;
 
   /// Libellé de la tuile Mes colis de la grille d'activité (activites_hub_screen.dart).
   ///
@@ -13905,11 +13893,35 @@ abstract class AppLocalizations {
   /// **'Publiés, négociés, en route'**
   String get activityTileShipmentsSubtitle;
 
-  /// Invite affichée quand le compteur de la tuile Mes colis est à zéro.
+  /// Titre de la tuile Trajets actifs quand l'utilisateur n'a aucun trajet actif : la tuile devient une invitation (activity_tile.dart ActivityHeroTile).
   ///
   /// In fr, this message translates to:
-  /// **'Envoyez un colis'**
-  String get activityTileShipmentsEmptyHint;
+  /// **'Je voyage'**
+  String get activityHeroTravelTitle;
+
+  /// Sous-titre de la tuile Trajets actifs à zéro, sous « Je voyage ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Rentabilisez vos kilos libres'**
+  String get activityHeroTravelPitch;
+
+  /// Titre de la tuile Mes colis quand l'utilisateur n'a aucun colis : la tuile devient une invitation (activity_tile.dart ActivityHeroTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'envoie'**
+  String get activityHeroSendTitle;
+
+  /// Sous-titre de la tuile Mes colis à zéro, sous « J'envoie ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Confiez votre colis à un voyageur'**
+  String get activityHeroSendPitch;
+
+  /// Bouton de la tuile Mes colis du hub, qui ouvre l'intro d'envoi ; le bouton de la tuile Trajets réutilise tripPublishTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer un colis'**
+  String get activityHeroSendCta;
 
   /// Libellé de la tuile Demandes reçues de la grille d'activité (activites_hub_screen.dart).
   ///

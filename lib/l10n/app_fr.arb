@@ -8701,10 +8701,6 @@
   "@activityIntroBody": {
     "description": "Corps de la carte d'introduction du hub (activites_hub_screen.dart _IntroCard)."
   },
-  "activityPublishParcelCta": "Publier un colis",
-  "@activityPublishParcelCta": {
-    "description": "Bouton Publier un colis de la rangée d'actions du hub (activites_hub_screen.dart _ActionRow) ; Publier un trajet réutilise tripPublishTitle (R40, préfixe partagé trip…)."
-  },
   "activityTileTripsLabel": "Trajets actifs",
   "@activityTileTripsLabel": {
     "description": "Libellé de la tuile Trajets actifs de la grille d'activité (activites_hub_screen.dart)."
@@ -8712,10 +8708,6 @@
   "activityTileTripsSubtitle": "Vos voyages à venir",
   "@activityTileTripsSubtitle": {
     "description": "Sous-titre de la tuile Trajets actifs."
-  },
-  "activityTileTripsEmptyHint": "Publiez un trajet",
-  "@activityTileTripsEmptyHint": {
-    "description": "Invite affichée quand le compteur de trajets actifs est à zéro."
   },
   "activityTileShipmentsLabel": "Mes colis",
   "@activityTileShipmentsLabel": {
@@ -8725,9 +8717,25 @@
   "@activityTileShipmentsSubtitle": {
     "description": "Sous-titre de la tuile Mes colis."
   },
-  "activityTileShipmentsEmptyHint": "Envoyez un colis",
-  "@activityTileShipmentsEmptyHint": {
-    "description": "Invite affichée quand le compteur de la tuile Mes colis est à zéro."
+  "activityHeroTravelTitle": "Je voyage",
+  "@activityHeroTravelTitle": {
+    "description": "Titre de la tuile Trajets actifs quand l'utilisateur n'a aucun trajet actif : la tuile devient une invitation (activity_tile.dart ActivityHeroTile)."
+  },
+  "activityHeroTravelPitch": "Rentabilisez vos kilos libres",
+  "@activityHeroTravelPitch": {
+    "description": "Sous-titre de la tuile Trajets actifs à zéro, sous « Je voyage »."
+  },
+  "activityHeroSendTitle": "J'envoie",
+  "@activityHeroSendTitle": {
+    "description": "Titre de la tuile Mes colis quand l'utilisateur n'a aucun colis : la tuile devient une invitation (activity_tile.dart ActivityHeroTile)."
+  },
+  "activityHeroSendPitch": "Confiez votre colis à un voyageur",
+  "@activityHeroSendPitch": {
+    "description": "Sous-titre de la tuile Mes colis à zéro, sous « J'envoie »."
+  },
+  "activityHeroSendCta": "Envoyer un colis",
+  "@activityHeroSendCta": {
+    "description": "Bouton de la tuile Mes colis du hub, qui ouvre l'intro d'envoi ; le bouton de la tuile Trajets réutilise tripPublishTitle."
   },
   "activityTileRequestsLabel": "Demandes reçues",
   "@activityTileRequestsLabel": {
