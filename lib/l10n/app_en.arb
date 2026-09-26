@@ -889,7 +889,6 @@
   "tripTemplateNameFieldLabel": "Name",
   "tripTemplateNameFieldHint": "E.g. My Paris → Dakar",
   "tripTemplateTripSectionLabel": "TRIP",
-  "tripTemplateTransportSectionLabel": "TRANSPORT MODE",
   "tripTemplateScheduleSectionLabel": "SCHEDULE",
   "tripTemplateDepartureTimeFieldLabel": "Departure time",
   "tripTemplateDepartureShortLabel": "Departure",

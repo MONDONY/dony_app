@@ -13,7 +13,6 @@ import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
-import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
@@ -90,7 +89,6 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     _labelCtrl.addListener(_recomputeCanContinue);
     _fields.departureCity.addListener(_recomputeCanContinue);
     _fields.arrivalCity.addListener(_recomputeCanContinue);
-    _fields.transportMode.addListener(_recomputeCanContinue);
     _step.addListener(_recomputeCanContinue);
     _fields.priceOption.addListener(_recomputeCanContinue);
     _fields.customPriceCtrl.addListener(_recomputeCanContinue);
@@ -247,8 +245,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     final step0Ok =
         _labelCtrl.text.trim().isNotEmpty &&
         (_fields.departureCity.value?.trim().isNotEmpty ?? false) &&
-        (_fields.arrivalCity.value?.trim().isNotEmpty ?? false) &&
-        _fields.transportMode.value != null;
+        (_fields.arrivalCity.value?.trim().isNotEmpty ?? false);
     var step2Ok = !_fields.kgPriceEnabled.value || _fields.pricePerKg != null;
     if (step2Ok && _fields.isCustomPrice) {
       final parsed = parsePriceInput(_fields.customPriceCtrl.text);
@@ -523,29 +520,10 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       ),
       const SizedBox(height: DonySpacing.xxl),
 
-      // ── MODE DE TRANSPORT ───────────────────────────────────────
-      _SectionLabel(
-        label: l.tripTemplateTransportSectionLabel,
-        iconAsset: 'route',
-      ),
-      const SizedBox(height: DonySpacing.sm),
-      ListenableBuilder(
-        listenable: _fields.transportMode,
-        builder: (context, _) => Wrap(
-          spacing: DonySpacing.sm,
-          runSpacing: DonySpacing.sm,
-          children: [
-            for (final mode in TransportMode.values)
-              DonyChip(
-                label: mode.label(context.l10n),
-                icon: mode.icon,
-                selected: _fields.transportMode.value == mode,
-                onTap: () => _fields.transportMode.value = mode,
-              ),
-          ],
-        ),
-      ),
-      const SizedBox(height: DonySpacing.xxl),
+      // Pas de « Mode de transport » : la création de trajet n'en propose
+      // plus (toujours avion). Le modèle garde la valeur en coulisse (avion
+      // par défaut, celle d'un ancien modèle en édition) parce que l'API et
+      // les récurrences l'exigent.
 
       // ── HORAIRES ─────────────────────────────────────────────────
       _SectionLabel(
@@ -601,14 +579,26 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   /// Lieux & capacité : adresses de remise/livraison optionnelles (jamais
   /// d'erreur affichée pour un modèle), capacité pilotée par `CapacityControl`
   /// (autonome, lit/écrit `AnnouncementFormBloc` directement).
+  ///
+  /// Les deux champs d'adresse sont sans état : ils n'affichent que la valeur
+  /// reçue au build. Sans ce `ListenableBuilder`, l'adresse choisie partait
+  /// bien dans le payload mais le champ restait vide jusqu'au changement
+  /// d'étape, comme si rien n'avait été choisi. La création de trajet fait de
+  /// même autour de son formulaire.
   List<Widget> _buildStep1() => [
-    LieuxCapaciteStep(
-      initialPickupAddress: _fields.pickupAddress.value,
-      initialDeliveryAddress: _fields.deliveryAddress.value,
-      onPickupSaved: (v) => _fields.pickupAddress.value = v,
-      onDeliverySaved: (v) => _fields.deliveryAddress.value = v,
-      onPickupChanged: (v) => _fields.pickupAddress.value = v,
-      onDeliveryChanged: (v) => _fields.deliveryAddress.value = v,
+    ListenableBuilder(
+      listenable: Listenable.merge([
+        _fields.pickupAddress,
+        _fields.deliveryAddress,
+      ]),
+      builder: (context, _) => LieuxCapaciteStep(
+        initialPickupAddress: _fields.pickupAddress.value,
+        initialDeliveryAddress: _fields.deliveryAddress.value,
+        onPickupSaved: (v) => _fields.pickupAddress.value = v,
+        onDeliverySaved: (v) => _fields.deliveryAddress.value = v,
+        onPickupChanged: (v) => _fields.pickupAddress.value = v,
+        onDeliveryChanged: (v) => _fields.deliveryAddress.value = v,
+      ),
     ),
   ];
 

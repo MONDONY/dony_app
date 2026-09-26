@@ -3186,9 +3186,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripTemplateTripSectionLabel => 'TRIP';
 
   @override
-  String get tripTemplateTransportSectionLabel => 'TRANSPORT MODE';
-
-  @override
   String get tripTemplateScheduleSectionLabel => 'SCHEDULE';
 
   @override

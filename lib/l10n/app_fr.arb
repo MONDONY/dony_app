@@ -2117,10 +2117,6 @@
   "@tripTemplateTripSectionLabel": {
     "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
   },
-  "tripTemplateTransportSectionLabel": "MODE DE TRANSPORT",
-  "@tripTemplateTransportSectionLabel": {
-    "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
-  },
   "tripTemplateScheduleSectionLabel": "HORAIRES",
   "@tripTemplateScheduleSectionLabel": {
     "description": "Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)"
