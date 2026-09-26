@@ -119,7 +119,14 @@ if [ $# -ge 1 ]; then
   # Seule la valeur injectée dans le manifest prouve quelque chose : la clé vue
   # par Dart est compilée dans le binaire et reste correcte même quand le natif
   # est vide, ce qui est exactement le cas qui a échappé jusqu'ici.
-  if ! unzip -p "$AAB" base/manifest/AndroidManifest.xml | strings | grep -q 'AIza'; then
+  #
+  # `... | strings | grep -q` sous pipefail rend un code NON NUL quand la clé est
+  # présente : grep -q sort à la première correspondance, ferme le tube, et
+  # strings meurt d'un SIGPIPE dont pipefail fait le statut du pipeline. Le
+  # garde-fou refusait alors les artefacts valides. Même remède que pour `read`
+  # plus haut : on capture, puis on teste.
+  MANIFEST_STRINGS=$(unzip -p "$AAB" base/manifest/AndroidManifest.xml | strings)
+  if ! grep -qF 'AIza' <<<"$MANIFEST_STRINGS"; then
     echo "ÉCHEC : $WHERE n'embarque aucune clé Google Maps dans son manifest."
     echo "Les cartes seront blanches. Rebâtir avec GOOGLE_MAPS_API_KEY exportée."
     exit 1
