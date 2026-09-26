@@ -1190,7 +1190,13 @@ final appRouter = GoRouter(
         ),
       ),
     ),
-    GoRoute(path: '/demandes', builder: (_, _) => const DemandesScreen()),
+    // `?bid=<id>` : posé par la notification « Nouvelle demande d'envoi »,
+    // ouvre cette demande par-dessus la liste (validé comme UUID par l'écran).
+    GoRoute(
+      path: '/demandes',
+      builder: (_, state) =>
+          DemandesScreen(focusBidId: state.uri.queryParameters['bid']),
+    ),
 
     // ── Profile — quick wins (hors shell) ────────────────────────────
     GoRoute(

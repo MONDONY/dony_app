@@ -707,10 +707,32 @@ void main() {
   });
 
   group('NotificationService._routeForMessage', () {
-    test('BID_CREATED routes to announcement bids page', () {
+    test('BID_CREATED ouvre la demande dans « Demandes reçues »', () {
       expect(
         service.testRouteForMessage({
           'type': 'BID_CREATED',
+          'bidId': bidId,
+          'announcementId': annId,
+        }),
+        '/demandes?bid=$bidId',
+      );
+    });
+
+    test('BID_CREATED sans bidId retombe sur la page de l\'annonce', () {
+      expect(
+        service.testRouteForMessage({
+          'type': 'BID_CREATED',
+          'announcementId': annId,
+        }),
+        '/announcements/$annId/bids',
+      );
+    });
+
+    test('BID_CREATED avec un bidId non UUID ne l\'injecte pas', () {
+      expect(
+        service.testRouteForMessage({
+          'type': 'BID_CREATED',
+          'bidId': '../../admin',
           'announcementId': annId,
         }),
         '/announcements/$annId/bids',

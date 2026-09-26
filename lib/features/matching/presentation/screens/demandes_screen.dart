@@ -38,37 +38,68 @@ import 'package:go_router/go_router.dart';
 /// (`/envois`) aux côtés de la liste d'envois : les deux y parlent du même
 /// objet, un colis que j'expédie.
 class DemandesScreen extends StatelessWidget {
-  const DemandesScreen({super.key});
+  const DemandesScreen({super.key, this.focusBidId});
+
+  /// Demande à ouvrir dès l'arrivée (`/demandes?bid=<id>`), posée par la
+  /// notification « Nouvelle demande d'envoi ». L'écran se met alors sur
+  /// « À traiter » et pousse le détail de cette demande par-dessus : le
+  /// voyageur y accepte ou refuse, et le retour le laisse dans la liste.
+  /// Ignorée si ce n'est pas un UUID (lien forgé ou tronqué).
+  final String? focusBidId;
 
   @override
   Widget build(BuildContext context) {
+    final focus = validFocusBidId(focusBidId);
     return MultiBlocProvider(
       providers: [
         // Singleton partagé avec le hub et l'onglet Activités : `.value` (ne pas
         // le fermer au pop). On force un chargement à l'ouverture de l'écran.
+        // Venu d'une notification, on force aussi « À traiter » : le singleton
+        // garde le dernier filtre choisi, et une nouvelle demande n'apparaît
+        // pas sous « Terminées ».
         BlocProvider.value(
           value: getIt<TravelerBidsBloc>()
-            ..add(const TravelerBidsRequested(force: true)),
+            ..add(
+              focus != null
+                  ? const TravelerBidsFilterChanged(TravelerBidFilter.aTraiter)
+                  : const TravelerBidsRequested(force: true),
+            ),
         ),
         BlocProvider(create: (_) => getIt<BidBloc>()),
         BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),
       ],
-      child: const _DemandesView(),
+      child: _DemandesView(focusBidId: focus),
     );
   }
 }
 
+final RegExp _uuidRegex = RegExp(
+  r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+  caseSensitive: false,
+);
+
+/// [raw] s'il s'agit d'un UUID, `null` sinon : l'id vient d'une URL et finit
+/// dans une route, il ne doit rien pouvoir y injecter.
+@visibleForTesting
+String? validFocusBidId(String? raw) =>
+    raw != null && _uuidRegex.hasMatch(raw) ? raw : null;
+
 /// Variante de test : les blocs sont fournis par le contexte parent.
 @visibleForTesting
 class DemandesScreenTesting extends StatelessWidget {
-  const DemandesScreenTesting({super.key});
+  const DemandesScreenTesting({super.key, this.focusBidId});
+
+  final String? focusBidId;
 
   @override
-  Widget build(BuildContext context) => const _DemandesView();
+  Widget build(BuildContext context) =>
+      _DemandesView(focusBidId: validFocusBidId(focusBidId));
 }
 
 class _DemandesView extends StatelessWidget {
-  const _DemandesView();
+  const _DemandesView({this.focusBidId});
+
+  final String? focusBidId;
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +137,7 @@ class _DemandesView extends StatelessWidget {
           ),
           // Le décompte « à traiter » vit sur les pastilles de filtre de ce
           // volet ; il n'a plus de toggle où s'afficher, et n'en a plus besoin.
-          const Expanded(child: _DemandesRecuesBody()),
+          Expanded(child: _DemandesRecuesBody(focusBidId: focusBidId)),
         ],
       ),
     );
@@ -116,7 +147,10 @@ class _DemandesView extends StatelessWidget {
 // ── Volet « Reçues » ─────────────────────────────────────────────────────────
 
 class _DemandesRecuesBody extends StatefulWidget {
-  const _DemandesRecuesBody();
+  const _DemandesRecuesBody({this.focusBidId});
+
+  /// Déjà validé comme UUID par l'écran.
+  final String? focusBidId;
 
   @override
   State<_DemandesRecuesBody> createState() => _DemandesRecuesBodyState();
@@ -137,6 +171,15 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    final focus = widget.focusBidId;
+    if (focus != null) {
+      // Après la première frame : pousser pendant le build de la route qui
+      // vient d'être poussée ferait échouer le Navigator. Une seule fois, en
+      // initState : un rebuild ne doit pas rouvrir la demande.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_openDetailById(focus));
+      });
+    }
   }
 
   @override
@@ -207,6 +250,13 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
 
   Future<void> _openDetail(BidModel bid) async {
     await context.push('/bids/${bid.id}', extra: bid);
+    if (mounted) _reload();
+  }
+
+  /// Ouverture depuis une notification : seul l'id est connu. Le détail charge
+  /// la demande lui-même (squelette puis `BidDetailRequested`).
+  Future<void> _openDetailById(String bidId) async {
+    await context.push('/bids/$bidId');
     if (mounted) _reload();
   }
 
