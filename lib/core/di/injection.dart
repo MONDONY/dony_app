@@ -7,6 +7,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/services/analytics_consent_remote.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/app_badge_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/core/services/device_id_service.dart';
@@ -266,6 +267,8 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<NotificationRemoteDatasource>(
     () => NotificationRemoteDatasource(getIt<ApiClient>()),
   );
+  getIt.registerLazySingleton<AppBadgeService>(() => AppBadgeService());
+
   getIt.registerLazySingleton<NotificationRepository>(
     () => NotificationRepository(getIt<NotificationRemoteDatasource>()),
   );
