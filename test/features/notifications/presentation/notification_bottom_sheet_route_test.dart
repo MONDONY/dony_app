@@ -51,13 +51,39 @@ void main() {
       );
     });
 
-    test('BID_CREATED routes to announcement bids page', () {
+    test('BID_CREATED ouvre la demande dans « Demandes reçues »', () {
+      expect(
+        routeForNotification(
+          _notif(
+            'BID_CREATED',
+            data: {'bidId': bidId, 'announcementId': annId},
+          ),
+        ),
+        '/demandes?bid=$bidId',
+      );
+    });
+
+    test('BID_CREATED sans bidId retombe sur la page de l\'annonce', () {
       expect(
         routeForNotification(
           _notif('BID_CREATED', data: {'announcementId': annId}),
         ),
         '/announcements/$annId/bids',
       );
+    });
+
+    test('BID_CREATED : le deeplink serveur garde sa demande', () {
+      final n = NotificationModel(
+        id: 'n1',
+        type: 'BID_CREATED',
+        title: 't',
+        body: 'b',
+        data: {'bidId': bidId, 'announcementId': annId},
+        read: false,
+        createdAt: DateTime(2026),
+        deeplink: 'yadony://demandes?bid=$bidId',
+      );
+      expect(routeForNotification(n), '/demandes?bid=$bidId');
     });
 
     test('BID_ACCEPTED routes to bid detail', () {

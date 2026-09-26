@@ -48,13 +48,16 @@ class NotificationModel {
   bool get isAggregate => count > 1;
 
   /// La route GoRouter portée par [deeplink] (`yadony://bids/x` → `/bids/x`),
-  /// nulle sans deeplink.
+  /// nulle sans deeplink. La query string est conservée : sans elle,
+  /// `yadony://demandes?bid=x` devenait `/demandes` et la notification
+  /// « Nouvelle demande d'envoi » perdait la demande qu'elle doit ouvrir.
   String? get deeplinkRoute {
     final link = deeplink;
     if (link == null || link.isEmpty) return null;
     final uri = Uri.tryParse(link);
     if (uri == null || uri.host.isEmpty) return null;
-    return '/${uri.host}${uri.path}';
+    final query = uri.hasQuery ? '?${uri.query}' : '';
+    return '/${uri.host}${uri.path}$query';
   }
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {

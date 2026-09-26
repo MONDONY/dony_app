@@ -40,6 +40,11 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
   final alertId = field('alertId');
 
   return switch (type) {
+    // Nouvelle demande d'envoi → cette demande, ouverte par-dessus « Demandes
+    // reçues » sur « À traiter ». L'ancienne cible, la page de l'annonce,
+    // montrait d'abord les demandes acceptées : la nouvelle y restait cachée
+    // derrière un bouton. Repli sur l'annonce pour un payload sans bidId.
+    'BID_CREATED' when _isUuid(bidId) => '/demandes?bid=$bidId',
     'BID_CREATED' when _isUuid(announcementId) =>
       '/announcements/$announcementId/bids',
 

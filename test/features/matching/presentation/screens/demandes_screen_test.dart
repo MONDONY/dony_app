@@ -92,6 +92,7 @@ Future<_MockPackageRequestBloc> _pump(
   required TravelerBidsState travelerBidsState,
   _MockBidBloc? bidBloc,
   _MockBidAcceptanceBloc? acceptanceBloc,
+  String? focusBidId,
 }) async {
   tester.view.physicalSize = const Size(900, 1800);
   tester.view.devicePixelRatio = 1.0;
@@ -135,8 +136,15 @@ Future<_MockPackageRequestBloc> _pump(
               )..add(const HelpCenterLoadRequested()),
             ),
           ],
-          child: const DemandesScreenTesting(),
+          child: DemandesScreenTesting(focusBidId: focusBidId),
         ),
+      ),
+      GoRoute(
+        path: '/bids/:bidId',
+        builder: (_, state) {
+          visited.add('/bids/${state.pathParameters['bidId']}');
+          return const Scaffold(body: Text('Détail demande'));
+        },
       ),
       GoRoute(
         path: '/trips/create',
@@ -313,6 +321,131 @@ void main() {
       verifyNever(() => acceptance.add(any()));
     },
   );
+
+  group('ouverture depuis la notification « Nouvelle demande d\'envoi »', () {
+    const focus = 'b1b2c3d4-e5f6-7890-abcd-ef1234567890';
+
+    testWidgets('ouvre la demande par-dessus la liste', (tester) async {
+      await _pump(
+        tester,
+        travelerBidsState: loaded([_bid(focus, 'PENDING')]),
+        focusBidId: focus,
+      );
+      await tester.pumpAndSettle();
+
+      expect(visited, ['/bids/$focus']);
+    });
+
+    testWidgets('au retour du détail, la liste est rechargée', (tester) async {
+      await _pump(
+        tester,
+        travelerBidsState: loaded([_bid(focus, 'PENDING')]),
+        focusBidId: focus,
+      );
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.text('Détail demande'));
+      // La liste est hors scène sous le détail poussé par-dessus.
+      final travelerBids = BlocProvider.of<TravelerBidsBloc>(
+        tester.element(find.byType(DemandesScreenTesting, skipOffstage: false)),
+      );
+      clearInteractions(travelerBids);
+      GoRouter.of(context).pop();
+      await tester.pumpAndSettle();
+
+      verify(
+        () => travelerBids.add(const TravelerBidsRequested(force: true)),
+      ).called(1);
+    });
+
+    testWidgets('un id non UUID n\'ouvre rien', (tester) async {
+      await _pump(
+        tester,
+        travelerBidsState: loaded(const []),
+        focusBidId: '../../admin',
+      );
+      await tester.pumpAndSettle();
+
+      expect(visited, isEmpty);
+    });
+
+    testWidgets('sans demande ciblée, rien ne s\'ouvre', (tester) async {
+      await _pump(tester, travelerBidsState: loaded(const []));
+      await tester.pumpAndSettle();
+
+      expect(visited, isEmpty);
+    });
+
+    test('validFocusBidId ne garde que les UUID', () {
+      expect(validFocusBidId(focus), focus);
+      expect(validFocusBidId(focus.toUpperCase()), focus.toUpperCase());
+      expect(validFocusBidId(null), isNull);
+      expect(validFocusBidId(''), isNull);
+      expect(validFocusBidId('b1'), isNull);
+      expect(validFocusBidId('$focus/../x'), isNull);
+    });
+
+    testWidgets('l\'écran réel force le filtre « À traiter »', (tester) async {
+      // Le bloc est un singleton qui garde le dernier filtre : venu d'une
+      // notification, une nouvelle demande ne doit pas tomber sous
+      // « Terminées ».
+      final travelerBids = _MockTravelerBidsBloc();
+      when(() => travelerBids.state).thenReturn(
+        TravelerBidsLoaded(
+          bids: const [],
+          page: 0,
+          hasMore: false,
+          filter: TravelerBidFilter.terminees,
+        ),
+      );
+      final bidBloc = _MockBidBloc();
+      when(() => bidBloc.state).thenReturn(BidListLoaded(const []));
+      final acceptance = _MockBidAcceptanceBloc();
+      when(() => acceptance.state).thenReturn(acs.BidAcceptanceInitial());
+      getIt
+        ..registerSingleton<TravelerBidsBloc>(travelerBids)
+        ..registerFactory<BidBloc>(() => bidBloc)
+        ..registerFactory<BidAcceptanceBloc>(() => acceptance);
+
+      await tester.pumpWidget(
+        BlocProvider<HelpCenterBloc>(
+          create: (_) => HelpCenterBloc(
+            HelpCenterRepository(
+              const _StaticHelpCenterSource(_emptyHelpConfigJson),
+              fallbackJsonLoader: () async => _emptyHelpConfigJson,
+            ),
+            makeDisabledAnalytics(MockAnalyticsBackend()),
+          )..add(const HelpCenterLoadRequested()),
+          child: MaterialApp.router(
+            theme: AppTheme.light(),
+            routerConfig: GoRouter(
+              routes: [
+                GoRoute(
+                  path: '/',
+                  builder: (_, _) => const DemandesScreen(focusBidId: focus),
+                ),
+                GoRoute(
+                  path: '/bids/:bidId',
+                  builder: (_, _) => const Scaffold(body: Text('Détail')),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      verify(
+        () => travelerBids.add(
+          const TravelerBidsFilterChanged(TravelerBidFilter.aTraiter),
+        ),
+      ).called(1);
+      verifyNever(
+        () => travelerBids.add(const TravelerBidsRequested(force: true)),
+      );
+      expect(find.text('Détail'), findsOneWidget);
+    });
+  });
 
   group('traductions', () {
     testWidgets('en anglais : titre + chips de filtre traduits', (

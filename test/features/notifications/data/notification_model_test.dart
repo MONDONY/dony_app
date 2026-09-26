@@ -68,6 +68,23 @@ void main() {
       expect(m.isAggregate, isFalse);
     });
 
+    test('la query string du deeplink est conservée dans la route', () {
+      // Sans elle, « Nouvelle demande d'envoi » ouvrait « Demandes reçues »
+      // sans la demande concernée.
+      final m = NotificationModel.fromJson({
+        'id': 'n1',
+        'type': 'BID_CREATED',
+        'title': 't',
+        'body': 'b',
+        'deeplink': 'yadony://demandes?bid=b1',
+        'data': <String, dynamic>{},
+        'read': false,
+        'createdAt': '2026-09-03T10:00:00.000Z',
+      });
+
+      expect(m.deeplinkRoute, '/demandes?bid=b1');
+    });
+
     test('un deeplink malformé ne donne aucune route', () {
       final m = NotificationModel.fromJson({
         'id': 'n1',
