@@ -107,3 +107,51 @@ if [ -n "$OTHERS" ]; then
 fi
 
 echo "OK : $WHERE est bien sur le projet $EXPECTED_ID ($EXPECTED_NUMBER)."
+
+# La clé Google Maps du manifest natif ne passe PAS par --dart-define-from-file :
+# build.gradle.kts lit $GOOGLE_MAPS_API_KEY, puis à défaut env.dev.json. Un build
+# lancé depuis un worktree qui n'a que env.staging.json reçoit donc une chaîne
+# vide. Même classe de panne que la divergence Firebase ci-dessus : ça compile,
+# ça s'installe, ça se lance, et aucune carte ne s'affiche. Les builds 1.0.0+78
+# à +83 sont partis ainsi. build-release.yml exporte la variable depuis un
+# secret ; rien ne couvrait les builds lancés à la main.
+if [ $# -ge 1 ]; then
+  # Seule la valeur injectée dans le manifest prouve quelque chose : la clé vue
+  # par Dart est compilée dans le binaire et reste correcte même quand le natif
+  # est vide, ce qui est exactement le cas qui a échappé jusqu'ici.
+  #
+  # `... | strings | grep -q` sous pipefail rend un code NON NUL quand la clé est
+  # présente : grep -q sort à la première correspondance, ferme le tube, et
+  # strings meurt d'un SIGPIPE dont pipefail fait le statut du pipeline. Le
+  # garde-fou refusait alors les artefacts valides. Même remède que pour `read`
+  # plus haut : on capture, puis on teste.
+  MANIFEST_STRINGS=$(unzip -p "$AAB" base/manifest/AndroidManifest.xml | strings)
+  if ! grep -qF 'AIza' <<<"$MANIFEST_STRINGS"; then
+    echo "ÉCHEC : $WHERE n'embarque aucune clé Google Maps dans son manifest."
+    echo "Les cartes seront blanches. Rebâtir avec GOOGLE_MAPS_API_KEY exportée."
+    exit 1
+  fi
+else
+  MAPS_KEY="${GOOGLE_MAPS_API_KEY:-}"
+  if [ -z "$MAPS_KEY" ] && [ -f env.dev.json ]; then
+    MAPS_KEY=$(python3 - <<'PY'
+import json
+print(json.load(open("env.dev.json")).get("GOOGLE_MAPS_API_KEY", "").strip())
+PY
+)
+  fi
+  case "$MAPS_KEY" in
+    AIza*) ;;
+    "")
+      echo "ÉCHEC : aucune clé Google Maps pour le manifest natif."
+      echo "Exporter GOOGLE_MAPS_API_KEY, ou renseigner env.dev.json."
+      exit 1
+      ;;
+    *)
+      echo "ÉCHEC : la clé Google Maps ne commence pas par AIza (gabarit non rempli ?)."
+      exit 1
+      ;;
+  esac
+fi
+
+echo "OK : clé Google Maps présente pour le manifest natif."
