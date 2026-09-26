@@ -6,6 +6,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/app_badge_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -23,6 +24,7 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
+import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
@@ -58,6 +60,8 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   StreamSubscription<void>? _fcmSub;
+  StreamSubscription<int>? _badgeMessagesSub;
+  StreamSubscription<int>? _badgeSupportSub;
   bool _ratingPromptShown = false;
   DateTime? _lastHomeRefreshAt;
   DateTime? _lastMessagesRefreshAt;
@@ -166,6 +170,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       context.read<StripeAccountBloc>().add(const StripeAccountStatusLoaded());
       // Initialise le compteur de non-lus support au démarrage du shell.
       unawaited(getIt<SupportUnreadCubit>().refresh());
+      _startBadgeSync();
       // Alimente le point d'attention de l'onglet Activités dès le démarrage,
       // sans attendre que l'utilisateur ouvre le hub.
       _loadActivityIndicators();
@@ -180,9 +185,43 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           // Une push peut être une nouvelle demande reçue ou une offre de
           // négociation : rafraîchir les compteurs de l'onglet aussi.
           _loadActivityIndicators();
+          // La push vient de poser une pastille calculée côté serveur, qui
+          // ignore messagerie et support : on réaligne l'icône sur le total réel.
+          unawaited(_syncNotificationBadge());
         }
       });
     });
+  }
+
+  /// Alimente la pastille de l'icône depuis les trois sources de non-lus.
+  ///
+  /// Le backend ne connaît que le fil de notifications : la messagerie vit dans Firestore
+  /// et le support a son propre compteur. Une push pose donc une valeur incomplète, que
+  /// l'application corrige ici dès qu'elle tourne.
+  void _startBadgeSync() {
+    final badge = getIt<AppBadgeService>();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null && uid.isNotEmpty) {
+      _badgeMessagesSub = getIt<FirestoreChatRepository>()
+          .totalUnreadStream(uid)
+          .listen(badge.setMessages);
+    }
+    final support = getIt<SupportUnreadCubit>();
+    unawaited(badge.setSupport(support.state));
+    _badgeSupportSub = support.stream.listen(badge.setSupport);
+    unawaited(_syncNotificationBadge());
+  }
+
+  /// Relit le nombre de notifications non lues et le reporte sur l'icône.
+  /// Silencieux en cas d'échec réseau : une pastille périmée vaut mieux qu'une
+  /// erreur affichée pour un compteur décoratif.
+  Future<void> _syncNotificationBadge() async {
+    try {
+      final unread = await getIt<NotificationRepository>().getUnreadCount();
+      await getIt<AppBadgeService>().setNotifications(unread);
+    } catch (_) {
+      // Compteur indisponible : on garde la dernière valeur écrite.
+    }
   }
 
   @override
@@ -190,6 +229,10 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     if (state != AppLifecycleState.resumed || !mounted) return;
     // Un visiteur n'a pas de compte Stripe à rafraîchir.
     if (!getIt<FirebaseSessionProbe>().hasRealSession) return;
+    // Retour au premier plan : c'est le seul moment où l'application peut
+    // corriger une pastille laissée par une push reçue écran éteint.
+    unawaited(_syncNotificationBadge());
+    unawaited(getIt<SupportUnreadCubit>().refresh());
     // Le bloc est un singleton DI : il peut être fermé (ex. logout) alors
     // que ce shell est encore mounted — mounted seul ne protège pas contre
     // ce cas, d'où le check isClosed avant le add().
@@ -203,6 +246,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _fcmSub?.cancel();
+    _badgeMessagesSub?.cancel();
+    _badgeSupportSub?.cancel();
     super.dispose();
   }
 

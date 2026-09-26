@@ -5,6 +5,7 @@ import FirebaseCore
 import FirebaseAuth
 import FirebaseMessaging
 import Sentry
+import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -35,6 +36,41 @@ import Sentry
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    registerBadgeChannel(engineBridge.pluginRegistry)
+  }
+
+  /// Pastille de l'icône. iOS ne laisse que l'application écrire ce nombre : lire les
+  /// notifications ne l'efface pas, et le champ APNs `badge` est absolu, il écrit la
+  /// valeur reçue. Sans ce canal, rien côté Dart ne pouvait remettre la pastille à zéro.
+  private func registerBadgeChannel(_ registry: FlutterPluginRegistry) {
+    guard let registrar = registry.registrar(forPlugin: "YadonyAppBadge") else {
+      NSLog("[Badge] Registrar indisponible, pastille non pilotable")
+      return
+    }
+    let channel = FlutterMethodChannel(
+      name: "com.yadony.yadony/app_badge",
+      binaryMessenger: registrar.messenger()
+    )
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "setBadge" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      let count = (call.arguments as? [String: Any])?["count"] as? Int ?? 0
+      if #available(iOS 16.0, *) {
+        UNUserNotificationCenter.current().setBadgeCount(count) { error in
+          DispatchQueue.main.async {
+            if let error = error {
+              NSLog("[Badge] Écriture refusée : %@", error.localizedDescription)
+            }
+            result(nil)
+          }
+        }
+      } else {
+        UIApplication.shared.applicationIconBadgeNumber = count
+        result(nil)
+      }
+    }
   }
 
   // FirebaseAppDelegateProxyEnabled est à false (Info.plist) : sans le swizzling,
