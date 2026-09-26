@@ -62,10 +62,19 @@ void _openSendIntro(BuildContext context) => _openRoute(
   '/parcels/send-intro',
 );
 
-/// Compteur « Colis en route » — partagé entre la tuile et la détection
-/// d'activité, pour que les deux restent alignés sur [kEnvoisEnCours].
-int envoisEnCours(BidState state) => state is BidListLoaded
-    ? state.bids.where((b) => kEnvoisEnCours.contains(b.status)).length
+/// Envois qui demandent encore quelque chose : les puces « En cours »
+/// ([kEnvoisEnCours]) et « En attente » ([kEnvoisAVenir], dont l'attente de
+/// paiement) de l'écran Mes colis. Les colis livrés et les envois clos sans
+/// livraison n'y entrent pas. Partagé entre la tuile et la détection
+/// d'activité, pour que les deux restent alignés.
+int envoisActifs(BidState state) => state is BidListLoaded
+    ? state.bids
+          .where(
+            (b) =>
+                kEnvoisEnCours.contains(b.status) ||
+                kEnvoisAVenir.contains(b.status),
+          )
+          .length
     : 0;
 
 /// Onglet Activités — hub unique, identique pour tous les utilisateurs.
@@ -348,7 +357,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
         : 0;
 
     return (summary?.activeTrips ?? 0) > 0 ||
-        envoisEnCours(bidState) > 0 ||
+        envoisActifs(bidState) > 0 ||
         demandes > 0 ||
         negoState.activeCount > 0 ||
         (summary?.revenue ?? 0) > 0 ||
@@ -713,7 +722,7 @@ class _ActivityGrid extends StatelessWidget {
         final negoState = context
             .select<NegotiationListBloc, NegotiationListState>((b) => b.state);
         final negociations = negosNonLuesSurMesColis(requestState, negoState);
-        final count = envoisEnCours(state) + colisPublies(requestState);
+        final count = envoisActifs(state) + colisPublies(requestState);
         return ActivityHeroTile(
           key: const Key('hub-tile-shipments'),
           iconName: 'package',
