@@ -387,6 +387,20 @@ void main() {
       expect((state as dynamic).handoverLeadDaysForTest, 2);
     });
 
+    testWidgets('le mode de transport n\'est plus proposé', (tester) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.textContaining('TRANSPORT'), findsNothing);
+      for (final mode in TransportMode.values) {
+        expect(find.byIcon(mode.icon), findsNothing, reason: mode.name);
+      }
+    });
+
     testWidgets(
       'édition : préremplit nom, villes, heures, délai et transport',
       (tester) async {
@@ -512,6 +526,45 @@ void main() {
     );
 
     testWidgets(
+      'étape 1 : le lieu de remise choisi s\'affiche aussitôt dans le champ',
+      (tester) async {
+        // Bug remonté en recette : l'adresse partait dans le payload mais le
+        // champ restait vide, faute de rebuild de l'étape.
+        tester.view.physicalSize = const Size(800, 3000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        await goToStep(tester, 1);
+        await tester.pumpAndSettle();
+        expect(find.text('Cocody'), findsNothing);
+
+        final fields =
+            (tester.state<State<TripTemplateEditScreen>>(
+                          find.byType(TripTemplateEditScreen),
+                        )
+                        as dynamic)
+                    .fieldsForTest
+                as TripFormFields;
+        fields.pickupAddress.value = const AddressData(
+          label: 'Cocody',
+          lat: 5.35,
+          lng: -3.99,
+        );
+        fields.deliveryAddress.value = const AddressData(
+          label: 'Gare de Lyon',
+          lat: 48.84,
+          lng: 2.37,
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Cocody'), findsOneWidget);
+        expect(find.text('Gare de Lyon'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'étape 2 : PrixConditionsStep et bandeau devise, chips CFA en XOF',
       (tester) async {
         tester.view.physicalSize = const Size(800, 3000);
@@ -617,6 +670,8 @@ void main() {
       expect(data['handoverLeadDays'], isNull);
       expect(data['capacityUnit'], 'SUITCASE_23KG');
       expect(data['availableKg'], 23);
+      // Plus de sélecteur : le modèle part en avion, valeur exigée par l'API.
+      expect(data['transportMode'], 'PLANE');
     });
 
     testWidgets(

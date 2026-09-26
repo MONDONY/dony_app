@@ -5441,12 +5441,6 @@ abstract class AppLocalizations {
   /// Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'MODE DE TRANSPORT'**
-  String get tripTemplateTransportSectionLabel;
-
-  /// Titre de section, étape Trajet du formulaire de modèle (trip_template_edit_screen.dart)
-  ///
-  /// In fr, this message translates to:
   /// **'HORAIRES'**
   String get tripTemplateScheduleSectionLabel;
 
