@@ -5,6 +5,7 @@ import 'package:dony/app/app.dart';
 import 'package:dony/app/initial_location.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/config/api_config.dart';
+import 'package:dony/core/config/environment.dart';
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/currency/active_rates.dart';
@@ -31,11 +32,6 @@ import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
-
-const _environment = String.fromEnvironment(
-  'ENVIRONMENT',
-  defaultValue: 'development',
-);
 
 const _stripePublishableKey = String.fromEnvironment('STRIPE_PUBLISHABLE_KEY');
 
@@ -270,7 +266,7 @@ Future<void> main() async {
   await SentryFlutter.init((options) {
     options.dsn = _sentryDsn;
     options.tracesSampleRate = 0.1;
-    options.environment = _environment;
+    options.environment = kEnvironment;
     options.sendDefaultPii = false;
     // Logs structurés Sentry : alimentés par AppLog (cf. core/services/app_log.dart).
     // Sans ce flag, tout appel Sentry.logger.* est ignoré côté SDK.

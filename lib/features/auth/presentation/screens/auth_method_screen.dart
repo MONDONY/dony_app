@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:dony/core/config/google_auth_flag.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -26,6 +27,8 @@ class AuthMethodScreen extends StatelessWidget {
   const AuthMethodScreen({super.key});
 
   bool get _showAppleButton => defaultTargetPlatform == TargetPlatform.iOS;
+
+  bool get _showGoogleButton => googleSignInAvailable;
 
   Future<void> _continueAfterNewAccount(
     BuildContext context,
@@ -107,7 +110,10 @@ class AuthMethodScreen extends StatelessWidget {
                             .fadeIn(delay: 60.ms)
                             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                         const SizedBox(height: DonySpacing.lg),
-                        _AuthActionsPanel(showAppleButton: _showAppleButton)
+                        _AuthActionsPanel(
+                              showAppleButton: _showAppleButton,
+                              showGoogleButton: _showGoogleButton,
+                            )
                             .animate()
                             .fadeIn(delay: 120.ms)
                             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
@@ -299,9 +305,13 @@ class _LoginIntro extends StatelessWidget {
 }
 
 class _AuthActionsPanel extends StatelessWidget {
-  const _AuthActionsPanel({required this.showAppleButton});
+  const _AuthActionsPanel({
+    required this.showAppleButton,
+    required this.showGoogleButton,
+  });
 
   final bool showAppleButton;
+  final bool showGoogleButton;
 
   @override
   Widget build(BuildContext context) {
@@ -352,12 +362,14 @@ class _AuthActionsPanel extends StatelessWidget {
                 ),
                 const SizedBox(height: DonySpacing.sm),
               ],
-              _GoogleCta(
-                onTap: () => context.read<AuthBloc>().add(
-                  const AuthGoogleSignInRequested(),
+              if (showGoogleButton) ...[
+                _GoogleCta(
+                  onTap: () => context.read<AuthBloc>().add(
+                    const AuthGoogleSignInRequested(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: DonySpacing.sm),
+                const SizedBox(height: DonySpacing.sm),
+              ],
               _SocialCta(
                 iconAsset: 'mail',
                 label: context.l10n.authMethodContinueWithEmail,
