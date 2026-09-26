@@ -24,6 +24,11 @@ make_repo() {
   cat > "$dir/env.prod.json" <<JSON
 { "FIREBASE_PROJECT_ID": "$env_project", "FIREBASE_MESSAGING_SENDER_ID": "$env_sender" }
 JSON
+  # La clé Maps du manifest natif se lit ici, pas dans env.prod.json. Sans elle
+  # tous les cas « doit accepter » échoueraient pour une raison sans rapport.
+  cat > "$dir/env.dev.json" <<'JSON'
+{ "GOOGLE_MAPS_API_KEY": "AIzaSyFAKEfakeFAKEfakeFAKEfakeFAKEfake0" }
+JSON
   if [ "$project" != "__none__" ]; then
     cat > "$dir/android/app/google-services.json" <<JSON
 { "project_info": { "project_id": "$project", "project_number": "$number" } }
@@ -35,7 +40,7 @@ JSON
 check() {
   local label="$1" expected="$2" dir="$3"
   local out code
-  out=$("$dir/tool/verify_android_release_config.sh" 2>&1); code=$?
+  out=$(env -u GOOGLE_MAPS_API_KEY "$dir/tool/verify_android_release_config.sh" 2>&1); code=$?
   if [ "$code" -eq "$expected" ]; then
     echo "  ok   $label (code $code)"; PASS=$((PASS + 1))
   else
@@ -78,8 +83,39 @@ cat > "$noNumber/android/app/google-services.json" <<'JSON'
 JSON
 check "numéro de projet absent du fichier natif" 1 "$noNumber"
 
+# Clé Maps : la panne qui a produit les builds 1.0.0+78 à +83. Le natif reçoit
+# une chaîne vide, tout le reste est cohérent, et l'appli se lance sans carte.
+noMaps=$(make_repo yadony-prod 799389399791); rm "$noMaps/env.dev.json"
+check "aucune clé Maps (ni variable, ni env.dev.json)" 1 "$noMaps"
+
+emptyMaps=$(make_repo yadony-prod 799389399791)
+cat > "$emptyMaps/env.dev.json" <<'JSON'
+{ "GOOGLE_MAPS_API_KEY": "" }
+JSON
+check "clé Maps vide dans env.dev.json" 1 "$emptyMaps"
+
+tplMaps=$(make_repo yadony-prod 799389399791)
+cat > "$tplMaps/env.dev.json" <<'JSON'
+{ "GOOGLE_MAPS_API_KEY": "your-google-maps-api-key" }
+JSON
+check "clé Maps au gabarit non rempli" 1 "$tplMaps"
+
 echo "Garde-fou Android — ce qu'il doit ACCEPTER :"
 check "production cohérente" 0 "$(make_repo yadony-prod 799389399791)"
+
+# La variable d'environnement prime sur env.dev.json : c'est la voie de CI et
+# celle des builds à la main. Sans ce test, le garde-fou pourrait n'accepter que
+# le fichier et casser la release.
+envKeyDir=$(make_repo yadony-prod 799389399791); rm "$envKeyDir/env.dev.json"
+envOut=$(GOOGLE_MAPS_API_KEY=AIzaSyFAKEfakeFAKEfakeFAKEfakeFAKEfake0 \
+  "$envKeyDir/tool/verify_android_release_config.sh" 2>&1); envCode=$?
+if [ "$envCode" -eq 0 ]; then
+  echo "  ok   clé Maps fournie par la variable d'environnement (code 0)"; PASS=$((PASS + 1))
+else
+  echo "  ÉCHEC clé Maps fournie par la variable d'environnement : attendu 0, obtenu $envCode"
+  echo "$envOut" | sed 's/^/         /'; FAIL=$((FAIL + 1))
+fi
+rm -rf "$envKeyDir"
 
 echo ""
 echo "$PASS réussis, $FAIL échoués"
