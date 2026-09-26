@@ -511,6 +511,54 @@ void main() {
       );
     });
 
+    testWidgets('« Mes colis » compte les envois en cours et en attente, '
+        'jamais les livrés ni les non aboutis', (tester) async {
+      await _pump(
+        tester,
+        bidState: BidListLoaded([
+          // En cours.
+          _bid('b1', 'IN_TRANSIT'),
+          _bid('b2', 'ARRIVED'),
+          // En attente, dont l'attente de paiement.
+          _bid('b3', 'PENDING'),
+          _bid('b4', 'AWAITING_PAYMENT'),
+          _bid('b5', 'PAYMENT_ESCROWED'),
+          // Exclus : livré et clos sans livraison.
+          _bid('b6', 'COMPLETED'),
+          _bid('b7', 'CANCELLED'),
+          _bid('b8', 'REJECTED'),
+        ]),
+      );
+
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('hub-tile-shipments')),
+          matching: find.text('5'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('un seul envoi en attente de paiement suffit à sortir '
+        '« Mes colis » de l\'invitation', (tester) async {
+      await _pump(
+        tester,
+        summary: const TripsSummaryModel(activeTrips: 0, kgSold: 0, revenue: 0),
+        bidState: BidListLoaded([_bid('b1', 'AWAITING_PAYMENT')]),
+      );
+
+      expect(find.text('J\'envoie'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('hub-tile-shipments')),
+          matching: find.text('1'),
+        ),
+        findsOneWidget,
+      );
+      // L'activité détectée fait aussi apparaître les statistiques.
+      expect(find.text('Statistiques'), findsOneWidget);
+    });
+
     testWidgets('une erreur de résumé n\'affecte que sa propre tuile', (
       tester,
     ) async {
