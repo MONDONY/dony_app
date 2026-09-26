@@ -38,7 +38,7 @@ void main() {
   const bidId = 'bid-1';
   const threadId = 'thread-1';
   const scope = MobileMoneyScope.bid(bidId);
-  // AppTheme.light() charge des polices via HTTP (google_fonts) : appelée
+  // AppTheme.light() est coûteux à construire : appelée
   // hors d'un testWidgets, la requête tombe hors de la zone de test et
   // plante. On ne la calcule donc jamais au niveau de main(), seulement à
   // l'intérieur des deux tests qui en ont besoin, une fois le binding de

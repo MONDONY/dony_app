@@ -1,7 +1,7 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class CommissionCardPreview extends StatelessWidget {
   final CommissionMethod card;
@@ -27,7 +27,8 @@ class CommissionCardPreview extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             card.maskedNumber,
-            style: GoogleFonts.plusJakartaSans(
+            style: const TextStyle(
+              fontFamily: DonyTypography.fontBody,
               fontSize: 18,
               color: Colors.white,
               letterSpacing: 2,
@@ -37,7 +38,8 @@ class CommissionCardPreview extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             context.l10n.commissionCardExpiryLabel(card.formattedExpiry),
-            style: GoogleFonts.plusJakartaSans(
+            style: const TextStyle(
+              fontFamily: DonyTypography.fontBody,
               color: Colors.white70,
               fontSize: 13,
             ),

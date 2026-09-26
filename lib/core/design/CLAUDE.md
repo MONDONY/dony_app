@@ -357,7 +357,7 @@ DonyOperatorTile(
 ## Règles obligatoires
 
 1. **Jamais** de `Color(0xFF...)` hardcodé — toujours `DonyColors.X` ou `cs.X`
-2. **Jamais** de `GoogleFonts.hankenGrotesk(...)` ou `GoogleFonts.plusJakartaSans(...)` direct dans les widgets — `Theme.of(context).textTheme.X`
+2. **Jamais** de `TextStyle(fontFamily: ...)` écrit à la main dans les widgets — `Theme.of(context).textTheme.X`. Polices embarquées, déclarées en `fonts:` dans le pubspec ; `google_fonts` retiré (téléchargement au démarrage, Sentry FLUTTER-2)
 3. **Jamais** de `EdgeInsets.all(16)` en dur — `EdgeInsets.all(DonySpacing.base)`
 4. **Jamais** de `BorderRadius.circular(16)` en dur pour les cards — `BorderRadius.circular(DonyRadius.card)`
 5. **Jamais** de `BorderRadius.circular(14)` en dur pour les boutons — `BorderRadius.circular(DonyRadius.lg)`

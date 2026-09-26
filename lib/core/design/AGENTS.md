@@ -112,9 +112,12 @@ intentionnel. Vérifier chaque nouveau composant en light et dark mode.
 ### Valeurs en dur interdites
 
 - Jamais de `Color(0xFF...)` hardcodé : utiliser `DonyColors.X` ou `cs.X`.
-- Jamais de `GoogleFonts.hankenGrotesk(...)` ni
-  `GoogleFonts.plusJakartaSans(...)` directement : utiliser
-  `Theme.of(context).textTheme.X`.
+- Jamais de `TextStyle(fontFamily: ...)` écrit à la main dans un widget :
+  utiliser `Theme.of(context).textTheme.X`. Les familles sont embarquées et
+  déclarées dans la table `fonts:` du pubspec ; `DonyTypography.fontDisplay`,
+  `fontBody` et `fontAccent` en sont les seuls noms. Le paquet `google_fonts` a
+  été retiré : il téléchargeait les polices au premier lancement et son échec
+  remontait en erreur fatale (Sentry FLUTTER-2).
 - Jamais de `EdgeInsets.all(16)` : utiliser
   `EdgeInsets.all(DonySpacing.base)`.
 - Jamais de `BorderRadius.circular(16)` pour une card : utiliser

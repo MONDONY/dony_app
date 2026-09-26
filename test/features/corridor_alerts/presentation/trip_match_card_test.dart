@@ -3,7 +3,6 @@ import 'package:dony/features/corridor_alerts/data/models/trip_match_model.dart'
 import 'package:dony/features/corridor_alerts/presentation/widgets/trip_match_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
@@ -24,7 +23,6 @@ TripMatchModel _trip() => TripMatchModel(
 void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
-    GoogleFonts.config.allowRuntimeFetching = false;
     await initializeDateFormatting('fr');
   });
 
