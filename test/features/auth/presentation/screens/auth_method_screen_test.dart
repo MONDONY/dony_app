@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/google_auth_flag.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -8,6 +9,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -72,7 +74,11 @@ Widget _app(AuthBloc bloc) => MaterialApp.router(
 
 void main() {
   setUp(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
-  tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
+  tearDown(() {
+    setSmsAuthEnabled(kSmsAuthEnabledDefault);
+    debugEnvironmentOverride = null;
+    debugDefaultTargetPlatformOverride = null;
+  });
 
   // La mention légale était bleue et soulignée mais ne portait aucun
   // `recognizer` : rien n'écoutait le toucher. On demandait d'accepter des
@@ -194,6 +200,44 @@ void main() {
       await bloc.close();
     },
   );
+
+  // Google Play re-signe les builds Android avec sa clé App Signing, dont le
+  // client OAuth appartient au projet Firebase prod : en staging le bouton
+  // Google ouvrait un écran qui se refermait aussitôt (DEVELOPER_ERROR).
+  testWidgets('masque le bouton Google sur Android en staging', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    debugEnvironmentOverride = 'staging';
+    final bloc = MockAuthBloc();
+    when(() => bloc.state).thenReturn(const AuthInitial());
+    when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+    await tester.pumpWidget(_app(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Continuer avec Google'), findsNothing);
+    expect(find.text('Continuer avec mon email'), findsOneWidget);
+    expect(find.text('Parcourir sans compte'), findsOneWidget);
+
+    await bloc.close();
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('garde le bouton Google sur iOS en staging', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    debugEnvironmentOverride = 'staging';
+    final bloc = MockAuthBloc();
+    when(() => bloc.state).thenReturn(const AuthInitial());
+    when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+    await tester.pumpWidget(_app(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Continuer avec Google'), findsOneWidget);
+    expect(find.text('Continuer avec Apple'), findsOneWidget);
+
+    await bloc.close();
+    debugDefaultTargetPlatformOverride = null;
+  });
 
   testWidgets(
     'affiche le bouton téléphone une fois le SMS OTP confirmé par le backend',
