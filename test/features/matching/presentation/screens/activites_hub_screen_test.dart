@@ -563,8 +563,8 @@ void main() {
       );
     });
 
-    testWidgets('Publier un colis → écran d\'intro colis', (tester) async {
-      await expectNavigation(tester, 'Publier un colis', '/parcels/send-intro');
+    testWidgets('Envoyer un colis → écran d\'intro colis', (tester) async {
+      await expectNavigation(tester, 'Envoyer un colis', '/parcels/send-intro');
     });
 
     testWidgets('Historique → historique des envois', (tester) async {
@@ -747,7 +747,7 @@ void main() {
 
       expect(find.text('Activities'), findsOneWidget);
       expect(find.text('Post a trip'), findsOneWidget);
-      expect(find.text('Post a parcel'), findsOneWidget);
+      expect(find.text('Send a parcel'), findsOneWidget);
       expect(find.text('Right now'), findsOneWidget);
       expect(find.text('Active trips'), findsOneWidget);
       expect(find.text('My parcels'), findsOneWidget);
@@ -815,7 +815,26 @@ void main() {
     );
   });
 
-  group('rangée d\'actions', () {
+  group('boutons des tuiles principales', () {
+    testWidgets('chaque bouton vit dans sa tuile de rôle', (tester) async {
+      await _pump(tester);
+
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('hub-tile-trips')),
+          matching: find.byKey(const Key('hub-publish-trip')),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('hub-tile-shipments')),
+          matching: find.byKey(const Key('hub-new-request')),
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('les deux boutons tiennent sur une ligne, à hauteur égale', (
       tester,
     ) async {
@@ -825,9 +844,21 @@ void main() {
       final send = tester.getSize(find.byKey(const Key('hub-new-request')));
 
       // Un libellé qui passe sur deux lignes fait grandir son bouton et casse
-      // la symétrie de la paire — c'est ce que cette assertion attrape.
+      // la symétrie de la paire : c'est ce que cette assertion attrape.
       expect(send.height, publish.height);
       expect(send.height, lessThanOrEqualTo(56));
+    });
+
+    testWidgets('les deux tuiles principales ont la même hauteur', (
+      tester,
+    ) async {
+      await _pump(tester);
+
+      final trips = tester.getSize(find.byKey(const Key('hub-tile-trips')));
+      final shipments = tester.getSize(
+        find.byKey(const Key('hub-tile-shipments')),
+      );
+      expect(shipments.height, trips.height);
     });
   });
 
@@ -942,9 +973,16 @@ void main() {
       // n'apparaît qu'à la première activité.
       expect(find.text('Statistiques'), findsNothing);
       expect(find.text('Revenus'), findsNothing);
-      // Les tuiles à zéro deviennent des invites à agir.
-      expect(find.text('Publiez un trajet'), findsOneWidget);
-      expect(find.text('Envoyez un colis'), findsOneWidget);
+      // Les deux tuiles principales à zéro deviennent des invitations : le
+      // rôle plutôt qu'un « 0 », et leur bouton reste là.
+      expect(find.text('Je voyage'), findsOneWidget);
+      expect(find.text('J\'envoie'), findsOneWidget);
+      expect(find.text('Trajets actifs'), findsNothing);
+      expect(find.text('Mes colis'), findsNothing);
+      expect(find.byKey(const Key('hub-publish-trip')), findsOneWidget);
+      expect(find.byKey(const Key('hub-new-request')), findsOneWidget);
+      // Les tuiles secondaires à zéro ne portent aucune pastille rouge.
+      expect(find.byKey(const Key('activity-tile-badge')), findsNothing);
     });
 
     testWidgets('taper Revenus ouvre la feuille des revenus', (tester) async {

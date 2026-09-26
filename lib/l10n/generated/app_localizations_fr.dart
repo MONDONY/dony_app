@@ -8298,16 +8298,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Envoyez vos colis avec des voyageurs de confiance, ou transportez des colis pendant vos trajets pour gagner de l\'argent. Tout se suit depuis cet écran.';
 
   @override
-  String get activityPublishParcelCta => 'Publier un colis';
-
-  @override
   String get activityTileTripsLabel => 'Trajets actifs';
 
   @override
   String get activityTileTripsSubtitle => 'Vos voyages à venir';
-
-  @override
-  String get activityTileTripsEmptyHint => 'Publiez un trajet';
 
   @override
   String get activityTileShipmentsLabel => 'Mes colis';
@@ -8316,7 +8310,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get activityTileShipmentsSubtitle => 'Publiés, négociés, en route';
 
   @override
-  String get activityTileShipmentsEmptyHint => 'Envoyez un colis';
+  String get activityHeroTravelTitle => 'Je voyage';
+
+  @override
+  String get activityHeroTravelPitch => 'Rentabilisez vos kilos libres';
+
+  @override
+  String get activityHeroSendTitle => 'J\'envoie';
+
+  @override
+  String get activityHeroSendPitch => 'Confiez votre colis à un voyageur';
+
+  @override
+  String get activityHeroSendCta => 'Envoyer un colis';
 
   @override
   String get activityTileRequestsLabel => 'Demandes reçues';
