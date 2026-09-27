@@ -203,17 +203,22 @@ class _Timeline extends StatelessWidget {
             return _TimelineItem(event: event, isLast: isLast, index: index);
           },
         ),
-        if (!hasArrivee) ...[
-          const SizedBox(height: DonySpacing.base),
-          _PendingConfirmationBanner(),
-        ] else if ((arrivalInstructions ?? '').trim().isNotEmpty) ...[
+        // Dès que le voyageur les a saisies, et non plus seulement après
+        // l'événement ARRIVEE (la remise au destinataire) : elles servent à
+        // récupérer le colis, donc AVANT la livraison.
+        if ((arrivalInstructions ?? '').trim().isNotEmpty) ...[
           const SizedBox(height: DonySpacing.md),
           DonyStatusBanner(
+            key: const Key('tracking-arrival-instructions'),
             type: DonyStatusBannerType.info,
             iconAsset: 'map-pin',
             title: context.l10n.tripOwnerArrivalEditingTitle,
-            message: arrivalInstructions,
+            message: arrivalInstructions!.trim(),
           ),
+        ],
+        if (!hasArrivee) ...[
+          const SizedBox(height: DonySpacing.base),
+          _PendingConfirmationBanner(),
         ],
       ],
     );

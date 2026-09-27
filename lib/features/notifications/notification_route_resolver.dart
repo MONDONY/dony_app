@@ -63,6 +63,9 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'PARCEL_RETURNED' when _isUuid(bidId) => '/bids/$bidId',
     'RETURN_DEADLINE_WARNING' when _isUuid(bidId) => '/bids/$bidId',
     'RETURN_DEADLINE_EXPIRED' when _isUuid(bidId) => '/bids/$bidId',
+    // Trajet arrivé : le détail du colis porte les instructions de retrait.
+    // Sans bidId (back antérieur à #334), repli sur l'écran générique.
+    'TRIP_ARRIVED' when _isUuid(bidId) => '/bids/$bidId',
 
     'KYC_VERIFIED' => '/kyc/status',
     'KYC_ACTION_REQUIRED' => '/kyc/verify',

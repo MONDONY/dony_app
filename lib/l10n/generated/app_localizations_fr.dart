@@ -136,6 +136,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Un autre voyageur a réglé la commission avant toi, ce colis ne peut plus te revenir.';
 
   @override
+  String get errorTripNoParcelInTransitTitle => 'Aucun colis en route';
+
+  @override
+  String get errorTripNoParcelInTransitMessage =>
+      'Scanne l\'étape Transit d\'au moins un colis avant de marquer ton trajet arrivé.';
+
+  @override
   String get errorThreadNotAwaitingCommissionTitle => 'Ce colis est parti';
 
   @override
@@ -6561,6 +6568,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidDetailSenderArrivedSubtitleDefault =>
       'Le voyageur est arrivé, les instructions de retrait arrivent bientôt.';
+
+  @override
+  String get bidDetailSenderArrivedSubtitleSeeInstructions =>
+      'Le voyageur est arrivé. Ses instructions de retrait sont juste en dessous.';
 
   @override
   String get bidDetailSenderRecipientFallback => 'votre destinataire';

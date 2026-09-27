@@ -314,6 +314,18 @@ abstract class AppLocalizations {
   /// **'Un autre voyageur a réglé la commission avant toi, ce colis ne peut plus te revenir.'**
   String get errorRequestAlreadyAcceptedMessage;
 
+  /// No description provided for @errorTripNoParcelInTransitTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun colis en route'**
+  String get errorTripNoParcelInTransitTitle;
+
+  /// No description provided for @errorTripNoParcelInTransitMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Scanne l\'étape Transit d\'au moins un colis avant de marquer ton trajet arrivé.'**
+  String get errorTripNoParcelInTransitMessage;
+
   /// No description provided for @errorThreadNotAwaitingCommissionTitle.
   ///
   /// In fr, this message translates to:
@@ -10916,6 +10928,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le voyageur est arrivé, les instructions de retrait arrivent bientôt.'**
   String get bidDetailSenderArrivedSubtitleDefault;
+
+  /// ARRIVED, sous-titre quand le voyageur a saisi ses instructions, affichées dans l'encart juste dessous (sender_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur est arrivé. Ses instructions de retrait sont juste en dessous.'**
+  String get bidDetailSenderArrivedSubtitleSeeInstructions;
 
   /// Repli quand bid.recipientName est vide (sender_hero_card.dart, COMPLETED/DELIVERED)
   ///

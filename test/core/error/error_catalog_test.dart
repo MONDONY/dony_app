@@ -97,6 +97,21 @@ void main() {
     });
   });
 
+  group('ErrorCatalog — trip/no-parcel-in-transit', () {
+    test('explique qu il faut scanner l étape Transit', () {
+      const error = NetworkException(
+        'ignored',
+        code: 'trip/no-parcel-in-transit',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'Aucun colis en route');
+      expect(p.message, contains('Transit'));
+      expect(p.severity, ErrorSeverity.warning);
+    });
+  });
+
   group('ErrorCatalog — pro-limit-reached', () {
     // RÉGRESSION : sans entrée dédiée, une ForbiddenException(pro-limit-reached)
     // retombait sur le type-fallback `forbidden` (« Action non autorisée »), donc

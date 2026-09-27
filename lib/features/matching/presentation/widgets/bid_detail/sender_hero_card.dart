@@ -172,10 +172,10 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
       return _HeroContent(
         variant: SenderHeroVariant.info,
         title: l.bidDetailSenderArrivedTitle,
-        // bid.arrivalInstructions : texte libre saisi par le voyageur, donnée
-        // serveur, jamais un littéral à traduire.
+        // Le texte lui-même vit dans ArrivalInstructionsCard, juste dessous :
+        // le répéter ici le dédoublait.
         subtitle: hasInstructions
-            ? bid.arrivalInstructions!
+            ? l.bidDetailSenderArrivedSubtitleSeeInstructions
             : l.bidDetailSenderArrivedSubtitleDefault,
       );
 

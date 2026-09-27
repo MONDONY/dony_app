@@ -48,6 +48,8 @@
   "errorRequestBudgetOutOfBoundsMessage": "Ce budget dépasse le plafond autorisé pour cette devise. Réduis le montant puis réessaie.",
   "errorRequestAlreadyAcceptedTitle": "Ce colis est parti",
   "errorRequestAlreadyAcceptedMessage": "Un autre voyageur a réglé la commission avant toi, ce colis ne peut plus te revenir.",
+  "errorTripNoParcelInTransitTitle": "Aucun colis en route",
+  "errorTripNoParcelInTransitMessage": "Scanne l'étape Transit d'au moins un colis avant de marquer ton trajet arrivé.",
   "errorThreadNotAwaitingCommissionTitle": "Ce colis est parti",
   "errorThreadNotAwaitingCommissionMessage": "Cette offre n'attend plus de règlement, elle a été conclue autrement ou le délai est écoulé.",
   "errorUnauthorizedTitle": "Session expirée",
@@ -6516,6 +6518,10 @@
   "bidDetailSenderArrivedSubtitleDefault": "Le voyageur est arrivé, les instructions de retrait arrivent bientôt.",
   "@bidDetailSenderArrivedSubtitleDefault": {
     "description": "ARRIVED, sous-titre sans instructions saisies par le voyageur (sender_hero_card.dart)"
+  },
+  "bidDetailSenderArrivedSubtitleSeeInstructions": "Le voyageur est arrivé. Ses instructions de retrait sont juste en dessous.",
+  "@bidDetailSenderArrivedSubtitleSeeInstructions": {
+    "description": "ARRIVED, sous-titre quand le voyageur a saisi ses instructions, affichées dans l'encart juste dessous (sender_hero_card.dart)"
   },
   "bidDetailSenderRecipientFallback": "votre destinataire",
   "@bidDetailSenderRecipientFallback": {
