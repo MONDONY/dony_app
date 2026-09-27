@@ -8879,6 +8879,12 @@ abstract class AppLocalizations {
   /// **'Bloqué par Yadony dès maintenant, versé au voyageur quand le destinataire confirme la livraison.'**
   String get bidCreateCardModeBody;
 
+  /// Explication du mode carte à l'étape paiement d'une proposition de prix : rien n'est débité avant l'accord (create_bid_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Payé par carte une fois ton prix accepté, puis bloqué par Yadony jusqu\'à la confirmation de la livraison.'**
+  String get bidCreateCardModeNegotiationBody;
+
   /// Explication du mode mobile money dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:

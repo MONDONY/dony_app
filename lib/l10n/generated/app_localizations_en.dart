@@ -5309,6 +5309,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Locked by Yadony right away, paid to the traveler once the recipient confirms delivery.';
 
   @override
+  String get bidCreateCardModeNegotiationBody =>
+      'Paid by card once your price is agreed, then locked by Yadony until delivery is confirmed.';
+
+  @override
   String get bidCreateMobileMoneyModeBody =>
       'Once the traveler agrees, you\'ll get a payment request on your phone. The amount is locked by Yadony until delivery.';
 

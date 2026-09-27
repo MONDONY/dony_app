@@ -5,6 +5,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -101,9 +102,9 @@ class BidNegotiationBloc
         gridItems: event.gridItems,
       );
       _emitLoaded(thread, BidNegotiationAction.proposed, emit);
-      // Ni description, ni destinataire, ni téléphone : la seule chose utile
-      // ici est de savoir si la proposition portait des articles hors grille,
-      // c'est le motif de négociation qu'on cherche à mesurer.
+      // Ni description, ni destinataire, ni téléphone : on mesure si la
+      // proposition portait des articles hors grille (le motif de négociation)
+      // et le mode de paiement choisi à l'étape « Comment veux-tu payer ? ».
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.tripNegotiationProposed,
@@ -111,6 +112,7 @@ class BidNegotiationBloc
             'announcement_id': event.announcementId,
             'has_custom_items': (event.customItems ?? const []).isNotEmpty,
             'custom_item_count': (event.customItems ?? const []).length,
+            'payment_method': event.paymentMethod.apiValue,
           },
         ),
       );
