@@ -73,9 +73,20 @@ abstract final class AnalyticsEvents {
   static const qrScanSuccess = 'qr_scan_success';
   static const deliveryConfirmed = 'delivery_confirmed';
 
-  // Suivi (entrées additives)
-  static const suiviScanOpened = 'suivi_scan_opened';
-  static const suiviTrackOpened = 'suivi_track_opened';
+  // Onglet Suivi unifié (« Valider une étape » | « Suivre un colis »)
+  /// Mode choisi par l'utilisateur (propriété `mode` : `valider`/`suivre`).
+  static const suiviModeChanged = 'suivi_mode_changed';
+
+  /// Trajet affiché changé (propriété `source` : `picker`/`other_trip`).
+  static const suiviTripChanged = 'suivi_trip_changed';
+
+  /// QR Yadony lu depuis l'onglet (propriétés `mode`, `outcome` :
+  /// `own_trip`/`other_trip`/`unknown`).
+  static const suiviQrScanned = 'suivi_qr_scanned';
+
+  /// Parcours d'un colis demandé en lecture seule (propriété `source` :
+  /// `number`/`qr`/`my_shipments`).
+  static const suiviTrackSubmitted = 'suivi_track_submitted';
 
   // Package Request
   static const packageRequestCreated = 'package_request_created';

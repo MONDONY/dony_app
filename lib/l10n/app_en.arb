@@ -5625,10 +5625,6 @@
   "@scanDepartureTitle": {
     "description": "Titre de l'écran de lecture QR au départ (qr_scanner_screen.dart)."
   },
-  "scanTorchTooltip": "Flashlight",
-  "@scanTorchTooltip": {
-    "description": "Tooltip du bouton lampe torche de qr_scanner_screen.dart."
-  },
   "scanQrReadTitle": "QR scanned",
   "@scanQrReadTitle": {
     "description": "Titre de la feuille de confirmation après lecture d'un QR (qr_scanner_screen.dart, _ScanConfirmSheet)."
@@ -5753,29 +5749,9 @@
   "@scanTerminateButton": {
     "description": "CTA de l'écran de succès livraison (scan_confirm_screen.dart, DonySuccessScreen)."
   },
-  "scanHubTitle": "Scan & Tracking",
-  "@scanHubTitle": {
-    "description": "Titre du hub Scan & Suivi (scan_hub_screen.dart)."
-  },
-  "scanTrackParcelEntry": "Track a parcel",
-  "@scanTrackParcelEntry": {
-    "description": "Entrée additive « Suivre un colis » du hub Scan & Suivi (scan_hub_screen.dart)."
-  },
   "scanChooseTripTitle": "Choose a trip",
   "@scanChooseTripTitle": {
     "description": "Titre de la feuille de sélection de trajet (scan_hub_screen.dart, _TripPicker)."
-  },
-  "scanChangeTripLabel": "Change trip",
-  "@scanChangeTripLabel": {
-    "description": "Bandeau du hero trajet quand plusieurs trajets sont actifs (scan_hub_screen.dart, _TripHeroCompact)."
-  },
-  "scanNoTripTitle": "No trip to handle",
-  "@scanNoTripTitle": {
-    "description": "Titre de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState)."
-  },
-  "scanNoTripDescription": "You'll be able to scan parcel QR codes once a request is accepted on one of your trips.",
-  "@scanNoTripDescription": {
-    "description": "Description de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState)."
   },
   "scanViewMyTripsAction": "See my trips",
   "@scanViewMyTripsAction": {
@@ -5785,30 +5761,9 @@
   "@scanLoadTripsErrorTitle": {
     "description": "Titre de l'état d'erreur du hub Scan & Suivi (scan_hub_screen.dart, _ErrorState)."
   },
-  "scanQuickReadSectionTitle": "QUICK SCAN",
-  "@scanQuickReadSectionTitle": {
-    "description": "Titre de la section des 3 boutons de scan rapide (scan_hub_screen.dart, _EtapesSection)."
-  },
-  "scanColisSectionTitle": "PARCELS ({count})",
-  "@scanColisSectionTitle": {
-    "description": "Titre de la section liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "scanNoColisConfirmed": "No parcel confirmed on this trip yet.",
   "@scanNoColisConfirmed": {
     "description": "Message vide de la liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection)."
-  },
-  "scanColisRowScanBadge": "Scan",
-  "@scanColisRowScanBadge": {
-    "description": "Pastille d'action d'une ligne colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisRow), identique dans les deux langues (voir _sameInBothLanguages)."
-  },
-  "scanHistorySectionTitle": "SCAN HISTORY",
-  "@scanHistorySectionTitle": {
-    "description": "Titre de la section historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection)."
   },
   "scanNoHistoryYet": "No scans yet",
   "@scanNoHistoryYet": {
@@ -5945,49 +5900,13 @@
     }
   },
 
-  "trackingSearchTitle": "Track a parcel",
-  "@trackingSearchTitle": {
-    "description": "Titre de l'app bar de l'écran de recherche de suivi (tracking_search_screen.dart)."
-  },
-  "trackingSearchScanTripEntry": "Scan a trip's QR code",
-  "@trackingSearchScanTripEntry": {
-    "description": "Entrée additive (voyageur occasionnel) de tracking_search_screen.dart, affichée seulement si onScanTrip est fourni."
-  },
   "trackingSearchNumberLabel": "Tracking number",
   "@trackingSearchNumberLabel": {
     "description": "Titre de section et labelText du champ de recherche de tracking_search_screen.dart (même texte aux deux endroits), réutilisé pour le même champ de tracking_search_bottom_sheet.dart (même feature, même préfixe)."
   },
-  "trackingSearchNumberHint": "Enter the DON-XXXXXX number to track your parcel in real time.",
-  "@trackingSearchNumberHint": {
-    "description": "Sous-titre explicatif de tracking_search_screen.dart, sous le titre « Numéro de suivi »."
-  },
   "trackingSearchSubmit": "Search",
   "@trackingSearchSubmit": {
     "description": "Bouton de recherche de tracking_search_screen.dart, réutilisé par tracking_search_bottom_sheet.dart (même feature, même préfixe)."
-  },
-  "trackingSearchViewDetails": "View full tracking",
-  "@trackingSearchViewDetails": {
-    "description": "Bouton de la carte résultat qui ouvre la frise de suivi (tracking_search_screen.dart, _TrackingResultCard)."
-  },
-  "trackingSearchStatusPending": "Pending",
-  "@trackingSearchStatusPending": {
-    "description": "Libellé de l'étape PENDING dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
-  },
-  "trackingSearchStatusAccepted": "Confirmed",
-  "@trackingSearchStatusAccepted": {
-    "description": "Libellé de l'étape ACCEPTED dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
-  },
-  "trackingSearchStatusPaid": "Paid",
-  "@trackingSearchStatusPaid": {
-    "description": "Libellé de l'étape PAYMENT_SECURED dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
-  },
-  "trackingSearchStatusDroppedOff": "Dropped off",
-  "@trackingSearchStatusDroppedOff": {
-    "description": "Libellé de l'étape DEPARTED (remise au voyageur) dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
-  },
-  "trackingSearchStatusDelivered": "Delivered",
-  "@trackingSearchStatusDelivered": {
-    "description": "Libellé de l'étape DELIVERED dans la frise de statut de tracking_search_screen.dart (_StepTimeline)."
   },
   "receptionConfirmTitle": "Confirmation",
   "@receptionConfirmTitle": {
@@ -7634,5 +7553,214 @@
   "appUpdateButton": "Update now",
   "connectivityRestored": "Connection restored",
   "connectivityOffline": "No internet connection",
-  "connectivityWeak": "Unstable connection"
+  "connectivityWeak": "Unstable connection",
+  "suiviTitle": "Tracking",
+  "@suiviTitle": {
+    "description": "Titre de l'onglet Suivi (suivi_header.dart)."
+  },
+  "suiviModeTabsLabel": "What do you want to do?",
+  "@suiviModeTabsLabel": {
+    "description": "Libellé d'accessibilité du sélecteur de mode de l'onglet Suivi (suivi_header.dart)."
+  },
+  "suiviModeValidate": "Validate a step",
+  "@suiviModeValidate": {
+    "description": "Onglet « Valider une étape » de l'onglet Suivi (suivi_header.dart)."
+  },
+  "suiviModeTrack": "Track a parcel",
+  "@suiviModeTrack": {
+    "description": "Onglet « Suivre un colis » de l'onglet Suivi (suivi_header.dart)."
+  },
+  "suiviValidateCameraHint": "Scan the QR code of a parcel on your trip.\nThe next step is picked for you.",
+  "@suiviValidateCameraHint": {
+    "description": "Consigne sous le cadre caméra, mode Valider (suivi_screen.dart)."
+  },
+  "suiviTrackCameraHint": "Scan a QR code to see where the parcel is.\nNothing is validated in this mode.",
+  "@suiviTrackCameraHint": {
+    "description": "Consigne sous le cadre caméra, mode Suivre (suivi_screen.dart)."
+  },
+  "suiviCameraPaused": "Camera paused",
+  "@suiviCameraPaused": {
+    "description": "Bandeau affiché quand la feuille est tirée en haut (suivi_screen.dart, _PausedStrip)."
+  },
+  "suiviResumeScan": "Scan",
+  "@suiviResumeScan": {
+    "description": "Bouton qui replie la feuille pour revenir à la caméra (suivi_screen.dart, _PausedStrip)."
+  },
+  "suiviTripSummary": "{date} · {count, plural, =0{no parcels} =1{1 parcel} other{{count} parcels}}",
+  "@suiviTripSummary": {
+    "description": "Date et nombre de colis confirmés d'un trajet (suivi_validate_content.dart).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "suiviChangeTrip": "Change",
+  "@suiviChangeTrip": {
+    "description": "Bouton qui ouvre le choix du trajet (suivi_validate_content.dart, _TripRow)."
+  },
+  "suiviTripsInProgress": "In progress",
+  "@suiviTripsInProgress": {
+    "description": "Groupe des trajets en cours dans « Choisir un trajet » (suivi_validate_content.dart)."
+  },
+  "suiviTripsUpcoming": "Upcoming",
+  "@suiviTripsUpcoming": {
+    "description": "Groupe des trajets à venir dans « Choisir un trajet » (suivi_validate_content.dart)."
+  },
+  "suiviToValidateCount": "{count, plural, =1{1 to validate} other{{count} to validate}}",
+  "@suiviToValidateCount": {
+    "description": "Colis d'un trajet qui attendent une étape (suivi_validate_content.dart, _TripGroup).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "suiviParcelsTitle": "Parcels on this trip",
+  "@suiviParcelsTitle": {
+    "description": "Titre de la liste des colis du trajet affiché (suivi_validate_content.dart)."
+  },
+  "suiviValidateStep": "{step, select, DEPART{Validate departure} TRANSIT{Validate transit} other{Validate arrival}}",
+  "@suiviValidateStep": {
+    "description": "Action d'une ligne colis selon son étape suivante (suivi_validate_content.dart, _ParcelRow).",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviAllValidated": "All done",
+  "@suiviAllValidated": {
+    "description": "Ligne colis dont toutes les étapes sont validées (suivi_validate_content.dart, _ParcelRow)."
+  },
+  "suiviLastStepAt": "{step, select, DEPART{Departure done at {time}} TRANSIT{Transit done at {time}} other{Arrival done at {time}}}",
+  "@suiviLastStepAt": {
+    "description": "Dernière étape scannée d'un colis et son heure (suivi_validate_content.dart, _ParcelRow).",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviNotHandedOver": "Not handed over yet",
+  "@suiviNotHandedOver": {
+    "description": "Colis confirmé pas encore remis au voyageur (suivi_validate_content.dart, _ParcelRow)."
+  },
+  "suiviEnterNumber": "QR unreadable? Enter the number",
+  "@suiviEnterNumber": {
+    "description": "Bouton qui ouvre l'identification par numéro (suivi_validate_content.dart)."
+  },
+  "suiviRecentScans": "Recent scans",
+  "@suiviRecentScans": {
+    "description": "Titre de l'historique des scans du trajet (suivi_validate_content.dart)."
+  },
+  "suiviPendingScans": "{count, plural, =1{1 scan waiting. It will be sent as soon as you're back online.} other{{count} scans waiting. They will be sent as soon as you're back online.}}",
+  "@suiviPendingScans": {
+    "description": "Bannière hors ligne de la feuille Valider (suivi_validate_content.dart, SuiviPendingScansBanner).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "suiviOtherTripTitle": "This parcel isn't on this trip",
+  "@suiviOtherTripTitle": {
+    "description": "Titre de la feuille d'un colis lu sur un autre trajet (suivi_parcel_sheets.dart)."
+  },
+  "suiviOtherTripBody": "The parcel for {parcel} travels on your {date} trip: {corridor}.",
+  "@suiviOtherTripBody": {
+    "description": "Explication de la feuille d'un colis lu sur un autre trajet (suivi_parcel_sheets.dart).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      },
+      "corridor": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviSwitchToTrip": "Switch to {corridor}",
+  "@suiviSwitchToTrip": {
+    "description": "Bouton qui affiche l'autre trajet (suivi_parcel_sheets.dart).",
+    "placeholders": {
+      "corridor": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviScanAnother": "Scan another parcel",
+  "@suiviScanAnother": {
+    "description": "Bouton secondaire des feuilles de colis hors trajet (suivi_parcel_sheets.dart)."
+  },
+  "suiviUnknownParcelTitle": "This parcel isn't on your trips",
+  "@suiviUnknownParcelTitle": {
+    "description": "Titre de la feuille d'un colis inconnu (suivi_parcel_sheets.dart)."
+  },
+  "suiviUnknownParcelBody": "Another traveler's parcel: you can't validate its steps, you can only track its journey.",
+  "@suiviUnknownParcelBody": {
+    "description": "Explication de la feuille d'un colis inconnu (suivi_parcel_sheets.dart)."
+  },
+  "suiviFollowParcel": "Track this parcel",
+  "@suiviFollowParcel": {
+    "description": "Bouton qui passe en mode Suivre sur un colis inconnu (suivi_parcel_sheets.dart)."
+  },
+  "suiviAllStepsDone": "All steps for {parcel} are already validated.",
+  "@suiviAllStepsDone": {
+    "description": "Message quand le QR d'un colis entièrement validé est lu (suivi_screen.dart).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviNothingToValidateTitle": "Nothing to validate yet",
+  "@suiviNothingToValidateTitle": {
+    "description": "Titre de l'état vide du mode Valider (suivi_screen.dart)."
+  },
+  "suiviNothingToValidateBody": "Your parcels will show up here as soon as a sender hands one over to you.",
+  "@suiviNothingToValidateBody": {
+    "description": "Description de l'état vide du mode Valider (suivi_screen.dart)."
+  },
+  "suiviTrackSubmit": "Track",
+  "@suiviTrackSubmit": {
+    "description": "Bouton qui lance le suivi d'un numéro (suivi_track_panel.dart)."
+  },
+  "suiviScanQr": "Scan a QR code",
+  "@suiviScanQr": {
+    "description": "Bouton qui ouvre le lecteur QR, utilisateur sans caméra dans l'onglet (suivi_track_panel.dart)."
+  },
+  "suiviMyShipments": "My shipments",
+  "@suiviMyShipments": {
+    "description": "Titre de la liste des envois en cours (suivi_track_panel.dart)."
+  },
+  "suiviNoShipments": "No shipments in progress.",
+  "@suiviNoShipments": {
+    "description": "Liste « Mes envois » vide (suivi_track_panel.dart)."
+  },
+  "suiviShipmentsError": "Couldn't load your shipments.",
+  "@suiviShipmentsError": {
+    "description": "Échec du chargement de « Mes envois » (suivi_track_panel.dart)."
+  },
+  "suiviShipmentStatus": "{status, select, HANDED_OVER{Handed over} IN_TRANSIT{On the way} ARRIVED{Arrived} other{To hand over}}",
+  "@suiviShipmentStatus": {
+    "description": "Statut d'un envoi en cours (suivi_track_panel.dart, _ShipmentRow).",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "qrCameraUnavailable": "Camera unavailable. Allow camera access in your phone settings.",
+  "@qrCameraUnavailable": {
+    "description": "Erreur du flux caméra QR (qr_camera_view.dart)."
+  }
 }

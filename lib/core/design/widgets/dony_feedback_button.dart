@@ -60,7 +60,12 @@ class DonyFeedbackButton extends StatelessWidget {
     this.pickImageOverride,
     this.captureOverride,
     this.repaintBoundaryKey,
+    this.color,
   });
+
+  /// Teinte de l'icône. `null` garde celle du SVG ; à fournir sur un en-tête
+  /// sombre (flux caméra de l'onglet Suivi), où l'icône resterait invisible.
+  final Color? color;
 
   /// Nombre maximal de captures jointes par le testeur.
   static const int maxAttachments = 4;
@@ -303,7 +308,7 @@ class DonyFeedbackButton extends StatelessWidget {
     // qui existait ici en créait un second, avec le même message.
     return IconButton(
       tooltip: context.l10n.feedbackButtonTooltip,
-      icon: const DonyIcon('bug'),
+      icon: DonyIcon('bug', color: color),
       onPressed: () => _openSheet(context),
     );
   }

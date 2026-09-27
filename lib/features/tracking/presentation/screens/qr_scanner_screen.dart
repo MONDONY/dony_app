@@ -12,6 +12,7 @@ import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -20,7 +21,6 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:native_exif/native_exif.dart';
 
 class QrScannerScreen extends StatefulWidget {
@@ -31,52 +31,30 @@ class QrScannerScreen extends StatefulWidget {
 }
 
 class _QrScannerScreenState extends State<QrScannerScreen> {
-  final MobileScannerController _scanner = MobileScannerController();
-
   // ValueNotifier replaces setState for detected flag
   final _detectedNotifier = ValueNotifier<bool>(false);
 
+  /// Caméra coupée : QR détecté (feuille ouverte) ou saisie manuelle.
+  final _pausedNotifier = ValueNotifier<bool>(false);
+  final _torchOn = ValueNotifier<bool>(false);
+
   @override
   void dispose() {
-    _scanner.dispose();
     _detectedNotifier.dispose();
+    _pausedNotifier.dispose();
+    _torchOn.dispose();
     super.dispose();
   }
 
-  // MobileScannerController.start() lève MobileScannerException si un
-  // précédent start() est encore en cours (value.isStarting) — value.isRunning
-  // est lui déjà géré en interne (no-op). Les 3 points de reprise du scan
-  // (fermeture de sheet) passent par ce garde-fou pour éviter la race.
-  void _resumeScanning() {
-    if (_scanner.value.isStarting) return;
-    _scanner.start();
-  }
+  // Les 3 points de reprise du scan (fermeture de sheet, de dialogue)
+  // passent par ici ; QrCameraView gère lui-même la course start/stop.
+  void _resumeScanning() => _pausedNotifier.value = false;
 
-  void _onDetect(BarcodeCapture capture) {
+  void _onBidId(String bidId) {
     if (_detectedNotifier.value) return;
-    final raw = capture.barcodes.firstOrNull?.rawValue;
-    if (raw == null) return;
-
-    final bidId = _extractBidId(raw);
-    if (bidId == null) return;
-
     _detectedNotifier.value = true;
-    _scanner.stop();
+    _pausedNotifier.value = true;
     _showScanSheet(bidId);
-  }
-
-  String? _extractBidId(String raw) {
-    final uri = Uri.tryParse(raw);
-    if (uri == null) return null;
-    final segments = uri.pathSegments;
-    final idx = segments.indexOf('tracking');
-    if (idx == -1 || idx + 1 >= segments.length) return null;
-    final candidate = segments[idx + 1];
-    final uuidPattern = RegExp(
-      r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-      caseSensitive: false,
-    );
-    return uuidPattern.hasMatch(candidate) ? candidate : null;
   }
 
   void _showScanSheet(String bidId) {
@@ -133,7 +111,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           child: Stack(
             children: [
               // Camera feed
-              MobileScanner(controller: _scanner, onDetect: _onDetect),
+              QrCameraView(
+                onBidId: _onBidId,
+                paused: _pausedNotifier,
+                torchOn: _torchOn,
+              ),
 
               // Top bar (dark overlay)
               Positioned(
@@ -166,11 +148,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         ),
                       ),
                       // Flash
-                      IconButton(
-                        icon: const DonyIcon('zap', color: DonyColors.white),
-                        onPressed: () => _scanner.toggleTorch(),
-                        tooltip: l.scanTorchTooltip,
-                      ),
+                      QrTorchButton(torchOn: _torchOn),
                     ],
                   ),
                 ),
@@ -180,7 +158,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               ValueListenableBuilder<bool>(
                 valueListenable: _detectedNotifier,
                 builder: (context, detected, _) {
-                  return Center(child: _ScanFrame(detected: detected));
+                  return Center(child: QrScanFrame(detected: detected));
                 },
               ),
 
@@ -273,7 +251,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
-    _scanner.stop();
+    _pausedNotifier.value = true;
     final ctrl = TextEditingController();
     bool loading = false;
 
@@ -348,6 +326,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         if (ctx.mounted) {
                           ctx.pop();
                           _detectedNotifier.value = true;
+                          _pausedNotifier.value = true;
                           _showScanSheet(result.bidId);
                         }
                       } catch (_) {
@@ -520,108 +499,6 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 /// Compare `eventType`, la donnée serveur (`DEPART`/`TRANSIT`/`ARRIVEE`),
 /// jamais le libellé traduit affiché à l'écran.
 bool isFinalDeliveryStep(String eventType) => eventType == 'ARRIVEE';
-
-// ── Scan frame overlay ────────────────────────────────────────────────────────
-
-class _ScanFrame extends StatelessWidget {
-  final bool detected;
-  const _ScanFrame({required this.detected});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: 240,
-      height: 240,
-      child: Stack(
-        children: [
-          // Corner brackets
-          for (final pos in [
-            Alignment.topLeft,
-            Alignment.topRight,
-            Alignment.bottomLeft,
-            Alignment.bottomRight,
-          ])
-            Align(
-              alignment: pos,
-              child: _Corner(alignment: pos),
-            ),
-
-          // Success check overlay when detected
-          if (detected)
-            Center(
-              child:
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: cs.success,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const DonyIcon(
-                      'circle-check',
-                      color: DonyColors.white,
-                      size: 44,
-                    ),
-                  ).animate().scale(
-                    begin: const Offset(0.5, 0.5),
-                    end: const Offset(1.0, 1.0),
-                    duration: 300.ms,
-                    curve: Curves.easeOutBack,
-                  ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Corner extends StatelessWidget {
-  final Alignment alignment;
-  const _Corner({required this.alignment});
-
-  @override
-  Widget build(BuildContext context) {
-    final isLeft =
-        alignment == Alignment.topLeft || alignment == Alignment.bottomLeft;
-    final isTop =
-        alignment == Alignment.topLeft || alignment == Alignment.topRight;
-
-    return SizedBox(
-      width: 28,
-      height: 28,
-      child: CustomPaint(
-        painter: _CornerPainter(isLeft: isLeft, isTop: isTop),
-      ),
-    );
-  }
-}
-
-class _CornerPainter extends CustomPainter {
-  final bool isLeft;
-  final bool isTop;
-  const _CornerPainter({required this.isLeft, required this.isTop});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = DonyColors.white
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final x = isLeft ? 0.0 : size.width;
-    final y = isTop ? 0.0 : size.height;
-    final dx = isLeft ? 1 : -1;
-    final dy = isTop ? 1 : -1;
-
-    canvas.drawLine(Offset(x, y), Offset(x + dx * size.width, y), paint);
-    canvas.drawLine(Offset(x, y), Offset(x, y + dy * size.height), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 
 // ── Confirm bottom sheet ──────────────────────────────────────────────────────
 

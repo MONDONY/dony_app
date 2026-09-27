@@ -74,7 +74,7 @@ class _ActivitesMenuContent extends StatelessWidget {
                   color: cs.primary,
                   choice: const ActivitesMenuChoice(
                     AnalyticsEvents.activitesHubSearchOpened,
-                    '/tracking/search',
+                    '/tracking?mode=suivre',
                   ),
                 ),
               ),
@@ -87,7 +87,7 @@ class _ActivitesMenuContent extends StatelessWidget {
                   color: cs.secondary,
                   choice: const ActivitesMenuChoice(
                     AnalyticsEvents.activitesHubScanOpened,
-                    '/tracking/scan-hub',
+                    '/tracking?mode=valider',
                   ),
                 ),
               ),

@@ -32,6 +32,7 @@ Future<void> _openSheet(
   WidgetTester tester,
   TrackingBloc bloc, {
   String? arrivalInstructions,
+  String corridor = 'Paris → Dakar',
   bool settle = true,
 }) async {
   if (getIt.isRegistered<TrackingBloc>()) {
@@ -52,7 +53,7 @@ Future<void> _openSheet(
             onPressed: () => showTrackingTimelineSheet(
               ctx,
               bidId: 'bid-1',
-              corridor: 'Paris → Dakar',
+              corridor: corridor,
               arrivalInstructions: arrivalInstructions,
             ),
             child: const Text('Ouvrir'),
@@ -103,6 +104,17 @@ void main() {
     await _openSheet(tester, bloc);
 
     expect(find.byType(RouteMapCard), findsOneWidget);
+    expect(find.text('ÉTAPES'), findsOneWidget);
+  });
+
+  testWidgets('corridor inconnu (colis lu par QR) : pas de carte', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
+
+    await _openSheet(tester, bloc, corridor: '');
+
+    expect(find.byType(RouteMapCard), findsNothing);
     expect(find.text('ÉTAPES'), findsOneWidget);
   });
 

@@ -52,6 +52,27 @@ void main() {
     });
   });
 
+  group('pendingCountFor / queueChanges', () {
+    test('ne compte que les scans des colis demandés', () async {
+      await service.queueScan(bidId: 'bid-1', eventType: 'DEPART');
+      await service.queueScan(bidId: 'bid-1', eventType: 'TRANSIT');
+      await service.queueScan(bidId: 'bid-2', eventType: 'DEPART');
+      expect(service.pendingCountFor({'bid-1'}), 2);
+      expect(service.pendingCountFor({'bid-1', 'bid-2'}), 3);
+      expect(service.pendingCountFor(const {}), 0);
+    });
+
+    test('notifie chaque ajout à la file', () async {
+      var calls = 0;
+      void listener() => calls++;
+      service.queueChanges.addListener(listener);
+      addTearDown(() => service.queueChanges.removeListener(listener));
+      await service.queueScan(bidId: 'bid-1', eventType: 'DEPART');
+      await Future<void>.delayed(Duration.zero);
+      expect(calls, greaterThan(0));
+    });
+  });
+
   group('queueScan', () {
     test('adds entry to queue with required fields', () async {
       await service.queueScan(bidId: 'bid-1', eventType: 'TRANSIT');

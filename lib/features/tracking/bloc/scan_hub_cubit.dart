@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -53,6 +56,15 @@ class ScanHubLoaded extends ScanHubState {
       confirmedColis(bidsByTrip[selectedTripId] ?? const []);
 
   ScanHubProgress get progress => computeScanProgress(selectedTripBids);
+
+  /// Colis confirmés d'un trajet donné (voir [selectedTripBids]).
+  List<BidModel> confirmedBidsOf(String tripId) =>
+      confirmedColis(bidsByTrip[tripId] ?? const []);
+
+  /// Au moins un colis, tous trajets confondus, attend encore une étape.
+  bool get hasParcelToValidate => trips.any(
+    (t) => confirmedBidsOf(t.id).any((b) => nextRequiredStep(b) != null),
+  );
 }
 
 class ScanHubCubit extends Cubit<ScanHubState> {
@@ -65,12 +77,21 @@ class ScanHubCubit extends Cubit<ScanHubState> {
 
   final AnnouncementRepository _announcementRepo;
   final BidRepository _bidRepo;
-  // ignore: unused_field
   final AnalyticsService _analytics;
   final TrackingRepository _trackingRepo;
 
-  Future<void> load() async {
-    emit(const ScanHubLoading());
+  /// Charge les trajets scannables et leurs colis.
+  ///
+  /// [silent] : rafraîchissement après une étape validée. L'écran garde son
+  /// contenu pendant l'appel (pas d'état de chargement, donc pas de caméra
+  /// démontée), et un échec laisse les données déjà affichées. Le trajet
+  /// sélectionné est conservé tant qu'il reste scannable.
+  Future<void> load({bool silent = false}) async {
+    final previous = state;
+    final keepTripId = previous is ScanHubLoaded
+        ? previous.selectedTripId
+        : null;
+    if (!silent || previous is! ScanHubLoaded) emit(const ScanHubLoading());
     try {
       final result = await _announcementRepo.getMyAnnouncements();
       final trips = selectScannableTrips(result.announcements);
@@ -84,7 +105,9 @@ class ScanHubCubit extends Cubit<ScanHubState> {
         bidsByTrip[trip.id] = await _bidRepo.getBidsForAnnouncement(trip.id);
       }
 
-      final selectedTripId = trips.first.id;
+      final selectedTripId = trips.any((t) => t.id == keepTripId)
+          ? keepTripId!
+          : trips.first.id;
       final scanHistory = await _trackingRepo.getTripScanHistory(
         selectedTripId,
       );
@@ -98,6 +121,7 @@ class ScanHubCubit extends Cubit<ScanHubState> {
         ),
       );
     } catch (e) {
+      if (silent && previous is ScanHubLoaded) return;
       emit(ScanHubError(unwrapDioError(e)));
     }
   }
@@ -106,9 +130,19 @@ class ScanHubCubit extends Cubit<ScanHubState> {
   /// en mémoire depuis [load]), seul l'historique de scans du nouveau trajet
   /// est refetché (potentiellement volumineux, inutile de le précharger pour
   /// des trajets jamais consultés).
-  Future<void> selectTrip(String tripId) async {
+  ///
+  /// [source] : `picker` (feuille « Choisir un trajet ») ou `other_trip`
+  /// (QR d'un colis d'un autre trajet du voyageur), tracé dans
+  /// `suivi_trip_changed`.
+  Future<void> selectTrip(String tripId, {String source = 'picker'}) async {
     final current = state;
     if (current is! ScanHubLoaded || current.selectedTripId == tripId) return;
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.suiviTripChanged,
+        properties: {'source': source},
+      ),
+    );
 
     emit(
       ScanHubLoaded(

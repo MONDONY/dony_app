@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -57,6 +58,9 @@ void main() {
     bidRepo = _MockBidRepo();
     analytics = _MockAnalytics();
     trackingRepo = _MockTrackingRepo();
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
   });
 
   blocTest<ScanHubCubit, ScanHubState>(
@@ -416,4 +420,124 @@ void main() {
     act: (c) => c.load(),
     expect: () => [isA<ScanHubLoading>(), isA<ScanHubError>()],
   );
+
+  group('load(silent: true)', () {
+    void twoTrips() {
+      when(() => annRepo.getMyAnnouncements()).thenAnswer(
+        (_) async => (
+          announcements: [
+            _trip('soonest', 'IN_PROGRESS', DateTime(2026, 6)),
+            _trip('later', 'IN_PROGRESS', DateTime(2026, 7)),
+          ],
+          totalElements: 2,
+        ),
+      );
+      when(
+        () => bidRepo.getBidsForAnnouncement(any()),
+      ).thenAnswer((_) async => [_bid('b1', 'ACCEPTED')]);
+      when(
+        () => trackingRepo.getTripScanHistory(any()),
+      ).thenAnswer((_) async => []);
+    }
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      'garde le trajet sélectionné et n\'émet pas de chargement',
+      build: () {
+        twoTrips();
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) async {
+        await c.load();
+        await c.selectTrip('later');
+        await c.load(silent: true);
+      },
+      skip: 4, // Loading, Loaded, bascule, historique
+      expect: () => [
+        isA<ScanHubLoaded>().having(
+          (s) => s.selectedTripId,
+          'selectedTripId',
+          'later',
+        ),
+      ],
+    );
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      'un échec garde les données déjà affichées',
+      build: () {
+        twoTrips();
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) async {
+        await c.load();
+        when(
+          () => annRepo.getMyAnnouncements(),
+        ).thenThrow(Exception('offline'));
+        await c.load(silent: true);
+      },
+      skip: 2,
+      expect: () => <ScanHubState>[],
+    );
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      'sans données affichées, se comporte comme un chargement normal',
+      build: () {
+        twoTrips();
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) => c.load(silent: true),
+      expect: () => [isA<ScanHubLoading>(), isA<ScanHubLoaded>()],
+    );
+  });
+
+  test('selectTrip trace suivi_trip_changed avec sa source', () async {
+    when(() => annRepo.getMyAnnouncements()).thenAnswer(
+      (_) async => (
+        announcements: [
+          _trip('soonest', 'IN_PROGRESS', DateTime(2026, 6)),
+          _trip('later', 'ACTIVE', DateTime(2026, 7)),
+        ],
+        totalElements: 2,
+      ),
+    );
+    when(
+      () => bidRepo.getBidsForAnnouncement(any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => trackingRepo.getTripScanHistory(any()),
+    ).thenAnswer((_) async => []);
+    final cubit = ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+    await cubit.load();
+    await cubit.selectTrip('later', source: 'other_trip');
+    verify(
+      () => analytics.logEvent(
+        AnalyticsEvents.suiviTripChanged,
+        properties: {'source': 'other_trip'},
+      ),
+    ).called(1);
+    await cubit.close();
+  });
+
+  test('hasParcelToValidate regarde tous les trajets', () {
+    final loaded = ScanHubLoaded(
+      trips: [_trip('a', 'IN_PROGRESS'), _trip('b', 'ACTIVE')],
+      selectedTripId: 'a',
+      bidsByTrip: {
+        'a': [_bid('done', 'COMPLETED')],
+        'b': [_bid('todo', 'ACCEPTED'), _bid('pending', 'PENDING')],
+      },
+      scanHistory: const [],
+    );
+    expect(loaded.hasParcelToValidate, isTrue);
+    expect(loaded.confirmedBidsOf('b').map((b) => b.id), ['todo']);
+
+    final allDone = ScanHubLoaded(
+      trips: [_trip('a', 'IN_PROGRESS')],
+      selectedTripId: 'a',
+      bidsByTrip: {
+        'a': [_bid('done', 'COMPLETED')],
+      },
+      scanHistory: const [],
+    );
+    expect(allDone.hasParcelToValidate, isFalse);
+  });
 }

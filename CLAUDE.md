@@ -360,6 +360,10 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `mobile_money_confirmed` | MobileMoneyPaymentBloc._emitKnown — dépôt mobile money séquestré, une seule fois par transition (propriété `scope` : `bid`/`negotiation`) |
 | `mobile_money_failed` | MobileMoneyPaymentBloc._emitKnown — dépôt mobile money refusé par l'opérateur, une seule fois par transition (propriété `failure_code`) |
 | `qr_scan_success` | TrackingBloc._onScanSubmit() |
+| `suivi_mode_changed` | SuiviCubit.selectMode()/followParcel() — onglet Suivi : l'utilisateur choisit « Valider une étape » ou « Suivre un colis », ou passe en Suivre depuis la feuille d'un colis inconnu (propriété `mode` : `valider`/`suivre`). Non émis pour le mode par défaut ni pour un mode imposé par l'URL (`/tracking?mode=…`) |
+| `suivi_trip_changed` | ScanHubCubit.selectTrip() — trajet affiché changé dans l'onglet Suivi (propriété `source` : `picker` pour la feuille « Choisir un trajet », `other_trip` pour « Passer sur ce trajet » après le QR d'un colis d'un autre trajet) |
+| `suivi_qr_scanned` | SuiviCubit.onQrScanned() — QR Yadony lu depuis la caméra de l'onglet Suivi ou le lecteur plein écran de l'expéditeur (propriétés `mode` : `valider`/`suivre`, `outcome` : `own_trip` colis du trajet affiché, `other_trip` colis d'un autre trajet du voyageur, `unknown` colis hors de ses trajets). Jamais l'identifiant du colis |
+| `suivi_track_submitted` | SuiviCubit — parcours d'un colis demandé en lecture seule (propriété `source` : `number` numéro saisi, `qr` QR lu en mode Suivre ou « Suivre ce colis », `my_shipments` ligne de « Mes envois »). Jamais le numéro saisi |
 | `delivery_confirmed` | ReceptionConfirmScreen._confirm() |
 | `package_request_created` | PackageRequestFormBloc |
 | `package_request_updated` | PackageRequestFormBloc._onStep3() (mode édition) |
@@ -476,8 +480,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `activites_hub_stats_period_changed` | ActivitesHubScreen — changement de période des statistiques |
 | `activites_hub_stats_revenues_opened` / `activites_hub_stats_kg_sold_opened` / `activites_hub_stats_trips_opened` / `activites_hub_stats_parcels_opened` | ActivitesHubScreen._StatsRow — tap sur une tuile de statistiques (feuille Revenus, feuille Kg vendus, Mes trajets filtré Terminés, Mes colis filtré Livrés) |
 | `activites_hub_menu_opened` | ActivitesHubScreen._openMenu — bouton burger du header, à l'ouverture de la feuille de menu (`ActivitesMenuSheet`). Émis même si la feuille est refermée sans choisir : c'est l'entrée de l'entonnoir |
-| `activites_hub_search_opened` | ActivitesHubScreen._openMenu — entrée « Suivre un colis » de la feuille de menu (l'ancien bouton du header a été remplacé par le burger) |
-| `activites_hub_scan_opened` | ActivitesHubScreen._openMenu — entrée « Scanner un colis » de la feuille de menu |
+| `activites_hub_search_opened` | ActivitesHubScreen._openMenu — entrée « Suivre un colis » de la feuille de menu (l'ancien bouton du header a été remplacé par le burger), qui ouvre l'onglet Suivi en mode Suivre (`/tracking?mode=suivre`) |
+| `activites_hub_scan_opened` | ActivitesHubScreen._openMenu — entrée « Scanner un colis » de la feuille de menu, qui ouvre l'onglet Suivi en mode Valider (`/tracking?mode=valider`) |
 | `activites_hub_settings_opened` | ActivitesHubScreen._openMenu — entrée « Paramètres » de la feuille de menu |
 | `activites_hub_wallet_opened` | ActivitesHubScreen._openMenu — entrée « Portefeuille » de la feuille de menu |
 | `activites_hub_history_opened` / `activites_hub_help_opened` / `activites_hub_alerts_opened` / `activites_hub_templates_opened` / `activites_hub_addresses_opened` / `activites_hub_recipients_opened` | ActivitesHubScreen — tuiles de la section Outils, et entrées correspondantes de la feuille de menu du burger (même événement des deux côtés : c'est la destination qui est mesurée, pas le chemin) |

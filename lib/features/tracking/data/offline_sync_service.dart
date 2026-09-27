@@ -6,6 +6,8 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
+import 'package:flutter/foundation.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class OfflineSyncService {
   final HiveService _hive;
@@ -27,6 +29,14 @@ class OfflineSyncService {
   void dispose() => _sub?.cancel();
 
   int get pendingCount => _hive.offlineQueue.length;
+
+  /// Scans en attente qui concernent l'un de ces colis.
+  int pendingCountFor(Set<String> bidIds) => _hive.offlineQueue.values
+      .where((raw) => bidIds.contains(raw['bidId']))
+      .length;
+
+  /// Notifie chaque ajout ou envoi d'un scan de la file.
+  Listenable get queueChanges => _hive.offlineQueue.listenable();
 
   Future<void> queueScan({
     required String bidId,

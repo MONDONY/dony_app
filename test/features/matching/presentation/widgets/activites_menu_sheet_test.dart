@@ -62,7 +62,7 @@ void main() {
     await tester.tap(find.byKey(const Key('menu-quick-scan')));
     await tester.pumpAndSettle();
 
-    expect(choice?.route, '/tracking/scan-hub');
+    expect(choice?.route, '/tracking?mode=valider');
     expect(choice?.event, AnalyticsEvents.activitesHubScanOpened);
   });
 

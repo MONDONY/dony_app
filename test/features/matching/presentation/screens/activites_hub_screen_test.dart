@@ -334,8 +334,7 @@ Future<void> _pump(
       route('/trips/create', 'Créer trajet'),
       route('/trips/publish-intro', 'Intro trajet'),
       route('/parcels/send-intro', 'Intro colis'),
-      route('/tracking/search', 'Recherche'),
-      route('/tracking/scan-hub', 'Scan'),
+      route('/tracking', 'Suivi'),
       route('/settings', 'Paramètres'),
       route('/payments/wallet', 'Portefeuille'),
       route('/profile/shipments/history', 'Écran historique'),
@@ -688,20 +687,24 @@ void main() {
       expect(find.text('Suivre un colis'), findsNothing);
     });
 
-    testWidgets('Suivre un colis → recherche de suivi', (tester) async {
+    testWidgets('Suivre un colis → onglet Suivi, mode Suivre', (tester) async {
       await expectMenuNavigation(
         tester,
         const Key('menu-quick-track'),
-        '/tracking/search',
+        '/tracking',
       );
+      expect(visitedUris, contains('/tracking?mode=suivre'));
     });
 
-    testWidgets('Scanner un colis → hub de scan', (tester) async {
+    testWidgets('Scanner un colis → onglet Suivi, mode Valider', (
+      tester,
+    ) async {
       await expectMenuNavigation(
         tester,
         const Key('menu-quick-scan'),
-        '/tracking/scan-hub',
+        '/tracking',
       );
+      expect(visitedUris, contains('/tracking?mode=valider'));
     });
 
     testWidgets('Paramètres → réglages', (tester) async {

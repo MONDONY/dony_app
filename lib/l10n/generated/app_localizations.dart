@@ -16352,12 +16352,6 @@ abstract class AppLocalizations {
   /// **'Lecture au départ'**
   String get scanDepartureTitle;
 
-  /// Tooltip du bouton lampe torche de qr_scanner_screen.dart.
-  ///
-  /// In fr, this message translates to:
-  /// **'Lampe torche'**
-  String get scanTorchTooltip;
-
   /// Titre de la feuille de confirmation après lecture d'un QR (qr_scanner_screen.dart, _ScanConfirmSheet).
   ///
   /// In fr, this message translates to:
@@ -16544,41 +16538,11 @@ abstract class AppLocalizations {
   /// **'Terminer'**
   String get scanTerminateButton;
 
-  /// Titre du hub Scan & Suivi (scan_hub_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Lecture & Suivi'**
-  String get scanHubTitle;
-
-  /// Entrée additive « Suivre un colis » du hub Scan & Suivi (scan_hub_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Suivre un colis'**
-  String get scanTrackParcelEntry;
-
   /// Titre de la feuille de sélection de trajet (scan_hub_screen.dart, _TripPicker).
   ///
   /// In fr, this message translates to:
   /// **'Choisir un trajet'**
   String get scanChooseTripTitle;
-
-  /// Bandeau du hero trajet quand plusieurs trajets sont actifs (scan_hub_screen.dart, _TripHeroCompact).
-  ///
-  /// In fr, this message translates to:
-  /// **'Changer de trajet'**
-  String get scanChangeTripLabel;
-
-  /// Titre de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState).
-  ///
-  /// In fr, this message translates to:
-  /// **'Aucun trajet à traiter'**
-  String get scanNoTripTitle;
-
-  /// Description de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState).
-  ///
-  /// In fr, this message translates to:
-  /// **'Tu pourras lire les QR des colis dès qu\'une demande sera acceptée sur l\'un de tes trajets.'**
-  String get scanNoTripDescription;
 
   /// Action de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState).
   ///
@@ -16592,35 +16556,11 @@ abstract class AppLocalizations {
   /// **'Impossible de charger les trajets'**
   String get scanLoadTripsErrorTitle;
 
-  /// Titre de la section des 3 boutons de scan rapide (scan_hub_screen.dart, _EtapesSection).
-  ///
-  /// In fr, this message translates to:
-  /// **'LECTURE RAPIDE'**
-  String get scanQuickReadSectionTitle;
-
-  /// Titre de la section liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection).
-  ///
-  /// In fr, this message translates to:
-  /// **'COLIS ({count})'**
-  String scanColisSectionTitle(int count);
-
   /// Message vide de la liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection).
   ///
   /// In fr, this message translates to:
   /// **'Aucun colis confirmé sur ce trajet pour l\'instant.'**
   String get scanNoColisConfirmed;
-
-  /// Pastille d'action d'une ligne colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisRow), identique dans les deux langues (voir _sameInBothLanguages).
-  ///
-  /// In fr, this message translates to:
-  /// **'Scan'**
-  String get scanColisRowScanBadge;
-
-  /// Titre de la section historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection).
-  ///
-  /// In fr, this message translates to:
-  /// **'HISTORIQUE DES LECTURES'**
-  String get scanHistorySectionTitle;
 
   /// Message vide de l'historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection).
   ///
@@ -16808,71 +16748,17 @@ abstract class AppLocalizations {
   /// **'colis {code}'**
   String scanOfflineParcelCode(String code);
 
-  /// Titre de l'app bar de l'écran de recherche de suivi (tracking_search_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Suivre un colis'**
-  String get trackingSearchTitle;
-
-  /// Entrée additive (voyageur occasionnel) de tracking_search_screen.dart, affichée seulement si onScanTrip est fourni.
-  ///
-  /// In fr, this message translates to:
-  /// **'Lire le QR d\'un trajet'**
-  String get trackingSearchScanTripEntry;
-
   /// Titre de section et labelText du champ de recherche de tracking_search_screen.dart (même texte aux deux endroits), réutilisé pour le même champ de tracking_search_bottom_sheet.dart (même feature, même préfixe).
   ///
   /// In fr, this message translates to:
   /// **'Numéro de suivi'**
   String get trackingSearchNumberLabel;
 
-  /// Sous-titre explicatif de tracking_search_screen.dart, sous le titre « Numéro de suivi ».
-  ///
-  /// In fr, this message translates to:
-  /// **'Entrez le numéro DON-XXXXXX pour suivre votre colis en temps réel.'**
-  String get trackingSearchNumberHint;
-
   /// Bouton de recherche de tracking_search_screen.dart, réutilisé par tracking_search_bottom_sheet.dart (même feature, même préfixe).
   ///
   /// In fr, this message translates to:
   /// **'Rechercher'**
   String get trackingSearchSubmit;
-
-  /// Bouton de la carte résultat qui ouvre la frise de suivi (tracking_search_screen.dart, _TrackingResultCard).
-  ///
-  /// In fr, this message translates to:
-  /// **'Voir le suivi détaillé'**
-  String get trackingSearchViewDetails;
-
-  /// Libellé de l'étape PENDING dans la frise de statut de tracking_search_screen.dart (_StepTimeline).
-  ///
-  /// In fr, this message translates to:
-  /// **'En attente'**
-  String get trackingSearchStatusPending;
-
-  /// Libellé de l'étape ACCEPTED dans la frise de statut de tracking_search_screen.dart (_StepTimeline).
-  ///
-  /// In fr, this message translates to:
-  /// **'Confirmé'**
-  String get trackingSearchStatusAccepted;
-
-  /// Libellé de l'étape PAYMENT_SECURED dans la frise de statut de tracking_search_screen.dart (_StepTimeline).
-  ///
-  /// In fr, this message translates to:
-  /// **'Payé'**
-  String get trackingSearchStatusPaid;
-
-  /// Libellé de l'étape DEPARTED (remise au voyageur) dans la frise de statut de tracking_search_screen.dart (_StepTimeline).
-  ///
-  /// In fr, this message translates to:
-  /// **'Remis'**
-  String get trackingSearchStatusDroppedOff;
-
-  /// Libellé de l'étape DELIVERED dans la frise de statut de tracking_search_screen.dart (_StepTimeline).
-  ///
-  /// In fr, this message translates to:
-  /// **'Livré'**
-  String get trackingSearchStatusDelivered;
 
   /// Titre de l'app bar de reception_confirm_screen.dart. Identique en anglais : mot cognate (voir _sameInBothLanguages).
   ///
@@ -23615,6 +23501,234 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Connexion instable'**
   String get connectivityWeak;
+
+  /// Titre de l'onglet Suivi (suivi_header.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi'**
+  String get suiviTitle;
+
+  /// Libellé d'accessibilité du sélecteur de mode de l'onglet Suivi (suivi_header.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Que veux-tu faire ?'**
+  String get suiviModeTabsLabel;
+
+  /// Onglet « Valider une étape » de l'onglet Suivi (suivi_header.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider une étape'**
+  String get suiviModeValidate;
+
+  /// Onglet « Suivre un colis » de l'onglet Suivi (suivi_header.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre un colis'**
+  String get suiviModeTrack;
+
+  /// Consigne sous le cadre caméra, mode Valider (suivi_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Scanne le QR d\'un colis de ton trajet.\nL\'étape suivante est validée toute seule.'**
+  String get suiviValidateCameraHint;
+
+  /// Consigne sous le cadre caméra, mode Suivre (suivi_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Scanne un QR pour voir où en est le colis.\nRien n\'est validé dans ce mode.'**
+  String get suiviTrackCameraHint;
+
+  /// Bandeau affiché quand la feuille est tirée en haut (suivi_screen.dart, _PausedStrip).
+  ///
+  /// In fr, this message translates to:
+  /// **'Caméra en pause'**
+  String get suiviCameraPaused;
+
+  /// Bouton qui replie la feuille pour revenir à la caméra (suivi_screen.dart, _PausedStrip).
+  ///
+  /// In fr, this message translates to:
+  /// **'Scanner'**
+  String get suiviResumeScan;
+
+  /// Date et nombre de colis confirmés d'un trajet (suivi_validate_content.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} · {count, plural, =0{aucun colis} =1{1 colis} other{{count} colis}}'**
+  String suiviTripSummary(String date, int count);
+
+  /// Bouton qui ouvre le choix du trajet (suivi_validate_content.dart, _TripRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer'**
+  String get suiviChangeTrip;
+
+  /// Groupe des trajets en cours dans « Choisir un trajet » (suivi_validate_content.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours'**
+  String get suiviTripsInProgress;
+
+  /// Groupe des trajets à venir dans « Choisir un trajet » (suivi_validate_content.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'À venir'**
+  String get suiviTripsUpcoming;
+
+  /// Colis d'un trajet qui attendent une étape (suivi_validate_content.dart, _TripGroup).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 à valider} other{{count} à valider}}'**
+  String suiviToValidateCount(int count);
+
+  /// Titre de la liste des colis du trajet affiché (suivi_validate_content.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis du trajet'**
+  String get suiviParcelsTitle;
+
+  /// Action d'une ligne colis selon son étape suivante (suivi_validate_content.dart, _ParcelRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'{step, select, DEPART{Valider le départ} TRANSIT{Valider le transit} other{Valider l\'arrivée}}'**
+  String suiviValidateStep(String step);
+
+  /// Ligne colis dont toutes les étapes sont validées (suivi_validate_content.dart, _ParcelRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout est validé'**
+  String get suiviAllValidated;
+
+  /// Dernière étape scannée d'un colis et son heure (suivi_validate_content.dart, _ParcelRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'{step, select, DEPART{Départ fait à {time}} TRANSIT{Transit fait à {time}} other{Arrivée faite à {time}}}'**
+  String suiviLastStepAt(String step, String time);
+
+  /// Colis confirmé pas encore remis au voyageur (suivi_validate_content.dart, _ParcelRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore remis'**
+  String get suiviNotHandedOver;
+
+  /// Bouton qui ouvre l'identification par numéro (suivi_validate_content.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'QR illisible ? Saisir le numéro'**
+  String get suiviEnterNumber;
+
+  /// Titre de l'historique des scans du trajet (suivi_validate_content.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Derniers scans'**
+  String get suiviRecentScans;
+
+  /// Bannière hors ligne de la feuille Valider (suivi_validate_content.dart, SuiviPendingScansBanner).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 scan en attente. Il part tout seul dès le retour du réseau.} other{{count} scans en attente. Ils partent tout seuls dès le retour du réseau.}}'**
+  String suiviPendingScans(int count);
+
+  /// Titre de la feuille d'un colis lu sur un autre trajet (suivi_parcel_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis n\'est pas sur ce trajet'**
+  String get suiviOtherTripTitle;
+
+  /// Explication de la feuille d'un colis lu sur un autre trajet (suivi_parcel_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis de {parcel} voyage sur ton trajet du {date} : {corridor}.'**
+  String suiviOtherTripBody(String parcel, String corridor, String date);
+
+  /// Bouton qui affiche l'autre trajet (suivi_parcel_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Passer sur {corridor}'**
+  String suiviSwitchToTrip(String corridor);
+
+  /// Bouton secondaire des feuilles de colis hors trajet (suivi_parcel_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Scanner un autre colis'**
+  String get suiviScanAnother;
+
+  /// Titre de la feuille d'un colis inconnu (suivi_parcel_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis n\'est pas sur tes trajets'**
+  String get suiviUnknownParcelTitle;
+
+  /// Explication de la feuille d'un colis inconnu (suivi_parcel_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis d\'un autre voyageur : impossible de valider ses étapes, tu peux seulement suivre son parcours.'**
+  String get suiviUnknownParcelBody;
+
+  /// Bouton qui passe en mode Suivre sur un colis inconnu (suivi_parcel_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre ce colis'**
+  String get suiviFollowParcel;
+
+  /// Message quand le QR d'un colis entièrement validé est lu (suivi_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les étapes de {parcel} sont déjà validées.'**
+  String suiviAllStepsDone(String parcel);
+
+  /// Titre de l'état vide du mode Valider (suivi_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien à valider pour l\'instant'**
+  String get suiviNothingToValidateTitle;
+
+  /// Description de l'état vide du mode Valider (suivi_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Tes colis apparaîtront ici dès qu\'un expéditeur te remettra son colis.'**
+  String get suiviNothingToValidateBody;
+
+  /// Bouton qui lance le suivi d'un numéro (suivi_track_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre'**
+  String get suiviTrackSubmit;
+
+  /// Bouton qui ouvre le lecteur QR, utilisateur sans caméra dans l'onglet (suivi_track_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Scanner un QR code'**
+  String get suiviScanQr;
+
+  /// Titre de la liste des envois en cours (suivi_track_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes envois'**
+  String get suiviMyShipments;
+
+  /// Liste « Mes envois » vide (suivi_track_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun envoi en cours.'**
+  String get suiviNoShipments;
+
+  /// Échec du chargement de « Mes envois » (suivi_track_panel.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger tes envois.'**
+  String get suiviShipmentsError;
+
+  /// Statut d'un envoi en cours (suivi_track_panel.dart, _ShipmentRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'{status, select, HANDED_OVER{Remis au voyageur} IN_TRANSIT{En route} ARRIVED{Arrivé} other{À remettre}}'**
+  String suiviShipmentStatus(String status);
+
+  /// Erreur du flux caméra QR (qr_camera_view.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Caméra indisponible. Autorise l\'accès à la caméra dans les réglages du téléphone.'**
+  String get qrCameraUnavailable;
 }
 
 class _AppLocalizationsDelegate

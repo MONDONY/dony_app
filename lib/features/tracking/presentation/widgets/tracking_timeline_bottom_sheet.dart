@@ -14,14 +14,16 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-void showTrackingTimelineSheet(
+/// Parcours d'un colis en lecture seule. [corridor] vide (colis inconnu de
+/// l'app, lu par QR) masque la carte du trajet.
+Future<void> showTrackingTimelineSheet(
   BuildContext context, {
   required String bidId,
   required String corridor,
   VoidCallback? onShareTracking,
   String? arrivalInstructions,
 }) {
-  DonyBottomSheet.show(
+  return DonyBottomSheet.show<void>(
     context,
     title: context.l10n.trackingTimelineTitle,
     subtitle: corridor.isNotEmpty ? corridor : null,
@@ -134,13 +136,15 @@ class _TrackingTimelineContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Map card
-                  RouteMapCard(
-                    departureCode: corridorCodes.$1,
-                    arrivalCode: corridorCodes.$3,
-                    departureCity: corridorCodes.$2,
-                    arrivalCity: corridorCodes.$4,
-                  ),
-                  const SizedBox(height: DonySpacing.base),
+                  if (corridor.isNotEmpty) ...[
+                    RouteMapCard(
+                      departureCode: corridorCodes.$1,
+                      arrivalCode: corridorCodes.$3,
+                      departureCity: corridorCodes.$2,
+                      arrivalCity: corridorCodes.$4,
+                    ),
+                    const SizedBox(height: DonySpacing.base),
+                  ],
 
                   // Timeline
                   _Timeline(

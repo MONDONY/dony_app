@@ -12,6 +12,7 @@ import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../helpers/l10n_test_helpers.dart';
@@ -518,12 +519,57 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'HANDED_OVER'), false);
-    // Redirige vers les étapes du Suivi (ScanHub).
+    // Redirige vers l'onglet Suivi, mode « Valider une étape ».
     expect(find.text('Lire les QR des étapes'), findsOneWidget);
     expect(
       find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'scan-line'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('voyageur : le lien ouvre l\'onglet Suivi en mode Valider', (
+    tester,
+  ) async {
+    final t = _MockTrackingBloc();
+    final b = _MockBidBloc();
+    when(() => t.state).thenReturn(TrackingInitial());
+    when(() => b.state).thenReturn(BidInitial());
+    final visited = <String>[];
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => Scaffold(
+            body: MultiBlocProvider(
+              providers: [
+                BlocProvider<TrackingBloc>.value(value: t),
+                BlocProvider<BidBloc>.value(value: b),
+              ],
+              child: BilletTalon(
+                bid: _bid(status: 'HANDED_OVER'),
+                isSender: false,
+              ),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/tracking',
+          builder: (_, state) {
+            visited.add(state.uri.toString());
+            return const Scaffold(body: Text('suivi'));
+          },
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+
+    await tester.tap(find.text('Lire les QR des étapes'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(visited, ['/tracking?mode=valider']);
   });
 
   testWidgets('voyageur + IN_TRANSIT → lien "Scanner les étapes" (Suivi)', (
