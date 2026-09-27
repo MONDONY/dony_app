@@ -177,9 +177,11 @@ void main() {
       expect(find.text('Instructions de retrait'), findsNothing);
     });
 
-    testWidgets('bandeau absent tant que le colis n\'est pas arrivé', (
-      tester,
-    ) async {
+    // ARRIVEE n'existe qu'à la confirmation de livraison (code du
+    // destinataire) : conditionner le bandeau à cet événement ne montrait les
+    // instructions qu'une fois le colis déjà récupéré.
+    testWidgets('bandeau affiché avant la livraison, avec l\'attente de '
+        'confirmation', (tester) async {
       when(
         () => bloc.state,
       ).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
@@ -190,7 +192,8 @@ void main() {
         arrivalInstructions: 'Métro Châtelet, sortie 3',
       );
 
-      expect(find.text('Instructions de retrait'), findsNothing);
+      expect(find.text('Instructions de retrait'), findsOneWidget);
+      expect(find.text('Métro Châtelet, sortie 3'), findsOneWidget);
       expect(find.text('En attente de confirmation'), findsOneWidget);
     });
   });

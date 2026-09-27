@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_cta_cell.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
@@ -97,6 +98,11 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       // pour éviter une double animation (fade × fade + slide × slide).
       ColisBillet(bid: widget.bid, isSender: true),
       SenderHeroCard(bid: widget.bid),
+      // Hors du hero, qui les masquait dès qu'une contestation, une absence
+      // ou la livraison prenait la place.
+      if (_activeStatuses.contains(status) &&
+          ArrivalInstructionsCard.hasText(widget.bid.arrivalInstructions))
+        ArrivalInstructionsCard(instructions: widget.bid.arrivalInstructions!),
       DeliveryNoShowCtaCell(bid: widget.bid, isSender: true),
       if (_activeStatuses.contains(status))
         VoyageurContactCard(bid: widget.bid),

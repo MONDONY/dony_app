@@ -36,6 +36,8 @@
   "errorRequestBudgetOutOfBoundsMessage": "This budget is above the limit for this currency. Lower the amount and try again.",
   "errorRequestAlreadyAcceptedTitle": "This parcel is taken",
   "errorRequestAlreadyAcceptedMessage": "Another traveler paid the service fee before you, so this parcel is no longer available to you.",
+  "errorTripNoParcelInTransitTitle": "No parcel on the way",
+  "errorTripNoParcelInTransitMessage": "Scan the Transit step of at least one parcel before marking your trip as arrived.",
   "errorThreadNotAwaitingCommissionTitle": "This parcel is taken",
   "errorThreadNotAwaitingCommissionMessage": "This offer no longer needs payment. It was settled another way or the time limit has passed.",
   "errorUnauthorizedTitle": "Session expired",
@@ -3292,6 +3294,10 @@
   "bidDetailSenderArrivedSubtitleDefault": "The traveler has arrived, pickup instructions are coming soon.",
   "@bidDetailSenderArrivedSubtitleDefault": {
     "description": "ARRIVED, sous-titre sans instructions saisies par le voyageur (sender_hero_card.dart)"
+  },
+  "bidDetailSenderArrivedSubtitleSeeInstructions": "The traveler has arrived. Their pickup instructions are just below.",
+  "@bidDetailSenderArrivedSubtitleSeeInstructions": {
+    "description": "ARRIVED, sous-titre quand le voyageur a saisi ses instructions, affichées dans l'encart juste dessous (sender_hero_card.dart)"
   },
   "bidDetailSenderRecipientFallback": "your recipient",
   "@bidDetailSenderRecipientFallback": {

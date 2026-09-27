@@ -63,21 +63,24 @@ const _owner = UserModel(
   status: 'ACTIVE',
 );
 
-AnnouncementModel _makeAnnouncement({String status = 'ACTIVE'}) =>
-    AnnouncementModel(
-      id: 'ann-trip-001',
-      travelerId: _ownerId,
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 7),
-      availableKg: 10,
-      totalKg: 23,
-      pricePerKg: 8,
-      status: status,
-      bidsCount: 0,
-      createdAt: DateTime(2026, 6),
-      updatedAt: DateTime(2026, 6),
-    );
+AnnouncementModel _makeAnnouncement({
+  String status = 'ACTIVE',
+  String? arrivalInstructions,
+}) => AnnouncementModel(
+  arrivalInstructions: arrivalInstructions,
+  id: 'ann-trip-001',
+  travelerId: _ownerId,
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 7),
+  availableKg: 10,
+  totalKg: 23,
+  pricePerKg: 8,
+  status: status,
+  bidsCount: 0,
+  createdAt: DateTime(2026, 6),
+  updatedAt: DateTime(2026, 6),
+);
 
 BidModel _makeBid({required String status}) => BidModel(
   id: 'bid-001',
@@ -350,7 +353,64 @@ void main() {
     expect(find.text('Arrivé à destination'), findsOneWidget);
   });
 
-  testWidgets('hides arrival button when a bid is still HANDED_OVER', (
+  Future<void> pumpOwnerWith(
+    WidgetTester tester, {
+    required AnnouncementModel announcement,
+    required AuthState auth,
+  }) async {
+    when(
+      () => annBloc.state,
+    ).thenReturn(AnnouncementDetailLoaded(announcement));
+    whenListen(
+      annBloc,
+      Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
+      initialState: AnnouncementDetailLoaded(announcement),
+    );
+    when(() => authBloc.state).thenReturn(auth);
+    whenListen(authBloc, const Stream<AuthState>.empty(), initialState: auth);
+    final bids = [_makeBid(status: 'ARRIVED')];
+    when(() => bidBloc.state).thenReturn(BidListLoaded(bids));
+    whenListen(
+      bidBloc,
+      Stream<BidState>.value(BidListLoaded(bids)),
+      initialState: BidListLoaded(bids),
+    );
+    await _pump(
+      tester,
+      annBloc: annBloc,
+      bidBloc: bidBloc,
+      cancelBloc: cancelBloc,
+      authBloc: authBloc,
+    );
+    await tester.pumpAndSettle();
+  }
+
+  // Le voyageur ne relisait son texte que dans la feuille d'édition, qui
+  // disparaît avec le dernier colis actif.
+  testWidgets('proprietaire : encart des instructions de retrait', (
+    tester,
+  ) async {
+    await pumpOwnerWith(
+      tester,
+      announcement: _makeAnnouncement(arrivalInstructions: 'Gare routière'),
+      auth: const AuthAuthenticated(_owner),
+    );
+
+    expect(find.byKey(const Key('arrival-instructions-card')), findsOneWidget);
+    expect(find.text('Gare routière'), findsOneWidget);
+  });
+
+  testWidgets('proprietaire sans instructions : aucun encart', (tester) async {
+    await pumpOwnerWith(
+      tester,
+      announcement: _makeAnnouncement(),
+      auth: const AuthAuthenticated(_owner),
+    );
+
+    expect(find.byKey(const Key('arrival-instructions-card')), findsNothing);
+  });
+
+  testWidgets('hides arrival button when no bid is in transit yet', (
     tester,
   ) async {
     final announcement = _makeAnnouncement();
@@ -735,11 +795,41 @@ void main() {
         TripArrivalCta.editInstructions,
       );
     });
-    test('un colis encore HANDED_OVER → aucun CTA', () {
+    // Un colis pas encore parti bloquait tout le trajet, et avec lui la saisie
+    // des instructions de retrait (yadony-back #334 : seuls les colis en
+    // transit passent en ARRIVED).
+    test('un colis encore HANDED_OVER + un IN_TRANSIT → markArrived', () {
       expect(
         tripArrivalCtaFor([
           _makeBid(status: 'HANDED_OVER'),
           _makeBid(status: 'IN_TRANSIT'),
+        ]),
+        TripArrivalCta.markArrived,
+      );
+    });
+    test('ARRIVED + un colis resté ACCEPTED → editInstructions', () {
+      expect(
+        tripArrivalCtaFor([
+          _makeBid(status: 'ARRIVED'),
+          _makeBid(status: 'ACCEPTED'),
+        ]),
+        TripArrivalCta.editInstructions,
+      );
+    });
+    test('ARRIVED + un colis passé en transit plus tard → markArrived', () {
+      expect(
+        tripArrivalCtaFor([
+          _makeBid(status: 'ARRIVED'),
+          _makeBid(status: 'IN_TRANSIT'),
+        ]),
+        TripArrivalCta.markArrived,
+      );
+    });
+    test('aucun colis en vol ni arrivé → aucun CTA', () {
+      expect(
+        tripArrivalCtaFor([
+          _makeBid(status: 'HANDED_OVER'),
+          _makeBid(status: 'ACCEPTED'),
         ]),
         isNull,
       );

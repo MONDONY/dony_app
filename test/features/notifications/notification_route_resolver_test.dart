@@ -63,6 +63,7 @@ void main() {
       'PARCEL_RETURNED',
       'RETURN_DEADLINE_WARNING',
       'RETURN_DEADLINE_EXPIRED',
+      'TRIP_ARRIVED',
     ]) {
       test('$type routes to bid detail', () {
         expect(
@@ -75,6 +76,14 @@ void main() {
         expect(resolveNotificationRoute(type, {'bidId': '../admin'}), isNull);
       });
     }
+
+    // Push d'un back antérieur à yadony-back #334, sans bidId.
+    test('TRIP_ARRIVED without bidId has no dedicated route', () {
+      expect(
+        resolveNotificationRoute('TRIP_ARRIVED', {'announcementId': bidId}),
+        isNull,
+      );
+    });
 
     test('KYC_VERIFIED routes to KYC status', () {
       expect(resolveNotificationRoute('KYC_VERIFIED', {}), '/kyc/status');

@@ -23,6 +23,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
@@ -42,7 +43,8 @@ const _biddableActiveStatuses = <String>{
 
 /// Mode du CTA d'arrivée affiché au voyageur propriétaire.
 enum TripArrivalCta {
-  /// Trajet pas encore marqué arrivé, tous les colis actifs sont en transit.
+  /// Au moins un colis actif est en transit : le marquer arrivé (le back ne
+  /// fait passer en ARRIVED que les colis en transit).
   markArrived,
 
   /// Trajet déjà marqué arrivé : seule l'édition des instructions reste
@@ -51,19 +53,20 @@ enum TripArrivalCta {
   editInstructions,
 }
 
-/// `null` = aucun CTA (colis pas tous partis, ou plus aucun colis actif).
+/// `null` = aucun CTA (aucun colis en vol ni arrivé, ou plus aucun colis actif).
+///
+/// Un colis pas encore parti (accepté, remis sans scan Transit) ne bloque plus
+/// le trajet : il empêchait auparavant de le marquer arrivé, et donc de saisir
+/// les instructions de retrait (yadony-back #334 aligne la règle serveur).
 TripArrivalCta? tripArrivalCtaFor(List<BidModel> bids) {
   final active = bids
       .where((b) => _biddableActiveStatuses.contains(b.status))
       .toList();
-  if (active.isEmpty) {
-    return null;
-  }
-  if (active.every((b) => b.status == 'ARRIVED')) {
-    return TripArrivalCta.editInstructions;
-  }
-  if (active.every((b) => b.status == 'IN_TRANSIT')) {
+  if (active.any((b) => b.status == 'IN_TRANSIT')) {
     return TripArrivalCta.markArrived;
+  }
+  if (active.any((b) => b.status == 'ARRIVED')) {
+    return TripArrivalCta.editInstructions;
   }
   return null;
 }
@@ -331,6 +334,17 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                   OwnerActionGrid(a: a, isOwner: isOwner),
                   const SizedBox(height: DonySpacing.lg),
                   const TripParcelsSection(),
+                  // Relecture du texte envoyé aux expéditeurs : le voyageur ne
+                  // le voyait que dans la feuille d'édition, qui disparaît avec
+                  // le dernier colis actif.
+                  if (isOwner &&
+                      ArrivalInstructionsCard.hasText(a.arrivalInstructions))
+                    Padding(
+                      padding: const EdgeInsets.only(top: DonySpacing.md),
+                      child: ArrivalInstructionsCard(
+                        instructions: a.arrivalInstructions!,
+                      ),
+                    ),
                   BlocBuilder<BidBloc, BidState>(
                     builder: (context, bidState) {
                       if (!isOwner || bidState is! BidListLoaded) {

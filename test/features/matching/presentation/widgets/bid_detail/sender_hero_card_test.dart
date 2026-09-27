@@ -258,7 +258,8 @@ void main() {
   // ── Test 8b: ARRIVED avec instructions de retrait ────────────────────────────
 
   testWidgets(
-    '8b · ARRIVED avec arrivalInstructions → instructions affichées',
+    '8b · ARRIVED avec arrivalInstructions → renvoi vers l\'encart, sans '
+    'doublon du texte',
     (tester) async {
       final bid = _bid(
         status: 'ARRIVED',
@@ -267,7 +268,16 @@ void main() {
       await tester.pumpWidget(_host(bid, cancellationBloc));
       await tester.pump();
 
-      expect(find.textContaining('Métro Châtelet'), findsOneWidget);
+      // Le texte vit dans ArrivalInstructionsCard (sender_detail_body), juste
+      // sous le hero : le hero n'y renvoie plus que par une phrase.
+      expect(find.textContaining('Métro Châtelet'), findsNothing);
+      expect(
+        find.text(
+          'Le voyageur est arrivé. Ses instructions de retrait sont juste en '
+          'dessous.',
+        ),
+        findsOneWidget,
+      );
     },
   );
 

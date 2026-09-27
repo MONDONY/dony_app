@@ -135,6 +135,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Another traveler paid the service fee before you, so this parcel is no longer available to you.';
 
   @override
+  String get errorTripNoParcelInTransitTitle => 'No parcel on the way';
+
+  @override
+  String get errorTripNoParcelInTransitMessage =>
+      'Scan the Transit step of at least one parcel before marking your trip as arrived.';
+
+  @override
   String get errorThreadNotAwaitingCommissionTitle => 'This parcel is taken';
 
   @override
@@ -6528,6 +6535,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidDetailSenderArrivedSubtitleDefault =>
       'The traveler has arrived, pickup instructions are coming soon.';
+
+  @override
+  String get bidDetailSenderArrivedSubtitleSeeInstructions =>
+      'The traveler has arrived. Their pickup instructions are just below.';
 
   @override
   String get bidDetailSenderRecipientFallback => 'your recipient';

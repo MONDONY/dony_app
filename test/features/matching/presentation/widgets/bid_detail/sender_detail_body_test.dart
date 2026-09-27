@@ -58,6 +58,7 @@ BidModel _bid({
   String? departureCity = 'Paris',
   String? arrivalCity = 'Dakar',
   bool senderHasRated = false,
+  String? arrivalInstructions,
 }) => BidModel(
   id: 'bid-001',
   announcementId: 'ann-001',
@@ -80,6 +81,7 @@ BidModel _bid({
   departureCity: departureCity,
   arrivalCity: arrivalCity,
   senderHasRated: senderHasRated,
+  arrivalInstructions: arrivalInstructions,
 );
 
 // ── Host widget ───────────────────────────────────────────────────────────────
@@ -223,6 +225,42 @@ void main() {
       expect(find.byType(ColisDestinataireCard), findsOneWidget);
     },
   );
+
+  // ── Instructions de retrait : encart hors du hero ──────────────────────────
+  // Le hero ne les montrait qu'en ARRIVED, et les perdait dès qu'une
+  // contestation, une absence ou la livraison prenait sa place.
+  for (final status in ['HANDED_OVER', 'ARRIVED', 'COMPLETED']) {
+    testWidgets('$status + instructions → encart des instructions de retrait', (
+      tester,
+    ) async {
+      sizeView(tester);
+      final bid = _bid(
+        status: status,
+        arrivalInstructions: 'Gare routière, quai 4',
+      );
+
+      await tester.pumpWidget(
+        _host(bid, cancellationBloc, conversationOpenBloc),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(
+        find.byKey(const Key('arrival-instructions-card')),
+        findsOneWidget,
+      );
+      expect(find.text('Gare routière, quai 4'), findsOneWidget);
+    });
+  }
+
+  testWidgets('sans instructions → aucun encart', (tester) async {
+    sizeView(tester);
+    final bid = _bid(status: 'ARRIVED', arrivalInstructions: '  ');
+
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.byKey(const Key('arrival-instructions-card')), findsNothing);
+  });
 
   // ── Test 4: COMPLETED + senderHasRated=true → RatingDoneBadge ──────────────
   testWidgets('4 · COMPLETED + senderHasRated=true → RatingDoneBadge affiché', (

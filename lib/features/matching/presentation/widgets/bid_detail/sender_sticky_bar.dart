@@ -280,6 +280,7 @@ class SenderStickyBar extends StatelessWidget {
             context,
             bidId: bid.id,
             corridor: corridor,
+            arrivalInstructions: bid.arrivalInstructions,
             onShareTracking: bid.trackingToken != null
                 ? () => shareTrackingLink(
                     bid,
