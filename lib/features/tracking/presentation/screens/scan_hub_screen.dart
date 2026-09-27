@@ -40,14 +40,28 @@ class _EtapeInfo {
   final String? iconAsset;
   final bool photoRequired;
 
-  const _EtapeInfo(this.code, {this.iconAsset, required this.photoRequired});
+  /// Étape que le voyageur peut sauter (Transit) : seuls le départ et la remise
+  /// au destinataire sont obligatoires.
+  final bool optional;
+
+  const _EtapeInfo(
+    this.code, {
+    this.iconAsset,
+    required this.photoRequired,
+    this.optional = false,
+  });
 }
 
 // Le libellé de chaque étape se calcule dans build() via trackingStepLabel,
 // jamais gardé en dur ici.
 const _etapes = [
   _EtapeInfo('DEPART', iconAsset: 'plane-takeoff', photoRequired: true),
-  _EtapeInfo('TRANSIT', iconAsset: 'arrow-left-right', photoRequired: false),
+  _EtapeInfo(
+    'TRANSIT',
+    iconAsset: 'arrow-left-right',
+    photoRequired: false,
+    optional: true,
+  ),
   _EtapeInfo('ARRIVEE', iconAsset: 'plane-landing', photoRequired: true),
 ];
 
@@ -609,6 +623,17 @@ class _EtapeChip extends StatelessWidget {
               width: double.infinity,
               child: etape.photoRequired
                   ? const FittedBox(fit: BoxFit.scaleDown, child: _PhotoBadge())
+                  : etape.optional
+                  ? FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        context.l10n.trackingStepOptional,
+                        key: const Key('etape-optional-label'),
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    )
                   : null,
             ),
           ],

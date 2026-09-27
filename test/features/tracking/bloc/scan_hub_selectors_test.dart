@@ -89,8 +89,9 @@ void main() {
     test('ACCEPTED → DEPART', () {
       expect(nextRequiredStep(_bid('ACCEPTED')), 'DEPART');
     });
-    test('HANDED_OVER → TRANSIT', () {
-      expect(nextRequiredStep(_bid('HANDED_OVER')), 'TRANSIT');
+    // Transit facultatif : après le départ, l'étape obligatoire est la remise.
+    test('HANDED_OVER → ARRIVEE', () {
+      expect(nextRequiredStep(_bid('HANDED_OVER')), 'ARRIVEE');
     });
     test('IN_TRANSIT → ARRIVEE', () {
       expect(nextRequiredStep(_bid('IN_TRANSIT')), 'ARRIVEE');

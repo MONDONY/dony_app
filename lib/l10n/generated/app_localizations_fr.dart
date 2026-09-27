@@ -136,11 +136,25 @@ class AppLocalizationsFr extends AppLocalizations {
       'Un autre voyageur a réglé la commission avant toi, ce colis ne peut plus te revenir.';
 
   @override
-  String get errorTripNoParcelInTransitTitle => 'Aucun colis en route';
+  String get errorTripNoParcelDepartedTitle => 'Aucun colis récupéré';
 
   @override
-  String get errorTripNoParcelInTransitMessage =>
-      'Scanne l\'étape Transit d\'au moins un colis avant de marquer ton trajet arrivé.';
+  String get errorTripNoParcelDepartedMessage =>
+      'Scanne le départ d\'au moins un colis avant de marquer ton trajet arrivé.';
+
+  @override
+  String get errorDepartRequiredTitle => 'Scanne d\'abord le départ';
+
+  @override
+  String get errorDepartRequiredMessage =>
+      'Le départ doit être scanné quand tu récupères le colis, avant le transit.';
+
+  @override
+  String get errorParcelRefusalLockedTitle => 'Le trajet est parti';
+
+  @override
+  String get errorParcelRefusalLockedMessage =>
+      'Tu ne peux plus refuser ce colis une fois le trajet parti.';
 
   @override
   String get errorThreadNotAwaitingCommissionTitle => 'Ce colis est parti';
@@ -7081,7 +7095,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailScanParcelQr => 'Lire le QR du colis';
 
   @override
-  String get bidDetailScanTransitQr => 'Lire le QR de transit';
+  String get bidDetailScanTransitOptional => 'Scanner le transit (facultatif)';
+
+  @override
+  String get trackingStepOptional => 'Facultatif';
 
   @override
   String get bidDetailConfirmHandover => 'Valider la remise';

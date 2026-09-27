@@ -314,17 +314,41 @@ abstract class AppLocalizations {
   /// **'Un autre voyageur a réglé la commission avant toi, ce colis ne peut plus te revenir.'**
   String get errorRequestAlreadyAcceptedMessage;
 
-  /// No description provided for @errorTripNoParcelInTransitTitle.
+  /// No description provided for @errorTripNoParcelDepartedTitle.
   ///
   /// In fr, this message translates to:
-  /// **'Aucun colis en route'**
-  String get errorTripNoParcelInTransitTitle;
+  /// **'Aucun colis récupéré'**
+  String get errorTripNoParcelDepartedTitle;
 
-  /// No description provided for @errorTripNoParcelInTransitMessage.
+  /// No description provided for @errorTripNoParcelDepartedMessage.
   ///
   /// In fr, this message translates to:
-  /// **'Scanne l\'étape Transit d\'au moins un colis avant de marquer ton trajet arrivé.'**
-  String get errorTripNoParcelInTransitMessage;
+  /// **'Scanne le départ d\'au moins un colis avant de marquer ton trajet arrivé.'**
+  String get errorTripNoParcelDepartedMessage;
+
+  /// No description provided for @errorDepartRequiredTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Scanne d\'abord le départ'**
+  String get errorDepartRequiredTitle;
+
+  /// No description provided for @errorDepartRequiredMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le départ doit être scanné quand tu récupères le colis, avant le transit.'**
+  String get errorDepartRequiredMessage;
+
+  /// No description provided for @errorParcelRefusalLockedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le trajet est parti'**
+  String get errorParcelRefusalLockedTitle;
+
+  /// No description provided for @errorParcelRefusalLockedMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu ne peux plus refuser ce colis une fois le trajet parti.'**
+  String get errorParcelRefusalLockedMessage;
 
   /// No description provided for @errorThreadNotAwaitingCommissionTitle.
   ///
@@ -11793,11 +11817,17 @@ abstract class AppLocalizations {
   /// **'Lire le QR du colis'**
   String get bidDetailScanParcelQr;
 
-  /// Bouton étape Transit (traveler_sticky_bar.dart)
+  /// Action secondaire du voyageur sur un colis récupéré : le scan Transit est facultatif (traveler_sticky_bar.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Lire le QR de transit'**
-  String get bidDetailScanTransitQr;
+  /// **'Scanner le transit (facultatif)'**
+  String get bidDetailScanTransitOptional;
+
+  /// Mention sous l'étape Transit du hub de scan : étape facultative (scan_hub_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Facultatif'**
+  String get trackingStepOptional;
 
   /// Bouton étape Arrivée, valider la remise au destinataire (traveler_sticky_bar.dart)
   ///

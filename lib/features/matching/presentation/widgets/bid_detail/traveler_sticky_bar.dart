@@ -10,7 +10,6 @@ enum _TravelerAction {
   decide,
   confirmPresence,
   scan,
-  transit,
   deliver,
   delete,
   awaitingMobileMoneyPayment,
@@ -65,13 +64,12 @@ class TravelerStickyBar extends StatelessWidget {
           return null;
         }
         return _TravelerAction.confirmPresence;
-      // HANDED_OVER : colis récupéré (départ fait), transit pas encore scanné
-      // → étape Transit. Le scan transit fait passer le bid en IN_TRANSIT.
+      // Colis récupéré (départ scanné) : la seule étape obligatoire restante
+      // est la remise au destinataire. Le scan Transit est facultatif, proposé
+      // en second tant qu'il n'a pas été fait (HANDED_OVER).
+      // ARRIVED : trajet marqué arrivé, même action tant que la livraison
+      // n'est pas confirmée.
       case 'HANDED_OVER':
-        return _TravelerAction.transit;
-      // IN_TRANSIT : transit fait → dernière étape, validation de la remise.
-      // ARRIVED : voyageur a marqué son trajet arrivé, l'action reste la même
-      // (valider la remise) tant que la livraison n'est pas confirmée.
       case 'IN_TRANSIT':
       case 'ARRIVED':
         return _TravelerAction.deliver;
@@ -95,10 +93,8 @@ class TravelerStickyBar extends StatelessWidget {
         return TravelerRejectedBar(bid: bid, isLoading: isLoading);
       case _TravelerAction.scan:
         return const _ScanBar();
-      case _TravelerAction.transit:
-        return const _TransitBar();
       case _TravelerAction.deliver:
-        return const _DeliverBar();
+        return _DeliverBar(offerOptionalTransit: bid.status == 'HANDED_OVER');
       case _TravelerAction.awaitingMobileMoneyPayment:
         return const _AwaitingMobileMoneyPaymentBar();
     }
@@ -175,41 +171,14 @@ class _ScanBar extends StatelessWidget {
   }
 }
 
-// ── Transit bar ───────────────────────────────────────────────────────────────
-
-class _TransitBar extends StatelessWidget {
-  const _TransitBar();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final h = DonyLayout.hPadding(context);
-    return Container(
-      color: cs.surface,
-      padding: EdgeInsets.fromLTRB(
-        h,
-        DonySpacing.base,
-        h,
-        MediaQuery.of(context).padding.bottom + DonySpacing.base,
-      ),
-      // Étape Transit du hub de scan. Une fois scanné, le bid passe en
-      // IN_TRANSIT et la barre affiche « Valider la remise » (étape Arrivée).
-      child: DonyButton(
-        label: context.l10n.bidDetailScanTransitQr,
-        iconAsset: 'arrow-left-right',
-        onPressed: () => context.push(
-          '/tracking/scan/identify',
-          extra: <String, dynamic>{'etape': 'TRANSIT', 'focusNumber': false},
-        ),
-      ),
-    );
-  }
-}
-
 // ── Deliver bar ───────────────────────────────────────────────────────────────
 
 class _DeliverBar extends StatelessWidget {
-  const _DeliverBar();
+  const _DeliverBar({this.offerOptionalTransit = false});
+
+  /// Colis récupéré, transit pas encore scanné : propose le scan Transit en
+  /// action secondaire, jamais comme un passage obligé.
+  final bool offerOptionalTransit;
 
   @override
   Widget build(BuildContext context) {
@@ -226,14 +195,38 @@ class _DeliverBar extends StatelessWidget {
       // Redirige vers l'étape Arrivée du hub de scan (identify → confirm), qui
       // dispatche ConfirmDeliveryRequested et libère le paiement — au lieu de
       // l'écran de réception autonome (/tracking/confirm).
-      child: DonyButton(
-        label: context.l10n.bidDetailConfirmHandover,
-        iconAsset: 'badge-check',
-        variant: DonyButtonVariant.success,
-        onPressed: () => context.push(
-          '/tracking/scan/identify',
-          extra: <String, dynamic>{'etape': 'ARRIVEE', 'focusNumber': false},
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyButton(
+            label: context.l10n.bidDetailConfirmHandover,
+            iconAsset: 'badge-check',
+            variant: DonyButtonVariant.success,
+            onPressed: () => context.push(
+              '/tracking/scan/identify',
+              extra: <String, dynamic>{
+                'etape': 'ARRIVEE',
+                'focusNumber': false,
+              },
+            ),
+          ),
+          if (offerOptionalTransit) ...[
+            const SizedBox(height: DonySpacing.sm),
+            DonyButton(
+              key: const Key('traveler-optional-transit-btn'),
+              label: context.l10n.bidDetailScanTransitOptional,
+              iconAsset: 'arrow-left-right',
+              variant: DonyButtonVariant.ghost,
+              onPressed: () => context.push(
+                '/tracking/scan/identify',
+                extra: <String, dynamic>{
+                  'etape': 'TRANSIT',
+                  'focusNumber': false,
+                },
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

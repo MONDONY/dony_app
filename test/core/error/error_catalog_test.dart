@@ -97,17 +97,35 @@ void main() {
     });
   });
 
-  group('ErrorCatalog — trip/no-parcel-in-transit', () {
-    test('explique qu il faut scanner l étape Transit', () {
+  group('ErrorCatalog — transit facultatif', () {
+    test('trip/no-parcel-departed demande de scanner le départ', () {
       const error = NetworkException(
         'ignored',
-        code: 'trip/no-parcel-in-transit',
+        code: 'trip/no-parcel-departed',
       );
 
       final p = ErrorCatalog.lookup(error);
 
-      expect(p.title, 'Aucun colis en route');
-      expect(p.message, contains('Transit'));
+      expect(p.title, 'Aucun colis récupéré');
+      expect(p.message, contains('départ'));
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('depart-required : le départ avant le transit', () {
+      const error = NetworkException('ignored', code: 'depart-required');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, "Scanne d'abord le départ");
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('parcel-refusal-locked : refus fermé une fois parti', () {
+      const error = NetworkException('ignored', code: 'parcel-refusal-locked');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'Le trajet est parti');
       expect(p.severity, ErrorSeverity.warning);
     });
   });
