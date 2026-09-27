@@ -2441,7 +2441,7 @@ abstract class AppLocalizations {
   /// No description provided for @authOnboardingTrackingSubtitle.
   ///
   /// In fr, this message translates to:
-  /// **'Le suivi avance à chaque scan, du départ jusqu’à la confirmation d’arrivée.'**
+  /// **'Le suivi avance à chaque étape, de la remise au voyageur jusqu’à la livraison.'**
   String get authOnboardingTrackingSubtitle;
 
   /// No description provided for @authOnboardingTrackingStep1Title.
@@ -2459,13 +2459,13 @@ abstract class AppLocalizations {
   /// No description provided for @authOnboardingTrackingStep2Title.
   ///
   /// In fr, this message translates to:
-  /// **'Départ, transit, arrivée'**
+  /// **'En route'**
   String get authOnboardingTrackingStep2Title;
 
   /// No description provided for @authOnboardingTrackingStep2Subtitle.
   ///
   /// In fr, this message translates to:
-  /// **'Chaque scan met le suivi à jour.'**
+  /// **'Le voyageur peut signaler son passage en chemin.'**
   String get authOnboardingTrackingStep2Subtitle;
 
   /// No description provided for @authOnboardingTrackingStep3Title.
@@ -12480,7 +12480,7 @@ abstract class AppLocalizations {
   /// Libellé d'étape IN_TRANSIT sous le stepper (shipment_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'En vol vers {city}'**
+  /// **'En route vers {city}'**
   String shipmentStepInTransitLabel(String city);
 
   /// Repli de {city} quand la ville d'arrivée est inconnue, mot identique dans les deux langues (shipment_card.dart)
@@ -12531,31 +12531,25 @@ abstract class AppLocalizations {
   /// **'Colis {weight} · pour {recipient}'**
   String shipmentParcelWeightForRecipientLabel(String weight, String recipient);
 
-  /// Libellé de pastille 1/5 du stepper (shipment_card.dart, clé dédiée : casse différente du badge REMIS, R40)
+  /// Libellé de pastille 1/4 du stepper (shipment_card.dart, clé dédiée : casse différente du badge REMIS, R40)
   ///
   /// In fr, this message translates to:
   /// **'Remis'**
   String get shipmentStepperHandedOverLabel;
 
-  /// Libellé de pastille 2/5 du stepper (shipment_card.dart)
+  /// Libellé de pastille 2/4 du stepper (shipment_card.dart) : colis récupéré, scan Transit facultatif
   ///
   /// In fr, this message translates to:
-  /// **'Embarqué'**
-  String get shipmentStepperEmbarkedLabel;
+  /// **'En route'**
+  String get shipmentStepperOnTheWayLabel;
 
-  /// Libellé de pastille 3/5 du stepper (shipment_card.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'En vol'**
-  String get shipmentStepperInFlightLabel;
-
-  /// Libellé de pastille 4/5 du stepper (shipment_card.dart, clé dédiée : casse différente du badge ARRIVÉ, R40)
+  /// Libellé de pastille 3/4 du stepper (shipment_card.dart, clé dédiée : casse différente du badge ARRIVÉ, R40)
   ///
   /// In fr, this message translates to:
   /// **'Arrivé'**
   String get shipmentStepperArrivedLabel;
 
-  /// Libellé de pastille 5/5 du stepper (shipment_card.dart)
+  /// Libellé de pastille 4/4 du stepper (shipment_card.dart)
   ///
   /// In fr, this message translates to:
   /// **'Livraison'**

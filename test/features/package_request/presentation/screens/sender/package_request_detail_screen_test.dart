@@ -49,12 +49,13 @@ class _MockRatingBloc extends MockBloc<RatingEvent, RatingState>
 
 PackageRequest _fakeRequest({
   PackageRequestStatus status = PackageRequestStatus.open,
+  DateTime? desiredDate,
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 'sender-1',
   departureCity: 'Divo',
   arrivalCity: 'Annemasse',
-  desiredDate: DateTime(2026, 9, 27),
+  desiredDate: desiredDate ?? DateTime(2026, 9, 27),
   dateToleranceDays: 2,
   weightKg: 5,
   parcelSize: ParcelSize.medium,
@@ -733,9 +734,13 @@ void main() {
     testWidgets(
       'Dupliquer (menu) : showDuplicate avec clearDate=false (date future)',
       (tester) async {
-        when(
-          () => repo.getById('pr-1'),
-        ).thenAnswer((_) async => _fakeRequest());
+        // Date relative : une date figée devient passée avec le temps et
+        // bascule le menu en clearDate=true (cassé le 28/09/2026).
+        when(() => repo.getById('pr-1')).thenAnswer(
+          (_) async => _fakeRequest(
+            desiredDate: DateTime.now().add(const Duration(days: 30)),
+          ),
+        );
         when(
           () => repo.listThreadsForRequest('pr-1'),
         ).thenAnswer((_) async => []);

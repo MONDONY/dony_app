@@ -13,27 +13,28 @@ import 'package:intl/intl.dart';
 // Design direction: « Éditorial calme » (cohérent avec TripCard)
 // • Route en headline Hanken Grotesk bold avec flèche primaire.
 // • Badge statut pill (dot + label uppercase) — même pattern que TripCard.
-// • ShipmentStepper 5 étapes (icônes Lucide en pastilles) pour les
+// • ShipmentStepper 4 étapes (icônes Lucide en pastilles) pour les
 //   statuts post-acceptation ; masqué en pré-acceptation.
 // • Footer DonyAvatar sm + nom voyageur + CTA contextuel.
 // • Motion : fadeIn + slideY staggeré par index, easeOutCubic 300 ms.
 // ─────────────────────────────────────────────────────────────
 
-/// Maps a bid status to its parcel stepper step (1–5), or null for
+/// Maps a bid status to its parcel stepper step (1–4), or null for
 /// pre-acceptance statuses that should not show the stepper.
 ///
 /// Steps:
-///   1 = ACCEPTED    — Remis au voyageur à venir
-///   2 = HANDED_OVER — Colis remis
-///   3 = IN_TRANSIT  — En vol
-///   4 = ARRIVED     — Arrivé à destination
-///   5 = COMPLETED   — Livré
+///   1 = ACCEPTED                  — Remise au voyageur à venir
+///   2 = HANDED_OVER / IN_TRANSIT  — En route
+///   3 = ARRIVED                   — Arrivé à destination
+///   4 = COMPLETED                 — Livré
+///
+/// Le scan Transit est facultatif : HANDED_OVER et IN_TRANSIT partagent la
+/// même pastille, sinon un colis arrivé sans scan Transit cochait « En vol ».
 int? shipmentStepFor(String status) => switch (status) {
   'ACCEPTED' => 1,
-  'HANDED_OVER' => 2,
-  'IN_TRANSIT' => 3,
-  'ARRIVED' => 4,
-  'COMPLETED' => 5,
+  'HANDED_OVER' || 'IN_TRANSIT' => 2,
+  'ARRIVED' => 3,
+  'COMPLETED' => 4,
   _ => null,
 };
 
@@ -106,8 +107,8 @@ class ShipmentCard extends StatelessWidget {
   /// Label describing the current stepper step.
   String _stepLabel(AppLocalizations l) => switch (bid.status) {
     'ACCEPTED' => l.shipmentStepAcceptedLabel,
-    'HANDED_OVER' => l.shipmentStepHandedOverLabel,
-    'IN_TRANSIT' => l.shipmentStepInTransitLabel(
+    'HANDED_OVER' when !bid.hasDeparted => l.shipmentStepHandedOverLabel,
+    'HANDED_OVER' || 'IN_TRANSIT' => l.shipmentStepInTransitLabel(
       bid.arrivalCity ?? l.shipmentDestinationFallback,
     ),
     'ARRIVED' => l.shipmentStepArrivedLabel,
@@ -309,9 +310,9 @@ class ShipmentCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
-// ShipmentStepper — 5-step parcel journey stepper
+// ShipmentStepper — 4-step parcel journey stepper
 //
-// Steps: 1=Remis · 2=Embarqué · 3=En vol · 4=Arrivé · 5=Livraison
+// Steps: 1=Remis · 2=En route · 3=Arrivé · 4=Livraison
 // Done (i < currentStep) → primary background + check icon
 // Current (i == currentStep) → primary background + step icon + blue200 border
 // pending (i > currentStep) → neutral100 background + step icon (onSurfaceVariant)
@@ -321,15 +322,14 @@ class ShipmentCard extends StatelessWidget {
 class ShipmentStepper extends StatelessWidget {
   const ShipmentStepper({super.key, required this.currentStep});
 
-  /// Current step in the range 1..5.
+  /// Current step in the range 1..4.
   final int currentStep;
 
   static const _iconAssets = <String>[
     'check', // step 1 — handover
-    'package', // step 2 — embarked (colis)
-    'plane', // step 3 — in transit
-    'map-pin', // step 4 — arrived at destination
-    'house', // step 5 — delivered
+    'route', // step 2 — on the way
+    'map-pin', // step 3 — arrived at destination
+    'house', // step 4 — delivered
   ];
 
   @override
@@ -339,8 +339,7 @@ class ShipmentStepper extends StatelessWidget {
     final l = context.l10n;
     final labels = [
       l.shipmentStepperHandedOverLabel,
-      l.shipmentStepperEmbarkedLabel,
-      l.shipmentStepperInFlightLabel,
+      l.shipmentStepperOnTheWayLabel,
       l.shipmentStepperArrivedLabel,
       l.shipmentStepperDeliveryLabel,
     ];
@@ -348,7 +347,7 @@ class ShipmentStepper extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (int i = 0; i < 5; i++) ...[
+        for (int i = 0; i < labels.length; i++) ...[
           _StepPastille(
             stepNumber: i + 1,
             currentStep: currentStep,
@@ -357,7 +356,7 @@ class ShipmentStepper extends StatelessWidget {
             cs: cs,
             tt: tt,
           ),
-          if (i < 4)
+          if (i < labels.length - 1)
             Expanded(
               child: Padding(
                 // Vertically align connector with pastille center (24/2 = 12, minus half stroke)
