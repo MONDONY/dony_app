@@ -77,11 +77,10 @@ String? nextRequiredStep(BidModel bid) {
   if (_arrivedStatuses.contains(bid.status)) {
     return null;
   }
-  if (_transitStatuses.contains(bid.status)) {
-    return 'ARRIVEE'; // i18n-ignore
-  }
+  // Transit facultatif : dès le départ scanné, l'étape suivante obligatoire
+  // est la remise au destinataire.
   if (_departedStatuses.contains(bid.status)) {
-    return 'TRANSIT'; // i18n-ignore
+    return 'ARRIVEE'; // i18n-ignore
   }
   return 'DEPART'; // i18n-ignore
 }

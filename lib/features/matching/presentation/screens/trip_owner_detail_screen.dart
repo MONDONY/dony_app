@@ -43,8 +43,8 @@ const _biddableActiveStatuses = <String>{
 
 /// Mode du CTA d'arrivée affiché au voyageur propriétaire.
 enum TripArrivalCta {
-  /// Au moins un colis actif est en transit : le marquer arrivé (le back ne
-  /// fait passer en ARRIVED que les colis en transit).
+  /// Au moins un colis actif a été récupéré (HANDED_OVER, avec ou sans scan
+  /// Transit, facultatif) : le marquer arrivé.
   markArrived,
 
   /// Trajet déjà marqué arrivé : seule l'édition des instructions reste
@@ -53,16 +53,18 @@ enum TripArrivalCta {
   editInstructions,
 }
 
-/// `null` = aucun CTA (aucun colis en vol ni arrivé, ou plus aucun colis actif).
+/// `null` = aucun CTA (aucun colis récupéré ni arrivé, ou plus aucun colis actif).
 ///
-/// Un colis pas encore parti (accepté, remis sans scan Transit) ne bloque plus
-/// le trajet : il empêchait auparavant de le marquer arrivé, et donc de saisir
-/// les instructions de retrait (yadony-back #334 aligne la règle serveur).
+/// Le scan Transit est facultatif (yadony-back #336) : un colis récupéré au
+/// départ suffit à marquer le trajet arrivé. Un colis pas encore récupéré ne
+/// bloque pas le trajet, il reste simplement en attente.
 TripArrivalCta? tripArrivalCtaFor(List<BidModel> bids) {
   final active = bids
       .where((b) => _biddableActiveStatuses.contains(b.status))
       .toList();
-  if (active.any((b) => b.status == 'IN_TRANSIT')) {
+  if (active.any(
+    (b) => b.status == 'HANDED_OVER' || b.status == 'IN_TRANSIT',
+  )) {
     return TripArrivalCta.markArrived;
   }
   if (active.any((b) => b.status == 'ARRIVED')) {

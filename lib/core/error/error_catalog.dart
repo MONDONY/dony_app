@@ -191,11 +191,23 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
-    'trip/no-parcel-in-transit': _Entry(
-      title: (l) => l.errorTripNoParcelInTransitTitle,
-      message: (l) => l.errorTripNoParcelInTransitMessage,
+    'trip/no-parcel-departed': _Entry(
+      title: (l) => l.errorTripNoParcelDepartedTitle,
+      message: (l) => l.errorTripNoParcelDepartedMessage,
       severity: ErrorSeverity.warning,
       icon: Icons.flight_rounded,
+    ),
+    'depart-required': _Entry(
+      title: (l) => l.errorDepartRequiredTitle,
+      message: (l) => l.errorDepartRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.qr_code_scanner_rounded,
+    ),
+    'parcel-refusal-locked': _Entry(
+      title: (l) => l.errorParcelRefusalLockedTitle,
+      message: (l) => l.errorParcelRefusalLockedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.flight_takeoff_rounded,
     ),
     'thread/not-awaiting-commission': _Entry(
       title: (l) => l.errorThreadNotAwaitingCommissionTitle,

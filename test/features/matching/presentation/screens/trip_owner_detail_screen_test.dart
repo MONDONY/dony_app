@@ -410,45 +410,47 @@ void main() {
     expect(find.byKey(const Key('arrival-instructions-card')), findsNothing);
   });
 
-  testWidgets('hides arrival button when no bid is in transit yet', (
-    tester,
-  ) async {
-    final announcement = _makeAnnouncement();
-    when(
-      () => annBloc.state,
-    ).thenReturn(AnnouncementDetailLoaded(announcement));
-    whenListen(
-      annBloc,
-      Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
-      initialState: AnnouncementDetailLoaded(announcement),
-    );
+  // Scan Transit facultatif : un colis récupéré suffit à marquer l'arrivée.
+  testWidgets(
+    'shows arrival button when a parcel is picked up without transit',
+    (tester) async {
+      final announcement = _makeAnnouncement();
+      when(
+        () => annBloc.state,
+      ).thenReturn(AnnouncementDetailLoaded(announcement));
+      whenListen(
+        annBloc,
+        Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
+        initialState: AnnouncementDetailLoaded(announcement),
+      );
 
-    when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
-    whenListen(
-      authBloc,
-      const Stream<AuthState>.empty(),
-      initialState: const AuthAuthenticated(_owner),
-    );
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
 
-    final bids = [_makeBid(status: 'HANDED_OVER')];
-    when(() => bidBloc.state).thenReturn(BidListLoaded(bids));
-    whenListen(
-      bidBloc,
-      Stream<BidState>.value(BidListLoaded(bids)),
-      initialState: BidListLoaded(bids),
-    );
+      final bids = [_makeBid(status: 'HANDED_OVER')];
+      when(() => bidBloc.state).thenReturn(BidListLoaded(bids));
+      whenListen(
+        bidBloc,
+        Stream<BidState>.value(BidListLoaded(bids)),
+        initialState: BidListLoaded(bids),
+      );
 
-    await _pump(
-      tester,
-      annBloc: annBloc,
-      bidBloc: bidBloc,
-      cancelBloc: cancelBloc,
-      authBloc: authBloc,
-    );
-    await tester.pumpAndSettle();
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Arrivé à destination'), findsNothing);
-  });
+      expect(find.text('Arrivé à destination'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'reloads bids after AnnouncementTripArrived so the CTA can switch mode',
@@ -825,14 +827,17 @@ void main() {
         TripArrivalCta.markArrived,
       );
     });
-    test('aucun colis en vol ni arrivé → aucun CTA', () {
+    test('colis recupere sans transit + un ACCEPTED → markArrived', () {
       expect(
         tripArrivalCtaFor([
           _makeBid(status: 'HANDED_OVER'),
           _makeBid(status: 'ACCEPTED'),
         ]),
-        isNull,
+        TripArrivalCta.markArrived,
       );
+    });
+    test('aucun colis recupere ni arrive → aucun CTA', () {
+      expect(tripArrivalCtaFor([_makeBid(status: 'ACCEPTED')]), isNull);
     });
     test('aucun colis actif → aucun CTA', () {
       expect(tripArrivalCtaFor([_makeBid(status: 'COMPLETED')]), isNull);

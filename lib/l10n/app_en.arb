@@ -36,8 +36,12 @@
   "errorRequestBudgetOutOfBoundsMessage": "This budget is above the limit for this currency. Lower the amount and try again.",
   "errorRequestAlreadyAcceptedTitle": "This parcel is taken",
   "errorRequestAlreadyAcceptedMessage": "Another traveler paid the service fee before you, so this parcel is no longer available to you.",
-  "errorTripNoParcelInTransitTitle": "No parcel on the way",
-  "errorTripNoParcelInTransitMessage": "Scan the Transit step of at least one parcel before marking your trip as arrived.",
+  "errorTripNoParcelDepartedTitle": "No parcel picked up",
+  "errorTripNoParcelDepartedMessage": "Scan the departure of at least one parcel before marking your trip as arrived.",
+  "errorDepartRequiredTitle": "Scan the departure first",
+  "errorDepartRequiredMessage": "The departure must be scanned when you pick up the parcel, before the transit step.",
+  "errorParcelRefusalLockedTitle": "The trip has left",
+  "errorParcelRefusalLockedMessage": "You can no longer refuse this parcel once the trip has left.",
   "errorThreadNotAwaitingCommissionTitle": "This parcel is taken",
   "errorThreadNotAwaitingCommissionMessage": "This offer no longer needs payment. It was settled another way or the time limit has passed.",
   "errorUnauthorizedTitle": "Session expired",
@@ -3688,7 +3692,14 @@
   "bidDetailDeleteRequestDefaultBody": "It will be permanently removed from your history.",
   "bidDetailAwaitingSenderMobileMoneyPayment": "Awaiting the sender's payment (mobile money).",
   "bidDetailScanParcelQr": "Scan the parcel QR",
-  "bidDetailScanTransitQr": "Scan the transit QR",
+  "bidDetailScanTransitOptional": "Scan transit (optional)",
+  "@bidDetailScanTransitOptional": {
+    "description": "Action secondaire du voyageur sur un colis récupéré : le scan Transit est facultatif (traveler_sticky_bar.dart)"
+  },
+  "trackingStepOptional": "Optional",
+  "@trackingStepOptional": {
+    "description": "Mention sous l'étape Transit du hub de scan : étape facultative (scan_hub_screen.dart)"
+  },
   "bidDetailConfirmHandover": "Confirm the drop-off",
   "bidDetailQrSheetTitle": "Parcel QR",
   "bidDetailQrSaveErrorSnackbar": "Unable to save the image",

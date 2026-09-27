@@ -135,11 +135,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Another traveler paid the service fee before you, so this parcel is no longer available to you.';
 
   @override
-  String get errorTripNoParcelInTransitTitle => 'No parcel on the way';
+  String get errorTripNoParcelDepartedTitle => 'No parcel picked up';
 
   @override
-  String get errorTripNoParcelInTransitMessage =>
-      'Scan the Transit step of at least one parcel before marking your trip as arrived.';
+  String get errorTripNoParcelDepartedMessage =>
+      'Scan the departure of at least one parcel before marking your trip as arrived.';
+
+  @override
+  String get errorDepartRequiredTitle => 'Scan the departure first';
+
+  @override
+  String get errorDepartRequiredMessage =>
+      'The departure must be scanned when you pick up the parcel, before the transit step.';
+
+  @override
+  String get errorParcelRefusalLockedTitle => 'The trip has left';
+
+  @override
+  String get errorParcelRefusalLockedMessage =>
+      'You can no longer refuse this parcel once the trip has left.';
 
   @override
   String get errorThreadNotAwaitingCommissionTitle => 'This parcel is taken';
@@ -7044,7 +7058,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidDetailScanParcelQr => 'Scan the parcel QR';
 
   @override
-  String get bidDetailScanTransitQr => 'Scan the transit QR';
+  String get bidDetailScanTransitOptional => 'Scan transit (optional)';
+
+  @override
+  String get trackingStepOptional => 'Optional';
 
   @override
   String get bidDetailConfirmHandover => 'Confirm the drop-off';

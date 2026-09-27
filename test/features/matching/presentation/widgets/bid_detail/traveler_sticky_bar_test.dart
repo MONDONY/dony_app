@@ -133,13 +133,29 @@ void main() {
     expect(find.text('Valider la remise'), findsOneWidget);
   });
 
-  testWidgets('HANDED_OVER → Scanner le transit (avant la remise)', (
+  // Seuls le départ et la remise sont obligatoires : dès le colis récupéré,
+  // la remise est l'action principale, le transit une option.
+  testWidgets('HANDED_OVER → Valider la remise + transit facultatif', (
     tester,
   ) async {
     await _pump(tester, _bid(status: 'HANDED_OVER'));
-    expect(find.text('Lire le QR de transit'), findsOneWidget);
-    // « Valider la remise » n'apparaît qu'une fois le transit scanné (IN_TRANSIT).
-    expect(find.text('Valider la remise'), findsNothing);
+    expect(find.text('Valider la remise'), findsOneWidget);
+    expect(
+      find.byKey(const Key('traveler-optional-transit-btn')),
+      findsOneWidget,
+    );
+    expect(find.text('Scanner le transit (facultatif)'), findsOneWidget);
+  });
+
+  testWidgets('IN_TRANSIT → Valider la remise, plus de transit proposé', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'IN_TRANSIT'));
+    expect(find.text('Valider la remise'), findsOneWidget);
+    expect(
+      find.byKey(const Key('traveler-optional-transit-btn')),
+      findsNothing,
+    );
   });
 
   testWidgets('REJECTED → Supprimer cette demande', (tester) async {
@@ -351,12 +367,12 @@ void main() {
     expect(pushedRoutes, contains('/tracking/scan/identify'));
   });
 
-  testWidgets('anglais — HANDED_OVER : "Scan the transit QR" traduit', (
+  testWidgets('anglais — HANDED_OVER : transit facultatif traduit', (
     tester,
   ) async {
     useEnglish();
     await _pump(tester, _bid(status: 'HANDED_OVER'));
 
-    expect(find.text('Scan the transit QR'), findsOneWidget);
+    expect(find.text('Scan transit (optional)'), findsOneWidget);
   });
 }

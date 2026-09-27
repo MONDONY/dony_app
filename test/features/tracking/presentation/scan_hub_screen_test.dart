@@ -233,6 +233,9 @@ void main() {
     expect(find.text('Départ'), findsOneWidget);
     expect(find.text('Transit'), findsOneWidget);
     expect(find.text('Arrivée'), findsOneWidget);
+    // Seuls le départ et la remise sont obligatoires.
+    expect(find.byKey(const Key('etape-optional-label')), findsOneWidget);
+    expect(find.text('Facultatif'), findsOneWidget);
   });
 
   testWidgets('anglais — titre et étapes traduits', (tester) async {
@@ -244,6 +247,7 @@ void main() {
     expect(find.text('Departure'), findsOneWidget);
     expect(find.text('Transit'), findsOneWidget);
     expect(find.text('Arrival'), findsOneWidget);
+    expect(find.text('Optional'), findsOneWidget);
   });
 
   testWidgets('affiche corridor du trajet réel', (tester) async {

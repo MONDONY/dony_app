@@ -371,6 +371,44 @@ void main() {
       expect(bid.canReportDeliveryNoShow, isTrue);
     });
 
+    // Scan Transit facultatif : un colis récupéré, jamais scanné en transit
+    // ni marqué arrivé, reste signalable une fois le trajet parti (back #336).
+    test('true si HANDED_OVER et trajet parti', () {
+      final bid = BidModel(
+        id: 'b1',
+        announcementId: 'a1',
+        senderId: 's1',
+        weightKg: 5,
+        status: 'HANDED_OVER',
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+        departureAt: DateTime.now().subtract(const Duration(hours: 2)),
+      );
+      expect(bid.canReportDeliveryNoShow, isTrue);
+      expect(bid.canCancelAfterHandover, isFalse);
+    });
+
+    test('sans heure de depart : parti le lendemain de la date de depart', () {
+      BidModel withDate(DateTime day) => BidModel(
+        id: 'b1',
+        announcementId: 'a1',
+        senderId: 's1',
+        weightKg: 5,
+        status: 'HANDED_OVER',
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+        departureDate: day,
+      );
+      final today = DateTime.now();
+      final yesterday = withDate(today.subtract(const Duration(days: 1)));
+      final sameDay = withDate(today);
+
+      expect(yesterday.hasDeparted, isTrue);
+      expect(yesterday.canCancelAfterHandover, isFalse);
+      expect(sameDay.hasDeparted, isFalse);
+      expect(sameDay.canCancelAfterHandover, isTrue);
+    });
+
     test('false si un signalement existe déjà', () {
       final bid = BidModel(
         id: 'b1',

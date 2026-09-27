@@ -48,8 +48,12 @@
   "errorRequestBudgetOutOfBoundsMessage": "Ce budget dépasse le plafond autorisé pour cette devise. Réduis le montant puis réessaie.",
   "errorRequestAlreadyAcceptedTitle": "Ce colis est parti",
   "errorRequestAlreadyAcceptedMessage": "Un autre voyageur a réglé la commission avant toi, ce colis ne peut plus te revenir.",
-  "errorTripNoParcelInTransitTitle": "Aucun colis en route",
-  "errorTripNoParcelInTransitMessage": "Scanne l'étape Transit d'au moins un colis avant de marquer ton trajet arrivé.",
+  "errorTripNoParcelDepartedTitle": "Aucun colis récupéré",
+  "errorTripNoParcelDepartedMessage": "Scanne le départ d'au moins un colis avant de marquer ton trajet arrivé.",
+  "errorDepartRequiredTitle": "Scanne d'abord le départ",
+  "errorDepartRequiredMessage": "Le départ doit être scanné quand tu récupères le colis, avant le transit.",
+  "errorParcelRefusalLockedTitle": "Le trajet est parti",
+  "errorParcelRefusalLockedMessage": "Tu ne peux plus refuser ce colis une fois le trajet parti.",
   "errorThreadNotAwaitingCommissionTitle": "Ce colis est parti",
   "errorThreadNotAwaitingCommissionMessage": "Cette offre n'attend plus de règlement, elle a été conclue autrement ou le délai est écoulé.",
   "errorUnauthorizedTitle": "Session expirée",
@@ -7153,9 +7157,13 @@
   "@bidDetailScanParcelQr": {
     "description": "Bouton étape Départ (traveler_sticky_bar.dart)"
   },
-  "bidDetailScanTransitQr": "Lire le QR de transit",
-  "@bidDetailScanTransitQr": {
-    "description": "Bouton étape Transit (traveler_sticky_bar.dart)"
+  "bidDetailScanTransitOptional": "Scanner le transit (facultatif)",
+  "@bidDetailScanTransitOptional": {
+    "description": "Action secondaire du voyageur sur un colis récupéré : le scan Transit est facultatif (traveler_sticky_bar.dart)"
+  },
+  "trackingStepOptional": "Facultatif",
+  "@trackingStepOptional": {
+    "description": "Mention sous l'étape Transit du hub de scan : étape facultative (scan_hub_screen.dart)"
   },
   "bidDetailConfirmHandover": "Valider la remise",
   "@bidDetailConfirmHandover": {

@@ -359,13 +359,29 @@ class BidModel {
   /// encore atteint. Source unique du verrou côté client (le serveur via
   /// CancellationGuard reste l'autorité). Consommé par les options sheets voyageur
   /// et expéditeur.
-  bool get canCancelAfterHandover =>
-      status == 'HANDED_OVER' &&
-      (resolvedDepartureAt == null ||
-          DateTime.now().isBefore(resolvedDepartureAt!));
+  bool get canCancelAfterHandover => status == 'HANDED_OVER' && !hasDeparted;
 
-  /// Signalement d'absence à la livraison possible : bid IN_TRANSIT ou ARRIVED,
-  /// trajet déjà parti, aucun signalement en cours ou contesté sur ce bid.
+  /// Le trajet est-il parti ? Miroir de `CancellationGuard.hasDeparted` côté
+  /// serveur : heure de départ si elle est connue, sinon le lendemain de la date
+  /// de départ. Le scan Transit, facultatif, ne ferme plus aucune fenêtre.
+  bool get hasDeparted {
+    final at = resolvedDepartureAt;
+    if (at != null) return !DateTime.now().isBefore(at);
+    final day = departureDate;
+    if (day == null) return false;
+    final now = DateTime.now();
+    return DateTime(
+      day.year,
+      day.month,
+      day.day,
+    ).isBefore(DateTime(now.year, now.month, now.day));
+  }
+
+  /// Signalement d'absence à la livraison possible : colis récupéré
+  /// (HANDED_OVER, IN_TRANSIT ou ARRIVED), trajet déjà parti, aucun signalement
+  /// en cours ou contesté sur ce bid. HANDED_OVER suit le back (#336) : le scan
+  /// Transit est facultatif, un colis récupéré jamais marqué arrivé doit rester
+  /// signalable.
   ///
   /// ARRIVED est inclus (miroir de `CancellationService.assertDeliveryReportable`
   /// côté backend) : les signalements d'absence à la livraison ne se déclenchent
@@ -373,8 +389,9 @@ class BidModel {
   /// pourrait marquer son trajet arrivé puis ne jamais livrer, sans que
   /// l'expéditeur puisse signaler l'absence.
   bool get canReportDeliveryNoShow =>
-      (status == 'IN_TRANSIT' || status == 'ARRIVED') &&
+      (status == 'HANDED_OVER' ||
+          status == 'IN_TRANSIT' ||
+          status == 'ARRIVED') &&
       deliveryNoShowStatus == null &&
-      resolvedDepartureAt != null &&
-      DateTime.now().isAfter(resolvedDepartureAt!);
+      hasDeparted;
 }
