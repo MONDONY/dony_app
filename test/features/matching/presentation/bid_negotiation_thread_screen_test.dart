@@ -78,6 +78,7 @@ BidNegotiation _thread({
   // `netEur != null` traitait à tort comme un expéditeur.
   String? role,
   String status = 'NEGOTIATING',
+  BidPaymentMethod? paymentMethod,
   int round = 1,
   List<BidNegotiationMessage> messages = const [
     BidNegotiationMessage(
@@ -119,6 +120,7 @@ BidNegotiation _thread({
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
   messages: messages,
+  paymentMethod: paymentMethod,
 );
 
 void main() {
@@ -650,6 +652,156 @@ void main() {
   });
 
   // ── Enchaînement sur le parcours de paiement carte existant ────────────────
+
+  group('accord en mobile money', () {
+    /// Fil poussé depuis un écran racine, avec l'écran d'attente mobile money
+    /// remplacé par un double qui rend `paid` au retour, comme le vrai
+    /// (`MobileMoneyAwaitingScreen` → `context.pop(paid)`).
+    Widget wrapWithMobileMoney({required bool paid}) {
+      return BlocProvider<BidNegotiationBloc>.value(
+        value: bloc,
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
+          routerConfig: GoRouter(
+            routes: [
+              GoRoute(
+                path: '/',
+                builder: (_, _) => Scaffold(
+                  body: Builder(
+                    builder: (inner) => TextButton(
+                      onPressed: () => inner.push('/thread'),
+                      child: const Text('Ouvrir'),
+                    ),
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: '/thread',
+                builder: (_, _) =>
+                    const BidNegotiationThreadScreen(bidId: 'bid1'),
+              ),
+              GoRoute(
+                path: '/bids/:bidId/mobile-money/awaiting',
+                builder: (_, state) => Scaffold(
+                  body: Builder(
+                    builder: (inner) => TextButton(
+                      key: const Key('fake-mm-done'),
+                      onPressed: () => inner.pop(paid),
+                      child: Text('awaiting ${state.pathParameters['bidId']}'),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    Future<void> openThread(WidgetTester tester, {required bool paid}) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      whenListen(
+        bloc,
+        const Stream<BidNegotiationState>.empty(),
+        initialState: BidNegotiationLoaded(
+          _thread(
+            status: 'AWAITING_PAYMENT',
+            myTurn: false,
+            paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+        ),
+      );
+      await tester.pumpWidget(wrapWithMobileMoney(paid: paid));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('cote expediteur : payer par mobile money, pas par carte', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(
+            status: 'AWAITING_PAYMENT',
+            myTurn: false,
+            paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+        ),
+      );
+
+      expect(
+        find.byKey(const Key('nego-pay-mobile-money-btn')),
+        findsOneWidget,
+      );
+      expect(find.text('Payer par mobile money'), findsOneWidget);
+      // Jamais le checkout carte : le back le refuse sur un accord mobile money.
+      expect(find.byKey(const Key('nego-pay-btn')), findsNothing);
+    });
+
+    testWidgets('cote voyageur : attente du paiement de l expediteur', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(
+            status: 'AWAITING_PAYMENT',
+            myTurn: false,
+            netEur: 37,
+            paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+        ),
+      );
+
+      expect(find.byKey(const Key('nego-pay-mobile-money-btn')), findsNothing);
+      expect(
+        find.byKey(const Key('nego-awaiting-payment-hint')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('paiement confirme : le fil se referme', (tester) async {
+      await openThread(tester, paid: true);
+
+      await tester.tap(find.byKey(const Key('nego-pay-mobile-money-btn')));
+      await tester.pumpAndSettle();
+      expect(find.text('awaiting bid1'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('fake-mm-done')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BidNegotiationThreadScreen), findsNothing);
+      expect(find.text('Ouvrir'), findsOneWidget);
+    });
+
+    testWidgets('paiement abandonne : le fil est relu', (tester) async {
+      await openThread(tester, paid: false);
+      // Seul le retour de l'écran d'attente doit relire le fil.
+      clearInteractions(bloc);
+
+      await tester.tap(find.byKey(const Key('nego-pay-mobile-money-btn')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('fake-mm-done')));
+      await tester.pumpAndSettle();
+
+      // L'accord a pu être annulé à l'échéance du dépôt : on relit le fil.
+      expect(find.byType(BidNegotiationThreadScreen), findsOneWidget);
+      final fetches = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<BidNegotiationFetchRequested>().toList();
+      expect(fetches, hasLength(1));
+      expect(fetches.single.bidId, 'bid1');
+    });
+  });
 
   group('paiement de l accord', () {
     BidCheckoutResponseModel checkout({

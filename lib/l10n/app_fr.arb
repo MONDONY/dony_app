@@ -4893,6 +4893,10 @@
   "@bidCreateCardModeBody": {
     "description": "Explication du mode carte dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)"
   },
+  "bidCreateCardModeNegotiationBody": "Payé par carte une fois ton prix accepté, puis bloqué par Yadony jusqu'à la confirmation de la livraison.",
+  "@bidCreateCardModeNegotiationBody": {
+    "description": "Explication du mode carte à l'étape paiement d'une proposition de prix : rien n'est débité avant l'accord (create_bid_bottom_sheet.dart)"
+  },
   "bidCreateMobileMoneyModeBody": "Après l'accord du voyageur, tu reçois une demande de paiement sur ton téléphone. Le montant est bloqué par Yadony jusqu'à la livraison.",
   "@bidCreateMobileMoneyModeBody": {
     "description": "Explication du mode mobile money dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)"

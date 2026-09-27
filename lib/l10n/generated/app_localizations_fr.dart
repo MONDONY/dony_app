@@ -5333,6 +5333,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Bloqué par Yadony dès maintenant, versé au voyageur quand le destinataire confirme la livraison.';
 
   @override
+  String get bidCreateCardModeNegotiationBody =>
+      'Payé par carte une fois ton prix accepté, puis bloqué par Yadony jusqu\'à la confirmation de la livraison.';
+
+  @override
   String get bidCreateMobileMoneyModeBody =>
       'Après l\'accord du voyageur, tu reçois une demande de paiement sur ton téléphone. Le montant est bloqué par Yadony jusqu\'à la livraison.';
 

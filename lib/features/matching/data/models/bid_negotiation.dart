@@ -4,6 +4,8 @@
 // jamais sérialisées vers le serveur (les corps de requête sont construits
 // dans le datasource), un aller-retour build_runner n'apporterait rien.
 
+import 'package:dony/features/matching/data/models/bid_model.dart';
+
 /// Type d'un message du fil.
 ///
 /// Le repli sur [proposal] couvre un futur type inconnu envoyé par un backend
@@ -148,6 +150,11 @@ class BidNegotiation {
   final DateTime? expiresAt;
   final List<BidNegotiationMessage> messages;
 
+  /// Mode figé à la proposition. Nul avec un serveur antérieur à yadony-back
+  /// #331, qui ne connaissait que la carte et les espèces (distinguées par le
+  /// statut seul).
+  final BidPaymentMethod? paymentMethod;
+
   const BidNegotiation({
     required this.bidId,
     required this.announcementId,
@@ -174,6 +181,7 @@ class BidNegotiation {
     this.departureDate,
     this.expiresAt,
     this.messages = const [],
+    this.paymentMethod,
   });
 
   factory BidNegotiation.fromJson(Map<String, dynamic> json) => BidNegotiation(
@@ -210,6 +218,9 @@ class BidNegotiation {
     messages: ((json['messages'] as List<dynamic>?) ?? const [])
         .map((e) => BidNegotiationMessage.fromJson(e as Map<String, dynamic>))
         .toList(),
+    paymentMethod: BidPaymentMethodApi.fromApi(
+      json['paymentMethod'] as String?,
+    ),
   );
 
   /// Le fil ne se négocie plus (accepté, refusé, annulé, expiré).
@@ -228,15 +239,26 @@ class BidNegotiation {
 
   /// Accord scellé côté CARTE : l'expéditeur doit encore payer, le bid part en
   /// soft delete au bout de 24 h si personne ne le fait.
-  bool get isAwaitingCardPayment => status == 'AWAITING_PAYMENT';
+  bool get isAwaitingCardPayment =>
+      status == 'AWAITING_PAYMENT' && !_isMobileMoney;
+
+  /// Accord scellé en MOBILE MONEY : la place est déjà réservée, l'expéditeur
+  /// confirme le dépôt pawaPay sur son téléphone avant l'échéance, sans quoi
+  /// le serveur annule l'accord et rend les kilos.
+  bool get isAwaitingMobileMoneyPayment =>
+      status == 'AWAITING_PAYMENT' && _isMobileMoney;
+
+  bool get _isMobileMoney => paymentMethod == BidPaymentMethod.mobileMoney;
 
   /// Accord scellé en ESPÈCES : le bid repart dans le flux classique et c'est
   /// le voyageur qui règle la commission Yadony. L'expéditeur n'a rien à payer
   /// dans l'application.
   bool get isAwaitingCashSettlement => status == 'PENDING';
 
-  /// C'est à moi de payer : accord carte, vu par l'expéditeur.
-  bool get needsMyPayment => isAwaitingCardPayment && !isTravelerView;
+  /// C'est à moi de payer : accord carte ou mobile money, vu par l'expéditeur.
+  bool get needsMyPayment =>
+      (isAwaitingCardPayment || isAwaitingMobileMoneyPayment) &&
+      !isTravelerView;
 }
 
 /// Ligne de la liste « Discussions de prix » côté trajet.

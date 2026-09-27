@@ -1672,6 +1672,10 @@
   "@bidCreateCardModeBody": {
     "description": "Explication du mode carte dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)"
   },
+  "bidCreateCardModeNegotiationBody": "Paid by card once your price is agreed, then locked by Yadony until delivery is confirmed.",
+  "@bidCreateCardModeNegotiationBody": {
+    "description": "Explication du mode carte à l'étape paiement d'une proposition de prix : rien n'est débité avant l'accord (create_bid_bottom_sheet.dart)"
+  },
   "bidCreateMobileMoneyModeBody": "Once the traveler agrees, you'll get a payment request on your phone. The amount is locked by Yadony until delivery.",
   "@bidCreateMobileMoneyModeBody": {
     "description": "Explication du mode mobile money dans la carte de paiement ouverte (create_bid_bottom_sheet.dart)"

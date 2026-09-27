@@ -202,7 +202,7 @@ Future<void> _goToPaymentPicker(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-// ── Harness (site négociation — dans l'étape formulaire) ───────────────────────
+// ── Harness (site négociation — formulaire puis étape paiement) ────────────────
 //
 // Copié/adapté de test/features/matching/presentation/create_bid_negotiation_test.dart
 // (helpers privés à ce fichier).
@@ -936,22 +936,24 @@ void main() {
   // ── 7. Second site d'appel — mode négociation ────────────────────────────
 
   group(
-    'Mode négociation — second site du sélecteur (mobile money exclu, R13)',
+    'Mode négociation — étape « Comment veux-tu payer ? » (mobile money ouvert)',
     () {
-      // R13 : le backend rejette toute négociation en mobile money (422
-      // mobile-money-negotiation-unsupported, BidNegotiationService) —
-      // décision produit « offres classiques seulement ». Ces tests
-      // remplacent ceux du round précédent (qui vérifiaient l'inverse) :
-      // on ne supprime jamais un test, on le fait affirmer le comportement
-      // correct.
+      // Le back accepte le mobile money sur un fil de négociation depuis
+      // yadony-back #331 : ces tests remplacent ceux de R13, qui vérifiaient
+      // son exclusion. Le choix du mode ne vit plus dans le formulaire mais à
+      // l'étape suivante, comme pour l'offre directe.
+      Future<void> goToNegotiationPicker(WidgetTester tester) async {
+        await _fillNegotiationForm(tester);
+        await tester.ensureVisible(find.byKey(const Key('bid-submit-btn')));
+        await tester.tap(find.byKey(const Key('bid-submit-btn')));
+        await tester.pump(_kSettle);
+      }
+
       testWidgets(
-        // Sans cash, mobile money ne compte plus comme alternative en
-        // négociation (_hasAlternativePaymentMethods = false ici) : toute la
-        // section « MODE DE PAIEMENT » disparaît, exactement comme avant la
-        // task 10 pour une annonce stripe-only — aucune tuile, pas même
-        // stripe (le mode reste figé sur stripe en silence).
-        'annonce STRIPE+MOBILE_MONEY (sans cash) en négociation → aucune '
-        'section de paiement, aucune tuile, aucun champ numéro',
+        // En zone euro le mobile money n'existe pas (isAllowedIn) : sans
+        // alternative à la carte, la proposition part sans étape paiement.
+        'annonce EUR STRIPE+MOBILE_MONEY → pas d étape paiement, carte, '
+        'phoneNumber null',
         (tester) async {
           await _openNegotiation(
             tester,
@@ -961,21 +963,25 @@ void main() {
                 BidPaymentMethod.mobileMoney,
               },
               negotiable: true,
+              currency: 'EUR',
             ),
           );
-
-          expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
           expect(
             find.byKey(const Key('payment-method-mobile-money')),
             findsNothing,
           );
-          expect(find.byKey(const Key('payer-phone-field')), findsNothing);
+          await _fillNegotiationForm(tester);
+
+          final captured = await _submitProposal(tester);
+          expect(captured, hasLength(1));
+          expect(captured.single.paymentMethod, BidPaymentMethod.stripe);
+          expect(captured.single.phoneNumber, isNull);
         },
       );
 
       testWidgets(
-        'annonce MOBILE_MONEY seul en négociation → aucune tuile de paiement, '
-        'aucun champ numéro (ni stripe ni cash disponibles, mobile money exclu)',
+        'annonce XOF MOBILE_MONEY seul → étape paiement, mobile money par '
+        'défaut, numéro payeur normalisé',
         (tester) async {
           await _openNegotiation(
             tester,
@@ -984,100 +990,58 @@ void main() {
               negotiable: true,
             ),
           );
-
-          expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
-          expect(find.byKey(const Key('payment-method-cash')), findsNothing);
+          // Rien dans le formulaire.
           expect(
             find.byKey(const Key('payment-method-mobile-money')),
             findsNothing,
           );
-          expect(find.byKey(const Key('payer-phone-field')), findsNothing);
-        },
-      );
-
-      testWidgets(
-        // Avec cash, l'alternative redevient réelle : la section s'affiche
-        // (stripe + cash), mais la tuile mobile money reste exclue même si
-        // l'annonce l'accepte — c'est le cœur du fix R13.
-        'annonce EUR STRIPE+CASH+MOBILE_MONEY en négociation → tuiles stripe et '
-        'cash présentes, tuile mobile money toujours absente',
-        (tester) async {
-          await _openNegotiation(
-            tester,
-            _announcement(
-              methods: const {
-                BidPaymentMethod.stripe,
-                BidPaymentMethod.cash,
-                BidPaymentMethod.mobileMoney,
-              },
-              negotiable: true,
-              currency: 'EUR',
-            ),
-          );
+          await goToNegotiationPicker(tester);
 
           expect(
-            find.byKey(const Key('payment-method-stripe')),
+            find.byKey(const Key('payment-method-mobile-money')),
             findsOneWidget,
           );
-          expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
-          expect(
-            find.byKey(const Key('payment-method-mobile-money')),
-            findsNothing,
+          await tester.enterText(
+            find.byKey(const Key('payer-phone-field')),
+            '+221 77 345 67 89',
           );
-          expect(find.byKey(const Key('payer-phone-field')), findsNothing);
-        },
-      );
-
-      testWidgets(
-        // Zone CFA : la carte n'existe pas, l'espèce ouvre la section, et le
-        // mobile money reste exclu en négociation même si la devise l'autorise.
-        'annonce XOF CASH+MOBILE_MONEY en négociation → tuile espèces seule, '
-        'tuile mobile money absente',
-        (tester) async {
-          await _openNegotiation(
-            tester,
-            _announcement(
-              methods: const {
-                BidPaymentMethod.cash,
-                BidPaymentMethod.mobileMoney,
-              },
-              negotiable: true,
-            ),
-          );
-
-          expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
-          expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
-          expect(
-            find.byKey(const Key('payment-method-mobile-money')),
-            findsNothing,
-          );
-          expect(find.byKey(const Key('payer-phone-field')), findsNothing);
-        },
-      );
-
-      testWidgets(
-        // Reprend et complète le test préexistant « mode carte (défaut) » :
-        // preuve que BidNegotiationProposeRequested ne porte jamais
-        // phoneNumber quel que soit le nombre de tuiles rendues (ici stripe
-        // seule, mobile money exclu).
-        'mode carte (défaut) en négociation → phoneNumber toujours null',
-        (tester) async {
-          await _openNegotiation(
-            tester,
-            _announcement(
-              methods: const {
-                BidPaymentMethod.stripe,
-                BidPaymentMethod.mobileMoney,
-              },
-              negotiable: true,
-              currency: 'EUR',
-            ),
-          );
-          await _fillNegotiationForm(tester);
+          await tester.pump();
 
           final captured = await _submitProposal(tester);
           expect(captured, hasLength(1));
-          expect(captured.single.paymentMethod, BidPaymentMethod.stripe);
+          expect(captured.single.paymentMethod, BidPaymentMethod.mobileMoney);
+          expect(captured.single.phoneNumber, '+221773456789');
+        },
+      );
+
+      testWidgets(
+        'annonce XOF CASH+MOBILE_MONEY → tuiles espèces et mobile money, '
+        'espèces choisies sans numéro payeur',
+        (tester) async {
+          await _openNegotiation(
+            tester,
+            _announcement(
+              methods: const {
+                BidPaymentMethod.cash,
+                BidPaymentMethod.mobileMoney,
+              },
+              negotiable: true,
+            ),
+          );
+          await goToNegotiationPicker(tester);
+
+          expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
+          expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
+          expect(
+            find.byKey(const Key('payment-method-mobile-money')),
+            findsOneWidget,
+          );
+
+          final captured = await _submitProposal(tester);
+          expect(captured, hasLength(1));
+          // Espèces avant mobile money quand la carte manque (défaut
+          // inchangé depuis l'offre directe).
+          expect(captured.single.paymentMethod, BidPaymentMethod.cash);
           expect(captured.single.phoneNumber, isNull);
         },
       );

@@ -68,8 +68,10 @@ AnnouncementModel _announcement({
   Set<BidPaymentMethod> acceptedPaymentMethods = const {
     BidPaymentMethod.stripe,
   },
+  String currency = 'EUR',
 }) => AnnouncementModel(
   id: 'ann-nego',
+  currency: currency,
   travelerId: 'traveler-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
@@ -255,6 +257,7 @@ void main() {
     Set<BidPaymentMethod> acceptedPaymentMethods = const {
       BidPaymentMethod.stripe,
     },
+    String currency = 'EUR',
   }) => MaterialApp.router(
     theme: AppTheme.light(),
     localizationsDelegates: const [
@@ -271,6 +274,7 @@ void main() {
             announcement: _announcement(
               negotiable: negotiation,
               acceptedPaymentMethods: acceptedPaymentMethods,
+              currency: currency,
             ),
             negotiation: negotiation,
           ),
@@ -285,6 +289,7 @@ void main() {
     Set<BidPaymentMethod> acceptedPaymentMethods = const {
       BidPaymentMethod.stripe,
     },
+    String currency = 'EUR',
   }) async {
     tester.view.physicalSize = const Size(800, 6000);
     tester.view.devicePixelRatio = 1.0;
@@ -293,6 +298,7 @@ void main() {
       bidApp(
         negotiation: negotiation,
         acceptedPaymentMethods: acceptedPaymentMethods,
+        currency: currency,
       ),
     );
     await tester.pump(_kSettle);
@@ -449,17 +455,36 @@ void main() {
     expect(captured.single.paymentMethod, BidPaymentMethod.stripe);
   });
 
-  testWidgets('sans alternative, la proposition ne propose aucun mode', (
+  testWidgets('sans alternative, la proposition part sans etape paiement', (
     tester,
   ) async {
     await openBid(tester, negotiation: true);
+    await fillNegotiationForm(tester);
 
+    final captured = await submitProposal(tester);
+    expect(captured, hasLength(1));
     expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
     expect(find.byKey(const Key('payment-method-cash')), findsNothing);
   });
 
+  testWidgets('le formulaire de proposition n affiche plus le choix du mode', (
+    tester,
+  ) async {
+    await openBid(
+      tester,
+      negotiation: true,
+      acceptedPaymentMethods: {BidPaymentMethod.stripe, BidPaymentMethod.cash},
+    );
+
+    // Comme l'offre directe : le mode se choisit à l'étape suivante.
+    expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
+    expect(find.byKey(const Key('payment-method-cash')), findsNothing);
+    expect(find.text('Continuer'), findsOneWidget);
+  });
+
   testWidgets(
-    'sur un trajet carte + especes, la proposition porte le mode choisi',
+    'sur un trajet carte + especes, Continuer ouvre l etape paiement et la '
+    'proposition porte le mode choisi',
     (tester) async {
       await openBid(
         tester,
@@ -471,15 +496,25 @@ void main() {
       );
       await fillNegotiationForm(tester);
 
-      // Sans ce choix, tout accord négocié partait en carte, même quand
-      // l'expéditeur voulait payer le voyageur en main propre.
-      await tester.ensureVisible(find.byKey(const Key('payment-method-cash')));
+      // « Continuer » n'envoie rien : il mène à « Comment veux-tu payer ? ».
+      await tester.ensureVisible(find.byKey(const Key('bid-submit-btn')));
+      await tester.tap(find.byKey(const Key('bid-submit-btn')));
+      await tester.pump(_kSettle);
+      expect(find.text('Comment veux-tu payer ?'), findsOneWidget);
+      expect(
+        find.text(
+          'Si le voyageur accepte votre prix, vous réglerez de cette façon.',
+        ),
+        findsOneWidget,
+      );
+
       await tester.tap(find.byKey(const Key('payment-method-cash')));
       await tester.pump(_kSettle);
 
       final captured = await submitProposal(tester);
       expect(captured, hasLength(1));
       expect(captured.single.paymentMethod, BidPaymentMethod.cash);
+      expect(captured.single.phoneNumber, isNull);
     },
   );
 
@@ -496,8 +531,50 @@ void main() {
       );
       await fillNegotiationForm(tester);
 
+      await tester.ensureVisible(find.byKey(const Key('bid-submit-btn')));
+      await tester.tap(find.byKey(const Key('bid-submit-btn')));
+      await tester.pump(_kSettle);
+      // Rien n'est débité à cette étape : la carte le dit.
+      expect(
+        find.text(
+          'Payé par carte une fois ton prix accepté, puis bloqué par Yadony '
+          "jusqu'à la confirmation de la livraison.",
+        ),
+        findsOneWidget,
+      );
+
       final captured = await submitProposal(tester);
+      expect(captured, hasLength(1));
       expect(captured.single.paymentMethod, BidPaymentMethod.stripe);
+    },
+  );
+
+  testWidgets(
+    'sur un trajet XOF especes + mobile money, la proposition peut partir en '
+    'mobile money',
+    (tester) async {
+      await openBid(
+        tester,
+        negotiation: true,
+        currency: 'XOF',
+        acceptedPaymentMethods: {
+          BidPaymentMethod.cash,
+          BidPaymentMethod.mobileMoney,
+        },
+      );
+      await fillNegotiationForm(tester);
+
+      await tester.ensureVisible(find.byKey(const Key('bid-submit-btn')));
+      await tester.tap(find.byKey(const Key('bid-submit-btn')));
+      await tester.pump(_kSettle);
+      // Pas de carte en zone CFA ; le mobile money n'est plus exclu.
+      expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
+      await tester.tap(find.byKey(const Key('payment-method-mobile-money')));
+      await tester.pump(_kSettle);
+
+      final captured = await submitProposal(tester);
+      expect(captured, hasLength(1));
+      expect(captured.single.paymentMethod, BidPaymentMethod.mobileMoney);
     },
   );
 

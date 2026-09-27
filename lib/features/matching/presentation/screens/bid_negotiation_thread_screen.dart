@@ -484,10 +484,47 @@ class _ThreadActions extends StatelessWidget {
     );
 
     // ── Après accord ────────────────────────────────────────────────────────
-    // Le `status` distingue les deux aval, et lui seul : `AWAITING_PAYMENT`
-    // pour un accord réglé par carte, `PENDING` pour un accord en espèces où
-    // c'est le voyageur qui règle la commission Yadony.
+    // `AWAITING_PAYMENT` pour un accord réglé en ligne (carte ou mobile money,
+    // départagés par le mode figé à la proposition), `PENDING` pour un accord
+    // en espèces où c'est le voyageur qui règle la commission Yadony.
     final l = context.l10n;
+
+    if (negotiation.isAwaitingMobileMoneyPayment) {
+      if (negotiation.needsMyPayment) {
+        final bloc = context.read<BidNegotiationBloc>();
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            hint(l.negotiationThreadPayHint, 'nego-pay-hint'),
+            const SizedBox(height: DonySpacing.sm),
+            DonyButton(
+              key: const Key('nego-pay-mobile-money-btn'),
+              label: l.bidDetailPayByMobileMoney,
+              iconAsset: 'smartphone',
+              // Même écran que le détail du colis (choix de l'opérateur puis
+              // confirmation sur le téléphone). Payé : le fil n'a plus rien à
+              // montrer, l'appelant recharge. Sinon le fil est relu, le serveur
+              // a pu annuler l'accord à l'échéance du dépôt.
+              onPressed: () async {
+                final paid = await context.push<bool>(
+                  '/bids/$bidId/mobile-money/awaiting',
+                );
+                if (!context.mounted) return;
+                if (paid ?? false) {
+                  context.pop(true);
+                } else {
+                  bloc.add(BidNegotiationFetchRequested(bidId));
+                }
+              },
+            ),
+          ],
+        );
+      }
+      return hint(
+        l.negotiationThreadAwaitingSenderPaymentHint,
+        'nego-awaiting-payment-hint',
+      );
+    }
 
     if (negotiation.isAwaitingCardPayment) {
       if (negotiation.needsMyPayment) {

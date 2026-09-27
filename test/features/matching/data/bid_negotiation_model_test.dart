@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -187,7 +188,51 @@ void main() {
       expect(thread.messages, isEmpty);
       expect(thread.departureDate, isNull);
       expect(thread.expiresAt, isNull);
+      expect(thread.paymentMethod, isNull);
     });
+
+    test(
+      'accord mobile money : a payer par l expediteur, jamais par carte',
+      () {
+        final sender = BidNegotiation.fromJson({
+          'bidId': 'bid-mm',
+          'announcementId': 'ann-mm',
+          'status': 'AWAITING_PAYMENT',
+          'role': 'SENDER',
+          'paymentMethod': 'MOBILE_MONEY',
+        });
+
+        expect(sender.paymentMethod, BidPaymentMethod.mobileMoney);
+        expect(sender.isAwaitingMobileMoneyPayment, isTrue);
+        expect(sender.isAwaitingCardPayment, isFalse);
+        expect(sender.needsMyPayment, isTrue);
+
+        final traveler = BidNegotiation.fromJson({
+          'bidId': 'bid-mm',
+          'announcementId': 'ann-mm',
+          'status': 'AWAITING_PAYMENT',
+          'role': 'TRAVELER',
+          'paymentMethod': 'MOBILE_MONEY',
+        });
+        expect(traveler.needsMyPayment, isFalse);
+      },
+    );
+
+    test(
+      'serveur sans paymentMethod : l attente de paiement reste la carte',
+      () {
+        final thread = BidNegotiation.fromJson({
+          'bidId': 'bid-old',
+          'announcementId': 'ann-old',
+          'status': 'AWAITING_PAYMENT',
+          'role': 'SENDER',
+        });
+
+        expect(thread.isAwaitingCardPayment, isTrue);
+        expect(thread.isAwaitingMobileMoneyPayment, isFalse);
+        expect(thread.needsMyPayment, isTrue);
+      },
+    );
   });
 
   group('BidCustomItem', () {

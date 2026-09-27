@@ -192,6 +192,9 @@ void main() {
         expect(flat, isNot(contains('+221700000000')));
         expect(flat, isNot(contains('chaussures')));
         expect(captured['announcement_id'], 'ann1');
+        // Le mode choisi à l'étape « Comment veux-tu payer ? », jamais le
+        // numéro payeur.
+        expect(captured['payment_method'], 'STRIPE');
       },
     );
 

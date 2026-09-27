@@ -275,13 +275,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   List<String> get _refusedCategories =>
       widget.announcement.refusedTypes ?? const [];
 
-  /// Mobile money ne compte comme « alternative » qu'en mode direct : le
-  /// backend rejette toute négociation en mobile money (422
-  /// mobile-money-negotiation-unsupported, `BidNegotiationService`) — en
-  /// mode négociation, seul le cash reste une alternative à Stripe, comme
-  /// avant la task 10 mobile money.
+  /// Une alternative à la carte justifie l'étape « Comment veux-tu payer ? »,
+  /// en offre directe comme en négociation (le back accepte le mobile money
+  /// sur un fil de négociation depuis yadony-back #331).
   bool get _hasAlternativePaymentMethods =>
-      _isCashAvailable || (!widget.negotiation && _isMobileMoneyAvailable);
+      _isCashAvailable || _isMobileMoneyAvailable;
 
   @override
   void initState() {
@@ -309,18 +307,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         accepted.contains(BidPaymentMethod.mobileMoney) &&
         BidPaymentMethod.mobileMoney.isAllowedIn(currency);
     _methodNotifier = ValueNotifier<BidPaymentMethod>(
-      // En négociation, le mobile money n'est jamais un choix possible
-      // (rejeté par le backend) : le défaut reste celui d'avant la task 10
-      // mobile money, stripe sinon cash, jamais mobileMoney.
-      widget.negotiation
-          ? (_isStripeAvailable
-                ? BidPaymentMethod.stripe
-                : BidPaymentMethod.cash)
-          : (_isStripeAvailable
-                ? BidPaymentMethod.stripe
-                : _isCashAvailable
-                ? BidPaymentMethod.cash
-                : BidPaymentMethod.mobileMoney),
+      _isStripeAvailable
+          ? BidPaymentMethod.stripe
+          : _isCashAvailable
+          ? BidPaymentMethod.cash
+          : BidPaymentMethod.mobileMoney,
     );
     final initialPayerPhone = _initialPayerPhone();
     _payerPhoneEmpty = initialPayerPhone.isEmpty;
@@ -509,11 +500,20 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         (weightOk || gridOk) && categoriesOk && _disclaimerNotifier.value;
 
     if (widget.negotiation) {
-      _btnConfigNotifier.value = _BtnConfig(
-        label: context.l10n.bidCreateSendProposalButton,
-        iconAsset: 'send',
-        onPressed: canSubmit ? _submitNegotiation : null,
-      );
+      // Comme l'offre directe : le formulaire mène à l'étape « Comment veux-tu
+      // payer ? » dès qu'il existe une alternative à la carte, et c'est elle
+      // qui envoie la proposition.
+      _btnConfigNotifier.value = _hasAlternativePaymentMethods
+          ? _BtnConfig(
+              label: context.l10n.commonContinue,
+              iconAsset: 'arrow-right',
+              onPressed: canSubmit ? _goToNegotiationPicker : null,
+            )
+          : _BtnConfig(
+              label: context.l10n.bidCreateSendProposalButton,
+              iconAsset: 'send',
+              onPressed: canSubmit ? _goToNegotiationPicker : null,
+            );
       return;
     }
 
@@ -526,6 +526,16 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   void _syncPickerButtonState() {
     if (_stepNotifier.value != _FormStep.paymentPicker) return;
+    if (widget.negotiation) {
+      // Rien n'est payé à cette étape : le mode choisi est figé sur la
+      // proposition et ne sert qu'une fois le prix accepté.
+      _btnConfigNotifier.value = _BtnConfig(
+        label: context.l10n.bidCreateSendProposalButton,
+        iconAsset: 'send',
+        onPressed: _submitNegotiation,
+      );
+      return;
+    }
     final method = _methodNotifier.value;
 
     final String label;
@@ -596,10 +606,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   double? _readProposal() => parsePriceInput(_proposalCtrl.text);
 
-  /// Première proposition. Le destinataire et le disclaimer sont demandés dès
-  /// maintenant : décision produit assumée, le voyageur doit pouvoir juger le
-  /// colis complet avant d'accepter un prix.
-  void _submitNegotiation() {
+  /// Première proposition, étape 1 : valide le formulaire. Le destinataire et
+  /// le disclaimer sont demandés dès maintenant : décision produit assumée, le
+  /// voyageur doit pouvoir juger le colis complet avant d'accepter un prix.
+  void _goToNegotiationPicker() {
     if (_descCtrl.text.trim().isEmpty) {
       _showError(context.l10n.bidCreateDescriptionRequiredError);
       return;
@@ -612,14 +622,28 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _showError(context.l10n.bidCreateRecipientPhoneRequiredError);
       return;
     }
-    final proposed = _readProposal();
-    if (proposed == null) {
+    if (_readProposal() == null) {
       _showError(context.l10n.bidCreatePriceRequiredError);
       return;
     }
 
+    // Tant que RecipientSection est montée : l'étape paiement la démonte (même
+    // raison que _goToPicker).
     _recipientSection.maybeSaveManualEntry();
 
+    if (!_hasAlternativePaymentMethods) {
+      _submitNegotiation();
+      return;
+    }
+    _stepNotifier.value = _FormStep.paymentPicker;
+  }
+
+  /// Première proposition, étape 2 : l'envoie avec le mode choisi. Les champs
+  /// du formulaire vivent dans ce State et survivent au changement d'étape.
+  void _submitNegotiation() {
+    final proposed = _readProposal();
+    if (proposed == null) return;
+    final method = _methodNotifier.value;
     final weight = _weightNotifier.value;
     _negotiationBloc!.add(
       BidNegotiationProposeRequested(
@@ -632,9 +656,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         proposedTotalEur: proposed,
         // Figé sur le bid dès la proposition : c'est ce mode que le back
         // appliquera à l'accord (carte → escrow à payer, espèces → commission
-        // réglée par le voyageur). Sans lui, tout accord négocié partait en
-        // carte, même sur un trajet qui n'acceptait que les espèces.
-        paymentMethod: _methodNotifier.value,
+        // réglée par le voyageur, mobile money → dépôt à confirmer).
+        paymentMethod: method,
+        phoneNumber: method == BidPaymentMethod.mobileMoney
+            ? normalizePayerPhone(_payerPhoneCtrl.text)
+            : null,
         photoKeys: _photosCubit.readyKeys,
         customItems: _customItemsNotifier.value
             .map((item) => item.toJson())
@@ -1436,10 +1462,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               ),
               const SizedBox(height: DonySpacing.xxl),
               _buildProposalSection(context),
-              if (_hasAlternativePaymentMethods) ...[
-                const SizedBox(height: DonySpacing.xxl),
-                _buildNegotiationPaymentSection(context),
-              ],
             ],
             const SizedBox(height: DonySpacing.md),
           ],
@@ -1481,55 +1503,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             ),
             key: const Key('negotiation-suggested-hint'),
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Choix du mode de paiement en mode négociation.
-  ///
-  /// Le flux ferme passe par l'étape « Paiement » (montants, promo, wallet),
-  /// sans objet ici : le prix n'est pas encore connu. Le mode, lui, doit être
-  /// figé dès la proposition, parmi ceux que le trajet accepte. Affiché
-  /// seulement quand il y a un vrai choix (carte ET espèces).
-  Widget _buildNegotiationPaymentSection(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionLabel(label: context.l10n.bidCreatePaymentMethodSectionLabel),
-        const SizedBox(height: DonySpacing.xs),
-        Text(
-          context.l10n.bidCreatePaymentMethodHint,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
-        const SizedBox(height: DonySpacing.sm),
-        ValueListenableBuilder<BidPaymentMethod>(
-          valueListenable: _methodNotifier,
-          builder: (context, method, _) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // R13 : le backend rejette toute négociation en mobile money
-              // (422 mobile-money-negotiation-unsupported,
-              // BidNegotiationService) — décision produit « offres
-              // classiques seulement ». `isMobileMoneyAvailable` n'est donc
-              // jamais passé ici (garde son défaut `false`), contrairement au
-              // site direct (_buildPickerStep) qui passe
-              // _isMobileMoneyAvailable.
-              _PaymentMethodSelector(
-                selectedMethod: method,
-                onChanged: (m) => _methodNotifier.value = m,
-                isCashAvailable: _isCashAvailable,
-                isStripeAvailable: _isStripeAvailable,
-              ),
-              if (method == BidPaymentMethod.cash) ...[
-                const SizedBox(height: DonySpacing.sm),
-                const _CashEscrowWarning(),
-              ],
-            ],
           ),
         ),
       ],
@@ -1603,7 +1576,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     final tt = Theme.of(context).textTheme;
     // Même somme que sur le bouton collant (_syncPickerButtonState) : la carte
     // ouverte et le CTA ne doivent jamais annoncer deux montants différents.
-    final total = _computeStripeTotal();
+    // En négociation, aucun montant : le prix peut encore changer avant
+    // l'accord.
+    final total = widget.negotiation ? null : _computeStripeTotal();
 
     return Column(
       key: const ValueKey('picker'),
@@ -1615,7 +1590,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         ),
         const SizedBox(height: DonySpacing.xs),
         Text(
-          context.l10n.bidCreateChoosePaymentSubtitle,
+          // En négociation, rien n'est payé ici : le mode ne sert qu'une fois
+          // le prix accepté.
+          widget.negotiation
+              ? context.l10n.bidCreatePaymentMethodHint
+              : context.l10n.bidCreateChoosePaymentSubtitle,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.lg),
@@ -1634,6 +1613,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             currency: widget.announcement.currency,
             payerPhoneController: _payerPhoneCtrl,
             hasProfilePhone: !_payerPhoneEmpty,
+            negotiation: widget.negotiation,
           ),
         ),
 
@@ -2239,6 +2219,7 @@ class _PaymentMethodSelector extends StatelessWidget {
     this.currency,
     this.payerPhoneController,
     this.hasProfilePhone = true,
+    this.negotiation = false,
   });
 
   final BidPaymentMethod selectedMethod;
@@ -2256,6 +2237,9 @@ class _PaymentMethodSelector extends StatelessWidget {
   final TextEditingController? payerPhoneController;
   final bool hasProfilePhone;
 
+  /// Proposition de prix : la carte n'est débitée qu'une fois le prix accepté.
+  final bool negotiation;
+
   @override
   Widget build(BuildContext context) {
     // Du plus immédiat au plus manuel : carte, mobile money, espèces. Les
@@ -2269,8 +2253,11 @@ class _PaymentMethodSelector extends StatelessWidget {
           subtitle: l.bidCreateCardModeSubtitle,
           iconAsset: 'credit-card',
           key: const Key('payment-method-stripe'),
-          expanded: (context) =>
-              _CardModeContent(total: total, currency: currency),
+          expanded: (context) => _CardModeContent(
+            total: total,
+            currency: currency,
+            negotiation: negotiation,
+          ),
         ),
       if (isMobileMoneyAvailable)
         DonyChoice(
@@ -2340,10 +2327,15 @@ class _CashEscrowWarning extends StatelessWidget {
 // négociation).
 
 class _CardModeContent extends StatelessWidget {
-  const _CardModeContent({required this.total, required this.currency});
+  const _CardModeContent({
+    required this.total,
+    required this.currency,
+    this.negotiation = false,
+  });
 
   final double? total;
   final String? currency;
+  final bool negotiation;
 
   @override
   Widget build(BuildContext context) {
@@ -2361,7 +2353,9 @@ class _CardModeContent extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
         ],
         Text(
-          context.l10n.bidCreateCardModeBody,
+          negotiation
+              ? context.l10n.bidCreateCardModeNegotiationBody
+              : context.l10n.bidCreateCardModeBody,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),
