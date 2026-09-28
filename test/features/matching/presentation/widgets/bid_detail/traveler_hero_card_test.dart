@@ -22,6 +22,7 @@ BidModel _bid({
   DateTime? windowEnd,
   String? recipientName = 'Awa S.',
   String? cancellationNoShowStatus,
+  DateTime? contestationDeadline,
 }) => BidModel(
   id: 'b1',
   announcementId: 'a1',
@@ -33,6 +34,7 @@ BidModel _bid({
   handoverDeadline: windowEnd,
   recipientName: recipientName,
   cancellationNoShowStatus: cancellationNoShowStatus,
+  contestationDeadline: contestationDeadline,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
 );
@@ -132,6 +134,46 @@ void main() {
         find.textContaining('Date limite de dépôt dépassée'),
         findsNothing,
       );
+    },
+  );
+
+  testWidgets(
+    'absence signalée sans échéance serveur → délai fixe de 24 h (aligné sur le back)',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'ACCEPTED',
+          cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+        ),
+      );
+      expect(
+        find.textContaining("L'expéditeur a 24 h pour confirmer ou contester"),
+        findsOneWidget,
+      );
+      expect(find.textContaining('48 h'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'absence signalée avec contestationDeadline → échéance réelle affichée',
+    (tester) async {
+      final deadline = DateTime.now().add(const Duration(hours: 20));
+      await _pump(
+        tester,
+        _bid(
+          status: 'ACCEPTED',
+          cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+          contestationDeadline: deadline,
+        ),
+      );
+      expect(find.textContaining("L'expéditeur a jusqu'au "), findsOneWidget);
+      expect(
+        find.textContaining('pour confirmer ou contester'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('24 h'), findsNothing);
+      expect(find.textContaining('48 h'), findsNothing);
     },
   );
 
@@ -407,6 +449,11 @@ void main() {
     expect(
       find.textContaining("L'expéditeur ne s'est pas présenté"),
       findsWidgets,
+    );
+    // Délai de contestation aligné sur le serveur (24 h, pas 48 h).
+    expect(
+      find.textContaining("L'expéditeur aura 24 h pour contester"),
+      findsOneWidget,
     );
   });
 

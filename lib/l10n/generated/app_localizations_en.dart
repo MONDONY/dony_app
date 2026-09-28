@@ -6590,7 +6590,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailSenderNoShowSheetHint =>
-      'The traveler will have 48 hours to contest. If they don\'t respond, the shipment will be canceled.';
+      'The traveler will have 24 hours to contest. If they don\'t respond, the shipment will be canceled.';
 
   @override
   String get bidDetailSenderContestationExpired => 'Expired';
@@ -6716,7 +6716,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailTravelerNoShowSheetHint =>
-      'The sender will have 48 hours to contest. If they don\'t respond, the shipment will be canceled.';
+      'The sender will have 24 hours to contest. If they don\'t respond, the shipment will be canceled.';
 
   @override
   String get bidDetailTravelerNoShowContestedSubtitle =>
@@ -6724,7 +6724,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailTravelerNoShowPendingSubtitle =>
-      'Report sent. The sender has 48 hours to confirm or contest. If there\'s no response, the shipment will be canceled automatically.';
+      'Report sent. The sender has 24 hours to confirm or contest. If there\'s no response, the shipment will be canceled automatically.';
+
+  @override
+  String bidDetailTravelerNoShowPendingSubtitleUntil(String date, String time) {
+    return 'Report sent. The sender has until $date at $time to confirm or contest. If there\'s no response, the shipment will be canceled automatically.';
+  }
 
   @override
   String get bidDetailGainCashTopLabel => 'YOU COLLECT';
@@ -6807,7 +6812,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailNoShowReportedSnackbar =>
-      'No-show reported. The sender has 48 hours to contest.';
+      'No-show reported. The sender has 24 hours to contest.';
 
   @override
   String get bidDetailDeliveryNoShowReportedSnackbar =>

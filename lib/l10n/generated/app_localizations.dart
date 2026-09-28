@@ -11016,7 +11016,7 @@ abstract class AppLocalizations {
   /// Note explicative de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)
   ///
   /// In fr, this message translates to:
-  /// **'Le voyageur aura 48 h pour contester. Sans réponse de sa part, l\'envoi sera annulé.'**
+  /// **'Le voyageur aura 24 h pour contester. Sans réponse de sa part, l\'envoi sera annulé.'**
   String get bidDetailSenderNoShowSheetHint;
 
   /// _ContestationHero, decompte expire (sender_hero_card.dart)
@@ -11220,7 +11220,7 @@ abstract class AppLocalizations {
   /// Note explicative de la feuille de signalement d'absence de l'expediteur (traveler_hero_card.dart, _showNoShowSheet)
   ///
   /// In fr, this message translates to:
-  /// **'L\'expéditeur aura 48 h pour contester. Sans réponse de sa part, l\'envoi sera annulé.'**
+  /// **'L\'expéditeur aura 24 h pour contester. Sans réponse de sa part, l\'envoi sera annulé.'**
   String get bidDetailTravelerNoShowSheetHint;
 
   /// _NoShowReportedHero, sous-titre conteste (traveler_hero_card.dart)
@@ -11232,8 +11232,14 @@ abstract class AppLocalizations {
   /// _NoShowReportedHero, sous-titre en attente (traveler_hero_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Signalement envoyé. L\'expéditeur a 48 h pour confirmer ou contester. Sans réponse, l\'envoi sera annulé automatiquement.'**
+  /// **'Signalement envoyé. L\'expéditeur a 24 h pour confirmer ou contester. Sans réponse, l\'envoi sera annulé automatiquement.'**
   String get bidDetailTravelerNoShowPendingSubtitle;
+
+  /// _NoShowReportedHero, sous-titre en attente quand le serveur renvoie l'échéance de contestation (bid.contestationDeadline, traveler_hero_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signalement envoyé. L\'expéditeur a jusqu\'au {date} à {time} pour confirmer ou contester. Sans réponse, l\'envoi sera annulé automatiquement.'**
+  String bidDetailTravelerNoShowPendingSubtitleUntil(String date, String time);
 
   /// Libelle du haut, paiement en especes (traveler_gain_card.dart)
   ///
@@ -11382,7 +11388,7 @@ abstract class AppLocalizations {
   /// Snackbar NoShowReported (bid_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Absence signalée. L\'expéditeur a 48 h pour contester.'**
+  /// **'Absence signalée. L\'expéditeur a 24 h pour contester.'**
   String get bidDetailNoShowReportedSnackbar;
 
   /// Snackbar DeliveryNoShowReported (bid_detail_screen.dart)

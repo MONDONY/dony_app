@@ -176,6 +176,11 @@ void main() {
 
       // The confirmation sheet should be visible
       expect(find.textContaining("Signaler l'absence"), findsWidgets);
+      // Délai de contestation aligné sur le serveur (24 h, pas 48 h).
+      expect(
+        find.textContaining('Le voyageur aura 24 h pour contester'),
+        findsOneWidget,
+      );
 
       // Tap the confirmation button in stickyBottom (the DonyButton in the sheet)
       final confirmBtn = find.descendant(

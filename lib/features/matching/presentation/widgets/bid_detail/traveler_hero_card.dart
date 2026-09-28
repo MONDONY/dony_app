@@ -37,6 +37,7 @@ class TravelerHeroCard extends StatelessWidget {
         duration: const Duration(milliseconds: 250),
         child: _NoShowReportedHero(
           contested: noShowStatus == 'CONTESTED',
+          contestationDeadline: bid.contestationDeadline,
           key: ValueKey('TRAVELER_NOSHOW_$noShowStatus${bid.id}'),
         ),
       );
@@ -403,9 +404,18 @@ class _WindowExpiredHero extends StatelessWidget {
 // ── Hero : absence déjà signalée (en attente / contestée) ─────────────────────
 
 class _NoShowReportedHero extends StatelessWidget {
-  const _NoShowReportedHero({super.key, required this.contested});
+  const _NoShowReportedHero({
+    super.key,
+    required this.contested,
+    this.contestationDeadline,
+  });
 
   final bool contested;
+
+  /// Échéance renvoyée par le serveur (délai de contestation réel, 24 h par
+  /// défaut côté back). Quand elle manque, le sous-titre retombe sur la
+  /// durée fixe.
+  final DateTime? contestationDeadline;
 
   @override
   Widget build(BuildContext context) {
@@ -417,8 +427,26 @@ class _NoShowReportedHero extends StatelessWidget {
           : l.bidDetailNoShowReportedTitle,
       subtitle: contested
           ? l.bidDetailTravelerNoShowContestedSubtitle
-          : l.bidDetailTravelerNoShowPendingSubtitle,
+          : _pendingSubtitle(context),
     );
+  }
+
+  String _pendingSubtitle(BuildContext context) {
+    final l = context.l10n;
+    final deadline = contestationDeadline?.toLocal();
+    if (deadline == null) {
+      return l.bidDetailTravelerNoShowPendingSubtitle;
+    }
+    final locale = l.localeName;
+    try {
+      return l.bidDetailTravelerNoShowPendingSubtitleUntil(
+        DateFormat.MMMEd(locale).format(deadline),
+        DateFormat.jm(locale).format(deadline),
+      );
+    } catch (_) {
+      // Repli sur la durée fixe quand les données de locale manquent.
+      return l.bidDetailTravelerNoShowPendingSubtitle;
+    }
   }
 }
 

@@ -6624,7 +6624,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailSenderNoShowSheetHint =>
-      'Le voyageur aura 48 h pour contester. Sans réponse de sa part, l\'envoi sera annulé.';
+      'Le voyageur aura 24 h pour contester. Sans réponse de sa part, l\'envoi sera annulé.';
 
   @override
   String get bidDetailSenderContestationExpired => 'Délai expiré';
@@ -6751,7 +6751,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailTravelerNoShowSheetHint =>
-      'L\'expéditeur aura 48 h pour contester. Sans réponse de sa part, l\'envoi sera annulé.';
+      'L\'expéditeur aura 24 h pour contester. Sans réponse de sa part, l\'envoi sera annulé.';
 
   @override
   String get bidDetailTravelerNoShowContestedSubtitle =>
@@ -6759,7 +6759,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailTravelerNoShowPendingSubtitle =>
-      'Signalement envoyé. L\'expéditeur a 48 h pour confirmer ou contester. Sans réponse, l\'envoi sera annulé automatiquement.';
+      'Signalement envoyé. L\'expéditeur a 24 h pour confirmer ou contester. Sans réponse, l\'envoi sera annulé automatiquement.';
+
+  @override
+  String bidDetailTravelerNoShowPendingSubtitleUntil(String date, String time) {
+    return 'Signalement envoyé. L\'expéditeur a jusqu\'au $date à $time pour confirmer ou contester. Sans réponse, l\'envoi sera annulé automatiquement.';
+  }
 
   @override
   String get bidDetailGainCashTopLabel => 'VOUS ENCAISSEZ';
@@ -6842,7 +6847,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailNoShowReportedSnackbar =>
-      'Absence signalée. L\'expéditeur a 48 h pour contester.';
+      'Absence signalée. L\'expéditeur a 24 h pour contester.';
 
   @override
   String get bidDetailDeliveryNoShowReportedSnackbar =>
