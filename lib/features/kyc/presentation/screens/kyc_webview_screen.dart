@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/camera_permission_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -41,8 +43,12 @@ class KycWebViewScreen extends StatefulWidget {
     required this.stripeUrl,
     this.progress,
     this.cameraPermission = const CameraPermissionService(),
+    this.analytics,
   });
   final String stripeUrl;
+
+  /// Injectable pour les tests ; `null` lit le service du conteneur.
+  final AnalyticsService? analytics;
 
   /// Injectable pour les tests : la vraie implémentation passe par un
   /// canal natif absent du binaire de test.
@@ -89,6 +95,18 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
   @override
   void initState() {
     super.initState();
+    // La route `/kyc/verify` est partagée avec l'écran de statut, et
+    // l'observer PostHog n'en voit que le chemin : ce second `$screen`
+    // distingue le parcours du fournisseur.
+    final host = Uri.tryParse(widget.stripeUrl)?.host ?? '';
+    unawaited(
+      (widget.analytics ?? getIt<AnalyticsService>()).logScreen(
+        AnalyticsEvents.kycProviderWebviewScreen,
+        properties: {
+          'provider': host.endsWith('stripe.com') ? 'stripe' : 'didit',
+        },
+      ),
+    );
     _controller =
         WebViewController.fromPlatformCreationParams(
             _creationParams(),

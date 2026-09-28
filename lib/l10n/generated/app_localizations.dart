@@ -10077,6 +10077,12 @@ abstract class AppLocalizations {
   /// **'Tes négociations actives apparaîtront ici dès qu\'un voyageur fait une offre.'**
   String get negotiationEmptyDescription;
 
+  /// Action de l'état vide global des négociations : mène à la recherche (my_negotiations_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un trajet'**
+  String get negotiationEmptySearchTripAction;
+
   /// Placeholder du champ de recherche (my_negotiations_screen.dart)
   ///
   /// In fr, this message translates to:

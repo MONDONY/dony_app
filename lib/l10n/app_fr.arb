@@ -5812,6 +5812,10 @@
   "@negotiationEmptyDescription": {
     "description": "Description de l'état vide global (my_negotiations_screen.dart)"
   },
+  "negotiationEmptySearchTripAction": "Rechercher un trajet",
+  "@negotiationEmptySearchTripAction": {
+    "description": "Action de l'état vide global des négociations : mène à la recherche (my_negotiations_screen.dart)"
+  },
   "negotiationSearchHint": "Voyageur, ville…",
   "@negotiationSearchHint": {
     "description": "Placeholder du champ de recherche (my_negotiations_screen.dart)"

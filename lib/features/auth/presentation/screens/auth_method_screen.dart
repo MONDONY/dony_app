@@ -304,7 +304,11 @@ class _LoginIntro extends StatelessWidget {
   }
 }
 
-class _AuthActionsPanel extends StatelessWidget {
+/// Méthode de connexion lancée depuis cet écran, pour savoir quel bouton
+/// porte le spinner pendant que l'`AuthBloc` travaille.
+enum _PendingAuth { apple, google, guest }
+
+class _AuthActionsPanel extends StatefulWidget {
   const _AuthActionsPanel({
     required this.showAppleButton,
     required this.showGoogleButton,
@@ -314,78 +318,164 @@ class _AuthActionsPanel extends StatelessWidget {
   final bool showGoogleButton;
 
   @override
+  State<_AuthActionsPanel> createState() => _AuthActionsPanelState();
+}
+
+/// Pendant une connexion Apple, Google ou invitée, les boutons restaient
+/// actifs et muets : aucun retour visuel entre le toucher et la réponse du
+/// fournisseur. Les testeurs iOS tapaient alors à répétition (rage clicks
+/// PostHog du 27/09). Le bouton touché affiche désormais un spinner et les
+/// autres se désactivent tant que le bloc est occupé.
+///
+/// L'occupation ne se lit pas seulement sur `AuthLoading` : l'`AuthBloc` est
+/// global et peut être en chargement pour une autre raison à l'arrivée sur
+/// l'écran. On ne bloque que si l'utilisateur a lancé une méthode d'ici.
+class _AuthActionsPanelState extends State<_AuthActionsPanel> {
+  final _pending = ValueNotifier<_PendingAuth?>(null);
+
+  @override
+  void dispose() {
+    _pending.dispose();
+    super.dispose();
+  }
+
+  static bool _isBusy(AuthState state) =>
+      state is AuthLoading || state is AuthOAuthNewUser;
+
+  void _start(_PendingAuth method, AuthEvent event) {
+    _pending.value = method;
+    context.read<AuthBloc>().add(event);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isLight = cs.brightness == Brightness.light;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(DonyRadius.sheet),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: Container(
-          padding: const EdgeInsets.all(DonySpacing.base),
-          decoration: BoxDecoration(
-            color: isLight
-                ? cs.surface.withValues(alpha: 0.94)
-                : DonyColors.ink900.withValues(alpha: 0.54),
-            borderRadius: BorderRadius.circular(DonyRadius.sheet),
-            border: Border.all(
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (_, state) => !_isBusy(state),
+      // Annulation (Google revient à `AuthInitial`), erreur ou succès : le
+      // bouton touché n'a plus rien à attendre.
+      listener: (_, _) => _pending.value = null,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(DonyRadius.sheet),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Container(
+            padding: const EdgeInsets.all(DonySpacing.base),
+            decoration: BoxDecoration(
               color: isLight
-                  ? cs.outline.withValues(alpha: 0.42)
-                  : DonyColors.neutral0.withValues(alpha: 0.18),
+                  ? cs.surface.withValues(alpha: 0.94)
+                  : DonyColors.ink900.withValues(alpha: 0.54),
+              borderRadius: BorderRadius.circular(DonyRadius.sheet),
+              border: Border.all(
+                color: isLight
+                    ? cs.outline.withValues(alpha: 0.42)
+                    : DonyColors.neutral0.withValues(alpha: 0.18),
+              ),
+              boxShadow: DonyShadow.lg,
             ),
-            boxShadow: DonyShadow.lg,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ValueListenableBuilder<bool>(
-                valueListenable: smsAuthEnabledListenable,
-                builder: (_, phoneEnabled, _) {
-                  if (!phoneEnabled) return const SizedBox.shrink();
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _PhoneCta(onTap: () => context.push('/auth/phone')),
-                      const SizedBox(height: DonySpacing.sm),
-                    ],
-                  );
-                },
-              ),
-              if (showAppleButton) ...[
-                _SocialCta(
-                  iconAsset: 'apple',
-                  label: context.l10n.authMethodContinueWithApple,
-                  onTap: () => context.read<AuthBloc>().add(
-                    const AuthAppleSignInRequested(),
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.sm),
-              ],
-              if (showGoogleButton) ...[
-                _GoogleCta(
-                  onTap: () => context.read<AuthBloc>().add(
-                    const AuthGoogleSignInRequested(),
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.sm),
-              ],
-              _SocialCta(
-                iconAsset: 'mail',
-                label: context.l10n.authMethodContinueWithEmail,
-                onTap: () => context.push('/auth/email'),
-              ),
-              const SizedBox(height: DonySpacing.md),
-              const _OrDivider(),
-              const SizedBox(height: DonySpacing.md),
-              _GuestCta(
-                onTap: () => context.read<AuthBloc>().add(
-                  const AuthGuestSessionRequested(),
-                ),
-              ),
-            ],
+            child: ValueListenableBuilder<_PendingAuth?>(
+              valueListenable: _pending,
+              builder: (context, pending, _) {
+                final authState = context.watch<AuthBloc>().state;
+                final active = pending != null && _isBusy(authState)
+                    ? pending
+                    : null;
+                final locked = active != null;
+                return _buildActions(context, active: active, locked: locked);
+              },
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildActions(
+    BuildContext context, {
+    required _PendingAuth? active,
+    required bool locked,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ValueListenableBuilder<bool>(
+          valueListenable: smsAuthEnabledListenable,
+          builder: (_, phoneEnabled, _) {
+            if (!phoneEnabled) return const SizedBox.shrink();
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _PhoneCta(
+                  onTap: locked ? null : () => context.push('/auth/phone'),
+                ),
+                const SizedBox(height: DonySpacing.sm),
+              ],
+            );
+          },
+        ),
+        if (widget.showAppleButton) ...[
+          _SocialCta(
+            iconAsset: 'apple',
+            label: context.l10n.authMethodContinueWithApple,
+            isLoading: active == _PendingAuth.apple,
+            onTap: locked
+                ? null
+                : () => _start(
+                    _PendingAuth.apple,
+                    const AuthAppleSignInRequested(),
+                  ),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+        ],
+        if (widget.showGoogleButton) ...[
+          _GoogleCta(
+            isLoading: active == _PendingAuth.google,
+            onTap: locked
+                ? null
+                : () => _start(
+                    _PendingAuth.google,
+                    const AuthGoogleSignInRequested(),
+                  ),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+        ],
+        _SocialCta(
+          iconAsset: 'mail',
+          label: context.l10n.authMethodContinueWithEmail,
+          onTap: locked ? null : () => context.push('/auth/email'),
+        ),
+        const SizedBox(height: DonySpacing.md),
+        const _OrDivider(),
+        const SizedBox(height: DonySpacing.md),
+        _GuestCta(
+          isLoading: active == _PendingAuth.guest,
+          onTap: locked
+              ? null
+              : () => _start(
+                  _PendingAuth.guest,
+                  const AuthGuestSessionRequested(),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Spinner des boutons contour pendant la connexion, à la taille de l'icône
+/// qu'il remplace pour que le bouton ne bouge pas.
+class _CtaSpinner extends StatelessWidget {
+  const _CtaSpinner();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 20,
+      height: 20,
+      child: CircularProgressIndicator(
+        strokeWidth: 2,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
     );
   }
@@ -393,7 +483,7 @@ class _AuthActionsPanel extends StatelessWidget {
 
 class _PhoneCta extends StatelessWidget {
   const _PhoneCta({required this.onTap});
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -412,10 +502,12 @@ class _SocialCta extends StatelessWidget {
     required this.iconAsset,
     required this.label,
     required this.onTap,
+    this.isLoading = false,
   });
   final String iconAsset;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -423,8 +515,12 @@ class _SocialCta extends StatelessWidget {
     return SizedBox(
       height: 52,
       child: OutlinedButton.icon(
-        onPressed: onTap,
-        icon: DonyIcon(iconAsset, size: 20, color: cs.onSurface),
+        // Désactivé mais pas grisé pendant son propre chargement : le
+        // spinner doit rester lisible.
+        onPressed: isLoading ? () {} : onTap,
+        icon: isLoading
+            ? const _CtaSpinner()
+            : DonyIcon(iconAsset, size: 20, color: cs.onSurface),
         label: Text(label),
         style: OutlinedButton.styleFrom(
           backgroundColor: cs.surface,
@@ -440,8 +536,9 @@ class _SocialCta extends StatelessWidget {
 }
 
 class _GoogleCta extends StatelessWidget {
-  const _GoogleCta({required this.onTap});
-  final VoidCallback onTap;
+  const _GoogleCta({required this.onTap, this.isLoading = false});
+  final VoidCallback? onTap;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -449,7 +546,7 @@ class _GoogleCta extends StatelessWidget {
     return SizedBox(
       height: 52,
       child: OutlinedButton(
-        onPressed: onTap,
+        onPressed: isLoading ? () {} : onTap,
         style: OutlinedButton.styleFrom(
           backgroundColor: cs.surface,
           foregroundColor: cs.onSurface,
@@ -461,7 +558,7 @@ class _GoogleCta extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const _GoogleLogo(),
+            if (isLoading) const _CtaSpinner() else const _GoogleLogo(),
             const SizedBox(width: DonySpacing.sm),
             Text(context.l10n.authMethodContinueWithGoogle),
           ],
@@ -565,9 +662,10 @@ class _OrDivider extends StatelessWidget {
 }
 
 class _GuestCta extends StatelessWidget {
-  const _GuestCta({required this.onTap});
+  const _GuestCta({required this.onTap, this.isLoading = false});
 
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -596,6 +694,7 @@ class _GuestCta extends StatelessWidget {
               label: context.l10n.authMethodBrowseWithoutAccount,
               iconAsset: 'search',
               variant: DonyButtonVariant.secondary,
+              isLoading: isLoading,
               onPressed: onTap,
             ),
             const SizedBox(height: DonySpacing.sm),

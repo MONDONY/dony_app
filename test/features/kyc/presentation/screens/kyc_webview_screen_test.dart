@@ -1,21 +1,64 @@
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../../helpers/fake_web_view_platform.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
 void main() {
+  late _MockAnalyticsService analytics;
+
   setUpAll(() {
     WebViewPlatform.instance = FakeWebViewPlatform();
   });
 
-  Widget wrap() => const MaterialApp(
-    home: KycWebViewScreen(stripeUrl: 'https://verify.stripe.com/start'),
+  setUp(() {
+    analytics = _MockAnalyticsService();
+    when(
+      () => analytics.logScreen(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+  });
+
+  Widget wrap({String url = 'https://verify.stripe.com/start'}) => MaterialApp(
+    home: KycWebViewScreen(stripeUrl: url, analytics: analytics),
   );
 
   group('KycWebViewScreen', () {
+    // L'écran de statut et la WebView partagent la route `/kyc/verify` : sans
+    // ce second `$screen`, PostHog comptait toute sortie du parcours Didit
+    // comme une sortie de l'écran de statut.
+    testWidgets('envoie un nom d\'écran propre à la WebView Didit', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(url: 'https://verify.didit.me/session/x'));
+
+      verify(
+        () => analytics.logScreen(
+          AnalyticsEvents.kycProviderWebviewScreen,
+          properties: {'provider': 'didit'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('indique Stripe quand la session vient de Stripe', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap());
+
+      verify(
+        () => analytics.logScreen(
+          AnalyticsEvents.kycProviderWebviewScreen,
+          properties: {'provider': 'stripe'},
+        ),
+      ).called(1);
+    });
+
     testWidgets('affiche le titre de vérification', (tester) async {
       await tester.pumpWidget(wrap());
       expect(find.text('Vérification d\'identité'), findsOneWidget);

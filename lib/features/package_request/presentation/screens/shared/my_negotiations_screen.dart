@@ -173,10 +173,16 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
                         );
                       }
                       if (bothEmpty) {
+                        // Sans action, un compte neuf restait devant un
+                        // écran inerte : 6 rage clicks PostHog en 13 min le
+                        // 27/09, juste après une inscription.
                         return DonyEmptyState(
                           title: context.l10n.negotiationEmptyTitle,
                           description: context.l10n.negotiationEmptyDescription,
                           mascotte: DonyMascotteType.assis,
+                          actionLabel:
+                              context.l10n.negotiationEmptySearchTripAction,
+                          onAction: () => context.go('/home'),
                         );
                       }
 

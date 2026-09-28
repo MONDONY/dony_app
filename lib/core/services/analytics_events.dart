@@ -33,6 +33,12 @@ abstract final class AnalyticsEvents {
   static const kycCompleted = 'kyc_completed';
   static const kycFailed = 'kyc_failed';
 
+  /// Nom d'écran de la WebView du fournisseur (Didit, Stripe en repli).
+  /// `/kyc/verify` sert aussi à l'écran de statut : sans ce nom distinct,
+  /// PostHog ne permettait pas de savoir si l'on quittait le statut ou le
+  /// parcours du fournisseur.
+  static const kycProviderWebviewScreen = '/kyc/verify/webview';
+
   // Announcements
   static const announcementCreated = 'announcement_created';
   static const announcementViewed = 'announcement_viewed';
