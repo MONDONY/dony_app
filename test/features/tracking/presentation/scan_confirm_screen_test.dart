@@ -335,13 +335,7 @@ void main() {
         '12 avenue du Général de Gaulle, Villeneuve-Saint-Georges, '
         'Île-de-France, France';
     await tester.pumpWidget(
-      _wrap(
-        'DEPART',
-        bloc,
-        gpsLat: 48.73,
-        gpsLon: 2.45,
-        gpsLabel: address,
-      ),
+      _wrap('DEPART', bloc, gpsLat: 48.73, gpsLon: 2.45, gpsLabel: address),
     );
     await tester.pump();
 
