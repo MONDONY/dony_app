@@ -199,4 +199,81 @@ void main() {
     expect(captured['attachmentKeys'], ['support/u1/1_a.jpg']);
     expect(captured['content'], 'Voici');
   });
+
+  group('getSummary', () {
+    test('200 : désérialise le résumé et son dernier ticket', () async {
+      when(() => mockDio.get('/support/summary')).thenAnswer(
+        (_) async => _ok({
+          'unreadCount': 1,
+          'openTicketCount': 1,
+          'latestTicket': {
+            'id': 't1',
+            'subject': 'Aide',
+            'lastMessagePreview': 'Bonjour',
+            'lastMessageAt': '2026-09-29T10:00:00Z',
+            'lastMessageFromAdmin': true,
+            'unreadCount': 1,
+          },
+        }, '/support/summary'),
+      );
+
+      final summary = await repository.getSummary();
+
+      expect(summary, isNotNull);
+      expect(summary!.unreadCount, 1);
+      expect(summary.latestTicket!.lastMessagePreview, 'Bonjour');
+    });
+
+    test('404 (ancien back) : rend null sans lever', () async {
+      final options = RequestOptions(path: '/support/summary');
+      when(() => mockDio.get('/support/summary')).thenThrow(
+        DioException(
+          requestOptions: options,
+          response: Response(statusCode: 404, requestOptions: options),
+          type: DioExceptionType.badResponse,
+        ),
+      );
+
+      expect(await repository.getSummary(), isNull);
+    });
+
+    test('une autre erreur remonte à l\'appelant', () async {
+      final options = RequestOptions(path: '/support/summary');
+      when(() => mockDio.get('/support/summary')).thenThrow(
+        DioException(
+          requestOptions: options,
+          response: Response(statusCode: 500, requestOptions: options),
+          type: DioExceptionType.badResponse,
+        ),
+      );
+
+      expect(repository.getSummary(), throwsA(isA<DioException>()));
+    });
+  });
+
+  test('loadTickets lit l\'aperçu du dernier message', () async {
+    when(
+      () => mockDio.get(
+        '/support/tickets',
+        queryParameters: any(named: 'queryParameters'),
+      ),
+    ).thenAnswer(
+      (_) async => _ok({
+        'content': [
+          {
+            'id': 't1',
+            'category': 'PAYMENT',
+            'subject': 'Aide',
+            'status': 'WAITING_USER',
+            'lastMessagePreview': 'Une photo svp',
+            'lastMessageFromAdmin': true,
+          },
+        ],
+      }, '/support/tickets'),
+    );
+
+    final tickets = await repository.loadTickets();
+    expect(tickets.single.lastMessagePreview, 'Une photo svp');
+    expect(tickets.single.lastMessageFromAdmin, isTrue);
+  });
 }
