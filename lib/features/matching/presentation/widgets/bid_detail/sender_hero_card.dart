@@ -148,7 +148,9 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
         subtitle: subtitle,
       );
 
-    case 'HANDED_OVER':
+    // Transit facultatif : une fois le trajet parti, un colis récupéré est en
+    // route même sans scan Transit, « Embarquement prévu » serait faux.
+    case 'HANDED_OVER' when !bid.hasDeparted:
       final name = bid.travelerName ?? l.bidDetailSenderTravelerFallback;
       final dateStr = _formatDepartureDate(context, bid.departureDate);
       return _HeroContent(
@@ -159,6 +161,7 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
             : l.bidDetailSenderHandedOverSubtitleDefault,
       );
 
+    case 'HANDED_OVER':
     case 'IN_TRANSIT':
       final subtitle = _buildInTransitSubtitle(context, bid);
       return _HeroContent(

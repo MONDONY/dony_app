@@ -131,7 +131,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Gardez le fil du colis.'), findsOneWidget);
     expect(find.text('Remis'), findsWidgets);
-    expect(find.text('Départ, transit, arrivée'), findsOneWidget);
+    expect(find.text('En route'), findsOneWidget);
     expect(find.text('Livraison'), findsWidgets);
     expect(_currentStep(tester), 2);
 

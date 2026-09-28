@@ -346,8 +346,8 @@ void main() {
 
     // ACCEPTED is shown under "Tous" / "En cours" chip (kEnvoisEnCours)
     expect(find.text('Remis'), findsOneWidget);
-    expect(find.text('Embarqué'), findsOneWidget);
-    expect(find.text('En vol'), findsOneWidget);
+    expect(find.text('En route'), findsOneWidget);
+    expect(find.text('Arrivé'), findsOneWidget);
     expect(find.text('Livraison'), findsOneWidget);
   });
 

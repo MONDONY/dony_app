@@ -44,7 +44,7 @@ void main() {
     expect(find.textContaining('Départ dans 3 jours'), findsOneWidget);
   });
 
-  testWidgets('IN_TRANSIT : stepper étape 3, badge transit', (tester) async {
+  testWidgets('IN_TRANSIT : stepper étape 2, badge transit', (tester) async {
     await tester.pumpWidget(
       _wrap(ShipmentCard(bid: _bid('IN_TRANSIT'), onTap: () {}, index: 0)),
     );
@@ -70,14 +70,14 @@ void main() {
   test('shipmentStepFor mappe les statuts vers les étapes', () {
     expect(shipmentStepFor('ACCEPTED'), 1);
     expect(shipmentStepFor('HANDED_OVER'), 2);
-    expect(shipmentStepFor('IN_TRANSIT'), 3);
-    expect(shipmentStepFor('ARRIVED'), 4);
-    expect(shipmentStepFor('COMPLETED'), 5);
+    expect(shipmentStepFor('IN_TRANSIT'), 2);
+    expect(shipmentStepFor('ARRIVED'), 3);
+    expect(shipmentStepFor('COMPLETED'), 4);
     expect(shipmentStepFor('PENDING'), isNull);
     expect(shipmentStepFor('AWAITING_PAYMENT'), isNull);
   });
 
-  testWidgets('ARRIVED : stepper étape 4, badge arrivé', (tester) async {
+  testWidgets('ARRIVED : stepper étape 3, badge arrivé', (tester) async {
     await tester.pumpWidget(
       _wrap(ShipmentCard(bid: _bid('ARRIVED'), onTap: () {}, index: 0)),
     );
@@ -151,8 +151,8 @@ void main() {
       expect(find.textContaining('Parcel 4.5 kg'), findsOneWidget);
       expect(find.textContaining('for Mariama'), findsOneWidget);
       expect(find.text('Handed over'), findsOneWidget);
-      expect(find.text('Boarded'), findsOneWidget);
-      expect(find.text('In flight'), findsOneWidget);
+      expect(find.text('On the way'), findsOneWidget);
+      expect(find.text('On the way to Dakar'), findsOneWidget);
       expect(find.text('Delivery'), findsOneWidget);
     });
 

@@ -1327,7 +1327,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authOnboardingTrackingSubtitle =>
-      'Tracking moves forward with every scan, from departure to confirmed arrival.';
+      'Tracking moves forward at every step, from handover to the traveler until delivery.';
 
   @override
   String get authOnboardingTrackingStep1Title => 'Dropped off';
@@ -1337,11 +1337,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'The parcel is handed to the traveler.';
 
   @override
-  String get authOnboardingTrackingStep2Title => 'Departure, transit, arrival';
+  String get authOnboardingTrackingStep2Title => 'On the way';
 
   @override
   String get authOnboardingTrackingStep2Subtitle =>
-      'Every scan updates the tracking.';
+      'The traveler can check in along the way.';
 
   @override
   String get authOnboardingTrackingStep3Title => 'Delivery';
@@ -7427,7 +7427,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String shipmentStepInTransitLabel(String city) {
-    return 'In flight to $city';
+    return 'On the way to $city';
   }
 
   @override
@@ -7465,10 +7465,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shipmentStepperHandedOverLabel => 'Handed over';
 
   @override
-  String get shipmentStepperEmbarkedLabel => 'Boarded';
-
-  @override
-  String get shipmentStepperInFlightLabel => 'In flight';
+  String get shipmentStepperOnTheWayLabel => 'On the way';
 
   @override
   String get shipmentStepperArrivedLabel => 'Arrived';

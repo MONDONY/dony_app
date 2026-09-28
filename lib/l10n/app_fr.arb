@@ -423,11 +423,11 @@
   "authOnboardingChipProofOfDropOff": "Preuve de remise",
   "authOnboardingTrackingEyebrow": "Temps réel",
   "authOnboardingTrackingTitle": "Gardez le fil du colis.",
-  "authOnboardingTrackingSubtitle": "Le suivi avance à chaque scan, du départ jusqu’à la confirmation d’arrivée.",
+  "authOnboardingTrackingSubtitle": "Le suivi avance à chaque étape, de la remise au voyageur jusqu’à la livraison.",
   "authOnboardingTrackingStep1Title": "Remis",
   "authOnboardingTrackingStep1Subtitle": "Le colis est confié au voyageur.",
-  "authOnboardingTrackingStep2Title": "Départ, transit, arrivée",
-  "authOnboardingTrackingStep2Subtitle": "Chaque scan met le suivi à jour.",
+  "authOnboardingTrackingStep2Title": "En route",
+  "authOnboardingTrackingStep2Subtitle": "Le voyageur peut signaler son passage en chemin.",
   "authOnboardingTrackingStep3Title": "Livraison",
   "authOnboardingTrackingStep3Subtitle": "La réception confirme la fin du trajet.",
   "authOnboardingDestinationsEyebrow": "Destinations",
@@ -7651,7 +7651,7 @@
   "@shipmentStepHandedOverLabel": {
     "description": "Libellé d'étape HANDED_OVER sous le stepper (shipment_card.dart)"
   },
-  "shipmentStepInTransitLabel": "En vol vers {city}",
+  "shipmentStepInTransitLabel": "En route vers {city}",
   "@shipmentStepInTransitLabel": {
     "description": "Libellé d'étape IN_TRANSIT sous le stepper (shipment_card.dart)",
     "placeholders": {
@@ -7707,23 +7707,19 @@
   },
   "shipmentStepperHandedOverLabel": "Remis",
   "@shipmentStepperHandedOverLabel": {
-    "description": "Libellé de pastille 1/5 du stepper (shipment_card.dart, clé dédiée : casse différente du badge REMIS, R40)"
+    "description": "Libellé de pastille 1/4 du stepper (shipment_card.dart, clé dédiée : casse différente du badge REMIS, R40)"
   },
-  "shipmentStepperEmbarkedLabel": "Embarqué",
-  "@shipmentStepperEmbarkedLabel": {
-    "description": "Libellé de pastille 2/5 du stepper (shipment_card.dart)"
-  },
-  "shipmentStepperInFlightLabel": "En vol",
-  "@shipmentStepperInFlightLabel": {
-    "description": "Libellé de pastille 3/5 du stepper (shipment_card.dart)"
+  "shipmentStepperOnTheWayLabel": "En route",
+  "@shipmentStepperOnTheWayLabel": {
+    "description": "Libellé de pastille 2/4 du stepper (shipment_card.dart) : colis récupéré, scan Transit facultatif"
   },
   "shipmentStepperArrivedLabel": "Arrivé",
   "@shipmentStepperArrivedLabel": {
-    "description": "Libellé de pastille 4/5 du stepper (shipment_card.dart, clé dédiée : casse différente du badge ARRIVÉ, R40)"
+    "description": "Libellé de pastille 3/4 du stepper (shipment_card.dart, clé dédiée : casse différente du badge ARRIVÉ, R40)"
   },
   "shipmentStepperDeliveryLabel": "Livraison",
   "@shipmentStepperDeliveryLabel": {
-    "description": "Libellé de pastille 5/5 du stepper (shipment_card.dart)"
+    "description": "Libellé de pastille 4/4 du stepper (shipment_card.dart)"
   },
   "shipmentStatusFilterTitle": "Filtrer par statut",
   "@shipmentStatusFilterTitle": {

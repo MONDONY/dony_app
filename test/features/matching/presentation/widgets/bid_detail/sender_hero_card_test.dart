@@ -230,7 +230,27 @@ void main() {
     await tester.pump();
 
     expect(find.textContaining('Colis remis'), findsOneWidget);
+    expect(find.textContaining('Embarquement prévu'), findsOneWidget);
   });
+
+  testWidgets(
+    '7b · HANDED_OVER après le départ, sans scan Transit → en route, plus '
+    '« Embarquement prévu »',
+    (tester) async {
+      final bid = _bid(
+        status: 'HANDED_OVER',
+        travelerName: 'Mamadou',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime.now().subtract(const Duration(days: 2)),
+      );
+      await tester.pumpWidget(_host(bid, cancellationBloc));
+      await tester.pump();
+
+      expect(find.textContaining('Colis en vol'), findsOneWidget);
+      expect(find.textContaining('En route vers Dakar'), findsOneWidget);
+      expect(find.textContaining('Embarquement prévu'), findsNothing);
+    },
+  );
 
   // ── Test 8: IN_TRANSIT with confirmationCode ─────────────────────────────────
 
