@@ -7098,9 +7098,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidDetailScanTransitOptional => 'Scanner le transit (facultatif)';
 
   @override
-  String get trackingStepOptional => 'Facultatif';
-
-  @override
   String get bidDetailConfirmHandover => 'Valider la remise';
 
   @override
@@ -9821,17 +9818,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String scanPendingSync(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count lectures en attente de synchro',
-      one: '$count lecture en attente de synchro',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String scanQueueSafe(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -10079,9 +10065,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trackingSearchNumberLabel => 'Numéro de suivi';
 
   @override
-  String get trackingSearchSubmit => 'Rechercher';
-
-  @override
   String get receptionConfirmTitle => 'Confirmation';
 
   @override
@@ -10168,12 +10151,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get trackingApplessMessage =>
       'Quand le voyageur sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.';
-
-  @override
-  String get trackingSearchSheetTitle => 'Rechercher un colis';
-
-  @override
-  String get trackingSearchSheetSubtitle => 'Format : DON-XXXXXX';
 
   @override
   String get cancellationConfirmTitle => 'Annuler ce trajet ?';
@@ -14295,4 +14272,151 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get qrCameraUnavailable =>
       'Caméra indisponible. Autorise l\'accès à la caméra dans les réglages du téléphone.';
+
+  @override
+  String suiviPositionSaved(String label) {
+    return 'Position enregistrée · $label';
+  }
+
+  @override
+  String suiviPhotoTitle(String parcel) {
+    return 'Photo du colis de $parcel';
+  }
+
+  @override
+  String suiviPhotoRequiredFor(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Obligatoire pour valider le départ',
+      'TRANSIT': 'Obligatoire pour valider le transit',
+      'other': 'Obligatoire pour valider l\'arrivée',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get suiviNumberRecapTitle => 'Valider avec le numéro';
+
+  @override
+  String suiviPhotoAndValidate(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Photo et valider le départ',
+      'TRANSIT': 'Photo et valider le transit',
+      'other': 'Photo et valider l\'arrivée',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String suiviParcelOf(String parcel) {
+    return 'Colis de $parcel';
+  }
+
+  @override
+  String get suiviRecapTrip => 'Trajet';
+
+  @override
+  String get suiviRecapDone => 'Déjà validé';
+
+  @override
+  String get suiviRecapNothingDone => 'Aucune étape';
+
+  @override
+  String get suiviRecapToValidate => 'À valider';
+
+  @override
+  String get suiviNumberPhotoNotice =>
+      'Sans QR code, une photo du colis est obligatoire. Ta position est enregistrée avec l\'étape.';
+
+  @override
+  String get suiviForceStep => 'Forcer une étape';
+
+  @override
+  String get suiviStepModeHelp =>
+      'Chaque scan valide l\'étape suivante du colis. Force une étape seulement pour rattraper un oubli.';
+
+  @override
+  String get suiviStepModeLabel => 'Étape : ';
+
+  @override
+  String get suiviStepModeAuto => 'automatique';
+
+  @override
+  String get suiviNumberHint => 'Numéro du colis, DON-…';
+
+  @override
+  String get suiviNumberSubmit => 'Valider';
+
+  @override
+  String get suiviNumberNotFound =>
+      'Numéro introuvable. Vérifie-le et réessaie.';
+
+  @override
+  String get trackingNotLinkedTitle => 'Ce colis n\'est pas lié à ton compte';
+
+  @override
+  String get trackingNotLinkedBody =>
+      'Seuls l\'expéditeur et le voyageur peuvent le suivre ici. Demande le lien de suivi à l\'expéditeur.';
+
+  @override
+  String suiviStepValidatedToast(String step, String parcel) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Départ de $parcel validé',
+      'other': 'Transit de $parcel validé',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String suiviToastSendingIn(String photo, int seconds) {
+    String _temp0 = intl.Intl.selectLogic(photo, {
+      'yes': 'Photo prise · envoi dans $seconds s',
+      'other': 'Envoi dans $seconds s',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get suiviUndo => 'Annuler';
+
+  @override
+  String suiviStepAlreadyPending(String parcel) {
+    return 'La validation de $parcel part dans quelques secondes.';
+  }
+
+  @override
+  String suiviValidationQueued(String step, String parcel) {
+    return '$step de $parcel en attente d\'envoi. Il part dès le retour du réseau.';
+  }
+
+  @override
+  String suiviValidationFailed(String step, String parcel) {
+    return '$step de $parcel non validé';
+  }
+
+  @override
+  String get trackingStepOptional => 'Facultatif';
+
+  @override
+  String get suiviStepModeTransit => 'transit, facultatif';
+
+  @override
+  String get suiviStepModeBackToAuto => 'Automatique';
+
+  @override
+  String get suiviStepModeTransitHelp =>
+      'Le prochain colis scanné ou saisi valide son transit, puis l\'étape repasse en automatique.';
+
+  @override
+  String get suiviForcedTransitCameraHint =>
+      'Transit facultatif : scanne le colis à valider.\nL\'étape repasse ensuite en automatique.';
+
+  @override
+  String suiviTransitNeedsDepart(String parcel) {
+    return 'Valide d\'abord le départ de $parcel.';
+  }
+
+  @override
+  String suiviTransitAlreadyDone(String parcel) {
+    return 'Le transit de $parcel est déjà validé.';
+  }
 }

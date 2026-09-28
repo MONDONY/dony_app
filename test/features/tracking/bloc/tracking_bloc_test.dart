@@ -8,6 +8,7 @@ import 'package:dony/features/tracking/data/models/qr_code_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
+import 'package:dony/features/tracking/data/scan_submitter.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
@@ -383,6 +384,46 @@ void main() {
       act: (b) =>
           b.add(QrScanSubmitRequested(bidId: 'bid-1', eventType: 'TRANSIT')),
       expect: () => [isA<QrScanSubmitting>(), isA<QrScanError>()],
+    );
+
+    TrackingBloc withNetwork({required bool online}) {
+      final analytics = makeDisabledAnalytics(MockAnalyticsBackend())
+        ..onConfigured();
+      return TrackingBloc(
+        mockRepo,
+        mockSync,
+        analytics,
+        submitter: ScanSubmitter(
+          mockRepo,
+          mockSync,
+          isOnline: () async => online,
+        ),
+      );
+    }
+
+    blocTest<TrackingBloc, TrackingState>(
+      'en ligne : étape envoyée → QrScanSuccess',
+      setUp: () => when(
+        () => mockRepo.postScan(bidId: 'bid-1', eventType: 'TRANSIT'),
+      ).thenAnswer((_) async => _event),
+      build: () => withNetwork(online: true),
+      act: (b) =>
+          b.add(QrScanSubmitRequested(bidId: 'bid-1', eventType: 'TRANSIT')),
+      expect: () => [
+        isA<QrScanSubmitting>(),
+        isA<QrScanSuccess>().having((s) => s.event, 'event', _event),
+      ],
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
+      'hors ligne : file d\'attente → QrScanQueued',
+      setUp: () => when(
+        () => mockSync.queueScan(bidId: 'bid-1', eventType: 'TRANSIT'),
+      ).thenAnswer((_) async {}),
+      build: () => withNetwork(online: false),
+      act: (b) =>
+          b.add(QrScanSubmitRequested(bidId: 'bid-1', eventType: 'TRANSIT')),
+      expect: () => [isA<QrScanSubmitting>(), isA<QrScanQueued>()],
     );
   });
 

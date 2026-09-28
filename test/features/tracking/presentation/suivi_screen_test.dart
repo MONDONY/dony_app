@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -12,13 +13,18 @@ import 'package:dony/features/matching/data/repositories/announcement_repository
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
+import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
+import 'package:dony/features/tracking/data/scan_locator.dart';
+import 'package:dony/features/tracking/data/scan_submitter.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
+import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
@@ -44,6 +50,12 @@ class _MockBidRepo extends Mock implements BidRepository {}
 class _MockTrackingRepo extends Mock implements TrackingRepository {}
 
 class _MockOfflineSync extends Mock implements OfflineSyncService {}
+
+class _MockSubmitter extends Mock implements ScanSubmitter {}
+
+class _MockLocator extends Mock implements ScanLocator {}
+
+const _here = ScanPosition(lat: 14.7, lon: -17.4, label: 'Dakar');
 
 UserModel _user(List<String> roles) =>
     UserModel(id: 'u1', roles: roles, kycStatus: 'APPROVED', status: 'ACTIVE');
@@ -76,6 +88,7 @@ BidModel _bid(
   String? number,
   String? from,
   String? to,
+  double? weight,
 }) => BidModel(
   id: id,
   announcementId: trip,
@@ -83,6 +96,7 @@ BidModel _bid(
   status: status,
   recipientName: name,
   trackingNumber: number,
+  weightKg: weight,
   departureCity: from,
   arrivalCity: to,
   createdAt: DateTime(2026),
@@ -95,6 +109,8 @@ void main() {
   late _MockTrackingRepo trackingRepo;
   late _MockAnalytics analytics;
   late _MockOfflineSync offlineSync;
+  late _MockSubmitter submitter;
+  late _MockLocator locator;
   late ChangeNotifier queue;
   late List<String> visited;
   late Map<String, dynamic>? lastExtra;
@@ -153,6 +169,30 @@ void main() {
     trackingRepo = _MockTrackingRepo();
     analytics = _MockAnalytics();
     offlineSync = _MockOfflineSync();
+    submitter = _MockSubmitter();
+    locator = _MockLocator();
+    when(() => locator.capture()).thenAnswer((_) async => _here);
+    when(
+      () => submitter.submit(
+        bidId: any(named: 'bidId'),
+        eventType: any(named: 'eventType'),
+        photoPath: any(named: 'photoPath'),
+        gpsLat: any(named: 'gpsLat'),
+        gpsLon: any(named: 'gpsLon'),
+        gpsLabel: any(named: 'gpsLabel'),
+        queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
+      ),
+    ).thenAnswer(
+      (_) async => ScanSubmitSent(
+        TrackingEventModel(
+          id: 'e1',
+          bidId: 'sali',
+          eventType: 'TRANSIT',
+          scannedAt: DateTime(2026, 9, 28),
+          createdAt: DateTime(2026, 9, 28),
+        ),
+      ),
+    );
     queue = ChangeNotifier();
     visited = [];
     lastExtra = null;
@@ -184,6 +224,9 @@ void main() {
       )
       ..registerFactory<ScanHubCubit>(
         () => ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo),
+      )
+      ..registerFactory<SuiviValidationCubit>(
+        () => SuiviValidationCubit(submitter, locator, analytics),
       )
       ..registerFactory<TrackingBloc>(() {
         final bloc = _MockTrackingBloc();
@@ -245,7 +288,22 @@ void main() {
             cameraBuilder: fakeCamera,
           ),
         ),
-        stub('/tracking/scan/photo'),
+        stub(
+          '/tracking/scan/photo',
+          page: (state) => Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => context.pop(
+                  const ScanPhotoResult(
+                    photoPath: '/tmp/colis.jpg',
+                    position: _here,
+                  ),
+                ),
+                child: const Text('page /tracking/scan/photo'),
+              ),
+            ),
+          ),
+        ),
         stub('/tracking/scan/identify'),
         stub('/tracking/offline-queue'),
         stub('/announcements/trips'),
@@ -279,6 +337,87 @@ void main() {
   }
 
   Finder text(String s) => find.text(s, findRichText: true);
+
+  void verifyNeverSubmitted() => verifyNever(
+    () => submitter.submit(
+      bidId: any(named: 'bidId'),
+      eventType: any(named: 'eventType'),
+      photoPath: any(named: 'photoPath'),
+      gpsLat: any(named: 'gpsLat'),
+      gpsLon: any(named: 'gpsLon'),
+      gpsLabel: any(named: 'gpsLabel'),
+      queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
+    ),
+  );
+
+  /// Trajet avec un colis remis (étape suivante : transit) et un colis au
+  /// départ, plus un colis sur un autre trajet.
+  void stubTransitTrips() => stubTrips(
+    [
+      _trip('trip-a', 'IN_PROGRESS', 'Bobo-Dioulasso', 'Yaoundé'),
+      _trip('trip-b', 'ACTIVE', 'Paris', 'Dakar', date: DateTime(2026, 10, 3)),
+    ],
+    {
+      'trip-a': [
+        _bid(
+          'sali',
+          'HANDED_OVER',
+          name: 'Sali',
+          number: 'DON-SAL003',
+          weight: 4.5,
+        ),
+        _bid('madou', 'ACCEPTED', name: 'Madou', number: 'DON-MAD001'),
+      ],
+      'trip-b': [
+        _bid(
+          'fatou',
+          'ACCEPTED',
+          trip: 'trip-b',
+          name: 'Fatou',
+          number: 'DON-FAT004',
+        ),
+      ],
+    },
+  );
+
+  /// Amène [key] dans la partie visible de la feuille, puis le touche.
+  Future<void> tapVisible(WidgetTester tester, Key key) async {
+    await tester.ensureVisible(find.byKey(key));
+    await settle(tester, rounds: 1);
+    await tester.tap(find.byKey(key));
+    await settle(tester);
+  }
+
+  /// Déplie la feuille sur le champ numéro via « QR illisible ? ».
+  Future<void> openNumberField(WidgetTester tester) async {
+    await tester.ensureVisible(find.byKey(const Key('suivi-enter-number')));
+    await settle(tester, rounds: 2);
+    await tester.tap(find.byKey(const Key('suivi-enter-number')));
+    await settle(tester);
+  }
+
+  /// « Forcer une étape » → Transit : le prochain colis valide son transit.
+  Future<void> forceTransit(WidgetTester tester) async {
+    await openNumberField(tester);
+    await tapVisible(tester, const Key('suivi-force-step'));
+    await tester.tap(find.byKey(const Key('suivi-force-TRANSIT')));
+    await settle(tester);
+  }
+
+  Future<void> submitNumber(WidgetTester tester, String number) async {
+    await tester.ensureVisible(
+      find.byKey(const Key('suivi-validate-number-field')),
+    );
+    await settle(tester, rounds: 1);
+    await tester.enterText(
+      find.byKey(const Key('suivi-validate-number-field')),
+      number,
+    );
+    // Validation au clavier : le focus fait défiler la feuille, un tap sur
+    // le bouton tomberait pendant le défilement.
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await settle(tester);
+  }
 
   group('expéditeur (non voyageur)', () {
     testWidgets('ni sélecteur ni caméra, Mes envois et bouton QR', (
@@ -472,15 +611,46 @@ void main() {
         'bidId': 'madou',
         'etape': 'DEPART',
         'packageLabel': 'Madou',
+        'returnResult': true,
       });
       // Écran recouvert : caméra coupée.
       expect(cameraPaused?.value, isTrue);
 
-      final router = GoRouter.of(
-        tester.element(find.text('page /tracking/scan/photo')),
-      );
-      router.pop();
+      // Photo prise : bandeau « Annuler », envoi à la fin du délai.
+      await tester.tap(text('page /tracking/scan/photo'));
+      await settle(tester, rounds: 2);
+      expect(cameraPaused?.value, isFalse);
+      expect(text('Départ de Madou validé'), findsOneWidget);
+      verifyNeverSubmitted();
+
+      await tester.pump(const Duration(seconds: 5));
+      await settle(tester, rounds: 2);
+      verify(
+        () => submitter.submit(
+          bidId: 'madou',
+          eventType: 'DEPART',
+          photoPath: '/tmp/colis.jpg',
+          gpsLat: 14.7,
+          gpsLon: -17.4,
+          gpsLabel: 'Dakar',
+          queueOnNetworkFailure: true,
+        ),
+      ).called(1);
+      expect(text('Départ de Madou validé'), findsNothing);
+      // Position relevée avant la photo : pas de nouveau relevé.
+      verifyNever(() => locator.capture());
+    });
+
+    testWidgets('photo du départ abandonnée → rien n\'est programmé', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester);
+      scan!('madou');
       await settle(tester);
+      GoRouter.of(tester.element(find.text('page /tracking/scan/photo'))).pop();
+      await settle(tester);
+      expect(find.byKey(const Key('suivi-undo-1')), findsNothing);
       expect(cameraPaused?.value, isFalse);
     });
 
@@ -589,9 +759,7 @@ void main() {
       expect(text('Suivi du colis'), findsOneWidget);
     });
 
-    testWidgets('action d\'une ligne et numéro → identification', (
-      tester,
-    ) async {
+    testWidgets('action d\'une ligne → identification', (tester) async {
       stubDefaultTrips();
       await pump(tester);
 
@@ -605,13 +773,6 @@ void main() {
         tester.element(find.text('page /tracking/scan/identify')),
       ).pop();
       await settle(tester);
-
-      await tester.ensureVisible(find.byKey(const Key('suivi-enter-number')));
-      await settle(tester, rounds: 2);
-      await tester.tap(find.byKey(const Key('suivi-enter-number')));
-      await settle(tester);
-      // Étapes différentes selon les colis : l'identification la demandera.
-      expect(lastExtra, {'etape': null, 'focusNumber': false});
     });
 
     testWidgets('feuille tirée en haut → caméra en pause, Scanner la replie', (
@@ -679,6 +840,481 @@ void main() {
       expect(text('Bobo-Dioulasso → Yaoundé'), findsOneWidget);
     });
   });
+
+  group('validation rapide', () {
+    testWidgets('QR d\'un transit : bandeau, envoi au bout de 5 s', (
+      tester,
+    ) async {
+      stubTransitTrips();
+      await pump(tester);
+      await forceTransit(tester);
+      clearInteractions(annRepo);
+
+      scan!('sali');
+      await settle(tester, rounds: 1);
+      expect(visited, isNot(contains('/tracking/scan/photo')));
+      expect(text('Transit de Sali validé'), findsOneWidget);
+      expect(text('Envoi dans 5 s'), findsOneWidget);
+      // La caméra continue pendant le délai.
+      expect(cameraPaused?.value, isFalse);
+      verifyNeverSubmitted();
+
+      await tester.pump(const Duration(seconds: 2));
+      expect(text('Envoi dans 3 s'), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 3));
+      await settle(tester, rounds: 2);
+      verify(
+        () => submitter.submit(
+          bidId: 'sali',
+          eventType: 'TRANSIT',
+          gpsLat: 14.7,
+          gpsLon: -17.4,
+          gpsLabel: 'Dakar',
+          queueOnNetworkFailure: true,
+        ),
+      ).called(1);
+      expect(text('Transit de Sali validé'), findsNothing);
+      // Colis et derniers scans rechargés sans démonter la caméra.
+      verify(() => annRepo.getMyAnnouncements()).called(1);
+      expect(find.byKey(const Key('fake-camera')), findsOneWidget);
+      verify(
+        () => analytics.logEvent(
+          'suivi_step_validated',
+          properties: {'step': 'TRANSIT', 'method': 'qr'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('Annuler : rien n\'est envoyé', (tester) async {
+      stubTransitTrips();
+      await pump(tester);
+      await forceTransit(tester);
+
+      scan!('sali');
+      await settle(tester, rounds: 1);
+      await tester.tap(find.byKey(const Key('suivi-undo-1')));
+      await tester.pump(const Duration(seconds: 6));
+      await settle(tester, rounds: 2);
+      expect(text('Transit de Sali validé'), findsNothing);
+      verifyNeverSubmitted();
+      verify(
+        () => analytics.logEvent(
+          'suivi_step_undone',
+          properties: {'step': 'TRANSIT'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('colis déjà en attente, saisi par numéro → message', (
+      tester,
+    ) async {
+      stubTransitTrips();
+      await pump(tester);
+      await forceTransit(tester);
+
+      scan!('sali');
+      await settle(tester, rounds: 1);
+      await openNumberField(tester);
+      await tester.enterText(
+        find.byKey(const Key('suivi-validate-number-field')),
+        'DON-SAL003',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        text('La validation de Sali part dans quelques secondes.'),
+        findsOneWidget,
+      );
+      expect(text('Valider avec le numéro'), findsNothing);
+      await tester.pump(const Duration(seconds: 5));
+      await settle(tester, rounds: 12);
+      verify(
+        () => submitter.submit(
+          bidId: 'sali',
+          eventType: 'TRANSIT',
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          queueOnNetworkFailure: true,
+        ),
+      ).called(1);
+    });
+
+    testWidgets('sans réseau → en attente d\'envoi', (tester) async {
+      when(
+        () => submitter.submit(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          photoPath: any(named: 'photoPath'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
+        ),
+      ).thenAnswer((_) async => const ScanSubmitQueued());
+      stubTransitTrips();
+      await pump(tester);
+      await forceTransit(tester);
+
+      scan!('sali');
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        text(
+          "Transit de Sali en attente d'envoi. Il part dès le retour du "
+          'réseau.',
+        ),
+        findsOneWidget,
+      );
+      await settle(tester, rounds: 12);
+    });
+
+    testWidgets('refus du back → message d\'échec', (tester) async {
+      when(
+        () => submitter.submit(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          photoPath: any(named: 'photoPath'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
+        ),
+      ).thenThrow(const ConflictException('déjà scanné'));
+      stubTransitTrips();
+      await pump(tester);
+      await forceTransit(tester);
+
+      scan!('sali');
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(text('Transit de Sali non validé'), findsOneWidget);
+      await settle(tester, rounds: 12);
+    });
+
+    testWidgets('onglet démonté pendant le délai → envoi immédiat', (
+      tester,
+    ) async {
+      stubTransitTrips();
+      await pump(tester);
+      await forceTransit(tester);
+
+      scan!('sali');
+      await settle(tester, rounds: 1);
+      verifyNeverSubmitted();
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+      verify(
+        () => submitter.submit(
+          bidId: 'sali',
+          eventType: 'TRANSIT',
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          queueOnNetworkFailure: true,
+        ),
+      ).called(1);
+    });
+
+    testWidgets('app en arrière-plan pendant le délai → envoi immédiat', (
+      tester,
+    ) async {
+      stubTransitTrips();
+      await pump(tester);
+      await forceTransit(tester);
+
+      scan!('sali');
+      await settle(tester, rounds: 1);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      await tester.pump();
+      verify(
+        () => submitter.submit(
+          bidId: 'sali',
+          eventType: 'TRANSIT',
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          queueOnNetworkFailure: true,
+        ),
+      ).called(1);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await settle(tester, rounds: 2);
+    });
+  });
+
+  group('feuille dépliée : étape et numéro', () {
+    testWidgets('QR illisible → feuille dépliée, étape automatique', (
+      tester,
+    ) async {
+      stubTransitTrips();
+      await pump(tester);
+      expect(
+        find.byKey(const Key('suivi-validate-number-field')),
+        findsNothing,
+      );
+
+      await openNumberField(tester);
+      expect(cameraPaused?.value, isTrue);
+      expect(find.byKey(const Key('suivi-enter-number')), findsNothing);
+      expect(text('Étape : automatique'), findsOneWidget);
+      final field = tester.widget<TextField>(
+        find.byKey(const Key('suivi-validate-number-field')),
+      );
+      expect(field.focusNode!.hasFocus, isTrue);
+
+      // Explication repliée, dépliée au tap.
+      await tapVisible(tester, const Key('suivi-step-mode'));
+      expect(
+        text(
+          "Chaque scan valide l'étape suivante du colis. Force une étape "
+          'seulement pour rattraper un oubli.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Forcer une étape → identification avec l\'étape', (
+      tester,
+    ) async {
+      stubTransitTrips();
+      await pump(tester);
+      await openNumberField(tester);
+
+      await tapVisible(tester, const Key('suivi-force-step'));
+      // Seul le transit est marqué facultatif.
+      expect(text('Facultatif'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('suivi-force-DEPART')));
+      await settle(tester);
+      expect(visited.last, '/tracking/scan/identify');
+      expect(lastExtra, {'etape': 'DEPART', 'focusNumber': true});
+    });
+
+    testWidgets('transit forcé : consigne, puis retour en automatique', (
+      tester,
+    ) async {
+      stubTransitTrips();
+      await pump(tester);
+      await forceTransit(tester);
+      // Feuille repliée sur la caméra, consigne du transit.
+      expect(cameraPaused?.value, isFalse);
+      expect(
+        text(
+          'Transit facultatif : scanne le colis à valider.\n'
+          "L'étape repasse ensuite en automatique.",
+        ),
+        findsOneWidget,
+      );
+
+      // Colis pas encore parti : refusé avant tout envoi.
+      scan!('madou');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(text("Valide d'abord le départ de Madou."), findsOneWidget);
+      await settle(tester, rounds: 12);
+
+      await openNumberField(tester);
+      expect(text('Étape : transit, facultatif'), findsOneWidget);
+      await tapVisible(tester, const Key('suivi-step-auto'));
+      expect(text('Étape : automatique'), findsOneWidget);
+    });
+
+    testWidgets('numéro, transit forcé : récap, photo obligatoire, bandeau', (
+      tester,
+    ) async {
+      stubTransitTrips();
+      await pump(tester);
+      await forceTransit(tester);
+      await openNumberField(tester);
+      await submitNumber(tester, 'don-sal003');
+
+      expect(text('Valider avec le numéro'), findsOneWidget);
+      expect(text('Colis de Sali'), findsOneWidget);
+      expect(text('4,5 kg · DON-SAL003'), findsOneWidget);
+      expect(text('Départ'), findsOneWidget);
+      expect(text('Transit'), findsOneWidget);
+      expect(
+        text(
+          'Sans QR code, une photo du colis est obligatoire. Ta position '
+          "est enregistrée avec l'étape.",
+        ),
+        findsOneWidget,
+      );
+      verifyNever(() => trackingRepo.searchByTrackingNumber(any()));
+
+      await tester.tap(find.byKey(const Key('suivi-number-photo')));
+      await settle(tester);
+      expect(lastExtra, {
+        'bidId': 'sali',
+        'etape': 'TRANSIT',
+        'packageLabel': 'Sali',
+        'returnResult': true,
+      });
+      await tester.tap(text('page /tracking/scan/photo'));
+      await settle(tester, rounds: 2);
+      expect(text('Transit de Sali validé'), findsOneWidget);
+      expect(
+        find.textContaining('Photo prise · envoi dans', findRichText: true),
+        findsOneWidget,
+      );
+
+      await tester.pump(const Duration(seconds: 5));
+      await settle(tester, rounds: 2);
+      verify(
+        () => submitter.submit(
+          bidId: 'sali',
+          eventType: 'TRANSIT',
+          photoPath: '/tmp/colis.jpg',
+          gpsLat: 14.7,
+          gpsLon: -17.4,
+          gpsLabel: 'Dakar',
+          queueOnNetworkFailure: true,
+        ),
+      ).called(1);
+      verify(
+        () => analytics.logEvent(
+          'suivi_step_validated',
+          properties: {'step': 'TRANSIT', 'method': 'number'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('numéro d\'une arrivée → parcours photo puis code', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      when(
+        () => trackingRepo.searchByTrackingNumber(any()),
+      ).thenThrow(const NotFoundException());
+      await pump(tester);
+      await openNumberField(tester);
+      await submitNumber(tester, 'DON-KAD002');
+      await tester.tap(find.byKey(const Key('suivi-number-photo')));
+      await settle(tester);
+      expect(lastExtra, {
+        'bidId': 'kadi',
+        'etape': 'ARRIVEE',
+        'packageLabel': 'Kadi',
+      });
+    });
+
+    testWidgets('récap fermé → rien n\'est programmé', (tester) async {
+      stubTransitTrips();
+      await pump(tester);
+      await openNumberField(tester);
+      await submitNumber(tester, 'DON-SAL003');
+      await tester.tapAt(const Offset(20, 20));
+      await settle(tester);
+      expect(text('Valider avec le numéro'), findsNothing);
+      expect(visited, isNot(contains('/tracking/scan/photo')));
+    });
+
+    testWidgets('numéro d\'un autre trajet → passer sur ce trajet', (
+      tester,
+    ) async {
+      stubTransitTrips();
+      await pump(tester);
+      await openNumberField(tester);
+      await submitNumber(tester, 'DON-FAT004');
+      expect(text("Ce colis n'est pas sur ce trajet"), findsOneWidget);
+    });
+
+    testWidgets('numéro d\'un colis inconnu → suivre seulement', (
+      tester,
+    ) async {
+      when(() => trackingRepo.searchByTrackingNumber('DON-AUTRE1')).thenAnswer(
+        (_) async => const TrackingSearchModel(
+          trackingNumber: 'DON-AUTRE1',
+          bidId: 'ailleurs',
+          departureCity: 'Lyon',
+          arrivalCity: 'Abidjan',
+          currentStep: 'IN_TRANSIT',
+          stepLabel: 'En transit',
+          paymentStatus: 'ESCROWED',
+        ),
+      );
+      stubTransitTrips();
+      await pump(tester);
+      await openNumberField(tester);
+      await submitNumber(tester, 'DON-AUTRE1');
+      expect(text("Ce colis n'est pas sur tes trajets"), findsOneWidget);
+    });
+
+    testWidgets('numéro introuvable ou non lié au compte', (tester) async {
+      when(
+        () => trackingRepo.searchByTrackingNumber('DON-NOPE01'),
+      ).thenThrow(const NotFoundException());
+      when(
+        () => trackingRepo.searchByTrackingNumber('DON-PRIVE1'),
+      ).thenThrow(const ForbiddenException());
+      stubTransitTrips();
+      await pump(tester);
+      await openNumberField(tester);
+
+      await submitNumber(tester, 'DON-NOPE01');
+      expect(
+        text('Numéro introuvable. Vérifie-le et réessaie.'),
+        findsOneWidget,
+      );
+
+      await submitNumber(tester, 'DON-PRIVE1');
+      expect(text("Ce colis n'est pas lié à ton compte"), findsOneWidget);
+      expect(text('Réessayer'), findsNothing);
+    });
+  });
+
+  group('mode Suivre : colis non lié au compte', () {
+    testWidgets('numéro refusé (403) → message dédié, sans Réessayer', (
+      tester,
+    ) async {
+      when(
+        () => trackingRepo.searchByTrackingNumber('DON-PRIVE1'),
+      ).thenThrow(const ForbiddenException());
+      await pump(tester, roles: ['SENDER']);
+      await tester.enterText(
+        find.byKey(const Key('suivi-number-field')),
+        'DON-PRIVE1',
+      );
+      await tester.tap(find.byKey(const Key('suivi-number-submit')));
+      await settle(tester);
+      expect(text("Ce colis n'est pas lié à ton compte"), findsOneWidget);
+      expect(
+        text(
+          "Seuls l'expéditeur et le voyageur peuvent le suivre ici. Demande "
+          "le lien de suivi à l'expéditeur.",
+        ),
+        findsOneWidget,
+      );
+      expect(text('Réessayer'), findsNothing);
+      expect(find.byKey(const Key('suivi-search-error')), findsNothing);
+    });
+
+    testWidgets('QR refusé (403) → parcours avec message dédié', (
+      tester,
+    ) async {
+      getIt
+        ..unregister<TrackingBloc>()
+        ..registerFactory<TrackingBloc>(() {
+          final bloc = _MockTrackingBloc();
+          when(
+            () => bloc.state,
+          ).thenReturn(TrackingEventsError(const ForbiddenException()));
+          return bloc;
+        });
+      stubDefaultTrips();
+      await pump(tester, location: '/?mode=suivre');
+      scan!('00000000-0000-0000-0000-000000000000');
+      await settle(tester);
+      expect(text("Ce colis n'est pas lié à ton compte"), findsOneWidget);
+      expect(text('Réessayer'), findsNothing);
+    });
+  });
 }
 
 /// `flutter_animate` et les feuilles laissent des animations finies : on
@@ -693,6 +1329,9 @@ Future<void> settle(WidgetTester tester, {int rounds = 6}) async {
 void _unregisterAll() {
   if (getIt.isRegistered<SuiviCubit>()) getIt.unregister<SuiviCubit>();
   if (getIt.isRegistered<ScanHubCubit>()) getIt.unregister<ScanHubCubit>();
+  if (getIt.isRegistered<SuiviValidationCubit>()) {
+    getIt.unregister<SuiviValidationCubit>();
+  }
   if (getIt.isRegistered<TrackingBloc>()) getIt.unregister<TrackingBloc>();
   if (getIt.isRegistered<OfflineSyncService>()) {
     getIt.unregister<OfflineSyncService>();

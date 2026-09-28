@@ -1,15 +1,15 @@
+import 'dart:io';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:native_exif/native_exif.dart';
 
 // Icônes uniquement : le libellé se calcule via trackingStepLabel.
 const _etapeIcons = <String, (String?, String?)>{
@@ -18,17 +18,38 @@ const _etapeIcons = <String, (String?, String?)>{
   'ARRIVEE': (null, 'plane-landing'),
 };
 
+/// Photo prise en mode « retour de résultat » ([ScanPhotoScreen.returnResult]).
+class ScanPhotoResult {
+  const ScanPhotoResult({required this.photoPath, this.position});
+
+  final String photoPath;
+
+  /// Position relevée avant la photo, `null` sans permission ou sans signal.
+  final ScanPosition? position;
+}
+
 class ScanPhotoScreen extends StatefulWidget {
   const ScanPhotoScreen({
     super.key,
     required this.bidId,
     required this.etape,
     required this.packageLabel,
+    this.returnResult = false,
+    this.locator = const ScanLocator(),
   });
 
   final String bidId;
   final String etape;
   final String packageLabel;
+
+  /// Onglet Suivi : la photo (obligatoire) est rendue à l'appelant par
+  /// `context.pop(ScanPhotoResult)` au lieu d'ouvrir la confirmation.
+  final bool returnResult;
+
+  final ScanLocator locator;
+
+  /// Taille maximale acceptée par le back pour une photo d'étape.
+  static const maxPhotoBytes = 10 * 1024 * 1024;
 
   @override
   State<ScanPhotoScreen> createState() => _ScanPhotoScreenState();
@@ -36,12 +57,16 @@ class ScanPhotoScreen extends StatefulWidget {
 
 class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
   final ValueNotifier<bool> _loading = ValueNotifier(false);
-  Position? _position;
-  String? _gpsLabel;
+
+  /// Position relevée à l'ouverture, AVANT la photo : `null` tant qu'elle
+  /// n'est pas connue (ou introuvable).
+  final ValueNotifier<ScanPosition?> _position = ValueNotifier(null);
   late final Future<void> _gpsFuture;
 
   bool get _photoRequired =>
-      widget.etape == 'DEPART' || widget.etape == 'ARRIVEE';
+      widget.returnResult ||
+      widget.etape == 'DEPART' ||
+      widget.etape == 'ARRIVEE';
 
   @override
   void initState() {
@@ -52,22 +77,13 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
   @override
   void dispose() {
     _loading.dispose();
+    _position.dispose();
     super.dispose();
   }
 
   Future<void> _captureGps() async {
-    try {
-      final permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.always ||
-          permission == LocationPermission.whileInUse) {
-        _position = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-          ),
-        );
-        _gpsLabel = await _resolveGpsLabel(_position!);
-      }
-    } catch (_) {}
+    final position = await widget.locator.capture();
+    if (mounted) _position.value = position;
   }
 
   Future<void> _takePhoto() async {
@@ -81,8 +97,24 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
         _loading.value = false;
         return;
       }
-      if (_position != null) await _writeGpsExif(picked.path, _position!);
+      final position = _position.value;
+      if (position != null) {
+        await widget.locator.writeExif(picked.path, position);
+      }
       if (!mounted) return;
+      if (widget.returnResult) {
+        if (await File(picked.path).length() > ScanPhotoScreen.maxPhotoBytes) {
+          throw const MediaFileTooLargeException(
+            ScanPhotoScreen.maxPhotoBytes + 1,
+            ScanPhotoScreen.maxPhotoBytes,
+          );
+        }
+        if (!mounted) return;
+        context.pop(
+          ScanPhotoResult(photoPath: picked.path, position: position),
+        );
+        return;
+      }
       _navigateToConfirm(photoPath: picked.path);
     } on MediaFileTooLargeException catch (e) {
       if (!mounted) return;
@@ -107,65 +139,11 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
         'etape': widget.etape,
         'packageLabel': widget.packageLabel,
         'photoPath': photoPath,
-        'gpsLat': _position?.latitude,
-        'gpsLon': _position?.longitude,
-        'gpsLabel': _gpsLabel,
+        'gpsLat': _position.value?.lat,
+        'gpsLon': _position.value?.lon,
+        'gpsLabel': _position.value?.label,
       },
     );
-  }
-
-  Future<String?> _resolveGpsLabel(Position position) async {
-    try {
-      final places = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
-      );
-      if (places.isEmpty) return null;
-      return _formatPlacemark(places.first);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  String? _formatPlacemark(Placemark place) {
-    final parts = <String>[
-      ?_cleanPlacePart(place.street),
-      ?_cleanPlacePart(place.locality),
-      ?_cleanPlacePart(place.administrativeArea),
-      ?_cleanPlacePart(place.country),
-    ];
-    final unique = <String>[];
-    for (final part in parts) {
-      if (!unique.contains(part)) unique.add(part);
-    }
-    return unique.isEmpty ? null : unique.take(3).join(', ');
-  }
-
-  String? _cleanPlacePart(String? value) {
-    final trimmed = value?.trim();
-    return trimmed == null || trimmed.isEmpty ? null : trimmed;
-  }
-
-  Future<void> _writeGpsExif(String path, Position pos) async {
-    try {
-      final exif = await Exif.fromPath(path);
-      // Clés EXIF standard — jamais traduites (i18n-ignore).
-      await exif.writeAttributes({
-        'GPSLatitude': _toExifDms(pos.latitude.abs()), // i18n-ignore
-        'GPSLatitudeRef': pos.latitude >= 0 ? 'N' : 'S', // i18n-ignore
-        'GPSLongitude': _toExifDms(pos.longitude.abs()), // i18n-ignore
-        'GPSLongitudeRef': pos.longitude >= 0 ? 'E' : 'W', // i18n-ignore
-      });
-      await exif.close();
-    } catch (_) {}
-  }
-
-  String _toExifDms(double decimal) {
-    final deg = decimal.floor();
-    final minFull = (decimal - deg) * 60;
-    final min = minFull.floor();
-    final sec = ((minFull - min) * 60 * 100).round();
-    return '$deg/1,$min/1,$sec/100';
   }
 
   @override
@@ -194,133 +172,68 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                   DonySpacing.sm,
                   DonySpacing.lg,
                 ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        IconButton(
-                          tooltip: l.commonClose,
-                          icon: const DonyIcon('x', color: DonyColors.neutral0),
-                          onPressed: () => context.pop(),
-                        ),
-                        Expanded(
-                          child: Text(
-                            l.scanPhotoOfParcelLabel,
-                            textAlign: TextAlign.center,
-                            style: tt.bodyMedium?.copyWith(
-                              color: DonyColors.neutral0,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 48),
-                      ],
-                    ),
-                    const SizedBox(height: DonySpacing.sm),
-                    // Package pill
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.md,
-                        vertical: DonySpacing.xs,
-                      ),
-                      decoration: BoxDecoration(
-                        color: DonyColors.neutral0.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(DonyRadius.full),
-                        border: Border.all(
-                          color: DonyColors.neutral0.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                child: widget.returnResult
+                    ? _ResultHeader(
+                        parcel: widget.packageLabel,
+                        step: widget.etape,
+                      )
+                    : Column(
                         children: [
-                          const DonyIcon(
-                            'package',
-                            color: DonyColors.neutral0,
-                            size: 13,
-                          ),
-                          const SizedBox(width: DonySpacing.xs),
-                          Text(
-                            widget.packageLabel,
-                            style: tt.labelMedium?.copyWith(
-                              color: DonyColors.neutral0,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: DonySpacing.xs),
-                    // Étape + badge photo
-                    if (etapeIcons != null)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: DonySpacing.md,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: cs.primary.withValues(alpha: 0.75),
-                              borderRadius: BorderRadius.circular(
-                                DonyRadius.full,
+                          Row(
+                            children: [
+                              IconButton(
+                                tooltip: l.commonClose,
+                                icon: const DonyIcon(
+                                  'x',
+                                  color: DonyColors.neutral0,
+                                ),
+                                onPressed: () => context.pop(),
                               ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (etapeIcons.$2 != null)
-                                  DonyIcon(
-                                    etapeIcons.$2!,
-                                    color: DonyColors.neutral0,
-                                    size: 12,
-                                  )
-                                else
-                                  DonyIcon(
-                                    etapeIcons.$1!,
-                                    color: DonyColors.neutral0,
-                                    size: 12,
-                                  ),
-                                const SizedBox(width: DonySpacing.xs),
-                                Text(
-                                  l.scanStepLabel(
-                                    trackingStepLabel(l, widget.etape),
-                                  ),
-                                  style: tt.labelSmall?.copyWith(
+                              Expanded(
+                                child: Text(
+                                  l.scanPhotoOfParcelLabel,
+                                  textAlign: TextAlign.center,
+                                  style: tt.bodyMedium?.copyWith(
                                     color: DonyColors.neutral0,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(width: 48),
+                            ],
                           ),
-                          const SizedBox(width: DonySpacing.sm),
+                          const SizedBox(height: DonySpacing.sm),
+                          // Package pill
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: DonySpacing.sm,
-                              vertical: 2,
+                              horizontal: DonySpacing.md,
+                              vertical: DonySpacing.xs,
                             ),
                             decoration: BoxDecoration(
-                              color: (_photoRequired ? cs.error : cs.warning)
-                                  .withValues(alpha: 0.75),
+                              color: DonyColors.neutral0.withValues(
+                                alpha: 0.15,
+                              ),
                               borderRadius: BorderRadius.circular(
                                 DonyRadius.full,
+                              ),
+                              border: Border.all(
+                                color: DonyColors.neutral0.withValues(
+                                  alpha: 0.3,
+                                ),
                               ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const DonyIcon(
-                                  'camera',
+                                  'package',
                                   color: DonyColors.neutral0,
-                                  size: 11,
+                                  size: 13,
                                 ),
-                                const SizedBox(width: 2),
+                                const SizedBox(width: DonySpacing.xs),
                                 Text(
-                                  _photoRequired
-                                      ? l.scanPhotoMandatoryBadge
-                                      : l.scanPhotoOptionalBadge,
-                                  style: tt.labelSmall?.copyWith(
+                                  widget.packageLabel,
+                                  style: tt.labelMedium?.copyWith(
                                     color: DonyColors.neutral0,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -328,10 +241,90 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                               ],
                             ),
                           ),
+                          const SizedBox(height: DonySpacing.xs),
+                          // Étape + badge photo
+                          if (etapeIcons != null)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: DonySpacing.md,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: cs.primary.withValues(alpha: 0.75),
+                                    borderRadius: BorderRadius.circular(
+                                      DonyRadius.full,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (etapeIcons.$2 != null)
+                                        DonyIcon(
+                                          etapeIcons.$2!,
+                                          color: DonyColors.neutral0,
+                                          size: 12,
+                                        )
+                                      else
+                                        DonyIcon(
+                                          etapeIcons.$1!,
+                                          color: DonyColors.neutral0,
+                                          size: 12,
+                                        ),
+                                      const SizedBox(width: DonySpacing.xs),
+                                      Text(
+                                        l.scanStepLabel(
+                                          trackingStepLabel(l, widget.etape),
+                                        ),
+                                        style: tt.labelSmall?.copyWith(
+                                          color: DonyColors.neutral0,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: DonySpacing.sm),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: DonySpacing.sm,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        (_photoRequired ? cs.error : cs.warning)
+                                            .withValues(alpha: 0.75),
+                                    borderRadius: BorderRadius.circular(
+                                      DonyRadius.full,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const DonyIcon(
+                                        'camera',
+                                        color: DonyColors.neutral0,
+                                        size: 11,
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        _photoRequired
+                                            ? l.scanPhotoMandatoryBadge
+                                            : l.scanPhotoOptionalBadge,
+                                        style: tt.labelSmall?.copyWith(
+                                          color: DonyColors.neutral0,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                         ],
                       ),
-                  ],
-                ),
               ),
             ),
 
@@ -425,10 +418,24 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                             size: 12,
                           ),
                           const SizedBox(width: DonySpacing.xs),
-                          Text(
-                            l.scanAutoGeolocation,
-                            style: tt.labelSmall?.copyWith(
-                              color: DonyColors.neutral0.withValues(alpha: 0.5),
+                          Flexible(
+                            child: ValueListenableBuilder<ScanPosition?>(
+                              valueListenable: _position,
+                              builder: (context, position, _) {
+                                final label = position?.label;
+                                return Text(
+                                  widget.returnResult && label != null
+                                      ? l.suiviPositionSaved(label)
+                                      : l.scanAutoGeolocation,
+                                  key: const Key('scan-photo-position'),
+                                  textAlign: TextAlign.center,
+                                  style: tt.labelSmall?.copyWith(
+                                    color: DonyColors.neutral0.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ],
@@ -441,6 +448,56 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// En-tête du mode « retour de résultat » : « Photo du colis de X » et
+/// l'étape qu'elle valide.
+class _ResultHeader extends StatelessWidget {
+  const _ResultHeader({required this.parcel, required this.step});
+
+  final String parcel;
+  final String step;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        IconButton(
+          tooltip: l.commonClose,
+          icon: const DonyIcon('x', color: DonyColors.neutral0),
+          onPressed: () => context.pop(),
+        ),
+        const SizedBox(width: DonySpacing.xs),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: DonySpacing.sm),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.suiviPhotoTitle(parcel),
+                  style: tt.headlineSmall?.copyWith(
+                    color: DonyColors.neutral0,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.xxs),
+                Text(
+                  l.suiviPhotoRequiredFor(step),
+                  style: tt.bodyMedium?.copyWith(
+                    color: DonyColors.neutral0.withValues(alpha: 0.75),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

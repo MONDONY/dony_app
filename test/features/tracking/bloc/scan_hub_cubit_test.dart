@@ -168,7 +168,7 @@ void main() {
   );
 
   blocTest<ScanHubCubit, ScanHubState>(
-    'trajet ACTIVE sans bids → ScanHubLoaded avec compteurs à zéro',
+    'trajet ACTIVE sans bids → ScanHubLoaded sans colis',
     build: () {
       when(() => annRepo.getMyAnnouncements()).thenAnswer(
         (_) async => (announcements: [_trip('b', 'ACTIVE')], totalElements: 1),
@@ -185,9 +185,9 @@ void main() {
     expect: () => [
       isA<ScanHubLoading>(),
       isA<ScanHubLoaded>().having(
-        (s) => s.progress.confirmedColis,
-        'confirmedColis',
-        0,
+        (s) => s.selectedTripBids,
+        'selectedTripBids',
+        isEmpty,
       ),
     ],
   );

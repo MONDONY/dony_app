@@ -7,6 +7,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
+import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,11 +26,13 @@ BidModel _bid(
   String? from,
   String? to,
   String? instructions,
+  String? number,
 }) => BidModel(
   id: id,
   announcementId: announcementId,
   senderId: 's',
   status: status,
+  trackingNumber: number,
   departureCity: from,
   arrivalCity: to,
   arrivalInstructions: instructions,
@@ -455,6 +458,186 @@ void main() {
       expect(c.state.effect, isNull);
       c.releaseScan();
       expect(c.state.busy, isFalse);
+    });
+  });
+
+  group('validation rapide (QR)', () {
+    ScanHubLoaded hub() => _hub(
+      bidsByTrip: {
+        'trip-a': [
+          _bid('handed', 'HANDED_OVER'),
+          _bid('accepted', 'ACCEPTED'),
+          _bid('transit', 'IN_TRANSIT'),
+        ],
+      },
+    );
+    SuiviCubit validating() =>
+        build()..start(canValidate: true, requested: SuiviMode.valider);
+
+    test('colis remis : la remise, jamais le transit automatique', () {
+      final c = validating()..onQrScanned('handed', hub());
+      expect((c.state.effect! as SuiviValidateStep).step, 'ARRIVEE');
+    });
+
+    test('transit forcé lu par QR : sans photo, puis automatique', () {
+      final c = validating()..forceTransit();
+      expect(c.state.forcedStep, 'TRANSIT');
+      c.onQrScanned('handed', hub());
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect(effect.step, 'TRANSIT');
+      expect(effect.method, SuiviValidationMethod.qr);
+      expect(effect.photoRequired, isFalse);
+      expect(c.state.forcedStep, isNull);
+    });
+
+    test('transit forcé : départ manquant ou transit déjà fait', () {
+      final c = validating()
+        ..forceTransit()
+        ..onQrScanned('accepted', hub());
+      expect(c.state.effect, isA<SuiviTransitNeedsDepart>());
+      // Pas consommé : le transit reste forcé pour le colis suivant.
+      expect(c.state.forcedStep, 'TRANSIT');
+      c
+        ..releaseScan()
+        ..onQrScanned('transit', hub());
+      expect(c.state.effect, isA<SuiviTransitAlreadyDone>());
+      c.clearForcedStep();
+      expect(c.state.forcedStep, isNull);
+      final id = c.state.effectId;
+      c.clearForcedStep();
+      expect(c.state.effectId, id);
+    });
+
+    test('DEPART et ARRIVEE : photo exigée', () {
+      final c = validating()..onQrScanned('accepted', hub());
+      expect((c.state.effect! as SuiviValidateStep).photoRequired, isTrue);
+      c
+        ..releaseScan()
+        ..onQrScanned('transit', hub());
+      final arrival = c.state.effect! as SuiviValidateStep;
+      expect(arrival.step, 'ARRIVEE');
+      expect(arrival.photoRequired, isTrue);
+    });
+
+    test('validation déjà en attente pour ce colis', () {
+      final c = validating()
+        ..onQrScanned('handed', hub(), pendingBidIds: {'handed'});
+      expect(c.state.effect, isA<SuiviStepPending>());
+      expect((c.state.effect! as SuiviStepPending).bid.id, 'handed');
+    });
+  });
+
+  group('validateNumber', () {
+    ScanHubLoaded hub() => _hub(
+      bidsByTrip: {
+        'trip-a': [
+          _bid('handed', 'HANDED_OVER', number: 'DON-HAN001'),
+          _bid('done', 'COMPLETED', number: 'DON-DON002'),
+        ],
+        'trip-b': [
+          _bid('lyon', 'ACCEPTED', announcementId: 'trip-b', number: 'DON-LYO'),
+        ],
+      },
+    );
+    SuiviCubit validating() =>
+        build()..start(canValidate: true, requested: SuiviMode.valider);
+
+    TrackingSearchModel found(String bidId) => TrackingSearchModel(
+      trackingNumber: 'DON-X',
+      bidId: bidId,
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      currentStep: 'IN_TRANSIT',
+      stepLabel: 'En transit',
+      paymentStatus: 'ESCROWED',
+    );
+
+    test('colis du trajet affiché, retrouvé sans appel réseau', () async {
+      final c = validating();
+      await c.validateNumber('  don-han001 ', hub());
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect(effect.bid.id, 'handed');
+      expect(effect.step, 'ARRIVEE');
+      expect(effect.method, SuiviValidationMethod.number);
+      expect(c.state.busy, isTrue);
+      expect(c.state.numberStatus, SuiviLoadStatus.idle);
+      verifyNever(() => trackingRepo.searchByTrackingNumber(any()));
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.suiviQrScanned,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    test('transit forcé par numéro : photo obligatoire', () async {
+      final c = validating()..forceTransit();
+      await c.validateNumber('DON-HAN001', hub());
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect(effect.step, 'TRANSIT');
+      // Sans QR, la photo est obligatoire même pour le transit.
+      expect(effect.photoRequired, isTrue);
+      expect(c.state.forcedStep, isNull);
+    });
+
+    test('colis déjà livré, ou déjà en attente', () async {
+      final c = validating();
+      await c.validateNumber('DON-DON002', hub());
+      expect(c.state.effect, isA<SuiviStepsAllDone>());
+      c.releaseScan();
+      await c.validateNumber('DON-HAN001', hub(), pendingBidIds: {'handed'});
+      expect(c.state.effect, isA<SuiviStepPending>());
+    });
+
+    test('colis d\'un autre trajet chargé', () async {
+      final c = validating();
+      await c.validateNumber('DON-LYO', hub());
+      expect((c.state.effect! as SuiviParcelOnOtherTrip).trip.id, 'trip-b');
+    });
+
+    test('trouvé par le back sur le trajet affiché', () async {
+      when(
+        () => trackingRepo.searchByTrackingNumber('DON-ZZZ'),
+      ).thenAnswer((_) async => found('handed'));
+      final c = validating();
+      final states = <SuiviState>[];
+      final sub = c.stream.listen(states.add);
+      await c.validateNumber('DON-ZZZ', hub());
+      await sub.cancel();
+      expect(states.first.numberStatus, SuiviLoadStatus.loading);
+      expect((c.state.effect! as SuiviValidateStep).bid.id, 'handed');
+    });
+
+    test('colis d\'un autre voyageur → suivre seulement', () async {
+      when(
+        () => trackingRepo.searchByTrackingNumber('DON-ZZZ'),
+      ).thenAnswer((_) async => found('ailleurs'));
+      final c = validating();
+      await c.validateNumber('DON-ZZZ', hub());
+      expect((c.state.effect! as SuiviParcelUnknown).bidId, 'ailleurs');
+      expect(c.state.numberStatus, SuiviLoadStatus.idle);
+    });
+
+    test('403 : erreur gardée pour le message dédié', () async {
+      when(
+        () => trackingRepo.searchByTrackingNumber('DON-ZZZ'),
+      ).thenThrow(const ForbiddenException());
+      final c = validating();
+      await c.validateNumber('DON-ZZZ', hub());
+      expect(c.state.numberStatus, SuiviLoadStatus.error);
+      expect(c.state.numberError, isA<ForbiddenException>());
+      expect(c.state.busy, isFalse);
+      expect(c.state.effect, isNull);
+    });
+
+    test('vide, trajets non chargés ou traitement en cours : rien', () async {
+      final c = validating();
+      await c.validateNumber('   ', hub());
+      await c.validateNumber('DON-HAN001', const ScanHubLoading());
+      expect(c.state.effect, isNull);
+      c.holdScans();
+      await c.validateNumber('DON-HAN001', hub());
+      expect(c.state.effect, isNull);
     });
   });
 }

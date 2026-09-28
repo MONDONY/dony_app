@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
@@ -8,6 +9,7 @@ import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -121,6 +123,14 @@ class _TrackingTimelineContent extends StatelessWidget {
           );
         }
         if (state is TrackingEventsError) {
+          // 403 : colis ni envoyé ni transporté par l'utilisateur. Refus
+          // définitif, « Réessayer » n'y changerait rien.
+          if (state.error is ForbiddenException) {
+            return const Padding(
+              padding: EdgeInsets.all(DonySpacing.xl),
+              child: Center(child: ParcelNotLinkedNotice(centered: true)),
+            );
+          }
           return _ErrorView(
             message: ErrorPresenter.resolve(
               state.error,

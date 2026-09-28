@@ -1,8 +1,15 @@
+import 'dart:io';
+
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 
@@ -19,6 +26,42 @@ GoRouter _router(String etape) => GoRouter(
     GoRoute(
       path: '/tracking/scan/confirm',
       builder: (_, _) => const Scaffold(body: Text('confirm')),
+    ),
+  ],
+);
+
+class _MockMedia extends Mock implements DonyMediaService {}
+
+class _MockLocator extends Mock implements ScanLocator {}
+
+const _here = ScanPosition(lat: 14.7, lon: -17.4, label: 'Dakar');
+
+/// Onglet Suivi : l'écran photo rend sa photo à l'appelant.
+GoRouter _resultRouter(
+  String etape,
+  ScanLocator locator,
+  ValueChanged<ScanPhotoResult?> onResult,
+) => GoRouter(
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (context, _) => Scaffold(
+        body: TextButton(
+          onPressed: () async =>
+              onResult(await context.push<ScanPhotoResult>('/photo')),
+          child: const Text('ouvrir'),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/photo',
+      builder: (_, _) => ScanPhotoScreen(
+        bidId: 'bid-1',
+        etape: etape,
+        packageLabel: 'Madou',
+        returnResult: true,
+        locator: locator,
+      ),
     ),
   ],
 );
@@ -168,5 +211,96 @@ void main() {
     expect(find.text('Take the photo'), findsOneWidget);
     expect(find.text('Skip: continue without a photo'), findsOneWidget);
     expect(find.text('Automatic geolocation'), findsOneWidget);
+  });
+
+  group('mode retour de résultat (onglet Suivi)', () {
+    late _MockLocator locator;
+    late _MockMedia media;
+    late Directory tmp;
+
+    setUp(() {
+      locator = _MockLocator();
+      media = _MockMedia();
+      tmp = Directory.systemTemp.createTempSync('scan_photo');
+      registerFallbackValue(_here);
+      when(() => locator.capture()).thenAnswer((_) async => _here);
+      when(() => locator.writeExif(any(), any())).thenAnswer((_) async {});
+      if (getIt.isRegistered<DonyMediaService>()) {
+        getIt.unregister<DonyMediaService>();
+      }
+      getIt.registerSingleton<DonyMediaService>(media);
+    });
+
+    tearDown(() {
+      getIt.unregister<DonyMediaService>();
+      tmp.deleteSync(recursive: true);
+    });
+
+    Future<void> open(WidgetTester tester, GoRouter router) async {
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.tap(find.text('ouvrir'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('titre du colis, photo obligatoire même au transit', (
+      tester,
+    ) async {
+      await open(tester, _resultRouter('TRANSIT', locator, (_) {}));
+      expect(find.text('Photo du colis de Madou'), findsOneWidget);
+      expect(find.text('Obligatoire pour valider le transit'), findsOneWidget);
+      expect(find.text('Passer : continuer sans photo'), findsNothing);
+      expect(find.text('Position enregistrée · Dakar'), findsOneWidget);
+    });
+
+    testWidgets('photo prise : rendue avec la position relevée avant', (
+      tester,
+    ) async {
+      final file = File('${tmp.path}/colis.jpg')..writeAsBytesSync([1, 2, 3]);
+      when(
+        () => media.pick(source: ImageSource.camera),
+      ).thenAnswer((_) async => XFile(file.path));
+      ScanPhotoResult? result;
+      await open(tester, _resultRouter('DEPART', locator, (r) => result = r));
+
+      await tester.tap(find.text('Prendre la photo'));
+      // Lecture réelle du fichier : on laisse tourner l'horloge réelle
+      // jusqu'au retour de l'écran.
+      for (var i = 0; i < 40 && result == null; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        await tester.pump();
+      }
+      await tester.pumpAndSettle();
+      expect(result?.photoPath, file.path);
+      expect(result?.position?.label, 'Dakar');
+      verify(() => locator.writeExif(file.path, _here)).called(1);
+      expect(find.text('ouvrir'), findsOneWidget);
+    });
+
+    testWidgets('photo de plus de 10 Mo : refusée, écran conservé', (
+      tester,
+    ) async {
+      final file = File('${tmp.path}/lourde.jpg')
+        ..writeAsBytesSync(List.filled(ScanPhotoScreen.maxPhotoBytes + 1, 0));
+      when(
+        () => media.pick(source: ImageSource.camera),
+      ).thenAnswer((_) async => XFile(file.path));
+      ScanPhotoResult? result;
+      await open(tester, _resultRouter('DEPART', locator, (r) => result = r));
+
+      await tester.tap(find.text('Prendre la photo'));
+      final tooLarge = find.textContaining('Photo trop lourde (max 10 Mo)');
+      for (var i = 0; i < 40 && tooLarge.evaluate().isEmpty; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        await tester.pump();
+      }
+      expect(tooLarge, findsOneWidget);
+      expect(result, isNull);
+      expect(find.text('Photo du colis de Madou'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+    });
   });
 }

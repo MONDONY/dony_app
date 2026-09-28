@@ -206,8 +206,11 @@ import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/data/support_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
+import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
+import 'package:dony/features/tracking/data/scan_locator.dart';
+import 'package:dony/features/tracking/data/scan_submitter.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
@@ -871,6 +874,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => SuiviCubit(
       getIt<BidRepository>(),
       getIt<TrackingRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerLazySingleton<ScanSubmitter>(
+    () =>
+        ScanSubmitter(getIt<TrackingRepository>(), getIt<OfflineSyncService>()),
+  );
+  getIt.registerFactory<SuiviValidationCubit>(
+    () => SuiviValidationCubit(
+      getIt<ScanSubmitter>(),
+      const ScanLocator(),
       getIt<AnalyticsService>(),
     ),
   );

@@ -1,9 +1,11 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
+import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,7 +38,10 @@ class SuiviTrackPanel extends StatelessWidget {
             _TrackNumberField(
               loading: state.searchStatus == SuiviLoadStatus.loading,
             ),
-            if (error != null) ...[
+            if (error is ForbiddenException) ...[
+              const SizedBox(height: DonySpacing.md),
+              const ParcelNotLinkedNotice(),
+            ] else if (error != null) ...[
               const SizedBox(height: DonySpacing.sm),
               Text(
                 ErrorPresenter.resolve(error, l10n: l).message,

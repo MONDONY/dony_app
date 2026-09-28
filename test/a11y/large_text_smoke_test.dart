@@ -69,8 +69,11 @@ import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
+import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
+import 'package:dony/features/tracking/data/scan_locator.dart';
+import 'package:dony/features/tracking/data/scan_submitter.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
@@ -749,6 +752,8 @@ class _SuiviMockTrackingRepo extends Mock implements TrackingRepository {}
 
 class _SuiviMockOfflineSync extends Mock implements OfflineSyncService {}
 
+class _SuiviMockSubmitter extends Mock implements ScanSubmitter {}
+
 AnnouncementModel _suiviTrip(String id) => AnnouncementModel(
   id: id,
   travelerId: 'traveler-1',
@@ -836,6 +841,13 @@ Widget _suiviHarness(List<String> roles, {SuiviMode? mode}) {
     ),
   );
   register<OfflineSyncService>(() => offlineSync);
+  register<SuiviValidationCubit>(
+    () => SuiviValidationCubit(
+      _SuiviMockSubmitter(),
+      const ScanLocator(),
+      makeDisabledAnalytics(MockAnalyticsBackend()),
+    ),
+  );
 
   final auth = _SuiviMockAuthBloc();
   when(() => auth.state).thenReturn(

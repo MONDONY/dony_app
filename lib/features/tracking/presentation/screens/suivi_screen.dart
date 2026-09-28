@@ -9,13 +9,16 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
-import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
+import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
+import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
+import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_header.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_parcel_sheets.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_track_panel.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_validate_content.dart';
+import 'package:dony/features/tracking/presentation/widgets/suivi_validation_toast.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
@@ -84,10 +87,16 @@ class SuiviScreen extends StatelessWidget {
                 create: (_) => getIt<SuiviCubit>()
                   ..start(canValidate: canValidate, requested: requestedMode),
               ),
-              if (canValidate)
+              if (canValidate) ...[
                 BlocProvider<ScanHubCubit>(
                   create: (_) => getIt<ScanHubCubit>()..load(),
                 ),
+                // Fermé avec l'onglet : les validations en attente partent
+                // alors aussitôt (SuiviValidationCubit.close).
+                BlocProvider<SuiviValidationCubit>(
+                  create: (_) => getIt<SuiviValidationCubit>(),
+                ),
+              ],
             ],
             child: _SuiviBody(
               canValidate: canValidate,
@@ -121,18 +130,27 @@ class _SuiviBodyState extends State<_SuiviBody> {
   final _sheetExpanded = ValueNotifier<bool>(false);
   final _cameraPaused = ValueNotifier<bool>(false);
   final _torchOn = ValueNotifier<bool>(false);
+  final _numberFocus = FocusNode();
+  late final AppLifecycleListener _lifecycle;
 
   /// Onglet visible et non recouvert par une autre page.
   bool _visible = true;
 
   // Tailles de la feuille, recalculées à chaque mise en page.
   double _peekSize = 0.45;
+  double _maxSize = 0.9;
   double _expandThreshold = 0.7;
 
   @override
   void initState() {
     super.initState();
     _sheetController.addListener(_onSheetMoved);
+    // App en arrière-plan : une validation en attente part tout de suite
+    // plutôt que d'attendre un délai que personne ne regarde.
+    _lifecycle = AppLifecycleListener(
+      onHide: _flushValidations,
+      onPause: _flushValidations,
+    );
     if (widget.canValidate) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -150,7 +168,18 @@ class _SuiviBodyState extends State<_SuiviBody> {
     // TickerMode est coupé, la caméra aussi.
     _visible = TickerMode.valuesOf(context).enabled;
     _updatePaused();
+    // Onglet quitté ou recouvert : plus personne pour « Annuler ».
+    if (!_visible) _flushValidations();
   }
+
+  void _flushValidations() {
+    if (!widget.canValidate || !mounted) return;
+    unawaited(context.read<SuiviValidationCubit>().flush());
+  }
+
+  Set<String> get _pendingBidIds => widget.canValidate
+      ? context.read<SuiviValidationCubit>().state.pendingBidIds
+      : const {};
 
   @override
   void didUpdateWidget(covariant _SuiviBody oldWidget) {
@@ -162,6 +191,8 @@ class _SuiviBodyState extends State<_SuiviBody> {
 
   @override
   void dispose() {
+    _lifecycle.dispose();
+    _numberFocus.dispose();
     _sheetController.removeListener(_onSheetMoved);
     _sheetController.dispose();
     _sheetExpanded.dispose();
@@ -196,6 +227,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
     context.read<SuiviCubit>().onQrScanned(
       bidId,
       widget.canValidate ? context.read<ScanHubCubit>().state : null,
+      pendingBidIds: _pendingBidIds,
     );
   }
 
@@ -208,17 +240,27 @@ class _SuiviBodyState extends State<_SuiviBody> {
   Future<void> _handleEffect(SuiviEffect effect) async {
     final cubit = context.read<SuiviCubit>();
     switch (effect) {
-      case SuiviValidateStep(:final bid, :final step):
-        await context.push<void>(
-          '/tracking/scan/photo',
-          extra: <String, dynamic>{
-            'bidId': bid.id,
-            'etape': step,
-            'packageLabel': suiviParcelLabel(bid),
-          },
-        );
+      case SuiviValidateStep():
+        await _validateStep(effect);
         if (!mounted) return;
-        _reloadTrips();
+        cubit.releaseScan();
+      case SuiviTransitNeedsDepart(:final bid):
+        DonySnackbar.show(
+          context,
+          message: context.l10n.suiviTransitNeedsDepart(suiviParcelLabel(bid)),
+        );
+        cubit.releaseScan();
+      case SuiviTransitAlreadyDone(:final bid):
+        DonySnackbar.show(
+          context,
+          message: context.l10n.suiviTransitAlreadyDone(suiviParcelLabel(bid)),
+        );
+        cubit.releaseScan();
+      case SuiviStepPending(:final bid):
+        DonySnackbar.show(
+          context,
+          message: context.l10n.suiviStepAlreadyPending(suiviParcelLabel(bid)),
+        );
         cubit.releaseScan();
       case SuiviStepsAllDone(:final bid):
         DonySnackbar.show(
@@ -262,6 +304,127 @@ class _SuiviBodyState extends State<_SuiviBody> {
     }
   }
 
+  /// Étape d'un colis du trajet : récapitulatif si le colis vient d'un
+  /// numéro, puis photo si elle est exigée, puis bandeau « Annuler » avant
+  /// l'envoi. L'arrivée garde son parcours photo puis code.
+  Future<void> _validateStep(SuiviValidateStep effect) async {
+    final SuiviValidateStep(:bid, :step, :method) = effect;
+    final hub = context.read<ScanHubCubit>();
+    final validations = context.read<SuiviValidationCubit>();
+    final label = suiviParcelLabel(bid);
+    if (method == SuiviValidationMethod.number) {
+      final hubState = hub.state;
+      if (hubState is! ScanHubLoaded) return;
+      final go = await showSuiviNumberRecapSheet(
+        context,
+        bid: bid,
+        trip: hubState.selectedTrip,
+        step: step,
+      );
+      if (!mounted || go != true) return;
+    }
+    if (step == 'ARRIVEE') {
+      await context.push<void>(
+        '/tracking/scan/photo',
+        extra: <String, dynamic>{
+          'bidId': bid.id,
+          'etape': step,
+          'packageLabel': label,
+        },
+      );
+      if (mounted) _reloadTrips();
+      return;
+    }
+    ScanPhotoResult? photo;
+    if (effect.photoRequired) {
+      photo = await context.push<ScanPhotoResult>(
+        '/tracking/scan/photo',
+        extra: <String, dynamic>{
+          'bidId': bid.id,
+          'etape': step,
+          'packageLabel': label,
+          'returnResult': true,
+        },
+      );
+      if (!mounted || photo == null) return;
+    }
+    validations.schedule(
+      bidId: bid.id,
+      step: step,
+      parcelLabel: label,
+      method: method,
+      photoPath: photo?.photoPath,
+      position: photo?.position,
+    );
+  }
+
+  /// Envoi d'une validation terminé : message si elle n'est pas partie
+  /// directement, puis colis et derniers scans rechargés.
+  void _onValidationOutcome(SuiviValidationOutcome outcome) {
+    final l = context.l10n;
+    final step = trackingStepLabel(l, outcome.step);
+    switch (outcome) {
+      case SuiviValidationSent():
+        break;
+      case SuiviValidationQueued(:final parcelLabel):
+        DonySnackbar.show(
+          context,
+          message: l.suiviValidationQueued(step, parcelLabel),
+          type: DonySnackbarType.warning,
+        );
+      case SuiviValidationFailed(:final parcelLabel, :final error):
+        DonySnackbar.show(
+          context,
+          title: l.suiviValidationFailed(step, parcelLabel),
+          message: ErrorPresenter.resolve(error, l10n: l).message,
+          type: DonySnackbarType.error,
+        );
+    }
+    _reloadTrips();
+  }
+
+  /// « QR illisible ? Saisir le numéro » : feuille dépliée sur le champ.
+  Future<void> _enterNumber() async {
+    if (_sheetController.isAttached) {
+      await _sheetController.animateTo(
+        _maxSize,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    }
+    if (!mounted) return;
+    // Le champ n'existe qu'une fois la feuille dépliée : focus à la frame
+    // suivante.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _numberFocus.requestFocus();
+    });
+  }
+
+  void _submitNumber(String raw) {
+    unawaited(
+      context.read<SuiviCubit>().validateNumber(
+        raw,
+        context.read<ScanHubCubit>().state,
+        pendingBidIds: _pendingBidIds,
+      ),
+    );
+  }
+
+  /// « Forcer une étape ». Transit (facultatif) : le prochain colis scanné
+  /// ou saisi le valide, la feuille se replie sur la caméra. Départ et
+  /// remise passent par l'identification.
+  Future<void> _forceStep() async {
+    final cubit = context.read<SuiviCubit>();
+    final step = await showSuiviForceStepSheet(context);
+    if (!mounted || step == null) return;
+    if (step == 'TRANSIT') {
+      cubit.forceTransit();
+      _collapseSheet();
+      return;
+    }
+    await _openIdentify(step);
+  }
+
   Future<void> _openIdentify(String? step) async {
     final cubit = context.read<SuiviCubit>();
     if (cubit.state.busy) return;
@@ -296,16 +459,6 @@ class _SuiviBodyState extends State<_SuiviBody> {
     );
   }
 
-  /// Étape proposée à la saisie du numéro : celle que tous les colis du
-  /// trajet attendent, sinon aucune (l'écran d'identification la demande).
-  String? _commonNextStep(ScanHubLoaded hub) {
-    final steps = hub.selectedTripBids
-        .map(nextRequiredStep)
-        .whereType<String>()
-        .toSet();
-    return steps.length == 1 ? steps.single : null;
-  }
-
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
@@ -318,11 +471,17 @@ class _SuiviBodyState extends State<_SuiviBody> {
           listenWhen: (a, b) => a.busy != b.busy,
           listener: (_, _) => _updatePaused(),
         ),
-        if (widget.canValidate)
+        if (widget.canValidate) ...[
           BlocListener<ScanHubCubit, ScanHubState>(
             listener: (context, hub) =>
                 context.read<SuiviCubit>().resolveDefaultMode(hub),
           ),
+          BlocListener<SuiviValidationCubit, SuiviValidationState>(
+            listenWhen: (a, b) =>
+                a.outcomeId != b.outcomeId && b.outcome != null,
+            listener: (_, state) => _onValidationOutcome(state.outcome!),
+          ),
+        ],
       ],
       child: BlocBuilder<SuiviCubit, SuiviState>(
         buildWhen: (a, b) => a.mode != b.mode || a.canValidate != b.canValidate,
@@ -455,6 +614,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
                 final strip = 56 * textScale.clamp(1.0, 1.6).toDouble();
                 final max = math.max(peek + 0.05, (height - strip) / height);
                 _peekSize = peek;
+                _maxSize = max;
                 _expandThreshold = peek + (max - peek) / 2;
 
                 return Stack(
@@ -478,17 +638,22 @@ class _SuiviBodyState extends State<_SuiviBody> {
                             color: DonyColors.blue300,
                           ),
                           const SizedBox(height: DonySpacing.base),
-                          Text(
-                            mode == SuiviMode.valider
-                                ? l.suiviValidateCameraHint
-                                : l.suiviTrackCameraHint,
-                            key: const Key('suivi-camera-hint'),
-                            textAlign: TextAlign.center,
-                            style: tt.bodyMedium?.copyWith(
-                              color: DonyColors.neutral0.withValues(
-                                alpha: 0.85,
+                          BlocBuilder<SuiviCubit, SuiviState>(
+                            buildWhen: (a, b) => a.forcedStep != b.forcedStep,
+                            builder: (context, state) => Text(
+                              mode == SuiviMode.suivre
+                                  ? l.suiviTrackCameraHint
+                                  : state.forcedStep == 'TRANSIT'
+                                  ? l.suiviForcedTransitCameraHint
+                                  : l.suiviValidateCameraHint,
+                              key: const Key('suivi-camera-hint'),
+                              textAlign: TextAlign.center,
+                              style: tt.bodyMedium?.copyWith(
+                                color: DonyColors.neutral0.withValues(
+                                  alpha: 0.85,
+                                ),
+                                height: 1.45,
                               ),
-                              height: 1.45,
                             ),
                           ),
                         ],
@@ -515,15 +680,38 @@ class _SuiviBodyState extends State<_SuiviBody> {
                         child: hub != null
                             ? SuiviValidateContent(
                                 hub: hub,
+                                expanded: _sheetExpanded,
+                                numberFocus: _numberFocus,
                                 onChangeTrip: () => _openTripPicker(hub),
                                 onValidateParcel: (BidModel _, String step) =>
                                     _openIdentify(step),
-                                onEnterNumber: () =>
-                                    _openIdentify(_commonNextStep(hub)),
+                                onEnterNumber: _enterNumber,
+                                onSubmitNumber: _submitNumber,
+                                onForceStep: _forceStep,
                               )
                             : const SuiviTrackPanel(),
                       ),
                     ),
+                    // Validations rapides en attente, au-dessus de la
+                    // feuille : sous le cadre, comme la maquette. Feuille
+                    // dépliée : en bas, pour ne pas masquer le champ numéro.
+                    if (hub != null)
+                      ValueListenableBuilder<bool>(
+                        valueListenable: _sheetExpanded,
+                        builder: (context, expanded, child) => Positioned(
+                          top: expanded
+                              ? null
+                              : DonySpacing.base + frame + DonySpacing.base,
+                          bottom: expanded
+                              ? DonySpacing.base +
+                                    MediaQuery.paddingOf(context).bottom
+                              : null,
+                          left: DonySpacing.base,
+                          right: DonySpacing.base,
+                          child: child!,
+                        ),
+                        child: const SuiviPendingValidations(),
+                      ),
                   ],
                 );
               },
@@ -621,12 +809,12 @@ class _SheetSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(DonyRadius.sheet),
-        ),
+    // Material plutôt qu'un DecoratedBox : les tuiles (ExpansionTile) et
+    // les InkWell de la feuille y peignent leur fond et leurs effets.
+    return Material(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      borderRadius: const BorderRadius.vertical(
+        top: Radius.circular(DonyRadius.sheet),
       ),
       child: ListView(
         key: const Key('suivi-sheet'),

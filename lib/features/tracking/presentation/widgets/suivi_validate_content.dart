@@ -1,15 +1,21 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
+import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
 import 'package:dony/l10n/l10n.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -32,43 +38,266 @@ String suiviShortDate(AppLocalizations l, DateTime date) =>
 
 /// Contenu de la feuille du mode « Valider une étape » : trajet affiché,
 /// colis et leur prochaine étape, derniers scans.
+///
+/// Feuille repliée : « QR illisible ? Saisir le numéro » sous les colis.
+/// Dépliée : l'étape automatique (et « Forcer une étape ») puis le champ
+/// numéro, sous le trajet.
 class SuiviValidateContent extends StatelessWidget {
   const SuiviValidateContent({
     super.key,
     required this.hub,
+    required this.expanded,
+    required this.numberFocus,
     required this.onChangeTrip,
     required this.onValidateParcel,
     required this.onEnterNumber,
+    required this.onSubmitNumber,
+    required this.onForceStep,
   });
 
   final ScanHubLoaded hub;
+
+  /// Feuille tirée en haut.
+  final ValueListenable<bool> expanded;
+
+  /// Focus du champ numéro, donné par « QR illisible ? ».
+  final FocusNode numberFocus;
   final VoidCallback onChangeTrip;
 
   /// Action d'une ligne colis : ouvre l'identification pour son [step].
   final void Function(BidModel bid, String step) onValidateParcel;
 
-  /// « QR illisible ? Saisir le numéro ».
+  /// « QR illisible ? Saisir le numéro » : déplie la feuille sur le champ.
   final VoidCallback onEnterNumber;
+
+  /// Numéro saisi puis « Valider ».
+  final ValueChanged<String> onSubmitNumber;
+
+  /// « Forcer une étape ».
+  final VoidCallback onForceStep;
 
   @override
   Widget build(BuildContext context) {
     final bids = hub.selectedTripBids;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SuiviPendingScansBanner(bidIds: {for (final b in bids) b.id}),
-        _TripRow(hub: hub, onChangeTrip: onChangeTrip),
-        const SizedBox(height: DonySpacing.base),
-        _ParcelList(
-          bids: bids,
-          history: hub.scanHistory,
-          onValidateParcel: onValidateParcel,
-        ),
-        const SizedBox(height: DonySpacing.base),
-        _EnterNumberButton(onTap: onEnterNumber),
-        const SizedBox(height: DonySpacing.xl),
-        _RecentScans(history: hub.scanHistory),
-      ],
+    return ValueListenableBuilder<bool>(
+      valueListenable: expanded,
+      builder: (context, isExpanded, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SuiviPendingScansBanner(bidIds: {for (final b in bids) b.id}),
+          _TripRow(hub: hub, onChangeTrip: onChangeTrip),
+          if (isExpanded) ...[
+            const SizedBox(height: DonySpacing.sm),
+            _StepModeRow(onForceStep: onForceStep),
+            const SizedBox(height: DonySpacing.sm),
+            _ValidateNumberField(
+              focusNode: numberFocus,
+              onSubmit: onSubmitNumber,
+            ),
+          ],
+          const SizedBox(height: DonySpacing.base),
+          _ParcelList(
+            bids: bids,
+            history: hub.scanHistory,
+            onValidateParcel: onValidateParcel,
+          ),
+          if (!isExpanded) ...[
+            const SizedBox(height: DonySpacing.base),
+            _EnterNumberButton(onTap: onEnterNumber),
+          ],
+          const SizedBox(height: DonySpacing.xl),
+          _RecentScans(history: hub.scanHistory),
+        ],
+      ),
+    );
+  }
+}
+
+/// « Étape : automatique », repliable sur son explication, et « Forcer une
+/// étape » pour rattraper un oubli. Transit forcé : « Étape : transit,
+/// facultatif » et « Automatique » pour revenir.
+class _StepModeRow extends StatelessWidget {
+  const _StepModeRow({required this.onForceStep});
+
+  final VoidCallback onForceStep;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    return BlocBuilder<SuiviCubit, SuiviState>(
+      buildWhen: (a, b) => a.forcedStep != b.forcedStep,
+      builder: (context, state) {
+        final forced = state.forcedStep != null;
+        return Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            key: const Key('suivi-step-mode'),
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: const EdgeInsets.only(bottom: DonySpacing.md),
+            expandedCrossAxisAlignment: CrossAxisAlignment.start,
+            minTileHeight: 48,
+            title: Text.rich(
+              TextSpan(
+                text: l.suiviStepModeLabel,
+                children: [
+                  TextSpan(
+                    text: forced ? l.suiviStepModeTransit : l.suiviStepModeAuto,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: forced ? DonyColors.accent : null,
+                    ),
+                  ),
+                ],
+              ),
+              style: tt.bodyLarge,
+            ),
+            trailing: TextButton(
+              key: Key(forced ? 'suivi-step-auto' : 'suivi-force-step'),
+              onPressed: forced
+                  ? context.read<SuiviCubit>().clearForcedStep
+                  : onForceStep,
+              style: TextButton.styleFrom(
+                foregroundColor: cs.primary,
+                minimumSize: const Size(44, 44),
+              ),
+              child: Text(
+                forced ? l.suiviStepModeBackToAuto : l.suiviForceStep,
+                style: tt.labelLarge,
+              ),
+            ),
+            children: [
+              Text(
+                forced ? l.suiviStepModeTransitHelp : l.suiviStepModeHelp,
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Champ « Numéro du colis » de la feuille dépliée. Le contrôleur vit ici,
+/// jamais dans l'écran.
+class _ValidateNumberField extends StatefulWidget {
+  const _ValidateNumberField({required this.focusNode, required this.onSubmit});
+
+  final FocusNode focusNode;
+  final ValueChanged<String> onSubmit;
+
+  @override
+  State<_ValidateNumberField> createState() => _ValidateNumberFieldState();
+}
+
+class _ValidateNumberFieldState extends State<_ValidateNumberField> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (_controller.text.trim().isEmpty) return;
+    widget.focusNode.unfocus();
+    widget.onSubmit(_controller.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(DonyRadius.lg),
+      borderSide: BorderSide(color: cs.outline),
+    );
+
+    return BlocBuilder<SuiviCubit, SuiviState>(
+      buildWhen: (a, b) =>
+          a.numberStatus != b.numberStatus || a.numberError != b.numberError,
+      builder: (context, state) {
+        final loading = state.numberStatus == SuiviLoadStatus.loading;
+        final error = state.numberStatus == SuiviLoadStatus.error
+            ? state.numberError
+            : null;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    key: const Key('suivi-validate-number-field'),
+                    controller: _controller,
+                    focusNode: widget.focusNode,
+                    textCapitalization: TextCapitalization.characters,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _submit(),
+                    style: tt.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: _tabular,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: l.suiviNumberHint,
+                      filled: true,
+                      fillColor: cs.surface,
+                      border: border,
+                      enabledBorder: border,
+                      focusedBorder: border.copyWith(
+                        borderSide: BorderSide(color: cs.primary, width: 2),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                SizedBox(
+                  height: 52,
+                  child: FilledButton(
+                    key: const Key('suivi-validate-number-submit'),
+                    onPressed: loading ? null : _submit,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.lg,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(DonyRadius.lg),
+                      ),
+                    ),
+                    child: loading
+                        ? SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: cs.onPrimary,
+                            ),
+                          )
+                        : Text(l.suiviNumberSubmit, style: tt.labelLarge),
+                  ),
+                ),
+              ],
+            ),
+            if (error is ForbiddenException) ...[
+              const SizedBox(height: DonySpacing.md),
+              const ParcelNotLinkedNotice(),
+            ] else if (error != null) ...[
+              const SizedBox(height: DonySpacing.sm),
+              Text(
+                error is NotFoundException
+                    ? l.suiviNumberNotFound
+                    : ErrorPresenter.resolve(error, l10n: l).message,
+                key: const Key('suivi-validate-number-error'),
+                style: tt.bodySmall?.copyWith(color: cs.error),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }

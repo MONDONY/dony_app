@@ -11823,12 +11823,6 @@ abstract class AppLocalizations {
   /// **'Scanner le transit (facultatif)'**
   String get bidDetailScanTransitOptional;
 
-  /// Mention sous l'étape Transit du hub de scan : étape facultative (scan_hub_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Facultatif'**
-  String get trackingStepOptional;
-
   /// Bouton étape Arrivée, valider la remise au destinataire (traveler_sticky_bar.dart)
   ///
   /// In fr, this message translates to:
@@ -16310,12 +16304,6 @@ abstract class AppLocalizations {
   /// **'Étape : {step}'**
   String scanStepLabel(String step);
 
-  /// Bandeau de synchro du hub Scan & Suivi (scan_hub_screen.dart, _SyncBanner).
-  ///
-  /// In fr, this message translates to:
-  /// **'{count, plural, =1{{count} lecture en attente de synchro} other{{count} lectures en attente de synchro}}'**
-  String scanPendingSync(int count);
-
   /// Bandeau d'alerte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _AlertBanner) : corrige l'accord faux à 1 ("1 lectures").
   ///
   /// In fr, this message translates to:
@@ -16370,7 +16358,7 @@ abstract class AppLocalizations {
   /// **'Colis confirmé en valise'**
   String get scanConfirmedInSuitcase;
 
-  /// Mot « Photo » seul, identique dans les deux langues (voir _sameInBothLanguages) : bouton de qr_scanner_screen.dart, badge de scan_hub_screen.dart.
+  /// Mot « Photo » seul, identique dans les deux langues (voir _sameInBothLanguages) : bouton de qr_scanner_screen.dart.
   ///
   /// In fr, this message translates to:
   /// **'Photo'**
@@ -16538,31 +16526,31 @@ abstract class AppLocalizations {
   /// **'Terminer'**
   String get scanTerminateButton;
 
-  /// Titre de la feuille de sélection de trajet (scan_hub_screen.dart, _TripPicker).
+  /// Titre de la feuille « Choisir un trajet » de l'onglet Suivi (suivi_screen.dart, _openTripPicker).
   ///
   /// In fr, this message translates to:
   /// **'Choisir un trajet'**
   String get scanChooseTripTitle;
 
-  /// Action de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState).
+  /// Action de l'état vide du mode Valider de l'onglet Suivi (suivi_screen.dart).
   ///
   /// In fr, this message translates to:
   /// **'Voir mes trajets'**
   String get scanViewMyTripsAction;
 
-  /// Titre de l'état d'erreur du hub Scan & Suivi (scan_hub_screen.dart, _ErrorState).
+  /// Titre de l'état d'erreur du mode Valider de l'onglet Suivi (suivi_screen.dart).
   ///
   /// In fr, this message translates to:
   /// **'Impossible de charger les trajets'**
   String get scanLoadTripsErrorTitle;
 
-  /// Message vide de la liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection).
+  /// Message vide de la liste des colis du trajet (suivi_validate_content.dart, _ParcelList).
   ///
   /// In fr, this message translates to:
   /// **'Aucun colis confirmé sur ce trajet pour l\'instant.'**
   String get scanNoColisConfirmed;
 
-  /// Message vide de l'historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection).
+  /// Message vide des derniers scans du trajet (suivi_validate_content.dart, _RecentScans).
   ///
   /// In fr, this message translates to:
   /// **'Aucune lecture pour l\'instant'**
@@ -16748,17 +16736,11 @@ abstract class AppLocalizations {
   /// **'colis {code}'**
   String scanOfflineParcelCode(String code);
 
-  /// Titre de section et labelText du champ de recherche de tracking_search_screen.dart (même texte aux deux endroits), réutilisé pour le même champ de tracking_search_bottom_sheet.dart (même feature, même préfixe).
+  /// labelText du champ numéro du mode Suivre de l'onglet Suivi (suivi_track_panel.dart, _TrackNumberField).
   ///
   /// In fr, this message translates to:
   /// **'Numéro de suivi'**
   String get trackingSearchNumberLabel;
-
-  /// Bouton de recherche de tracking_search_screen.dart, réutilisé par tracking_search_bottom_sheet.dart (même feature, même préfixe).
-  ///
-  /// In fr, this message translates to:
-  /// **'Rechercher'**
-  String get trackingSearchSubmit;
 
   /// Titre de l'app bar de reception_confirm_screen.dart. Identique en anglais : mot cognate (voir _sameInBothLanguages).
   ///
@@ -16915,18 +16897,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Quand le voyageur sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.'**
   String get trackingApplessMessage;
-
-  /// Titre de la sheet TrackingSearchBottomSheet.show (tracking_search_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Rechercher un colis'**
-  String get trackingSearchSheetTitle;
-
-  /// Sous-titre de la sheet TrackingSearchBottomSheet.show (tracking_search_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Format : DON-XXXXXX'**
-  String get trackingSearchSheetSubtitle;
 
   /// Titre de la sheet CancellationBottomSheet.show (cancellation_bottom_sheet.dart).
   ///
@@ -23610,7 +23580,7 @@ abstract class AppLocalizations {
   /// **'Pas encore remis'**
   String get suiviNotHandedOver;
 
-  /// Bouton qui ouvre l'identification par numéro (suivi_validate_content.dart).
+  /// Bouton de la feuille repliée qui la déplie sur le champ numéro (suivi_validate_content.dart, _EnterNumberButton).
   ///
   /// In fr, this message translates to:
   /// **'QR illisible ? Saisir le numéro'**
@@ -23729,6 +23699,204 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Caméra indisponible. Autorise l\'accès à la caméra dans les réglages du téléphone.'**
   String get qrCameraUnavailable;
+
+  /// Position relevée avant la photo, mode retour de résultat (scan_photo_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Position enregistrée · {label}'**
+  String suiviPositionSaved(String label);
+
+  /// Titre de l'écran photo en mode retour de résultat, onglet Suivi (scan_photo_screen.dart, _ResultHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo du colis de {parcel}'**
+  String suiviPhotoTitle(String parcel);
+
+  /// Sous-titre de l'écran photo en mode retour de résultat (scan_photo_screen.dart, _ResultHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'{step, select, DEPART{Obligatoire pour valider le départ} TRANSIT{Obligatoire pour valider le transit} other{Obligatoire pour valider l\'arrivée}}'**
+  String suiviPhotoRequiredFor(String step);
+
+  /// Titre de la feuille récapitulative d'un colis saisi par numéro (suivi_parcel_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider avec le numéro'**
+  String get suiviNumberRecapTitle;
+
+  /// Bouton de la feuille récapitulative d'un colis saisi par numéro (suivi_parcel_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{step, select, DEPART{Photo et valider le départ} TRANSIT{Photo et valider le transit} other{Photo et valider l\'arrivée}}'**
+  String suiviPhotoAndValidate(String step);
+
+  /// Titre du colis dans la feuille récapitulative (suivi_parcel_sheets.dart, _NumberRecap).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis de {parcel}'**
+  String suiviParcelOf(String parcel);
+
+  /// Libellé de ligne de la feuille récapitulative (suivi_parcel_sheets.dart, _NumberRecap).
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet'**
+  String get suiviRecapTrip;
+
+  /// Libellé de ligne : étapes déjà faites (suivi_parcel_sheets.dart, _NumberRecap).
+  ///
+  /// In fr, this message translates to:
+  /// **'Déjà validé'**
+  String get suiviRecapDone;
+
+  /// Valeur quand aucune étape n'est faite (suivi_parcel_sheets.dart, _NumberRecap).
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune étape'**
+  String get suiviRecapNothingDone;
+
+  /// Libellé de ligne : étape à valider (suivi_parcel_sheets.dart, _NumberRecap).
+  ///
+  /// In fr, this message translates to:
+  /// **'À valider'**
+  String get suiviRecapToValidate;
+
+  /// Encart de la feuille récapitulative d'un colis saisi par numéro (suivi_parcel_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans QR code, une photo du colis est obligatoire. Ta position est enregistrée avec l\'étape.'**
+  String get suiviNumberPhotoNotice;
+
+  /// Bouton et titre de la feuille de choix d'étape (suivi_validate_content.dart, _StepModeRow ; suivi_parcel_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Forcer une étape'**
+  String get suiviForceStep;
+
+  /// Explication de l'étape automatique (suivi_validate_content.dart, _StepModeRow ; suivi_parcel_sheets.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque scan valide l\'étape suivante du colis. Force une étape seulement pour rattraper un oubli.'**
+  String get suiviStepModeHelp;
+
+  /// Début de la ligne « Étape : automatique », suivi de suiviStepModeAuto en gras (suivi_validate_content.dart, _StepModeRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape : '**
+  String get suiviStepModeLabel;
+
+  /// Fin en gras de la ligne « Étape : automatique » (suivi_validate_content.dart, _StepModeRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'automatique'**
+  String get suiviStepModeAuto;
+
+  /// Indice du champ numéro de la feuille Valider (suivi_validate_content.dart, _ValidateNumberField).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro du colis, DON-…'**
+  String get suiviNumberHint;
+
+  /// Bouton du champ numéro de la feuille Valider (suivi_validate_content.dart, _ValidateNumberField).
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider'**
+  String get suiviNumberSubmit;
+
+  /// Numéro saisi inconnu du back (suivi_validate_content.dart, _ValidateNumberField).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro introuvable. Vérifie-le et réessaie.'**
+  String get suiviNumberNotFound;
+
+  /// Titre du refus 403 d'un colis ni envoyé ni transporté par l'utilisateur (parcel_not_linked_notice.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis n\'est pas lié à ton compte'**
+  String get trackingNotLinkedTitle;
+
+  /// Explication du refus 403, sans « Réessayer » (parcel_not_linked_notice.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls l\'expéditeur et le voyageur peuvent le suivre ici. Demande le lien de suivi à l\'expéditeur.'**
+  String get trackingNotLinkedBody;
+
+  /// Titre du bandeau d'une validation rapide annulable (suivi_validation_toast.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{step, select, DEPART{Départ de {parcel} validé} other{Transit de {parcel} validé}}'**
+  String suiviStepValidatedToast(String step, String parcel);
+
+  /// Décompte du bandeau de validation rapide, photo prise ou non (suivi_validation_toast.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{photo, select, yes{Photo prise · envoi dans {seconds} s} other{Envoi dans {seconds} s}}'**
+  String suiviToastSendingIn(String photo, int seconds);
+
+  /// Bouton du bandeau de validation rapide : rien n'est envoyé (suivi_validation_toast.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get suiviUndo;
+
+  /// QR d'un colis dont la validation attend déjà son envoi (suivi_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La validation de {parcel} part dans quelques secondes.'**
+  String suiviStepAlreadyPending(String parcel);
+
+  /// Validation rapide mise dans la file hors ligne (suivi_screen.dart). step = libellé d'étape traduit.
+  ///
+  /// In fr, this message translates to:
+  /// **'{step} de {parcel} en attente d\'envoi. Il part dès le retour du réseau.'**
+  String suiviValidationQueued(String step, String parcel);
+
+  /// Titre du message d'échec d'une validation rapide (suivi_screen.dart). step = libellé d'étape traduit.
+  ///
+  /// In fr, this message translates to:
+  /// **'{step} de {parcel} non validé'**
+  String suiviValidationFailed(String step, String parcel);
+
+  /// Mention sous l'étape Transit, seule étape facultative du voyageur (suivi_parcel_sheets.dart, _ForceStepChoices).
+  ///
+  /// In fr, this message translates to:
+  /// **'Facultatif'**
+  String get trackingStepOptional;
+
+  /// Fin en gras de la ligne « Étape : … » quand le transit est forcé (suivi_validate_content.dart, _StepModeRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'transit, facultatif'**
+  String get suiviStepModeTransit;
+
+  /// Bouton qui annule le transit forcé (suivi_validate_content.dart, _StepModeRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Automatique'**
+  String get suiviStepModeBackToAuto;
+
+  /// Explication du transit forcé (suivi_validate_content.dart, _StepModeRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le prochain colis scanné ou saisi valide son transit, puis l\'étape repasse en automatique.'**
+  String get suiviStepModeTransitHelp;
+
+  /// Consigne sous le cadre caméra quand le transit est forcé (suivi_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Transit facultatif : scanne le colis à valider.\nL\'étape repasse ensuite en automatique.'**
+  String get suiviForcedTransitCameraHint;
+
+  /// Transit forcé sur un colis pas encore parti (suivi_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Valide d\'abord le départ de {parcel}.'**
+  String suiviTransitNeedsDepart(String parcel);
+
+  /// Transit forcé sur un colis dont le transit est déjà fait (suivi_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le transit de {parcel} est déjà validé.'**
+  String suiviTransitAlreadyDone(String parcel);
 }
 
 class _AppLocalizationsDelegate

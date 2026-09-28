@@ -684,6 +684,7 @@ final appRouter = GoRouter(
           bidId: extra['bidId'] as String? ?? '',
           etape: extra['etape'] as String? ?? '',
           packageLabel: extra['packageLabel'] as String? ?? '',
+          returnResult: extra['returnResult'] as bool? ?? false,
         );
       },
     ),

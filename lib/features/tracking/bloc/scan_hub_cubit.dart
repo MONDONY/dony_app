@@ -55,8 +55,6 @@ class ScanHubLoaded extends ScanHubState {
   List<BidModel> get selectedTripBids =>
       confirmedColis(bidsByTrip[selectedTripId] ?? const []);
 
-  ScanHubProgress get progress => computeScanProgress(selectedTripBids);
-
   /// Colis confirmés d'un trajet donné (voir [selectedTripBids]).
   List<BidModel> confirmedBidsOf(String tripId) =>
       confirmedColis(bidsByTrip[tripId] ?? const []);

@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
+import 'package:dony/features/tracking/data/scan_submitter.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,9 +15,15 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
   final TrackingRepository _repository;
   final OfflineSyncService _offlineSync;
   final AnalyticsService _analytics;
+  final ScanSubmitter _submitter;
 
-  TrackingBloc(this._repository, this._offlineSync, this._analytics)
-    : super(TrackingInitial()) {
+  TrackingBloc(
+    this._repository,
+    this._offlineSync,
+    this._analytics, {
+    ScanSubmitter? submitter,
+  }) : _submitter = submitter ?? ScanSubmitter(_repository, _offlineSync),
+       super(TrackingInitial()) {
     on<TrackingQrCodeRequested>(_onQrCodeRequested);
     on<TrackingSearchRequested>(_onSearchRequested);
     on<TrackingEventsRequested>(_onEventsRequested);
@@ -121,38 +127,19 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
   ) async {
     emit(QrScanSubmitting());
     try {
-      final connectivity = await Connectivity().checkConnectivity();
-      final isOnline = connectivity.any((r) => r != ConnectivityResult.none);
-
-      if (!isOnline) {
-        await _offlineSync.queueScan(
-          bidId: event.bidId,
-          eventType: event.eventType,
-          gpsLat: event.gpsLat,
-          gpsLon: event.gpsLon,
-          gpsLabel: event.gpsLabel,
-          photoPath: event.photo?.path,
-        );
-        emit(QrScanQueued());
-        return;
-      }
-
-      String? photoKey;
-      if (event.photo != null) {
-        photoKey = await _repository.uploadTrackingPhoto(
-          event.bidId,
-          event.photo!.path,
-        );
-      }
-      final result = await _repository.postScan(
+      final result = await _submitter.submit(
         bidId: event.bidId,
         eventType: event.eventType,
+        photoPath: event.photo?.path,
         gpsLat: event.gpsLat,
         gpsLon: event.gpsLon,
         gpsLabel: event.gpsLabel,
-        photoUrl: photoKey,
       );
-      emit(QrScanSuccess(result));
+      if (result is! ScanSubmitSent) {
+        emit(QrScanQueued());
+        return;
+      }
+      emit(QrScanSuccess(result.event));
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.qrScanSuccess,

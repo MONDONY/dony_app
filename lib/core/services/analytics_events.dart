@@ -88,6 +88,14 @@ abstract final class AnalyticsEvents {
   /// `number`/`qr`/`my_shipments`).
   static const suiviTrackSubmitted = 'suivi_track_submitted';
 
+  /// Étape envoyée (ou mise en file hors ligne) après le délai d'annulation
+  /// (propriétés `step` : `DEPART`/`TRANSIT`, `method` : `qr`/`number`).
+  static const suiviStepValidated = 'suivi_step_validated';
+
+  /// Validation annulée pendant le délai, rien n'est envoyé (propriété
+  /// `step`).
+  static const suiviStepUndone = 'suivi_step_undone';
+
   // Package Request
   static const packageRequestCreated = 'package_request_created';
   static const packageRequestUpdated = 'package_request_updated';

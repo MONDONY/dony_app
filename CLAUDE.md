@@ -364,6 +364,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `suivi_trip_changed` | ScanHubCubit.selectTrip() — trajet affiché changé dans l'onglet Suivi (propriété `source` : `picker` pour la feuille « Choisir un trajet », `other_trip` pour « Passer sur ce trajet » après le QR d'un colis d'un autre trajet) |
 | `suivi_qr_scanned` | SuiviCubit.onQrScanned() — QR Yadony lu depuis la caméra de l'onglet Suivi ou le lecteur plein écran de l'expéditeur (propriétés `mode` : `valider`/`suivre`, `outcome` : `own_trip` colis du trajet affiché, `other_trip` colis d'un autre trajet du voyageur, `unknown` colis hors de ses trajets). Jamais l'identifiant du colis |
 | `suivi_track_submitted` | SuiviCubit — parcours d'un colis demandé en lecture seule (propriété `source` : `number` numéro saisi, `qr` QR lu en mode Suivre ou « Suivre ce colis », `my_shipments` ligne de « Mes envois »). Jamais le numéro saisi |
+| `suivi_step_validated` | SuiviValidationCubit._send() — étape DEPART/TRANSIT validée depuis l'onglet Suivi, envoyée (ou mise dans la file hors ligne) une fois passé le délai d'annulation de 5 s, ou aussitôt si l'onglet ou l'app est quitté (propriétés `step` : `DEPART`/`TRANSIT`, `method` : `qr` QR lu, `number` numéro saisi dans la feuille). Jamais l'identifiant ni le numéro du colis |
+| `suivi_step_undone` | SuiviValidationCubit.undo() — « Annuler » touché sur le bandeau d'une validation rapide pendant le délai : rien n'est envoyé (propriété `step`) |
 | `delivery_confirmed` | ReceptionConfirmScreen._confirm() |
 | `package_request_created` | PackageRequestFormBloc |
 | `package_request_updated` | PackageRequestFormBloc._onStep3() (mode édition) |

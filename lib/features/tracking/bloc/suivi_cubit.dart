@@ -10,6 +10,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
+import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 
 /// Les deux usages de l'onglet Suivi. Le nom sert aussi de valeur de
@@ -31,11 +32,45 @@ sealed class SuiviEffect {
   const SuiviEffect();
 }
 
-/// Colis du trajet affiché : ouvrir le parcours de validation de [step].
+/// Colis du trajet affiché : valider [step].
+///
+/// - `ARRIVEE` (remise) : parcours photo puis code du destinataire, inchangé.
+/// - `TRANSIT` (facultatif, choisi par « Forcer une étape ») lu par QR :
+///   validation rapide, sans photo.
+/// - Sinon ([photoRequired]) : photo obligatoire d'abord. Sans QR (numéro
+///   saisi), la photo est la seule preuve que le colis est entre les mains
+///   du voyageur, même pour le transit.
 final class SuiviValidateStep extends SuiviEffect {
-  const SuiviValidateStep(this.bid, this.step);
+  const SuiviValidateStep(
+    this.bid,
+    this.step, {
+    this.method = SuiviValidationMethod.qr,
+  });
   final BidModel bid;
   final String step;
+  final SuiviValidationMethod method;
+
+  bool get photoRequired =>
+      step != 'TRANSIT' || method == SuiviValidationMethod.number;
+}
+
+/// Colis du trajet dont une validation attend déjà son envoi.
+final class SuiviStepPending extends SuiviEffect {
+  const SuiviStepPending(this.bid);
+  final BidModel bid;
+}
+
+/// Transit forcé sur un colis pas encore parti : le back le refuserait
+/// (`depart-required`).
+final class SuiviTransitNeedsDepart extends SuiviEffect {
+  const SuiviTransitNeedsDepart(this.bid);
+  final BidModel bid;
+}
+
+/// Transit forcé sur un colis dont le transit est déjà validé.
+final class SuiviTransitAlreadyDone extends SuiviEffect {
+  const SuiviTransitAlreadyDone(this.bid);
+  final BidModel bid;
 }
 
 /// Colis du trajet affiché dont toutes les étapes sont déjà validées.
@@ -80,6 +115,9 @@ class SuiviState {
     this.shipments = const [],
     this.searchStatus = SuiviLoadStatus.idle,
     this.searchError,
+    this.numberStatus = SuiviLoadStatus.idle,
+    this.numberError,
+    this.forcedStep,
     this.effect,
     this.effectId = 0,
   });
@@ -102,6 +140,14 @@ class SuiviState {
   final SuiviLoadStatus searchStatus;
   final AppException? searchError;
 
+  /// Numéro saisi dans la feuille du mode Valider.
+  final SuiviLoadStatus numberStatus;
+  final AppException? numberError;
+
+  /// Étape imposée au prochain colis identifié (« Forcer une étape »),
+  /// `null` en automatique. Seul le transit, facultatif, passe par là.
+  final String? forcedStep;
+
   final SuiviEffect? effect;
   final int effectId;
 
@@ -113,6 +159,10 @@ class SuiviState {
     List<BidModel>? shipments,
     SuiviLoadStatus? searchStatus,
     AppException? searchError,
+    SuiviLoadStatus? numberStatus,
+    AppException? numberError,
+    String? forcedStep,
+    bool clearForcedStep = false,
     SuiviEffect? effect,
   }) => SuiviState(
     canValidate: canValidate ?? this.canValidate,
@@ -123,6 +173,9 @@ class SuiviState {
     searchStatus: searchStatus ?? this.searchStatus,
     // L'erreur suit son statut : effacée dès qu'une recherche repart.
     searchError: searchStatus != null ? searchError : this.searchError,
+    numberStatus: numberStatus ?? this.numberStatus,
+    numberError: numberStatus != null ? numberError : this.numberError,
+    forcedStep: clearForcedStep ? null : forcedStep ?? this.forcedStep,
     effect: effect ?? this.effect,
     effectId: effect != null ? effectId + 1 : effectId,
   );
@@ -234,8 +287,13 @@ class SuiviCubit extends Cubit<SuiviState> {
 
   /// QR Yadony lu par la caméra de l'onglet (ou le lecteur plein écran de
   /// l'expéditeur, [hub] à `null`). Ignoré pendant un traitement en cours et,
-  /// pour le même colis, juste après.
-  void onQrScanned(String bidId, ScanHubState? hub) {
+  /// pour le même colis, juste après. [pendingBidIds] : colis dont une
+  /// validation attend son envoi.
+  void onQrScanned(
+    String bidId,
+    ScanHubState? hub, {
+    Set<String> pendingBidIds = const {},
+  }) {
     if (state.busy) return;
     final releasedAt = _releasedAt;
     if (bidId == _lastBidId &&
@@ -274,16 +332,120 @@ class SuiviCubit extends Cubit<SuiviState> {
     }
     if (located == null) {
       _emitEffect(SuiviParcelUnknown(bidId));
-    } else if (outcome == 'other_trip') {
-      _emitEffect(SuiviParcelOnOtherTrip(located.bid, located.trip));
     } else {
-      final step = nextRequiredStep(located.bid);
-      _emitEffect(
-        step == null
-            ? SuiviStepsAllDone(located.bid)
-            : SuiviValidateStep(located.bid, step),
+      _emitValidation(
+        _validationOf(
+          located,
+          loaded!,
+          SuiviValidationMethod.qr,
+          pendingBidIds,
+        ),
       );
     }
+  }
+
+  /// « Forcer une étape » → transit : le prochain colis identifié (QR ou
+  /// numéro) valide son transit au lieu de son étape obligatoire.
+  void forceTransit() => emit(state._copy(forcedStep: 'TRANSIT'));
+
+  /// Retour à l'étape automatique.
+  void clearForcedStep() {
+    if (state.forcedStep != null) emit(state._copy(clearForcedStep: true));
+  }
+
+  /// Un transit forcé ne sert qu'une fois : il repasse en automatique dès
+  /// qu'un colis est parti en validation.
+  void _emitValidation(SuiviEffect effect) => emit(
+    state._copy(
+      numberStatus: SuiviLoadStatus.idle,
+      busy: true,
+      effect: effect,
+      clearForcedStep: effect is SuiviValidateStep && effect.step == 'TRANSIT',
+    ),
+  );
+
+  /// Effet à jouer pour un colis retrouvé dans les trajets du voyageur.
+  SuiviEffect _validationOf(
+    ({BidModel bid, AnnouncementModel trip}) located,
+    ScanHubLoaded hub,
+    SuiviValidationMethod method,
+    Set<String> pendingBidIds,
+  ) {
+    final bid = located.bid;
+    if (located.trip.id != hub.selectedTripId) {
+      return SuiviParcelOnOtherTrip(bid, located.trip);
+    }
+    final step = nextRequiredStep(bid);
+    if (step == null) return SuiviStepsAllDone(bid);
+    if (pendingBidIds.contains(bid.id)) return SuiviStepPending(bid);
+    if (state.forcedStep == 'TRANSIT') {
+      final progress = colisStepProgress(bid);
+      if (!progress.depart) return SuiviTransitNeedsDepart(bid);
+      if (progress.transit) return SuiviTransitAlreadyDone(bid);
+      return SuiviValidateStep(bid, 'TRANSIT', method: method);
+    }
+    return SuiviValidateStep(bid, step, method: method);
+  }
+
+  /// Numéro saisi dans la feuille du mode Valider (QR illisible) : le colis
+  /// doit être sur le trajet affiché. Cherché d'abord parmi les colis
+  /// chargés, puis auprès du back (colis d'un autre voyageur, numéro
+  /// inconnu, colis non lié au compte).
+  Future<void> validateNumber(
+    String raw,
+    ScanHubState hub, {
+    Set<String> pendingBidIds = const {},
+  }) async {
+    final number = raw.trim().toUpperCase();
+    if (number.isEmpty ||
+        hub is! ScanHubLoaded ||
+        state.busy ||
+        state.numberStatus == SuiviLoadStatus.loading) {
+      return;
+    }
+    var located = _locateByNumber(number, hub);
+    if (located == null) {
+      emit(state._copy(numberStatus: SuiviLoadStatus.loading));
+      try {
+        final result = await _trackingRepo.searchByTrackingNumber(number);
+        located = _locate(result.bidId, hub);
+        if (located == null) {
+          emit(
+            state._copy(
+              numberStatus: SuiviLoadStatus.idle,
+              busy: true,
+              effect: SuiviParcelUnknown(result.bidId),
+            ),
+          );
+          return;
+        }
+      } catch (e) {
+        emit(
+          state._copy(
+            numberStatus: SuiviLoadStatus.error,
+            numberError: unwrapDioError(e),
+          ),
+        );
+        return;
+      }
+    }
+    _emitValidation(
+      _validationOf(located, hub, SuiviValidationMethod.number, pendingBidIds),
+    );
+  }
+
+  ({BidModel bid, AnnouncementModel trip})? _locateByNumber(
+    String number,
+    ScanHubLoaded hub,
+  ) {
+    for (final trip in hub.trips) {
+      for (final bid in hub.confirmedBidsOf(trip.id)) {
+        if (bid.trackingNumber?.toUpperCase() == number) {
+          return (bid: bid, trip: trip);
+        }
+      }
+    }
+    return null;
   }
 
   ({BidModel bid, AnnouncementModel trip})? _locate(

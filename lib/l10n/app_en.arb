@@ -3696,10 +3696,6 @@
   "@bidDetailScanTransitOptional": {
     "description": "Action secondaire du voyageur sur un colis récupéré : le scan Transit est facultatif (traveler_sticky_bar.dart)"
   },
-  "trackingStepOptional": "Optional",
-  "@trackingStepOptional": {
-    "description": "Mention sous l'étape Transit du hub de scan : étape facultative (scan_hub_screen.dart)"
-  },
   "bidDetailConfirmHandover": "Confirm the drop-off",
   "bidDetailQrSheetTitle": "Parcel QR",
   "bidDetailQrSaveErrorSnackbar": "Unable to save the image",
@@ -5572,15 +5568,6 @@
       }
     }
   },
-  "scanPendingSync": "{count, plural, =1{{count} scan waiting to sync} other{{count} scans waiting to sync}}",
-  "@scanPendingSync": {
-    "description": "Bandeau de synchro du hub Scan & Suivi (scan_hub_screen.dart, _SyncBanner).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "scanQueueSafe": "{count, plural, =1{{count} scan pending. We'll send it as soon as you're back online.} other{{count} scans pending. We'll send them as soon as you're back online.}}",
   "@scanQueueSafe": {
     "description": "Bandeau d'alerte de la file d'attente hors-ligne (offline_scan_queue_screen.dart, _AlertBanner) : corrige l'accord faux à 1 (\"1 lectures\").",
@@ -5639,7 +5626,7 @@
   },
   "scanPhotoWordLabel": "Photo",
   "@scanPhotoWordLabel": {
-    "description": "Mot « Photo » seul, identique dans les deux langues (voir _sameInBothLanguages) : bouton de qr_scanner_screen.dart, badge de scan_hub_screen.dart."
+    "description": "Mot « Photo » seul, identique dans les deux langues (voir _sameInBothLanguages) : bouton de qr_scanner_screen.dart."
   },
   "scanConfirmAndContinue": "Confirm & continue",
   "@scanConfirmAndContinue": {
@@ -5751,23 +5738,23 @@
   },
   "scanChooseTripTitle": "Choose a trip",
   "@scanChooseTripTitle": {
-    "description": "Titre de la feuille de sélection de trajet (scan_hub_screen.dart, _TripPicker)."
+    "description": "Titre de la feuille « Choisir un trajet » de l'onglet Suivi (suivi_screen.dart, _openTripPicker)."
   },
   "scanViewMyTripsAction": "See my trips",
   "@scanViewMyTripsAction": {
-    "description": "Action de l'état vide du hub Scan & Suivi (scan_hub_screen.dart, _NoTripState)."
+    "description": "Action de l'état vide du mode Valider de l'onglet Suivi (suivi_screen.dart)."
   },
   "scanLoadTripsErrorTitle": "Couldn't load your trips",
   "@scanLoadTripsErrorTitle": {
-    "description": "Titre de l'état d'erreur du hub Scan & Suivi (scan_hub_screen.dart, _ErrorState)."
+    "description": "Titre de l'état d'erreur du mode Valider de l'onglet Suivi (suivi_screen.dart)."
   },
   "scanNoColisConfirmed": "No parcel confirmed on this trip yet.",
   "@scanNoColisConfirmed": {
-    "description": "Message vide de la liste des colis du hub Scan & Suivi (scan_hub_screen.dart, _ColisListSection)."
+    "description": "Message vide de la liste des colis du trajet (suivi_validate_content.dart, _ParcelList)."
   },
   "scanNoHistoryYet": "No scans yet",
   "@scanNoHistoryYet": {
-    "description": "Message vide de l'historique des scans du hub Scan & Suivi (scan_hub_screen.dart, _ScanHistorySection)."
+    "description": "Message vide des derniers scans du trajet (suivi_validate_content.dart, _RecentScans)."
   },
   "scanIdentifyTitle": "Identify the parcel",
   "@scanIdentifyTitle": {
@@ -5902,11 +5889,7 @@
 
   "trackingSearchNumberLabel": "Tracking number",
   "@trackingSearchNumberLabel": {
-    "description": "Titre de section et labelText du champ de recherche de tracking_search_screen.dart (même texte aux deux endroits), réutilisé pour le même champ de tracking_search_bottom_sheet.dart (même feature, même préfixe)."
-  },
-  "trackingSearchSubmit": "Search",
-  "@trackingSearchSubmit": {
-    "description": "Bouton de recherche de tracking_search_screen.dart, réutilisé par tracking_search_bottom_sheet.dart (même feature, même préfixe)."
+    "description": "labelText du champ numéro du mode Suivre de l'onglet Suivi (suivi_track_panel.dart, _TrackNumberField)."
   },
   "receptionConfirmTitle": "Confirmation",
   "@receptionConfirmTitle": {
@@ -6026,14 +6009,6 @@
   "trackingApplessMessage": "When the traveler is at your door, you'll confirm with a QR code or a 4-digit code.",
   "@trackingApplessMessage": {
     "description": "Message complet du bandeau _ApplessBanner (tracking_timeline_bottom_sheet.dart) — l'ancien paramètre travelerName valait toujours le littéral « le voyageur » (seul appelant), donc intégré tel quel dans le message plutôt que fragmenté."
-  },
-  "trackingSearchSheetTitle": "Search for a parcel",
-  "@trackingSearchSheetTitle": {
-    "description": "Titre de la sheet TrackingSearchBottomSheet.show (tracking_search_bottom_sheet.dart)."
-  },
-  "trackingSearchSheetSubtitle": "Format: DON-XXXXXX",
-  "@trackingSearchSheetSubtitle": {
-    "description": "Sous-titre de la sheet TrackingSearchBottomSheet.show (tracking_search_bottom_sheet.dart)."
   },
   "cancellationConfirmTitle": "Cancel this trip?",
   "@cancellationConfirmTitle": {
@@ -7654,7 +7629,7 @@
   },
   "suiviEnterNumber": "QR unreadable? Enter the number",
   "@suiviEnterNumber": {
-    "description": "Bouton qui ouvre l'identification par numéro (suivi_validate_content.dart)."
+    "description": "Bouton de la feuille repliée qui la déplie sur le champ numéro (suivi_validate_content.dart, _EnterNumberButton)."
   },
   "suiviRecentScans": "Recent scans",
   "@suiviRecentScans": {
@@ -7762,5 +7737,209 @@
   "qrCameraUnavailable": "Camera unavailable. Allow camera access in your phone settings.",
   "@qrCameraUnavailable": {
     "description": "Erreur du flux caméra QR (qr_camera_view.dart)."
+  },
+  "suiviPositionSaved": "Location saved · {label}",
+  "@suiviPositionSaved": {
+    "description": "Position relevée avant la photo, mode retour de résultat (scan_photo_screen.dart).",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviPhotoTitle": "Photo of {parcel}'s parcel",
+  "@suiviPhotoTitle": {
+    "description": "Titre de l'écran photo en mode retour de résultat, onglet Suivi (scan_photo_screen.dart, _ResultHeader).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviPhotoRequiredFor": "{step, select, DEPART{Required to validate the departure} TRANSIT{Required to validate the transit} other{Required to validate the arrival}}",
+  "@suiviPhotoRequiredFor": {
+    "description": "Sous-titre de l'écran photo en mode retour de résultat (scan_photo_screen.dart, _ResultHeader).",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviNumberRecapTitle": "Validate with the number",
+  "@suiviNumberRecapTitle": {
+    "description": "Titre de la feuille récapitulative d'un colis saisi par numéro (suivi_parcel_sheets.dart)."
+  },
+  "suiviPhotoAndValidate": "{step, select, DEPART{Photo and validate the departure} TRANSIT{Photo and validate the transit} other{Photo and validate the arrival}}",
+  "@suiviPhotoAndValidate": {
+    "description": "Bouton de la feuille récapitulative d'un colis saisi par numéro (suivi_parcel_sheets.dart).",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviParcelOf": "{parcel}'s parcel",
+  "@suiviParcelOf": {
+    "description": "Titre du colis dans la feuille récapitulative (suivi_parcel_sheets.dart, _NumberRecap).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviRecapTrip": "Trip",
+  "@suiviRecapTrip": {
+    "description": "Libellé de ligne de la feuille récapitulative (suivi_parcel_sheets.dart, _NumberRecap)."
+  },
+  "suiviRecapDone": "Already validated",
+  "@suiviRecapDone": {
+    "description": "Libellé de ligne : étapes déjà faites (suivi_parcel_sheets.dart, _NumberRecap)."
+  },
+  "suiviRecapNothingDone": "No step yet",
+  "@suiviRecapNothingDone": {
+    "description": "Valeur quand aucune étape n'est faite (suivi_parcel_sheets.dart, _NumberRecap)."
+  },
+  "suiviRecapToValidate": "To validate",
+  "@suiviRecapToValidate": {
+    "description": "Libellé de ligne : étape à valider (suivi_parcel_sheets.dart, _NumberRecap)."
+  },
+  "suiviNumberPhotoNotice": "Without a QR code, a photo of the parcel is required. Your location is saved with the step.",
+  "@suiviNumberPhotoNotice": {
+    "description": "Encart de la feuille récapitulative d'un colis saisi par numéro (suivi_parcel_sheets.dart)."
+  },
+  "suiviForceStep": "Force a step",
+  "@suiviForceStep": {
+    "description": "Bouton et titre de la feuille de choix d'étape (suivi_validate_content.dart, _StepModeRow ; suivi_parcel_sheets.dart)."
+  },
+  "suiviStepModeHelp": "Each scan validates the parcel's next step. Only force a step to catch up on a missed one.",
+  "@suiviStepModeHelp": {
+    "description": "Explication de l'étape automatique (suivi_validate_content.dart, _StepModeRow ; suivi_parcel_sheets.dart)."
+  },
+  "suiviStepModeLabel": "Step: ",
+  "@suiviStepModeLabel": {
+    "description": "Début de la ligne « Étape : automatique », suivi de suiviStepModeAuto en gras (suivi_validate_content.dart, _StepModeRow)."
+  },
+  "suiviStepModeAuto": "automatic",
+  "@suiviStepModeAuto": {
+    "description": "Fin en gras de la ligne « Étape : automatique » (suivi_validate_content.dart, _StepModeRow)."
+  },
+  "suiviNumberHint": "Parcel number, DON-…",
+  "@suiviNumberHint": {
+    "description": "Indice du champ numéro de la feuille Valider (suivi_validate_content.dart, _ValidateNumberField)."
+  },
+  "suiviNumberSubmit": "Validate",
+  "@suiviNumberSubmit": {
+    "description": "Bouton du champ numéro de la feuille Valider (suivi_validate_content.dart, _ValidateNumberField)."
+  },
+  "suiviNumberNotFound": "Number not found. Check it and try again.",
+  "@suiviNumberNotFound": {
+    "description": "Numéro saisi inconnu du back (suivi_validate_content.dart, _ValidateNumberField)."
+  },
+  "trackingNotLinkedTitle": "This parcel isn't linked to your account",
+  "@trackingNotLinkedTitle": {
+    "description": "Titre du refus 403 d'un colis ni envoyé ni transporté par l'utilisateur (parcel_not_linked_notice.dart)."
+  },
+  "trackingNotLinkedBody": "Only the sender and the traveler can track it here. Ask the sender for the tracking link.",
+  "@trackingNotLinkedBody": {
+    "description": "Explication du refus 403, sans « Réessayer » (parcel_not_linked_notice.dart)."
+  },
+  "suiviStepValidatedToast": "{step, select, DEPART{{parcel}: departure validated} other{{parcel}: transit validated}}",
+  "@suiviStepValidatedToast": {
+    "description": "Titre du bandeau d'une validation rapide annulable (suivi_validation_toast.dart).",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      },
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviToastSendingIn": "{photo, select, yes{Photo taken · sending in {seconds} s} other{Sending in {seconds} s}}",
+  "@suiviToastSendingIn": {
+    "description": "Décompte du bandeau de validation rapide, photo prise ou non (suivi_validation_toast.dart).",
+    "placeholders": {
+      "photo": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "suiviUndo": "Undo",
+  "@suiviUndo": {
+    "description": "Bouton du bandeau de validation rapide : rien n'est envoyé (suivi_validation_toast.dart)."
+  },
+  "suiviStepAlreadyPending": "{parcel}'s validation goes out in a few seconds.",
+  "@suiviStepAlreadyPending": {
+    "description": "QR d'un colis dont la validation attend déjà son envoi (suivi_screen.dart).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviValidationQueued": "{step} of {parcel} waiting to be sent. It goes out as soon as you're back online.",
+  "@suiviValidationQueued": {
+    "description": "Validation rapide mise dans la file hors ligne (suivi_screen.dart). step = libellé d'étape traduit.",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      },
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviValidationFailed": "{step} of {parcel} not validated",
+  "@suiviValidationFailed": {
+    "description": "Titre du message d'échec d'une validation rapide (suivi_screen.dart). step = libellé d'étape traduit.",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      },
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingStepOptional": "Optional",
+  "@trackingStepOptional": {
+    "description": "Mention sous l'étape Transit, seule étape facultative du voyageur (suivi_parcel_sheets.dart, _ForceStepChoices)."
+  },
+  "suiviStepModeTransit": "transit, optional",
+  "@suiviStepModeTransit": {
+    "description": "Fin en gras de la ligne « Étape : … » quand le transit est forcé (suivi_validate_content.dart, _StepModeRow)."
+  },
+  "suiviStepModeBackToAuto": "Automatic",
+  "@suiviStepModeBackToAuto": {
+    "description": "Bouton qui annule le transit forcé (suivi_validate_content.dart, _StepModeRow)."
+  },
+  "suiviStepModeTransitHelp": "The next parcel scanned or entered gets its transit validated, then the step goes back to automatic.",
+  "@suiviStepModeTransitHelp": {
+    "description": "Explication du transit forcé (suivi_validate_content.dart, _StepModeRow)."
+  },
+  "suiviForcedTransitCameraHint": "Optional transit: scan the parcel to validate.\nThe step then goes back to automatic.",
+  "@suiviForcedTransitCameraHint": {
+    "description": "Consigne sous le cadre caméra quand le transit est forcé (suivi_screen.dart)."
+  },
+  "suiviTransitNeedsDepart": "Validate {parcel}'s departure first.",
+  "@suiviTransitNeedsDepart": {
+    "description": "Transit forcé sur un colis pas encore parti (suivi_screen.dart).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviTransitAlreadyDone": "{parcel}'s transit is already validated.",
+  "@suiviTransitAlreadyDone": {
+    "description": "Transit forcé sur un colis dont le transit est déjà fait (suivi_screen.dart).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      }
+    }
   }
 }

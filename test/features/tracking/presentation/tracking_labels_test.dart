@@ -64,20 +64,6 @@ void main() {
     });
   });
 
-  group('scanPendingSync', () {
-    // Ancien code : ternaire sur `> 1`, donc 0 ET 1 restent au singulier
-    // (comme le pluriel ICU français, qui range 0 dans la branche `one`).
-    test('0 — fr (égal à l\'ancien code)', () {
-      expect(fr.scanPendingSync(0), '0 lecture en attente de synchro');
-    });
-    test('1 — fr', () {
-      expect(fr.scanPendingSync(1), '1 lecture en attente de synchro');
-    });
-    test('3 — fr (égal à l\'ancien code)', () {
-      expect(fr.scanPendingSync(3), '3 lectures en attente de synchro');
-    });
-  });
-
   group('scanQueueSafe', () {
     test('1 — fr (nouveau rendu, accord corrigé)', () {
       expect(
