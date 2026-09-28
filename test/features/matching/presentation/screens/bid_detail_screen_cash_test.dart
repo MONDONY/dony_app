@@ -658,6 +658,38 @@ void main() {
   // établit le pattern pour les branches sœurs.
   group('BlocListener<CancellationBloc> — DeliveryNoShow*', () {
     testWidgets(
+      'NoShowReported → snackbar avec le délai serveur de 24 h + refetch',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
+
+        whenListen(
+          cancellationBloc,
+          Stream<CancellationState>.fromIterable([NoShowReported()]),
+          initialState: CancellationInitial(),
+        );
+
+        await _pump(tester, bid: _makeBid(), authBloc: authBloc);
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining(
+            "Absence signalée. L'expéditeur a 24 h pour contester.",
+          ),
+          findsOneWidget,
+        );
+        verify(
+          () => bidBloc.add(any(that: isA<BidDetailRequested>())),
+        ).called(2);
+      },
+    );
+
+    testWidgets(
       'DeliveryNoShowReported → snackbar info + refetch BidDetailRequested',
       (tester) async {
         final authBloc = _MockAuthBloc();

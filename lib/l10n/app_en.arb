@@ -3349,7 +3349,7 @@
   "@bidDetailSenderNoShowSheetBody": {
     "description": "Corps de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)"
   },
-  "bidDetailSenderNoShowSheetHint": "The traveler will have 48 hours to contest. If they don't respond, the shipment will be canceled.",
+  "bidDetailSenderNoShowSheetHint": "The traveler will have 24 hours to contest. If they don't respond, the shipment will be canceled.",
   "@bidDetailSenderNoShowSheetHint": {
     "description": "Note explicative de la feuille de signalement d'absence du voyageur (sender_hero_card.dart, _showNoShowSheet)"
   },
@@ -3505,7 +3505,7 @@
   "@bidDetailTravelerNoShowSheetBody": {
     "description": "Corps de la feuille de signalement d'absence de l'expediteur (traveler_hero_card.dart, _showNoShowSheet)"
   },
-  "bidDetailTravelerNoShowSheetHint": "The sender will have 48 hours to contest. If they don't respond, the shipment will be canceled.",
+  "bidDetailTravelerNoShowSheetHint": "The sender will have 24 hours to contest. If they don't respond, the shipment will be canceled.",
   "@bidDetailTravelerNoShowSheetHint": {
     "description": "Note explicative de la feuille de signalement d'absence de l'expediteur (traveler_hero_card.dart, _showNoShowSheet)"
   },
@@ -3513,9 +3513,23 @@
   "@bidDetailTravelerNoShowContestedSubtitle": {
     "description": "_NoShowReportedHero, sous-titre conteste (traveler_hero_card.dart)"
   },
-  "bidDetailTravelerNoShowPendingSubtitle": "Report sent. The sender has 48 hours to confirm or contest. If there's no response, the shipment will be canceled automatically.",
+  "bidDetailTravelerNoShowPendingSubtitle": "Report sent. The sender has 24 hours to confirm or contest. If there's no response, the shipment will be canceled automatically.",
   "@bidDetailTravelerNoShowPendingSubtitle": {
     "description": "_NoShowReportedHero, sous-titre en attente (traveler_hero_card.dart)"
+  },
+  "bidDetailTravelerNoShowPendingSubtitleUntil": "Report sent. The sender has until {date} at {time} to confirm or contest. If there's no response, the shipment will be canceled automatically.",
+  "@bidDetailTravelerNoShowPendingSubtitleUntil": {
+    "description": "_NoShowReportedHero, sous-titre en attente quand le serveur renvoie l'échéance de contestation (bid.contestationDeadline, traveler_hero_card.dart)",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "Mon, Sep 28"
+      },
+      "time": {
+        "type": "String",
+        "example": "2:30 PM"
+      }
+    }
   },
   "bidDetailGainCashTopLabel": "YOU COLLECT",
   "@bidDetailGainCashTopLabel": {
@@ -3591,7 +3605,7 @@
   "bidDetailPayByCard": "Pay by card",
   "bidDetailAddCard": "Add a card",
   "bidDetailAcceptedSetHandoverWindow": "Request accepted! Now set the drop-off window.",
-  "bidDetailNoShowReportedSnackbar": "No-show reported. The sender has 48 hours to contest.",
+  "bidDetailNoShowReportedSnackbar": "No-show reported. The sender has 24 hours to contest.",
   "bidDetailDeliveryNoShowReportedSnackbar": "No-show reported. The other party has 24 hours to contest.",
   "bidDetailContestSentSnackbar": "Contest sent. Our team will review your request.",
   "bidDetailNoShowConfirmedSnackbar": "No-show confirmed. The shipment has been canceled, you will not be charged.",
