@@ -173,7 +173,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                     ),
                                     child: Row(
                                       children: [
+                                        // `opaque` : sans lui, la marge
+                                        // de la case ne réagissait pas,
+                                        // seuls le drapeau et l'indicatif.
                                         GestureDetector(
+                                          behavior: HitTestBehavior.opaque,
                                           onTap: _showCodePicker,
                                           child: Padding(
                                             padding: const EdgeInsets.symmetric(

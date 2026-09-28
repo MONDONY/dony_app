@@ -6,6 +6,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/auth/presentation/widgets/dial_code_picker.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -245,6 +246,34 @@ void main() {
         expect(find.widgetWithText(DonyButton, 'Vérifier'), findsOneWidget);
       },
     );
+
+    // Rage clicks PostHog du 27/09 (x≈90, y≈182) : le sélecteur ne réagissait
+    // que sur les pixels du drapeau, de l'indicatif et du chevron. Un toucher
+    // dans sa marge, pourtant dans la case dessinée, ne faisait rien.
+    testWidgets('toucher la marge du sélecteur d\'indicatif ouvre la liste', (
+      tester,
+    ) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(_user),
+      );
+
+      await tester.pumpWidget(_wrap(const EditPhoneScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+
+      final dialCode = find.byWidgetPredicate(
+        (w) => w is Text && (w.data?.startsWith('+') ?? false),
+      );
+      final selector = find
+          .ancestor(of: dialCode, matching: find.byType(GestureDetector))
+          .first;
+      final zone = tester.getRect(selector);
+      await tester.tapAt(Offset(zone.left + 3, zone.top + 3));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DialCodePicker), findsOneWidget);
+    });
 
     testWidgets('titre et bouton en anglais', (tester) async {
       useEnglish();

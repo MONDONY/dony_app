@@ -224,6 +224,26 @@ void main() {
       expect(find.text('Indicatif pays'), findsOneWidget);
     });
 
+    // Même zone morte que sur la modification du numéro : seuls le drapeau,
+    // l'indicatif et le chevron réagissaient, pas la marge de la case.
+    testWidgets('toucher la marge du sélecteur d\'indicatif ouvre la liste', (
+      tester,
+    ) async {
+      await _pump(tester, mockAuthBloc);
+      await tester.ensureVisible(find.text('+33'));
+      final selector = find
+          .ancestor(
+            of: find.text('+33'),
+            matching: find.byType(GestureDetector),
+          )
+          .first;
+      final zone = tester.getRect(selector);
+      await tester.tapAt(Offset(zone.left + 3, zone.top + 3));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Indicatif pays'), findsOneWidget);
+    });
+
     testWidgets(
       'sélection d\'un indicatif dans le bottom sheet met à jour l\'affichage',
       (tester) async {
