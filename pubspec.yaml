@@ -33,7 +33,7 @@ dependencies:
   # 7.x : Apple Vision/AVFoundation sur iOS (plus de GoogleMLKit) → résout le conflit
   # GoogleDataTransport avec Firebase 11.15 (MLKit exigeait GDT <10, Firebase exige >=10).
   # Compatible iOS 12+ ; supporte aussi le simulateur Apple Silicon.
-  mobile_scanner: ^7.2.0
+  mobile_scanner: ^7.4.2
   local_auth: ^2.3.0
 
   # Location

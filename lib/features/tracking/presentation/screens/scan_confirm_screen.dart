@@ -232,11 +232,18 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                                       size: 13,
                                     ),
                                     const SizedBox(width: DonySpacing.xs),
-                                    Text(
-                                      locationLabel,
-                                      style: tt.labelSmall?.copyWith(
-                                        color: cs.primary,
-                                        fontWeight: FontWeight.w600,
+                                    // Adresse du géocodage inverse, de longueur
+                                    // imprévisible : sans Flexible elle débordait
+                                    // la pastille en 360 dp (Sentry FLUTTER-3W).
+                                    Flexible(
+                                      child: Text(
+                                        locationLabel,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: tt.labelSmall?.copyWith(
+                                          color: cs.primary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
                                   ],
