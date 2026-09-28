@@ -6,6 +6,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
+import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -255,9 +256,7 @@ class _ShipmentRow extends StatelessWidget {
     final l = context.l10n;
     final from = bid.departureCity;
     final to = bid.arrivalCity;
-    final title = from != null && to != null
-        ? '$from → $to'
-        : (bid.trackingNumber ?? bid.recipientName ?? '');
+    final titleStyle = tt.titleLarge?.copyWith(fontWeight: FontWeight.w700);
     final step = shipmentStepFor(bid.status) ?? 1;
     final moving = bid.status == 'IN_TRANSIT'; // i18n-ignore — statut back
 
@@ -278,10 +277,12 @@ class _ShipmentRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text(
-                    title,
-                    style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                  ),
+                  child: from != null && to != null
+                      ? RouteLabel(from: from, to: to, style: titleStyle)
+                      : Text(
+                          bid.trackingNumber ?? bid.recipientName ?? '',
+                          style: titleStyle,
+                        ),
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 Text(

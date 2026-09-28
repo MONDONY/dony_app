@@ -16154,6 +16154,26 @@
   "@suiviChangeTrip": {
     "description": "Bouton qui ouvre le choix du trajet (suivi_validate_content.dart, _TripRow)."
   },
+  "suiviRouteSemantics": "De {from} à {to}",
+  "@suiviRouteSemantics": {
+    "description": "Lecture d'écran d'un trajet affiché villes et icône (route_label.dart, RouteLabel).",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviChangeTripSemantics": "Changer de trajet",
+  "@suiviChangeTripSemantics": {
+    "description": "Libellé d'accessibilité de la ligne du trajet, tapable pour ouvrir le choix du trajet (suivi_validate_content.dart, _TripRow)."
+  },
+  "suiviOnlyTrip": "C'est ton seul trajet en cours ou à venir.",
+  "@suiviOnlyTrip": {
+    "description": "Ligne discrète de « Choisir un trajet » quand le voyageur n'a qu'un trajet en cours ou à venir (suivi_validate_content.dart, SuiviTripPicker)."
+  },
   "suiviTripsInProgress": "En cours",
   "@suiviTripsInProgress": {
     "description": "Groupe des trajets en cours dans « Choisir un trajet » (suivi_validate_content.dart)."
@@ -16247,14 +16267,11 @@
   "@suiviOtherTripTitle": {
     "description": "Titre de la feuille d'un colis lu sur un autre trajet (suivi_parcel_sheets.dart)."
   },
-  "suiviOtherTripBody": "Le colis de {parcel} voyage sur ton trajet du {date} : {corridor}.",
+  "suiviOtherTripBody": "Le colis de {parcel} voyage sur ton trajet du {date} :",
   "@suiviOtherTripBody": {
     "description": "Explication de la feuille d'un colis lu sur un autre trajet (suivi_parcel_sheets.dart).",
     "placeholders": {
       "parcel": {
-        "type": "String"
-      },
-      "corridor": {
         "type": "String"
       },
       "date": {
@@ -16262,14 +16279,9 @@
       }
     }
   },
-  "suiviSwitchToTrip": "Passer sur {corridor}",
+  "suiviSwitchToTrip": "Passer sur ce trajet",
   "@suiviSwitchToTrip": {
-    "description": "Bouton qui affiche l'autre trajet (suivi_parcel_sheets.dart).",
-    "placeholders": {
-      "corridor": {
-        "type": "String"
-      }
-    }
+    "description": "Bouton qui affiche l'autre trajet (suivi_parcel_sheets.dart)."
   },
   "suiviScanAnother": "Scanner un autre colis",
   "@suiviScanAnother": {

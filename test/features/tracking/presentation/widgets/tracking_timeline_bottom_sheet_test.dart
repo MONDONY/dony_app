@@ -1,11 +1,13 @@
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
+import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,13 +37,19 @@ TrackingEventModel _event(
   photoUrl: photoUrl,
 );
 
+Finder _route(String from, String to) => find.byWidgetPredicate(
+  (w) => w is RouteLabel && w.from == from && w.to == to,
+);
+
 /// Ouvre la feuille avec un TrackingBloc mocké injecté via GetIt (c'est
 /// `showTrackingTimelineSheet` qui l'instancie), sous le vrai thème.
 Future<void> _openSheet(
   WidgetTester tester,
   TrackingBloc bloc, {
   String? arrivalInstructions,
-  String corridor = 'Paris → Dakar',
+  String? from = 'Paris',
+  String? to = 'Dakar',
+  TransportMode? transportMode,
   String? trackingNumber = 'DON-4K7Q2M',
   VoidCallback? onShare,
   ThemeMode themeMode = ThemeMode.light,
@@ -68,7 +76,9 @@ Future<void> _openSheet(
             onPressed: () => showTrackingTimelineSheet(
               ctx,
               bidId: 'bid-1',
-              corridor: corridor,
+              departureCity: from,
+              arrivalCity: to,
+              transportMode: transportMode,
               trackingNumber: trackingNumber,
               arrivalInstructions: arrivalInstructions,
               onShareTracking: onShare,
@@ -139,7 +149,7 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('DON-4K7Q2M'), findsOneWidget);
       expect(find.text('En route vers Dakar'), findsOneWidget);
-      expect(find.text('Paris → Dakar'), findsOneWidget);
+      expect(_route('Paris', 'Dakar'), findsOneWidget);
       // Faite : remise au voyageur, heure, lieu, provenance, photo.
       expect(steps('done'), findsOneWidget);
       expect(find.text('Remis au voyageur'), findsOneWidget);
@@ -208,14 +218,29 @@ void main() {
     expect(y, [...y]..sort());
   });
 
-  testWidgets('corridor inconnu (colis lu par QR) : phrase sans ville', (
+  testWidgets('trajet inconnu (colis lu par QR) : phrase sans ville', (
     tester,
   ) async {
     when(() => bloc.state).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
-    await _openSheet(tester, bloc, corridor: '');
+    await _openSheet(tester, bloc, from: null, to: null);
 
     expect(find.text('En route'), findsNWidgets(2));
-    expect(find.text('Paris → Dakar'), findsNothing);
+    expect(find.byType(RouteLabel), findsNothing);
+  });
+
+  testWidgets('trajet en voiture : icône voiture sous le titre', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
+    await _openSheet(tester, bloc, transportMode: TransportMode.car);
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('tracking-route')),
+        matching: find.byIcon(Icons.directions_car_rounded),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('sans partage : pas de bouton', (tester) async {

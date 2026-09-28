@@ -7,6 +7,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -33,6 +34,7 @@ import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
+import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -411,6 +413,19 @@ void main() {
 
   Finder text(String s) => find.text(s, findRichText: true);
 
+  /// Trajet affiché par un [RouteLabel] (villes reliées par l'icône).
+  Finder route(String from, String to) => find.byWidgetPredicate(
+    (w) => w is RouteLabel && w.from == from && w.to == to,
+  );
+
+  /// Villes du trajet en tête de la feuille « Valider une étape ».
+  (String, String) selectedTrip(WidgetTester tester) {
+    final label = tester.widget<RouteLabel>(
+      find.byKey(const Key('suivi-selected-trip')),
+    );
+    return (label.from, label.to);
+  }
+
   void verifyNeverSubmitted() => verifyNever(
     () => offlineSync.sendScheduled(any(), position: any(named: 'position')),
   );
@@ -530,7 +545,7 @@ void main() {
       expect(scan, isNull);
       expect(find.byType(DonyFeedbackButton), findsOneWidget);
       expect(text('Scanner un QR code'), findsOneWidget);
-      expect(text('Paris → Dakar'), findsOneWidget);
+      expect(route('Paris', 'Dakar'), findsOneWidget);
       expect(text('En route'), findsOneWidget);
       // Envoi livré : hors de « Mes envois ».
       expect(find.byKey(const Key('suivi-shipment-ship-old')), findsNothing);
@@ -543,7 +558,7 @@ void main() {
       expect(text('Suivi en lecture seule'), findsOneWidget);
       // Numéro DON de l'envoi en tête du parcours.
       expect(find.byKey(const Key('tracking-number')), findsOneWidget);
-      expect(text('Paris → Dakar'), findsWidgets);
+      expect(route('Paris', 'Dakar'), findsWidgets);
     });
 
     testWidgets('lecteur QR plein écran → parcours du colis lu', (
@@ -596,7 +611,7 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await settle(tester);
       expect(text('Suivi en lecture seule'), findsOneWidget);
-      expect(text('Lyon → Abidjan'), findsWidgets);
+      expect(route('Lyon', 'Abidjan'), findsWidgets);
     });
 
     testWidgets('échec de Mes envois → Réessayer', (tester) async {
@@ -626,7 +641,7 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(text('Bobo-Dioulasso → Yaoundé'), findsOneWidget);
+      expect(route('Bobo-Dioulasso', 'Yaoundé'), findsOneWidget);
       expect(text('Madou'), findsWidgets);
       expect(text('Valider le départ'), findsOneWidget);
       expect(text("Valider l'arrivée"), findsOneWidget);
@@ -678,7 +693,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key('suivi-mode-valider')));
       await settle(tester);
-      expect(text('Bobo-Dioulasso → Yaoundé'), findsOneWidget);
+      expect(route('Bobo-Dioulasso', 'Yaoundé'), findsOneWidget);
       expect(
         find.textContaining('Mes envois', findRichText: true),
         findsNothing,
@@ -700,10 +715,49 @@ void main() {
 
       await tester.tap(find.byKey(const Key('trip_option_trip-b')));
       await settle(tester);
-      expect(
-        tester.widget<Text>(find.byKey(const Key('suivi-selected-trip'))).data,
-        'Paris → Dakar',
+      expect(selectedTrip(tester), ('Paris', 'Dakar'));
+    });
+
+    testWidgets('défaut : le trajet qui a des colis à valider', (tester) async {
+      stubTrips(
+        [
+          _trip('trip-a', 'IN_PROGRESS', 'Bobo-Dioulasso', 'Yaoundé'),
+          _trip(
+            'trip-b',
+            'ACTIVE',
+            'Paris',
+            'Dakar',
+            date: DateTime(2026, 10, 3),
+          ),
+        ],
+        {
+          'trip-a': [_bid('awa', 'COMPLETED', name: 'Awa')],
+          'trip-b': [_bid('fatou', 'ACCEPTED', trip: 'trip-b', name: 'Fatou')],
+        },
       );
+      await pump(tester);
+      expect(selectedTrip(tester), ('Paris', 'Dakar'));
+    });
+
+    testWidgets('trajet choisi gardé au retour sur l\'onglet', (tester) async {
+      stubDefaultTrips();
+      await pump(tester);
+      await tester.tap(find.byKey(const Key('suivi-change-trip')));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('trip_option_trip-b')));
+      await settle(tester);
+
+      unawaited(
+        GoRouter.of(
+          tester.element(find.byKey(const Key('fake-camera'))),
+        ).push('/announcements/trips'),
+      );
+      await settle(tester);
+      GoRouter.of(tester.element(find.text('page /announcements/trips'))).pop();
+      await settle(tester);
+
+      verify(() => annRepo.getMyAnnouncements()).called(2);
+      expect(selectedTrip(tester), ('Paris', 'Dakar'));
     });
 
     testWidgets('QR d\'un colis du trajet → parcours photo de l\'étape', (
@@ -790,20 +844,23 @@ void main() {
       await settle(tester);
       expect(text("Ce colis n'est pas sur ce trajet"), findsOneWidget);
       expect(
-        text(
-          'Le colis de Fatou voyage sur ton trajet du sam. 3 oct. : '
-          'Paris → Dakar.',
+        text('Le colis de Fatou voyage sur ton trajet du sam. 3 oct. :'),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('suivi-other-trip-route')),
+          matching: route('Paris', 'Dakar'),
+          matchRoot: true,
         ),
         findsOneWidget,
       );
+      expect(text('Passer sur ce trajet'), findsOneWidget);
       expect(cameraPaused?.value, isTrue);
 
       await tester.tap(find.byKey(const Key('suivi-switch-trip')));
       await settle(tester);
-      expect(
-        tester.widget<Text>(find.byKey(const Key('suivi-selected-trip'))).data,
-        'Paris → Dakar',
-      );
+      expect(selectedTrip(tester), ('Paris', 'Dakar'));
       expect(cameraPaused?.value, isFalse);
     });
 
@@ -817,10 +874,7 @@ void main() {
       await settle(tester);
       await tester.tap(find.byKey(const Key('suivi-scan-another')));
       await settle(tester);
-      expect(
-        tester.widget<Text>(find.byKey(const Key('suivi-selected-trip'))).data,
-        'Bobo-Dioulasso → Yaoundé',
-      );
+      expect(selectedTrip(tester), ('Bobo-Dioulasso', 'Yaoundé'));
       expect(cameraPaused?.value, isFalse);
     });
 
@@ -995,7 +1049,7 @@ void main() {
       await settle(tester);
 
       verify(() => annRepo.getMyAnnouncements()).called(1);
-      expect(text('Bobo-Dioulasso → Yaoundé'), findsOneWidget);
+      expect(route('Bobo-Dioulasso', 'Yaoundé'), findsOneWidget);
       expect(find.byKey(const Key('suivi-sheet')), findsOneWidget);
       expect(
         text(
@@ -1063,7 +1117,7 @@ void main() {
         ],
       );
       verify(() => annRepo.getMyAnnouncements()).called(2);
-      expect(text('Bobo-Dioulasso → Yaoundé'), findsOneWidget);
+      expect(route('Bobo-Dioulasso', 'Yaoundé'), findsOneWidget);
     });
 
     testWidgets('erreur de chargement → Valider, Réessayer recharge', (
@@ -1076,7 +1130,7 @@ void main() {
       stubDefaultTrips();
       await tester.tap(text('Réessayer'));
       await settle(tester);
-      expect(text('Bobo-Dioulasso → Yaoundé'), findsOneWidget);
+      expect(route('Bobo-Dioulasso', 'Yaoundé'), findsOneWidget);
     });
   });
 
@@ -1678,7 +1732,7 @@ void main() {
         stubDefaultTrips();
         await pump(tester, themeMode: mode);
         expect(tester.takeException(), isNull);
-        expect(text('Bobo-Dioulasso → Yaoundé'), findsOneWidget);
+        expect(route('Bobo-Dioulasso', 'Yaoundé'), findsOneWidget);
         expect(text('QR illisible ? Saisir le numéro'), findsOneWidget);
 
         await openNumberField(tester);
@@ -1692,6 +1746,92 @@ void main() {
           findsOneWidget,
         );
         expect(text('Forcer une étape'), findsOneWidget);
+      });
+
+      testWidgets('un seul trajet : la ligne ouvre la liste, trajet coché '
+          '($mode)', (tester) async {
+        stubTrips(
+          [_trip('trip-a', 'IN_PROGRESS', 'Bobo-Dioulasso', 'Yaoundé')],
+          {
+            'trip-a': [
+              _bid('madou', 'ACCEPTED', name: 'Madou'),
+              _bid('kadi', 'IN_TRANSIT', name: 'Kadi'),
+              _bid('awa', 'COMPLETED', name: 'Awa'),
+            ],
+          },
+        );
+        await pump(tester, themeMode: mode);
+        expect(tester.takeException(), isNull);
+
+        final row = find.byKey(const Key('suivi-change-trip'));
+        expect(text('Changer'), findsOneWidget);
+        expect(tester.getSize(row).height, greaterThanOrEqualTo(44));
+        expect(
+          find.bySemanticsLabel(RegExp('^Changer de trajet')),
+          findsOneWidget,
+        );
+
+        // Tap sur la ville, pas sur « Changer » : toute la ligne est active.
+        await tester.tap(find.byKey(const Key('suivi-selected-trip')));
+        await settle(tester);
+        expect(tester.takeException(), isNull);
+        expect(text('Choisir un trajet'), findsOneWidget);
+        expect(
+          text("C'est ton seul trajet en cours ou à venir."),
+          findsOneWidget,
+        );
+        expect(text('sam. 26 sept. · 3 colis · 2 à valider'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('trip_option_trip-a')),
+            matching: find.byWidgetPredicate(
+              (w) => w is DonyIcon && w.name == 'check',
+            ),
+          ),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byKey(const Key('trip_option_trip-a')));
+        await settle(tester);
+        expect(text('Choisir un trajet'), findsNothing);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.suiviTripChanged,
+            properties: any(named: 'properties'),
+          ),
+        );
+      });
+
+      testWidgets('plusieurs trajets : compteurs et trajet courant coché '
+          '($mode)', (tester) async {
+        stubDefaultTrips();
+        await pump(tester, themeMode: mode);
+        await tester.tap(find.byKey(const Key('suivi-change-trip')));
+        await settle(tester);
+        expect(tester.takeException(), isNull);
+        expect(
+          text("C'est ton seul trajet en cours ou à venir."),
+          findsNothing,
+        );
+        expect(text('sam. 26 sept. · 2 colis · 2 à valider'), findsOneWidget);
+        expect(text('sam. 3 oct. · 1 colis · 1 à valider'), findsOneWidget);
+        Finder checkIn(String trip) => find.descendant(
+          of: find.byKey(Key('trip_option_$trip')),
+          matching: find.byWidgetPredicate(
+            (w) => w is DonyIcon && w.name == 'check',
+          ),
+        );
+        expect(checkIn('trip-a'), findsOneWidget);
+        expect(checkIn('trip-b'), findsNothing);
+
+        await tester.tap(find.byKey(const Key('trip_option_trip-b')));
+        await settle(tester);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.suiviTripChanged,
+            properties: {'source': 'picker'},
+          ),
+        ).called(1);
       });
 
       testWidgets('Suivre un colis ($mode)', (tester) async {

@@ -3,12 +3,14 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
+import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -19,14 +21,17 @@ import 'package:intl/intl.dart';
 /// suivi ») : numéro, phrase d'état, trajet, puis frise des étapes faites,
 /// de l'étape en cours et des étapes à venir.
 ///
-/// [corridor] (« Paris → Dakar ») vide quand le colis est inconnu de l'app
-/// (lu par QR) : pas de sous-titre ni de ville dans la phrase d'état.
+/// [departureCity] et [arrivalCity] `null` quand le colis est inconnu de
+/// l'app (lu par QR) : pas de trajet en sous-titre ni de ville dans la phrase
+/// d'état. [transportMode] choisit l'icône du trajet (avion par défaut).
 /// [trackingNumber] : numéro DON affiché au-dessus du titre, s'il est connu.
 /// [onShareTracking] : bouton « Partager le suivi » en bas de la feuille.
 Future<void> showTrackingTimelineSheet(
   BuildContext context, {
   required String bidId,
-  required String corridor,
+  String? departureCity,
+  String? arrivalCity,
+  TransportMode? transportMode,
   VoidCallback? onShareTracking,
   String? arrivalInstructions,
   String? trackingNumber,
@@ -55,7 +60,9 @@ Future<void> showTrackingTimelineSheet(
           ),
     child: _TrackingTimelineContent(
       bidId: bidId,
-      corridor: corridor,
+      departureCity: departureCity,
+      arrivalCity: arrivalCity,
+      transportMode: transportMode,
       trackingNumber: trackingNumber,
       arrivalInstructions: arrivalInstructions,
     ),
@@ -65,13 +72,17 @@ Future<void> showTrackingTimelineSheet(
 class _TrackingTimelineContent extends StatelessWidget {
   const _TrackingTimelineContent({
     required this.bidId,
-    required this.corridor,
+    this.departureCity,
+    this.arrivalCity,
+    this.transportMode,
     this.trackingNumber,
     this.arrivalInstructions,
   });
 
   final String bidId;
-  final String corridor;
+  final String? departureCity;
+  final String? arrivalCity;
+  final TransportMode? transportMode;
   final String? trackingNumber;
   final String? arrivalInstructions;
 
@@ -110,7 +121,9 @@ class _TrackingTimelineContent extends StatelessWidget {
             ),
             TrackingEventsLoaded(:final events) => _Journey(
               events: events,
-              corridor: corridor,
+              departureCity: departureCity,
+              arrivalCity: arrivalCity,
+              transportMode: transportMode,
               trackingNumber: trackingNumber,
               arrivalInstructions: arrivalInstructions,
             ).animate().fadeIn(duration: 250.ms, curve: Curves.easeOutCubic),
@@ -201,7 +214,7 @@ String _doneTitle(AppLocalizations l, TrackingEventModel event) =>
 String _headline(
   AppLocalizations l,
   List<TrackingEventModel> events,
-  String corridor,
+  String? arrivalCity,
 ) {
   if (events.any((e) => e.eventType == 'ARRIVEE')) {
     return l.trackingHeadlineDelivered;
@@ -209,8 +222,7 @@ String _headline(
   if (!events.any((e) => e.eventType == 'DEPART')) {
     return l.trackingHeadlineAwaitingHandover;
   }
-  final parts = corridor.split('→');
-  final city = parts.length > 1 ? parts.last.trim() : '';
+  final city = arrivalCity?.trim() ?? '';
   return city.isEmpty
       ? l.trackingHeadlineOnTheWay
       : l.trackingHeadlineOnTheWayTo(city);
@@ -219,13 +231,17 @@ String _headline(
 class _Journey extends StatelessWidget {
   const _Journey({
     required this.events,
-    required this.corridor,
+    this.departureCity,
+    this.arrivalCity,
+    this.transportMode,
     this.trackingNumber,
     this.arrivalInstructions,
   });
 
   final List<TrackingEventModel> events;
-  final String corridor;
+  final String? departureCity;
+  final String? arrivalCity;
+  final TransportMode? transportMode;
   final String? trackingNumber;
   final String? arrivalInstructions;
 
@@ -237,6 +253,8 @@ class _Journey extends StatelessWidget {
     final steps = _journeySteps(l, events);
     final number = trackingNumber?.trim() ?? '';
     final instructions = arrivalInstructions?.trim() ?? '';
+    final from = departureCity?.trim() ?? '';
+    final to = arrivalCity?.trim() ?? '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -255,14 +273,17 @@ class _Journey extends StatelessWidget {
           const SizedBox(height: DonySpacing.xs),
         ],
         Text(
-          _headline(l, events, corridor),
+          _headline(l, events, arrivalCity),
           key: const Key('tracking-headline'),
           style: tt.headlineLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
-        if (corridor.isNotEmpty) ...[
+        if (from.isNotEmpty && to.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.xs),
-          Text(
-            corridor,
+          RouteLabel(
+            key: const Key('tracking-route'),
+            from: from,
+            to: to,
+            transportMode: transportMode,
             style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],

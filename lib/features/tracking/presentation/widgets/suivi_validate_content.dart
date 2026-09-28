@@ -12,6 +12,7 @@ import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
+import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -27,10 +28,6 @@ String suiviParcelLabel(BidModel bid) =>
     bid.recipientName ??
     bid.trackingNumber ??
     bid.id.substring(0, bid.id.length < 8 ? bid.id.length : 8).toUpperCase();
-
-/// « Paris → Dakar ».
-String suiviCorridor(AnnouncementModel trip) =>
-    '${trip.departureCity} → ${trip.arrivalCity}';
 
 /// « sam. 26 sept. » dans la langue de l'app.
 String suiviShortDate(AppLocalizations l, DateTime date) =>
@@ -314,6 +311,8 @@ class _ValidateNumberFieldState extends State<_ValidateNumberField> {
   }
 }
 
+/// Trajet affiché, toujours présenté comme un choix : toute la ligne ouvre
+/// « Choisir un trajet », même quand le voyageur n'en a qu'un.
 class _TripRow extends StatelessWidget {
   const _TripRow({required this.hub, required this.onChangeTrip});
 
@@ -327,48 +326,69 @@ class _TripRow extends StatelessWidget {
     final l = context.l10n;
     final trip = hub.selectedTrip;
 
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                suiviCorridor(trip),
-                key: const Key('suivi-selected-trip'),
-                style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: DonySpacing.xxs),
-              Text(
-                l.suiviTripSummary(
-                  suiviShortDate(l, trip.departureDate),
-                  hub.selectedTripBids.length,
+    return Semantics(
+      button: true,
+      label: l.suiviChangeTripSemantics,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          key: const Key('suivi-change-trip'),
+          onTap: onChangeTrip,
+          borderRadius: BorderRadius.circular(DonyRadius.lg),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RouteLabel(
+                        key: const Key('suivi-selected-trip'),
+                        from: trip.departureCity,
+                        to: trip.arrivalCity,
+                        transportMode: trip.transportMode,
+                        style: tt.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.xxs),
+                      Text(
+                        l.suiviTripSummary(
+                          suiviShortDate(l, trip.departureDate),
+                          hub.selectedTripBids.length,
+                        ),
+                        style: tt.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontFeatures: _tabular,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                style: tt.bodyMedium?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  fontFeatures: _tabular,
+                const SizedBox(width: DonySpacing.sm),
+                // Indicateur du choix, lu par la ligne entière.
+                ExcludeSemantics(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l.suiviChangeTrip,
+                        style: tt.labelLarge?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: DonySpacing.xxs),
+                      DonyIcon('chevron-down', size: 18, color: cs.primary),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        if (hub.trips.length > 1) ...[
-          const SizedBox(width: DonySpacing.sm),
-          OutlinedButton.icon(
-            key: const Key('suivi-change-trip'),
-            onPressed: onChangeTrip,
-            icon: Icon(DonyIcons.swapVertical, size: 16, color: cs.onSurface),
-            label: Text(l.suiviChangeTrip),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: cs.onSurface,
-              backgroundColor: cs.surface,
-              side: BorderSide(color: cs.outline),
-              minimumSize: const Size(0, 44),
-              shape: const StadiumBorder(),
+              ],
             ),
           ),
-        ],
-      ],
+        ),
+      ),
     );
   }
 }
@@ -753,7 +773,8 @@ class SuiviPendingScansBanner extends StatelessWidget {
   }
 }
 
-/// Feuille « Choisir un trajet » : trajets en cours puis à venir.
+/// Feuille « Choisir un trajet » : trajets en cours puis à venir, avec leurs
+/// colis et ceux qui attendent une étape. Ouverte même avec un seul trajet.
 class SuiviTripPicker extends StatelessWidget {
   const SuiviTripPicker({super.key, required this.hub, required this.onSelect});
 
@@ -784,6 +805,14 @@ class SuiviTripPicker extends StatelessWidget {
             trips: upcoming.toList(),
             hub: hub,
             onSelect: onSelect,
+          ),
+        if (hub.trips.length == 1)
+          Text(
+            l.suiviOnlyTrip,
+            key: const Key('suivi-only-trip'),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
       ],
     );
@@ -824,9 +853,7 @@ class _TripGroup extends StatelessWidget {
               builder: (context) {
                 final selected = trip.id == hub.selectedTripId;
                 final bids = hub.confirmedBidsOf(trip.id);
-                final toValidate = bids
-                    .where((b) => nextRequiredStep(b) != null)
-                    .length;
+                final toValidate = hub.toValidateCountOf(trip.id);
                 final summary = l.suiviTripSummary(
                   suiviShortDate(l, trip.departureDate),
                   bids.length,
@@ -851,8 +878,10 @@ class _TripGroup extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  suiviCorridor(trip),
+                                RouteLabel(
+                                  from: trip.departureCity,
+                                  to: trip.arrivalCity,
+                                  transportMode: trip.transportMode,
                                   style: tt.titleLarge?.copyWith(
                                     fontWeight: FontWeight.w700,
                                   ),

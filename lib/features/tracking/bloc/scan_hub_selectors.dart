@@ -35,6 +35,20 @@ List<AnnouncementModel> selectScannableTrips(List<AnnouncementModel> trips) {
   return [...inProgress, ...upcoming];
 }
 
+/// Trajet affiché par défaut dans « Valider une étape » : le premier de
+/// [trips] (ordre de [selectScannableTrips]) dont au moins un colis confirmé
+/// attend une étape, sinon le premier trajet. [trips] n'est jamais vide.
+String defaultScanTripId(
+  List<AnnouncementModel> trips,
+  Map<String, List<BidModel>> bidsByTrip,
+) {
+  for (final trip in trips) {
+    final bids = confirmedColis(bidsByTrip[trip.id] ?? const []);
+    if (bids.any((b) => nextRequiredStep(b) != null)) return trip.id;
+  }
+  return trips.first.id;
+}
+
 /// Sous-ensemble de [bids] réellement confirmés/embarqués sur le trajet
 /// (`_confirmedStatuses` : `ACCEPTED`/`HANDED_OVER`/`IN_TRANSIT`/`ARRIVED`/
 /// `COMPLETED`).

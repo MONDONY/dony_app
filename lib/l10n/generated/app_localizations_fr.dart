@@ -14119,6 +14119,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get suiviChangeTrip => 'Changer';
 
   @override
+  String suiviRouteSemantics(String from, String to) {
+    return 'De $from à $to';
+  }
+
+  @override
+  String get suiviChangeTripSemantics => 'Changer de trajet';
+
+  @override
+  String get suiviOnlyTrip => 'C\'est ton seul trajet en cours ou à venir.';
+
+  @override
   String get suiviTripsInProgress => 'En cours';
 
   @override
@@ -14199,14 +14210,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get suiviOtherTripTitle => 'Ce colis n\'est pas sur ce trajet';
 
   @override
-  String suiviOtherTripBody(String parcel, String corridor, String date) {
-    return 'Le colis de $parcel voyage sur ton trajet du $date : $corridor.';
+  String suiviOtherTripBody(String parcel, String date) {
+    return 'Le colis de $parcel voyage sur ton trajet du $date :';
   }
 
   @override
-  String suiviSwitchToTrip(String corridor) {
-    return 'Passer sur $corridor';
-  }
+  String get suiviSwitchToTrip => 'Passer sur ce trajet';
 
   @override
   String get suiviScanAnother => 'Scanner un autre colis';

@@ -145,4 +145,34 @@ void main() {
       expect(p.arrivee, isTrue);
     });
   });
+
+  group('defaultScanTripId', () {
+    final trips = [
+      _trip('en-cours', 'IN_PROGRESS', DateTime(2026, 6)),
+      _trip('bientot', 'ACTIVE', DateTime(2026, 7)),
+      _trip('plus-tard', 'ACTIVE', DateTime(2026, 8)),
+    ];
+
+    test(
+      'premier trajet qui a un colis à valider, pas le premier par date',
+      () {
+        expect(
+          defaultScanTripId(trips, {
+            'en-cours': [_bid('COMPLETED'), _bid('PENDING')],
+            'plus-tard': [_bid('IN_TRANSIT')],
+          }),
+          'plus-tard',
+        );
+      },
+    );
+
+    test('rien à valider → premier trajet', () {
+      expect(
+        defaultScanTripId(trips, {
+          'bientot': [_bid('COMPLETED')],
+        }),
+        'en-cours',
+      );
+    });
+  });
 }

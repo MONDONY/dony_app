@@ -266,11 +266,6 @@ class SenderStickyBar extends StatelessWidget {
     if (status == 'HANDED_OVER' ||
         status == 'IN_TRANSIT' ||
         status == 'ARRIVED') {
-      final dep = bid.departureCity ?? '';
-      final arr = bid.arrivalCity ?? '';
-      final corridor = (dep.isNotEmpty && arr.isNotEmpty)
-          ? '$dep → $arr'
-          : context.l10n.bidDetailTrackParcel;
       return DonyButton(
         label: context.l10n.bidDetailTrackParcel,
         iconAsset: 'package',
@@ -279,7 +274,8 @@ class SenderStickyBar extends StatelessWidget {
           showTrackingTimelineSheet(
             context,
             bidId: bid.id,
-            corridor: corridor,
+            departureCity: bid.departureCity,
+            arrivalCity: bid.arrivalCity,
             arrivalInstructions: bid.arrivalInstructions,
             trackingNumber: bid.trackingNumber,
             onShareTracking: bid.trackingToken != null
