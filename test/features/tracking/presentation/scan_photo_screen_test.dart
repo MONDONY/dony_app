@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -78,7 +79,10 @@ void main() {
   // ─── Bouton Passer (optionnel) ─────────────────────────────────────────────
   testWidgets('DEPART — pas de bouton Passer', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('DEPART')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('DEPART'),
+      ),
     );
     await tester.pump();
     expect(find.text('Passer : continuer sans photo'), findsNothing);
@@ -86,7 +90,10 @@ void main() {
 
   testWidgets('ARRIVEE — pas de bouton Passer', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('ARRIVEE')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('ARRIVEE'),
+      ),
     );
     await tester.pump();
     expect(find.text('Passer : continuer sans photo'), findsNothing);
@@ -94,7 +101,10 @@ void main() {
 
   testWidgets('TRANSIT — bouton Passer visible', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('TRANSIT')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('TRANSIT'),
+      ),
     );
     await tester.pump();
     expect(find.text('Passer : continuer sans photo'), findsOneWidget);
@@ -105,6 +115,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp.router(
+        theme: AppTheme.light(),
         routerConfig: _router('TRANSIT', scanMethod: ScanMethod.manual),
       ),
     );
@@ -118,7 +129,10 @@ void main() {
   // ─── Label du colis ────────────────────────────────────────────────────────
   testWidgets('affiche label du colis', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('DEPART')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('DEPART'),
+      ),
     );
     await tester.pump();
     expect(find.text('DON-TEST01'), findsOneWidget);
@@ -127,7 +141,10 @@ void main() {
   // ─── Badges photo ─────────────────────────────────────────────────────────
   testWidgets('badge obligatoire pour DEPART', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('DEPART')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('DEPART'),
+      ),
     );
     await tester.pump();
     expect(find.text('Photo obligatoire'), findsOneWidget);
@@ -135,7 +152,10 @@ void main() {
 
   testWidgets('badge optionnelle pour TRANSIT', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('TRANSIT')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('TRANSIT'),
+      ),
     );
     await tester.pump();
     expect(find.text('Photo optionnelle'), findsOneWidget);
@@ -143,7 +163,10 @@ void main() {
 
   testWidgets('badge obligatoire pour ARRIVEE', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('ARRIVEE')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('ARRIVEE'),
+      ),
     );
     await tester.pump();
     expect(find.text('Photo obligatoire'), findsOneWidget);
@@ -152,7 +175,10 @@ void main() {
   // ─── Bouton "Prendre la photo" toujours présent ──────────────────────────
   testWidgets('bouton Prendre la photo présent pour DEPART', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('DEPART')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('DEPART'),
+      ),
     );
     await tester.pump();
     expect(find.text('Prendre la photo'), findsOneWidget);
@@ -160,7 +186,10 @@ void main() {
 
   testWidgets('bouton Prendre la photo présent pour TRANSIT', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('TRANSIT')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('TRANSIT'),
+      ),
     );
     await tester.pump();
     expect(find.text('Prendre la photo'), findsOneWidget);
@@ -169,7 +198,10 @@ void main() {
   // ─── Label étape visible ──────────────────────────────────────────────────
   testWidgets('DEPART — label étape Départ visible', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('DEPART')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('DEPART'),
+      ),
     );
     await tester.pump();
     expect(find.textContaining('Départ'), findsOneWidget);
@@ -177,7 +209,10 @@ void main() {
 
   testWidgets('TRANSIT — label étape Transit visible', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('TRANSIT')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('TRANSIT'),
+      ),
     );
     await tester.pump();
     expect(find.textContaining('Transit'), findsOneWidget);
@@ -185,7 +220,10 @@ void main() {
 
   testWidgets('ARRIVEE — label étape Arrivée visible', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('ARRIVEE')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('ARRIVEE'),
+      ),
     );
     await tester.pump();
     expect(find.textContaining('Arrivée'), findsOneWidget);
@@ -194,7 +232,10 @@ void main() {
   // ─── Icône fermeture ─────────────────────────────────────────────────────
   testWidgets('icône close présente', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('DEPART')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('DEPART'),
+      ),
     );
     await tester.pump();
     expect(
@@ -206,7 +247,10 @@ void main() {
   // ─── Titre écran ─────────────────────────────────────────────────────────
   testWidgets('titre Photo du colis affiché', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('DEPART')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('DEPART'),
+      ),
     );
     await tester.pump();
     expect(find.text('Photo du colis'), findsOneWidget);
@@ -215,7 +259,10 @@ void main() {
   // ─── Géolocalisation label ────────────────────────────────────────────────
   testWidgets('label Géolocalisation automatique affiché', (tester) async {
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('DEPART')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('DEPART'),
+      ),
     );
     await tester.pump();
     expect(find.text('Géolocalisation automatique'), findsOneWidget);
@@ -225,7 +272,10 @@ void main() {
   testWidgets('anglais — titre, badges et boutons traduits', (tester) async {
     useEnglish();
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: _router('TRANSIT')),
+      MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: _router('TRANSIT'),
+      ),
     );
     await tester.pump();
     expect(find.text('Parcel photo'), findsOneWidget);
@@ -260,7 +310,9 @@ void main() {
     });
 
     Future<void> open(WidgetTester tester, GoRouter router) async {
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpWidget(
+        MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+      );
       await tester.tap(find.text('ouvrir'));
       await tester.pumpAndSettle();
     }

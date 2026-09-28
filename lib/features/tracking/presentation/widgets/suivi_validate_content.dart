@@ -261,6 +261,8 @@ class _ValidateNumberFieldState extends State<_ValidateNumberField> {
                     key: const Key('suivi-validate-number-submit'),
                     onPressed: loading ? null : _submit,
                     style: FilledButton.styleFrom(
+                      // Largeur minimale bornée : celle du thème est infinie.
+                      minimumSize: const Size(64, 52),
                       padding: const EdgeInsets.symmetric(
                         horizontal: DonySpacing.lg,
                       ),

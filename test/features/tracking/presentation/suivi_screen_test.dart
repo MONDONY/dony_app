@@ -320,6 +320,7 @@ void main() {
     String location = '/',
     List<AuthState> authLater = const [],
     bool qrTutorial = false,
+    ThemeMode themeMode = ThemeMode.light,
   }) async {
     final auth = _MockAuthBloc();
     whenListen(
@@ -389,7 +390,12 @@ void main() {
             )..add(const HelpCenterLoadRequested()),
           ),
         ],
+        // Le vrai thème de l'app (app.dart) : ses boutons ont une largeur
+        // minimale infinie, qu'un thème par défaut masquait (recette Redmi).
         child: MaterialApp.router(
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          themeMode: themeMode,
           locale: AppL10n.fr,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -1418,6 +1424,57 @@ void main() {
       await pump(tester);
       expect(find.byKey(const Key('suivi-help')), findsNothing);
     });
+  });
+
+  // Recette Redmi : sous le thème de l'app, les boutons « Suivre » et
+  // « Valider » du champ numéro (largeur minimale infinie dans une Row)
+  // cassaient la mise en page, feuille blanche ou superposée.
+  group('vrai thème de l\'app, clair et sombre', () {
+    for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+      testWidgets('Valider replié puis déplié sur le champ numéro ($mode)', (
+        tester,
+      ) async {
+        stubDefaultTrips();
+        await pump(tester, themeMode: mode);
+        expect(tester.takeException(), isNull);
+        expect(text('Bobo-Dioulasso → Yaoundé'), findsOneWidget);
+        expect(text('QR illisible ? Saisir le numéro'), findsOneWidget);
+
+        await openNumberField(tester);
+        expect(tester.takeException(), isNull);
+        expect(
+          find.byKey(const Key('suivi-validate-number-field')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('suivi-validate-number-submit')),
+          findsOneWidget,
+        );
+        expect(text('Forcer une étape'), findsOneWidget);
+      });
+
+      testWidgets('Suivre un colis ($mode)', (tester) async {
+        stubDefaultTrips();
+        await pump(tester, themeMode: mode, location: '/?mode=suivre');
+        expect(tester.takeException(), isNull);
+        expect(find.byKey(const Key('suivi-number-field')), findsOneWidget);
+        expect(find.byKey(const Key('suivi-number-submit')), findsOneWidget);
+        expect(
+          find.textContaining('Mes envois', findRichText: true),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('expéditeur seul ($mode)', (tester) async {
+        await pump(tester, roles: ['SENDER'], themeMode: mode);
+        expect(tester.takeException(), isNull);
+        expect(find.byKey(const Key('suivi-number-field')), findsOneWidget);
+        expect(
+          find.textContaining('Mes envois', findRichText: true),
+          findsOneWidget,
+        );
+      });
+    }
   });
 }
 

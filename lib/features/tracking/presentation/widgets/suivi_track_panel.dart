@@ -145,6 +145,9 @@ class _TrackNumberFieldState extends State<_TrackNumberField> {
             style: FilledButton.styleFrom(
               backgroundColor: DonyColors.ink800,
               foregroundColor: DonyColors.neutral0,
+              // Le thème impose `Size.fromHeight` (largeur minimale infinie) :
+              // dans une Row, le bouton ne se mettait plus en page.
+              minimumSize: const Size(64, 56),
               padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(DonyRadius.lg),
