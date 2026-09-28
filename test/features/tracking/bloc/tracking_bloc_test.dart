@@ -5,9 +5,11 @@ import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/qr_code_model.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
+import 'package:dony/features/tracking/data/scan_submitter.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
@@ -350,6 +352,31 @@ void main() {
     );
 
     blocTest<TrackingBloc, TrackingState>(
+      'transmet la provenance à la confirmation',
+      build: buildBloc,
+      setUp: () {
+        when(
+          () => mockRepo.confirmDelivery(
+            bidId: 'bid-1',
+            code: '4721',
+            scanMethod: ScanMethod.manual,
+          ),
+        ).thenAnswer((_) async => _event);
+      },
+      act: (b) => b.add(
+        ConfirmDeliveryRequested(
+          bidId: 'bid-1',
+          code: '4721',
+          scanMethod: ScanMethod.manual,
+        ),
+      ),
+      expect: () => [
+        isA<DeliveryConfirmLoading>(),
+        isA<DeliveryConfirmSuccess>(),
+      ],
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
       'emits [DeliveryConfirmLoading, DeliveryConfirmError] on failure',
       build: buildBloc,
       setUp: () {
@@ -383,6 +410,66 @@ void main() {
       act: (b) =>
           b.add(QrScanSubmitRequested(bidId: 'bid-1', eventType: 'TRANSIT')),
       expect: () => [isA<QrScanSubmitting>(), isA<QrScanError>()],
+    );
+
+    TrackingBloc withNetwork({required bool online}) {
+      final analytics = makeDisabledAnalytics(MockAnalyticsBackend())
+        ..onConfigured();
+      return TrackingBloc(
+        mockRepo,
+        mockSync,
+        analytics,
+        submitter: ScanSubmitter(
+          mockRepo,
+          mockSync,
+          isOnline: () async => online,
+        ),
+      );
+    }
+
+    blocTest<TrackingBloc, TrackingState>(
+      'en ligne : étape envoyée → QrScanSuccess',
+      setUp: () => when(
+        () => mockRepo.postScan(bidId: 'bid-1', eventType: 'TRANSIT'),
+      ).thenAnswer((_) async => _event),
+      build: () => withNetwork(online: true),
+      act: (b) =>
+          b.add(QrScanSubmitRequested(bidId: 'bid-1', eventType: 'TRANSIT')),
+      expect: () => [
+        isA<QrScanSubmitting>(),
+        isA<QrScanSuccess>().having((s) => s.event, 'event', _event),
+      ],
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
+      'transmet la provenance à l\'envoi de l\'étape',
+      setUp: () => when(
+        () => mockRepo.postScan(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          scanMethod: ScanMethod.qr,
+        ),
+      ).thenAnswer((_) async => _event),
+      build: () => withNetwork(online: true),
+      act: (b) => b.add(
+        QrScanSubmitRequested(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          scanMethod: ScanMethod.qr,
+        ),
+      ),
+      expect: () => [isA<QrScanSubmitting>(), isA<QrScanSuccess>()],
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
+      'hors ligne : file d\'attente → QrScanQueued',
+      setUp: () => when(
+        () => mockSync.queueScan(bidId: 'bid-1', eventType: 'TRANSIT'),
+      ).thenAnswer((_) async => 1),
+      build: () => withNetwork(online: false),
+      act: (b) =>
+          b.add(QrScanSubmitRequested(bidId: 'bid-1', eventType: 'TRANSIT')),
+      expect: () => [isA<QrScanSubmitting>(), isA<QrScanQueued>()],
     );
   });
 

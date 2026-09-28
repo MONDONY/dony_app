@@ -339,9 +339,8 @@ class _RetraitTalonButton extends StatelessWidget {
   }
 }
 
-/// traveler / HANDED_OVER · IN_TRANSIT — lien vers les étapes de scan du Suivi
-/// (ScanHub : Départ / Transit / Arrivée). Redirige simplement vers le hub
-/// d'étapes déjà établi, où le voyageur scanne (QR) ou identifie par numéro.
+/// traveler / HANDED_OVER · IN_TRANSIT — lien vers l'onglet Suivi en mode
+/// « Valider une étape », où le voyageur scanne (QR) ou saisit le numéro.
 class _TravelerScanStepsButton extends StatelessWidget {
   const _TravelerScanStepsButton();
 
@@ -349,7 +348,7 @@ class _TravelerScanStepsButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return OutlinedButton.icon(
-      onPressed: () => context.push('/tracking/scan-hub'),
+      onPressed: () => context.go('/tracking?mode=valider'),
       icon: DonyIcon('scan-line', size: 20, color: cs.primary),
       label: Text(
         context.l10n.ticketScanStepsButton,

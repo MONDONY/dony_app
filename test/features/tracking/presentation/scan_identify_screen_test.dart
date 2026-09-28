@@ -3,6 +3,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_identify_screen.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,9 @@ import '../../../helpers/l10n_test_helpers.dart';
 class MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
 
+/// Extras reçus par l'écran photo au dernier passage.
+Map<String, dynamic>? _photoExtra;
+
 GoRouter _router(String? etape, {bool focusNumber = false}) => GoRouter(
   routes: [
     GoRoute(
@@ -27,11 +31,19 @@ GoRouter _router(String? etape, {bool focusNumber = false}) => GoRouter(
     ),
     GoRoute(
       path: '/tracking/scan/photo',
-      builder: (_, _) => const Scaffold(body: Text('photo')),
+      builder: (_, state) {
+        _photoExtra = state.extra as Map<String, dynamic>?;
+        return const Scaffold(body: Text('photo'));
+      },
     ),
     GoRoute(
       path: '/tracking/scan/qr-picker',
-      builder: (_, _) => const Scaffold(body: Text('picker')),
+      builder: (ctx, _) => Scaffold(
+        body: TextButton(
+          onPressed: () => ctx.pop('bid-qr-12345678'),
+          child: const Text('picker'),
+        ),
+      ),
     ),
   ],
 );
@@ -47,11 +59,19 @@ GoRouter _routerWithBloc(MockTrackingBloc bloc, {String? etape}) => GoRouter(
     ),
     GoRoute(
       path: '/tracking/scan/photo',
-      builder: (_, _) => const Scaffold(body: Text('photo')),
+      builder: (_, state) {
+        _photoExtra = state.extra as Map<String, dynamic>?;
+        return const Scaffold(body: Text('photo'));
+      },
     ),
     GoRoute(
       path: '/tracking/scan/qr-picker',
-      builder: (_, _) => const Scaffold(body: Text('picker')),
+      builder: (ctx, _) => Scaffold(
+        body: TextButton(
+          onPressed: () => ctx.pop('bid-qr-12345678'),
+          child: const Text('picker'),
+        ),
+      ),
     ),
   ],
 );
@@ -204,8 +224,27 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('photo'), findsOneWidget);
+      expect(_photoExtra?['scanMethod'], ScanMethod.manual);
     },
   );
+
+  testWidgets('QR lu → écran photo avec la provenance QR', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp.router(routerConfig: _router('TRANSIT')),
+    );
+    await tester.pump();
+    await tester.tap(find.text('Ouvrir le lecteur QR'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('picker'));
+    await tester.pumpAndSettle();
+    expect(find.text('photo'), findsOneWidget);
+    expect(_photoExtra, {
+      'bidId': 'bid-qr-12345678',
+      'etape': 'TRANSIT',
+      'packageLabel': 'bid-qr-1',
+      'scanMethod': ScanMethod.qr,
+    });
+  });
 
   // ─── Scanner QR button present ────────────────────────────────────────────
   testWidgets('bouton Ouvrir le scanner QR présent', (tester) async {

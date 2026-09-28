@@ -3,6 +3,7 @@ import 'package:dony/features/matching/presentation/widgets/route_map_components
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -17,14 +18,18 @@ class _MockTrackingBloc extends Mock implements TrackingBloc {}
 
 class _FakeTrackingEvent extends Fake implements TrackingEvent {}
 
-TrackingEventModel _event(String type, {DateTime? scannedAt}) =>
-    TrackingEventModel(
-      id: 'evt-$type',
-      bidId: 'bid-1',
-      eventType: type,
-      scannedAt: scannedAt ?? DateTime(2026, 6, 20, 10),
-      createdAt: scannedAt ?? DateTime(2026, 6, 20, 10),
-    );
+TrackingEventModel _event(
+  String type, {
+  DateTime? scannedAt,
+  ScanMethod? scanMethod,
+}) => TrackingEventModel(
+  id: 'evt-$type',
+  bidId: 'bid-1',
+  eventType: type,
+  scannedAt: scannedAt ?? DateTime(2026, 6, 20, 10),
+  createdAt: scannedAt ?? DateTime(2026, 6, 20, 10),
+  scanMethod: scanMethod,
+);
 
 /// Ouvre la sheet de suivi avec un TrackingBloc mocké injecté via GetIt
 /// (c'est `showTrackingTimelineSheet` qui l'instancie lui-même).
@@ -32,6 +37,7 @@ Future<void> _openSheet(
   WidgetTester tester,
   TrackingBloc bloc, {
   String? arrivalInstructions,
+  String corridor = 'Paris → Dakar',
   bool settle = true,
 }) async {
   if (getIt.isRegistered<TrackingBloc>()) {
@@ -52,7 +58,7 @@ Future<void> _openSheet(
             onPressed: () => showTrackingTimelineSheet(
               ctx,
               bidId: 'bid-1',
-              corridor: 'Paris → Dakar',
+              corridor: corridor,
               arrivalInstructions: arrivalInstructions,
             ),
             child: const Text('Ouvrir'),
@@ -103,6 +109,33 @@ void main() {
     await _openSheet(tester, bloc);
 
     expect(find.byType(RouteMapCard), findsOneWidget);
+    expect(find.text('ÉTAPES'), findsOneWidget);
+  });
+
+  testWidgets('provenance de chaque étape, rien si inconnue', (tester) async {
+    when(() => bloc.state).thenReturn(
+      TrackingEventsLoaded([
+        _event('DEPART', scanMethod: ScanMethod.qr),
+        _event('TRANSIT', scanMethod: ScanMethod.manual),
+        _event('ARRIVEE'),
+      ]),
+    );
+
+    await _openSheet(tester, bloc);
+
+    expect(find.text('Validé par scan du QR'), findsOneWidget);
+    expect(find.text('Validé avec le numéro'), findsOneWidget);
+    expect(find.byKey(const Key('tracking-step-method')), findsNWidgets(2));
+  });
+
+  testWidgets('corridor inconnu (colis lu par QR) : pas de carte', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
+
+    await _openSheet(tester, bloc, corridor: '');
+
+    expect(find.byType(RouteMapCard), findsNothing);
     expect(find.text('ÉTAPES'), findsOneWidget);
   });
 

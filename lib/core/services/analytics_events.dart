@@ -73,9 +73,28 @@ abstract final class AnalyticsEvents {
   static const qrScanSuccess = 'qr_scan_success';
   static const deliveryConfirmed = 'delivery_confirmed';
 
-  // Suivi (entrées additives)
-  static const suiviScanOpened = 'suivi_scan_opened';
-  static const suiviTrackOpened = 'suivi_track_opened';
+  // Onglet Suivi unifié (« Valider une étape » | « Suivre un colis »)
+  /// Mode choisi par l'utilisateur (propriété `mode` : `valider`/`suivre`).
+  static const suiviModeChanged = 'suivi_mode_changed';
+
+  /// Trajet affiché changé (propriété `source` : `picker`/`other_trip`).
+  static const suiviTripChanged = 'suivi_trip_changed';
+
+  /// QR Yadony lu depuis l'onglet (propriétés `mode`, `outcome` :
+  /// `own_trip`/`other_trip`/`unknown`).
+  static const suiviQrScanned = 'suivi_qr_scanned';
+
+  /// Parcours d'un colis demandé en lecture seule (propriété `source` :
+  /// `number`/`qr`/`my_shipments`).
+  static const suiviTrackSubmitted = 'suivi_track_submitted';
+
+  /// Étape envoyée (ou mise en file hors ligne) après le délai d'annulation
+  /// (propriétés `step` : `DEPART`/`TRANSIT`, `method` : `qr`/`number`).
+  static const suiviStepValidated = 'suivi_step_validated';
+
+  /// Validation annulée pendant le délai, rien n'est envoyé (propriété
+  /// `step`).
+  static const suiviStepUndone = 'suivi_step_undone';
 
   // Package Request
   static const packageRequestCreated = 'package_request_created';

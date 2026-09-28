@@ -1,0 +1,553 @@
+import 'dart:async';
+
+import 'package:bloc/bloc.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/repositories/bid_repository.dart';
+import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
+import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/tracking_repository.dart';
+
+/// Les deux usages de l'onglet Suivi. Le nom sert aussi de valeur de
+/// requête (`/tracking?mode=valider`) et de propriété analytics.
+enum SuiviMode { valider, suivre }
+
+/// Mode demandé par l'URL de l'onglet, `null` si absent ou inconnu.
+SuiviMode? suiviModeFromQuery(String? raw) => switch (raw) {
+  'valider' => SuiviMode.valider,
+  'suivre' => SuiviMode.suivre,
+  _ => null,
+};
+
+enum SuiviLoadStatus { idle, loading, loaded, error }
+
+/// Effet ponctuel à jouer par l'écran (navigation, feuille). Chaque émission
+/// incrémente [SuiviState.effectId] : l'écran n'écoute que ce compteur.
+sealed class SuiviEffect {
+  const SuiviEffect();
+}
+
+/// Colis du trajet affiché : valider [step].
+///
+/// - `ARRIVEE` (remise) : parcours photo puis code du destinataire, inchangé.
+/// - `TRANSIT` (facultatif, choisi par « Forcer une étape ») lu par QR :
+///   validation rapide, sans photo.
+/// - Sinon ([photoRequired]) : photo obligatoire d'abord. Sans QR (numéro
+///   saisi), la photo est la seule preuve que le colis est entre les mains
+///   du voyageur, même pour le transit.
+final class SuiviValidateStep extends SuiviEffect {
+  const SuiviValidateStep(this.bid, this.step, {this.method = ScanMethod.qr});
+  final BidModel bid;
+  final String step;
+  final ScanMethod method;
+
+  bool get photoRequired => step != 'TRANSIT' || method == ScanMethod.manual;
+}
+
+/// Colis du trajet dont une validation attend déjà son envoi.
+final class SuiviStepPending extends SuiviEffect {
+  const SuiviStepPending(this.bid);
+  final BidModel bid;
+}
+
+/// Transit forcé sur un colis pas encore parti : le back le refuserait
+/// (`depart-required`).
+final class SuiviTransitNeedsDepart extends SuiviEffect {
+  const SuiviTransitNeedsDepart(this.bid);
+  final BidModel bid;
+}
+
+/// Transit forcé sur un colis dont le transit est déjà validé.
+final class SuiviTransitAlreadyDone extends SuiviEffect {
+  const SuiviTransitAlreadyDone(this.bid);
+  final BidModel bid;
+}
+
+/// Colis du trajet affiché dont toutes les étapes sont déjà validées.
+final class SuiviStepsAllDone extends SuiviEffect {
+  const SuiviStepsAllDone(this.bid);
+  final BidModel bid;
+}
+
+/// Colis confirmé sur un autre trajet chargé du voyageur.
+final class SuiviParcelOnOtherTrip extends SuiviEffect {
+  const SuiviParcelOnOtherTrip(this.bid, this.trip);
+  final BidModel bid;
+  final AnnouncementModel trip;
+}
+
+/// Colis absent des trajets du voyageur : il ne peut que suivre son parcours.
+final class SuiviParcelUnknown extends SuiviEffect {
+  const SuiviParcelUnknown(this.bidId);
+  final String bidId;
+}
+
+/// Parcours d'un colis en lecture seule.
+final class SuiviShowTimeline extends SuiviEffect {
+  const SuiviShowTimeline({
+    required this.bidId,
+    required this.corridor,
+    this.arrivalInstructions,
+  });
+  final String bidId;
+
+  /// « Paris → Dakar », vide quand le colis n'est pas connu de l'app.
+  final String corridor;
+  final String? arrivalInstructions;
+}
+
+class SuiviState {
+  const SuiviState({
+    this.canValidate = false,
+    this.mode,
+    this.busy = false,
+    this.shipmentsStatus = SuiviLoadStatus.idle,
+    this.shipments = const [],
+    this.searchStatus = SuiviLoadStatus.idle,
+    this.searchError,
+    this.numberStatus = SuiviLoadStatus.idle,
+    this.numberError,
+    this.forcedStep,
+    this.effect,
+    this.effectId = 0,
+  });
+
+  /// Voyageur : peut valider des étapes et choisir son mode.
+  final bool canValidate;
+
+  /// `null` tant que le mode par défaut d'un voyageur attend ses trajets.
+  final SuiviMode? mode;
+
+  /// Un scan est en cours de traitement (feuille, parcours photo) : les
+  /// détections suivantes sont ignorées et la caméra est en pause.
+  final bool busy;
+
+  final SuiviLoadStatus shipmentsStatus;
+
+  /// Envois en cours de l'utilisateur (statuts [kEnvoisEnCours]).
+  final List<BidModel> shipments;
+
+  final SuiviLoadStatus searchStatus;
+  final AppException? searchError;
+
+  /// Numéro saisi dans la feuille du mode Valider.
+  final SuiviLoadStatus numberStatus;
+  final AppException? numberError;
+
+  /// Étape imposée au prochain colis identifié (« Forcer une étape »),
+  /// `null` en automatique. Seul le transit, facultatif, passe par là.
+  final String? forcedStep;
+
+  final SuiviEffect? effect;
+  final int effectId;
+
+  SuiviState _copy({
+    bool? canValidate,
+    SuiviMode? mode,
+    bool? busy,
+    SuiviLoadStatus? shipmentsStatus,
+    List<BidModel>? shipments,
+    SuiviLoadStatus? searchStatus,
+    AppException? searchError,
+    SuiviLoadStatus? numberStatus,
+    AppException? numberError,
+    String? forcedStep,
+    bool clearForcedStep = false,
+    SuiviEffect? effect,
+  }) => SuiviState(
+    canValidate: canValidate ?? this.canValidate,
+    mode: mode ?? this.mode,
+    busy: busy ?? this.busy,
+    shipmentsStatus: shipmentsStatus ?? this.shipmentsStatus,
+    shipments: shipments ?? this.shipments,
+    searchStatus: searchStatus ?? this.searchStatus,
+    // L'erreur suit son statut : effacée dès qu'une recherche repart.
+    searchError: searchStatus != null ? searchError : this.searchError,
+    numberStatus: numberStatus ?? this.numberStatus,
+    numberError: numberStatus != null ? numberError : this.numberError,
+    forcedStep: clearForcedStep ? null : forcedStep ?? this.forcedStep,
+    effect: effect ?? this.effect,
+    effectId: effect != null ? effectId + 1 : effectId,
+  );
+}
+
+/// Porte l'onglet Suivi : mode, lecture des QR, suivi en lecture seule.
+///
+/// Les trajets du voyageur restent chargés par [ScanHubCubit] : l'écran
+/// passe son état à [resolveDefaultMode] et [onQrScanned].
+class SuiviCubit extends Cubit<SuiviState> {
+  SuiviCubit(
+    this._bidRepo,
+    this._trackingRepo,
+    this._analytics, {
+    DateTime Function()? now,
+  }) : _now = now ?? DateTime.now,
+       super(const SuiviState());
+
+  final BidRepository _bidRepo;
+  final TrackingRepository _trackingRepo;
+  final AnalyticsService _analytics;
+  final DateTime Function() _now;
+
+  /// Un QR resté dans le cadre après une feuille fermée ne doit pas la
+  /// rouvrir aussitôt : le même colis est ignoré pendant ce délai.
+  static const rescanCooldown = Duration(seconds: 3);
+
+  String? _lastBidId;
+  DateTime? _releasedAt;
+
+  /// Premier état de l'écran. Un non-voyageur ne peut que suivre ; un
+  /// voyageur prend [requested] s'il est fourni, sinon son mode attend ses
+  /// trajets ([resolveDefaultMode]).
+  void start({required bool canValidate, SuiviMode? requested}) {
+    if (!canValidate) {
+      emit(state._copy(canValidate: false, mode: SuiviMode.suivre));
+      _ensureShipments();
+      return;
+    }
+    emit(state._copy(canValidate: true, mode: requested));
+    if (requested == SuiviMode.suivre) _ensureShipments();
+  }
+
+  /// Mode par défaut d'un voyageur, une fois ses trajets connus : « Valider »
+  /// s'il a au moins un colis à valider (ou si le chargement a échoué, pour
+  /// afficher l'erreur et « Réessayer »), « Suivre » sinon. Sans effet si le
+  /// mode est déjà fixé.
+  void resolveDefaultMode(ScanHubState hub) {
+    if (!state.canValidate || state.mode != null) return;
+    final mode = switch (hub) {
+      ScanHubLoading() => null,
+      ScanHubLoaded() =>
+        hub.hasParcelToValidate ? SuiviMode.valider : SuiviMode.suivre,
+      ScanHubEmpty() => SuiviMode.suivre,
+      ScanHubError() => SuiviMode.valider,
+    };
+    if (mode != null) _setMode(mode);
+  }
+
+  /// Onglet choisi par l'utilisateur.
+  void selectMode(SuiviMode mode) {
+    if (!state.canValidate || mode == state.mode) return;
+    _logModeChanged(mode);
+    _setMode(mode);
+  }
+
+  /// Mode imposé par la navigation (`/tracking?mode=…`).
+  void applyRequestedMode(SuiviMode? mode) {
+    if (mode == null || !state.canValidate || mode == state.mode) return;
+    _setMode(mode);
+  }
+
+  void _setMode(SuiviMode mode) {
+    emit(state._copy(mode: mode));
+    if (mode == SuiviMode.suivre) _ensureShipments();
+  }
+
+  void _logModeChanged(SuiviMode mode) => unawaited(
+    _analytics.logEvent(
+      AnalyticsEvents.suiviModeChanged,
+      properties: {'mode': mode.name},
+    ),
+  );
+
+  void _ensureShipments() {
+    if (state.shipmentsStatus == SuiviLoadStatus.loading ||
+        state.shipmentsStatus == SuiviLoadStatus.loaded) {
+      return;
+    }
+    unawaited(loadShipments());
+  }
+
+  Future<void> loadShipments() async {
+    emit(state._copy(shipmentsStatus: SuiviLoadStatus.loading));
+    try {
+      final bids = await _bidRepo.getMyBids();
+      emit(
+        state._copy(
+          shipmentsStatus: SuiviLoadStatus.loaded,
+          shipments: bids
+              .where((b) => kEnvoisEnCours.contains(b.status))
+              .toList(growable: false),
+        ),
+      );
+    } catch (_) {
+      emit(state._copy(shipmentsStatus: SuiviLoadStatus.error));
+    }
+  }
+
+  /// QR Yadony lu par la caméra de l'onglet (ou le lecteur plein écran de
+  /// l'expéditeur, [hub] à `null`). Ignoré pendant un traitement en cours et,
+  /// pour le même colis, juste après. [pendingBidIds] : colis dont une
+  /// validation attend son envoi.
+  void onQrScanned(
+    String bidId,
+    ScanHubState? hub, {
+    Set<String> pendingBidIds = const {},
+  }) {
+    if (state.busy) return;
+    final releasedAt = _releasedAt;
+    if (bidId == _lastBidId &&
+        releasedAt != null &&
+        _now().difference(releasedAt) < rescanCooldown) {
+      return;
+    }
+    _lastBidId = bidId;
+
+    final loaded = hub is ScanHubLoaded ? hub : null;
+    final located = loaded == null ? null : _locate(bidId, loaded);
+    final String outcome;
+    if (located == null) {
+      outcome = 'unknown';
+    } else if (located.trip.id == loaded!.selectedTripId) {
+      outcome = 'own_trip';
+    } else {
+      outcome = 'other_trip';
+    }
+    final mode = state.mode ?? SuiviMode.suivre;
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.suiviQrScanned,
+        properties: {'mode': mode.name, 'outcome': outcome},
+      ),
+    );
+
+    if (mode == SuiviMode.suivre) {
+      _openTimeline(
+        bidId,
+        source: 'qr',
+        bid: located?.bid,
+        trip: located?.trip,
+      );
+      return;
+    }
+    if (located == null) {
+      _emitEffect(SuiviParcelUnknown(bidId));
+    } else {
+      _emitValidation(
+        _validationOf(located, loaded!, ScanMethod.qr, pendingBidIds),
+      );
+    }
+  }
+
+  /// « Forcer une étape » → transit : le prochain colis identifié (QR ou
+  /// numéro) valide son transit au lieu de son étape obligatoire.
+  void forceTransit() => emit(state._copy(forcedStep: 'TRANSIT'));
+
+  /// Retour à l'étape automatique.
+  void clearForcedStep() {
+    if (state.forcedStep != null) emit(state._copy(clearForcedStep: true));
+  }
+
+  /// Un transit forcé ne sert qu'une fois : il repasse en automatique dès
+  /// qu'un colis est parti en validation.
+  void _emitValidation(SuiviEffect effect) => emit(
+    state._copy(
+      numberStatus: SuiviLoadStatus.idle,
+      busy: true,
+      effect: effect,
+      clearForcedStep: effect is SuiviValidateStep && effect.step == 'TRANSIT',
+    ),
+  );
+
+  /// Effet à jouer pour un colis retrouvé dans les trajets du voyageur.
+  SuiviEffect _validationOf(
+    ({BidModel bid, AnnouncementModel trip}) located,
+    ScanHubLoaded hub,
+    ScanMethod method,
+    Set<String> pendingBidIds,
+  ) {
+    final bid = located.bid;
+    if (located.trip.id != hub.selectedTripId) {
+      return SuiviParcelOnOtherTrip(bid, located.trip);
+    }
+    final step = nextRequiredStep(bid);
+    if (step == null) return SuiviStepsAllDone(bid);
+    if (pendingBidIds.contains(bid.id)) return SuiviStepPending(bid);
+    if (state.forcedStep == 'TRANSIT') {
+      final progress = colisStepProgress(bid);
+      if (!progress.depart) return SuiviTransitNeedsDepart(bid);
+      if (progress.transit) return SuiviTransitAlreadyDone(bid);
+      return SuiviValidateStep(bid, 'TRANSIT', method: method);
+    }
+    return SuiviValidateStep(bid, step, method: method);
+  }
+
+  /// Numéro saisi dans la feuille du mode Valider (QR illisible) : le colis
+  /// doit être sur le trajet affiché. Cherché d'abord parmi les colis
+  /// chargés, puis auprès du back (colis d'un autre voyageur, numéro
+  /// inconnu, colis non lié au compte).
+  Future<void> validateNumber(
+    String raw,
+    ScanHubState hub, {
+    Set<String> pendingBidIds = const {},
+  }) async {
+    final number = raw.trim().toUpperCase();
+    if (number.isEmpty ||
+        hub is! ScanHubLoaded ||
+        state.busy ||
+        state.numberStatus == SuiviLoadStatus.loading) {
+      return;
+    }
+    var located = _locateByNumber(number, hub);
+    if (located == null) {
+      emit(state._copy(numberStatus: SuiviLoadStatus.loading));
+      try {
+        final result = await _trackingRepo.searchByTrackingNumber(number);
+        located = _locate(result.bidId, hub);
+        if (located == null) {
+          emit(
+            state._copy(
+              numberStatus: SuiviLoadStatus.idle,
+              busy: true,
+              effect: SuiviParcelUnknown(result.bidId),
+            ),
+          );
+          return;
+        }
+      } catch (e) {
+        emit(
+          state._copy(
+            numberStatus: SuiviLoadStatus.error,
+            numberError: unwrapDioError(e),
+          ),
+        );
+        return;
+      }
+    }
+    _emitValidation(
+      _validationOf(located, hub, ScanMethod.manual, pendingBidIds),
+    );
+  }
+
+  ({BidModel bid, AnnouncementModel trip})? _locateByNumber(
+    String number,
+    ScanHubLoaded hub,
+  ) {
+    for (final trip in hub.trips) {
+      for (final bid in hub.confirmedBidsOf(trip.id)) {
+        if (bid.trackingNumber?.toUpperCase() == number) {
+          return (bid: bid, trip: trip);
+        }
+      }
+    }
+    return null;
+  }
+
+  ({BidModel bid, AnnouncementModel trip})? _locate(
+    String bidId,
+    ScanHubLoaded hub,
+  ) {
+    for (final trip in hub.trips) {
+      for (final bid in hub.confirmedBidsOf(trip.id)) {
+        if (bid.id == bidId) return (bid: bid, trip: trip);
+      }
+    }
+    return null;
+  }
+
+  /// « Suivre ce colis » depuis la feuille d'un colis inconnu : bascule en
+  /// mode Suivre et ouvre son parcours.
+  void followParcel(String bidId) {
+    if (state.mode != SuiviMode.suivre) {
+      _logModeChanged(SuiviMode.suivre);
+      _setMode(SuiviMode.suivre);
+    }
+    _openTimeline(bidId, source: 'qr');
+  }
+
+  /// Ligne « Mes envois » touchée.
+  void trackShipment(BidModel bid) {
+    if (state.busy) return;
+    _openTimeline(bid.id, source: 'my_shipments', bid: bid);
+  }
+
+  /// Numéro de suivi saisi : on retrouve le colis puis on ouvre son parcours.
+  Future<void> trackNumber(String raw) async {
+    final number = raw.trim().toUpperCase();
+    if (number.isEmpty ||
+        state.busy ||
+        state.searchStatus == SuiviLoadStatus.loading) {
+      return;
+    }
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.suiviTrackSubmitted,
+        properties: {'source': 'number'},
+      ),
+    );
+    emit(state._copy(searchStatus: SuiviLoadStatus.loading));
+    try {
+      final result = await _trackingRepo.searchByTrackingNumber(number);
+      emit(
+        state._copy(
+          searchStatus: SuiviLoadStatus.idle,
+          busy: true,
+          effect: SuiviShowTimeline(
+            bidId: result.bidId,
+            corridor: '${result.departureCity} → ${result.arrivalCity}',
+            arrivalInstructions: result.arrivalInstructions,
+          ),
+        ),
+      );
+    } catch (e) {
+      emit(
+        state._copy(
+          searchStatus: SuiviLoadStatus.error,
+          searchError: unwrapDioError(e),
+        ),
+      );
+    }
+  }
+
+  void _openTimeline(
+    String bidId, {
+    required String source,
+    BidModel? bid,
+    AnnouncementModel? trip,
+  }) {
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.suiviTrackSubmitted,
+        properties: {'source': source},
+      ),
+    );
+    final known =
+        bid ??
+        state.shipments.cast<BidModel?>().firstWhere(
+          (b) => b!.id == bidId,
+          orElse: () => null,
+        );
+    final from = known?.departureCity ?? trip?.departureCity;
+    final to = known?.arrivalCity ?? trip?.arrivalCity;
+    _emitEffect(
+      SuiviShowTimeline(
+        bidId: bidId,
+        corridor: from != null && to != null ? '$from → $to' : '',
+        arrivalInstructions:
+            known?.arrivalInstructions ?? trip?.arrivalInstructions,
+      ),
+    );
+  }
+
+  void _emitEffect(SuiviEffect effect) {
+    emit(state._copy(busy: true, effect: effect));
+  }
+
+  /// Parcours ouvert hors QR de l'onglet (saisie du numéro) : caméra en
+  /// pause et scans ignorés jusqu'à [releaseScan].
+  void holdScans() {
+    if (!state.busy) emit(state._copy(busy: true));
+  }
+
+  /// L'écran a fini de jouer l'effet (feuille fermée, retour du parcours
+  /// photo) : les scans reprennent.
+  void releaseScan() {
+    _releasedAt = _now();
+    if (state.busy) emit(state._copy(busy: false));
+  }
+}

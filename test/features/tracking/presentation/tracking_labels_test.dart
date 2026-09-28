@@ -1,3 +1,5 @@
+import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -64,20 +66,6 @@ void main() {
     });
   });
 
-  group('scanPendingSync', () {
-    // Ancien code : ternaire sur `> 1`, donc 0 ET 1 restent au singulier
-    // (comme le pluriel ICU français, qui range 0 dans la branche `one`).
-    test('0 — fr (égal à l\'ancien code)', () {
-      expect(fr.scanPendingSync(0), '0 lecture en attente de synchro');
-    });
-    test('1 — fr', () {
-      expect(fr.scanPendingSync(1), '1 lecture en attente de synchro');
-    });
-    test('3 — fr (égal à l\'ancien code)', () {
-      expect(fr.scanPendingSync(3), '3 lectures en attente de synchro');
-    });
-  });
-
   group('scanQueueSafe', () {
     test('1 — fr (nouveau rendu, accord corrigé)', () {
       expect(
@@ -90,6 +78,35 @@ void main() {
         fr.scanQueueSafe(3),
         '3 lectures en attente. On les enverra dès que vous récupérez du réseau.',
       );
+    });
+  });
+
+  group('recentScanStepLabel', () {
+    TripScanHistoryEntryModel entry(ScanMethod? method) =>
+        TripScanHistoryEntryModel(
+          eventType: 'TRANSIT',
+          scannedAt: DateTime(2026, 9, 28),
+          scanMethod: method,
+        );
+
+    test('QR', () {
+      expect(recentScanStepLabel(fr, entry(ScanMethod.qr)), 'Transit · QR');
+      expect(recentScanStepLabel(en, entry(ScanMethod.qr)), 'Transit · QR');
+    });
+
+    test('numéro', () {
+      expect(
+        recentScanStepLabel(fr, entry(ScanMethod.manual)),
+        'Transit · numéro',
+      );
+      expect(
+        recentScanStepLabel(en, entry(ScanMethod.manual)),
+        'Transit · number',
+      );
+    });
+
+    test('provenance inconnue : étape seule', () {
+      expect(recentScanStepLabel(fr, entry(null)), 'Transit');
     });
   });
 }

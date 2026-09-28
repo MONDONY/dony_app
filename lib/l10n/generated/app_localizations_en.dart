@@ -7061,9 +7061,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bidDetailScanTransitOptional => 'Scan transit (optional)';
 
   @override
-  String get trackingStepOptional => 'Optional';
-
-  @override
   String get bidDetailConfirmHandover => 'Confirm the drop-off';
 
   @override
@@ -9760,17 +9757,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String scanPendingSync(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count scans waiting to sync',
-      one: '$count scan waiting to sync',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String scanQueueSafe(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -9803,9 +9789,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanDepartureTitle => 'Departure scan';
-
-  @override
-  String get scanTorchTooltip => 'Flashlight';
 
   @override
   String get scanQrReadTitle => 'QR scanned';
@@ -9907,23 +9890,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanTerminateButton => 'Finish';
 
   @override
-  String get scanHubTitle => 'Scan & Tracking';
-
-  @override
-  String get scanTrackParcelEntry => 'Track a parcel';
-
-  @override
   String get scanChooseTripTitle => 'Choose a trip';
-
-  @override
-  String get scanChangeTripLabel => 'Change trip';
-
-  @override
-  String get scanNoTripTitle => 'No trip to handle';
-
-  @override
-  String get scanNoTripDescription =>
-      'You\'ll be able to scan parcel QR codes once a request is accepted on one of your trips.';
 
   @override
   String get scanViewMyTripsAction => 'See my trips';
@@ -9932,21 +9899,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanLoadTripsErrorTitle => 'Couldn\'t load your trips';
 
   @override
-  String get scanQuickReadSectionTitle => 'QUICK SCAN';
-
-  @override
-  String scanColisSectionTitle(int count) {
-    return 'PARCELS ($count)';
-  }
-
-  @override
   String get scanNoColisConfirmed => 'No parcel confirmed on this trip yet.';
-
-  @override
-  String get scanColisRowScanBadge => 'Scan';
-
-  @override
-  String get scanHistorySectionTitle => 'SCAN HISTORY';
 
   @override
   String get scanNoHistoryYet => 'No scans yet';
@@ -10047,38 +10000,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get trackingSearchTitle => 'Track a parcel';
-
-  @override
-  String get trackingSearchScanTripEntry => 'Scan a trip\'s QR code';
-
-  @override
   String get trackingSearchNumberLabel => 'Tracking number';
-
-  @override
-  String get trackingSearchNumberHint =>
-      'Enter the DON-XXXXXX number to track your parcel in real time.';
-
-  @override
-  String get trackingSearchSubmit => 'Search';
-
-  @override
-  String get trackingSearchViewDetails => 'View full tracking';
-
-  @override
-  String get trackingSearchStatusPending => 'Pending';
-
-  @override
-  String get trackingSearchStatusAccepted => 'Confirmed';
-
-  @override
-  String get trackingSearchStatusPaid => 'Paid';
-
-  @override
-  String get trackingSearchStatusDroppedOff => 'Dropped off';
-
-  @override
-  String get trackingSearchStatusDelivered => 'Delivered';
 
   @override
   String get receptionConfirmTitle => 'Confirmation';
@@ -10148,6 +10070,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackingOfflineScanSynced => 'Offline scan synced';
 
   @override
+  String get trackingValidatedByQr => 'Validated by scanning the QR code';
+
+  @override
+  String get trackingValidatedByNumberWithPhoto =>
+      'Validated with the number, photo attached';
+
+  @override
+  String get trackingValidatedByNumber => 'Validated with the number';
+
+  @override
   String get trackingAwaitingConfirmationTitle => 'Awaiting confirmation';
 
   @override
@@ -10167,12 +10099,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get trackingApplessMessage =>
       'When the traveler is at your door, you\'ll confirm with a QR code or a 4-digit code.';
-
-  @override
-  String get trackingSearchSheetTitle => 'Search for a parcel';
-
-  @override
-  String get trackingSearchSheetSubtitle => 'Format: DON-XXXXXX';
 
   @override
   String get cancellationConfirmTitle => 'Cancel this trip?';
@@ -14095,4 +14021,337 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectivityWeak => 'Unstable connection';
+
+  @override
+  String get suiviTitle => 'Tracking';
+
+  @override
+  String get suiviModeTabsLabel => 'What do you want to do?';
+
+  @override
+  String get suiviModeValidate => 'Validate a step';
+
+  @override
+  String get suiviModeTrack => 'Track a parcel';
+
+  @override
+  String get suiviValidateCameraHint =>
+      'Scan the QR code of a parcel on your trip.\nThe next step is picked for you.';
+
+  @override
+  String get suiviTrackCameraHint =>
+      'Scan a QR code to see where the parcel is.\nNothing is validated in this mode.';
+
+  @override
+  String get suiviCameraPaused => 'Camera paused';
+
+  @override
+  String get suiviResumeScan => 'Scan';
+
+  @override
+  String suiviTripSummary(String date, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels',
+      one: '1 parcel',
+      zero: 'no parcels',
+    );
+    return '$date · $_temp0';
+  }
+
+  @override
+  String get suiviChangeTrip => 'Change';
+
+  @override
+  String get suiviTripsInProgress => 'In progress';
+
+  @override
+  String get suiviTripsUpcoming => 'Upcoming';
+
+  @override
+  String suiviToValidateCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count to validate',
+      one: '1 to validate',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get suiviParcelsTitle => 'Parcels on this trip';
+
+  @override
+  String suiviValidateStep(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Validate departure',
+      'TRANSIT': 'Validate transit',
+      'other': 'Validate arrival',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get suiviAllValidated => 'All done';
+
+  @override
+  String suiviLastStepAt(String step, String time) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Departure done at $time',
+      'TRANSIT': 'Transit done at $time',
+      'other': 'Arrival done at $time',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get suiviNotHandedOver => 'Not handed over yet';
+
+  @override
+  String get suiviEnterNumber => 'QR unreadable? Enter the number';
+
+  @override
+  String get suiviRecentScans => 'Recent scans';
+
+  @override
+  String suiviRecentScanStepByQr(String step) {
+    return '$step · QR';
+  }
+
+  @override
+  String suiviRecentScanStepByNumber(String step) {
+    return '$step · number';
+  }
+
+  @override
+  String get suiviHelpTooltip => 'How does it work?';
+
+  @override
+  String suiviPendingScans(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count scans waiting. They will be sent as soon as you\'re back online.',
+      one: '1 scan waiting. It will be sent as soon as you\'re back online.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get suiviOtherTripTitle => 'This parcel isn\'t on this trip';
+
+  @override
+  String suiviOtherTripBody(String parcel, String corridor, String date) {
+    return 'The parcel for $parcel travels on your $date trip: $corridor.';
+  }
+
+  @override
+  String suiviSwitchToTrip(String corridor) {
+    return 'Switch to $corridor';
+  }
+
+  @override
+  String get suiviScanAnother => 'Scan another parcel';
+
+  @override
+  String get suiviUnknownParcelTitle => 'This parcel isn\'t on your trips';
+
+  @override
+  String get suiviUnknownParcelBody =>
+      'Another traveler\'s parcel: you can\'t validate its steps, you can only track its journey.';
+
+  @override
+  String get suiviFollowParcel => 'Track this parcel';
+
+  @override
+  String suiviAllStepsDone(String parcel) {
+    return 'All steps for $parcel are already validated.';
+  }
+
+  @override
+  String get suiviNothingToValidateTitle => 'Nothing to validate yet';
+
+  @override
+  String get suiviNothingToValidateBody =>
+      'Your parcels will show up here as soon as a sender hands one over to you.';
+
+  @override
+  String get suiviTrackSubmit => 'Track';
+
+  @override
+  String get suiviScanQr => 'Scan a QR code';
+
+  @override
+  String get suiviMyShipments => 'My shipments';
+
+  @override
+  String get suiviNoShipments => 'No shipments in progress.';
+
+  @override
+  String get suiviShipmentsError => 'Couldn\'t load your shipments.';
+
+  @override
+  String suiviShipmentStatus(String status) {
+    String _temp0 = intl.Intl.selectLogic(status, {
+      'HANDED_OVER': 'Handed over',
+      'IN_TRANSIT': 'On the way',
+      'ARRIVED': 'Arrived',
+      'other': 'To hand over',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get qrCameraUnavailable =>
+      'Camera unavailable. Allow camera access in your phone settings.';
+
+  @override
+  String suiviPositionSaved(String label) {
+    return 'Location saved · $label';
+  }
+
+  @override
+  String suiviPhotoTitle(String parcel) {
+    return 'Photo of $parcel\'s parcel';
+  }
+
+  @override
+  String suiviPhotoRequiredFor(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Required to validate the departure',
+      'TRANSIT': 'Required to validate the transit',
+      'other': 'Required to validate the arrival',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get suiviNumberRecapTitle => 'Validate with the number';
+
+  @override
+  String suiviPhotoAndValidate(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Photo and validate the departure',
+      'TRANSIT': 'Photo and validate the transit',
+      'other': 'Photo and validate the arrival',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String suiviParcelOf(String parcel) {
+    return '$parcel\'s parcel';
+  }
+
+  @override
+  String get suiviRecapTrip => 'Trip';
+
+  @override
+  String get suiviRecapDone => 'Already validated';
+
+  @override
+  String get suiviRecapNothingDone => 'No step yet';
+
+  @override
+  String get suiviRecapToValidate => 'To validate';
+
+  @override
+  String get suiviNumberPhotoNotice =>
+      'Without a QR code, a photo of the parcel is required. Your location is saved with the step.';
+
+  @override
+  String get suiviForceStep => 'Force a step';
+
+  @override
+  String get suiviStepModeHelp =>
+      'Each scan validates the parcel\'s next step. Only force a step to catch up on a missed one.';
+
+  @override
+  String get suiviStepModeLabel => 'Step: ';
+
+  @override
+  String get suiviStepModeAuto => 'automatic';
+
+  @override
+  String get suiviNumberHint => 'Parcel number, DON-…';
+
+  @override
+  String get suiviNumberSubmit => 'Validate';
+
+  @override
+  String get suiviNumberNotFound => 'Number not found. Check it and try again.';
+
+  @override
+  String get trackingNotLinkedTitle =>
+      'This parcel isn\'t linked to your account';
+
+  @override
+  String get trackingNotLinkedBody =>
+      'Only the sender and the traveler can track it here. Ask the sender for the tracking link.';
+
+  @override
+  String suiviStepValidatedToast(String step, String parcel) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': '$parcel: departure validated',
+      'other': '$parcel: transit validated',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String suiviToastSendingIn(String photo, int seconds) {
+    String _temp0 = intl.Intl.selectLogic(photo, {
+      'yes': 'Photo taken · sending in $seconds s',
+      'other': 'Sending in $seconds s',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get suiviUndo => 'Undo';
+
+  @override
+  String suiviStepAlreadyPending(String parcel) {
+    return '$parcel\'s validation goes out in a few seconds.';
+  }
+
+  @override
+  String suiviValidationQueued(String step, String parcel) {
+    return '$step of $parcel waiting to be sent. It goes out as soon as you\'re back online.';
+  }
+
+  @override
+  String suiviValidationFailed(String step, String parcel) {
+    return '$step of $parcel not validated';
+  }
+
+  @override
+  String get trackingStepOptional => 'Optional';
+
+  @override
+  String get suiviStepModeTransit => 'transit, optional';
+
+  @override
+  String get suiviStepModeBackToAuto => 'Automatic';
+
+  @override
+  String get suiviStepModeTransitHelp =>
+      'The next parcel scanned or entered gets its transit validated, then the step goes back to automatic.';
+
+  @override
+  String get suiviForcedTransitCameraHint =>
+      'Optional transit: scan the parcel to validate.\nThe step then goes back to automatic.';
+
+  @override
+  String suiviTransitNeedsDepart(String parcel) {
+    return 'Validate $parcel\'s departure first.';
+  }
+
+  @override
+  String suiviTransitAlreadyDone(String parcel) {
+    return '$parcel\'s transit is already validated.';
+  }
 }

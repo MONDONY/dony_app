@@ -197,17 +197,17 @@ import 'package:dony/features/subscriptions/presentation/traveler_profile_hub_sc
 import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/presentation/screens/support_home_screen.dart';
 import 'package:dony/features/support/presentation/screens/support_ticket_detail_screen.dart';
+import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_picker_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/reception_confirm_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_confirm_screen.dart';
-import 'package:dony/features/tracking/presentation/screens/scan_hub_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_identify_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
-import 'package:dony/features/tracking/presentation/screens/tracking_search_screen.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
@@ -291,6 +291,14 @@ String initialAppLocation = '/auth/method';
 /// réseau à cet instant. Repli sûr sur `false` si le bootstrap ne l'a pas
 /// renseignée (tests) : une valeur non calculée ne doit jamais bloquer.
 bool appUpdateRequired = false;
+
+/// Provenance d'une étape passée en `extra` (identification → photo →
+/// confirmation). Absente ou d'un autre type : rien n'est envoyé au back.
+ScanMethod? _scanMethodExtra(Map<String, dynamic> extra) =>
+    switch (extra['scanMethod']) {
+      final ScanMethod method => method,
+      _ => null,
+    };
 
 final appRouter = GoRouter(
   initialLocation: initialAppLocation,
@@ -685,6 +693,8 @@ final appRouter = GoRouter(
           bidId: extra['bidId'] as String? ?? '',
           etape: extra['etape'] as String? ?? '',
           packageLabel: extra['packageLabel'] as String? ?? '',
+          returnResult: extra['returnResult'] as bool? ?? false,
+          scanMethod: _scanMethodExtra(extra),
         );
       },
     ),
@@ -705,6 +715,7 @@ final appRouter = GoRouter(
             gpsLon: extra['gpsLon'] as double?,
             gpsLabel: extra['gpsLabel'] as String?,
             packageLabel: extra['packageLabel'] as String? ?? '',
+            scanMethod: _scanMethodExtra(extra),
           ),
         );
       },
@@ -1164,17 +1175,16 @@ final appRouter = GoRouter(
       builder: (context, state) => const OfflineScanQueueScreen(),
     ),
 
-    // ── Suivi expéditeur (hors shell) ────────────────────────────────────
+    // ── Anciennes entrées du suivi ───────────────────────────────────────
+    // Recherche et hub de scan vivent désormais dans l'onglet Suivi : ces
+    // chemins (liens et notifications déjà émis) y mènent avec le bon mode.
     GoRoute(
       path: '/tracking/search',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<TrackingBloc>(),
-        child: const TrackingSearchScreen(),
-      ),
+      redirect: (_, _) => '/tracking?mode=${SuiviMode.suivre.name}',
     ),
     GoRoute(
       path: '/tracking/scan-hub',
-      builder: (context, state) => const ScanHubScreen(),
+      redirect: (_, _) => '/tracking?mode=${SuiviMode.valider.name}',
     ),
 
     // ── Mes colis — hub expéditeur (hors shell) ───────────────────────
@@ -1650,12 +1660,16 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Branch 2 — Suivi (dispatcher additif par profil)
+        // Branch 2 — Suivi (valider une étape | suivre un colis)
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/tracking',
-              builder: (context, state) => const SuiviScreen(),
+              builder: (context, state) => SuiviScreen(
+                requestedMode: suiviModeFromQuery(
+                  state.uri.queryParameters['mode'],
+                ),
+              ),
             ),
           ],
         ),

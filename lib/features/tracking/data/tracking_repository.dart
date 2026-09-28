@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/tracking/data/models/qr_code_model.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
@@ -37,6 +38,7 @@ class TrackingRepository {
     String? gpsLabel,
     String? photoUrl,
     DateTime? offlineTimestamp,
+    ScanMethod? scanMethod,
   }) async {
     final response = await _apiClient.dio.post(
       '/tracking/events',
@@ -47,6 +49,7 @@ class TrackingRepository {
         'gpsLon': ?gpsLon,
         'gpsLabel': ?gpsLabel,
         'photoUrl': ?photoUrl,
+        'scanMethod': ?scanMethod?.wire,
         if (offlineTimestamp != null)
           'offlineTimestamp': offlineTimestamp.toUtc().toIso8601String(),
       },
@@ -120,10 +123,15 @@ class TrackingRepository {
     required String bidId,
     required String code,
     String? photoUrl,
+    ScanMethod? scanMethod,
   }) async {
     final response = await _apiClient.dio.post(
       '/tracking/$bidId/confirm-delivery',
-      data: {'confirmationCode': code, 'photoUrl': ?photoUrl},
+      data: {
+        'confirmationCode': code,
+        'photoUrl': ?photoUrl,
+        'scanMethod': ?scanMethod?.wire,
+      },
     );
     return TrackingEventModel.fromJson(response.data as Map<String, dynamic>);
   }

@@ -50,7 +50,12 @@ void _logEvent(String event) {
 /// grille de tuiles, qui poussent tous deux des routes tracées.
 void _openRoute(BuildContext context, String event, String route) {
   _logEvent(event);
-  context.push(route);
+  // L'onglet Suivi est une branche du shell : on y va, on ne l'empile pas.
+  if (Uri.parse(route).path == '/tracking') {
+    context.go(route);
+  } else {
+    context.push(route);
+  }
 }
 
 /// Bouton de la tuile « Mes colis ». Passe d'abord par l'écran d'intro

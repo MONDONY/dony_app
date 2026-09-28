@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -75,6 +76,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
         'bidId': bidId,
         'etape': etape,
         'packageLabel': bidId.substring(0, 8),
+        'scanMethod': ScanMethod.qr,
       },
     );
   }
@@ -102,6 +104,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
         'bidId': state.result.bidId,
         'etape': etape,
         'packageLabel': state.result.trackingNumber,
+        'scanMethod': ScanMethod.manual,
       },
     );
   }

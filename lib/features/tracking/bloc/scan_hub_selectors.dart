@@ -17,16 +17,6 @@ const _departedStatuses = {'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED', 'COMPLETED'};
 const _transitStatuses = {'IN_TRANSIT', 'ARRIVED', 'COMPLETED'};
 const _arrivedStatuses = {'COMPLETED'};
 
-class ScanHubProgress {
-  const ScanHubProgress({
-    required this.confirmedColis,
-    required this.scannedDepart,
-  });
-
-  final int confirmedColis;
-  final int scannedDepart;
-}
-
 /// Tous les trajets scannables du voyageur : `IN_PROGRESS` triés par date de
 /// départ en premier, puis `ACTIVE`/`FULL` triés par date de départ. Un
 /// voyageur peut avoir plusieurs trajets actifs en même temps — contrairement
@@ -45,19 +35,7 @@ List<AnnouncementModel> selectScannableTrips(List<AnnouncementModel> trips) {
   return [...inProgress, ...upcoming];
 }
 
-ScanHubProgress computeScanProgress(List<BidModel> bids) {
-  return ScanHubProgress(
-    confirmedColis: bids
-        .where((b) => _confirmedStatuses.contains(b.status))
-        .length,
-    scannedDepart: bids
-        .where((b) => _departedStatuses.contains(b.status))
-        .length,
-  );
-}
-
-/// Sous-ensemble de [bids] réellement confirmés/embarqués sur le trajet —
-/// mêmes statuts que ceux comptés par [computeScanProgress]
+/// Sous-ensemble de [bids] réellement confirmés/embarqués sur le trajet
 /// (`_confirmedStatuses` : `ACCEPTED`/`HANDED_OVER`/`IN_TRANSIT`/`ARRIVED`/
 /// `COMPLETED`).
 /// Source unique de vérité pour « quels bids sont scannables » dans le hub
@@ -67,12 +45,17 @@ List<BidModel> confirmedColis(List<BidModel> bids) => bids
     .where((b) => _confirmedStatuses.contains(b.status))
     .toList(growable: false);
 
-/// Étape à scanner ensuite pour ce colis, dérivée de son statut. `null` si
-/// toutes les étapes sont déjà scannées (statut `COMPLETED`).
+/// Étape obligatoire suivante pour ce colis, dérivée de son statut. `null` si
+/// le colis est déjà remis (statut `COMPLETED`).
 ///
-/// Renvoie le code d'étape (`DEPART`/`TRANSIT`/`ARRIVEE`), une valeur de
-/// donnée réutilisée telle quelle par les écrans de lecture — jamais affichée
-/// directement (voir `trackingStepLabel`).
+/// Deux étapes seulement sont obligatoires : `DEPART` (récupération, photo)
+/// puis `ARRIVEE` (remise au destinataire avec son code). `TRANSIT` est
+/// facultatif : jamais proposé automatiquement, seulement quand le voyageur
+/// le choisit (« Forcer une étape »).
+///
+/// Renvoie le code d'étape, une valeur de donnée réutilisée telle quelle par
+/// les écrans de lecture, jamais affichée directement (voir
+/// `trackingStepLabel`).
 String? nextRequiredStep(BidModel bid) {
   if (_arrivedStatuses.contains(bid.status)) {
     return null;

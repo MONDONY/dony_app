@@ -43,6 +43,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
+import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
@@ -67,10 +68,17 @@ import 'package:dony/features/profile/data/repositories/help_center_repository.d
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
-import 'package:dony/features/tracking/presentation/screens/scan_hub_screen.dart';
+import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
+import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
+import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
+import 'package:dony/features/tracking/data/offline_sync_service.dart';
+import 'package:dony/features/tracking/data/scan_locator.dart';
+import 'package:dony/features/tracking/data/tracking_repository.dart';
+import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -79,14 +87,13 @@ import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
 import '../helpers/mock_analytics_backend.dart';
 
-// Fournit un HelpCenterBloc minimal (catalogue vide) aux 4 harnais de ce
+// Fournit un HelpCenterBloc minimal (catalogue vide) aux 3 harnais de ce
 // fichier dont l'écran embarque désormais une ContextualTutorialCard
-// (Task 7 du plan centre d'aide) : accueil, publication de trajet, paiement,
-// scan. Sans ce provider, HelpCenterBloc n'est pas résolu dans l'arbre de
+// (Task 7 du plan centre d'aide) : accueil, publication de trajet, paiement.
+// Sans ce provider, HelpCenterBloc n'est pas résolu dans l'arbre de
 // widgets et context.select lève ProviderNotFoundException.
 const _smokeEmptyHelpConfigJson = '''
 {
@@ -728,48 +735,29 @@ Widget _wrapPaymentScreen(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Scan — harnais recopié de
-// test/features/tracking/presentation/scan_hub_screen_test.dart
+// Onglet Suivi — harnais recopié de
+// test/features/tracking/presentation/suivi_screen_test.dart
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _ScanMockScanHubCubit extends MockCubit<ScanHubState>
+class _SuiviMockScanHubCubit extends MockCubit<ScanHubState>
     implements ScanHubCubit {}
 
-class _ScanFakePathProviderPlatform extends PathProviderPlatform {
-  @override
-  Future<String?> getTemporaryPath() async => '.dart_tool/test_hive_a11y';
-  @override
-  Future<String?> getApplicationSupportPath() async =>
-      '.dart_tool/test_hive_a11y';
-  @override
-  Future<String?> getApplicationCachePath() async =>
-      '.dart_tool/test_hive_a11y';
-  @override
-  Future<String?> getApplicationDocumentsPath() async =>
-      '.dart_tool/test_hive_a11y';
-  @override
-  Future<String?> getLibraryPath() async => '.dart_tool/test_hive_a11y';
-  @override
-  Future<String?> getExternalStoragePath() async => '.dart_tool/test_hive_a11y';
-  @override
-  Future<List<String>?> getExternalCachePaths() async => [
-    '.dart_tool/test_hive_a11y',
-  ];
-  @override
-  Future<List<String>?> getExternalStoragePaths({
-    StorageDirectory? type,
-  }) async => ['.dart_tool/test_hive_a11y'];
-  @override
-  Future<String?> getDownloadsPath() async => '.dart_tool/test_hive_a11y';
-}
+class _SuiviMockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
 
-AnnouncementModel _scanTrip(String id) => AnnouncementModel(
+class _SuiviMockBidRepo extends Mock implements BidRepository {}
+
+class _SuiviMockTrackingRepo extends Mock implements TrackingRepository {}
+
+class _SuiviMockOfflineSync extends Mock implements OfflineSyncService {}
+
+AnnouncementModel _suiviTrip(String id) => AnnouncementModel(
   id: id,
   travelerId: 'traveler-1',
   status: 'IN_PROGRESS',
   departureDate: DateTime(2026, 6, 22),
-  departureCity: 'Paris',
-  arrivalCity: 'Dakar',
+  departureCity: 'Bobo-Dioulasso',
+  arrivalCity: 'Yaoundé',
   availableKg: 10,
   totalKg: 20,
   pricePerKg: 5,
@@ -777,51 +765,145 @@ AnnouncementModel _scanTrip(String id) => AnnouncementModel(
   updatedAt: DateTime(2026),
 );
 
-BidModel _scanBid(String id, String status, {String? recipientName}) =>
+BidModel _suiviBid(String id, String status, {String? recipientName}) =>
     BidModel(
       id: id,
       announcementId: 'trip-1',
       senderId: 's',
       status: status,
       recipientName: recipientName,
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      trackingNumber: 'DON-$id',
       createdAt: DateTime(2026),
       updatedAt: DateTime(2026),
     );
 
-GoRouter _scanRouter(ScanHubCubit cubit) => GoRouter(
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (_, _) => MultiBlocProvider(
-        providers: [
-          BlocProvider<ScanHubCubit>.value(value: cubit),
-          _smokeHelpCenterProvider(),
+Widget _suiviCamera(
+  BuildContext _,
+  ValueChanged<String> _,
+  ValueListenable<bool> _,
+  ValueListenable<bool> _,
+) => const ColoredBox(color: DonyColors.neutral900);
+
+const _suiviHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": [
+    {
+      "id": "qr_handover",
+      "title": "Remettre un colis avec le QR",
+      "description": "Scanner le QR du colis à chaque étape.",
+      "youtubeVideoId": "dQw4w9WgXcQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["qrHandover"]
+    }
+  ]
+}
+''';
+
+/// Enregistre les dépendances de l'onglet Suivi (trajets via un cubit mocké,
+/// envois via un dépôt mocké) et monte l'écran pour [roles].
+Widget _suiviHarness(List<String> roles, {SuiviMode? mode}) {
+  final trip = _suiviTrip('trip-1');
+  final hub = _SuiviMockScanHubCubit();
+  when(() => hub.state).thenReturn(
+    ScanHubLoaded(
+      trips: [trip, _suiviTrip('trip-2')],
+      selectedTripId: trip.id,
+      bidsByTrip: {
+        trip.id: [
+          _suiviBid('bid-1', 'ACCEPTED', recipientName: 'Awa Ndiaye'),
+          _suiviBid('bid-2', 'IN_TRANSIT', recipientName: 'Moussa Diop'),
         ],
-        child: const ScanHubView(),
+      },
+      scanHistory: [
+        TripScanHistoryEntryModel(
+          donNumber: 'DON-bid-2',
+          recipientName: 'Moussa Diop',
+          eventType: 'TRANSIT',
+          scannedAt: DateTime(2026, 6, 22, 12, 58),
+        ),
+      ],
+    ),
+  );
+  when(() => hub.load(silent: any(named: 'silent'))).thenAnswer((_) async {});
+
+  final bidRepo = _SuiviMockBidRepo();
+  when(
+    () => bidRepo.getMyBids(),
+  ).thenAnswer((_) async => [_suiviBid('bid-9', 'IN_TRANSIT')]);
+  final offlineSync = _SuiviMockOfflineSync();
+  when(() => offlineSync.pendingCountFor(any())).thenReturn(2);
+  when(() => offlineSync.queueChanges).thenReturn(ChangeNotifier());
+
+  void register<T extends Object>(T Function() factory) {
+    if (getIt.isRegistered<T>()) getIt.unregister<T>();
+    getIt.registerFactory<T>(factory);
+    addTearDown(() {
+      if (getIt.isRegistered<T>()) getIt.unregister<T>();
+    });
+  }
+
+  register<ScanHubCubit>(() => hub);
+  register<SuiviCubit>(
+    () => SuiviCubit(
+      bidRepo,
+      _SuiviMockTrackingRepo(),
+      makeDisabledAnalytics(MockAnalyticsBackend()),
+    ),
+  );
+  register<OfflineSyncService>(() => offlineSync);
+  register<SuiviValidationCubit>(
+    () => SuiviValidationCubit(
+      offlineSync,
+      const ScanLocator(),
+      makeDisabledAnalytics(MockAnalyticsBackend()),
+    ),
+  );
+
+  final auth = _SuiviMockAuthBloc();
+  when(() => auth.state).thenReturn(
+    AuthAuthenticated(
+      UserModel(
+        id: 'u1',
+        roles: roles,
+        kycStatus: 'APPROVED',
+        status: 'ACTIVE',
       ),
     ),
-    GoRoute(
-      path: '/tracking/scan/identify',
-      builder: (_, _) => const Scaffold(body: Text('identify')),
-    ),
-    GoRoute(
-      path: '/tracking/offline-queue',
-      builder: (_, _) => const Scaffold(body: Text('offline-queue')),
-    ),
-    GoRoute(
-      path: '/announcements/trips',
-      builder: (_, _) => const Scaffold(body: Text('mes-trajets')),
-    ),
-    GoRoute(
-      path: '/bids/:id',
-      builder: (_, state) =>
-          Scaffold(body: Text('bid-${state.pathParameters['id']}')),
-    ),
-  ],
-);
+  );
 
-Widget _wrapScanHub(ScanHubCubit cubit) =>
-    MaterialApp.router(routerConfig: _scanRouter(cubit));
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<AuthBloc>.value(value: auth),
+      // Tutoriel de la remise QR au catalogue : le « ? » de l'en-tête est
+      // affiché, et mesuré, à 200 %.
+      BlocProvider<HelpCenterBloc>(
+        create: (_) => HelpCenterBloc(
+          HelpCenterRepository(
+            const _SmokeStaticHelpCenterSource(_suiviHelpConfigJson),
+            fallbackJsonLoader: () async => _suiviHelpConfigJson,
+          ),
+          makeDisabledAnalytics(MockAnalyticsBackend()),
+        )..add(const HelpCenterLoadRequested()),
+      ),
+    ],
+    child: MaterialApp.router(
+      routerConfig: GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) =>
+                SuiviScreen(requestedMode: mode, cameraBuilder: _suiviCamera),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Vos informations — harnais recopié de
@@ -874,7 +956,7 @@ void main() {
     // dans le harnais accueil (mocktail exige un fallback pour tout type
     // non primitif utilisé avec `any()`).
     registerFallbackValue(StatsPeriod.thirtyDays);
-    // Requis par DateFormat(..., 'fr') dans TrajetStep et ScanHubView.
+    // Requis par DateFormat(..., 'fr') dans TrajetStep et l'onglet Suivi.
     await initializeDateFormatting('fr');
   });
 
@@ -1037,49 +1119,28 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('scan', (tester) async {
-      // Écriture disque Hive réelle : doit tourner dans la vraie zone async
-      // (runAsync), sinon le testWidgets hang jusqu'au timeout sous
-      // l'horloge fake (cf. le même piège documenté dans
-      // scan_hub_screen_test.dart).
-      PathProviderPlatform.instance = _ScanFakePathProviderPlatform();
-      await tester.runAsync(() async {
-        Hive.init('.dart_tool/test_hive_a11y');
-        if (getIt.isRegistered<HiveService>()) {
-          getIt.unregister<HiveService>();
-        }
-        getIt.registerLazySingleton<HiveService>(() => HiveService());
-        await getIt<HiveService>().init();
-        await getIt<HiveService>().offlineQueue.clear();
-      });
-      addTearDown(() async {
-        await tester.runAsync(() async {
-          await Hive.deleteFromDisk();
-        });
-        if (getIt.isRegistered<HiveService>()) {
-          getIt.unregister<HiveService>();
-        }
-      });
-
-      final cubit = _ScanMockScanHubCubit();
-      when(() => cubit.selectTrip(any())).thenAnswer((_) async {});
-
-      final trip = _scanTrip('trip-1');
-      when(() => cubit.state).thenReturn(
-        ScanHubLoaded(
-          trips: [trip],
-          selectedTripId: trip.id,
-          bidsByTrip: {
-            trip.id: [
-              _scanBid('bid-1', 'ACCEPTED', recipientName: 'Awa Ndiaye'),
-            ],
-          },
-          scanHistory: const [],
-        ),
+    testWidgets('suivi : valider une étape (voyageur)', (tester) async {
+      registerFallbackValue(<String>{});
+      await pumpAt200(
+        tester,
+        _suiviHarness(['SENDER', 'TRAVELER'], mode: SuiviMode.valider),
       );
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('suivi-help')), findsOneWidget);
+    });
 
-      await pumpAt200(tester, _wrapScanHub(cubit));
+    testWidgets('suivi : suivre un colis (voyageur)', (tester) async {
+      registerFallbackValue(<String>{});
+      await pumpAt200(
+        tester,
+        _suiviHarness(['SENDER', 'TRAVELER'], mode: SuiviMode.suivre),
+      );
+      expect(tester.takeException(), isNull);
+    });
 
+    testWidgets('suivi : expéditeur sans caméra', (tester) async {
+      registerFallbackValue(<String>{});
+      await pumpAt200(tester, _suiviHarness(['SENDER']));
       expect(tester.takeException(), isNull);
     });
 

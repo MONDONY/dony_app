@@ -144,6 +144,7 @@ const _sameInBothLanguages = <String>{
   'listingKiloProChip', // nom de fonctionnalité, identique en anglais
   'listingRowLabelDate', // « Date » se dit pareil
   'bidCreateMobileMoneySubtitle', // « Orange Money, Wave, MTN » : noms de marque
+  'suiviRecentScanStepByQr', // gabarit identique, « QR » se dit pareil
   'bidCreateTotalLabel', // « Total » se dit pareil
   'bidCreatePromoBadge', // « Promo » se dit pareil
   'negotiationRoundCounter', // « Round » déjà utilisé tel quel en français
@@ -176,7 +177,6 @@ const _sameInBothLanguages = <String>{
   'archivedConversationsTitle', // « Archives » se dit pareil (tâche F1)
   'trackingStepTransit', // « Transit » se dit pareil (tâche F2)
   'scanPhotoWordLabel', // « Photo » se dit pareil (tâche F2)
-  'scanColisRowScanBadge', // « Scan » se dit pareil (tâche F2)
   'scanOfflineEventTransitLabel', // « transit » se dit pareil (tâche F2)
   'receptionConfirmTitle', // « Confirmation » se dit pareil (tâche F3)
   'receptionCodeOptionLabel', // « OPTION »/« CODE » se disent pareil (tâche F3)

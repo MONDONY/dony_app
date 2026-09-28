@@ -1,3 +1,5 @@
+import 'package:dony/features/tracking/data/models/scan_method.dart';
+
 class TrackingEventModel {
   final String id;
   final String bidId;
@@ -10,6 +12,9 @@ class TrackingEventModel {
   final DateTime? offlineTimestamp;
   final DateTime createdAt;
 
+  /// Provenance de l'étape, `null` si le back ne la connaît pas.
+  final ScanMethod? scanMethod;
+
   const TrackingEventModel({
     required this.id,
     required this.bidId,
@@ -21,6 +26,7 @@ class TrackingEventModel {
     this.photoUrl,
     this.offlineTimestamp,
     required this.createdAt,
+    this.scanMethod,
   });
 
   factory TrackingEventModel.fromJson(Map<String, dynamic> json) =>
@@ -37,5 +43,6 @@ class TrackingEventModel {
             ? null
             : DateTime.parse(json['offlineTimestamp'] as String),
         createdAt: DateTime.parse(json['createdAt'] as String),
+        scanMethod: ScanMethod.fromWire(json['scanMethod']),
       );
 }

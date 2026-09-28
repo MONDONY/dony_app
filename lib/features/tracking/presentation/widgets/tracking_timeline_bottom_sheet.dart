@@ -1,27 +1,32 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-void showTrackingTimelineSheet(
+/// Parcours d'un colis en lecture seule. [corridor] vide (colis inconnu de
+/// l'app, lu par QR) masque la carte du trajet.
+Future<void> showTrackingTimelineSheet(
   BuildContext context, {
   required String bidId,
   required String corridor,
   VoidCallback? onShareTracking,
   String? arrivalInstructions,
 }) {
-  DonyBottomSheet.show(
+  return DonyBottomSheet.show<void>(
     context,
     title: context.l10n.trackingTimelineTitle,
     subtitle: corridor.isNotEmpty ? corridor : null,
@@ -119,6 +124,14 @@ class _TrackingTimelineContent extends StatelessWidget {
           );
         }
         if (state is TrackingEventsError) {
+          // 403 : colis ni envoyé ni transporté par l'utilisateur. Refus
+          // définitif, « Réessayer » n'y changerait rien.
+          if (state.error is ForbiddenException) {
+            return const Padding(
+              padding: EdgeInsets.all(DonySpacing.xl),
+              child: Center(child: ParcelNotLinkedNotice(centered: true)),
+            );
+          }
           return _ErrorView(
             message: ErrorPresenter.resolve(
               state.error,
@@ -134,13 +147,15 @@ class _TrackingTimelineContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Map card
-                  RouteMapCard(
-                    departureCode: corridorCodes.$1,
-                    arrivalCode: corridorCodes.$3,
-                    departureCity: corridorCodes.$2,
-                    arrivalCity: corridorCodes.$4,
-                  ),
-                  const SizedBox(height: DonySpacing.base),
+                  if (corridor.isNotEmpty) ...[
+                    RouteMapCard(
+                      departureCode: corridorCodes.$1,
+                      arrivalCode: corridorCodes.$3,
+                      departureCity: corridorCodes.$2,
+                      arrivalCity: corridorCodes.$4,
+                    ),
+                    const SizedBox(height: DonySpacing.base),
+                  ],
 
                   // Timeline
                   _Timeline(
@@ -243,6 +258,7 @@ class _TimelineItem extends StatelessWidget {
     final l = context.l10n;
     final localeName = l.localeName;
     final locationLabel = event.locationLabel(l);
+    final methodLabel = event.methodLabel(l);
 
     final Color stepColor = switch (event.eventType) {
       'ARRIVEE' => cs.success,
@@ -333,6 +349,30 @@ class _TimelineItem extends StatelessWidget {
                               locationLabel,
                               style: tt.bodySmall?.copyWith(
                                 color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (methodLabel != null) ...[
+                        const SizedBox(height: DonySpacing.xs),
+                        Row(
+                          key: const Key('tracking-step-method'),
+                          children: [
+                            DonyIcon(
+                              event.scanMethod == ScanMethod.qr
+                                  ? 'qr-code'
+                                  : 'package',
+                              size: 12,
+                              color: cs.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: DonySpacing.xs),
+                            Expanded(
+                              child: Text(
+                                methodLabel,
+                                style: tt.bodySmall?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                ),
                               ),
                             ),
                           ],

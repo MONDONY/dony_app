@@ -57,40 +57,11 @@ void main() {
     });
   });
 
-  group('computeScanProgress', () {
-    test('confirmés et scannés départ dérivés du statut', () {
-      final bids = [
-        _bid('ACCEPTED'),
-        _bid('HANDED_OVER'),
-        _bid('IN_TRANSIT'),
-        _bid('COMPLETED'),
-        _bid('REJECTED'),
-        _bid('PENDING'),
-      ];
-      final p = computeScanProgress(bids);
-      expect(p.confirmedColis, 4); // ACCEPTED+HANDED_OVER+IN_TRANSIT+COMPLETED
-      expect(p.scannedDepart, 3); // HANDED_OVER+IN_TRANSIT+COMPLETED
-    });
-
-    test('ARRIVED compte comme confirmé ET scanné au départ', () {
-      final p = computeScanProgress([_bid('ARRIVED')]);
-      expect(p.confirmedColis, 1);
-      expect(p.scannedDepart, 1);
-    });
-
-    test('liste vide → zéros', () {
-      final p = computeScanProgress(const []);
-      expect(p.confirmedColis, 0);
-      expect(p.scannedDepart, 0);
-    });
-  });
-
   group('nextRequiredStep', () {
     test('ACCEPTED → DEPART', () {
       expect(nextRequiredStep(_bid('ACCEPTED')), 'DEPART');
     });
-    // Transit facultatif : après le départ, l'étape obligatoire est la remise.
-    test('HANDED_OVER → ARRIVEE', () {
+    test('HANDED_OVER → ARRIVEE (transit facultatif)', () {
       expect(nextRequiredStep(_bid('HANDED_OVER')), 'ARRIVEE');
     });
     test('IN_TRANSIT → ARRIVEE', () {
