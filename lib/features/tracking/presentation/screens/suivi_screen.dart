@@ -226,6 +226,13 @@ class _SuiviBodyState extends State<_SuiviBody> {
     _updatePaused();
   }
 
+  void _snapToMax() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_sheetController.isAttached) return;
+      _sheetController.jumpTo(_maxSize);
+    });
+  }
+
   void _updatePaused() {
     final busy = context.read<SuiviCubit>().state.busy;
     _cameraPaused.value = !_visible || busy || _sheetExpanded.value;
@@ -626,6 +633,13 @@ class _SuiviBodyState extends State<_SuiviBody> {
                     .toDouble();
                 final strip = 56 * textScale.clamp(1.0, 1.6).toDouble();
                 final max = math.max(peek + 0.05, (height - strip) / height);
+                // Le clavier réduit la zone, donc la fraction maximale. Une
+                // fois refermé, la feuille dépliée restait à l'ancienne
+                // fraction et laissait une bande vide sous « Scanner » :
+                // elle se recale sur la nouvelle.
+                if ((max - _maxSize).abs() > 0.001 && _sheetExpanded.value) {
+                  _snapToMax();
+                }
                 _peekSize = peek;
                 _maxSize = max;
                 _expandThreshold = peek + (max - peek) / 2;

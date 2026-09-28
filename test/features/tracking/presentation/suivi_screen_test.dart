@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -35,6 +36,7 @@ import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -579,6 +581,11 @@ void main() {
       await settle(tester);
       expect(find.byKey(const Key('suivi-search-error')), findsOneWidget);
 
+      // Recette Redmi : l'erreur restait affichée champ vidé puis retapé.
+      await tester.enterText(find.byKey(const Key('suivi-number-field')), '');
+      await settle(tester, rounds: 1);
+      expect(find.byKey(const Key('suivi-search-error')), findsNothing);
+
       await tester.enterText(
         find.byKey(const Key('suivi-number-field')),
         'don-abc123',
@@ -993,6 +1000,32 @@ void main() {
           "L'étape suivante est validée toute seule.",
         ),
         findsOneWidget,
+      );
+    });
+
+    // Recette Redmi : clavier refermé, la feuille dépliée redescendait et
+    // laissait une bande sombre sous « Scanner ».
+    testWidgets('clavier refermé → feuille dépliée recollée sous Scanner', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester);
+      await openNumberField(tester);
+      final top = tester.getTopLeft(find.byKey(const Key('suivi-sheet'))).dy;
+      final strip = tester
+          .getBottomLeft(find.byKey(const Key('suivi-resume-scan')))
+          .dy;
+      expect(top, greaterThanOrEqualTo(strip));
+
+      tester.view.viewInsets = const FakeViewPadding(bottom: 900);
+      addTearDown(tester.view.resetViewInsets);
+      await settle(tester, rounds: 2);
+      tester.view.resetViewInsets();
+      await settle(tester, rounds: 2);
+
+      expect(
+        tester.getTopLeft(find.byKey(const Key('suivi-sheet'))).dy,
+        moreOrLessEquals(top, epsilon: 1),
       );
     });
 
@@ -1473,6 +1506,12 @@ void main() {
         text('Numéro introuvable. Vérifie-le et réessaie.'),
         findsOneWidget,
       );
+      await tester.enterText(
+        find.byKey(const Key('suivi-validate-number-field')),
+        'DON-NOPE0',
+      );
+      await settle(tester, rounds: 1);
+      expect(text('Numéro introuvable. Vérifie-le et réessaie.'), findsNothing);
 
       await submitNumber(tester, 'DON-PRIVE1');
       expect(text("Ce colis n'est pas lié à ton compte"), findsOneWidget);
@@ -1590,6 +1629,41 @@ void main() {
     });
   });
 
+  /// Libellé présent, contraste d'au moins 4,5:1 sur le fond du bouton, et
+  /// bouton aussi haut que son champ.
+  void expectReadableButton(
+    WidgetTester tester, {
+    required Key button,
+    required Key field,
+    required String label,
+  }) {
+    final labelFinder = find.descendant(
+      of: find.byKey(button),
+      matching: find.text(label),
+    );
+    expect(labelFinder, findsOneWidget);
+    final paragraph = tester.renderObject<RenderParagraph>(labelFinder);
+    final textColor = paragraph.text.style!.color!;
+    final background = tester
+        .widget<Material>(
+          find
+              .descendant(
+                of: find.byKey(button),
+                matching: find.byType(Material),
+              )
+              .first,
+        )
+        .color!;
+    final l1 = textColor.computeLuminance();
+    final l2 = background.computeLuminance();
+    final ratio = (math.max(l1, l2) + 0.05) / (math.min(l1, l2) + 0.05);
+    expect(ratio, greaterThanOrEqualTo(4.5), reason: '$label : $ratio');
+    expect(
+      tester.getSize(find.byKey(button)).height,
+      tester.getSize(find.byKey(field)).height,
+    );
+  }
+
   // Recette Redmi : sous le thème de l'app, les boutons « Suivre » et
   // « Valider » du champ numéro (largeur minimale infinie dans une Row)
   // cassaient la mise en page, feuille blanche ou superposée.
@@ -1626,6 +1700,28 @@ void main() {
         expect(
           find.textContaining('Mes envois', findRichText: true),
           findsOneWidget,
+        );
+      });
+
+      testWidgets('boutons Suivre et Valider lisibles, à hauteur du champ '
+          '($mode)', (tester) async {
+        stubDefaultTrips();
+        await pump(tester, themeMode: mode, location: '/?mode=suivre');
+        expectReadableButton(
+          tester,
+          button: const Key('suivi-number-submit'),
+          field: const Key('suivi-number-field'),
+          label: 'Suivre',
+        );
+
+        await tester.tap(find.byKey(const Key('suivi-mode-valider')));
+        await settle(tester);
+        await openNumberField(tester);
+        expectReadableButton(
+          tester,
+          button: const Key('suivi-validate-number-submit'),
+          field: const Key('suivi-validate-number-field'),
+          label: 'Valider',
         );
       });
 

@@ -234,41 +234,44 @@ class _ValidateNumberFieldState extends State<_ValidateNumberField> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    key: const Key('suivi-validate-number-field'),
-                    controller: _controller,
-                    focusNode: widget.focusNode,
-                    textCapitalization: TextCapitalization.characters,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _submit(),
-                    style: tt.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontFeatures: _tabular,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: l.suiviNumberHint,
-                      filled: true,
-                      fillColor: cs.surface,
-                      border: border,
-                      enabledBorder: border,
-                      focusedBorder: border.copyWith(
-                        borderSide: BorderSide(color: cs.primary, width: 2),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      key: const Key('suivi-validate-number-field'),
+                      controller: _controller,
+                      focusNode: widget.focusNode,
+                      textCapitalization: TextCapitalization.characters,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _submit(),
+                      // L'erreur d'un numéro précédent ne survit pas à la saisie.
+                      onChanged: (_) =>
+                          context.read<SuiviCubit>().clearNumberError(),
+                      style: tt.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: _tabular,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: l.suiviNumberHint,
+                        filled: true,
+                        fillColor: cs.surface,
+                        border: border,
+                        enabledBorder: border,
+                        focusedBorder: border.copyWith(
+                          borderSide: BorderSide(color: cs.primary, width: 2),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                SizedBox(
-                  height: 52,
-                  child: FilledButton(
+                  const SizedBox(width: DonySpacing.sm),
+                  FilledButton(
                     key: const Key('suivi-validate-number-submit'),
                     onPressed: loading ? null : _submit,
                     style: FilledButton.styleFrom(
                       // Largeur minimale bornée : celle du thème est infinie.
-                      minimumSize: const Size(64, 52),
+                      minimumSize: const Size(64, 48),
                       padding: const EdgeInsets.symmetric(
                         horizontal: DonySpacing.lg,
                       ),
@@ -276,6 +279,7 @@ class _ValidateNumberFieldState extends State<_ValidateNumberField> {
                         borderRadius: BorderRadius.circular(DonyRadius.lg),
                       ),
                     ),
+                    // Sans `style` : la couleur du bouton primaire s'applique.
                     child: loading
                         ? SizedBox(
                             width: 18,
@@ -285,10 +289,10 @@ class _ValidateNumberFieldState extends State<_ValidateNumberField> {
                               color: cs.onPrimary,
                             ),
                           )
-                        : Text(l.suiviNumberSubmit, style: tt.labelLarge),
+                        : Text(l.suiviNumberSubmit),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             if (error is ForbiddenException) ...[
               const SizedBox(height: DonySpacing.md),

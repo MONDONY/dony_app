@@ -544,6 +544,21 @@ class SuiviCubit extends Cubit<SuiviState> {
     _openTimeline(bid.id, source: 'my_shipments', bid: bid);
   }
 
+  /// Saisie modifiée dans le champ du mode Suivre : l'erreur de la recherche
+  /// précédente disparaît.
+  void clearSearchError() {
+    if (state.searchStatus == SuiviLoadStatus.error) {
+      emit(state._copy(searchStatus: SuiviLoadStatus.idle));
+    }
+  }
+
+  /// Saisie modifiée dans le champ du mode Valider : même règle.
+  void clearNumberError() {
+    if (state.numberStatus == SuiviLoadStatus.error) {
+      emit(state._copy(numberStatus: SuiviLoadStatus.idle));
+    }
+  }
+
   /// Numéro de suivi saisi : on retrouve le colis puis on ouvre son parcours.
   Future<void> trackNumber(String raw) async {
     final number = raw.trim().toUpperCase();
