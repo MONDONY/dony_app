@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_success_screen.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -85,7 +86,7 @@ Widget _wrap(
       ),
     ],
   );
-  return MaterialApp.router(routerConfig: router);
+  return MaterialApp.router(theme: AppTheme.light(), routerConfig: router);
 }
 
 void main() {

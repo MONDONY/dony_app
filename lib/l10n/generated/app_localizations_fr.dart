@@ -10105,13 +10105,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get receptionContestFirst => 'contestez d\'abord';
 
   @override
-  String get trackingTimelineTitle => 'Suivi du colis';
-
-  @override
   String get trackingTimelineShare => 'Partager le suivi';
-
-  @override
-  String get trackingTimelineStepsHeader => 'ÉTAPES';
 
   @override
   String get trackingEventDepartureConfirmed => 'Départ confirmé';
@@ -10126,9 +10120,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trackingGpsRecorded => 'Lieu GPS enregistré';
 
   @override
-  String get trackingOfflineScanSynced => 'Lecture hors-ligne synchronisée';
-
-  @override
   String get trackingValidatedByQr => 'Validé par scan du QR';
 
   @override
@@ -10137,27 +10128,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get trackingValidatedByNumber => 'Validé avec le numéro';
-
-  @override
-  String get trackingAwaitingConfirmationTitle => 'En attente de confirmation';
-
-  @override
-  String get trackingAwaitingConfirmationDesc =>
-      'Le destinataire doit confirmer la réception via le code SMS.';
-
-  @override
-  String get trackingEmptyTimelineTitle => 'En attente de la lecture au départ';
-
-  @override
-  String get trackingEmptyTimelineDesc =>
-      'Le voyageur lira le QR code lors de la remise du colis.';
-
-  @override
-  String get trackingApplessTitle => 'Pas besoin d\'app !';
-
-  @override
-  String get trackingApplessMessage =>
-      'Quand le voyageur sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.';
 
   @override
   String get cancellationConfirmTitle => 'Annuler ce trajet ?';
@@ -14417,26 +14387,82 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trackingStepOptional => 'Facultatif';
 
   @override
-  String get suiviStepModeTransit => 'transit, facultatif';
-
-  @override
   String get suiviStepModeBackToAuto => 'Automatique';
 
   @override
-  String get suiviStepModeTransitHelp =>
-      'Le prochain colis scanné ou saisi valide son transit, puis l\'étape repasse en automatique.';
+  String suiviStepModeForced(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'départ',
+      'TRANSIT': 'transit, facultatif',
+      'other': 'arrivée',
+    });
+    return '$_temp0';
+  }
 
   @override
-  String get suiviForcedTransitCameraHint =>
-      'Transit facultatif : scanne le colis à valider.\nL\'étape repasse ensuite en automatique.';
+  String suiviStepModeForcedHelp(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'son départ, avec une photo',
+      'TRANSIT': 'son transit',
+      'other': 'son arrivée, avec la photo puis le code du destinataire',
+    });
+    return 'Le prochain colis scanné ou saisi valide $_temp0, puis l\'étape repasse en automatique.';
+  }
 
   @override
-  String suiviTransitNeedsDepart(String parcel) {
+  String suiviForcedCameraHint(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Départ forcé : scanne le colis à valider.',
+      'TRANSIT': 'Transit facultatif : scanne le colis à valider.',
+      'other': 'Arrivée forcée : scanne le colis à remettre.',
+    });
+    return '$_temp0\nL\'étape repasse ensuite en automatique.';
+  }
+
+  @override
+  String suiviStepNeedsDepart(String parcel) {
     return 'Valide d\'abord le départ de $parcel.';
   }
 
   @override
-  String suiviTransitAlreadyDone(String parcel) {
-    return 'Le transit de $parcel est déjà validé.';
+  String suiviStepAlreadyDone(String step, String parcel) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Le départ de $parcel est déjà validé.',
+      'other': 'Le transit de $parcel est déjà validé.',
+    });
+    return '$_temp0';
   }
+
+  @override
+  String get trackingReadOnlyLabel => 'Suivi en lecture seule';
+
+  @override
+  String get trackingHeadlineAwaitingHandover =>
+      'En attente de la remise au voyageur';
+
+  @override
+  String trackingHeadlineOnTheWayTo(String city) {
+    return 'En route vers $city';
+  }
+
+  @override
+  String get trackingHeadlineOnTheWay => 'En route';
+
+  @override
+  String get trackingHeadlineDelivered => 'Colis remis au destinataire';
+
+  @override
+  String get trackingStepHandedToTraveler => 'Remis au voyageur';
+
+  @override
+  String get trackingStepHandedToRecipient => 'Remis au destinataire';
+
+  @override
+  String get trackingStepHandoverToTraveler => 'Remise au voyageur';
+
+  @override
+  String get trackingStepHandoverToRecipient => 'Remise au destinataire';
+
+  @override
+  String get trackingStepPhotoLabel => 'Photo de l\'étape';
 }

@@ -11,7 +11,6 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
-import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
@@ -78,10 +77,13 @@ class SuiviScreen extends StatelessWidget {
       buildWhen: (_, next) => _travelerOf(next) != null,
       builder: (context, authState) {
         final canValidate = _travelerOf(authState) ?? false;
-        // Clé par profil : devenir voyageur en cours de session recrée les
-        // blocs.
+        // Clé par compte et par profil : devenir voyageur ou changer de
+        // compte en cours de session recrée les blocs, donc recharge.
         return KeyedSubtree(
-          key: ValueKey<bool>(canValidate),
+          key: ValueKey<(String?, bool)>((
+            authState.currentUserId,
+            canValidate,
+          )),
           child: MultiBlocProvider(
             providers: [
               BlocProvider<SuiviCubit>(
@@ -151,6 +153,9 @@ class _SuiviBodyState extends State<_SuiviBody> {
     _lifecycle = AppLifecycleListener(
       onHide: _flushValidations,
       onPause: _flushValidations,
+      onResume: () {
+        if (_visible) _refresh();
+      },
     );
     if (widget.canValidate) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -167,10 +172,23 @@ class _SuiviBodyState extends State<_SuiviBody> {
     super.didChangeDependencies();
     // Onglet caché (IndexedStack du shell) ou page poussée par-dessus :
     // TickerMode est coupé, la caméra aussi.
+    final wasVisible = _visible;
     _visible = TickerMode.valuesOf(context).enabled;
     _updatePaused();
     // Onglet quitté ou recouvert : plus personne pour « Annuler ».
     if (!_visible) _flushValidations();
+    // Retour sur l'onglet : l'IndexedStack du shell l'a gardé vivant, ses
+    // données datent de sa première ouverture (trajet publié, demande
+    // acceptée ailleurs depuis). Recette Redmi : « Rien à valider » restait
+    // affiché jusqu'au redémarrage de l'app.
+    if (_visible && !wasVisible) _refresh();
+  }
+
+  /// Rafraîchissement silencieux au retour sur l'onglet ou dans l'app.
+  void _refresh() {
+    if (!mounted) return;
+    _reloadTrips();
+    unawaited(context.read<SuiviCubit>().refreshShipments());
   }
 
   void _flushValidations() {
@@ -206,6 +224,13 @@ class _SuiviBodyState extends State<_SuiviBody> {
     if (!_sheetController.isAttached) return;
     _sheetExpanded.value = _sheetController.size > _expandThreshold;
     _updatePaused();
+  }
+
+  void _snapToMax() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_sheetController.isAttached) return;
+      _sheetController.jumpTo(_maxSize);
+    });
   }
 
   void _updatePaused() {
@@ -245,16 +270,19 @@ class _SuiviBodyState extends State<_SuiviBody> {
         await _validateStep(effect);
         if (!mounted) return;
         cubit.releaseScan();
-      case SuiviTransitNeedsDepart(:final bid):
+      case SuiviStepNeedsDepart(:final bid):
         DonySnackbar.show(
           context,
-          message: context.l10n.suiviTransitNeedsDepart(suiviParcelLabel(bid)),
+          message: context.l10n.suiviStepNeedsDepart(suiviParcelLabel(bid)),
         );
         cubit.releaseScan();
-      case SuiviTransitAlreadyDone(:final bid):
+      case SuiviStepAlreadyDone(:final bid, :final step):
         DonySnackbar.show(
           context,
-          message: context.l10n.suiviTransitAlreadyDone(suiviParcelLabel(bid)),
+          message: context.l10n.suiviStepAlreadyDone(
+            step,
+            suiviParcelLabel(bid),
+          ),
         );
         cubit.releaseScan();
       case SuiviStepPending(:final bid):
@@ -293,12 +321,14 @@ class _SuiviBodyState extends State<_SuiviBody> {
         :final bidId,
         :final corridor,
         :final arrivalInstructions,
+        :final trackingNumber,
       ):
         await showTrackingTimelineSheet(
           context,
           bidId: bidId,
           corridor: corridor,
           arrivalInstructions: arrivalInstructions,
+          trackingNumber: trackingNumber,
         );
         if (!mounted) return;
         cubit.releaseScan();
@@ -306,14 +336,15 @@ class _SuiviBodyState extends State<_SuiviBody> {
   }
 
   /// Étape d'un colis du trajet : récapitulatif si le colis vient d'un
-  /// numéro, puis photo si elle est exigée, puis bandeau « Annuler » avant
-  /// l'envoi. L'arrivée garde son parcours photo puis code.
+  /// numéro saisi, puis photo si elle est exigée, puis bandeau « Annuler »
+  /// avant l'envoi. L'arrivée garde son parcours photo puis code, sans
+  /// passer par l'identification du colis.
   Future<void> _validateStep(SuiviValidateStep effect) async {
     final SuiviValidateStep(:bid, :step, :method) = effect;
     final hub = context.read<ScanHubCubit>();
     final validations = context.read<SuiviValidationCubit>();
     final label = suiviParcelLabel(bid);
-    if (method == ScanMethod.manual) {
+    if (effect.confirmNumber) {
       final hubState = hub.state;
       if (hubState is! ScanHubLoaded) return;
       final go = await showSuiviNumberRecapSheet(
@@ -412,34 +443,23 @@ class _SuiviBodyState extends State<_SuiviBody> {
     );
   }
 
-  /// « Forcer une étape ». Transit (facultatif) : le prochain colis scanné
-  /// ou saisi le valide, la feuille se replie sur la caméra. Départ et
-  /// remise passent par l'identification.
+  /// « Forcer une étape » : l'étape choisie s'applique au prochain colis
+  /// scanné ou saisi, la feuille se replie sur la caméra.
   Future<void> _forceStep() async {
     final cubit = context.read<SuiviCubit>();
     final step = await showSuiviForceStepSheet(context);
     if (!mounted || step == null) return;
-    if (step == 'TRANSIT') {
-      cubit.forceTransit();
-      _collapseSheet();
-      return;
-    }
-    await _openIdentify(step);
+    cubit.forceStep(step);
+    _collapseSheet();
   }
 
-  Future<void> _openIdentify(String? step) async {
-    final cubit = context.read<SuiviCubit>();
-    if (cubit.state.busy) return;
-    // Pas de scan ni de caméra pendant la saisie : l'écran d'identification
-    // ouvre son propre lecteur.
-    cubit.holdScans();
-    await context.push<void>(
-      '/tracking/scan/identify',
-      extra: <String, dynamic>{'etape': step, 'focusNumber': step != null},
+  /// Bouton d'une ligne colis : son étape, sans identification.
+  void _validateParcel(BidModel bid, String step) {
+    context.read<SuiviCubit>().validateParcel(
+      bid,
+      step,
+      pendingBidIds: _pendingBidIds,
     );
-    if (!mounted) return;
-    _reloadTrips();
-    cubit.releaseScan();
   }
 
   Future<void> _openQrPicker() async {
@@ -615,6 +635,13 @@ class _SuiviBodyState extends State<_SuiviBody> {
                     .toDouble();
                 final strip = 56 * textScale.clamp(1.0, 1.6).toDouble();
                 final max = math.max(peek + 0.05, (height - strip) / height);
+                // Le clavier réduit la zone, donc la fraction maximale. Une
+                // fois refermé, la feuille dépliée restait à l'ancienne
+                // fraction et laissait une bande vide sous « Scanner » :
+                // elle se recale sur la nouvelle.
+                if ((max - _maxSize).abs() > 0.001 && _sheetExpanded.value) {
+                  _snapToMax();
+                }
                 _peekSize = peek;
                 _maxSize = max;
                 _expandThreshold = peek + (max - peek) / 2;
@@ -645,8 +672,8 @@ class _SuiviBodyState extends State<_SuiviBody> {
                             builder: (context, state) => Text(
                               mode == SuiviMode.suivre
                                   ? l.suiviTrackCameraHint
-                                  : state.forcedStep == 'TRANSIT'
-                                  ? l.suiviForcedTransitCameraHint
+                                  : state.forcedStep != null
+                                  ? l.suiviForcedCameraHint(state.forcedStep!)
                                   : l.suiviValidateCameraHint,
                               key: const Key('suivi-camera-hint'),
                               textAlign: TextAlign.center,
@@ -685,8 +712,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
                                 expanded: _sheetExpanded,
                                 numberFocus: _numberFocus,
                                 onChangeTrip: () => _openTripPicker(hub),
-                                onValidateParcel: (BidModel _, String step) =>
-                                    _openIdentify(step),
+                                onValidateParcel: _validateParcel,
                                 onEnterNumber: _enterNumber,
                                 onSubmitNumber: _submitNumber,
                                 onForceStep: _forceStep,

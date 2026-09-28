@@ -100,69 +100,75 @@ class _TrackNumberFieldState extends State<_TrackNumberField> {
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: TextField(
-            key: const Key('suivi-number-field'),
-            controller: _controller,
-            focusNode: _focusNode,
-            textCapitalization: TextCapitalization.characters,
-            textInputAction: TextInputAction.search,
-            onSubmitted: (_) => _submit(),
-            style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-            decoration: InputDecoration(
-              labelText: l.trackingSearchNumberLabel,
-              hintText: 'DON-XXXXXX', // i18n-ignore — format de numéro
-              prefixIcon: Padding(
-                padding: const EdgeInsets.all(DonySpacing.md),
-                child: DonyIcon('qr-code', size: 18, color: cs.primary),
-              ),
-              filled: true,
-              fillColor: cs.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.lg),
-                borderSide: BorderSide(color: cs.outline),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.lg),
-                borderSide: BorderSide(color: cs.outline),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.lg),
-                borderSide: BorderSide(color: cs.primary, width: 2),
+    // Bouton à la hauteur du champ : IntrinsicHeight + stretch.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: TextField(
+              key: const Key('suivi-number-field'),
+              controller: _controller,
+              focusNode: _focusNode,
+              textCapitalization: TextCapitalization.characters,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => _submit(),
+              // L'erreur d'une recherche précédente ne survit pas à la saisie.
+              onChanged: (_) => context.read<SuiviCubit>().clearSearchError(),
+              style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+              decoration: InputDecoration(
+                labelText: l.trackingSearchNumberLabel,
+                hintText: 'DON-XXXXXX', // i18n-ignore — format de numéro
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.all(DonySpacing.md),
+                  child: DonyIcon('qr-code', size: 18, color: cs.primary),
+                ),
+                filled: true,
+                fillColor: cs.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+                  borderSide: BorderSide(color: cs.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+                  borderSide: BorderSide(color: cs.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+                  borderSide: BorderSide(color: cs.primary, width: 2),
+                ),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: DonySpacing.sm),
-        SizedBox(
-          height: 56,
-          child: FilledButton(
+          const SizedBox(width: DonySpacing.sm),
+          FilledButton(
             key: const Key('suivi-number-submit'),
             onPressed: widget.loading ? null : _submit,
+            // Couleurs du bouton primaire du thème (libellé contrasté en clair
+            // comme en sombre). Largeur minimale bornée : celle du thème est
+            // infinie et cassait la Row.
             style: FilledButton.styleFrom(
-              backgroundColor: DonyColors.ink800,
-              foregroundColor: DonyColors.neutral0,
+              minimumSize: const Size(64, 48),
               padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(DonyRadius.lg),
               ),
             ),
+            // Pas de `style` sur le Text : celui du textTheme porte la couleur
+            // du texte courant et masquait le libellé (bleu nuit sur bleu nuit).
             child: widget.loading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: DonyColors.neutral0,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   )
-                : Text(l.suiviTrackSubmit, style: tt.labelLarge),
+                : Text(l.suiviTrackSubmit),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

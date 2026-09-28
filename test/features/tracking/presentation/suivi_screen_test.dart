@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -33,6 +36,7 @@ import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -320,6 +324,7 @@ void main() {
     String location = '/',
     List<AuthState> authLater = const [],
     bool qrTutorial = false,
+    ThemeMode themeMode = ThemeMode.light,
   }) async {
     final auth = _MockAuthBloc();
     whenListen(
@@ -355,7 +360,6 @@ void main() {
             ),
           ),
         ),
-        stub('/tracking/scan/identify'),
         stub('/profile/help/tutorial/:id'),
         stub('/tracking/offline-queue'),
         stub('/announcements/trips'),
@@ -389,7 +393,12 @@ void main() {
             )..add(const HelpCenterLoadRequested()),
           ),
         ],
+        // Le vrai thème de l'app (app.dart) : ses boutons ont une largeur
+        // minimale infinie, qu'un thème par défaut masquait (recette Redmi).
         child: MaterialApp.router(
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          themeMode: themeMode,
           locale: AppL10n.fr,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -531,7 +540,10 @@ void main() {
       await pump(tester, roles: ['SENDER']);
       await tester.tap(find.byKey(const Key('suivi-shipment-ship-1')));
       await settle(tester);
-      expect(text('Suivi du colis'), findsOneWidget);
+      expect(text('Suivi en lecture seule'), findsOneWidget);
+      // Numéro DON de l'envoi en tête du parcours.
+      expect(find.byKey(const Key('tracking-number')), findsOneWidget);
+      expect(text('Paris → Dakar'), findsWidgets);
     });
 
     testWidgets('lecteur QR plein écran → parcours du colis lu', (
@@ -542,7 +554,7 @@ void main() {
       await settle(tester);
       await tester.tap(text('lire le QR'));
       await settle(tester);
-      expect(text('Suivi du colis'), findsOneWidget);
+      expect(text('Suivi en lecture seule'), findsOneWidget);
     });
 
     testWidgets('numéro trouvé → parcours ; introuvable → erreur', (
@@ -572,13 +584,18 @@ void main() {
       await settle(tester);
       expect(find.byKey(const Key('suivi-search-error')), findsOneWidget);
 
+      // Recette Redmi : l'erreur restait affichée champ vidé puis retapé.
+      await tester.enterText(find.byKey(const Key('suivi-number-field')), '');
+      await settle(tester, rounds: 1);
+      expect(find.byKey(const Key('suivi-search-error')), findsNothing);
+
       await tester.enterText(
         find.byKey(const Key('suivi-number-field')),
         'don-abc123',
       );
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await settle(tester);
-      expect(text('Suivi du colis'), findsOneWidget);
+      expect(text('Suivi en lecture seule'), findsOneWidget);
       expect(text('Lyon → Abidjan'), findsWidgets);
     });
 
@@ -817,7 +834,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key('suivi-follow-parcel')));
       await settle(tester);
-      expect(text('Suivi du colis'), findsOneWidget);
+      expect(text('Suivi en lecture seule'), findsOneWidget);
       expect(
         find.textContaining('Mes envois', findRichText: true),
         findsOneWidget,
@@ -843,23 +860,63 @@ void main() {
       await pump(tester, location: '/?mode=suivre');
       scan!('fatou');
       await settle(tester);
-      expect(text('Suivi du colis'), findsOneWidget);
+      expect(text('Suivi en lecture seule'), findsOneWidget);
     });
 
-    testWidgets('action d\'une ligne → identification', (tester) async {
+    // Recette Redmi : le bouton d'une ligne ouvrait l'ancien écran
+    // « Identifier le colis ». Tout se passe désormais dans l'onglet.
+    testWidgets('bouton Valider le départ → photo, bandeau, envoi MANUAL', (
+      tester,
+    ) async {
       stubDefaultTrips();
       await pump(tester);
 
-      await tester.ensureVisible(find.byKey(const Key('suivi-validate-kadi')));
+      await tapVisible(tester, const Key('suivi-validate-madou'));
+      expect(visited, isNot(contains('/tracking/scan/identify')));
+      // Colis choisi dans la liste : pas de récapitulatif du numéro.
+      expect(text('Valider avec le numéro'), findsNothing);
+      expect(visited.last, '/tracking/scan/photo');
+      expect(lastExtra, {
+        'bidId': 'madou',
+        'etape': 'DEPART',
+        'packageLabel': 'Madou',
+        'returnResult': true,
+      });
+
+      await tester.tap(text('page /tracking/scan/photo'));
       await settle(tester, rounds: 2);
-      await tester.tap(find.byKey(const Key('suivi-validate-kadi')));
+      expect(text('Départ de Madou validé'), findsOneWidget);
+      verifyNeverSubmitted();
+
+      await tester.pump(const Duration(seconds: 5));
+      await settle(tester, rounds: 2);
+      await verifySent(
+        bidId: 'madou',
+        step: 'DEPART',
+        method: ScanMethod.manual,
+        photoPath: '/tmp/colis.jpg',
+        at: _here,
+      );
+    });
+
+    testWidgets('bouton Valider l\'arrivée → parcours photo puis code', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester);
+
+      await tapVisible(tester, const Key('suivi-validate-kadi'));
+      expect(visited, isNot(contains('/tracking/scan/identify')));
+      expect(visited.last, '/tracking/scan/photo');
+      expect(lastExtra, {
+        'bidId': 'kadi',
+        'etape': 'ARRIVEE',
+        'packageLabel': 'Kadi',
+        'scanMethod': ScanMethod.manual,
+      });
+      GoRouter.of(tester.element(find.text('page /tracking/scan/photo'))).pop();
       await settle(tester);
-      expect(visited.last, '/tracking/scan/identify');
-      expect(lastExtra, {'etape': 'ARRIVEE', 'focusNumber': true});
-      GoRouter.of(
-        tester.element(find.text('page /tracking/scan/identify')),
-      ).pop();
-      await settle(tester);
+      expect(cameraPaused?.value, isFalse);
     });
 
     testWidgets('feuille tirée en haut → caméra en pause, Scanner la replie', (
@@ -912,6 +969,101 @@ void main() {
       await tester.tap(text('Voir mes trajets'));
       await settle(tester);
       expect(visited, contains('/announcements/trips'));
+    });
+
+    // Recette Redmi : onglet ouvert avant la publication du trajet et
+    // l'acceptation du colis, gardé vivant par le shell. Au retour, les
+    // colis apparaissent sans relancer l'app, et l'onglet passe en Valider.
+    testWidgets('retour sur l\'onglet → trajets rechargés, Valider', (
+      tester,
+    ) async {
+      stubTrips(const [], const {});
+      await pump(tester);
+      expect(find.byKey(const Key('suivi-mode-suivre')), findsOneWidget);
+      verify(() => annRepo.getMyAnnouncements()).called(1);
+
+      stubDefaultTrips();
+      // Une page poussée par-dessus coupe le TickerMode de l'onglet, comme
+      // l'IndexedStack du shell quand on change d'onglet.
+      unawaited(
+        GoRouter.of(
+          tester.element(find.byKey(const Key('fake-camera'))),
+        ).push('/announcements/trips'),
+      );
+      await settle(tester);
+      GoRouter.of(tester.element(find.text('page /announcements/trips'))).pop();
+      await settle(tester);
+
+      verify(() => annRepo.getMyAnnouncements()).called(1);
+      expect(text('Bobo-Dioulasso → Yaoundé'), findsOneWidget);
+      expect(find.byKey(const Key('suivi-sheet')), findsOneWidget);
+      expect(
+        text(
+          "Scanne le QR d'un colis de ton trajet.\n"
+          "L'étape suivante est validée toute seule.",
+        ),
+        findsOneWidget,
+      );
+    });
+
+    // Recette Redmi : clavier refermé, la feuille dépliée redescendait et
+    // laissait une bande sombre sous « Scanner ».
+    testWidgets('clavier refermé → feuille dépliée recollée sous Scanner', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester);
+      await openNumberField(tester);
+      final top = tester.getTopLeft(find.byKey(const Key('suivi-sheet'))).dy;
+      final strip = tester
+          .getBottomLeft(find.byKey(const Key('suivi-resume-scan')))
+          .dy;
+      expect(top, greaterThanOrEqualTo(strip));
+
+      tester.view.viewInsets = const FakeViewPadding(bottom: 900);
+      addTearDown(tester.view.resetViewInsets);
+      await settle(tester, rounds: 2);
+      tester.view.resetViewInsets();
+      await settle(tester, rounds: 2);
+
+      expect(
+        tester.getTopLeft(find.byKey(const Key('suivi-sheet'))).dy,
+        moreOrLessEquals(top, epsilon: 1),
+      );
+    });
+
+    testWidgets('app revenue au premier plan → trajets rechargés', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester);
+      verify(() => annRepo.getMyAnnouncements()).called(1);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await settle(tester);
+      verify(() => annRepo.getMyAnnouncements()).called(1);
+    });
+
+    testWidgets('changement de compte → onglet rechargé', (tester) async {
+      stubDefaultTrips();
+      await pump(
+        tester,
+        authLater: [
+          const AuthAuthenticated(
+            UserModel(
+              id: 'u2',
+              roles: ['TRAVELER'],
+              kycStatus: 'APPROVED',
+              status: 'ACTIVE',
+            ),
+          ),
+        ],
+      );
+      verify(() => annRepo.getMyAnnouncements()).called(2);
+      expect(text('Bobo-Dioulasso → Yaoundé'), findsOneWidget);
     });
 
     testWidgets('erreur de chargement → Valider, Réessayer recharge', (
@@ -1124,7 +1276,7 @@ void main() {
       );
     });
 
-    testWidgets('Forcer une étape → identification avec l\'étape', (
+    testWidgets('départ forcé : prochain colis scanné, consigne adaptée', (
       tester,
     ) async {
       stubTransitTrips();
@@ -1136,8 +1288,62 @@ void main() {
       expect(text('Facultatif'), findsOneWidget);
       await tester.tap(find.byKey(const Key('suivi-force-DEPART')));
       await settle(tester);
-      expect(visited.last, '/tracking/scan/identify');
-      expect(lastExtra, {'etape': 'DEPART', 'focusNumber': true});
+      expect(visited, isEmpty);
+      expect(
+        text(
+          'Départ forcé : scanne le colis à valider.\n'
+          "L'étape repasse ensuite en automatique.",
+        ),
+        findsOneWidget,
+      );
+
+      // Départ déjà validé : message, l'étape reste forcée.
+      scan!('sali');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(text('Le départ de Sali est déjà validé.'), findsOneWidget);
+      await settle(tester, rounds: 12);
+
+      scan!('madou');
+      await settle(tester);
+      expect(visited.last, '/tracking/scan/photo');
+      expect(lastExtra?['etape'], 'DEPART');
+    });
+
+    testWidgets('arrivée forcée : flux de remise, Automatique l\'annule', (
+      tester,
+    ) async {
+      stubTransitTrips();
+      await pump(tester);
+      await openNumberField(tester);
+      await tapVisible(tester, const Key('suivi-force-step'));
+      await tester.tap(find.byKey(const Key('suivi-force-ARRIVEE')));
+      await settle(tester);
+      expect(
+        text(
+          'Arrivée forcée : scanne le colis à remettre.\n'
+          "L'étape repasse ensuite en automatique.",
+        ),
+        findsOneWidget,
+      );
+
+      await openNumberField(tester);
+      expect(text('Étape : arrivée'), findsOneWidget);
+      await tapVisible(tester, const Key('suivi-step-auto'));
+      expect(text('Étape : automatique'), findsOneWidget);
+
+      await tapVisible(tester, const Key('suivi-force-step'));
+      await tester.tap(find.byKey(const Key('suivi-force-ARRIVEE')));
+      await settle(tester);
+      scan!('sali');
+      await settle(tester);
+      expect(visited.last, '/tracking/scan/photo');
+      expect(lastExtra, {
+        'bidId': 'sali',
+        'etape': 'ARRIVEE',
+        'packageLabel': 'Sali',
+        'scanMethod': ScanMethod.qr,
+      });
     });
 
     testWidgets('transit forcé : consigne, puis retour en automatique', (
@@ -1303,6 +1509,12 @@ void main() {
         text('Numéro introuvable. Vérifie-le et réessaie.'),
         findsOneWidget,
       );
+      await tester.enterText(
+        find.byKey(const Key('suivi-validate-number-field')),
+        'DON-NOPE0',
+      );
+      await settle(tester, rounds: 1);
+      expect(text('Numéro introuvable. Vérifie-le et réessaie.'), findsNothing);
 
       await submitNumber(tester, 'DON-PRIVE1');
       expect(text("Ce colis n'est pas lié à ton compte"), findsOneWidget);
@@ -1418,6 +1630,114 @@ void main() {
       await pump(tester);
       expect(find.byKey(const Key('suivi-help')), findsNothing);
     });
+  });
+
+  /// Libellé présent, contraste d'au moins 4,5:1 sur le fond du bouton, et
+  /// bouton aussi haut que son champ.
+  void expectReadableButton(
+    WidgetTester tester, {
+    required Key button,
+    required Key field,
+    required String label,
+  }) {
+    final labelFinder = find.descendant(
+      of: find.byKey(button),
+      matching: find.text(label),
+    );
+    expect(labelFinder, findsOneWidget);
+    final paragraph = tester.renderObject<RenderParagraph>(labelFinder);
+    final textColor = paragraph.text.style!.color!;
+    final background = tester
+        .widget<Material>(
+          find
+              .descendant(
+                of: find.byKey(button),
+                matching: find.byType(Material),
+              )
+              .first,
+        )
+        .color!;
+    final l1 = textColor.computeLuminance();
+    final l2 = background.computeLuminance();
+    final ratio = (math.max(l1, l2) + 0.05) / (math.min(l1, l2) + 0.05);
+    expect(ratio, greaterThanOrEqualTo(4.5), reason: '$label : $ratio');
+    expect(
+      tester.getSize(find.byKey(button)).height,
+      tester.getSize(find.byKey(field)).height,
+    );
+  }
+
+  // Recette Redmi : sous le thème de l'app, les boutons « Suivre » et
+  // « Valider » du champ numéro (largeur minimale infinie dans une Row)
+  // cassaient la mise en page, feuille blanche ou superposée.
+  group('vrai thème de l\'app, clair et sombre', () {
+    for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+      testWidgets('Valider replié puis déplié sur le champ numéro ($mode)', (
+        tester,
+      ) async {
+        stubDefaultTrips();
+        await pump(tester, themeMode: mode);
+        expect(tester.takeException(), isNull);
+        expect(text('Bobo-Dioulasso → Yaoundé'), findsOneWidget);
+        expect(text('QR illisible ? Saisir le numéro'), findsOneWidget);
+
+        await openNumberField(tester);
+        expect(tester.takeException(), isNull);
+        expect(
+          find.byKey(const Key('suivi-validate-number-field')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('suivi-validate-number-submit')),
+          findsOneWidget,
+        );
+        expect(text('Forcer une étape'), findsOneWidget);
+      });
+
+      testWidgets('Suivre un colis ($mode)', (tester) async {
+        stubDefaultTrips();
+        await pump(tester, themeMode: mode, location: '/?mode=suivre');
+        expect(tester.takeException(), isNull);
+        expect(find.byKey(const Key('suivi-number-field')), findsOneWidget);
+        expect(find.byKey(const Key('suivi-number-submit')), findsOneWidget);
+        expect(
+          find.textContaining('Mes envois', findRichText: true),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('boutons Suivre et Valider lisibles, à hauteur du champ '
+          '($mode)', (tester) async {
+        stubDefaultTrips();
+        await pump(tester, themeMode: mode, location: '/?mode=suivre');
+        expectReadableButton(
+          tester,
+          button: const Key('suivi-number-submit'),
+          field: const Key('suivi-number-field'),
+          label: 'Suivre',
+        );
+
+        await tester.tap(find.byKey(const Key('suivi-mode-valider')));
+        await settle(tester);
+        await openNumberField(tester);
+        expectReadableButton(
+          tester,
+          button: const Key('suivi-validate-number-submit'),
+          field: const Key('suivi-validate-number-field'),
+          label: 'Valider',
+        );
+      });
+
+      testWidgets('expéditeur seul ($mode)', (tester) async {
+        await pump(tester, roles: ['SENDER'], themeMode: mode);
+        expect(tester.takeException(), isNull);
+        expect(find.byKey(const Key('suivi-number-field')), findsOneWidget);
+        expect(
+          find.textContaining('Mes envois', findRichText: true),
+          findsOneWidget,
+        );
+      });
+    }
   });
 }
 

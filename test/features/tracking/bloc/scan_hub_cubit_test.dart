@@ -487,6 +487,75 @@ void main() {
       act: (c) => c.load(silent: true),
       expect: () => [isA<ScanHubLoading>(), isA<ScanHubLoaded>()],
     );
+
+    // Recette Redmi : onglet ouvert avant le premier trajet, gardé vivant
+    // par le shell. Le retour sur l'onglet doit faire apparaître les colis.
+    blocTest<ScanHubCubit, ScanHubState>(
+      'depuis « Rien à valider » : colis affichés sans chargement',
+      build: () {
+        when(() => annRepo.getMyAnnouncements()).thenAnswer(
+          (_) async => (announcements: <AnnouncementModel>[], totalElements: 0),
+        );
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) async {
+        await c.load();
+        twoTrips();
+        await c.load(silent: true);
+      },
+      skip: 2,
+      expect: () => [isA<ScanHubLoaded>()],
+    );
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      'depuis « Rien à valider », un échec s\'affiche en erreur',
+      build: () {
+        when(() => annRepo.getMyAnnouncements()).thenAnswer(
+          (_) async => (announcements: <AnnouncementModel>[], totalElements: 0),
+        );
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) async {
+        await c.load();
+        when(
+          () => annRepo.getMyAnnouncements(),
+        ).thenThrow(Exception('offline'));
+        await c.load(silent: true);
+      },
+      skip: 2,
+      expect: () => [isA<ScanHubError>()],
+    );
+
+    test('deux rechargements silencieux simultanés : un seul appel', () async {
+      twoTrips();
+      final cubit = ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      await cubit.load();
+      clearInteractions(annRepo);
+      await Future.wait([cubit.load(silent: true), cubit.load(silent: true)]);
+      verify(() => annRepo.getMyAnnouncements()).called(1);
+      await cubit.load(silent: true);
+      verify(() => annRepo.getMyAnnouncements()).called(1);
+      await cubit.close();
+    });
+
+    test('résultat arrivé après la fermeture : ignoré', () async {
+      final pending =
+          Completer<
+            ({List<AnnouncementModel> announcements, int totalElements})
+          >();
+      when(
+        () => annRepo.getMyAnnouncements(),
+      ).thenAnswer((_) => pending.future);
+      final cubit = ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      final loading = cubit.load();
+      await cubit.close();
+      pending.complete((
+        announcements: <AnnouncementModel>[],
+        totalElements: 0,
+      ));
+      await loading;
+      expect(cubit.state, isA<ScanHubLoading>());
+    });
   });
 
   test('selectTrip trace suivi_trip_changed avec sa source', () async {

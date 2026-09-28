@@ -16808,23 +16808,11 @@ abstract class AppLocalizations {
   /// **'contestez d\'abord'**
   String get receptionContestFirst;
 
-  /// Titre de la sheet showTrackingTimelineSheet (tracking_timeline_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Suivi du colis'**
-  String get trackingTimelineTitle;
-
   /// Bouton sticky de la sheet showTrackingTimelineSheet, visible seulement si onShareTracking est fourni (tracking_timeline_bottom_sheet.dart).
   ///
   /// In fr, this message translates to:
   /// **'Partager le suivi'**
   String get trackingTimelineShare;
-
-  /// En-tête de section de la frise d'événements (tracking_timeline_bottom_sheet.dart, _Timeline).
-  ///
-  /// In fr, this message translates to:
-  /// **'ÉTAPES'**
-  String get trackingTimelineStepsHeader;
 
   /// Libellé complet de l'étape DEPART d'un événement de suivi (extension TrackingEventL10n, tracking_labels.dart) — distinct de trackingStepDeparture (« Départ » seul, écrans de lecture).
   ///
@@ -16850,12 +16838,6 @@ abstract class AppLocalizations {
   /// **'Lieu GPS enregistré'**
   String get trackingGpsRecorded;
 
-  /// Badge d'un événement de suivi ayant un offlineTimestamp (tracking_timeline_bottom_sheet.dart, _TimelineItem).
-  ///
-  /// In fr, this message translates to:
-  /// **'Lecture hors-ligne synchronisée'**
-  String get trackingOfflineScanSynced;
-
   /// Provenance d'une étape du suivi : QR du colis scanné (tracking_timeline_bottom_sheet.dart, _TimelineItem).
   ///
   /// In fr, this message translates to:
@@ -16873,42 +16855,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Validé avec le numéro'**
   String get trackingValidatedByNumber;
-
-  /// Titre du bandeau affiché tant qu'aucun événement ARRIVEE n'est enregistré (tracking_timeline_bottom_sheet.dart, _PendingConfirmationBanner).
-  ///
-  /// In fr, this message translates to:
-  /// **'En attente de confirmation'**
-  String get trackingAwaitingConfirmationTitle;
-
-  /// Description du bandeau _PendingConfirmationBanner (tracking_timeline_bottom_sheet.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Le destinataire doit confirmer la réception via le code SMS.'**
-  String get trackingAwaitingConfirmationDesc;
-
-  /// Titre de la frise vide, avant tout événement (tracking_timeline_bottom_sheet.dart, _EmptyTimeline).
-  ///
-  /// In fr, this message translates to:
-  /// **'En attente de la lecture au départ'**
-  String get trackingEmptyTimelineTitle;
-
-  /// Description de la frise vide (tracking_timeline_bottom_sheet.dart, _EmptyTimeline).
-  ///
-  /// In fr, this message translates to:
-  /// **'Le voyageur lira le QR code lors de la remise du colis.'**
-  String get trackingEmptyTimelineDesc;
-
-  /// Titre du bandeau « pas besoin d'app » (tracking_timeline_bottom_sheet.dart, _ApplessBanner).
-  ///
-  /// In fr, this message translates to:
-  /// **'Pas besoin d\'app !'**
-  String get trackingApplessTitle;
-
-  /// Message complet du bandeau _ApplessBanner (tracking_timeline_bottom_sheet.dart) — l'ancien paramètre travelerName valait toujours le littéral « le voyageur » (seul appelant), donc intégré tel quel dans le message plutôt que fragmenté.
-  ///
-  /// In fr, this message translates to:
-  /// **'Quand le voyageur sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.'**
-  String get trackingApplessMessage;
 
   /// Titre de la sheet CancellationBottomSheet.show (cancellation_bottom_sheet.dart).
   ///
@@ -23892,41 +23838,101 @@ abstract class AppLocalizations {
   /// **'Facultatif'**
   String get trackingStepOptional;
 
-  /// Fin en gras de la ligne « Étape : … » quand le transit est forcé (suivi_validate_content.dart, _StepModeRow).
-  ///
-  /// In fr, this message translates to:
-  /// **'transit, facultatif'**
-  String get suiviStepModeTransit;
-
   /// Bouton qui annule le transit forcé (suivi_validate_content.dart, _StepModeRow).
   ///
   /// In fr, this message translates to:
   /// **'Automatique'**
   String get suiviStepModeBackToAuto;
 
-  /// Explication du transit forcé (suivi_validate_content.dart, _StepModeRow).
+  /// Fin en gras de la ligne « Étape : … » quand une étape est forcée (suivi_validate_content.dart, _StepModeRow). {step} : DEPART, TRANSIT ou ARRIVEE.
   ///
   /// In fr, this message translates to:
-  /// **'Le prochain colis scanné ou saisi valide son transit, puis l\'étape repasse en automatique.'**
-  String get suiviStepModeTransitHelp;
+  /// **'{step, select, DEPART{départ} TRANSIT{transit, facultatif} other{arrivée}}'**
+  String suiviStepModeForced(String step);
 
-  /// Consigne sous le cadre caméra quand le transit est forcé (suivi_screen.dart).
+  /// Explication de l'étape forcée (suivi_validate_content.dart, _StepModeRow).
   ///
   /// In fr, this message translates to:
-  /// **'Transit facultatif : scanne le colis à valider.\nL\'étape repasse ensuite en automatique.'**
-  String get suiviForcedTransitCameraHint;
+  /// **'Le prochain colis scanné ou saisi valide {step, select, DEPART{son départ, avec une photo} TRANSIT{son transit} other{son arrivée, avec la photo puis le code du destinataire}}, puis l\'étape repasse en automatique.'**
+  String suiviStepModeForcedHelp(String step);
 
-  /// Transit forcé sur un colis pas encore parti (suivi_screen.dart).
+  /// Consigne sous le cadre caméra quand une étape est forcée (suivi_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{step, select, DEPART{Départ forcé : scanne le colis à valider.} TRANSIT{Transit facultatif : scanne le colis à valider.} other{Arrivée forcée : scanne le colis à remettre.}}\nL\'étape repasse ensuite en automatique.'**
+  String suiviForcedCameraHint(String step);
+
+  /// Transit ou arrivée forcés sur un colis pas encore parti (suivi_screen.dart).
   ///
   /// In fr, this message translates to:
   /// **'Valide d\'abord le départ de {parcel}.'**
-  String suiviTransitNeedsDepart(String parcel);
+  String suiviStepNeedsDepart(String parcel);
 
-  /// Transit forcé sur un colis dont le transit est déjà fait (suivi_screen.dart).
+  /// Départ ou transit forcés sur un colis où cette étape est déjà faite (suivi_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le transit de {parcel} est déjà validé.'**
-  String suiviTransitAlreadyDone(String parcel);
+  /// **'{step, select, DEPART{Le départ de {parcel} est déjà validé.} other{Le transit de {parcel} est déjà validé.}}'**
+  String suiviStepAlreadyDone(String step, String parcel);
+
+  /// En-tête de la feuille du parcours d'un colis, avec l'icône œil (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi en lecture seule'**
+  String get trackingReadOnlyLabel;
+
+  /// Phrase d'état en titre : aucune étape encore validée (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de la remise au voyageur'**
+  String get trackingHeadlineAwaitingHandover;
+
+  /// Phrase d'état en titre : colis parti, ville d'arrivée connue (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En route vers {city}'**
+  String trackingHeadlineOnTheWayTo(String city);
+
+  /// Phrase d'état sans ville d'arrivée, et étape en cours de la frise entre le départ et la remise (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'En route'**
+  String get trackingHeadlineOnTheWay;
+
+  /// Phrase d'état en titre : remise au destinataire validée (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis remis au destinataire'**
+  String get trackingHeadlineDelivered;
+
+  /// Étape faite de la frise : événement DEPART (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remis au voyageur'**
+  String get trackingStepHandedToTraveler;
+
+  /// Étape faite de la frise : événement ARRIVEE (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remis au destinataire'**
+  String get trackingStepHandedToRecipient;
+
+  /// Étape en cours de la frise, avant tout événement (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise au voyageur'**
+  String get trackingStepHandoverToTraveler;
+
+  /// Dernière étape à venir de la frise (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise au destinataire'**
+  String get trackingStepHandoverToRecipient;
+
+  /// Libellé d'accessibilité de la miniature photo d'une étape (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo de l\'étape'**
+  String get trackingStepPhotoLabel;
 }
 
 class _AppLocalizationsDelegate

@@ -78,18 +78,34 @@ class ScanHubCubit extends Cubit<ScanHubState> {
   final AnalyticsService _analytics;
   final TrackingRepository _trackingRepo;
 
+  /// Un rechargement peut finir après la fermeture de l'onglet (changement
+  /// de compte ou de profil) : son résultat est alors ignoré.
+  @override
+  void emit(ScanHubState state) {
+    if (!isClosed) super.emit(state);
+  }
+
+  /// Rechargement silencieux en cours : un retour sur l'onglet pendant
+  /// l'appel n'en relance pas un second.
+  bool _silentLoading = false;
+
   /// Charge les trajets scannables et leurs colis.
   ///
-  /// [silent] : rafraîchissement après une étape validée. L'écran garde son
-  /// contenu pendant l'appel (pas d'état de chargement, donc pas de caméra
-  /// démontée), et un échec laisse les données déjà affichées. Le trajet
-  /// sélectionné est conservé tant qu'il reste scannable.
+  /// [silent] : rafraîchissement (étape validée, retour sur l'onglet). L'écran
+  /// garde son contenu pendant l'appel (pas d'état de chargement, donc pas de
+  /// caméra démontée), et un échec laisse les colis déjà affichés. Un échec
+  /// depuis « Rien à valider » s'affiche en erreur : jamais un vide trompeur.
+  /// Le trajet sélectionné est conservé tant qu'il reste scannable.
   Future<void> load({bool silent = false}) async {
+    if (silent && _silentLoading) return;
     final previous = state;
     final keepTripId = previous is ScanHubLoaded
         ? previous.selectedTripId
         : null;
-    if (!silent || previous is! ScanHubLoaded) emit(const ScanHubLoading());
+    final keepContent =
+        silent && (previous is ScanHubLoaded || previous is ScanHubEmpty);
+    if (!keepContent) emit(const ScanHubLoading());
+    _silentLoading = silent;
     try {
       final result = await _announcementRepo.getMyAnnouncements();
       final trips = selectScannableTrips(result.announcements);
@@ -121,6 +137,8 @@ class ScanHubCubit extends Cubit<ScanHubState> {
     } catch (e) {
       if (silent && previous is ScanHubLoaded) return;
       emit(ScanHubError(unwrapDioError(e)));
+    } finally {
+      if (silent) _silentLoading = false;
     }
   }
 

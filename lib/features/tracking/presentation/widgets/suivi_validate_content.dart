@@ -64,7 +64,8 @@ class SuiviValidateContent extends StatelessWidget {
   final FocusNode numberFocus;
   final VoidCallback onChangeTrip;
 
-  /// Action d'une ligne colis : ouvre l'identification pour son [step].
+  /// Action d'une ligne colis : valide son [step] (photo, puis bandeau
+  /// « Annuler » ou code du destinataire pour l'arrivée).
   final void Function(BidModel bid, String step) onValidateParcel;
 
   /// « QR illisible ? Saisir le numéro » : déplie la feuille sur le champ.
@@ -114,8 +115,8 @@ class SuiviValidateContent extends StatelessWidget {
 }
 
 /// « Étape : automatique », repliable sur son explication, et « Forcer une
-/// étape » pour rattraper un oubli. Transit forcé : « Étape : transit,
-/// facultatif » et « Automatique » pour revenir.
+/// étape » pour rattraper un oubli. Étape forcée : « Étape : départ » (ou
+/// transit, arrivée) et « Automatique » pour revenir.
 class _StepModeRow extends StatelessWidget {
   const _StepModeRow({required this.onForceStep});
 
@@ -129,7 +130,8 @@ class _StepModeRow extends StatelessWidget {
     return BlocBuilder<SuiviCubit, SuiviState>(
       buildWhen: (a, b) => a.forcedStep != b.forcedStep,
       builder: (context, state) {
-        final forced = state.forcedStep != null;
+        final forcedStep = state.forcedStep;
+        final forced = forcedStep != null;
         return Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
@@ -143,7 +145,9 @@ class _StepModeRow extends StatelessWidget {
                 text: l.suiviStepModeLabel,
                 children: [
                   TextSpan(
-                    text: forced ? l.suiviStepModeTransit : l.suiviStepModeAuto,
+                    text: forced
+                        ? l.suiviStepModeForced(forcedStep)
+                        : l.suiviStepModeAuto,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: forced ? DonyColors.accent : null,
@@ -169,7 +173,9 @@ class _StepModeRow extends StatelessWidget {
             ),
             children: [
               Text(
-                forced ? l.suiviStepModeTransitHelp : l.suiviStepModeHelp,
+                forced
+                    ? l.suiviStepModeForcedHelp(forcedStep)
+                    : l.suiviStepModeHelp,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],
@@ -228,39 +234,44 @@ class _ValidateNumberFieldState extends State<_ValidateNumberField> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    key: const Key('suivi-validate-number-field'),
-                    controller: _controller,
-                    focusNode: widget.focusNode,
-                    textCapitalization: TextCapitalization.characters,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _submit(),
-                    style: tt.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontFeatures: _tabular,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: l.suiviNumberHint,
-                      filled: true,
-                      fillColor: cs.surface,
-                      border: border,
-                      enabledBorder: border,
-                      focusedBorder: border.copyWith(
-                        borderSide: BorderSide(color: cs.primary, width: 2),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      key: const Key('suivi-validate-number-field'),
+                      controller: _controller,
+                      focusNode: widget.focusNode,
+                      textCapitalization: TextCapitalization.characters,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _submit(),
+                      // L'erreur d'un numéro précédent ne survit pas à la saisie.
+                      onChanged: (_) =>
+                          context.read<SuiviCubit>().clearNumberError(),
+                      style: tt.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: _tabular,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: l.suiviNumberHint,
+                        filled: true,
+                        fillColor: cs.surface,
+                        border: border,
+                        enabledBorder: border,
+                        focusedBorder: border.copyWith(
+                          borderSide: BorderSide(color: cs.primary, width: 2),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                SizedBox(
-                  height: 52,
-                  child: FilledButton(
+                  const SizedBox(width: DonySpacing.sm),
+                  FilledButton(
                     key: const Key('suivi-validate-number-submit'),
                     onPressed: loading ? null : _submit,
                     style: FilledButton.styleFrom(
+                      // Largeur minimale bornée : celle du thème est infinie.
+                      minimumSize: const Size(64, 48),
                       padding: const EdgeInsets.symmetric(
                         horizontal: DonySpacing.lg,
                       ),
@@ -268,6 +279,7 @@ class _ValidateNumberFieldState extends State<_ValidateNumberField> {
                         borderRadius: BorderRadius.circular(DonyRadius.lg),
                       ),
                     ),
+                    // Sans `style` : la couleur du bouton primaire s'applique.
                     child: loading
                         ? SizedBox(
                             width: 18,
@@ -277,10 +289,10 @@ class _ValidateNumberFieldState extends State<_ValidateNumberField> {
                               color: cs.onPrimary,
                             ),
                           )
-                        : Text(l.suiviNumberSubmit, style: tt.labelLarge),
+                        : Text(l.suiviNumberSubmit),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             if (error is ForbiddenException) ...[
               const SizedBox(height: DonySpacing.md),

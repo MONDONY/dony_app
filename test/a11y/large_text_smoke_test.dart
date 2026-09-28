@@ -891,7 +891,10 @@ Widget _suiviHarness(List<String> roles, {SuiviMode? mode}) {
         )..add(const HelpCenterLoadRequested()),
       ),
     ],
+    // Vrai thème : ses boutons ont une largeur minimale infinie, qu'un
+    // thème par défaut masquait (bouton « Suivre » hors de toute mise en page).
     child: MaterialApp.router(
+      theme: AppTheme.light(),
       routerConfig: GoRouter(
         routes: [
           GoRoute(
@@ -1136,12 +1139,15 @@ void main() {
         _suiviHarness(['SENDER', 'TRAVELER'], mode: SuiviMode.suivre),
       );
       expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('suivi-number-field')), findsOneWidget);
     });
 
     testWidgets('suivi : expéditeur sans caméra', (tester) async {
       registerFallbackValue(<String>{});
       await pumpAt200(tester, _suiviHarness(['SENDER']));
       expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('suivi-number-field')), findsOneWidget);
+      expect(find.byKey(const Key('suivi-number-submit')), findsOneWidget);
     });
 
     testWidgets('vos informations', (tester) async {

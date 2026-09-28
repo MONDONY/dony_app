@@ -900,8 +900,8 @@ void main() {
         await tester.tap(find.text('Suivi du colis'));
         await tester.pumpAndSettle();
 
-        // Le sheet de suivi doit être ouvert (titre visible).
-        expect(find.text('Suivi du colis'), findsWidgets);
+        // La feuille de suivi en lecture seule est ouverte.
+        expect(find.text('Suivi en lecture seule'), findsOneWidget);
       },
     );
 

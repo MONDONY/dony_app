@@ -1,5 +1,6 @@
+import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -9,7 +10,6 @@ import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bo
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
@@ -22,22 +22,29 @@ TrackingEventModel _event(
   String type, {
   DateTime? scannedAt,
   ScanMethod? scanMethod,
+  String? gpsLabel,
+  String? photoUrl,
 }) => TrackingEventModel(
   id: 'evt-$type',
   bidId: 'bid-1',
   eventType: type,
-  scannedAt: scannedAt ?? DateTime(2026, 6, 20, 10),
-  createdAt: scannedAt ?? DateTime(2026, 6, 20, 10),
+  scannedAt: scannedAt ?? DateTime(2026, 9, 22, 9, 12),
+  createdAt: scannedAt ?? DateTime(2026, 9, 22, 9, 12),
   scanMethod: scanMethod,
+  gpsLabel: gpsLabel,
+  photoUrl: photoUrl,
 );
 
-/// Ouvre la sheet de suivi avec un TrackingBloc mocké injecté via GetIt
-/// (c'est `showTrackingTimelineSheet` qui l'instancie lui-même).
+/// Ouvre la feuille avec un TrackingBloc mocké injecté via GetIt (c'est
+/// `showTrackingTimelineSheet` qui l'instancie), sous le vrai thème.
 Future<void> _openSheet(
   WidgetTester tester,
   TrackingBloc bloc, {
   String? arrivalInstructions,
   String corridor = 'Paris → Dakar',
+  String? trackingNumber = 'DON-4K7Q2M',
+  VoidCallback? onShare,
+  ThemeMode themeMode = ThemeMode.light,
   bool settle = true,
 }) async {
   if (getIt.isRegistered<TrackingBloc>()) {
@@ -52,6 +59,9 @@ Future<void> _openSheet(
 
   await tester.pumpWidget(
     MaterialApp(
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
       home: Builder(
         builder: (ctx) => Scaffold(
           body: TextButton(
@@ -59,7 +69,9 @@ Future<void> _openSheet(
               ctx,
               bidId: 'bid-1',
               corridor: corridor,
+              trackingNumber: trackingNumber,
               arrivalInstructions: arrivalInstructions,
+              onShareTracking: onShare,
             ),
             child: const Text('Ouvrir'),
           ),
@@ -82,6 +94,7 @@ void main() {
   setUpAll(() async {
     registerFallbackValue(_FakeTrackingEvent());
     await initializeDateFormatting('fr');
+    await initializeDateFormatting('en');
   });
 
   late TrackingBloc bloc;
@@ -93,132 +106,166 @@ void main() {
     when(() => bloc.close()).thenAnswer((_) async {});
   });
 
-  testWidgets('affiche le chargement', (tester) async {
-    when(() => bloc.state).thenReturn(TrackingEventsLoading());
+  Finder steps(String state) =>
+      find.byKey(Key('tracking-step-$state'), skipOffstage: false);
 
+  testWidgets('chargement : en-tête lecture seule et indicateur', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(TrackingEventsLoading());
     await _openSheet(tester, bloc, settle: false);
 
+    expect(find.text('Suivi en lecture seule'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    verify(() => bloc.add(any(that: isA<TrackingEventsRequested>()))).called(1);
   });
 
-  testWidgets('affiche la carte corridor quand les étapes sont chargées', (
+  for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+    testWidgets('colis en route : numéro, phrase d\'état, frise ($mode)', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        TrackingEventsLoaded([
+          _event(
+            'DEPART',
+            scanMethod: ScanMethod.qr,
+            gpsLabel: 'Paris 11e',
+            photoUrl: 'https://example.com/depart.jpg',
+          ),
+        ]),
+      );
+      await _openSheet(tester, bloc, themeMode: mode, onShare: () {});
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('DON-4K7Q2M'), findsOneWidget);
+      expect(find.text('En route vers Dakar'), findsOneWidget);
+      expect(find.text('Paris → Dakar'), findsOneWidget);
+      // Faite : remise au voyageur, heure, lieu, provenance, photo.
+      expect(steps('done'), findsOneWidget);
+      expect(find.text('Remis au voyageur'), findsOneWidget);
+      expect(find.text('22 sept. 09:12'), findsOneWidget);
+      expect(find.text('Paris 11e · Validé par scan du QR'), findsOneWidget);
+      expect(find.bySemanticsLabel("Photo de l'étape"), findsOneWidget);
+      // En cours puis à venir.
+      expect(steps('current'), findsOneWidget);
+      expect(find.text('En route'), findsOneWidget);
+      expect(steps('upcoming'), findsOneWidget);
+      expect(find.text('Remise au destinataire'), findsOneWidget);
+      // Transit facultatif, jamais scanné : absent.
+      expect(find.text('Transit'), findsNothing);
+      // Anciens éléments refusés.
+      expect(find.textContaining('4 chiffres'), findsNothing);
+      expect(find.text('Pas besoin d\'app !'), findsNothing);
+      expect(find.text('Partager le suivi'), findsOneWidget);
+    });
+  }
+
+  testWidgets('aucune étape : attente de la remise au voyageur', (
     tester,
   ) async {
-    when(() => bloc.state).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
+    when(() => bloc.state).thenReturn(TrackingEventsLoaded(const []));
+    await _openSheet(tester, bloc, trackingNumber: null);
 
-    await _openSheet(tester, bloc);
-
-    expect(find.byType(RouteMapCard), findsOneWidget);
-    expect(find.text('ÉTAPES'), findsOneWidget);
+    expect(find.text('En attente de la remise au voyageur'), findsOneWidget);
+    expect(find.byKey(const Key('tracking-number')), findsNothing);
+    expect(steps('done'), findsNothing);
+    expect(steps('current'), findsOneWidget);
+    expect(find.text('Remise au voyageur'), findsOneWidget);
+    expect(steps('upcoming'), findsNWidgets(2));
+    expect(find.text('Départ'), findsOneWidget);
+    expect(find.text('Remise au destinataire'), findsOneWidget);
   });
 
-  testWidgets('provenance de chaque étape, rien si inconnue', (tester) async {
+  testWidgets('transit scanné et remise faite : colis remis, sans à venir', (
+    tester,
+  ) async {
     when(() => bloc.state).thenReturn(
       TrackingEventsLoaded([
-        _event('DEPART', scanMethod: ScanMethod.qr),
-        _event('TRANSIT', scanMethod: ScanMethod.manual),
-        _event('ARRIVEE'),
+        _event('ARRIVEE', scannedAt: DateTime(2026, 9, 24, 18)),
+        _event(
+          'TRANSIT',
+          scannedAt: DateTime(2026, 9, 23, 7),
+          scanMethod: ScanMethod.manual,
+        ),
+        _event('DEPART', scannedAt: DateTime(2026, 9, 22, 9)),
       ]),
     );
-
     await _openSheet(tester, bloc);
 
-    expect(find.text('Validé par scan du QR'), findsOneWidget);
+    expect(find.text('Colis remis au destinataire'), findsOneWidget);
+    expect(steps('done'), findsNWidgets(3));
+    expect(steps('current'), findsNothing);
+    expect(steps('upcoming'), findsNothing);
+    expect(find.text('Transit'), findsOneWidget);
     expect(find.text('Validé avec le numéro'), findsOneWidget);
-    expect(find.byKey(const Key('tracking-step-method')), findsNWidgets(2));
+    expect(find.byKey(const Key('tracking-step-method')), findsOneWidget);
+    // Ordre chronologique, quel que soit l'ordre reçu.
+    final y = [
+      'Remis au voyageur',
+      'Transit',
+      'Remis au destinataire',
+    ].map((t) => tester.getTopLeft(find.text(t)).dy).toList();
+    expect(y, [...y]..sort());
   });
 
-  testWidgets('corridor inconnu (colis lu par QR) : pas de carte', (
+  testWidgets('corridor inconnu (colis lu par QR) : phrase sans ville', (
     tester,
   ) async {
     when(() => bloc.state).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
-
     await _openSheet(tester, bloc, corridor: '');
 
-    expect(find.byType(RouteMapCard), findsNothing);
-    expect(find.text('ÉTAPES'), findsOneWidget);
+    expect(find.text('En route'), findsNWidgets(2));
+    expect(find.text('Paris → Dakar'), findsNothing);
   });
 
-  // Régression finale F : 'dd/MM/yyyy à HH:mm' fixe → commonDateAtTime avec
-  // DateFormat.yMd/.jm(localeName). Rendu fr identique à l'ancien motif.
-  testWidgets('event date and time render like the old fr pattern', (
+  testWidgets('sans partage : pas de bouton', (tester) async {
+    when(() => bloc.state).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
+    await _openSheet(tester, bloc);
+    expect(find.byKey(const Key('tracking-share')), findsNothing);
+  });
+
+  testWidgets('Partager le suivi appelle le partage ; la croix ferme', (
     tester,
   ) async {
-    final date = DateTime(2026, 10, 6, 14, 5);
-    when(
-      () => bloc.state,
-    ).thenReturn(TrackingEventsLoaded([_event('DEPART', scannedAt: date)]));
+    var shared = 0;
+    when(() => bloc.state).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
+    await _openSheet(tester, bloc, onShare: () => shared++);
 
-    await _openSheet(tester, bloc);
+    await tester.tap(find.byKey(const Key('tracking-share')));
+    expect(shared, 1);
 
-    expect(find.text('06/10/2026 à 14:05'), findsOneWidget);
+    await tester.tap(find.byTooltip('Fermer'));
+    await tester.pumpAndSettle();
+    expect(find.text('Suivi en lecture seule'), findsNothing);
   });
 
-  testWidgets('event date and time render in English', (tester) async {
-    useEnglish();
-    final date = DateTime(2026, 10, 6, 14, 5);
+  testWidgets('erreur : message et Réessayer relance le chargement', (
+    tester,
+  ) async {
     when(
       () => bloc.state,
-    ).thenReturn(TrackingEventsLoaded([_event('DEPART', scannedAt: date)]));
-
+    ).thenReturn(TrackingEventsError(const NetworkException('hors ligne')));
     await _openSheet(tester, bloc);
 
-    final expected =
-        '${DateFormat.yMd('en').format(date)} at ${DateFormat.jm('en').format(date)}';
-    expect(find.text(expected), findsOneWidget);
+    await tester.tap(find.text('Réessayer'));
+    verify(() => bloc.add(any(that: isA<TrackingEventsRequested>()))).called(2);
+  });
+
+  testWidgets('403 : colis non lié au compte, sans Réessayer', (tester) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(TrackingEventsError(const ForbiddenException()));
+    await _openSheet(tester, bloc);
+
+    expect(find.text('Réessayer'), findsNothing);
+    expect(find.text("Ce colis n'est pas lié à ton compte"), findsOneWidget);
   });
 
   group('instructions de retrait', () {
-    testWidgets('bandeau affiché quand arrivé et instructions présentes', (
-      tester,
-    ) async {
-      when(
-        () => bloc.state,
-      ).thenReturn(TrackingEventsLoaded([_event('DEPART'), _event('ARRIVEE')]));
-
-      await _openSheet(
-        tester,
-        bloc,
-        arrivalInstructions: 'Métro Châtelet, sortie 3',
-      );
-
-      expect(find.text('Instructions de retrait'), findsOneWidget);
-      expect(find.textContaining('Métro Châtelet'), findsOneWidget);
-    });
-
-    testWidgets('bandeau absent quand les instructions sont nulles', (
-      tester,
-    ) async {
-      when(
-        () => bloc.state,
-      ).thenReturn(TrackingEventsLoaded([_event('ARRIVEE')]));
-
-      await _openSheet(tester, bloc);
-
-      expect(find.text('Instructions de retrait'), findsNothing);
-    });
-
-    testWidgets('bandeau absent quand les instructions sont vides', (
-      tester,
-    ) async {
-      when(
-        () => bloc.state,
-      ).thenReturn(TrackingEventsLoaded([_event('ARRIVEE')]));
-
-      await _openSheet(tester, bloc, arrivalInstructions: '   ');
-
-      expect(find.text('Instructions de retrait'), findsNothing);
-    });
-
-    // ARRIVEE n'existe qu'à la confirmation de livraison (code du
-    // destinataire) : conditionner le bandeau à cet événement ne montrait les
-    // instructions qu'une fois le colis déjà récupéré.
-    testWidgets('bandeau affiché avant la livraison, avec l\'attente de '
-        'confirmation', (tester) async {
+    testWidgets('affichées avant la remise', (tester) async {
       when(
         () => bloc.state,
       ).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
-
       await _openSheet(
         tester,
         bloc,
@@ -227,19 +274,26 @@ void main() {
 
       expect(find.text('Instructions de retrait'), findsOneWidget);
       expect(find.text('Métro Châtelet, sortie 3'), findsOneWidget);
-      expect(find.text('En attente de confirmation'), findsOneWidget);
+    });
+
+    testWidgets('absentes quand vides', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(TrackingEventsLoaded([_event('ARRIVEE')]));
+      await _openSheet(tester, bloc, arrivalInstructions: '   ');
+
+      expect(find.text('Instructions de retrait'), findsNothing);
     });
   });
 
-  testWidgets('titre et étapes traduits en anglais', (tester) async {
+  testWidgets('en anglais', (tester) async {
     useEnglish();
     when(() => bloc.state).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
-
     await _openSheet(tester, bloc);
 
-    expect(find.text('Parcel tracking'), findsOneWidget);
-    expect(find.text('STEPS'), findsOneWidget);
-    expect(find.text('Departure confirmed'), findsOneWidget);
-    expect(find.text('No app needed!'), findsOneWidget);
+    expect(find.text('Read-only tracking'), findsOneWidget);
+    expect(find.text('On the way to Dakar'), findsOneWidget);
+    expect(find.text('Handed to the traveler'), findsOneWidget);
+    expect(find.text('Handover to the recipient'), findsOneWidget);
   });
 }
