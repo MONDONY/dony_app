@@ -20,6 +20,7 @@ import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_c
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -198,6 +199,43 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       expect(find.text('Aucune négociation'), findsOneWidget);
+    });
+
+    // Un compte neuf restait devant un écran vide et inerte (rage clicks
+    // PostHog du 27/09) : l'état vide propose désormais d'aller chercher un
+    // trajet.
+    testWidgets('l\'état vide mène à la recherche de trajets', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationListState(status: NegotiationListStatus.loaded));
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => MultiBlocProvider(
+              providers: [
+                BlocProvider<NegotiationListBloc>.value(value: bloc),
+                BlocProvider<BidNegotiationListBloc>.value(value: tripBloc),
+                BlocProvider<AuthBloc>.value(value: authBloc),
+              ],
+              child: const Scaffold(body: MyNegotiationsBody()),
+            ),
+          ),
+          GoRoute(
+            path: '/home',
+            builder: (_, _) => const Scaffold(body: Text('Recherche')),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Rechercher un trajet'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Recherche'), findsOneWidget);
     });
 
     testWidgets(

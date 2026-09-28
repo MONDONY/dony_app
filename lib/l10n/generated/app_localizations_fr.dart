@@ -6049,6 +6049,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tes négociations actives apparaîtront ici dès qu\'un voyageur fait une offre.';
 
   @override
+  String get negotiationEmptySearchTripAction => 'Rechercher un trajet';
+
+  @override
   String get negotiationSearchHint => 'Voyageur, ville…';
 
   @override

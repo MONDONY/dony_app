@@ -6023,6 +6023,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your active negotiations will show up here as soon as a traveler makes an offer.';
 
   @override
+  String get negotiationEmptySearchTripAction => 'Search for a trip';
+
+  @override
   String get negotiationSearchHint => 'Traveler, city…';
 
   @override
