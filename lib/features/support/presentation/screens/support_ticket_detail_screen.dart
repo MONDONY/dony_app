@@ -49,60 +49,71 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
           ),
         ),
       ),
-      body: BlocConsumer<SupportBloc, SupportState>(
-        listener: (context, state) {
-          if (state.sendStatus == SupportActionStatus.failure) {
-            final message = supportErrorMessage(context.l10n, state);
-            if (message != null) {
-              DonySnackbar.show(
-                context,
-                message: message,
-                type: DonySnackbarType.error,
+      body: BlocListener<SupportBloc, SupportState>(
+        // Message reçu en direct sur ce fil (push au premier plan, bandeau
+        // tu) : le fil est déjà marqué lu, on resynchronise le compteur
+        // global et l'aperçu de la ligne épinglée.
+        listenWhen: (previous, current) =>
+            previous.liveRefreshCount != current.liveRefreshCount,
+        listener: (_, _) => getIt<SupportUnreadCubit>().refresh(),
+        child: BlocConsumer<SupportBloc, SupportState>(
+          listener: (context, state) {
+            if (state.sendStatus == SupportActionStatus.failure) {
+              final message = supportErrorMessage(context.l10n, state);
+              if (message != null) {
+                DonySnackbar.show(
+                  context,
+                  message: message,
+                  type: DonySnackbarType.error,
+                );
+              }
+            }
+            if (state.sendStatus == SupportActionStatus.success) {
+              _messageController.clear();
+            }
+            // À l'ouverture du fil, éteindre la pastille sans attendre le
+            // serveur : le BLoC a déjà marqué les messages comme lus (Task 9).
+            // Le flag _unreadDeducted garantit que le décrément ne s'exécute
+            // qu'une fois par instance d'écran, même si le BLoC réémet un état
+            // `ready` lors d'un cycle sendStatus (submitting → success).
+            if (!_unreadDeducted &&
+                state.detailStatus == SupportViewStatus.ready &&
+                state.ticket != null &&
+                state.ticket!.unreadCount > 0) {
+              _unreadDeducted = true;
+              getIt<SupportUnreadCubit>().decrementBy(
+                state.ticket!.unreadCount,
               );
             }
-          }
-          if (state.sendStatus == SupportActionStatus.success) {
-            _messageController.clear();
-          }
-          // À l'ouverture du fil, éteindre la pastille sans attendre le
-          // serveur : le BLoC a déjà marqué les messages comme lus (Task 9).
-          // Le flag _unreadDeducted garantit que le décrément ne s'exécute
-          // qu'une fois par instance d'écran, même si le BLoC réémet un état
-          // `ready` lors d'un cycle sendStatus (submitting → success).
-          if (!_unreadDeducted &&
-              state.detailStatus == SupportViewStatus.ready &&
-              state.ticket != null &&
-              state.ticket!.unreadCount > 0) {
-            _unreadDeducted = true;
-            getIt<SupportUnreadCubit>().decrementBy(state.ticket!.unreadCount);
-          }
-        },
-        builder: (context, state) => switch (state.detailStatus) {
-          SupportViewStatus.initial || SupportViewStatus.loading =>
-            const Center(child: CircularProgressIndicator()),
-          SupportViewStatus.failure => DonyEmptyState(
-            type: DonyEmptyStateType.error,
-            title: context.l10n.supportTicketNotFoundTitle,
-            // `state.failure` est toujours renseigné dans cette branche :
-            // `supportErrorMessage` n'y rend jamais `null` (relecture finale
-            // H, Mineur #8). Pas de repli.
-            description: supportErrorMessage(context.l10n, state),
-            actionLabel: context.l10n.commonRetry,
-            onAction: () => context.read<SupportBloc>().add(
-              SupportTicketDetailRequested(widget.ticketId),
+          },
+          builder: (context, state) => switch (state.detailStatus) {
+            SupportViewStatus.initial || SupportViewStatus.loading =>
+              const Center(child: CircularProgressIndicator()),
+            SupportViewStatus.failure => DonyEmptyState(
+              type: DonyEmptyStateType.error,
+              title: context.l10n.supportTicketNotFoundTitle,
+              // `state.failure` est toujours renseigné dans cette branche :
+              // `supportErrorMessage` n'y rend jamais `null` (relecture finale
+              // H, Mineur #8). Pas de repli.
+              description: supportErrorMessage(context.l10n, state),
+              actionLabel: context.l10n.commonRetry,
+              onAction: () => context.read<SupportBloc>().add(
+                SupportTicketDetailRequested(widget.ticketId),
+              ),
             ),
-          ),
-          // `ready` n'est émis qu'avec un ticket chargé, mais le repli évite
-          // qu'une transition ajoutée plus tard ne fasse planter l'écran.
-          SupportViewStatus.ready =>
-            state.ticket == null
-                ? const Center(child: CircularProgressIndicator())
-                : _TicketThread(
-                    ticket: state.ticket!,
-                    controller: _messageController,
-                    sending: state.sendStatus == SupportActionStatus.submitting,
-                  ),
-        },
+            // `ready` n'est émis qu'avec un ticket chargé, mais le repli évite
+            // qu'une transition ajoutée plus tard ne fasse planter l'écran.
+            SupportViewStatus.ready =>
+              state.ticket == null
+                  ? const Center(child: CircularProgressIndicator())
+                  : _TicketThread(
+                      ticket: state.ticket!,
+                      controller: _messageController,
+                      sending:
+                          state.sendStatus == SupportActionStatus.submitting,
+                    ),
+          },
+        ),
       ),
     );
   }

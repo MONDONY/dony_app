@@ -20960,6 +20960,24 @@ abstract class AppLocalizations {
   /// **'Une question ? Notre équipe vous répond ici.'**
   String get supportConversationDefaultPreview;
 
+  /// Aperçu du dernier message quand il vient de l'équipe support (support_conversation_tile.dart, support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony : {preview}'**
+  String supportPreviewFromTeam(String preview);
+
+  /// Aperçu du dernier message quand l'utilisateur l'a écrit (support_conversation_tile.dart, support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous : {preview}'**
+  String supportPreviewFromUser(String preview);
+
+  /// Libellé d'accessibilité du nombre de messages support non lus (support_conversation_tile.dart, support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{aucun message non lu} =1{1 message non lu} other{{count} messages non lus}}'**
+  String supportUnreadSemantics(int count);
+
   /// Libellé du mode de notification instantané d'une alerte corridor (corridor_alert_labels.dart, extension sur AlertNotifyMode).
   ///
   /// In fr, this message translates to:

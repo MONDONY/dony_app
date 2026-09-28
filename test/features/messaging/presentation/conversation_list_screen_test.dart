@@ -8,7 +8,9 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/conversation_list_screen.dart';
+import 'package:dony/features/support/bloc/support_summary_cubit.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
+import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/data/support_repository.dart';
 import 'package:dony/features/support/presentation/widgets/support_conversation_tile.dart';
 import 'package:flutter/material.dart';
@@ -113,6 +115,7 @@ void main() {
   late MockConversationListBloc bloc;
   late _MockSupportRepository mockSupportRepository;
   late SupportUnreadCubit supportUnreadCubit;
+  late SupportSummaryCubit supportSummaryCubit;
 
   setUp(() {
     bloc = MockConversationListBloc();
@@ -124,11 +127,23 @@ void main() {
     when(
       () => mockSupportRepository.loadUnreadCount(),
     ).thenAnswer((_) async => 0);
-    supportUnreadCubit = SupportUnreadCubit(mockSupportRepository);
+    // Par défaut, back antérieur au résumé (404 → null).
+    when(
+      () => mockSupportRepository.getSummary(),
+    ).thenAnswer((_) async => null);
+    supportSummaryCubit = SupportSummaryCubit(mockSupportRepository);
+    supportUnreadCubit = SupportUnreadCubit(
+      mockSupportRepository,
+      summaryCubit: supportSummaryCubit,
+    );
     if (getIt.isRegistered<SupportUnreadCubit>()) {
       getIt.unregister<SupportUnreadCubit>();
     }
+    if (getIt.isRegistered<SupportSummaryCubit>()) {
+      getIt.unregister<SupportSummaryCubit>();
+    }
     getIt.registerLazySingleton<SupportUnreadCubit>(() => supportUnreadCubit);
+    getIt.registerLazySingleton<SupportSummaryCubit>(() => supportSummaryCubit);
   });
 
   tearDown(() async {
@@ -136,7 +151,11 @@ void main() {
     if (getIt.isRegistered<SupportUnreadCubit>()) {
       getIt.unregister<SupportUnreadCubit>();
     }
+    if (getIt.isRegistered<SupportSummaryCubit>()) {
+      getIt.unregister<SupportSummaryCubit>();
+    }
     await supportUnreadCubit.close();
+    await supportSummaryCubit.close();
   });
 
   group('ConversationListScreen', () {
@@ -488,5 +507,39 @@ void main() {
       );
       expect(find.text('Support Yadony'), findsOneWidget);
     });
+  });
+
+  testWidgets('la ligne Support montre l aperçu du résumé serveur', (
+    tester,
+  ) async {
+    when(() => mockSupportRepository.getSummary()).thenAnswer(
+      (_) async => const SupportSummary(
+        unreadCount: 2,
+        openTicketCount: 1,
+        latestTicket: SupportSummaryTicket(
+          id: 'ticket-1',
+          subject: 'Colis bloqué',
+          lastMessagePreview: 'Votre colis est arrivé',
+          lastMessageFromAdmin: true,
+          unreadCount: 2,
+        ),
+      ),
+    );
+    when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
+    await _pump(tester, bloc);
+
+    expect(find.text('Yadony : Votre colis est arrivé'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
+    verifyNever(() => mockSupportRepository.loadUnreadCount());
+  });
+
+  testWidgets('ancien back : la ligne Support garde l invitation', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
+    await _pump(tester, bloc);
+
+    expect(find.textContaining('Une question'), findsOneWidget);
+    verify(() => mockSupportRepository.loadUnreadCount()).called(1);
   });
 }

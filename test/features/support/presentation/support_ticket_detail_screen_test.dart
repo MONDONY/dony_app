@@ -226,6 +226,49 @@ void main() {
     });
   });
 
+  group('message reçu en direct sur le fil ouvert', () {
+    late SupportUnreadCubit unreadCubit;
+    late MockSupportRepository mockRepo;
+
+    setUp(() {
+      mockRepo = MockSupportRepository();
+      when(() => mockRepo.loadUnreadCount()).thenAnswer((_) async => 0);
+      unreadCubit = SupportUnreadCubit(mockRepo);
+      if (getIt.isRegistered<SupportUnreadCubit>()) {
+        getIt.unregister<SupportUnreadCubit>();
+      }
+      getIt.registerSingleton<SupportUnreadCubit>(unreadCubit);
+    });
+
+    tearDown(() async {
+      if (getIt.isRegistered<SupportUnreadCubit>()) {
+        getIt.unregister<SupportUnreadCubit>();
+      }
+      await unreadCubit.close();
+    });
+
+    testWidgets('le rechargement en direct rafraîchit le compteur global', (
+      tester,
+    ) async {
+      const ready = SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _openTicket,
+      );
+      final controller = StreamController<SupportState>();
+      whenListen(bloc, controller.stream, initialState: ready);
+
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+      verifyNever(() => mockRepo.loadUnreadCount());
+
+      controller.add(ready.copyWith(liveRefreshCount: 1));
+      await tester.pumpAndSettle();
+
+      verify(() => mockRepo.loadUnreadCount()).called(1);
+      await controller.close();
+    });
+  });
+
   testWidgets('affiche le fil de messages des deux auteurs', (tester) async {
     stubState(
       const SupportState(

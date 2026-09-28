@@ -17,18 +17,43 @@ part 'support_state.dart';
 /// création de ticket, fil de messages. Un ticket RESOLVED n'accepte plus
 /// d'écriture — la règle est appliquée ici avant tout appel réseau, le
 /// backend la fait respecter de toute façon (422).
+///
+/// [incomingMessages] diffuse l'identifiant du ticket de chaque message
+/// support reçu au premier plan (`SupportLiveEvents`) : si c'est le fil
+/// affiché, il est rechargé en place.
 class SupportBloc extends Bloc<SupportEvent, SupportState> {
-  SupportBloc(this._repository, this._analytics) : super(const SupportState()) {
+  SupportBloc(
+    this._repository,
+    this._analytics, {
+    Stream<String>? incomingMessages,
+  }) : super(const SupportState()) {
     on<SupportHomeRequested>(_onHomeRequested);
     on<SupportTicketCreateRequested>(_onCreateRequested);
     on<SupportTicketDetailRequested>(_onDetailRequested);
     on<SupportMessageSendRequested>(_onMessageSendRequested);
     on<SupportAttachmentPickRequested>(_onAttachmentPickRequested);
     on<SupportAttachmentRemoved>(_onAttachmentRemoved);
+    on<SupportTicketLiveRefreshRequested>(_onLiveRefreshRequested);
+    _incomingSub = incomingMessages?.listen((ticketId) {
+      final ticket = state.ticket;
+      if (ticket != null &&
+          ticket.id == ticketId &&
+          state.detailStatus == SupportViewStatus.ready) {
+        add(SupportTicketLiveRefreshRequested(ticketId));
+      }
+    });
   }
 
   final SupportRepository _repository;
   final AnalyticsService _analytics;
+  StreamSubscription<String>? _incomingSub;
+
+  @override
+  Future<void> close() async {
+    await _incomingSub?.cancel();
+    return super.close();
+  }
+
   static const _uuid = Uuid();
 
   Future<void> _onHomeRequested(
@@ -122,6 +147,29 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
           serverDetail: _serverDetail(e),
         ),
       );
+    }
+  }
+
+  Future<void> _onLiveRefreshRequested(
+    SupportTicketLiveRefreshRequested event,
+    Emitter<SupportState> emit,
+  ) async {
+    try {
+      final ticket = await _repository.loadTicket(event.ticketId);
+      try {
+        await _repository.markRead(event.ticketId);
+      } catch (_) {
+        // silence intentionnel : le fil reste lisible
+      }
+      emit(
+        state.copyWith(
+          detailStatus: SupportViewStatus.ready,
+          ticket: ticket,
+          liveRefreshCount: state.liveRefreshCount + 1,
+        ),
+      );
+    } catch (_) {
+      // silence intentionnel : le fil déjà affiché reste à l'écran
     }
   }
 

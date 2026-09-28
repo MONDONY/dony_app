@@ -198,4 +198,85 @@ void main() {
     expect(find.text('Payment'), findsOneWidget);
     expect(find.text('Contact support'), findsOneWidget);
   });
+
+  group('aperçu du dernier message dans la carte ticket', () {
+    const withPreview = SupportTicket(
+      id: 'ticket-3',
+      category: 'PAYMENT',
+      subject: 'Paiement bloque',
+      status: SupportTicketStatuses.waitingUser,
+      lastMessagePreview: 'Pouvez-vous envoyer une photo ?',
+      lastMessageFromAdmin: true,
+      unreadCount: 1,
+    );
+
+    testWidgets('affiche l aperçu préfixé et le point de non-lu', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      stubState(
+        const SupportState(
+          homeStatus: SupportViewStatus.ready,
+          tickets: [withPreview],
+        ),
+      );
+
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Yadony : Pouvez-vous envoyer une photo ?'),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('support-ticket-unread-dot')),
+        findsOneWidget,
+      );
+      expect(find.bySemanticsLabel(RegExp('1 message non lu')), findsOneWidget);
+      handle.dispose();
+    });
+
+    testWidgets('message de l utilisateur, tout lu : « Vous : », sans point', (
+      tester,
+    ) async {
+      stubState(
+        const SupportState(
+          homeStatus: SupportViewStatus.ready,
+          tickets: [
+            SupportTicket(
+              id: 'ticket-4',
+              category: 'PAYMENT',
+              subject: 'Paiement bloque',
+              status: SupportTicketStatuses.waitingSupport,
+              lastMessagePreview: 'Merci',
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vous : Merci'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('support-ticket-unread-dot')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('ancien back : pas de ligne d aperçu', (tester) async {
+      stubState(
+        const SupportState(
+          homeStatus: SupportViewStatus.ready,
+          tickets: [_ticket],
+        ),
+      );
+
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Yadony :'), findsNothing);
+      expect(find.textContaining('Vous :'), findsNothing);
+    });
+  });
 }

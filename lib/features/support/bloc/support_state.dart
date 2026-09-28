@@ -34,6 +34,7 @@ final class SupportState extends Equatable {
     this.failure,
     this.serverDetail,
     this.pendingAttachments = const [],
+    this.liveRefreshCount = 0,
   });
 
   final SupportViewStatus homeStatus;
@@ -59,6 +60,11 @@ final class SupportState extends Equatable {
 
   /// Images en attente d'envoi (état local avant que le message parte).
   final List<SupportAttachmentUpload> pendingAttachments;
+
+  /// Incrémenté à chaque rechargement du fil déclenché par un message reçu
+  /// en direct (push au premier plan sur cet écran) : l'écran de détail
+  /// rafraîchit alors le compteur global de non-lus.
+  final int liveRefreshCount;
 
   /// Envoi possible s'il y a du texte ou au moins une image prête, et
   /// qu'aucun upload n'est encore en cours. Une image en échec ne bloque
@@ -95,6 +101,7 @@ final class SupportState extends Equatable {
     SupportFailure? failure,
     String? serverDetail,
     List<SupportAttachmentUpload>? pendingAttachments,
+    int? liveRefreshCount,
   }) {
     return SupportState(
       homeStatus: homeStatus ?? this.homeStatus,
@@ -108,6 +115,7 @@ final class SupportState extends Equatable {
       failure: failure,
       serverDetail: serverDetail,
       pendingAttachments: pendingAttachments ?? this.pendingAttachments,
+      liveRefreshCount: liveRefreshCount ?? this.liveRefreshCount,
     );
   }
 
@@ -124,5 +132,6 @@ final class SupportState extends Equatable {
     failure,
     serverDetail,
     pendingAttachments,
+    liveRefreshCount,
   ];
 }

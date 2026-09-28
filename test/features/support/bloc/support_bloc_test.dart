@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -576,6 +578,121 @@ void main() {
 
       // texte seul suffit (pas d'images)
       expect(vide.canSendWith('bonjour'), isTrue);
+    });
+  });
+
+  group('message reçu en direct sur le fil ouvert', () {
+    const updated = SupportTicket(
+      id: 'ticket-1',
+      category: 'PAYMENT',
+      subject: 'Paiement bloque',
+      status: SupportTicketStatuses.waitingUser,
+      messages: [
+        SupportMessage(id: 'm1', authorType: 'ADMIN', content: 'Bonjour'),
+      ],
+    );
+
+    test('recharge le fil sans spinner et le marque lu', () async {
+      final incoming = StreamController<String>.broadcast();
+      addTearDown(incoming.close);
+      when(
+        () => repository.loadTicket('ticket-1'),
+      ).thenAnswer((_) async => _ticket);
+      when(() => repository.markRead('ticket-1')).thenAnswer((_) async {});
+      final bloc = SupportBloc(
+        repository,
+        analytics,
+        incomingMessages: incoming.stream,
+      );
+      bloc.add(const SupportTicketDetailRequested('ticket-1'));
+      await bloc.stream.firstWhere(
+        (s) => s.detailStatus == SupportViewStatus.ready,
+      );
+
+      when(
+        () => repository.loadTicket('ticket-1'),
+      ).thenAnswer((_) async => updated);
+      final emitted = <SupportState>[];
+      final sub = bloc.stream.listen(emitted.add);
+      incoming.add('ticket-1');
+      await pumpEventQueue();
+
+      expect(emitted, hasLength(1));
+      expect(emitted.single.detailStatus, SupportViewStatus.ready);
+      expect(emitted.single.ticket, updated);
+      expect(emitted.single.liveRefreshCount, 1);
+      verify(() => repository.markRead('ticket-1')).called(2);
+      await sub.cancel();
+      await bloc.close();
+    });
+
+    test('ignore un message d\'un autre ticket', () async {
+      final incoming = StreamController<String>.broadcast();
+      addTearDown(incoming.close);
+      when(
+        () => repository.loadTicket('ticket-1'),
+      ).thenAnswer((_) async => _ticket);
+      when(() => repository.markRead('ticket-1')).thenAnswer((_) async {});
+      final bloc = SupportBloc(
+        repository,
+        analytics,
+        incomingMessages: incoming.stream,
+      );
+      bloc.add(const SupportTicketDetailRequested('ticket-1'));
+      await bloc.stream.firstWhere(
+        (s) => s.detailStatus == SupportViewStatus.ready,
+      );
+
+      incoming.add('autre-ticket');
+      await pumpEventQueue();
+
+      verify(() => repository.loadTicket('ticket-1')).called(1);
+      expect(bloc.state.liveRefreshCount, 0);
+      await bloc.close();
+    });
+
+    test('un échec du rechargement garde le fil affiché', () async {
+      final incoming = StreamController<String>.broadcast();
+      addTearDown(incoming.close);
+      when(
+        () => repository.loadTicket('ticket-1'),
+      ).thenAnswer((_) async => _ticket);
+      when(() => repository.markRead('ticket-1')).thenAnswer((_) async {});
+      final bloc = SupportBloc(
+        repository,
+        analytics,
+        incomingMessages: incoming.stream,
+      );
+      bloc.add(const SupportTicketDetailRequested('ticket-1'));
+      await bloc.stream.firstWhere(
+        (s) => s.detailStatus == SupportViewStatus.ready,
+      );
+
+      when(
+        () => repository.loadTicket('ticket-1'),
+      ).thenThrow(Exception('hors ligne'));
+      incoming.add('ticket-1');
+      await pumpEventQueue();
+
+      expect(bloc.state.detailStatus, SupportViewStatus.ready);
+      expect(bloc.state.ticket, _ticket);
+      await bloc.close();
+    });
+
+    test('sans fil chargé, un message reçu ne déclenche rien', () async {
+      final incoming = StreamController<String>.broadcast();
+      addTearDown(incoming.close);
+      final bloc = SupportBloc(
+        repository,
+        analytics,
+        incomingMessages: incoming.stream,
+      );
+
+      incoming.add('ticket-1');
+      await pumpEventQueue();
+
+      verifyNever(() => repository.loadTicket(any()));
+      await bloc.close();
     });
   });
 }

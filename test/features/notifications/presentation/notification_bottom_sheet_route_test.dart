@@ -19,6 +19,22 @@ void main() {
     const annId = '123e4567-e89b-12d3-a456-426614174000';
     const bidId = 'b1b2c3d4-e5f6-7890-abcd-ef1234567890';
 
+    test(
+      'SUPPORT_MESSAGE du centre de notifications ouvre la conversation',
+      () {
+        expect(
+          routeForNotification(
+            _notif('SUPPORT_MESSAGE', data: {'ticketId': annId}),
+          ),
+          '/support/tickets/$annId',
+        );
+      },
+    );
+
+    test('SUPPORT_MESSAGE sans ticketId ouvre la liste du support', () {
+      expect(routeForNotification(_notif('SUPPORT_MESSAGE')), '/support');
+    });
+
     test('CORRIDOR_ALERT routes to the matching trip detail', () {
       expect(
         routeForNotification(

@@ -681,6 +681,8 @@ class _NotificationIcon extends StatelessWidget {
       'BID_CREATED' => (cs.primary, 'package'),
       'PACKAGE_MATCH' => (cs.primary, 'package'),
       'NEW_MESSAGE' => (cs.primary, 'message-circle'),
+      // Même icône que la ligne épinglée « Support Yadony » des conversations.
+      'SUPPORT_MESSAGE' => (cs.primary, 'circle-help'),
       'TRIP_IN_PROGRESS' => (cs.primary, 'plane-takeoff'),
       'negotiation_started' => (cs.info, 'arrow-left-right'),
       'negotiation_counter' => (cs.info, 'arrow-left-right'),

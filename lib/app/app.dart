@@ -112,6 +112,10 @@ class _DonyAppState extends State<DonyApp> {
   @override
   void initState() {
     super.initState();
+    // Le service tait le bandeau d'un message support quand sa conversation
+    // est déjà à l'écran : il lui faut la route courante.
+    getIt<NotificationService>().currentLocationProvider = () =>
+        appRouter.routerDelegate.currentConfiguration.uri.path;
     _navSub = getIt<NotificationService>().navigationStream.listen((route) {
       _navigateToRoute(route);
     });

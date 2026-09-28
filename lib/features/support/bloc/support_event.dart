@@ -73,3 +73,14 @@ final class SupportAttachmentRemoved extends SupportEvent {
   @override
   List<Object?> get props => [localId];
 }
+
+/// Un message support est arrivé en direct (push au premier plan) pour le
+/// ticket affiché : le fil est rechargé sans repasser par le spinner.
+final class SupportTicketLiveRefreshRequested extends SupportEvent {
+  const SupportTicketLiveRefreshRequested(this.ticketId);
+
+  final String ticketId;
+
+  @override
+  List<Object?> get props => [ticketId];
+}
