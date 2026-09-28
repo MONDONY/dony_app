@@ -310,7 +310,11 @@ class _PhoneInputStep extends StatelessWidget {
             child: Row(
               children: [
                 // Sélecteur indicatif
+                // `opaque` : sans lui, seuls les pixels du drapeau, de
+                // l'indicatif et du chevron réagissaient, pas la marge de la
+                // case (rage clicks PostHog du 27/09).
                 GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => _showCodePicker(context),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
