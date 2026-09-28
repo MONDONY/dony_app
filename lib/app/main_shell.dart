@@ -26,6 +26,7 @@ import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/notifications/presentation/widgets/notification_badge_listener.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
@@ -226,9 +227,17 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed || !mounted) return;
+    if (!mounted) return;
     // Un visiteur n'a pas de compte Stripe à rafraîchir.
     if (!getIt<FirebaseSessionProbe>().hasRealSession) return;
+    if (state == AppLifecycleState.hidden) {
+      // Départ vers l'accueil du téléphone : dernière relecture avant que
+      // l'icône ne redevienne visible. Rattrape les lectures faites hors du
+      // NotificationBloc (écran de détail, boîte des annonces).
+      unawaited(_syncNotificationBadge());
+      return;
+    }
+    if (state != AppLifecycleState.resumed) return;
     // Retour au premier plan : c'est le seul moment où l'application peut
     // corriger une pastille laissée par une push reçue écran éteint.
     unawaited(_syncNotificationBadge());
@@ -255,6 +264,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
+        NotificationBadgeListener(badge: getIt<AppBadgeService>()),
         BlocListener<RatingBloc, RatingState>(
           listener: (context, state) {
             if (state is PendingRatingFound && !_ratingPromptShown) {
