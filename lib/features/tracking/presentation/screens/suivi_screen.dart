@@ -78,10 +78,13 @@ class SuiviScreen extends StatelessWidget {
       buildWhen: (_, next) => _travelerOf(next) != null,
       builder: (context, authState) {
         final canValidate = _travelerOf(authState) ?? false;
-        // Clé par profil : devenir voyageur en cours de session recrée les
-        // blocs.
+        // Clé par compte et par profil : devenir voyageur ou changer de
+        // compte en cours de session recrée les blocs, donc recharge.
         return KeyedSubtree(
-          key: ValueKey<bool>(canValidate),
+          key: ValueKey<(String?, bool)>((
+            authState.currentUserId,
+            canValidate,
+          )),
           child: MultiBlocProvider(
             providers: [
               BlocProvider<SuiviCubit>(
@@ -151,6 +154,9 @@ class _SuiviBodyState extends State<_SuiviBody> {
     _lifecycle = AppLifecycleListener(
       onHide: _flushValidations,
       onPause: _flushValidations,
+      onResume: () {
+        if (_visible) _refresh();
+      },
     );
     if (widget.canValidate) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -167,10 +173,23 @@ class _SuiviBodyState extends State<_SuiviBody> {
     super.didChangeDependencies();
     // Onglet caché (IndexedStack du shell) ou page poussée par-dessus :
     // TickerMode est coupé, la caméra aussi.
+    final wasVisible = _visible;
     _visible = TickerMode.valuesOf(context).enabled;
     _updatePaused();
     // Onglet quitté ou recouvert : plus personne pour « Annuler ».
     if (!_visible) _flushValidations();
+    // Retour sur l'onglet : l'IndexedStack du shell l'a gardé vivant, ses
+    // données datent de sa première ouverture (trajet publié, demande
+    // acceptée ailleurs depuis). Recette Redmi : « Rien à valider » restait
+    // affiché jusqu'au redémarrage de l'app.
+    if (_visible && !wasVisible) _refresh();
+  }
+
+  /// Rafraîchissement silencieux au retour sur l'onglet ou dans l'app.
+  void _refresh() {
+    if (!mounted) return;
+    _reloadTrips();
+    unawaited(context.read<SuiviCubit>().refreshShipments());
   }
 
   void _flushValidations() {

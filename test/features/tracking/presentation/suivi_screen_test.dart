@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -918,6 +920,75 @@ void main() {
       await tester.tap(text('Voir mes trajets'));
       await settle(tester);
       expect(visited, contains('/announcements/trips'));
+    });
+
+    // Recette Redmi : onglet ouvert avant la publication du trajet et
+    // l'acceptation du colis, gardé vivant par le shell. Au retour, les
+    // colis apparaissent sans relancer l'app, et l'onglet passe en Valider.
+    testWidgets('retour sur l\'onglet → trajets rechargés, Valider', (
+      tester,
+    ) async {
+      stubTrips(const [], const {});
+      await pump(tester);
+      expect(find.byKey(const Key('suivi-mode-suivre')), findsOneWidget);
+      verify(() => annRepo.getMyAnnouncements()).called(1);
+
+      stubDefaultTrips();
+      // Une page poussée par-dessus coupe le TickerMode de l'onglet, comme
+      // l'IndexedStack du shell quand on change d'onglet.
+      unawaited(
+        GoRouter.of(
+          tester.element(find.byKey(const Key('fake-camera'))),
+        ).push('/announcements/trips'),
+      );
+      await settle(tester);
+      GoRouter.of(tester.element(find.text('page /announcements/trips'))).pop();
+      await settle(tester);
+
+      verify(() => annRepo.getMyAnnouncements()).called(1);
+      expect(text('Bobo-Dioulasso → Yaoundé'), findsOneWidget);
+      expect(find.byKey(const Key('suivi-sheet')), findsOneWidget);
+      expect(
+        text(
+          "Scanne le QR d'un colis de ton trajet.\n"
+          "L'étape suivante est validée toute seule.",
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('app revenue au premier plan → trajets rechargés', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester);
+      verify(() => annRepo.getMyAnnouncements()).called(1);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await settle(tester);
+      verify(() => annRepo.getMyAnnouncements()).called(1);
+    });
+
+    testWidgets('changement de compte → onglet rechargé', (tester) async {
+      stubDefaultTrips();
+      await pump(
+        tester,
+        authLater: [
+          const AuthAuthenticated(
+            UserModel(
+              id: 'u2',
+              roles: ['TRAVELER'],
+              kycStatus: 'APPROVED',
+              status: 'ACTIVE',
+            ),
+          ),
+        ],
+      );
+      verify(() => annRepo.getMyAnnouncements()).called(2);
+      expect(text('Bobo-Dioulasso → Yaoundé'), findsOneWidget);
     });
 
     testWidgets('erreur de chargement → Valider, Réessayer recharge', (

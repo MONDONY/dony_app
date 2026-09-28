@@ -216,10 +216,23 @@ class SuiviCubit extends Cubit<SuiviState> {
 
   /// Mode par défaut d'un voyageur, une fois ses trajets connus : « Valider »
   /// s'il a au moins un colis à valider (ou si le chargement a échoué, pour
-  /// afficher l'erreur et « Réessayer »), « Suivre » sinon. Sans effet si le
-  /// mode est déjà fixé.
+  /// afficher l'erreur et « Réessayer »), « Suivre » sinon.
+  ///
+  /// Un mode choisi (onglet, URL) ne bouge plus. Un « Suivre » par défaut
+  /// passe en « Valider » quand un rechargement fait apparaître un colis à
+  /// valider (trajet publié ou demande acceptée depuis) ; jamais l'inverse,
+  /// qui ferait sauter l'écran après la dernière validation.
   void resolveDefaultMode(ScanHubState hub) {
-    if (!state.canValidate || state.mode != null) return;
+    if (!state.canValidate) return;
+    if (state.mode != null) {
+      if (_modeIsDefault &&
+          state.mode == SuiviMode.suivre &&
+          hub is ScanHubLoaded &&
+          hub.hasParcelToValidate) {
+        _setMode(SuiviMode.valider);
+      }
+      return;
+    }
     final mode = switch (hub) {
       ScanHubLoading() => null,
       ScanHubLoaded() =>
@@ -227,12 +240,19 @@ class SuiviCubit extends Cubit<SuiviState> {
       ScanHubEmpty() => SuiviMode.suivre,
       ScanHubError() => SuiviMode.valider,
     };
-    if (mode != null) _setMode(mode);
+    if (mode != null) {
+      _modeIsDefault = true;
+      _setMode(mode);
+    }
   }
+
+  /// Le mode affiché vient de [resolveDefaultMode], pas d'un choix.
+  bool _modeIsDefault = false;
 
   /// Onglet choisi par l'utilisateur.
   void selectMode(SuiviMode mode) {
     if (!state.canValidate || mode == state.mode) return;
+    _modeIsDefault = false;
     _logModeChanged(mode);
     _setMode(mode);
   }
@@ -240,6 +260,7 @@ class SuiviCubit extends Cubit<SuiviState> {
   /// Mode imposé par la navigation (`/tracking?mode=…`).
   void applyRequestedMode(SuiviMode? mode) {
     if (mode == null || !state.canValidate || mode == state.mode) return;
+    _modeIsDefault = false;
     _setMode(mode);
   }
 
@@ -267,6 +288,7 @@ class SuiviCubit extends Cubit<SuiviState> {
     emit(state._copy(shipmentsStatus: SuiviLoadStatus.loading));
     try {
       final bids = await _bidRepo.getMyBids();
+      if (isClosed) return;
       emit(
         state._copy(
           shipmentsStatus: SuiviLoadStatus.loaded,
@@ -276,7 +298,27 @@ class SuiviCubit extends Cubit<SuiviState> {
         ),
       );
     } catch (_) {
+      if (isClosed) return;
       emit(state._copy(shipmentsStatus: SuiviLoadStatus.error));
+    }
+  }
+
+  /// Retour sur l'onglet : « Mes envois » déjà affichés sont rafraîchis sans
+  /// indicateur de chargement ; un échec garde la liste affichée.
+  Future<void> refreshShipments() async {
+    if (state.shipmentsStatus != SuiviLoadStatus.loaded) return;
+    try {
+      final bids = await _bidRepo.getMyBids();
+      if (isClosed) return;
+      emit(
+        state._copy(
+          shipments: bids
+              .where((b) => kEnvoisEnCours.contains(b.status))
+              .toList(growable: false),
+        ),
+      );
+    } catch (_) {
+      // Liste précédente conservée : elle reste utilisable.
     }
   }
 
@@ -454,6 +496,7 @@ class SuiviCubit extends Cubit<SuiviState> {
   /// mode Suivre et ouvre son parcours.
   void followParcel(String bidId) {
     if (state.mode != SuiviMode.suivre) {
+      _modeIsDefault = false;
       _logModeChanged(SuiviMode.suivre);
       _setMode(SuiviMode.suivre);
     }
