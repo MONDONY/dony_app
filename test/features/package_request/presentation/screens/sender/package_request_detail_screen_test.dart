@@ -47,6 +47,12 @@ class _MockAnalyticsService extends Mock implements AnalyticsService {}
 class _MockRatingBloc extends MockBloc<RatingEvent, RatingState>
     implements RatingBloc {}
 
+/// Date souhaitée de la fausse demande : toujours dans le futur, sans heure.
+DateTime get _desiredDate {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, now.day + 30);
+}
+
 PackageRequest _fakeRequest({
   PackageRequestStatus status = PackageRequestStatus.open,
 }) => PackageRequest(
@@ -54,7 +60,9 @@ PackageRequest _fakeRequest({
   senderId: 'sender-1',
   departureCity: 'Divo',
   arrivalCity: 'Annemasse',
-  desiredDate: DateTime(2026, 9, 27),
+  // Relative à aujourd'hui : une date en dur finit par passer et la duplication
+  // efface alors la date (clearDate=true), ce qui cassait le test « date future ».
+  desiredDate: _desiredDate,
   dateToleranceDays: 2,
   weightKg: 5,
   parcelSize: ParcelSize.medium,
@@ -823,8 +831,9 @@ void main() {
       expect(prefill.direction, AlertDirection.senderWantsTrips);
       expect(prefill.departureCity, 'Divo');
       expect(prefill.arrivalCity, 'Annemasse');
-      expect(prefill.dateFrom, DateTime(2026, 9, 25));
-      expect(prefill.dateTo, DateTime(2026, 9, 29));
+      final d = _desiredDate;
+      expect(prefill.dateFrom, DateTime(d.year, d.month, d.day - 2));
+      expect(prefill.dateTo, DateTime(d.year, d.month, d.day + 2));
       expect(prefill.minWeightKg, isNull);
       expect(prefill.contentCategories, anyOf(isNull, isEmpty));
     });
