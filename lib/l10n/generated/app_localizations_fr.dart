@@ -10105,13 +10105,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get receptionContestFirst => 'contestez d\'abord';
 
   @override
-  String get trackingTimelineTitle => 'Suivi du colis';
-
-  @override
   String get trackingTimelineShare => 'Partager le suivi';
-
-  @override
-  String get trackingTimelineStepsHeader => 'ÉTAPES';
 
   @override
   String get trackingEventDepartureConfirmed => 'Départ confirmé';
@@ -10126,9 +10120,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trackingGpsRecorded => 'Lieu GPS enregistré';
 
   @override
-  String get trackingOfflineScanSynced => 'Lecture hors-ligne synchronisée';
-
-  @override
   String get trackingValidatedByQr => 'Validé par scan du QR';
 
   @override
@@ -10137,27 +10128,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get trackingValidatedByNumber => 'Validé avec le numéro';
-
-  @override
-  String get trackingAwaitingConfirmationTitle => 'En attente de confirmation';
-
-  @override
-  String get trackingAwaitingConfirmationDesc =>
-      'Le destinataire doit confirmer la réception via le code SMS.';
-
-  @override
-  String get trackingEmptyTimelineTitle => 'En attente de la lecture au départ';
-
-  @override
-  String get trackingEmptyTimelineDesc =>
-      'Le voyageur lira le QR code lors de la remise du colis.';
-
-  @override
-  String get trackingApplessTitle => 'Pas besoin d\'app !';
-
-  @override
-  String get trackingApplessMessage =>
-      'Quand le voyageur sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.';
 
   @override
   String get cancellationConfirmTitle => 'Annuler ce trajet ?';
@@ -14462,4 +14432,37 @@ class AppLocalizationsFr extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get trackingReadOnlyLabel => 'Suivi en lecture seule';
+
+  @override
+  String get trackingHeadlineAwaitingHandover =>
+      'En attente de la remise au voyageur';
+
+  @override
+  String trackingHeadlineOnTheWayTo(String city) {
+    return 'En route vers $city';
+  }
+
+  @override
+  String get trackingHeadlineOnTheWay => 'En route';
+
+  @override
+  String get trackingHeadlineDelivered => 'Colis remis au destinataire';
+
+  @override
+  String get trackingStepHandedToTraveler => 'Remis au voyageur';
+
+  @override
+  String get trackingStepHandedToRecipient => 'Remis au destinataire';
+
+  @override
+  String get trackingStepHandoverToTraveler => 'Remise au voyageur';
+
+  @override
+  String get trackingStepHandoverToRecipient => 'Remise au destinataire';
+
+  @override
+  String get trackingStepPhotoLabel => 'Photo de l\'étape';
 }

@@ -10043,13 +10043,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get receptionContestFirst => 'contest first';
 
   @override
-  String get trackingTimelineTitle => 'Parcel tracking';
-
-  @override
   String get trackingTimelineShare => 'Share tracking';
-
-  @override
-  String get trackingTimelineStepsHeader => 'STEPS';
 
   @override
   String get trackingEventDepartureConfirmed => 'Departure confirmed';
@@ -10064,9 +10058,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackingGpsRecorded => 'GPS location recorded';
 
   @override
-  String get trackingOfflineScanSynced => 'Offline scan synced';
-
-  @override
   String get trackingValidatedByQr => 'Validated by scanning the QR code';
 
   @override
@@ -10075,27 +10066,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackingValidatedByNumber => 'Validated with the number';
-
-  @override
-  String get trackingAwaitingConfirmationTitle => 'Awaiting confirmation';
-
-  @override
-  String get trackingAwaitingConfirmationDesc =>
-      'The recipient must confirm receipt with the SMS code.';
-
-  @override
-  String get trackingEmptyTimelineTitle => 'Waiting for the departure scan';
-
-  @override
-  String get trackingEmptyTimelineDesc =>
-      'The traveler will scan the QR code when the parcel is handed over.';
-
-  @override
-  String get trackingApplessTitle => 'No app needed!';
-
-  @override
-  String get trackingApplessMessage =>
-      'When the traveler is at your door, you\'ll confirm with a QR code or a 4-digit code.';
 
   @override
   String get cancellationConfirmTitle => 'Cancel this trip?';
@@ -14375,4 +14345,37 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get trackingReadOnlyLabel => 'Read-only tracking';
+
+  @override
+  String get trackingHeadlineAwaitingHandover =>
+      'Waiting to be handed to the traveler';
+
+  @override
+  String trackingHeadlineOnTheWayTo(String city) {
+    return 'On the way to $city';
+  }
+
+  @override
+  String get trackingHeadlineOnTheWay => 'On the way';
+
+  @override
+  String get trackingHeadlineDelivered => 'Parcel handed to the recipient';
+
+  @override
+  String get trackingStepHandedToTraveler => 'Handed to the traveler';
+
+  @override
+  String get trackingStepHandedToRecipient => 'Handed to the recipient';
+
+  @override
+  String get trackingStepHandoverToTraveler => 'Handover to the traveler';
+
+  @override
+  String get trackingStepHandoverToRecipient => 'Handover to the recipient';
+
+  @override
+  String get trackingStepPhotoLabel => 'Step photo';
 }

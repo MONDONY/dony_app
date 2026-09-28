@@ -104,8 +104,12 @@ final class SuiviShowTimeline extends SuiviEffect {
     required this.bidId,
     required this.corridor,
     this.arrivalInstructions,
+    this.trackingNumber,
   });
   final String bidId;
+
+  /// Numéro DON affiché en tête du parcours, `null` s'il n'est pas connu.
+  final String? trackingNumber;
 
   /// « Paris → Dakar », vide quand le colis n'est pas connu de l'app.
   final String corridor;
@@ -584,6 +588,7 @@ class SuiviCubit extends Cubit<SuiviState> {
             bidId: result.bidId,
             corridor: '${result.departureCity} → ${result.arrivalCity}',
             arrivalInstructions: result.arrivalInstructions,
+            trackingNumber: result.trackingNumber,
           ),
         ),
       );
@@ -623,6 +628,7 @@ class SuiviCubit extends Cubit<SuiviState> {
         corridor: from != null && to != null ? '$from → $to' : '',
         arrivalInstructions:
             known?.arrivalInstructions ?? trip?.arrivalInstructions,
+        trackingNumber: known?.trackingNumber,
       ),
     );
   }

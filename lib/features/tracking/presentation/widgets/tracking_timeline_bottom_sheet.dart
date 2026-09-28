@@ -3,11 +3,9 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
-import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
@@ -17,501 +15,442 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-/// Parcours d'un colis en lecture seule. [corridor] vide (colis inconnu de
-/// l'app, lu par QR) masque la carte du trajet.
+/// Parcours d'un colis en lecture seule (maquette B3, « Résultat du
+/// suivi ») : numéro, phrase d'état, trajet, puis frise des étapes faites,
+/// de l'étape en cours et des étapes à venir.
+///
+/// [corridor] (« Paris → Dakar ») vide quand le colis est inconnu de l'app
+/// (lu par QR) : pas de sous-titre ni de ville dans la phrase d'état.
+/// [trackingNumber] : numéro DON affiché au-dessus du titre, s'il est connu.
+/// [onShareTracking] : bouton « Partager le suivi » en bas de la feuille.
 Future<void> showTrackingTimelineSheet(
   BuildContext context, {
   required String bidId,
   required String corridor,
   VoidCallback? onShareTracking,
   String? arrivalInstructions,
+  String? trackingNumber,
 }) {
   return DonyBottomSheet.show<void>(
     context,
-    title: context.l10n.trackingTimelineTitle,
-    subtitle: corridor.isNotEmpty ? corridor : null,
     wrapper: (child) => BlocProvider(
       create: (_) => getIt<TrackingBloc>()..add(TrackingEventsRequested(bidId)),
       child: child,
     ),
-    stickyBottom: BlocBuilder<TrackingBloc, TrackingState>(
-      builder: (context, state) {
-        if (state is! TrackingEventsLoaded || onShareTracking == null) {
-          return const SizedBox.shrink();
-        }
-        return DonyButton(
-          label: context.l10n.trackingTimelineShare,
-          iconAsset: 'share-2',
-          onPressed: onShareTracking,
-        );
-      },
-    ),
+    stickyBottom: onShareTracking == null
+        ? null
+        : BlocBuilder<TrackingBloc, TrackingState>(
+            builder: (context, state) {
+              if (state is! TrackingEventsLoaded) {
+                return const SizedBox.shrink();
+              }
+              return DonyButton(
+                key: const Key('tracking-share'),
+                label: context.l10n.trackingTimelineShare,
+                iconAsset: 'share-2',
+                variant: DonyButtonVariant.secondary,
+                onPressed: onShareTracking,
+              );
+            },
+          ),
     child: _TrackingTimelineContent(
       bidId: bidId,
       corridor: corridor,
+      trackingNumber: trackingNumber,
       arrivalInstructions: arrivalInstructions,
     ),
   );
 }
 
-// ── Content widget ────────────────────────────────────────────────────────────
-
 class _TrackingTimelineContent extends StatelessWidget {
-  final String bidId;
-  final String corridor;
-  final String? arrivalInstructions;
-
   const _TrackingTimelineContent({
     required this.bidId,
     required this.corridor,
+    this.trackingNumber,
     this.arrivalInstructions,
   });
 
-  // Noms de villes : valeur de donnée, jamais traduite (i18n-ignore).
-  static const _cityToCodes = <String, (String, String)>{
-    'Paris': ('PAR', 'CDG'), // i18n-ignore
-    'Lyon': ('LYS', 'LYS'), // i18n-ignore
-    'Marseille': ('MRS', 'MRS'), // i18n-ignore
-    'Dakar': ('DKR', 'DSS'), // i18n-ignore
-    'Abidjan': ('ABJ', 'ABJ'), // i18n-ignore
-    'Bamako': ('BKO', 'BKO'), // i18n-ignore
-    'Douala': ('DLA', 'DLA'), // i18n-ignore
-  };
-
-  (String, String, String, String) _parseCorridor() {
-    // corridor format: "Paris → Dakar" or "Paris CDG → Dakar DSS"
-    final parts = corridor.split('→').map((s) => s.trim()).toList();
-    final dep = parts.isNotEmpty ? parts[0].trim() : 'Paris'; // i18n-ignore
-    final arr = parts.length > 1 ? parts[1].trim() : 'Dakar'; // i18n-ignore
-
-    final depCodes =
-        _cityToCodes[dep] ??
-        (
-          dep.length >= 3
-              ? dep.substring(0, 3).toUpperCase()
-              : dep.toUpperCase(),
-          dep.length >= 3
-              ? dep.substring(0, 3).toUpperCase()
-              : dep.toUpperCase(),
-        );
-    final arrCodes =
-        _cityToCodes[arr] ??
-        (
-          arr.length >= 3
-              ? arr.substring(0, 3).toUpperCase()
-              : arr.toUpperCase(),
-          arr.length >= 3
-              ? arr.substring(0, 3).toUpperCase()
-              : arr.toUpperCase(),
-        );
-
-    return (depCodes.$1, depCodes.$2, arrCodes.$1, arrCodes.$2);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final corridorCodes = _parseCorridor();
-
-    return BlocBuilder<TrackingBloc, TrackingState>(
-      builder: (context, state) {
-        if (state is TrackingEventsLoading) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(DonySpacing.xxl),
-              child: CircularProgressIndicator(color: cs.primary),
-            ),
-          );
-        }
-        if (state is TrackingEventsError) {
-          // 403 : colis ni envoyé ni transporté par l'utilisateur. Refus
-          // définitif, « Réessayer » n'y changerait rien.
-          if (state.error is ForbiddenException) {
-            return const Padding(
-              padding: EdgeInsets.all(DonySpacing.xl),
-              child: Center(child: ParcelNotLinkedNotice(centered: true)),
-            );
-          }
-          return _ErrorView(
-            message: ErrorPresenter.resolve(
-              state.error,
-              l10n: context.l10n,
-            ).message,
-            onRetry: () => context.read<TrackingBloc>().add(
-              TrackingEventsRequested(bidId),
-            ),
-          );
-        }
-        if (state is TrackingEventsLoaded) {
-          return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Map card
-                  if (corridor.isNotEmpty) ...[
-                    RouteMapCard(
-                      departureCode: corridorCodes.$1,
-                      arrivalCode: corridorCodes.$3,
-                      departureCity: corridorCodes.$2,
-                      arrivalCity: corridorCodes.$4,
-                    ),
-                    const SizedBox(height: DonySpacing.base),
-                  ],
-
-                  // Timeline
-                  _Timeline(
-                    events: state.events,
-                    arrivalInstructions: arrivalInstructions,
-                  ),
-
-                  const SizedBox(height: DonySpacing.base),
-
-                  // "Pas besoin d'app !" banner
-                  const _ApplessBanner(),
-                ],
-              )
-              .animate()
-              .fadeIn(duration: 300.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic);
-        }
-        return const SizedBox.shrink();
-      },
-    );
-  }
-}
-
-// ── Timeline ──────────────────────────────────────────────────────────────────
-
-class _Timeline extends StatelessWidget {
-  final List<TrackingEventModel> events;
+  final String bidId;
+  final String corridor;
+  final String? trackingNumber;
   final String? arrivalInstructions;
-  const _Timeline({required this.events, this.arrivalInstructions});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    if (events.isEmpty) {
-      return _EmptyTimeline();
-    }
-
-    final hasArrivee = events.any((e) => e.eventType == 'ARRIVEE');
-
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          context.l10n.trackingTimelineStepsHeader,
-          style: tt.labelMedium?.copyWith(
-            color: cs.onSurfaceVariant,
-            letterSpacing: 0.8,
-          ),
-        ),
-        const SizedBox(height: DonySpacing.base),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: events.length,
-          itemBuilder: (context, index) {
-            final event = events[index];
-            final isLast = index == events.length - 1;
-            return _TimelineItem(event: event, isLast: isLast, index: index);
+        const _ReadOnlyHeader(),
+        BlocBuilder<TrackingBloc, TrackingState>(
+          builder: (context, state) => switch (state) {
+            TrackingEventsLoading() => Padding(
+              padding: const EdgeInsets.all(DonySpacing.xxl),
+              child: Center(
+                child: CircularProgressIndicator(color: cs.primary),
+              ),
+            ),
+            // 403 : colis ni envoyé ni transporté par l'utilisateur. Refus
+            // définitif, « Réessayer » n'y changerait rien.
+            TrackingEventsError(:final error)
+                when error is ForbiddenException =>
+              const Padding(
+                padding: EdgeInsets.all(DonySpacing.xl),
+                child: Center(child: ParcelNotLinkedNotice(centered: true)),
+              ),
+            TrackingEventsError(:final error) => _ErrorView(
+              message: ErrorPresenter.resolve(
+                error,
+                l10n: context.l10n,
+              ).message,
+              onRetry: () => context.read<TrackingBloc>().add(
+                TrackingEventsRequested(bidId),
+              ),
+            ),
+            TrackingEventsLoaded(:final events) => _Journey(
+              events: events,
+              corridor: corridor,
+              trackingNumber: trackingNumber,
+              arrivalInstructions: arrivalInstructions,
+            ).animate().fadeIn(duration: 250.ms, curve: Curves.easeOutCubic),
+            _ => const SizedBox.shrink(),
           },
         ),
-        // Dès que le voyageur les a saisies, et non plus seulement après
-        // l'événement ARRIVEE (la remise au destinataire) : elles servent à
-        // récupérer le colis, donc AVANT la livraison.
-        if ((arrivalInstructions ?? '').trim().isNotEmpty) ...[
-          const SizedBox(height: DonySpacing.md),
-          DonyStatusBanner(
-            key: const Key('tracking-arrival-instructions'),
-            type: DonyStatusBannerType.info,
-            iconAsset: 'map-pin',
-            title: context.l10n.tripOwnerArrivalEditingTitle,
-            message: arrivalInstructions!.trim(),
-          ),
-        ],
-        if (!hasArrivee) ...[
-          const SizedBox(height: DonySpacing.base),
-          _PendingConfirmationBanner(),
-        ],
       ],
     );
   }
 }
 
-class _TimelineItem extends StatelessWidget {
-  final TrackingEventModel event;
-  final bool isLast;
-  final int index;
-
-  const _TimelineItem({
-    required this.event,
-    required this.isLast,
-    required this.index,
-  });
+/// « Suivi en lecture seule » et la croix de fermeture.
+class _ReadOnlyHeader extends StatelessWidget {
+  const _ReadOnlyHeader();
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final localeName = l.localeName;
-    final locationLabel = event.locationLabel(l);
-    final methodLabel = event.methodLabel(l);
+    return Row(
+      children: [
+        DonyIcon('eye', size: 15, color: cs.onSurfaceVariant),
+        const SizedBox(width: DonySpacing.xs),
+        Expanded(
+          child: Text(
+            l.trackingReadOnlyLabel,
+            style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
+        IconButton(
+          tooltip: l.commonClose,
+          style: IconButton.styleFrom(minimumSize: const Size(44, 44)),
+          icon: DonyIcon('x', size: 20, color: cs.onSurfaceVariant),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ],
+    );
+  }
+}
 
-    final Color stepColor = switch (event.eventType) {
-      'ARRIVEE' => cs.success,
-      _ => cs.primary,
+enum _StepState { done, current, upcoming }
+
+/// Une ligne de la frise.
+class _JourneyStep {
+  const _JourneyStep(this.state, this.title, {this.event});
+
+  final _StepState state;
+  final String title;
+
+  /// Événement enregistré d'une étape faite : heure, lieu, provenance, photo.
+  final TrackingEventModel? event;
+}
+
+/// Étapes du parcours, dans l'ordre : faites (événements enregistrés), en
+/// cours, puis à venir. Le transit, facultatif, n'apparaît que s'il a été
+/// scanné.
+List<_JourneyStep> _journeySteps(
+  AppLocalizations l,
+  List<TrackingEventModel> events,
+) {
+  final sorted = [...events]
+    ..sort((a, b) => a.scannedAt.compareTo(b.scannedAt));
+  final departed = sorted.any((e) => e.eventType == 'DEPART');
+  final delivered = sorted.any((e) => e.eventType == 'ARRIVEE');
+  return [
+    for (final event in sorted)
+      _JourneyStep(_StepState.done, _doneTitle(l, event), event: event),
+    if (!delivered && !departed) ...[
+      _JourneyStep(_StepState.current, l.trackingStepHandoverToTraveler),
+      _JourneyStep(_StepState.upcoming, l.trackingStepDeparture),
+    ],
+    if (!delivered && departed)
+      _JourneyStep(_StepState.current, l.trackingHeadlineOnTheWay),
+    if (!delivered)
+      _JourneyStep(_StepState.upcoming, l.trackingStepHandoverToRecipient),
+  ];
+}
+
+String _doneTitle(AppLocalizations l, TrackingEventModel event) =>
+    switch (event.eventType) {
+      'DEPART' => l.trackingStepHandedToTraveler,
+      'ARRIVEE' => l.trackingStepHandedToRecipient,
+      _ => trackingStepLabel(l, event.eventType),
+    };
+
+/// Phrase d'état du colis, en titre.
+String _headline(
+  AppLocalizations l,
+  List<TrackingEventModel> events,
+  String corridor,
+) {
+  if (events.any((e) => e.eventType == 'ARRIVEE')) {
+    return l.trackingHeadlineDelivered;
+  }
+  if (!events.any((e) => e.eventType == 'DEPART')) {
+    return l.trackingHeadlineAwaitingHandover;
+  }
+  final parts = corridor.split('→');
+  final city = parts.length > 1 ? parts.last.trim() : '';
+  return city.isEmpty
+      ? l.trackingHeadlineOnTheWay
+      : l.trackingHeadlineOnTheWayTo(city);
+}
+
+class _Journey extends StatelessWidget {
+  const _Journey({
+    required this.events,
+    required this.corridor,
+    this.trackingNumber,
+    this.arrivalInstructions,
+  });
+
+  final List<TrackingEventModel> events;
+  final String corridor;
+  final String? trackingNumber;
+  final String? arrivalInstructions;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final steps = _journeySteps(l, events);
+    final number = trackingNumber?.trim() ?? '';
+    final instructions = arrivalInstructions?.trim() ?? '';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: DonySpacing.sm),
+        if (number.isNotEmpty) ...[
+          Text(
+            number,
+            key: const Key('tracking-number'),
+            style: tt.labelLarge?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(height: DonySpacing.xs),
+        ],
+        Text(
+          _headline(l, events, corridor),
+          key: const Key('tracking-headline'),
+          style: tt.headlineLarge?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        if (corridor.isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            corridor,
+            style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+        const SizedBox(height: DonySpacing.xl),
+        for (var i = 0; i < steps.length; i++)
+          _JourneyRow(
+            step: steps[i],
+            // Trait bleu entre deux étapes faites, gris ensuite.
+            connector: i == steps.length - 1
+                ? null
+                : steps[i + 1].state == _StepState.done
+                ? cs.primary
+                : cs.outline,
+          ),
+        // Dès que le voyageur les a saisies : elles servent à récupérer le
+        // colis, donc avant la remise au destinataire.
+        if (instructions.isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.sm),
+          DonyStatusBanner(
+            key: const Key('tracking-arrival-instructions'),
+            type: DonyStatusBannerType.info,
+            iconAsset: 'map-pin',
+            title: l.tripOwnerArrivalEditingTitle,
+            message: instructions,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _JourneyRow extends StatelessWidget {
+  const _JourneyRow({required this.step, required this.connector});
+
+  final _JourneyStep step;
+
+  /// Couleur du trait vers l'étape suivante, `null` pour la dernière.
+  final Color? connector;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final event = step.event;
+    final line = connector;
+    final details = event == null
+        ? ''
+        : [?event.locationLabel(l), ?event.methodLabel(l)].join(' · ');
+    final photo = event?.photoUrl;
+
+    final Widget marker = switch (step.state) {
+      _StepState.done => Container(
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle),
+        child: DonyIcon('check', size: 12, color: cs.onPrimary),
+      ),
+      _StepState.current => Container(
+        width: 22,
+        height: 22,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: cs.surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: cs.secondary, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: cs.secondary.withValues(alpha: 0.15),
+              spreadRadius: 5,
+            ),
+          ],
+        ),
+        child: Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: cs.secondary,
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
+      _StepState.upcoming => Container(
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: cs.outline, width: 2),
+        ),
+      ),
     };
 
     return IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Timeline indicator — all recorded events are completed
-              SizedBox(
-                width: 40,
-                child: Column(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: stepColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const DonyIcon(
-                        'check',
-                        color: DonyColors.white,
-                        size: 16,
-                      ),
-                    ),
-                    if (!isLast)
-                      Expanded(
-                        child: Container(
-                          width: 2,
-                          color: cs.outlineVariant,
-                          margin: const EdgeInsets.symmetric(
-                            vertical: DonySpacing.xs,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+      key: Key('tracking-step-${step.state.name}'),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 22,
+            child: Column(
+              children: [
+                ExcludeSemantics(child: marker),
+                if (line != null)
+                  Expanded(child: Container(width: 2, color: line)),
+              ],
+            ),
+          ),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: line == null ? 0 : DonySpacing.lg,
               ),
-              const SizedBox(width: DonySpacing.md),
-
-              // Content card
-              Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(
-                    bottom: isLast ? 0 : DonySpacing.base,
-                  ),
-                  padding: const EdgeInsets.all(DonySpacing.md),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(DonyRadius.lg),
-                    border: Border.all(color: cs.outline),
-                  ),
-                  child: Column(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        event.stepLabel(l),
-                        style: tt.titleSmall?.copyWith(color: cs.onSurface),
-                      ),
-                      const SizedBox(height: DonySpacing.xs),
-                      Text(
-                        l.commonDateAtTime(
-                          DateFormat.yMd(
-                            localeName,
-                          ).format(event.scannedAt.toLocal()),
-                          DateFormat.jm(
-                            localeName,
-                          ).format(event.scannedAt.toLocal()),
-                        ),
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                      if (locationLabel != null) ...[
-                        const SizedBox(height: DonySpacing.xs),
-                        Row(
-                          children: [
-                            DonyIcon(
-                              'map-pin',
-                              size: 12,
-                              color: cs.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: DonySpacing.xs),
-                            Text(
-                              locationLabel,
-                              style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                      if (methodLabel != null) ...[
-                        const SizedBox(height: DonySpacing.xs),
-                        Row(
-                          key: const Key('tracking-step-method'),
-                          children: [
-                            DonyIcon(
-                              event.scanMethod == ScanMethod.qr
-                                  ? 'qr-code'
-                                  : 'package',
-                              size: 12,
-                              color: cs.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: DonySpacing.xs),
-                            Expanded(
-                              child: Text(
-                                methodLabel,
-                                style: tt.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                      if (event.photoUrl != null) ...[
-                        const SizedBox(height: DonySpacing.sm),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(DonyRadius.sm),
-                          child: DonyImage(
-                            url: event.photoUrl!,
-                            height: 120,
-                            width: double.infinity,
-                            placeholder: (_) => Container(
-                              height: 120,
-                              color: cs.primaryContainer,
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  color: cs.primary,
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            ),
-                            errorWidget: (_) => Container(
-                              height: 60,
-                              color: cs.surfaceContainerHighest,
-                              child: Center(
-                                child: DonyIcon(
-                                  'image-off',
-                                  color: cs.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
+                      Expanded(
+                        child: Text(
+                          step.title,
+                          style: tt.bodyLarge?.copyWith(
+                            fontWeight: step.state == _StepState.current
+                                ? FontWeight.w700
+                                : null,
+                            color: step.state == _StepState.upcoming
+                                ? cs.onSurfaceVariant
+                                : cs.onSurface,
                           ),
                         ),
-                      ],
-                      if (event.offlineTimestamp != null) ...[
-                        const SizedBox(height: DonySpacing.sm),
-                        Row(
-                          children: [
-                            DonyIcon('wifi-off', size: 12, color: cs.warning),
-                            const SizedBox(width: DonySpacing.xs),
-                            Text(
-                              l.trackingOfflineScanSynced,
-                              style: tt.bodySmall?.copyWith(
-                                color: cs.warning,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                      ),
+                      if (event != null) ...[
+                        const SizedBox(width: DonySpacing.sm),
+                        Text(
+                          DateFormat.MMMd(
+                            l.localeName,
+                          ).add_Hm().format(event.scannedAt.toLocal()),
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
                         ),
                       ],
                     ],
                   ),
-                ),
+                  if (details.isNotEmpty) ...[
+                    const SizedBox(height: DonySpacing.xxs),
+                    Text(
+                      details,
+                      key: event?.scanMethod != null
+                          ? const Key('tracking-step-method')
+                          : null,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ],
+                  if (photo != null) ...[
+                    const SizedBox(height: DonySpacing.sm),
+                    Semantics(
+                      image: true,
+                      label: l.trackingStepPhotoLabel,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        child: DonyImage(
+                          url: photo,
+                          width: 64,
+                          height: 64,
+                          placeholder: (_) => ColoredBox(
+                            color: cs.surfaceWarm,
+                            child: const SizedBox(width: 64, height: 64),
+                          ),
+                          errorWidget: (_) => Container(
+                            width: 64,
+                            height: 64,
+                            color: cs.surfaceWarm,
+                            alignment: Alignment.center,
+                            child: DonyIcon(
+                              'image-off',
+                              size: 18,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            ],
-          ),
-        )
-        .animate(delay: (index * 60).ms)
-        .fadeIn(duration: 250.ms)
-        .slideX(begin: 0.04);
-  }
-}
-
-class _PendingConfirmationBanner extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.warning.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(DonyRadius.lg),
-        border: Border.all(color: cs.warning.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          DonyIcon('hourglass', color: cs.warning, size: 22),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.trackingAwaitingConfirmationTitle,
-                  style: tt.titleSmall?.copyWith(color: cs.warning),
-                ),
-                const SizedBox(height: DonySpacing.xxs),
-                Text(
-                  context.l10n.trackingAwaitingConfirmationDesc,
-                  style: tt.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 250.ms);
-  }
-}
-
-class _EmptyTimeline extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.xl),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(DonySpacing.md),
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(DonyRadius.lg),
-            ),
-            child: DonyIcon('hourglass', color: cs.primary, size: 32),
-          ),
-          const SizedBox(height: DonySpacing.base),
-          Text(context.l10n.trackingEmptyTimelineTitle, style: tt.titleLarge),
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            context.l10n.trackingEmptyTimelineDesc,
-            textAlign: TextAlign.center,
-            style: tt.bodySmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              height: 1.4,
             ),
           ),
         ],
@@ -520,87 +459,37 @@ class _EmptyTimeline extends StatelessWidget {
   }
 }
 
-// ── "Pas besoin d'app !" banner ───────────────────────────────────────────────
-
-class _ApplessBanner extends StatelessWidget {
-  const _ApplessBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.secondaryContainer,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.secondary),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              DonyIcon('circle-check', color: cs.secondary, size: 20),
-              const SizedBox(width: DonySpacing.sm),
-              Text(
-                context.l10n.trackingApplessTitle,
-                style: tt.titleSmall?.copyWith(
-                  color: cs.secondary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            context.l10n.trackingApplessMessage,
-            style: tt.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface,
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms);
-  }
-}
-
-// ── Error view ────────────────────────────────────────────────────────────────
-
 class _ErrorView extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
   const _ErrorView({required this.message, required this.onRetry});
 
+  final String message;
+  final VoidCallback onRetry;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(DonySpacing.xxl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DonyIcon('circle-alert', color: cs.error, size: 40),
-            const SizedBox(height: DonySpacing.md),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: DonySpacing.lg),
-            DonyButton(
-              label: context.l10n.commonRetry,
-              iconAsset: 'refresh-cw',
-              onPressed: onRetry,
-              fullWidth: false,
-            ),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(DonySpacing.xl),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyIcon('circle-alert', color: cs.error, size: 40),
+          const SizedBox(height: DonySpacing.md),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: DonySpacing.lg),
+          DonyButton(
+            label: context.l10n.commonRetry,
+            iconAsset: 'refresh-cw',
+            onPressed: onRetry,
+            fullWidth: false,
+          ),
+        ],
       ),
     );
   }

@@ -540,7 +540,10 @@ void main() {
       await pump(tester, roles: ['SENDER']);
       await tester.tap(find.byKey(const Key('suivi-shipment-ship-1')));
       await settle(tester);
-      expect(text('Suivi du colis'), findsOneWidget);
+      expect(text('Suivi en lecture seule'), findsOneWidget);
+      // Numéro DON de l'envoi en tête du parcours.
+      expect(find.byKey(const Key('tracking-number')), findsOneWidget);
+      expect(text('Paris → Dakar'), findsWidgets);
     });
 
     testWidgets('lecteur QR plein écran → parcours du colis lu', (
@@ -551,7 +554,7 @@ void main() {
       await settle(tester);
       await tester.tap(text('lire le QR'));
       await settle(tester);
-      expect(text('Suivi du colis'), findsOneWidget);
+      expect(text('Suivi en lecture seule'), findsOneWidget);
     });
 
     testWidgets('numéro trouvé → parcours ; introuvable → erreur', (
@@ -592,7 +595,7 @@ void main() {
       );
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await settle(tester);
-      expect(text('Suivi du colis'), findsOneWidget);
+      expect(text('Suivi en lecture seule'), findsOneWidget);
       expect(text('Lyon → Abidjan'), findsWidgets);
     });
 
@@ -831,7 +834,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key('suivi-follow-parcel')));
       await settle(tester);
-      expect(text('Suivi du colis'), findsOneWidget);
+      expect(text('Suivi en lecture seule'), findsOneWidget);
       expect(
         find.textContaining('Mes envois', findRichText: true),
         findsOneWidget,
@@ -857,7 +860,7 @@ void main() {
       await pump(tester, location: '/?mode=suivre');
       scan!('fatou');
       await settle(tester);
-      expect(text('Suivi du colis'), findsOneWidget);
+      expect(text('Suivi en lecture seule'), findsOneWidget);
     });
 
     // Recette Redmi : le bouton d'une ligne ouvrait l'ancien écran

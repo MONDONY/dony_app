@@ -321,12 +321,14 @@ class _SuiviBodyState extends State<_SuiviBody> {
         :final bidId,
         :final corridor,
         :final arrivalInstructions,
+        :final trackingNumber,
       ):
         await showTrackingTimelineSheet(
           context,
           bidId: bidId,
           corridor: corridor,
           arrivalInstructions: arrivalInstructions,
+          trackingNumber: trackingNumber,
         );
         if (!mounted) return;
         cubit.releaseScan();

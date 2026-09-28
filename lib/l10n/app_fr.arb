@@ -11059,17 +11059,9 @@
   "@receptionContestFirst": {
     "description": "Segment cliquable (vers /disputes) de receptionReleaseWarning, isolé pour emphasizedSpans (reception_confirm_screen.dart, _LegalNote)."
   },
-  "trackingTimelineTitle": "Suivi du colis",
-  "@trackingTimelineTitle": {
-    "description": "Titre de la sheet showTrackingTimelineSheet (tracking_timeline_bottom_sheet.dart)."
-  },
   "trackingTimelineShare": "Partager le suivi",
   "@trackingTimelineShare": {
     "description": "Bouton sticky de la sheet showTrackingTimelineSheet, visible seulement si onShareTracking est fourni (tracking_timeline_bottom_sheet.dart)."
-  },
-  "trackingTimelineStepsHeader": "ÉTAPES",
-  "@trackingTimelineStepsHeader": {
-    "description": "En-tête de section de la frise d'événements (tracking_timeline_bottom_sheet.dart, _Timeline)."
   },
   "trackingEventDepartureConfirmed": "Départ confirmé",
   "@trackingEventDepartureConfirmed": {
@@ -11087,10 +11079,6 @@
   "@trackingGpsRecorded": {
     "description": "Repli affiché quand un événement de suivi a des coordonnées GPS mais aucun gpsLabel (extension TrackingEventL10n, tracking_labels.dart)."
   },
-  "trackingOfflineScanSynced": "Lecture hors-ligne synchronisée",
-  "@trackingOfflineScanSynced": {
-    "description": "Badge d'un événement de suivi ayant un offlineTimestamp (tracking_timeline_bottom_sheet.dart, _TimelineItem)."
-  },
   "trackingValidatedByQr": "Validé par scan du QR",
   "@trackingValidatedByQr": {
     "description": "Provenance d'une étape du suivi : QR du colis scanné (tracking_timeline_bottom_sheet.dart, _TimelineItem)."
@@ -11102,30 +11090,6 @@
   "trackingValidatedByNumber": "Validé avec le numéro",
   "@trackingValidatedByNumber": {
     "description": "Provenance d'une étape du suivi : numéro saisi à la main, sans photo (tracking_timeline_bottom_sheet.dart, _TimelineItem)."
-  },
-  "trackingAwaitingConfirmationTitle": "En attente de confirmation",
-  "@trackingAwaitingConfirmationTitle": {
-    "description": "Titre du bandeau affiché tant qu'aucun événement ARRIVEE n'est enregistré (tracking_timeline_bottom_sheet.dart, _PendingConfirmationBanner)."
-  },
-  "trackingAwaitingConfirmationDesc": "Le destinataire doit confirmer la réception via le code SMS.",
-  "@trackingAwaitingConfirmationDesc": {
-    "description": "Description du bandeau _PendingConfirmationBanner (tracking_timeline_bottom_sheet.dart)."
-  },
-  "trackingEmptyTimelineTitle": "En attente de la lecture au départ",
-  "@trackingEmptyTimelineTitle": {
-    "description": "Titre de la frise vide, avant tout événement (tracking_timeline_bottom_sheet.dart, _EmptyTimeline)."
-  },
-  "trackingEmptyTimelineDesc": "Le voyageur lira le QR code lors de la remise du colis.",
-  "@trackingEmptyTimelineDesc": {
-    "description": "Description de la frise vide (tracking_timeline_bottom_sheet.dart, _EmptyTimeline)."
-  },
-  "trackingApplessTitle": "Pas besoin d'app !",
-  "@trackingApplessTitle": {
-    "description": "Titre du bandeau « pas besoin d'app » (tracking_timeline_bottom_sheet.dart, _ApplessBanner)."
-  },
-  "trackingApplessMessage": "Quand le voyageur sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.",
-  "@trackingApplessMessage": {
-    "description": "Message complet du bandeau _ApplessBanner (tracking_timeline_bottom_sheet.dart) — l'ancien paramètre travelerName valait toujours le littéral « le voyageur » (seul appelant), donc intégré tel quel dans le message plutôt que fragmenté."
   },
   "cancellationConfirmTitle": "Annuler ce trajet ?",
   "@cancellationConfirmTitle": {
@@ -16594,5 +16558,50 @@
         "type": "String"
       }
     }
+  },
+  "trackingReadOnlyLabel": "Suivi en lecture seule",
+  "@trackingReadOnlyLabel": {
+    "description": "En-tête de la feuille du parcours d'un colis, avec l'icône œil (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingHeadlineAwaitingHandover": "En attente de la remise au voyageur",
+  "@trackingHeadlineAwaitingHandover": {
+    "description": "Phrase d'état en titre : aucune étape encore validée (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingHeadlineOnTheWayTo": "En route vers {city}",
+  "@trackingHeadlineOnTheWayTo": {
+    "description": "Phrase d'état en titre : colis parti, ville d'arrivée connue (tracking_timeline_bottom_sheet.dart).",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingHeadlineOnTheWay": "En route",
+  "@trackingHeadlineOnTheWay": {
+    "description": "Phrase d'état sans ville d'arrivée, et étape en cours de la frise entre le départ et la remise (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingHeadlineDelivered": "Colis remis au destinataire",
+  "@trackingHeadlineDelivered": {
+    "description": "Phrase d'état en titre : remise au destinataire validée (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingStepHandedToTraveler": "Remis au voyageur",
+  "@trackingStepHandedToTraveler": {
+    "description": "Étape faite de la frise : événement DEPART (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingStepHandedToRecipient": "Remis au destinataire",
+  "@trackingStepHandedToRecipient": {
+    "description": "Étape faite de la frise : événement ARRIVEE (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingStepHandoverToTraveler": "Remise au voyageur",
+  "@trackingStepHandoverToTraveler": {
+    "description": "Étape en cours de la frise, avant tout événement (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingStepHandoverToRecipient": "Remise au destinataire",
+  "@trackingStepHandoverToRecipient": {
+    "description": "Dernière étape à venir de la frise (tracking_timeline_bottom_sheet.dart)."
+  },
+  "trackingStepPhotoLabel": "Photo de l'étape",
+  "@trackingStepPhotoLabel": {
+    "description": "Libellé d'accessibilité de la miniature photo d'une étape (tracking_timeline_bottom_sheet.dart)."
   }
 }
