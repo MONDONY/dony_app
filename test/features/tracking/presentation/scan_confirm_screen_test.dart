@@ -321,6 +321,34 @@ void main() {
     expect(find.textContaining('2.3522'), findsNothing);
   });
 
+  // Sentry FLUTTER-3W : sur un écran de 360 dp (Redmi), une adresse issue du
+  // géocodage inverse débordait de la pastille de lieu de 1 à 3 px à droite.
+  testWidgets('une adresse longue tient dans la pastille de lieu en 360 dp', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final bloc = MockTrackingBloc();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+    whenListen(bloc, const Stream<TrackingState>.empty());
+    const address =
+        '12 avenue du Général de Gaulle, Villeneuve-Saint-Georges, '
+        'Île-de-France, France';
+    await tester.pumpWidget(
+      _wrap(
+        'DEPART',
+        bloc,
+        gpsLat: 48.73,
+        gpsLon: 2.45,
+        gpsLabel: address,
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text(address), findsOneWidget);
+  });
+
   // ─── "Reprendre photo" visible si photoPath fourni ───────────────────────
   testWidgets('bouton Reprendre la photo visible si photoPath fourni', (
     tester,
