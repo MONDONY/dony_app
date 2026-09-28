@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/google_auth_flag.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
@@ -352,5 +354,131 @@ void main() {
       find.textContaining('By continuing, you agree to our'),
       findsOneWidget,
     );
+  });
+
+  // Rage clicks PostHog du 27/09 : pendant la connexion Google, Apple ou
+  // invitée, les boutons restaient actifs et sans retour visuel, et les
+  // testeurs iOS tapaient à répétition.
+  group('pendant une connexion lancée depuis cet écran', () {
+    late MockAuthBloc bloc;
+    late StreamController<AuthState> states;
+
+    setUp(() {
+      bloc = MockAuthBloc();
+      states = StreamController<AuthState>.broadcast();
+      var current = const AuthInitial() as AuthState;
+      when(() => bloc.state).thenAnswer((_) => current);
+      when(() => bloc.stream).thenAnswer((_) => states.stream);
+      states.stream.listen((s) => current = s);
+    });
+
+    tearDown(() async {
+      await states.close();
+      await bloc.close();
+    });
+
+    Future<void> emit(WidgetTester tester, AuthState state) async {
+      states.add(state);
+      await tester.pump();
+      await tester.pump();
+    }
+
+    bool googleEnabled(WidgetTester tester) => tester
+        .widget<OutlinedButton>(
+          find.ancestor(
+            of: find.text('Continuer avec Google'),
+            matching: find.byType(OutlinedButton),
+          ),
+        )
+        .enabled;
+
+    bool emailEnabled(WidgetTester tester) => tester
+        .widget<OutlinedButton>(
+          find.ancestor(
+            of: find.text('Continuer avec mon email'),
+            matching: find.byType(OutlinedButton),
+          ),
+        )
+        .enabled;
+
+    testWidgets('Google affiche un spinner et bloque les autres boutons', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_app(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+
+      await tester.tap(find.text('Continuer avec Google'));
+      await emit(tester, const AuthLoading());
+
+      verify(() => bloc.add(const AuthGoogleSignInRequested())).called(1);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(emailEnabled(tester), isFalse);
+
+      // Un second toucher pendant l'attente ne relance rien.
+      await tester.tap(find.text('Continuer avec Google'));
+      await tester.pump();
+      verifyNever(() => bloc.add(const AuthGoogleSignInRequested()));
+    });
+
+    testWidgets('une annulation Google rend la main aux boutons', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_app(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.text('Continuer avec Google'));
+      await emit(tester, const AuthLoading());
+      await emit(tester, const AuthInitial());
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(googleEnabled(tester), isTrue);
+      expect(emailEnabled(tester), isTrue);
+    });
+
+    testWidgets('une erreur rend la main aux boutons', (tester) async {
+      await tester.pumpWidget(_app(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.text('Parcourir sans compte'));
+      await emit(tester, const AuthLoading());
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(googleEnabled(tester), isFalse);
+
+      await emit(
+        tester,
+        const AuthError(NetworkException('Hors ligne', code: 'offline')),
+      );
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(googleEnabled(tester), isTrue);
+    });
+
+    // L'AuthBloc est global : un chargement qui ne vient pas de cet écran ne
+    // doit pas en figer les boutons.
+    testWidgets('un chargement non lancé ici ne bloque rien', (tester) async {
+      await tester.pumpWidget(_app(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await emit(tester, const AuthLoading());
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(googleEnabled(tester), isTrue);
+      expect(emailEnabled(tester), isTrue);
+    });
+
+    testWidgets('Apple affiche son spinner sur iOS', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      await tester.pumpWidget(_app(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.text('Continuer avec Apple'));
+      await emit(tester, const AuthLoading());
+
+      verify(() => bloc.add(const AuthAppleSignInRequested())).called(1);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(googleEnabled(tester), isFalse);
+      debugDefaultTargetPlatformOverride = null;
+    });
   });
 }
