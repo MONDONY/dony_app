@@ -14119,6 +14119,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get suiviChangeTrip => 'Changer';
 
   @override
+  String get suiviChangeTripSemantics => 'Changer de trajet';
+
+  @override
+  String get suiviOnlyTrip => 'C\'est ton seul trajet en cours ou à venir.';
+
+  @override
   String get suiviTripsInProgress => 'En cours';
 
   @override

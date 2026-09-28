@@ -23490,6 +23490,18 @@ abstract class AppLocalizations {
   /// **'Changer'**
   String get suiviChangeTrip;
 
+  /// Libellé d'accessibilité de la ligne du trajet, tapable pour ouvrir le choix du trajet (suivi_validate_content.dart, _TripRow).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de trajet'**
+  String get suiviChangeTripSemantics;
+
+  /// Ligne discrète de « Choisir un trajet » quand le voyageur n'a qu'un trajet en cours ou à venir (suivi_validate_content.dart, SuiviTripPicker).
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est ton seul trajet en cours ou à venir.'**
+  String get suiviOnlyTrip;
+
   /// Groupe des trajets en cours dans « Choisir un trajet » (suivi_validate_content.dart).
   ///
   /// In fr, this message translates to:

@@ -7,6 +7,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -700,6 +701,54 @@ void main() {
 
       await tester.tap(find.byKey(const Key('trip_option_trip-b')));
       await settle(tester);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('suivi-selected-trip'))).data,
+        'Paris → Dakar',
+      );
+    });
+
+    testWidgets('défaut : le trajet qui a des colis à valider', (tester) async {
+      stubTrips(
+        [
+          _trip('trip-a', 'IN_PROGRESS', 'Bobo-Dioulasso', 'Yaoundé'),
+          _trip(
+            'trip-b',
+            'ACTIVE',
+            'Paris',
+            'Dakar',
+            date: DateTime(2026, 10, 3),
+          ),
+        ],
+        {
+          'trip-a': [_bid('awa', 'COMPLETED', name: 'Awa')],
+          'trip-b': [_bid('fatou', 'ACCEPTED', trip: 'trip-b', name: 'Fatou')],
+        },
+      );
+      await pump(tester);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('suivi-selected-trip'))).data,
+        'Paris → Dakar',
+      );
+    });
+
+    testWidgets('trajet choisi gardé au retour sur l\'onglet', (tester) async {
+      stubDefaultTrips();
+      await pump(tester);
+      await tester.tap(find.byKey(const Key('suivi-change-trip')));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('trip_option_trip-b')));
+      await settle(tester);
+
+      unawaited(
+        GoRouter.of(
+          tester.element(find.byKey(const Key('fake-camera'))),
+        ).push('/announcements/trips'),
+      );
+      await settle(tester);
+      GoRouter.of(tester.element(find.text('page /announcements/trips'))).pop();
+      await settle(tester);
+
+      verify(() => annRepo.getMyAnnouncements()).called(2);
       expect(
         tester.widget<Text>(find.byKey(const Key('suivi-selected-trip'))).data,
         'Paris → Dakar',
@@ -1692,6 +1741,92 @@ void main() {
           findsOneWidget,
         );
         expect(text('Forcer une étape'), findsOneWidget);
+      });
+
+      testWidgets('un seul trajet : la ligne ouvre la liste, trajet coché '
+          '($mode)', (tester) async {
+        stubTrips(
+          [_trip('trip-a', 'IN_PROGRESS', 'Bobo-Dioulasso', 'Yaoundé')],
+          {
+            'trip-a': [
+              _bid('madou', 'ACCEPTED', name: 'Madou'),
+              _bid('kadi', 'IN_TRANSIT', name: 'Kadi'),
+              _bid('awa', 'COMPLETED', name: 'Awa'),
+            ],
+          },
+        );
+        await pump(tester, themeMode: mode);
+        expect(tester.takeException(), isNull);
+
+        final row = find.byKey(const Key('suivi-change-trip'));
+        expect(text('Changer'), findsOneWidget);
+        expect(tester.getSize(row).height, greaterThanOrEqualTo(44));
+        expect(
+          find.bySemanticsLabel(RegExp('^Changer de trajet')),
+          findsOneWidget,
+        );
+
+        // Tap sur la ville, pas sur « Changer » : toute la ligne est active.
+        await tester.tap(find.byKey(const Key('suivi-selected-trip')));
+        await settle(tester);
+        expect(tester.takeException(), isNull);
+        expect(text('Choisir un trajet'), findsOneWidget);
+        expect(
+          text("C'est ton seul trajet en cours ou à venir."),
+          findsOneWidget,
+        );
+        expect(text('sam. 26 sept. · 3 colis · 2 à valider'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('trip_option_trip-a')),
+            matching: find.byWidgetPredicate(
+              (w) => w is DonyIcon && w.name == 'check',
+            ),
+          ),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byKey(const Key('trip_option_trip-a')));
+        await settle(tester);
+        expect(text('Choisir un trajet'), findsNothing);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.suiviTripChanged,
+            properties: any(named: 'properties'),
+          ),
+        );
+      });
+
+      testWidgets('plusieurs trajets : compteurs et trajet courant coché '
+          '($mode)', (tester) async {
+        stubDefaultTrips();
+        await pump(tester, themeMode: mode);
+        await tester.tap(find.byKey(const Key('suivi-change-trip')));
+        await settle(tester);
+        expect(tester.takeException(), isNull);
+        expect(
+          text("C'est ton seul trajet en cours ou à venir."),
+          findsNothing,
+        );
+        expect(text('sam. 26 sept. · 2 colis · 2 à valider'), findsOneWidget);
+        expect(text('sam. 3 oct. · 1 colis · 1 à valider'), findsOneWidget);
+        Finder checkIn(String trip) => find.descendant(
+          of: find.byKey(Key('trip_option_$trip')),
+          matching: find.byWidgetPredicate(
+            (w) => w is DonyIcon && w.name == 'check',
+          ),
+        );
+        expect(checkIn('trip-a'), findsOneWidget);
+        expect(checkIn('trip-b'), findsNothing);
+
+        await tester.tap(find.byKey(const Key('trip_option_trip-b')));
+        await settle(tester);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.suiviTripChanged,
+            properties: {'source': 'picker'},
+          ),
+        ).called(1);
       });
 
       testWidgets('Suivre un colis ($mode)', (tester) async {

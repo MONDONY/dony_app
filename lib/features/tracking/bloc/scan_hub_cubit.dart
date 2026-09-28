@@ -59,10 +59,12 @@ class ScanHubLoaded extends ScanHubState {
   List<BidModel> confirmedBidsOf(String tripId) =>
       confirmedColis(bidsByTrip[tripId] ?? const []);
 
+  /// Colis d'un trajet qui attendent encore une étape (départ ou remise).
+  int toValidateCountOf(String tripId) =>
+      confirmedBidsOf(tripId).where((b) => nextRequiredStep(b) != null).length;
+
   /// Au moins un colis, tous trajets confondus, attend encore une étape.
-  bool get hasParcelToValidate => trips.any(
-    (t) => confirmedBidsOf(t.id).any((b) => nextRequiredStep(b) != null),
-  );
+  bool get hasParcelToValidate => trips.any((t) => toValidateCountOf(t.id) > 0);
 }
 
 class ScanHubCubit extends Cubit<ScanHubState> {
@@ -89,19 +91,26 @@ class ScanHubCubit extends Cubit<ScanHubState> {
   /// l'appel n'en relance pas un second.
   bool _silentLoading = false;
 
+  /// Trajet choisi explicitement par le voyageur (feuille « Choisir un
+  /// trajet » ou « Passer sur ce trajet »). Prime sur la sélection
+  /// automatique à chaque rechargement tant qu'il reste scannable.
+  ///
+  /// En mémoire seulement : le cubit vit dans le shell, et après un
+  /// redémarrage de l'app la sélection automatique reprend la main.
+  String? _chosenTripId;
+
   /// Charge les trajets scannables et leurs colis.
   ///
   /// [silent] : rafraîchissement (étape validée, retour sur l'onglet). L'écran
   /// garde son contenu pendant l'appel (pas d'état de chargement, donc pas de
   /// caméra démontée), et un échec laisse les colis déjà affichés. Un échec
   /// depuis « Rien à valider » s'affiche en erreur : jamais un vide trompeur.
-  /// Le trajet sélectionné est conservé tant qu'il reste scannable.
+  ///
+  /// Trajet affiché : le choix du voyageur tant qu'il reste scannable,
+  /// sinon la sélection automatique ([defaultScanTripId]).
   Future<void> load({bool silent = false}) async {
     if (silent && _silentLoading) return;
     final previous = state;
-    final keepTripId = previous is ScanHubLoaded
-        ? previous.selectedTripId
-        : null;
     final keepContent =
         silent && (previous is ScanHubLoaded || previous is ScanHubEmpty);
     if (!keepContent) emit(const ScanHubLoading());
@@ -119,9 +128,10 @@ class ScanHubCubit extends Cubit<ScanHubState> {
         bidsByTrip[trip.id] = await _bidRepo.getBidsForAnnouncement(trip.id);
       }
 
-      final selectedTripId = trips.any((t) => t.id == keepTripId)
-          ? keepTripId!
-          : trips.first.id;
+      // Trajet choisi disparu (terminé, annulé) : le choix est oublié.
+      if (!trips.any((t) => t.id == _chosenTripId)) _chosenTripId = null;
+      final selectedTripId =
+          _chosenTripId ?? defaultScanTripId(trips, bidsByTrip);
       final scanHistory = await _trackingRepo.getTripScanHistory(
         selectedTripId,
       );
@@ -150,9 +160,17 @@ class ScanHubCubit extends Cubit<ScanHubState> {
   /// [source] : `picker` (feuille « Choisir un trajet ») ou `other_trip`
   /// (QR d'un colis d'un autre trajet du voyageur), tracé dans
   /// `suivi_trip_changed`.
+  ///
+  /// Choix explicite du voyageur : gardé pour les rechargements suivants,
+  /// même quand il confirme le trajet déjà affiché par défaut.
   Future<void> selectTrip(String tripId, {String source = 'picker'}) async {
     final current = state;
-    if (current is! ScanHubLoaded || current.selectedTripId == tripId) return;
+    if (current is! ScanHubLoaded ||
+        !current.trips.any((t) => t.id == tripId)) {
+      return;
+    }
+    _chosenTripId = tripId;
+    if (current.selectedTripId == tripId) return;
     unawaited(
       _analytics.logEvent(
         AnalyticsEvents.suiviTripChanged,

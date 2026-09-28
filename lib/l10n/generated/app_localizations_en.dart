@@ -14031,6 +14031,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suiviChangeTrip => 'Change';
 
   @override
+  String get suiviChangeTripSemantics => 'Change trip';
+
+  @override
+  String get suiviOnlyTrip => 'This is your only current or upcoming trip.';
+
+  @override
   String get suiviTripsInProgress => 'In progress';
 
   @override

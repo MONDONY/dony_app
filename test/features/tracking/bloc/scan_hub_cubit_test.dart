@@ -586,6 +586,255 @@ void main() {
     await cubit.close();
   });
 
+  group('trajet affiché : sélection automatique et choix du voyageur', () {
+    /// `soonest` (en cours) n'a que des colis remis, `later` (à venir) un
+    /// colis à récupérer, `third` (à venir) un colis à récupérer aussi.
+    void tripsWithWork({bool withThird = true, bool laterStillThere = true}) {
+      when(() => annRepo.getMyAnnouncements()).thenAnswer(
+        (_) async => (
+          announcements: [
+            _trip('soonest', 'IN_PROGRESS', DateTime(2026, 6)),
+            if (laterStillThere) _trip('later', 'ACTIVE', DateTime(2026, 7)),
+            if (withThird) _trip('third', 'ACTIVE', DateTime(2026, 8)),
+          ],
+          totalElements: 3,
+        ),
+      );
+      when(
+        () => bidRepo.getBidsForAnnouncement('soonest'),
+      ).thenAnswer((_) async => [_bid('done', 'COMPLETED')]);
+      when(
+        () => bidRepo.getBidsForAnnouncement('later'),
+      ).thenAnswer((_) async => [_bid('todo', 'ACCEPTED')]);
+      when(
+        () => bidRepo.getBidsForAnnouncement('third'),
+      ).thenAnswer((_) async => [_bid('todo-3', 'ACCEPTED')]);
+      when(
+        () => trackingRepo.getTripScanHistory(any()),
+      ).thenAnswer((_) async => []);
+    }
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      'par défaut : le premier trajet qui a un colis à valider',
+      build: () {
+        tripsWithWork();
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) => c.load(),
+      expect: () => [
+        isA<ScanHubLoading>(),
+        isA<ScanHubLoaded>().having(
+          (s) => s.selectedTripId,
+          'selectedTripId',
+          'later',
+        ),
+      ],
+    );
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      'rien à valider nulle part : le premier trajet',
+      build: () {
+        when(() => annRepo.getMyAnnouncements()).thenAnswer(
+          (_) async => (
+            announcements: [
+              _trip('later', 'ACTIVE', DateTime(2026, 7)),
+              _trip('soonest', 'IN_PROGRESS', DateTime(2026, 6)),
+            ],
+            totalElements: 2,
+          ),
+        );
+        when(
+          () => bidRepo.getBidsForAnnouncement(any()),
+        ).thenAnswer((_) async => [_bid('done', 'COMPLETED')]);
+        when(
+          () => trackingRepo.getTripScanHistory(any()),
+        ).thenAnswer((_) async => []);
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) => c.load(),
+      expect: () => [
+        isA<ScanHubLoading>(),
+        isA<ScanHubLoaded>().having(
+          (s) => s.selectedTripId,
+          'selectedTripId',
+          'soonest',
+        ),
+      ],
+    );
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      'sans choix du voyageur, un rechargement réapplique la règle',
+      build: () {
+        tripsWithWork();
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) async {
+        await c.load();
+        // Le colis de `later` vient d'être remis : `third` passe devant.
+        when(
+          () => bidRepo.getBidsForAnnouncement('later'),
+        ).thenAnswer((_) async => [_bid('todo', 'COMPLETED')]);
+        await c.load(silent: true);
+      },
+      skip: 2,
+      expect: () => [
+        isA<ScanHubLoaded>().having(
+          (s) => s.selectedTripId,
+          'selectedTripId',
+          'third',
+        ),
+      ],
+    );
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      'le trajet choisi dans la liste prime sur la règle au rechargement',
+      build: () {
+        tripsWithWork();
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) async {
+        await c.load();
+        await c.selectTrip('soonest');
+        await c.load(silent: true);
+      },
+      skip: 4, // Loading, Loaded, bascule, historique
+      expect: () => [
+        isA<ScanHubLoaded>().having(
+          (s) => s.selectedTripId,
+          'selectedTripId',
+          'soonest',
+        ),
+      ],
+    );
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      'confirmer le trajet déjà affiché compte comme un choix',
+      build: () {
+        tripsWithWork();
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) async {
+        await c.load();
+        await c.selectTrip('later');
+        when(
+          () => bidRepo.getBidsForAnnouncement('later'),
+        ).thenAnswer((_) async => [_bid('todo', 'COMPLETED')]);
+        await c.load(silent: true);
+      },
+      skip: 2,
+      expect: () => [
+        isA<ScanHubLoaded>().having(
+          (s) => s.selectedTripId,
+          'selectedTripId',
+          'later',
+        ),
+      ],
+      verify: (_) => verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.suiviTripChanged,
+          properties: any(named: 'properties'),
+        ),
+      ),
+    );
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      '« Passer sur ce trajet » compte comme un choix du voyageur',
+      build: () {
+        tripsWithWork();
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) async {
+        await c.load();
+        await c.selectTrip('third', source: 'other_trip');
+        await c.load(silent: true);
+      },
+      skip: 4,
+      expect: () => [
+        isA<ScanHubLoaded>().having(
+          (s) => s.selectedTripId,
+          'selectedTripId',
+          'third',
+        ),
+      ],
+    );
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      'trajet choisi disparu : retour à la règle, choix oublié',
+      build: () {
+        tripsWithWork();
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) async {
+        await c.load();
+        await c.selectTrip('third');
+        tripsWithWork(withThird: false);
+        await c.load(silent: true);
+        // `third` revient : le choix ne ressuscite pas.
+        tripsWithWork();
+        await c.load(silent: true);
+      },
+      skip: 4,
+      expect: () => [
+        isA<ScanHubLoaded>().having(
+          (s) => s.selectedTripId,
+          'selectedTripId',
+          'later',
+        ),
+        isA<ScanHubLoaded>().having(
+          (s) => s.selectedTripId,
+          'selectedTripId',
+          'later',
+        ),
+      ],
+    );
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      'trajet inconnu : ignoré',
+      build: () {
+        tripsWithWork();
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) async {
+        await c.load();
+        await c.selectTrip('ghost');
+      },
+      skip: 2,
+      expect: () => <ScanHubState>[],
+    );
+
+    test('choix gardé en mémoire seulement : un nouveau cubit repart de la '
+        'règle', () async {
+      tripsWithWork();
+      final first = ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      await first.load();
+      await first.selectTrip('soonest');
+      await first.close();
+
+      final restarted = ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      await restarted.load();
+      expect((restarted.state as ScanHubLoaded).selectedTripId, 'later');
+      await restarted.close();
+    });
+  });
+
+  test('toValidateCountOf compte les colis qui attendent une étape', () {
+    final loaded = ScanHubLoaded(
+      trips: [_trip('a', 'IN_PROGRESS')],
+      selectedTripId: 'a',
+      bidsByTrip: {
+        'a': [
+          _bid('todo', 'ACCEPTED'),
+          _bid('road', 'IN_TRANSIT'),
+          _bid('done', 'COMPLETED'),
+          _bid('pending', 'PENDING'),
+        ],
+      },
+      scanHistory: const [],
+    );
+    expect(loaded.toValidateCountOf('a'), 2);
+    expect(loaded.toValidateCountOf('unknown'), 0);
+  });
+
   test('hasParcelToValidate regarde tous les trajets', () {
     final loaded = ScanHubLoaded(
       trips: [_trip('a', 'IN_PROGRESS'), _trip('b', 'ACTIVE')],

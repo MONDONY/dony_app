@@ -16154,6 +16154,14 @@
   "@suiviChangeTrip": {
     "description": "Bouton qui ouvre le choix du trajet (suivi_validate_content.dart, _TripRow)."
   },
+  "suiviChangeTripSemantics": "Changer de trajet",
+  "@suiviChangeTripSemantics": {
+    "description": "Libellé d'accessibilité de la ligne du trajet, tapable pour ouvrir le choix du trajet (suivi_validate_content.dart, _TripRow)."
+  },
+  "suiviOnlyTrip": "C'est ton seul trajet en cours ou à venir.",
+  "@suiviOnlyTrip": {
+    "description": "Ligne discrète de « Choisir un trajet » quand le voyageur n'a qu'un trajet en cours ou à venir (suivi_validate_content.dart, SuiviTripPicker)."
+  },
   "suiviTripsInProgress": "En cours",
   "@suiviTripsInProgress": {
     "description": "Groupe des trajets en cours dans « Choisir un trajet » (suivi_validate_content.dart)."
