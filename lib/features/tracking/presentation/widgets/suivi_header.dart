@@ -1,12 +1,17 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
-/// En-tête maison de l'onglet Suivi : titre, lampe (caméra affichée),
-/// scarabée de signalement et, pour un voyageur, le choix du mode.
+/// En-tête maison de l'onglet Suivi : titre, aide (mode Valider), lampe
+/// (caméra affichée), scarabée de signalement et, pour un voyageur, le
+/// choix du mode.
 ///
 /// [onDark] : posé au-dessus du flux caméra (texte blanc).
 class SuiviHeader extends StatelessWidget {
@@ -60,6 +65,7 @@ class SuiviHeader extends StatelessWidget {
                   ),
                 ),
               ),
+              if (current == SuiviMode.valider) SuiviHelpButton(onDark: onDark),
               if (torch != null) QrTorchButton(torchOn: torch),
               DonyFeedbackButton(color: onDark ? DonyColors.neutral0 : null),
             ],
@@ -77,6 +83,45 @@ class SuiviHeader extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// « ? » : tutoriel vidéo de la remise par QR. Rien si le catalogue du
+/// Centre d'aide n'en propose pas.
+class SuiviHelpButton extends StatelessWidget {
+  const SuiviHelpButton({super.key, required this.onDark});
+
+  final bool onDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final tutorial = context.select<HelpCenterBloc, HelpTutorial?>(
+      (bloc) => switch (bloc.state) {
+        HelpCenterSuccess(:final config) => config,
+        HelpCenterError(:final config) => config,
+        _ => HelpCenterConfig.empty,
+      }.tutorialFor(TutorialContext.qrHandover),
+    );
+    if (tutorial == null) return const SizedBox.shrink();
+    final fg = onDark
+        ? DonyColors.neutral0
+        : Theme.of(context).colorScheme.onSurface;
+
+    return IconButton(
+      key: const Key('suivi-help'),
+      tooltip: context.l10n.suiviHelpTooltip,
+      style: IconButton.styleFrom(minimumSize: const Size(44, 44)),
+      icon: DonyIcon('circle-help', color: fg, size: 20),
+      onPressed: () {
+        context.read<HelpCenterBloc>().add(
+          HelpTutorialOpenRequested(
+            tutorialId: tutorial.id,
+            source: TutorialContext.qrHandover,
+          ),
+        );
+        context.push('/profile/help/tutorial/${tutorial.id}');
+      },
     );
   }
 }

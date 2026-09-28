@@ -11,6 +11,7 @@ import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.d
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_confirm_screen.dart';
 import 'package:flutter/material.dart';
@@ -54,6 +55,7 @@ Widget _wrap(
   double? gpsLat,
   double? gpsLon,
   String? gpsLabel,
+  ScanMethod? scanMethod,
 }) {
   final router = GoRouter(
     routes: [
@@ -73,6 +75,7 @@ Widget _wrap(
             gpsLat: gpsLat,
             gpsLon: gpsLon,
             gpsLabel: gpsLabel,
+            scanMethod: scanMethod,
           ),
         ),
       ),
@@ -190,8 +193,38 @@ void main() {
               as ConfirmDeliveryRequested;
       expect(event.code, '654321');
       expect(event.photo?.path, '/tmp/arrivee_photo.jpg');
+      expect(event.scanMethod, isNull);
     },
   );
+
+  testWidgets('la provenance reçue part avec l\'étape et la remise', (
+    tester,
+  ) async {
+    final bloc = MockTrackingBloc();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+    whenListen(bloc, const Stream<TrackingState>.empty());
+    await tester.pumpWidget(_wrap('DEPART', bloc, scanMethod: ScanMethod.qr));
+    await tester.pump();
+    await tester.tap(find.text('Valider la lecture'));
+    await tester.pump();
+    final scan =
+        verify(() => bloc.add(captureAny())).captured.single
+            as QrScanSubmitRequested;
+    expect(scan.scanMethod, ScanMethod.qr);
+
+    await tester.pumpWidget(
+      _wrap('ARRIVEE', bloc, scanMethod: ScanMethod.manual),
+    );
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), '654321');
+    await tester.pump();
+    await tester.tap(find.text('Confirmer la livraison'));
+    await tester.pump();
+    final delivery =
+        verify(() => bloc.add(captureAny())).captured.single
+            as ConfirmDeliveryRequested;
+    expect(delivery.scanMethod, ScanMethod.manual);
+  });
 
   // ─── Loading state — CircularProgressIndicator shown ────────────────────
   testWidgets('état QrScanSubmitting — spinner affiché dans le bouton', (

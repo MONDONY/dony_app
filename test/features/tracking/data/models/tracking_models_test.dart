@@ -1,4 +1,5 @@
 import 'package:dony/features/tracking/data/models/qr_code_model.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -43,6 +44,36 @@ void main() {
       expect(model.gpsLabel, isNull);
       expect(model.photoUrl, isNull);
       expect(model.offlineTimestamp, isNull);
+    });
+
+    group('scanMethod', () {
+      test('QR', () {
+        final model = TrackingEventModel.fromJson({
+          ...baseJson,
+          'scanMethod': 'QR',
+        });
+        expect(model.scanMethod, ScanMethod.qr);
+      });
+
+      test('MANUAL', () {
+        final model = TrackingEventModel.fromJson({
+          ...baseJson,
+          'scanMethod': 'MANUAL',
+        });
+        expect(model.scanMethod, ScanMethod.manual);
+      });
+
+      test('clé absente (provenance inconnue) : null', () {
+        expect(TrackingEventModel.fromJson(baseJson).scanMethod, isNull);
+      });
+
+      test('valeur inattendue ignorée, sans exception', () {
+        final model = TrackingEventModel.fromJson({
+          ...baseJson,
+          'scanMethod': 'BLUETOOTH',
+        });
+        expect(model.scanMethod, isNull);
+      });
     });
   });
 

@@ -199,6 +199,7 @@ import 'package:dony/features/support/presentation/screens/support_home_screen.d
 import 'package:dony/features/support/presentation/screens/support_ticket_detail_screen.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_picker_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
@@ -290,6 +291,14 @@ String initialAppLocation = '/auth/method';
 /// réseau à cet instant. Repli sûr sur `false` si le bootstrap ne l'a pas
 /// renseignée (tests) : une valeur non calculée ne doit jamais bloquer.
 bool appUpdateRequired = false;
+
+/// Provenance d'une étape passée en `extra` (identification → photo →
+/// confirmation). Absente ou d'un autre type : rien n'est envoyé au back.
+ScanMethod? _scanMethodExtra(Map<String, dynamic> extra) =>
+    switch (extra['scanMethod']) {
+      final ScanMethod method => method,
+      _ => null,
+    };
 
 final appRouter = GoRouter(
   initialLocation: initialAppLocation,
@@ -685,6 +694,7 @@ final appRouter = GoRouter(
           etape: extra['etape'] as String? ?? '',
           packageLabel: extra['packageLabel'] as String? ?? '',
           returnResult: extra['returnResult'] as bool? ?? false,
+          scanMethod: _scanMethodExtra(extra),
         );
       },
     ),
@@ -705,6 +715,7 @@ final appRouter = GoRouter(
             gpsLon: extra['gpsLon'] as double?,
             gpsLabel: extra['gpsLabel'] as String?,
             packageLabel: extra['packageLabel'] as String? ?? '',
+            scanMethod: _scanMethodExtra(extra),
           ),
         );
       },

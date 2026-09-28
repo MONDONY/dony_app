@@ -5,6 +5,7 @@ import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/qr_code_model.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
@@ -351,6 +352,31 @@ void main() {
     );
 
     blocTest<TrackingBloc, TrackingState>(
+      'transmet la provenance à la confirmation',
+      build: buildBloc,
+      setUp: () {
+        when(
+          () => mockRepo.confirmDelivery(
+            bidId: 'bid-1',
+            code: '4721',
+            scanMethod: ScanMethod.manual,
+          ),
+        ).thenAnswer((_) async => _event);
+      },
+      act: (b) => b.add(
+        ConfirmDeliveryRequested(
+          bidId: 'bid-1',
+          code: '4721',
+          scanMethod: ScanMethod.manual,
+        ),
+      ),
+      expect: () => [
+        isA<DeliveryConfirmLoading>(),
+        isA<DeliveryConfirmSuccess>(),
+      ],
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
       'emits [DeliveryConfirmLoading, DeliveryConfirmError] on failure',
       build: buildBloc,
       setUp: () {
@@ -413,6 +439,26 @@ void main() {
         isA<QrScanSubmitting>(),
         isA<QrScanSuccess>().having((s) => s.event, 'event', _event),
       ],
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
+      'transmet la provenance à l\'envoi de l\'étape',
+      setUp: () => when(
+        () => mockRepo.postScan(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          scanMethod: ScanMethod.qr,
+        ),
+      ).thenAnswer((_) async => _event),
+      build: () => withNetwork(online: true),
+      act: (b) => b.add(
+        QrScanSubmitRequested(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          scanMethod: ScanMethod.qr,
+        ),
+      ),
+      expect: () => [isA<QrScanSubmitting>(), isA<QrScanSuccess>()],
     );
 
     blocTest<TrackingBloc, TrackingState>(

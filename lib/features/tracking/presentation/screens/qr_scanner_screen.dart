@@ -10,6 +10,7 @@ import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.d
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
@@ -54,10 +55,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     if (_detectedNotifier.value) return;
     _detectedNotifier.value = true;
     _pausedNotifier.value = true;
-    _showScanSheet(bidId);
+    _showScanSheet(bidId, ScanMethod.qr);
   }
 
-  void _showScanSheet(String bidId) {
+  void _showScanSheet(String bidId, ScanMethod method) {
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -71,6 +72,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         ],
         child: _ScanConfirmSheet(
           bidId: bidId,
+          scanMethod: method,
           onClose: () {
             _detectedNotifier.value = false;
             _resumeScanning();
@@ -327,7 +329,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                           ctx.pop();
                           _detectedNotifier.value = true;
                           _pausedNotifier.value = true;
-                          _showScanSheet(result.bidId);
+                          _showScanSheet(result.bidId, ScanMethod.manual);
                         }
                       } catch (_) {
                         setDialogState(() => loading = false);
@@ -504,11 +506,15 @@ bool isFinalDeliveryStep(String eventType) => eventType == 'ARRIVEE';
 
 class _ScanConfirmSheet extends StatefulWidget {
   final String bidId;
+
+  /// QR lu par la caméra, ou numéro saisi à la main.
+  final ScanMethod scanMethod;
   final VoidCallback onClose;
   final void Function(String bidId)? onDeliveryConfirmed;
 
   const _ScanConfirmSheet({
     required this.bidId,
+    required this.scanMethod,
     required this.onClose,
     this.onDeliveryConfirmed,
   });
@@ -656,6 +662,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
           bidId: widget.bidId,
           code: code,
           photo: _photo,
+          scanMethod: widget.scanMethod,
         ),
       );
     } else {
@@ -667,6 +674,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
           gpsLat: _position?.latitude,
           gpsLon: _position?.longitude,
           gpsLabel: _gpsLabel,
+          scanMethod: widget.scanMethod,
         ),
       );
     }

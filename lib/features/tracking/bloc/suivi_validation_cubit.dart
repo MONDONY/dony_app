@@ -4,11 +4,9 @@ import 'package:bloc/bloc.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/scan_submitter.dart';
-
-/// Comment le colis a été identifié. Le nom sert de propriété analytics.
-enum SuiviValidationMethod { qr, number }
 
 /// Étape validée dans l'onglet, pas encore envoyée : « Annuler » reste
 /// possible jusqu'à [deadline].
@@ -29,7 +27,9 @@ class PendingValidation {
   /// `DEPART` ou `TRANSIT` (l'arrivée passe par le code du destinataire).
   final String step;
   final String parcelLabel;
-  final SuiviValidationMethod method;
+
+  /// Comment le colis a été identifié, envoyé au back avec l'étape.
+  final ScanMethod method;
   final DateTime deadline;
   final String? photoPath;
 }
@@ -111,7 +111,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
     required String bidId,
     required String step,
     required String parcelLabel,
-    required SuiviValidationMethod method,
+    required ScanMethod method,
     String? photoPath,
     ScanPosition? position,
   }) {
@@ -177,6 +177,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
         gpsLat: at?.lat,
         gpsLon: at?.lon,
         gpsLabel: at?.label,
+        scanMethod: pending.method,
         queueOnNetworkFailure: true,
       );
       unawaited(

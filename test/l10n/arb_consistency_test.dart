@@ -144,6 +144,7 @@ const _sameInBothLanguages = <String>{
   'listingKiloProChip', // nom de fonctionnalité, identique en anglais
   'listingRowLabelDate', // « Date » se dit pareil
   'bidCreateMobileMoneySubtitle', // « Orange Money, Wave, MTN » : noms de marque
+  'suiviRecentScanStepByQr', // gabarit identique, « QR » se dit pareil
   'bidCreateTotalLabel', // « Total » se dit pareil
   'bidCreatePromoBadge', // « Promo » se dit pareil
   'negotiationRoundCounter', // « Round » déjà utilisé tel quel en français

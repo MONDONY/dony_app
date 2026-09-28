@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
@@ -109,6 +110,19 @@ void main() {
       );
       expect(entry.containsKey('gpsLat'), isFalse);
       expect(entry.containsKey('photoPath'), isFalse);
+      expect(entry.containsKey('scanMethod'), isFalse);
+    });
+
+    test('garde la provenance du scan', () async {
+      await service.queueScan(
+        bidId: 'bid-4',
+        eventType: 'TRANSIT',
+        scanMethod: ScanMethod.manual,
+      );
+      final entry = Map<String, dynamic>.from(
+        _hiveService.offlineQueue.values.first,
+      );
+      expect(entry['scanMethod'], 'MANUAL');
     });
   });
 
@@ -305,6 +319,61 @@ void main() {
           offlineTimestamp: any(named: 'offlineTimestamp'),
         ),
       ).called(2);
+    });
+  });
+
+  group('syncAll et provenance', () {
+    void stubPost(ScanMethod? method) {
+      when(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+          scanMethod: method,
+        ),
+      ).thenAnswer((_) async => _fakeEvent());
+    }
+
+    test('renvoie la provenance mise en file', () async {
+      stubPost(ScanMethod.qr);
+      await service.queueScan(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+        scanMethod: ScanMethod.qr,
+      );
+
+      await service.syncAll();
+
+      expect(service.pendingCount, 0);
+      verify(
+        () => mockRepo.postScan(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+          scanMethod: ScanMethod.qr,
+        ),
+      ).called(1);
+    });
+
+    test('entrée mise en file avant la provenance : rien envoyé', () async {
+      stubPost(null);
+      // Entrée écrite par une version précédente de l'app : pas de clé.
+      await _hiveService.offlineQueue.add({
+        'bidId': 'bid-legacy',
+        'eventType': 'DEPART',
+        'offlineTimestamp': DateTime.utc(2026, 9).toIso8601String(),
+      });
+
+      await service.syncAll();
+
+      expect(service.pendingCount, 0);
+      verify(
+        () => mockRepo.postScan(
+          bidId: 'bid-legacy',
+          eventType: 'DEPART',
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).called(1);
     });
   });
 

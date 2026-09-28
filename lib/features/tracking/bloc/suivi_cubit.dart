@@ -10,7 +10,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
-import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 
 /// Les deux usages de l'onglet Suivi. Le nom sert aussi de valeur de
@@ -41,17 +41,12 @@ sealed class SuiviEffect {
 ///   saisi), la photo est la seule preuve que le colis est entre les mains
 ///   du voyageur, même pour le transit.
 final class SuiviValidateStep extends SuiviEffect {
-  const SuiviValidateStep(
-    this.bid,
-    this.step, {
-    this.method = SuiviValidationMethod.qr,
-  });
+  const SuiviValidateStep(this.bid, this.step, {this.method = ScanMethod.qr});
   final BidModel bid;
   final String step;
-  final SuiviValidationMethod method;
+  final ScanMethod method;
 
-  bool get photoRequired =>
-      step != 'TRANSIT' || method == SuiviValidationMethod.number;
+  bool get photoRequired => step != 'TRANSIT' || method == ScanMethod.manual;
 }
 
 /// Colis du trajet dont une validation attend déjà son envoi.
@@ -334,12 +329,7 @@ class SuiviCubit extends Cubit<SuiviState> {
       _emitEffect(SuiviParcelUnknown(bidId));
     } else {
       _emitValidation(
-        _validationOf(
-          located,
-          loaded!,
-          SuiviValidationMethod.qr,
-          pendingBidIds,
-        ),
+        _validationOf(located, loaded!, ScanMethod.qr, pendingBidIds),
       );
     }
   }
@@ -368,7 +358,7 @@ class SuiviCubit extends Cubit<SuiviState> {
   SuiviEffect _validationOf(
     ({BidModel bid, AnnouncementModel trip}) located,
     ScanHubLoaded hub,
-    SuiviValidationMethod method,
+    ScanMethod method,
     Set<String> pendingBidIds,
   ) {
     final bid = located.bid;
@@ -430,7 +420,7 @@ class SuiviCubit extends Cubit<SuiviState> {
       }
     }
     _emitValidation(
-      _validationOf(located, hub, SuiviValidationMethod.number, pendingBidIds),
+      _validationOf(located, hub, ScanMethod.manual, pendingBidIds),
     );
   }
 

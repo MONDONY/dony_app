@@ -16862,6 +16862,24 @@ abstract class AppLocalizations {
   /// **'Lecture hors-ligne synchronisée'**
   String get trackingOfflineScanSynced;
 
+  /// Provenance d'une étape du suivi : QR du colis scanné (tracking_timeline_bottom_sheet.dart, _TimelineItem).
+  ///
+  /// In fr, this message translates to:
+  /// **'Validé par scan du QR'**
+  String get trackingValidatedByQr;
+
+  /// Provenance d'une étape du suivi : numéro saisi à la main, avec photo de l'étape (tracking_timeline_bottom_sheet.dart, _TimelineItem).
+  ///
+  /// In fr, this message translates to:
+  /// **'Validé avec le numéro, photo à l\'appui'**
+  String get trackingValidatedByNumberWithPhoto;
+
+  /// Provenance d'une étape du suivi : numéro saisi à la main, sans photo (tracking_timeline_bottom_sheet.dart, _TimelineItem).
+  ///
+  /// In fr, this message translates to:
+  /// **'Validé avec le numéro'**
+  String get trackingValidatedByNumber;
+
   /// Titre du bandeau affiché tant qu'aucun événement ARRIVEE n'est enregistré (tracking_timeline_bottom_sheet.dart, _PendingConfirmationBanner).
   ///
   /// In fr, this message translates to:
@@ -23591,6 +23609,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Derniers scans'**
   String get suiviRecentScans;
+
+  /// Étape d'un scan des derniers scans, validée par le QR du colis (suivi_validate_content.dart, _RecentScans).
+  ///
+  /// In fr, this message translates to:
+  /// **'{step} · QR'**
+  String suiviRecentScanStepByQr(String step);
+
+  /// Étape d'un scan des derniers scans, validée avec le numéro du colis saisi à la main (suivi_validate_content.dart, _RecentScans).
+  ///
+  /// In fr, this message translates to:
+  /// **'{step} · numéro'**
+  String suiviRecentScanStepByNumber(String step);
+
+  /// Bouton « ? » de l'en-tête de l'onglet Suivi, ouvre le tutoriel de la remise par QR (suivi_header.dart, SuiviHelpButton).
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment ça marche ?'**
+  String get suiviHelpTooltip;
 
   /// Bannière hors ligne de la feuille Valider (suivi_validate_content.dart, SuiviPendingScansBanner).
   ///

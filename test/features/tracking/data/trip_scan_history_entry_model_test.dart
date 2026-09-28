@@ -1,3 +1,4 @@
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -27,6 +28,32 @@ void main() {
 
       expect(model.donNumber, isNull);
       expect(model.recipientName, isNull);
+    });
+
+    group('scanMethod', () {
+      TripScanHistoryEntryModel parse(Map<String, dynamic> extra) =>
+          TripScanHistoryEntryModel.fromJson({
+            'eventType': 'DEPART',
+            'scannedAt': '2026-06-20T14:32:00',
+            ...extra,
+          });
+
+      test('QR', () {
+        expect(parse({'scanMethod': 'QR'}).scanMethod, ScanMethod.qr);
+      });
+
+      test('MANUAL', () {
+        expect(parse({'scanMethod': 'MANUAL'}).scanMethod, ScanMethod.manual);
+      });
+
+      test('clé absente (ancien back, provenance inconnue) : null', () {
+        expect(parse({}).scanMethod, isNull);
+      });
+
+      test('valeur inattendue ignorée, sans exception', () {
+        expect(parse({'scanMethod': 'NFC'}).scanMethod, isNull);
+        expect(parse({'scanMethod': 42}).scanMethod, isNull);
+      });
     });
   });
 }

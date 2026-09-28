@@ -1,3 +1,4 @@
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:image_picker/image_picker.dart';
 
 abstract class TrackingEvent {}
@@ -25,6 +26,9 @@ class QrScanSubmitRequested extends TrackingEvent {
   final double? gpsLon;
   final String? gpsLabel;
 
+  /// Provenance envoyée au back ; `null` : rien n'est envoyé.
+  final ScanMethod? scanMethod;
+
   QrScanSubmitRequested({
     required this.bidId,
     required this.eventType,
@@ -32,6 +36,7 @@ class QrScanSubmitRequested extends TrackingEvent {
     this.gpsLat,
     this.gpsLon,
     this.gpsLabel,
+    this.scanMethod,
   });
 }
 
@@ -42,10 +47,14 @@ class ConfirmDeliveryRequested extends TrackingEvent {
   /// Photo de preuve de l'arrivée, uploadée avant la confirmation.
   final XFile? photo;
 
+  /// Provenance envoyée au back ; `null` : rien n'est envoyé.
+  final ScanMethod? scanMethod;
+
   ConfirmDeliveryRequested({
     required this.bidId,
     required this.code,
     this.photo,
+    this.scanMethod,
   });
 }
 

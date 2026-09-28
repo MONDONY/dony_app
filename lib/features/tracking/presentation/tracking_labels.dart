@@ -1,4 +1,6 @@
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
+import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:dony/l10n/l10n.dart';
 
 /// Libellé traduit d'une étape de suivi.
@@ -13,6 +15,21 @@ String trackingStepLabel(AppLocalizations l, String eventType) {
     'TRANSIT' => l.trackingStepTransit,
     'ARRIVEE' => l.trackingStepArrival,
     _ => eventType,
+  };
+}
+
+/// Étape d'une ligne des derniers scans, suivie de sa provenance
+/// (« Départ · QR », « Transit · numéro ») ; l'étape seule si elle est
+/// inconnue.
+String recentScanStepLabel(
+  AppLocalizations l,
+  TripScanHistoryEntryModel entry,
+) {
+  final step = trackingStepLabel(l, entry.eventType);
+  return switch (entry.scanMethod) {
+    ScanMethod.qr => l.suiviRecentScanStepByQr(step),
+    ScanMethod.manual => l.suiviRecentScanStepByNumber(step),
+    null => step,
   };
 }
 
@@ -47,4 +64,13 @@ extension TrackingEventL10n on TrackingEventModel {
     if (gpsLat != null && gpsLon != null) return l.trackingGpsRecorded;
     return null;
   }
+
+  /// Comment l'étape a été validée, `null` si le back ne le sait pas.
+  String? methodLabel(AppLocalizations l) => switch (scanMethod) {
+    ScanMethod.qr => l.trackingValidatedByQr,
+    ScanMethod.manual when photoUrl != null =>
+      l.trackingValidatedByNumberWithPhoto,
+    ScanMethod.manual => l.trackingValidatedByNumber,
+    null => null,
+  };
 }

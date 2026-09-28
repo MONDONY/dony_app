@@ -11,6 +11,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
@@ -312,7 +313,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
     final hub = context.read<ScanHubCubit>();
     final validations = context.read<SuiviValidationCubit>();
     final label = suiviParcelLabel(bid);
-    if (method == SuiviValidationMethod.number) {
+    if (method == ScanMethod.manual) {
       final hubState = hub.state;
       if (hubState is! ScanHubLoaded) return;
       final go = await showSuiviNumberRecapSheet(
@@ -330,6 +331,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
           'bidId': bid.id,
           'etape': step,
           'packageLabel': label,
+          'scanMethod': method,
         },
       );
       if (mounted) _reloadTrips();

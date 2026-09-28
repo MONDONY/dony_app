@@ -789,6 +789,24 @@ Widget _suiviCamera(
   ValueListenable<bool> _,
 ) => const ColoredBox(color: DonyColors.neutral900);
 
+const _suiviHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": [
+    {
+      "id": "qr_handover",
+      "title": "Remettre un colis avec le QR",
+      "description": "Scanner le QR du colis à chaque étape.",
+      "youtubeVideoId": "dQw4w9WgXcQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["qrHandover"]
+    }
+  ]
+}
+''';
+
 /// Enregistre les dépendances de l'onglet Suivi (trajets via un cubit mocké,
 /// envois via un dépôt mocké) et monte l'écran pour [roles].
 Widget _suiviHarness(List<String> roles, {SuiviMode? mode}) {
@@ -861,8 +879,21 @@ Widget _suiviHarness(List<String> roles, {SuiviMode? mode}) {
     ),
   );
 
-  return BlocProvider<AuthBloc>.value(
-    value: auth,
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<AuthBloc>.value(value: auth),
+      // Tutoriel de la remise QR au catalogue : le « ? » de l'en-tête est
+      // affiché, et mesuré, à 200 %.
+      BlocProvider<HelpCenterBloc>(
+        create: (_) => HelpCenterBloc(
+          HelpCenterRepository(
+            const _SmokeStaticHelpCenterSource(_suiviHelpConfigJson),
+            fallbackJsonLoader: () async => _suiviHelpConfigJson,
+          ),
+          makeDisabledAnalytics(MockAnalyticsBackend()),
+        )..add(const HelpCenterLoadRequested()),
+      ),
+    ],
     child: MaterialApp.router(
       routerConfig: GoRouter(
         routes: [
@@ -1098,6 +1129,7 @@ void main() {
         _suiviHarness(['SENDER', 'TRAVELER'], mode: SuiviMode.valider),
       );
       expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('suivi-help')), findsOneWidget);
     });
 
     testWidgets('suivi : suivre un colis (voyageur)', (tester) async {

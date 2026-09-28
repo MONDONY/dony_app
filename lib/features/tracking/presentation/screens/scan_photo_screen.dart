@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -35,6 +36,7 @@ class ScanPhotoScreen extends StatefulWidget {
     required this.etape,
     required this.packageLabel,
     this.returnResult = false,
+    this.scanMethod,
     this.locator = const ScanLocator(),
   });
 
@@ -45,6 +47,9 @@ class ScanPhotoScreen extends StatefulWidget {
   /// Onglet Suivi : la photo (obligatoire) est rendue à l'appelant par
   /// `context.pop(ScanPhotoResult)` au lieu d'ouvrir la confirmation.
   final bool returnResult;
+
+  /// Provenance transmise à la confirmation ; `null` : rien n'est envoyé.
+  final ScanMethod? scanMethod;
 
   final ScanLocator locator;
 
@@ -142,6 +147,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
         'gpsLat': _position.value?.lat,
         'gpsLon': _position.value?.lon,
         'gpsLabel': _position.value?.label,
+        'scanMethod': widget.scanMethod,
       },
     );
   }

@@ -1,5 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
@@ -52,6 +53,7 @@ class ScanSubmitter {
     double? gpsLat,
     double? gpsLon,
     String? gpsLabel,
+    ScanMethod? scanMethod,
     bool queueOnNetworkFailure = false,
   }) async {
     Future<ScanSubmitResult> queue() async {
@@ -62,6 +64,7 @@ class ScanSubmitter {
         gpsLon: gpsLon,
         gpsLabel: gpsLabel,
         photoPath: photoPath,
+        scanMethod: scanMethod,
       );
       return const ScanSubmitQueued();
     }
@@ -80,6 +83,7 @@ class ScanSubmitter {
         gpsLon: gpsLon,
         gpsLabel: gpsLabel,
         photoUrl: photoKey,
+        scanMethod: scanMethod,
       );
       return ScanSubmitSent(event);
     } catch (e) {

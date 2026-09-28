@@ -364,7 +364,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `suivi_trip_changed` | ScanHubCubit.selectTrip() — trajet affiché changé dans l'onglet Suivi (propriété `source` : `picker` pour la feuille « Choisir un trajet », `other_trip` pour « Passer sur ce trajet » après le QR d'un colis d'un autre trajet) |
 | `suivi_qr_scanned` | SuiviCubit.onQrScanned() — QR Yadony lu depuis la caméra de l'onglet Suivi ou le lecteur plein écran de l'expéditeur (propriétés `mode` : `valider`/`suivre`, `outcome` : `own_trip` colis du trajet affiché, `other_trip` colis d'un autre trajet du voyageur, `unknown` colis hors de ses trajets). Jamais l'identifiant du colis |
 | `suivi_track_submitted` | SuiviCubit — parcours d'un colis demandé en lecture seule (propriété `source` : `number` numéro saisi, `qr` QR lu en mode Suivre ou « Suivre ce colis », `my_shipments` ligne de « Mes envois »). Jamais le numéro saisi |
-| `suivi_step_validated` | SuiviValidationCubit._send() — étape DEPART/TRANSIT validée depuis l'onglet Suivi, envoyée (ou mise dans la file hors ligne) une fois passé le délai d'annulation de 5 s, ou aussitôt si l'onglet ou l'app est quitté (propriétés `step` : `DEPART`/`TRANSIT`, `method` : `qr` QR lu, `number` numéro saisi dans la feuille). Jamais l'identifiant ni le numéro du colis |
+| `suivi_step_validated` | SuiviValidationCubit._send() — étape DEPART/TRANSIT validée depuis l'onglet Suivi, envoyée (ou mise dans la file hors ligne) une fois passé le délai d'annulation de 5 s, ou aussitôt si l'onglet ou l'app est quitté (propriétés `step` : `DEPART`/`TRANSIT`, `method` : `qr` QR lu, `manual` numéro saisi dans la feuille). Jamais l'identifiant ni le numéro du colis |
 | `suivi_step_undone` | SuiviValidationCubit.undo() — « Annuler » touché sur le bandeau d'une validation rapide pendant le délai : rien n'est envoyé (propriété `step`) |
 | `delivery_confirmed` | ReceptionConfirmScreen._confirm() |
 | `package_request_created` | PackageRequestFormBloc |
@@ -416,7 +416,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `pro_portal_open_failed` | SubscriptionBloc._onPortalOpenRequested — l'ouverture échoue (URL invalide ou lanceur en échec), l'écran restaure l'état précédent (propriété `target`) |
 | `pro_downgrade_blocked` | UpgradeToProBloc._onDowngrade — `DELETE /auth/me/upgrade-to-pro` refusé en `409` `active-stripe-subscription` : l'abonnement Stripe est encore actif, la résiliation passe par le portail web. Aucune propriété (ni identifiant, ni message serveur) |
 | `help_center_opened` | HelpCenterBloc._onOpenRequested — ouverture réelle du hub, distincte du préchargement global |
-| `help_tutorial_opened` | HelpCenterBloc._onTutorialOpenRequested (propriétés contrôlées `tutorial_id`, `source`) |
+| `help_tutorial_opened` | HelpCenterBloc._onTutorialOpenRequested (propriétés contrôlées `tutorial_id`, `source`). Émis aussi par le bouton « ? » de l'en-tête de l'onglet Suivi en mode Valider (`SuiviHelpButton`, `source: 'qr_handover'`), qui ouvre le tutoriel de la remise par QR |
 | `help_tutorial_play_started` | HelpCenterBloc._onPlaybackRequested — lecture démarrée (propriété `tutorial_id`) |
 | `help_tutorial_completed` | HelpCenterBloc._onPlaybackRequested — lecture terminée (propriété `tutorial_id`) |
 | `help_tutorial_external_opened` | HelpCenterBloc._onExternalOpenRequested — ouverture YouTube externe réussie (propriété `tutorial_id`) |

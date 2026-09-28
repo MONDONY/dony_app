@@ -7,6 +7,7 @@ import 'package:dony/features/matching/presentation/widgets/route_map_components
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
@@ -257,6 +258,7 @@ class _TimelineItem extends StatelessWidget {
     final l = context.l10n;
     final localeName = l.localeName;
     final locationLabel = event.locationLabel(l);
+    final methodLabel = event.methodLabel(l);
 
     final Color stepColor = switch (event.eventType) {
       'ARRIVEE' => cs.success,
@@ -347,6 +349,30 @@ class _TimelineItem extends StatelessWidget {
                               locationLabel,
                               style: tt.bodySmall?.copyWith(
                                 color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (methodLabel != null) ...[
+                        const SizedBox(height: DonySpacing.xs),
+                        Row(
+                          key: const Key('tracking-step-method'),
+                          children: [
+                            DonyIcon(
+                              event.scanMethod == ScanMethod.qr
+                                  ? 'qr-code'
+                                  : 'package',
+                              size: 12,
+                              color: cs.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: DonySpacing.xs),
+                            Expanded(
+                              child: Text(
+                                methodLabel,
+                                style: tt.bodySmall?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                ),
                               ),
                             ),
                           ],

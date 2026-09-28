@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -11,12 +12,16 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
@@ -103,6 +108,37 @@ BidModel _bid(
   updatedAt: DateTime(2026),
 );
 
+/// Catalogue du Centre d'aide : un tutoriel de la remise par QR, ou rien.
+String _helpConfig({required bool withQrTutorial}) =>
+    '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": [${withQrTutorial ? '''
+    {
+      "id": "qr_handover",
+      "title": "Remettre un colis avec le QR",
+      "description": "Scanner le QR du colis à chaque étape.",
+      "youtubeVideoId": "dQw4w9WgXcQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["qrHandover"]
+    }''' : ''}]
+}
+''';
+
+class _StaticHelpSource implements HelpCenterConfigSource {
+  const _StaticHelpSource(this.json);
+
+  final String json;
+
+  @override
+  String get activatedJson => json;
+
+  @override
+  Future<String?> fetchAndActivate() async => json;
+}
+
 void main() {
   late _MockAnnouncementRepo annRepo;
   late _MockBidRepo bidRepo;
@@ -120,6 +156,7 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr');
     registerFallbackValue(<String>{});
+    registerFallbackValue(ScanMethod.qr);
   });
 
   void stubTrips(
@@ -158,6 +195,21 @@ void main() {
         recipientName: 'Kadi',
         eventType: 'TRANSIT',
         scannedAt: DateTime(2026, 9, 26, 12, 58),
+        scanMethod: ScanMethod.qr,
+      ),
+      TripScanHistoryEntryModel(
+        donNumber: 'DON-KAD002',
+        recipientName: 'Kadi',
+        eventType: 'DEPART',
+        scannedAt: DateTime(2026, 9, 26, 9, 40),
+        scanMethod: ScanMethod.manual,
+      ),
+      // Colis retiré du trajet depuis : ne compte pour aucune ligne.
+      TripScanHistoryEntryModel(
+        donNumber: 'DON-OLD009',
+        recipientName: 'Awa',
+        eventType: 'DEPART',
+        scannedAt: DateTime(2026, 9, 26, 8, 12),
       ),
     ],
   );
@@ -181,6 +233,7 @@ void main() {
         gpsLon: any(named: 'gpsLon'),
         gpsLabel: any(named: 'gpsLabel'),
         queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
+        scanMethod: any(named: 'scanMethod'),
       ),
     ).thenAnswer(
       (_) async => ScanSubmitSent(
@@ -269,6 +322,7 @@ void main() {
     List<String> roles = const ['SENDER', 'TRAVELER'],
     String location = '/',
     List<AuthState> authLater = const [],
+    bool qrTutorial = false,
   }) async {
     final auth = _MockAuthBloc();
     whenListen(
@@ -305,6 +359,7 @@ void main() {
           ),
         ),
         stub('/tracking/scan/identify'),
+        stub('/profile/help/tutorial/:id'),
         stub('/tracking/offline-queue'),
         stub('/announcements/trips'),
         stub('/bids/:id'),
@@ -322,9 +377,21 @@ void main() {
       ],
     );
     addTearDown(router.dispose);
+    final helpJson = _helpConfig(withQrTutorial: qrTutorial);
     await tester.pumpWidget(
-      BlocProvider<AuthBloc>.value(
-        value: auth,
+      MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>.value(value: auth),
+          BlocProvider<HelpCenterBloc>(
+            create: (_) => HelpCenterBloc(
+              HelpCenterRepository(
+                _StaticHelpSource(helpJson),
+                fallbackJsonLoader: () async => helpJson,
+              ),
+              analytics,
+            )..add(const HelpCenterLoadRequested()),
+          ),
+        ],
         child: MaterialApp.router(
           locale: AppL10n.fr,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -347,6 +414,7 @@ void main() {
       gpsLon: any(named: 'gpsLon'),
       gpsLabel: any(named: 'gpsLabel'),
       queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
+      scanMethod: any(named: 'scanMethod'),
     ),
   );
 
@@ -633,6 +701,7 @@ void main() {
           gpsLat: 14.7,
           gpsLon: -17.4,
           gpsLabel: 'Dakar',
+          scanMethod: ScanMethod.qr,
           queueOnNetworkFailure: true,
         ),
       ).called(1);
@@ -871,6 +940,7 @@ void main() {
           gpsLat: 14.7,
           gpsLon: -17.4,
           gpsLabel: 'Dakar',
+          scanMethod: ScanMethod.qr,
           queueOnNetworkFailure: true,
         ),
       ).called(1);
@@ -937,6 +1007,7 @@ void main() {
           gpsLat: any(named: 'gpsLat'),
           gpsLon: any(named: 'gpsLon'),
           gpsLabel: any(named: 'gpsLabel'),
+          scanMethod: ScanMethod.qr,
           queueOnNetworkFailure: true,
         ),
       ).called(1);
@@ -952,6 +1023,7 @@ void main() {
           gpsLon: any(named: 'gpsLon'),
           gpsLabel: any(named: 'gpsLabel'),
           queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
+          scanMethod: any(named: 'scanMethod'),
         ),
       ).thenAnswer((_) async => const ScanSubmitQueued());
       stubTransitTrips();
@@ -982,6 +1054,7 @@ void main() {
           gpsLon: any(named: 'gpsLon'),
           gpsLabel: any(named: 'gpsLabel'),
           queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
+          scanMethod: any(named: 'scanMethod'),
         ),
       ).thenThrow(const ConflictException('déjà scanné'));
       stubTransitTrips();
@@ -1016,6 +1089,7 @@ void main() {
           gpsLat: any(named: 'gpsLat'),
           gpsLon: any(named: 'gpsLon'),
           gpsLabel: any(named: 'gpsLabel'),
+          scanMethod: ScanMethod.qr,
           queueOnNetworkFailure: true,
         ),
       ).called(1);
@@ -1040,6 +1114,7 @@ void main() {
           gpsLat: any(named: 'gpsLat'),
           gpsLon: any(named: 'gpsLon'),
           gpsLabel: any(named: 'gpsLabel'),
+          scanMethod: ScanMethod.qr,
           queueOnNetworkFailure: true,
         ),
       ).called(1);
@@ -1174,13 +1249,14 @@ void main() {
           gpsLat: 14.7,
           gpsLon: -17.4,
           gpsLabel: 'Dakar',
+          scanMethod: ScanMethod.manual,
           queueOnNetworkFailure: true,
         ),
       ).called(1);
       verify(
         () => analytics.logEvent(
           'suivi_step_validated',
-          properties: {'step': 'TRANSIT', 'method': 'number'},
+          properties: {'step': 'TRANSIT', 'method': 'manual'},
         ),
       ).called(1);
     });
@@ -1201,6 +1277,7 @@ void main() {
         'bidId': 'kadi',
         'etape': 'ARRIVEE',
         'packageLabel': 'Kadi',
+        'scanMethod': ScanMethod.manual,
       });
     });
 
@@ -1313,6 +1390,69 @@ void main() {
       await settle(tester);
       expect(text("Ce colis n'est pas lié à ton compte"), findsOneWidget);
       expect(text('Réessayer'), findsNothing);
+    });
+  });
+
+  group('provenance et aide', () {
+    testWidgets('derniers scans : étape suivie de QR ou numéro', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester);
+      await tester.drag(
+        find.byKey(const Key('suivi-sheet')),
+        const Offset(0, -700),
+      );
+      await settle(tester);
+      await tester.ensureVisible(text('Transit · QR'));
+      await settle(tester, rounds: 1);
+
+      expect(text('Transit · QR'), findsOneWidget);
+      expect(text('Départ · numéro'), findsOneWidget);
+      // Provenance inconnue (ancien scan) : l'étape seule.
+      expect(
+        find.descendant(
+          of: find.ancestor(of: text('Awa'), matching: find.byType(Row)),
+          matching: text('Départ'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('« ? » en mode Valider ouvre le tutoriel de la remise QR', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester, qrTutorial: true);
+
+      final help = find.byKey(const Key('suivi-help'));
+      expect(help, findsOneWidget);
+      expect(find.byTooltip('Comment ça marche ?'), findsOneWidget);
+      expect(tester.getSize(help).height, greaterThanOrEqualTo(44));
+
+      await tester.tap(help);
+      await settle(tester);
+      expect(visited, contains('/profile/help/tutorial/:id'));
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.helpTutorialOpened,
+          properties: {'tutorial_id': 'qr_handover', 'source': 'qr_handover'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('« ? » absent en mode Suivre', (tester) async {
+      stubDefaultTrips();
+      await pump(tester, qrTutorial: true, location: '/?mode=suivre');
+      expect(find.byKey(const Key('suivi-help')), findsNothing);
+    });
+
+    testWidgets('« ? » absent quand le catalogue n\'a pas le tutoriel', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester);
+      expect(find.byKey(const Key('suivi-help')), findsNothing);
     });
   });
 }

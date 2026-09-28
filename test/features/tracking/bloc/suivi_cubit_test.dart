@@ -7,7 +7,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
-import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -485,7 +485,7 @@ void main() {
       c.onQrScanned('handed', hub());
       final effect = c.state.effect! as SuiviValidateStep;
       expect(effect.step, 'TRANSIT');
-      expect(effect.method, SuiviValidationMethod.qr);
+      expect(effect.method, ScanMethod.qr);
       expect(effect.photoRequired, isFalse);
       expect(c.state.forcedStep, isNull);
     });
@@ -558,7 +558,7 @@ void main() {
       final effect = c.state.effect! as SuiviValidateStep;
       expect(effect.bid.id, 'handed');
       expect(effect.step, 'ARRIVEE');
-      expect(effect.method, SuiviValidationMethod.number);
+      expect(effect.method, ScanMethod.manual);
       expect(c.state.busy, isTrue);
       expect(c.state.numberStatus, SuiviLoadStatus.idle);
       verifyNever(() => trackingRepo.searchByTrackingNumber(any()));

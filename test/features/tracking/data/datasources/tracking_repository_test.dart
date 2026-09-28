@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -125,6 +126,33 @@ void main() {
               ).captured.single
               as Map<String, dynamic>;
       expect(payload['gpsLabel'], 'Paris');
+      expect(payload.containsKey('scanMethod'), isFalse);
+    });
+
+    test('envoie la provenance quand elle est connue', () async {
+      when(
+        () => mockDio.post('/tracking/events', data: any(named: 'data')),
+      ).thenAnswer(
+        (_) async =>
+            _ok({..._eventJson, 'scanMethod': 'MANUAL'}, '/tracking/events'),
+      );
+
+      final result = await repo.postScan(
+        bidId: 'bid-001',
+        eventType: 'TRANSIT',
+        scanMethod: ScanMethod.manual,
+      );
+
+      expect(result.scanMethod, ScanMethod.manual);
+      final payload =
+          verify(
+                () => mockDio.post(
+                  '/tracking/events',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(payload['scanMethod'], 'MANUAL');
     });
   });
 
@@ -232,6 +260,33 @@ void main() {
         'confirmationCode': '4721',
         'photoUrl': 'tracking/bid-001/1_ARRIVEE.jpg',
       });
+    });
+
+    test('envoie la provenance quand elle est connue', () async {
+      when(
+        () => mockDio.post(
+          '/tracking/bid-001/confirm-delivery',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok(_eventJson, '/tracking/bid-001/confirm-delivery'),
+      );
+
+      await repo.confirmDelivery(
+        bidId: 'bid-001',
+        code: '4721',
+        scanMethod: ScanMethod.qr,
+      );
+
+      final captured =
+          verify(
+                () => mockDio.post(
+                  '/tracking/bid-001/confirm-delivery',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured, {'confirmationCode': '4721', 'scanMethod': 'QR'});
     });
   });
 }

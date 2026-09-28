@@ -10070,6 +10070,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackingOfflineScanSynced => 'Offline scan synced';
 
   @override
+  String get trackingValidatedByQr => 'Validated by scanning the QR code';
+
+  @override
+  String get trackingValidatedByNumberWithPhoto =>
+      'Validated with the number, photo attached';
+
+  @override
+  String get trackingValidatedByNumber => 'Validated with the number';
+
+  @override
   String get trackingAwaitingConfirmationTitle => 'Awaiting confirmation';
 
   @override
@@ -14104,6 +14114,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suiviRecentScans => 'Recent scans';
+
+  @override
+  String suiviRecentScanStepByQr(String step) {
+    return '$step · QR';
+  }
+
+  @override
+  String suiviRecentScanStepByNumber(String step) {
+    return '$step · number';
+  }
+
+  @override
+  String get suiviHelpTooltip => 'How does it work?';
 
   @override
   String suiviPendingScans(int count) {

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,10 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 
-GoRouter _router(String etape) => GoRouter(
+/// Extras reçus par la confirmation au dernier passage.
+Map<String, dynamic>? _confirmExtra;
+
+GoRouter _router(String etape, {ScanMethod? scanMethod}) => GoRouter(
   routes: [
     GoRoute(
       path: '/',
@@ -21,11 +25,15 @@ GoRouter _router(String etape) => GoRouter(
         bidId: 'test-bid-id',
         etape: etape,
         packageLabel: 'DON-TEST01',
+        scanMethod: scanMethod,
       ),
     ),
     GoRoute(
       path: '/tracking/scan/confirm',
-      builder: (_, _) => const Scaffold(body: Text('confirm')),
+      builder: (_, state) {
+        _confirmExtra = state.extra as Map<String, dynamic>?;
+        return const Scaffold(body: Text('confirm'));
+      },
     ),
   ],
 );
@@ -90,6 +98,21 @@ void main() {
     );
     await tester.pump();
     expect(find.text('Passer : continuer sans photo'), findsOneWidget);
+  });
+
+  testWidgets('Passer : la provenance suit vers la confirmation', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp.router(
+        routerConfig: _router('TRANSIT', scanMethod: ScanMethod.manual),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('Passer : continuer sans photo'));
+    await tester.pumpAndSettle();
+    expect(find.text('confirm'), findsOneWidget);
+    expect(_confirmExtra?['scanMethod'], ScanMethod.manual);
   });
 
   // ─── Label du colis ────────────────────────────────────────────────────────

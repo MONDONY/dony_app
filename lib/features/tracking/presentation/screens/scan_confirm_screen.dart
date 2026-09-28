@@ -10,6 +10,7 @@ import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.d
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,7 @@ class ScanConfirmScreen extends StatefulWidget {
     this.gpsLat,
     this.gpsLon,
     this.gpsLabel,
+    this.scanMethod,
   });
 
   final String bidId;
@@ -43,6 +45,9 @@ class ScanConfirmScreen extends StatefulWidget {
   final double? gpsLat;
   final double? gpsLon;
   final String? gpsLabel;
+
+  /// Provenance envoyée au back ; `null` : rien n'est envoyé.
+  final ScanMethod? scanMethod;
 
   @override
   State<ScanConfirmScreen> createState() => _ScanConfirmScreenState();
@@ -65,7 +70,12 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
       final code = _codeCtrl.text.trim();
       if (code.length != 6) return;
       context.read<TrackingBloc>().add(
-        ConfirmDeliveryRequested(bidId: widget.bidId, code: code, photo: photo),
+        ConfirmDeliveryRequested(
+          bidId: widget.bidId,
+          code: code,
+          photo: photo,
+          scanMethod: widget.scanMethod,
+        ),
       );
     } else {
       context.read<TrackingBloc>().add(
@@ -76,6 +86,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
           gpsLat: widget.gpsLat,
           gpsLon: widget.gpsLon,
           gpsLabel: widget.gpsLabel,
+          scanMethod: widget.scanMethod,
         ),
       );
     }

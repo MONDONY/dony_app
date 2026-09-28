@@ -11095,6 +11095,18 @@
   "@trackingOfflineScanSynced": {
     "description": "Badge d'un événement de suivi ayant un offlineTimestamp (tracking_timeline_bottom_sheet.dart, _TimelineItem)."
   },
+  "trackingValidatedByQr": "Validé par scan du QR",
+  "@trackingValidatedByQr": {
+    "description": "Provenance d'une étape du suivi : QR du colis scanné (tracking_timeline_bottom_sheet.dart, _TimelineItem)."
+  },
+  "trackingValidatedByNumberWithPhoto": "Validé avec le numéro, photo à l'appui",
+  "@trackingValidatedByNumberWithPhoto": {
+    "description": "Provenance d'une étape du suivi : numéro saisi à la main, avec photo de l'étape (tracking_timeline_bottom_sheet.dart, _TimelineItem)."
+  },
+  "trackingValidatedByNumber": "Validé avec le numéro",
+  "@trackingValidatedByNumber": {
+    "description": "Provenance d'une étape du suivi : numéro saisi à la main, sans photo (tracking_timeline_bottom_sheet.dart, _TimelineItem)."
+  },
   "trackingAwaitingConfirmationTitle": "En attente de confirmation",
   "@trackingAwaitingConfirmationTitle": {
     "description": "Titre du bandeau affiché tant qu'aucun événement ARRIVEE n'est enregistré (tracking_timeline_bottom_sheet.dart, _PendingConfirmationBanner)."
@@ -16239,6 +16251,28 @@
   "suiviRecentScans": "Derniers scans",
   "@suiviRecentScans": {
     "description": "Titre de l'historique des scans du trajet (suivi_validate_content.dart)."
+  },
+  "suiviRecentScanStepByQr": "{step} · QR",
+  "@suiviRecentScanStepByQr": {
+    "description": "Étape d'un scan des derniers scans, validée par le QR du colis (suivi_validate_content.dart, _RecentScans).",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviRecentScanStepByNumber": "{step} · numéro",
+  "@suiviRecentScanStepByNumber": {
+    "description": "Étape d'un scan des derniers scans, validée avec le numéro du colis saisi à la main (suivi_validate_content.dart, _RecentScans).",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviHelpTooltip": "Comment ça marche ?",
+  "@suiviHelpTooltip": {
+    "description": "Bouton « ? » de l'en-tête de l'onglet Suivi, ouvre le tutoriel de la remise par QR (suivi_header.dart, SuiviHelpButton)."
   },
   "suiviPendingScans": "{count, plural, =1{1 scan en attente. Il part tout seul dès le retour du réseau.} other{{count} scans en attente. Ils partent tout seuls dès le retour du réseau.}}",
   "@suiviPendingScans": {

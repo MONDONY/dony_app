@@ -1,4 +1,5 @@
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_submitter.dart';
@@ -78,6 +79,50 @@ void main() {
         eventType: 'TRANSIT',
         gpsLat: 14.7,
         photoUrl: 'tracking/bid-1/photo.jpg',
+      ),
+    ).called(1);
+  });
+
+  test('provenance envoyée au back, en ligne comme en file', () async {
+    when(
+      () => repo.postScan(
+        bidId: any(named: 'bidId'),
+        eventType: any(named: 'eventType'),
+        scanMethod: ScanMethod.manual,
+      ),
+    ).thenAnswer((_) async => _event);
+    when(
+      () => offline.queueScan(
+        bidId: any(named: 'bidId'),
+        eventType: any(named: 'eventType'),
+        scanMethod: ScanMethod.manual,
+      ),
+    ).thenAnswer((_) async {});
+
+    await build().submit(
+      bidId: 'bid-1',
+      eventType: 'TRANSIT',
+      scanMethod: ScanMethod.manual,
+    );
+    online = false;
+    await build().submit(
+      bidId: 'bid-1',
+      eventType: 'TRANSIT',
+      scanMethod: ScanMethod.manual,
+    );
+
+    verify(
+      () => repo.postScan(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+        scanMethod: ScanMethod.manual,
+      ),
+    ).called(1);
+    verify(
+      () => offline.queueScan(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+        scanMethod: ScanMethod.manual,
       ),
     ).called(1);
   });

@@ -1,3 +1,5 @@
+import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -76,6 +78,35 @@ void main() {
         fr.scanQueueSafe(3),
         '3 lectures en attente. On les enverra dès que vous récupérez du réseau.',
       );
+    });
+  });
+
+  group('recentScanStepLabel', () {
+    TripScanHistoryEntryModel entry(ScanMethod? method) =>
+        TripScanHistoryEntryModel(
+          eventType: 'TRANSIT',
+          scannedAt: DateTime(2026, 9, 28),
+          scanMethod: method,
+        );
+
+    test('QR', () {
+      expect(recentScanStepLabel(fr, entry(ScanMethod.qr)), 'Transit · QR');
+      expect(recentScanStepLabel(en, entry(ScanMethod.qr)), 'Transit · QR');
+    });
+
+    test('numéro', () {
+      expect(
+        recentScanStepLabel(fr, entry(ScanMethod.manual)),
+        'Transit · numéro',
+      );
+      expect(
+        recentScanStepLabel(en, entry(ScanMethod.manual)),
+        'Transit · number',
+      );
+    });
+
+    test('provenance inconnue : étape seule', () {
+      expect(recentScanStepLabel(fr, entry(null)), 'Transit');
     });
   });
 }

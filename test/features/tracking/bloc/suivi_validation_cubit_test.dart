@@ -5,6 +5,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/scan_submitter.dart';
@@ -27,6 +28,8 @@ final _event = TrackingEventModel(
 );
 
 void main() {
+  setUpAll(() => registerFallbackValue(ScanMethod.qr));
+
   late _MockSubmitter submitter;
   late _MockLocator locator;
   late _MockAnalytics analytics;
@@ -50,6 +53,7 @@ void main() {
         gpsLon: any(named: 'gpsLon'),
         gpsLabel: any(named: 'gpsLabel'),
         queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
+        scanMethod: any(named: 'scanMethod'),
       ),
     ).thenAnswer((_) async => ScanSubmitSent(_event));
   });
@@ -68,13 +72,14 @@ void main() {
         bidId: bidId,
         step: 'TRANSIT',
         parcelLabel: 'Madou',
-        method: SuiviValidationMethod.qr,
+        method: ScanMethod.qr,
       );
 
   void verifySubmitted({
     String bidId = 'bid-1',
     String step = 'TRANSIT',
     String? photoPath,
+    ScanMethod method = ScanMethod.qr,
     int times = 1,
   }) => verify(
     () => submitter.submit(
@@ -84,6 +89,7 @@ void main() {
       gpsLat: 14.7,
       gpsLon: -17.4,
       gpsLabel: 'Dakar',
+      scanMethod: method,
       queueOnNetworkFailure: true,
     ),
   ).called(times);
@@ -106,6 +112,7 @@ void main() {
           gpsLon: any(named: 'gpsLon'),
           gpsLabel: any(named: 'gpsLabel'),
           queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
+          scanMethod: any(named: 'scanMethod'),
         ),
       );
 
@@ -141,6 +148,7 @@ void main() {
           gpsLon: any(named: 'gpsLon'),
           gpsLabel: any(named: 'gpsLabel'),
           queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
+          scanMethod: any(named: 'scanMethod'),
         ),
       );
       verify(
@@ -196,18 +204,22 @@ void main() {
       bidId: 'bid-1',
       step: 'DEPART',
       parcelLabel: 'Madou',
-      method: SuiviValidationMethod.number,
+      method: ScanMethod.manual,
       photoPath: '/tmp/photo.jpg',
       position: const ScanPosition(lat: 14.7, lon: -17.4, label: 'Dakar'),
     );
     await c.flush();
-    verifySubmitted(step: 'DEPART', photoPath: '/tmp/photo.jpg');
+    verifySubmitted(
+      step: 'DEPART',
+      photoPath: '/tmp/photo.jpg',
+      method: ScanMethod.manual,
+    );
     // Position fournie par la photo : pas de nouveau relevé.
     verifyNever(() => locator.capture());
     verify(
       () => analytics.logEvent(
         AnalyticsEvents.suiviStepValidated,
-        properties: {'step': 'DEPART', 'method': 'number'},
+        properties: {'step': 'DEPART', 'method': 'manual'},
       ),
     ).called(1);
     await c.close();
@@ -232,6 +244,7 @@ void main() {
         gpsLon: any(named: 'gpsLon'),
         gpsLabel: any(named: 'gpsLabel'),
         queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
+        scanMethod: any(named: 'scanMethod'),
       ),
     ).thenAnswer((_) async => const ScanSubmitQueued()),
     build: () => build(delay: const Duration(milliseconds: 10)),
@@ -261,6 +274,7 @@ void main() {
         gpsLon: any(named: 'gpsLon'),
         gpsLabel: any(named: 'gpsLabel'),
         queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
+        scanMethod: any(named: 'scanMethod'),
       ),
     ).thenThrow(const ConflictException('déjà scanné')),
     build: () => build(delay: const Duration(milliseconds: 10)),
@@ -296,6 +310,7 @@ void main() {
         () => submitter.submit(
           bidId: 'bid-1',
           eventType: 'TRANSIT',
+          scanMethod: ScanMethod.qr,
           queueOnNetworkFailure: true,
         ),
       ).called(1);

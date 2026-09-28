@@ -673,7 +673,7 @@ class _RecentScans extends StatelessWidget {
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   Text(
-                    trackingStepLabel(l, entry.eventType),
+                    recentScanStepLabel(l, entry),
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],

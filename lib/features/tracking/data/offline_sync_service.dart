@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -45,6 +46,7 @@ class OfflineSyncService {
     double? gpsLon,
     String? gpsLabel,
     String? photoPath,
+    ScanMethod? scanMethod,
   }) async {
     final entry = <String, dynamic>{
       'bidId': bidId,
@@ -53,6 +55,9 @@ class OfflineSyncService {
       'gpsLon': ?gpsLon,
       'gpsLabel': ?gpsLabel,
       'photoPath': ?photoPath,
+      // Absent des entrées mises en file avant la provenance : rien n'est
+      // alors envoyé au back.
+      'scanMethod': ?scanMethod?.wire,
       'offlineTimestamp': DateTime.now().toUtc().toIso8601String(),
     };
     await _hive.offlineQueue.add(entry);
@@ -86,6 +91,7 @@ class OfflineSyncService {
             gpsLon: (entry['gpsLon'] as num?)?.toDouble(),
             gpsLabel: entry['gpsLabel'] as String?,
             photoUrl: photoKey,
+            scanMethod: ScanMethod.fromWire(entry['scanMethod']),
             offlineTimestamp: DateTime.parse(
               entry['offlineTimestamp'] as String,
             ),
