@@ -23490,6 +23490,12 @@ abstract class AppLocalizations {
   /// **'Changer'**
   String get suiviChangeTrip;
 
+  /// Lecture d'écran d'un trajet affiché villes et icône (route_label.dart, RouteLabel).
+  ///
+  /// In fr, this message translates to:
+  /// **'De {from} à {to}'**
+  String suiviRouteSemantics(String from, String to);
+
   /// Libellé d'accessibilité de la ligne du trajet, tapable pour ouvrir le choix du trajet (suivi_validate_content.dart, _TripRow).
   ///
   /// In fr, this message translates to:
@@ -23595,14 +23601,14 @@ abstract class AppLocalizations {
   /// Explication de la feuille d'un colis lu sur un autre trajet (suivi_parcel_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le colis de {parcel} voyage sur ton trajet du {date} : {corridor}.'**
-  String suiviOtherTripBody(String parcel, String corridor, String date);
+  /// **'Le colis de {parcel} voyage sur ton trajet du {date} :'**
+  String suiviOtherTripBody(String parcel, String date);
 
   /// Bouton qui affiche l'autre trajet (suivi_parcel_sheets.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Passer sur {corridor}'**
-  String suiviSwitchToTrip(String corridor);
+  /// **'Passer sur ce trajet'**
+  String get suiviSwitchToTrip;
 
   /// Bouton secondaire des feuilles de colis hors trajet (suivi_parcel_sheets.dart).
   ///

@@ -12,6 +12,7 @@ import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
+import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -27,10 +28,6 @@ String suiviParcelLabel(BidModel bid) =>
     bid.recipientName ??
     bid.trackingNumber ??
     bid.id.substring(0, bid.id.length < 8 ? bid.id.length : 8).toUpperCase();
-
-/// « Paris → Dakar ».
-String suiviCorridor(AnnouncementModel trip) =>
-    '${trip.departureCity} → ${trip.arrivalCity}';
 
 /// « sam. 26 sept. » dans la langue de l'app.
 String suiviShortDate(AppLocalizations l, DateTime date) =>
@@ -346,9 +343,11 @@ class _TripRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        suiviCorridor(trip),
+                      RouteLabel(
                         key: const Key('suivi-selected-trip'),
+                        from: trip.departureCity,
+                        to: trip.arrivalCity,
+                        transportMode: trip.transportMode,
                         style: tt.headlineMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
@@ -879,8 +878,10 @@ class _TripGroup extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  suiviCorridor(trip),
+                                RouteLabel(
+                                  from: trip.departureCity,
+                                  to: trip.arrivalCity,
+                                  transportMode: trip.transportMode,
                                   style: tt.titleLarge?.copyWith(
                                     fontWeight: FontWeight.w700,
                                   ),

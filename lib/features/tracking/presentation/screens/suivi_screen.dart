@@ -319,14 +319,18 @@ class _SuiviBodyState extends State<_SuiviBody> {
         }
       case SuiviShowTimeline(
         :final bidId,
-        :final corridor,
+        :final departureCity,
+        :final arrivalCity,
+        :final transportMode,
         :final arrivalInstructions,
         :final trackingNumber,
       ):
         await showTrackingTimelineSheet(
           context,
           bidId: bidId,
-          corridor: corridor,
+          departureCity: departureCity,
+          arrivalCity: arrivalCity,
+          transportMode: transportMode,
           arrivalInstructions: arrivalInstructions,
           trackingNumber: trackingNumber,
         );

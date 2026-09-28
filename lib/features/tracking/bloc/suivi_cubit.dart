@@ -7,6 +7,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
@@ -102,7 +103,9 @@ final class SuiviParcelUnknown extends SuiviEffect {
 final class SuiviShowTimeline extends SuiviEffect {
   const SuiviShowTimeline({
     required this.bidId,
-    required this.corridor,
+    this.departureCity,
+    this.arrivalCity,
+    this.transportMode,
     this.arrivalInstructions,
     this.trackingNumber,
   });
@@ -111,8 +114,12 @@ final class SuiviShowTimeline extends SuiviEffect {
   /// Numéro DON affiché en tête du parcours, `null` s'il n'est pas connu.
   final String? trackingNumber;
 
-  /// « Paris → Dakar », vide quand le colis n'est pas connu de l'app.
-  final String corridor;
+  /// Villes du trajet, `null` quand le colis n'est pas connu de l'app.
+  final String? departureCity;
+  final String? arrivalCity;
+
+  /// Mode du trajet du voyageur quand il est connu (icône du trajet).
+  final TransportMode? transportMode;
   final String? arrivalInstructions;
 }
 
@@ -586,7 +593,8 @@ class SuiviCubit extends Cubit<SuiviState> {
           busy: true,
           effect: SuiviShowTimeline(
             bidId: result.bidId,
-            corridor: '${result.departureCity} → ${result.arrivalCity}',
+            departureCity: result.departureCity,
+            arrivalCity: result.arrivalCity,
             arrivalInstructions: result.arrivalInstructions,
             trackingNumber: result.trackingNumber,
           ),
@@ -622,10 +630,13 @@ class SuiviCubit extends Cubit<SuiviState> {
         );
     final from = known?.departureCity ?? trip?.departureCity;
     final to = known?.arrivalCity ?? trip?.arrivalCity;
+    final hasRoute = from != null && to != null;
     _emitEffect(
       SuiviShowTimeline(
         bidId: bidId,
-        corridor: from != null && to != null ? '$from → $to' : '',
+        departureCity: hasRoute ? from : null,
+        arrivalCity: hasRoute ? to : null,
+        transportMode: trip?.transportMode,
         arrivalInstructions:
             known?.arrivalInstructions ?? trip?.arrivalInstructions,
         trackingNumber: known?.trackingNumber,

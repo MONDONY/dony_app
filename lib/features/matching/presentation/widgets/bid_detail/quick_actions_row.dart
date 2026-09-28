@@ -53,14 +53,6 @@ class QuickActionsRow extends StatelessWidget {
 
   const QuickActionsRow({super.key, required this.bid});
 
-  String _corridor(BuildContext context) {
-    final dep = bid.departureCity ?? '';
-    final arr = bid.arrivalCity ?? '';
-    return dep.isNotEmpty && arr.isNotEmpty
-        ? '$dep → $arr'
-        : context.l10n.bidDetailTrackParcel;
-  }
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -79,7 +71,8 @@ class QuickActionsRow extends StatelessWidget {
             onTap: () => showTrackingTimelineSheet(
               context,
               bidId: bid.id,
-              corridor: _corridor(context),
+              departureCity: bid.departureCity,
+              arrivalCity: bid.arrivalCity,
               arrivalInstructions: bid.arrivalInstructions,
               trackingNumber: bid.trackingNumber,
               onShareTracking: hasToken

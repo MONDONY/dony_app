@@ -14031,6 +14031,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suiviChangeTrip => 'Change';
 
   @override
+  String suiviRouteSemantics(String from, String to) {
+    return 'From $from to $to';
+  }
+
+  @override
   String get suiviChangeTripSemantics => 'Change trip';
 
   @override
@@ -14117,14 +14122,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suiviOtherTripTitle => 'This parcel isn\'t on this trip';
 
   @override
-  String suiviOtherTripBody(String parcel, String corridor, String date) {
-    return 'The parcel for $parcel travels on your $date trip: $corridor.';
+  String suiviOtherTripBody(String parcel, String date) {
+    return 'The parcel for $parcel travels on your $date trip:';
   }
 
   @override
-  String suiviSwitchToTrip(String corridor) {
-    return 'Switch to $corridor';
-  }
+  String get suiviSwitchToTrip => 'Switch to this trip';
 
   @override
   String get suiviScanAnother => 'Scan another parcel';

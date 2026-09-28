@@ -445,7 +445,7 @@ void main() {
       c.onQrScanned('ship-1', null);
       final effect = c.state.effect! as SuiviShowTimeline;
       expect(effect.bidId, 'ship-1');
-      expect(effect.corridor, 'Paris → Dakar');
+      expect((effect.departureCity, effect.arrivalCity), ('Paris', 'Dakar'));
       verify(
         () => analytics.logEvent(
           AnalyticsEvents.suiviQrScanned,
@@ -460,19 +460,21 @@ void main() {
       ).called(1);
     });
 
-    test('QR d\'un colis du voyageur en mode Suivre : corridor du trajet', () {
+    test('QR d\'un colis du voyageur en mode Suivre : villes du trajet', () {
       final c = build()
         ..start(canValidate: true, requested: SuiviMode.suivre)
         ..onQrScanned('other', _hub());
       final effect = c.state.effect! as SuiviShowTimeline;
-      expect(effect.corridor, 'Lyon → Abidjan');
+      expect((effect.departureCity, effect.arrivalCity), ('Lyon', 'Abidjan'));
     });
 
-    test('QR inconnu : corridor vide', () {
+    test('QR inconnu : pas de trajet', () {
       final c = build()
         ..start(canValidate: true, requested: SuiviMode.suivre)
         ..onQrScanned('nowhere', _hub());
-      expect((c.state.effect! as SuiviShowTimeline).corridor, isEmpty);
+      final effect = c.state.effect! as SuiviShowTimeline;
+      expect(effect.departureCity, isNull);
+      expect(effect.arrivalCity, isNull);
     });
 
     test('followParcel bascule en Suivre et ouvre le parcours', () {
@@ -524,7 +526,10 @@ void main() {
       await c.trackNumber('  don-abc123 ');
       final effect = c.state.effect! as SuiviShowTimeline;
       expect(effect.bidId, 'bid-9');
-      expect(effect.corridor, 'Marseille → Bamako');
+      expect(
+        (effect.departureCity, effect.arrivalCity),
+        ('Marseille', 'Bamako'),
+      );
       expect(effect.arrivalInstructions, 'Gare routière');
       expect(c.state.searchStatus, SuiviLoadStatus.idle);
       verify(

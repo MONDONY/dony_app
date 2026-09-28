@@ -5,6 +5,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
+import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_validate_content.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -17,20 +18,19 @@ Future<bool?> showSuiviOtherTripSheet(
   required AnnouncementModel trip,
 }) {
   final l = context.l10n;
-  final corridor = suiviCorridor(trip);
   return DonyBottomSheet.show<bool>(
     context,
     stickyBottom: _SheetActions(
       primaryKey: const Key('suivi-switch-trip'),
-      primaryLabel: l.suiviSwitchToTrip(corridor),
+      primaryLabel: l.suiviSwitchToTrip,
     ),
     child: _ParcelNotice(
       title: l.suiviOtherTripTitle,
       body: l.suiviOtherTripBody(
         suiviParcelLabel(bid),
-        corridor,
         suiviShortDate(l, trip.departureDate),
       ),
+      trip: trip,
     ),
   );
 }
@@ -53,10 +53,13 @@ Future<bool?> showSuiviUnknownParcelSheet(BuildContext context) {
 }
 
 class _ParcelNotice extends StatelessWidget {
-  const _ParcelNotice({required this.title, required this.body});
+  const _ParcelNotice({required this.title, required this.body, this.trip});
 
   final String title;
   final String body;
+
+  /// Trajet du colis, affiché sous l'explication.
+  final AnnouncementModel? trip;
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +89,16 @@ class _ParcelNotice extends StatelessWidget {
             height: 1.45,
           ),
         ),
+        if (trip case final trip?) ...[
+          const SizedBox(height: DonySpacing.md),
+          RouteLabel(
+            key: const Key('suivi-other-trip-route'),
+            from: trip.departureCity,
+            to: trip.arrivalCity,
+            transportMode: trip.transportMode,
+            style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ],
       ],
     );
   }
@@ -221,7 +234,15 @@ class _NumberRecap extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: DonySpacing.base),
-                _RecapRow(label: l.suiviRecapTrip, value: suiviCorridor(trip)),
+                _RecapRow(
+                  label: l.suiviRecapTrip,
+                  child: RouteLabel(
+                    from: trip.departureCity,
+                    to: trip.arrivalCity,
+                    transportMode: trip.transportMode,
+                    style: tt.bodyMedium,
+                  ),
+                ),
                 _RecapRow(
                   label: l.suiviRecapDone,
                   value: done.isEmpty
@@ -268,12 +289,16 @@ class _NumberRecap extends StatelessWidget {
 class _RecapRow extends StatelessWidget {
   const _RecapRow({
     required this.label,
-    required this.value,
+    this.value,
+    this.child,
     this.strong = false,
-  });
+  }) : assert((value == null) != (child == null));
 
   final String label;
-  final String value;
+  final String? value;
+
+  /// Valeur composée (trajet), à la place de [value].
+  final Widget? child;
   final bool strong;
 
   @override
@@ -295,12 +320,14 @@ class _RecapRow extends StatelessWidget {
           const SizedBox(width: DonySpacing.md),
           Expanded(
             flex: 3,
-            child: Text(
-              value,
-              style: tt.bodyMedium?.copyWith(
-                fontWeight: strong ? FontWeight.w700 : null,
-              ),
-            ),
+            child:
+                child ??
+                Text(
+                  value!,
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: strong ? FontWeight.w700 : null,
+                  ),
+                ),
           ),
         ],
       ),
