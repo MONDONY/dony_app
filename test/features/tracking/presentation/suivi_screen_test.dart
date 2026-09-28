@@ -27,7 +27,6 @@ import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
-import 'package:dony/features/tracking/data/scan_submitter.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
@@ -55,8 +54,6 @@ class _MockBidRepo extends Mock implements BidRepository {}
 class _MockTrackingRepo extends Mock implements TrackingRepository {}
 
 class _MockOfflineSync extends Mock implements OfflineSyncService {}
-
-class _MockSubmitter extends Mock implements ScanSubmitter {}
 
 class _MockLocator extends Mock implements ScanLocator {}
 
@@ -145,7 +142,6 @@ void main() {
   late _MockTrackingRepo trackingRepo;
   late _MockAnalytics analytics;
   late _MockOfflineSync offlineSync;
-  late _MockSubmitter submitter;
   late _MockLocator locator;
   late ChangeNotifier queue;
   late List<String> visited;
@@ -221,29 +217,30 @@ void main() {
     trackingRepo = _MockTrackingRepo();
     analytics = _MockAnalytics();
     offlineSync = _MockOfflineSync();
-    submitter = _MockSubmitter();
     locator = _MockLocator();
     when(() => locator.capture()).thenAnswer((_) async => _here);
     when(
-      () => submitter.submit(
+      () => offlineSync.queueScan(
         bidId: any(named: 'bidId'),
         eventType: any(named: 'eventType'),
         photoPath: any(named: 'photoPath'),
         gpsLat: any(named: 'gpsLat'),
         gpsLon: any(named: 'gpsLon'),
         gpsLabel: any(named: 'gpsLabel'),
-        queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
         scanMethod: any(named: 'scanMethod'),
+        notBefore: any(named: 'notBefore'),
       ),
+    ).thenAnswer((_) async => 1);
+    when(() => offlineSync.discard(any())).thenAnswer((_) async {});
+    when(
+      () => offlineSync.sendScheduled(any(), position: any(named: 'position')),
     ).thenAnswer(
-      (_) async => ScanSubmitSent(
-        TrackingEventModel(
-          id: 'e1',
-          bidId: 'sali',
-          eventType: 'TRANSIT',
-          scannedAt: DateTime(2026, 9, 28),
-          createdAt: DateTime(2026, 9, 28),
-        ),
+      (_) async => TrackingEventModel(
+        id: 'e1',
+        bidId: 'sali',
+        eventType: 'TRANSIT',
+        scannedAt: DateTime(2026, 9, 28),
+        createdAt: DateTime(2026, 9, 28),
       ),
     );
     queue = ChangeNotifier();
@@ -279,7 +276,7 @@ void main() {
         () => ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo),
       )
       ..registerFactory<SuiviValidationCubit>(
-        () => SuiviValidationCubit(submitter, locator, analytics),
+        () => SuiviValidationCubit(offlineSync, locator, analytics),
       )
       ..registerFactory<TrackingBloc>(() {
         final bloc = _MockTrackingBloc();
@@ -406,17 +403,43 @@ void main() {
   Finder text(String s) => find.text(s, findRichText: true);
 
   void verifyNeverSubmitted() => verifyNever(
-    () => submitter.submit(
-      bidId: any(named: 'bidId'),
-      eventType: any(named: 'eventType'),
-      photoPath: any(named: 'photoPath'),
-      gpsLat: any(named: 'gpsLat'),
-      gpsLon: any(named: 'gpsLon'),
-      gpsLabel: any(named: 'gpsLabel'),
-      queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
-      scanMethod: any(named: 'scanMethod'),
-    ),
+    () => offlineSync.sendScheduled(any(), position: any(named: 'position')),
   );
+
+  /// Validation mise en file dès le « Valider », puis envoyée une fois (avec
+  /// la position relevée, quand [at] est donnée).
+  Future<void> verifySent({
+    required String bidId,
+    required String step,
+    required ScanMethod method,
+    String? photoPath,
+    ScanPosition? at,
+  }) async {
+    verify(
+      () => offlineSync.queueScan(
+        bidId: bidId,
+        eventType: step,
+        photoPath: photoPath,
+        gpsLat: any(named: 'gpsLat'),
+        gpsLon: any(named: 'gpsLon'),
+        gpsLabel: any(named: 'gpsLabel'),
+        scanMethod: method,
+        notBefore: any(named: 'notBefore'),
+      ),
+    ).called(1);
+    final position =
+        verify(
+              () => offlineSync.sendScheduled(
+                1,
+                position: captureAny(named: 'position'),
+              ),
+            ).captured.single
+            as Future<ScanPosition?>;
+    if (at != null) {
+      final sent = await position;
+      expect((sent?.lat, sent?.lon, sent?.label), (at.lat, at.lon, at.label));
+    }
+  }
 
   /// Trajet avec un colis remis (étape suivante : transit) et un colis au
   /// départ, plus un colis sur un autre trajet.
@@ -693,18 +716,13 @@ void main() {
 
       await tester.pump(const Duration(seconds: 5));
       await settle(tester, rounds: 2);
-      verify(
-        () => submitter.submit(
-          bidId: 'madou',
-          eventType: 'DEPART',
-          photoPath: '/tmp/colis.jpg',
-          gpsLat: 14.7,
-          gpsLon: -17.4,
-          gpsLabel: 'Dakar',
-          scanMethod: ScanMethod.qr,
-          queueOnNetworkFailure: true,
-        ),
-      ).called(1);
+      await verifySent(
+        bidId: 'madou',
+        step: 'DEPART',
+        method: ScanMethod.qr,
+        photoPath: '/tmp/colis.jpg',
+        at: _here,
+      );
       expect(text('Départ de Madou validé'), findsNothing);
       // Position relevée avant la photo : pas de nouveau relevé.
       verifyNever(() => locator.capture());
@@ -933,17 +951,12 @@ void main() {
 
       await tester.pump(const Duration(seconds: 3));
       await settle(tester, rounds: 2);
-      verify(
-        () => submitter.submit(
-          bidId: 'sali',
-          eventType: 'TRANSIT',
-          gpsLat: 14.7,
-          gpsLon: -17.4,
-          gpsLabel: 'Dakar',
-          scanMethod: ScanMethod.qr,
-          queueOnNetworkFailure: true,
-        ),
-      ).called(1);
+      await verifySent(
+        bidId: 'sali',
+        step: 'TRANSIT',
+        method: ScanMethod.qr,
+        at: _here,
+      );
       expect(text('Transit de Sali validé'), findsNothing);
       // Colis et derniers scans rechargés sans démonter la caméra.
       verify(() => annRepo.getMyAnnouncements()).called(1);
@@ -968,6 +981,8 @@ void main() {
       await settle(tester, rounds: 2);
       expect(text('Transit de Sali validé'), findsNothing);
       verifyNeverSubmitted();
+      // Retirée de la file hors ligne : rien ne partira après un redémarrage.
+      verify(() => offlineSync.discard(1)).called(1);
       verify(
         () => analytics.logEvent(
           'suivi_step_undone',
@@ -1000,32 +1015,14 @@ void main() {
       expect(text('Valider avec le numéro'), findsNothing);
       await tester.pump(const Duration(seconds: 5));
       await settle(tester, rounds: 12);
-      verify(
-        () => submitter.submit(
-          bidId: 'sali',
-          eventType: 'TRANSIT',
-          gpsLat: any(named: 'gpsLat'),
-          gpsLon: any(named: 'gpsLon'),
-          gpsLabel: any(named: 'gpsLabel'),
-          scanMethod: ScanMethod.qr,
-          queueOnNetworkFailure: true,
-        ),
-      ).called(1);
+      await verifySent(bidId: 'sali', step: 'TRANSIT', method: ScanMethod.qr);
     });
 
     testWidgets('sans réseau → en attente d\'envoi', (tester) async {
       when(
-        () => submitter.submit(
-          bidId: any(named: 'bidId'),
-          eventType: any(named: 'eventType'),
-          photoPath: any(named: 'photoPath'),
-          gpsLat: any(named: 'gpsLat'),
-          gpsLon: any(named: 'gpsLon'),
-          gpsLabel: any(named: 'gpsLabel'),
-          queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
-          scanMethod: any(named: 'scanMethod'),
-        ),
-      ).thenAnswer((_) async => const ScanSubmitQueued());
+        () =>
+            offlineSync.sendScheduled(any(), position: any(named: 'position')),
+      ).thenAnswer((_) async => null);
       stubTransitTrips();
       await pump(tester);
       await forceTransit(tester);
@@ -1046,16 +1043,8 @@ void main() {
 
     testWidgets('refus du back → message d\'échec', (tester) async {
       when(
-        () => submitter.submit(
-          bidId: any(named: 'bidId'),
-          eventType: any(named: 'eventType'),
-          photoPath: any(named: 'photoPath'),
-          gpsLat: any(named: 'gpsLat'),
-          gpsLon: any(named: 'gpsLon'),
-          gpsLabel: any(named: 'gpsLabel'),
-          queueOnNetworkFailure: any(named: 'queueOnNetworkFailure'),
-          scanMethod: any(named: 'scanMethod'),
-        ),
+        () =>
+            offlineSync.sendScheduled(any(), position: any(named: 'position')),
       ).thenThrow(const ConflictException('déjà scanné'));
       stubTransitTrips();
       await pump(tester);
@@ -1082,17 +1071,7 @@ void main() {
 
       await tester.pumpWidget(const SizedBox());
       await tester.pump();
-      verify(
-        () => submitter.submit(
-          bidId: 'sali',
-          eventType: 'TRANSIT',
-          gpsLat: any(named: 'gpsLat'),
-          gpsLon: any(named: 'gpsLon'),
-          gpsLabel: any(named: 'gpsLabel'),
-          scanMethod: ScanMethod.qr,
-          queueOnNetworkFailure: true,
-        ),
-      ).called(1);
+      await verifySent(bidId: 'sali', step: 'TRANSIT', method: ScanMethod.qr);
     });
 
     testWidgets('app en arrière-plan pendant le délai → envoi immédiat', (
@@ -1107,17 +1086,7 @@ void main() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
       await tester.pump();
-      verify(
-        () => submitter.submit(
-          bidId: 'sali',
-          eventType: 'TRANSIT',
-          gpsLat: any(named: 'gpsLat'),
-          gpsLon: any(named: 'gpsLon'),
-          gpsLabel: any(named: 'gpsLabel'),
-          scanMethod: ScanMethod.qr,
-          queueOnNetworkFailure: true,
-        ),
-      ).called(1);
+      await verifySent(bidId: 'sali', step: 'TRANSIT', method: ScanMethod.qr);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await settle(tester, rounds: 2);
@@ -1241,18 +1210,13 @@ void main() {
 
       await tester.pump(const Duration(seconds: 5));
       await settle(tester, rounds: 2);
-      verify(
-        () => submitter.submit(
-          bidId: 'sali',
-          eventType: 'TRANSIT',
-          photoPath: '/tmp/colis.jpg',
-          gpsLat: 14.7,
-          gpsLon: -17.4,
-          gpsLabel: 'Dakar',
-          scanMethod: ScanMethod.manual,
-          queueOnNetworkFailure: true,
-        ),
-      ).called(1);
+      await verifySent(
+        bidId: 'sali',
+        step: 'TRANSIT',
+        method: ScanMethod.manual,
+        photoPath: '/tmp/colis.jpg',
+        at: _here,
+      );
       verify(
         () => analytics.logEvent(
           'suivi_step_validated',

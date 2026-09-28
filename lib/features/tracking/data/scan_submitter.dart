@@ -1,5 +1,4 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
@@ -24,8 +23,9 @@ final class ScanSubmitQueued extends ScanSubmitResult {
 /// si elle existe. Sans réseau, l'étape part dans la file hors ligne
 /// ([OfflineSyncService]) au lieu d'échouer.
 ///
-/// Partagé par [TrackingBloc] (parcours photo puis confirmation) et la
-/// validation rapide de l'onglet Suivi.
+/// Utilisé par [TrackingBloc] (parcours photo puis confirmation). La
+/// validation rapide de l'onglet Suivi passe, elle, par la file dès le
+/// départ ([OfflineSyncService.sendScheduled]).
 class ScanSubmitter {
   ScanSubmitter(
     this._repository,
@@ -42,10 +42,6 @@ class ScanSubmitter {
     return results.any((r) => r != ConnectivityResult.none);
   }
 
-  /// [queueOnNetworkFailure] : un envoi qui échoue faute de réseau (connexion
-  /// coupée entre la vérification et l'appel, délai dépassé) rejoint aussi la
-  /// file au lieu d'être perdu. Un refus du back (409, 422, 403…) remonte
-  /// toujours tel quel.
   Future<ScanSubmitResult> submit({
     required String bidId,
     required String eventType,
@@ -54,7 +50,6 @@ class ScanSubmitter {
     double? gpsLon,
     String? gpsLabel,
     ScanMethod? scanMethod,
-    bool queueOnNetworkFailure = false,
   }) async {
     Future<ScanSubmitResult> queue() async {
       await _offlineSync.queueScan(
@@ -71,29 +66,19 @@ class ScanSubmitter {
 
     if (!await _isOnline()) return queue();
 
-    try {
-      String? photoKey;
-      if (photoPath != null) {
-        photoKey = await _repository.uploadTrackingPhoto(bidId, photoPath);
-      }
-      final event = await _repository.postScan(
-        bidId: bidId,
-        eventType: eventType,
-        gpsLat: gpsLat,
-        gpsLon: gpsLon,
-        gpsLabel: gpsLabel,
-        photoUrl: photoKey,
-        scanMethod: scanMethod,
-      );
-      return ScanSubmitSent(event);
-    } catch (e) {
-      final error = unwrapDioError(e);
-      final networkFailure =
-          error is NetworkException ||
-          error is TimeoutException ||
-          error is OfflineException;
-      if (queueOnNetworkFailure && networkFailure) return queue();
-      rethrow;
+    String? photoKey;
+    if (photoPath != null) {
+      photoKey = await _repository.uploadTrackingPhoto(bidId, photoPath);
     }
+    final event = await _repository.postScan(
+      bidId: bidId,
+      eventType: eventType,
+      gpsLat: gpsLat,
+      gpsLon: gpsLon,
+      gpsLabel: gpsLabel,
+      photoUrl: photoKey,
+      scanMethod: scanMethod,
+    );
+    return ScanSubmitSent(event);
   }
 }

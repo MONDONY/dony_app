@@ -37,7 +37,7 @@ void main() {
         gpsLabel: any(named: 'gpsLabel'),
         photoPath: any(named: 'photoPath'),
       ),
-    ).thenAnswer((_) async {});
+    ).thenAnswer((_) async => 1);
     when(
       () => repo.uploadTrackingPhoto(any(), any()),
     ).thenAnswer((_) async => 'tracking/bid-1/photo.jpg');
@@ -97,7 +97,7 @@ void main() {
         eventType: any(named: 'eventType'),
         scanMethod: ScanMethod.manual,
       ),
-    ).thenAnswer((_) async {});
+    ).thenAnswer((_) async => 1);
 
     await build().submit(
       bidId: 'bid-1',
@@ -145,22 +145,7 @@ void main() {
     verifyNever(() => repo.uploadTrackingPhoto(any(), any()));
   });
 
-  test('réseau coupé pendant l\'envoi : file si demandé', () async {
-    when(
-      () => repo.uploadTrackingPhoto(any(), any()),
-    ).thenThrow(const NetworkException('coupé'));
-    final result = await build().submit(
-      bidId: 'bid-1',
-      eventType: 'TRANSIT',
-      photoPath: '/tmp/p.jpg',
-      gpsLat: 14.7,
-      queueOnNetworkFailure: true,
-    );
-    expect(result, isA<ScanSubmitQueued>());
-    verifyQueued();
-  });
-
-  test('réseau coupé sans file demandée : l\'erreur remonte', () async {
+  test('réseau coupé pendant l\'envoi : l\'erreur remonte', () async {
     when(
       () => repo.uploadTrackingPhoto(any(), any()),
     ).thenThrow(const TimeoutException());
@@ -186,11 +171,7 @@ void main() {
       ),
     ).thenThrow(const ConflictException('déjà scanné'));
     await expectLater(
-      build().submit(
-        bidId: 'bid-1',
-        eventType: 'DEPART',
-        queueOnNetworkFailure: true,
-      ),
+      build().submit(bidId: 'bid-1', eventType: 'DEPART'),
       throwsA(isA<ConflictException>()),
     );
     verifyNever(

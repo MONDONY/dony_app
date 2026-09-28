@@ -465,7 +465,7 @@ void main() {
       'hors ligne : file d\'attente → QrScanQueued',
       setUp: () => when(
         () => mockSync.queueScan(bidId: 'bid-1', eventType: 'TRANSIT'),
-      ).thenAnswer((_) async {}),
+      ).thenAnswer((_) async => 1),
       build: () => withNetwork(online: false),
       act: (b) =>
           b.add(QrScanSubmitRequested(bidId: 'bid-1', eventType: 'TRANSIT')),

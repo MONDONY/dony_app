@@ -1,17 +1,22 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
+import 'package:dony/features/tracking/data/scan_locator.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockTrackingRepository extends Mock implements TrackingRepository {}
+
+class _MockReporter extends Mock implements ErrorReportingService {}
 
 late Directory _tempDir;
 late HiveService _hiveService;
@@ -111,6 +116,8 @@ void main() {
       expect(entry.containsKey('gpsLat'), isFalse);
       expect(entry.containsKey('photoPath'), isFalse);
       expect(entry.containsKey('scanMethod'), isFalse);
+      // Scan hors ligne ordinaire : aucune échéance.
+      expect(entry.containsKey('notBefore'), isFalse);
     });
 
     test('garde la provenance du scan', () async {
@@ -374,6 +381,232 @@ void main() {
           offlineTimestamp: any(named: 'offlineTimestamp'),
         ),
       ).called(1);
+    });
+  });
+
+  group('validation annulable (notBefore)', () {
+    final t0 = DateTime.utc(2026, 9, 28, 12);
+    late DateTime now;
+    late OfflineSyncService timed;
+
+    void stubPost(Future<TrackingEventModel> Function(Invocation) answer) =>
+        when(
+          () => mockRepo.postScan(
+            bidId: any(named: 'bidId'),
+            eventType: any(named: 'eventType'),
+            gpsLat: any(named: 'gpsLat'),
+            gpsLon: any(named: 'gpsLon'),
+            gpsLabel: any(named: 'gpsLabel'),
+            photoUrl: any(named: 'photoUrl'),
+            scanMethod: any(named: 'scanMethod'),
+            offlineTimestamp: any(named: 'offlineTimestamp'),
+          ),
+        ).thenAnswer(answer);
+
+    void verifyNeverPosted() => verifyNever(
+      () => mockRepo.postScan(
+        bidId: any(named: 'bidId'),
+        eventType: any(named: 'eventType'),
+        gpsLat: any(named: 'gpsLat'),
+        gpsLon: any(named: 'gpsLon'),
+        gpsLabel: any(named: 'gpsLabel'),
+        photoUrl: any(named: 'photoUrl'),
+        scanMethod: any(named: 'scanMethod'),
+        offlineTimestamp: any(named: 'offlineTimestamp'),
+      ),
+    );
+
+    setUp(() {
+      now = t0;
+      timed = OfflineSyncService(_hiveService, mockRepo, null, () => now);
+      stubPost((_) async => _fakeEvent());
+    });
+
+    tearDown(() => timed.dispose());
+
+    Future<int> schedule() => timed.queueScan(
+      bidId: 'bid-1',
+      eventType: 'TRANSIT',
+      scanMethod: ScanMethod.manual,
+      notBefore: t0.add(const Duration(seconds: 7)),
+    );
+
+    test('échéance et provenance écrites dans l\'entrée', () async {
+      final key = await schedule();
+      final entry = Map<String, dynamic>.from(
+        _hiveService.offlineQueue.get(key)!,
+      );
+      expect(entry['notBefore'], '2026-09-28T12:00:07.000Z');
+      expect(entry['scanMethod'], 'MANUAL');
+    });
+
+    test('syncAll l\'ignore avant l\'échéance, l\'envoie après', () async {
+      await schedule();
+      await timed.syncAll();
+      verifyNeverPosted();
+      expect(timed.pendingCount, 0);
+      expect(timed.pendingCountFor({'bid-1'}), 0);
+
+      now = t0.add(const Duration(seconds: 8));
+      expect(timed.pendingCount, 1);
+      await timed.syncAll();
+      verify(
+        () => mockRepo.postScan(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          scanMethod: ScanMethod.manual,
+          offlineTimestamp: any(named: 'offlineTimestamp', that: isNotNull),
+        ),
+      ).called(1);
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+    });
+
+    test('syncAll repasse de lui-même à l\'échéance', () async {
+      final real = OfflineSyncService(_hiveService, mockRepo);
+      addTearDown(real.dispose);
+      await real.queueScan(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+        notBefore: DateTime.now().add(const Duration(milliseconds: 40)),
+      );
+      await real.syncAll();
+      verifyNeverPosted();
+      for (var i = 0; i < 100 && _hiveService.offlineQueue.isNotEmpty; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+    });
+
+    test('discard retire l\'entrée', () async {
+      final key = await schedule();
+      await timed.discard(key);
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+    });
+
+    test('sendScheduled : envoi immédiat, position écrite, retirée', () async {
+      final key = await schedule();
+      final event = await timed.sendScheduled(
+        key,
+        position: Future.value(
+          const ScanPosition(lat: 14.7, lon: -17.4, label: 'Dakar'),
+        ),
+      );
+      expect(event, isNotNull);
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      // Envoi en direct : pas daté comme un scan hors ligne.
+      verify(
+        () => mockRepo.postScan(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          gpsLat: 14.7,
+          gpsLon: -17.4,
+          gpsLabel: 'Dakar',
+          scanMethod: ScanMethod.manual,
+        ),
+      ).called(1);
+    });
+
+    test('sendScheduled : entrée absente → null, rien envoyé', () async {
+      expect(await timed.sendScheduled(42), isNull);
+      verifyNeverPosted();
+    });
+
+    test('sendScheduled : deux appels concurrents, un seul envoi', () async {
+      final answer = Completer<TrackingEventModel>();
+      stubPost((_) => answer.future);
+      final key = await schedule();
+      final first = timed.sendScheduled(key);
+      // Réservée : ni un second envoi ni syncAll ne la reprennent.
+      expect(await timed.sendScheduled(key), isNull);
+      now = t0.add(const Duration(minutes: 1));
+      expect(timed.pendingCount, 0);
+      await timed.syncAll();
+      answer.complete(_fakeEvent());
+      expect(await first, isNotNull);
+      verify(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: any(named: 'photoUrl'),
+          scanMethod: any(named: 'scanMethod'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).called(1);
+    });
+
+    test(
+      'sendScheduled : erreur inattendue signalée, gardée en file',
+      () async {
+        final reporter = _MockReporter();
+        when(
+          () => reporter.report(
+            any(),
+            operation: any(named: 'operation'),
+            stackTrace: any(named: 'stackTrace'),
+            context: any(named: 'context'),
+          ),
+        ).thenAnswer((_) async {});
+        final reported = OfflineSyncService(
+          _hiveService,
+          mockRepo,
+          reporter,
+          () => now,
+        );
+        stubPost((_) async => throw StateError('bug'));
+        final key = await schedule();
+        expect(await reported.sendScheduled(key), isNull);
+        final entry = Map<String, dynamic>.from(
+          _hiveService.offlineQueue.get(key)!,
+        );
+        expect(entry.containsKey('notBefore'), isFalse);
+        expect(reported.pendingCount, 1);
+        verify(
+          () => reporter.report(
+            any(that: isA<StateError>()),
+            operation: 'tracking.offline_sync',
+            stackTrace: any(named: 'stackTrace'),
+            context: any(named: 'context'),
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      'sendScheduled : refus définitif retiré de la file et remonté',
+      () async {
+        stubPost(
+          (_) async => throw DioException(
+            requestOptions: RequestOptions(path: '/tracking/events'),
+            error: const ForbiddenException(),
+          ),
+        );
+        final key = await schedule();
+        await expectLater(
+          timed.sendScheduled(key),
+          throwsA(isA<DioException>()),
+        );
+        expect(_hiveService.offlineQueue.isEmpty, isTrue);
+      },
+    );
+
+    test('entrée vidée pendant l\'envoi (déconnexion) : pas recréée', () async {
+      final answer = Completer<TrackingEventModel>();
+      stubPost((_) => answer.future);
+      final key = await schedule();
+      final sending = timed.sendScheduled(key);
+      await Future<void>.delayed(Duration.zero);
+      await _hiveService.offlineQueue.clear();
+      answer.completeError(
+        DioException(
+          requestOptions: RequestOptions(path: '/tracking/events'),
+          type: DioExceptionType.connectionError,
+        ),
+      );
+      expect(await sending, isNull);
+      expect(_hiveService.offlineQueue.isEmpty, isTrue);
     });
   });
 

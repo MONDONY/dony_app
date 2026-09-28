@@ -5,8 +5,8 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/tracking/data/models/scan_method.dart';
+import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/scan_locator.dart';
-import 'package:dony/features/tracking/data/scan_submitter.dart';
 
 /// Étape validée dans l'onglet, pas encore envoyée : « Annuler » reste
 /// possible jusqu'à [deadline].
@@ -76,11 +76,24 @@ class SuiviValidationState {
 /// tout de suite, mais ne part qu'au bout de [delay] pour laisser le temps
 /// d'« Annuler » (le back n'a pas d'annulation d'événement).
 ///
-/// Une validation n'est jamais perdue : quitter l'onglet ou l'app l'envoie
+/// Chaque validation est écrite dans la file hors ligne Hive dès [schedule],
+/// avec une échéance (`notBefore`) : « Annuler » l'en retire, l'envoi
+/// ([OfflineSyncService.sendScheduled]) la retire au succès ou au refus du
+/// back, et la laisse en file sinon. Quitter l'onglet ou l'app l'envoie
 /// aussitôt ([flush]), fermer le cubit aussi ([close]).
+///
+/// Garantie : une validation qui n'a pas été annulée part au moins une fois,
+/// même si le process meurt pendant le délai ou pendant l'envoi : l'entrée
+/// restée en file est rejouée par [OfflineSyncService.syncAll] (démarrage,
+/// retour du réseau) une fois l'échéance passée. Dans un même process, elle
+/// ne part qu'une fois : l'entrée est réservée avant l'appel réseau. Seul un
+/// arrêt entre l'acceptation par le back et le retrait de l'entrée la fait
+/// rejouer : un départ en double est alors refusé (409, retiré de la file),
+/// un transit peut être enregistré deux fois. Une panne réseau, un 5xx ou
+/// une session expirée laissent l'entrée en file (issue « en attente »).
 class SuiviValidationCubit extends Cubit<SuiviValidationState> {
   SuiviValidationCubit(
-    this._submitter,
+    this._queue,
     this._locator,
     this._analytics, {
     this.delay = const Duration(seconds: 5),
@@ -88,7 +101,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
   }) : _now = now ?? DateTime.now,
        super(const SuiviValidationState());
 
-  final ScanSubmitter _submitter;
+  final OfflineSyncService _queue;
   final ScanLocator _locator;
   final AnalyticsService _analytics;
   final DateTime Function() _now;
@@ -100,8 +113,15 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
   /// sans elle.
   static const positionTimeout = Duration(seconds: 10);
 
+  /// Ajoutée à l'échéance de l'entrée en file : à la fin du délai, c'est ce
+  /// cubit qui l'envoie (avec la position), pas un `syncAll` concurrent.
+  static const replayGrace = Duration(seconds: 2);
+
   final _timers = <int, Timer>{};
   final _positions = <int, Future<ScanPosition?>>{};
+
+  /// Clé Hive de chaque validation, disponible une fois l'écriture faite.
+  final _keys = <int, Future<int>>{};
   int _lastId = 0;
 
   /// Programme l'envoi de [step] pour [bidId]. Sans [position] (validation
@@ -117,6 +137,19 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
   }) {
     if (isClosed || state.pendingBidIds.contains(bidId)) return null;
     final id = ++_lastId;
+    final deadline = _now().add(delay);
+    // Écrite tout de suite : un arrêt brutal du process ne la perd plus.
+    // Une erreur d'écriture remonte à l'envoi (issue en échec).
+    _keys[id] = _queue.queueScan(
+      bidId: bidId,
+      eventType: step,
+      photoPath: photoPath,
+      gpsLat: position?.lat,
+      gpsLon: position?.lon,
+      gpsLabel: position?.label,
+      scanMethod: method,
+      notBefore: deadline.add(replayGrace),
+    )..ignore();
     _positions[id] = position != null
         ? Future.value(position)
         : _locator.capture();
@@ -131,7 +164,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
             step: step,
             parcelLabel: parcelLabel,
             method: method,
-            deadline: _now().add(delay),
+            deadline: deadline,
             photoPath: photoPath,
           ),
         ],
@@ -146,6 +179,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
     if (pending == null) return;
     _timers.remove(id)?.cancel();
     unawaited(_positions.remove(id));
+    unawaited(_keys.remove(id)!.then(_queue.discard, onError: (Object _) {}));
     emit(_copy(pending: _without(id)));
     unawaited(
       _analytics.logEvent(
@@ -164,21 +198,15 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
     final pending = _find(id);
     if (pending == null) return;
     _timers.remove(id)?.cancel();
-    final position = _positions.remove(id);
+    final position = _positions.remove(id)!;
+    final key = _keys.remove(id)!;
     if (!isClosed) emit(_copy(pending: _without(id)));
 
     SuiviValidationOutcome outcome;
     try {
-      final at = position == null ? null : await _positionOrNull(position);
-      final result = await _submitter.submit(
-        bidId: pending.bidId,
-        eventType: pending.step,
-        photoPath: pending.photoPath,
-        gpsLat: at?.lat,
-        gpsLon: at?.lon,
-        gpsLabel: at?.label,
-        scanMethod: pending.method,
-        queueOnNetworkFailure: true,
+      final event = await _queue.sendScheduled(
+        await key,
+        position: _positionOrNull(position),
       );
       unawaited(
         _analytics.logEvent(
@@ -186,7 +214,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
           properties: {'step': pending.step, 'method': pending.method.name},
         ),
       );
-      outcome = result is ScanSubmitSent
+      outcome = event != null
           ? SuiviValidationSent(pending.step, pending.parcelLabel)
           : SuiviValidationQueued(pending.step, pending.parcelLabel);
     } catch (e) {
