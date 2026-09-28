@@ -64,7 +64,8 @@ class SuiviValidateContent extends StatelessWidget {
   final FocusNode numberFocus;
   final VoidCallback onChangeTrip;
 
-  /// Action d'une ligne colis : ouvre l'identification pour son [step].
+  /// Action d'une ligne colis : valide son [step] (photo, puis bandeau
+  /// « Annuler » ou code du destinataire pour l'arrivée).
   final void Function(BidModel bid, String step) onValidateParcel;
 
   /// « QR illisible ? Saisir le numéro » : déplie la feuille sur le champ.
@@ -114,8 +115,8 @@ class SuiviValidateContent extends StatelessWidget {
 }
 
 /// « Étape : automatique », repliable sur son explication, et « Forcer une
-/// étape » pour rattraper un oubli. Transit forcé : « Étape : transit,
-/// facultatif » et « Automatique » pour revenir.
+/// étape » pour rattraper un oubli. Étape forcée : « Étape : départ » (ou
+/// transit, arrivée) et « Automatique » pour revenir.
 class _StepModeRow extends StatelessWidget {
   const _StepModeRow({required this.onForceStep});
 
@@ -129,7 +130,8 @@ class _StepModeRow extends StatelessWidget {
     return BlocBuilder<SuiviCubit, SuiviState>(
       buildWhen: (a, b) => a.forcedStep != b.forcedStep,
       builder: (context, state) {
-        final forced = state.forcedStep != null;
+        final forcedStep = state.forcedStep;
+        final forced = forcedStep != null;
         return Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
@@ -143,7 +145,9 @@ class _StepModeRow extends StatelessWidget {
                 text: l.suiviStepModeLabel,
                 children: [
                   TextSpan(
-                    text: forced ? l.suiviStepModeTransit : l.suiviStepModeAuto,
+                    text: forced
+                        ? l.suiviStepModeForced(forcedStep)
+                        : l.suiviStepModeAuto,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: forced ? DonyColors.accent : null,
@@ -169,7 +173,9 @@ class _StepModeRow extends StatelessWidget {
             ),
             children: [
               Text(
-                forced ? l.suiviStepModeTransitHelp : l.suiviStepModeHelp,
+                forced
+                    ? l.suiviStepModeForcedHelp(forcedStep)
+                    : l.suiviStepModeHelp,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],

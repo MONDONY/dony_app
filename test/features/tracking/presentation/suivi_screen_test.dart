@@ -358,7 +358,6 @@ void main() {
             ),
           ),
         ),
-        stub('/tracking/scan/identify'),
         stub('/profile/help/tutorial/:id'),
         stub('/tracking/offline-queue'),
         stub('/announcements/trips'),
@@ -854,20 +853,60 @@ void main() {
       expect(text('Suivi du colis'), findsOneWidget);
     });
 
-    testWidgets('action d\'une ligne → identification', (tester) async {
+    // Recette Redmi : le bouton d'une ligne ouvrait l'ancien écran
+    // « Identifier le colis ». Tout se passe désormais dans l'onglet.
+    testWidgets('bouton Valider le départ → photo, bandeau, envoi MANUAL', (
+      tester,
+    ) async {
       stubDefaultTrips();
       await pump(tester);
 
-      await tester.ensureVisible(find.byKey(const Key('suivi-validate-kadi')));
+      await tapVisible(tester, const Key('suivi-validate-madou'));
+      expect(visited, isNot(contains('/tracking/scan/identify')));
+      // Colis choisi dans la liste : pas de récapitulatif du numéro.
+      expect(text('Valider avec le numéro'), findsNothing);
+      expect(visited.last, '/tracking/scan/photo');
+      expect(lastExtra, {
+        'bidId': 'madou',
+        'etape': 'DEPART',
+        'packageLabel': 'Madou',
+        'returnResult': true,
+      });
+
+      await tester.tap(text('page /tracking/scan/photo'));
       await settle(tester, rounds: 2);
-      await tester.tap(find.byKey(const Key('suivi-validate-kadi')));
+      expect(text('Départ de Madou validé'), findsOneWidget);
+      verifyNeverSubmitted();
+
+      await tester.pump(const Duration(seconds: 5));
+      await settle(tester, rounds: 2);
+      await verifySent(
+        bidId: 'madou',
+        step: 'DEPART',
+        method: ScanMethod.manual,
+        photoPath: '/tmp/colis.jpg',
+        at: _here,
+      );
+    });
+
+    testWidgets('bouton Valider l\'arrivée → parcours photo puis code', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester);
+
+      await tapVisible(tester, const Key('suivi-validate-kadi'));
+      expect(visited, isNot(contains('/tracking/scan/identify')));
+      expect(visited.last, '/tracking/scan/photo');
+      expect(lastExtra, {
+        'bidId': 'kadi',
+        'etape': 'ARRIVEE',
+        'packageLabel': 'Kadi',
+        'scanMethod': ScanMethod.manual,
+      });
+      GoRouter.of(tester.element(find.text('page /tracking/scan/photo'))).pop();
       await settle(tester);
-      expect(visited.last, '/tracking/scan/identify');
-      expect(lastExtra, {'etape': 'ARRIVEE', 'focusNumber': true});
-      GoRouter.of(
-        tester.element(find.text('page /tracking/scan/identify')),
-      ).pop();
-      await settle(tester);
+      expect(cameraPaused?.value, isFalse);
     });
 
     testWidgets('feuille tirée en haut → caméra en pause, Scanner la replie', (
@@ -1201,7 +1240,7 @@ void main() {
       );
     });
 
-    testWidgets('Forcer une étape → identification avec l\'étape', (
+    testWidgets('départ forcé : prochain colis scanné, consigne adaptée', (
       tester,
     ) async {
       stubTransitTrips();
@@ -1213,8 +1252,62 @@ void main() {
       expect(text('Facultatif'), findsOneWidget);
       await tester.tap(find.byKey(const Key('suivi-force-DEPART')));
       await settle(tester);
-      expect(visited.last, '/tracking/scan/identify');
-      expect(lastExtra, {'etape': 'DEPART', 'focusNumber': true});
+      expect(visited, isEmpty);
+      expect(
+        text(
+          'Départ forcé : scanne le colis à valider.\n'
+          "L'étape repasse ensuite en automatique.",
+        ),
+        findsOneWidget,
+      );
+
+      // Départ déjà validé : message, l'étape reste forcée.
+      scan!('sali');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(text('Le départ de Sali est déjà validé.'), findsOneWidget);
+      await settle(tester, rounds: 12);
+
+      scan!('madou');
+      await settle(tester);
+      expect(visited.last, '/tracking/scan/photo');
+      expect(lastExtra?['etape'], 'DEPART');
+    });
+
+    testWidgets('arrivée forcée : flux de remise, Automatique l\'annule', (
+      tester,
+    ) async {
+      stubTransitTrips();
+      await pump(tester);
+      await openNumberField(tester);
+      await tapVisible(tester, const Key('suivi-force-step'));
+      await tester.tap(find.byKey(const Key('suivi-force-ARRIVEE')));
+      await settle(tester);
+      expect(
+        text(
+          'Arrivée forcée : scanne le colis à remettre.\n'
+          "L'étape repasse ensuite en automatique.",
+        ),
+        findsOneWidget,
+      );
+
+      await openNumberField(tester);
+      expect(text('Étape : arrivée'), findsOneWidget);
+      await tapVisible(tester, const Key('suivi-step-auto'));
+      expect(text('Étape : automatique'), findsOneWidget);
+
+      await tapVisible(tester, const Key('suivi-force-step'));
+      await tester.tap(find.byKey(const Key('suivi-force-ARRIVEE')));
+      await settle(tester);
+      scan!('sali');
+      await settle(tester);
+      expect(visited.last, '/tracking/scan/photo');
+      expect(lastExtra, {
+        'bidId': 'sali',
+        'etape': 'ARRIVEE',
+        'packageLabel': 'Sali',
+        'scanMethod': ScanMethod.qr,
+      });
     });
 
     testWidgets('transit forcé : consigne, puis retour en automatique', (

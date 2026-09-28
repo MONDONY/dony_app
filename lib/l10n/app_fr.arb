@@ -16543,35 +16543,53 @@
   "@trackingStepOptional": {
     "description": "Mention sous l'étape Transit, seule étape facultative du voyageur (suivi_parcel_sheets.dart, _ForceStepChoices)."
   },
-  "suiviStepModeTransit": "transit, facultatif",
-  "@suiviStepModeTransit": {
-    "description": "Fin en gras de la ligne « Étape : … » quand le transit est forcé (suivi_validate_content.dart, _StepModeRow)."
-  },
   "suiviStepModeBackToAuto": "Automatique",
   "@suiviStepModeBackToAuto": {
     "description": "Bouton qui annule le transit forcé (suivi_validate_content.dart, _StepModeRow)."
   },
-  "suiviStepModeTransitHelp": "Le prochain colis scanné ou saisi valide son transit, puis l'étape repasse en automatique.",
-  "@suiviStepModeTransitHelp": {
-    "description": "Explication du transit forcé (suivi_validate_content.dart, _StepModeRow)."
+  "suiviStepModeForced": "{step, select, DEPART{départ} TRANSIT{transit, facultatif} other{arrivée}}",
+  "@suiviStepModeForced": {
+    "description": "Fin en gras de la ligne « Étape : … » quand une étape est forcée (suivi_validate_content.dart, _StepModeRow). {step} : DEPART, TRANSIT ou ARRIVEE.",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
   },
-  "suiviForcedTransitCameraHint": "Transit facultatif : scanne le colis à valider.\nL'étape repasse ensuite en automatique.",
-  "@suiviForcedTransitCameraHint": {
-    "description": "Consigne sous le cadre caméra quand le transit est forcé (suivi_screen.dart)."
+  "suiviStepModeForcedHelp": "Le prochain colis scanné ou saisi valide {step, select, DEPART{son départ, avec une photo} TRANSIT{son transit} other{son arrivée, avec la photo puis le code du destinataire}}, puis l'étape repasse en automatique.",
+  "@suiviStepModeForcedHelp": {
+    "description": "Explication de l'étape forcée (suivi_validate_content.dart, _StepModeRow).",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
   },
-  "suiviTransitNeedsDepart": "Valide d'abord le départ de {parcel}.",
-  "@suiviTransitNeedsDepart": {
-    "description": "Transit forcé sur un colis pas encore parti (suivi_screen.dart).",
+  "suiviForcedCameraHint": "{step, select, DEPART{Départ forcé : scanne le colis à valider.} TRANSIT{Transit facultatif : scanne le colis à valider.} other{Arrivée forcée : scanne le colis à remettre.}}\nL'étape repasse ensuite en automatique.",
+  "@suiviForcedCameraHint": {
+    "description": "Consigne sous le cadre caméra quand une étape est forcée (suivi_screen.dart).",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "suiviStepNeedsDepart": "Valide d'abord le départ de {parcel}.",
+  "@suiviStepNeedsDepart": {
+    "description": "Transit ou arrivée forcés sur un colis pas encore parti (suivi_screen.dart).",
     "placeholders": {
       "parcel": {
         "type": "String"
       }
     }
   },
-  "suiviTransitAlreadyDone": "Le transit de {parcel} est déjà validé.",
-  "@suiviTransitAlreadyDone": {
-    "description": "Transit forcé sur un colis dont le transit est déjà fait (suivi_screen.dart).",
+  "suiviStepAlreadyDone": "{step, select, DEPART{Le départ de {parcel} est déjà validé.} other{Le transit de {parcel} est déjà validé.}}",
+  "@suiviStepAlreadyDone": {
+    "description": "Départ ou transit forcés sur un colis où cette étape est déjà faite (suivi_screen.dart).",
     "placeholders": {
+      "step": {
+        "type": "String"
+      },
       "parcel": {
         "type": "String"
       }

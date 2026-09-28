@@ -38,13 +38,23 @@ sealed class SuiviEffect {
 /// - `TRANSIT` (facultatif, choisi par « Forcer une étape ») lu par QR :
 ///   validation rapide, sans photo.
 /// - Sinon ([photoRequired]) : photo obligatoire d'abord. Sans QR (numéro
-///   saisi), la photo est la seule preuve que le colis est entre les mains
-///   du voyageur, même pour le transit.
+///   saisi, bouton d'une ligne colis), la photo est la seule preuve que le
+///   colis est entre les mains du voyageur, même pour le transit.
+///
+/// [confirmNumber] : colis identifié par un numéro saisi, à confirmer sur
+/// un récapitulatif avant la photo. Le bouton d'une ligne colis n'en a pas
+/// besoin : le voyageur a déjà choisi le colis dans la liste.
 final class SuiviValidateStep extends SuiviEffect {
-  const SuiviValidateStep(this.bid, this.step, {this.method = ScanMethod.qr});
+  const SuiviValidateStep(
+    this.bid,
+    this.step, {
+    this.method = ScanMethod.qr,
+    this.confirmNumber = false,
+  });
   final BidModel bid;
   final String step;
   final ScanMethod method;
+  final bool confirmNumber;
 
   bool get photoRequired => step != 'TRANSIT' || method == ScanMethod.manual;
 }
@@ -55,17 +65,18 @@ final class SuiviStepPending extends SuiviEffect {
   final BidModel bid;
 }
 
-/// Transit forcé sur un colis pas encore parti : le back le refuserait
-/// (`depart-required`).
-final class SuiviTransitNeedsDepart extends SuiviEffect {
-  const SuiviTransitNeedsDepart(this.bid);
+/// Transit ou arrivée forcés sur un colis pas encore parti : le back le
+/// refuserait (`depart-required`).
+final class SuiviStepNeedsDepart extends SuiviEffect {
+  const SuiviStepNeedsDepart(this.bid);
   final BidModel bid;
 }
 
-/// Transit forcé sur un colis dont le transit est déjà validé.
-final class SuiviTransitAlreadyDone extends SuiviEffect {
-  const SuiviTransitAlreadyDone(this.bid);
+/// Départ ou transit forcés sur un colis où cette [step] est déjà faite.
+final class SuiviStepAlreadyDone extends SuiviEffect {
+  const SuiviStepAlreadyDone(this.bid, this.step);
   final BidModel bid;
+  final String step;
 }
 
 /// Colis du trajet affiché dont toutes les étapes sont déjà validées.
@@ -139,8 +150,8 @@ class SuiviState {
   final SuiviLoadStatus numberStatus;
   final AppException? numberError;
 
-  /// Étape imposée au prochain colis identifié (« Forcer une étape »),
-  /// `null` en automatique. Seul le transit, facultatif, passe par là.
+  /// Étape imposée au prochain colis scanné ou saisi (« Forcer une
+  /// étape » : `DEPART`, `TRANSIT` ou `ARRIVEE`), `null` en automatique.
   final String? forcedStep;
 
   final SuiviEffect? effect;
@@ -376,25 +387,41 @@ class SuiviCubit extends Cubit<SuiviState> {
     }
   }
 
-  /// « Forcer une étape » → transit : le prochain colis identifié (QR ou
-  /// numéro) valide son transit au lieu de son étape obligatoire.
-  void forceTransit() => emit(state._copy(forcedStep: 'TRANSIT'));
+  /// « Forcer une étape » : le prochain colis scanné ou saisi valide [step]
+  /// au lieu de son étape automatique.
+  void forceStep(String step) => emit(state._copy(forcedStep: step));
 
   /// Retour à l'étape automatique.
   void clearForcedStep() {
     if (state.forcedStep != null) emit(state._copy(clearForcedStep: true));
   }
 
-  /// Un transit forcé ne sert qu'une fois : il repasse en automatique dès
+  /// Une étape forcée ne sert qu'une fois : elle repasse en automatique dès
   /// qu'un colis est parti en validation.
   void _emitValidation(SuiviEffect effect) => emit(
     state._copy(
       numberStatus: SuiviLoadStatus.idle,
       busy: true,
       effect: effect,
-      clearForcedStep: effect is SuiviValidateStep && effect.step == 'TRANSIT',
+      clearForcedStep: effect is SuiviValidateStep,
     ),
   );
+
+  /// Bouton d'une ligne colis (« Valider le départ », « Valider
+  /// l'arrivée ») : [step] tel qu'affiché sur la ligne, sans identification
+  /// ni étape forcée. Provenance `MANUAL` : aucun QR n'a été lu.
+  void validateParcel(
+    BidModel bid,
+    String step, {
+    Set<String> pendingBidIds = const {},
+  }) {
+    if (state.busy) return;
+    if (pendingBidIds.contains(bid.id)) {
+      _emitEffect(SuiviStepPending(bid));
+      return;
+    }
+    _emitEffect(SuiviValidateStep(bid, step, method: ScanMethod.manual));
+  }
 
   /// Effet à jouer pour un colis retrouvé dans les trajets du voyageur.
   SuiviEffect _validationOf(
@@ -407,16 +434,24 @@ class SuiviCubit extends Cubit<SuiviState> {
     if (located.trip.id != hub.selectedTripId) {
       return SuiviParcelOnOtherTrip(bid, located.trip);
     }
-    final step = nextRequiredStep(bid);
-    if (step == null) return SuiviStepsAllDone(bid);
+    final next = nextRequiredStep(bid);
+    if (next == null) return SuiviStepsAllDone(bid);
     if (pendingBidIds.contains(bid.id)) return SuiviStepPending(bid);
-    if (state.forcedStep == 'TRANSIT') {
-      final progress = colisStepProgress(bid);
-      if (!progress.depart) return SuiviTransitNeedsDepart(bid);
-      if (progress.transit) return SuiviTransitAlreadyDone(bid);
-      return SuiviValidateStep(bid, 'TRANSIT', method: method);
+    final forced = state.forcedStep;
+    final progress = colisStepProgress(bid);
+    if (forced != null && forced != 'DEPART' && !progress.depart) {
+      return SuiviStepNeedsDepart(bid);
     }
-    return SuiviValidateStep(bid, step, method: method);
+    if ((forced == 'DEPART' && progress.depart) ||
+        (forced == 'TRANSIT' && progress.transit)) {
+      return SuiviStepAlreadyDone(bid, forced!);
+    }
+    return SuiviValidateStep(
+      bid,
+      forced ?? next,
+      method: method,
+      confirmNumber: method == ScanMethod.manual,
+    );
   }
 
   /// Numéro saisi dans la feuille du mode Valider (QR illisible) : le colis
@@ -579,12 +614,6 @@ class SuiviCubit extends Cubit<SuiviState> {
 
   void _emitEffect(SuiviEffect effect) {
     emit(state._copy(busy: true, effect: effect));
-  }
-
-  /// Parcours ouvert hors QR de l'onglet (saisie du numéro) : caméra en
-  /// pause et scans ignorés jusqu'à [releaseScan].
-  void holdScans() {
-    if (!state.busy) emit(state._copy(busy: true));
   }
 
   /// L'écran a fini de jouer l'effet (feuille fermée, retour du parcours

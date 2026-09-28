@@ -14417,26 +14417,49 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trackingStepOptional => 'Facultatif';
 
   @override
-  String get suiviStepModeTransit => 'transit, facultatif';
-
-  @override
   String get suiviStepModeBackToAuto => 'Automatique';
 
   @override
-  String get suiviStepModeTransitHelp =>
-      'Le prochain colis scanné ou saisi valide son transit, puis l\'étape repasse en automatique.';
+  String suiviStepModeForced(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'départ',
+      'TRANSIT': 'transit, facultatif',
+      'other': 'arrivée',
+    });
+    return '$_temp0';
+  }
 
   @override
-  String get suiviForcedTransitCameraHint =>
-      'Transit facultatif : scanne le colis à valider.\nL\'étape repasse ensuite en automatique.';
+  String suiviStepModeForcedHelp(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'son départ, avec une photo',
+      'TRANSIT': 'son transit',
+      'other': 'son arrivée, avec la photo puis le code du destinataire',
+    });
+    return 'Le prochain colis scanné ou saisi valide $_temp0, puis l\'étape repasse en automatique.';
+  }
 
   @override
-  String suiviTransitNeedsDepart(String parcel) {
+  String suiviForcedCameraHint(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Départ forcé : scanne le colis à valider.',
+      'TRANSIT': 'Transit facultatif : scanne le colis à valider.',
+      'other': 'Arrivée forcée : scanne le colis à remettre.',
+    });
+    return '$_temp0\nL\'étape repasse ensuite en automatique.';
+  }
+
+  @override
+  String suiviStepNeedsDepart(String parcel) {
     return 'Valide d\'abord le départ de $parcel.';
   }
 
   @override
-  String suiviTransitAlreadyDone(String parcel) {
-    return 'Le transit de $parcel est déjà validé.';
+  String suiviStepAlreadyDone(String step, String parcel) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Le départ de $parcel est déjà validé.',
+      'other': 'Le transit de $parcel est déjà validé.',
+    });
+    return '$_temp0';
   }
 }

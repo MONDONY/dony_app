@@ -11,7 +11,6 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
-import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
@@ -264,16 +263,19 @@ class _SuiviBodyState extends State<_SuiviBody> {
         await _validateStep(effect);
         if (!mounted) return;
         cubit.releaseScan();
-      case SuiviTransitNeedsDepart(:final bid):
+      case SuiviStepNeedsDepart(:final bid):
         DonySnackbar.show(
           context,
-          message: context.l10n.suiviTransitNeedsDepart(suiviParcelLabel(bid)),
+          message: context.l10n.suiviStepNeedsDepart(suiviParcelLabel(bid)),
         );
         cubit.releaseScan();
-      case SuiviTransitAlreadyDone(:final bid):
+      case SuiviStepAlreadyDone(:final bid, :final step):
         DonySnackbar.show(
           context,
-          message: context.l10n.suiviTransitAlreadyDone(suiviParcelLabel(bid)),
+          message: context.l10n.suiviStepAlreadyDone(
+            step,
+            suiviParcelLabel(bid),
+          ),
         );
         cubit.releaseScan();
       case SuiviStepPending(:final bid):
@@ -325,14 +327,15 @@ class _SuiviBodyState extends State<_SuiviBody> {
   }
 
   /// Étape d'un colis du trajet : récapitulatif si le colis vient d'un
-  /// numéro, puis photo si elle est exigée, puis bandeau « Annuler » avant
-  /// l'envoi. L'arrivée garde son parcours photo puis code.
+  /// numéro saisi, puis photo si elle est exigée, puis bandeau « Annuler »
+  /// avant l'envoi. L'arrivée garde son parcours photo puis code, sans
+  /// passer par l'identification du colis.
   Future<void> _validateStep(SuiviValidateStep effect) async {
     final SuiviValidateStep(:bid, :step, :method) = effect;
     final hub = context.read<ScanHubCubit>();
     final validations = context.read<SuiviValidationCubit>();
     final label = suiviParcelLabel(bid);
-    if (method == ScanMethod.manual) {
+    if (effect.confirmNumber) {
       final hubState = hub.state;
       if (hubState is! ScanHubLoaded) return;
       final go = await showSuiviNumberRecapSheet(
@@ -431,34 +434,23 @@ class _SuiviBodyState extends State<_SuiviBody> {
     );
   }
 
-  /// « Forcer une étape ». Transit (facultatif) : le prochain colis scanné
-  /// ou saisi le valide, la feuille se replie sur la caméra. Départ et
-  /// remise passent par l'identification.
+  /// « Forcer une étape » : l'étape choisie s'applique au prochain colis
+  /// scanné ou saisi, la feuille se replie sur la caméra.
   Future<void> _forceStep() async {
     final cubit = context.read<SuiviCubit>();
     final step = await showSuiviForceStepSheet(context);
     if (!mounted || step == null) return;
-    if (step == 'TRANSIT') {
-      cubit.forceTransit();
-      _collapseSheet();
-      return;
-    }
-    await _openIdentify(step);
+    cubit.forceStep(step);
+    _collapseSheet();
   }
 
-  Future<void> _openIdentify(String? step) async {
-    final cubit = context.read<SuiviCubit>();
-    if (cubit.state.busy) return;
-    // Pas de scan ni de caméra pendant la saisie : l'écran d'identification
-    // ouvre son propre lecteur.
-    cubit.holdScans();
-    await context.push<void>(
-      '/tracking/scan/identify',
-      extra: <String, dynamic>{'etape': step, 'focusNumber': step != null},
+  /// Bouton d'une ligne colis : son étape, sans identification.
+  void _validateParcel(BidModel bid, String step) {
+    context.read<SuiviCubit>().validateParcel(
+      bid,
+      step,
+      pendingBidIds: _pendingBidIds,
     );
-    if (!mounted) return;
-    _reloadTrips();
-    cubit.releaseScan();
   }
 
   Future<void> _openQrPicker() async {
@@ -664,8 +656,8 @@ class _SuiviBodyState extends State<_SuiviBody> {
                             builder: (context, state) => Text(
                               mode == SuiviMode.suivre
                                   ? l.suiviTrackCameraHint
-                                  : state.forcedStep == 'TRANSIT'
-                                  ? l.suiviForcedTransitCameraHint
+                                  : state.forcedStep != null
+                                  ? l.suiviForcedCameraHint(state.forcedStep!)
                                   : l.suiviValidateCameraHint,
                               key: const Key('suivi-camera-hint'),
                               textAlign: TextAlign.center,
@@ -704,8 +696,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
                                 expanded: _sheetExpanded,
                                 numberFocus: _numberFocus,
                                 onChangeTrip: () => _openTripPicker(hub),
-                                onValidateParcel: (BidModel _, String step) =>
-                                    _openIdentify(step),
+                                onValidateParcel: _validateParcel,
                                 onEnterNumber: _enterNumber,
                                 onSubmitNumber: _submitNumber,
                                 onForceStep: _forceStep,

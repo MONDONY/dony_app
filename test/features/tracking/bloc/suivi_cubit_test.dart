@@ -549,13 +549,13 @@ void main() {
       expect(c.state.busy, isFalse);
     });
 
-    test('holdScans met les scans en pause jusqu\'à releaseScan', () {
+    test('traitement en cours : scans ignorés jusqu\'à releaseScan', () {
       final c = build()
         ..start(canValidate: true, requested: SuiviMode.valider)
-        ..holdScans();
-      expect(c.state.busy, isTrue);
-      c.onQrScanned('own-accepted', _hub());
-      expect(c.state.effect, isNull);
+        ..onQrScanned('own-accepted', _hub());
+      final id = c.state.effectId;
+      c.onQrScanned('own-done', _hub());
+      expect(c.state.effectId, id);
       c.releaseScan();
       expect(c.state.busy, isFalse);
     });
@@ -580,7 +580,7 @@ void main() {
     });
 
     test('transit forcé lu par QR : sans photo, puis automatique', () {
-      final c = validating()..forceTransit();
+      final c = validating()..forceStep('TRANSIT');
       expect(c.state.forcedStep, 'TRANSIT');
       c.onQrScanned('handed', hub());
       final effect = c.state.effect! as SuiviValidateStep;
@@ -592,20 +592,51 @@ void main() {
 
     test('transit forcé : départ manquant ou transit déjà fait', () {
       final c = validating()
-        ..forceTransit()
+        ..forceStep('TRANSIT')
         ..onQrScanned('accepted', hub());
-      expect(c.state.effect, isA<SuiviTransitNeedsDepart>());
+      expect(c.state.effect, isA<SuiviStepNeedsDepart>());
       // Pas consommé : le transit reste forcé pour le colis suivant.
       expect(c.state.forcedStep, 'TRANSIT');
       c
         ..releaseScan()
         ..onQrScanned('transit', hub());
-      expect(c.state.effect, isA<SuiviTransitAlreadyDone>());
+      expect(c.state.effect, isA<SuiviStepAlreadyDone>());
       c.clearForcedStep();
       expect(c.state.forcedStep, isNull);
       final id = c.state.effectId;
       c.clearForcedStep();
       expect(c.state.effectId, id);
+    });
+
+    test('départ forcé : départ du colis, déjà fait → message', () {
+      final c = validating()
+        ..forceStep('DEPART')
+        ..onQrScanned('handed', hub());
+      final done = c.state.effect! as SuiviStepAlreadyDone;
+      expect((done.bid.id, done.step), ('handed', 'DEPART'));
+      expect(c.state.forcedStep, 'DEPART');
+      c
+        ..releaseScan()
+        ..onQrScanned('accepted', hub());
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect(effect.step, 'DEPART');
+      expect(effect.photoRequired, isTrue);
+      expect(effect.confirmNumber, isFalse);
+      expect(c.state.forcedStep, isNull);
+    });
+
+    test('arrivée forcée : remise, ou départ manquant', () {
+      final c = validating()
+        ..forceStep('ARRIVEE')
+        ..onQrScanned('accepted', hub());
+      expect(c.state.effect, isA<SuiviStepNeedsDepart>());
+      expect(c.state.forcedStep, 'ARRIVEE');
+      c
+        ..releaseScan()
+        ..onQrScanned('transit', hub());
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect(effect.step, 'ARRIVEE');
+      expect(c.state.forcedStep, isNull);
     });
 
     test('DEPART et ARRIVEE : photo exigée', () {
@@ -624,6 +655,33 @@ void main() {
         ..onQrScanned('handed', hub(), pendingBidIds: {'handed'});
       expect(c.state.effect, isA<SuiviStepPending>());
       expect((c.state.effect! as SuiviStepPending).bid.id, 'handed');
+    });
+  });
+
+  group('validateParcel (bouton d\'une ligne colis)', () {
+    SuiviCubit validating() =>
+        build()..start(canValidate: true, requested: SuiviMode.valider);
+
+    test('étape de la ligne, provenance MANUAL, sans récapitulatif', () {
+      final c = validating()..forceStep('TRANSIT');
+      c.validateParcel(_bid('b', 'ACCEPTED'), 'DEPART');
+      final effect = c.state.effect! as SuiviValidateStep;
+      expect((effect.bid.id, effect.step), ('b', 'DEPART'));
+      expect(effect.method, ScanMethod.manual);
+      expect(effect.confirmNumber, isFalse);
+      expect(effect.photoRequired, isTrue);
+      expect(c.state.busy, isTrue);
+      // L'étape forcée attend toujours le prochain colis scanné ou saisi.
+      expect(c.state.forcedStep, 'TRANSIT');
+    });
+
+    test('déjà en attente → message ; traitement en cours → rien', () {
+      final c = validating()
+        ..validateParcel(_bid('b', 'ACCEPTED'), 'DEPART', pendingBidIds: {'b'});
+      expect(c.state.effect, isA<SuiviStepPending>());
+      final id = c.state.effectId;
+      c.validateParcel(_bid('c', 'ACCEPTED'), 'DEPART');
+      expect(c.state.effectId, id);
     });
   });
 
@@ -659,6 +717,7 @@ void main() {
       expect(effect.bid.id, 'handed');
       expect(effect.step, 'ARRIVEE');
       expect(effect.method, ScanMethod.manual);
+      expect(effect.confirmNumber, isTrue);
       expect(c.state.busy, isTrue);
       expect(c.state.numberStatus, SuiviLoadStatus.idle);
       verifyNever(() => trackingRepo.searchByTrackingNumber(any()));
@@ -671,7 +730,7 @@ void main() {
     });
 
     test('transit forcé par numéro : photo obligatoire', () async {
-      final c = validating()..forceTransit();
+      final c = validating()..forceStep('TRANSIT');
       await c.validateNumber('DON-HAN001', hub());
       final effect = c.state.effect! as SuiviValidateStep;
       expect(effect.step, 'TRANSIT');
@@ -735,9 +794,10 @@ void main() {
       await c.validateNumber('   ', hub());
       await c.validateNumber('DON-HAN001', const ScanHubLoading());
       expect(c.state.effect, isNull);
-      c.holdScans();
+      c.onQrScanned('handed', hub());
+      final id = c.state.effectId;
       await c.validateNumber('DON-HAN001', hub());
-      expect(c.state.effect, isNull);
+      expect(c.state.effectId, id);
     });
   });
 }

@@ -14329,26 +14329,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackingStepOptional => 'Optional';
 
   @override
-  String get suiviStepModeTransit => 'transit, optional';
-
-  @override
   String get suiviStepModeBackToAuto => 'Automatic';
 
   @override
-  String get suiviStepModeTransitHelp =>
-      'The next parcel scanned or entered gets its transit validated, then the step goes back to automatic.';
+  String suiviStepModeForced(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'departure',
+      'TRANSIT': 'transit, optional',
+      'other': 'arrival',
+    });
+    return '$_temp0';
+  }
 
   @override
-  String get suiviForcedTransitCameraHint =>
-      'Optional transit: scan the parcel to validate.\nThe step then goes back to automatic.';
+  String suiviStepModeForcedHelp(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'its departure validated, with a photo',
+      'TRANSIT': 'its transit validated',
+      'other':
+          'its arrival validated, with the photo then the recipient\'s code',
+    });
+    return 'The next parcel scanned or entered gets $_temp0, then the step goes back to automatic.';
+  }
 
   @override
-  String suiviTransitNeedsDepart(String parcel) {
+  String suiviForcedCameraHint(String step) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': 'Forced departure: scan the parcel to validate.',
+      'TRANSIT': 'Optional transit: scan the parcel to validate.',
+      'other': 'Forced arrival: scan the parcel to hand over.',
+    });
+    return '$_temp0\nThe step then goes back to automatic.';
+  }
+
+  @override
+  String suiviStepNeedsDepart(String parcel) {
     return 'Validate $parcel\'s departure first.';
   }
 
   @override
-  String suiviTransitAlreadyDone(String parcel) {
-    return '$parcel\'s transit is already validated.';
+  String suiviStepAlreadyDone(String step, String parcel) {
+    String _temp0 = intl.Intl.selectLogic(step, {
+      'DEPART': '$parcel\'s departure is already validated.',
+      'other': '$parcel\'s transit is already validated.',
+    });
+    return '$_temp0';
   }
 }

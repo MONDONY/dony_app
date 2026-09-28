@@ -23892,41 +23892,41 @@ abstract class AppLocalizations {
   /// **'Facultatif'**
   String get trackingStepOptional;
 
-  /// Fin en gras de la ligne « Étape : … » quand le transit est forcé (suivi_validate_content.dart, _StepModeRow).
-  ///
-  /// In fr, this message translates to:
-  /// **'transit, facultatif'**
-  String get suiviStepModeTransit;
-
   /// Bouton qui annule le transit forcé (suivi_validate_content.dart, _StepModeRow).
   ///
   /// In fr, this message translates to:
   /// **'Automatique'**
   String get suiviStepModeBackToAuto;
 
-  /// Explication du transit forcé (suivi_validate_content.dart, _StepModeRow).
+  /// Fin en gras de la ligne « Étape : … » quand une étape est forcée (suivi_validate_content.dart, _StepModeRow). {step} : DEPART, TRANSIT ou ARRIVEE.
   ///
   /// In fr, this message translates to:
-  /// **'Le prochain colis scanné ou saisi valide son transit, puis l\'étape repasse en automatique.'**
-  String get suiviStepModeTransitHelp;
+  /// **'{step, select, DEPART{départ} TRANSIT{transit, facultatif} other{arrivée}}'**
+  String suiviStepModeForced(String step);
 
-  /// Consigne sous le cadre caméra quand le transit est forcé (suivi_screen.dart).
+  /// Explication de l'étape forcée (suivi_validate_content.dart, _StepModeRow).
   ///
   /// In fr, this message translates to:
-  /// **'Transit facultatif : scanne le colis à valider.\nL\'étape repasse ensuite en automatique.'**
-  String get suiviForcedTransitCameraHint;
+  /// **'Le prochain colis scanné ou saisi valide {step, select, DEPART{son départ, avec une photo} TRANSIT{son transit} other{son arrivée, avec la photo puis le code du destinataire}}, puis l\'étape repasse en automatique.'**
+  String suiviStepModeForcedHelp(String step);
 
-  /// Transit forcé sur un colis pas encore parti (suivi_screen.dart).
+  /// Consigne sous le cadre caméra quand une étape est forcée (suivi_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{step, select, DEPART{Départ forcé : scanne le colis à valider.} TRANSIT{Transit facultatif : scanne le colis à valider.} other{Arrivée forcée : scanne le colis à remettre.}}\nL\'étape repasse ensuite en automatique.'**
+  String suiviForcedCameraHint(String step);
+
+  /// Transit ou arrivée forcés sur un colis pas encore parti (suivi_screen.dart).
   ///
   /// In fr, this message translates to:
   /// **'Valide d\'abord le départ de {parcel}.'**
-  String suiviTransitNeedsDepart(String parcel);
+  String suiviStepNeedsDepart(String parcel);
 
-  /// Transit forcé sur un colis dont le transit est déjà fait (suivi_screen.dart).
+  /// Départ ou transit forcés sur un colis où cette étape est déjà faite (suivi_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Le transit de {parcel} est déjà validé.'**
-  String suiviTransitAlreadyDone(String parcel);
+  /// **'{step, select, DEPART{Le départ de {parcel} est déjà validé.} other{Le transit de {parcel} est déjà validé.}}'**
+  String suiviStepAlreadyDone(String step, String parcel);
 }
 
 class _AppLocalizationsDelegate
