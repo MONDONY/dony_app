@@ -31,6 +31,35 @@ void main() {
       },
     );
 
+    test('SUPPORT_MESSAGE : le deeplink serveur ouvre la conversation', () {
+      final n = NotificationModel(
+        id: 'n1',
+        type: 'SUPPORT_MESSAGE',
+        title: 't',
+        body: 'b',
+        data: const {'type': 'SUPPORT_MESSAGE', 'ticketId': annId},
+        read: false,
+        createdAt: DateTime(2026),
+        category: 'colis',
+        deeplink: 'yadony://support/tickets/$annId',
+      );
+      expect(routeForNotification(n), '/support/tickets/$annId');
+    });
+
+    test('SUPPORT_MESSAGE : le deeplink de repli ouvre la liste', () {
+      final n = NotificationModel(
+        id: 'n1',
+        type: 'SUPPORT_MESSAGE',
+        title: 't',
+        body: 'b',
+        data: const {},
+        read: false,
+        createdAt: DateTime(2026),
+        deeplink: 'yadony://support',
+      );
+      expect(routeForNotification(n), '/support');
+    });
+
     test('SUPPORT_MESSAGE sans ticketId ouvre la liste du support', () {
       expect(routeForNotification(_notif('SUPPORT_MESSAGE')), '/support');
     });
