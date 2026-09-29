@@ -174,12 +174,14 @@ Future<void> _pump(
   StripeAccountState? stripeState,
   CommissionMethodState? commissionState,
   ValueNotifier<bool>? negotiableNotifier,
+  SupportedCurrency currency = SupportedCurrency.eur,
 }) async {
   await tester.pumpWidget(
     _host(
       stripeState: stripeState,
       commissionState: commissionState,
       negotiableNotifier: negotiableNotifier,
+      currency: currency,
     ),
   );
   await tester.pump(const Duration(milliseconds: 200));
@@ -394,13 +396,75 @@ void main() {
     );
 
     testWidgets(
-      'bannière Stripe non configuré visible quand stripeAccountStatus != ONBOARDING_COMPLETE',
+      'Stripe non configuré : l\'encart sous la carte dit que Stripe Connect '
+      'n\'est pas activé',
       (tester) async {
         await _pump(tester, stripeState: _stripeNotConfiguredState);
-        // La bannière contient "Connectez Stripe"
-        expect(find.textContaining('Connectez Stripe'), findsOneWidget);
+        expect(find.byKey(const Key('card-setup-notice')), findsOneWidget);
+        expect(
+          find.text(
+            'Stripe Connect n\'est pas activé : le paiement par carte '
+            'n\'est donc pas disponible sur vos trajets.',
+          ),
+          findsOneWidget,
+        );
       },
     );
+
+    testWidgets('Stripe configuré, trajet en EUR : carte acceptée, aucun '
+        'encart d\'explication', (tester) async {
+      await _pump(tester, stripeState: _stripeConfiguredState);
+      expect(find.byKey(const Key('card-setup-notice')), findsNothing);
+      expect(find.text('Paiement sécurisé par défaut'), findsOneWidget);
+    });
+
+    // Capture d'écran du 29/09 : trajet en XOF, Stripe configuré, la carte
+    // s'affichait « activée par défaut » alors qu'elle ne part jamais au
+    // serveur pour cette devise.
+    testWidgets('Stripe configuré mais trajet en XOF : carte désactivée, la '
+        'devise est expliquée, espèces forcées', (tester) async {
+      await _pump(
+        tester,
+        stripeState: _stripeConfiguredState,
+        currency: SupportedCurrency.xof,
+      );
+
+      final stripeSwitch = tester.widget<SwitchListTile>(
+        find.byKey(const Key('payment-method-stripe')),
+      );
+      expect(stripeSwitch.value, isFalse);
+      expect(stripeSwitch.onChanged, isNull);
+      expect(find.text('Indisponible sur ce trajet'), findsOneWidget);
+      expect(
+        find.text(
+          'Le paiement par carte n\'est pas proposé pour les trajets '
+          'en XOF.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('activate-card-payments-cta')),
+        findsNothing,
+        reason: 'Activer Stripe ne rendrait pas la carte possible en XOF',
+      );
+
+      final cashSwitch = tester.widget<SwitchListTile>(
+        find.byKey(const Key('payment-method-cash')),
+      );
+      expect(cashSwitch.value, isTrue, reason: 'Seul mode garanti sans carte');
+      expect(cashSwitch.onChanged, isNull);
+    });
+
+    testWidgets('Stripe non configuré et trajet en XOF : la devise prime, pas '
+        'd\'invitation à activer Stripe', (tester) async {
+      await _pump(
+        tester,
+        stripeState: _stripeReadyCoveredState,
+        currency: SupportedCurrency.xof,
+      );
+      expect(find.textContaining('trajets en XOF'), findsOneWidget);
+      expect(find.byKey(const Key('activate-card-payments-cta')), findsNothing);
+    });
 
     // ── Task 5 — section paiement inversée (cash libre, carte verrouillée) ──
 
@@ -545,7 +609,7 @@ void main() {
         await _pump(tester, stripeState: _stripeReadyCoveredState);
 
         expect(
-          find.textContaining('Publiez en espèces dès maintenant'),
+          find.textContaining('Stripe Connect n\'est pas activé'),
           findsOneWidget,
         );
         expect(

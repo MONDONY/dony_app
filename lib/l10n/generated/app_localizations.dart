@@ -4664,12 +4664,6 @@ abstract class AppLocalizations {
   /// **'Ex: Je préfère les colis bien emballés. Contactez-moi avant le départ.'**
   String get tripPublishNoteToSendersHint;
 
-  /// Bannière quand Stripe n'est pas configuré mais disponible dans le pays
-  ///
-  /// In fr, this message translates to:
-  /// **'Publiez en espèces dès maintenant. Connectez Stripe pour accepter aussi la carte.'**
-  String get tripPublishCashOnlyBannerWithConnect;
-
   /// Bannière quand Stripe n'est pas disponible dans le pays du voyageur
   ///
   /// In fr, this message translates to:
@@ -4688,12 +4682,6 @@ abstract class AppLocalizations {
   /// **'Non configuré, activez pour proposer le paiement sécurisé'**
   String get tripPublishCardNotConfiguredSubtitle;
 
-  /// Bouton d'activation du versement mobile money
-  ///
-  /// In fr, this message translates to:
-  /// **'Activer le versement'**
-  String get tripPublishActivatePayoutCta;
-
   /// Sous-titre mobile money quand la devise n'est pas éligible
   ///
   /// In fr, this message translates to:
@@ -4703,8 +4691,38 @@ abstract class AppLocalizations {
   /// Sous-titre mobile money quand le compte de versement n'est pas actif
   ///
   /// In fr, this message translates to:
-  /// **'Active d\'abord ton versement mobile money'**
+  /// **'Non configuré, activez-le pour l\'accepter'**
   String get tripPublishMobileMoneyInactiveSubtitle;
+
+  /// Sous-titre de la ligne Carte bancaire quand la devise du trajet ou le pays empêche la carte
+  ///
+  /// In fr, this message translates to:
+  /// **'Indisponible sur ce trajet'**
+  String get tripPublishCardUnavailableSubtitle;
+
+  /// Encart sous la ligne Carte bancaire quand l'onboarding Stripe Connect n'est pas fait
+  ///
+  /// In fr, this message translates to:
+  /// **'Stripe Connect n\'est pas activé : le paiement par carte n\'est donc pas disponible sur vos trajets.'**
+  String get tripPublishCardConnectInactiveNotice;
+
+  /// Encart sous la ligne Carte bancaire quand la devise du trajet ne se paie pas par carte (zone CFA)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement par carte n\'est pas proposé pour les trajets en {currency}.'**
+  String tripPublishCardCurrencyUnavailableNotice(String currency);
+
+  /// Encart sous la ligne Mobile money quand le trajet est en franc CFA mais le compte de versement inactif
+  ///
+  /// In fr, this message translates to:
+  /// **'Le mobile money n\'est pas activé : vous ne pouvez pas encore l\'accepter sur ce trajet.'**
+  String get tripPublishMobileMoneyInactiveNotice;
+
+  /// Lien vers l'écran d'activation du compte de versement mobile money
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer le mobile money'**
+  String get tripPublishActivateMobileMoneyCta;
 
   /// Titre de la note remplacant la section prix quand le prix est verrouillé
   ///

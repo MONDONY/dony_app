@@ -2737,10 +2737,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ex: Je préfère les colis bien emballés. Contactez-moi avant le départ.';
 
   @override
-  String get tripPublishCashOnlyBannerWithConnect =>
-      'Publiez en espèces dès maintenant. Connectez Stripe pour accepter aussi la carte.';
-
-  @override
   String get tripPublishCashOnlyBannerNoConnect =>
       'Le paiement par carte n\'est pas encore disponible dans votre pays. Vos trajets sont publiés en espèces.';
 
@@ -2753,15 +2749,31 @@ class AppLocalizationsFr extends AppLocalizations {
       'Non configuré, activez pour proposer le paiement sécurisé';
 
   @override
-  String get tripPublishActivatePayoutCta => 'Activer le versement';
-
-  @override
   String get tripPublishMobileMoneyIneligibleSubtitle =>
       'Disponible pour les trajets en XOF ou XAF';
 
   @override
   String get tripPublishMobileMoneyInactiveSubtitle =>
-      'Active d\'abord ton versement mobile money';
+      'Non configuré, activez-le pour l\'accepter';
+
+  @override
+  String get tripPublishCardUnavailableSubtitle => 'Indisponible sur ce trajet';
+
+  @override
+  String get tripPublishCardConnectInactiveNotice =>
+      'Stripe Connect n\'est pas activé : le paiement par carte n\'est donc pas disponible sur vos trajets.';
+
+  @override
+  String tripPublishCardCurrencyUnavailableNotice(String currency) {
+    return 'Le paiement par carte n\'est pas proposé pour les trajets en $currency.';
+  }
+
+  @override
+  String get tripPublishMobileMoneyInactiveNotice =>
+      'Le mobile money n\'est pas activé : vous ne pouvez pas encore l\'accepter sur ce trajet.';
+
+  @override
+  String get tripPublishActivateMobileMoneyCta => 'Activer le mobile money';
 
   @override
   String get tripPublishLockedPriceNoteTitle => 'Prix fixé par la négociation';

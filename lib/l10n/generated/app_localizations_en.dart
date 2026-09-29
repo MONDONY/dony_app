@@ -2727,10 +2727,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'E.g. I prefer well-packed parcels. Contact me before departure.';
 
   @override
-  String get tripPublishCashOnlyBannerWithConnect =>
-      'Post in cash right now. Connect Stripe to also accept card payments.';
-
-  @override
   String get tripPublishCashOnlyBannerNoConnect =>
       'Card payment isn\'t available in your country yet. Your trips are posted in cash.';
 
@@ -2742,15 +2738,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not set up, turn it on to offer secure payment';
 
   @override
-  String get tripPublishActivatePayoutCta => 'Turn on payout';
-
-  @override
   String get tripPublishMobileMoneyIneligibleSubtitle =>
       'Available for trips in XOF or XAF';
 
   @override
   String get tripPublishMobileMoneyInactiveSubtitle =>
-      'First turn on your mobile money payout';
+      'Not set up, activate it to accept it';
+
+  @override
+  String get tripPublishCardUnavailableSubtitle => 'Unavailable on this trip';
+
+  @override
+  String get tripPublishCardConnectInactiveNotice =>
+      'Stripe Connect isn\'t activated, so card payment isn\'t available on your trips.';
+
+  @override
+  String tripPublishCardCurrencyUnavailableNotice(String currency) {
+    return 'Card payment isn\'t offered for trips in $currency.';
+  }
+
+  @override
+  String get tripPublishMobileMoneyInactiveNotice =>
+      'Mobile money isn\'t activated, so you can\'t accept it on this trip yet.';
+
+  @override
+  String get tripPublishActivateMobileMoneyCta => 'Activate mobile money';
 
   @override
   String get tripPublishLockedPriceNoteTitle => 'Price set by the negotiation';

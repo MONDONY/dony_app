@@ -52,14 +52,16 @@ const _stripeNotConfiguredState = StripeAccountInitial();
 // ── Host builder ──────────────────────────────────────────────────────────────
 
 /// Construit l'arbre minimal pour tester la bascule mobile money de
-/// PrixConditionsStep, avec un GoRouter réel : le CTA "Activer le versement"
-/// pousse `/payments/mobile-money/account`, dont la destination est stubée.
+/// PrixConditionsStep, avec un GoRouter réel : le lien « Activer le mobile
+/// money » pousse `/payments/mobile-money/account`, dont la destination est
+/// stubée (avec un bouton de retour pour éprouver le rechargement).
 Widget _host({
   StripeAccountState? stripeState,
   SupportedCurrency initialCurrency = SupportedCurrency.eur,
   ValueNotifier<bool>? mobileMoneyEnabledNotifier,
   ValueNotifier<SupportedCurrency>? currencyNotifier,
   bool mobileMoneyAccountActive = false,
+  VoidCallback? onMobileMoneySetupReturned,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   when(
@@ -105,6 +107,7 @@ Widget _host({
                     currencyNotifier ??
                     ValueNotifier<SupportedCurrency>(initialCurrency),
                 mobileMoneyAccountActive: mobileMoneyAccountActive,
+                onMobileMoneySetupReturned: onMobileMoneySetupReturned,
                 negotiableNotifier: ValueNotifier<bool>(false),
                 selectedContentNotifier: ValueNotifier<Set<String>>({}),
                 customAcceptedNotifier: ValueNotifier<Set<String>>({}),
@@ -123,8 +126,17 @@ Widget _host({
       ),
       GoRoute(
         path: '/payments/mobile-money/account',
-        builder: (context, state) =>
-            const Scaffold(body: Text('mobile-money-account-stub')),
+        builder: (context, state) => Scaffold(
+          body: Column(
+            children: [
+              const Text('mobile-money-account-stub'),
+              TextButton(
+                onPressed: () => context.pop(),
+                child: const Text('stub-back'),
+              ),
+            ],
+          ),
+        ),
       ),
     ],
   );
@@ -162,7 +174,7 @@ void main() {
         );
         expect(find.text('Mobile money'), findsOneWidget);
         expect(
-          find.widgetWithText(TextButton, 'Activer le versement'),
+          find.byKey(const Key('activate-mobile-money-cta')),
           findsNothing,
           reason: 'Rien à activer hors zone CFA',
         );
@@ -170,8 +182,8 @@ void main() {
     );
 
     testWidgets(
-      'devise XOF sans compte actif : désactivée, invite à activer le '
-      'versement, le CTA pousse /payments/mobile-money/account',
+      'devise XOF sans compte actif : désactivée, encart explicatif, le '
+      'lien pousse /payments/mobile-money/account',
       (tester) async {
         await _pump(
           tester,
@@ -185,17 +197,19 @@ void main() {
         expect(tile.value, isFalse);
         expect(tile.onChanged, isNull);
         expect(
-          find.text('Active d\'abord ton versement mobile money'),
+          find.text('Non configuré, activez-le pour l\'accepter'),
           findsOneWidget,
         );
         expect(
-          find.widgetWithText(TextButton, 'Activer le versement'),
+          find.byKey(const Key('activate-mobile-money-cta')),
           findsOneWidget,
         );
 
-        await tester.tap(
-          find.widgetWithText(TextButton, 'Activer le versement'),
+        await tester.ensureVisible(
+          find.byKey(const Key('activate-mobile-money-cta')),
         );
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('activate-mobile-money-cta')));
         await tester.pumpAndSettle();
 
         expect(find.text('mobile-money-account-stub'), findsOneWidget);
@@ -223,11 +237,17 @@ void main() {
         expect(tile.onChanged, isNotNull);
         expect(find.text('Orange Money, Wave, MTN'), findsOneWidget);
         expect(
-          find.widgetWithText(TextButton, 'Activer le versement'),
+          find.byKey(const Key('activate-mobile-money-cta')),
           findsNothing,
           reason: 'Compte déjà actif : rien à activer',
         );
 
+        // En XOF la carte est indisponible : son encart et celui des espèces
+        // (forcées ON) repoussent la bascule hors du viewport de test.
+        await tester.ensureVisible(
+          find.byKey(const Key('payment-method-mobile-money')),
+        );
+        await tester.pump();
         await tester.tap(find.byKey(const Key('payment-method-mobile-money')));
         await tester.pump();
 
@@ -255,6 +275,91 @@ void main() {
     );
   });
 
+  group('PrixConditionsStep — encart « mobile money non activé »', () {
+    testWidgets('devise XOF sans compte actif : explique pourquoi et propose '
+        'l\'activation', (tester) async {
+      await _pump(tester, _host(initialCurrency: SupportedCurrency.xof));
+
+      expect(
+        find.byKey(const Key('mobile-money-setup-notice')),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Le mobile money n\'est pas activé : vous ne pouvez pas encore '
+          'l\'accepter sur ce trajet.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Activer le mobile money'), findsOneWidget);
+    });
+
+    testWidgets('hors zone CFA : aucun encart, le mobile money ne peut pas '
+        's\'appliquer à ce trajet', (tester) async {
+      await _pump(tester, _host());
+
+      expect(find.byKey(const Key('mobile-money-setup-notice')), findsNothing);
+      expect(find.byKey(const Key('activate-mobile-money-cta')), findsNothing);
+    });
+
+    testWidgets('compte actif : aucun encart', (tester) async {
+      await _pump(
+        tester,
+        _host(
+          initialCurrency: SupportedCurrency.xof,
+          mobileMoneyAccountActive: true,
+        ),
+      );
+
+      expect(find.byKey(const Key('mobile-money-setup-notice')), findsNothing);
+    });
+
+    testWidgets('au retour de l\'écran d\'activation, le parent est invité à '
+        'recharger le compte mobile money', (tester) async {
+      var reloads = 0;
+      await _pump(
+        tester,
+        _host(
+          initialCurrency: SupportedCurrency.xof,
+          onMobileMoneySetupReturned: () => reloads++,
+        ),
+      );
+
+      await tester.ensureVisible(
+        find.byKey(const Key('activate-mobile-money-cta')),
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('activate-mobile-money-cta')));
+      await tester.pumpAndSettle();
+      expect(
+        reloads,
+        0,
+        reason: 'Rien à recharger tant que l\'écran est ouvert',
+      );
+
+      await tester.tap(find.text('stub-back'));
+      await tester.pumpAndSettle();
+
+      expect(reloads, 1);
+    });
+
+    testWidgets('bascule jamais affichée activée quand le mobile money est '
+        'inutilisable, même si la valeur héritée vaut true', (tester) async {
+      await _pump(
+        tester,
+        _host(
+          initialCurrency: SupportedCurrency.xof,
+          mobileMoneyEnabledNotifier: ValueNotifier<bool>(true),
+        ),
+      );
+
+      final tile = tester.widget<SwitchListTile>(
+        find.byKey(const Key('payment-method-mobile-money')),
+      );
+      expect(tile.value, isFalse);
+    });
+  });
+
   group('PrixConditionsStep — bascule mobile money (Stripe non configuré)', () {
     testWidgets('devise XOF sans compte actif : même clé, même comportement '
         'désactivé + CTA que la disposition Stripe configuré', (tester) async {
@@ -273,11 +378,11 @@ void main() {
       expect(tile.value, isFalse);
       expect(tile.onChanged, isNull);
       expect(
-        find.text('Active d\'abord ton versement mobile money'),
+        find.text('Non configuré, activez-le pour l\'accepter'),
         findsOneWidget,
       );
       expect(
-        find.widgetWithText(TextButton, 'Activer le versement'),
+        find.byKey(const Key('activate-mobile-money-cta')),
         findsOneWidget,
       );
     });
