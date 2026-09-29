@@ -12504,6 +12504,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get supportContactCta => 'Contacter le support';
 
   @override
+  String get supportNewRequestCta => 'Nouvelle demande';
+
+  @override
   String get supportCreateTicketCategoryLabel => 'Catégorie';
 
   @override

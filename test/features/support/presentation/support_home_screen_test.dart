@@ -196,7 +196,8 @@ void main() {
     // DonyBadge rend son libellé en majuscules.
     expect(find.text('REPLY RECEIVED'), findsOneWidget);
     expect(find.text('Payment'), findsOneWidget);
-    expect(find.text('Contact support'), findsOneWidget);
+    // Avec une conversation, le bouton fixe devient « New request ».
+    expect(find.text('New request'), findsOneWidget);
   });
 
   group('aperçu du dernier message dans la carte ticket', () {
@@ -277,6 +278,184 @@ void main() {
 
       expect(find.textContaining('Yadony :'), findsNothing);
       expect(find.textContaining('Vous :'), findsNothing);
+    });
+  });
+
+  group('écran avec des conversations', () {
+    SupportTicket ticket(
+      String id, {
+      String status = SupportTicketStatuses.waitingSupport,
+      DateTime? lastAt,
+      DateTime? createdAt,
+    }) => SupportTicket(
+      id: id,
+      category: 'PAYMENT',
+      subject: 'Sujet $id',
+      status: status,
+      lastMessageAt: lastAt,
+      createdAt: createdAt,
+    );
+
+    final replies = List.generate(
+      6,
+      (i) => SupportPredefinedReply(
+        code: 'q$i',
+        category: 'PAYMENT',
+        question: 'Question fréquente $i',
+        answer: 'Réponse $i',
+      ),
+    );
+
+    testWidgets('non résolues d abord, puis par dernier message', (
+      tester,
+    ) async {
+      stubState(
+        SupportState(
+          homeStatus: SupportViewStatus.ready,
+          tickets: [
+            ticket(
+              'resolu',
+              status: SupportTicketStatuses.resolved,
+              lastAt: DateTime(2026, 9, 28),
+            ),
+            ticket('ancien', lastAt: DateTime(2026, 9, 20)),
+            ticket('recent', lastAt: DateTime(2026, 9, 27)),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      final recent = tester.getTopLeft(find.text('Sujet recent')).dy;
+      final old = tester.getTopLeft(find.text('Sujet ancien')).dy;
+      final resolved = tester.getTopLeft(find.text('Sujet resolu')).dy;
+      expect(recent, lessThan(old));
+      expect(old, lessThan(resolved));
+    });
+
+    testWidgets('les conversations passent avant l assistant, conservé', (
+      tester,
+    ) async {
+      stubState(
+        SupportState(
+          homeStatus: SupportViewStatus.ready,
+          replies: replies,
+          tickets: [ticket('a')],
+        ),
+      );
+
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.getTopLeft(find.text('Mes tickets')).dy,
+        lessThan(tester.getTopLeft(find.text('Sujet a')).dy),
+      );
+      await tester.scrollUntilVisible(find.text('Questions fréquentes'), 200);
+      expect(find.text('Questions fréquentes'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Sujet a')).dy,
+        lessThan(tester.getTopLeft(find.text('Questions fréquentes')).dy),
+      );
+    });
+
+    for (final count in [1, 3]) {
+      testWidgets(
+        '« Nouvelle demande » visible sans défiler avec $count conversation(s)',
+        (tester) async {
+          stubState(
+            SupportState(
+              homeStatus: SupportViewStatus.ready,
+              replies: replies,
+              tickets: [for (var i = 0; i < count; i++) ticket('t$i')],
+            ),
+          );
+
+          await tester.pumpWidget(_harness(bloc));
+          await tester.pumpAndSettle();
+
+          expect(find.text('Nouvelle demande').hitTestable(), findsOneWidget);
+          // L ancien bouton en bas de liste n existe plus dans ce cas.
+          expect(find.text('Contacter le support'), findsNothing);
+
+          // Le bouton reste en place après un défilement de la liste.
+          await tester.drag(find.byType(ListView), const Offset(0, -600));
+          await tester.pumpAndSettle();
+          expect(find.text('Nouvelle demande').hitTestable(), findsOneWidget);
+
+          await tester.tap(find.text('Nouvelle demande'));
+          await tester.pumpAndSettle();
+          expect(find.text('Catégorie'), findsOneWidget);
+          expect(find.text('Envoyer'), findsOneWidget);
+        },
+      );
+    }
+
+    testWidgets('sans conversation : pas de bouton fixe, écran inchangé', (
+      tester,
+    ) async {
+      stubState(
+        SupportState(homeStatus: SupportViewStatus.ready, replies: replies),
+      );
+
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nouvelle demande'), findsNothing);
+      // L assistant reste en tête quand il n y a aucune conversation.
+      expect(
+        tester.getTopLeft(find.text('Questions fréquentes')).dy,
+        lessThan(tester.getTopLeft(find.text('Question fréquente 0')).dy),
+      );
+      await tester.scrollUntilVisible(find.text('Contacter le support'), 200);
+      expect(find.text('Contacter le support'), findsOneWidget);
+    });
+  });
+
+  group('sortSupportTickets', () {
+    test('non résolues d abord, puis dernier message décroissant', () {
+      final sorted = sortSupportTickets([
+        const SupportTicket(
+          id: 'r',
+          category: 'OTHER',
+          subject: 'r',
+          status: SupportTicketStatuses.resolved,
+        ),
+        SupportTicket(
+          id: 'old',
+          category: 'OTHER',
+          subject: 'old',
+          status: SupportTicketStatuses.newTicket,
+          createdAt: DateTime(2026, 1, 2),
+        ),
+        SupportTicket(
+          id: 'new',
+          category: 'OTHER',
+          subject: 'new',
+          status: SupportTicketStatuses.waitingUser,
+          lastMessageAt: DateTime(2026, 9, 2),
+        ),
+      ]);
+
+      expect(sorted.map((t) => t.id), ['new', 'old', 'r']);
+    });
+
+    test('sans date, garde l ordre du serveur', () {
+      const a = SupportTicket(
+        id: 'a',
+        category: 'OTHER',
+        subject: 'a',
+        status: SupportTicketStatuses.newTicket,
+      );
+      const b = SupportTicket(
+        id: 'b',
+        category: 'OTHER',
+        subject: 'b',
+        status: SupportTicketStatuses.newTicket,
+      );
+
+      expect(sortSupportTickets([a, b]).map((t) => t.id), ['a', 'b']);
     });
   });
 }

@@ -7,19 +7,6 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Route ouverte par un tap sur la ligne épinglée : le fil directement quand
-/// l'utilisateur a exactement une conversation non résolue (le résumé la
-/// place alors dans [latestTicket]), la liste `/support` sinon.
-String supportTileRoute(
-  int openTicketCount,
-  SupportSummaryTicket? latestTicket,
-) {
-  if (openTicketCount == 1 && latestTicket != null) {
-    return '/support/tickets/${latestTicket.id}';
-  }
-  return '/support';
-}
-
 /// Texte d'aperçu de la ligne : « Yadony : … » ou « Vous : … » selon
 /// l'auteur du dernier message, l'invitation par défaut sans aperçu. Les
 /// retours à la ligne sont aplatis pour tenir sur une ligne.
@@ -38,16 +25,19 @@ String supportPreviewText(
 /// Ligne épinglée « Support Yadony » en tête de la liste des conversations.
 ///
 /// Affichée même sans ticket (aperçu d'invitation). Avec un résumé serveur
-/// ([latestTicket]), elle montre l'aperçu et l'heure du dernier message ; un
-/// tap ouvre la route de [supportTileRoute]. Sans résumé (back antérieur),
-/// elle garde l'invitation et ouvre `/support`. Le badge ne s'affiche qu'à
-/// partir de 1.
+/// ([latestTicket]), elle montre l'aperçu et l'heure du dernier message ;
+/// sans résumé (back antérieur), elle garde l'invitation. Le badge ne
+/// s'affiche qu'à partir de 1.
+///
+/// Un tap ouvre toujours l'écran `/support`, même avec une seule
+/// conversation : c'est là que l'utilisateur retrouve ses fils ET le bouton
+/// « Nouvelle demande ». Ouvrir directement le fil (PR #430) l'empêchait
+/// d'ouvrir un nouveau sujet. Seules les notifications mènent au fil.
 class SupportConversationTile extends StatelessWidget {
   const SupportConversationTile({
     super.key,
     required this.unreadCount,
     this.latestTicket,
-    this.openTicketCount = 0,
     this.onReturned,
   });
 
@@ -56,9 +46,6 @@ class SupportConversationTile extends StatelessWidget {
   /// Dernière conversation résumée par le back, null sans conversation ou
   /// sur un back antérieur au résumé.
   final SupportSummaryTicket? latestTicket;
-
-  /// Conversations non résolues.
-  final int openTicketCount;
 
   /// Appelé au retour de l'écran ouvert, pour rafraîchir aperçu et compteur.
   final VoidCallback? onReturned;
@@ -94,7 +81,7 @@ class SupportConversationTile extends StatelessWidget {
             : cs.surface,
         child: InkWell(
           onTap: () async {
-            await context.push(supportTileRoute(openTicketCount, latest));
+            await context.push('/support');
             onReturned?.call();
           },
           child: Padding(
