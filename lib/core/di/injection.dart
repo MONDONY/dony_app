@@ -661,7 +661,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => ConnectOnboardingRepository(getIt<ConnectOnboardingDatasource>()),
   );
   getIt.registerFactory<ConnectOnboardingBloc>(
-    () => ConnectOnboardingBloc(getIt<IConnectOnboardingRepository>()),
+    () => ConnectOnboardingBloc(
+      getIt<IConnectOnboardingRepository>(),
+      analytics: getIt<AnalyticsService>(),
+    ),
   );
 
   // Content categories (catalogue unifié des types de contenu de colis)

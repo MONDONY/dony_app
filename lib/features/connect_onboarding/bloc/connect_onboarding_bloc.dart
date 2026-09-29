@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -9,8 +13,13 @@ class ConnectOnboardingBloc
     extends Bloc<ConnectOnboardingEvent, ConnectOnboardingState> {
   final IConnectOnboardingRepository _repository;
 
-  ConnectOnboardingBloc(this._repository)
-    : super(const ConnectOnboardingInitial()) {
+  /// Nullable pour les tests qui ne regardent pas l'analytics ; la DI en
+  /// fournit toujours un.
+  final AnalyticsService? _analytics;
+
+  ConnectOnboardingBloc(this._repository, {AnalyticsService? analytics})
+    : _analytics = analytics,
+      super(const ConnectOnboardingInitial()) {
     on<ConnectOnboardingStatusRequested>(_onStatusRequested);
     on<ConnectOnboardingLinkRequested>(_onLinkRequested);
     on<ConnectOnboardingPollingRequested>(_onPollingRequested);
@@ -61,8 +70,11 @@ class ConnectOnboardingBloc
       }
       final url = await _repository.createOnboardingLink();
       emit(ConnectOnboardingUrlReady(url));
+      _log(AnalyticsEvents.connectOnboardingLinkOpened);
     } catch (e) {
-      emit(ConnectOnboardingError(unwrapDioError(e)));
+      final error = unwrapDioError(e);
+      emit(ConnectOnboardingError(error));
+      _logFailed('link', error.code);
     }
   }
 
@@ -79,19 +91,38 @@ class ConnectOnboardingBloc
     emit(const ConnectOnboardingLoading());
     try {
       final status = await _repository.getAccountStatus();
+      // Le poll suit un retour du formulaire Stripe : c'est ici, et non au
+      // chargement initial du statut, qu'une activation se produit.
       if (status.isComplete) {
         emit(const ConnectOnboardingComplete());
+        _log(AnalyticsEvents.connectOnboardingCompleted);
       } else if (status.isDisabled) {
         emit(const ConnectOnboardingDisabled());
+        _logFailed('disabled', null);
       } else if (status.isRejected) {
         emit(ConnectOnboardingRejected(reason: status.reason));
+        _logFailed('rejected', status.reason);
       } else {
         emit(const ConnectOnboardingPending());
+        _log(AnalyticsEvents.connectOnboardingStillPending);
       }
     } catch (e) {
-      emit(ConnectOnboardingError(unwrapDioError(e)));
+      final error = unwrapDioError(e);
+      emit(ConnectOnboardingError(error));
+      _logFailed('status', error.code);
     }
   }
+
+  void _log(String event, [Map<String, Object>? properties]) {
+    final analytics = _analytics;
+    if (analytics == null) return;
+    unawaited(analytics.logEvent(event, properties: properties));
+  }
+
+  void _logFailed(String stage, String? reason) => _log(
+    AnalyticsEvents.connectOnboardingFailed,
+    {'stage': stage, 'reason': ?reason},
+  );
 
   Future<void> _onLaunchFailed(
     ConnectOnboardingLaunchFailed event,
@@ -105,5 +136,6 @@ class ConnectOnboardingBloc
         ),
       ),
     );
+    _logFailed('launch', 'launch-failed');
   }
 }
