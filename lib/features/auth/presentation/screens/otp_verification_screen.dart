@@ -267,6 +267,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                 child: OtpCodeField(
                                   controller: _codeController,
                                   onCompleted: _onCodeCompleted,
+                                  readSms: widget.mode == OtpMode.phone,
                                   boxWidth:
                                       ((DonyLayout.screenWidth(context) -
                                                   h * 2 -

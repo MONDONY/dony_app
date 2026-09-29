@@ -134,6 +134,7 @@ dependencies:
   # Importé directement par le code (Bloc/Emitter/Transition) et pas seulement
   # via flutter_bloc : depend_on_referenced_packages exige la déclaration.
   bloc: ^8.1.4
+  smart_auth: ^3.2.0
 
 dev_dependencies:
   flutter_test:

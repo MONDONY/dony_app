@@ -248,6 +248,7 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
           return _OtpStep(
             controller: _otpCtrl,
             onCompleted: (_) => _verifyOtp(),
+            readSms: true,
             contact: _pendingPhone,
             tt: tt,
             cs: cs,
@@ -595,6 +596,7 @@ class _OtpStep extends StatelessWidget {
     required this.controller,
     required this.onCompleted,
     required this.contact,
+    this.readSms = false,
     required this.tt,
     required this.cs,
   });
@@ -602,6 +604,9 @@ class _OtpStep extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onCompleted;
   final String contact;
+
+  /// Vrai pour un code reçu par SMS (numéro), faux par e-mail.
+  final bool readSms;
   final TextTheme tt;
   final ColorScheme cs;
 
@@ -639,6 +644,7 @@ class _OtpStep extends StatelessWidget {
             child: OtpCodeField(
               controller: controller,
               onCompleted: onCompleted,
+              readSms: readSms,
               boxWidth: 44,
               boxHeight: 52,
             ),
