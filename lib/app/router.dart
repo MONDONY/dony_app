@@ -55,6 +55,7 @@ import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/incident_report/presentation/screens/incident_report_screen.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
+import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -503,10 +504,13 @@ final appRouter = GoRouter(
         final progress = fromOnboarding
             ? readOnboardingProgress(context, current: OnboardingStep.identity)
             : null;
+        final returnTo = kycReturnRouteOrNull(
+          state.uri.queryParameters[kycReturnParam],
+        );
 
         final raw = state.extra;
         if (raw is! String) {
-          return KycStatusScreen(progress: progress);
+          return KycStatusScreen(progress: progress, returnTo: returnTo);
         }
         // Second filtre, en plus de celui de la webview elle-même : une URL
         // qui n'est pas celle d'un fournisseur connu ne doit même pas ouvrir
@@ -520,11 +524,15 @@ final appRouter = GoRouter(
             uri.scheme == 'https' &&
             isVerificationProviderHost(uri.host);
         if (!estFournisseurConnu) {
-          return KycStatusScreen(progress: progress);
+          return KycStatusScreen(progress: progress, returnTo: returnTo);
         }
         return BlocProvider(
           create: (_) => getIt<KycBloc>(),
-          child: KycWebViewScreen(stripeUrl: raw, progress: progress),
+          child: KycWebViewScreen(
+            stripeUrl: raw,
+            progress: progress,
+            returnTo: returnTo,
+          ),
         );
       },
     ),

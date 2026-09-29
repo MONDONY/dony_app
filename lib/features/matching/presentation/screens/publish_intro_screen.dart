@@ -137,6 +137,11 @@ class PublishIntroScreen extends StatelessWidget {
     KycRequiredBottomSheet.show(
       context,
       kycStatus: user?.kycStatus ?? 'NOT_STARTED',
+      // Revenir ici une fois vérifié, pour enchaîner sur la publication.
+      returnTo: switch (role) {
+        PublishIntroRole.trip => '/trips/publish-intro',
+        PublishIntroRole.parcel => '/parcels/send-intro',
+      },
     );
   }
 }

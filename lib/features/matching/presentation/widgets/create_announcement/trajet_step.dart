@@ -252,7 +252,10 @@ class TrajetStep extends StatelessWidget {
                     size: 16,
                     color: cs.onSurfaceVariant,
                   ),
-                  onTap: () {},
+                  onTap: () => _showLocked(
+                    context,
+                    l.tripPublishFieldLockedCorridorMessage,
+                  ),
                 ),
                 const SizedBox(height: DonySpacing.sm),
                 DonyTextField.tappable(
@@ -265,7 +268,10 @@ class TrajetStep extends StatelessWidget {
                     size: 16,
                     color: cs.onSurfaceVariant,
                   ),
-                  onTap: () {},
+                  onTap: () => _showLocked(
+                    context,
+                    l.tripPublishFieldLockedCorridorMessage,
+                  ),
                 ),
               ] else
                 CityCorridorFields(
@@ -369,7 +375,12 @@ class TrajetStep extends StatelessWidget {
                 ),
                 requiredLabel: true,
                 errorText: departureDateError,
-                onTap: lockDate ? () {} : () => onSelectDate(),
+                onTap: lockDate
+                    ? () => _showLocked(
+                        context,
+                        l.tripPublishFieldLockedDateMessage,
+                      )
+                    : () => onSelectDate(),
               ),
               // ── Feedback informatif « sera signalé urgent » ────────────
               // Non-bloquant : n'affecte jamais la soumission du formulaire.
@@ -403,4 +414,11 @@ class TrajetStep extends StatelessWidget {
       const SizedBox(height: DonySpacing.lg),
     ];
   }
+}
+
+/// Retour au tap sur un champ verrouillé. Il n'avait qu'un `onTap` vide : le
+/// champ montrait l'effet d'appui sans rien ouvrir ni rien dire, et PostHog
+/// relevait des rafales de taps (rage clicks) sur le haut de ce formulaire.
+void _showLocked(BuildContext context, String message) {
+  DonySnackbar.show(context, message: message);
 }

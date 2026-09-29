@@ -4334,6 +4334,18 @@ abstract class AppLocalizations {
   /// **'Corridor, capacité et prix sont verrouillés. La date doit rester dans la fenêtre de tolérance de l\'expéditeur.'**
   String get tripPublishLockedBannerSubtitle;
 
+  /// Snackbar au tap sur une ville verrouillée (édition ou trajet dédié à une demande).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les villes de ce trajet ne peuvent plus être modifiées.'**
+  String get tripPublishFieldLockedCorridorMessage;
+
+  /// Snackbar au tap sur la date de départ verrouillée.
+  ///
+  /// In fr, this message translates to:
+  /// **'La date de départ de ce trajet ne peut plus être modifiée.'**
+  String get tripPublishFieldLockedDateMessage;
+
   /// Titre de l'intro de publication, rôle expéditeur
   ///
   /// In fr, this message translates to:

@@ -23,6 +23,8 @@ Future<bool> openPackageRequestWizard(BuildContext context) async {
     await KycRequiredBottomSheet.show(
       context,
       kycStatus: user?.kycStatus ?? 'NOT_STARTED',
+      // Une fois vérifié, l'intro d'envoi reprend là où il s'était arrêté.
+      returnTo: '/parcels/send-intro',
     );
     return false;
   }

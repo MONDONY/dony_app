@@ -14,6 +14,7 @@ import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/presentation/kyc_rejection_messages.dart';
+import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -27,9 +28,13 @@ import 'package:go_router/go_router.dart';
 /// `router.dart` qui le construit (`readOnboardingProgress`), pour que cet
 /// écran reste montable en test sans `AuthBloc`/`StripeAccountBloc` fournis.
 class KycStatusScreen extends StatefulWidget {
-  const KycStatusScreen({super.key, this.progress});
+  const KycStatusScreen({super.key, this.progress, this.returnTo});
 
   final OnboardingProgress? progress;
+
+  /// Écran où revenir une fois vérifié, hors onboarding (cf.
+  /// `kycReturnRoutes`). `null` : l'accueil, comme avant.
+  final String? returnTo;
 
   @override
   State<KycStatusScreen> createState() => _KycStatusScreenState();
@@ -115,8 +120,12 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     final progress = justVerified
         ? widget.progress?.completing(OnboardingStep.identity)
         : widget.progress;
+    // Hors onboarding, l'écran d'où la vérification a été demandée (publier
+    // un trajet, envoyer un colis) plutôt que l'accueil — seulement une fois
+    // vérifié : un statut encore en attente n'y donnerait pas accès.
+    final returnTo = justVerified ? widget.returnTo : null;
     final destination =
-        progress?.routeAfter(OnboardingStep.identity) ?? '/home';
+        progress?.routeAfter(OnboardingStep.identity) ?? returnTo ?? '/home';
     if (progress != null && destination == '/home') {
       unawaited(
         getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}),
@@ -137,7 +146,10 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
             // webview (`KycWebViewScreen`) perdrait `widget.progress` et
             // rendrait l'écran de statut suivant amnésique du parcours.
             context.go(
-              '/kyc/verify${onboardingEntrySuffix(fromOnboarding: widget.progress != null)}',
+              kycVerifyLocation(
+                fromOnboarding: widget.progress != null,
+                returnTo: widget.returnTo,
+              ),
               extra: state.stripeUrl,
             );
             return;

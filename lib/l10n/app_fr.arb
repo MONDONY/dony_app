@@ -1238,6 +1238,14 @@
   "@tripPublishLockedBannerSubtitle": {
     "description": "Texte du bandeau affiché quand le trajet est créé pour une demande de colis verrouillée"
   },
+  "tripPublishFieldLockedCorridorMessage": "Les villes de ce trajet ne peuvent plus être modifiées.",
+  "@tripPublishFieldLockedCorridorMessage": {
+    "description": "Snackbar au tap sur une ville verrouillée (édition ou trajet dédié à une demande)."
+  },
+  "tripPublishFieldLockedDateMessage": "La date de départ de ce trajet ne peut plus être modifiée.",
+  "@tripPublishFieldLockedDateMessage": {
+    "description": "Snackbar au tap sur la date de départ verrouillée."
+  },
   "requestPublishIntroTitle": "Publier un colis",
   "@requestPublishIntroTitle": {
     "description": "Titre de l'intro de publication, rôle expéditeur"
