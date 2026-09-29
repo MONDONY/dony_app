@@ -324,6 +324,94 @@ void main() {
 
   // ── payment_method_selected — checkout (sender's real choice) ──────────────
 
+  // ── payment_succeeded — checkout carte ────────────────────────────────────
+
+  group('payment_succeeded (checkout)', () {
+    test('fires for a card checkout (Stripe PaymentIntent)', () async {
+      when(
+        () => repo.checkout(
+          't-1',
+          paymentIntentId: 'pi_1',
+          paymentMethod: PaymentMethod.stripe,
+        ),
+      ).thenAnswer(
+        (_) async => _fakeThread(status: NegotiationThreadStatus.accepted),
+      );
+
+      final bloc = makeBloc();
+      bloc.add(
+        const NegotiationCheckoutRequested(
+          threadId: 't-1',
+          paymentIntentId: 'pi_1',
+          paymentMethod: PaymentMethod.stripe,
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
+      await Future<void>.delayed(Duration.zero);
+
+      final captured = verify(
+        () => backend.capture(AnalyticsEvents.paymentSucceeded, captureAny()),
+      ).captured;
+      expect(captured.single, containsPair('context', 'negotiation'));
+      expect(captured.single, containsPair('payment_id', 'pi_1'));
+    });
+
+    test('does not fire for a cash agreement (sentinel, no payment)', () async {
+      when(
+        () => repo.checkout(
+          't-1',
+          paymentIntentId: 'CASH',
+          paymentMethod: PaymentMethod.cash,
+        ),
+      ).thenAnswer(
+        (_) async => _fakeThread(status: NegotiationThreadStatus.accepted),
+      );
+
+      final bloc = makeBloc();
+      bloc.add(
+        const NegotiationCheckoutRequested(
+          threadId: 't-1',
+          paymentIntentId: 'CASH',
+          paymentMethod: PaymentMethod.cash,
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.paymentSucceeded, any()),
+      );
+    });
+
+    test('fires on the webhook-race recovery path', () async {
+      when(
+        () => repo.checkout(
+          't-1',
+          paymentIntentId: 'pi_1',
+          paymentMethod: PaymentMethod.stripe,
+        ),
+      ).thenThrow(const ConflictException('thread/not-awaiting-payment'));
+      when(() => repo.getById('t-1')).thenAnswer(
+        (_) async => _fakeThread(status: NegotiationThreadStatus.accepted),
+      );
+
+      final bloc = makeBloc();
+      bloc.add(
+        const NegotiationCheckoutRequested(
+          threadId: 't-1',
+          paymentIntentId: 'pi_1',
+          paymentMethod: PaymentMethod.stripe,
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.paymentSucceeded, any()),
+      ).called(1);
+    });
+  });
+
   group('payment_method_selected (checkout)', () {
     test('fires with method wireName on checkout success', () async {
       when(

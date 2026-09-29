@@ -73,6 +73,7 @@ import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
 import 'package:dony/features/incident_report/data/datasources/incident_report_remote_datasource.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
+import 'package:dony/features/kyc/data/kyc_completion_tracker.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
@@ -364,11 +365,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<KycRepository>(
     () => KycRepository(getIt<ApiClient>()),
   );
+  getIt.registerLazySingleton<KycCompletionTracker>(
+    () => KycCompletionTracker(getIt<HiveService>().userPrefs),
+  );
   getIt.registerFactory<KycBloc>(
     () => KycBloc(
       getIt<KycRepository>(),
       getIt<AnalyticsService>(),
       getIt<ErrorReportingService>(),
+      getIt<KycCompletionTracker>(),
     ),
   );
 

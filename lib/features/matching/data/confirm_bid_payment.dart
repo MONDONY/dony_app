@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 
@@ -24,7 +28,19 @@ import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 /// `BidCheckoutService.settleIfAlreadyEscrowed`) — mais il est **rapporté**,
 /// sans quoi la dérive que ce code existe pour corriger redeviendrait
 /// silencieuse en production.
+///
+/// C'est aussi le point de passage commun des paiements carte d'une offre :
+/// `payment_succeeded` y est émis, faute de quoi ces paiements n'étaient jamais
+/// comptés (seul l'écran `/payments/pay` l'émettait).
 Future<void> confirmBidPaymentSafely(String bidId) async {
+  if (getIt.isRegistered<AnalyticsService>()) {
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.paymentSucceeded,
+        properties: {'method': 'card', 'context': 'bid', 'bid_id': bidId},
+      ),
+    );
+  }
   try {
     await getIt<BidRepository>().confirmPayment(bidId);
   } catch (e, stackTrace) {

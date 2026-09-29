@@ -554,6 +554,33 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     );
   }
 
+  /// `payment_succeeded` d'un paiement carte finalisé au checkout.
+  ///
+  /// Ce flux n'émettait rien : seul `PaymentBloc` (écran `/payments/pay`)
+  /// comptait les paiements réussis, si bien que les tableaux de bord
+  /// sous-estimaient les paiements aboutis. Un accord en espèces passe aussi par
+  /// `/checkout`, avec une sentinelle à la place du PaymentIntent : seul un
+  /// identifiant Stripe (`pi_…`) témoigne d'un encaissement.
+  void _logCheckoutPaymentSucceeded(
+    NegotiationCheckoutRequested e,
+    NegotiationThread thread,
+  ) {
+    if (!e.paymentIntentId.startsWith('pi_')) {
+      return;
+    }
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.paymentSucceeded,
+        properties: {
+          'method': 'card',
+          'context': 'negotiation',
+          'currency': thread.currency,
+          'payment_id': e.paymentIntentId,
+        },
+      ),
+    );
+  }
+
   /// Tranche de montant pour l'analytics, sans PII et **sans symbole monétaire**.
   ///
   /// Les bornes s'entendaient auparavant en euros et portaient le « € » dans leur
@@ -871,6 +898,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       );
       emit(NegotiationLoaded(thread));
       _logCheckoutPaymentMethodSelected(e.paymentMethod);
+      _logCheckoutPaymentSucceeded(e, thread);
     } catch (err) {
       final appErr = unwrapDioError(err);
       // Course gagnée par le webhook Stripe : `payment_intent.amount_capturable_updated`
@@ -885,6 +913,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
           final thread = await _repository.getById(e.threadId);
           emit(NegotiationLoaded(thread));
           _logCheckoutPaymentMethodSelected(e.paymentMethod);
+          _logCheckoutPaymentSucceeded(e, thread);
           return;
         } catch (_) {
           // Re-fetch échoué → on retombe sur l'erreur d'origine ci-dessous.

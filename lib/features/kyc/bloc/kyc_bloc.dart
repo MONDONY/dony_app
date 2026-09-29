@@ -6,6 +6,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
+import 'package:dony/features/kyc/data/kyc_completion_tracker.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -13,9 +14,18 @@ class KycBloc extends Bloc<KycEvent, KycState> {
   final KycRepository _repository;
   final AnalyticsService _analytics;
   final ErrorReportingService? _errorReporter;
+  final KycCompletionTracker? _completionTracker;
 
-  KycBloc(this._repository, this._analytics, [this._errorReporter])
-    : super(const KycInitial()) {
+  /// `kyc_completed` déjà émis par cette instance : l'écran interroge le
+  /// statut plusieurs fois, l'événement ne doit partir qu'une fois.
+  bool _completionLogged = false;
+
+  KycBloc(
+    this._repository,
+    this._analytics, [
+    this._errorReporter,
+    this._completionTracker,
+  ]) : super(const KycInitial()) {
     on<KycSessionRequested>(_onSessionRequested);
     on<KycStatusRefreshed>(_onStatusRefreshed);
     on<KycReset>((_, emit) => emit(const KycInitial()));
@@ -70,8 +80,9 @@ class KycBloc extends Bloc<KycEvent, KycState> {
           rejectionCode: data['rejectionCode'] as String?,
         ),
       );
-      if ((data['kycStatus'] as String) == 'VERIFIED') {
-        unawaited(_analytics.logEvent(AnalyticsEvents.kycCompleted));
+      if ((data['kycStatus'] as String) == 'VERIFIED' && !_completionLogged) {
+        _completionLogged = true;
+        unawaited(_logCompletion());
       }
     } catch (e, stackTrace) {
       if (e is! DioException) {
@@ -86,6 +97,13 @@ class KycBloc extends Bloc<KycEvent, KycState> {
       }
       emit(KycError(unwrapDioError(e)));
     }
+  }
+
+  /// Une seule émission par compte et par appareil (cf. [KycCompletionTracker]).
+  Future<void> _logCompletion() async {
+    final tracker = _completionTracker;
+    if (tracker != null && !await tracker.claim()) return;
+    await _analytics.logEvent(AnalyticsEvents.kycCompleted);
   }
 
   Future<void> _onSessionAbandoned(
