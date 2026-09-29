@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
+import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -82,17 +83,88 @@ void main() {
     );
   });
 
-  group('getConversations', () {
-    test('lit le contenu de la page', () async {
-      when(() => dio.get('/conversations')).thenAnswer(
-        (_) async => _ok({
-          'content': [_conversationJson('a1')],
-        }, '/conversations'),
-      );
+  group('getConversationPage', () {
+    Map<String, dynamic> dated(String id, String? at) => {
+      ..._conversationJson(id),
+      'lastMessageAt': at,
+    };
 
-      final result = await repository.getConversations();
+    void stubList(dynamic data) {
+      when(
+        () => dio.get(
+          '/conversations',
+          queryParameters: {'size': ConversationRepository.pageSize},
+        ),
+      ).thenAnswer((_) async => _ok(data, '/conversations'));
+    }
 
-      expect(result.single.id, 'a1');
+    test('demande une grande page et la dit complète sur `last`', () async {
+      stubList({
+        'content': [_conversationJson('a1')],
+        'last': true,
+      });
+
+      final page = await repository.getConversationPage();
+
+      expect(page.items.single.id, 'a1');
+      expect(page.isComplete, isTrue);
+    });
+
+    test('une page suivie d\'autres, ou sans `last`, est incomplète', () async {
+      stubList({
+        'content': [_conversationJson('a1')],
+        'last': false,
+      });
+      expect((await repository.getConversationPage()).isComplete, isFalse);
+
+      stubList({
+        'content': [_conversationJson('a1')],
+      });
+      expect((await repository.getConversationPage()).isComplete, isFalse);
+    });
+
+    test('un corps illisible rend une page vide et incomplète', () async {
+      stubList(null);
+
+      final page = await repository.getConversationPage();
+
+      expect(page.items, isEmpty);
+      expect(page.isComplete, isFalse);
+    });
+
+    test(
+      'trie par dernier message, fils sans date en fin (serveur non trié)',
+      () async {
+        stubList({
+          'content': [
+            dated('old', '2026-09-01T10:00:00'),
+            dated('undated', null),
+            dated('recent', '2026-09-29T07:55:00'),
+            dated('middle', '2026-09-15T10:00:00'),
+          ],
+          'last': true,
+        });
+
+        final page = await repository.getConversationPage();
+
+        expect(page.items.map((c) => c.id), [
+          'recent',
+          'middle',
+          'old',
+          'undated',
+        ]);
+      },
+    );
+  });
+
+  group('sortByLastMessage', () {
+    test('garde l\'ordre reçu à égalité', () {
+      final sorted = ConversationRepository.sortByLastMessage([
+        ConversationModel.fromJson(_conversationJson('b')),
+        ConversationModel.fromJson(_conversationJson('a')),
+      ]);
+
+      expect(sorted.map((c) => c.id), ['b', 'a']);
     });
   });
 }

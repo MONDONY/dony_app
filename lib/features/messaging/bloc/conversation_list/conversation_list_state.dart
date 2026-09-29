@@ -15,6 +15,11 @@ class ConversationListLoading extends ConversationListState {
   const ConversationListLoading();
 }
 
+/// Statuts d'un fil « En cours » : offre acceptée, colis remis ou en route
+/// (`IN_TRANSIT`), arrivé mais pas encore livré (`TRIP_ARRIVED`). Seul
+/// `BID_ACCEPTED` était retenu : le fil sortait du filtre dès la remise.
+const activeBidStatuses = {'BID_ACCEPTED', 'IN_TRANSIT', 'TRIP_ARRIVED'};
+
 class ConversationListLoaded extends ConversationListState {
   final List<ConversationModel> conversations;
   final List<ConversationModel> archivedConversations;
@@ -33,7 +38,7 @@ class ConversationListLoaded extends ConversationListState {
     final matchFilter = switch (filter) {
       ConversationFilter.all => true,
       ConversationFilter.unread => c.hasUnread,
-      ConversationFilter.active => c.bidStatus == 'BID_ACCEPTED',
+      ConversationFilter.active => activeBidStatuses.contains(c.bidStatus),
       ConversationFilter.done => c.bidStatus == 'DELIVERY_CONFIRMED',
     };
     final q = searchQuery.toLowerCase();
