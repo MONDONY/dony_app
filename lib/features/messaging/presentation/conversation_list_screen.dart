@@ -7,6 +7,7 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/widgets/conversation_tile.dart';
+import 'package:dony/features/support/bloc/support_summary_cubit.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/presentation/widgets/support_conversation_tile.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -87,12 +88,23 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
                 ),
                 // Ligne épinglée Support Yadony — toujours en tête, non
                 // filtrable, non déplaçable.
-                BlocBuilder<SupportUnreadCubit, int>(
-                  bloc: getIt<SupportUnreadCubit>(),
-                  builder: (context, supportUnread) {
-                    return SupportConversationTile(
-                      unreadCount: supportUnread,
-                      preview: '',
+                // Aperçu et compteur viennent du même `/support/summary`
+                // (SupportUnreadCubit.refresh alimente les deux).
+                BlocBuilder<SupportSummaryCubit, SupportSummaryState>(
+                  bloc: getIt<SupportSummaryCubit>(),
+                  builder: (context, summaryState) {
+                    final summary = summaryState.summary;
+                    return BlocBuilder<SupportUnreadCubit, int>(
+                      bloc: getIt<SupportUnreadCubit>(),
+                      builder: (context, supportUnread) {
+                        return SupportConversationTile(
+                          unreadCount: supportUnread,
+                          latestTicket: summary?.latestTicket,
+                          openTicketCount: summary?.openTicketCount ?? 0,
+                          onReturned: () =>
+                              getIt<SupportUnreadCubit>().refresh(),
+                        );
+                      },
                     );
                   },
                 ),

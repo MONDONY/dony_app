@@ -90,6 +90,8 @@ class SupportTicket extends Equatable {
     this.resolvedAt,
     this.messages = const [],
     this.unreadCount = 0,
+    this.lastMessagePreview,
+    this.lastMessageFromAdmin = false,
   });
 
   final String id;
@@ -104,6 +106,14 @@ class SupportTicket extends Equatable {
   /// Nombre de messages non lus pour l'utilisateur courant.
   /// Vaut 0 par défaut (absent du JSON de liste ou détail).
   final int unreadCount;
+
+  /// Aperçu du dernier message du fil (liste uniquement). Absent sur un back
+  /// antérieur au contrat d'aperçu : aucune ligne d'aperçu n'est alors
+  /// affichée.
+  final String? lastMessagePreview;
+
+  /// `true` quand le dernier message vient de l'équipe support.
+  final bool lastMessageFromAdmin;
 
   bool get isResolved => status == SupportTicketStatuses.resolved;
 
@@ -127,6 +137,8 @@ class SupportTicket extends Equatable {
           .map((e) => SupportMessage.fromJson(e as Map<String, dynamic>))
           .toList(),
       unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
+      lastMessagePreview: _optionalString(json['lastMessagePreview']),
+      lastMessageFromAdmin: json['lastMessageFromAdmin'] == true,
     );
   }
 
@@ -141,5 +153,92 @@ class SupportTicket extends Equatable {
     resolvedAt,
     messages,
     unreadCount,
+    lastMessagePreview,
+    lastMessageFromAdmin,
   ];
 }
+
+/// Dernière conversation support résumée par `GET /support/summary` : la
+/// conversation non résolue la plus récente, sinon la plus récente.
+class SupportSummaryTicket extends Equatable {
+  const SupportSummaryTicket({
+    required this.id,
+    this.subject = '',
+    this.lastMessagePreview,
+    this.lastMessageAt,
+    this.lastMessageFromAdmin = false,
+    this.unreadCount = 0,
+  });
+
+  final String id;
+  final String subject;
+  final String? lastMessagePreview;
+  final DateTime? lastMessageAt;
+
+  /// `true` quand le dernier message vient de l'équipe support.
+  final bool lastMessageFromAdmin;
+  final int unreadCount;
+
+  factory SupportSummaryTicket.fromJson(Map<String, dynamic> json) {
+    return SupportSummaryTicket(
+      id: _optionalString(json['id']) ?? '',
+      subject: _optionalString(json['subject']) ?? '',
+      lastMessagePreview: _optionalString(json['lastMessagePreview']),
+      lastMessageAt: _optionalDate(json['lastMessageAt']),
+      lastMessageFromAdmin: json['lastMessageFromAdmin'] == true,
+      unreadCount: _optionalInt(json['unreadCount']),
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    subject,
+    lastMessagePreview,
+    lastMessageAt,
+    lastMessageFromAdmin,
+    unreadCount,
+  ];
+}
+
+/// Résumé du support pour la ligne épinglée des conversations
+/// (`GET /support/summary`). Lecture tolérante : un champ absent ou d'un
+/// type inattendu retombe sur sa valeur neutre, jamais sur une exception.
+class SupportSummary extends Equatable {
+  const SupportSummary({
+    required this.unreadCount,
+    required this.openTicketCount,
+    this.latestTicket,
+  });
+
+  /// Messages non lus, tous tickets confondus.
+  final int unreadCount;
+
+  /// Conversations non résolues.
+  final int openTicketCount;
+
+  /// Null quand l'utilisateur n'a encore aucune conversation.
+  final SupportSummaryTicket? latestTicket;
+
+  factory SupportSummary.fromJson(Map<String, dynamic> json) {
+    final rawLatest = json['latestTicket'];
+    final latest = rawLatest is Map
+        ? SupportSummaryTicket.fromJson(Map<String, dynamic>.from(rawLatest))
+        : null;
+    return SupportSummary(
+      unreadCount: _optionalInt(json['unreadCount']),
+      openTicketCount: _optionalInt(json['openTicketCount']),
+      latestTicket: latest == null || latest.id.isEmpty ? null : latest,
+    );
+  }
+
+  @override
+  List<Object?> get props => [unreadCount, openTicketCount, latestTicket];
+}
+
+String? _optionalString(Object? value) => value is String ? value : null;
+
+int _optionalInt(Object? value) => value is num ? value.toInt() : 0;
+
+DateTime? _optionalDate(Object? value) =>
+    value is String ? DateTime.tryParse(value) : null;

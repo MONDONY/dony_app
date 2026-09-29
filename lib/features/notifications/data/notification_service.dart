@@ -14,6 +14,7 @@ import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:dony/features/subscriptions/data/subscription_badge_consumer.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
+import 'package:dony/features/support/data/support_live_events.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -672,14 +673,53 @@ class NotificationService {
   String? testRouteForMessage(Map<String, dynamic> data) =>
       _routeForMessage(data);
 
+  /// Route affichée à l'écran, fournie par l'app (GoRouter). Sert à taire le
+  /// bandeau d'un message support quand sa conversation est déjà ouverte.
+  String? Function()? currentLocationProvider;
+
+  /// `true` quand [data] est un message support dont la conversation est
+  /// celle affichée à [location].
+  @visibleForTesting
+  static bool isViewingSupportTicket(
+    Map<String, dynamic> data,
+    String? location,
+  ) {
+    if (data['type'] != 'SUPPORT_MESSAGE' || location == null) return false;
+    final ticketId = data['ticketId'];
+    if (ticketId is! String || ticketId.isEmpty) return false;
+    return location == '/support/tickets/$ticketId';
+  }
+
+  /// Message support reçu au premier plan : prévient le fil ouvert
+  /// ([SupportLiveEvents]) et rafraîchit compteur et aperçu de la ligne
+  /// épinglée sans attendre un tap. Rend `true` quand le bandeau doit être
+  /// tu, parce que l'utilisateur lit déjà cette conversation : l'écran
+  /// recharge alors le fil, le marque lu puis resynchronise le compteur.
+  bool _handleSupportForeground(Map<String, dynamic> data) {
+    if (data['type'] != 'SUPPORT_MESSAGE') return false;
+    final ticketId = data['ticketId'];
+    if (ticketId is String && getIt.isRegistered<SupportLiveEvents>()) {
+      getIt<SupportLiveEvents>().messageReceived(ticketId);
+    }
+    String? location;
+    try {
+      location = currentLocationProvider?.call();
+    } catch (_) {
+      location = null;
+    }
+    if (isViewingSupportTicket(data, location)) return true;
+    unawaited(getIt<SupportUnreadCubit>().refresh());
+    return false;
+  }
+
+  @visibleForTesting
+  bool testHandleSupportForeground(Map<String, dynamic> data) =>
+      _handleSupportForeground(data);
+
   void _handleForegroundMessage(RemoteMessage message) {
     _ackIfCritical(message.data);
     _newNotificationController.add(null);
-    // Rafraîchir le compteur support dès réception au premier plan, sans
-    // attendre que l'utilisateur tape sur la notification.
-    if (message.data['type'] == 'SUPPORT_MESSAGE') {
-      unawaited(getIt<SupportUnreadCubit>().refresh());
-    }
+    if (_handleSupportForeground(message.data)) return;
     final notification = message.notification;
     if (notification == null) return;
 

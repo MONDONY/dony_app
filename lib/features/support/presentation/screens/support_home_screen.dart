@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/data/support_models.dart';
+import 'package:dony/features/support/presentation/widgets/support_conversation_tile.dart'
+    show supportPreviewText;
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -232,6 +234,8 @@ class _TicketCard extends StatelessWidget {
 
   final SupportTicket ticket;
 
+  bool get _hasPreview => (ticket.lastMessagePreview ?? '').trim().isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -264,6 +268,10 @@ class _TicketCard extends StatelessWidget {
               ),
             ],
           ),
+          if (_hasPreview) ...[
+            const SizedBox(height: 4),
+            _TicketPreviewLine(ticket: ticket),
+          ],
           const SizedBox(height: 6),
           Text(
             SupportLabels.category(context.l10n, ticket.category),
@@ -273,6 +281,55 @@ class _TicketCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Aperçu du dernier message sous le sujet, précédé d'un point quand le fil
+/// a des messages non lus. Absent sur un back antérieur au contrat d'aperçu.
+class _TicketPreviewLine extends StatelessWidget {
+  const _TicketPreviewLine({required this.ticket});
+
+  final SupportTicket ticket;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final unread = ticket.unreadCount > 0;
+    return Row(
+      children: [
+        if (unread) ...[
+          Semantics(
+            label: l.supportUnreadSemantics(ticket.unreadCount),
+            child: Container(
+              key: const ValueKey('support-ticket-unread-dot'),
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: cs.primary,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+        ],
+        Expanded(
+          child: Text(
+            supportPreviewText(
+              l,
+              preview: ticket.lastMessagePreview,
+              fromAdmin: ticket.lastMessageFromAdmin,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: unread ? cs.onSurface : cs.onSurfaceVariant,
+              fontWeight: unread ? FontWeight.w600 : FontWeight.w400,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

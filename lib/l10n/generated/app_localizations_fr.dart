@@ -12553,6 +12553,28 @@ class AppLocalizationsFr extends AppLocalizations {
       'Une question ? Notre équipe vous répond ici.';
 
   @override
+  String supportPreviewFromTeam(String preview) {
+    return 'Yadony : $preview';
+  }
+
+  @override
+  String supportPreviewFromUser(String preview) {
+    return 'Vous : $preview';
+  }
+
+  @override
+  String supportUnreadSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages non lus',
+      one: '1 message non lu',
+      zero: 'aucun message non lu',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get corridorAlertNotifyInstant => 'Instantanée';
 
   @override

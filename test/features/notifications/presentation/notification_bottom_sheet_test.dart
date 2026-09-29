@@ -211,6 +211,12 @@ void main() {
       },
     );
 
+    testWidgets('un message du support Yadony a l icône d aide', (
+      tester,
+    ) async {
+      expect(await iconAssetFor(tester, 'SUPPORT_MESSAGE'), 'circle-help');
+    });
+
     testWidgets('un type inconnu garde la cloche neutre', (tester) async {
       expect(await iconAssetFor(tester, 'TYPE_INEXISTANT'), 'bell');
     });

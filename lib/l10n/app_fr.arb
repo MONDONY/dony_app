@@ -14158,6 +14158,33 @@
   "@supportConversationDefaultPreview": {
     "description": "Aperçu par défaut de la ligne épinglée support quand aucun message n'existe encore (support_conversation_tile.dart)."
   },
+  "supportPreviewFromTeam": "Yadony : {preview}",
+  "@supportPreviewFromTeam": {
+    "description": "Aperçu du dernier message quand il vient de l'équipe support (support_conversation_tile.dart, support_home_screen.dart).",
+    "placeholders": {
+      "preview": {
+        "type": "String"
+      }
+    }
+  },
+  "supportPreviewFromUser": "Vous : {preview}",
+  "@supportPreviewFromUser": {
+    "description": "Aperçu du dernier message quand l'utilisateur l'a écrit (support_conversation_tile.dart, support_home_screen.dart).",
+    "placeholders": {
+      "preview": {
+        "type": "String"
+      }
+    }
+  },
+  "supportUnreadSemantics": "{count, plural, =0{aucun message non lu} =1{1 message non lu} other{{count} messages non lus}}",
+  "@supportUnreadSemantics": {
+    "description": "Libellé d'accessibilité du nombre de messages support non lus (support_conversation_tile.dart, support_home_screen.dart).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "corridorAlertNotifyInstant": "Instantanée",
   "@corridorAlertNotifyInstant": {
     "description": "Libellé du mode de notification instantané d'une alerte corridor (corridor_alert_labels.dart, extension sur AlertNotifyMode)."

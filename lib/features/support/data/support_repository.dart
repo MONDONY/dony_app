@@ -76,6 +76,26 @@ class SupportRepository {
     return (data['count'] as num?)?.toInt() ?? 0;
   }
 
+  /// Résumé de la ligne épinglée « Support Yadony » : non-lus, conversations
+  /// ouvertes et dernier message.
+  ///
+  /// Rend `null` sur un 404 : le back déployé est antérieur à cet endpoint,
+  /// l'appelant retombe alors sur `/support/unread-count`. Un 404 fait partie
+  /// des statuts attendus de `ErrorReportingService`, il ne remonte pas dans
+  /// Sentry. Toute autre erreur est propagée.
+  Future<SupportSummary?> getSummary() async {
+    try {
+      final response = await _api.dio.get('/support/summary');
+      final data = response.data;
+      return SupportSummary.fromJson(
+        data is Map<String, dynamic> ? data : const {},
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
   /// Upload une image en multipart et retourne la clé objet distante.
   /// La clé est ensuite passée dans `attachmentKeys` lors de la création
   /// d'un ticket ou d'un message.

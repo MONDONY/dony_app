@@ -202,7 +202,9 @@ import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_remote_datasource.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
+import 'package:dony/features/support/bloc/support_summary_cubit.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
+import 'package:dony/features/support/data/support_live_events.dart';
 import 'package:dony/features/support/data/support_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
@@ -691,13 +693,28 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<SupportRepository>(
     () => SupportRepository(getIt<ApiClient>()),
   );
-  getIt.registerFactory<SupportBloc>(
-    () => SupportBloc(getIt<SupportRepository>(), getIt<AnalyticsService>()),
+  getIt.registerLazySingleton<SupportLiveEvents>(
+    SupportLiveEvents.new,
+    dispose: (e) => e.dispose(),
   );
-  // Singleton : le badge de l'onglet et l'écran de détail partagent
-  // la même instance pour que la pastille s'éteigne à la lecture.
+  getIt.registerFactory<SupportBloc>(
+    () => SupportBloc(
+      getIt<SupportRepository>(),
+      getIt<AnalyticsService>(),
+      incomingMessages: getIt<SupportLiveEvents>().messages,
+    ),
+  );
+  // Singletons : le badge de l'onglet, la ligne épinglée et l'écran de détail
+  // partagent la même instance pour que la pastille s'éteigne à la lecture.
+  // Le résumé alimente à la fois l'aperçu et le compteur de non-lus.
+  getIt.registerLazySingleton<SupportSummaryCubit>(
+    () => SupportSummaryCubit(getIt<SupportRepository>()),
+  );
   getIt.registerLazySingleton<SupportUnreadCubit>(
-    () => SupportUnreadCubit(getIt<SupportRepository>()),
+    () => SupportUnreadCubit(
+      getIt<SupportRepository>(),
+      summaryCubit: getIt<SupportSummaryCubit>(),
+    ),
   );
 
   // Settings — Account Deletion
