@@ -7094,6 +7094,7 @@
   "supportHomeMyTicketsTitle": "My tickets",
   "supportHomeNoTicketsMessage": "No tickets yet. A problem the assistant couldn't solve? Open a ticket, the Yadony team will get back to you.",
   "supportContactCta": "Contact support",
+  "supportNewRequestCta": "New request",
   "supportCreateTicketCategoryLabel": "Category",
   "supportCreateTicketSubjectLabel": "Subject",
   "supportCreateTicketSubjectHint": "Summarize your problem",

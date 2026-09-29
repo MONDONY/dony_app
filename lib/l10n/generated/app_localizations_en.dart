@@ -12426,6 +12426,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportContactCta => 'Contact support';
 
   @override
+  String get supportNewRequestCta => 'New request';
+
+  @override
   String get supportCreateTicketCategoryLabel => 'Category';
 
   @override

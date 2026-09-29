@@ -83,6 +83,15 @@ GoRouter _buildRouter(ConversationListBloc bloc) => GoRouter(
       path: '/conversations/:id',
       builder: (_, _) => const Scaffold(body: Text('Chat')),
     ),
+    GoRoute(
+      path: '/support',
+      builder: (_, _) => const Scaffold(body: Text('ecran-support')),
+    ),
+    GoRoute(
+      path: '/support/tickets/:id',
+      builder: (_, state) =>
+          Scaffold(body: Text('fil-${state.pathParameters['id']}')),
+    ),
   ],
 );
 
@@ -542,4 +551,36 @@ void main() {
     expect(find.textContaining('Une question'), findsOneWidget);
     verify(() => mockSupportRepository.loadUnreadCount()).called(1);
   });
+
+  // L ouverture directe du fil (PR #430) privait l utilisateur d une
+  // conversation ouverte du bouton « Nouvelle demande » : quel que soit le
+  // nombre de conversations, la ligne ouvre l écran Support.
+  for (final openCount in [0, 1, 2]) {
+    testWidgets(
+      'tap sur la ligne Support avec $openCount conversation(s) ouverte(s) : '
+      'ouvre l écran Support',
+      (tester) async {
+        when(() => mockSupportRepository.getSummary()).thenAnswer(
+          (_) async => SupportSummary(
+            unreadCount: openCount,
+            openTicketCount: openCount,
+            latestTicket: const SupportSummaryTicket(
+              id: 'ticket-1',
+              subject: 'Colis bloqué',
+              lastMessagePreview: 'Votre colis est arrivé',
+              lastMessageFromAdmin: true,
+            ),
+          ),
+        );
+        when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
+        await _pump(tester, bloc);
+
+        await tester.tap(find.byType(SupportConversationTile));
+        await tester.pumpAndSettle();
+
+        expect(find.text('ecran-support'), findsOneWidget);
+        expect(find.text('fil-ticket-1'), findsNothing);
+      },
+    );
+  }
 }

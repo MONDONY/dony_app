@@ -20888,6 +20888,12 @@ abstract class AppLocalizations {
   /// **'Contacter le support'**
   String get supportContactCta;
 
+  /// Bouton fixé en bas de l'écran support quand l'utilisateur a déjà des conversations : ouvre la sheet de création d'un nouveau ticket (support_home_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle demande'**
+  String get supportNewRequestCta;
+
   /// Libellé du sélecteur de catégorie de la sheet de création de ticket (support_home_screen.dart).
   ///
   /// In fr, this message translates to:

@@ -14087,6 +14087,10 @@
   "@supportContactCta": {
     "description": "Bouton d'accueil support et titre de la sheet de création de ticket (support_home_screen.dart, même texte deux usages)."
   },
+  "supportNewRequestCta": "Nouvelle demande",
+  "@supportNewRequestCta": {
+    "description": "Bouton fixé en bas de l'écran support quand l'utilisateur a déjà des conversations : ouvre la sheet de création d'un nouveau ticket (support_home_screen.dart)."
+  },
   "supportCreateTicketCategoryLabel": "Catégorie",
   "@supportCreateTicketCategoryLabel": {
     "description": "Libellé du sélecteur de catégorie de la sheet de création de ticket (support_home_screen.dart)."

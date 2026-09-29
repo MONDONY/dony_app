@@ -64,8 +64,10 @@ String? supportErrorMessage(AppLocalizations l, SupportState state) {
   };
 }
 
-/// Accueil du support : assistant (réponses prédéfinies), tickets de
-/// l'utilisateur et création d'un nouveau ticket via bottom sheet.
+/// Accueil du support : tickets de l'utilisateur, assistant (réponses
+/// prédéfinies) et création d'un nouveau ticket via bottom sheet. Avec au
+/// moins une conversation, elles passent en tête et « Nouvelle demande »
+/// reste fixé en bas ; sans conversation, l'assistant reste en tête.
 class SupportHomeScreen extends StatelessWidget {
   const SupportHomeScreen({super.key});
 
@@ -121,8 +123,42 @@ class SupportHomeScreen extends StatelessWidget {
   }
 }
 
+/// Conversations dans l'ordre d'affichage : non résolues d'abord, puis par
+/// dernier message décroissant (date de création à défaut). Sans date, l'ordre
+/// du serveur est conservé (tri stable par index).
+List<SupportTicket> sortSupportTickets(List<SupportTicket> tickets) {
+  final indexed = tickets.indexed.toList();
+  indexed.sort((a, b) {
+    final (ia, ta) = a;
+    final (ib, tb) = b;
+    if (ta.isResolved != tb.isResolved) return ta.isResolved ? 1 : -1;
+    final da = ta.lastMessageAt ?? ta.createdAt;
+    final db = tb.lastMessageAt ?? tb.createdAt;
+    if (da != null && db != null && da != db) return db.compareTo(da);
+    if (da != null && db == null) return -1;
+    if (da == null && db != null) return 1;
+    return ia.compareTo(ib);
+  });
+  return [for (final (_, ticket) in indexed) ticket];
+}
+
 class _SupportHomeBody extends StatelessWidget {
   const _SupportHomeBody({required this.state});
+
+  final SupportState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return state.tickets.isEmpty
+        ? _AssistantFirstBody(state: state)
+        : _ConversationsFirstBody(state: state);
+  }
+}
+
+/// Sans conversation : l'assistant en tête, puis l'invitation et le bouton
+/// de contact en fin de liste.
+class _AssistantFirstBody extends StatelessWidget {
+  const _AssistantFirstBody({required this.state});
 
   final SupportState state;
 
@@ -134,26 +170,7 @@ class _SupportHomeBody extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
       children: [
         if (state.replies.isNotEmpty) ...[
-          Text(
-            l.supportHomeFaqTitle,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l.supportHomeFaqSubtitle,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: 12),
-          ...state.replies.asMap().entries.map(
-            (entry) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _PredefinedReplyTile(
-                reply: entry.value,
-              ).animate().fadeIn(duration: 250.ms, delay: (40 * entry.key).ms),
-            ),
-          ),
+          _AssistantSection(replies: state.replies),
           const SizedBox(height: 24),
         ],
         Text(
@@ -161,30 +178,122 @@ class _SupportHomeBody extends StatelessWidget {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 12),
-        if (state.tickets.isEmpty)
-          DonyCard(
-            child: Padding(
-              padding: const EdgeInsets.all(4),
-              child: Text(
-                l.supportHomeNoTicketsMessage,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-              ),
-            ),
-          )
-        else
-          ...state.tickets.map(
-            (ticket) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _TicketCard(ticket: ticket),
+        DonyCard(
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Text(
+              l.supportHomeNoTicketsMessage,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
+        ),
         const SizedBox(height: 24),
         DonyButton(
           label: l.supportContactCta,
           iconAsset: 'mail',
           onPressed: () => _openCreateTicketSheet(context),
+        ),
+      ],
+    );
+  }
+}
+
+/// Avec des conversations : elles passent en tête (non résolues d'abord),
+/// l'assistant suit en dessous, et « Nouvelle demande » reste fixé en bas
+/// pour ouvrir un autre sujet sans défiler.
+class _ConversationsFirstBody extends StatelessWidget {
+  const _ConversationsFirstBody({required this.state});
+
+  final SupportState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tickets = sortSupportTickets(state.tickets);
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            children: [
+              Text(
+                l.supportHomeMyTicketsTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              ...tickets.map(
+                (ticket) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _TicketCard(ticket: ticket),
+                ),
+              ),
+              if (state.replies.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                _AssistantSection(replies: state.replies),
+              ],
+            ],
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            border: Border(
+              top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+              child: DonyButton(
+                label: l.supportNewRequestCta,
+                iconAsset: 'plus',
+                onPressed: () => _openCreateTicketSheet(context),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Assistant de réponses prédéfinies : titre, sous-titre et questions
+/// dépliables.
+class _AssistantSection extends StatelessWidget {
+  const _AssistantSection({required this.replies});
+
+  final List<SupportPredefinedReply> replies;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.supportHomeFaqTitle,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          l.supportHomeFaqSubtitle,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: 12),
+        ...replies.asMap().entries.map(
+          (entry) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _PredefinedReplyTile(
+              reply: entry.value,
+            ).animate().fadeIn(duration: 250.ms, delay: (40 * entry.key).ms),
+          ),
         ),
       ],
     );

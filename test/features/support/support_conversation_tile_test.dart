@@ -182,34 +182,18 @@ void main() {
   });
 
   group('tap', () {
-    testWidgets('une seule conversation ouverte : ouvre directement le fil', (
+    // La tuile ouvre toujours l écran Support : c est là que l utilisateur
+    // retrouve ses conversations ET le bouton « Nouvelle demande ». L ouverture
+    // directe du fil (PR #430) le privait d un nouveau sujet dès qu il avait
+    // une conversation ouverte. Seules les notifications ouvrent le fil.
+    testWidgets('avec un résumé et des non-lus : ouvre l écran Support', (
       tester,
     ) async {
       await tester.pumpWidget(
         _routed(
           SupportConversationTile(
             unreadCount: 1,
-            openTicketCount: 1,
-            latestTicket: _latest(id: 'abc'),
-          ),
-        ),
-      );
-
-      await tester.tap(find.byType(SupportConversationTile));
-      await tester.pumpAndSettle();
-
-      expect(find.text('fil-abc'), findsOneWidget);
-    });
-
-    testWidgets('plusieurs conversations ouvertes : ouvre la liste', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _routed(
-          SupportConversationTile(
-            unreadCount: 0,
-            openTicketCount: 2,
-            latestTicket: _latest(),
+            latestTicket: _latest(id: 'abc', unread: 1),
           ),
         ),
       );
@@ -218,9 +202,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('liste-support'), findsOneWidget);
+      expect(find.text('fil-abc'), findsNothing);
     });
 
-    testWidgets('aucune conversation ouverte : ouvre la liste', (tester) async {
+    testWidgets('avec un résumé sans non-lu : ouvre l écran Support', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _routed(
           SupportConversationTile(unreadCount: 0, latestTicket: _latest()),
@@ -262,15 +249,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(returned, 1);
-    });
-  });
-
-  group('supportTileRoute', () {
-    test('règle d ouverture directe', () {
-      expect(supportTileRoute(1, _latest(id: 'x')), '/support/tickets/x');
-      expect(supportTileRoute(2, _latest(id: 'x')), '/support');
-      expect(supportTileRoute(0, _latest(id: 'x')), '/support');
-      expect(supportTileRoute(1, null), '/support');
     });
   });
 }
