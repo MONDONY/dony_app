@@ -16,6 +16,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:pinput/pinput.dart';
+
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/stripe_account_test_doubles.dart';
 
@@ -137,11 +139,9 @@ void main() {
       await tester.pumpWidget(_buildEmail(bloc: mockBloc));
       await tester.pump();
 
-      final fields = find.byType(TextFormField);
-      for (int i = 0; i < 6; i++) {
-        await tester.enterText(fields.at(i), '$i');
-      }
-      await tester.tap(find.text('Vérifier'));
+      // Six chiffres saisis : la vérification part sans toucher « Vérifier ».
+      await tester.enterText(find.byType(Pinput), '012345');
+      await tester.pump();
 
       verify(
         () => mockBloc.add(

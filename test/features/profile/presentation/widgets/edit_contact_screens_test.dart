@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:pinput/pinput.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
@@ -274,6 +275,36 @@ void main() {
 
       expect(find.byType(DialCodePicker), findsOneWidget);
     });
+
+    // Le code se remplit d'un toucher sur la suggestion du clavier : la
+    // vérification part sans passer par le bouton.
+    testWidgets(
+      'étape code : six chiffres saisis déclenchent la vérification',
+      (tester) async {
+        whenListen<AuthState>(
+          mockAuthBloc,
+          Stream.value(
+            const AuthOtpSent(
+              verificationId: 'vid',
+              phoneNumber: '+33612345678',
+            ),
+          ),
+          initialState: const AuthAuthenticated(_user),
+        );
+
+        await tester.pumpWidget(_wrap(const EditPhoneScreen(), mockAuthBloc));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(Pinput), '482913');
+        await tester.pump();
+
+        verify(
+          () => mockAuthBloc.add(
+            any(that: isA<AuthAddPhoneFromProfileRequested>()),
+          ),
+        ).called(1);
+      },
+    );
 
     testWidgets('titre et bouton en anglais', (tester) async {
       useEnglish();
