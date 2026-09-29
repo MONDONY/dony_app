@@ -20,6 +20,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_fields.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
@@ -624,6 +625,9 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               mobileMoneyAccountActive: mobileMoneyAccountActiveFrom(
                 mobileMoneyState,
               ),
+              onMobileMoneySetupReturned: () => context
+                  .read<MobileMoneyAccountBloc>()
+                  .add(const MobileMoneyAccountRequested()),
               negotiableNotifier: _fields.negotiable,
               selectedContentNotifier: _fields.selectedContent,
               customAcceptedNotifier: _fields.customAccepted,

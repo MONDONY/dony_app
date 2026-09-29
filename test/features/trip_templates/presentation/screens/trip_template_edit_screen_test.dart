@@ -245,7 +245,12 @@ void main() {
                   .fieldsForTest
               as TripFormFields;
       fields.currency.value = SupportedCurrency.xof;
-      await tester.pump(const Duration(milliseconds: 600));
+      // En XOF la carte est indisponible : les espèces passent ON d'office
+      // (post-frame) et leur encart animé entre. Plusieurs passes pour que
+      // le Timer de flutter_animate se termine avant la fin du test.
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
 
       expect(
         find.text(CurrencyFormatter.format(1000, SupportedCurrency.xof)),
@@ -582,7 +587,12 @@ void main() {
                     .fieldsForTest
                 as TripFormFields;
         fields.currency.value = SupportedCurrency.xof;
-        await tester.pump(const Duration(milliseconds: 600));
+        // En XOF la carte est indisponible : les espèces passent ON d'office
+        // (post-frame) et leur encart animé entre. Plusieurs passes pour que
+        // le Timer de flutter_animate se termine avant la fin du test.
+        for (var i = 0; i < 6; i++) {
+          await tester.pump(const Duration(milliseconds: 400));
+        }
 
         expect(find.byType(PrixConditionsStep), findsOneWidget);
         expect(

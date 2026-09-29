@@ -1484,10 +1484,6 @@
   "@tripPublishNoteToSendersHint": {
     "description": "Indice du champ de note libre aux expéditeurs"
   },
-  "tripPublishCashOnlyBannerWithConnect": "Publiez en espèces dès maintenant. Connectez Stripe pour accepter aussi la carte.",
-  "@tripPublishCashOnlyBannerWithConnect": {
-    "description": "Bannière quand Stripe n'est pas configuré mais disponible dans le pays"
-  },
   "tripPublishCashOnlyBannerNoConnect": "Le paiement par carte n'est pas encore disponible dans votre pays. Vos trajets sont publiés en espèces.",
   "@tripPublishCashOnlyBannerNoConnect": {
     "description": "Bannière quand Stripe n'est pas disponible dans le pays du voyageur"
@@ -1500,17 +1496,39 @@
   "@tripPublishCardNotConfiguredSubtitle": {
     "description": "Sous-titre de la ligne carte verrouillée quand Stripe n'est pas configuré"
   },
-  "tripPublishActivatePayoutCta": "Activer le versement",
-  "@tripPublishActivatePayoutCta": {
-    "description": "Bouton d'activation du versement mobile money"
-  },
   "tripPublishMobileMoneyIneligibleSubtitle": "Disponible pour les trajets en XOF ou XAF",
   "@tripPublishMobileMoneyIneligibleSubtitle": {
     "description": "Sous-titre mobile money quand la devise n'est pas éligible"
   },
-  "tripPublishMobileMoneyInactiveSubtitle": "Active d'abord ton versement mobile money",
+  "tripPublishMobileMoneyInactiveSubtitle": "Non configuré, activez-le pour l'accepter",
   "@tripPublishMobileMoneyInactiveSubtitle": {
     "description": "Sous-titre mobile money quand le compte de versement n'est pas actif"
+  },
+  "tripPublishCardUnavailableSubtitle": "Indisponible sur ce trajet",
+  "@tripPublishCardUnavailableSubtitle": {
+    "description": "Sous-titre de la ligne Carte bancaire quand la devise du trajet ou le pays empêche la carte"
+  },
+  "tripPublishCardConnectInactiveNotice": "Stripe Connect n'est pas activé : le paiement par carte n'est donc pas disponible sur vos trajets.",
+  "@tripPublishCardConnectInactiveNotice": {
+    "description": "Encart sous la ligne Carte bancaire quand l'onboarding Stripe Connect n'est pas fait"
+  },
+  "tripPublishCardCurrencyUnavailableNotice": "Le paiement par carte n'est pas proposé pour les trajets en {currency}.",
+  "@tripPublishCardCurrencyUnavailableNotice": {
+    "description": "Encart sous la ligne Carte bancaire quand la devise du trajet ne se paie pas par carte (zone CFA)",
+    "placeholders": {
+      "currency": {
+        "type": "String",
+        "example": "XOF"
+      }
+    }
+  },
+  "tripPublishMobileMoneyInactiveNotice": "Le mobile money n'est pas activé : vous ne pouvez pas encore l'accepter sur ce trajet.",
+  "@tripPublishMobileMoneyInactiveNotice": {
+    "description": "Encart sous la ligne Mobile money quand le trajet est en franc CFA mais le compte de versement inactif"
+  },
+  "tripPublishActivateMobileMoneyCta": "Activer le mobile money",
+  "@tripPublishActivateMobileMoneyCta": {
+    "description": "Lien vers l'écran d'activation du compte de versement mobile money"
   },
   "tripPublishLockedPriceNoteTitle": "Prix fixé par la négociation",
   "@tripPublishLockedPriceNoteTitle": {

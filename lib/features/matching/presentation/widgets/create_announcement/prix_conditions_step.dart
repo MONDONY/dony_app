@@ -15,6 +15,7 @@ import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/grid_preview_card.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/payment_setup_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -51,6 +52,12 @@ class PrixConditionsStep extends StatelessWidget {
   /// (`MobileMoneyAccountBloc` côté écran). Tant que ce n'est pas le cas, la
   /// bascule reste désactivée même en zone CFA.
   final bool mobileMoneyAccountActive;
+
+  /// Appelé au retour de l'écran d'activation du mobile money, ouvert depuis
+  /// l'encart « Activer le mobile money ». Le parent y recharge son
+  /// `MobileMoneyAccountBloc`, sans quoi la bascule resterait désactivée
+  /// après une activation réussie.
+  final VoidCallback? onMobileMoneySetupReturned;
 
   /// Le voyageur accepte les propositions de prix des expéditeurs.
   /// Propriété du parent, comme les autres notifiers de cette étape.
@@ -97,6 +104,7 @@ class PrixConditionsStep extends StatelessWidget {
     required this.mobileMoneyEnabledNotifier,
     required this.currencyNotifier,
     this.mobileMoneyAccountActive = false,
+    this.onMobileMoneySetupReturned,
     required this.negotiableNotifier,
     required this.selectedContentNotifier,
     required this.customAcceptedNotifier,
@@ -523,140 +531,18 @@ class PrixConditionsStep extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           BlocBuilder<StripeAccountBloc, StripeAccountState>(
-            builder: (ctx, stripeState) {
-              final isStripeConfigured =
-                  stripeState is StripeAccountReady &&
-                  stripeState.accountStatus.isComplete;
-
-              if (!isStripeConfigured) {
-                // Sans Stripe configuré, les espèces sont la seule méthode
-                // disponible : on force le notifier à ON (au moins une méthode
-                // de paiement est requise pour publier). Post-frame pour éviter
-                // toute mutation d'état pendant la phase de build.
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  cashEnabledNotifier.value = true;
-                });
-                // Deux causes très différentes au même écran « espèces
-                // seulement » : un onboarding à terminer, ou un pays que
-                // Stripe ne couvre pas. Le second ne se règle pas, inutile
-                // d'inviter à l'activation.
-                return _buildStripeNotConfiguredPaymentSection(
-                  tt,
-                  cs,
-                  ctx,
-                  l,
-                  connectAvailable: stripeState.connectAvailableInCountry,
-                );
-              }
-
-              return CaSectionCard(
-                child: Column(
-                  children: [
-                    SwitchListTile(
-                      key: const Key('payment-method-stripe'),
-                      value: true,
-                      onChanged: null,
-                      activeThumbColor: cs.primary,
-                      title: Row(
-                        children: [
-                          const DonyIcon('credit-card', size: 18),
-                          const SizedBox(width: DonySpacing.sm),
-                          Flexible(
-                            child: Text(
-                              l.tripPublishCardPaymentTitle,
-                              style: tt.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: cs.onSurface,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: DonySpacing.xs),
-                          DonyIcon(
-                            'lock',
-                            size: 14,
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ],
-                      ),
-                      subtitle: Text(
-                        l.tripPublishCardPaymentSubtitle,
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.base,
-                        vertical: DonySpacing.xs,
-                      ),
-                    ),
-                    const CaRowDivider(),
-                    // La carte de commission n'est plus requise à la création d'annonce.
-                    // La vérification (wallet ou carte) est reportée à l'acceptation du bid.
-                    ValueListenableBuilder<bool>(
-                      valueListenable: cashEnabledNotifier,
-                      builder: (context, cashEnabled, _) {
-                        return Column(
-                          children: [
-                            SwitchListTile(
-                              key: const Key('payment-method-cash'),
-                              value: cashEnabled,
-                              onChanged: (val) =>
-                                  cashEnabledNotifier.value = val,
-                              activeThumbColor: cs.primary,
-                              title: Row(
-                                children: [
-                                  const DonyIcon('banknote', size: 18),
-                                  const SizedBox(width: DonySpacing.sm),
-                                  Flexible(
-                                    child: Text(
-                                      l.tripPublishCashLabel,
-                                      style: tt.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: cs.onSurface,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              subtitle: Text(
-                                l.tripPublishCashSubtitle,
-                                style: tt.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: DonySpacing.base,
-                                vertical: DonySpacing.xs,
-                              ),
-                            ),
-                            AnimatedSize(
-                              duration: 200.ms,
-                              curve: Curves.easeOutCubic,
-                              alignment: Alignment.topCenter,
-                              child: cashEnabled
-                                  ? Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        DonySpacing.base,
-                                        0,
-                                        DonySpacing.base,
-                                        DonySpacing.md,
-                                      ),
-                                      child: const CashCommissionNotice()
-                                          .animate()
-                                          .fadeIn(duration: 200.ms),
-                                    )
-                                  : const SizedBox(width: double.infinity),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                    const CaRowDivider(),
-                    _buildMobileMoneySection(tt, cs, l),
-                  ],
+            builder: (ctx, stripeState) =>
+                ValueListenableBuilder<SupportedCurrency>(
+                  valueListenable: currencyNotifier,
+                  builder: (ctx, currencyValue, _) => _buildPaymentMethodsCard(
+                    tt,
+                    cs,
+                    ctx,
+                    l,
+                    cardStatus: _cardStatusFor(stripeState, currencyValue),
+                    currency: currencyValue,
+                  ),
                 ),
-              );
-            },
           ).animate().fadeIn(delay: 180.ms),
           const SizedBox(height: DonySpacing.xxl),
         ], // fin de la section paiement (masquée quand !showPaymentMethods)
@@ -815,175 +701,74 @@ class PrixConditionsStep extends StatelessWidget {
     );
   }
 
-  // Cash libre et forcé ON ; carte verrouillée OFF avec CTA d'activation
-  // Stripe. Publier sans Stripe est autorisé (D3/D4) — seul le paiement par
-  // carte requiert l'onboarding Stripe complet.
-  Widget _buildStripeNotConfiguredPaymentSection(
+  /// Ce que la ligne « Carte bancaire » peut offrir sur CE trajet.
+  ///
+  /// L'ordre compte. La devise passe en premier : un trajet en XOF ne prendra
+  /// jamais la carte, onboarding Stripe fait ou non, et y inviter serait
+  /// trompeur. Le pays ensuite, puis l'onboarding lui-même. Même règle que la
+  /// soumission (`create_trip_screen.dart`, `_isStripeConfigured() &&
+  /// _currency.isStripeEligible`) : l'écran n'affiche jamais une carte
+  /// « activée » qui ne partirait pas au serveur.
+  static _CardStatus _cardStatusFor(
+    StripeAccountState stripeState,
+    SupportedCurrency currency,
+  ) {
+    if (!currency.isStripeEligible) return _CardStatus.currencyUnavailable;
+    if (stripeState is StripeAccountReady &&
+        stripeState.accountStatus.isComplete) {
+      return _CardStatus.active;
+    }
+    if (!stripeState.connectAvailableInCountry) {
+      return _CardStatus.countryUnavailable;
+    }
+    return _CardStatus.notConfigured;
+  }
+
+  /// Section « Modes de paiement acceptés ». Chaque mode indisponible dit
+  /// pourquoi, et mène à sa configuration quand l'utilisateur peut la faire.
+  Widget _buildPaymentMethodsCard(
     TextTheme tt,
     ColorScheme cs,
     BuildContext ctx,
     AppLocalizations l, {
-    required bool connectAvailable,
+    required _CardStatus cardStatus,
+    required SupportedCurrency currency,
   }) {
+    final cardActive = cardStatus == _CardStatus.active;
+    // Sans carte, les espèces sont le seul mode garanti : la soumission les
+    // ajoute d'office, l'écran les montre donc activées et verrouillées. Au
+    // moins un mode de paiement est requis pour publier. Post-frame pour ne
+    // pas muter d'état pendant le build.
+    final cashLocked = !cardActive;
+    if (cashLocked && !cashEnabledNotifier.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        cashEnabledNotifier.value = true;
+      });
+    }
+
     return CaSectionCard(
       child: Column(
         children: [
-          // ── Bannière info ─────────────────────────────────────────────────
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.base,
-              vertical: DonySpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: cs.successLight,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(DonyRadius.card),
-              ),
-            ),
-            // Bascule conditionnelle, pas un Wrap. Un Wrap mesure chaque
-            // enfant INDÉPENDAMMENT contre la largeur totale avant de
-            // décider s'il tient sur la ligne courante : mesuré seul, le
-            // texte d'explication consomme presque toute la largeur et
-            // n'en laisse plus au CTA, qui retombe à la ligne — exactement
-            // le même résultat que le Column abandonné, par un autre
-            // chemin. Le Row d'origine, lui, mesurait Expanded(texte) et le
-            // CTA SIMULTANÉMENT : le CTA (largeur intrinsèque) était résolu
-            // en premier, et le texte était contraint dans la colonne
-            // étroite restante — c'est ce dimensionnement simultané, propre
-            // à Expanded dans un Row, qui permettait au CTA de tenir sur la
-            // même ligne à 100 %. Un Wrap ne peut pas reproduire ça.
-            //
-            // À 100 %, la largeur intrinsèque du CTA (~140 px) laisse assez
-            // de place au texte pour tenir sur 2-3 lignes sans déborder.
-            // Au-delà, cette largeur grandit avec la police (jusqu'à ~2x à
-            // 200 %) et peut à elle seule dépasser la largeur de la
-            // bannière, quel que soit le Expanded voisin : un enfant non
-            // flexible d'un Row est mesuré avec une contrainte de largeur
-            // non bornée, Flexible/Expanded ne protège que ses propres
-            // enfants, pas ses frères non-flex (c'est la cause du
-            // débordement constaté à 200 %).
-            //
-            // On choisit donc explicitement la disposition d'origine
-            // (identique à 100 % PAR CONSTRUCTION, pas par approximation)
-            // tant que l'échelle de texte est celle par défaut, et on ne
-            // passe à l'empilement — toujours sûr, quel que soit le
-            // contenu — que si elle grandit. Le seuil (> 1.0, pas de valeur
-            // intermédiaire calculée) est délibérément conservateur :
-            // calculer le point de rupture exact demanderait de mesurer la
-            // largeur intrinsèque réelle du CTA (TextPainter/LayoutBuilder),
-            // disproportionné pour une bannière d'info. Le prix : la
-            // disposition empilée peut s'activer un peu avant le point de
-            // rupture réel (ex. à 110 % alors que le Row tiendrait encore),
-            // jamais après.
-            child: Builder(
-              builder: (bannerCtx) {
-                final icon = DonyIcon(
-                  'circle-check',
-                  color: cs.success,
-                  size: 18,
-                );
-                final explanation = Expanded(
-                  child: Text(
-                    connectAvailable
-                        ? l.tripPublishCashOnlyBannerWithConnect
-                        : l.tripPublishCashOnlyBannerNoConnect,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurface),
-                  ),
-                );
-
-                // Une seule écriture de la ligne icône + texte : la variante
-                // avec CTA n'ajoute que le bouton en fin de ligne, et hérite
-                // du centrage vertical (défaut de Row) qu'elle avait déjà.
-                Row bannerLine({Widget? trailing}) => Row(
-                  crossAxisAlignment: trailing == null
-                      ? CrossAxisAlignment.start
-                      : CrossAxisAlignment.center,
-                  children: [
-                    icon,
-                    const SizedBox(width: DonySpacing.xs),
-                    explanation,
-                    if (trailing != null) ...[
-                      const SizedBox(width: DonySpacing.sm),
-                      trailing,
-                    ],
-                  ],
-                );
-
-                // Pays non couvert par Stripe : rien à activer, donc pas de
-                // CTA — ni le calcul d'échelle qui ne sert qu'à lui trouver une
-                // place. Le texte occupe toute la bannière.
-                if (!connectAvailable) return bannerLine();
-
-                final textScale =
-                    MediaQuery.textScalerOf(bannerCtx).scale(14) / 14;
-                final stacked = textScale > 1.0;
-
-                final cta = GestureDetector(
-                  key: const Key('activate-card-payments-cta'),
-                  onTap: () => ctx.push('/connect/onboarding/intro'),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.sm,
-                      vertical: DonySpacing.xs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: cs.primary,
-                      borderRadius: BorderRadius.circular(DonyRadius.full),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            l.tripPublishActivateCardPaymentsCta,
-                            style: tt.labelSmall?.copyWith(
-                              color: cs.onPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: DonySpacing.xs),
-                        Icon(
-                          DonyIcons.arrowRight,
-                          size: 14,
-                          color: cs.onPrimary,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-
-                // Disposition d'origine, avant ce lot : le CTA tient sur la
-                // même ligne tant que l'échelle de texte est celle par défaut.
-                if (!stacked) return bannerLine(trailing: cta);
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    bannerLine(),
-                    const SizedBox(height: DonySpacing.sm),
-                    Align(alignment: Alignment.centerLeft, child: cta),
-                  ],
-                );
-              },
-            ),
-          ),
-          // ── Ligne Carte bancaire (verrouillée OFF) ────────────────────────
+          // ── Carte bancaire (toujours verrouillée, ON seulement si utilisable)
           SwitchListTile(
             key: const Key('payment-method-stripe'),
-            value: false,
+            value: cardActive,
             onChanged: null,
+            activeThumbColor: cs.primary,
             title: Row(
               children: [
-                DonyIcon('credit-card', size: 18, color: cs.onSurfaceVariant),
+                DonyIcon(
+                  'credit-card',
+                  size: 18,
+                  color: cardActive ? null : cs.onSurfaceVariant,
+                ),
                 const SizedBox(width: DonySpacing.sm),
                 Flexible(
                   child: Text(
                     l.tripPublishCardPaymentTitle,
                     style: tt.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: cs.onSurfaceVariant,
+                      color: cardActive ? cs.onSurface : cs.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -991,134 +776,214 @@ class PrixConditionsStep extends StatelessWidget {
                 DonyIcon('lock', size: 14, color: cs.onSurfaceVariant),
               ],
             ),
-            subtitle: Text(
-              l.tripPublishCardNotConfiguredSubtitle,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
+            subtitle: Text(switch (cardStatus) {
+              _CardStatus.active => l.tripPublishCardPaymentSubtitle,
+              _CardStatus.notConfigured =>
+                l.tripPublishCardNotConfiguredSubtitle,
+              _CardStatus.countryUnavailable ||
+              _CardStatus.currencyUnavailable =>
+                l.tripPublishCardUnavailableSubtitle,
+            }, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: DonySpacing.base,
               vertical: DonySpacing.xs,
             ),
           ),
+          if (!cardActive)
+            _noticePadding(switch (cardStatus) {
+              _CardStatus.notConfigured => PaymentSetupNotice(
+                key: const Key('card-setup-notice'),
+                message: l.tripPublishCardConnectInactiveNotice,
+                ctaLabel: l.tripPublishActivateCardPaymentsCta,
+                ctaKey: const Key('activate-card-payments-cta'),
+                // Le retour d'onboarding rafraîchit lui-même le
+                // StripeAccountBloc global (connect_onboarding_intro_screen).
+                onCtaTap: () => ctx.push('/connect/onboarding/intro'),
+              ),
+              _CardStatus.countryUnavailable => PaymentSetupNotice(
+                key: const Key('card-setup-notice'),
+                message: l.tripPublishCashOnlyBannerNoConnect,
+              ),
+              _CardStatus.currencyUnavailable ||
+              _CardStatus.active => PaymentSetupNotice(
+                key: const Key('card-setup-notice'),
+                message: l.tripPublishCardCurrencyUnavailableNotice(
+                  currency.code,
+                ),
+              ),
+            }),
           const CaRowDivider(),
-          // ── Ligne Espèces (forcée ON, non désactivable) ───────────────────
-          SwitchListTile(
-            key: const Key('payment-method-cash'),
-            value: true,
-            onChanged: null,
-            activeThumbColor: cs.primary,
-            title: Row(
-              children: [
-                const DonyIcon('banknote', size: 18),
-                const SizedBox(width: DonySpacing.sm),
-                Flexible(
-                  child: Text(
-                    l.tripPublishCashLabel,
-                    style: tt.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: cs.onSurface,
+          // ── Espèces ───────────────────────────────────────────────────────
+          // La carte de commission n'est plus requise à la création d'annonce.
+          // La vérification (wallet ou carte) est reportée à l'acceptation du bid.
+          ValueListenableBuilder<bool>(
+            valueListenable: cashEnabledNotifier,
+            builder: (context, cashEnabled, _) {
+              final cashOn = cashLocked || cashEnabled;
+              return Column(
+                children: [
+                  SwitchListTile(
+                    key: const Key('payment-method-cash'),
+                    value: cashOn,
+                    onChanged: cashLocked
+                        ? null
+                        : (val) => cashEnabledNotifier.value = val,
+                    activeThumbColor: cs.primary,
+                    title: Row(
+                      children: [
+                        const DonyIcon('banknote', size: 18),
+                        const SizedBox(width: DonySpacing.sm),
+                        Flexible(
+                          child: Text(
+                            l.tripPublishCashLabel,
+                            style: tt.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    subtitle: Text(
+                      l.tripPublishCashSubtitle,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.base,
+                      vertical: DonySpacing.xs,
                     ),
                   ),
-                ),
-              ],
-            ),
-            subtitle: Text(
-              l.tripPublishCashSubtitle,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.base,
-              vertical: DonySpacing.xs,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.base,
-              0,
-              DonySpacing.base,
-              DonySpacing.md,
-            ),
-            child: const CashCommissionNotice().animate().fadeIn(
-              duration: 200.ms,
-            ),
+                  AnimatedSize(
+                    duration: 200.ms,
+                    curve: Curves.easeOutCubic,
+                    alignment: Alignment.topCenter,
+                    child: cashOn
+                        ? _noticePadding(
+                            const CashCommissionNotice().animate().fadeIn(
+                              duration: 200.ms,
+                            ),
+                          )
+                        : const SizedBox(width: double.infinity),
+                  ),
+                ],
+              );
+            },
           ),
           const CaRowDivider(),
-          _buildMobileMoneySection(tt, cs, l),
+          _buildMobileMoneySection(tt, cs, l, currency: currency),
         ],
       ),
     );
   }
 
-  /// Bascule « Mobile money » : partagée entre la disposition « Stripe
-  /// configuré » et « Stripe non configuré » — les deux sont vivantes en
-  /// production selon que le voyageur a terminé l'onboarding Stripe Connect,
-  /// indépendant du rail mobile money. Visible même hors zone CFA (bascule
-  /// désactivée) et tant que le compte de versement n'est pas actif.
+  /// Marge commune des encarts placés sous une ligne de mode de paiement.
+  Widget _noticePadding(Widget child) => Padding(
+    padding: const EdgeInsets.fromLTRB(
+      DonySpacing.base,
+      0,
+      DonySpacing.base,
+      DonySpacing.md,
+    ),
+    child: child,
+  );
+
+  /// Bascule « Mobile money » : réservée aux trajets en franc CFA (XOF, XAF),
+  /// et au voyageur qui a activé son compte de versement. Visible dans tous
+  /// les cas, désactivée tant que l'une des deux conditions manque.
   Widget _buildMobileMoneySection(
     TextTheme tt,
     ColorScheme cs,
-    AppLocalizations l,
-  ) {
-    return ValueListenableBuilder<SupportedCurrency>(
-      valueListenable: currencyNotifier,
-      builder: (context, currencyValue, _) {
-        final eligible = currencyValue.isMobileMoneyEligible;
-        return Column(
-          children: [
-            if (eligible && !mobileMoneyAccountActive)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: () =>
-                      context.push('/payments/mobile-money/account'),
-                  child: Text(l.tripPublishActivatePayoutCta),
-                ),
-              ),
-            ValueListenableBuilder<bool>(
-              valueListenable: mobileMoneyEnabledNotifier,
-              builder: (context, mobileMoneyEnabled, _) {
-                return SwitchListTile(
-                  key: const Key('payment-method-mobile-money'),
-                  value: mobileMoneyEnabled,
-                  onChanged: eligible && mobileMoneyAccountActive
-                      ? (v) => mobileMoneyEnabledNotifier.value = v
-                      : null,
-                  activeThumbColor: cs.primary,
-                  title: Row(
-                    children: [
-                      const DonyIcon('smartphone', size: 18),
-                      const SizedBox(width: DonySpacing.sm),
-                      Flexible(
-                        child: Text(
-                          'Mobile money', // i18n-ignore : mot identique en anglais (glossaire commun)
-                          style: tt.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: cs.onSurface,
-                          ),
-                        ),
+    AppLocalizations l, {
+    required SupportedCurrency currency,
+  }) {
+    final eligible = currency.isMobileMoneyEligible;
+    final usable = eligible && mobileMoneyAccountActive;
+    return Column(
+      children: [
+        ValueListenableBuilder<bool>(
+          valueListenable: mobileMoneyEnabledNotifier,
+          builder: (context, mobileMoneyEnabled, _) {
+            return SwitchListTile(
+              key: const Key('payment-method-mobile-money'),
+              // Jamais affichée activée quand elle n'est pas utilisable,
+              // quelle que soit la valeur héritée d'un modèle ou d'une devise
+              // précédente.
+              value: usable && mobileMoneyEnabled,
+              onChanged: usable
+                  ? (v) => mobileMoneyEnabledNotifier.value = v
+                  : null,
+              activeThumbColor: cs.primary,
+              title: Row(
+                children: [
+                  DonyIcon(
+                    'smartphone',
+                    size: 18,
+                    color: usable ? null : cs.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  Flexible(
+                    child: Text(
+                      'Mobile money', // i18n-ignore : mot identique en anglais (glossaire commun)
+                      style: tt.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: usable ? cs.onSurface : cs.onSurfaceVariant,
                       ),
-                    ],
+                    ),
                   ),
-                  subtitle: Text(
-                    !eligible
-                        ? l.tripPublishMobileMoneyIneligibleSubtitle
-                        : !mobileMoneyAccountActive
-                        ? l.tripPublishMobileMoneyInactiveSubtitle
-                        : 'Orange Money, Wave, MTN', // i18n-ignore : noms de marques
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.base,
-                    vertical: DonySpacing.xs,
-                  ),
-                );
-              },
+                ],
+              ),
+              subtitle: Text(
+                !eligible
+                    ? l.tripPublishMobileMoneyIneligibleSubtitle
+                    : !mobileMoneyAccountActive
+                    ? l.tripPublishMobileMoneyInactiveSubtitle
+                    : 'Orange Money, Wave, MTN', // i18n-ignore : noms de marques
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.base,
+                vertical: DonySpacing.xs,
+              ),
+            );
+          },
+        ),
+        // Hors zone CFA, rien à activer : le sous-titre suffit.
+        if (eligible && !mobileMoneyAccountActive)
+          Builder(
+            builder: (context) => _noticePadding(
+              PaymentSetupNotice(
+                key: const Key('mobile-money-setup-notice'),
+                message: l.tripPublishMobileMoneyInactiveNotice,
+                ctaLabel: l.tripPublishActivateMobileMoneyCta,
+                ctaKey: const Key('activate-mobile-money-cta'),
+                onCtaTap: () async {
+                  // L'écran d'activation a sa propre instance du bloc
+                  // (registerFactory) : sans rechargement au retour, l'étape
+                  // afficherait encore « non activé » après l'activation.
+                  await context.push<void>('/payments/mobile-money/account');
+                  if (context.mounted) onMobileMoneySetupReturned?.call();
+                },
+              ),
             ),
-          ],
-        );
-      },
+          ),
+      ],
     );
   }
+}
+
+/// Ce que la ligne « Carte bancaire » peut offrir sur un trajet donné.
+enum _CardStatus {
+  /// Onboarding Stripe terminé et devise compatible : la carte est acceptée.
+  active,
+
+  /// Stripe couvre le pays mais l'onboarding n'est pas fait.
+  notConfigured,
+
+  /// Stripe n'ouvre pas de compte connecté dans le pays de l'utilisateur.
+  countryUnavailable,
+
+  /// La devise du trajet ne se paie pas par carte (zone CFA notamment).
+  currencyUnavailable,
 }
 
 /// Bouton de sélection du mode de tarification dans le toggle.
