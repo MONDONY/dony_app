@@ -4193,6 +4193,18 @@
   "@listingSeeMyParcelButton": {
     "description": "Bouton vers le colis déjà en cours sur ce trajet (traveler_announcement_bottom_sheet.dart)"
   },
+  "listingAlreadyNegotiatingMessage": "Vous avez déjà une discussion de prix sur ce trajet",
+  "@listingAlreadyNegotiatingMessage": {
+    "description": "Info quand l'expéditeur veut commander sur un trajet où une discussion de prix est encore ouverte : on l'amène au fil au lieu du formulaire (traveler_announcement_bottom_sheet.dart)"
+  },
+  "errorAlreadyBidTitle": "Demande déjà envoyée",
+  "@errorAlreadyBidTitle": {
+    "description": "Titre de l'erreur 409 already-bid : l'expéditeur a déjà une demande en cours sur ce trajet (error_catalog.dart)"
+  },
+  "errorAlreadyBidMessage": "Vous avez déjà une demande en cours sur ce trajet. Retrouvez-la dans Mes colis.",
+  "@errorAlreadyBidMessage": {
+    "description": "Message de l'erreur 409 already-bid (error_catalog.dart)"
+  },
   "listingMakeRequestButton": "Faire une demande",
   "@listingMakeRequestButton": {
     "description": "Bouton principal de demande de transport (traveler_announcement_bottom_sheet.dart)"

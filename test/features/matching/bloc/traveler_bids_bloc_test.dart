@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
@@ -363,6 +365,104 @@ void main() {
         expect(state.countFor(TravelerBidFilter.acceptees), 1);
         expect(state.countFor(TravelerBidFilter.terminees), 1);
         expect(state.filter, TravelerBidFilter.aTraiter);
+      },
+    );
+  });
+
+  group('pull-to-refresh et chargements concurrents', () {
+    test('done se termine sans erreur une fois la liste chargée', () async {
+      stub(_page([_bid('b1', 'PENDING')]));
+      final b = bloc();
+      final done = Completer<Object?>();
+      b.add(TravelerBidsRequested(force: true, done: done));
+
+      expect(await done.future, isNull);
+      expect(b.state, isA<TravelerBidsLoaded>());
+      await b.close();
+    });
+
+    test(
+      'refresh raté : done porte l\'erreur, la liste reste affichée',
+      () async {
+        stub(_page([_bid('b1', 'PENDING')]));
+        final b = bloc();
+        final first = Completer<Object?>();
+        b.add(TravelerBidsRequested(force: true, done: first));
+        await first.future;
+
+        when(
+          () => repository.getTravelerBids(
+            page: any(named: 'page'),
+            size: any(named: 'size'),
+          ),
+        ).thenThrow(Exception('réseau'));
+        final done = Completer<Object?>();
+        b.add(TravelerBidsRequested(force: true, done: done));
+
+        expect(await done.future, isNotNull);
+        expect(
+          b.state,
+          isA<TravelerBidsLoaded>().having((s) => s.bids.length, 'bids', 1),
+        );
+        await b.close();
+      },
+    );
+
+    test(
+      'sans force sur une liste chargée : done se termine aussitôt',
+      () async {
+        stub(_page([_bid('b1', 'PENDING')]));
+        final b = bloc();
+        final first = Completer<Object?>();
+        b.add(TravelerBidsRequested(force: true, done: first));
+        await first.future;
+
+        final done = Completer<Object?>();
+        b.add(TravelerBidsRequested(done: done));
+        expect(await done.future, isNull);
+        verify(
+          () => repository.getTravelerBids(
+            page: any(named: 'page'),
+            size: any(named: 'size'),
+          ),
+        ).called(1);
+        await b.close();
+      },
+    );
+
+    test(
+      'une réponse lente et périmée n\'écrase pas une plus récente',
+      () async {
+        final slow = Completer<TravelerBidsPage>();
+        var calls = 0;
+        when(
+          () => repository.getTravelerBids(
+            page: any(named: 'page'),
+            size: any(named: 'size'),
+          ),
+        ).thenAnswer((_) {
+          calls++;
+          // Premier appel : la réponse d'avant le paiement, qui arrive en
+          // dernier. Second appel : la liste à jour, qui arrive tout de suite.
+          if (calls == 1) return slow.future;
+          return Future.value(
+            _page([_bid('b1', 'PENDING'), _bid('b2', 'PAYMENT_ESCROWED')]),
+          );
+        });
+        final b = bloc();
+        final oldDone = Completer<Object?>();
+        final newDone = Completer<Object?>();
+        b.add(TravelerBidsRequested(force: true, done: oldDone));
+        b.add(TravelerBidsRequested(force: true, done: newDone));
+        await newDone.future;
+        slow.complete(_page([_bid('b1', 'PENDING')]));
+        expect(await oldDone.future, isNull);
+
+        expect(
+          b.state,
+          isA<TravelerBidsLoaded>().having((s) => s.bids.length, 'bids', 2),
+        );
+        await b.close();
       },
     );
   });

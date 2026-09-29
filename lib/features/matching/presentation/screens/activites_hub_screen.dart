@@ -54,7 +54,16 @@ void _openRoute(BuildContext context, String event, String route) {
   if (Uri.parse(route).path == '/tracking') {
     context.go(route);
   } else {
-    context.push(route);
+    // Au retour, le hub se recharge (bridé à 3 s) : une demande payée ou
+    // acceptée dans l'écran ouvert doit se voir sur les tuiles sans avoir à
+    // retaper l'onglet.
+    unawaited(
+      context.push<Object?>(route).then((_) {
+        if (getIt.isRegistered<EnvoisRefreshNotifier>()) {
+          getIt<EnvoisRefreshNotifier>().requestRefresh();
+        }
+      }),
+    );
   }
 }
 

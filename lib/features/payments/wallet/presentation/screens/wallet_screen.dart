@@ -59,24 +59,24 @@ class _WalletScreenState extends State<WalletScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: BlocBuilder<WalletBloc, WalletState>(
-        builder: (context, state) {
-          return switch (state) {
-            WalletInitial() || WalletLoading() => const _LoadingView(),
-            WalletError(:final error) => _ErrorView(
-              message: ErrorPresenter.resolve(
-                error,
-                l10n: context.l10n,
-              ).message,
-            ),
-            WalletLoaded(:final wallet) => _LoadedView(
-              wallet: wallet,
-              topupBanner: _topupBanner,
-            ),
-            _ => const SizedBox.shrink(),
-          };
+    return BlocBuilder<WalletBloc, WalletState>(
+      builder: (context, state) => Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        // Chargement et erreur n'ont pas le héros du portefeuille : sans cet
+        // en-tête, ni retour ni scarabée sur un écran d'erreur persistant.
+        appBar: state is WalletLoaded
+            ? null
+            : DonyAppBar(title: context.l10n.walletTitle),
+        body: switch (state) {
+          WalletInitial() || WalletLoading() => const _LoadingView(),
+          WalletError(:final error) => _ErrorView(
+            message: ErrorPresenter.resolve(error, l10n: context.l10n).message,
+          ),
+          WalletLoaded(:final wallet) => _LoadedView(
+            wallet: wallet,
+            topupBanner: _topupBanner,
+          ),
+          _ => const SizedBox.shrink(),
         },
       ),
     );

@@ -58,6 +58,7 @@ class _ConversationLoaderScreenState extends State<ConversationLoaderScreen> {
               backgroundColor: cs.surface,
               elevation: 0,
               leading: const DonyAppBarBackButton(),
+              actions: const [DonyFeedbackButton()],
             ),
             body: const DonyChatSkeleton(),
           );
@@ -71,6 +72,7 @@ class _ConversationLoaderScreenState extends State<ConversationLoaderScreen> {
               backgroundColor: cs.surface,
               elevation: 0,
               leading: const DonyAppBarBackButton(),
+              actions: const [DonyFeedbackButton()],
             ),
             body: DonyEmptyState(
               mascotte: DonyMascotteType.erreurLegere,

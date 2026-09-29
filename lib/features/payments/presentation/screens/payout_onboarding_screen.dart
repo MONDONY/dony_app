@@ -241,6 +241,7 @@ class _OnboardingView extends StatelessWidget {
                 children: [
                   if (progress != null) ...[
                     AuthFlowHeader.gauge(
+                      showFeedback: false,
                       segments: progress!.segments,
                       label: l.payoutGaugeLabel,
                     ),
@@ -461,6 +462,7 @@ class _ActiveAccountView extends StatelessWidget {
             children: [
               if (progress != null) ...[
                 AuthFlowHeader.gauge(
+                  showFeedback: false,
                   segments: progress!.segments,
                   label: l.payoutGaugeLabel,
                 ),
@@ -632,6 +634,7 @@ class _SuccessView extends StatelessWidget {
                 children: [
                   if (progress != null) ...[
                     AuthFlowHeader.gauge(
+                      showFeedback: false,
                       segments: progress!.segments,
                       label: l.payoutGaugeLabel,
                     ),

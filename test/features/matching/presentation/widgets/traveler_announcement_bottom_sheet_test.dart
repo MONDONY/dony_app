@@ -22,6 +22,9 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
+import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
@@ -63,6 +66,11 @@ class _MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
 class _MockExternalUrlLauncher extends Mock implements ExternalUrlLauncher {}
 
 class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
+
+class _MockBidRepository extends Mock implements BidRepository {}
+
+class _MockBidNegotiationRepository extends Mock
+    implements BidNegotiationRepository {}
 
 class _FakeUri extends Fake implements Uri {}
 
@@ -194,6 +202,11 @@ Widget _harness({
         path: '/bids/:id',
         builder: (context, state) =>
             const Scaffold(body: Center(child: Text('Bid détail'))),
+      ),
+      GoRoute(
+        path: '/bids/:bidId/negotiation',
+        builder: (context, state) =>
+            const Scaffold(body: Center(child: Text('Fil négo'))),
       ),
       GoRoute(
         path: '/settings/report-incident',
@@ -719,6 +732,8 @@ void main() {
 
       expect(find.byKey(const Key('bid-submit-btn')), findsOneWidget);
       expect(find.text("Vérification d'identité"), findsNothing);
+      // Le formulaire « Faire une demande » porte le scarabée de signalement.
+      expect(find.byType(DonyFeedbackButton), findsOneWidget);
     });
 
     testWidgets('expéditeur NON vérifié + voyageur ouvert aux non vérifiés : '
@@ -764,6 +779,128 @@ void main() {
         expect(find.byKey(const Key('bid-submit-btn')), findsNothing);
       },
     );
+
+    // ── Demande déjà présente sur le trajet (contrôle serveur au tap) ─────────
+    //
+    // Bug : après une négociation payée dans son fil, le cache du BidBloc ne
+    // connaissait pas le colis ; « Faire une demande » ouvrait le formulaire et
+    // le back ne refusait qu'au paiement (409 already-bid). La feuille relit
+    // désormais le serveur avant d'ouvrir le formulaire.
+    group('demande déjà présente, cache périmé', () {
+      late _MockBidRepository bids;
+      late _MockBidNegotiationRepository negos;
+
+      BidModel bidOn(String announcementId, String status) => BidModel(
+        id: 'bid-9',
+        announcementId: announcementId,
+        senderId: 'u1',
+        status: status,
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      );
+
+      setUp(() {
+        bids = _MockBidRepository();
+        negos = _MockBidNegotiationRepository();
+        when(() => bids.getMyBids()).thenAnswer((_) async => const []);
+        when(() => negos.myNegotiations()).thenAnswer((_) async => const []);
+        GetIt.I.registerSingleton<BidRepository>(bids);
+        GetIt.I.registerSingleton<BidNegotiationRepository>(negos);
+      });
+
+      Future<void> tapMakeRequest(WidgetTester tester) async {
+        await tester.pumpWidget(
+          _harness(announcement: _buildAnnouncement(kycVerified: true)),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Faire une demande'));
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('colis payé sur ce trajet → ouvre le colis, pas le '
+          'formulaire', (tester) async {
+        when(
+          () => bids.getMyBids(),
+        ).thenAnswer((_) async => [bidOn('a1', 'PAYMENT_ESCROWED')]);
+
+        await tapMakeRequest(tester);
+
+        expect(find.text('Bid détail'), findsOneWidget);
+        expect(find.byKey(const Key('bid-submit-btn')), findsNothing);
+        expect(
+          find.text('Vous avez déjà un colis sur ce trajet'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('discussion de prix ouverte sur ce trajet → ouvre le fil', (
+        tester,
+      ) async {
+        when(() => negos.myNegotiations()).thenAnswer(
+          (_) async => const [
+            BidNegotiationSummary(
+              bidId: 'bid-7',
+              announcementId: 'a1',
+              status: 'NEGOTIATING',
+              role: 'SENDER',
+            ),
+          ],
+        );
+
+        await tapMakeRequest(tester);
+
+        expect(find.text('Fil négo'), findsOneWidget);
+        expect(find.byKey(const Key('bid-submit-btn')), findsNothing);
+        expect(
+          find.text('Vous avez déjà une discussion de prix sur ce trajet'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('colis annulé ou discussion close → formulaire ouvert', (
+        tester,
+      ) async {
+        when(
+          () => bids.getMyBids(),
+        ).thenAnswer((_) async => [bidOn('a1', 'CANCELLED')]);
+        when(() => negos.myNegotiations()).thenAnswer(
+          (_) async => const [
+            BidNegotiationSummary(
+              bidId: 'bid-7',
+              announcementId: 'a1',
+              status: 'REJECTED',
+            ),
+          ],
+        );
+
+        await tapMakeRequest(tester);
+
+        expect(find.byKey(const Key('bid-submit-btn')), findsOneWidget);
+      });
+
+      testWidgets('colis sur un autre trajet → formulaire ouvert', (
+        tester,
+      ) async {
+        when(
+          () => bids.getMyBids(),
+        ).thenAnswer((_) async => [bidOn('autre', 'ACCEPTED')]);
+
+        await tapMakeRequest(tester);
+
+        expect(find.byKey(const Key('bid-submit-btn')), findsOneWidget);
+      });
+
+      testWidgets('serveur injoignable → formulaire ouvert, le back reste '
+          "l'arbitre", (tester) async {
+        when(() => bids.getMyBids()).thenThrow(Exception('réseau'));
+        when(() => negos.myNegotiations()).thenThrow(Exception('réseau'));
+
+        await tapMakeRequest(tester);
+
+        expect(find.byKey(const Key('bid-submit-btn')), findsOneWidget);
+      });
+    });
   });
 
   // ── Lieux de remise / récupération ─────────────────────────────────────────

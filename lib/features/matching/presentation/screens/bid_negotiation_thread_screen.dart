@@ -12,6 +12,7 @@ import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
 import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/presentation/activity_refresh.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -94,9 +95,11 @@ class _BidNegotiationThreadScreenState
       // carte côté expéditeur : le fil reste ouvert, il lui reste à payer.
       case BidNegotiationAction.accepted:
         if (state.negotiation.needsMyPayment) break;
+        refreshActivityAfterBidChange(context);
         context.pop(true);
       case BidNegotiationAction.rejected:
       case BidNegotiationAction.cancelled:
+        refreshActivityAfterBidChange(context);
         context.pop(true);
       case BidNegotiationAction.fetched:
       case BidNegotiationAction.proposed:
@@ -149,7 +152,13 @@ class _BidNegotiationThreadScreenState
         // serveur alors que l'escrow Stripe est actif, expéditeur bloqué sur
         // « à payer »). Seul le `pop` est conditionné au montage, plus bas.
         await confirmBidPaymentSafely(state.bidId);
-        if (!context.mounted) return;
+        // Hors garde de montage, comme la confirmation : les listes doivent
+        // voir le colis payé même si l'écran est déjà démonté.
+        if (!context.mounted) {
+          refreshActivityAfterBidChange();
+          return;
+        }
+        refreshActivityAfterBidChange(context);
         // Le fil n'a plus rien à montrer : l'appelant recharge sa liste et y
         // verra le colis passé en payé.
         context.pop(true);
@@ -511,6 +520,7 @@ class _ThreadActions extends StatelessWidget {
                 );
                 if (!context.mounted) return;
                 if (paid ?? false) {
+                  refreshActivityAfterBidChange(context);
                   context.pop(true);
                 } else {
                   bloc.add(BidNegotiationFetchRequested(bidId));

@@ -22,6 +22,12 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
   final BidRepository _repository;
   final AnalyticsService _analytics;
 
+  /// Numéro du dernier chargement lancé. Les chargements tournent en
+  /// parallèle (hub, shell et écran en lancent chacun un à l'ouverture) :
+  /// seul le plus récent a le droit d'émettre, sinon une réponse lente et
+  /// périmée écraserait une liste plus fraîche.
+  int _generation = 0;
+
   /// Toutes les demandes sont chargées d'un bloc puis filtrées côté client :
   /// les compteurs par onglet doivent rester justes sans un appel par filtre.
   TravelerBidsBloc(this._repository, this._analytics)
@@ -37,8 +43,10 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
   ) async {
     final current = state;
     if (current is TravelerBidsLoaded && !event.force) {
+      event.done?.complete();
       return;
     }
+    final generation = ++_generation;
 
     final filter = current is TravelerBidsLoaded
         ? current.filter
@@ -63,20 +71,30 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
         // boucle tournerait à l'infini.
         page++;
       }
+      if (generation != _generation) {
+        event.done?.complete();
+        return;
+      }
       emit(
         TravelerBidsLoaded(
           bids: bids,
           page: page - 1,
           hasMore: !isLast,
-          filter: filter,
+          // Le filtre courant, pas celui du départ : l'utilisateur a pu
+          // changer d'onglet pendant le chargement.
+          filter: state is TravelerBidsLoaded
+              ? (state as TravelerBidsLoaded).filter
+              : filter,
         ),
       );
+      event.done?.complete();
     } catch (e) {
+      final error = unwrapDioError(e);
+      event.done?.complete(error);
+      if (generation != _generation) return;
       // Un refresh raté ne doit pas vider une liste déjà affichée.
-      if (current is TravelerBidsLoaded) {
-        emit(current);
-      } else {
-        emit(TravelerBidsError(unwrapDioError(e)));
+      if (state is! TravelerBidsLoaded) {
+        emit(TravelerBidsError(error));
       }
     }
   }

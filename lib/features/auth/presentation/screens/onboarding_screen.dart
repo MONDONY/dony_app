@@ -327,6 +327,7 @@ class _OnboardingTopBar extends StatelessWidget {
             )
           else
             const SizedBox(width: 72, height: 44),
+          const DonyFeedbackButton(),
         ],
       ),
     );

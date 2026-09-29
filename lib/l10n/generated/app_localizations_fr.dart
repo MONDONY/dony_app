@@ -4815,6 +4815,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listingSeeMyParcelButton => 'Voir mon colis';
 
   @override
+  String get listingAlreadyNegotiatingMessage =>
+      'Vous avez déjà une discussion de prix sur ce trajet';
+
+  @override
+  String get errorAlreadyBidTitle => 'Demande déjà envoyée';
+
+  @override
+  String get errorAlreadyBidMessage =>
+      'Vous avez déjà une demande en cours sur ce trajet. Retrouvez-la dans Mes colis.';
+
+  @override
   String get listingMakeRequestButton => 'Faire une demande';
 
   @override

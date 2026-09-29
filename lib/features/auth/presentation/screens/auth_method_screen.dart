@@ -219,6 +219,7 @@ class _LoginTopBar extends StatelessWidget {
         ),
         const Spacer(),
         const _SecureBadge(),
+        const DonyFeedbackButton(),
       ],
     );
   }

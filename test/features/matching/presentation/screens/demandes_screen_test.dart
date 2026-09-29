@@ -440,9 +440,11 @@ void main() {
           const TravelerBidsFilterChanged(TravelerBidFilter.aTraiter),
         ),
       ).called(1);
-      verifyNever(
+      // Et recharge : la demande de la notification est peut-être plus
+      // récente que la liste gardée en mémoire par le singleton.
+      verify(
         () => travelerBids.add(const TravelerBidsRequested(force: true)),
-      );
+      ).called(1);
       expect(find.text('Détail'), findsOneWidget);
     });
   });
