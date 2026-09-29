@@ -25,13 +25,19 @@ class ConversationListBloc
   ConversationFilter _currentFilter = ConversationFilter.all;
   String _currentSearchQuery = '';
 
+  /// UID Firebase de l'utilisateur courant, injectable pour les tests.
+  final String Function() _currentUid;
+
   /// [blockEvents] reste nullable pour les tests unitaires qui n'ont pas besoin
   /// des blocages ; la DI en fournit toujours une instance.
   ConversationListBloc(
     this._repository,
     this._firestoreRepo, {
     BlockEventsService? blockEvents,
-  }) : super(const ConversationListInitial()) {
+    String Function()? currentUid,
+  }) : _currentUid =
+           currentUid ?? (() => FirebaseAuth.instance.currentUser?.uid ?? ''),
+       super(const ConversationListInitial()) {
     on<ConversationsLoadRequested>(_onLoad);
     on<ConversationsUnreadUpdated>(_onUnreadUpdated);
     on<ConversationDeleteRequested>(_onDelete);
@@ -69,8 +75,11 @@ class ConversationListBloc
     Emitter<ConversationListState> emit,
   ) async {
     emit(const ConversationListLoading());
+    var listComplete = false;
     try {
-      final conversations = await _repository.getConversations();
+      final page = await _repository.getConversationPage();
+      final conversations = page.items;
+      listComplete = page.isComplete;
       List<ConversationModel> archived = [];
       try {
         archived = await _repository.getArchivedConversations();
@@ -94,8 +103,12 @@ class ConversationListBloc
 
     try {
       await _unreadSub?.cancel();
-      final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-      if (uid.isNotEmpty) {
+      final uid = _currentUid();
+      // Nettoyage des compteurs orphelins seulement sur une liste complète :
+      // appelé avec une seule page, il remettait à zéro les non-lus de tous
+      // les fils hors de cette page. Nouveaux messages, filtre « Non lus » et
+      // badge de l'onglet disparaissaient ensemble.
+      if (uid.isNotEmpty && listComplete) {
         final validIds = _loaded!
             .map((c) => c.firestoreConversationId)
             .where((id) => id.isNotEmpty)
@@ -106,7 +119,8 @@ class ConversationListBloc
             validFirestoreIds: validIds,
           ),
         );
-
+      }
+      if (uid.isNotEmpty) {
         _unreadSub = _firestoreRepo
             .perConversationUnreadStream(uid)
             .listen(

@@ -37,8 +37,8 @@ void main() {
       'emits Loading → Loaded when load succeeds',
       build: () {
         when(
-          () => convRepo.getConversations(),
-        ).thenAnswer((_) async => [_conv]);
+          () => convRepo.getConversationPage(),
+        ).thenAnswer((_) async => const ConversationPage([_conv]));
         when(
           () => convRepo.getArchivedConversations(),
         ).thenAnswer((_) async => []);
@@ -57,7 +57,9 @@ void main() {
     blocTest<ConversationListBloc, ConversationListState>(
       'emits Loading → Error when getConversations throws',
       build: () {
-        when(() => convRepo.getConversations()).thenThrow(Exception('network'));
+        when(
+          () => convRepo.getConversationPage(),
+        ).thenThrow(Exception('network'));
         when(
           () => firestoreRepo.perConversationUnreadStream(any()),
         ).thenAnswer((_) => const Stream.empty());
@@ -74,8 +76,8 @@ void main() {
       'emits updated Loaded state with hasUnread=true when unread count > 0',
       build: () {
         when(
-          () => convRepo.getConversations(),
-        ).thenAnswer((_) async => [_conv]);
+          () => convRepo.getConversationPage(),
+        ).thenAnswer((_) async => const ConversationPage([_conv]));
         when(
           () => convRepo.getArchivedConversations(),
         ).thenAnswer((_) async => []);
@@ -104,8 +106,8 @@ void main() {
       'ConversationDeleteRequested removes the conversation locally and calls API',
       build: () {
         when(
-          () => convRepo.getConversations(),
-        ).thenAnswer((_) async => [_conv]);
+          () => convRepo.getConversationPage(),
+        ).thenAnswer((_) async => const ConversationPage([_conv]));
         when(
           () => convRepo.getArchivedConversations(),
         ).thenAnswer((_) async => []);
@@ -141,7 +143,9 @@ void main() {
     blocTest<ConversationListBloc, ConversationListState>(
       'ConversationsUnreadUpdated does nothing when no conversations loaded',
       build: () {
-        when(() => convRepo.getConversations()).thenAnswer((_) async => []);
+        when(
+          () => convRepo.getConversationPage(),
+        ).thenAnswer((_) async => const ConversationPage([]));
         when(
           () => convRepo.getArchivedConversations(),
         ).thenAnswer((_) async => []);
@@ -158,8 +162,8 @@ void main() {
       'ConversationFilterChanged met à jour filter et searchQuery dans le state',
       build: () {
         when(
-          () => convRepo.getConversations(),
-        ).thenAnswer((_) async => [_conv]);
+          () => convRepo.getConversationPage(),
+        ).thenAnswer((_) async => const ConversationPage([_conv]));
         when(
           () => convRepo.getArchivedConversations(),
         ).thenAnswer((_) async => []);
@@ -193,8 +197,8 @@ void main() {
       'ConversationArchiveRequested retire la conversation localement et appelle l\'API',
       build: () {
         when(
-          () => convRepo.getConversations(),
-        ).thenAnswer((_) async => [_conv]);
+          () => convRepo.getConversationPage(),
+        ).thenAnswer((_) async => const ConversationPage([_conv]));
         when(
           () => convRepo.getArchivedConversations(),
         ).thenAnswer((_) async => []);
@@ -232,8 +236,8 @@ void main() {
       'filter est préservé après ConversationArchiveRequested',
       build: () {
         when(
-          () => convRepo.getConversations(),
-        ).thenAnswer((_) async => [_conv]);
+          () => convRepo.getConversationPage(),
+        ).thenAnswer((_) async => const ConversationPage([_conv]));
         when(
           () => convRepo.getArchivedConversations(),
         ).thenAnswer((_) async => []);
@@ -274,7 +278,7 @@ void main() {
     );
 
     blocTest<ConversationListBloc, ConversationListState>(
-      'ConversationFilter.active ne montre que les conversations BID_ACCEPTED',
+      'ConversationFilter.active ne montre que les conversations en cours',
       build: () {
         when(
           () => convRepo.getArchivedConversations(),
@@ -294,8 +298,8 @@ void main() {
           bidStatus: 'DELIVERY_CONFIRMED',
         );
         when(
-          () => convRepo.getConversations(),
-        ).thenAnswer((_) async => [convActive, convDone]);
+          () => convRepo.getConversationPage(),
+        ).thenAnswer((_) async => ConversationPage([convActive, convDone]));
         when(
           () => firestoreRepo.perConversationUnreadStream(any()),
         ).thenAnswer((_) => const Stream.empty());
@@ -329,6 +333,55 @@ void main() {
     );
 
     blocTest<ConversationListBloc, ConversationListState>(
+      'ConversationFilter.active garde un colis remis, en route ou arrivé',
+      build: () {
+        when(
+          () => convRepo.getArchivedConversations(),
+        ).thenAnswer((_) async => []);
+        ConversationModel withStatus(String id, String? status) =>
+            ConversationModel(
+              id: id,
+              bidId: 'bid-$id',
+              firestoreConversationId: 'conv_$id',
+              otherParticipant: _participant,
+              bidStatus: status,
+            );
+        when(() => convRepo.getConversationPage()).thenAnswer(
+          (_) async => ConversationPage([
+            withStatus('accepted', 'BID_ACCEPTED'),
+            withStatus('transit', 'IN_TRANSIT'),
+            withStatus('arrived', 'TRIP_ARRIVED'),
+            withStatus('done', 'DELIVERY_CONFIRMED'),
+            withStatus('cancelled', 'TRIP_CANCELLED'),
+            withStatus('pending', null),
+          ]),
+        );
+        when(
+          () => firestoreRepo.perConversationUnreadStream(any()),
+        ).thenAnswer((_) => const Stream.empty());
+        return ConversationListBloc(convRepo, firestoreRepo);
+      },
+      act: (b) async {
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        b.add(
+          const ConversationFilterChanged(
+            filter: ConversationFilter.active,
+            searchQuery: '',
+          ),
+        );
+      },
+      skip: 2,
+      expect: () => [
+        isA<ConversationListLoaded>().having(
+          (s) => s.displayed.map((c) => c.id).toList(),
+          'en cours',
+          ['accepted', 'transit', 'arrived'],
+        ),
+      ],
+    );
+
+    blocTest<ConversationListBloc, ConversationListState>(
       'ConversationFilter.done ne montre que les conversations DELIVERY_CONFIRMED',
       build: () {
         when(
@@ -349,8 +402,8 @@ void main() {
           bidStatus: 'BID_ACCEPTED',
         );
         when(
-          () => convRepo.getConversations(),
-        ).thenAnswer((_) async => [convDone, convActive]);
+          () => convRepo.getConversationPage(),
+        ).thenAnswer((_) async => ConversationPage([convDone, convActive]));
         when(
           () => firestoreRepo.perConversationUnreadStream(any()),
         ).thenAnswer((_) => const Stream.empty());
@@ -387,8 +440,8 @@ void main() {
       'ConversationUnarchiveRequested remet la conversation dans la liste et appelle l\'API',
       build: () {
         when(
-          () => convRepo.getConversations(),
-        ).thenAnswer((_) async => [_conv]);
+          () => convRepo.getConversationPage(),
+        ).thenAnswer((_) async => const ConversationPage([_conv]));
         when(
           () => convRepo.getArchivedConversations(),
         ).thenAnswer((_) async => []);
@@ -434,8 +487,8 @@ void main() {
       'filter est préservé après ConversationsUnreadUpdated',
       build: () {
         when(
-          () => convRepo.getConversations(),
-        ).thenAnswer((_) async => [_conv]);
+          () => convRepo.getConversationPage(),
+        ).thenAnswer((_) async => const ConversationPage([_conv]));
         when(
           () => convRepo.getArchivedConversations(),
         ).thenAnswer((_) async => []);
@@ -473,13 +526,84 @@ void main() {
     );
   });
 
+  // ── Compteurs de non-lus orphelins ───────────────────────────────────────
+  group('ConversationListBloc — nettoyage des non-lus', () {
+    setUp(() {
+      when(
+        () => convRepo.getArchivedConversations(),
+      ).thenAnswer((_) async => []);
+      when(
+        () => firestoreRepo.perConversationUnreadStream(any()),
+      ).thenAnswer((_) => const Stream.empty());
+      when(
+        () => firestoreRepo.cleanupOrphanUnreadCounters(
+          currentUserUid: any(named: 'currentUserUid'),
+          validFirestoreIds: any(named: 'validFirestoreIds'),
+        ),
+      ).thenAnswer((_) async {});
+    });
+
+    test('liste complète : les fils absents sont nettoyés', () async {
+      when(
+        () => convRepo.getConversationPage(),
+      ).thenAnswer((_) async => const ConversationPage([_conv]));
+      final bloc = ConversationListBloc(
+        convRepo,
+        firestoreRepo,
+        currentUid: () => 'me',
+      );
+
+      bloc.add(const ConversationsLoadRequested());
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      verify(
+        () => firestoreRepo.cleanupOrphanUnreadCounters(
+          currentUserUid: 'me',
+          validFirestoreIds: {'conv_bid-1'},
+        ),
+      ).called(1);
+      verify(() => firestoreRepo.perConversationUnreadStream('me')).called(1);
+      await bloc.close();
+    });
+
+    test(
+      'liste incomplète : aucun compteur remis à zéro, non-lus toujours suivis',
+      () async {
+        // Une seule page chargée : les fils des pages suivantes ne sont pas
+        // supprimés, leurs non-lus doivent survivre.
+        when(() => convRepo.getConversationPage()).thenAnswer(
+          (_) async => const ConversationPage([_conv], isComplete: false),
+        );
+        final bloc = ConversationListBloc(
+          convRepo,
+          firestoreRepo,
+          currentUid: () => 'me',
+        );
+
+        bloc.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        verifyNever(
+          () => firestoreRepo.cleanupOrphanUnreadCounters(
+            currentUserUid: any(named: 'currentUserUid'),
+            validFirestoreIds: any(named: 'validFirestoreIds'),
+          ),
+        );
+        verify(() => firestoreRepo.perConversationUnreadStream('me')).called(1);
+        await bloc.close();
+      },
+    );
+  });
+
   // ── Réaction aux blocages ────────────────────────────────────────────────
   group('ConversationListBloc — blocages', () {
     late BlockEventsService blockEvents;
 
     setUp(() {
       blockEvents = BlockEventsService();
-      when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+      when(
+        () => convRepo.getConversationPage(),
+      ).thenAnswer((_) async => const ConversationPage([_conv]));
       when(
         () => convRepo.getArchivedConversations(),
       ).thenAnswer((_) async => []);
@@ -539,7 +663,7 @@ void main() {
       blockEvents.notifyBlocked('uid-1');
       await Future<void>.delayed(const Duration(milliseconds: 20));
 
-      verifyNever(() => convRepo.getConversations());
+      verifyNever(() => convRepo.getConversationPage());
     });
 
     test('sans service injecté, la construction reste possible', () {

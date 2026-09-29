@@ -6,12 +6,51 @@ class ConversationRepository {
   final ApiClient _api;
   ConversationRepository(this._api);
 
-  Future<List<ConversationModel>> getConversations() async {
-    final response = await _api.dio.get('/conversations');
-    final content = (response.data['content'] as List<dynamic>? ?? []);
-    return content
+  /// Taille de la page demandée : la liste n'est pas paginée côté écran, elle
+  /// doit tenir en un appel pour un utilisateur ordinaire.
+  static const pageSize = 100;
+
+  /// Conversations actives, la plus récente en tête.
+  ///
+  /// Le tri est refait ici : un serveur antérieur rend les fils dans l'ordre
+  /// physique de sa table, et seulement 20 par défaut. [ConversationPage.isComplete]
+  /// dit si le serveur a tout rendu (`last`), condition pour que l'app puisse
+  /// traiter un fil absent comme supprimé.
+  Future<ConversationPage> getConversationPage() async {
+    final response = await _api.dio.get(
+      '/conversations',
+      queryParameters: {'size': pageSize},
+    );
+    final data = response.data;
+    final page = data is Map<String, dynamic>
+        ? data
+        : const <String, dynamic>{};
+    final content = page['content'] as List<dynamic>? ?? const <dynamic>[];
+    final items = content
         .map((e) => ConversationModel.fromJson(e as Map<String, dynamic>))
         .toList();
+    return ConversationPage(
+      sortByLastMessage(items),
+      isComplete: page['last'] == true,
+    );
+  }
+
+  /// Dernier message en tête, fils sans date en fin, ordre d'origine conservé
+  /// à égalité.
+  static List<ConversationModel> sortByLastMessage(
+    List<ConversationModel> conversations,
+  ) {
+    final indexed = conversations.indexed.toList()
+      ..sort((a, b) {
+        final at = a.$2.lastMessageAt;
+        final bt = b.$2.lastMessageAt;
+        if (at == null && bt == null) return a.$1.compareTo(b.$1);
+        if (at == null) return 1;
+        if (bt == null) return -1;
+        final byDate = bt.compareTo(at);
+        return byDate != 0 ? byDate : a.$1.compareTo(b.$1);
+      });
+    return [for (final (_, c) in indexed) c];
   }
 
   Future<ConversationModel> getConversation(String id) async {
@@ -87,4 +126,15 @@ class ConversationRepository {
       's3Key': response.data['s3Key'] as String,
     };
   }
+}
+
+/// Liste active telle que rendue par le serveur.
+class ConversationPage {
+  final List<ConversationModel> items;
+
+  /// `true` quand aucune autre page n'existe. Tant qu'elle est incomplète, un
+  /// fil absent de [items] n'est pas un fil supprimé.
+  final bool isComplete;
+
+  const ConversationPage(this.items, {this.isComplete = true});
 }
