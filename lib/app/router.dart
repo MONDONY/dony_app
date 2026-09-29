@@ -1,5 +1,6 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/config/pro_flag.dart';
+import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
@@ -1833,7 +1834,7 @@ class _PlaceholderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title)),
+    appBar: AppBar(title: Text(title), actions: const [DonyFeedbackButton()]),
     body: Center(child: Text(title)),
   );
 }

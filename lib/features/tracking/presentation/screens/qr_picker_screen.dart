@@ -76,6 +76,7 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
                       ),
                     ),
                     QrTorchButton(torchOn: _torchOn),
+                    const DonyFeedbackButton(color: DonyColors.neutral0),
                   ],
                 ),
               ),

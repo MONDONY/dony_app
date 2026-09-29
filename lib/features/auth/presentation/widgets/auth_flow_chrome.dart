@@ -61,6 +61,7 @@ class AuthFlowHeader extends StatelessWidget {
     required int this.total,
     required this.label,
     this.showBack = true,
+    this.showFeedback = true,
   }) : segments = null;
 
   /// Parcours d'onboarding progressif : la jauge remplace la pastille.
@@ -77,6 +78,7 @@ class AuthFlowHeader extends StatelessWidget {
     super.key,
     required List<DonyGaugeSegment> this.segments,
     required this.label,
+    this.showFeedback = true,
   }) : current = null,
        total = null,
        showBack = false;
@@ -87,6 +89,10 @@ class AuthFlowHeader extends StatelessWidget {
   final String label;
   final bool showBack;
 
+  /// Scarabée de signalement en bout de ligne. À couper seulement sous un
+  /// [DonyAppBar], qui porte déjà le sien (paiements).
+  final bool showFeedback;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -96,7 +102,11 @@ class AuthFlowHeader extends StatelessWidget {
       children: [
         Row(
           children: [
-            if (showBack) const DonyAppBarBackButton(),
+            if (showBack)
+              const DonyAppBarBackButton()
+            else if (showFeedback)
+              // Contrepoids du scarabée : le logo reste centré.
+              const SizedBox(width: kDonyMinTapTarget),
             const Spacer(),
             ClipRRect(
               borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -119,7 +129,10 @@ class AuthFlowHeader extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            if (showBack) const SizedBox(width: kDonyMinTapTarget),
+            if (showFeedback)
+              const DonyFeedbackButton()
+            else if (showBack)
+              const SizedBox(width: kDonyMinTapTarget),
           ],
         ),
         const SizedBox(height: DonySpacing.sm),

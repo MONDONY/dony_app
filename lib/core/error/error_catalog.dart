@@ -209,6 +209,12 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.flight_takeoff_rounded,
     ),
+    'already-bid': _Entry(
+      title: (l) => l.errorAlreadyBidTitle,
+      message: (l) => l.errorAlreadyBidMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.inventory_2_outlined,
+    ),
     'thread/not-awaiting-commission': _Entry(
       title: (l) => l.errorThreadNotAwaitingCommissionTitle,
       message: (l) => l.errorThreadNotAwaitingCommissionMessage,

@@ -151,6 +151,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       ),
                       // Flash
                       QrTorchButton(torchOn: _torchOn),
+                      const DonyFeedbackButton(color: DonyColors.white),
                     ],
                   ),
                 ),

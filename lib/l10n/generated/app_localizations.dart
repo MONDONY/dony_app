@@ -8081,6 +8081,24 @@ abstract class AppLocalizations {
   /// **'Voir mon colis'**
   String get listingSeeMyParcelButton;
 
+  /// Info quand l'expéditeur veut commander sur un trajet où une discussion de prix est encore ouverte : on l'amène au fil au lieu du formulaire (traveler_announcement_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà une discussion de prix sur ce trajet'**
+  String get listingAlreadyNegotiatingMessage;
+
+  /// Titre de l'erreur 409 already-bid : l'expéditeur a déjà une demande en cours sur ce trajet (error_catalog.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande déjà envoyée'**
+  String get errorAlreadyBidTitle;
+
+  /// Message de l'erreur 409 already-bid (error_catalog.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà une demande en cours sur ce trajet. Retrouvez-la dans Mes colis.'**
+  String get errorAlreadyBidMessage;
+
   /// Bouton principal de demande de transport (traveler_announcement_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:

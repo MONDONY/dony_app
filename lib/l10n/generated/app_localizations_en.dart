@@ -4792,6 +4792,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listingSeeMyParcelButton => 'See my parcel';
 
   @override
+  String get listingAlreadyNegotiatingMessage =>
+      'You already have a price discussion on this trip';
+
+  @override
+  String get errorAlreadyBidTitle => 'Request already sent';
+
+  @override
+  String get errorAlreadyBidMessage =>
+      'You already have an ongoing request on this trip. Find it in My parcels.';
+
+  @override
   String get listingMakeRequestButton => 'Make a request';
 
   @override

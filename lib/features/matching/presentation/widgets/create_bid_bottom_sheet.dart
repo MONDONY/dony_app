@@ -972,6 +972,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   ),
                 ),
                 centerTitle: false,
+                actions: const [DonyFeedbackButton()],
                 bottom: PreferredSize(
                   preferredSize: const Size.fromHeight(1),
                   child: Divider(height: 1, color: cs.outlineVariant),

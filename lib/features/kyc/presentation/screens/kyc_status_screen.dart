@@ -189,7 +189,13 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
                         label: OnboardingStep.identity.label(context.l10n),
                       ),
                       const SizedBox(height: DonySpacing.md),
-                    ],
+                    ] else
+                      // Depuis le profil, pas d'en-tête : le scarabée seul,
+                      // en haut à droite comme sur les autres écrans.
+                      const Align(
+                        alignment: Alignment.centerRight,
+                        child: DonyFeedbackButton(),
+                      ),
                     Expanded(
                       child: LayoutBuilder(
                         builder: (context, constraints) =>

@@ -58,12 +58,17 @@ class DemandesScreen extends StatelessWidget {
         // garde le dernier filtre choisi, et une nouvelle demande n'apparaît
         // pas sous « Terminées ».
         BlocProvider.value(
-          value: getIt<TravelerBidsBloc>()
-            ..add(
-              focus != null
-                  ? const TravelerBidsFilterChanged(TravelerBidFilter.aTraiter)
-                  : const TravelerBidsRequested(force: true),
-            ),
+          value: focus != null
+              // Filtre d'abord (appliqué tout de suite si la liste est déjà
+              // là), rechargement ensuite : la demande de la notification est
+              // peut-être plus récente que la liste en mémoire.
+              ? (getIt<TravelerBidsBloc>()
+                  ..add(
+                    const TravelerBidsFilterChanged(TravelerBidFilter.aTraiter),
+                  )
+                  ..add(const TravelerBidsRequested(force: true)))
+              : (getIt<TravelerBidsBloc>()
+                  ..add(const TravelerBidsRequested(force: true))),
         ),
         BlocProvider(create: (_) => getIt<BidBloc>()),
         BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),
@@ -216,9 +221,20 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
     );
   }
 
+  /// Attend la réponse réelle : un délai fixe relâchait le spinner avant
+  /// elle, et un échec (qui laisse la liste intacte) passait inaperçu.
   Future<void> _onRefresh() async {
-    _reload();
-    await Future<void>.delayed(const Duration(milliseconds: 400));
+    final done = Completer<Object?>();
+    context.read<TravelerBidsBloc>().add(
+      TravelerBidsRequested(force: true, done: done),
+    );
+    final error = await done.future.timeout(
+      const Duration(seconds: 20),
+      onTimeout: () => null,
+    );
+    if (error != null && mounted) {
+      unawaited(ErrorPresenter.show(context, error));
+    }
   }
 
   // ── Actions ────────────────────────────────────────────────────────────────

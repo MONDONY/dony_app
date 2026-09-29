@@ -20,6 +20,9 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
+import 'package:dony/features/matching/data/repositories/bid_repository.dart';
+import 'package:dony/features/matching/presentation/existing_trip_request.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
@@ -177,6 +180,21 @@ Future<void> showTravelerAnnouncementSheet(
             return;
           }
           if (canSendRequest) {
+            // Le cache lu plus haut peut être périmé (négociation payée dans
+            // son fil, bid NEGOTIATING absent de /bids/me) : on relit le
+            // serveur avant d'ouvrir le formulaire, pour ne pas le laisser
+            // remplir jusqu'au 409 `already-bid` du paiement.
+            final existing = await _findExistingTripRequest(announcement.id);
+            if (!rootCtx.mounted) return;
+            if (existing != null) {
+              // Le cache se remet d'aplomb : à la prochaine ouverture, la
+              // feuille affiche d'emblée « Voir mon colis ».
+              parentBidBloc?.add(
+                const BidMyListAutoRefreshRequested(force: true),
+              );
+              _openExistingTripRequest(rootCtx, existing);
+              return;
+            }
             await CreateBidBottomSheet.show(
               rootCtx,
               announcement: announcement,
@@ -248,6 +266,34 @@ Future<void> showTravelerAnnouncementSheet(
       lecteurId: lecteurId,
     ),
   );
+}
+
+Future<ExistingTripRequest?> _findExistingTripRequest(String announcementId) {
+  if (!getIt.isRegistered<BidRepository>() ||
+      !getIt.isRegistered<BidNegotiationRepository>()) {
+    return Future.value();
+  }
+  return ExistingTripRequestLookup(
+    getIt<BidRepository>(),
+    getIt<BidNegotiationRepository>(),
+  ).find(announcementId);
+}
+
+/// Amène l'expéditeur à la demande qu'il a déjà sur ce trajet, au lieu du
+/// formulaire que le back refuserait.
+void _openExistingTripRequest(
+  BuildContext context,
+  ExistingTripRequest existing,
+) {
+  final l = context.l10n;
+  switch (existing) {
+    case ExistingTripBid(:final bid):
+      DonySnackbar.show(context, message: l.listingAlreadyHasParcelMessage);
+      unawaited(context.push('/bids/${bid.id}', extra: bid));
+    case ExistingTripNegotiation(:final bidId):
+      DonySnackbar.show(context, message: l.listingAlreadyNegotiatingMessage);
+      unawaited(context.push('/bids/$bidId/negotiation'));
+  }
 }
 
 class _TravelerAnnouncementContent extends StatelessWidget {

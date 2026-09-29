@@ -205,7 +205,9 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 48),
+                              const DonyFeedbackButton(
+                                color: DonyColors.neutral0,
+                              ),
                             ],
                           ),
                           const SizedBox(height: DonySpacing.sm),
@@ -503,6 +505,7 @@ class _ResultHeader extends StatelessWidget {
             ),
           ),
         ),
+        const DonyFeedbackButton(color: DonyColors.neutral0),
       ],
     );
   }
