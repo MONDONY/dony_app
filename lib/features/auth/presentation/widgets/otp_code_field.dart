@@ -1,4 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/auth/presentation/widgets/android_sms_code_retriever.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pinput/pinput.dart';
@@ -14,13 +16,16 @@ import 'package:pinput/pinput.dart';
 /// plus le SMS.
 ///
 /// [Pinput] porte `AutofillHints.oneTimeCode` par défaut et répartit un code
-/// collé sur les six cases.
-class OtpCodeField extends StatelessWidget {
+/// collé sur les six cases. Sur Android, un code reçu par SMS est en plus lu
+/// automatiquement ([AndroidSmsCodeRetriever]) quand [readSms] est vrai.
+class OtpCodeField extends StatefulWidget {
   const OtpCodeField({
     super.key,
     required this.controller,
     this.focusNode,
     this.onCompleted,
+    this.readSms = false,
+    this.smsRetriever,
     this.boxWidth = 48,
     this.boxHeight = 56,
     this.gap = DonySpacing.sm,
@@ -32,6 +37,14 @@ class OtpCodeField extends StatelessWidget {
   /// Appelé quand les six chiffres sont saisis, remplissage auto compris.
   final ValueChanged<String>? onCompleted;
 
+  /// Vrai quand le code arrive par SMS : active la lecture automatique sur
+  /// Android. Faux pour un code envoyé par e-mail.
+  final bool readSms;
+
+  /// Écouteur injecté par les tests. Sinon, [AndroidSmsCodeRetriever] sur
+  /// Android quand [readSms] est vrai.
+  final SmsRetriever? smsRetriever;
+
   /// Largeur d'une case. Fixée par l'appelant, jamais mesurée ici : ce champ
   /// vit aussi dans une bottom sheet, où un `LayoutBuilder` casserait le
   /// calcul de hauteur intrinsèque.
@@ -42,13 +55,27 @@ class OtpCodeField extends StatelessWidget {
   static const length = 6;
 
   @override
+  State<OtpCodeField> createState() => _OtpCodeFieldState();
+}
+
+class _OtpCodeFieldState extends State<OtpCodeField> {
+  // Créé une seule fois : Pinput ne lit l'écouteur qu'à son montage.
+  late final SmsRetriever? _smsRetriever =
+      widget.smsRetriever ??
+      (widget.readSms &&
+              !kIsWeb &&
+              defaultTargetPlatform == TargetPlatform.android
+          ? AndroidSmsCodeRetriever()
+          : null);
+
+  @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     final base = PinTheme(
-      width: boxWidth,
-      height: boxHeight,
+      width: widget.boxWidth,
+      height: widget.boxHeight,
       textStyle: tt.headlineMedium?.copyWith(
         fontWeight: FontWeight.w700,
         color: cs.onSurface,
@@ -61,9 +88,10 @@ class OtpCodeField extends StatelessWidget {
     );
 
     return Pinput(
-      length: length,
-      controller: controller,
-      focusNode: focusNode,
+      length: OtpCodeField.length,
+      controller: widget.controller,
+      focusNode: widget.focusNode,
+      smsRetriever: _smsRetriever,
       autofocus: true,
       // Curseur fixe : l'animation de clignotement tourne sans fin, ce qui
       // empêche tout `pumpAndSettle` dans les tests des écrans qui l'hébergent.
@@ -71,12 +99,12 @@ class OtpCodeField extends StatelessWidget {
       // Un code collé depuis un message peut traîner des lettres ou des
       // espaces : seuls les chiffres entrent, comme dans les anciennes cases.
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      separatorBuilder: (_) => SizedBox(width: gap),
+      separatorBuilder: (_) => SizedBox(width: widget.gap),
       defaultPinTheme: base,
       focusedPinTheme: base.copyDecorationWith(
         border: Border.all(color: cs.primary, width: 2),
       ),
-      onCompleted: onCompleted,
+      onCompleted: widget.onCompleted,
     );
   }
 }
