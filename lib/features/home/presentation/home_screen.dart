@@ -1901,13 +1901,23 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   ),
                 ),
                 if (_mode.isTrips && count > 0)
+                  // Cible élargie : seul le texte (≈ 15 px de haut) captait le
+                  // tap. La ligne tient déjà la hauteur du bouton de feedback
+                  // voisin (kDonyMinTapTarget), le padding ne la change pas.
                   GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () => _openComposer(ctx),
-                    child: Text(
-                      ctx.l10n.homeSort,
-                      style: tt.labelMedium?.copyWith(
-                        color: cs.primary,
-                        fontWeight: FontWeight.w600,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm,
+                        vertical: DonySpacing.sm,
+                      ),
+                      child: Text(
+                        ctx.l10n.homeSort,
+                        style: tt.labelMedium?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),

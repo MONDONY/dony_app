@@ -71,6 +71,7 @@ Future<void> _wrap(
   required KycBloc kycBloc,
   required AuthBloc authBloc,
   OnboardingProgress? progress,
+  String? returnTo,
 }) async {
   final router = GoRouter(
     routes: [
@@ -81,7 +82,7 @@ Future<void> _wrap(
             BlocProvider<KycBloc>.value(value: kycBloc),
             BlocProvider<AuthBloc>.value(value: authBloc),
           ],
-          child: KycStatusScreen(progress: progress),
+          child: KycStatusScreen(progress: progress, returnTo: returnTo),
         ),
       ),
       GoRoute(
@@ -91,6 +92,10 @@ Future<void> _wrap(
       GoRoute(
         path: '/payments/onboarding',
         builder: (_, _) => const Scaffold(body: Text('Payouts route')),
+      ),
+      GoRoute(
+        path: '/parcels/send-intro',
+        builder: (_, _) => const Scaffold(body: Text('Send intro route')),
       ),
     ],
   );
@@ -357,6 +362,64 @@ void main() {
 
       verifyNever(() => authRepository.markOnboardingSeen());
       expect(find.text('Home route'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'VERIFIED hors onboarding avec un écran de retour : y revient au lieu '
+    'de l\'accueil (l\'intention de publier n\'est plus perdue)',
+    (tester) async {
+      const verified = KycStatusLoaded(
+        kycStatus: 'VERIFIED',
+        verificationStatus: 'verified',
+      );
+      whenListen<KycState>(
+        kycBloc,
+        Stream.value(verified),
+        initialState: verified,
+      );
+
+      await _wrap(
+        tester,
+        kycBloc: kycBloc,
+        authBloc: authBloc,
+        returnTo: '/parcels/send-intro',
+      );
+
+      await tester.pump(const Duration(milliseconds: 1600));
+      await tester.pumpAndSettle();
+
+      verify(() => authBloc.add(const AuthCheckRequested())).called(1);
+      expect(find.text('Send intro route'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'onboarding prioritaire sur l\'écran de retour : les paiements restent '
+    'l\'étape suivante',
+    (tester) async {
+      const verified = KycStatusLoaded(
+        kycStatus: 'VERIFIED',
+        verificationStatus: 'verified',
+      );
+      whenListen<KycState>(
+        kycBloc,
+        Stream.value(verified),
+        initialState: verified,
+      );
+
+      await _wrap(
+        tester,
+        kycBloc: kycBloc,
+        authBloc: authBloc,
+        progress: _progressPayoutsLeft,
+        returnTo: '/parcels/send-intro',
+      );
+
+      await tester.pump(const Duration(milliseconds: 1600));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Payouts route'), findsOneWidget);
     },
   );
 

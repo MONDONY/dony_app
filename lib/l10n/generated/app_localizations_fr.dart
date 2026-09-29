@@ -2533,6 +2533,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Corridor, capacité et prix sont verrouillés. La date doit rester dans la fenêtre de tolérance de l\'expéditeur.';
 
   @override
+  String get tripPublishFieldLockedCorridorMessage =>
+      'Les villes de ce trajet ne peuvent plus être modifiées.';
+
+  @override
+  String get tripPublishFieldLockedDateMessage =>
+      'La date de départ de ce trajet ne peut plus être modifiée.';
+
+  @override
   String get requestPublishIntroTitle => 'Publier un colis';
 
   @override

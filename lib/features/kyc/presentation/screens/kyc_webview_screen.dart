@@ -12,6 +12,7 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
+import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,10 +43,14 @@ class KycWebViewScreen extends StatefulWidget {
     super.key,
     required this.stripeUrl,
     this.progress,
+    this.returnTo,
     this.cameraPermission = const CameraPermissionService(),
     this.analytics,
   });
   final String stripeUrl;
+
+  /// Écran où revenir une fois vérifié, transmis à l'écran de statut.
+  final String? returnTo;
 
   /// Injectable pour les tests ; `null` lit le service du conteneur.
   final AnalyticsService? analytics;
@@ -170,8 +175,10 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
                     // progression et permet à l'écran de statut d'enchaîner
                     // sur l'étape suivante une fois vérifié.
                     context.go(
-                      '/kyc/verify'
-                      '${onboardingEntrySuffix(fromOnboarding: widget.progress != null)}',
+                      kycVerifyLocation(
+                        fromOnboarding: widget.progress != null,
+                        returnTo: widget.returnTo,
+                      ),
                     );
                   }
                   return NavigationDecision.prevent;

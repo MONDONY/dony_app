@@ -706,6 +706,8 @@
   "tripPublishHandoverDeadlineChoose": "Choose",
   "tripPublishLockedBannerTitle": "Trip dedicated to the request",
   "tripPublishLockedBannerSubtitle": "Corridor, capacity and price are locked. The date must stay within the sender's tolerance window.",
+  "tripPublishFieldLockedCorridorMessage": "The cities of this trip can no longer be changed.",
+  "tripPublishFieldLockedDateMessage": "The departure date of this trip can no longer be changed.",
   "requestPublishIntroTitle": "Post a parcel",
   "tripPublishIntroVerifiedTextTrip": "Identity verified. You can post your trip safely.",
   "requestPublishIntroVerifiedText": "Identity verified. You can post your shipping request safely.",

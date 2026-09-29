@@ -2525,6 +2525,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Corridor, capacity and price are locked. The date must stay within the sender\'s tolerance window.';
 
   @override
+  String get tripPublishFieldLockedCorridorMessage =>
+      'The cities of this trip can no longer be changed.';
+
+  @override
+  String get tripPublishFieldLockedDateMessage =>
+      'The departure date of this trip can no longer be changed.';
+
+  @override
   String get requestPublishIntroTitle => 'Post a parcel';
 
   @override

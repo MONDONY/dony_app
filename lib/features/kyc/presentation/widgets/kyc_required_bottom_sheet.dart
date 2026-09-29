@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
+import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,7 @@ class KycRequiredBottomSheet extends StatelessWidget {
   static Future<void> show(
     BuildContext context, {
     required String kycStatus,
+    String? returnTo,
   }) async {
     if (kycStatus == 'PENDING') {
       final l = context.l10n;
@@ -97,7 +99,10 @@ class KycRequiredBottomSheet extends StatelessWidget {
     );
 
     if (stripeUrl != null && context.mounted) {
-      GoRouter.of(context).go('/kyc/verify', extra: stripeUrl);
+      GoRouter.of(context).go(
+        kycVerifyLocation(fromOnboarding: false, returnTo: returnTo),
+        extra: stripeUrl,
+      );
     }
   }
 
