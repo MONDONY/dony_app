@@ -65,6 +65,14 @@ abstract final class AnalyticsEvents {
   static const paymentFailed = 'payment_failed';
   static const mobileMoneyAwaiting = 'mobile_money_awaiting';
 
+  // Activation des versements (Stripe Connect). Sans eux, l'étape paiements de
+  // l'inscription était une boîte noire : on voyait l'écran, jamais l'issue.
+  static const connectOnboardingLinkOpened = 'connect_onboarding_link_opened';
+  static const connectOnboardingCompleted = 'connect_onboarding_completed';
+  static const connectOnboardingStillPending =
+      'connect_onboarding_still_pending';
+  static const connectOnboardingFailed = 'connect_onboarding_failed';
+
   /// Compte de versement mobile money (voyageur) activé ou désactivé.
   static const mobileMoneyAccountActivated = 'mobile_money_account_activated';
   static const mobileMoneyAccountDisabled = 'mobile_money_account_disabled';
