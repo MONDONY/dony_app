@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -18,6 +19,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:pinput/pinput.dart';
+
 import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/stripe_account_test_doubles.dart';
@@ -50,6 +53,9 @@ void main() {
   late MockAuthBloc mockBloc;
 
   setUpAll(() {
+    registerFallbackValue(
+      const AuthPhoneVerified(verificationId: 'fallback', smsCode: '000000'),
+    );
     if (!getIt.isRegistered<AnalyticsService>()) {
       final analytics = makeEnabledAnalytics(MockAnalyticsBackend());
       getIt.registerSingleton<AnalyticsService>(analytics);
@@ -266,13 +272,8 @@ void main() {
       );
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      // Enter 6 digits so the partial-code guard doesn't fire
-      final fields = find.byType(TextFormField);
-      for (int i = 0; i < 6; i++) {
-        await tester.enterText(fields.at(i), '$i');
-        await tester.pump();
-      }
-      await tester.tap(find.text('Vérifier'));
+      // Six chiffres saisis : la vérification part d'elle-même.
+      await tester.enterText(find.byType(Pinput), '012345');
       await tester.pump();
 
       // Should show session expired snackbar, not navigate
@@ -291,13 +292,9 @@ void main() {
       await tester.pumpWidget(buildPhoneScreenNoStream());
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      final fields = find.byType(TextFormField);
-      for (int i = 0; i < 6; i++) {
-        await tester.enterText(fields.at(i), '$i');
-        await tester.pump();
-      }
-
-      await tester.tap(find.text('Vérifier'));
+      // Le code arrive d'un bloc, comme depuis la suggestion du clavier : la
+      // vérification part sans toucher « Vérifier ».
+      await tester.enterText(find.byType(Pinput), '012345');
       await tester.pump();
 
       verify(
@@ -307,6 +304,49 @@ void main() {
       ).called(1);
     },
   );
+
+  // Les testeurs recevaient la notification du SMS mais ne le retrouvaient
+  // plus dans Messages (iOS le range dans « Filtres › Transactions ») : sans
+  // cet indice, le téléphone ne proposait pas le code au-dessus du clavier.
+  testWidgets(
+    'le champ du code déclare le remplissage automatique d\'un code SMS',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildPhoneScreenNoStream());
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+
+      final field = tester.widget<EditableText>(
+        find.descendant(
+          of: find.byType(Pinput),
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(field.autofillHints, contains(AutofillHints.oneTimeCode));
+    },
+  );
+
+  testWidgets('un code incomplet ne part pas et « Vérifier » le signale', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(buildPhoneScreenNoStream());
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+
+    await tester.enterText(find.byType(Pinput), '0123');
+    await tester.pump();
+    await tester.tap(find.text('Vérifier'));
+    await tester.pump();
+
+    verifyNever(() => mockBloc.add(any(that: isA<AuthPhoneVerified>())));
+  });
 
   testWidgets(
     'phone mode — _resend() avec secondsLeft=0 dispatche AuthSendOtpRequested',

@@ -11,11 +11,11 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/post_signup_route.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
+import 'package:dony/features/auth/presentation/widgets/otp_code_field.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -38,25 +38,24 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final List<TextEditingController> _controllers = List.generate(
-    6,
-    (_) => TextEditingController(),
-  );
-  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  final _codeController = TextEditingController();
   int _attemptCount = 0;
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    for (final f in _focusNodes) {
-      f.dispose();
-    }
+    _codeController.dispose();
     super.dispose();
   }
 
-  String get _otpCode => _controllers.map((c) => c.text).join();
+  String get _otpCode => _codeController.text;
+
+  /// Six chiffres saisis, le plus souvent d'un toucher sur la suggestion du
+  /// clavier : on vérifie sans attendre le bouton, sauf si une vérification
+  /// est déjà en cours.
+  void _onCodeCompleted(String _) {
+    if (context.read<AuthBloc>().state is AuthLoading) return;
+    _verify();
+  }
 
   void _verify() {
     if (_otpCode.length != 6) {
@@ -98,9 +97,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   }
 
   void _resend() {
-    for (final c in _controllers) {
-      c.clear();
-    }
+    _codeController.clear();
     if (widget.mode == OtpMode.email) {
       context.read<AuthBloc>().add(AuthEmailOtpSendRequested(widget.contact));
     } else {
@@ -266,71 +263,17 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               const SizedBox(height: DonySpacing.xxl),
 
                               // OTP 6-digit input
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: List.generate(6, (index) {
-                                  return SizedBox(
-                                    width:
-                                        (DonyLayout.screenWidth(context) -
-                                            h * 2 -
-                                            DonySpacing.sm * 5) /
-                                        6,
-                                    height: 56,
-                                    child: TextFormField(
-                                      controller: _controllers[index],
-                                      focusNode: _focusNodes[index],
-                                      keyboardType: TextInputType.number,
-                                      textAlign: TextAlign.center,
-                                      maxLength: 1,
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.digitsOnly,
-                                      ],
-                                      style: tt.headlineMedium?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: cs.onSurface,
-                                      ),
-                                      decoration: InputDecoration(
-                                        counterText: '',
-                                        filled: true,
-                                        fillColor: cs.surface,
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            DonyRadius.md,
-                                          ),
-                                          borderSide: BorderSide(
-                                            color: cs.outline,
-                                          ),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            DonyRadius.md,
-                                          ),
-                                          borderSide: BorderSide(
-                                            color: cs.outline,
-                                          ),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            DonyRadius.md,
-                                          ),
-                                          borderSide: BorderSide(
-                                            color: cs.primary,
-                                            width: 2,
-                                          ),
-                                        ),
-                                        contentPadding: EdgeInsets.zero,
-                                      ),
-                                      onChanged: (value) {
-                                        if (value.isNotEmpty && index < 5) {
-                                          _focusNodes[index + 1].requestFocus();
-                                        } else if (value.isEmpty && index > 0) {
-                                          _focusNodes[index - 1].requestFocus();
-                                        }
-                                      },
-                                    ),
-                                  );
-                                }),
+                              Center(
+                                child: OtpCodeField(
+                                  controller: _codeController,
+                                  onCompleted: _onCodeCompleted,
+                                  boxWidth:
+                                      ((DonyLayout.screenWidth(context) -
+                                                  h * 2 -
+                                                  DonySpacing.sm * 5) /
+                                              6)
+                                          .clamp(36.0, 56.0),
+                                ),
                               ),
 
                               const SizedBox(height: DonySpacing.xl),

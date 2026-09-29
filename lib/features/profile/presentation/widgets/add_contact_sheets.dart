@@ -6,6 +6,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/dial_code_picker.dart';
+import 'package:dony/features/auth/presentation/widgets/otp_code_field.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:dony/l10n/rich_text.dart';
 import 'package:flutter/material.dart';
@@ -171,11 +172,7 @@ class _AddPhoneContent extends StatefulWidget {
 
 class _AddPhoneContentState extends State<_AddPhoneContent> {
   final _phoneCtrl = TextEditingController();
-  final List<TextEditingController> _otpCtrl = List.generate(
-    6,
-    (_) => TextEditingController(),
-  );
-  final List<FocusNode> _otpFocus = List.generate(6, (_) => FocusNode());
+  final _otpCtrl = TextEditingController();
   PhoneCountry _country = kDefaultPhoneCountry;
   String _pendingPhone = '';
 
@@ -188,12 +185,7 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
   @override
   void dispose() {
     _phoneCtrl.dispose();
-    for (final c in _otpCtrl) {
-      c.dispose();
-    }
-    for (final f in _otpFocus) {
-      f.dispose();
-    }
+    _otpCtrl.dispose();
     super.dispose();
   }
 
@@ -213,7 +205,7 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
   }
 
   void _verifyOtp() {
-    final code = _otpCtrl.map((c) => c.text).join();
+    final code = _otpCtrl.text;
     if (code.length != 6) return;
     context.read<AuthBloc>().add(
       AuthAddPhoneFromProfileRequested(phoneNumber: _pendingPhone, code: code),
@@ -254,8 +246,8 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
             );
           }
           return _OtpStep(
-            controllers: _otpCtrl,
-            focusNodes: _otpFocus,
+            controller: _otpCtrl,
+            onCompleted: (_) => _verifyOtp(),
             contact: _pendingPhone,
             tt: tt,
             cs: cs,
@@ -444,11 +436,7 @@ class _AddEmailContent extends StatefulWidget {
 
 class _AddEmailContentState extends State<_AddEmailContent> {
   final _emailCtrl = TextEditingController();
-  final List<TextEditingController> _otpCtrl = List.generate(
-    6,
-    (_) => TextEditingController(),
-  );
-  final List<FocusNode> _otpFocus = List.generate(6, (_) => FocusNode());
+  final _otpCtrl = TextEditingController();
   String _pendingEmail = '';
 
   static final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
@@ -462,12 +450,7 @@ class _AddEmailContentState extends State<_AddEmailContent> {
   @override
   void dispose() {
     _emailCtrl.dispose();
-    for (final c in _otpCtrl) {
-      c.dispose();
-    }
-    for (final f in _otpFocus) {
-      f.dispose();
-    }
+    _otpCtrl.dispose();
     super.dispose();
   }
 
@@ -487,7 +470,7 @@ class _AddEmailContentState extends State<_AddEmailContent> {
   }
 
   void _verifyOtp() {
-    final code = _otpCtrl.map((c) => c.text).join();
+    final code = _otpCtrl.text;
     if (code.length != 6) return;
     context.read<AuthBloc>().add(
       AuthAddEmailFromProfileRequested(email: _pendingEmail, code: code),
@@ -522,8 +505,8 @@ class _AddEmailContentState extends State<_AddEmailContent> {
             return _EmailInputStep(controller: _emailCtrl, tt: tt, cs: cs);
           }
           return _OtpStep(
-            controllers: _otpCtrl,
-            focusNodes: _otpFocus,
+            controller: _otpCtrl,
+            onCompleted: (_) => _verifyOtp(),
             contact: _pendingEmail,
             tt: tt,
             cs: cs,
@@ -609,15 +592,15 @@ class _EmailInputStep extends StatelessWidget {
 
 class _OtpStep extends StatelessWidget {
   const _OtpStep({
-    required this.controllers,
-    required this.focusNodes,
+    required this.controller,
+    required this.onCompleted,
     required this.contact,
     required this.tt,
     required this.cs,
   });
 
-  final List<TextEditingController> controllers;
-  final List<FocusNode> focusNodes;
+  final TextEditingController controller;
+  final ValueChanged<String> onCompleted;
   final String contact;
   final TextTheme tt;
   final ColorScheme cs;
@@ -652,51 +635,13 @@ class _OtpStep extends StatelessWidget {
             ),
           ),
           const SizedBox(height: DonySpacing.xl),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(6, (i) {
-              return SizedBox(
-                width: 44,
-                height: 52,
-                child: TextFormField(
-                  controller: controllers[i],
-                  focusNode: focusNodes[i],
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  maxLength: 1,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  style: tt.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: cs.onSurface,
-                  ),
-                  decoration: InputDecoration(
-                    counterText: '',
-                    filled: true,
-                    fillColor: cs.surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(DonyRadius.md),
-                      borderSide: BorderSide(color: cs.outline),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(DonyRadius.md),
-                      borderSide: BorderSide(color: cs.outline),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(DonyRadius.md),
-                      borderSide: BorderSide(color: cs.primary, width: 2),
-                    ),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  onChanged: (value) {
-                    if (value.isNotEmpty && i < 5) {
-                      focusNodes[i + 1].requestFocus();
-                    } else if (value.isEmpty && i > 0) {
-                      focusNodes[i - 1].requestFocus();
-                    }
-                  },
-                ),
-              );
-            }),
+          Center(
+            child: OtpCodeField(
+              controller: controller,
+              onCompleted: onCompleted,
+              boxWidth: 44,
+              boxHeight: 52,
+            ),
           ),
         ],
       ),
