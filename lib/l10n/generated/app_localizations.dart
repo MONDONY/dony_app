@@ -16397,7 +16397,7 @@ abstract class AppLocalizations {
   /// Libellé de l'étape de suivi DEPART (tracking_labels.dart, trackingStepLabel).
   ///
   /// In fr, this message translates to:
-  /// **'Départ'**
+  /// **'Récupération'**
   String get trackingStepDeparture;
 
   /// Libellé de l'étape de suivi TRANSIT (tracking_labels.dart, trackingStepLabel), identique dans les deux langues (voir _sameInBothLanguages).
@@ -16943,7 +16943,7 @@ abstract class AppLocalizations {
   /// Libellé complet de l'étape DEPART d'un événement de suivi (extension TrackingEventL10n, tracking_labels.dart) — distinct de trackingStepDeparture (« Départ » seul, écrans de lecture).
   ///
   /// In fr, this message translates to:
-  /// **'Départ confirmé'**
+  /// **'Colis récupéré'**
   String get trackingEventDepartureConfirmed;
 
   /// Libellé complet de l'étape TRANSIT d'un événement de suivi (extension TrackingEventL10n, tracking_labels.dart).
@@ -23697,7 +23697,7 @@ abstract class AppLocalizations {
   /// Action d'une ligne colis selon son étape suivante (suivi_validate_content.dart, _ParcelRow).
   ///
   /// In fr, this message translates to:
-  /// **'{step, select, DEPART{Valider le départ} TRANSIT{Valider le transit} other{Valider l\'arrivée}}'**
+  /// **'{step, select, DEPART{Valider la récupération} TRANSIT{Valider le transit} other{Valider l\'arrivée}}'**
   String suiviValidateStep(String step);
 
   /// Ligne colis dont toutes les étapes sont validées (suivi_validate_content.dart, _ParcelRow).
@@ -23706,11 +23706,11 @@ abstract class AppLocalizations {
   /// **'Tout est validé'**
   String get suiviAllValidated;
 
-  /// Dernière étape scannée d'un colis et son heure (suivi_validate_content.dart, _ParcelRow).
+  /// Dernière étape scannée d'un colis, sa date et son heure (suivi_validate_content.dart, _ParcelRow). DEPART = prise en charge du colis à la remise, pas le départ du trajet (FLUTTER-45).
   ///
   /// In fr, this message translates to:
-  /// **'{step, select, DEPART{Départ fait à {time}} TRANSIT{Transit fait à {time}} other{Arrivée faite à {time}}}'**
-  String suiviLastStepAt(String step, String time);
+  /// **'{step, select, DEPART{Colis récupéré le {date} à {time}} TRANSIT{Transit le {date} à {time}} other{Arrivée le {date} à {time}}}'**
+  String suiviLastStepAt(String step, String date, String time);
 
   /// Colis confirmé pas encore remis au voyageur (suivi_validate_content.dart, _ParcelRow).
   ///
@@ -23979,7 +23979,7 @@ abstract class AppLocalizations {
   /// Titre du bandeau d'une validation rapide annulable (suivi_validation_toast.dart).
   ///
   /// In fr, this message translates to:
-  /// **'{step, select, DEPART{Départ de {parcel} validé} other{Transit de {parcel} validé}}'**
+  /// **'{step, select, DEPART{{parcel} récupéré} other{Transit de {parcel} validé}}'**
   String suiviStepValidatedToast(String step, String parcel);
 
   /// Décompte du bandeau de validation rapide, photo prise ou non (suivi_validation_toast.dart).
@@ -24027,13 +24027,13 @@ abstract class AppLocalizations {
   /// Fin en gras de la ligne « Étape : … » quand une étape est forcée (suivi_validate_content.dart, _StepModeRow). {step} : DEPART, TRANSIT ou ARRIVEE.
   ///
   /// In fr, this message translates to:
-  /// **'{step, select, DEPART{départ} TRANSIT{transit, facultatif} other{arrivée}}'**
+  /// **'{step, select, DEPART{récupération} TRANSIT{transit, facultatif} other{arrivée}}'**
   String suiviStepModeForced(String step);
 
   /// Explication de l'étape forcée (suivi_validate_content.dart, _StepModeRow).
   ///
   /// In fr, this message translates to:
-  /// **'Le prochain colis scanné ou saisi valide {step, select, DEPART{son départ, avec une photo} TRANSIT{son transit} other{son arrivée, avec la photo puis le code du destinataire}}, puis l\'étape repasse en automatique.'**
+  /// **'Le prochain colis scanné ou saisi valide {step, select, DEPART{sa récupération, avec une photo} TRANSIT{son transit} other{son arrivée, avec la photo puis le code du destinataire}}, puis l\'étape repasse en automatique.'**
   String suiviStepModeForcedHelp(String step);
 
   /// Consigne sous le cadre caméra quand une étape est forcée (suivi_screen.dart).
@@ -24045,13 +24045,13 @@ abstract class AppLocalizations {
   /// Transit ou arrivée forcés sur un colis pas encore parti (suivi_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Valide d\'abord le départ de {parcel}.'**
+  /// **'Valide d\'abord la récupération de {parcel}.'**
   String suiviStepNeedsDepart(String parcel);
 
   /// Départ ou transit forcés sur un colis où cette étape est déjà faite (suivi_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'{step, select, DEPART{Le départ de {parcel} est déjà validé.} other{Le transit de {parcel} est déjà validé.}}'**
+  /// **'{step, select, DEPART{La récupération de {parcel} est déjà validée.} other{Le transit de {parcel} est déjà validé.}}'**
   String suiviStepAlreadyDone(String step, String parcel);
 
   /// En-tête de la feuille du parcours d'un colis, avec l'icône œil (tracking_timeline_bottom_sheet.dart).

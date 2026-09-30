@@ -29,10 +29,10 @@ void main() {
 
   group('TrackingEventL10n.stepLabel', () {
     test('DEPART — fr', () {
-      expect(event('DEPART').stepLabel(fr), 'Départ confirmé');
+      expect(event('DEPART').stepLabel(fr), 'Colis récupéré');
     });
     test('DEPART — en', () {
-      expect(event('DEPART').stepLabel(en), 'Departure confirmed');
+      expect(event('DEPART').stepLabel(en), 'Parcel collected');
     });
     test('TRANSIT — fr', () {
       expect(event('TRANSIT').stepLabel(fr), 'En transit');
