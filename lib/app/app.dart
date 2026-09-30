@@ -8,6 +8,7 @@ import 'package:dony/app/mobile_money_deep_link.dart';
 import 'package:dony/app/package_request_deep_link.dart';
 import 'package:dony/app/reduced_motion_priming.dart';
 import 'package:dony/app/router.dart';
+import 'package:dony/app/system_back_dispatcher.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
@@ -97,6 +98,10 @@ class _DonyAppState extends State<DonyApp> {
   /// changement de langue effective, pas à chaque reconstruction du `builder`
   /// de `MaterialApp` (rebâti à chaque frame).
   final _channelLanguageGuard = LanguageChangeGuard();
+
+  /// Retour Android : même repli que le bouton des écrans au lieu de fermer
+  /// l'application quand la pile est vide.
+  final _backButtonDispatcher = SystemBackDispatcher.forRouter(appRouter);
 
   // go() est nécessaire pour activer le bon onglet du shell principal.
   // Toutes les autres routes utilisent push() pour empiler par-dessus l'état
@@ -476,7 +481,14 @@ class _DonyAppState extends State<DonyApp> {
                         ? null
                         : Locale(prefsState.preferences.languageCode),
                     localeListResolutionCallback: AppL10n.localeListResolution,
-                    routerConfig: appRouter,
+                    // Pas `routerConfig` : il interdit un `backButtonDispatcher`
+                    // propre, seul moyen de donner au retour Android le même
+                    // repli que le bouton des écrans (`backFallbackFor`).
+                    routerDelegate: appRouter.routerDelegate,
+                    routeInformationParser: appRouter.routeInformationParser,
+                    routeInformationProvider:
+                        appRouter.routeInformationProvider,
+                    backButtonDispatcher: _backButtonDispatcher,
                     debugShowCheckedModeBanner: false,
                     builder: (context, child) {
                       // Sous Localizations, rebâti à chaque langue effective ;

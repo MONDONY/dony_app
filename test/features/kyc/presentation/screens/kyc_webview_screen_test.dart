@@ -95,5 +95,23 @@ void main() {
             'de la page distante passe sous la barre de navigation',
       );
     });
+
+    // Régression : l'écran n'a pas de bouton retour, seulement la croix.
+    // Ouvert par `go()`, il est seul dans la pile : le retour du téléphone
+    // fermait l'application en pleine vérification d'identité.
+    testWidgets('intercepte le retour système au lieu de fermer l\'app', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap());
+
+      final scope = tester.widget<PopScope>(
+        find.ancestor(
+          of: find.byType(WebViewWidget),
+          matching: find.byWidgetPredicate((w) => w is PopScope),
+        ),
+      );
+      expect(scope.canPop, isFalse);
+      expect(scope.onPopInvokedWithResult, isNotNull);
+    });
   });
 }

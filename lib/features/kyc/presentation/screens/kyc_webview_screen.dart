@@ -212,59 +212,80 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
     }
   }
 
+  /// Croix de l'en-tête, et retour système une fois l'historique de la page
+  /// de vérification épuisé.
+  void _close() {
+    context.read<KycBloc>().add(const KycSessionAbandoned());
+    context.read<AuthBloc>().add(const AuthCheckRequested());
+    // Abandonner l'identité ne la termine pas : positionnel, pas
+    // `progress.next`, pour ne jamais reboucler sur cette même
+    // étape (voir `OnboardingProgress.routeAfter`).
+    final progress = widget.progress;
+    final destination =
+        progress?.routeAfter(OnboardingStep.identity) ?? '/home';
+    if (progress != null && destination == '/home') {
+      unawaited(
+        getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}),
+      );
+      // Fin du parcours : « Par quoi commencer ? » plutôt que
+      // l'accueil.
+      context.go(firstStepsRoute);
+      return;
+    }
+    context.go(destination);
+  }
+
+  /// Retour Android : l'écran n'a pas de bouton retour, seulement la croix.
+  /// Sans ce relais, le retour du téléphone fermait l'application en pleine
+  /// vérification (route ouverte par `go()`, seule dans la pile). On recule
+  /// d'abord dans la page du fournisseur, puis on fait comme la croix.
+  Future<void> _onSystemBack(bool didPop, Object? _) async {
+    if (didPop) return;
+    if (await _controller.canGoBack()) {
+      await _controller.goBack();
+      return;
+    }
+    if (mounted) _close();
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      appBar: DonyAppBar(
-        title: l.kycVerificationTitle,
-        showBackButton: false,
-        actions: [
-          IconButton(
-            tooltip: l.commonClose,
-            icon: DonyIcon('x', color: cs.onSurface),
-            onPressed: () {
-              context.read<KycBloc>().add(const KycSessionAbandoned());
-              context.read<AuthBloc>().add(const AuthCheckRequested());
-              // Abandonner l'identité ne la termine pas : positionnel, pas
-              // `progress.next`, pour ne jamais reboucler sur cette même
-              // étape (voir `OnboardingProgress.routeAfter`).
-              final progress = widget.progress;
-              final destination =
-                  progress?.routeAfter(OnboardingStep.identity) ?? '/home';
-              if (progress != null && destination == '/home') {
-                unawaited(
-                  getIt<AuthRepository>().markOnboardingSeen().catchError(
-                    (_) {},
-                  ),
-                );
-                // Fin du parcours : « Par quoi commencer ? » plutôt que
-                // l'accueil.
-                context.go(firstStepsRoute);
-                return;
-              }
-              context.go(destination);
-            },
-          ),
-        ],
-      ),
-      body: SafeArea(
-        // Android 15 impose l'edge-to-edge : sans cette marge, la WebView
-        // s'étend sous la barre de navigation. Le bouton d'action de la page
-        // distante, ancré en bas, tombe alors entièrement dans la bande
-        // système et devient invisible autant qu'intouchable.
-        child: Stack(
-          children: [
-            WebViewWidget(controller: _controller),
-            ValueListenableBuilder<bool>(
-              valueListenable: _isLoading,
-              builder: (_, loading, _) => loading
-                  ? Center(child: CircularProgressIndicator(color: cs.primary))
-                  : const SizedBox.shrink(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: _onSystemBack,
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        appBar: DonyAppBar(
+          title: l.kycVerificationTitle,
+          showBackButton: false,
+          actions: [
+            IconButton(
+              tooltip: l.commonClose,
+              icon: DonyIcon('x', color: cs.onSurface),
+              onPressed: _close,
             ),
           ],
+        ),
+        body: SafeArea(
+          // Android 15 impose l'edge-to-edge : sans cette marge, la WebView
+          // s'étend sous la barre de navigation. Le bouton d'action de la page
+          // distante, ancré en bas, tombe alors entièrement dans la bande
+          // système et devient invisible autant qu'intouchable.
+          child: Stack(
+            children: [
+              WebViewWidget(controller: _controller),
+              ValueListenableBuilder<bool>(
+                valueListenable: _isLoading,
+                builder: (_, loading, _) => loading
+                    ? Center(
+                        child: CircularProgressIndicator(color: cs.primary),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
         ),
       ),
     );

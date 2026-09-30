@@ -1,3 +1,4 @@
+import 'package:dony/app/system_back_dispatcher.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -112,7 +113,7 @@ class DonyAppBarBackButton extends StatelessWidget {
         } else if (context.canPop()) {
           context.pop();
         } else {
-          context.go('/home');
+          _goFallback(context);
         }
       },
       icon: Container(
@@ -177,7 +178,7 @@ class DonySliverAppBar extends StatelessWidget {
                     if (context.canPop()) {
                       context.pop();
                     } else {
-                      context.go('/home');
+                      _goFallback(context);
                     }
                   },
               icon: Container(
@@ -236,4 +237,11 @@ List<Widget>? withFeedbackButton(List<Widget>? actions, bool showFeedback) {
     return current;
   }
   return [...current, const DonyFeedbackButton()];
+}
+
+/// Repli du bouton retour quand la pile est vide : le même que celui du retour
+/// système Android (`backFallbackFor`), l'accueil à défaut.
+void _goFallback(BuildContext context) {
+  final location = GoRouterState.of(context).uri.path;
+  context.go(backFallbackFor(location) ?? '/home');
 }
