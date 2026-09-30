@@ -267,9 +267,42 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
     if (_focusNode.hasFocus) {
       _openOverlay();
     } else {
+      _commitPendingText();
       _closeOverlay();
     }
     setState(() {}); // rafraîchit la bordure focus du champ
+  }
+
+  /// En mode [ContentCategoryComboBox.alwaysAllowCustom], une saisie laissée
+  /// dans le champ (validation au clavier, tap à côté) est enregistrée : le
+  /// libellé du catalogue qu'elle désigne exactement, sinon un contenu libre.
+  ///
+  /// Sans ça, seul un tap sur la ligne « Ajouter » créait le tag : le texte
+  /// restait affiché mais la sélection était vide, et le formulaire d'envoi
+  /// refusait la demande sans dire pourquoi (FLUTTER-4A). Après un tap dans
+  /// la liste, [_afterChange] a déjà vidé le champ : rien n'est ajouté deux
+  /// fois.
+  void _commitPendingText() {
+    if (!widget.alwaysAllowCustom) {
+      return;
+    }
+    final lowerQuery = _controller.text.trim().toLowerCase();
+    if (lowerQuery.isEmpty) {
+      return;
+    }
+    for (final c in widget.catalog) {
+      if (c.label.toLowerCase() == lowerQuery ||
+          contentCategoryDisplayName(context.l10n, c.label).toLowerCase() ==
+              lowerQuery) {
+        if (_selected.contains(c.label)) {
+          _controller.clear();
+          return;
+        }
+        _select(c.label);
+        return;
+      }
+    }
+    _addCustom();
   }
 
   /// Compare la requête au libellé affiché ET au libellé brut : un
@@ -334,7 +367,12 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
   }
 
   void _addCustom() {
-    final value = _controller.text.trim();
+    // Le contenu part au back en liste séparée par des virgules : une virgule
+    // dans un libellé libre le couperait en deux.
+    final value = _controller.text
+        .replaceAll(',', ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
     if (value.isEmpty) {
       return;
     }
@@ -543,6 +581,8 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
               focusNode: _focusNode,
               style: tt.bodyMedium?.copyWith(color: cs.onSurface),
               textCapitalization: TextCapitalization.sentences,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _focusNode.unfocus(),
               decoration: InputDecoration(
                 hintText:
                     widget.hint ?? context.l10n.contentCategoryHintDefault,

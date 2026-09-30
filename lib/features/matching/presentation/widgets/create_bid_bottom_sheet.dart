@@ -253,11 +253,18 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   /// Libellés des articles de grille sélectionnés (quantité > 0), utilisés
   /// comme `contentCategory` en grille pure — remplace le combobox masqué.
+  /// En proposition de prix, les articles hors grille ajoutés par
+  /// l'expéditeur en font partie : il peut envoyer un contenu absent de la
+  /// liste du voyageur (FLUTTER-4A).
   Set<String> get _gridDerivedCategories {
     final q = _gridQuantitiesNotifier.value;
     return {
       for (final item in widget.announcement.priceGridItems)
         if ((q[item.id] ?? 0) > 0) item.label,
+      if (widget.negotiation)
+        for (final item in _customItemsNotifier.value)
+          if (item.label.trim().isNotEmpty)
+            item.label.replaceAll(',', ' ').trim(),
     };
   }
 
@@ -328,6 +335,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _categoriesNotifier.addListener(_syncFormButtonState);
     _disclaimerNotifier.addListener(_syncFormButtonState);
     _gridQuantitiesNotifier.addListener(_syncFormButtonState);
+    _customItemsNotifier.addListener(_syncFormButtonState);
 
     _weightNotifier.addListener(_invalidateQuote);
     _gridQuantitiesNotifier.addListener(_invalidateQuote);
@@ -461,6 +469,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _categoriesNotifier.removeListener(_syncFormButtonState);
     _disclaimerNotifier.removeListener(_syncFormButtonState);
     _gridQuantitiesNotifier.removeListener(_syncFormButtonState);
+    _customItemsNotifier.removeListener(_syncFormButtonState);
     _weightNotifier.removeListener(_invalidateQuote);
     _gridQuantitiesNotifier.removeListener(_invalidateQuote);
     _stepNotifier.removeListener(_onStepChanged);
@@ -492,7 +501,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     final hasKgPricing = kgPrice != null && kgPrice > 0;
     final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
     final weightOk = hasKgPricing && _weightNotifier.value > 0;
-    final gridOk = hasGridPricing && _gridQuantitiesNotifier.value.isNotEmpty;
+    // En proposition de prix, des articles hors grille suffisent : le
+    // voyageur les chiffre dans le fil (le back les accepte seuls).
+    final customOk =
+        widget.negotiation && _customItemsNotifier.value.isNotEmpty;
+    final gridOk =
+        hasGridPricing &&
+        (_gridQuantitiesNotifier.value.isNotEmpty || customOk);
     // En grille pure, le contenu se déduit des articles choisis (gridOk le
     // couvre déjà) — pas de combobox à remplir séparément.
     final categoriesOk = _isGridOnly || _categoriesNotifier.value.isNotEmpty;

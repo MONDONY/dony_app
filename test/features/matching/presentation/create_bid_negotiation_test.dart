@@ -69,6 +69,7 @@ AnnouncementModel _announcement({
     BidPaymentMethod.stripe,
   },
   String currency = 'EUR',
+  bool gridOnly = false,
 }) => AnnouncementModel(
   id: 'ann-nego',
   currency: currency,
@@ -78,7 +79,17 @@ AnnouncementModel _announcement({
   departureDate: DateTime(2026, 9, 12),
   availableKg: 10.0,
   totalKg: 10.0,
-  pricePerKg: 10.0,
+  pricePerKg: gridOnly ? null : 10.0,
+  priceGridItems: gridOnly
+      ? const [
+          AnnouncementGridItemModel(
+            id: 'grid-valise',
+            label: 'Valise 23 kg',
+            unitPriceNet: 40,
+            unitPriceDisplay: 45,
+          ),
+        ]
+      : const [],
   status: 'OPEN',
   createdAt: DateTime(2026, 8),
   updatedAt: DateTime(2026, 8),
@@ -258,6 +269,7 @@ void main() {
       BidPaymentMethod.stripe,
     },
     String currency = 'EUR',
+    bool gridOnly = false,
   }) => MaterialApp.router(
     theme: AppTheme.light(),
     localizationsDelegates: const [
@@ -275,6 +287,7 @@ void main() {
               negotiable: negotiation,
               acceptedPaymentMethods: acceptedPaymentMethods,
               currency: currency,
+              gridOnly: gridOnly,
             ),
             negotiation: negotiation,
           ),
@@ -290,6 +303,7 @@ void main() {
       BidPaymentMethod.stripe,
     },
     String currency = 'EUR',
+    bool gridOnly = false,
   }) async {
     tester.view.physicalSize = const Size(800, 6000);
     tester.view.devicePixelRatio = 1.0;
@@ -299,6 +313,7 @@ void main() {
         negotiation: negotiation,
         acceptedPaymentMethods: acceptedPaymentMethods,
         currency: currency,
+        gridOnly: gridOnly,
       ),
     );
     await tester.pump(_kSettle);
@@ -453,6 +468,58 @@ void main() {
     expect(captured.single.recipientName, 'Awa Diop');
     // Trajet carte seule : le mode est figé sur la carte sans rien demander.
     expect(captured.single.paymentMethod, BidPaymentMethod.stripe);
+  });
+
+  // FLUTTER-4A : sur un trajet en grille pure, l'expéditeur dont le contenu
+  // n'est pas dans la grille du voyageur l'ajoute en article hors grille ;
+  // cela suffit pour proposer, et le contenu envoyé est son libellé.
+  testWidgets('grille pure : un article hors grille seul permet de proposer', (
+    tester,
+  ) async {
+    await openBid(tester, negotiation: true, gridOnly: true);
+
+    await tester.ensureVisible(find.byKey(const Key('custom-item-add')));
+    await tester.tap(find.byKey(const Key('custom-item-add')));
+    await tester.pump(_kSettle);
+    await tester.enterText(
+      find.byKey(const Key('custom-item-label')),
+      'Sac de riz',
+    );
+    await tester.pump(_kSettle);
+    await tester.enterText(find.byKey(const Key('custom-item-amount')), '10');
+    await tester.pump(_kSettle);
+    await tester.pump(_kSettle);
+    await tester.tap(find.byKey(const Key('custom-item-submit')));
+    await tester.pump(_kSettle);
+    await tester.pump(_kSettle);
+
+    await tester.enterText(
+      find.widgetWithText(
+        TextFormField,
+        'Médicaments pour diabète + 2 tee-shirts enfants',
+      ),
+      'Un sac de riz de 10 kg',
+    );
+    await tester.pump(_kSettle);
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Prénom et nom du destinataire'),
+      'Awa Diop',
+    );
+    await tester.pump(_kSettle);
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Téléphone du destinataire'),
+      '+221700000000',
+    );
+    await tester.pump(_kSettle);
+    await tester.ensureVisible(find.text('Je signe & j\'accepte'));
+    await tester.tap(find.text('Je signe & j\'accepte'));
+    await tester.pump(_kSettle);
+    await tester.pump(_kSettle);
+
+    final captured = await submitProposal(tester);
+    expect(captured, hasLength(1));
+    expect(captured.single.contentCategory, 'Sac de riz');
+    expect(captured.single.customItems, hasLength(1));
   });
 
   testWidgets('sans alternative, la proposition part sans etape paiement', (
