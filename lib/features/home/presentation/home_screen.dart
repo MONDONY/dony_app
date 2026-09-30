@@ -1549,8 +1549,13 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       child: AnimatedOpacity(
                         duration: const Duration(milliseconds: 200),
                         opacity: _showPublishParcel ? 1 : 0,
-                        child: Center(
-                          child: _PublishParcelFab(onTap: _onPublishParcel),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: DonySpacing.lg,
+                          ),
+                          child: Center(
+                            child: _PublishParcelFab(onTap: _onPublishParcel),
+                          ),
                         ),
                       ),
                     ),
@@ -2507,11 +2512,17 @@ class _PublishParcelFab extends StatelessWidget {
                 children: [
                   const DonyIcon('plus', size: 20, color: Colors.white),
                   const SizedBox(width: DonySpacing.sm),
-                  Text(
-                    context.l10n.homeGuidancePublishParcel,
-                    style: tt.titleSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
+                  // Flexible : à 200 % de taille de texte, le libellé
+                  // débordait l'écran ; il passe à la ligne à la place.
+                  Flexible(
+                    child: Text(
+                      context.l10n.homeGuidancePublishParcel,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.titleSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],
