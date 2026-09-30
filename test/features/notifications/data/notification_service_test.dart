@@ -1111,4 +1111,27 @@ void main() {
       );
     });
   });
+
+  // FLUTTER-4B : une notification touchée au lancement à froid, avant que
+  // l'app n'écoute navigationStream, était perdue (flux broadcast).
+  group('route d\'une notification touchée', () {
+    test('sans écouteur : gardée, puis relevée une seule fois', () {
+      service.emitRoute('/bids/abc');
+
+      expect(service.takePendingRoute(), '/bids/abc');
+      expect(service.takePendingRoute(), isNull);
+    });
+
+    test('avec écouteur : émise, rien en attente', () async {
+      final routes = <String>[];
+      final sub = service.navigationStream.listen(routes.add);
+      addTearDown(sub.cancel);
+
+      service.emitRoute('/tracking');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(routes, ['/tracking']);
+      expect(service.takePendingRoute(), isNull);
+    });
+  });
 }

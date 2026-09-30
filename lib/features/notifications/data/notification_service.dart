@@ -171,6 +171,29 @@ class NotificationService {
   final _navigationController = StreamController<String>.broadcast();
   Stream<String> get navigationStream => _navigationController.stream;
 
+  /// Route d'une notification touchée alors que personne n'écoutait encore
+  /// [navigationStream] (lancement à froid) : un flux broadcast la perdrait.
+  /// L'app la relève avec [takePendingRoute] une fois prête.
+  String? _pendingRoute;
+
+  /// Émet la route d'une notification touchée, ou la garde en attente si
+  /// l'app n'écoute pas encore (FLUTTER-4B).
+  @visibleForTesting
+  void emitRoute(String route) {
+    if (_navigationController.hasListener) {
+      _navigationController.add(route);
+    } else {
+      _pendingRoute = route;
+    }
+  }
+
+  /// Route en attente (voir [emitRoute]), consommée : elle ne sert qu'une fois.
+  String? takePendingRoute() {
+    final route = _pendingRoute;
+    _pendingRoute = null;
+    return route;
+  }
+
   // Emits void whenever a new foreground notification arrives (for badge refresh)
   final _newNotificationController = StreamController<void>.broadcast();
   Stream<void> get newNotificationStream => _newNotificationController.stream;
@@ -223,6 +246,17 @@ class NotificationService {
       const InitializationSettings(android: androidInit, iOS: iosInit),
       onDidReceiveNotificationResponse: _onLocalNotificationTap,
     );
+
+    // App lancée par le tap d'une notification locale (bandeau affiché au
+    // premier plan, touché après la fermeture de l'app) : ce tap-là n'arrive
+    // pas par onDidReceiveNotificationResponse.
+    final launch = await _localNotifications.getNotificationAppLaunchDetails();
+    final launchRoute = (launch?.didNotificationLaunchApp ?? false)
+        ? launch?.notificationResponse?.payload
+        : null;
+    if (launchRoute != null && launchRoute.isNotEmpty) {
+      emitRoute(launchRoute);
+    }
 
     // Register background handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -760,14 +794,14 @@ class NotificationService {
     }
     final route = _routeForMessage(message.data);
     if (route != null) {
-      _navigationController.add(route);
+      emitRoute(route);
     }
   }
 
   void _onLocalNotificationTap(NotificationResponse response) {
     final route = response.payload;
     if (route != null && route.isNotEmpty) {
-      _navigationController.add(route);
+      emitRoute(route);
     }
   }
 
