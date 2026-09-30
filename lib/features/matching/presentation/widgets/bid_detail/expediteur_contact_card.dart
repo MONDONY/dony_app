@@ -25,6 +25,10 @@ import 'package:go_router/go_router.dart';
 
 /// Carte profil expéditeur (vue voyageur) — bouton 📞 conditionnel + 💬 chat.
 ///
+/// Affichée à tous les statuts : tant que la demande est en attente, seul le
+/// profil est visible, sans bouton d'appel ni de message
+/// ([bidAllowsContact]).
+///
 /// Le bouton téléphone est affiché uniquement si :
 ///   - `bid.senderPhoneAvailable` est vrai (le serveur autorise la révélation),
 ///   - ET le statut n'est pas COMPLETED ni DELIVERED.
@@ -61,6 +65,7 @@ class ExpediteurContactCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
     final name = bid.senderDisplayName(l);
+    final contactAllowed = bidAllowsContact(bid.status);
     final canOpenProfile = bid.senderId.isNotEmpty;
 
     return InkWell(
@@ -146,7 +151,7 @@ class ExpediteurContactCard extends StatelessWidget {
                   ),
                 ),
                 // Bouton 📞 — conditionnel
-                if (_showPhoneButton) ...[
+                if (_showPhoneButton && contactAllowed) ...[
                   BlocConsumer<ContactRevealBloc, ContactRevealState>(
                     listener: (context, state) {
                       if (state is ContactRevealSuccess) {
@@ -168,21 +173,22 @@ class ExpediteurContactCard extends StatelessWidget {
                   const SizedBox(width: DonySpacing.sm),
                 ],
                 // Bouton 💬 chat
-                BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
-                  builder: (context, openState) {
-                    final isOpening = openState is ConversationOpenLoading;
-                    return _IconActionButton(
-                      iconAsset: 'message-circle',
-                      semanticLabel: l.bidDetailSenderOpenChatSemanticLabel,
-                      isLoading: isOpening,
-                      onTap: isOpening
-                          ? null
-                          : () => context.read<ConversationOpenBloc>().add(
-                              ConversationOpenRequested(bid.id),
-                            ),
-                    );
-                  },
-                ),
+                if (contactAllowed)
+                  BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
+                    builder: (context, openState) {
+                      final isOpening = openState is ConversationOpenLoading;
+                      return _IconActionButton(
+                        iconAsset: 'message-circle',
+                        semanticLabel: l.bidDetailSenderOpenChatSemanticLabel,
+                        isLoading: isOpening,
+                        onTap: isOpening
+                            ? null
+                            : () => context.read<ConversationOpenBloc>().add(
+                                ConversationOpenRequested(bid.id),
+                              ),
+                      );
+                    },
+                  ),
                 if (canOpenProfile) ...[
                   const SizedBox(width: DonySpacing.xs),
                   DonyIcon(

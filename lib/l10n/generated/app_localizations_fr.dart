@@ -14593,4 +14593,44 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorHandoverDeadlinePassedMessage =>
       'La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.';
+
+  @override
+  String get bidDetailSectionRequest => 'DEMANDE';
+
+  @override
+  String get bidDetailReferenceLabel => 'Référence';
+
+  @override
+  String get bidDetailSentAtLabel => 'Envoyée le';
+
+  @override
+  String get bidDetailUpdatedAtLabel => 'Mise à jour';
+
+  @override
+  String get bidDetailPaymentMethodLabel => 'Paiement';
+
+  @override
+  String bidDetailPaymentMethodValue(String method) {
+    String _temp0 = intl.Intl.selectLogic(method, {
+      'stripe': 'Carte bancaire',
+      'cash': 'Espèces à la remise',
+      'wave': 'Wave',
+      'orangeMoney': 'Orange Money',
+      'mobileMoney': 'Mobile money',
+      'other': '-',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get bidDetailPromoCodeLabel => 'Code promo';
+
+  @override
+  String get bidDetailRouteLabel => 'Itinéraire';
+
+  @override
+  String get bidDetailArrivalTimeLabel => 'Heure d\'arrivée';
+
+  @override
+  String get bidDetailPickupInstructionsLabel => 'Retrait à l\'arrivée';
 }

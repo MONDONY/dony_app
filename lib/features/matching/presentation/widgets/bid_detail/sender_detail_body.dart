@@ -104,8 +104,9 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
           ArrivalInstructionsCard.hasText(widget.bid.arrivalInstructions))
         ArrivalInstructionsCard(instructions: widget.bid.arrivalInstructions!),
       DeliveryNoShowCtaCell(bid: widget.bid, isSender: true),
-      if (_activeStatuses.contains(status))
-        VoyageurContactCard(bid: widget.bid),
+      // Profil du voyageur à tous les statuts ; les boutons de contact
+      // n'apparaissent qu'une fois la demande acceptée.
+      VoyageurContactCard(bid: widget.bid),
       ColisDestinataireCard(bid: widget.bid),
       PaiementCard(bid: widget.bid),
       if (_activeStatuses.contains(status)) QuickActionsRow(bid: widget.bid),

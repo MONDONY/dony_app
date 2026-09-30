@@ -3,6 +3,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_photo_viewer_modal.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -16,7 +17,15 @@ import 'package:flutter/material.dart';
 class ColisDestinataireCard extends StatelessWidget {
   final BidModel bid;
 
-  const ColisDestinataireCard({super.key, required this.bid});
+  /// Vue expéditeur : le téléphone du destinataire est toujours affiché. Vue
+  /// voyageur : seulement une fois la demande acceptée ([bidAllowsContact]).
+  final bool isSender;
+
+  const ColisDestinataireCard({
+    super.key,
+    required this.bid,
+    this.isSender = true,
+  });
 
   String _colisLabel(AppLocalizations l) {
     final parts = <String>[];
@@ -53,11 +62,13 @@ class ColisDestinataireCard extends StatelessWidget {
             label: l.bidDetailRecipientLabel,
             value: bid.recipientName ?? '-',
           ),
-          const SizedBox(height: DonySpacing.sm),
-          InfoRow(
-            label: l.bidDetailPhoneLabel,
-            value: bid.recipientPhone ?? '-',
-          ),
+          if (isSender || bidAllowsContact(bid.status)) ...[
+            const SizedBox(height: DonySpacing.sm),
+            InfoRow(
+              label: l.bidDetailPhoneLabel,
+              value: bid.recipientPhone ?? '-',
+            ),
+          ],
         ],
       ),
     );

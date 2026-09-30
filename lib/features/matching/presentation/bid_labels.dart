@@ -69,3 +69,18 @@ extension BidFailedDisplay on BidFailed {
     }
   }
 }
+
+/// Statuts où expéditeur et voyageur peuvent se contacter (appel, message) :
+/// la demande est acceptée ou au-delà. Avant (en attente de paiement ou
+/// d'acceptation), chacun voit le profil de l'autre mais sans moyen de le
+/// joindre, et le voyageur ne voit pas le téléphone du destinataire.
+const bidContactStatuses = <String>{
+  'ACCEPTED',
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'ARRIVED',
+  'COMPLETED',
+  'DELIVERED',
+};
+
+bool bidAllowsContact(String status) => bidContactStatuses.contains(status);

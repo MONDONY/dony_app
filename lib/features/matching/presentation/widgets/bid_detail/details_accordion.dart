@@ -23,11 +23,12 @@ const _kRemisStatuses = <String>{
   'DELIVERED',
 };
 
-/// Accordéon « Plus de détails » — contient 4 sections :
-///   1. FENÊTRE DE REMISE
-///   2. TRAJET
-///   3. LIEN DE SUIVI (si autorisé et trackingToken != null)
-///   4. RESPONSABILITÉ LÉGALE
+/// Accordéon « Plus de détails » — tout ce que l'app sait de la demande :
+///   1. DEMANDE (référence, dates d'envoi et de mise à jour, paiement, promo)
+///   2. FENÊTRE DE REMISE
+///   3. TRAJET (itinéraire, départ, arrivée, retrait à l'arrivée)
+///   4. LIEN DE SUIVI (si autorisé et trackingToken != null)
+///   5. RESPONSABILITÉ LÉGALE
 ///
 /// NOTE : ce widget est un [StatefulWidget] pour gérer l'état UI `_open`
 /// (pattern AnimatedSize standard). Ce setState local ne gère que l'ouverture/
@@ -72,6 +73,29 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
     }
     return DateFormat.yMMMEd(locale).format(d.toLocal());
   }
+
+  String _formatDateTime(BuildContext context, DateTime d) {
+    final locale = context.l10n.localeName;
+    return '${DateFormat.yMd(locale).format(d.toLocal())} '
+        '${DateFormat.Hm(locale).format(d.toLocal())}';
+  }
+
+  /// Numéro de suivi quand il est servi (expéditeur, ou voyageur après la
+  /// remise), sinon le début de l'identifiant de la demande.
+  String get _reference =>
+      bid.trackingNumber ??
+      bid.id.substring(0, bid.id.length < 8 ? bid.id.length : 8).toUpperCase();
+
+  String get _route {
+    final from = bid.departureCity;
+    final to = bid.arrivalCity;
+    if (from == null && to == null) return '-';
+    return '${from ?? '-'} → ${to ?? '-'}';
+  }
+
+  /// « 14:30:00 » (LocalTime du back) → « 14:30 ».
+  static String _hhmm(String time) =>
+      time.length >= 5 ? time.substring(0, 5) : time;
 
   void _toggle() {
     HapticFeedback.lightImpact();
@@ -142,6 +166,41 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                       children: [
                         Divider(color: cs.outline, height: 1),
                         const SizedBox(height: DonySpacing.md),
+                        // Section — DEMANDE
+                        _SectionLabel(label: l.bidDetailSectionRequest),
+                        const SizedBox(height: DonySpacing.sm),
+                        InfoRow(
+                          label: l.bidDetailReferenceLabel,
+                          value: _reference,
+                        ),
+                        const SizedBox(height: DonySpacing.sm),
+                        InfoRow(
+                          label: l.bidDetailSentAtLabel,
+                          value: _formatDateTime(context, bid.createdAt),
+                        ),
+                        const SizedBox(height: DonySpacing.sm),
+                        InfoRow(
+                          label: l.bidDetailUpdatedAtLabel,
+                          value: _formatDateTime(context, bid.updatedAt),
+                        ),
+                        const SizedBox(height: DonySpacing.sm),
+                        InfoRow(
+                          label: l.bidDetailPaymentMethodLabel,
+                          value: l.bidDetailPaymentMethodValue(
+                            bid.paymentMethod.name,
+                          ),
+                        ),
+                        if (bid.promoCode != null &&
+                            bid.promoCode!.isNotEmpty) ...[
+                          const SizedBox(height: DonySpacing.sm),
+                          InfoRow(
+                            label: l.bidDetailPromoCodeLabel,
+                            value: bid.promoCode!,
+                          ),
+                        ],
+                        const SizedBox(height: DonySpacing.md),
+                        Divider(color: cs.outline, height: 1),
+                        const SizedBox(height: DonySpacing.md),
                         // Section 1 — DÉPÔT DU COLIS
                         _SectionLabel(label: l.bidDetailSectionDropoff),
                         const SizedBox(height: DonySpacing.sm),
@@ -179,6 +238,8 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                         // Section 2 — TRAJET
                         _SectionLabel(label: l.listingHeroTripLabelCaps),
                         const SizedBox(height: DonySpacing.sm),
+                        InfoRow(label: l.bidDetailRouteLabel, value: _route),
+                        const SizedBox(height: DonySpacing.sm),
                         InfoRow(
                           label: l.tripPublishDepartureDateLabel,
                           value: _formatDepartureDate(
@@ -186,6 +247,30 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                             bid.departureDate,
                           ),
                         ),
+                        if (bid.departureTime != null &&
+                            bid.departureTime!.isNotEmpty) ...[
+                          const SizedBox(height: DonySpacing.sm),
+                          InfoRow(
+                            label: l.tripPublishDepartureTimeLabel,
+                            value: _hhmm(bid.departureTime!),
+                          ),
+                        ],
+                        if (bid.arrivalTime != null &&
+                            bid.arrivalTime!.isNotEmpty) ...[
+                          const SizedBox(height: DonySpacing.sm),
+                          InfoRow(
+                            label: l.bidDetailArrivalTimeLabel,
+                            value: _hhmm(bid.arrivalTime!),
+                          ),
+                        ],
+                        if (bid.arrivalInstructions != null &&
+                            bid.arrivalInstructions!.trim().isNotEmpty) ...[
+                          const SizedBox(height: DonySpacing.sm),
+                          InfoRow(
+                            label: l.bidDetailPickupInstructionsLabel,
+                            value: bid.arrivalInstructions!.trim(),
+                          ),
+                        ],
                         if (bid.senderPricePerKg != null &&
                             bid.senderPricePerKg! > 0) ...[
                           const SizedBox(height: DonySpacing.sm),
