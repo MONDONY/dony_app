@@ -232,6 +232,41 @@ void main() {
       expect(captured, {'confirmationCode': '4721'});
     });
 
+    // FLUTTER-2A : la position de l'arrivée n'était pas envoyée.
+    test('envoie la position de l\'arrivée quand elle est fournie', () async {
+      when(
+        () => mockDio.post(
+          '/tracking/bid-001/confirm-delivery',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok(_eventJson, '/tracking/bid-001/confirm-delivery'),
+      );
+
+      await repo.confirmDelivery(
+        bidId: 'bid-001',
+        code: '4721',
+        gpsLat: 14.6928,
+        gpsLon: -17.4467,
+        gpsLabel: 'Dakar, Plateau',
+      );
+
+      final captured =
+          verify(
+                () => mockDio.post(
+                  '/tracking/bid-001/confirm-delivery',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured, {
+        'confirmationCode': '4721',
+        'gpsLat': 14.6928,
+        'gpsLon': -17.4467,
+        'gpsLabel': 'Dakar, Plateau',
+      });
+    });
+
     test('envoie la clé photo quand elle est fournie', () async {
       when(
         () => mockDio.post(
