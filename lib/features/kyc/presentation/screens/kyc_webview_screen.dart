@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_settings/app_settings.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -47,6 +48,7 @@ class KycWebViewScreen extends StatefulWidget {
     this.returnTo,
     this.cameraPermission = const CameraPermissionService(),
     this.analytics,
+    this.openAppSettings = _openAppSettings,
   });
   final String stripeUrl;
 
@@ -59,6 +61,10 @@ class KycWebViewScreen extends StatefulWidget {
   /// Injectable pour les tests : la vraie implémentation passe par un
   /// canal natif absent du binaire de test.
   final CameraPermissionService cameraPermission;
+
+  /// Ouvre la fiche de l'app dans les réglages du téléphone. Injectable pour
+  /// les tests : le canal natif n'existe pas dans le binaire de test.
+  final Future<void> Function() openAppSettings;
 
   /// Non `null` seulement quand cette webview a été ouverte depuis
   /// l'onboarding — voir `KycStatusScreen`, seul point d'entrée qui la
@@ -88,19 +94,90 @@ PlatformWebViewControllerCreationParams _creationParams() {
   return const PlatformWebViewControllerCreationParams();
 }
 
-class _KycWebViewScreenState extends State<KycWebViewScreen> {
+Future<void> _openAppSettings() => AppSettings.openAppSettings();
+
+/// Canal par lequel la page de vérification signale un accès caméra refusé.
+const kycCameraChannel = 'YadonyCamera';
+
+/// Enveloppe `getUserMedia` pour prévenir l'app quand la caméra est refusée.
+///
+/// Une fois la caméra refusée, ni iOS ni Android ne reposent la question :
+/// chaque appui sur « Démarrer » de la page Didit échouait en silence, sans
+/// qu'on dise à l'utilisateur d'aller dans les réglages (feedback FLUTTER-4J).
+/// Le refus système n'est visible que dans la page (`NotAllowedError`), d'où
+/// ce relais. Idempotent : rejoué à chaque fin de chargement.
+const kycCameraHookScript = """
+(function () {
+  if (window.__yadonyCameraHook) return;
+  var md = navigator.mediaDevices;
+  if (!md || !md.getUserMedia) return;
+  window.__yadonyCameraHook = true;
+  var original = md.getUserMedia.bind(md);
+  md.getUserMedia = function (constraints) {
+    return original(constraints).catch(function (error) {
+      if (error && (error.name === 'NotAllowedError' || error.name === 'SecurityError')) {
+        try { YadonyCamera.postMessage(error.name); } catch (_) {}
+      }
+      throw error;
+    });
+  };
+})();
+""";
+
+class _KycWebViewScreenState extends State<KycWebViewScreen>
+    with WidgetsBindingObserver {
   late final WebViewController _controller;
   final _isLoading = ValueNotifier<bool>(true);
 
+  /// Feuille « caméra bloquée » affichée : un seul exemplaire à la fois, la
+  /// page pouvant réessayer la caméra plusieurs fois de suite.
+  bool _cameraSheetShown = false;
+
+  /// L'utilisateur est parti dans les réglages : au retour, la page est
+  /// rechargée pour que « Démarrer » reprenne avec la caméra autorisée.
+  bool _awaitingSettings = false;
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _isLoading.dispose();
     super.dispose();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _awaitingSettings && mounted) {
+      _awaitingSettings = false;
+      unawaited(_controller.reload());
+    }
+  }
+
+  /// Caméra refusée par le système : expliquer et mener aux réglages, au lieu
+  /// de laisser « Démarrer » échouer sans rien dire (FLUTTER-4J).
+  void _onCameraBlocked() {
+    if (_cameraSheetShown || !mounted) return;
+    _cameraSheetShown = true;
+    final l = context.l10n;
+    DonyBottomSheet.show<void>(
+      context,
+      child: const _CameraBlockedSheet(key: Key('kyc-camera-blocked-sheet')),
+      stickyBottom: Builder(
+        builder: (ctx) => DonyButton(
+          label: l.homeLocationPermissionOpenSettings,
+          onPressed: () async {
+            Navigator.of(ctx, rootNavigator: true).pop();
+            _awaitingSettings = true;
+            await widget.openAppSettings();
+          },
+        ),
+      ),
+    ).whenComplete(() => _cameraSheetShown = false);
+  }
+
+  @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // La route `/kyc/verify` est partagée avec l'écran de statut, et
     // l'observer PostHog n'en voit que le chemin : ce second `$screen`
     // distingue le parcours du fournisseur.
@@ -133,14 +210,28 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
                 await request.grant();
               } else {
                 await request.deny();
+                _onCameraBlocked();
               }
             },
           )
           ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..addJavaScriptChannel(
+            kycCameraChannel,
+            onMessageReceived: (_) => _onCameraBlocked(),
+          )
           ..setNavigationDelegate(
             NavigationDelegate(
               onPageStarted: (_) => _isLoading.value = true,
-              onPageFinished: (_) => _isLoading.value = false,
+              onPageFinished: (_) {
+                _isLoading.value = false;
+                // Hors connexion ou page déjà déchargée : le relais caméra
+                // manque, la page reste utilisable comme avant.
+                unawaited(
+                  _controller
+                      .runJavaScript(kycCameraHookScript)
+                      .catchError((_) {}),
+                );
+              },
               onWebResourceError: (error) {
                 // N'alerter que si c'est la PAGE qui échoue. Une sous-ressource
                 // en échec est sans conséquence : la page Didit charge une vidéo
@@ -287,6 +378,45 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Contenu de la feuille « caméra bloquée » ; le bouton vers les réglages est
+/// ancré dans `stickyBottom` (règle des bottom sheets).
+class _CameraBlockedSheet extends StatelessWidget {
+  const _CameraBlockedSheet({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.sm,
+        DonySpacing.lg,
+        DonySpacing.lg,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyIcon('camera', size: 48, color: cs.primary),
+          const SizedBox(height: DonySpacing.md),
+          Text(
+            l.kycCameraBlockedTitle,
+            style: tt.titleLarge,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            l.kycCameraBlockedBody,
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

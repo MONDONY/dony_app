@@ -10479,6 +10479,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Nous n\'avons pas pu vérifier votre identité. Assurez-vous que votre document est lisible et réessayez.';
 
   @override
+  String get kycCameraBlockedTitle => 'Caméra bloquée';
+
+  @override
+  String get kycCameraBlockedBody =>
+      'La vérification d\'identité a besoin de la caméra pour photographier ta pièce et ton visage. Autorise la caméra pour Yadony dans les réglages de ton téléphone, puis reviens ici : la vérification reprendra.';
+
+  @override
   String get kycVerificationTitle => 'Vérification d\'identité';
 
   @override

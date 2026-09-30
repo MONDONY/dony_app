@@ -11506,6 +11506,14 @@
   "@kycRejectionGeneric": {
     "description": "Message de repli pour un code de refus KYC inconnu ou absent (kyc_rejection_messages.dart, kycRejectionMessage)."
   },
+  "kycCameraBlockedTitle": "Caméra bloquée",
+  "@kycCameraBlockedTitle": {
+    "description": "Titre de la feuille affichée quand la caméra est refusée pendant la vérification d'identité (kyc_webview_screen.dart)."
+  },
+  "kycCameraBlockedBody": "La vérification d'identité a besoin de la caméra pour photographier ta pièce et ton visage. Autorise la caméra pour Yadony dans les réglages de ton téléphone, puis reviens ici : la vérification reprendra.",
+  "@kycCameraBlockedBody": {
+    "description": "Corps de la feuille caméra bloquée (kyc_webview_screen.dart)."
+  },
   "kycVerificationTitle": "Vérification d'identité",
   "@kycVerificationTitle": {
     "description": "Titre de l'écran/la feuille de vérification d'identité (kyc_status_bottom_sheet.dart, KycStatusBottomSheet.show ; kyc_webview_screen.dart, KycWebViewScreen)."

@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
@@ -25,9 +26,27 @@ void main() {
     ).thenAnswer((_) async {});
   });
 
+  var settingsOpened = 0;
+
+  setUp(() {
+    FakeWebViewPlatform.reset();
+    settingsOpened = 0;
+  });
+
   Widget wrap({String url = 'https://verify.stripe.com/start'}) => MaterialApp(
-    home: KycWebViewScreen(stripeUrl: url, analytics: analytics),
+    home: KycWebViewScreen(
+      stripeUrl: url,
+      analytics: analytics,
+      openAppSettings: () async => settingsOpened++,
+    ),
   );
+
+  /// Simule la page Didit qui signale un `NotAllowedError` sur la caméra.
+  void pageReportsCameraDenied() {
+    FakeWebViewPlatform.channels[kycCameraChannel]!.onMessageReceived(
+      const JavaScriptMessage(message: 'NotAllowedError'),
+    );
+  }
 
   group('KycWebViewScreen', () {
     // L'écran de statut et la WebView partagent la route `/kyc/verify` : sans
@@ -112,6 +131,90 @@ void main() {
       );
       expect(scope.canPop, isFalse);
       expect(scope.onPopInvokedWithResult, isNotNull);
+    });
+
+    // ── FLUTTER-4J : caméra refusée, « Démarrer » ne répondait plus ─────────
+
+    testWidgets(
+      'déclare le canal par lequel la page signale la caméra refusée',
+      (tester) async {
+        await tester.pumpWidget(wrap(url: 'https://verify.didit.me/session/x'));
+        expect(FakeWebViewPlatform.channels, contains(kycCameraChannel));
+      },
+    );
+
+    testWidgets(
+      'caméra refusée → feuille explicative avec accès aux réglages',
+      (tester) async {
+        await tester.pumpWidget(wrap(url: 'https://verify.didit.me/session/x'));
+
+        pageReportsCameraDenied();
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.text('Caméra bloquée'), findsOneWidget);
+        expect(find.text('Ouvrir les réglages'), findsOneWidget);
+      },
+    );
+
+    testWidgets('refus répétés → une seule feuille à la fois', (tester) async {
+      await tester.pumpWidget(wrap(url: 'https://verify.didit.me/session/x'));
+
+      pageReportsCameraDenied();
+      pageReportsCameraDenied();
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('Caméra bloquée'), findsOneWidget);
+    });
+
+    testWidgets(
+      'réglages ouverts puis retour dans l\'app → la page est rechargée',
+      (tester) async {
+        await tester.pumpWidget(wrap(url: 'https://verify.didit.me/session/x'));
+        pageReportsCameraDenied();
+        await tester.pump(const Duration(milliseconds: 600));
+
+        // Bouton ancré dans `stickyBottom`, hors de la zone touchable du
+        // viewport de test : on déclenche son action directement.
+        final button = tester.widget<DonyButton>(
+          find.ancestor(
+            of: find.text('Ouvrir les réglages'),
+            matching: find.byType(DonyButton),
+          ),
+        );
+        button.onPressed!();
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(settingsOpened, 1);
+        expect(find.text('Caméra bloquée'), findsNothing);
+
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pump();
+
+        expect(FakeWebViewPlatform.reloads, 1);
+      },
+    );
+
+    testWidgets(
+      'retour dans l\'app sans passage par les réglages → pas de rechargement',
+      (tester) async {
+        await tester.pumpWidget(wrap(url: 'https://verify.didit.me/session/x'));
+
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pump();
+
+        expect(FakeWebViewPlatform.reloads, 0);
+      },
+    );
+
+    test('le script relaie les refus caméra vers le canal', () {
+      expect(kycCameraHookScript, contains('NotAllowedError'));
+      expect(kycCameraHookScript, contains('$kycCameraChannel.postMessage'));
+      expect(kycCameraHookScript, contains('__yadonyCameraHook'));
     });
   });
 }
