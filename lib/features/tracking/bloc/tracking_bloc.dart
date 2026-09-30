@@ -170,6 +170,9 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
         code: event.code,
         photoUrl: photoKey,
         scanMethod: event.scanMethod,
+        gpsLat: event.gpsLat,
+        gpsLon: event.gpsLon,
+        gpsLabel: event.gpsLabel,
       );
       emit(DeliveryConfirmSuccess(result));
     } catch (e) {

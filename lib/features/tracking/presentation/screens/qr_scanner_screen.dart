@@ -664,6 +664,9 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
           code: code,
           photo: _photo,
           scanMethod: widget.scanMethod,
+          gpsLat: _position?.latitude,
+          gpsLon: _position?.longitude,
+          gpsLabel: _gpsLabel,
         ),
       );
     } else {
