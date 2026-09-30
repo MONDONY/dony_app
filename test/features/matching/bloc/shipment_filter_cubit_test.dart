@@ -94,25 +94,37 @@ void main() {
     test('all -> null', () {
       expect(rangeForPreset(ShipmentPeriodPreset.all, null, now), isNull);
     });
-    test('thisWeek -> lundi minuit', () {
+    // FLUTTER-4Q : les périodes vont jusqu'à leur fin, pour garder les
+    // départs à venir de la période.
+    test('thisWeek -> lundi minuit -> dimanche 23:59:59', () {
       // 3 juin 2026 est un mercredi -> lundi = 1er juin, borné à minuit.
       final r = rangeForPreset(ShipmentPeriodPreset.thisWeek, null, now)!;
       expect(r.start, DateTime(2026, 6));
-      expect(r.end, now);
+      expect(r.end, DateTime(2026, 6, 7, 23, 59, 59));
     });
-    test('thisMonth -> 1er du mois -> now', () {
+    test('thisMonth -> 1er du mois -> dernier jour 23:59:59', () {
       final r = rangeForPreset(ShipmentPeriodPreset.thisMonth, null, now)!;
       expect(r.start, DateTime(2026, 6));
-      expect(r.end, now);
+      expect(r.end, DateTime(2026, 6, 30, 23, 59, 59));
     });
     test('last3Months -> J-90 borné au début de journée', () {
       // 2026-06-03 12:00 - 90j = 2026-03-05 ; dateOnly -> minuit.
       final r = rangeForPreset(ShipmentPeriodPreset.last3Months, null, now)!;
       expect(r.start, DateTime(2026, 3, 5));
+      expect(r.end, DateTime(2026, 6, 3, 23, 59, 59));
     });
-    test('thisYear -> 1er janvier', () {
+    test('thisYear -> 1er janvier -> 31 décembre 23:59:59', () {
       final r = rangeForPreset(ShipmentPeriodPreset.thisYear, null, now)!;
       expect(r.start, DateTime(2026));
+      expect(r.end, DateTime(2026, 12, 31, 23, 59, 59));
+    });
+    test('thisMonth en décembre -> 31 décembre', () {
+      final r = rangeForPreset(
+        ShipmentPeriodPreset.thisMonth,
+        null,
+        DateTime(2026, 12, 10),
+      )!;
+      expect(r.end, DateTime(2026, 12, 31, 23, 59, 59));
     });
     test('custom -> bornes étendues (fin 23:59:59)', () {
       final custom = DateTimeRange(

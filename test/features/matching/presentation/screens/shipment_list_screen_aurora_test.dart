@@ -284,6 +284,86 @@ void main() {
     );
   });
 
+  // FLUTTER-4Q : « la page ne se met pas à jour ».
+  group('rechargement de la liste', () {
+    int refreshCount() => verify(
+      () => bidBloc.add(captureAny()),
+    ).captured.whereType<BidMyListAutoRefreshRequested>().length;
+
+    testWidgets('erreur sans données : tirer vers le bas recharge', (
+      tester,
+    ) async {
+      when(
+        () => bidBloc.state,
+      ).thenReturn(BidError(const NetworkException('Erreur réseau')));
+      await _pump(
+        tester,
+        bidBloc: bidBloc,
+        paymentBloc: paymentBloc,
+        authBloc: authBloc,
+      );
+      clearInteractions(bidBloc);
+
+      await tester.fling(
+        find.descendant(
+          of: find.byType(RefreshIndicator),
+          matching: find.byType(SingleChildScrollView),
+        ),
+        const Offset(0, 400),
+        1000,
+      );
+      await tester.pumpAndSettle();
+
+      expect(refreshCount(), 1);
+    });
+
+    testWidgets('filtre sans résultat : tirer vers le bas recharge', (
+      tester,
+    ) async {
+      when(
+        () => bidBloc.state,
+      ).thenReturn(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+      await _pump(
+        tester,
+        bidBloc: bidBloc,
+        paymentBloc: paymentBloc,
+        authBloc: authBloc,
+      );
+      await tester.tap(find.text('Livrés'));
+      await tester.pumpAndSettle();
+      clearInteractions(bidBloc);
+
+      await tester.fling(
+        find.descendant(
+          of: find.byType(RefreshIndicator),
+          matching: find.byType(SingleChildScrollView),
+        ),
+        const Offset(0, 400),
+        1000,
+      );
+      await tester.pumpAndSettle();
+
+      expect(refreshCount(), 1);
+    });
+
+    testWidgets('retour de l\'app au premier plan : recharge', (tester) async {
+      when(() => bidBloc.state).thenReturn(BidListLoaded(const []));
+      await _pump(
+        tester,
+        bidBloc: bidBloc,
+        paymentBloc: paymentBloc,
+        authBloc: authBloc,
+      );
+      clearInteractions(bidBloc);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+
+      expect(refreshCount(), 1);
+    });
+  });
+
   // ── Vues vides ────────────────────────────────────────────────────────────
 
   testWidgets('liste vide → état global "Aucun envoi pour l\'instant"', (

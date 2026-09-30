@@ -121,37 +121,44 @@ DateTimeRange? rangeForPreset(
   switch (preset) {
     case ShipmentPeriodPreset.all:
       return null;
+    // Les périodes vont jusqu'à leur fin, pas jusqu'à maintenant : la base par
+    // défaut est la date de départ, et un colis déposé aujourd'hui pour un
+    // trajet qui part demain disparaissait de « Cette semaine » (FLUTTER-4Q).
     case ShipmentPeriodPreset.thisWeek:
       final monday = DateUtils.dateOnly(
         now,
       ).subtract(Duration(days: now.weekday - 1));
-      return DateTimeRange(start: monday, end: now);
+      return DateTimeRange(
+        start: monday,
+        end: _endOfDay(monday.add(const Duration(days: 6))),
+      );
     case ShipmentPeriodPreset.thisMonth:
-      return DateTimeRange(start: DateTime(now.year, now.month), end: now);
+      return DateTimeRange(
+        start: DateTime(now.year, now.month),
+        end: _endOfDay(DateTime(now.year, now.month + 1, 0)),
+      );
     case ShipmentPeriodPreset.last3Months:
       // dateOnly : on borne au début de journée pour ne pas exclure un envoi
       // daté plus tôt dans la journée que l'heure courante.
       return DateTimeRange(
         start: DateUtils.dateOnly(now.subtract(const Duration(days: 90))),
-        end: now,
+        end: _endOfDay(now),
       );
     case ShipmentPeriodPreset.thisYear:
-      return DateTimeRange(start: DateTime(now.year), end: now);
+      return DateTimeRange(
+        start: DateTime(now.year),
+        end: _endOfDay(DateTime(now.year, 12, 31)),
+      );
     case ShipmentPeriodPreset.custom:
       if (custom == null) return null;
       return DateTimeRange(
         start: DateUtils.dateOnly(custom.start),
-        end: DateTime(
-          custom.end.year,
-          custom.end.month,
-          custom.end.day,
-          23,
-          59,
-          59,
-        ),
+        end: _endOfDay(custom.end),
       );
   }
 }
+
+DateTime _endOfDay(DateTime d) => DateTime(d.year, d.month, d.day, 23, 59, 59);
 
 List<BidModel> _sortShipments(List<BidModel> bids) {
   bids.sort((a, b) {
@@ -170,7 +177,11 @@ List<BidModel> applyShipmentFilters(
   ShipmentFilterState f,
   DateTime now,
 ) {
-  Iterable<BidModel> out = bids;
+  // Un fil de négociation n'est pas un envoi ; le back l'écarte de /bids/me,
+  // mais une prod pas encore déployée renvoyait les fils clos (FLUTTER-4Q).
+  Iterable<BidModel> out = bids.where(
+    (b) => b.status != 'NEGOTIATING' && b.status != 'NEGOTIATION_CLOSED',
+  );
   if (f.statuses.isNotEmpty) {
     out = out.where((b) => f.statuses.contains(b.status));
   }
