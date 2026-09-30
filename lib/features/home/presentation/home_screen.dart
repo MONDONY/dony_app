@@ -284,6 +284,20 @@ class _MapSenderViewState extends State<_MapSenderView> {
   double _sheetSize = 0.20;
   bool get _isMapHidden => _sheetSize > 0.92;
 
+  /// Hauteur de la feuille repliée, en fraction de l'écran : 0,30, agrandie
+  /// avec la taille du texte. Renseignée par le builder de la feuille.
+  double _peekSize = 0.30;
+
+  /// Feuille à sa hauteur repliée (à la tolérance près du glissement).
+  bool get _isSheetCollapsed => _sheetSize <= _peekSize + 0.03;
+
+  /// Bouton « Publier un colis » : seulement en mode « J'envoie un colis », et
+  /// posé sur la carte au-dessus de la feuille repliée. Feuille tirée, il
+  /// recouvrirait la liste ; en mode « Près de moi », le carrousel occupe le
+  /// bas. Placé plus bas, il masquait le carrousel de guidance.
+  bool get _showPublishParcel =>
+      _mode.isTrips && _isSheetCollapsed && !_isNearMeActive;
+
   // Cached markers for package_requests (rebuilt when search results change).
   Set<Marker> _packageRequestMarkers = {};
   List<PackageRequestSearchItem> _lastBuiltRequests = const [];
@@ -410,7 +424,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (!_sheetController.isAttached) return;
     final newSize = _sheetController.size;
     final wasHidden = _isMapHidden;
+    final wasCollapsed = _isSheetCollapsed;
     _sheetSize = newSize;
+    if (wasCollapsed != _isSheetCollapsed) {
+      setState(() {});
+      return;
+    }
     // Rebuild quand l'état plein écran change (swap indications / filtres).
     if (wasHidden != _isMapHidden) setState(() {});
   }
@@ -874,6 +893,19 @@ class _MapSenderViewState extends State<_MapSenderView> {
       ),
     );
     _onFiltersChanged(_filters.copyWith(urgentOnly: next));
+  }
+
+  /// Accès direct à la publication d'une demande d'envoi. PostHog (29/09) :
+  /// l'offre de trajets dépassait nettement les demandes d'envoi, dont la seule
+  /// entrée depuis l'accueil était une carte du carrousel, sous la barre de
+  /// navigation, feuille tirée.
+  void _onPublishParcel() {
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.homePublishParcelTapped,
+      ),
+    );
+    unawaited(context.push('/parcels/send-intro'));
   }
 
   void _deactivateNearMe() {
@@ -1403,6 +1435,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         // peek plus haute garde le contenu utilisable sans
                         // modifier la taille normale à 100 %.
                         final peekSize = (0.30 * textScale).clamp(0.30, 0.70);
+                        _peekSize = peekSize;
                         final middleSnap = peekSize >= 0.6 ? 0.8 : 0.6;
                         return DraggableScrollableSheet(
                           controller: _sheetController,
@@ -1499,6 +1532,29 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         ),
                       ),
                     ),
+
+                  // ── Bouton « Publier un colis » (mode J'envoie un colis) ──────
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOutCubic,
+                    bottom: _showPublishParcel
+                        ? MediaQuery.sizeOf(context).height * _peekSize +
+                              DonySpacing.md
+                        : MediaQuery.sizeOf(context).height * _peekSize -
+                              DonySpacing.xxl,
+                    left: 0,
+                    right: 0,
+                    child: IgnorePointer(
+                      ignoring: !_showPublishParcel,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 200),
+                        opacity: _showPublishParcel ? 1 : 0,
+                        child: Center(
+                          child: _PublishParcelFab(onTap: _onPublishParcel),
+                        ),
+                      ),
+                    ),
+                  ),
 
                   // ── FAB "Carte" (visible quand sheet plein écran) ─────────────
                   AnimatedPositioned(
@@ -2395,6 +2451,71 @@ class _CrossDiscoveryTile extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 Icon(Icons.chevron_right_rounded, size: 20, color: cs.primary),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── _PublishParcelFab ─────────────────────────────────────────────────────────
+
+class _PublishParcelFab extends StatelessWidget {
+  const _PublishParcelFab({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    // Terracotta foncée et non l'accent (terra500) : du texte blanc sur
+    // terra500 n'atteint pas le contraste 4,5:1.
+    const background = DonyColors.terra600;
+    const radius = BorderRadius.all(Radius.circular(DonyRadius.full));
+    return Material(
+      key: const Key('home-publish-parcel'),
+      color: background,
+      borderRadius: radius,
+
+      shadowColor: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: radius,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            boxShadow: [
+              BoxShadow(
+                color: background.withValues(alpha: 0.35),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 52),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.base,
+                DonySpacing.sm,
+                DonySpacing.lg,
+                DonySpacing.sm,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const DonyIcon('plus', size: 20, color: Colors.white),
+                  const SizedBox(width: DonySpacing.sm),
+                  Text(
+                    context.l10n.homeGuidancePublishParcel,
+                    style: tt.titleSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

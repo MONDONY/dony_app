@@ -322,6 +322,10 @@ abstract final class AnalyticsEvents {
   // Filtre urgent (chip 🔥 Urgent — Accueil)
   static const urgentFilterToggled = 'urgent_filter_toggled';
 
+  /// Bouton flottant « Publier un colis » de l'accueil, mode « J'envoie un
+  /// colis » : ouvre l'intro d'envoi.
+  static const homePublishParcelTapped = 'home_publish_parcel_tapped';
+
   // Annonces tab navigation (Phase 1 — modèle additif)
   static const annoncesTripsOpened = 'annonces_trips_opened';
   static const annoncesSendOpened = 'annonces_send_opened';
