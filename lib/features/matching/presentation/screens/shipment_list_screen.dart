@@ -48,7 +48,8 @@ class _ShipmentListContent extends StatefulWidget {
   State<_ShipmentListContent> createState() => _ShipmentListContentState();
 }
 
-class _ShipmentListContentState extends State<_ShipmentListContent> {
+class _ShipmentListContentState extends State<_ShipmentListContent>
+    with WidgetsBindingObserver {
   late final EnvoisRefreshNotifier _refreshNotifier;
   final _searchController = TextEditingController();
   Timer? _debounce;
@@ -58,6 +59,7 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
     super.initState();
     _refreshNotifier = getIt<EnvoisRefreshNotifier>();
     _refreshNotifier.addListener(_onTabRefreshRequested);
+    WidgetsBinding.instance.addObserver(this);
     // force: refetch silencieux à chaque ouverture de la liste pour refléter
     // un statut changé hors de l'app (ex. trajet annulé par le voyageur), que
     // le TTL d'auto-refresh masquerait sinon jusqu'à 3 min.
@@ -74,6 +76,18 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
     }
   }
 
+  /// Retour au premier plan : un paiement (Wave, 3DS) ou une acceptation a pu
+  /// changer la liste hors de l'app (FLUTTER-4Q, « la page ne se met pas à
+  /// jour »).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _onTabRefreshRequested();
+  }
+
+  Future<void> _pullToRefresh() async => context.read<BidBloc>().add(
+    const BidMyListAutoRefreshRequested(force: true),
+  );
+
   void _onQueryChanged(String q) {
     _debounce?.cancel();
     _debounce = Timer(
@@ -87,6 +101,7 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
     _debounce?.cancel();
     _searchController.dispose();
     _refreshNotifier.removeListener(_onTabRefreshRequested);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -127,34 +142,42 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
                 (bidState is BidLoading || bidState is BidInitial)) {
               body = const _LoadingView();
             } else if (!hasData && bidState is BidError) {
-              body = _ErrorView(
-                message: ErrorPresenter.resolve(
-                  bidState.error,
-                  l10n: context.l10n,
-                ).message,
+              body = _RefreshableFill(
+                onRefresh: _pullToRefresh,
+                child: _ErrorView(
+                  message: ErrorPresenter.resolve(
+                    bidState.error,
+                    l10n: context.l10n,
+                  ).message,
+                ),
               );
             } else if (rawEmpty) {
               // Raw (unfiltered) list empty → full empty state with CTA
-              body = _RawEmptyView(
-                onSearchTrip: () async {
-                  final params = await SearchFormBottomSheet.show(context);
-                  if (params != null && context.mounted) {
-                    getIt<PendingSearchNotifier>().setPending(params);
-                    context.go('/home');
-                  }
-                },
+              // Déjà défilant : le geste de rafraîchissement suffit.
+              body = RefreshIndicator(
+                onRefresh: _pullToRefresh,
+                child: _RawEmptyView(
+                  onSearchTrip: () async {
+                    final params = await SearchFormBottomSheet.show(context);
+                    if (params != null && context.mounted) {
+                      getIt<PendingSearchNotifier>().setPending(params);
+                      context.go('/home');
+                    }
+                  },
+                ),
               );
             } else if (filtered.isEmpty) {
-              body = _FilteredEmptyView(
-                onReset: () => context.read<ShipmentFilterCubit>().reset(),
+              body = _RefreshableFill(
+                onRefresh: _pullToRefresh,
+                child: _FilteredEmptyView(
+                  onReset: () => context.read<ShipmentFilterCubit>().reset(),
+                ),
               );
             } else {
               body = _ShipmentListView(
                 bids: filtered,
                 hPadding: DonyLayout.hPadding(context),
-                onRefresh: () async => context.read<BidBloc>().add(
-                  const BidMyListAutoRefreshRequested(force: true),
-                ),
+                onRefresh: _pullToRefresh,
                 onDelete: (bid) =>
                     context.read<BidBloc>().add(BidDeleteRequested(bid.id)),
               );
@@ -449,6 +472,29 @@ class _DeleteBackground extends StatelessWidget {
 
 /// Empty state shown when the RAW (unfiltered) bid list is empty.
 /// Shows mascotte and a primary CTA to search a trip.
+/// Vue plein écran (vide filtré, erreur) qu'on peut tirer pour recharger :
+/// sans elle, une liste vide ou en erreur ne se rafraîchissait qu'en
+/// quittant l'onglet.
+class _RefreshableFill extends StatelessWidget {
+  const _RefreshableFill({required this.onRefresh, required this.child});
+
+  final Future<void> Function() onRefresh;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(height: constraints.maxHeight, child: child),
+        ),
+      ),
+    );
+  }
+}
+
 class _RawEmptyView extends StatelessWidget {
   const _RawEmptyView({required this.onSearchTrip});
 
