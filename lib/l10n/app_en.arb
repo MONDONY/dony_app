@@ -5577,7 +5577,7 @@
   "@conversationTimeJustNow": {
     "description": "Repli de formatConversationTime (conversation_tile.dart) pour un message envoyé il y a moins d'une minute."
   },
-  "trackingStepDeparture": "Departure",
+  "trackingStepDeparture": "Collection",
   "@trackingStepDeparture": {
     "description": "Libellé de l'étape de suivi DEPART (tracking_labels.dart, trackingStepLabel)."
   },
@@ -5997,7 +5997,7 @@
   "@trackingTimelineShare": {
     "description": "Bouton sticky de la sheet showTrackingTimelineSheet, visible seulement si onShareTracking est fourni (tracking_timeline_bottom_sheet.dart)."
   },
-  "trackingEventDepartureConfirmed": "Departure confirmed",
+  "trackingEventDepartureConfirmed": "Parcel collected",
   "@trackingEventDepartureConfirmed": {
     "description": "Libellé complet de l'étape DEPART d'un événement de suivi (extension TrackingEventL10n, tracking_labels.dart) — distinct de trackingStepDeparture (« Départ » seul, écrans de lecture)."
   },
@@ -7645,7 +7645,7 @@
   "@suiviParcelsTitle": {
     "description": "Titre de la liste des colis du trajet affiché (suivi_validate_content.dart)."
   },
-  "suiviValidateStep": "{step, select, DEPART{Validate departure} TRANSIT{Validate transit} other{Validate arrival}}",
+  "suiviValidateStep": "{step, select, DEPART{Validate collection} TRANSIT{Validate transit} other{Validate arrival}}",
   "@suiviValidateStep": {
     "description": "Action d'une ligne colis selon son étape suivante (suivi_validate_content.dart, _ParcelRow).",
     "placeholders": {
@@ -7658,11 +7658,14 @@
   "@suiviAllValidated": {
     "description": "Ligne colis dont toutes les étapes sont validées (suivi_validate_content.dart, _ParcelRow)."
   },
-  "suiviLastStepAt": "{step, select, DEPART{Departure done at {time}} TRANSIT{Transit done at {time}} other{Arrival done at {time}}}",
+  "suiviLastStepAt": "{step, select, DEPART{Parcel collected on {date} at {time}} TRANSIT{Transit on {date} at {time}} other{Arrival on {date} at {time}}}",
   "@suiviLastStepAt": {
     "description": "Dernière étape scannée d'un colis et son heure (suivi_validate_content.dart, _ParcelRow).",
     "placeholders": {
       "step": {
+        "type": "String"
+      },
+      "date": {
         "type": "String"
       },
       "time": {
@@ -7904,7 +7907,7 @@
   "@trackingNotLinkedBody": {
     "description": "Explication du refus 403, sans « Réessayer » (parcel_not_linked_notice.dart)."
   },
-  "suiviStepValidatedToast": "{step, select, DEPART{{parcel}: departure validated} other{{parcel}: transit validated}}",
+  "suiviStepValidatedToast": "{step, select, DEPART{{parcel}: collection validated} other{{parcel}: transit validated}}",
   "@suiviStepValidatedToast": {
     "description": "Titre du bandeau d'une validation rapide annulable (suivi_validation_toast.dart).",
     "placeholders": {
@@ -7973,7 +7976,7 @@
   "@suiviStepModeBackToAuto": {
     "description": "Bouton qui annule le transit forcé (suivi_validate_content.dart, _StepModeRow)."
   },
-  "suiviStepModeForced": "{step, select, DEPART{departure} TRANSIT{transit, optional} other{arrival}}",
+  "suiviStepModeForced": "{step, select, DEPART{collection} TRANSIT{transit, optional} other{arrival}}",
   "@suiviStepModeForced": {
     "description": "Fin en gras de la ligne « Étape : … » quand une étape est forcée (suivi_validate_content.dart, _StepModeRow). {step} : DEPART, TRANSIT ou ARRIVEE.",
     "placeholders": {
@@ -7982,7 +7985,7 @@
       }
     }
   },
-  "suiviStepModeForcedHelp": "The next parcel scanned or entered gets {step, select, DEPART{its departure validated, with a photo} TRANSIT{its transit validated} other{its arrival validated, with the photo then the recipient's code}}, then the step goes back to automatic.",
+  "suiviStepModeForcedHelp": "The next parcel scanned or entered gets {step, select, DEPART{its collection validated, with a photo} TRANSIT{its transit validated} other{its arrival validated, with the photo then the recipient's code}}, then the step goes back to automatic.",
   "@suiviStepModeForcedHelp": {
     "description": "Explication de l'étape forcée (suivi_validate_content.dart, _StepModeRow).",
     "placeholders": {
@@ -8000,7 +8003,7 @@
       }
     }
   },
-  "suiviStepNeedsDepart": "Validate {parcel}'s departure first.",
+  "suiviStepNeedsDepart": "Validate {parcel}'s collection first.",
   "@suiviStepNeedsDepart": {
     "description": "Transit ou arrivée forcés sur un colis pas encore parti (suivi_screen.dart).",
     "placeholders": {
@@ -8009,7 +8012,7 @@
       }
     }
   },
-  "suiviStepAlreadyDone": "{step, select, DEPART{{parcel}'s departure is already validated.} other{{parcel}'s transit is already validated.}}",
+  "suiviStepAlreadyDone": "{step, select, DEPART{{parcel}'s collection is already validated.} other{{parcel}'s transit is already validated.}}",
   "@suiviStepAlreadyDone": {
     "description": "Départ ou transit forcés sur un colis où cette étape est déjà faite (suivi_screen.dart).",
     "placeholders": {

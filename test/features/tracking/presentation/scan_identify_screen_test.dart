@@ -89,7 +89,7 @@ TrackingSearchModel _fakeResult() => const TrackingSearchModel(
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
   currentStep: 'DEPART',
-  stepLabel: 'Départ confirmé',
+  stepLabel: 'Colis récupéré',
   paymentStatus: 'CAPTURED',
 );
 
@@ -104,13 +104,13 @@ void main() {
       MaterialApp.router(routerConfig: _router('DEPART')),
     );
     await tester.pump();
-    expect(find.text('Départ'), findsOneWidget);
+    expect(find.text('Récupération'), findsOneWidget);
   });
 
   testWidgets('pas de badge étape quand etape=null', (tester) async {
     await tester.pumpWidget(MaterialApp.router(routerConfig: _router(null)));
     await tester.pump();
-    expect(find.text('Départ'), findsNothing);
+    expect(find.text('Récupération'), findsNothing);
     expect(find.text('Transit'), findsNothing);
   });
 
@@ -302,7 +302,7 @@ void main() {
       MaterialApp.router(routerConfig: _routerWithBloc(bloc)),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Départ'), findsOneWidget);
+    expect(find.text('Récupération'), findsOneWidget);
     expect(find.text('Transit'), findsOneWidget);
     expect(find.text('Arrivée'), findsOneWidget);
   });
@@ -357,7 +357,7 @@ void main() {
     );
     await tester.pump();
     expect(find.text('Identify the parcel'), findsOneWidget);
-    expect(find.text('Departure'), findsOneWidget);
+    expect(find.text('Collection'), findsOneWidget);
     expect(find.text('Open QR reader'), findsOneWidget);
     expect(find.text('OR'), findsOneWidget);
     expect(find.text('Identify →'), findsOneWidget);

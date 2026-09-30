@@ -182,7 +182,7 @@ void main() {
     expect(steps('current'), findsOneWidget);
     expect(find.text('Remise au voyageur'), findsOneWidget);
     expect(steps('upcoming'), findsNWidgets(2));
-    expect(find.text('Départ'), findsOneWidget);
+    expect(find.text('Récupération'), findsOneWidget);
     expect(find.text('Remise au destinataire'), findsOneWidget);
   });
 

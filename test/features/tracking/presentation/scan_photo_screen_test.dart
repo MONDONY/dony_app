@@ -204,7 +204,7 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.textContaining('Départ'), findsOneWidget);
+    expect(find.textContaining('Récupération'), findsOneWidget);
   });
 
   testWidgets('TRANSIT — label étape Transit visible', (tester) async {

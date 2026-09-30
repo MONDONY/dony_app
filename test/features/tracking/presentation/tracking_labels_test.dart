@@ -8,14 +8,31 @@ void main() {
   final fr = lookupAppLocalizations(AppL10n.fr);
   final en = lookupAppLocalizations(AppL10n.en);
 
+  // FLUTTER-45 : l'étape DEPART est la prise en charge du colis à la remise,
+  // pas le départ du trajet. La ligne colis affiche la date avec l'heure.
+  group('suiviLastStepAt', () {
+    test('DEPART — fr : colis récupéré, date et heure', () {
+      expect(
+        fr.suiviLastStepAt('DEPART', 'mer. 30 sept.', '09:34'),
+        'Colis récupéré le mer. 30 sept. à 09:34',
+      );
+    });
+    test('DEPART — en : parcel collected, date and time', () {
+      expect(
+        en.suiviLastStepAt('DEPART', 'Wed, Sep 30', '09:34'),
+        'Parcel collected on Wed, Sep 30 at 09:34',
+      );
+    });
+  });
+
   group('trackingStepLabel', () {
     test(
       'DEPART — fr',
-      () => expect(trackingStepLabel(fr, 'DEPART'), 'Départ'),
+      () => expect(trackingStepLabel(fr, 'DEPART'), 'Récupération'),
     );
     test(
       'DEPART — en',
-      () => expect(trackingStepLabel(en, 'DEPART'), 'Departure'),
+      () => expect(trackingStepLabel(en, 'DEPART'), 'Collection'),
     );
     test(
       'TRANSIT — fr',

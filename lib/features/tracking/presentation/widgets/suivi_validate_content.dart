@@ -498,9 +498,11 @@ class _ParcelRow extends StatelessWidget {
 
     final String? subtitle;
     if (scan != null) {
+      final at = scan.scannedAt.toLocal();
       subtitle = l.suiviLastStepAt(
         scan.eventType,
-        DateFormat.Hm(l.localeName).format(scan.scannedAt.toLocal()),
+        suiviShortDate(l, at),
+        DateFormat.Hm(l.localeName).format(at),
       );
     } else if (!progress.depart) {
       subtitle = l.suiviNotHandedOver;

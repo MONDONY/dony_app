@@ -643,9 +643,9 @@ void main() {
       );
       expect(route('Bobo-Dioulasso', 'Yaoundé'), findsOneWidget);
       expect(text('Madou'), findsWidgets);
-      expect(text('Valider le départ'), findsOneWidget);
+      expect(text('Valider la récupération'), findsOneWidget);
       expect(text("Valider l'arrivée"), findsOneWidget);
-      expect(text('Transit fait à 12:58'), findsOneWidget);
+      expect(text('Transit le sam. 26 sept. à 12:58'), findsOneWidget);
       expect(text('Pas encore remis'), findsOneWidget);
       expect(find.byType(DonyFeedbackButton), findsOneWidget);
       expect(cameraPaused?.value, isFalse);
@@ -782,7 +782,7 @@ void main() {
       await tester.tap(text('page /tracking/scan/photo'));
       await settle(tester, rounds: 2);
       expect(cameraPaused?.value, isFalse);
-      expect(text('Départ de Madou validé'), findsOneWidget);
+      expect(text('Madou récupéré'), findsOneWidget);
       verifyNeverSubmitted();
 
       await tester.pump(const Duration(seconds: 5));
@@ -794,7 +794,7 @@ void main() {
         photoPath: '/tmp/colis.jpg',
         at: _here,
       );
-      expect(text('Départ de Madou validé'), findsNothing);
+      expect(text('Madou récupéré'), findsNothing);
       // Position relevée avant la photo : pas de nouveau relevé.
       verifyNever(() => locator.capture());
     });
@@ -919,7 +919,7 @@ void main() {
 
     // Recette Redmi : le bouton d'une ligne ouvrait l'ancien écran
     // « Identifier le colis ». Tout se passe désormais dans l'onglet.
-    testWidgets('bouton Valider le départ → photo, bandeau, envoi MANUAL', (
+    testWidgets('bouton Valider la récupération → photo, bandeau, envoi MANUAL', (
       tester,
     ) async {
       stubDefaultTrips();
@@ -939,7 +939,7 @@ void main() {
 
       await tester.tap(text('page /tracking/scan/photo'));
       await settle(tester, rounds: 2);
-      expect(text('Départ de Madou validé'), findsOneWidget);
+      expect(text('Madou récupéré'), findsOneWidget);
       verifyNeverSubmitted();
 
       await tester.pump(const Duration(seconds: 5));
@@ -1355,7 +1355,7 @@ void main() {
       scan!('sali');
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      expect(text('Le départ de Sali est déjà validé.'), findsOneWidget);
+      expect(text('La récupération de Sali est déjà validée.'), findsOneWidget);
       await settle(tester, rounds: 12);
 
       scan!('madou');
@@ -1420,7 +1420,7 @@ void main() {
       scan!('madou');
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      expect(text("Valide d'abord le départ de Madou."), findsOneWidget);
+      expect(text("Valide d'abord la récupération de Madou."), findsOneWidget);
       await settle(tester, rounds: 12);
 
       await openNumberField(tester);
@@ -1441,7 +1441,7 @@ void main() {
       expect(text('Valider avec le numéro'), findsOneWidget);
       expect(text('Colis de Sali'), findsOneWidget);
       expect(text('4,5 kg · DON-SAL003'), findsOneWidget);
-      expect(text('Départ'), findsOneWidget);
+      expect(text('Récupération'), findsOneWidget);
       expect(text('Transit'), findsOneWidget);
       expect(
         text(
@@ -1638,12 +1638,12 @@ void main() {
       await settle(tester, rounds: 1);
 
       expect(text('Transit · QR'), findsOneWidget);
-      expect(text('Départ · numéro'), findsOneWidget);
+      expect(text('Récupération · numéro'), findsOneWidget);
       // Provenance inconnue (ancien scan) : l'étape seule.
       expect(
         find.descendant(
           of: find.ancestor(of: text('Awa'), matching: find.byType(Row)),
-          matching: text('Départ'),
+          matching: text('Récupération'),
         ),
         findsOneWidget,
       );

@@ -9806,7 +9806,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get conversationTimeJustNow => 'just now';
 
   @override
-  String get trackingStepDeparture => 'Departure';
+  String get trackingStepDeparture => 'Collection';
 
   @override
   String get trackingStepTransit => 'Transit';
@@ -10122,7 +10122,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackingTimelineShare => 'Share tracking';
 
   @override
-  String get trackingEventDepartureConfirmed => 'Departure confirmed';
+  String get trackingEventDepartureConfirmed => 'Parcel collected';
 
   @override
   String get trackingEventInTransit => 'In transit';
@@ -14172,7 +14172,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String suiviValidateStep(String step) {
     String _temp0 = intl.Intl.selectLogic(step, {
-      'DEPART': 'Validate departure',
+      'DEPART': 'Validate collection',
       'TRANSIT': 'Validate transit',
       'other': 'Validate arrival',
     });
@@ -14183,11 +14183,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suiviAllValidated => 'All done';
 
   @override
-  String suiviLastStepAt(String step, String time) {
+  String suiviLastStepAt(String step, String date, String time) {
     String _temp0 = intl.Intl.selectLogic(step, {
-      'DEPART': 'Departure done at $time',
-      'TRANSIT': 'Transit done at $time',
-      'other': 'Arrival done at $time',
+      'DEPART': 'Parcel collected on $date at $time',
+      'TRANSIT': 'Transit on $date at $time',
+      'other': 'Arrival on $date at $time',
     });
     return '$_temp0';
   }
@@ -14379,7 +14379,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String suiviStepValidatedToast(String step, String parcel) {
     String _temp0 = intl.Intl.selectLogic(step, {
-      'DEPART': '$parcel: departure validated',
+      'DEPART': '$parcel: collection validated',
       'other': '$parcel: transit validated',
     });
     return '$_temp0';
@@ -14421,7 +14421,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String suiviStepModeForced(String step) {
     String _temp0 = intl.Intl.selectLogic(step, {
-      'DEPART': 'departure',
+      'DEPART': 'collection',
       'TRANSIT': 'transit, optional',
       'other': 'arrival',
     });
@@ -14431,7 +14431,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String suiviStepModeForcedHelp(String step) {
     String _temp0 = intl.Intl.selectLogic(step, {
-      'DEPART': 'its departure validated, with a photo',
+      'DEPART': 'its collection validated, with a photo',
       'TRANSIT': 'its transit validated',
       'other':
           'its arrival validated, with the photo then the recipient\'s code',
@@ -14451,13 +14451,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String suiviStepNeedsDepart(String parcel) {
-    return 'Validate $parcel\'s departure first.';
+    return 'Validate $parcel\'s collection first.';
   }
 
   @override
   String suiviStepAlreadyDone(String step, String parcel) {
     String _temp0 = intl.Intl.selectLogic(step, {
-      'DEPART': '$parcel\'s departure is already validated.',
+      'DEPART': '$parcel\'s collection is already validated.',
       'other': '$parcel\'s transit is already validated.',
     });
     return '$_temp0';
