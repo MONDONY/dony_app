@@ -140,7 +140,11 @@ abstract final class DonySnackbar {
     // confirmations y passaient inaperçues (FLUTTER-4W : « je ne peux pas
     // confirmer », FLUTTER-4P). On l'affiche alors en haut de l'écran,
     // par-dessus la feuille.
-    if (ModalRoute.of(context) is PopupRoute) {
+    // Seulement si la feuille est encore la route active : après un `pop()`
+    // suivi d'un message (motif courant « fermer puis confirmer »), la feuille
+    // s'en va et le snackbar de la page redevient visible.
+    final modal = ModalRoute.of(context);
+    if (modal is PopupRoute && modal.isCurrent) {
       _showAboveModal(
         context,
         content: content,

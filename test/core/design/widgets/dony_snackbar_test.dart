@@ -220,4 +220,32 @@ void main() {
       expect(find.text('Refusé par le serveur'), findsNothing);
     });
   });
+
+  testWidgets('feuille fermée puis message : SnackBar normal de la page', (
+    tester,
+  ) async {
+    DonySnackbar.clearDedup();
+    await tester.pumpWidget(
+      _harness(
+        (ctx) => showModalBottomSheet<void>(
+          context: ctx,
+          useRootNavigator: true,
+          builder: (sheetCtx) => TextButton(
+            onPressed: () {
+              Navigator.of(sheetCtx, rootNavigator: true).pop();
+              DonySnackbar.show(sheetCtx, message: 'Demande envoyée');
+            },
+            child: const Text('Fermer'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byType(ElevatedButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fermer'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.byKey(const Key('dony-snackbar-above-modal')), findsNothing);
+  });
 }
