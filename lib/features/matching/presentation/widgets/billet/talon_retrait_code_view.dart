@@ -5,12 +5,12 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/copy_code_button.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -207,36 +207,10 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                 },
               ),
               const SizedBox(height: DonySpacing.md),
-              // Fix #3 + Fix #4: DonySnackbar + 44pt touch target for copy button
-              GestureDetector(
-                onTap: () {
-                  Clipboard.setData(ClipboardData(text: displayCode));
-                  DonySnackbar.show(
-                    ctx,
-                    message: l.ticketCodeCopiedSnackbar,
-                    type: DonySnackbarType.success,
-                  );
-                },
-                child: SizedBox(
-                  height: 44,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: cs.primary),
-                      borderRadius: BorderRadius.circular(DonyRadius.md),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        DonyIcon('copy', size: 16, color: cs.primary),
-                        const SizedBox(width: DonySpacing.sm),
-                        Text(
-                          l.ticketCopyCodeButton,
-                          style: tt.titleSmall?.copyWith(color: cs.primary),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              CopyCodeButton(
+                code: displayCode,
+                label: l.ticketCopyCodeButton,
+                copiedLabel: l.ticketCodeCopiedSnackbar,
               ),
               const SizedBox(height: DonySpacing.sm),
               Opacity(

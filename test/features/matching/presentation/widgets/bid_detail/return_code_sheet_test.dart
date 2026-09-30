@@ -97,7 +97,7 @@ void main() {
   );
 
   testWidgets(
-    'ReturnCodeSheet : tap "Copier le code" → snackbar "Code copié"',
+    'ReturnCodeSheet : tap "Copier le code" → « Code copié » sur le bouton',
     (tester) async {
       await tester.pumpWidget(
         _host(
@@ -115,8 +115,12 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Copier le code'));
-      await tester.pump();
+      await tester.pumpAndSettle();
+      // Confirmé dans la feuille elle-même (FLUTTER-4P), pas par un snackbar
+      // caché derrière elle.
       expect(find.text('Code copié'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
     },
   );
 
