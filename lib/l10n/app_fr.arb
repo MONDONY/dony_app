@@ -6606,7 +6606,7 @@
   "@bidDetailSenderWindowExpiredTitle": {
     "description": "_WindowExpiredHero, titre (sender_hero_card.dart)"
   },
-  "bidDetailSenderWindowExpiredSubtitle": "Le dépôt était possible {window}. Le voyageur ne s'est pas présenté ?",
+  "bidDetailSenderWindowExpiredSubtitle": "Le dépôt était possible {window}. Vous pouvez annuler votre demande sans frais. Si le voyageur ne s'est pas présenté, signalez son absence.",
   "@bidDetailSenderWindowExpiredSubtitle": {
     "description": "_WindowExpiredHero, sous-titre (sender_hero_card.dart)",
     "placeholders": {

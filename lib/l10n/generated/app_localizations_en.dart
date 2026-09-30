@@ -6632,7 +6632,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String bidDetailSenderWindowExpiredSubtitle(String window) {
-    return 'Drop-off was possible $window. Did the traveler not show up?';
+    return 'Drop-off was possible $window. You can cancel your request at no cost. If the traveler did not show up, report their absence.';
   }
 
   @override

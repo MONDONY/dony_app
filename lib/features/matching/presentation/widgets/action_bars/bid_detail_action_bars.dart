@@ -30,6 +30,50 @@ void showSenderOptionsSheet(BuildContext context, BidModel bid) {
   );
 }
 
+/// Confirmation d'annulation d'une demande par l'expéditeur, avant remise du
+/// colis (remboursement automatique). Partagée entre la feuille d'options et la
+/// carte « fenêtre de remise dépassée ». `context` doit voir le [BidBloc] de
+/// l'écran de détail.
+void showSenderCancelBidDialog(BuildContext context, BidModel bid) {
+  final tt = Theme.of(context).textTheme;
+  final cs = Theme.of(context).colorScheme;
+  final l = context.l10n;
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DonyRadius.sheet),
+      ),
+      title: Text(l.bidDetailCancelRequestLabel, style: tt.headlineMedium),
+      content: Text(
+        l.bidDetailCancelConfirmBody,
+        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => ctx.pop(),
+          child: Text(
+            l.bidDetailNo,
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
+        FilledButton(
+          onPressed: () {
+            ctx.pop();
+            context.read<BidBloc>().add(BidCancelRequested(bid.id));
+          },
+          style: FilledButton.styleFrom(
+            backgroundColor: cs.error,
+            foregroundColor: DonyColors.white,
+            elevation: 0,
+          ),
+          child: Text(l.bidDetailConfirmCancelButton, style: tt.labelLarge),
+        ),
+      ],
+    ),
+  );
+}
+
 // ── Traveler PENDING bar ──────────────────────────────────────────────────────
 
 class TravelerPendingBar extends StatelessWidget {
@@ -665,7 +709,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               subtitle: l.bidDetailCancelRefundAutoSubtitle,
               onTap: () {
                 context.pop();
-                _showCancelDialog(outerContext);
+                showSenderCancelBidDialog(outerContext, bid);
               },
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -715,46 +759,6 @@ class _SenderOptionsSheet extends StatelessWidget {
     context.push(
       '/settings/report-incident',
       extra: {'targetType': IncidentTargetType.bid, 'targetId': bid.id},
-    );
-  }
-
-  void _showCancelDialog(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final l = context.l10n;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.sheet),
-        ),
-        title: Text(l.bidDetailCancelRequestLabel, style: tt.headlineMedium),
-        content: Text(
-          l.bidDetailCancelConfirmBody,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => ctx.pop(),
-            child: Text(
-              l.bidDetailNo,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ),
-          FilledButton(
-            onPressed: () {
-              ctx.pop();
-              context.read<BidBloc>().add(BidCancelRequested(bid.id));
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: cs.error,
-              foregroundColor: DonyColors.white,
-              elevation: 0,
-            ),
-            child: Text(l.bidDetailConfirmCancelButton, style: tt.labelLarge),
-          ),
-        ],
-      ),
     );
   }
 
