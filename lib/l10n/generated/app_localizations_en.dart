@@ -1549,7 +1549,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your Yadony account is ready. You can start searching for, sending and tracking parcels.';
 
   @override
-  String get authReferralContinueHome => 'Continue to home';
+  String get authReferralContinueHome => 'Continue';
 
   @override
   String get authConsentTitle => 'One last thing';
@@ -2534,6 +2534,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestPublishIntroTitle => 'Post a parcel';
+
+  @override
+  String get firstStepsDoneLabel => 'Sign-up complete';
+
+  @override
+  String get firstStepsTitle => 'Your account is ready';
+
+  @override
+  String get firstStepsSubtitle =>
+      'What would you like to do first? You can always do the other one later.';
+
+  @override
+  String get firstStepsTripTitle => 'I\'m traveling';
+
+  @override
+  String get firstStepsTripSubtitle =>
+      'Post your trip and earn from your spare luggage space.';
+
+  @override
+  String get firstStepsParcelTitle => 'I\'m sending a parcel';
+
+  @override
+  String get firstStepsParcelSubtitle =>
+      'Find a traveler or post your shipping request.';
+
+  @override
+  String get firstStepsLater => 'Later, go to home';
 
   @override
   String get tripPublishIntroVerifiedTextTrip =>
@@ -9436,7 +9463,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'You receive the money in the account linked to your bank details/IBAN, not in a Stripe wallet.';
 
   @override
-  String get payoutContinueToHome => 'Continue to home';
+  String get payoutContinueToHome => 'Continue';
 
   @override
   String get payoutSuccessTitle => 'Payments enabled ✓';

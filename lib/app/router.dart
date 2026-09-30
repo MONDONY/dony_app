@@ -17,6 +17,7 @@ import 'package:dony/features/auth/presentation/screens/analytics_consent_screen
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/country_selection_screen.dart';
 import 'package:dony/features/auth/presentation/screens/email_auth_screen.dart';
+import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
@@ -854,6 +855,11 @@ final appRouter = GoRouter(
             getIt<CommissionMethodBloc>()..add(CommissionMethodLoadRequested()),
         child: const CommissionMethodScreen(),
       ),
+    ),
+    // Fin d'inscription : choix de la première action (voir FirstStepsScreen).
+    GoRoute(
+      path: firstStepsRoute,
+      builder: (context, state) => const FirstStepsScreen(),
     ),
     GoRoute(
       path: '/payments/onboarding',

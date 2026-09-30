@@ -456,7 +456,7 @@
   "authReferralSuccessTitle": "Code applied!",
   "authReferralSuccessBody": "Your friend gets a reward as soon as you complete your first delivery.",
   "authReferralSuccessFootnote": "Your Yadony account is ready. You can start searching for, sending and tracking parcels.",
-  "authReferralContinueHome": "Continue to home",
+  "authReferralContinueHome": "Continue",
   "authConsentTitle": "One last thing",
   "authConsentBody": "To improve Yadony, we'd like to measure how the app is used. It's anonymous and optional.",
   "authConsentFootnote": "Never your payments, identity or phone number. You can change your mind in Settings.",
@@ -709,6 +709,14 @@
   "tripPublishFieldLockedCorridorMessage": "The cities of this trip can no longer be changed.",
   "tripPublishFieldLockedDateMessage": "The departure date of this trip can no longer be changed.",
   "requestPublishIntroTitle": "Post a parcel",
+  "firstStepsDoneLabel": "Sign-up complete",
+  "firstStepsTitle": "Your account is ready",
+  "firstStepsSubtitle": "What would you like to do first? You can always do the other one later.",
+  "firstStepsTripTitle": "I'm traveling",
+  "firstStepsTripSubtitle": "Post your trip and earn from your spare luggage space.",
+  "firstStepsParcelTitle": "I'm sending a parcel",
+  "firstStepsParcelSubtitle": "Find a traveler or post your shipping request.",
+  "firstStepsLater": "Later, go to home",
   "tripPublishIntroVerifiedTextTrip": "Identity verified. You can post your trip safely.",
   "requestPublishIntroVerifiedText": "Identity verified. You can post your shipping request safely.",
   "tripPublishIntroEngagementsTitleTrip": "Your commitments as a traveler",
@@ -5146,7 +5154,7 @@
   "@payoutActiveInfoBankAccountSubtitle": {
     "description": "Sous-titre de la troisième ligne d'info de payout_onboarding_screen.dart _ActiveAccountView."
   },
-  "payoutContinueToHome": "Continue to home",
+  "payoutContinueToHome": "Continue",
   "@payoutContinueToHome": {
     "description": "Bouton de sortie de l'étape paiements de l'onboarding, répété dans _ActiveAccountView et _SuccessView (payout_onboarding_screen.dart)."
   },

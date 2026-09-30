@@ -10,6 +10,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
+import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/presentation/kyc_return_route.dart';
@@ -239,6 +240,10 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
                     (_) {},
                   ),
                 );
+                // Fin du parcours : « Par quoi commencer ? » plutôt que
+                // l'accueil.
+                context.go(firstStepsRoute);
+                return;
               }
               context.go(destination);
             },

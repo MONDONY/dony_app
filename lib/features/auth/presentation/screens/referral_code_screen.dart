@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
+import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -65,6 +66,9 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
       unawaited(
         getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}),
       );
+      // Fin du parcours : « Par quoi commencer ? » plutôt que l'accueil.
+      context.go(firstStepsRoute);
+      return;
     }
     context.go(destination);
   }
