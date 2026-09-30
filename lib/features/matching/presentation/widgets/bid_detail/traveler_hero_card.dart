@@ -3,6 +3,7 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -114,12 +115,29 @@ class _HeroContent {
 _HeroContent? _buildContent(BuildContext context, BidModel bid) {
   final l = context.l10n;
   switch (bid.status) {
+    // Au voyageur de décider. PAYMENT_ESCROWED (carte déjà séquestrée) n'avait
+    // aucun hero : seulement « En attente » et deux boutons sans contexte
+    // (FLUTTER-4T : « on ne sait pas ce que cet écran signifie »).
     case 'PENDING':
+    case 'PAYMENT_ESCROWED':
       final amount = travelerAmountLabel(bid);
       return _HeroContent(
         variant: TravelerHeroVariant.wait,
-        title: l.bidDetailTravelerPendingTitle,
+        title: l.bidDetailTravelerRequestTitle(bid.senderDisplayName(l)),
         subtitle: l.bidDetailTravelerPendingSubtitle(amount),
+      );
+
+    // Paiement de l'expéditeur attendu : rien à faire pour le voyageur.
+    case 'AWAITING_PAYMENT':
+      final mobileMoney = bid.paymentMethod == BidPaymentMethod.mobileMoney;
+      return _HeroContent(
+        variant: TravelerHeroVariant.wait,
+        title: mobileMoney
+            ? l.bidDetailTravelerAwaitingPaymentAcceptedTitle
+            : l.bidDetailTravelerAwaitingPaymentTitle,
+        subtitle: mobileMoney
+            ? l.bidDetailTravelerAwaitingPaymentMobileMoneySubtitle
+            : l.bidDetailTravelerAwaitingPaymentSubtitle,
       );
 
     case 'ACCEPTED':

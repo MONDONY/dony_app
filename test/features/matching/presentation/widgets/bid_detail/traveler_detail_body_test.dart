@@ -92,6 +92,13 @@ void main() {
       );
       expect(_contactIcon(ExpediteurContactCard, 'phone'), findsNothing);
       expect(find.text('Téléphone'), findsNothing);
+      // Et on lui dit pourquoi (FLUTTER-4T).
+      expect(
+        find.text(
+          "Vous pourrez contacter l'expéditeur une fois la demande acceptée.",
+        ),
+        findsOneWidget,
+      );
       expect(find.byType(TravelerGainCard), findsOneWidget);
     },
   );

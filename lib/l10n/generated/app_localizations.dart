@@ -11208,7 +11208,7 @@ abstract class AppLocalizations {
   /// PENDING, sous-titre (traveler_hero_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Gain potentiel : {amount}. Acceptez ou refusez la demande.'**
+  /// **'Vous gagnez {amount} si vous acceptez. Vérifiez le colis ci-dessous, puis acceptez ou refusez.'**
   String bidDetailTravelerPendingSubtitle(String amount);
 
   /// ACCEPTED deja scanne par le voyageur (voyageurConfirmed), titre (traveler_hero_card.dart)
@@ -24221,6 +24221,66 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Pour accepter un paiement en espèces, ton portefeuille doit couvrir la commission. Recharge-le, puis réessaie.'**
   String get errorCashFundsRequiredMessage;
+
+  /// Hero du voyageur sur une demande pas encore acceptée (traveler_hero_card.dart, FLUTTER-4T)
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} vous demande de transporter son colis'**
+  String bidDetailTravelerRequestTitle(String name);
+
+  /// Hero du voyageur sur une demande pas encore acceptée (traveler_hero_card.dart, FLUTTER-4T)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez accepté, paiement en cours'**
+  String get bidDetailTravelerAwaitingPaymentAcceptedTitle;
+
+  /// Hero du voyageur sur une demande pas encore acceptée (traveler_hero_card.dart, FLUTTER-4T)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement de l\'expéditeur en attente'**
+  String get bidDetailTravelerAwaitingPaymentTitle;
+
+  /// Hero du voyageur sur une demande pas encore acceptée (traveler_hero_card.dart, FLUTTER-4T)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur a 30 minutes pour payer par mobile money. Rien à faire de votre côté : la demande passera en « Acceptée » dès le paiement reçu, sinon elle sera annulée automatiquement.'**
+  String get bidDetailTravelerAwaitingPaymentMobileMoneySubtitle;
+
+  /// Hero du voyageur sur une demande pas encore acceptée (traveler_hero_card.dart, FLUTTER-4T)
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur n\'a pas encore finalisé son paiement. Rien à faire pour l\'instant, vous serez notifié dès qu\'il faudra agir.'**
+  String get bidDetailTravelerAwaitingPaymentSubtitle;
+
+  /// Tampon du billet côté voyageur quand c'est à lui de décider (billet_status_stamp.dart, FLUTTER-4T)
+  ///
+  /// In fr, this message translates to:
+  /// **'À décider'**
+  String get ticketStatusPendingTravelerLabel;
+
+  /// Ligne sous la carte profil quand le contact n'est pas encore possible (FLUTTER-4T)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez contacter l\'expéditeur une fois la demande acceptée.'**
+  String get bidDetailContactSenderAfterAcceptanceHint;
+
+  /// Ligne sous la carte profil quand le contact n'est pas encore possible (FLUTTER-4T)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez contacter l\'expéditeur dès que son paiement sera confirmé.'**
+  String get bidDetailContactSenderAfterPaymentHint;
+
+  /// Ligne sous la carte profil quand le contact n'est pas encore possible (FLUTTER-4T)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez contacter le voyageur une fois la demande acceptée.'**
+  String get bidDetailContactTravelerAfterAcceptanceHint;
+
+  /// Ligne sous la carte profil quand le contact n'est pas encore possible (FLUTTER-4T)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez contacter le voyageur dès que votre paiement sera confirmé.'**
+  String get bidDetailContactTravelerAfterPaymentHint;
 }
 
 class _AppLocalizationsDelegate

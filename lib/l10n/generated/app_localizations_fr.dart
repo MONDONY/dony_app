@@ -6740,7 +6740,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String bidDetailTravelerPendingSubtitle(String amount) {
-    return 'Gain potentiel : $amount. Acceptez ou refusez la demande.';
+    return 'Vous gagnez $amount si vous acceptez. Vérifiez le colis ci-dessous, puis acceptez ou refusez.';
   }
 
   @override
@@ -14654,4 +14654,44 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorCashFundsRequiredMessage =>
       'Pour accepter un paiement en espèces, ton portefeuille doit couvrir la commission. Recharge-le, puis réessaie.';
+
+  @override
+  String bidDetailTravelerRequestTitle(String name) {
+    return '$name vous demande de transporter son colis';
+  }
+
+  @override
+  String get bidDetailTravelerAwaitingPaymentAcceptedTitle =>
+      'Vous avez accepté, paiement en cours';
+
+  @override
+  String get bidDetailTravelerAwaitingPaymentTitle =>
+      'Paiement de l\'expéditeur en attente';
+
+  @override
+  String get bidDetailTravelerAwaitingPaymentMobileMoneySubtitle =>
+      'L\'expéditeur a 30 minutes pour payer par mobile money. Rien à faire de votre côté : la demande passera en « Acceptée » dès le paiement reçu, sinon elle sera annulée automatiquement.';
+
+  @override
+  String get bidDetailTravelerAwaitingPaymentSubtitle =>
+      'L\'expéditeur n\'a pas encore finalisé son paiement. Rien à faire pour l\'instant, vous serez notifié dès qu\'il faudra agir.';
+
+  @override
+  String get ticketStatusPendingTravelerLabel => 'À décider';
+
+  @override
+  String get bidDetailContactSenderAfterAcceptanceHint =>
+      'Vous pourrez contacter l\'expéditeur une fois la demande acceptée.';
+
+  @override
+  String get bidDetailContactSenderAfterPaymentHint =>
+      'Vous pourrez contacter l\'expéditeur dès que son paiement sera confirmé.';
+
+  @override
+  String get bidDetailContactTravelerAfterAcceptanceHint =>
+      'Vous pourrez contacter le voyageur une fois la demande acceptée.';
+
+  @override
+  String get bidDetailContactTravelerAfterPaymentHint =>
+      'Vous pourrez contacter le voyageur dès que votre paiement sera confirmé.';
 }

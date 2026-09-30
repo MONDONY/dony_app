@@ -32,8 +32,14 @@ class BilletStatusStamp extends StatelessWidget {
             ? l.ticketStatusAwaitingPaymentSenderLabel
             : l.ticketStatusAwaitingPaymentTravelerLabel,
       ),
-      'PENDING' ||
-      'PAYMENT_ESCROWED' => (cs.warning, l.ticketStatusPendingLabel),
+      // Côté voyageur, c'est à lui d'agir : « En attente » laissait croire
+      // qu'on attendait quelqu'un d'autre (FLUTTER-4T).
+      'PENDING' || 'PAYMENT_ESCROWED' => (
+        cs.warning,
+        isSender
+            ? l.ticketStatusPendingLabel
+            : l.ticketStatusPendingTravelerLabel,
+      ),
       'ACCEPTED' => (cs.success, l.ticketStatusAcceptedLabel),
       'HANDED_OVER' => (cs.primary, l.ticketStatusHandedOverLabel),
       'IN_TRANSIT' => (cs.primary, l.ticketStatusInTransitLabel),
