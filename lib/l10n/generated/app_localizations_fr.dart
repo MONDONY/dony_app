@@ -1561,7 +1561,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ton compte Yadony est prêt. Tu peux commencer à rechercher, envoyer ou suivre tes colis.';
 
   @override
-  String get authReferralContinueHome => 'Continuer vers l\'accueil';
+  String get authReferralContinueHome => 'Continuer';
 
   @override
   String get authConsentTitle => 'Une dernière chose';
@@ -2542,6 +2542,33 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestPublishIntroTitle => 'Publier un colis';
+
+  @override
+  String get firstStepsDoneLabel => 'Inscription terminée';
+
+  @override
+  String get firstStepsTitle => 'Votre compte est prêt';
+
+  @override
+  String get firstStepsSubtitle =>
+      'Par quoi voulez-vous commencer ? Vous pourrez toujours faire l\'autre plus tard.';
+
+  @override
+  String get firstStepsTripTitle => 'Je voyage';
+
+  @override
+  String get firstStepsTripSubtitle =>
+      'Publiez votre trajet et rentabilisez vos kilos libres.';
+
+  @override
+  String get firstStepsParcelTitle => 'J\'envoie un colis';
+
+  @override
+  String get firstStepsParcelSubtitle =>
+      'Trouvez un voyageur ou publiez votre demande d\'envoi.';
+
+  @override
+  String get firstStepsLater => 'Plus tard, aller à l\'accueil';
 
   @override
   String get tripPublishIntroVerifiedTextTrip =>
@@ -9493,7 +9520,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous recevez l\'argent sur le compte lié à votre RIB/IBAN, pas dans un portefeuille Stripe.';
 
   @override
-  String get payoutContinueToHome => 'Continuer vers l\'accueil';
+  String get payoutContinueToHome => 'Continuer';
 
   @override
   String get payoutSuccessTitle => 'Paiements activés ✓';

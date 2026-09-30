@@ -2837,7 +2837,7 @@ abstract class AppLocalizations {
   /// No description provided for @authReferralContinueHome.
   ///
   /// In fr, this message translates to:
-  /// **'Continuer vers l\'accueil'**
+  /// **'Continuer'**
   String get authReferralContinueHome;
 
   /// No description provided for @authConsentTitle.
@@ -4351,6 +4351,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Publier un colis'**
   String get requestPublishIntroTitle;
+
+  /// Pastille en haut de l'écran de fin d'inscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Inscription terminée'**
+  String get firstStepsDoneLabel;
+
+  /// Titre de l'écran de fin d'inscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre compte est prêt'**
+  String get firstStepsTitle;
+
+  /// Sous-titre de l'écran de fin d'inscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Par quoi voulez-vous commencer ? Vous pourrez toujours faire l\'autre plus tard.'**
+  String get firstStepsSubtitle;
+
+  /// Carte de choix voyageur, fin d'inscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je voyage'**
+  String get firstStepsTripTitle;
+
+  /// Détail de la carte voyageur, fin d'inscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publiez votre trajet et rentabilisez vos kilos libres.'**
+  String get firstStepsTripSubtitle;
+
+  /// Carte de choix expéditeur, fin d'inscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'envoie un colis'**
+  String get firstStepsParcelTitle;
+
+  /// Détail de la carte expéditeur, fin d'inscription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trouvez un voyageur ou publiez votre demande d\'envoi.'**
+  String get firstStepsParcelSubtitle;
+
+  /// Bouton discret pour ignorer le choix et aller à l'accueil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard, aller à l\'accueil'**
+  String get firstStepsLater;
 
   /// Encart vert de l'intro quand l'identité est déjà vérifiée, rôle voyageur
   ///
@@ -15743,7 +15791,7 @@ abstract class AppLocalizations {
   /// Bouton de sortie de l'étape paiements de l'onboarding, répété dans _ActiveAccountView et _SuccessView (payout_onboarding_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Continuer vers l\'accueil'**
+  /// **'Continuer'**
   String get payoutContinueToHome;
 
   /// Titre de payout_onboarding_screen.dart _SuccessView, la coche fait partie de la valeur dans les deux langues.

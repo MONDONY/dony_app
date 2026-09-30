@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -6,6 +7,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
+import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -29,6 +31,9 @@ void _leavePayoutsStep(BuildContext context, OnboardingProgress? progress) {
   final destination = progress?.routeAfter(OnboardingStep.payouts) ?? '/home';
   if (progress != null && destination == '/home') {
     unawaited(getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}));
+    // Fin du parcours : l'écran « Par quoi commencer ? » plutôt que l'accueil.
+    context.go(firstStepsRoute);
+    return;
   }
   context.go(destination);
 }

@@ -14,6 +14,7 @@ void main() {
       AnalyticsEvents.loginFailed,
       AnalyticsEvents.kycStarted,
       AnalyticsEvents.kycCompleted,
+      AnalyticsEvents.firstStepsChoice,
       AnalyticsEvents.kycFailed,
       AnalyticsEvents.announcementCreated,
       AnalyticsEvents.announcementViewed,

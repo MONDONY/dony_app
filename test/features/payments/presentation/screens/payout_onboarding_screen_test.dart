@@ -101,6 +101,10 @@ Widget _wrap(
           path: '/home',
           builder: (_, _) => const Scaffold(body: Text('Home route')),
         ),
+        GoRoute(
+          path: '/first-steps',
+          builder: (_, _) => const Scaffold(body: Text('First steps route')),
+        ),
       ],
     ),
   );
@@ -301,7 +305,7 @@ void main() {
           await tester.pumpAndSettle();
 
           verify(() => mockAuthRepository.markOnboardingSeen()).called(1);
-          expect(find.text('Home route'), findsOneWidget);
+          expect(find.text('First steps route'), findsOneWidget);
         },
       );
 
@@ -326,7 +330,7 @@ void main() {
           await tester.pump(const Duration(milliseconds: 500));
 
           expect(find.text('Paiements activés ✓'), findsOneWidget);
-          await tester.tap(find.text('Continuer vers l\'accueil'));
+          await tester.tap(find.text('Continuer'));
           // Pas de `pumpAndSettle()` : la mascotte de la page quittée anime
           // en boucle. Des `pump()` bornés suffisent à laisser la transition
           // GoRouter se terminer.
@@ -335,7 +339,7 @@ void main() {
           }
 
           verify(() => mockAuthRepository.markOnboardingSeen()).called(1);
-          expect(find.text('Home route'), findsOneWidget);
+          expect(find.text('First steps route'), findsOneWidget);
         },
       );
 
@@ -355,13 +359,13 @@ void main() {
           await tester.pump(const Duration(milliseconds: 500));
 
           expect(find.text('Compte bancaire connecté'), findsOneWidget);
-          await tester.ensureVisible(find.text('Continuer vers l\'accueil'));
+          await tester.ensureVisible(find.text('Continuer'));
           await tester.pumpAndSettle();
-          await tester.tap(find.text('Continuer vers l\'accueil'));
+          await tester.tap(find.text('Continuer'));
           await tester.pumpAndSettle();
 
           verify(() => mockAuthRepository.markOnboardingSeen()).called(1);
-          expect(find.text('Home route'), findsOneWidget);
+          expect(find.text('First steps route'), findsOneWidget);
         },
       );
 
@@ -381,7 +385,7 @@ void main() {
           await tester.pumpAndSettle();
 
           verify(() => mockAuthRepository.markOnboardingSeen()).called(1);
-          expect(find.text('Home route'), findsOneWidget);
+          expect(find.text('First steps route'), findsOneWidget);
           expect(
             find.text('Pas encore disponible\ndans votre pays'),
             findsNothing,
