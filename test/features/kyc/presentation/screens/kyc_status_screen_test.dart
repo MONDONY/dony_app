@@ -90,6 +90,10 @@ Future<void> _wrap(
         builder: (_, _) => const Scaffold(body: Text('Home route')),
       ),
       GoRoute(
+        path: '/first-steps',
+        builder: (_, _) => const Scaffold(body: Text('First steps route')),
+      ),
+      GoRoute(
         path: '/payments/onboarding',
         builder: (_, _) => const Scaffold(body: Text('Payouts route')),
       ),
@@ -225,7 +229,7 @@ void main() {
     // `kyc-required`). Le parcours s'arrête donc là, et `onboarding_seen_at`
     // est bien posé : l'utilisateur a atteint l'accueil.
     verify(() => authRepository.markOnboardingSeen()).called(1);
-    expect(find.text('Home route'), findsOneWidget);
+    expect(find.text('First steps route'), findsOneWidget);
     expect(find.text('Payouts route'), findsNothing);
   });
 
@@ -252,7 +256,7 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => authRepository.markOnboardingSeen()).called(1);
-      expect(find.text('Home route'), findsOneWidget);
+      expect(find.text('First steps route'), findsOneWidget);
     },
   );
 
@@ -282,7 +286,7 @@ void main() {
 
       // Un rejet laisse l'identité non vérifiée : les paiements restent
       // verrouillés, le parcours se termine à l'accueil.
-      expect(find.text('Home route'), findsOneWidget);
+      expect(find.text('First steps route'), findsOneWidget);
     },
   );
 
@@ -338,7 +342,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => authRepository.markOnboardingSeen()).called(1);
-    expect(find.text('Home route'), findsOneWidget);
+    expect(find.text('First steps route'), findsOneWidget);
   });
 
   testWidgets(

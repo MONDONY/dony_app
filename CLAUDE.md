@@ -332,6 +332,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `onboarding_step_viewed` | `resolvePostSignupRoute` — étape retenue à l'entrée du parcours d'onboarding progressif (propriétés `step` énumération fermée, `index`, `total`) |
 | `onboarding_step_completed` | CountryOnboardingCubit.select() (`step: 'country'`) · PersonalInfoCubit.submit() (`step: 'personal_info'`) · AnalyticsConsentScreen._respond() (`step: 'consent'`) — étape du parcours d'onboarding progressif complétée |
 | `onboarding_completed` | `resolvePostSignupRoute` — `nextStep` rend `null`, le compte est complet (propriété `steps_total`) |
+| `first_steps_choice` | FirstStepsScreen._choose — écran de fin d'inscription `/first-steps` (« Par quoi voulez-vous commencer ? »), émis depuis l'écran comme les tuiles du hub Activités : c'est un choix de navigation, sans état métier (propriété `choice` : `trip`/`parcel`/`later`) |
 | `login_success` | AuthBloc (check / phone / social / email) |
 | `login_failed` | AuthBloc._onCheckRequested() |
 | `guest_session_started` | AuthBloc._onGuestSessionRequested() — session Firebase anonyme ouverte avec succès depuis « Parcourir sans compte » |
@@ -339,7 +340,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `guest_data_claimed` | AuthBloc._claimGuestData() — favoris posés en session visiteur rattachés au compte (`POST /auth/guest/claim` accepté), aussi bien à l'inscription qu'à la connexion à un compte existant (téléphone, e-mail, Google, Apple). Sortie de l'entonnoir invité |
 | `guest_data_claim_failed` | AuthBloc._claimGuestData() — rattachement refusé ou impossible, propriété `reason` (code métier backend `guest-claim-*` / `user-not-found`, ou `unknown`). L'inscription ou la connexion aboutit malgré tout : le visiteur perd ses favoris, jamais son compte. Doublé d'un `AppLog.warn` car l'analytics se tait si le consentement est refusé |
 | `kyc_started` | KycBloc._onSessionRequested() |
-| `kyc_completed` | KycBloc._onStatusRefreshed() |
+| `kyc_completed` | KycBloc._onStatusRefreshed() — une fois par instance, et une fois par compte et par appareil (`KycCompletionTracker`, clé Hive par UID) : rouvrir l'écran de statut d'un compte déjà vérifié ne le réémet plus |
 | `kyc_failed` | KycBloc._onSessionRequested() |
 | `announcement_created` | AnnouncementBloc._onCreateRequested() |
 | `announcement_viewed` | AnnouncementDetailScreen (BlocListener) |
@@ -351,7 +352,11 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `bid_accepted` | BidAcceptanceBloc._handleResponse() |
 | `bid_rejected` | BidBloc._onRejectRequested() |
 | `payment_initiated` | PaymentScreen._pay() |
-| `payment_succeeded` | PaymentBloc._onPaymentSheetCompleted() |
+| `payment_succeeded` | PaymentBloc._onPaymentSheetCompleted() (`/payments/pay`) · `confirmBidPaymentSafely` (paiement carte d'une offre, `context: bid`) · NegotiationBloc._onCheckout() (paiement carte d'une demande négociée, `context: negotiation`, seulement pour un PaymentIntent `pi_…`, jamais pour un accord en espèces) |
+| `connect_onboarding_link_opened` | ConnectOnboardingBloc._onLinkRequested — lien du formulaire Stripe Connect obtenu |
+| `connect_onboarding_completed` | ConnectOnboardingBloc._onPollingRequested — compte de versement actif au retour de Stripe (pas au chargement d'un statut déjà actif) |
+| `connect_onboarding_still_pending` | ConnectOnboardingBloc._onPollingRequested — retour de Stripe sans formulaire terminé |
+| `connect_onboarding_failed` | ConnectOnboardingBloc — échec (propriétés `stage` : `link`/`status`/`rejected`/`disabled`/`launch`, `reason`) |
 | `payment_failed` | PaymentBloc._onPaymentFailed() |
 | `mobile_money_awaiting` | MobileMoneyAwaitingScreen.initState |
 | `mobile_money_account_activated` | MobileMoneyAccountBloc._onActivateRequested — compte de versement mobile money du voyageur (Wave/Orange Money) activé avec succès, réseaux cochés compris (propriétés `provider`, `providers_count`, `currency`). Même event réémis par _onProvidersUpdateRequested quand les réseaux acceptés d'un compte déjà actif sont modifiés sans ressaisir le numéro (propriété additionnelle `update: true`) |

@@ -73,6 +73,10 @@ Future<void> _wrap(
         builder: (_, _) => const Scaffold(body: Text('Home route')),
       ),
       GoRoute(
+        path: '/first-steps',
+        builder: (_, _) => const Scaffold(body: Text('First steps route')),
+      ),
+      GoRoute(
         path: '/kyc/verify',
         builder: (_, _) => const Scaffold(body: Text('KYC route')),
       ),
@@ -124,7 +128,7 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => authRepository.markOnboardingSeen()).called(1);
-      expect(find.text('Home route'), findsOneWidget);
+      expect(find.text('First steps route'), findsOneWidget);
     },
   );
 
@@ -137,11 +141,11 @@ void main() {
 
       await _wrap(tester, bloc);
 
-      await tester.tap(find.text('Continuer vers l\'accueil'));
+      await tester.tap(find.text('Continuer'));
       await tester.pumpAndSettle();
 
       verify(() => authRepository.markOnboardingSeen()).called(1);
-      expect(find.text('Home route'), findsOneWidget);
+      expect(find.text('First steps route'), findsOneWidget);
     },
   );
 
@@ -162,7 +166,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Home route'), findsOneWidget);
+      expect(find.text('First steps route'), findsOneWidget);
     },
   );
 
@@ -195,7 +199,7 @@ void main() {
 
       await _wrap(tester, bloc, progress: _progressWithIdentityLeft);
 
-      await tester.tap(find.text('Continuer vers l\'accueil'));
+      await tester.tap(find.text('Continuer'));
       await tester.pumpAndSettle();
 
       verifyNever(() => authRepository.markOnboardingSeen());

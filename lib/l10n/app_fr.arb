@@ -516,7 +516,7 @@
   "authReferralSuccessTitle": "Code appliqué !",
   "authReferralSuccessBody": "Ton ami sera récompensé dès que tu complètes ta première livraison.",
   "authReferralSuccessFootnote": "Ton compte Yadony est prêt. Tu peux commencer à rechercher, envoyer ou suivre tes colis.",
-  "authReferralContinueHome": "Continuer vers l'accueil",
+  "authReferralContinueHome": "Continuer",
   "authConsentTitle": "Une dernière chose",
   "authConsentBody": "Pour améliorer Yadony, on aimerait mesurer comment l'app est utilisée. C'est anonyme et facultatif.",
   "authConsentFootnote": "Jamais tes paiements, ton identité ou ton numéro. Tu peux changer d’avis dans Réglages.",
@@ -1250,6 +1250,22 @@
   "@requestPublishIntroTitle": {
     "description": "Titre de l'intro de publication, rôle expéditeur"
   },
+  "firstStepsDoneLabel": "Inscription terminée",
+  "@firstStepsDoneLabel": {"description": "Pastille en haut de l'écran de fin d'inscription."},
+  "firstStepsTitle": "Votre compte est prêt",
+  "@firstStepsTitle": {"description": "Titre de l'écran de fin d'inscription."},
+  "firstStepsSubtitle": "Par quoi voulez-vous commencer ? Vous pourrez toujours faire l'autre plus tard.",
+  "@firstStepsSubtitle": {"description": "Sous-titre de l'écran de fin d'inscription."},
+  "firstStepsTripTitle": "Je voyage",
+  "@firstStepsTripTitle": {"description": "Carte de choix voyageur, fin d'inscription."},
+  "firstStepsTripSubtitle": "Publiez votre trajet et rentabilisez vos kilos libres.",
+  "@firstStepsTripSubtitle": {"description": "Détail de la carte voyageur, fin d'inscription."},
+  "firstStepsParcelTitle": "J'envoie un colis",
+  "@firstStepsParcelTitle": {"description": "Carte de choix expéditeur, fin d'inscription."},
+  "firstStepsParcelSubtitle": "Trouvez un voyageur ou publiez votre demande d'envoi.",
+  "@firstStepsParcelSubtitle": {"description": "Détail de la carte expéditeur, fin d'inscription."},
+  "firstStepsLater": "Plus tard, aller à l'accueil",
+  "@firstStepsLater": {"description": "Bouton discret pour ignorer le choix et aller à l'accueil."},
   "tripPublishIntroVerifiedTextTrip": "Identité vérifiée. Vous pouvez publier votre trajet en toute sécurité.",
   "@tripPublishIntroVerifiedTextTrip": {
     "description": "Encart vert de l'intro quand l'identité est déjà vérifiée, rôle voyageur"
@@ -10282,7 +10298,7 @@
   "@payoutActiveInfoBankAccountSubtitle": {
     "description": "Sous-titre de la troisième ligne d'info de payout_onboarding_screen.dart _ActiveAccountView."
   },
-  "payoutContinueToHome": "Continuer vers l'accueil",
+  "payoutContinueToHome": "Continuer",
   "@payoutContinueToHome": {
     "description": "Bouton de sortie de l'étape paiements de l'onboarding, répété dans _ActiveAccountView et _SuccessView (payout_onboarding_screen.dart)."
   },

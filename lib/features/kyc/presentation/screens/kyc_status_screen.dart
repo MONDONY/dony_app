@@ -9,6 +9,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
+import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
@@ -130,6 +131,9 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
       unawaited(
         getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}),
       );
+      // Fin du parcours : « Par quoi commencer ? » plutôt que l'accueil.
+      context.go(firstStepsRoute);
+      return;
     }
     context.go(destination);
   }

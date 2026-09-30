@@ -496,6 +496,9 @@ abstract final class AnalyticsEvents {
   // abouti, et le nom lui-même ne doit jamais partir dans l'analytics.
   static const onboardingIdentityDeclared = 'onboarding_identity_declared';
 
+  /// Choix de l'écran de fin d'inscription : trip, parcel ou later.
+  static const firstStepsChoice = 'first_steps_choice';
+
   // Langue serveur — synchronisation de la langue effective de l'app avec
   // `preferredLanguage` du compte (`LanguageSyncCubit`).
   static const preferredLanguageSynced = 'preferred_language_synced';
