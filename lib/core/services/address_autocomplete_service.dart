@@ -48,7 +48,17 @@ class AddressAutocompleteService {
 
   /// Step 2 — closes the Google session; billed as 1 session with all
   /// preceding autocomplete calls sharing the same [sessionToken].
-  Future<AddressData> resolvePlace(String placeId, String sessionToken) async {
+  ///
+  /// [placeName] : nom de la suggestion touchée (`mainText`). Le back renvoie
+  /// l'adresse postale de Google (`formattedAddress`), qui pour un lieu
+  /// nommé (aéroport, gare, commerce) ne contient pas son nom : sans lui,
+  /// « Aéroport International de Douala » s'affichait « Douala, Cameroun »
+  /// (FLUTTER-4F). Le nom n'est pas redemandé à Google (champ facturé).
+  Future<AddressData> resolvePlace(
+    String placeId,
+    String sessionToken, {
+    String? placeName,
+  }) async {
     final response = await _dio.post<dynamic>(
       '/addresses/details',
       data: {'placeId': placeId, 'sessionToken': sessionToken},
@@ -61,7 +71,7 @@ class AddressAutocompleteService {
       );
     }
     return AddressData(
-      label: raw['label'] as String,
+      label: labelWithPlaceName(placeName, raw['label'] as String),
       lat: (raw['lat'] as num).toDouble(),
       lng: (raw['lng'] as num).toDouble(),
       street: raw['street'] as String?,
@@ -92,4 +102,14 @@ class AddressAutocompleteService {
       rethrow;
     }
   }
+}
+
+/// Libellé d'un lieu résolu : son nom en tête, sauf si l'adresse le contient
+/// déjà (adresse de rue, où `mainText` est « 12 rue X » et l'adresse commence
+/// par lui).
+String labelWithPlaceName(String? placeName, String address) {
+  final name = placeName?.trim() ?? '';
+  if (name.isEmpty) return address;
+  if (address.toLowerCase().contains(name.toLowerCase())) return address;
+  return '$name, $address';
 }

@@ -222,6 +222,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
       final addr = await _w.autocompleteService.resolvePlace(
         suggestion.placeId,
         token,
+        placeName: suggestion.mainText,
       );
       _sessionToken = null;
       _sessionTokenCreatedAt = null;
