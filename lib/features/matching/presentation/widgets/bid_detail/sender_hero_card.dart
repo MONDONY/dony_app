@@ -6,6 +6,7 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -423,10 +424,26 @@ class _WindowExpiredHero extends StatelessWidget {
           variant: SenderHeroVariant.alert,
           title: l.bidDetailSenderWindowExpiredTitle,
           subtitle: subtitle,
-          footer: _HeroButton(
-            label: l.bidDetailSenderReportNoShowButton,
-            isLoading: isLoading,
-            onPressed: () => _showNoShowSheet(context),
+          // Annuler d'abord : la fenêtre peut être dépassée sans faute du
+          // voyageur (demande faite après la date limite, FLUTTER-46/47).
+          // Le signalement d'absence ne doit pas être la seule issue.
+          footer: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (bid.canCancelBeforeHandover) ...[
+                _HeroButton(
+                  label: l.bidDetailCancelRequestLabel,
+                  isLoading: isLoading,
+                  onPressed: () => showSenderCancelBidDialog(context, bid),
+                ),
+                const SizedBox(height: DonySpacing.sm),
+              ],
+              _HeroButton(
+                label: l.bidDetailSenderReportNoShowButton,
+                isLoading: isLoading,
+                onPressed: () => _showNoShowSheet(context),
+              ),
+            ],
           ),
         );
       },

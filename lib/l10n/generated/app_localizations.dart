@@ -11088,7 +11088,7 @@ abstract class AppLocalizations {
   /// _WindowExpiredHero, sous-titre (sender_hero_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Le dépôt était possible {window}. Le voyageur ne s\'est pas présenté ?'**
+  /// **'Le dépôt était possible {window}. Vous pouvez annuler votre demande sans frais. Si le voyageur ne s\'est pas présenté, signalez son absence.'**
   String bidDetailSenderWindowExpiredSubtitle(String window);
 
   /// _WindowExpiredHero, bouton d'ouverture de la feuille de signalement (sender_hero_card.dart)

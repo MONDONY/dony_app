@@ -5,11 +5,15 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -18,6 +22,8 @@ import 'package:mocktail/mocktail.dart';
 class _MockCancellationBloc
     extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
+
+class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 // ── Fixture ───────────────────────────────────────────────────────────────────
 
@@ -80,6 +86,7 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr');
     registerFallbackValue(TravelerNoShowReportRequested('bid-001'));
+    registerFallbackValue(BidCancelRequested('bid-001'));
     registerFallbackValue(NoShowContestRequested('bid-001'));
     registerFallbackValue(DeliveryNoShowContestRequested('bid-001'));
   });
@@ -196,6 +203,97 @@ void main() {
           any(that: isA<TravelerNoShowReportRequested>()),
         ),
       ).called(1);
+    },
+  );
+
+  // ── Test 5b/5c : annulation sans faute depuis la fenêtre dépassée ──────────
+  // FLUTTER-46/47 : une demande faite après la date limite naissait « fenêtre
+  // dépassée » et le seul bouton accusait le voyageur. L'annulation (remboursée,
+  // déjà possible via « … ») est désormais proposée sur la carte, en premier.
+
+  testWidgets(
+    '5b · fenêtre passée → bouton "Annuler la demande" au-dessus du signalement',
+    (tester) async {
+      final bid = _bid(
+        status: 'ACCEPTED',
+        handoverDeadline: DateTime.now().subtract(const Duration(hours: 2)),
+      );
+      await tester.pumpWidget(_host(bid, cancellationBloc));
+      await tester.pump();
+
+      final cancel = find.text('Annuler la demande');
+      final report = find.textContaining("Signaler l'absence du voyageur");
+      expect(cancel, findsOneWidget);
+      expect(report, findsOneWidget);
+      expect(
+        tester.getTopLeft(cancel).dy,
+        lessThan(tester.getTopLeft(report).dy),
+      );
+      expect(
+        find.textContaining('annuler votre demande sans frais'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    '5c · tap "Annuler la demande" → confirmation → BidCancelRequested dispatched',
+    (tester) async {
+      final bidBloc = _MockBidBloc();
+      whenListen<BidState>(
+        bidBloc,
+        const Stream<BidState>.empty(),
+        initialState: BidInitial(),
+      );
+      final bid = _bid(
+        status: 'ACCEPTED',
+        handoverDeadline: DateTime.now().subtract(const Duration(hours: 2)),
+      );
+      // La confirmation se ferme via GoRouter (ctx.pop()), comme dans l'app.
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => Scaffold(
+              body: MultiBlocProvider(
+                providers: [
+                  BlocProvider<CancellationBloc>.value(value: cancellationBloc),
+                  BlocProvider<BidBloc>.value(value: bidBloc),
+                ],
+                child: SenderHeroCard(bid: bid),
+              ),
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+      );
+      await tester.pump();
+
+      await tester.tap(find.text('Annuler la demande'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      await tester.tap(find.text('Oui, annuler'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => bidBloc.add(
+          any(
+            that: isA<BidCancelRequested>().having(
+              (e) => e.bidId,
+              'bidId',
+              'bid-001',
+            ),
+          ),
+        ),
+      ).called(1);
+      verifyNever(
+        () => cancellationBloc.add(
+          any(that: isA<TravelerNoShowReportRequested>()),
+        ),
+      );
     },
   );
 

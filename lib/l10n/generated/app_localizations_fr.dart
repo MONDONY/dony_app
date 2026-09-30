@@ -6665,7 +6665,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String bidDetailSenderWindowExpiredSubtitle(String window) {
-    return 'Le dépôt était possible $window. Le voyageur ne s\'est pas présenté ?';
+    return 'Le dépôt était possible $window. Vous pouvez annuler votre demande sans frais. Si le voyageur ne s\'est pas présenté, signalez son absence.';
   }
 
   @override

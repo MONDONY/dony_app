@@ -3344,7 +3344,7 @@
   "@bidDetailSenderWindowExpiredTitle": {
     "description": "_WindowExpiredHero, titre (sender_hero_card.dart)"
   },
-  "bidDetailSenderWindowExpiredSubtitle": "Drop-off was possible {window}. Did the traveler not show up?",
+  "bidDetailSenderWindowExpiredSubtitle": "Drop-off was possible {window}. You can cancel your request at no cost. If the traveler did not show up, report their absence.",
   "@bidDetailSenderWindowExpiredSubtitle": {
     "description": "_WindowExpiredHero, sous-titre (sender_hero_card.dart)",
     "placeholders": {
