@@ -24113,6 +24113,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Photo de l\'étape'**
   String get trackingStepPhotoLabel;
+
+  /// Voyageur, commission à régler alors que le jour du voyage est passé (thread_state_cta_bar.dart, FLUTTER-44)
+  ///
+  /// In fr, this message translates to:
+  /// **'La date du voyage est passée : la commission ne peut plus être réglée.'**
+  String get negotiationCommissionTravelDatePassed;
+
+  /// Titre de l'erreur handover-deadline-passed (409) : trajet parti ou date limite de remise atteinte
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise des colis terminée'**
+  String get errorHandoverDeadlinePassedTitle;
+
+  /// Message de l'erreur handover-deadline-passed (409)
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.'**
+  String get errorHandoverDeadlinePassedMessage;
 }
 
 class _AppLocalizationsDelegate

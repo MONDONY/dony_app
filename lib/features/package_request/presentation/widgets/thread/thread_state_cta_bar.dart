@@ -585,7 +585,16 @@ class _TravelerCommissionActions extends StatelessWidget {
     // AcceptOfferBottomSheet) : le montant exact éventuellement ajusté par
     // un promo n'est recalculé côté serveur qu'au règlement lui-même.
     final commissionEur = PriceDisplay.feeFromNet(thread.currentPriceEur);
-    final deadline = thread.commissionDeadline;
+    final now = DateTime.now();
+    final travelOver = isTravelDayOver(thread.travelerTravelDate, now);
+    final deadline = effectiveCommissionDeadline(
+      thread.commissionDeadline,
+      thread.travelerTravelDate,
+    );
+    // Échéance déjà passée à l'affichage : le back refuserait le règlement
+    // (409), le bouton ne doit pas le proposer (FLUTTER-44).
+    final expired =
+        travelOver || (deadline != null && !deadline.isAfter(now.toUtc()));
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -598,14 +607,26 @@ class _TravelerCommissionActions extends StatelessWidget {
             PriceDisplay.money(commissionEur, thread.currency),
           ),
         ),
-        if (deadline != null) ...[
+        if (travelOver) ...[
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            l.negotiationCommissionTravelDatePassed,
+            key: const Key('commission-travel-date-passed'),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: cs.error,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ] else if (deadline != null) ...[
           const SizedBox(height: DonySpacing.sm),
           _CommissionCountdown(deadline: deadline),
         ],
         const SizedBox(height: DonySpacing.sm),
         DonyButton(
+          key: const Key('commission-pay-button'),
           label: l.negotiationPayCommissionButton,
-          onPressed: actionInProgress
+          onPressed: actionInProgress || expired
               ? null
               : () => context.read<NegotiationBloc>().add(
                   NegotiationSettleCommissionRequested(thread.id),
@@ -627,6 +648,30 @@ class _TravelerCommissionActions extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Le voyage a-t-il eu lieu ? [travelDate] est un jour (minuit local) : il
+/// est passé dès le lendemain.
+@visibleForTesting
+bool isTravelDayOver(DateTime travelDate, DateTime now) => !now.isBefore(
+  DateTime(travelDate.year, travelDate.month, travelDate.day + 1),
+);
+
+/// Échéance de la commission affichée au voyageur : celle du back, mais
+/// jamais au-delà du jour du voyage. Le minuteur annonçait encore du temps
+/// alors que le voyage était passé (FLUTTER-44). `null` sans échéance back.
+@visibleForTesting
+DateTime? effectiveCommissionDeadline(
+  DateTime? commissionDeadline,
+  DateTime travelDate,
+) {
+  if (commissionDeadline == null) return null;
+  final travelEnd = DateTime(
+    travelDate.year,
+    travelDate.month,
+    travelDate.day + 1,
+  ).toUtc();
+  return commissionDeadline.isAfter(travelEnd) ? travelEnd : commissionDeadline;
 }
 
 /// Compte à rebours jusqu'à [deadline] (UTC), isolé dans son propre widget

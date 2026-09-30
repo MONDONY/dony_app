@@ -59,11 +59,16 @@ NegotiationThread _thread({
   String? commissionStatus,
   DateTime? commissionDeadline,
   double price = 38,
+  DateTime? travelerTravelDate,
 }) => NegotiationThread(
   id: 't1',
   packageRequestId: 'pr1',
   travelerId: 'traveler-1',
-  travelerTravelDate: DateTime(2026, 6, 15),
+  // Voyage à venir par défaut : un jour de voyage passé désactive le
+  // règlement (FLUTTER-44).
+  travelerTravelDate:
+      travelerTravelDate ??
+      DateUtils.dateOnly(DateTime.now().add(const Duration(days: 30))),
   travelerAvailableKg: 10,
   status: status,
   currentPriceEur: price,
@@ -320,6 +325,108 @@ void main() {
         expect(find.text('Délai écoulé'), findsNothing);
       },
     );
+  });
+
+  // FLUTTER-44 : le minuteur annonçait encore du temps pour régler la
+  // commission alors que la date du voyage était passée.
+  group('commission et date du voyage', () {
+    late _MockNegotiationBloc bloc;
+
+    setUp(() {
+      bloc = _MockNegotiationBloc();
+      when(() => bloc.state).thenReturn(const NegotiationInitial());
+      when(
+        () => bloc.stream,
+      ).thenAnswer((_) => const Stream<NegotiationState>.empty());
+    });
+
+    Widget wrap(NegotiationThread thread) => MaterialApp(
+      theme: AppTheme.light(),
+      home: BlocProvider<NegotiationBloc>.value(
+        value: bloc,
+        child: Scaffold(
+          body: ThreadStateCtaBar(
+            thread: thread,
+            viewerUserId: _viewerTraveler,
+            actionInProgress: false,
+          ),
+        ),
+      ),
+    );
+
+    testWidgets('voyage passé : message, pas de minuteur, bouton inactif', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.awaitingCommission,
+            commissionStatus: 'PENDING',
+            commissionDeadline: DateTime.now().toUtc().add(
+              const Duration(hours: 1),
+            ),
+            travelerTravelDate: DateUtils.dateOnly(
+              DateTime.now().subtract(const Duration(days: 2)),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('commission-travel-date-passed')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Il te reste'), findsNothing);
+      final button = tester.widget<DonyButton>(
+        find.byKey(const Key('commission-pay-button')),
+      );
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('échéance dépassée : bouton inactif', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.awaitingCommission,
+            commissionStatus: 'PENDING',
+            commissionDeadline: DateTime.now().toUtc().subtract(
+              const Duration(minutes: 5),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final button = tester.widget<DonyButton>(
+        find.byKey(const Key('commission-pay-button')),
+      );
+      expect(button.onPressed, isNull);
+    });
+
+    test(
+      'effectiveCommissionDeadline : plafonnée à la fin du jour du voyage',
+      () {
+        final travel = DateTime(2026, 10, 4);
+        final travelEnd = DateTime(2026, 10, 5).toUtc();
+        expect(
+          effectiveCommissionDeadline(
+            travelEnd.add(const Duration(days: 1)),
+            travel,
+          ),
+          travelEnd,
+        );
+        final before = travelEnd.subtract(const Duration(hours: 3));
+        expect(effectiveCommissionDeadline(before, travel), before);
+        expect(effectiveCommissionDeadline(null, travel), isNull);
+      },
+    );
+
+    test('isTravelDayOver : passé dès le lendemain du voyage', () {
+      final travel = DateTime(2026, 10, 4);
+      expect(isTravelDayOver(travel, DateTime(2026, 10, 4, 23, 59)), isFalse);
+      expect(isTravelDayOver(travel, DateTime(2026, 10, 5)), isTrue);
+    });
   });
 
   group('showCommissionSettlementSheet', () {
