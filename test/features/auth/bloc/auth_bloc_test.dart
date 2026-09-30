@@ -1200,7 +1200,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.attachEmail(email: 'a@b.com', code: '123456'),
-        ).thenAnswer((_) async => testUser);
+        ).thenAnswer((_) async => (user: testUser, sessionToken: null));
         return buildBloc();
       },
       act: (bloc) => bloc.add(
@@ -1248,7 +1248,7 @@ void main() {
             phoneNumber: '+221701234567',
             code: '123456',
           ),
-        ).thenAnswer((_) async => testUser);
+        ).thenAnswer((_) async => (user: testUser, sessionToken: null));
         return buildBloc();
       },
       act: (bloc) => bloc.add(
@@ -1289,6 +1289,111 @@ void main() {
         ),
       ),
       expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
+
+  // Reconnexion après rattachement (FLUTTER-4C) : le backend écrit la
+  // coordonnée sur le compte Firebase, ce qui révoque le jeton de
+  // rafraîchissement. Sans reconnexion, l'utilisateur était déconnecté au
+  // premier rafraîchissement forcé et croyait devoir se réinscrire.
+  group('reconnexion après rattachement', () {
+    blocTest<AuthBloc, AuthState>(
+      'email : jeton reçu → signInWithCustomToken puis AuthProfileUpdated',
+      build: () {
+        when(
+          () => mockRepo.attachEmail(email: 'a@b.com', code: '123456'),
+        ).thenAnswer(
+          (_) async => (user: testUser, sessionToken: 'session-token'),
+        );
+        when(
+          () => mockFirebaseAuth.signInWithCustomToken('session-token'),
+        ).thenAnswer((_) async => MockUserCredential());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthAddEmailFromProfileRequested(
+          email: 'a@b.com',
+          code: '123456',
+        ),
+      ),
+      expect: () => [const AuthLoading(), isA<AuthProfileUpdated>()],
+      verify: (_) {
+        verify(
+          () => mockFirebaseAuth.signInWithCustomToken('session-token'),
+        ).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'téléphone : jeton reçu → signInWithCustomToken puis AuthProfileUpdated',
+      build: () {
+        when(
+          () => mockRepo.attachPhone(
+            phoneNumber: '+221701234567',
+            code: '123456',
+          ),
+        ).thenAnswer(
+          (_) async => (user: testUser, sessionToken: 'session-token'),
+        );
+        when(
+          () => mockFirebaseAuth.signInWithCustomToken('session-token'),
+        ).thenAnswer((_) async => MockUserCredential());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthAddPhoneFromProfileRequested(
+          phoneNumber: '+221701234567',
+          code: '123456',
+        ),
+      ),
+      expect: () => [const AuthLoading(), isA<AuthProfileUpdated>()],
+      verify: (_) {
+        verify(
+          () => mockFirebaseAuth.signInWithCustomToken('session-token'),
+        ).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'sans jeton (backend antérieur) → aucune reconnexion',
+      build: () {
+        when(
+          () => mockRepo.attachEmail(email: 'a@b.com', code: '123456'),
+        ).thenAnswer((_) async => (user: testUser, sessionToken: null));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthAddEmailFromProfileRequested(
+          email: 'a@b.com',
+          code: '123456',
+        ),
+      ),
+      expect: () => [const AuthLoading(), isA<AuthProfileUpdated>()],
+      verify: (_) {
+        verifyNever(() => mockFirebaseAuth.signInWithCustomToken(any()));
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      "reconnexion en échec → profil mis à jour quand même, pas d'erreur",
+      build: () {
+        when(
+          () => mockRepo.attachEmail(email: 'a@b.com', code: '123456'),
+        ).thenAnswer(
+          (_) async => (user: testUser, sessionToken: 'session-token'),
+        );
+        when(
+          () => mockFirebaseAuth.signInWithCustomToken('session-token'),
+        ).thenThrow(FirebaseAuthException(code: 'network-request-failed'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthAddEmailFromProfileRequested(
+          email: 'a@b.com',
+          code: '123456',
+        ),
+      ),
+      expect: () => [const AuthLoading(), isA<AuthProfileUpdated>()],
     );
   });
 

@@ -550,11 +550,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // Un seul appel : le backend consomme l'OTP et écrit le numéro dans la même
       // opération. Séparer vérification et écriture laissait la seconde invocable
       // seule — on ne prouvait plus la possession du téléphone au moment d'écrire.
-      final updatedUser = await _authRepository.attachPhone(
+      final result = await _authRepository.attachPhone(
         phoneNumber: event.phoneNumber,
         code: event.code,
       );
-      emit(AuthProfileUpdated(updatedUser));
+      await _reopenSessionAfterContactChange(result.sessionToken);
+      emit(AuthProfileUpdated(result.user));
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }
@@ -571,13 +572,38 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // Un seul appel : le backend consomme l'OTP et écrit l'adresse dans la même
       // opération. Séparer vérification et écriture laissait la seconde invocable
       // seule — on ne prouvait plus la possession de la boîte au moment d'écrire.
-      final updatedUser = await _authRepository.attachEmail(
+      final result = await _authRepository.attachEmail(
         email: event.email,
         code: event.code,
       );
-      emit(AuthProfileUpdated(updatedUser));
+      await _reopenSessionAfterContactChange(result.sessionToken);
+      emit(AuthProfileUpdated(result.user));
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  /// Rouvre la session Firebase avec le jeton émis par le backend après un
+  /// rattachement d'email ou de numéro.
+  ///
+  /// L'écriture d'une coordonnée par le backend révoque le jeton de
+  /// rafraîchissement : sans reconnexion, le premier rafraîchissement forcé
+  /// (paiement, KYC, suivi) déconnectait l'utilisateur jusqu'à une heure plus
+  /// tard, et il croyait devoir se réinscrire (FLUTTER-4C). Même UID : la
+  /// session continue sans rien lui montrer.
+  ///
+  /// Non bloquant : le rattachement a réussi côté serveur, un échec ici ne doit
+  /// pas afficher d'erreur. Sans jeton (backend antérieur), rien ne change.
+  Future<void> _reopenSessionAfterContactChange(String? sessionToken) async {
+    if (sessionToken == null || sessionToken.isEmpty) return;
+    try {
+      await _firebaseAuth.signInWithCustomToken(sessionToken);
+    } catch (e, st) {
+      AppLog.error(
+        'Reconnexion après rattachement impossible', // i18n-ignore
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 

@@ -2,6 +2,19 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 
+/// En-tête du jeton de reconnexion renvoyé par `/auth/{email,sms}-otp/attach`.
+const sessionTokenHeader = 'x-session-token';
+
+/// Profil à jour après un rattachement d'email ou de numéro, plus le jeton
+/// personnalisé qui rouvre la session Firebase.
+///
+/// Quand le backend écrit une coordonnée sur le compte Firebase, Firebase révoque
+/// le jeton de rafraîchissement : la session tient jusqu'à l'expiration du jeton
+/// d'identité, puis le premier rafraîchissement forcé (paiement, KYC, suivi)
+/// déconnecte l'utilisateur (feedback FLUTTER-4C). `sessionToken` est `null`
+/// avec un backend antérieur ou si Firebase n'a pas pu l'émettre.
+typedef AttachResult = ({UserModel user, String? sessionToken});
+
 class AuthRemoteDatasource {
   final ApiClient _apiClient;
 
@@ -85,8 +98,9 @@ class AuthRemoteDatasource {
 
   /// Rattache une adresse au compte connecté. Adresse et code partent ensemble :
   /// le backend consomme l'OTP au moment d'écrire, donc la preuve de possession
-  /// est intrinsèque. Renvoie le profil à jour.
-  Future<UserModel> attachEmail({
+  /// est intrinsèque. Renvoie le profil à jour et, si le backend en émet un,
+  /// le jeton de reconnexion (voir [AttachResult]).
+  Future<AttachResult> attachEmail({
     required String email,
     required String code,
   }) async {
@@ -94,7 +108,10 @@ class AuthRemoteDatasource {
       '/auth/email-otp/attach',
       data: {'email': email, 'code': code},
     );
-    return UserModel.fromJson(response.data!);
+    return (
+      user: UserModel.fromJson(response.data!),
+      sessionToken: response.headers.value(sessionTokenHeader),
+    );
   }
 
   Future<UserModel> registerWithEmail({required String email}) async {
@@ -122,8 +139,9 @@ class AuthRemoteDatasource {
 
   /// Rattache un numéro au compte connecté. Numéro et code partent ensemble :
   /// le backend consomme l'OTP au moment d'écrire, donc la preuve de possession
-  /// est intrinsèque. Renvoie le profil à jour.
-  Future<UserModel> attachPhone({
+  /// est intrinsèque. Renvoie le profil à jour et, si le backend en émet un,
+  /// le jeton de reconnexion (voir [AttachResult]).
+  Future<AttachResult> attachPhone({
     required String phoneNumber,
     required String code,
   }) async {
@@ -131,7 +149,10 @@ class AuthRemoteDatasource {
       '/auth/sms-otp/attach',
       data: {'phoneNumber': phoneNumber, 'code': code},
     );
-    return UserModel.fromJson(response.data!);
+    return (
+      user: UserModel.fromJson(response.data!),
+      sessionToken: response.headers.value(sessionTokenHeader),
+    );
   }
 
   Future<void> markOnboardingSeen() async {
