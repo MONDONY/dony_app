@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -139,12 +140,40 @@ class _QrCameraViewState extends State<QrCameraView>
   void _onDetect(BarcodeCapture capture) {
     if (!_shouldRun) return;
     final bidId = bidIdFromCapture(capture);
-    if (bidId != null) widget.onBidId(bidId);
+    if (bidId != null) {
+      widget.onBidId(bidId);
+    } else if (capture.barcodes.any((b) => b.rawValue != null)) {
+      _onForeignCode();
+    }
+  }
+
+  /// Un QR a bien été lu, mais ce n'est pas celui d'un colis Yadony : le
+  /// dire, au lieu de laisser croire que la caméra ne lit rien (FLUTTER-20).
+  /// La caméra relit le même code à chaque image : un seul avis toutes les
+  /// [_foreignNoticeGap].
+  static const _foreignNoticeGap = Duration(milliseconds: 2500);
+  DateTime? _lastForeignNotice;
+  final _foreignNotice = ValueNotifier<bool>(false);
+  Timer? _foreignTimer;
+
+  void _onForeignCode() {
+    final now = DateTime.now();
+    final last = _lastForeignNotice;
+    if (last != null && now.difference(last) < _foreignNoticeGap) return;
+    _lastForeignNotice = now;
+    unawaited(HapticFeedback.heavyImpact());
+    _foreignNotice.value = true;
+    _foreignTimer?.cancel();
+    _foreignTimer = Timer(const Duration(milliseconds: 1800), () {
+      if (!_disposed) _foreignNotice.value = false;
+    });
   }
 
   @override
   void dispose() {
     _disposed = true;
+    _foreignTimer?.cancel();
+    _foreignNotice.dispose();
     WidgetsBinding.instance.removeObserver(this);
     widget.paused?.removeListener(_sync);
     widget.torchOn?.removeListener(_syncTorch);
@@ -154,10 +183,51 @@ class _QrCameraViewState extends State<QrCameraView>
 
   @override
   Widget build(BuildContext context) {
-    return MobileScanner(
-      controller: _controller,
-      onDetect: _onDetect,
-      errorBuilder: (context, _) => const _CameraUnavailable(),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        MobileScanner(
+          controller: _controller,
+          onDetect: _onDetect,
+          errorBuilder: (context, _) => const _CameraUnavailable(),
+        ),
+        Positioned(
+          left: DonySpacing.lg,
+          right: DonySpacing.lg,
+          bottom: DonySpacing.xl,
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _foreignNotice,
+            builder: (context, show, _) => AnimatedOpacity(
+              opacity: show ? 1 : 0,
+              duration: const Duration(milliseconds: 180),
+              child: Semantics(
+                liveRegion: show,
+                child: Center(
+                  child: Container(
+                    key: const Key('qr-foreign-notice'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.base,
+                      vertical: DonySpacing.sm,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.error,
+                      borderRadius: BorderRadius.circular(DonyRadius.full),
+                    ),
+                    child: Text(
+                      context.l10n.qrForeignCodeNotice,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: DonyColors.neutral0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

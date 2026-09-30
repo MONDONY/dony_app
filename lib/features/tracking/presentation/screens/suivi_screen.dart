@@ -11,6 +11,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
+import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
@@ -23,6 +24,7 @@ import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bo
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -133,6 +135,12 @@ class _SuiviBodyState extends State<_SuiviBody> {
   final _sheetExpanded = ValueNotifier<bool>(false);
   final _cameraPaused = ValueNotifier<bool>(false);
   final _torchOn = ValueNotifier<bool>(false);
+
+  /// Colis dont le QR vient d'être lu : coche verte et « QR reconnu »
+  /// affichées un instant avant d'enchaîner. Sans ce retour, l'écran photo
+  /// remplaçait la caméra aussitôt et le voyageur croyait que la lecture
+  /// n'avait pas marché (FLUTTER-20).
+  final _recognized = ValueNotifier<String?>(null);
   final _numberFocus = FocusNode();
   late final AppLifecycleListener _lifecycle;
 
@@ -217,6 +225,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
     _sheetExpanded.dispose();
     _cameraPaused.dispose();
     _torchOn.dispose();
+    _recognized.dispose();
     super.dispose();
   }
 
@@ -263,39 +272,50 @@ class _SuiviBodyState extends State<_SuiviBody> {
     unawaited(context.read<ScanHubCubit>().load(silent: true));
   }
 
+  /// Durée pendant laquelle « QR reconnu » reste affiché avant l'étape.
+  static const recognizedHold = Duration(milliseconds: 600);
+
+  Future<void> _showRecognized(String label) async {
+    unawaited(HapticFeedback.mediumImpact());
+    _recognized.value = label;
+    await Future<void>.delayed(recognizedHold);
+    if (mounted) _recognized.value = null;
+  }
+
+  /// QR lu mais refusé (déjà fait, en attente, départ manquant) : vibration
+  /// plus marquée et message d'avertissement, pour qu'il ne passe pas pour
+  /// une lecture ratée.
+  void _refuse(String message) {
+    unawaited(HapticFeedback.heavyImpact());
+    DonySnackbar.show(
+      context,
+      message: message,
+      type: DonySnackbarType.warning,
+    );
+  }
+
   Future<void> _handleEffect(SuiviEffect effect) async {
     final cubit = context.read<SuiviCubit>();
     switch (effect) {
       case SuiviValidateStep():
+        if (effect.method == ScanMethod.qr) {
+          await _showRecognized(suiviParcelLabel(effect.bid));
+          if (!mounted) return;
+        }
         await _validateStep(effect);
         if (!mounted) return;
         cubit.releaseScan();
       case SuiviStepNeedsDepart(:final bid):
-        DonySnackbar.show(
-          context,
-          message: context.l10n.suiviStepNeedsDepart(suiviParcelLabel(bid)),
-        );
+        _refuse(context.l10n.suiviStepNeedsDepart(suiviParcelLabel(bid)));
         cubit.releaseScan();
       case SuiviStepAlreadyDone(:final bid, :final step):
-        DonySnackbar.show(
-          context,
-          message: context.l10n.suiviStepAlreadyDone(
-            step,
-            suiviParcelLabel(bid),
-          ),
-        );
+        _refuse(context.l10n.suiviStepAlreadyDone(step, suiviParcelLabel(bid)));
         cubit.releaseScan();
       case SuiviStepPending(:final bid):
-        DonySnackbar.show(
-          context,
-          message: context.l10n.suiviStepAlreadyPending(suiviParcelLabel(bid)),
-        );
+        _refuse(context.l10n.suiviStepAlreadyPending(suiviParcelLabel(bid)));
         cubit.releaseScan();
       case SuiviStepsAllDone(:final bid):
-        DonySnackbar.show(
-          context,
-          message: context.l10n.suiviAllStepsDone(suiviParcelLabel(bid)),
-        );
+        _refuse(context.l10n.suiviAllStepsDone(suiviParcelLabel(bid)));
         cubit.releaseScan();
       case SuiviParcelOnOtherTrip(:final bid, :final trip):
         final hub = context.read<ScanHubCubit>();
@@ -666,28 +686,45 @@ class _SuiviBodyState extends State<_SuiviBody> {
                       right: DonySpacing.lg,
                       child: Column(
                         children: [
-                          const QrScanFrame(
-                            size: frame,
-                            color: DonyColors.blue300,
+                          ValueListenableBuilder<String?>(
+                            valueListenable: _recognized,
+                            builder: (context, recognized, _) => QrScanFrame(
+                              size: frame,
+                              color: recognized != null
+                                  ? Theme.of(context).colorScheme.success
+                                  : DonyColors.blue300,
+                              detected: recognized != null,
+                            ),
                           ),
                           const SizedBox(height: DonySpacing.base),
                           BlocBuilder<SuiviCubit, SuiviState>(
                             buildWhen: (a, b) => a.forcedStep != b.forcedStep,
-                            builder: (context, state) => Text(
-                              mode == SuiviMode.suivre
-                                  ? l.suiviTrackCameraHint
-                                  : state.forcedStep != null
-                                  ? l.suiviForcedCameraHint(state.forcedStep!)
-                                  : l.suiviValidateCameraHint,
-                              key: const Key('suivi-camera-hint'),
-                              textAlign: TextAlign.center,
-                              style: tt.bodyMedium?.copyWith(
-                                color: DonyColors.neutral0.withValues(
-                                  alpha: 0.85,
+                            builder: (context, state) =>
+                                ValueListenableBuilder<String?>(
+                                  valueListenable: _recognized,
+                                  builder: (context, recognized, _) => Text(
+                                    recognized != null
+                                        ? l.suiviQrRecognized(recognized)
+                                        : mode == SuiviMode.suivre
+                                        ? l.suiviTrackCameraHint
+                                        : state.forcedStep != null
+                                        ? l.suiviForcedCameraHint(
+                                            state.forcedStep!,
+                                          )
+                                        : l.suiviValidateCameraHint,
+                                    key: const Key('suivi-camera-hint'),
+                                    textAlign: TextAlign.center,
+                                    style: tt.bodyMedium?.copyWith(
+                                      color: DonyColors.neutral0.withValues(
+                                        alpha: 0.85,
+                                      ),
+                                      height: 1.45,
+                                      fontWeight: recognized != null
+                                          ? FontWeight.w700
+                                          : null,
+                                    ),
+                                  ),
                                 ),
-                                height: 1.45,
-                              ),
-                            ),
                           ),
                         ],
                       ),
