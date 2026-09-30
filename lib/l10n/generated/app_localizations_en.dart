@@ -6706,7 +6706,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String bidDetailTravelerPendingSubtitle(String amount) {
-    return 'Potential earnings: $amount. Accept or decline the request.';
+    return 'You earn $amount if you accept. Check the parcel below, then accept or decline.';
   }
 
   @override
@@ -14573,4 +14573,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get qrForeignCodeNotice => 'This QR isn\'t a Yadony parcel code';
+
+  @override
+  String bidDetailTravelerRequestTitle(String name) {
+    return '$name wants you to carry their parcel';
+  }
+
+  @override
+  String get bidDetailTravelerAwaitingPaymentAcceptedTitle =>
+      'You accepted, payment in progress';
+
+  @override
+  String get bidDetailTravelerAwaitingPaymentTitle =>
+      'Waiting for the sender\'s payment';
+
+  @override
+  String get bidDetailTravelerAwaitingPaymentMobileMoneySubtitle =>
+      'The sender has 30 minutes to pay by mobile money. Nothing to do on your side: the request becomes “Accepted” once the payment is received, otherwise it is cancelled automatically.';
+
+  @override
+  String get bidDetailTravelerAwaitingPaymentSubtitle =>
+      'The sender hasn\'t completed their payment yet. Nothing to do for now, you\'ll be notified when action is needed.';
+
+  @override
+  String get ticketStatusPendingTravelerLabel => 'To decide';
+
+  @override
+  String get bidDetailContactSenderAfterAcceptanceHint =>
+      'You\'ll be able to contact the sender once the request is accepted.';
+
+  @override
+  String get bidDetailContactSenderAfterPaymentHint =>
+      'You\'ll be able to contact the sender once their payment is confirmed.';
+
+  @override
+  String get bidDetailContactTravelerAfterAcceptanceHint =>
+      'You\'ll be able to contact the traveler once the request is accepted.';
+
+  @override
+  String get bidDetailContactTravelerAfterPaymentHint =>
+      'You\'ll be able to contact the traveler once your payment is confirmed.';
 }

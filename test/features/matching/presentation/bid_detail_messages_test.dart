@@ -153,12 +153,12 @@ void main() {
       useEnglish();
       await _pumpTraveler(tester, _bid(status: 'PENDING'));
 
-      expect(find.textContaining('New shipment request'), findsOneWidget);
-      expect(find.textContaining('Potential earnings: '), findsOneWidget);
       expect(
-        find.textContaining('Accept or decline the request.'),
+        find.textContaining('wants you to carry their parcel'),
         findsOneWidget,
       );
+      expect(find.textContaining('You earn '), findsOneWidget);
+      expect(find.textContaining('then accept or decline.'), findsOneWidget);
     });
 
     testWidgets('traveler_gain_card.dart — ACCEPTED carte en anglais', (

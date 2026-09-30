@@ -6690,7 +6690,7 @@
   "@bidDetailTravelerPendingTitle": {
     "description": "PENDING, titre (traveler_hero_card.dart)"
   },
-  "bidDetailTravelerPendingSubtitle": "Gain potentiel : {amount}. Acceptez ou refusez la demande.",
+  "bidDetailTravelerPendingSubtitle": "Vous gagnez {amount} si vous acceptez. Vérifiez le colis ci-dessous, puis acceptez ou refusez.",
   "@bidDetailTravelerPendingSubtitle": {
     "description": "PENDING, sous-titre (traveler_hero_card.dart)",
     "placeholders": {
@@ -16825,5 +16825,50 @@
   "qrForeignCodeNotice": "Ce QR n'est pas celui d'un colis Yadony",
   "@qrForeignCodeNotice": {
     "description": "Pastille sur la caméra quand le QR lu n'est pas celui d'un colis Yadony (qr_camera_view.dart, FLUTTER-20)"
+  },
+  "bidDetailTravelerRequestTitle": "{name} vous demande de transporter son colis",
+  "@bidDetailTravelerRequestTitle": {
+    "description": "Hero du voyageur sur une demande pas encore acceptée (traveler_hero_card.dart, FLUTTER-4T)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailTravelerAwaitingPaymentAcceptedTitle": "Vous avez accepté, paiement en cours",
+  "@bidDetailTravelerAwaitingPaymentAcceptedTitle": {
+    "description": "Hero du voyageur sur une demande pas encore acceptée (traveler_hero_card.dart, FLUTTER-4T)"
+  },
+  "bidDetailTravelerAwaitingPaymentTitle": "Paiement de l'expéditeur en attente",
+  "@bidDetailTravelerAwaitingPaymentTitle": {
+    "description": "Hero du voyageur sur une demande pas encore acceptée (traveler_hero_card.dart, FLUTTER-4T)"
+  },
+  "bidDetailTravelerAwaitingPaymentMobileMoneySubtitle": "L'expéditeur a 30 minutes pour payer par mobile money. Rien à faire de votre côté : la demande passera en « Acceptée » dès le paiement reçu, sinon elle sera annulée automatiquement.",
+  "@bidDetailTravelerAwaitingPaymentMobileMoneySubtitle": {
+    "description": "Hero du voyageur sur une demande pas encore acceptée (traveler_hero_card.dart, FLUTTER-4T)"
+  },
+  "bidDetailTravelerAwaitingPaymentSubtitle": "L'expéditeur n'a pas encore finalisé son paiement. Rien à faire pour l'instant, vous serez notifié dès qu'il faudra agir.",
+  "@bidDetailTravelerAwaitingPaymentSubtitle": {
+    "description": "Hero du voyageur sur une demande pas encore acceptée (traveler_hero_card.dart, FLUTTER-4T)"
+  },
+  "ticketStatusPendingTravelerLabel": "À décider",
+  "@ticketStatusPendingTravelerLabel": {
+    "description": "Tampon du billet côté voyageur quand c'est à lui de décider (billet_status_stamp.dart, FLUTTER-4T)"
+  },
+  "bidDetailContactSenderAfterAcceptanceHint": "Vous pourrez contacter l'expéditeur une fois la demande acceptée.",
+  "@bidDetailContactSenderAfterAcceptanceHint": {
+    "description": "Ligne sous la carte profil quand le contact n'est pas encore possible (FLUTTER-4T)"
+  },
+  "bidDetailContactSenderAfterPaymentHint": "Vous pourrez contacter l'expéditeur dès que son paiement sera confirmé.",
+  "@bidDetailContactSenderAfterPaymentHint": {
+    "description": "Ligne sous la carte profil quand le contact n'est pas encore possible (FLUTTER-4T)"
+  },
+  "bidDetailContactTravelerAfterAcceptanceHint": "Vous pourrez contacter le voyageur une fois la demande acceptée.",
+  "@bidDetailContactTravelerAfterAcceptanceHint": {
+    "description": "Ligne sous la carte profil quand le contact n'est pas encore possible (FLUTTER-4T)"
+  },
+  "bidDetailContactTravelerAfterPaymentHint": "Vous pourrez contacter le voyageur dès que votre paiement sera confirmé.",
+  "@bidDetailContactTravelerAfterPaymentHint": {
+    "description": "Ligne sous la carte profil quand le contact n'est pas encore possible (FLUTTER-4T)"
   }
 }

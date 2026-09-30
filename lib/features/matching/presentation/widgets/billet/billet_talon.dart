@@ -98,7 +98,7 @@ class BilletTalon extends StatelessWidget {
 
     // ── Traveler dispatch ───────────────────────────────────────────────────────
     return switch (status) {
-      'PENDING' => _TravelerDecisionSummary(bid: bid),
+      'PENDING' || 'PAYMENT_ESCROWED' => _TravelerDecisionSummary(bid: bid),
       // Voyageur vient d'accepter une offre mobile money : l'expéditeur a
       // 30 min pour séquestrer via pawaPay. Rien à faire ici tant que le
       // paiement n'est pas séquestré (le bid repasse alors en ACCEPTED) —

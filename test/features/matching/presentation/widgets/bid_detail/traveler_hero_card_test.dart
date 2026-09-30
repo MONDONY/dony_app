@@ -63,7 +63,10 @@ void main() {
 
   testWidgets('PENDING → gain mis en avant', (tester) async {
     await _pump(tester, _bid(status: 'PENDING'));
-    expect(find.textContaining('Nouvelle demande'), findsOneWidget);
+    expect(
+      find.textContaining('vous demande de transporter son colis'),
+      findsOneWidget,
+    );
     expect(find.textContaining('48'), findsOneWidget);
   });
 
@@ -197,7 +200,10 @@ void main() {
 
   testWidgets('REJECTED → rien (SizedBox.shrink)', (tester) async {
     await _pump(tester, _bid(status: 'REJECTED'));
-    expect(find.textContaining('Nouvelle demande'), findsNothing);
+    expect(
+      find.textContaining('vous demande de transporter son colis'),
+      findsNothing,
+    );
     expect(find.textContaining('Livraison'), findsNothing);
   });
 
@@ -213,7 +219,10 @@ void main() {
 
   testWidgets('CANCELLED → rien (SizedBox.shrink)', (tester) async {
     await _pump(tester, _bid(status: 'CANCELLED'));
-    expect(find.textContaining('Nouvelle demande'), findsNothing);
+    expect(
+      find.textContaining('vous demande de transporter son colis'),
+      findsNothing,
+    );
     expect(find.textContaining('Colis'), findsNothing);
   });
 
@@ -316,11 +325,37 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
+  // FLUTTER-4T : ces statuts n'avaient aucun hero côté voyageur.
+  testWidgets('PAYMENT_ESCROWED → même explication que PENDING', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'PAYMENT_ESCROWED'));
+    expect(
+      find.textContaining('vous demande de transporter son colis'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('puis acceptez ou refusez'), findsOneWidget);
+  });
+
+  testWidgets('AWAITING_PAYMENT → paiement attendu, rien à faire', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'AWAITING_PAYMENT'));
+    expect(
+      find.textContaining("Paiement de l'expéditeur en attente"),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Rien à faire'), findsOneWidget);
+  });
+
   testWidgets('PENDING sans total → subtitle sans montant précis', (
     tester,
   ) async {
     await _pump(tester, _bid(status: 'PENDING', total: null));
-    expect(find.textContaining('Nouvelle demande'), findsOneWidget);
+    expect(
+      find.textContaining('vous demande de transporter son colis'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('ACCEPTED avec seulement windowStart → subtitle ok', (

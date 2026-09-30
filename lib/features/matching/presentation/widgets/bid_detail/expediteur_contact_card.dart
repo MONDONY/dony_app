@@ -199,6 +199,25 @@ class ExpediteurContactCard extends StatelessWidget {
                 ],
               ],
             ),
+            if (!contactAllowed &&
+                bidContactPendingStatuses.contains(bid.status)) ...[
+              const SizedBox(height: DonySpacing.sm),
+              Row(
+                key: const Key('contact-after-acceptance-hint'),
+                children: [
+                  DonyIcon('lock', size: 14, color: cs.onSurfaceVariant),
+                  const SizedBox(width: DonySpacing.xs),
+                  Expanded(
+                    child: Text(
+                      bid.status == 'AWAITING_PAYMENT'
+                          ? l.bidDetailContactSenderAfterPaymentHint
+                          : l.bidDetailContactSenderAfterAcceptanceHint,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

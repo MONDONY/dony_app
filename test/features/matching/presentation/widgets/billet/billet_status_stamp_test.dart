@@ -41,10 +41,16 @@ void main() {
     expect(find.text('Livré'), findsOneWidget);
   });
 
-  testWidgets('PENDING → libellé "En attente"', (tester) async {
-    await _pump(tester, 'PENDING');
-    expect(find.text('En attente'), findsOneWidget);
-  });
+  testWidgets(
+    'PENDING → « À décider » (voyageur), « En attente » (expéditeur)',
+    (tester) async {
+      // Côté voyageur c'est à lui d'agir (FLUTTER-4T) ; l'expéditeur attend.
+      await _pump(tester, 'PENDING');
+      expect(find.text('À décider'), findsOneWidget);
+      await _pump(tester, 'PENDING', isSender: true);
+      expect(find.text('En attente'), findsOneWidget);
+    },
+  );
 
   testWidgets('NO_SHOW → libellé "Absent"', (tester) async {
     await _pump(tester, 'NO_SHOW');

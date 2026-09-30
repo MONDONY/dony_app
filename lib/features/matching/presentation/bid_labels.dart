@@ -84,3 +84,11 @@ const bidContactStatuses = <String>{
 };
 
 bool bidAllowsContact(String status) => bidContactStatuses.contains(status);
+
+/// Statuts d'une demande pas encore acceptée : les cartes de profil y
+/// expliquent quand le contact deviendra possible (FLUTTER-4T).
+const bidContactPendingStatuses = <String>{
+  'PENDING',
+  'PAYMENT_ESCROWED',
+  'AWAITING_PAYMENT',
+};
