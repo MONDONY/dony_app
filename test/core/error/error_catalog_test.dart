@@ -86,6 +86,24 @@ void main() {
       expect(p.severity, ErrorSeverity.warning);
     });
 
+    test(
+      'contact-email-required dit d\'ajouter un email plutôt qu\'un message générique',
+      () {
+        // 422 du backend pour un compte inscrit par téléphone (FLUTTER-3T) :
+        // auparavant rendu comme « Vérifie les informations saisies ».
+        const error = ValidationException(
+          'ignored',
+          code: 'contact-email-required',
+        );
+
+        final p = ErrorCatalog.lookup(error);
+
+        expect(p.title, 'Adresse e-mail requise');
+        expect(p.message, contains("Stripe a besoin d'une adresse e-mail"));
+        expect(p.severity, ErrorSeverity.warning);
+      },
+    );
+
     test('country-unsupported invite à choisir un autre pays', () {
       const error = NetworkException('ignored', code: 'country-unsupported');
 

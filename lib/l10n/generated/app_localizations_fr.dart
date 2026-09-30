@@ -649,6 +649,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette devise n\'est pas encore disponible. Vérifie la devise de ton compte dans les réglages.';
 
   @override
+  String get errorContactEmailRequiredTitle => 'Adresse e-mail requise';
+
+  @override
+  String get errorContactEmailRequiredMessage =>
+      'Pour créer ton compte de paiement, Stripe a besoin d\'une adresse e-mail. Ajoute-la à ton compte, puis reviens ici.';
+
+  @override
   String get errorStripeAccountRequiredTitle => 'Compte Stripe à créer';
 
   @override
@@ -9462,6 +9469,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get payoutResumeSignup => 'Reprendre mon inscription';
+
+  @override
+  String get payoutAddEmailButton => 'Ajouter mon adresse e-mail';
 
   @override
   String get payoutConnectBankAccount => 'Connecter mon compte bancaire';

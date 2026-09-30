@@ -182,6 +182,8 @@
   "errorPaymentMethodUnavailableForCurrencyMessage": "This payment method isn't offered in this trip's currency.",
   "errorUnsupportedCurrencyTitle": "Currency not supported",
   "errorUnsupportedCurrencyMessage": "This currency isn't available yet. Check your account currency in Settings.",
+  "errorContactEmailRequiredTitle": "Email address required",
+  "errorContactEmailRequiredMessage": "To create your payment account, Stripe needs an email address. Add one to your account, then come back here.",
   "errorStripeAccountRequiredTitle": "Stripe account needed",
   "errorStripeAccountRequiredMessage": "Your payment account hasn't been created yet. Tap the button again to start setting it up.",
   "errorStripeAccountInvalidTitle": "Invalid payment account",
@@ -5089,6 +5091,10 @@
   "payoutResumeSignup": "Resume my sign-up",
   "@payoutResumeSignup": {
     "description": "Bouton principal quand l'inscription Stripe est déjà entamée côté serveur (payout_onboarding_screen.dart _OnboardingView)."
+  },
+  "payoutAddEmailButton": "Add my email address",
+  "@payoutAddEmailButton": {
+    "description": "Bouton affiché sous l'erreur contact-email-required : mène à l'ajout d'email (payout_onboarding_screen.dart _OnboardingView)."
   },
   "payoutConnectBankAccount": "Connect my bank account",
   "@payoutConnectBankAccount": {

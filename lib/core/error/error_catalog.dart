@@ -795,6 +795,17 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.account_balance_outlined,
     ),
+    // Stripe exige un email de contact pour ouvrir un compte de paiement ; un
+    // compte inscrit par téléphone n'en a pas. Sans cette entrée, le 422
+    // tombait sur le message générique de validation et l'utilisateur ne
+    // savait pas quoi faire (FLUTTER-3T). L'écran d'onboarding paiement
+    // ajoute le bouton qui mène à l'ajout d'email.
+    'contact-email-required': _Entry(
+      title: (l) => l.errorContactEmailRequiredTitle,
+      message: (l) => l.errorContactEmailRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.alternate_email_rounded,
+    ),
     'stripe-account-invalid': _Entry(
       title: (l) => l.errorStripeAccountInvalidTitle,
       message: (l) => l.errorStripeAccountInvalidMessage,
