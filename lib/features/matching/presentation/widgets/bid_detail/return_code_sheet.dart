@@ -10,6 +10,7 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/copy_code_button.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -146,35 +147,10 @@ class _ReturnCodeContent extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.md),
           if (code != null)
-            GestureDetector(
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: code!));
-                DonySnackbar.show(
-                  context,
-                  message: context.l10n.bidDetailReturnCodeCopiedSnackbar,
-                  type: DonySnackbarType.success,
-                );
-              },
-              child: SizedBox(
-                height: 44,
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: cs.primary),
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      DonyIcon('copy', size: 16, color: cs.primary),
-                      const SizedBox(width: DonySpacing.sm),
-                      Text(
-                        context.l10n.bidDetailReturnCopyCode,
-                        style: tt.titleSmall?.copyWith(color: cs.primary),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            CopyCodeButton(
+              code: code!,
+              label: context.l10n.bidDetailReturnCopyCode,
+              copiedLabel: context.l10n.bidDetailReturnCodeCopiedSnackbar,
             ),
           const SizedBox(height: DonySpacing.md),
           Container(
