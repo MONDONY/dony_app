@@ -170,7 +170,13 @@ void main() {
             ),
           ],
         );
-        when(() => service.resolvePlace(any(), any())).thenAnswer(
+        when(
+          () => service.resolvePlace(
+            any(),
+            any(),
+            placeName: any(named: 'placeName'),
+          ),
+        ).thenAnswer(
           (_) async => const AddressData(
             label: '8 Rue de Paris, 75001 Paris',
             lat: 48.86,
@@ -323,7 +329,13 @@ void main() {
         await tester.tap(find.text('10 Rue de Rivoli, Paris'));
         await tester.pump();
 
-        verifyNever(() => service.resolvePlace(any(), any()));
+        verifyNever(
+          () => service.resolvePlace(
+            any(),
+            any(),
+            placeName: any(named: 'placeName'),
+          ),
+        );
         verifyNever(() => service.search(any(), any()));
 
         // La sélection est une simple pré-sélection : le sheet reste ouvert,

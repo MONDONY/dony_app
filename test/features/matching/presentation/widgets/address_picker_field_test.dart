@@ -106,7 +106,13 @@ void main() {
         ),
       ],
     );
-    when(() => mockService.resolvePlace(any(), any())).thenAnswer(
+    when(
+      () => mockService.resolvePlace(
+        any(),
+        any(),
+        placeName: any(named: 'placeName'),
+      ),
+    ).thenAnswer(
       (_) async =>
           const AddressData(label: 'Paris, France', lat: 48.8566, lng: 2.3522),
     );
@@ -120,7 +126,13 @@ void main() {
     await tester.tap(find.byType(InkWell));
     await tester.pumpAndSettle();
 
-    verify(() => mockService.resolvePlace('ChIJi', any())).called(1);
+    verify(
+      () => mockService.resolvePlace(
+        'ChIJi',
+        any(),
+        placeName: any(named: 'placeName'),
+      ),
+    ).called(1);
     // After resolve, the field displays the resolved label
     expect(find.text('Paris, France'), findsOneWidget);
   });
@@ -181,7 +193,13 @@ void main() {
       }
       return const [];
     });
-    when(() => mockService.resolvePlace(any(), any())).thenAnswer(
+    when(
+      () => mockService.resolvePlace(
+        any(),
+        any(),
+        placeName: any(named: 'placeName'),
+      ),
+    ).thenAnswer(
       (_) async =>
           const AddressData(label: 'Lyon, France', lat: 45.748, lng: 4.846),
     );
@@ -222,7 +240,11 @@ void main() {
       ],
     );
     when(
-      () => mockService.resolvePlace(any(), any()),
+      () => mockService.resolvePlace(
+        any(),
+        any(),
+        placeName: any(named: 'placeName'),
+      ),
     ).thenThrow(Exception('network'));
 
     await tester.pumpWidget(buildWidget());
@@ -246,7 +268,13 @@ void main() {
         ),
       ],
     );
-    when(() => mockService.resolvePlace(any(), any())).thenAnswer(
+    when(
+      () => mockService.resolvePlace(
+        any(),
+        any(),
+        placeName: any(named: 'placeName'),
+      ),
+    ).thenAnswer(
       (_) async =>
           const AddressData(label: 'Paris, France', lat: 48.8566, lng: 2.3522),
     );

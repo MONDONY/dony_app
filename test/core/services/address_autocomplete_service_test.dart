@@ -120,6 +120,33 @@ void main() {
   });
 
   group('resolvePlace', () {
+    // FLUTTER-4F : l'adresse Google d'un lieu nommé n'en contient pas le nom.
+    test('resolvePlace_placeName_keepsSelectedPlaceName', () async {
+      when(
+        () => mockDio.post<dynamic>(
+          '/addresses/details',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/addresses/details'),
+          statusCode: 200,
+          data: {'label': 'Douala, Cameroun', 'lat': 4.0, 'lng': 9.7},
+        ),
+      );
+
+      final result = await service.resolvePlace(
+        'ChIJdla',
+        'tok',
+        placeName: 'Aéroport International de Douala',
+      );
+
+      expect(
+        result.label,
+        'Aéroport International de Douala, Douala, Cameroun',
+      );
+    });
+
     test('resolvePlace_returnsAddressData', () async {
       when(
         () => mockDio.post<dynamic>(
@@ -241,6 +268,28 @@ void main() {
 
       final result = await service.reverseGeocode(0.0, 0.0);
       expect(result, isNull);
+    });
+  });
+
+  group('labelWithPlaceName', () {
+    test('lieu nommé : nom en tête de l\'adresse', () {
+      expect(
+        labelWithPlaceName('Gare de Lyon', '75012 Paris, France'),
+        'Gare de Lyon, 75012 Paris, France',
+      );
+    });
+    test('adresse de rue : nom déjà contenu, pas de doublon', () {
+      expect(
+        labelWithPlaceName(
+          '12 Rue Victor Hugo',
+          '12 Rue Victor Hugo, 69002 Lyon, France',
+        ),
+        '12 Rue Victor Hugo, 69002 Lyon, France',
+      );
+    });
+    test('sans nom : adresse telle quelle', () {
+      expect(labelWithPlaceName(null, 'Lyon, France'), 'Lyon, France');
+      expect(labelWithPlaceName('  ', 'Lyon, France'), 'Lyon, France');
     });
   });
 }

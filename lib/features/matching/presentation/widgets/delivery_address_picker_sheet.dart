@@ -186,7 +186,11 @@ class _DeliveryAddressPickerSheetState
     setState(() => _resolving = true);
     try {
       final token = _sessionToken ?? _getOrCreateToken();
-      final addr = await _service.resolvePlace(s.placeId, token);
+      final addr = await _service.resolvePlace(
+        s.placeId,
+        token,
+        placeName: s.mainText,
+      );
       _sessionToken = null;
       _sessionTokenAt = null;
       await _recents.add(addr);
