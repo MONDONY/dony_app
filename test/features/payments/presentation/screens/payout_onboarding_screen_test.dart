@@ -11,12 +11,15 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
+import 'package:dony/features/payments/presentation/stripe_onboarding_return.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:url_launcher_platform_interface/link.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 import '../../../../helpers/l10n_test_helpers.dart';
 // `MockStripeAccountBloc` est déjà déclaré localement ci-dessous : on n'importe
@@ -105,9 +108,26 @@ Widget _wrap(
           path: '/first-steps',
           builder: (_, _) => const Scaffold(body: Text('First steps route')),
         ),
+        GoRoute(
+          path: '/profile/edit/email',
+          builder: (_, _) => const Scaffold(body: Text('Edit email route')),
+        ),
       ],
     ),
   );
+}
+
+final class _RecordingLauncher extends UrlLauncherPlatform {
+  final launchedUrls = <String>[];
+
+  @override
+  LinkDelegate? get linkDelegate => null;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    launchedUrls.add(url);
+    return true;
+  }
 }
 
 void main() {
@@ -256,6 +276,101 @@ void main() {
         findsOneWidget,
       );
     });
+
+    // ── FLUTTER-3T : compte inscrit par téléphone, retour du navigateur ────────
+
+    testWidgets(
+      'contact-email-required : message explicite + bouton vers l\'ajout d\'email',
+      (tester) async {
+        const error = PaymentError(
+          ValidationException('Email requis', code: 'contact-email-required'),
+        );
+        whenListen<PaymentState>(
+          mockBloc,
+          Stream.value(error),
+          initialState: error,
+        );
+        await tester.pumpWidget(_wrap(mockBloc));
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(
+          find.textContaining('Stripe a besoin d\'une adresse e-mail'),
+          findsOneWidget,
+        );
+        await tester.ensureVisible(find.text('Ajouter mon adresse e-mail'));
+        await tester.tap(find.text('Ajouter mon adresse e-mail'));
+        await tester.pumpAndSettle();
+        expect(find.text('Edit email route'), findsOneWidget);
+      },
+    );
+
+    testWidgets('autre erreur : pas de bouton d\'ajout d\'email', (
+      tester,
+    ) async {
+      whenListen<PaymentState>(
+        mockBloc,
+        Stream.value(const PaymentError(NetworkException('Compte refusé'))),
+        initialState: const PaymentError(NetworkException('Compte refusé')),
+      );
+      await tester.pumpWidget(_wrap(mockBloc));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Ajouter mon adresse e-mail'), findsNothing);
+    });
+
+    testWidgets(
+      'retour au premier plan sans lien Stripe ouvert : pas de relecture en plus',
+      (tester) async {
+        await tester.pumpWidget(_wrap(mockBloc, stripeBloc: mockStripeBloc));
+        await tester.pump(const Duration(milliseconds: 500));
+
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pump();
+
+        // Seulement la resynchronisation d'ouverture.
+        verify(
+          () => mockStripeBloc.add(const StripeAccountStatusRefreshed()),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'lien Stripe ouvert puis retour au premier plan : statut relu, origine retenue',
+      (tester) async {
+        final previous = UrlLauncherPlatform.instance;
+        final launcher = _RecordingLauncher();
+        UrlLauncherPlatform.instance = launcher;
+        addTearDown(() {
+          UrlLauncherPlatform.instance = previous;
+          StripeOnboardingReturn.consume();
+        });
+        whenListen<PaymentState>(
+          mockBloc,
+          Stream.value(
+            const PaymentOnboardingUrlReady('https://connect.stripe.com/x'),
+          ),
+          initialState: const PaymentInitial(),
+        );
+
+        await tester.pumpWidget(_wrap(mockBloc, stripeBloc: mockStripeBloc));
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(launcher.launchedUrls, ['https://connect.stripe.com/x']);
+
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pump();
+
+        // Ouverture de l'écran + retour du navigateur.
+        verify(
+          () => mockStripeBloc.add(const StripeAccountStatusRefreshed()),
+        ).called(2);
+        expect(StripeOnboardingReturn.consume(), '/');
+      },
+    );
 
     testWidgets('affiche la vue succès en état complete', (tester) async {
       whenListen<PaymentState>(

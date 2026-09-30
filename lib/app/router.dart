@@ -125,6 +125,7 @@ import 'package:dony/features/payments/cash/presentation/screens/commission_meth
 import 'package:dony/features/payments/presentation/screens/mobile_money_account_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
+import 'package:dony/features/payments/presentation/stripe_onboarding_return.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_requests_list_cubit.dart';
@@ -1011,13 +1012,18 @@ final appRouter = GoRouter(
       ),
     ),
     // ── Stripe Connect deep-link return routes ───────────────────────────
+    // Retour vers l'écran qui a ouvert le lien (voir StripeOnboardingReturn),
+    // l'intro « devenir voyageur » restant le repli.
     GoRoute(
       path: '/stripe/onboarding/complete',
-      redirect: (context, state) => '/connect/onboarding/intro?from=stripe',
+      redirect: (context, state) =>
+          StripeOnboardingReturn.consume() ??
+          '/connect/onboarding/intro?from=stripe',
     ),
     GoRoute(
       path: '/stripe/onboarding/refresh',
-      redirect: (context, state) => '/connect/onboarding/intro',
+      redirect: (context, state) =>
+          StripeOnboardingReturn.consume() ?? '/connect/onboarding/intro',
     ),
     // ── Boîte « Annonces Yadony » (hors shell) ───────────────────────────
     GoRoute(

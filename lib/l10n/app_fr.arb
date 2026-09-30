@@ -194,6 +194,8 @@
   "errorPaymentMethodUnavailableForCurrencyMessage": "Ce moyen de paiement n'est pas proposé dans la devise de ce trajet.",
   "errorUnsupportedCurrencyTitle": "Devise non prise en charge",
   "errorUnsupportedCurrencyMessage": "Cette devise n'est pas encore disponible. Vérifie la devise de ton compte dans les réglages.",
+  "errorContactEmailRequiredTitle": "Adresse e-mail requise",
+  "errorContactEmailRequiredMessage": "Pour créer ton compte de paiement, Stripe a besoin d'une adresse e-mail. Ajoute-la à ton compte, puis reviens ici.",
   "errorStripeAccountRequiredTitle": "Compte Stripe à créer",
   "errorStripeAccountRequiredMessage": "Ton compte de paiement n'a pas encore été créé. Retape sur le bouton pour lancer l'activation.",
   "errorStripeAccountInvalidTitle": "Compte de paiement invalide",
@@ -10233,6 +10235,10 @@
   "payoutResumeSignup": "Reprendre mon inscription",
   "@payoutResumeSignup": {
     "description": "Bouton principal quand l'inscription Stripe est déjà entamée côté serveur (payout_onboarding_screen.dart _OnboardingView)."
+  },
+  "payoutAddEmailButton": "Ajouter mon adresse e-mail",
+  "@payoutAddEmailButton": {
+    "description": "Bouton affiché sous l'erreur contact-email-required : mène à l'ajout d'email (payout_onboarding_screen.dart _OnboardingView)."
   },
   "payoutConnectBankAccount": "Connecter mon compte bancaire",
   "@payoutConnectBankAccount": {

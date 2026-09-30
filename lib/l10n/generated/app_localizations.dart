@@ -1190,6 +1190,18 @@ abstract class AppLocalizations {
   /// **'Cette devise n\'est pas encore disponible. Vérifie la devise de ton compte dans les réglages.'**
   String get errorUnsupportedCurrencyMessage;
 
+  /// No description provided for @errorContactEmailRequiredTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse e-mail requise'**
+  String get errorContactEmailRequiredTitle;
+
+  /// No description provided for @errorContactEmailRequiredMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour créer ton compte de paiement, Stripe a besoin d\'une adresse e-mail. Ajoute-la à ton compte, puis reviens ici.'**
+  String get errorContactEmailRequiredMessage;
+
   /// No description provided for @errorStripeAccountRequiredTitle.
   ///
   /// In fr, this message translates to:
@@ -15691,6 +15703,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Reprendre mon inscription'**
   String get payoutResumeSignup;
+
+  /// Bouton affiché sous l'erreur contact-email-required : mène à l'ajout d'email (payout_onboarding_screen.dart _OnboardingView).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter mon adresse e-mail'**
+  String get payoutAddEmailButton;
 
   /// Bouton principal quand aucune inscription Stripe n'a encore été entamée (payout_onboarding_screen.dart _OnboardingView).
   ///

@@ -10,6 +10,7 @@ import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/presentation/stripe_onboarding_return.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/connect_unavailable_view.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/identity_required_view.dart';
@@ -51,10 +52,16 @@ class PayoutOnboardingScreen extends StatefulWidget {
   State<PayoutOnboardingScreen> createState() => _PayoutOnboardingScreenState();
 }
 
-class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen> {
+class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen>
+    with WidgetsBindingObserver {
+  /// Vrai dès que le lien Stripe a été ouvert. Simple drapeau lu au retour au
+  /// premier plan, jamais affiché : pas d'état d'interface, donc pas de BLoC.
+  bool _launchedStripe = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // C'est l'écran qui parle du statut : on le resynchronise avec Stripe à
     // l'ouverture plutôt que de se fier au dernier webhook reçu. Sans ça, un
     // compte activé entre-temps continuait d'afficher « connectez votre compte
@@ -68,6 +75,27 @@ class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen> {
         bloc.add(const StripeAccountStatusRefreshed());
       }
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Retour du navigateur sans deep link (onglet fermé, formulaire Stripe
+  /// abandonné ou terminé sans redirection) : l'écran restait figé sur le même
+  /// bouton, sans rien montrer de l'inscription entamée (FLUTTER-3T). Le statut
+  /// est relu, comme le fait l'écran « devenir voyageur ».
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || !_launchedStripe || !mounted) {
+      return;
+    }
+    final bloc = context.read<StripeAccountBloc>();
+    if (!bloc.isClosed) {
+      bloc.add(const StripeAccountStatusRefreshed());
+    }
   }
 
   @override
@@ -132,6 +160,12 @@ class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen> {
               // que le backend produit en redirigeant depuis son endpoint HTTPS
               // (Stripe n'accepte pas de deep link comme URL de retour). Le
               // routeur récupère ce lien et ramène ici, où le statut est relu.
+              // Le retour doit ramener ici, jauge d'inscription comprise, et
+              // non sur l'écran « devenir voyageur ».
+              StripeOnboardingReturn.remember(
+                GoRouterState.of(context).uri.toString(),
+              );
+              _launchedStripe = true;
               final ouvert = await launchUrl(
                 Uri.parse(state.url),
                 mode: LaunchMode.externalApplication,
@@ -222,6 +256,12 @@ class _OnboardingView extends StatelessWidget {
             l10n: context.l10n,
           ).message
         : null;
+    // Compte inscrit par téléphone : Stripe exige un email de contact. Le
+    // message seul laissait l'utilisateur chercher où l'ajouter (FLUTTER-3T).
+    final needsEmail =
+        state is PaymentError &&
+        (state as PaymentError).error.code ==
+            'contact-email-required'; // i18n-ignore
 
     return Scaffold(
       appBar: DonyAppBar(title: l.payoutTitle),
@@ -289,6 +329,16 @@ class _OnboardingView extends StatelessWidget {
                             DonyStatusBanner(
                               type: DonyStatusBannerType.error,
                               message: error,
+                            ),
+                            const SizedBox(height: DonySpacing.md),
+                          ],
+                          if (needsEmail) ...[
+                            DonyButton(
+                              label: l.payoutAddEmailButton,
+                              variant: DonyButtonVariant.secondary,
+                              iconAsset: 'mail',
+                              onPressed: () =>
+                                  context.push('/profile/edit/email'),
                             ),
                             const SizedBox(height: DonySpacing.md),
                           ],

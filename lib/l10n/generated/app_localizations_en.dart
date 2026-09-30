@@ -646,6 +646,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'This currency isn\'t available yet. Check your account currency in Settings.';
 
   @override
+  String get errorContactEmailRequiredTitle => 'Email address required';
+
+  @override
+  String get errorContactEmailRequiredMessage =>
+      'To create your payment account, Stripe needs an email address. Add one to your account, then come back here.';
+
+  @override
   String get errorStripeAccountRequiredTitle => 'Stripe account needed';
 
   @override
@@ -9405,6 +9412,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get payoutResumeSignup => 'Resume my sign-up';
+
+  @override
+  String get payoutAddEmailButton => 'Add my email address';
 
   @override
   String get payoutConnectBankAccount => 'Connect my bank account';
