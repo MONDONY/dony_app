@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -66,78 +68,96 @@ abstract final class DonySnackbar {
 
     final resolvedIcon = icon ?? defaultIcon;
 
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.white.withValues(alpha: 0.12),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.6],
-                    ),
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                  ),
+    final content = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.12),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.6],
+              ),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+          ),
+        ),
+        Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.22),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.35),
+                  width: 1.5,
                 ),
               ),
-              Row(
+              alignment: Alignment.center,
+              child: Icon(resolvedIcon, color: fg, size: 18),
+            ),
+            const SizedBox(width: DonySpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.22),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.35),
-                        width: 1.5,
+                  if (title != null && title.isNotEmpty) ...[
+                    Text(
+                      title,
+                      style: tt.labelLarge?.copyWith(
+                        color: fg,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
                       ),
                     ),
-                    alignment: Alignment.center,
-                    child: Icon(resolvedIcon, color: fg, size: 18),
-                  ),
-                  const SizedBox(width: DonySpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (title != null && title.isNotEmpty) ...[
-                          Text(
-                            title,
-                            style: tt.labelLarge?.copyWith(
-                              color: fg,
-                              fontWeight: FontWeight.w700,
-                              height: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                        ],
-                        Text(
-                          message,
-                          style: tt.bodySmall?.copyWith(
-                            color: title != null
-                                ? fg.withValues(alpha: 0.85)
-                                : fg,
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 2),
+                  ],
+                  Text(
+                    message,
+                    style: tt.bodySmall?.copyWith(
+                      color: title != null ? fg.withValues(alpha: 0.85) : fg,
+                      height: 1.35,
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    // Depuis une feuille ou une fenêtre modale, le snackbar du Scaffold de la
+    // page s'affiche SOUS la feuille : invisible. Les erreurs du serveur et les
+    // confirmations y passaient inaperçues (FLUTTER-4W : « je ne peux pas
+    // confirmer », FLUTTER-4P). On l'affiche alors en haut de l'écran,
+    // par-dessus la feuille.
+    if (ModalRoute.of(context) is PopupRoute) {
+      _showAboveModal(
+        context,
+        content: content,
+        background: bg,
+        foreground: fg,
+        duration: effectiveDuration,
+        actionLabel: effectiveActionLabel,
+        onAction: onAction,
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: content,
           backgroundColor: bg,
           duration: effectiveDuration,
           behavior: SnackBarBehavior.floating,
@@ -173,11 +193,164 @@ abstract final class DonySnackbar {
       );
   }
 
+  static OverlayEntry? _modalEntry;
+
+  static void _hideAboveModal() {
+    final entry = _modalEntry;
+    _modalEntry = null;
+    if (entry != null && entry.mounted) entry.remove();
+  }
+
+  static void _showAboveModal(
+    BuildContext context, {
+    required Widget content,
+    required Color background,
+    required Color foreground,
+    required Duration duration,
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay == null) return;
+    _hideAboveModal();
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => _ModalToast(
+        content: content,
+        background: background,
+        foreground: foreground,
+        duration: duration,
+        actionLabel: actionLabel,
+        onAction: onAction,
+        onDismissed: () {
+          if (identical(_modalEntry, entry)) _modalEntry = null;
+          if (entry.mounted) entry.remove();
+        },
+      ),
+    );
+    _modalEntry = entry;
+    overlay.insert(entry);
+  }
+
   static bool _isDuplicate(String key, DateTime now) {
     final last = _lastShown[key];
     if (last == null) {
       return false;
     }
     return now.difference(last) < const Duration(milliseconds: 400);
+  }
+}
+
+/// Message affiché en haut de l'écran, au-dessus d'une feuille modale. Son
+/// minuteur vit dans l'état du widget : il s'arrête avec lui, sans rester en
+/// suspens quand l'écran est démonté.
+class _ModalToast extends StatefulWidget {
+  const _ModalToast({
+    required this.content,
+    required this.background,
+    required this.foreground,
+    required this.duration,
+    required this.onDismissed,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final Widget content;
+  final Color background;
+  final Color foreground;
+  final Duration duration;
+  final VoidCallback onDismissed;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  State<_ModalToast> createState() => _ModalToastState();
+}
+
+class _ModalToastState extends State<_ModalToast>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _anim = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+  )..forward();
+  Timer? _timer;
+  bool _closing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(widget.duration, _close);
+  }
+
+  Future<void> _close() async {
+    if (_closing) return;
+    _closing = true;
+    _timer?.cancel();
+    if (mounted) await _anim.reverse();
+    widget.onDismissed();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _anim.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top + DonySpacing.sm;
+    final curve = CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic);
+    return Positioned(
+      top: top,
+      left: DonySpacing.base,
+      right: DonySpacing.base,
+      child: FadeTransition(
+        opacity: curve,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, -0.3),
+            end: Offset.zero,
+          ).animate(curve),
+          child: Semantics(
+            liveRegion: true,
+            child: Material(
+              key: const Key('dony-snackbar-above-modal'),
+              color: widget.background,
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+                onTap: _close,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.base,
+                    vertical: DonySpacing.md,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(child: widget.content),
+                      if (widget.actionLabel != null)
+                        TextButton(
+                          onPressed: () {
+                            widget.onAction?.call();
+                            unawaited(_close());
+                          },
+                          child: Text(
+                            widget.actionLabel!,
+                            style: TextStyle(color: widget.foreground),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

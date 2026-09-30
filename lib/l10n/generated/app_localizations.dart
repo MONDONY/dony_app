@@ -7448,13 +7448,13 @@ abstract class AppLocalizations {
   /// Titre de la carte moyens de paiement (package_request_public_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Mode de paiement souhaité'**
+  /// **'Modes de paiement acceptés'**
   String get requestPublicPaymentTitle;
 
   /// Sous-titre de la carte moyens de paiement (package_request_public_detail_screen.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Accepté par l\'expéditeur'**
+  /// **'L\'expéditeur choisira parmi ceux-ci au moment de payer : rien à choisir de ton côté'**
   String get requestPublicPaymentSubtitle;
 
   /// CTA voyageur sur une demande négociable (package_request_public_detail_screen.dart)
@@ -24191,6 +24191,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Retrait à l\'arrivée'**
   String get bidDetailPickupInstructionsLabel;
+
+  /// Sous le bouton grisé de la feuille d'offre tant qu'aucun trajet n'est choisi (make_offer_bottom_sheet.dart, FLUTTER-4W)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisis un de tes trajets ci-dessus pour envoyer l\'offre'**
+  String get negotiationMakeOfferSelectTripHint;
+
+  /// Erreur payment-method/none-available : aucun mode de paiement commun entre la demande et le voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun mode de paiement commun'**
+  String get errorPaymentMethodNoneAvailableTitle;
+
+  /// Erreur payment-method/none-available : aucun mode de paiement commun entre la demande et le voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur accepte plusieurs modes de paiement, mais aucun n\'est prêt sur ton compte : configure ton compte de paiement par carte, ou recharge ton portefeuille pour couvrir la commission en espèces.'**
+  String get errorPaymentMethodNoneAvailableMessage;
+
+  /// Erreur payment-method/cash-funds-required : solde insuffisant pour garantir la commission espèces
+  ///
+  /// In fr, this message translates to:
+  /// **'Portefeuille trop bas pour les espèces'**
+  String get errorCashFundsRequiredTitle;
+
+  /// Erreur payment-method/cash-funds-required : solde insuffisant pour garantir la commission espèces
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour accepter un paiement en espèces, ton portefeuille doit couvrir la commission. Recharge-le, puis réessaie.'**
+  String get errorCashFundsRequiredMessage;
 }
 
 class _AppLocalizationsDelegate

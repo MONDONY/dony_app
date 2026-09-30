@@ -1222,8 +1222,8 @@
   "requestPublicZonesLabel": "Zones",
   "requestPublicPickupLabel": "Drop-off",
   "requestPublicDeliveryLabel": "Delivery",
-  "requestPublicPaymentTitle": "Preferred payment method",
-  "requestPublicPaymentSubtitle": "Accepted by the sender",
+  "requestPublicPaymentTitle": "Accepted payment methods",
+  "requestPublicPaymentSubtitle": "The sender will pick one of these when paying: nothing to choose on your side",
   "requestPublicProposeTripCta": "Propose my trip",
   "requestPublicViewNegotiationCta": "View my negotiation",
   "requestPublicViewProposalCta": "View my proposal",
@@ -8125,5 +8125,25 @@
   "bidDetailPickupInstructionsLabel": "Pickup on arrival",
   "@bidDetailPickupInstructionsLabel": {
     "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "negotiationMakeOfferSelectTripHint": "Pick one of your trips above to send the offer",
+  "@negotiationMakeOfferSelectTripHint": {
+    "description": "Sous le bouton grisé de la feuille d'offre tant qu'aucun trajet n'est choisi (make_offer_bottom_sheet.dart, FLUTTER-4W)"
+  },
+  "errorPaymentMethodNoneAvailableTitle": "No common payment method",
+  "@errorPaymentMethodNoneAvailableTitle": {
+    "description": "Erreur payment-method/none-available : aucun mode de paiement commun entre la demande et le voyageur"
+  },
+  "errorPaymentMethodNoneAvailableMessage": "The sender accepts several payment methods, but none is ready on your account: set up card payouts, or top up your wallet to cover the cash commission.",
+  "@errorPaymentMethodNoneAvailableMessage": {
+    "description": "Erreur payment-method/none-available : aucun mode de paiement commun entre la demande et le voyageur"
+  },
+  "errorCashFundsRequiredTitle": "Wallet too low for cash",
+  "@errorCashFundsRequiredTitle": {
+    "description": "Erreur payment-method/cash-funds-required : solde insuffisant pour garantir la commission espèces"
+  },
+  "errorCashFundsRequiredMessage": "To accept a cash payment, your wallet must cover the commission. Top it up, then try again.",
+  "@errorCashFundsRequiredMessage": {
+    "description": "Erreur payment-method/cash-funds-required : solde insuffisant pour garantir la commission espèces"
   }
 }

@@ -155,4 +155,69 @@ void main() {
       expect(find.text('Attention'), findsOneWidget);
     });
   });
+
+  // FLUTTER-4W / 4P : depuis une feuille, le snackbar du Scaffold de la page
+  // s'affichait sous la feuille, invisible. Il passe au-dessus.
+  group('DonySnackbar depuis une feuille modale', () {
+    Future<void> openSheetAndShow(WidgetTester tester) async {
+      await tester.pumpWidget(
+        _harness(
+          (ctx) => showModalBottomSheet<void>(
+            context: ctx,
+            useRootNavigator: true,
+            builder: (sheetCtx) => SizedBox(
+              height: 300,
+              child: Center(
+                child: TextButton(
+                  onPressed: () => DonySnackbar.show(
+                    sheetCtx,
+                    message: 'Refusé par le serveur',
+                    type: DonySnackbarType.warning,
+                  ),
+                  child: const Text('Envoyer'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Envoyer'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('affiché par-dessus la feuille, pas en SnackBar dessous', (
+      tester,
+    ) async {
+      await openSheetAndShow(tester);
+
+      expect(
+        find.byKey(const Key('dony-snackbar-above-modal')),
+        findsOneWidget,
+      );
+      expect(find.text('Refusé par le serveur'), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+      // La feuille reste ouverte.
+      expect(find.text('Envoyer'), findsOneWidget);
+    });
+
+    testWidgets('disparaît seul après sa durée', (tester) async {
+      await openSheetAndShow(tester);
+
+      await tester.pump(const Duration(seconds: 4));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Refusé par le serveur'), findsNothing);
+    });
+
+    testWidgets('un tap le ferme', (tester) async {
+      await openSheetAndShow(tester);
+
+      await tester.tap(find.byKey(const Key('dony-snackbar-above-modal')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Refusé par le serveur'), findsNothing);
+    });
+  });
 }
