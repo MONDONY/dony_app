@@ -53,17 +53,6 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
   /// Annulé dans [dispose] pour éviter les timers pendants en test.
   Timer? _entranceTimer;
 
-  /// Statuts où l'expéditeur est connu (carte contact affichée)
-  /// et où le suivi est disponible (actions rapides affichées).
-  static const _activeStatuses = <String>{
-    'ACCEPTED',
-    'HANDED_OVER',
-    'IN_TRANSIT',
-    'ARRIVED',
-    'COMPLETED',
-    'DELIVERED',
-  };
-
   @override
   void initState() {
     super.initState();
@@ -96,9 +85,10 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
       ColisBillet(bid: widget.bid, isSender: false),
       TravelerHeroCard(bid: widget.bid),
       DeliveryNoShowCtaCell(bid: widget.bid, isSender: false),
-      if (_activeStatuses.contains(status))
-        ExpediteurContactCard(bid: widget.bid),
-      ColisDestinataireCard(bid: widget.bid),
+      // Profil de l'expéditeur à tous les statuts ; les boutons de contact
+      // n'apparaissent qu'une fois la demande acceptée.
+      ExpediteurContactCard(bid: widget.bid),
+      ColisDestinataireCard(bid: widget.bid, isSender: false),
       TravelerGainCard(bid: widget.bid),
       DetailsAccordion(bid: widget.bid, showTrackingLink: false),
       if (status == 'COMPLETED' && widget.bid.travelerHasRated)

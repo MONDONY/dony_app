@@ -200,7 +200,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
               style: tt.headlineMedium,
             ),
             const SizedBox(height: DonySpacing.base),
-            ColisDestinataireCard(bid: bid),
+            ColisDestinataireCard(bid: bid, isSender: false),
           ],
         ),
       ),

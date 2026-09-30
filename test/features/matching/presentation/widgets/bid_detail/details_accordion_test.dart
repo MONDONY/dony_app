@@ -24,7 +24,10 @@ BidModel _bid({DateTime? handoverDeadline, DateTime? departureDate}) =>
     );
 
 Widget _host(BidModel bid) => MaterialApp(
-  home: Scaffold(body: DetailsAccordion(bid: bid)),
+  // Défilant comme l'écran réel : l'accordéon ouvert dépasse la hauteur du test.
+  home: Scaffold(
+    body: SingleChildScrollView(child: DetailsAccordion(bid: bid)),
+  ),
 );
 
 void main() {
@@ -96,5 +99,37 @@ void main() {
       find.textContaining(DateFormat.yMd('en').format(deadline)),
       findsOneWidget,
     );
+  });
+
+  testWidgets('section DEMANDE et trajet complet : tout ce qui est connu', (
+    tester,
+  ) async {
+    final bid = BidModel(
+      id: 'abcdef12-0000-0000-0000-000000000000',
+      announcementId: 'ann-001',
+      senderId: 'sender-001',
+      status: 'PENDING',
+      createdAt: DateTime(2026, 9, 30, 9, 15),
+      updatedAt: DateTime(2026, 9, 30, 10, 45),
+      paymentMethod: BidPaymentMethod.cash,
+      promoCode: 'BIENVENUE',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureTime: '14:30:00',
+      arrivalTime: '21:05:00',
+      arrivalInstructions: 'Marché Sandaga, porte 3',
+    );
+    await tester.pumpWidget(_host(bid));
+    await ouvrir(tester);
+
+    expect(find.text('DEMANDE'), findsOneWidget);
+    // Sans numéro de suivi servi : début de l'identifiant.
+    expect(find.text('ABCDEF12'), findsOneWidget);
+    expect(find.text('Espèces à la remise'), findsOneWidget);
+    expect(find.text('BIENVENUE'), findsOneWidget);
+    expect(find.text('Paris → Dakar'), findsOneWidget);
+    expect(find.text('14:30'), findsOneWidget);
+    expect(find.text('21:05'), findsOneWidget);
+    expect(find.text('Marché Sandaga, porte 3'), findsOneWidget);
   });
 }

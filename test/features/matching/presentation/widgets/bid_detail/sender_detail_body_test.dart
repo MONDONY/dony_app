@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
@@ -172,23 +173,23 @@ void main() {
   );
 
   // ── Test 2: PENDING → pas de voyageur ni d'actions de suivi ─────────────────
-  testWidgets(
-    '2 · PENDING → VoyageurContactCard absent, QuickActionsRow absent, '
-    'ColisDestinataireCard présent',
-    (tester) async {
-      sizeView(tester);
-      final bid = _bid(status: 'PENDING');
+  testWidgets('2 · PENDING → profil du voyageur sans bouton de contact, '
+      'QuickActionsRow absent, ColisDestinataireCard présent', (tester) async {
+    sizeView(tester);
+    final bid = _bid(status: 'PENDING');
 
-      await tester.pumpWidget(
-        _host(bid, cancellationBloc, conversationOpenBloc),
-      );
-      await tester.pump(const Duration(seconds: 1));
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    await tester.pump(const Duration(seconds: 1));
 
-      expect(find.byType(VoyageurContactCard), findsNothing);
-      expect(find.byType(QuickActionsRow), findsNothing);
-      expect(find.byType(ColisDestinataireCard), findsOneWidget);
-    },
-  );
+    // En attente : on voit qui est le voyageur, sans pouvoir le joindre.
+    expect(find.byType(VoyageurContactCard), findsOneWidget);
+    expect(_contactIcon(VoyageurContactCard, 'message-circle'), findsNothing);
+    expect(_contactIcon(VoyageurContactCard, 'phone'), findsNothing);
+    expect(find.byType(QuickActionsRow), findsNothing);
+    expect(find.byType(ColisDestinataireCard), findsOneWidget);
+    // L'expéditeur voit toujours le téléphone du destinataire.
+    expect(find.text('Téléphone'), findsOneWidget);
+  });
 
   // ── Test 2 bis: ARRIVED → voyageur + actions rapides toujours visibles ──────
   testWidgets(
@@ -208,23 +209,21 @@ void main() {
   );
 
   // ── Test 3: CANCELLED → voyageur absent, hero shrink ────────────────────────
-  testWidgets(
-    '3 · CANCELLED → VoyageurContactCard absent (la hero rend shrink)',
-    (tester) async {
-      sizeView(tester);
-      final bid = _bid(status: 'CANCELLED');
+  testWidgets('3 · CANCELLED → profil du voyageur sans bouton de contact', (
+    tester,
+  ) async {
+    sizeView(tester);
+    final bid = _bid(status: 'CANCELLED');
 
-      await tester.pumpWidget(
-        _host(bid, cancellationBloc, conversationOpenBloc),
-      );
-      await tester.pump(const Duration(seconds: 1));
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    await tester.pump(const Duration(seconds: 1));
 
-      expect(find.byType(VoyageurContactCard), findsNothing);
-      // Le billet et la carte colis restent toujours présents.
-      expect(find.byType(ColisBillet), findsOneWidget);
-      expect(find.byType(ColisDestinataireCard), findsOneWidget);
-    },
-  );
+    expect(find.byType(VoyageurContactCard), findsOneWidget);
+    expect(_contactIcon(VoyageurContactCard, 'message-circle'), findsNothing);
+    // Le billet et la carte colis restent toujours présents.
+    expect(find.byType(ColisBillet), findsOneWidget);
+    expect(find.byType(ColisDestinataireCard), findsOneWidget);
+  });
 
   // ── Instructions de retrait : encart hors du hero ──────────────────────────
   // Le hero ne les montrait qu'en ARRIVED, et les perdait dès qu'une
@@ -320,3 +319,9 @@ void main() {
     },
   );
 }
+
+/// Bouton d'une carte de profil (appel ou message), repéré par son icône.
+Finder _contactIcon(Type card, String icon) => find.descendant(
+  of: find.byType(card),
+  matching: find.byWidgetPredicate((w) => w is DonyIcon && w.name == icon),
+);

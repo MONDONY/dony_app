@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
@@ -80,13 +81,20 @@ void main() {
     expect(find.byType(QuickActionsRow), findsNothing);
   });
 
-  testWidgets('PENDING → pas de carte contact (statut non actif)', (
-    tester,
-  ) async {
-    await _pump(tester, _bid('PENDING'));
-    expect(find.byType(ExpediteurContactCard), findsNothing);
-    expect(find.byType(TravelerGainCard), findsOneWidget);
-  });
+  testWidgets(
+    'PENDING → profil de l\'expéditeur sans contact, téléphone du destinataire masqué',
+    (tester) async {
+      await _pump(tester, _bid('PENDING'));
+      expect(find.byType(ExpediteurContactCard), findsOneWidget);
+      expect(
+        _contactIcon(ExpediteurContactCard, 'message-circle'),
+        findsNothing,
+      );
+      expect(_contactIcon(ExpediteurContactCard, 'phone'), findsNothing);
+      expect(find.text('Téléphone'), findsNothing);
+      expect(find.byType(TravelerGainCard), findsOneWidget);
+    },
+  );
 
   testWidgets('trackingToken présent → pas de lien ni action suivi voyageur', (
     tester,
@@ -108,3 +116,9 @@ void main() {
     expect(find.textContaining('public-token'), findsNothing);
   });
 }
+
+/// Bouton d'une carte de profil (appel ou message), repéré par son icône.
+Finder _contactIcon(Type card, String icon) => find.descendant(
+  of: find.byType(card),
+  matching: find.byWidgetPredicate((w) => w is DonyIcon && w.name == icon),
+);

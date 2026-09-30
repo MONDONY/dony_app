@@ -399,6 +399,47 @@ void main() {
 
   // ── ColisDestinataireCard ──────────────────────────────────────────────────
   group('ColisDestinataireCard', () {
+    Widget hostAs(BidModel bid, {required bool isSender}) => MaterialApp(
+      theme: AppTheme.light(),
+      home: Scaffold(
+        body: ColisDestinataireCard(bid: bid, isSender: isSender),
+      ),
+    );
+
+    testWidgets(
+      'voyageur, demande en attente : téléphone du destinataire masqué',
+      (tester) async {
+        final bid = _bid(
+          status: 'PENDING',
+          recipientName: 'Aminata Traoré',
+          recipientPhone: '+221700000000',
+        );
+        await tester.pumpWidget(hostAs(bid, isSender: false));
+
+        expect(find.textContaining('Aminata'), findsWidgets);
+        expect(find.textContaining('+221700000000'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'voyageur, demande acceptée : téléphone du destinataire visible',
+      (tester) async {
+        final bid = _bid(recipientPhone: '+221700000000');
+        await tester.pumpWidget(hostAs(bid, isSender: false));
+
+        expect(find.textContaining('+221700000000'), findsWidgets);
+      },
+    );
+
+    testWidgets('expéditeur, demande en attente : téléphone visible', (
+      tester,
+    ) async {
+      final bid = _bid(status: 'PENDING', recipientPhone: '+221700000000');
+      await tester.pumpWidget(hostAs(bid, isSender: true));
+
+      expect(find.textContaining('+221700000000'), findsWidgets);
+    });
+
     testWidgets('shows weight, category and recipient', (tester) async {
       final bid = _bid(
         weightKg: 5.0,

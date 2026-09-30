@@ -16747,5 +16747,50 @@
   "errorHandoverDeadlinePassedMessage": "La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.",
   "@errorHandoverDeadlinePassedMessage": {
     "description": "Message de l'erreur handover-deadline-passed (409)"
+  },
+  "bidDetailSectionRequest": "DEMANDE",
+  "@bidDetailSectionRequest": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailReferenceLabel": "Référence",
+  "@bidDetailReferenceLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailSentAtLabel": "Envoyée le",
+  "@bidDetailSentAtLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailUpdatedAtLabel": "Mise à jour",
+  "@bidDetailUpdatedAtLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailPaymentMethodLabel": "Paiement",
+  "@bidDetailPaymentMethodLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailPaymentMethodValue": "{method, select, stripe{Carte bancaire} cash{Espèces à la remise} wave{Wave} orangeMoney{Orange Money} mobileMoney{Mobile money} other{-}}",
+  "@bidDetailPaymentMethodValue": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)",
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailPromoCodeLabel": "Code promo",
+  "@bidDetailPromoCodeLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailRouteLabel": "Itinéraire",
+  "@bidDetailRouteLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailArrivalTimeLabel": "Heure d'arrivée",
+  "@bidDetailArrivalTimeLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailPickupInstructionsLabel": "Retrait à l'arrivée",
+  "@bidDetailPickupInstructionsLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
   }
 }

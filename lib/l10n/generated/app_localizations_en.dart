@@ -14506,4 +14506,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorHandoverDeadlinePassedMessage =>
       'The drop-off deadline for this trip has passed. It no longer takes new parcels.';
+
+  @override
+  String get bidDetailSectionRequest => 'REQUEST';
+
+  @override
+  String get bidDetailReferenceLabel => 'Reference';
+
+  @override
+  String get bidDetailSentAtLabel => 'Sent on';
+
+  @override
+  String get bidDetailUpdatedAtLabel => 'Last update';
+
+  @override
+  String get bidDetailPaymentMethodLabel => 'Payment';
+
+  @override
+  String bidDetailPaymentMethodValue(String method) {
+    String _temp0 = intl.Intl.selectLogic(method, {
+      'stripe': 'Bank card',
+      'cash': 'Cash at drop-off',
+      'wave': 'Wave',
+      'orangeMoney': 'Orange Money',
+      'mobileMoney': 'Mobile money',
+      'other': '-',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get bidDetailPromoCodeLabel => 'Promo code';
+
+  @override
+  String get bidDetailRouteLabel => 'Route';
+
+  @override
+  String get bidDetailArrivalTimeLabel => 'Arrival time';
+
+  @override
+  String get bidDetailPickupInstructionsLabel => 'Pickup on arrival';
 }

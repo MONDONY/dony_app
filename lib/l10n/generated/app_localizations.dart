@@ -24131,6 +24131,66 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.'**
   String get errorHandoverDeadlinePassedMessage;
+
+  /// Plus de détails d'une demande (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'DEMANDE'**
+  String get bidDetailSectionRequest;
+
+  /// Plus de détails d'une demande (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Référence'**
+  String get bidDetailReferenceLabel;
+
+  /// Plus de détails d'une demande (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyée le'**
+  String get bidDetailSentAtLabel;
+
+  /// Plus de détails d'une demande (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mise à jour'**
+  String get bidDetailUpdatedAtLabel;
+
+  /// Plus de détails d'une demande (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement'**
+  String get bidDetailPaymentMethodLabel;
+
+  /// Plus de détails d'une demande (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{method, select, stripe{Carte bancaire} cash{Espèces à la remise} wave{Wave} orangeMoney{Orange Money} mobileMoney{Mobile money} other{-}}'**
+  String bidDetailPaymentMethodValue(String method);
+
+  /// Plus de détails d'une demande (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code promo'**
+  String get bidDetailPromoCodeLabel;
+
+  /// Plus de détails d'une demande (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Itinéraire'**
+  String get bidDetailRouteLabel;
+
+  /// Plus de détails d'une demande (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure d\'arrivée'**
+  String get bidDetailArrivalTimeLabel;
+
+  /// Plus de détails d'une demande (details_accordion.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Retrait à l\'arrivée'**
+  String get bidDetailPickupInstructionsLabel;
 }
 
 class _AppLocalizationsDelegate

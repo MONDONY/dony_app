@@ -8080,5 +8080,50 @@
   "errorHandoverDeadlinePassedMessage": "The drop-off deadline for this trip has passed. It no longer takes new parcels.",
   "@errorHandoverDeadlinePassedMessage": {
     "description": "Message de l'erreur handover-deadline-passed (409)"
+  },
+  "bidDetailSectionRequest": "REQUEST",
+  "@bidDetailSectionRequest": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailReferenceLabel": "Reference",
+  "@bidDetailReferenceLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailSentAtLabel": "Sent on",
+  "@bidDetailSentAtLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailUpdatedAtLabel": "Last update",
+  "@bidDetailUpdatedAtLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailPaymentMethodLabel": "Payment",
+  "@bidDetailPaymentMethodLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailPaymentMethodValue": "{method, select, stripe{Bank card} cash{Cash at drop-off} wave{Wave} orangeMoney{Orange Money} mobileMoney{Mobile money} other{-}}",
+  "@bidDetailPaymentMethodValue": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)",
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "bidDetailPromoCodeLabel": "Promo code",
+  "@bidDetailPromoCodeLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailRouteLabel": "Route",
+  "@bidDetailRouteLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailArrivalTimeLabel": "Arrival time",
+  "@bidDetailArrivalTimeLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
+  },
+  "bidDetailPickupInstructionsLabel": "Pickup on arrival",
+  "@bidDetailPickupInstructionsLabel": {
+    "description": "Plus de détails d'une demande (details_accordion.dart)"
   }
 }
