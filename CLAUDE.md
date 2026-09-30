@@ -441,7 +441,6 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `trip_filter_applied` | TripFilterCubit.setFilter() — chips statut « Mes trajets » (Activités), propriété `status` |
 | `envoyer_envois` / `envoyer_demandes` | EnvoyerHubScreen `logScreen` au changement d'onglet (Envois / Demandes) |
 | `urgent_filter_toggled` | HomeScreen._onUrgentToggle — chip 🔥 Urgent (propriété `active`) |
-| `home_publish_parcel_tapped` | HomeScreen._onPublishParcel — bouton flottant « Publier un colis » de l'accueil, mode « J'envoie un colis », feuille repliée ; ouvre `/parcels/send-intro` |
 | `firm_price_taken` | NegotiationBloc._onStart() — voyageur prend un prix ferme |
 | `payment_method_selected` | NegotiationBloc._onCheckout() — mode de paiement retenu par l'expéditeur au checkout final (le voyageur ne choisit plus au trip-linking : `paymentMethod` y est un placeholder, `acceptedPaymentMethods.first`) |
 | `trip_link_payment_blocked` | NegotiationBloc._onSubmitTrip()/_onCreateDedicatedTrip() — 422 `payment-method/*` : le voyageur ne peut honorer aucun mode accepté par l'expéditeur (propriété `reason` : `no_card`/`no_cash_funds`/`none`) |

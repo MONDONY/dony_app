@@ -653,10 +653,6 @@ Widget _buildHomeRouter({
           body: Text('TutorialStub:${state.pathParameters['tutorialId']}'),
         ),
       ),
-      GoRoute(
-        path: '/parcels/send-intro',
-        builder: (_, _) => const Scaffold(body: Text('STUB_SEND_INTRO')),
-      ),
     ],
   );
 
@@ -896,81 +892,6 @@ void main() {
         ).called(1);
       },
     );
-
-    testWidgets(
-      'mode J\'envoie un colis : bouton « Publier un colis » qui ouvre '
-      'l\'intro d\'envoi',
-      (tester) async {
-        tester.view.physicalSize = const Size(800, 1000);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
-
-        await tester.pumpWidget(
-          _buildHomeRouter(
-            announcementState: AnnouncementSearchLoaded(const []),
-            visitedTripIds: [],
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 1000));
-        await tester.pump(const Duration(milliseconds: 400));
-
-        final fab = find.byKey(const Key('home-publish-parcel'));
-        expect(fab, findsOneWidget);
-        expect(
-          find.descendant(of: fab, matching: find.text('Publier un colis')),
-          findsOneWidget,
-        );
-
-        await tester.tap(fab);
-        await tester.pumpAndSettle();
-
-        expect(find.text('STUB_SEND_INTRO'), findsOneWidget);
-        verify(
-          () => analytics.logEvent(AnalyticsEvents.homePublishParcelTapped),
-        ).called(1);
-      },
-    );
-
-    testWidgets('mode Je voyage : le bouton « Publier un colis » disparaît', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(800, 1000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      await tester.pumpWidget(
-        _buildHomeRouter(
-          announcementState: AnnouncementSearchLoaded(const []),
-          visitedTripIds: [],
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 1000));
-      await tester.pump(const Duration(milliseconds: 400));
-
-      await tester.tap(find.text('Je voyage').first);
-      await tester.pumpAndSettle();
-
-      final ignore = tester.widget<IgnorePointer>(
-        find
-            .ancestor(
-              of: find.byKey(const Key('home-publish-parcel')),
-              matching: find.byType(IgnorePointer),
-            )
-            .first,
-      );
-      expect(ignore.ignoring, isTrue);
-      final opacity = tester.widget<AnimatedOpacity>(
-        find
-            .ancestor(
-              of: find.byKey(const Key('home-publish-parcel')),
-              matching: find.byType(AnimatedOpacity),
-            )
-            .first,
-      );
-      expect(opacity.opacity, 0);
-    });
 
     testWidgets(
       'masque intentionnellement la carte tutoriel en mode carousel Près de '
