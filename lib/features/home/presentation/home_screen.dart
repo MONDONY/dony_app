@@ -1260,16 +1260,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
           final raw = state is AnnouncementSearchLoaded
               ? state.results
               : <AnnouncementModel>[];
-          // On ne se voit jamais soi-même dans la recherche : les trajets dont
-          // l'utilisateur est le voyageur sont exclus du feed ET de la carte
-          // (ils restent accessibles via « Mes trajets » / Activités).
-          final ownFiltered = currentUserId == null
-              ? raw
-              : raw.where((a) => a.travelerId != currentUserId).toList();
+          // Les trajets de l'utilisateur restent dans le fil et sur la carte,
+          // marqués « Ton trajet » (TravelerCard.isOwnAnnouncement) et sans
+          // réservation : il voit qu'ils sont bien publiés et comment les
+          // expéditeurs les voient (FLUTTER-43). Ils étaient masqués.
           final urgencyFilter = _filters.urgencyFilter;
           final announcements = urgencyFilter == null
-              ? ownFiltered
-              : ownFiltered
+              ? raw
+              : raw
                     .where((a) => urgencyFilter.matches(a.departureDate))
                     .toList();
 
@@ -1751,6 +1749,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final tt = Theme.of(ctx).textTheme;
     final cs = Theme.of(ctx).colorScheme;
     final count = announcements.length;
+    // « N voyageurs peuvent emporter ton colis » : sans ses propres trajets,
+    // affichés dans la liste mais qui ne peuvent pas emporter son colis.
+    final othersCount = currentUserId == null
+        ? count
+        : announcements.where((a) => a.travelerId != currentUserId).length;
 
     final statusBarHeight = MediaQuery.of(ctx).padding.top;
 
@@ -1865,7 +1868,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     context.l10n,
                                     mode: _mode,
                                     filters: _filters,
-                                    trips: count,
+                                    trips: othersCount,
                                     parcels: parcels,
                                     matching: matching,
                                   ),
@@ -1879,7 +1882,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   homeListSubtitle(
                                     context.l10n,
                                     mode: _mode,
-                                    trips: count,
+                                    trips: othersCount,
                                     parcels: parcels,
                                     matching: matching,
                                     activeTrips: trips,

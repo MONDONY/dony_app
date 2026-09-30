@@ -1076,7 +1076,9 @@ void main() {
       expect(find.byType(TravelerCard), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('ses propres trajets sont exclus du feed de recherche', (
+    // FLUTTER-43 : l'utilisateur voit ses propres trajets dans le fil, avec
+    // les autres, marqués « Votre trajet », pour vérifier qu'ils sont publiés.
+    testWidgets('ses propres trajets apparaissent dans le fil, marqués', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(800, 1600);
@@ -1085,24 +1087,21 @@ void main() {
 
       await tester.pumpWidget(
         _buildHomeRouter(
-          // travelerId == id de _makeUser ('uid-1') : l'utilisateur ne doit
-          // pas voir ses propres trajets dans la recherche.
+          // travelerId == id de _makeUser ('uid-1') : trajet de l'utilisateur.
           announcementState: AnnouncementSearchLoaded([
             _makeAnn(id: 'a-own', travelerId: 'uid-1'),
+            _makeAnn(id: 'a-other', travelerId: 'uid-2'),
           ]),
           visitedTripIds: <String>[],
         ),
       );
       await tester.pump(const Duration(milliseconds: 1000));
 
-      // Déplier le sheet en plein écran.
       await tester.tap(find.textContaining('Tirer pour voir'));
       await tester.pumpAndSettle();
 
-      // Aucune carte trajet ni pill « Votre trajet » : l'annonce propre est
-      // filtrée du feed (elle reste accessible via « Mes trajets »).
-      expect(find.byKey(const Key('own-trip-pill')), findsNothing);
-      expect(find.byType(TravelerCard), findsNothing);
+      expect(find.byType(TravelerCard), findsNWidgets(2));
+      expect(find.byKey(const Key('own-trip-pill')), findsOneWidget);
     });
 
     testWidgets('shows empty message when search loaded with no results', (
