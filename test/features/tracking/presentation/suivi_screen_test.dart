@@ -919,39 +919,40 @@ void main() {
 
     // Recette Redmi : le bouton d'une ligne ouvrait l'ancien écran
     // « Identifier le colis ». Tout se passe désormais dans l'onglet.
-    testWidgets('bouton Valider la récupération → photo, bandeau, envoi MANUAL', (
-      tester,
-    ) async {
-      stubDefaultTrips();
-      await pump(tester);
+    testWidgets(
+      'bouton Valider la récupération → photo, bandeau, envoi MANUAL',
+      (tester) async {
+        stubDefaultTrips();
+        await pump(tester);
 
-      await tapVisible(tester, const Key('suivi-validate-madou'));
-      expect(visited, isNot(contains('/tracking/scan/identify')));
-      // Colis choisi dans la liste : pas de récapitulatif du numéro.
-      expect(text('Valider avec le numéro'), findsNothing);
-      expect(visited.last, '/tracking/scan/photo');
-      expect(lastExtra, {
-        'bidId': 'madou',
-        'etape': 'DEPART',
-        'packageLabel': 'Madou',
-        'returnResult': true,
-      });
+        await tapVisible(tester, const Key('suivi-validate-madou'));
+        expect(visited, isNot(contains('/tracking/scan/identify')));
+        // Colis choisi dans la liste : pas de récapitulatif du numéro.
+        expect(text('Valider avec le numéro'), findsNothing);
+        expect(visited.last, '/tracking/scan/photo');
+        expect(lastExtra, {
+          'bidId': 'madou',
+          'etape': 'DEPART',
+          'packageLabel': 'Madou',
+          'returnResult': true,
+        });
 
-      await tester.tap(text('page /tracking/scan/photo'));
-      await settle(tester, rounds: 2);
-      expect(text('Madou récupéré'), findsOneWidget);
-      verifyNeverSubmitted();
+        await tester.tap(text('page /tracking/scan/photo'));
+        await settle(tester, rounds: 2);
+        expect(text('Madou récupéré'), findsOneWidget);
+        verifyNeverSubmitted();
 
-      await tester.pump(const Duration(seconds: 5));
-      await settle(tester, rounds: 2);
-      await verifySent(
-        bidId: 'madou',
-        step: 'DEPART',
-        method: ScanMethod.manual,
-        photoPath: '/tmp/colis.jpg',
-        at: _here,
-      );
-    });
+        await tester.pump(const Duration(seconds: 5));
+        await settle(tester, rounds: 2);
+        await verifySent(
+          bidId: 'madou',
+          step: 'DEPART',
+          method: ScanMethod.manual,
+          photoPath: '/tmp/colis.jpg',
+          at: _here,
+        );
+      },
+    );
 
     testWidgets('bouton Valider l\'arrivée → parcours photo puis code', (
       tester,
