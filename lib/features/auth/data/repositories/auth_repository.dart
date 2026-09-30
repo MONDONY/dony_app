@@ -43,7 +43,7 @@ class AuthRepository {
   Future<String> verifyEmailOtp(String email, String code) =>
       _datasource.verifyEmailOtp(email, code);
 
-  Future<UserModel> attachEmail({
+  Future<AttachResult> attachEmail({
     required String email,
     required String code,
   }) => _datasource.attachEmail(email: email, code: code);
@@ -57,7 +57,7 @@ class AuthRepository {
   Future<String> verifyPhoneOtp(String phoneNumber, String code) =>
       _datasource.verifyPhoneOtp(phoneNumber, code);
 
-  Future<UserModel> attachPhone({
+  Future<AttachResult> attachPhone({
     required String phoneNumber,
     required String code,
   }) => _datasource.attachPhone(phoneNumber: phoneNumber, code: code);

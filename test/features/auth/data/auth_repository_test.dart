@@ -87,13 +87,13 @@ void main() {
   test('attachEmail delegates to datasource', () async {
     when(
       () => mockDs.attachEmail(email: 'user@example.com', code: '123456'),
-    ).thenAnswer((_) async => _user);
+    ).thenAnswer((_) async => (user: _user, sessionToken: null));
 
     final result = await repo.attachEmail(
       email: 'user@example.com',
       code: '123456',
     );
-    expect(result.id, 'u1');
+    expect(result.user.id, 'u1');
     verify(
       () => mockDs.attachEmail(email: 'user@example.com', code: '123456'),
     ).called(1);
@@ -119,13 +119,13 @@ void main() {
   test('attachPhone delegates to datasource', () async {
     when(
       () => mockDs.attachPhone(phoneNumber: '+221701234567', code: '123456'),
-    ).thenAnswer((_) async => _user);
+    ).thenAnswer((_) async => (user: _user, sessionToken: null));
 
     final result = await repo.attachPhone(
       phoneNumber: '+221701234567',
       code: '123456',
     );
-    expect(result.id, 'u1');
+    expect(result.user.id, 'u1');
     verify(
       () => mockDs.attachPhone(phoneNumber: '+221701234567', code: '123456'),
     ).called(1);

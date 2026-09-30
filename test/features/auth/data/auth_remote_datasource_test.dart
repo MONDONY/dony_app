@@ -123,7 +123,8 @@ void main() {
           code: '123456',
         );
 
-        expect(result.id, 'user-123');
+        expect(result.user.id, 'user-123');
+        expect(result.sessionToken, isNull);
         verify(
           () => mockDio.post<Map<String, dynamic>>(
             '/auth/email-otp/attach',
@@ -283,6 +284,34 @@ void main() {
     });
   });
 
+  group('attach — jeton de reconnexion (FLUTTER-4C)', () {
+    test('en-tête x-session-token → sessionToken exposé', () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/auth/email-otp/attach',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          data: _userJson,
+          statusCode: 200,
+          headers: Headers.fromMap({
+            'x-session-token': ['session-token'],
+          }),
+          requestOptions: RequestOptions(path: '/auth/email-otp/attach'),
+        ),
+      );
+
+      final result = await datasource.attachEmail(
+        email: 'amadou@dony.app',
+        code: '123456',
+      );
+
+      expect(result.sessionToken, 'session-token');
+      expect(result.user.id, 'user-123');
+    });
+  });
+
   group('attachPhone', () {
     test(
       'POST /auth/sms-otp/attach avec phoneNumber+code, renvoie le profil',
@@ -305,7 +334,8 @@ void main() {
           code: '123456',
         );
 
-        expect(result.id, 'user-123');
+        expect(result.user.id, 'user-123');
+        expect(result.sessionToken, isNull);
         verify(
           () => mockDio.post<Map<String, dynamic>>(
             '/auth/sms-otp/attach',
