@@ -4416,10 +4416,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestPublicDeliveryLabel => 'Delivery';
 
   @override
-  String get requestPublicPaymentTitle => 'Preferred payment method';
+  String get requestPublicPaymentTitle => 'Accepted payment methods';
 
   @override
-  String get requestPublicPaymentSubtitle => 'Accepted by the sender';
+  String get requestPublicPaymentSubtitle =>
+      'The sender will pick one of these when paying: nothing to choose on your side';
 
   @override
   String get requestPublicProposeTripCta => 'Propose my trip';
@@ -14546,4 +14547,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailPickupInstructionsLabel => 'Pickup on arrival';
+
+  @override
+  String get negotiationMakeOfferSelectTripHint =>
+      'Pick one of your trips above to send the offer';
+
+  @override
+  String get errorPaymentMethodNoneAvailableTitle => 'No common payment method';
+
+  @override
+  String get errorPaymentMethodNoneAvailableMessage =>
+      'The sender accepts several payment methods, but none is ready on your account: set up card payouts, or top up your wallet to cover the cash commission.';
+
+  @override
+  String get errorCashFundsRequiredTitle => 'Wallet too low for cash';
+
+  @override
+  String get errorCashFundsRequiredMessage =>
+      'To accept a cash payment, your wallet must cover the commission. Top it up, then try again.';
 }

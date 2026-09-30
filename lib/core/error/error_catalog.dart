@@ -693,6 +693,24 @@ abstract final class ErrorCatalog {
     // `payment-method/card-capability-required`, qui a sa feuille dédiée
     // (`PaymentCapabilityBlock._byCode`), ce code n'a pas d'écran propre : il
     // est affiché via cette entrée du catalogue.
+    // 422 (NegotiationService.assertNonEmptyOrThrow) : la demande accepte
+    // plusieurs modes et le voyageur n'en honore aucun. Retombait sur le
+    // message générique, affiché de surcroît sous la feuille d'offre
+    // (FLUTTER-4W : « je ne peux pas confirmer »).
+    'payment-method/none-available': _Entry(
+      title: (l) => l.errorPaymentMethodNoneAvailableTitle,
+      message: (l) => l.errorPaymentMethodNoneAvailableMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.payments_outlined,
+    ),
+    // 422 : demande en espèces seules, portefeuille du voyageur insuffisant
+    // pour garantir la commission.
+    'payment-method/cash-funds-required': _Entry(
+      title: (l) => l.errorCashFundsRequiredTitle,
+      message: (l) => l.errorCashFundsRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.account_balance_wallet_outlined,
+    ),
     'payment-method/mobile-money-capability-required': _Entry(
       title: (l) => l.errorPaymentMethodMobileMoneyCapabilityRequiredTitle,
       message: (l) => l.errorPaymentMethodMobileMoneyCapabilityRequiredMessage,

@@ -123,10 +123,29 @@ class MakeOfferBottomSheet {
                   } else {
                     label = l.negotiationMakeOfferSendButtonLabel;
                   }
-                  return DonyButton(
+                  final button = DonyButton(
                     label: label,
                     isLoading: loading,
                     onPressed: disabled ? null : () => submitFn?.call(),
+                  );
+                  if (loading || selectedTrip != null) return button;
+                  // Bouton grisé tant qu'aucun trajet n'est choisi : dire
+                  // pourquoi, au lieu d'un bouton muet (FLUTTER-4W).
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l.negotiationMakeOfferSelectTripHint,
+                        key: const Key('make-offer-select-trip-hint'),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.sm),
+                      button,
+                    ],
                   );
                 },
               ),
@@ -523,8 +542,14 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                     weightKg: widget.weightKg,
                     currency: widget.currency,
                     selected: selected,
-                    onSelected: (ann) =>
-                        widget.selectedTripNotifier.value = ann,
+                    onSelected: (ann) {
+                      widget.selectedTripNotifier.value = ann;
+                      // La date du voyage est celle du trajet choisi (le
+                      // serveur la prend de toute façon sur le trajet). Sans
+                      // ça, l'envoi s'arrêtait sur « sélectionnez une date »
+                      // alors qu'un trajet était choisi (FLUTTER-4W).
+                      _dateNotifier.value ??= ann.departureDate;
+                    },
                     onCreateDedicated: () async {
                       if (!_formKey.currentState!.validate()) return;
                       if (travelDate == null) {

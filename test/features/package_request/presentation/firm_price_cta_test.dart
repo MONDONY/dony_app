@@ -213,7 +213,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byKey(const Key('payment-methods-card')), findsOneWidget);
-        expect(find.text('Mode de paiement souhaité'), findsOneWidget);
+        expect(find.text('Modes de paiement acceptés'), findsOneWidget);
         expect(find.text('Carte'), findsOneWidget);
         expect(find.text('Espèces'), findsOneWidget);
         expect(
@@ -247,7 +247,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('payment-methods-card')), findsNothing);
-      expect(find.text('Mode de paiement souhaité'), findsNothing);
+      expect(find.text('Modes de paiement acceptés'), findsNothing);
     });
   });
 

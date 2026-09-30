@@ -4435,10 +4435,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestPublicDeliveryLabel => 'Livraison';
 
   @override
-  String get requestPublicPaymentTitle => 'Mode de paiement souhaité';
+  String get requestPublicPaymentTitle => 'Modes de paiement acceptés';
 
   @override
-  String get requestPublicPaymentSubtitle => 'Accepté par l\'expéditeur';
+  String get requestPublicPaymentSubtitle =>
+      'L\'expéditeur choisira parmi ceux-ci au moment de payer : rien à choisir de ton côté';
 
   @override
   String get requestPublicProposeTripCta => 'Proposer mon trajet';
@@ -14633,4 +14634,24 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailPickupInstructionsLabel => 'Retrait à l\'arrivée';
+
+  @override
+  String get negotiationMakeOfferSelectTripHint =>
+      'Choisis un de tes trajets ci-dessus pour envoyer l\'offre';
+
+  @override
+  String get errorPaymentMethodNoneAvailableTitle =>
+      'Aucun mode de paiement commun';
+
+  @override
+  String get errorPaymentMethodNoneAvailableMessage =>
+      'L\'expéditeur accepte plusieurs modes de paiement, mais aucun n\'est prêt sur ton compte : configure ton compte de paiement par carte, ou recharge ton portefeuille pour couvrir la commission en espèces.';
+
+  @override
+  String get errorCashFundsRequiredTitle =>
+      'Portefeuille trop bas pour les espèces';
+
+  @override
+  String get errorCashFundsRequiredMessage =>
+      'Pour accepter un paiement en espèces, ton portefeuille doit couvrir la commission. Recharge-le, puis réessaie.';
 }
