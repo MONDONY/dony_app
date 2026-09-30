@@ -14565,4 +14565,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorCashFundsRequiredMessage =>
       'To accept a cash payment, your wallet must cover the commission. Top it up, then try again.';
+
+  @override
+  String suiviQrRecognized(String parcel) {
+    return 'QR recognized: $parcel';
+  }
+
+  @override
+  String get qrForeignCodeNotice => 'This QR isn\'t a Yadony parcel code';
 }

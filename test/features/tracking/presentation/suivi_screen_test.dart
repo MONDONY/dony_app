@@ -1136,6 +1136,29 @@ void main() {
   });
 
   group('validation rapide', () {
+    // FLUTTER-20 : la lecture du QR était instantanée, sans retour visible.
+    testWidgets('QR lu : coche et « QR reconnu » avant l\'étape', (
+      tester,
+    ) async {
+      stubTransitTrips();
+      await pump(tester);
+      await forceTransit(tester);
+
+      scan!('sali');
+      for (var i = 0; i < 3; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.textContaining('QR reconnu'), findsOneWidget);
+      expect(text('Transit de Sali validé'), findsNothing);
+
+      await tester.pump(const Duration(milliseconds: 600));
+      await settle(tester, rounds: 1);
+      expect(find.textContaining('QR reconnu'), findsNothing);
+      expect(text('Transit de Sali validé'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 6));
+      await settle(tester, rounds: 2);
+    });
+
     testWidgets('QR d\'un transit : bandeau, envoi au bout de 5 s', (
       tester,
     ) async {
@@ -1145,6 +1168,10 @@ void main() {
       clearInteractions(annRepo);
 
       scan!('sali');
+
+      // « QR reconnu » affiché avant l'étape (FLUTTER-20).
+
+      await tester.pump(const Duration(milliseconds: 600));
       await settle(tester, rounds: 1);
       expect(visited, isNot(contains('/tracking/scan/photo')));
       expect(text('Transit de Sali validé'), findsOneWidget);
@@ -1182,6 +1209,10 @@ void main() {
       await forceTransit(tester);
 
       scan!('sali');
+
+      // « QR reconnu » affiché avant l'étape (FLUTTER-20).
+
+      await tester.pump(const Duration(milliseconds: 600));
       await settle(tester, rounds: 1);
       await tester.tap(find.byKey(const Key('suivi-undo-1')));
       await tester.pump(const Duration(seconds: 6));
@@ -1206,6 +1237,10 @@ void main() {
       await forceTransit(tester);
 
       scan!('sali');
+
+      // « QR reconnu » affiché avant l'étape (FLUTTER-20).
+
+      await tester.pump(const Duration(milliseconds: 600));
       await settle(tester, rounds: 1);
       await openNumberField(tester);
       await tester.enterText(
@@ -1235,6 +1270,10 @@ void main() {
       await forceTransit(tester);
 
       scan!('sali');
+
+      // « QR reconnu » affiché avant l'étape (FLUTTER-20).
+
+      await tester.pump(const Duration(milliseconds: 600));
       await tester.pump(const Duration(seconds: 5));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
@@ -1258,6 +1297,10 @@ void main() {
       await forceTransit(tester);
 
       scan!('sali');
+
+      // « QR reconnu » affiché avant l'étape (FLUTTER-20).
+
+      await tester.pump(const Duration(milliseconds: 600));
       await tester.pump(const Duration(seconds: 5));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
@@ -1273,6 +1316,10 @@ void main() {
       await forceTransit(tester);
 
       scan!('sali');
+
+      // « QR reconnu » affiché avant l'étape (FLUTTER-20).
+
+      await tester.pump(const Duration(milliseconds: 600));
       await settle(tester, rounds: 1);
       verifyNeverSubmitted();
 
@@ -1289,6 +1336,10 @@ void main() {
       await forceTransit(tester);
 
       scan!('sali');
+
+      // « QR reconnu » affiché avant l'étape (FLUTTER-20).
+
+      await tester.pump(const Duration(milliseconds: 600));
       await settle(tester, rounds: 1);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
