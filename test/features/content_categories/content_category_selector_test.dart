@@ -405,4 +405,87 @@ void main() {
       expect(find.text('Add a content type…'), findsOneWidget);
     },
   );
+
+  // FLUTTER-4A : un contenu hors liste laissé dans le champ était perdu si
+  // l'expéditeur ne touchait pas la ligne « Ajouter ».
+  group('alwaysAllowCustom : saisie laissée dans le champ', () {
+    Future<List<List<String>>> pumpAndType(
+      WidgetTester tester,
+      String text, {
+      bool alwaysAllowCustom = true,
+    }) async {
+      final emitted = <List<String>>[];
+      await tester.pumpWidget(
+        _wrap(
+          ContentCategorySelector(
+            repository: repository,
+            selected: const [],
+            alwaysAllowCustom: alwaysAllowCustom,
+            onChanged: emitted.add,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(fieldFinder());
+      await tester.pumpAndSettle();
+      await tester.enterText(fieldFinder(), text);
+      await tester.pumpAndSettle();
+      return emitted;
+    }
+
+    testWidgets('validée au clavier : ajoutée comme contenu libre', (
+      tester,
+    ) async {
+      final emitted = await pumpAndType(tester, 'Pièces auto');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(emitted.last, ['Pièces auto']);
+      expect(find.text('Pièces auto'), findsOneWidget);
+    });
+
+    testWidgets('virgule retirée : le back découpe le contenu sur « , »', (
+      tester,
+    ) async {
+      final emitted = await pumpAndType(tester, 'Pièces, auto');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(emitted.last, ['Pièces auto']);
+    });
+
+    testWidgets('libellé exact du catalogue : l\'item du catalogue', (
+      tester,
+    ) async {
+      final emitted = await pumpAndType(tester, 'alimentation sèche');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(emitted.last, ['Alimentation sèche']);
+    });
+
+    testWidgets('tap dans la liste : pas de doublon avec la saisie', (
+      tester,
+    ) async {
+      final emitted = await pumpAndType(tester, 'ali');
+      await tester.tap(
+        find.byKey(const Key('content-combo-item-Alimentation sèche')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(emitted.last, ['Alimentation sèche']);
+    });
+
+    testWidgets('sans alwaysAllowCustom : rien n\'est ajouté', (tester) async {
+      final emitted = await pumpAndType(
+        tester,
+        'Pièces auto',
+        alwaysAllowCustom: false,
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(emitted, isEmpty);
+    });
+  });
 }
