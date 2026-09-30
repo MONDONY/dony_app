@@ -17420,6 +17420,18 @@ abstract class AppLocalizations {
   /// **'Nous n\'avons pas pu vérifier votre identité. Assurez-vous que votre document est lisible et réessayez.'**
   String get kycRejectionGeneric;
 
+  /// Titre de la feuille affichée quand la caméra est refusée pendant la vérification d'identité (kyc_webview_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Caméra bloquée'**
+  String get kycCameraBlockedTitle;
+
+  /// Corps de la feuille caméra bloquée (kyc_webview_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La vérification d\'identité a besoin de la caméra pour photographier ta pièce et ton visage. Autorise la caméra pour Yadony dans les réglages de ton téléphone, puis reviens ici : la vérification reprendra.'**
+  String get kycCameraBlockedBody;
+
   /// Titre de l'écran/la feuille de vérification d'identité (kyc_status_bottom_sheet.dart, KycStatusBottomSheet.show ; kyc_webview_screen.dart, KycWebViewScreen).
   ///
   /// In fr, this message translates to:

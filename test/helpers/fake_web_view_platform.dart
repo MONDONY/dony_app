@@ -10,6 +10,18 @@ import 'package:webview_flutter_platform_interface/webview_flutter_platform_inte
 /// la WebView elle-même, seulement ce que l'écran construit autour.
 class FakeWebViewPlatform extends WebViewPlatform
     with MockPlatformInterfaceMixin {
+  /// Canaux JavaScript déclarés par l'écran, par nom : un test peut simuler
+  /// un message de la page via `onMessageReceived`.
+  static final channels = <String, JavaScriptChannelParams>{};
+
+  /// Nombre d'appels à `reload()` depuis le dernier [reset].
+  static int reloads = 0;
+
+  static void reset() {
+    channels.clear();
+    reloads = 0;
+  }
+
   @override
   PlatformWebViewController createPlatformWebViewController(
     PlatformWebViewControllerCreationParams params,
@@ -47,7 +59,18 @@ class _FakePlatformWebViewController extends PlatformWebViewController
   Future<void> loadRequest(LoadRequestParams params) async {}
 
   @override
-  Future<void> reload() async {}
+  Future<void> reload() async => FakeWebViewPlatform.reloads++;
+
+  @override
+  Future<void> addJavaScriptChannel(
+    JavaScriptChannelParams javaScriptChannelParams,
+  ) async {
+    FakeWebViewPlatform.channels[javaScriptChannelParams.name] =
+        javaScriptChannelParams;
+  }
+
+  @override
+  Future<void> runJavaScript(String javaScript) async {}
 }
 
 class _FakePlatformNavigationDelegate extends PlatformNavigationDelegate
