@@ -14495,4 +14495,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackingStepPhotoLabel => 'Step photo';
+
+  @override
+  String get negotiationCommissionTravelDatePassed =>
+      'The travel date has passed: the commission can no longer be paid.';
+
+  @override
+  String get errorHandoverDeadlinePassedTitle => 'Parcel drop-off closed';
+
+  @override
+  String get errorHandoverDeadlinePassedMessage =>
+      'The drop-off deadline for this trip has passed. It no longer takes new parcels.';
 }

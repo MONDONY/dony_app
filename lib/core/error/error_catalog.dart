@@ -800,6 +800,12 @@ abstract final class ErrorCatalog {
     // tombait sur le message générique de validation et l'utilisateur ne
     // savait pas quoi faire (FLUTTER-3T). L'écran d'onboarding paiement
     // ajoute le bouton qui mène à l'ajout d'email.
+    'handover-deadline-passed': _Entry(
+      title: (l) => l.errorHandoverDeadlinePassedTitle,
+      message: (l) => l.errorHandoverDeadlinePassedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.event_busy_rounded,
+    ),
     'contact-email-required': _Entry(
       title: (l) => l.errorContactEmailRequiredTitle,
       message: (l) => l.errorContactEmailRequiredMessage,

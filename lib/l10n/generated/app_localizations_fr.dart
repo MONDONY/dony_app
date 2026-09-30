@@ -14582,4 +14582,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get trackingStepPhotoLabel => 'Photo de l\'étape';
+
+  @override
+  String get negotiationCommissionTravelDatePassed =>
+      'La date du voyage est passée : la commission ne peut plus être réglée.';
+
+  @override
+  String get errorHandoverDeadlinePassedTitle => 'Remise des colis terminée';
+
+  @override
+  String get errorHandoverDeadlinePassedMessage =>
+      'La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.';
 }

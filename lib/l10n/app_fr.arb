@@ -16732,5 +16732,17 @@
   "trackingStepPhotoLabel": "Photo de l'étape",
   "@trackingStepPhotoLabel": {
     "description": "Libellé d'accessibilité de la miniature photo d'une étape (tracking_timeline_bottom_sheet.dart)."
+  },
+  "negotiationCommissionTravelDatePassed": "La date du voyage est passée : la commission ne peut plus être réglée.",
+  "@negotiationCommissionTravelDatePassed": {
+    "description": "Voyageur, commission à régler alors que le jour du voyage est passé (thread_state_cta_bar.dart, FLUTTER-44)"
+  },
+  "errorHandoverDeadlinePassedTitle": "Remise des colis terminée",
+  "@errorHandoverDeadlinePassedTitle": {
+    "description": "Titre de l'erreur handover-deadline-passed (409) : trajet parti ou date limite de remise atteinte"
+  },
+  "errorHandoverDeadlinePassedMessage": "La date limite de remise des colis de ce trajet est passée. Ce trajet ne prend plus de nouveau colis.",
+  "@errorHandoverDeadlinePassedMessage": {
+    "description": "Message de l'erreur handover-deadline-passed (409)"
   }
 }
