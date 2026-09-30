@@ -16813,6 +16813,19 @@
   "@errorCashFundsRequiredMessage": {
     "description": "Erreur payment-method/cash-funds-required : solde insuffisant pour garantir la commission espèces"
   },
+  "suiviQrRecognized": "QR reconnu : {parcel}",
+  "@suiviQrRecognized": {
+    "description": "Sous le cadre caméra de l'onglet Suivi, juste après la lecture d'un QR de colis (suivi_screen.dart, FLUTTER-20)",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      }
+    }
+  },
+  "qrForeignCodeNotice": "Ce QR n'est pas celui d'un colis Yadony",
+  "@qrForeignCodeNotice": {
+    "description": "Pastille sur la caméra quand le QR lu n'est pas celui d'un colis Yadony (qr_camera_view.dart, FLUTTER-20)"
+  },
   "bidDetailTravelerRequestTitle": "{name} vous demande de transporter son colis",
   "@bidDetailTravelerRequestTitle": {
     "description": "Hero du voyageur sur une demande pas encore acceptée (traveler_hero_card.dart, FLUTTER-4T)",

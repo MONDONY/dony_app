@@ -24222,6 +24222,18 @@ abstract class AppLocalizations {
   /// **'Pour accepter un paiement en espèces, ton portefeuille doit couvrir la commission. Recharge-le, puis réessaie.'**
   String get errorCashFundsRequiredMessage;
 
+  /// Sous le cadre caméra de l'onglet Suivi, juste après la lecture d'un QR de colis (suivi_screen.dart, FLUTTER-20)
+  ///
+  /// In fr, this message translates to:
+  /// **'QR reconnu : {parcel}'**
+  String suiviQrRecognized(String parcel);
+
+  /// Pastille sur la caméra quand le QR lu n'est pas celui d'un colis Yadony (qr_camera_view.dart, FLUTTER-20)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce QR n\'est pas celui d\'un colis Yadony'**
+  String get qrForeignCodeNotice;
+
   /// Hero du voyageur sur une demande pas encore acceptée (traveler_hero_card.dart, FLUTTER-4T)
   ///
   /// In fr, this message translates to:

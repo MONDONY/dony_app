@@ -124,6 +124,9 @@ class TrackingRepository {
     required String code,
     String? photoUrl,
     ScanMethod? scanMethod,
+    double? gpsLat,
+    double? gpsLon,
+    String? gpsLabel,
   }) async {
     final response = await _apiClient.dio.post(
       '/tracking/$bidId/confirm-delivery',
@@ -131,6 +134,9 @@ class TrackingRepository {
         'confirmationCode': code,
         'photoUrl': ?photoUrl,
         'scanMethod': ?scanMethod?.wire,
+        'gpsLat': ?gpsLat,
+        'gpsLon': ?gpsLon,
+        'gpsLabel': ?gpsLabel,
       },
     );
     return TrackingEventModel.fromJson(response.data as Map<String, dynamic>);

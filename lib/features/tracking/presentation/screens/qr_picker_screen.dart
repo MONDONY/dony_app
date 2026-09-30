@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
@@ -26,10 +29,14 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
     super.dispose();
   }
 
-  void _onBidId(String bidId) {
+  Future<void> _onBidId(String bidId) async {
     if (_detected.value) return;
     _detected.value = true;
-    context.pop<String>(bidId);
+    // Laisser voir la coche avant de refermer : fermée dans la même image,
+    // la lecture passait inaperçue (FLUTTER-20).
+    unawaited(HapticFeedback.mediumImpact());
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    if (mounted) context.pop<String>(bidId);
   }
 
   @override

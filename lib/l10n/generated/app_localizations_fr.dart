@@ -14656,6 +14656,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Pour accepter un paiement en espèces, ton portefeuille doit couvrir la commission. Recharge-le, puis réessaie.';
 
   @override
+  String suiviQrRecognized(String parcel) {
+    return 'QR reconnu : $parcel';
+  }
+
+  @override
+  String get qrForeignCodeNotice => 'Ce QR n\'est pas celui d\'un colis Yadony';
+
+  @override
   String bidDetailTravelerRequestTitle(String name) {
     return '$name vous demande de transporter son colis';
   }

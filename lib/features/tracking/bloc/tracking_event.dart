@@ -50,11 +50,20 @@ class ConfirmDeliveryRequested extends TrackingEvent {
   /// Provenance envoyée au back ; `null` : rien n'est envoyé.
   final ScanMethod? scanMethod;
 
+  /// Position relevée à l'arrivée, comme pour les autres étapes. Elle
+  /// n'était pas transmise : l'arrivée n'avait jamais de lieu (FLUTTER-2A).
+  final double? gpsLat;
+  final double? gpsLon;
+  final String? gpsLabel;
+
   ConfirmDeliveryRequested({
     required this.bidId,
     required this.code,
     this.photo,
     this.scanMethod,
+    this.gpsLat,
+    this.gpsLon,
+    this.gpsLabel,
   });
 }
 

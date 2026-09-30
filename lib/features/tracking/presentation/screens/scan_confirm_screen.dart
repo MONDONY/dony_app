@@ -75,6 +75,9 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
           code: code,
           photo: photo,
           scanMethod: widget.scanMethod,
+          gpsLat: widget.gpsLat,
+          gpsLon: widget.gpsLon,
+          gpsLabel: widget.gpsLabel,
         ),
       );
     } else {
