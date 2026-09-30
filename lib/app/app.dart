@@ -121,9 +121,12 @@ class _DonyAppState extends State<DonyApp> {
     // est déjà à l'écran : il lui faut la route courante.
     getIt<NotificationService>().currentLocationProvider = () =>
         appRouter.routerDelegate.currentConfiguration.uri.path;
-    _navSub = getIt<NotificationService>().navigationStream.listen((route) {
-      _navigateToRoute(route);
-    });
+    // Même porte que les liens profonds : une notification touchée sur le
+    // verrou PIN s'empilait par-dessus, puis le déverrouillage (`go('/home')`)
+    // effaçait la pile et la cible était perdue au premier essai (FLUTTER-4B).
+    _navSub = getIt<NotificationService>().navigationStream.listen(
+      _deepLinkGate.dispatch,
+    );
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       // `!user.isAnonymous` : l'ouverture d'une session visiteur déclenche
       // aussi cet événement, et un visiteur n'a pas de compte serveur où
@@ -163,13 +166,13 @@ class _DonyAppState extends State<DonyApp> {
   }
 
   void _initDeepLinks() {
-    // Handle cold-start URI (app was terminated)
-    _appLinks.getInitialLink().then((uri) {
-      if (uri != null) {
-        _handleDeepLink(uri);
-      }
-    });
-    // Handle warm/hot start URIs
+    // Notification touchée avant que l'app n'écoute (lancement à froid).
+    final pendingRoute = getIt<NotificationService>().takePendingRoute();
+    if (pendingRoute != null) {
+      _deepLinkGate.dispatch(pendingRoute);
+    }
+    // app_links 6 : le flux émet aussi le lien de lancement à froid. Le lire
+    // en plus par getInitialLink() le traitait deux fois (deux push).
     _deepLinkSub = _appLinks.uriLinkStream.listen(
       _handleDeepLink,
       onError: (Object error, StackTrace stack) {
