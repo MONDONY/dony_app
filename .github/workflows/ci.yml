@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main, develop]
 
+# Un nouveau commit sur une PR annule la CI du commit précédent, devenue
+# caduque. Chaque push sur main/develop garde son propre groupe (run_id) et
+# va jusqu'au bout.
+concurrency:
+  group: flutter-ci-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: true
+
 env:
   FLUTTER_VERSION: 3.44.x
 
@@ -18,6 +25,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
 
       - name: Get dependencies
         run: flutter pub get
@@ -31,14 +39,29 @@ jobs:
       - name: Check hardcoded French strings
         run: dart run tool/check_hardcoded_strings.dart
 
+  # 844 fichiers de test (2026-09-30), et `flutter test` les compile UN PAR UN
+  # (flutter_tools, test_compiler.dart : « only one compilation at a time »),
+  # environ 2 s chacun : 23 à 29 min pour la suite, quel que soit le nombre de
+  # cœurs. Répartis sur quatre jobs, chacun avec son propre compilateur, les
+  # fichiers se compilent en parallèle.
+  #
+  # La répartition se fait ici, par fichier, et non par `--total-shards` :
+  # package:test découpe alors les tests À L'INTÉRIEUR de chaque fichier, et
+  # chaque shard chargerait et compilerait encore les 844 fichiers. Chaque
+  # fichier garde son propre isolate, comme avant : l'isolation ne change pas.
   test:
-    name: Tests & Coverage
+    name: Tests (shard ${{ matrix.shard }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
 
       - name: Get dependencies
         run: flutter pub get
@@ -47,51 +70,92 @@ jobs:
       # sous macOS et le rendu des polices diffère sous Linux (~0,03 % de pixels
       # d'écart à code identique). Ils restent joués en local.
       - name: Run tests
-        run: flutter test --coverage --exclude-tags golden
+        env:
+          SHARD_INDEX: ${{ matrix.shard }}
+          TOTAL_SHARDS: ${{ strategy.job-total }}
+        run: |
+          mapfile -t FILES < <(find test -name '*_test.dart' | LC_ALL=C sort \
+            | awk -v n="$TOTAL_SHARDS" -v i="$SHARD_INDEX" '(NR - 1) % n == i')
+          # Une liste vide ferait tourner `flutter test` sur toute la suite.
+          if [ "${#FILES[@]}" -eq 0 ]; then
+            echo "::error::Aucun fichier de test pour le shard $SHARD_INDEX/$TOTAL_SHARDS."
+            exit 1
+          fi
+          echo "Shard $SHARD_INDEX/$TOTAL_SHARDS : ${#FILES[@]} fichiers de test."
+          flutter test --coverage --exclude-tags golden "${FILES[@]}"
 
-      # Seuil-cliquet, pas une cible.
-      #
-      # L'objectif du projet reste 90 % (cf. CLAUDE.md). Le dépôt est aujourd'hui
-      # à ~78,5 % : ce job n'avait jamais pu s'exécuter, si bien que l'exigence
-      # de 90 % n'a jamais été mesurée ni atteinte. La laisser telle quelle
-      # gardait la CI rouge en permanence, et une porte toujours rouge finit par
-      # être ignorée — elle ne protège plus rien.
-      #
-      # MIN_COVERAGE est donc calé sous le niveau réellement atteint : il
-      # interdit toute régression dès maintenant. Il doit MONTER au fil des
-      # ajouts de tests, jamais descendre. Ne l'abaissez pas pour faire passer
-      # une PR : c'est le signal qu'elle retire de la couverture.
+      - name: Upload coverage shard
+        uses: actions/upload-artifact@v4
+        with:
+          name: lcov-shard-${{ matrix.shard }}
+          path: coverage/lcov.info
+          retention-days: 1
+          if-no-files-found: error
+
+  # Seuil-cliquet, pas une cible.
+  #
+  # L'objectif du projet reste 90 % (cf. CLAUDE.md). MIN_COVERAGE est calé sous
+  # le niveau réellement atteint : il interdit toute régression. Il doit MONTER
+  # au fil des ajouts de tests, jamais descendre. Ne l'abaissez pas pour faire
+  # passer une PR : c'est le signal qu'elle retire de la couverture.
+  #
+  # Jusqu'au 2026-09-30, ce contrôle ne mesurait rien : `lcov` n'est pas
+  # installé sur le runner, son erreur partait dans /dev/null, la mesure restait
+  # vide et `bc` échouait sans faire échouer l'étape (« Couverture mesurée : % »
+  # puis « ✅ Pas de régression »). Le calcul se fait désormais avec awk sur les
+  # rapports des shards, et une mesure vide fait échouer le job. Une ligne compte
+  # comme couverte dès qu'un shard l'a exécutée.
+  coverage:
+    name: Coverage (seuil-cliquet)
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: lcov-shard-*
+          path: coverage-shards
+
       - name: Check coverage (seuil-cliquet)
         env:
           MIN_COVERAGE: '78'
         run: |
-          COVERAGE=$(lcov --summary coverage/lcov.info 2>/dev/null | grep -oP 'lines\.*: \K[0-9.]+' | head -1)
-          echo "Couverture mesurée : $COVERAGE% (plancher $MIN_COVERAGE%, cible projet 90%)"
-          if (( $(echo "$COVERAGE < $MIN_COVERAGE" | bc -l) )); then
-            echo "❌ Régression : $COVERAGE% est sous le plancher de $MIN_COVERAGE%."
+          COVERAGE=$(awk -F'[:,]' '
+            /^SF:/ { sf = substr($0, 4); next }
+            /^DA:/ {
+              key = sf SUBSEP $2
+              if (!(key in hit)) hit[key] = 0
+              if ($3 > 0) hit[key] = 1
+            }
+            END {
+              for (k in hit) { total++; covered += hit[k] }
+              if (total == 0) exit 1
+              printf "%.2f", 100 * covered / total
+            }' coverage-shards/*/lcov.info) || {
+            echo "::error::Aucune donnée de couverture lisible dans les rapports des shards."
+            exit 1
+          }
+          echo "Couverture mesurée : $COVERAGE % (plancher $MIN_COVERAGE %, cible projet 90 %)"
+          if awk -v c="$COVERAGE" -v m="$MIN_COVERAGE" 'BEGIN { exit !(c < m) }'; then
+            echo "❌ Régression : $COVERAGE % est sous le plancher de $MIN_COVERAGE %."
             echo "   Ajoutez des tests plutôt que d'abaisser le plancher."
             exit 1
           fi
           echo "✅ Pas de régression de couverture."
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./coverage/lcov.info
-          flags: flutter
-          fail_ci_if_error: false
-
+  # Tourne aussi sur main, sans rien publier : setup-gradle n'écrit son cache
+  # que sur la branche par défaut et le garde en lecture seule ailleurs. Sans
+  # build sur main, aucune PR n'avait de cache Gradle à relire, et
+  # `assembleDebug` repartait de zéro (535 s le 2026-09-30).
   build-apk:
     name: Build APK (debug)
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
 
       # Le 2026-09-04, deux runs de suite sont morts à 15-17 min sur
       # « System.IO.IOException: No space left on device » (annotation du
-      # check, aucun log de job publié) : l'image ubuntu-latest laisse ~14 Go
-      # et un build apk --debug (trois ABI + caches Gradle) les consomme tout
+      # check, aucun log de job publié) : l'image ubuntu-latest laissait ~14 Go
+      # et un build apk --debug (trois ABI + caches Gradle) les consommait tout
       # juste. On rend une vingtaine de Go en jetant ce que ce job n'utilise
       # jamais. `df -h` avant et après pour que le prochain qui débogue voie
       # la marge réelle plutôt qu'un job muet.
@@ -107,6 +171,9 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - uses: gradle/actions/setup-gradle@v4
 
       - name: Get dependencies
         run: flutter pub get
@@ -153,20 +220,11 @@ jobs:
             echo "L'APK produit ne peut pas joindre Firebase — build de vérification uniquement."
           fi
 
+      # Une seule ABI : ce job vérifie que le code natif et les plugins
+      # compilent, ce que les autres ABI ne testent pas davantage. L'APK n'est
+      # jamais téléchargé (les builds de recette se font en local).
       - name: Build APK (debug)
-        run: flutter build apk --debug
-
-      # L'APK de PR n'est jamais téléchargé (les builds de recette se font en
-      # local) et chaque exemplaire pèse 150 Mo : à cinq jours de rétention, le
-      # quota d'artefacts du compte saturait et tous les uploads de CI, tous
-      # dépôts confondus, échouaient. On ne garde que celui de main, deux jours.
-      - name: Upload APK artifact
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
-        with:
-          name: dony-app-debug.apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
-          retention-days: 2
+        run: flutter build apk --debug --target-platform android-arm64
 
   security-scan:
     name: Dependency Check
@@ -176,6 +234,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
 
       - name: Get dependencies
         run: flutter pub get
