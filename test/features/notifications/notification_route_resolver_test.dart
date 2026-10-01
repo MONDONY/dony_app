@@ -431,6 +431,36 @@ void main() {
       );
     });
 
+    test('RECIPIENT_INVITATION ouvre les demandes d\'expéditeurs', () {
+      expect(
+        resolveNotificationRoute('RECIPIENT_INVITATION', {}),
+        '/recipient-invitations',
+      );
+    });
+
+    test('RECIPIENT_INVITATION_ACCEPTED ouvre le carnet', () {
+      expect(
+        resolveNotificationRoute('RECIPIENT_INVITATION_ACCEPTED', {}),
+        '/profile/recipients',
+      );
+    });
+
+    test('RECIPIENT_PARCEL_ANNOUNCED ouvre le colis rattaché', () {
+      expect(
+        resolveNotificationRoute('RECIPIENT_PARCEL_ANNOUNCED', {
+          'bidId': bidId,
+        }),
+        '/receptions/$bidId',
+      );
+      // Sans bidId valide, pas de route forgée.
+      expect(
+        resolveNotificationRoute('RECIPIENT_PARCEL_ANNOUNCED', {
+          'bidId': '../admin',
+        }),
+        isNull,
+      );
+    });
+
     test('RECIPIENT_PARCEL_REASSIGNED ouvre l\'onglet Suivi', () {
       final route = resolveNotificationRoute('RECIPIENT_PARCEL_REASSIGNED', {
         'bidId': bidId,

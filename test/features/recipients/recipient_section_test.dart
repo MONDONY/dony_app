@@ -140,6 +140,64 @@ void main() {
     expect(find.text('Choisir un destinataire'), findsOneWidget);
   });
 
+  testWidgets('destinataire « Dans Yadony » choisi : mention sous le champ', (
+    tester,
+  ) async {
+    const linked = Recipient(
+      id: 'r-9',
+      fullName: 'Awa Diop',
+      phoneE164: '+221770000009',
+      city: 'Dakar',
+      country: 'SN',
+      linkedOnYadony: true,
+    );
+    final pickerBloc = MockRecipientBloc();
+    when(() => pickerBloc.state).thenReturn(
+      const RecipientState(
+        status: RecipientStatus.success,
+        recipients: [linked],
+      ),
+    );
+    getIt.registerFactory<RecipientBloc>(() => pickerBloc);
+
+    await tester.pumpWidget(buildSut());
+    await tester.pump();
+    expect(find.byKey(const Key('recipient-linked-on-yadony')), findsNothing);
+
+    await tester.tap(find.text('Choisir un destinataire'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirmer ce destinataire'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Dans Yadony : il suivra le colis dans l\'app.'),
+      findsOneWidget,
+    );
+
+    // Un autre numéro saisi à la main : la mention disparaît.
+    phoneCtrl.text = '+221770000010';
+    await tester.pump();
+    expect(find.byKey(const Key('recipient-linked-on-yadony')), findsNothing);
+  });
+
+  testWidgets('destinataire non lié : aucune mention', (tester) async {
+    final pickerBloc = MockRecipientBloc();
+    when(() => pickerBloc.state).thenReturn(
+      const RecipientState(status: RecipientStatus.success, recipients: [_r1]),
+    );
+    getIt.registerFactory<RecipientBloc>(() => pickerBloc);
+
+    await tester.pumpWidget(buildSut());
+    await tester.pump();
+    await tester.tap(find.text('Choisir un destinataire'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirmer ce destinataire'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Changer'), findsOneWidget);
+    expect(find.byKey(const Key('recipient-linked-on-yadony')), findsNothing);
+  });
+
   testWidgets(
     'editing city only does not clear a selected recipient (regression)',
     (tester) async {

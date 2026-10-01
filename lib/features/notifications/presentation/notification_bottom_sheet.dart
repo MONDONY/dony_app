@@ -662,6 +662,7 @@ class _NotificationIcon extends StatelessWidget {
       'DELIVERY_CONFIRMED' => (cs.success, 'package'),
       'RECIPIENT_PARCEL_DELIVERED' => (cs.success, 'circle-check'),
       'RECIPIENT_CONFIRMED' => (cs.success, 'badge-check'),
+      'RECIPIENT_INVITATION_ACCEPTED' => (cs.success, 'badge-check'),
 
       // Perdu
       'BID_REJECTED' => (cs.error, 'circle-x'),
@@ -684,6 +685,7 @@ class _NotificationIcon extends StatelessWidget {
       'DELIVERY_NOSHOW_REPORTED' => (cs.warning, 'user-x'),
       'CONFIRMATION_CODE_READY' => (cs.warning, 'qr-code'),
       'RECIPIENT_PARCEL_INCOMING' => (cs.warning, 'inbox'),
+      'RECIPIENT_INVITATION' => (cs.warning, 'user-plus'),
       'RECIPIENT_PARCEL_RESCHEDULED' => (cs.warning, 'calendar'),
       'RECIPIENT_DECLINED' => (cs.warning, 'user-x'),
       'RECIPIENT_CHANGED' => (cs.warning, 'refresh-cw'),
@@ -698,6 +700,7 @@ class _NotificationIcon extends StatelessWidget {
       'RECIPIENT_PARCEL_DEPARTED' => (cs.primary, 'plane-takeoff'),
       'RECIPIENT_PARCEL_ARRIVED' => (cs.primary, 'plane-landing'),
       'RECIPIENT_PICKUP_UPDATED' => (cs.primary, 'map-pin'),
+      'RECIPIENT_PARCEL_ANNOUNCED' => (cs.primary, 'inbox'),
       'negotiation_started' => (cs.info, 'arrow-left-right'),
       'negotiation_counter' => (cs.info, 'arrow-left-right'),
       'negotiation' => (cs.info, 'arrow-left-right'),

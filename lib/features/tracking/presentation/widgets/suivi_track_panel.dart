@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
 import 'package:dony/features/receptions/presentation/widgets/receptions_section.dart';
+import 'package:dony/features/recipients/presentation/widgets/recipient_invitations_banner.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
@@ -65,6 +66,9 @@ class SuiviTrackPanel extends StatelessWidget {
             ],
             const SizedBox(height: DonySpacing.xl),
             // Colis à recevoir : masquée tant qu'elle est vide.
+            // Demandes d'expéditeurs en attente (lot 4), en tête de la
+            // section.
+            const RecipientInvitationsBanner(),
             const ReceptionsSection(),
             _MyShipments(state: state),
           ],

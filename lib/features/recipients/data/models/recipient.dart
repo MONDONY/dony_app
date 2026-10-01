@@ -10,6 +10,11 @@ class Recipient {
   final String? notes;
   final bool isDefault;
 
+  /// Le titulaire du numéro a accepté l'invitation de l'expéditeur (lot 4) :
+  /// ses colis lui sont rattachés directement, sans confirmation. Absent sur
+  /// un back antérieur, donc `false`.
+  final bool linkedOnYadony;
+
   const Recipient({
     required this.id,
     required this.fullName,
@@ -21,6 +26,7 @@ class Recipient {
     required this.country,
     this.notes,
     this.isDefault = false,
+    this.linkedOnYadony = false,
   });
 
   factory Recipient.fromJson(Map<String, dynamic> json) => Recipient(
@@ -34,6 +40,7 @@ class Recipient {
     country: json['country'] as String,
     notes: json['notes'] as String?,
     isDefault: json['isDefault'] as bool? ?? false,
+    linkedOnYadony: json['linkedOnYadony'] as bool? ?? false,
   );
 
   Map<String, dynamic> toJson() => {
@@ -60,5 +67,6 @@ class Recipient {
     country: country,
     notes: notes,
     isDefault: isDefault ?? this.isDefault,
+    linkedOnYadony: linkedOnYadony,
   );
 }

@@ -492,6 +492,9 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `recipient_selected` | RecipientBloc._onPicked — destinataire confirmé dans la sheet (propriété `source`: saved/phone_contact/new) |
 | `recipient_created` | RecipientBloc._onCreated — destinataire ajouté au carnet |
 | `recipient_default_set` | RecipientBloc._onDefaultSet — destinataire marqué par défaut |
+| `recipient_invitation_sent` | InviteRecipientCubit.submit — invitation « destinataire Yadony » partie depuis la feuille « Ajouter un destinataire Yadony » du carnet (`POST /recipient-invitations`, 202 identique que le compte existe ou non), propriété `channel` : `phone`/`email`. Non émis sur un 429 (quota) ni un 422. Jamais le numéro ni l'e-mail |
+| `recipient_invitation_answered` | IncomingInvitationsCubit.accept()/decline() — l'invité répond à une demande depuis `/recipient-invitations`, réponse acceptée par le serveur (propriété `answer` : `accepted`/`declined`). Non émis sur le 409 `recipient-invitation-phone-required`. Jamais le prénom de l'expéditeur |
+| `recipient_invitation_revoked` | SentInvitationsCubit.revoke() (`side: inviter`, « Annuler » d'une invitation envoyée du carnet) · IncomingInvitationsCubit.revoke() (`side: invitee`, « Retirer » un expéditeur autorisé), après le 204 du `DELETE /recipient-invitations/{id}` |
 | `activites_hub_trips_opened` / `activites_hub_envois_opened` / `activites_hub_demandes_opened` / `activites_hub_negotiations_opened` | ActivitesHubScreen — tap sur une tuile d'activité du hub. `activites_hub_envois_opened` porte la tuile « Mes colis », qui ouvre `/envois` (MesColisScreen : envois en route + demandes publiées) |
 | `activites_hub_trip_create_opened` / `activites_hub_request_create_opened` | ActivitesHubScreen — CTA « Publier un trajet » / « Publier un colis » |
 | `activites_hub_stats_period_changed` | ActivitesHubScreen — changement de période des statistiques |

@@ -22,6 +22,9 @@ import 'package:dony/features/profile/data/repositories/help_center_repository.d
 import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/receptions/data/repositories/reception_repository.dart';
+import 'package:dony/features/recipients/bloc/incoming_invitations_cubit.dart';
+import 'package:dony/features/recipients/data/models/recipient_invitation.dart';
+import 'package:dony/features/recipients/data/repositories/recipient_invitation_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
@@ -63,6 +66,9 @@ class _MockBidRepo extends Mock implements BidRepository {}
 class _MockTrackingRepo extends Mock implements TrackingRepository {}
 
 class _MockReceptionRepo extends Mock implements ReceptionRepository {}
+
+class _MockInvitationRepo extends Mock
+    implements RecipientInvitationRepository {}
 
 class _MockOfflineSync extends Mock implements OfflineSyncService {}
 
@@ -152,6 +158,7 @@ void main() {
   late _MockBidRepo bidRepo;
   late _MockTrackingRepo trackingRepo;
   late _MockReceptionRepo receptionRepo;
+  late _MockInvitationRepo invitationRepo;
   late _MockAnalytics analytics;
   late _MockOfflineSync offlineSync;
   late _MockLocator locator;
@@ -230,6 +237,9 @@ void main() {
     receptionRepo = _MockReceptionRepo();
     // Personne ne reçoit de colis par défaut : la section reste masquée.
     when(() => receptionRepo.getReceptions()).thenAnswer((_) async => []);
+    // Aucune demande d'expéditeur par défaut : le bandeau reste masqué.
+    invitationRepo = _MockInvitationRepo();
+    when(() => invitationRepo.getIncoming()).thenAnswer((_) async => []);
     analytics = _MockAnalytics();
     offlineSync = _MockOfflineSync();
     locator = _MockLocator();
@@ -289,6 +299,9 @@ void main() {
       )
       ..registerFactory<ReceptionsCubit>(
         () => ReceptionsCubit(receptionRepo, analytics),
+      )
+      ..registerFactory<IncomingInvitationsCubit>(
+        () => IncomingInvitationsCubit(invitationRepo, analytics),
       )
       ..registerFactory<ScanHubCubit>(
         () => ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo),
@@ -378,6 +391,7 @@ void main() {
         stub('/tracking/offline-queue'),
         stub('/announcements/trips'),
         stub('/bids/:id'),
+        stub('/recipient-invitations'),
         stub('/receptions/:bidId'),
         stub(
           '/tracking/scan/qr-picker',
@@ -661,6 +675,77 @@ void main() {
       await tester.tap(find.byKey(const Key('reception-row-rec-1')));
       await settle(tester);
       expect(visited, contains('/receptions/:bidId'));
+    });
+
+    testWidgets("demandes d'expéditeurs : bandeau en tête, ouvre l'écran", (
+      tester,
+    ) async {
+      when(() => invitationRepo.getIncoming()).thenAnswer(
+        (_) async => const [
+          IncomingRecipientInvitation(
+            id: 'inv-1',
+            inviterFirstName: 'Awa',
+            status: 'PENDING',
+          ),
+          IncomingRecipientInvitation(
+            id: 'inv-2',
+            inviterFirstName: 'Moussa',
+            status: 'PENDING',
+          ),
+          IncomingRecipientInvitation(
+            id: 'inv-3',
+            inviterFirstName: 'Fatou',
+            status: 'ACCEPTED',
+          ),
+        ],
+      );
+      await pump(tester, roles: ['SENDER']);
+
+      final banner = find.byKey(const Key('recipient-invitations-banner'));
+      expect(banner, findsOneWidget);
+      expect(text("2 demandes d'expéditeurs"), findsOneWidget);
+      final shipments = find.textContaining('Mes envois', findRichText: true);
+      expect(
+        tester.getTopLeft(banner).dy,
+        lessThan(tester.getTopLeft(shipments).dy),
+      );
+
+      await tester.tap(banner);
+      await settle(tester);
+      expect(visited, contains('/recipient-invitations'));
+    });
+
+    testWidgets("demandes d'expéditeurs : aucune en attente → pas de bandeau", (
+      tester,
+    ) async {
+      when(() => invitationRepo.getIncoming()).thenAnswer(
+        (_) async => const [
+          IncomingRecipientInvitation(
+            id: 'inv-3',
+            inviterFirstName: 'Fatou',
+            status: 'ACCEPTED',
+          ),
+        ],
+      );
+      await pump(tester, roles: ['SENDER']);
+      expect(
+        find.byKey(const Key('recipient-invitations-banner')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('demandes d\'expéditeurs : ancien back → bandeau masqué', (
+      tester,
+    ) async {
+      when(
+        () => invitationRepo.getIncoming(),
+      ).thenThrow(const NotFoundException());
+      await pump(tester, roles: ['SENDER']);
+      expect(
+        find.byKey(const Key('recipient-invitations-banner')),
+        findsNothing,
+      );
+      expect(route('Paris', 'Dakar'), findsOneWidget);
     });
 
     testWidgets('colis à recevoir : ancien back → section masquée', (
@@ -2007,6 +2092,9 @@ void _unregisterAll() {
   if (getIt.isRegistered<SuiviCubit>()) getIt.unregister<SuiviCubit>();
   if (getIt.isRegistered<ReceptionsCubit>()) {
     getIt.unregister<ReceptionsCubit>();
+  }
+  if (getIt.isRegistered<IncomingInvitationsCubit>()) {
+    getIt.unregister<IncomingInvitationsCubit>();
   }
   if (getIt.isRegistered<ScanHubCubit>()) getIt.unregister<ScanHubCubit>();
   if (getIt.isRegistered<SuiviValidationCubit>()) {

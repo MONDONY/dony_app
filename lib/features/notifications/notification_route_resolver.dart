@@ -90,6 +90,12 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // Ancien destinataire : il n'a plus accès au colis, on l'emmène sur
     // l'onglet Suivi (sa liste « Colis à recevoir », à jour).
     'RECIPIENT_PARCEL_REASSIGNED' => '/tracking',
+    // Destinataire Yadony par invitation (lot 4). L'invité répond à la
+    // demande ; l'expéditeur retrouve l'entrée « Dans Yadony » de son carnet ;
+    // un colis d'un expéditeur autorisé est rattaché sans confirmation.
+    'RECIPIENT_INVITATION' => '/recipient-invitations',
+    'RECIPIENT_INVITATION_ACCEPTED' => '/profile/recipients',
+    'RECIPIENT_PARCEL_ANNOUNCED' when _isUuid(bidId) => '/receptions/$bidId',
 
     'KYC_VERIFIED' => '/kyc/status',
     'KYC_ACTION_REQUIRED' => '/kyc/verify',

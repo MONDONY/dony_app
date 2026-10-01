@@ -176,6 +176,10 @@ class _RecipientSectionState extends State<RecipientSection> {
                 _PickerButton(onTap: _openPicker),
               const SizedBox(height: DonySpacing.md),
               ...widget.children,
+              if (_selected?.linkedOnYadony ?? false) ...[
+                const SizedBox(height: DonySpacing.sm),
+                const _LinkedOnYadonyNote(),
+              ],
               if (_toggleVisible) ...[
                 const SizedBox(height: DonySpacing.sm),
                 SwitchListTile.adaptive(
@@ -192,6 +196,34 @@ class _RecipientSectionState extends State<RecipientSection> {
           );
         },
       ),
+    );
+  }
+}
+
+/// Le destinataire choisi a accepté l'invitation de l'expéditeur : le colis
+/// lui sera rattaché sans qu'il ait à confirmer.
+class _LinkedOnYadonyNote extends StatelessWidget {
+  const _LinkedOnYadonyNote();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      key: const Key('recipient-linked-on-yadony'),
+      children: [
+        DonyIcon('badge-check', size: 16, color: cs.primary),
+        const SizedBox(width: DonySpacing.xs),
+        Expanded(
+          child: Text(
+            context.l10n.recipientSectionLinkedOnYadony,
+            style: tt.bodySmall?.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

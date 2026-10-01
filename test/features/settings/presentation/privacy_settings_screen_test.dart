@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/l10n_test_helpers.dart';
@@ -155,6 +156,37 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Utilisateurs bloqués'), findsOneWidget);
+    });
+
+    testWidgets('« Expéditeurs autorisés » ouvre les demandes d\'expéditeurs', (
+      tester,
+    ) async {
+      when(() => mockBloc.state).thenReturn(const PrivacySettingsLoading());
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => BlocProvider<PrivacySettingsBloc>.value(
+              value: mockBloc,
+              child: const PrivacySettingsScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/recipient-invitations',
+            builder: (_, _) => const Scaffold(body: Text('demandes')),
+          ),
+        ],
+      );
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpAndSettle();
+
+      final tile = find.byKey(const Key('privacy-authorized-senders'));
+      expect(find.text('Expéditeurs autorisés'), findsOneWidget);
+      expect(find.text('Qui peut vous rattacher ses colis'), findsOneWidget);
+      await tester.ensureVisible(tile);
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      expect(find.text('demandes'), findsOneWidget);
     });
 
     testWidgets('Switch est off quand contactKycOnly == false', (tester) async {

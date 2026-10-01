@@ -4,7 +4,9 @@ import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/features/recipients/bloc/sent_invitations_cubit.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
+import 'package:dony/features/recipients/data/repositories/recipient_invitation_repository.dart';
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -77,33 +79,49 @@ const _r4Default = Recipient(
   isDefault: true,
 );
 
-Widget _wrap(RecipientBloc bloc) => BlocProvider<HelpCenterBloc>(
-  create: (_) => HelpCenterBloc(
-    HelpCenterRepository(
-      const _StaticHelpCenterSource(_emptyHelpConfigJson),
-      fallbackJsonLoader: () async => _emptyHelpConfigJson,
-    ),
-    makeDisabledAnalytics(MockAnalyticsBackend()),
-  )..add(const HelpCenterLoadRequested()),
-  child: BlocProvider<RecipientBloc>.value(
-    value: bloc,
-    child: MaterialApp.router(
-      routerConfig: GoRouter(
-        routes: [
-          GoRoute(path: '/', builder: (_, _) => const RecipientsScreen()),
-          GoRoute(
-            path: '/profile/recipients/new',
-            builder: (_, _) => const Scaffold(body: Text('New Recipient')),
-          ),
-          GoRoute(
-            path: '/profile/recipients/:id',
-            builder: (_, _) => const Scaffold(body: Text('Edit Recipient')),
+class _MockInvitationRepo extends Mock
+    implements RecipientInvitationRepository {}
+
+/// Invitations envoyées par défaut : rien encore chargé, l'entrée « Ajouter
+/// un destinataire Yadony » est visible et la section masquée.
+SentInvitationsCubit _defaultSent() => SentInvitationsCubit(
+  _MockInvitationRepo(),
+  makeDisabledAnalytics(MockAnalyticsBackend()),
+);
+
+Widget _wrap(RecipientBloc bloc, {SentInvitationsCubit? sent}) =>
+    BlocProvider<HelpCenterBloc>(
+      create: (_) => HelpCenterBloc(
+        HelpCenterRepository(
+          const _StaticHelpCenterSource(_emptyHelpConfigJson),
+          fallbackJsonLoader: () async => _emptyHelpConfigJson,
+        ),
+        makeDisabledAnalytics(MockAnalyticsBackend()),
+      )..add(const HelpCenterLoadRequested()),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<RecipientBloc>.value(value: bloc),
+          BlocProvider<SentInvitationsCubit>(
+            create: (_) => sent ?? _defaultSent(),
           ),
         ],
+        child: MaterialApp.router(
+          routerConfig: GoRouter(
+            routes: [
+              GoRoute(path: '/', builder: (_, _) => const RecipientsScreen()),
+              GoRoute(
+                path: '/profile/recipients/new',
+                builder: (_, _) => const Scaffold(body: Text('New Recipient')),
+              ),
+              GoRoute(
+                path: '/profile/recipients/:id',
+                builder: (_, _) => const Scaffold(body: Text('Edit Recipient')),
+              ),
+            ],
+          ),
+        ),
       ),
-    ),
-  ),
-);
+    );
 
 /// The kebab menu's `_RecipientAction` enum is private to the screen's
 /// library, so it can't be referenced from this test file as a generic
