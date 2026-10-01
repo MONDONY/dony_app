@@ -28,6 +28,7 @@ import 'package:dony/features/messaging/presentation/chat_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -967,8 +968,34 @@ class _TextContent extends StatelessWidget {
     required this.tt,
   });
 
+  // Appui long = copie du message entier, comme dans les messageries
+  // courantes : une adresse ou un numéro reçu se recolle ailleurs (Sentry
+  // FLUTTER-5F). Le `Text` seul n'offrait aucune sélection.
+  Future<void> _copy(BuildContext context) async {
+    final message = context.l10n.chatMessageCopied;
+    unawaited(HapticFeedback.mediumImpact());
+    await Clipboard.setData(ClipboardData(text: body));
+    if (!context.mounted) return;
+    DonySnackbar.show(
+      context,
+      message: message,
+      type: DonySnackbarType.success,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    return Semantics(
+      onLongPressHint: context.l10n.chatCopyMessageHint,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onLongPress: () => _copy(context),
+        child: _body(),
+      ),
+    );
+  }
+
+  Widget _body() {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.md,

@@ -5523,6 +5523,14 @@
   "@chatMessageDeleted": {
     "description": "Texte d'un message supprimé, dans la bulle système et dans _DeletedContent (chat_screen.dart, même texte aux deux endroits)."
   },
+  "chatMessageCopied": "Message copied",
+  "@chatMessageCopied": {
+    "description": "Toast après la copie d'un message par appui long sur sa bulle (chat_screen.dart _TextContent)."
+  },
+  "chatCopyMessageHint": "copy the message",
+  "@chatCopyMessageHint": {
+    "description": "Indice lu par le lecteur d'écran pour l'appui long sur une bulle de texte (chat_screen.dart _TextContent)."
+  },
   "chatLocationMessageLabel": "Shared location",
   "@chatLocationMessageLabel": {
     "description": "Libellé affiché dans la bulle d'un message de localisation (chat_screen.dart _LocationContent)."
