@@ -16882,5 +16882,46 @@
   "tripPublishOtherContentPrecisionRequired": "Tu as coché « Autre » : précise ce que tu acceptes avant de publier.",
   "@tripPublishOtherContentPrecisionRequired": {
     "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+  },
+  "profilePublicVerificationsSectionLabel": "VÉRIFICATIONS",
+  "@profilePublicVerificationsSectionLabel": {
+    "description": "Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)"
+  },
+  "profilePublicVerificationPhone": "Numéro de téléphone",
+  "@profilePublicVerificationPhone": {
+    "description": "Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)"
+  },
+  "profilePublicVerificationEmail": "Adresse e-mail",
+  "@profilePublicVerificationEmail": {
+    "description": "Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)"
+  },
+  "profilePublicVerificationIdentity": "Pièce d'identité",
+  "@profilePublicVerificationIdentity": {
+    "description": "Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)"
+  },
+  "profilePublicVerifiedValue": "Vérifié",
+  "@profilePublicVerifiedValue": {
+    "description": "Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)"
+  },
+  "profilePublicNotVerifiedValue": "Non vérifié",
+  "@profilePublicNotVerifiedValue": {
+    "description": "Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)"
+  },
+  "profilePublicResidesIn": "Réside en {country}",
+  "@profilePublicResidesIn": {
+    "description": "Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "privacyShowResidenceCountryLabel": "Afficher mon pays de résidence",
+  "@privacyShowResidenceCountryLabel": {
+    "description": "Réglages de confidentialité : afficher le pays de résidence sur le profil public (FLUTTER-4H)"
+  },
+  "privacyShowResidenceCountrySubtitle": "Visible sur votre profil public. Votre pays se modifie dans Préférences.",
+  "@privacyShowResidenceCountrySubtitle": {
+    "description": "Réglages de confidentialité : afficher le pays de résidence sur le profil public (FLUTTER-4H)"
   }
 }

@@ -124,6 +124,22 @@ class PrivacySettingsScreen extends StatelessWidget {
                               HidePhoneNumberToggled(v),
                             ),
                     ),
+                    const _SettingsRowDivider(),
+                    // Pays choisi à l'onboarding (Préférences), affiché sur le
+                    // profil public seulement si activé (FLUTTER-4H).
+                    _SettingsToggleRow(
+                      key: const Key('privacy-show-residence-country'),
+                      emoji: '🌍',
+                      emojiBackground: const Color(0xFFEAF1FF),
+                      title: l.privacyShowResidenceCountryLabel,
+                      subtitle: l.privacyShowResidenceCountrySubtitle,
+                      value: loaded?.showResidenceCountry ?? false,
+                      onChanged: isLoading
+                          ? null
+                          : (v) => context.read<PrivacySettingsBloc>().add(
+                              ShowResidenceCountryToggled(v),
+                            ),
+                    ),
                   ],
                 ),
                 // Rappel persistant : sans lui, l'utilisateur oublie qu'il a
@@ -272,6 +288,7 @@ class _UnverifiedExposureNotice extends StatelessWidget {
 /// partageaient jusqu'ici une mise en page recopiée à l'identique.
 class _SettingsToggleRow extends StatelessWidget {
   const _SettingsToggleRow({
+    super.key,
     required this.emoji,
     required this.emojiBackground,
     required this.title,

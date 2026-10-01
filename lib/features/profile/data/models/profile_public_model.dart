@@ -15,6 +15,9 @@ class ProfilePublicModel {
     this.responseDelayHours,
     this.bio,
     this.languages = const [],
+    this.phoneVerified = false,
+    this.emailVerified = false,
+    this.residenceCountry,
   });
 
   final String userId;
@@ -32,6 +35,15 @@ class ProfilePublicModel {
   final int? responseDelayHours;
   final String? bio;
   final List<String> languages;
+
+  /// Vérifications du compte (FLUTTER-4H). Booléens seulement : le serveur
+  /// n'envoie jamais le numéro ni l'e-mail.
+  final bool phoneVerified;
+  final bool emailVerified;
+
+  /// Code ISO2 du pays de résidence, présent seulement si l'utilisateur a
+  /// choisi de l'afficher (filtré côté serveur).
+  final String? residenceCountry;
 
   factory ProfilePublicModel.fromJson(Map<String, dynamic> json) {
     return ProfilePublicModel(
@@ -58,6 +70,9 @@ class ProfilePublicModel {
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      phoneVerified: json['phoneVerified'] as bool? ?? false,
+      emailVerified: json['emailVerified'] as bool? ?? false,
+      residenceCountry: json['residenceCountry'] as String?,
     );
   }
 }
