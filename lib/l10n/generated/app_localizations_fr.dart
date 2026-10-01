@@ -7283,6 +7283,57 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String recipientNotifyTitle(String name) {
+    return 'Prévenir $name';
+  }
+
+  @override
+  String get recipientNotifyFallbackName => 'le destinataire';
+
+  @override
+  String recipientNotifyBodyLink(String name) {
+    return 'Envoyez le lien de suivi sur WhatsApp : $name suivra le colis en temps réel, sans créer de compte.';
+  }
+
+  @override
+  String recipientNotifyBodyCode(String name) {
+    return 'Le code de retrait est prêt. Envoyez-le à $name : le voyageur le demandera à la remise du colis.';
+  }
+
+  @override
+  String get recipientNotifyButtonLink => 'Prévenir sur WhatsApp';
+
+  @override
+  String get recipientNotifyButtonCode => 'Envoyer le code sur WhatsApp';
+
+  @override
+  String recipientNotifyGreeting(String name) {
+    return 'Bonjour $name,';
+  }
+
+  @override
+  String get recipientNotifyGreetingAnonymous => 'Bonjour,';
+
+  @override
+  String recipientNotifyRoute(String from, String to) {
+    return ' ($from → $to)';
+  }
+
+  @override
+  String recipientNotifyMessageLink(String route, String url) {
+    return 'je vous envoie un colis avec Yadony$route. Suivez son trajet en temps réel : $url';
+  }
+
+  @override
+  String recipientNotifyMessageCode(String route, String code, String url) {
+    return 'pour votre colis Yadony$route, le voyageur vous demandera ce code à la remise : $code\nSuivi en temps réel : $url';
+  }
+
+  @override
+  String get recipientNotifyMessageInvite =>
+      'Téléchargez Yadony pour suivre vos colis et en envoyer à votre tour : https://yadony.com';
+
+  @override
   String bidDetailTrackingShareSubject(String number) {
     return 'Suivi de colis Yadony · $number';
   }

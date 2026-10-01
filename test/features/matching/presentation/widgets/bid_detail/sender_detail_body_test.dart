@@ -11,6 +11,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
@@ -168,6 +169,7 @@ void main() {
       expect(find.byType(ColisDestinataireCard), findsOneWidget);
       expect(find.byType(PaiementCard), findsOneWidget);
       expect(find.byType(QuickActionsRow), findsOneWidget);
+      expect(find.byType(PrevenirDestinataireCard), findsOneWidget);
       expect(find.byType(DetailsAccordion), findsOneWidget);
     },
   );
@@ -186,6 +188,7 @@ void main() {
     expect(_contactIcon(VoyageurContactCard, 'message-circle'), findsNothing);
     expect(_contactIcon(VoyageurContactCard, 'phone'), findsNothing);
     expect(find.byType(QuickActionsRow), findsNothing);
+    expect(find.byType(PrevenirDestinataireCard), findsNothing);
     expect(find.byType(ColisDestinataireCard), findsOneWidget);
     // L'expéditeur voit toujours le téléphone du destinataire.
     expect(find.text('Téléphone'), findsOneWidget);

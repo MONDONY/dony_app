@@ -7385,6 +7385,101 @@
       }
     }
   },
+  "recipientNotifyTitle": "Prévenir {name}",
+  "@recipientNotifyTitle": {
+    "description": "Titre de l'encart Prévenir le destinataire (prevenir_destinataire_card.dart)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyFallbackName": "le destinataire",
+  "@recipientNotifyFallbackName": {
+    "description": "Nom générique quand le destinataire n'a pas de nom"
+  },
+  "recipientNotifyBodyLink": "Envoyez le lien de suivi sur WhatsApp : {name} suivra le colis en temps réel, sans créer de compte.",
+  "@recipientNotifyBodyLink": {
+    "description": "Texte de l'encart avant le code de retrait",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyBodyCode": "Le code de retrait est prêt. Envoyez-le à {name} : le voyageur le demandera à la remise du colis.",
+  "@recipientNotifyBodyCode": {
+    "description": "Texte de l'encart une fois le code de retrait généré",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyButtonLink": "Prévenir sur WhatsApp",
+  "@recipientNotifyButtonLink": {
+    "description": "Bouton : ouvre WhatsApp avec le lien de suivi"
+  },
+  "recipientNotifyButtonCode": "Envoyer le code sur WhatsApp",
+  "@recipientNotifyButtonCode": {
+    "description": "Bouton : ouvre WhatsApp avec le code de retrait"
+  },
+  "recipientNotifyGreeting": "Bonjour {name},",
+  "@recipientNotifyGreeting": {
+    "description": "Salutation du message WhatsApp au destinataire",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyGreetingAnonymous": "Bonjour,",
+  "@recipientNotifyGreetingAnonymous": {
+    "description": "Salutation sans nom"
+  },
+  "recipientNotifyRoute": " ({from} → {to})",
+  "@recipientNotifyRoute": {
+    "description": "Trajet inséré dans le message, espace initial voulu",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyMessageLink": "je vous envoie un colis avec Yadony{route}. Suivez son trajet en temps réel : {url}",
+  "@recipientNotifyMessageLink": {
+    "description": "Message WhatsApp : lien de suivi",
+    "placeholders": {
+      "route": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyMessageCode": "pour votre colis Yadony{route}, le voyageur vous demandera ce code à la remise : {code}\nSuivi en temps réel : {url}",
+  "@recipientNotifyMessageCode": {
+    "description": "Message WhatsApp : code de retrait",
+    "placeholders": {
+      "route": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyMessageInvite": "Téléchargez Yadony pour suivre vos colis et en envoyer à votre tour : https://yadony.com",
+  "@recipientNotifyMessageInvite": {
+    "description": "Invitation à installer l'app, fin du message WhatsApp"
+  },
   "bidDetailTrackingShareSubject": "Suivi de colis Yadony · {number}",
   "@bidDetailTrackingShareSubject": {
     "description": "Sujet du partage natif du lien de suivi (quick_actions_row.dart)",

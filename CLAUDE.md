@@ -454,6 +454,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `pending_requests_opened` | PendingBidsScreen — ouverture de l'écran « À traiter » depuis le bouton de la liste des demandes (propriété `count`) |
 | `traveler_call_initiated` | Tap 📞 sur la carte voyageur (propriété `status`) |
 | `tracking_link_shared` | Partage de l'URL de suivi (app bar ou carte) |
+| `recipient_notified` | PrevenirDestinataireCard._notify — l'expéditeur prévient son destinataire depuis l'encart « Prévenir … » du détail d'envoi : WhatsApp pré-rempli (`wa.me`), repli sur la feuille de partage si le numéro n'est pas international ou si WhatsApp ne s'ouvre pas (propriétés `with_code` : le code de retrait est dans le message, `channel` : `whatsapp`/`share`, `status`). Jamais le numéro ni le nom du destinataire |
 | `screen_feedback_submitted` | Envoi du rapport 🐞 DonyFeedbackButton (propriétés `route`, `attachment_count` : captures jointes par le testeur, jamais leur contenu) |
 | `profile_photo_updated` | AuthBloc._onAvatarUploadRequested() — upload photo de profil réussi |
 | `profile_about_updated` | AuthBloc._onUpdateProfileRequested() — bio « À propos » renseignée |

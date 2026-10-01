@@ -12123,6 +12123,78 @@ abstract class AppLocalizations {
   /// **'Suivez votre colis Yadony en temps réel :\n{url}'**
   String bidDetailShareTrackingMessage(String url);
 
+  /// Titre de l'encart Prévenir le destinataire (prevenir_destinataire_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prévenir {name}'**
+  String recipientNotifyTitle(String name);
+
+  /// Nom générique quand le destinataire n'a pas de nom
+  ///
+  /// In fr, this message translates to:
+  /// **'le destinataire'**
+  String get recipientNotifyFallbackName;
+
+  /// Texte de l'encart avant le code de retrait
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyez le lien de suivi sur WhatsApp : {name} suivra le colis en temps réel, sans créer de compte.'**
+  String recipientNotifyBodyLink(String name);
+
+  /// Texte de l'encart une fois le code de retrait généré
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code de retrait est prêt. Envoyez-le à {name} : le voyageur le demandera à la remise du colis.'**
+  String recipientNotifyBodyCode(String name);
+
+  /// Bouton : ouvre WhatsApp avec le lien de suivi
+  ///
+  /// In fr, this message translates to:
+  /// **'Prévenir sur WhatsApp'**
+  String get recipientNotifyButtonLink;
+
+  /// Bouton : ouvre WhatsApp avec le code de retrait
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer le code sur WhatsApp'**
+  String get recipientNotifyButtonCode;
+
+  /// Salutation du message WhatsApp au destinataire
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonjour {name},'**
+  String recipientNotifyGreeting(String name);
+
+  /// Salutation sans nom
+  ///
+  /// In fr, this message translates to:
+  /// **'Bonjour,'**
+  String get recipientNotifyGreetingAnonymous;
+
+  /// Trajet inséré dans le message, espace initial voulu
+  ///
+  /// In fr, this message translates to:
+  /// **' ({from} → {to})'**
+  String recipientNotifyRoute(String from, String to);
+
+  /// Message WhatsApp : lien de suivi
+  ///
+  /// In fr, this message translates to:
+  /// **'je vous envoie un colis avec Yadony{route}. Suivez son trajet en temps réel : {url}'**
+  String recipientNotifyMessageLink(String route, String url);
+
+  /// Message WhatsApp : code de retrait
+  ///
+  /// In fr, this message translates to:
+  /// **'pour votre colis Yadony{route}, le voyageur vous demandera ce code à la remise : {code}\nSuivi en temps réel : {url}'**
+  String recipientNotifyMessageCode(String route, String code, String url);
+
+  /// Invitation à installer l'app, fin du message WhatsApp
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléchargez Yadony pour suivre vos colis et en envoyer à votre tour : https://yadony.com'**
+  String get recipientNotifyMessageInvite;
+
   /// Sujet du partage natif du lien de suivi (quick_actions_row.dart)
   ///
   /// In fr, this message translates to:
