@@ -116,9 +116,7 @@ void main() {
         isTrue,
       );
       expect(
-        PrevenirDestinataireCard.withCode(
-          _bid(confirmationCode: '1'),
-        ),
+        PrevenirDestinataireCard.withCode(_bid(confirmationCode: '1')),
         isFalse,
       );
       expect(
