@@ -25,6 +25,7 @@ import 'package:dony/features/messaging/data/chat_message_validator.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:dony/features/messaging/presentation/chat_labels.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -261,42 +262,54 @@ class _ChatScreenState extends State<ChatScreen> {
         centerTitle: false,
         titleSpacing: 0,
         leading: const DonyAppBarBackButton(),
-        title: Row(
-          children: [
-            DonyAvatar(
-              name: participant.name.isNotEmpty ? participant.name : '?',
-              imageUrl: participant.avatarUrl,
-              size: DonyAvatarSize.sm,
-              verified: participant.kycVerified,
-            ),
-            const SizedBox(width: DonySpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    displayName,
-                    style: tt.titleLarge?.copyWith(
-                      color: cs.onSurface,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (participant.role != null && participant.role!.isNotEmpty)
+        // Avatar + nom : ouvrent le profil public du correspondant (Sentry
+        // FLUTTER-5E). Inactif si son compte est supprimé (readOnly) : le
+        // profil n'existe plus.
+        title: _ParticipantHeader(
+          enabled: participant.id.isNotEmpty && !conversation.readOnly,
+          semanticsLabel: l.chatOpenParticipantProfileSemantics(displayName),
+          onTap: () => _navigate(
+            '/profile/public',
+            ProfilePublicArgs(userId: participant.id),
+          ),
+          child: Row(
+            children: [
+              DonyAvatar(
+                name: participant.name.isNotEmpty ? participant.name : '?',
+                imageUrl: participant.avatarUrl,
+                size: DonyAvatarSize.sm,
+                verified: participant.kycVerified,
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                     Text(
-                      participant.role!,
-                      style: tt.labelSmall?.copyWith(
-                        color: cs.onSurfaceVariant,
+                      displayName,
+                      style: tt.titleLarge?.copyWith(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.w700,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                ],
+                    if (participant.role != null &&
+                        participant.role!.isNotEmpty)
+                      Text(
+                        participant.role!,
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           if (canCall)
@@ -590,6 +603,39 @@ class _ChatScreenState extends State<ChatScreen> {
 }
 
 // ── Read-only info banner ──────────────────────────────────────────────────────
+
+class _ParticipantHeader extends StatelessWidget {
+  final bool enabled;
+  final String semanticsLabel;
+  final VoidCallback onTap;
+  final Widget child;
+  const _ParticipantHeader({
+    required this.enabled,
+    required this.semanticsLabel,
+    required this.onTap,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+    return Semantics(
+      button: true,
+      container: true,
+      excludeSemantics: true,
+      label: semanticsLabel,
+      child: InkWell(
+        key: const Key('chat-participant-header'),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
 
 class _ReadOnlyBanner extends StatelessWidget {
   final ColorScheme cs;

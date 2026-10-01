@@ -16,6 +16,7 @@ import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:dony/features/messaging/presentation/chat_screen.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:dony/features/settings/data/models/blocked_user_model.dart';
 import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
@@ -409,6 +410,68 @@ void main() {
         expect(find.text('Bloquer Modibo Coulibaly'), findsNothing);
       },
     );
+
+    // Sentry FLUTTER-5E : l'en-tête (avatar + nom) ouvre le profil public.
+    testWidgets('toucher l en-tête ouvre le profil public du correspondant', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      String? pushedPath;
+      Object? pushedExtra;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: BlocProvider<ChatBloc>.value(
+            value: bloc,
+            child: ChatScreen(
+              conversation: _conversation,
+              onNavigate: (path, extra) {
+                pushedPath = path;
+                pushedExtra = extra;
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(
+        find.bySemanticsLabel('Voir le profil de Modibo Coulibaly'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('chat-participant-header')));
+      await tester.pump();
+
+      expect(pushedPath, '/profile/public');
+      expect(pushedExtra, isA<ProfilePublicArgs>());
+      expect((pushedExtra! as ProfilePublicArgs).userId, 'uid-1');
+    });
+
+    testWidgets('compte supprimé (readOnly) : en-tête non cliquable', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: BlocProvider<ChatBloc>.value(
+            value: bloc,
+            child: const ChatScreen(
+              conversation: ConversationModel(
+                id: 'conv-1',
+                bidId: 'bid-1',
+                firestoreConversationId: 'conv_bid-1',
+                otherParticipant: _participant,
+                readOnly: true,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(const Key('chat-participant-header')), findsNothing);
+    });
 
     testWidgets('signaler ouvre le formulaire avec la cible utilisateur', (
       tester,
