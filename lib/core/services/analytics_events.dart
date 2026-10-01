@@ -393,6 +393,10 @@ abstract final class AnalyticsEvents {
   static const recipientsNotifyOpened = 'recipients_notify_opened';
   static const recipientContacted = 'recipient_contacted';
 
+  // Conversation séparée voyageur ↔ destinataire (lot 3C). Seulement le côté
+  // qui l'ouvre (`role` : traveler/recipient), jamais d'identité.
+  static const recipientConversationOpened = 'recipient_conversation_opened';
+
   // Colis à recevoir (lot 2 destinataire). Jamais le nom, le numéro ni le
   // code : seulement des statuts et des comptes.
   static const receptionsSectionViewed = 'receptions_section_viewed';

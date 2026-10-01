@@ -11,7 +11,8 @@ class ParticipantModel {
   /// `GET /bids/{bidId}/contact`.
   final bool phoneAvailable;
 
-  /// Rôle affiché en sous-titre du header ('Voyageur' | 'Expéditeur').
+  /// Rôle affiché en sous-titre du header, tel que servi par le back
+  /// ('Voyageur' | 'Expéditeur' | 'Destinataire').
   final String? role;
 
   final bool kycVerified;
@@ -34,6 +35,15 @@ class ParticipantModel {
         role: json['role'] as String?,
         kycVerified: json['kycVerified'] as bool? ?? false,
       );
+
+  /// L'interlocuteur est le destinataire du colis : le back sert
+  /// « Destinataire » (en dur, jamais traduit) au voyageur d'une conversation
+  /// [ConversationModel.kindRecipientTraveler]. « Recipient » est aussi lu
+  /// au cas où le back localiserait un jour ce libellé.
+  bool get isRecipientRole {
+    final value = role?.trim().toLowerCase();
+    return value == 'destinataire' || value == 'recipient';
+  }
 }
 
 class ConversationModel {
@@ -57,6 +67,23 @@ class ConversationModel {
   // True when the current user deleted their own copy (restorable)
   final bool deletedBySelf;
 
+  /// Type de conversation : [kindSenderTraveler] (expéditeur ↔ voyageur, une
+  /// par bid) ou [kindRecipientTraveler] (voyageur ↔ destinataire rattaché,
+  /// lot 3C). Un back antérieur ne sert pas le champ : c'est alors une
+  /// conversation expéditeur ↔ voyageur.
+  final String kind;
+
+  static const kindSenderTraveler = 'SENDER_TRAVELER';
+  static const kindRecipientTraveler = 'RECIPIENT_TRAVELER';
+
+  /// Côté de l'utilisateur courant dans une conversation
+  /// [kindRecipientTraveler] : `TRAVELER` ou `RECIPIENT`, `null` pour une
+  /// conversation expéditeur ↔ voyageur ou sur un back antérieur.
+  final String? viewerRole;
+
+  static const viewerRoleTraveler = 'TRAVELER';
+  static const viewerRoleRecipient = 'RECIPIENT';
+
   const ConversationModel({
     required this.id,
     required this.bidId,
@@ -73,7 +100,27 @@ class ConversationModel {
     this.bidStatus,
     this.readOnly = false,
     this.deletedBySelf = false,
+    this.kind = kindSenderTraveler,
+    this.viewerRole,
   });
+
+  /// Conversation séparée voyageur ↔ destinataire : l'expéditeur n'y est pas,
+  /// le numéro n'y est jamais révélé.
+  bool get isRecipientConversation => kind == kindRecipientTraveler;
+
+  /// L'utilisateur courant est le destinataire de cette conversation
+  /// voyageur ↔ destinataire. [viewerRole] fait foi quand le back le sert.
+  /// Sinon (back antérieur), on le déduit du rôle de l'autre participant :
+  /// un interlocuteur « Destinataire » signifie que l'on est le voyageur ;
+  /// tout autre rôle (« Voyageur », ou absent), que l'on est le destinataire.
+  bool get viewerIsRecipient {
+    if (!isRecipientConversation) return false;
+    return switch (viewerRole) {
+      viewerRoleRecipient => true,
+      viewerRoleTraveler => false,
+      _ => !otherParticipant.isRecipientRole,
+    };
+  }
 
   /// Formatted trip label for display, e.g. "Paris → Dakar · 12 jan · 5 kg"
   String? get tripLabel {
@@ -109,6 +156,8 @@ class ConversationModel {
     tripWeightKg: tripWeightKg,
     bidStatus: bidStatus,
     readOnly: readOnly ?? this.readOnly,
+    kind: kind,
+    viewerRole: viewerRole,
   );
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) =>
@@ -134,5 +183,14 @@ class ConversationModel {
         bidStatus: json['bidStatus'] as String?,
         readOnly: json['readOnly'] as bool? ?? false,
         deletedBySelf: json['deletedBySelf'] as bool? ?? false,
+        kind: switch (json['kind']) {
+          final String value when value.trim().isNotEmpty => value.trim(),
+          _ => kindSenderTraveler,
+        },
+        viewerRole: switch (json['viewerRole']) {
+          final String value when value.trim().isNotEmpty =>
+            value.trim().toUpperCase(),
+          _ => null,
+        },
       );
 }

@@ -58,6 +58,21 @@ class Reception {
   bool get isPending => linkStatus == pending;
   bool get isConfirmed => linkStatus == confirmed;
 
+  /// Statuts d'un colis encore en cours : le destinataire peut écrire au
+  /// voyageur. Au-delà (`COMPLETED`), la conversation n'est plus qu'en
+  /// lecture et aucune nouvelle entrée n'est proposée.
+  static const activeBidStatuses = <String>{
+    'ACCEPTED',
+    'HANDED_OVER',
+    'IN_TRANSIT',
+    'ARRIVED',
+  };
+
+  /// Le destinataire peut ouvrir la conversation avec le voyageur (lot 3C) :
+  /// lien `CONFIRMED` et colis non terminé.
+  bool get canMessageTraveler =>
+      isConfirmed && activeBidStatuses.contains(bidStatus);
+
   factory Reception.fromJson(Map<String, dynamic> json) {
     String? text(String key) {
       final value = json[key];

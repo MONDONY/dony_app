@@ -618,4 +618,144 @@ void main() {
       },
     );
   });
+
+  group('conversation voyageur ↔ destinataire (lot 3C)', () {
+    setUp(() => setSmsAuthEnabled(true));
+    tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
+
+    ConversationModel recipientConversation(
+      String role, {
+      String? viewerRole,
+    }) => ConversationModel(
+      id: 'conv-r',
+      bidId: 'bid-r',
+      firestoreConversationId: 'rconv_bid-r',
+      otherParticipant: ParticipantModel(
+        id: 'uid-r',
+        name: 'Awa Diallo',
+        role: role,
+        // Même si un back le laissait passer, aucun appel dans ce type.
+        phoneAvailable: true,
+      ),
+      tripOrigin: 'Paris',
+      tripDestination: 'Dakar',
+      kind: ConversationModel.kindRecipientTraveler,
+      viewerRole: viewerRole,
+    );
+
+    Future<List<String>> pumpRecipient(
+      WidgetTester tester,
+      ConversationModel conversation,
+    ) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      final reveal = _MockContactRevealBloc();
+      when(() => reveal.state).thenReturn(const ContactRevealInitial());
+      final routes = <String>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: MultiBlocProvider(
+            providers: [
+              BlocProvider<ChatBloc>.value(value: bloc),
+              BlocProvider<ContactRevealBloc>.value(value: reveal),
+            ],
+            child: ChatScreen(
+              conversation: conversation,
+              onNavigate: (path, _) => routes.add(path),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      return routes;
+    }
+
+    testWidgets('destinataire : rôle servi, pas d\'appel, bandeau vers '
+        '/receptions', (tester) async {
+      final routes = await pumpRecipient(
+        tester,
+        recipientConversation('Voyageur'),
+      );
+
+      expect(find.text('Voyageur'), findsOneWidget);
+      expect(find.byTooltip('Appeler'), findsNothing);
+      expect(find.text('Colis à recevoir'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('chat-trip-banner')));
+      await tester.pump();
+
+      expect(routes, ['/receptions/bid-r']);
+    });
+
+    testWidgets('voyageur : bandeau vers /bids, toujours sans appel', (
+      tester,
+    ) async {
+      final routes = await pumpRecipient(
+        tester,
+        recipientConversation('Destinataire'),
+      );
+
+      expect(find.text('Destinataire'), findsOneWidget);
+      expect(find.byTooltip('Appeler'), findsNothing);
+      expect(find.text('Trajet lié'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('chat-trip-banner')));
+      await tester.pump();
+
+      expect(routes, ['/bids/bid-r']);
+    });
+
+    testWidgets('viewerRole RECIPIENT prime sur le rôle servi', (tester) async {
+      final routes = await pumpRecipient(
+        tester,
+        recipientConversation('Destinataire', viewerRole: 'RECIPIENT'),
+      );
+
+      expect(find.text('Colis à recevoir'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('chat-trip-banner')));
+      await tester.pump();
+
+      expect(routes, ['/receptions/bid-r']);
+    });
+
+    testWidgets('viewerRole TRAVELER prime sur le rôle servi', (tester) async {
+      final routes = await pumpRecipient(
+        tester,
+        recipientConversation('Voyageur', viewerRole: 'TRAVELER'),
+      );
+
+      expect(find.text('Trajet lié'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('chat-trip-banner')));
+      await tester.pump();
+
+      expect(routes, ['/bids/bid-r']);
+    });
+
+    testWidgets('fil expéditeur ↔ voyageur : appel et bandeau inchangés', (
+      tester,
+    ) async {
+      final routes = await pumpRecipient(
+        tester,
+        const ConversationModel(
+          id: 'conv-s',
+          bidId: 'bid-s',
+          firestoreConversationId: 'conv_bid-s',
+          otherParticipant: ParticipantModel(
+            id: 'uid-s',
+            name: 'Moussa',
+            role: 'Voyageur',
+            phoneAvailable: true,
+          ),
+          tripOrigin: 'Paris',
+          tripDestination: 'Dakar',
+        ),
+      );
+
+      expect(find.byTooltip('Appeler'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('chat-trip-banner')));
+      await tester.pump();
+
+      expect(routes, ['/bids/bid-s']);
+    });
+  });
 }

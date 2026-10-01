@@ -17772,5 +17772,29 @@
   "notifyRecipientsFallbackName": "Destinataire",
   "@notifyRecipientsFallbackName": {
     "description": "Feuille « Prévenir les destinataires » : destinataire sans nom saisi."
+  },
+  "travelerContactInAppMessage": "Message",
+  "@travelerContactInAppMessage": {
+    "description": "Bouton : écrire au destinataire dans la messagerie Yadony, visible quand il suit le colis dans l'app (recipient_contact.dart, lot 3C)."
+  },
+  "receptionMessageTraveler": "Écrire au voyageur",
+  "@receptionMessageTraveler": {
+    "description": "Écran du colis à recevoir : ouvre la conversation du destinataire avec le voyageur, tant que le colis est en cours (reception_detail_screen.dart, lot 3C)."
+  },
+  "recipientConversationOpenError": "Impossible d'ouvrir la conversation pour le moment. Réessayez plus tard.",
+  "@recipientConversationOpenError": {
+    "description": "Snackbar : la conversation voyageur ↔ destinataire n'a pas pu s'ouvrir (refus, panne ou serveur pas à jour)."
+  },
+  "chatLinkedParcelLabel": "Colis à recevoir",
+  "@chatLinkedParcelLabel": {
+    "description": "Chat voyageur ↔ destinataire, vu par le destinataire : libellé du bandeau qui mène à l'écran du colis."
+  },
+  "conversationKindRecipientFallback": "Destinataire",
+  "@conversationKindRecipientFallback": {
+    "description": "Liste des conversations : rôle de l'interlocuteur d'une conversation voyageur ↔ destinataire quand le serveur ne le donne pas (vu par le voyageur)."
+  },
+  "conversationKindTravelerFallback": "Voyageur",
+  "@conversationKindTravelerFallback": {
+    "description": "Liste des conversations : rôle de l'interlocuteur d'une conversation voyageur ↔ destinataire quand le serveur ne le donne pas (vu par le destinataire)."
   }
 }

@@ -167,4 +167,42 @@ void main() {
       expect(sorted.map((c) => c.id), ['b', 'a']);
     });
   });
+
+  group('getRecipientConversation', () {
+    test('appelle /conversations/bid/{bidId}/recipient', () async {
+      when(() => dio.get('/conversations/bid/bid-9/recipient')).thenAnswer(
+        (_) async => _ok({
+          ..._conversationJson('r1'),
+          'kind': 'RECIPIENT_TRAVELER',
+        }, '/conversations/bid/bid-9/recipient'),
+      );
+
+      final result = await repository.getRecipientConversation('bid-9');
+
+      expect(result.id, 'r1');
+      expect(result.isRecipientConversation, isTrue);
+      verify(() => dio.get('/conversations/bid/bid-9/recipient')).called(1);
+    });
+
+    test('propage l\'erreur du serveur (403/404)', () async {
+      when(() => dio.get('/conversations/bid/bid-9/recipient')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(
+            path: '/conversations/bid/bid-9/recipient',
+          ),
+          response: Response(
+            statusCode: 403,
+            requestOptions: RequestOptions(
+              path: '/conversations/bid/bid-9/recipient',
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        () => repository.getRecipientConversation('bid-9'),
+        throwsA(isA<DioException>()),
+      );
+    });
+  });
 }

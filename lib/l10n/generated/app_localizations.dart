@@ -25286,6 +25286,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Destinataire'**
   String get notifyRecipientsFallbackName;
+
+  /// Bouton : écrire au destinataire dans la messagerie Yadony, visible quand il suit le colis dans l'app (recipient_contact.dart, lot 3C).
+  ///
+  /// In fr, this message translates to:
+  /// **'Message'**
+  String get travelerContactInAppMessage;
+
+  /// Écran du colis à recevoir : ouvre la conversation du destinataire avec le voyageur, tant que le colis est en cours (reception_detail_screen.dart, lot 3C).
+  ///
+  /// In fr, this message translates to:
+  /// **'Écrire au voyageur'**
+  String get receptionMessageTraveler;
+
+  /// Snackbar : la conversation voyageur ↔ destinataire n'a pas pu s'ouvrir (refus, panne ou serveur pas à jour).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'ouvrir la conversation pour le moment. Réessayez plus tard.'**
+  String get recipientConversationOpenError;
+
+  /// Chat voyageur ↔ destinataire, vu par le destinataire : libellé du bandeau qui mène à l'écran du colis.
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis à recevoir'**
+  String get chatLinkedParcelLabel;
+
+  /// Liste des conversations : rôle de l'interlocuteur d'une conversation voyageur ↔ destinataire quand le serveur ne le donne pas (vu par le voyageur).
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire'**
+  String get conversationKindRecipientFallback;
+
+  /// Liste des conversations : rôle de l'interlocuteur d'une conversation voyageur ↔ destinataire quand le serveur ne le donne pas (vu par le destinataire).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur'**
+  String get conversationKindTravelerFallback;
 }
 
 class _AppLocalizationsDelegate

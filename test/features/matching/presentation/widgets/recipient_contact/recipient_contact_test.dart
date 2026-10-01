@@ -1,3 +1,4 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -5,6 +6,9 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/contact_links.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/recipient_contact.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,6 +19,27 @@ import 'package:url_launcher_platform_interface/url_launcher_platform_interface.
 import '../../../../../helpers/recording_url_launcher.dart';
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
+
+class _MockConversationOpenBloc
+    extends MockBloc<ConversationOpenEvent, ConversationOpenState>
+    implements ConversationOpenBloc {}
+
+/// Le bouton « Message » (destinataire CONFIRMED) porte son propre
+/// [ConversationOpenBloc], résolu par GetIt.
+_MockConversationOpenBloc _registerConversationOpenBloc() {
+  final bloc = _MockConversationOpenBloc();
+  when(() => bloc.state).thenReturn(const ConversationOpenInitial());
+  if (getIt.isRegistered<ConversationOpenBloc>()) {
+    getIt.unregister<ConversationOpenBloc>();
+  }
+  getIt.registerFactory<ConversationOpenBloc>(() => bloc);
+  addTearDown(() {
+    if (getIt.isRegistered<ConversationOpenBloc>()) {
+      getIt.unregister<ConversationOpenBloc>();
+    }
+  });
+  return bloc;
+}
 
 BidModel _bid({
   String status = 'ARRIVED',
@@ -176,6 +201,7 @@ void main() {
       platform = RecordingUrlLauncher();
       clipboard = null;
       DonySnackbar.clearDedup();
+      _registerConversationOpenBloc();
     });
 
     tearDown(() {
@@ -337,6 +363,52 @@ void main() {
       await tester.pumpAndSettle();
       expect(injected.urls, hasLength(1));
       expect(platform.urls, isEmpty);
+    });
+  });
+
+  group('bouton Message (lot 3C)', () {
+    setUpAll(() {
+      registerFallbackValue(const ConversationOpenRequested('x'));
+    });
+
+    Future<void> pumpActions(WidgetTester tester, BidModel bid) =>
+        tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light(),
+            home: Scaffold(body: RecipientContactActions(bid: bid)),
+          ),
+        );
+
+    testWidgets('absent tant que le destinataire n\'a pas confirmé', (
+      tester,
+    ) async {
+      _registerConversationOpenBloc();
+      await pumpActions(tester, _bid());
+      expect(find.text('Message'), findsNothing);
+
+      await pumpActions(tester, _bid(recipientAppStatus: 'PENDING'));
+      expect(find.text('Message'), findsNothing);
+      expect(recipientReachableInApp(_bid()), isFalse);
+    });
+
+    testWidgets('CONFIRMED : ouvre la conversation côté voyageur', (
+      tester,
+    ) async {
+      final bloc = _registerConversationOpenBloc();
+      await pumpActions(tester, _bid(recipientAppStatus: 'CONFIRMED'));
+
+      expect(find.text('Message'), findsOneWidget);
+      expect(find.text('WhatsApp'), findsOneWidget);
+      await tester.tap(
+        find.byKey(const Key('recipient-contact-message-bid-1')),
+      );
+      await tester.pump();
+
+      final event =
+          verify(() => bloc.add(captureAny())).captured.single
+              as RecipientConversationOpenRequested;
+      expect(event.bidId, 'bid-1');
+      expect(event.role, RecipientConversationRole.traveler);
     });
   });
 }

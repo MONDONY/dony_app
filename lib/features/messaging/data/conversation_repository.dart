@@ -63,6 +63,15 @@ class ConversationRepository {
     return ConversationModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  /// Conversation voyageur ↔ destinataire du bid (lot 3C), créée au premier
+  /// appel. Réservée au voyageur de l'annonce et au destinataire au lien
+  /// `CONFIRMED` : 403 `recipient-conversation-forbidden` sinon, 404 si le bid
+  /// n'existe pas (ou sur un back antérieur, sans la route).
+  Future<ConversationModel> getRecipientConversation(String bidId) async {
+    final response = await _api.dio.get('/conversations/bid/$bidId/recipient');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<void> updateLastMessage(String id, String preview) async {
     await _api.dio.post(
       '/conversations/$id/last-message',

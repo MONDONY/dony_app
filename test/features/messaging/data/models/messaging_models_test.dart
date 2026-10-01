@@ -229,4 +229,106 @@ void main() {
       expect(c.tripLabel, 'Paris → Dakar · Oct 6 · 5 kg');
     });
   });
+
+  group('ConversationModel.kind (lot 3C)', () {
+    Map<String, dynamic> json({
+      Object? kind,
+      String? role,
+      Object? viewerRole,
+    }) => {
+      'id': 'conv-k',
+      'bidId': 'bid-k',
+      'firestoreConversationId': 'rconv_bid-k',
+      'otherParticipant': {'id': 'uid-k', 'name': 'Awa', 'role': ?role},
+      'kind': ?kind,
+      'viewerRole': ?viewerRole,
+    };
+
+    test('viewerRole fait foi sur la déduction par le rôle', () {
+      final recipient = ConversationModel.fromJson(
+        json(
+          kind: 'RECIPIENT_TRAVELER',
+          role: 'Destinataire',
+          viewerRole: 'RECIPIENT',
+        ),
+      );
+      expect(recipient.viewerRole, 'RECIPIENT');
+      expect(recipient.viewerIsRecipient, isTrue);
+
+      final traveler = ConversationModel.fromJson(
+        json(
+          kind: 'RECIPIENT_TRAVELER',
+          role: 'Voyageur',
+          viewerRole: 'traveler',
+        ),
+      );
+      expect(traveler.viewerRole, 'TRAVELER');
+      expect(traveler.viewerIsRecipient, isFalse);
+      expect(traveler.copyWith(hasUnread: true).viewerRole, 'TRAVELER');
+    });
+
+    test('viewerRole absent, vide ou inconnu : repli sur le rôle', () {
+      for (final value in [null, ' ', 42, 'AUTRE']) {
+        final c = ConversationModel.fromJson(
+          json(
+            kind: 'RECIPIENT_TRAVELER',
+            role: 'Destinataire',
+            viewerRole: value,
+          ),
+        );
+        expect(c.viewerIsRecipient, isFalse, reason: '$value');
+      }
+      expect(ConversationModel.fromJson(json()).viewerRole, isNull);
+      // Fil expéditeur ↔ voyageur : jamais destinataire, quel que soit le champ.
+      expect(
+        ConversationModel.fromJson(
+          json(viewerRole: 'RECIPIENT'),
+        ).viewerIsRecipient,
+        isFalse,
+      );
+    });
+
+    test('kind absent (back antérieur) -> SENDER_TRAVELER', () {
+      final c = ConversationModel.fromJson(json());
+      expect(c.kind, ConversationModel.kindSenderTraveler);
+      expect(c.isRecipientConversation, isFalse);
+      expect(c.viewerIsRecipient, isFalse);
+    });
+
+    test('kind vide ou d\'un autre type -> SENDER_TRAVELER', () {
+      expect(
+        ConversationModel.fromJson(json(kind: '  ')).kind,
+        ConversationModel.kindSenderTraveler,
+      );
+      expect(
+        ConversationModel.fromJson(json(kind: 42)).kind,
+        ConversationModel.kindSenderTraveler,
+      );
+    });
+
+    test('RECIPIENT_TRAVELER vu par le voyageur', () {
+      final c = ConversationModel.fromJson(
+        json(kind: 'RECIPIENT_TRAVELER', role: 'Destinataire'),
+      );
+      expect(c.isRecipientConversation, isTrue);
+      expect(c.otherParticipant.isRecipientRole, isTrue);
+      expect(c.viewerIsRecipient, isFalse);
+    });
+
+    test('RECIPIENT_TRAVELER vu par le destinataire', () {
+      final c = ConversationModel.fromJson(
+        json(kind: 'RECIPIENT_TRAVELER', role: 'Voyageur'),
+      );
+      expect(c.isRecipientConversation, isTrue);
+      expect(c.viewerIsRecipient, isTrue);
+    });
+
+    test('copyWith conserve le type', () {
+      final c = ConversationModel.fromJson(
+        json(kind: 'RECIPIENT_TRAVELER', role: 'Recipient'),
+      ).copyWith(hasUnread: true);
+      expect(c.isRecipientConversation, isTrue);
+      expect(c.otherParticipant.isRecipientRole, isTrue);
+    });
+  });
 }

@@ -1,9 +1,13 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -12,6 +16,10 @@ import 'package:url_launcher_platform_interface/url_launcher_platform_interface.
 import '../../../../../helpers/recording_url_launcher.dart';
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
+
+class _MockConversationOpenBloc
+    extends MockBloc<ConversationOpenEvent, ConversationOpenState>
+    implements ConversationOpenBloc {}
 
 BidModel _bid(
   String id,
@@ -55,11 +63,20 @@ void main() {
       getIt.unregister<AnalyticsService>();
     }
     getIt.registerSingleton<AnalyticsService>(analytics);
+    // Bouton « Message » des destinataires CONFIRMED (lot 3C).
+    final conversationOpen = _MockConversationOpenBloc();
+    when(
+      () => conversationOpen.state,
+    ).thenReturn(const ConversationOpenInitial());
+    getIt.registerFactory<ConversationOpenBloc>(() => conversationOpen);
   });
 
   tearDown(() {
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
+    }
+    if (getIt.isRegistered<ConversationOpenBloc>()) {
+      getIt.unregister<ConversationOpenBloc>();
     }
   });
 
@@ -124,6 +141,13 @@ void main() {
     expect(find.text('WhatsApp'), findsNWidgets(3));
     expect(find.text('SMS'), findsNWidgets(3));
     expect(find.text('Appeler'), findsNWidgets(3));
+    // « Message » (conversation Yadony) : destinataires CONFIRMED seulement.
+    expect(find.text('Message'), findsNWidgets(2));
+    expect(
+      find.byKey(const Key('recipient-contact-message-b')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('recipient-contact-message-e')), findsNothing);
 
     verify(
       () => analytics.logEvent(
