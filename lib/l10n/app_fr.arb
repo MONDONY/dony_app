@@ -16989,26 +16989,6 @@
   "@tripRescheduleReasonOther": {
     "description": "Motif de report"
   },
-  "tripRescheduleNewDateLabel": "Nouvelle date de départ",
-  "@tripRescheduleNewDateLabel": {
-    "description": "Champ de la feuille de report"
-  },
-  "tripRescheduleDepartureTimeLabel": "Heure de départ",
-  "@tripRescheduleDepartureTimeLabel": {
-    "description": "Champ de la feuille de report"
-  },
-  "tripRescheduleArrivalTimeLabel": "Heure d'arrivée (facultatif)",
-  "@tripRescheduleArrivalTimeLabel": {
-    "description": "Champ de la feuille de report"
-  },
-  "tripRescheduleHandoverLabel": "Remise des colis au plus tard",
-  "@tripRescheduleHandoverLabel": {
-    "description": "Champ de la feuille de report"
-  },
-  "tripRescheduleNoteLabel": "Message aux expéditeurs (facultatif)",
-  "@tripRescheduleNoteLabel": {
-    "description": "Champ de la feuille de report"
-  },
   "tripRescheduleNoteHint": "Ex. : vol annulé, nouveau vol confirmé le lendemain",
   "@tripRescheduleNoteHint": {
     "description": "Indice du message aux expéditeurs"
@@ -17163,5 +17143,49 @@
   "errorRescheduleDecisionClosedMessage": "Le délai pour répondre au report est dépassé : votre colis reste sur le trajet.",
   "@errorRescheduleDecisionClosedMessage": {
     "description": "Erreur reschedule-decision-closed"
+  },
+  "tripRescheduleCurrentLabel": "Actuellement",
+  "@tripRescheduleCurrentLabel": {
+    "description": "Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)"
+  },
+  "tripRescheduleSectionDeparture": "Nouveau départ",
+  "@tripRescheduleSectionDeparture": {
+    "description": "Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)"
+  },
+  "tripRescheduleSectionArrival": "Arrivée",
+  "@tripRescheduleSectionArrival": {
+    "description": "Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)"
+  },
+  "tripRescheduleSectionHandover": "Remise des colis",
+  "@tripRescheduleSectionHandover": {
+    "description": "Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)"
+  },
+  "tripRescheduleSectionMessage": "Message aux expéditeurs",
+  "@tripRescheduleSectionMessage": {
+    "description": "Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)"
+  },
+  "tripRescheduleDateShort": "Jour",
+  "@tripRescheduleDateShort": {
+    "description": "Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)"
+  },
+  "tripRescheduleTimeShort": "Heure",
+  "@tripRescheduleTimeShort": {
+    "description": "Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)"
+  },
+  "tripRescheduleHandoverShort": "Au plus tard le",
+  "@tripRescheduleHandoverShort": {
+    "description": "Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)"
+  },
+  "tripRescheduleChoose": "Choisir",
+  "@tripRescheduleChoose": {
+    "description": "Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)"
+  },
+  "tripRescheduleOptional": "Facultatif",
+  "@tripRescheduleOptional": {
+    "description": "Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)"
+  },
+  "tripRescheduleHandoverHint": "Les expéditeurs vous remettent leur colis au plus tard ce jour-là. Elle suit la nouvelle date de départ.",
+  "@tripRescheduleHandoverHint": {
+    "description": "Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)"
   }
 }

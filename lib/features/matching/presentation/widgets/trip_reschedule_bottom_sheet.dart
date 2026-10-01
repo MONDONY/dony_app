@@ -83,7 +83,9 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
   late final ValueNotifier<int> _arrivalDayOffset = ValueNotifier(
     _initialArrivalOffset(),
   );
-  final _handoverDay = ValueNotifier<DateTime?>(null);
+  late final ValueNotifier<DateTime?> _handoverDay = ValueNotifier(
+    _initialHandoverDay(),
+  );
 
   /// Vrai dès que le voyageur a choisi lui-même la date limite de remise :
   /// elle ne suit plus la date de départ.
@@ -138,6 +140,16 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
       a.arrivalDate!,
     ).difference(DateUtils.dateOnly(a.departureDate)).inDays;
     return days.clamp(0, 2);
+  }
+
+  /// Date limite actuelle, jamais avant aujourd'hui : le champ est rempli et
+  /// cliquable dès l'ouverture, puis suit la nouvelle date de départ.
+  DateTime? _initialHandoverDay() {
+    final deadline = widget.announcement.handoverDeadline;
+    if (deadline == null) return null;
+    final day = DateUtils.dateOnly(deadline.toLocal());
+    final today = DateUtils.dateOnly(DateTime.now());
+    return day.isBefore(today) ? today : day;
   }
 
   static String _wire(TimeOfDay t) =>
@@ -218,15 +230,18 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
   }
 
   Future<void> _pickHandoverDay() async {
-    final date = _date.value;
-    if (date == null) return;
+    // Borne haute : le nouveau départ s'il est choisi, sinon l'actuel.
+    final last = _date.value ?? widget.announcement.departureDate;
     final today = DateUtils.dateOnly(DateTime.now());
-    final current = _handoverDay.value ?? date;
+    final lastDay = last.isBefore(today) ? today : DateUtils.dateOnly(last);
+    final current = _handoverDay.value ?? lastDay;
     final picked = await showDatePicker(
       context: context,
-      initialDate: current.isAfter(date) ? date : current,
+      initialDate: current.isAfter(lastDay)
+          ? lastDay
+          : (current.isBefore(today) ? today : current),
       firstDate: today,
-      lastDate: date,
+      lastDate: lastDay,
     );
     if (picked == null) return;
     _handoverTouched = true;
@@ -306,14 +321,24 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
         listenable: _form,
         builder: (context, _) {
           final date = _date.value;
-          final handover = _handoverDay.value;
           final time = _departureTime.value;
           final arrival = _arrivalTime.value;
+          final handover = _handoverDay.value;
+          final locale = l.localeName;
+          String day(DateTime d) => DateFormat.MMMEd(locale).format(d);
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(l.tripRescheduleReasonLabel, style: tt.titleSmall),
-              const SizedBox(height: DonySpacing.sm),
+              _ScheduleSummary(
+                current:
+                    '${day(widget.announcement.departureDate)}'
+                    '${widget.announcement.departureTime == null ? '' : ' · ${widget.announcement.departureTime!.padRight(5).substring(0, 5)}'}',
+                next: date == null
+                    ? null
+                    : '${day(date)}${time == null ? '' : ' · ${_wire(time)}'}',
+              ),
+              const SizedBox(height: DonySpacing.lg),
+              _SectionTitle(l.tripRescheduleReasonLabel),
               Wrap(
                 spacing: DonySpacing.sm,
                 runSpacing: DonySpacing.sm,
@@ -328,86 +353,262 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
                 ],
               ),
               const SizedBox(height: DonySpacing.lg),
-              DonyTextField.tappable(
-                key: const Key('reschedule-date-field'),
-                label: l.tripRescheduleNewDateLabel,
-                requiredLabel: true,
-                value: date == null
-                    ? null
-                    : DateFormat.yMMMEd(l.localeName).format(date),
-                prefixWidget: DonyIcon('calendar', size: 20, color: cs.primary),
-                onTap: _pickDate,
+              _SectionTitle(l.tripRescheduleSectionDeparture),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: _PickerTile(
+                      key: const Key('reschedule-date-field'),
+                      iconAsset: 'calendar',
+                      label: l.tripRescheduleDateShort,
+                      value: date == null ? null : day(date),
+                      placeholder: l.tripRescheduleChoose,
+                      onTap: _pickDate,
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  Expanded(
+                    flex: 2,
+                    child: _PickerTile(
+                      key: const Key('reschedule-departure-time-field'),
+                      iconAsset: 'plane-takeoff',
+                      label: l.tripRescheduleTimeShort,
+                      value: time == null ? null : _wire(time),
+                      placeholder: l.tripRescheduleChoose,
+                      onTap: _pickDepartureTime,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: DonySpacing.sm),
-              DonyTextField.tappable(
-                key: const Key('reschedule-departure-time-field'),
-                label: l.tripRescheduleDepartureTimeLabel,
-                requiredLabel: true,
-                value: time == null ? null : _wire(time),
-                prefixWidget: DonyIcon(
-                  'plane-takeoff',
-                  size: 20,
-                  color: cs.primary,
+              if (_isSameSchedule) ...[
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  l.tripRescheduleSameDateHint,
+                  style: tt.bodySmall?.copyWith(color: cs.error),
                 ),
-                onTap: _pickDepartureTime,
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              DonyTextField.tappable(
+              ],
+              const SizedBox(height: DonySpacing.lg),
+              _SectionTitle(l.tripRescheduleSectionArrival),
+              _PickerTile(
                 key: const Key('reschedule-arrival-time-field'),
-                label: l.tripRescheduleArrivalTimeLabel,
+                iconAsset: 'plane-landing',
+                label: l.tripRescheduleTimeShort,
                 value: arrival == null ? null : _wire(arrival),
-                prefixWidget: DonyIcon(
-                  'plane-landing',
-                  size: 20,
-                  color: cs.primary,
-                ),
+                placeholder: l.tripRescheduleOptional,
                 onTap: _pickArrivalTime,
               ),
               if (arrival != null) ...[
                 const SizedBox(height: DonySpacing.sm),
                 ArrivalDayChips(notifier: _arrivalDayOffset),
               ],
-              const SizedBox(height: DonySpacing.sm),
-              DonyTextField.tappable(
+              const SizedBox(height: DonySpacing.lg),
+              _SectionTitle(l.tripRescheduleSectionHandover),
+              _PickerTile(
                 key: const Key('reschedule-handover-field'),
-                label: l.tripRescheduleHandoverLabel,
-                requiredLabel: true,
-                value: handover == null
-                    ? null
-                    : DateFormat.yMMMEd(l.localeName).format(handover),
-                prefixWidget: DonyIcon('clock', size: 20, color: cs.primary),
-                onTap: date == null ? null : _pickHandoverDay,
+                iconAsset: 'clock',
+                label: l.tripRescheduleHandoverShort,
+                value: handover == null ? null : day(handover),
+                placeholder: l.tripRescheduleChoose,
+                onTap: _pickHandoverDay,
               ),
-              const SizedBox(height: DonySpacing.sm),
+              const SizedBox(height: DonySpacing.xs),
+              Text(
+                l.tripRescheduleHandoverHint,
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: DonySpacing.lg),
+              _SectionTitle(l.tripRescheduleSectionMessage),
               DonyTextField(
                 controller: _noteCtrl,
-                label: l.tripRescheduleNoteLabel,
                 hint: l.tripRescheduleNoteHint,
                 maxLines: 2,
               ),
-              const SizedBox(height: DonySpacing.md),
-              if (_isSameSchedule) ...[
-                Text(
-                  l.tripRescheduleSameDateHint,
-                  style: tt.bodySmall?.copyWith(color: cs.error),
-                ),
-                const SizedBox(height: DonySpacing.sm),
-              ],
-              Container(
-                padding: const EdgeInsets.all(DonySpacing.md),
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                ),
-                child: Text(
-                  l.tripRescheduleConsequences,
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
+              const SizedBox(height: DonySpacing.lg),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: DonyIcon(
+                      'info',
+                      size: 16,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  Expanded(
+                    child: Text(
+                      l.tripRescheduleConsequences,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: DonySpacing.xl),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Titre de section discret, aligné sur les sections du détail de trajet.
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+      child: Text(
+        text.toUpperCase(),
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: cs.onSurfaceVariant,
+          letterSpacing: 0.6,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+/// « Actuellement → Nouveau départ » : ce qui change, lisible d'un coup d'œil.
+class _ScheduleSummary extends StatelessWidget {
+  const _ScheduleSummary({required this.current, required this.next});
+
+  final String current;
+  final String? next;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    const figures = [FontFeature.tabularFigures()];
+    Widget column(String label, String value, {required bool emphasized}) =>
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: tt.titleSmall?.copyWith(
+                  fontFeatures: figures,
+                  fontWeight: emphasized ? FontWeight.w700 : FontWeight.w500,
+                  color: emphasized ? cs.primary : cs.onSurfaceVariant,
+                  decoration: emphasized ? null : TextDecoration.lineThrough,
+                  decorationColor: cs.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        );
+    return Container(
+      key: const Key('reschedule-summary'),
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: Row(
+        children: [
+          column(l.tripRescheduleCurrentLabel, current, emphasized: false),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+            child: DonyIcon('arrow-right', size: 18, color: cs.primary),
+          ),
+          column(
+            l.tripRescheduleSectionDeparture,
+            next ?? l.tripRescheduleChoose,
+            emphasized: next != null,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tuile de choix (date, heure) : surface douce sans bordure dure, libellé
+/// court au-dessus de la valeur, chiffres à largeur fixe.
+class _PickerTile extends StatelessWidget {
+  const _PickerTile({
+    super.key,
+    required this.iconAsset,
+    required this.label,
+    required this.value,
+    required this.placeholder,
+    required this.onTap,
+  });
+
+  final String iconAsset;
+  final String label;
+  final String? value;
+  final String placeholder;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final empty = value == null;
+    return Material(
+      color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
+      borderRadius: BorderRadius.circular(DonyRadius.lg),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 60),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.md,
+              vertical: DonySpacing.sm,
+            ),
+            child: Row(
+              children: [
+                DonyIcon(iconAsset, size: 20, color: cs.primary),
+                const SizedBox(width: DonySpacing.sm),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        value ?? placeholder,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: tt.titleSmall?.copyWith(
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                          fontWeight: empty ? FontWeight.w500 : FontWeight.w600,
+                          color: empty ? cs.primary : cs.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
