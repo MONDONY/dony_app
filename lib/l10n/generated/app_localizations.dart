@@ -16313,6 +16313,18 @@ abstract class AppLocalizations {
   /// **'Message supprimé'**
   String get chatMessageDeleted;
 
+  /// Toast après la copie d'un message par appui long sur sa bulle (chat_screen.dart _TextContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Message copié'**
+  String get chatMessageCopied;
+
+  /// Indice lu par le lecteur d'écran pour l'appui long sur une bulle de texte (chat_screen.dart _TextContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'copier le message'**
+  String get chatCopyMessageHint;
+
   /// Libellé affiché dans la bulle d'un message de localisation (chat_screen.dart _LocationContent).
   ///
   /// In fr, this message translates to:

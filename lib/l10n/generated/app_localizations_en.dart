@@ -9818,6 +9818,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatMessageDeleted => 'Message deleted';
 
   @override
+  String get chatMessageCopied => 'Message copied';
+
+  @override
+  String get chatCopyMessageHint => 'copy the message';
+
+  @override
   String get chatLocationMessageLabel => 'Shared location';
 
   @override

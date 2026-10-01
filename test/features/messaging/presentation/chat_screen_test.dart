@@ -20,6 +20,7 @@ import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:dony/features/settings/data/models/blocked_user_model.dart';
 import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -161,6 +162,40 @@ void main() {
       await _pump(tester, bloc);
 
       expect(find.text('Bonjour, colis reçu !'), findsOneWidget);
+    });
+
+    // Sentry FLUTTER-5F : le texte d'une bulle n'était pas copiable.
+    testWidgets('appui long sur une bulle → message copié + toast', (
+      tester,
+    ) async {
+      String? copied;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied = (call.arguments as Map)['text'] as String?;
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      when(() => bloc.state).thenReturn(
+        ChatLoaded([_makeMsg(id: 'm1', body: '12 rue des Lilas, Cocody')]),
+      );
+      await _pump(tester, bloc);
+
+      await tester.longPress(find.text('12 rue des Lilas, Cocody'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(copied, '12 rue des Lilas, Cocody');
+      expect(find.text('Message copié'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
     });
 
     // Régression finale F : 'd MMMM y' + 'HH:mm' fixes (AppL10n.localeName)
