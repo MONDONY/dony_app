@@ -79,9 +79,21 @@ void main() {
       expect(find.text('5 vues'), findsOneWidget);
     });
 
+    testWidgets('ma demande encore jamais vue → « 0 vue »', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          PackageRequestListCard(
+            item: _item(uniqueViewerCount: 0),
+            isOwnRequest: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('0 vue'), findsOneWidget);
+    });
+
     for (final (label, own, count) in [
       ('demande d’un autre, même avec un chiffre', false, 5),
-      ('ma demande sans vue', true, 0),
       ('ma demande, ancien back sans le champ', true, null),
     ]) {
       testWidgets('rien n’est affiché : $label', (tester) async {

@@ -3179,7 +3179,7 @@
       }
     }
   },
-  "requestDetailViewers": "{count, plural, =1{vue par {count} personne} other{vue par {count} personnes}}",
+  "requestDetailViewers": "{count, plural, =0{pas encore vue} =1{vue par {count} personne} other{vue par {count} personnes}}",
   "@requestDetailViewers": {
     "description": "Nombre de personnes distinctes qui ont vu la demande, dans le méta du billet (request_detail_view.dart). Remplace requestDetailViews quand le back le fournit",
     "placeholders": {
@@ -4392,7 +4392,7 @@
       }
     }
   },
-  "searchCardViews": "{count, plural, =1{{count} vue} other{{count} vues}}",
+  "searchCardViews": "{count, plural, =0{0 vue} =1{{count} vue} other{{count} vues}}",
   "@searchCardViews": {
     "description": "Fil Rechercher : nombre de personnes qui ont vu le trajet ou la demande, affiché à son seul propriétaire sur sa carte (traveler_card.dart, package_request_list_card.dart)",
     "placeholders": {
@@ -8358,7 +8358,7 @@
   "@tripOwnerDraftBannerTitle": {
     "description": "Titre du bandeau brouillon (trip_owner_detail_screen.dart)."
   },
-  "tripAudienceViewers": "{count, plural, =1{{count} personne a vu ton trajet} other{{count} personnes ont vu ton trajet}}",
+  "tripAudienceViewers": "{count, plural, =0{Personne n'a encore vu ton trajet} =1{{count} personne a vu ton trajet} other{{count} personnes ont vu ton trajet}}",
   "@tripAudienceViewers": {
     "description": "Carte d'audience de l'écran propriétaire d'un trajet : personnes distinctes qui l'ont ouvert dans l'app (trip_audience_section.dart)",
     "placeholders": {

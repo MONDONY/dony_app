@@ -7,8 +7,9 @@ import 'package:flutter/material.dart';
 /// carte de son seul propriétaire dans le fil Rechercher.
 ///
 /// Le back ne sert le chiffre qu'au propriétaire ; [isOwner] double la garde
-/// côté client. Rien n'est affiché avant la première vue, ni sur un back qui
-/// ne fournit pas encore le champ ([count] nul).
+/// côté client. « 0 vue » s'affiche aussi : le propriétaire sait que le
+/// compteur existe avant la première vue. Rien sur un back qui ne fournit pas
+/// encore le champ ([count] nul).
 class OwnerViewsLabel extends StatelessWidget {
   const OwnerViewsLabel({
     super.key,
@@ -20,7 +21,7 @@ class OwnerViewsLabel extends StatelessWidget {
   final bool isOwner;
 
   static bool isVisible({required int? count, required bool isOwner}) =>
-      isOwner && (count ?? 0) >= 1;
+      isOwner && count != null;
 
   @override
   Widget build(BuildContext context) {
