@@ -9884,6 +9884,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatCopyMessageHint => 'copier le message';
 
   @override
+  String chatOpenParticipantProfileSemantics(String name) {
+    return 'Voir le profil de $name';
+  }
+
+  @override
   String get chatLocationMessageLabel => 'Localisation partagée';
 
   @override

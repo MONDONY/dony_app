@@ -16325,6 +16325,12 @@ abstract class AppLocalizations {
   /// **'copier le message'**
   String get chatCopyMessageHint;
 
+  /// Nom accessible de l'en-tête du chat (avatar + nom) qui ouvre le profil public du correspondant (chat_screen.dart _ParticipantHeader).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le profil de {name}'**
+  String chatOpenParticipantProfileSemantics(String name);
+
   /// Libellé affiché dans la bulle d'un message de localisation (chat_screen.dart _LocationContent).
   ///
   /// In fr, this message translates to:

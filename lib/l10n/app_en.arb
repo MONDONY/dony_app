@@ -5531,6 +5531,13 @@
   "@chatCopyMessageHint": {
     "description": "Indice lu par le lecteur d'écran pour l'appui long sur une bulle de texte (chat_screen.dart _TextContent)."
   },
+  "chatOpenParticipantProfileSemantics": "View {name}'s profile",
+  "@chatOpenParticipantProfileSemantics": {
+    "description": "Nom accessible de l'en-tête du chat (avatar + nom) qui ouvre le profil public du correspondant (chat_screen.dart _ParticipantHeader).",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "chatLocationMessageLabel": "Shared location",
   "@chatLocationMessageLabel": {
     "description": "Libellé affiché dans la bulle d'un message de localisation (chat_screen.dart _LocationContent)."
