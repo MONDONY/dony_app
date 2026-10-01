@@ -432,6 +432,30 @@ void main() {
       ],
     );
 
+    blocTest<PrivacySettingsBloc, PrivacySettingsState>(
+      'masquer sa dernière connexion : optimiste, poussé au serveur',
+      setUp: () {
+        when(() => mockRepo.update(any())).thenAnswer((_) async {});
+      },
+      build: buildBloc,
+      seed: () => const PrivacySettingsLoaded(contactKycOnly: true),
+      act: (bloc) => bloc.add(const ShowLastSeenToggled(false)),
+      expect: () => [
+        isA<PrivacySettingsLoaded>().having(
+          (s) => s.showLastSeen,
+          'showLastSeen',
+          false,
+        ),
+      ],
+      verify: (_) {
+        final sent =
+            verify(() => mockRepo.update(captureAny())).captured.single
+                as PrivacySettingsModel;
+        expect(sent.showLastSeen, isFalse);
+        verify(() => mockBox.put(HiveService.kShowLastSeen, false)).called(1);
+      },
+    );
+
     // ── Equality des états ──────────────────────────────────────────────────
 
     test('PrivacySettingsLoaded equality est correcte', () {

@@ -24695,6 +24695,66 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Déjà reporté 2 fois : annulez et publiez un nouveau trajet'**
   String get tripRescheduleLimitReachedMessage;
+
+  /// Profil public : dernière connexion (profile_public_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vu aujourd\'hui'**
+  String get profilePublicLastSeenToday;
+
+  /// Profil public : dernière connexion
+  ///
+  /// In fr, this message translates to:
+  /// **'Vu hier'**
+  String get profilePublicLastSeenYesterday;
+
+  /// Profil public : dernière connexion, entre 2 et 30 jours
+  ///
+  /// In fr, this message translates to:
+  /// **'Vu il y a {days} jours'**
+  String profilePublicLastSeenDaysAgo(int days);
+
+  /// Profil public : dernière connexion au-delà de 30 jours
+  ///
+  /// In fr, this message translates to:
+  /// **'Vu il y a plus d\'un mois'**
+  String get profilePublicLastSeenLongAgo;
+
+  /// Profil public : libellé du temps de réponse mesuré
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse'**
+  String get profilePublicStatResponseLabel;
+
+  /// Profil public : temps de réponse sous une heure
+  ///
+  /// In fr, this message translates to:
+  /// **'< 1 h'**
+  String get profilePublicResponseUnderHour;
+
+  /// Profil public : temps de réponse en heures
+  ///
+  /// In fr, this message translates to:
+  /// **'{hours} h'**
+  String profilePublicResponseHours(int hours);
+
+  /// Profil public : temps de réponse en jours
+  ///
+  /// In fr, this message translates to:
+  /// **'{days} j'**
+  String profilePublicResponseDays(int days);
+
+  /// Réglage de confidentialité (privacy_settings_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher ma dernière connexion'**
+  String get privacyShowLastSeenLabel;
+
+  /// Réglage de confidentialité, sous-titre
+  ///
+  /// In fr, this message translates to:
+  /// **'Au jour près sur votre profil public, pour rassurer ceux qui vous contactent.'**
+  String get privacyShowLastSeenSubtitle;
 }
 
 class _AppLocalizationsDelegate

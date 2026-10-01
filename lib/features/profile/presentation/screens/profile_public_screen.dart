@@ -474,6 +474,14 @@ class _ProfileHero extends StatelessWidget {
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
+          if (profile.lastSeenDaysAgo != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              lastSeenLabel(l, profile.lastSeenDaysAgo!),
+              key: const Key('profile-last-seen'),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
           if (subscribeAction != null) ...[
             const SizedBox(height: DonySpacing.base),
             subscribeAction!,
@@ -626,6 +634,25 @@ class _HeroPill extends StatelessWidget {
   }
 }
 
+/// « Vu aujourd'hui / hier / il y a 3 jours / il y a plus d'un mois » :
+/// au jour près, pas plus précis (FLUTTER-4H partie 2).
+@visibleForTesting
+String lastSeenLabel(AppLocalizations l, int daysAgo) {
+  if (daysAgo <= 0) return l.profilePublicLastSeenToday;
+  if (daysAgo == 1) return l.profilePublicLastSeenYesterday;
+  if (daysAgo <= 30) return l.profilePublicLastSeenDaysAgo(daysAgo);
+  return l.profilePublicLastSeenLongAgo;
+}
+
+/// Temps de réponse arrondi à une unité lisible : « < 1 h », « 3 h », « 2 j ».
+@visibleForTesting
+String responseTimeLabel(AppLocalizations l, int minutes) {
+  if (minutes < 60) return l.profilePublicResponseUnderHour;
+  final hours = (minutes / 60).ceil();
+  if (hours < 24) return l.profilePublicResponseHours(hours);
+  return l.profilePublicResponseDays((hours / 24).ceil());
+}
+
 // ─── Stats row — 2 equal columns, no box ─────────────────────────────────────
 
 class _StatsRow extends StatelessWidget {
@@ -664,6 +691,24 @@ class _StatsRow extends StatelessWidget {
               iconColor: cs.primary,
             ),
           ),
+          // Mesuré sur ses réponses aux demandes (FLUTTER-4H partie 2) ;
+          // absent tant qu'il n'y a pas assez de décisions pour être juste.
+          if (profile.measuredResponseMinutes != null) ...[
+            VerticalDivider(
+              color: cs.outline.withValues(alpha: 0.6),
+              width: 1,
+              thickness: 1,
+            ),
+            Expanded(
+              child: _StatItem(
+                key: const Key('profile-response-time'),
+                value: responseTimeLabel(l, profile.measuredResponseMinutes!),
+                label: l.profilePublicStatResponseLabel,
+                iconAsset: 'timer',
+                iconColor: cs.primary,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -672,6 +717,7 @@ class _StatsRow extends StatelessWidget {
 
 class _StatItem extends StatelessWidget {
   const _StatItem({
+    super.key,
     required this.value,
     required this.label,
     required this.iconAsset,

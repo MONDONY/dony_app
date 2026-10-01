@@ -20,6 +20,7 @@ class PrivacySettingsDatasource {
         'contactKycOnly': settings.contactKycOnly,
         'hidePhoneNumber': settings.hidePhoneNumber,
         'showResidenceCountry': settings.showResidenceCountry,
+        'showLastSeen': settings.showLastSeen,
       },
     );
   }

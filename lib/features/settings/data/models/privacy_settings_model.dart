@@ -11,10 +11,15 @@ class PrivacySettingsModel {
   /// Masqué par défaut.
   final bool showResidenceCountry;
 
+  /// Ma dernière connexion apparaît sur mon profil public, au jour près
+  /// (FLUTTER-4H partie 2). Visible par défaut.
+  final bool showLastSeen;
+
   const PrivacySettingsModel({
     required this.contactKycOnly,
     required this.hidePhoneNumber,
     this.showResidenceCountry = false,
+    this.showLastSeen = true,
   });
 
   factory PrivacySettingsModel.fromJson(Map<String, dynamic> json) =>
@@ -22,6 +27,7 @@ class PrivacySettingsModel {
         contactKycOnly: json['contactKycOnly'] as bool? ?? true,
         hidePhoneNumber: json['hidePhoneNumber'] as bool? ?? false,
         showResidenceCountry: json['showResidenceCountry'] as bool? ?? false,
+        showLastSeen: json['showLastSeen'] as bool? ?? true,
       );
 
   @override
@@ -29,9 +35,14 @@ class PrivacySettingsModel {
       other is PrivacySettingsModel &&
       other.contactKycOnly == contactKycOnly &&
       other.hidePhoneNumber == hidePhoneNumber &&
-      other.showResidenceCountry == showResidenceCountry;
+      other.showResidenceCountry == showResidenceCountry &&
+      other.showLastSeen == showLastSeen;
 
   @override
-  int get hashCode =>
-      Object.hash(contactKycOnly, hidePhoneNumber, showResidenceCountry);
+  int get hashCode => Object.hash(
+    contactKycOnly,
+    hidePhoneNumber,
+    showResidenceCountry,
+    showLastSeen,
+  );
 }

@@ -17200,5 +17200,60 @@
   "tripRescheduleLimitReachedMessage": "Déjà reporté 2 fois : annulez et publiez un nouveau trajet",
   "@tripRescheduleLimitReachedMessage": {
     "description": "Tuile Reporter grisée (owner_action_grid.dart)"
+  },
+  "profilePublicLastSeenToday": "Vu aujourd'hui",
+  "@profilePublicLastSeenToday": {
+    "description": "Profil public : dernière connexion (profile_public_screen.dart)"
+  },
+  "profilePublicLastSeenYesterday": "Vu hier",
+  "@profilePublicLastSeenYesterday": {
+    "description": "Profil public : dernière connexion"
+  },
+  "profilePublicLastSeenDaysAgo": "Vu il y a {days} jours",
+  "@profilePublicLastSeenDaysAgo": {
+    "description": "Profil public : dernière connexion, entre 2 et 30 jours",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "profilePublicLastSeenLongAgo": "Vu il y a plus d'un mois",
+  "@profilePublicLastSeenLongAgo": {
+    "description": "Profil public : dernière connexion au-delà de 30 jours"
+  },
+  "profilePublicStatResponseLabel": "Réponse",
+  "@profilePublicStatResponseLabel": {
+    "description": "Profil public : libellé du temps de réponse mesuré"
+  },
+  "profilePublicResponseUnderHour": "< 1 h",
+  "@profilePublicResponseUnderHour": {
+    "description": "Profil public : temps de réponse sous une heure"
+  },
+  "profilePublicResponseHours": "{hours} h",
+  "@profilePublicResponseHours": {
+    "description": "Profil public : temps de réponse en heures",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "profilePublicResponseDays": "{days} j",
+  "@profilePublicResponseDays": {
+    "description": "Profil public : temps de réponse en jours",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "privacyShowLastSeenLabel": "Afficher ma dernière connexion",
+  "@privacyShowLastSeenLabel": {
+    "description": "Réglage de confidentialité (privacy_settings_screen.dart)"
+  },
+  "privacyShowLastSeenSubtitle": "Au jour près sur votre profil public, pour rassurer ceux qui vous contactent.",
+  "@privacyShowLastSeenSubtitle": {
+    "description": "Réglage de confidentialité, sous-titre"
   }
 }

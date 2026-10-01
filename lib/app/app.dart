@@ -447,6 +447,10 @@ class _DonyAppState extends State<DonyApp> {
                               HiveService.kShowResidenceCountry,
                               s.showResidenceCountry,
                             );
+                            prefs.put(
+                              HiveService.kShowLastSeen,
+                              s.showLastSeen,
+                            );
                           })
                           .catchError((_) {}),
                     );

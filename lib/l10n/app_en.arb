@@ -8392,5 +8392,36 @@
       }
     }
   },
-  "tripRescheduleLimitReachedMessage": "Already rescheduled twice: cancel and post a new trip"
+  "tripRescheduleLimitReachedMessage": "Already rescheduled twice: cancel and post a new trip",
+  "profilePublicLastSeenToday": "Seen today",
+  "profilePublicLastSeenYesterday": "Seen yesterday",
+  "profilePublicLastSeenDaysAgo": "Seen {days} days ago",
+  "@profilePublicLastSeenDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "profilePublicLastSeenLongAgo": "Seen over a month ago",
+  "profilePublicStatResponseLabel": "Reply time",
+  "profilePublicResponseUnderHour": "< 1 hr",
+  "profilePublicResponseHours": "{hours} hr",
+  "@profilePublicResponseHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "profilePublicResponseDays": "{days} d",
+  "@profilePublicResponseDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "privacyShowLastSeenLabel": "Show when I was last active",
+  "privacyShowLastSeenSubtitle": "To the day on your public profile, so people reaching out know you are active."
 }

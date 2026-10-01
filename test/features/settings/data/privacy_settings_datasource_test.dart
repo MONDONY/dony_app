@@ -67,6 +67,7 @@ void main() {
             'contactKycOnly': true,
             'hidePhoneNumber': true,
             'showResidenceCountry': false,
+            'showLastSeen': true,
           },
         ),
       ).called(1);
@@ -143,6 +144,20 @@ void main() {
       await repository.update(settings);
 
       verify(() => mockDatasource.update(settings)).called(1);
+    });
+
+    test('dernière connexion : visible par défaut, lue si servie', () {
+      expect(
+        PrivacySettingsModel.fromJson({'contactKycOnly': true}).showLastSeen,
+        isTrue,
+      );
+      expect(
+        PrivacySettingsModel.fromJson({
+          'contactKycOnly': true,
+          'showLastSeen': false,
+        }).showLastSeen,
+        isFalse,
+      );
     });
   });
 }

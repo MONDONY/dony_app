@@ -87,6 +87,7 @@ class HiveService {
       'profile_visibility'; // 'public' | 'limited'
   static const String kHidePhoneNumber = 'hide_phone_number'; // bool
   static const String kShowResidenceCountry = 'show_residence_country'; // bool
+  static const String kShowLastSeen = 'show_last_seen'; // bool
   static const String kContactKycOnly = 'contact_kyc_only'; // bool
 
   // ── Sécurité ─────────────────────────────────────────────────────────────
