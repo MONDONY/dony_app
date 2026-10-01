@@ -65,12 +65,12 @@ import 'package:dony/features/price_grid/data/repositories/price_grid_repository
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
-import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
-import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
-import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/receptions/data/repositories/reception_repository.dart';
+import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
