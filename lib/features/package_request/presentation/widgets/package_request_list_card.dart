@@ -199,14 +199,23 @@ class PackageRequestListCard extends StatelessWidget {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       const SizedBox(height: DonySpacing.xs),
-                                      _RouteMeta(
-                                        item: item,
-                                        cs: cs,
-                                        tt: tt,
-                                        isOwnRequest: isOwnRequest,
-                                      ),
+                                      _RouteMeta(item: item, cs: cs, tt: tt),
                                       const SizedBox(height: DonySpacing.xs),
                                       _Budget(item: item, cs: cs, tt: tt),
+                                      // Audience de ma demande, visible de moi
+                                      // seul : sous le budget plutôt que sur la
+                                      // ligne du trajet, dont la date serait
+                                      // tronquée.
+                                      if (OwnerViewsLabel.isVisible(
+                                        count: item.uniqueViewerCount,
+                                        isOwner: isOwnRequest,
+                                      )) ...[
+                                        const SizedBox(height: DonySpacing.xxs),
+                                        OwnerViewsLabel(
+                                          count: item.uniqueViewerCount,
+                                          isOwner: isOwnRequest,
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),
@@ -306,14 +315,8 @@ class _MatchScoreRow extends StatelessWidget {
 // ── Route meta (drapeaux + date) ─────────────────────────────────────────────
 
 class _RouteMeta extends StatelessWidget {
-  const _RouteMeta({
-    required this.item,
-    required this.cs,
-    required this.tt,
-    required this.isOwnRequest,
-  });
+  const _RouteMeta({required this.item, required this.cs, required this.tt});
   final PackageRequestSearchItem item;
-  final bool isOwnRequest;
   final ColorScheme cs;
   final TextTheme tt;
 
@@ -350,14 +353,6 @@ class _RouteMeta extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        // Audience de ma demande : visible de moi seul, hors de la partie tronquée.
-        if (OwnerViewsLabel.isVisible(
-          count: item.uniqueViewerCount,
-          isOwner: isOwnRequest,
-        )) ...[
-          const SizedBox(width: DonySpacing.sm),
-          OwnerViewsLabel(count: item.uniqueViewerCount, isOwner: isOwnRequest),
-        ],
       ],
     );
   }
