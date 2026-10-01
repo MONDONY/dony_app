@@ -48,3 +48,16 @@ class HidePhoneNumberToggled extends PrivacySettingsEvent {
   @override
   int get hashCode => value.hashCode;
 }
+
+/// Afficher ou non sa dernière connexion sur son profil public (FLUTTER-4H).
+class ShowLastSeenToggled extends PrivacySettingsEvent {
+  final bool value;
+  const ShowLastSeenToggled(this.value);
+
+  @override
+  bool operator ==(Object other) =>
+      other is ShowLastSeenToggled && other.value == value;
+
+  @override
+  int get hashCode => value.hashCode;
+}

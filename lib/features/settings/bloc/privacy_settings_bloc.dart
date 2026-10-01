@@ -22,6 +22,10 @@ class PrivacySettingsBloc
     on<PrivacySettingsLoadRequested>(_onLoad);
     on<ContactKycOnlyToggled>(_onToggleKycOnly);
     on<HidePhoneNumberToggled>(_onToggleHidePhone);
+    on<ShowLastSeenToggled>(
+      (event, emit) =>
+          _push(emit, (current) => current.copyWith(showLastSeen: event.value)),
+    );
     on<ShowResidenceCountryToggled>(
       (event, emit) => _push(
         emit,
@@ -41,6 +45,8 @@ class PrivacySettingsBloc
         showResidenceCountry:
             box.get(HiveService.kShowResidenceCountry, defaultValue: false)
                 as bool,
+        showLastSeen:
+            box.get(HiveService.kShowLastSeen, defaultValue: true) as bool,
       );
     }
     return const PrivacySettingsInitial();
@@ -62,11 +68,13 @@ class PrivacySettingsBloc
         HiveService.kShowResidenceCountry,
         settings.showResidenceCountry,
       );
+      await _box.put(HiveService.kShowLastSeen, settings.showLastSeen);
       emit(
         PrivacySettingsLoaded(
           contactKycOnly: settings.contactKycOnly,
           hidePhoneNumber: settings.hidePhoneNumber,
           showResidenceCountry: settings.showResidenceCountry,
+          showLastSeen: settings.showLastSeen,
         ),
       );
     } catch (_) {
@@ -127,6 +135,7 @@ class PrivacySettingsBloc
           contactKycOnly: updated.contactKycOnly,
           hidePhoneNumber: updated.hidePhoneNumber,
           showResidenceCountry: updated.showResidenceCountry,
+          showLastSeen: updated.showLastSeen,
         ),
       );
       return true;
@@ -144,5 +153,6 @@ class PrivacySettingsBloc
     await _box.put(HiveService.kContactKycOnly, s.contactKycOnly);
     await _box.put(HiveService.kHidePhoneNumber, s.hidePhoneNumber);
     await _box.put(HiveService.kShowResidenceCountry, s.showResidenceCountry);
+    await _box.put(HiveService.kShowLastSeen, s.showLastSeen);
   }
 }

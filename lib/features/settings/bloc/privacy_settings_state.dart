@@ -27,11 +27,15 @@ class PrivacySettingsLoaded extends PrivacySettingsState {
   /// Pays de résidence affiché sur le profil public (FLUTTER-4H).
   final bool showResidenceCountry;
 
+  /// Dernière connexion affichée sur le profil public (visible par défaut).
+  final bool showLastSeen;
+
   const PrivacySettingsLoaded({
     required this.contactKycOnly,
     this.hidePhoneNumber = false,
     this.saveFailed = false,
     this.showResidenceCountry = false,
+    this.showLastSeen = true,
   });
 
   PrivacySettingsLoaded copyWith({
@@ -39,11 +43,13 @@ class PrivacySettingsLoaded extends PrivacySettingsState {
     bool? hidePhoneNumber,
     bool? saveFailed,
     bool? showResidenceCountry,
+    bool? showLastSeen,
   }) => PrivacySettingsLoaded(
     contactKycOnly: contactKycOnly ?? this.contactKycOnly,
     hidePhoneNumber: hidePhoneNumber ?? this.hidePhoneNumber,
     saveFailed: saveFailed ?? this.saveFailed,
     showResidenceCountry: showResidenceCountry ?? this.showResidenceCountry,
+    showLastSeen: showLastSeen ?? this.showLastSeen,
   );
 
   @override
@@ -52,7 +58,8 @@ class PrivacySettingsLoaded extends PrivacySettingsState {
       other.contactKycOnly == contactKycOnly &&
       other.hidePhoneNumber == hidePhoneNumber &&
       other.saveFailed == saveFailed &&
-      other.showResidenceCountry == showResidenceCountry;
+      other.showResidenceCountry == showResidenceCountry &&
+      other.showLastSeen == showLastSeen;
 
   @override
   int get hashCode => Object.hash(
@@ -60,6 +67,7 @@ class PrivacySettingsLoaded extends PrivacySettingsState {
     hidePhoneNumber,
     saveFailed,
     showResidenceCountry,
+    showLastSeen,
   );
 }
 

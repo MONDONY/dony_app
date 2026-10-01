@@ -18,6 +18,8 @@ class ProfilePublicModel {
     this.phoneVerified = false,
     this.emailVerified = false,
     this.residenceCountry,
+    this.measuredResponseMinutes,
+    this.lastSeenDaysAgo,
   });
 
   final String userId;
@@ -44,6 +46,14 @@ class ProfilePublicModel {
   /// Code ISO2 du pays de résidence, présent seulement si l'utilisateur a
   /// choisi de l'afficher (filtré côté serveur).
   final String? residenceCountry;
+
+  /// Temps de réponse mesuré (médiane, minutes) sur 90 jours ; nul sous trois
+  /// décisions ou pour un back antérieur (FLUTTER-4H partie 2).
+  final int? measuredResponseMinutes;
+
+  /// Jours depuis la dernière ouverture de l'app (0 = aujourd'hui) ; nul si
+  /// l'utilisateur la masque ou si elle est inconnue.
+  final int? lastSeenDaysAgo;
 
   factory ProfilePublicModel.fromJson(Map<String, dynamic> json) {
     return ProfilePublicModel(
@@ -73,6 +83,9 @@ class ProfilePublicModel {
       phoneVerified: json['phoneVerified'] as bool? ?? false,
       emailVerified: json['emailVerified'] as bool? ?? false,
       residenceCountry: json['residenceCountry'] as String?,
+      measuredResponseMinutes: (json['measuredResponseMinutes'] as num?)
+          ?.toInt(),
+      lastSeenDaysAgo: (json['lastSeenDaysAgo'] as num?)?.toInt(),
     );
   }
 }

@@ -14,6 +14,7 @@ import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
+import 'package:dony/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -375,6 +376,62 @@ void main() {
     // Téléphone et identité vérifiés, e-mail non.
     expect(find.text('Non vérifié'), findsOneWidget);
     expect(find.text('Réside en France'), findsOneWidget);
+  });
+
+  testWidgets('dernière connexion et temps de réponse mesuré (4H partie 2)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: const ProfilePublicModel(
+          userId: _userId,
+          displayName: 'Fatou Diallo',
+          kycVerified: true,
+          isProAccount: false,
+          isKiloPro: false,
+          completedBidsCount: 12,
+          averageRating: 4.8,
+          ratingCount: 7,
+          memberSince: 'mars 2025',
+          badges: [],
+          measuredResponseMinutes: 130,
+          lastSeenDaysAgo: 1,
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Vu hier'), findsOneWidget);
+    expect(find.byKey(const Key('profile-response-time')), findsOneWidget);
+    expect(find.text('3 h'), findsOneWidget);
+    expect(find.text('Réponse'), findsOneWidget);
+  });
+
+  testWidgets('sans mesure ni dernière connexion : rien d\'inventé', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    await tester.pumpWidget(_wrapLoaded(profile: _profile));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byKey(const Key('profile-last-seen')), findsNothing);
+    expect(find.byKey(const Key('profile-response-time')), findsNothing);
+  });
+
+  test('libellés : dernière connexion au jour près, réponse arrondie', () {
+    final l = lookupAppLocalizations(const Locale('fr'));
+    expect(lastSeenLabel(l, 0), "Vu aujourd'hui");
+    expect(lastSeenLabel(l, 1), 'Vu hier');
+    expect(lastSeenLabel(l, 12), 'Vu il y a 12 jours');
+    expect(lastSeenLabel(l, 45), "Vu il y a plus d'un mois");
+    expect(responseTimeLabel(l, 20), '< 1 h');
+    expect(responseTimeLabel(l, 61), '2 h');
+    expect(responseTimeLabel(l, 60 * 30), '2 j');
   });
 
   testWidgets('pas de pays de résidence sans consentement', (tester) async {

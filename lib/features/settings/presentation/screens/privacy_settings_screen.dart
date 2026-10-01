@@ -140,6 +140,22 @@ class PrivacySettingsScreen extends StatelessWidget {
                               ShowResidenceCountryToggled(v),
                             ),
                     ),
+                    const _SettingsRowDivider(),
+                    // Dernière connexion au jour près sur le profil public
+                    // (FLUTTER-4H partie 2), visible par défaut.
+                    _SettingsToggleRow(
+                      key: const Key('privacy-show-last-seen'),
+                      emoji: '🕑',
+                      emojiBackground: const Color(0xFFEAF1FF),
+                      title: l.privacyShowLastSeenLabel,
+                      subtitle: l.privacyShowLastSeenSubtitle,
+                      value: loaded?.showLastSeen ?? true,
+                      onChanged: isLoading
+                          ? null
+                          : (v) => context.read<PrivacySettingsBloc>().add(
+                              ShowLastSeenToggled(v),
+                            ),
+                    ),
                   ],
                 ),
                 // Rappel persistant : sans lui, l'utilisateur oublie qu'il a

@@ -14860,4 +14860,41 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tripRescheduleHandoverHint =>
       'Senders hand you their parcel by this day at the latest. It follows the new departure date.';
+
+  @override
+  String get profilePublicLastSeenToday => 'Seen today';
+
+  @override
+  String get profilePublicLastSeenYesterday => 'Seen yesterday';
+
+  @override
+  String profilePublicLastSeenDaysAgo(int days) {
+    return 'Seen $days days ago';
+  }
+
+  @override
+  String get profilePublicLastSeenLongAgo => 'Seen over a month ago';
+
+  @override
+  String get profilePublicStatResponseLabel => 'Reply time';
+
+  @override
+  String get profilePublicResponseUnderHour => '< 1 hr';
+
+  @override
+  String profilePublicResponseHours(int hours) {
+    return '$hours hr';
+  }
+
+  @override
+  String profilePublicResponseDays(int days) {
+    return '$days d';
+  }
+
+  @override
+  String get privacyShowLastSeenLabel => 'Show when I was last active';
+
+  @override
+  String get privacyShowLastSeenSubtitle =>
+      'To the day on your public profile, so people reaching out know you are active.';
 }
