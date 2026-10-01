@@ -25,6 +25,7 @@ AnalyticsService makeEnabledAnalytics(MockAnalyticsBackend backend) {
   when(() => backend.capture(any(), any())).thenAnswer((_) async {});
   when(() => backend.screen(any(), any())).thenAnswer((_) async {});
   when(() => backend.identify(any(), any())).thenAnswer((_) async {});
+  when(() => backend.distinctId()).thenAnswer((_) async => 'anon-uuid');
   final service = AnalyticsService(hive, backend: backend);
   return service;
 }
@@ -42,6 +43,7 @@ AnalyticsService makeDisabledAnalytics(MockAnalyticsBackend backend) {
   when(() => backend.capture(any(), any())).thenAnswer((_) async {});
   when(() => backend.screen(any(), any())).thenAnswer((_) async {});
   when(() => backend.identify(any(), any())).thenAnswer((_) async {});
+  when(() => backend.distinctId()).thenAnswer((_) async => 'anon-uuid');
   final service = AnalyticsService(hive, backend: backend);
   return service;
 }
