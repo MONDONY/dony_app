@@ -58,24 +58,24 @@ class OwnerActionGrid extends StatelessWidget {
     final hasPending = pendingCount > 0;
     final hasColis = colisCount > 0;
 
+    // Le trajet engage-t-il quelqu'un ? `bidsCount` du back ne compte que les
+    // demandes en attente : un trajet dont tous les colis sont acceptés y vaut
+    // 0, et passait pour vide (« Modifier » et « Supprimer » ouverts, refusés
+    // ensuite par le back ; « Reporter » caché). Les colis acceptés comptent.
+    final hasBids = (a.bidsCount ?? 0) > 0 || hasPending || hasColis;
+
     // Gating édition / suppression — un brouillon (DRAFT) est modifiable ET
     // supprimable au même titre qu'un trajet ACTIF sans demande (le backend
     // autorise désormais la suppression d'un DRAFT).
-    final canEdit =
-        (a.status == 'ACTIVE' || a.status == 'DRAFT') &&
-        (a.bidsCount ?? 0) == 0;
+    final canEdit = (a.status == 'ACTIVE' || a.status == 'DRAFT') && !hasBids;
     final isCancelled = a.status == 'CANCELLED';
-    final canDelete =
-        ((a.status == 'ACTIVE' || a.status == 'DRAFT') &&
-            (a.bidsCount ?? 0) == 0) ||
-        isCancelled;
+    final canDelete = canEdit || isCancelled;
     final isActive = a.status == 'ACTIVE';
     // Report (vol annulé, voyage repoussé) : là où « Modifier » est bloqué par
-    // des demandes, sur un trajet encore à venir ou passé « en cours » à tort.
+    // des demandes ou des colis, sur un trajet encore à venir ou passé « en
+    // cours » à tort.
     final canReschedule =
-        !canEdit &&
-        (a.bidsCount ?? 0) > 0 &&
-        const {'ACTIVE', 'FULL', 'IN_PROGRESS'}.contains(a.status);
+        hasBids && const {'ACTIVE', 'FULL', 'IN_PROGRESS'}.contains(a.status);
 
     // Tuiles présentes selon le statut. Construites dans une liste pour éviter
     // les demi-tuiles vides (ex. trajet COMPLETED/FULL n'a ni Demandes ni
@@ -101,7 +101,7 @@ class OwnerActionGrid extends StatelessWidget {
           accent: cs.primary,
           onTap: () => context.push('/announcements/${a.id}/affiche', extra: a),
         ),
-      if (isActive && (a.bidsCount ?? 0) == 0)
+      if (isActive && !hasBids)
         _tile(
           iconAsset: 'eye-off',
           label: l.tripOwnerUnpublishTile,
