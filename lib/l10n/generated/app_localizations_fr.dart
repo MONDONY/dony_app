@@ -15311,4 +15311,82 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recipientChangeEditTooltip => 'Modifier le destinataire';
+
+  @override
+  String get travelerContactWhatsApp => 'WhatsApp';
+
+  @override
+  String get travelerContactSms => 'SMS';
+
+  @override
+  String get travelerContactCall => 'Appeler';
+
+  @override
+  String get travelerContactCardTitle => 'Contacter le destinataire';
+
+  @override
+  String get travelerContactMessageCopied =>
+      'Message copié. Collez-le dans votre messagerie.';
+
+  @override
+  String travelerContactIntro(String traveler) {
+    return 'je suis $traveler, voyageur Yadony.';
+  }
+
+  @override
+  String get travelerContactIntroAnonymous => 'je suis votre voyageur Yadony.';
+
+  @override
+  String travelerContactParcelFrom(String sender) {
+    return 'Votre colis envoyé par $sender';
+  }
+
+  @override
+  String get travelerContactParcel => 'Votre colis';
+
+  @override
+  String travelerContactArrived(String parcel, String city) {
+    return '$parcel est arrivé à $city.';
+  }
+
+  @override
+  String travelerContactOnTheWay(String parcel, String city) {
+    return '$parcel est en route vers $city. Je vous recontacte à mon arrivée.';
+  }
+
+  @override
+  String travelerContactPickup(String instructions) {
+    return 'Retrait : $instructions.';
+  }
+
+  @override
+  String get travelerContactCodeReminder =>
+      'Pensez à votre code de retrait à 6 chiffres.';
+
+  @override
+  String get travelerContactCityFallback => 'sa destination';
+
+  @override
+  String get notifyRecipientsTitle => 'Prévenir les destinataires';
+
+  @override
+  String get notifyRecipientsSubtitle =>
+      'Le message est déjà rédigé, vous pouvez le modifier avant de l\'envoyer.';
+
+  @override
+  String notifyRecipientsButton(int count) {
+    return 'Prévenir les destinataires ($count)';
+  }
+
+  @override
+  String get notifyRecipientsInAppChip => 'Dans Yadony';
+
+  @override
+  String get notifyRecipientsNotifiedInApp => 'Notifié dans l\'app';
+
+  @override
+  String get notifyRecipientsNoPhone => 'Numéro indisponible';
+
+  @override
+  String get notifyRecipientsFallbackName => 'Destinataire';
 }

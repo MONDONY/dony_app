@@ -25160,6 +25160,132 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Modifier le destinataire'**
   String get recipientChangeEditTooltip;
+
+  /// Bouton : contacter le destinataire sur WhatsApp (recipient_contact.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'WhatsApp'**
+  String get travelerContactWhatsApp;
+
+  /// Bouton : écrire au destinataire par SMS (recipient_contact.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'SMS'**
+  String get travelerContactSms;
+
+  /// Bouton : appeler le destinataire (recipient_contact.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler'**
+  String get travelerContactCall;
+
+  /// Vue voyageur d'un envoi : titre de la carte des actions de contact du destinataire (recipient_contact.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contacter le destinataire'**
+  String get travelerContactCardTitle;
+
+  /// Repli quand WhatsApp ou la messagerie ne s'ouvre pas : le message pré-rempli est copié (recipient_contact.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Message copié. Collez-le dans votre messagerie.'**
+  String get travelerContactMessageCopied;
+
+  /// Message pré-rempli au destinataire : présentation du voyageur (prénom).
+  ///
+  /// In fr, this message translates to:
+  /// **'je suis {traveler}, voyageur Yadony.'**
+  String travelerContactIntro(String traveler);
+
+  /// Message pré-rempli au destinataire : présentation du voyageur sans prénom connu.
+  ///
+  /// In fr, this message translates to:
+  /// **'je suis votre voyageur Yadony.'**
+  String get travelerContactIntroAnonymous;
+
+  /// Message pré-rempli au destinataire : sujet de la phrase, avec le prénom de l'expéditeur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis envoyé par {sender}'**
+  String travelerContactParcelFrom(String sender);
+
+  /// Message pré-rempli au destinataire : sujet de la phrase sans prénom d'expéditeur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre colis'**
+  String get travelerContactParcel;
+
+  /// Message pré-rempli au destinataire : colis arrivé (ARRIVED).
+  ///
+  /// In fr, this message translates to:
+  /// **'{parcel} est arrivé à {city}.'**
+  String travelerContactArrived(String parcel, String city);
+
+  /// Message pré-rempli au destinataire : colis en route (HANDED_OVER, IN_TRANSIT).
+  ///
+  /// In fr, this message translates to:
+  /// **'{parcel} est en route vers {city}. Je vous recontacte à mon arrivée.'**
+  String travelerContactOnTheWay(String parcel, String city);
+
+  /// Message pré-rempli au destinataire : instructions de retrait du voyageur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retrait : {instructions}.'**
+  String travelerContactPickup(String instructions);
+
+  /// Message pré-rempli au destinataire : rappel du code de retrait (colis arrivé).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pensez à votre code de retrait à 6 chiffres.'**
+  String get travelerContactCodeReminder;
+
+  /// Message pré-rempli au destinataire : ville d'arrivée inconnue.
+  ///
+  /// In fr, this message translates to:
+  /// **'sa destination'**
+  String get travelerContactCityFallback;
+
+  /// Titre de la feuille « Prévenir les destinataires » (notify_recipients_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Prévenir les destinataires'**
+  String get notifyRecipientsTitle;
+
+  /// Sous-titre de la feuille « Prévenir les destinataires ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Le message est déjà rédigé, vous pouvez le modifier avant de l\'envoyer.'**
+  String get notifyRecipientsSubtitle;
+
+  /// Écran trajet voyageur : bouton d'ouverture de la feuille « Prévenir les destinataires ».
+  ///
+  /// In fr, this message translates to:
+  /// **'Prévenir les destinataires ({count})'**
+  String notifyRecipientsButton(int count);
+
+  /// Puce : le destinataire suit le colis dans l'app.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans Yadony'**
+  String get notifyRecipientsInAppChip;
+
+  /// Feuille « Prévenir les destinataires » : le destinataire a reçu la notification d'arrivée dans l'app.
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifié dans l\'app'**
+  String get notifyRecipientsNotifiedInApp;
+
+  /// Feuille « Prévenir les destinataires » : colis sans numéro de destinataire.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro indisponible'**
+  String get notifyRecipientsNoPhone;
+
+  /// Feuille « Prévenir les destinataires » : destinataire sans nom saisi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire'**
+  String get notifyRecipientsFallbackName;
 }
 
 class _AppLocalizationsDelegate

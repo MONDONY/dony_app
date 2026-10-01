@@ -388,6 +388,11 @@ abstract final class AnalyticsEvents {
   static const recipientNotified = 'recipient_notified';
   static const bidRecipientChanged = 'bid_recipient_changed';
 
+  // Le voyageur prévient les destinataires de ses colis (lot 3B). Jamais le
+  // nom ni le numéro : canal, statut, compteurs.
+  static const recipientsNotifyOpened = 'recipients_notify_opened';
+  static const recipientContacted = 'recipient_contacted';
+
   // Colis à recevoir (lot 2 destinataire). Jamais le nom, le numéro ni le
   // code : seulement des statuts et des comptes.
   static const receptionsSectionViewed = 'receptions_section_viewed';

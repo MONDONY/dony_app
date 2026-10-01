@@ -7,6 +7,7 @@ import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -95,8 +96,14 @@ AnnouncementModel _makeAnnouncement({
   updatedAt: DateTime(2026, 6),
 );
 
-BidModel _makeBid({required String status}) => BidModel(
-  id: 'bid-001',
+BidModel _makeBid({
+  required String status,
+  String id = 'bid-001',
+  String? recipientPhone,
+}) => BidModel(
+  id: id,
+  recipientName: 'Awa',
+  recipientPhone: recipientPhone,
   announcementId: 'ann-trip-001',
   senderId: 'sender-001',
   status: status,
@@ -366,6 +373,186 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Arrivé à destination'), findsOneWidget);
+  });
+
+  group('Prévenir les destinataires (lot 3B)', () {
+    void ownerWithBids(List<BidModel> bids, {AnnouncementModel? announcement}) {
+      final a = announcement ?? _makeAnnouncement();
+      when(() => annBloc.state).thenReturn(AnnouncementDetailLoaded(a));
+      whenListen(
+        annBloc,
+        Stream<AnnouncementState>.value(AnnouncementDetailLoaded(a)),
+        initialState: AnnouncementDetailLoaded(a),
+      );
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
+      when(() => bidBloc.state).thenReturn(BidListLoaded(bids));
+      whenListen(
+        bidBloc,
+        Stream<BidState>.value(BidListLoaded(bids)),
+        initialState: BidListLoaded(bids),
+      );
+    }
+
+    testWidgets('bouton visible avec un colis en route, ouvre la feuille', (
+      tester,
+    ) async {
+      ownerWithBids([
+        _makeBid(status: 'IN_TRANSIT', recipientPhone: '+221700000000'),
+        _makeBid(status: 'ACCEPTED', id: 'bid-002'),
+      ]);
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
+
+      final button = find.text('Prévenir les destinataires (1)');
+      expect(button, findsOneWidget);
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Prévenir les destinataires'), findsOneWidget);
+      expect(find.byKey(const Key('notify-recipient-bid-001')), findsOneWidget);
+      expect(find.byKey(const Key('notify-recipient-bid-002')), findsNothing);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.recipientsNotifyOpened,
+          properties: {'count': 1, 'source': 'manual'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('aucun colis remis, en transit ou arrivé : pas de bouton', (
+      tester,
+    ) async {
+      ownerWithBids([_makeBid(status: 'ACCEPTED')]);
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('notify-recipients-button')), findsNothing);
+    });
+
+    testWidgets('visiteur non propriétaire : pas de bouton', (tester) async {
+      ownerWithBids([_makeBid(status: 'ARRIVED')]);
+      when(() => authBloc.state).thenReturn(const AuthInitial());
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthInitial(),
+      );
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('notify-recipients-button')), findsNothing);
+    });
+
+    Future<(StreamController<AnnouncementState>, StreamController<BidState>)>
+    pumpArrival(WidgetTester tester) async {
+      final a = _makeAnnouncement();
+      final annCtrl = StreamController<AnnouncementState>.broadcast();
+      final bidCtrl = StreamController<BidState>.broadcast();
+      addTearDown(annCtrl.close);
+      addTearDown(bidCtrl.close);
+      final before = [_makeBid(status: 'IN_TRANSIT')];
+      when(() => annBloc.state).thenReturn(AnnouncementDetailLoaded(a));
+      whenListen(
+        annBloc,
+        annCtrl.stream,
+        initialState: AnnouncementDetailLoaded(a),
+      );
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
+      when(() => bidBloc.state).thenReturn(BidListLoaded(before));
+      whenListen(bidBloc, bidCtrl.stream, initialState: BidListLoaded(before));
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
+      return (annCtrl, bidCtrl);
+    }
+
+    testWidgets('« Marquer arrivé » réussi : la feuille s’ouvre seule', (
+      tester,
+    ) async {
+      final (annCtrl, bidCtrl) = await pumpArrival(tester);
+      final arrived = _makeAnnouncement(
+        status: 'ARRIVED',
+        arrivalInstructions: 'Gare de Pikine',
+      );
+
+      annCtrl.add(AnnouncementTripArrived(arrived));
+      await tester.pump();
+      verify(
+        () => bidBloc.add(any(that: isA<BidListRequested>())),
+      ).called(greaterThanOrEqualTo(1));
+      expect(find.text('Prévenir les destinataires'), findsNothing);
+
+      bidCtrl.add(BidLoading());
+      await tester.pump();
+      bidCtrl.add(
+        BidListLoaded([
+          _makeBid(status: 'ARRIVED', recipientPhone: '+221700000000'),
+        ]),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Prévenir les destinataires'), findsOneWidget);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.recipientsNotifyOpened,
+          properties: {'count': 1, 'source': 'after_arrival'},
+        ),
+      ).called(1);
+
+      // Un rechargement ultérieur ne rouvre pas la feuille.
+      await tester.tap(find.text('Fermer'));
+      await tester.pumpAndSettle();
+      bidCtrl.add(BidListLoaded([_makeBid(status: 'ARRIVED')]));
+      await tester.pumpAndSettle();
+      expect(find.text('Prévenir les destinataires'), findsNothing);
+    });
+
+    testWidgets('rechargement en échec : pas d’ouverture automatique', (
+      tester,
+    ) async {
+      final (annCtrl, bidCtrl) = await pumpArrival(tester);
+      annCtrl.add(
+        AnnouncementTripArrived(_makeAnnouncement(status: 'ARRIVED')),
+      );
+      await tester.pump();
+      bidCtrl.add(BidError(const NetworkException('offline')));
+      await tester.pump();
+      bidCtrl.add(BidListLoaded([_makeBid(status: 'ARRIVED')]));
+      await tester.pumpAndSettle();
+      expect(find.text('Prévenir les destinataires'), findsNothing);
+    });
   });
 
   Future<void> pumpOwnerWith(

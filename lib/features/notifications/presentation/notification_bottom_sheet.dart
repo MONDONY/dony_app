@@ -697,6 +697,7 @@ class _NotificationIcon extends StatelessWidget {
       'TRIP_IN_PROGRESS' => (cs.primary, 'plane-takeoff'),
       'RECIPIENT_PARCEL_DEPARTED' => (cs.primary, 'plane-takeoff'),
       'RECIPIENT_PARCEL_ARRIVED' => (cs.primary, 'plane-landing'),
+      'RECIPIENT_PICKUP_UPDATED' => (cs.primary, 'map-pin'),
       'negotiation_started' => (cs.info, 'arrow-left-right'),
       'negotiation_counter' => (cs.info, 'arrow-left-right'),
       'negotiation' => (cs.info, 'arrow-left-right'),

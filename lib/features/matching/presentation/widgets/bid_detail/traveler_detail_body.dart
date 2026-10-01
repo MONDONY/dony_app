@@ -12,6 +12,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
+import 'package:dony/features/matching/presentation/widgets/recipient_contact/recipient_contact.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -57,12 +58,12 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
   @override
   void initState() {
     super.initState();
-    // Durée totale = délai max (60 ms × 7 pour 8 enfants, index 0–7)
+    // Durée totale = délai max (60 ms × 9 pour 10 enfants au plus, index 0–9)
     // + durée fadeIn (300 ms) + marge (50 ms).
     // Après ce délai, le flag est mis à false SANS setState : on ne veut pas
     // déclencher un rebuild ici, juste que le prochain rebuild (polling parent)
     // saute le stagger.
-    const total = Duration(milliseconds: 60 * 7 + 300 + 50);
+    const total = Duration(milliseconds: 60 * 9 + 300 + 50);
     _entranceTimer = Timer(total, () {
       _playEntrance = false;
     });
@@ -92,6 +93,10 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
       // n'apparaissent qu'une fois la demande acceptée.
       ExpediteurContactCard(bid: widget.bid),
       ColisDestinataireCard(bid: widget.bid, isSender: false),
+      // WhatsApp / SMS / appel au destinataire, message pré-rempli selon le
+      // statut du colis (lot 3B).
+      if (TravelerRecipientContactCard.shouldShow(widget.bid))
+        TravelerRecipientContactCard(bid: widget.bid),
       TravelerGainCard(bid: widget.bid),
       DetailsAccordion(bid: widget.bid, showTrackingLink: false),
       if (status == 'COMPLETED' && widget.bid.travelerHasRated)

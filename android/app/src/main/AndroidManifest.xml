@@ -172,5 +172,15 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="https"/>
         </intent>
+        <!-- sms: messagerie du téléphone, message pré-rempli au destinataire
+             d'un colis (voyageur, « Prévenir les destinataires »). -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="sms"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="sms"/>
+        </intent>
     </queries>
 </manifest>

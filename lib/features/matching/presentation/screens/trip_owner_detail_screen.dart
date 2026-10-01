@@ -25,6 +25,7 @@ import 'package:dony/features/matching/presentation/widgets/announcement_detail_
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
+import 'package:dony/features/matching/presentation/widgets/recipient_contact/notify_recipients_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_audience_section.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
@@ -114,6 +115,11 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   /// ouvertures par le propriétaire confirmé, une seule fois par écran.
   bool _loggedOwnerOpen = false;
 
+  /// Le trajet vient d'être marqué arrivé : à la liste des colis rechargée
+  /// (statuts passés à ARRIVED), la feuille « Prévenir les destinataires »
+  /// s'ouvre d'elle-même. Mutée hors `setState`, elle ne pilote aucun rendu.
+  bool _notifyAfterArrival = false;
+
   @override
   void initState() {
     super.initState();
@@ -195,13 +201,18 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: DonyAppBar(title: context.l10n.listingHeroTripLabel),
-      body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, _) {
-          final a = _current;
-          if (a != null) {
-            _evaluateViewer(context, a);
-          }
-        },
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<AuthBloc, AuthState>(
+            listener: (context, _) {
+              final a = _current;
+              if (a != null) {
+                _evaluateViewer(context, a);
+              }
+            },
+          ),
+          BlocListener<BidBloc, BidState>(listener: _onBidState),
+        ],
         child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
           listener: (context, state) {
             if (state is AnnouncementDetailLoaded) {
@@ -211,6 +222,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               _current = state.announcement;
             } else if (state is AnnouncementTripArrived) {
               _current = state.announcement;
+              _notifyAfterArrival = true;
               context.read<BidBloc>().add(
                 BidListRequested(widget.announcementId),
               );
@@ -360,26 +372,62 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                         return const SizedBox.shrink();
                       }
                       final cta = tripArrivalCtaFor(bidState.bids);
-                      if (cta == null) {
+                      final toNotify = recipientsToNotify(bidState.bids);
+                      if (cta == null && toNotify.isEmpty) {
                         return const SizedBox.shrink();
                       }
                       final isEditing = cta == TripArrivalCta.editInstructions;
-                      return Padding(
-                        padding: const EdgeInsets.only(top: DonySpacing.md),
-                        child: DonyButton(
-                          label: isEditing
-                              ? context.l10n.tripOwnerEditInstructionsButton
-                              : context.l10n.tripOwnerMarkArrivedButton,
-                          variant: isEditing
-                              ? DonyButtonVariant.secondary
-                              : DonyButtonVariant.primary,
-                          onPressed: () => ArrivalInstructionsBottomSheet.show(
-                            context,
-                            announcementId: a.id,
-                            initialInstructions: a.arrivalInstructions,
-                            isEditing: isEditing,
-                          ),
-                        ),
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (cta != null)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                top: DonySpacing.md,
+                              ),
+                              child: DonyButton(
+                                label: isEditing
+                                    ? context
+                                          .l10n
+                                          .tripOwnerEditInstructionsButton
+                                    : context.l10n.tripOwnerMarkArrivedButton,
+                                variant: isEditing
+                                    ? DonyButtonVariant.secondary
+                                    : DonyButtonVariant.primary,
+                                onPressed: () =>
+                                    ArrivalInstructionsBottomSheet.show(
+                                      context,
+                                      announcementId: a.id,
+                                      initialInstructions:
+                                          a.arrivalInstructions,
+                                      isEditing: isEditing,
+                                    ),
+                              ),
+                            ),
+                          // Destinataires des colis remis, en transit ou
+                          // arrivés : message pré-rempli WhatsApp / SMS, ou
+                          // appel.
+                          if (toNotify.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                top: DonySpacing.sm,
+                              ),
+                              child: DonyButton(
+                                key: const Key('notify-recipients-button'),
+                                label: context.l10n.notifyRecipientsButton(
+                                  toNotify.length,
+                                ),
+                                iconAsset: 'message-circle',
+                                variant: DonyButtonVariant.ghost,
+                                onPressed: () => NotifyRecipientsSheet.show(
+                                  context,
+                                  bids: bidState.bids,
+                                  source: NotifyRecipientsSource.manual,
+                                  instructions: a.arrivalInstructions,
+                                ),
+                              ),
+                            ),
+                        ],
                       );
                     },
                   ),
@@ -390,6 +438,29 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
         ),
       ),
     );
+  }
+
+  /// Après « Marquer arrivé », la liste des colis se recharge : dès qu'elle
+  /// arrive, la feuille « Prévenir les destinataires » s'ouvre sur les colis
+  /// concernés. Un échec de rechargement abandonne l'ouverture automatique,
+  /// le bouton de l'écran reste là.
+  void _onBidState(BuildContext context, BidState state) {
+    if (!_notifyAfterArrival) {
+      return;
+    }
+    if (state is BidListLoaded) {
+      _notifyAfterArrival = false;
+      unawaited(
+        NotifyRecipientsSheet.show(
+          context,
+          bids: state.bids,
+          source: NotifyRecipientsSource.afterArrival,
+          instructions: _current?.arrivalInstructions,
+        ),
+      );
+    } else if (state is BidError || state is BidNotFound) {
+      _notifyAfterArrival = false;
+    }
   }
 
   /// Détermine si l'utilisateur courant est le voyageur propriétaire du trajet.

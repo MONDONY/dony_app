@@ -15222,4 +15222,82 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipientChangeEditTooltip => 'Edit recipient';
+
+  @override
+  String get travelerContactWhatsApp => 'WhatsApp';
+
+  @override
+  String get travelerContactSms => 'SMS';
+
+  @override
+  String get travelerContactCall => 'Call';
+
+  @override
+  String get travelerContactCardTitle => 'Contact the recipient';
+
+  @override
+  String get travelerContactMessageCopied =>
+      'Message copied. Paste it into your messaging app.';
+
+  @override
+  String travelerContactIntro(String traveler) {
+    return 'I\'m $traveler, your Yadony traveler.';
+  }
+
+  @override
+  String get travelerContactIntroAnonymous => 'I\'m your Yadony traveler.';
+
+  @override
+  String travelerContactParcelFrom(String sender) {
+    return 'Your parcel sent by $sender';
+  }
+
+  @override
+  String get travelerContactParcel => 'Your parcel';
+
+  @override
+  String travelerContactArrived(String parcel, String city) {
+    return '$parcel has arrived in $city.';
+  }
+
+  @override
+  String travelerContactOnTheWay(String parcel, String city) {
+    return '$parcel is on its way to $city. I\'ll get back to you when I arrive.';
+  }
+
+  @override
+  String travelerContactPickup(String instructions) {
+    return 'Pickup: $instructions.';
+  }
+
+  @override
+  String get travelerContactCodeReminder =>
+      'Remember your 6-digit pickup code.';
+
+  @override
+  String get travelerContactCityFallback => 'its destination city';
+
+  @override
+  String get notifyRecipientsTitle => 'Notify recipients';
+
+  @override
+  String get notifyRecipientsSubtitle =>
+      'The message is ready, you can edit it before sending.';
+
+  @override
+  String notifyRecipientsButton(int count) {
+    return 'Notify recipients ($count)';
+  }
+
+  @override
+  String get notifyRecipientsInAppChip => 'On Yadony';
+
+  @override
+  String get notifyRecipientsNotifiedInApp => 'Notified in the app';
+
+  @override
+  String get notifyRecipientsNoPhone => 'No number available';
+
+  @override
+  String get notifyRecipientsFallbackName => 'Recipient';
 }

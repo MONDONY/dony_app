@@ -17652,5 +17652,125 @@
   "recipientChangeEditTooltip": "Modifier le destinataire",
   "@recipientChangeEditTooltip": {
     "description": "Nom accessible du bouton « Modifier » de la carte Colis & destinataire (vue expéditeur)."
+  },
+  "travelerContactWhatsApp": "WhatsApp",
+  "@travelerContactWhatsApp": {
+    "description": "Bouton : contacter le destinataire sur WhatsApp (recipient_contact.dart)."
+  },
+  "travelerContactSms": "SMS",
+  "@travelerContactSms": {
+    "description": "Bouton : écrire au destinataire par SMS (recipient_contact.dart)."
+  },
+  "travelerContactCall": "Appeler",
+  "@travelerContactCall": {
+    "description": "Bouton : appeler le destinataire (recipient_contact.dart)."
+  },
+  "travelerContactCardTitle": "Contacter le destinataire",
+  "@travelerContactCardTitle": {
+    "description": "Vue voyageur d'un envoi : titre de la carte des actions de contact du destinataire (recipient_contact.dart)."
+  },
+  "travelerContactMessageCopied": "Message copié. Collez-le dans votre messagerie.",
+  "@travelerContactMessageCopied": {
+    "description": "Repli quand WhatsApp ou la messagerie ne s'ouvre pas : le message pré-rempli est copié (recipient_contact.dart)."
+  },
+  "travelerContactIntro": "je suis {traveler}, voyageur Yadony.",
+  "@travelerContactIntro": {
+    "description": "Message pré-rempli au destinataire : présentation du voyageur (prénom).",
+    "placeholders": {
+      "traveler": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerContactIntroAnonymous": "je suis votre voyageur Yadony.",
+  "@travelerContactIntroAnonymous": {
+    "description": "Message pré-rempli au destinataire : présentation du voyageur sans prénom connu."
+  },
+  "travelerContactParcelFrom": "Votre colis envoyé par {sender}",
+  "@travelerContactParcelFrom": {
+    "description": "Message pré-rempli au destinataire : sujet de la phrase, avec le prénom de l'expéditeur.",
+    "placeholders": {
+      "sender": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerContactParcel": "Votre colis",
+  "@travelerContactParcel": {
+    "description": "Message pré-rempli au destinataire : sujet de la phrase sans prénom d'expéditeur."
+  },
+  "travelerContactArrived": "{parcel} est arrivé à {city}.",
+  "@travelerContactArrived": {
+    "description": "Message pré-rempli au destinataire : colis arrivé (ARRIVED).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      },
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerContactOnTheWay": "{parcel} est en route vers {city}. Je vous recontacte à mon arrivée.",
+  "@travelerContactOnTheWay": {
+    "description": "Message pré-rempli au destinataire : colis en route (HANDED_OVER, IN_TRANSIT).",
+    "placeholders": {
+      "parcel": {
+        "type": "String"
+      },
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerContactPickup": "Retrait : {instructions}.",
+  "@travelerContactPickup": {
+    "description": "Message pré-rempli au destinataire : instructions de retrait du voyageur.",
+    "placeholders": {
+      "instructions": {
+        "type": "String"
+      }
+    }
+  },
+  "travelerContactCodeReminder": "Pensez à votre code de retrait à 6 chiffres.",
+  "@travelerContactCodeReminder": {
+    "description": "Message pré-rempli au destinataire : rappel du code de retrait (colis arrivé)."
+  },
+  "travelerContactCityFallback": "sa destination",
+  "@travelerContactCityFallback": {
+    "description": "Message pré-rempli au destinataire : ville d'arrivée inconnue."
+  },
+  "notifyRecipientsTitle": "Prévenir les destinataires",
+  "@notifyRecipientsTitle": {
+    "description": "Titre de la feuille « Prévenir les destinataires » (notify_recipients_sheet.dart)."
+  },
+  "notifyRecipientsSubtitle": "Le message est déjà rédigé, vous pouvez le modifier avant de l'envoyer.",
+  "@notifyRecipientsSubtitle": {
+    "description": "Sous-titre de la feuille « Prévenir les destinataires »."
+  },
+  "notifyRecipientsButton": "Prévenir les destinataires ({count})",
+  "@notifyRecipientsButton": {
+    "description": "Écran trajet voyageur : bouton d'ouverture de la feuille « Prévenir les destinataires ».",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifyRecipientsInAppChip": "Dans Yadony",
+  "@notifyRecipientsInAppChip": {
+    "description": "Puce : le destinataire suit le colis dans l'app."
+  },
+  "notifyRecipientsNotifiedInApp": "Notifié dans l'app",
+  "@notifyRecipientsNotifiedInApp": {
+    "description": "Feuille « Prévenir les destinataires » : le destinataire a reçu la notification d'arrivée dans l'app."
+  },
+  "notifyRecipientsNoPhone": "Numéro indisponible",
+  "@notifyRecipientsNoPhone": {
+    "description": "Feuille « Prévenir les destinataires » : colis sans numéro de destinataire."
+  },
+  "notifyRecipientsFallbackName": "Destinataire",
+  "@notifyRecipientsFallbackName": {
+    "description": "Feuille « Prévenir les destinataires » : destinataire sans nom saisi."
   }
 }
