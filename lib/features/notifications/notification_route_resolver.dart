@@ -82,6 +82,12 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // le dit dans l'encart « Prévenir … ».
     'RECIPIENT_CONFIRMED' ||
     'RECIPIENT_DECLINED' when _isUuid(bidId) => '/bids/$bidId',
+    // Voyageur : l'expéditeur a changé de destinataire (lot 3A), le détail
+    // du colis montre le nouveau.
+    'RECIPIENT_CHANGED' when _isUuid(bidId) => '/bids/$bidId',
+    // Ancien destinataire : il n'a plus accès au colis, on l'emmène sur
+    // l'onglet Suivi (sa liste « Colis à recevoir », à jour).
+    'RECIPIENT_PARCEL_REASSIGNED' => '/tracking',
 
     'KYC_VERIFIED' => '/kyc/status',
     'KYC_ACTION_REQUIRED' => '/kyc/verify',

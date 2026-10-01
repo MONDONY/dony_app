@@ -416,6 +416,28 @@ void main() {
       });
     }
 
+    test('RECIPIENT_CHANGED ouvre le colis du voyageur', () {
+      expect(
+        resolveNotificationRoute('RECIPIENT_CHANGED', {'bidId': bidId}),
+        '/bids/$bidId',
+      );
+    });
+
+    test('RECIPIENT_CHANGED sans bidId valide : aucune cible', () {
+      expect(
+        resolveNotificationRoute('RECIPIENT_CHANGED', {'bidId': '../x'}),
+        isNull,
+      );
+    });
+
+    test('RECIPIENT_PARCEL_REASSIGNED ouvre l\'onglet Suivi', () {
+      final route = resolveNotificationRoute('RECIPIENT_PARCEL_REASSIGNED', {
+        'bidId': bidId,
+      });
+      expect(route, '/tracking');
+      expect(isShellTabRoute(route!), isTrue);
+    });
+
     for (final type in ['RECIPIENT_CONFIRMED', 'RECIPIENT_DECLINED']) {
       test('$type ouvre le détail d\'envoi de l\'expéditeur', () {
         expect(

@@ -377,6 +377,16 @@ class BidModel {
   /// et expéditeur.
   bool get canCancelAfterHandover => status == 'HANDED_OVER' && !hasDeparted;
 
+  /// L'expéditeur peut changer de destinataire jusqu'à la remise : demande
+  /// acceptée, colis chez le voyageur, en route ou arrivé. Miroir de la
+  /// fenêtre de `PUT /bids/{id}/recipient` (le serveur reste l'autorité et
+  /// répond 409 hors de ces statuts).
+  bool get canChangeRecipient =>
+      status == 'ACCEPTED' ||
+      status == 'HANDED_OVER' ||
+      status == 'IN_TRANSIT' ||
+      status == 'ARRIVED';
+
   /// Le trajet est-il parti ? Miroir de `CancellationGuard.hasDeparted` côté
   /// serveur : heure de départ si elle est connue, sinon le lendemain de la date
   /// de départ. Le scan Transit, facultatif, ne ferme plus aucune fenêtre.

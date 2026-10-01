@@ -98,6 +98,16 @@ class BidRepository {
   Future<BidModel> cancelBid(String bidId, {String? reason}) =>
       _datasource.cancelBid(bidId, reason: reason);
 
+  Future<BidModel> changeRecipient(
+    String bidId, {
+    required String recipientName,
+    required String recipientPhone,
+  }) => _datasource.changeRecipient(
+    bidId,
+    recipientName: recipientName,
+    recipientPhone: recipientPhone,
+  );
+
   Future<void> hideBid(String bidId) => _datasource.hideBid(bidId);
 
   Future<void> dismissBidAsTraveler(String bidId) =>

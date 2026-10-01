@@ -300,6 +300,35 @@ void main() {
     });
   });
 
+  group('BidModel.canChangeRecipient', () {
+    BidModel withStatus(String status) =>
+        BidModel.fromJson({..._minimalJson, 'status': status});
+
+    test('vrai jusqu\'à la remise', () {
+      for (final status in [
+        'ACCEPTED',
+        'HANDED_OVER',
+        'IN_TRANSIT',
+        'ARRIVED',
+      ]) {
+        expect(withStatus(status).canChangeRecipient, isTrue, reason: status);
+      }
+    });
+
+    test('faux avant acceptation et après la remise', () {
+      for (final status in [
+        'PENDING',
+        'PAYMENT_ESCROWED',
+        'COMPLETED',
+        'DELIVERED',
+        'CANCELLED',
+        'REJECTED',
+      ]) {
+        expect(withStatus(status).canChangeRecipient, isFalse, reason: status);
+      }
+    });
+  });
+
   group('BidModel.canCancelBeforeHandover', () {
     BidModel withStatus(String status) =>
         BidModel.fromJson({..._minimalJson, 'status': status});

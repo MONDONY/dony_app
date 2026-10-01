@@ -10,6 +10,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
@@ -25,6 +26,11 @@ void showSenderOptionsSheet(BuildContext context, BidModel bid) {
   showModalBottomSheet<void>(
     context: context,
     useRootNavigator: true,
+    // Jusqu'à six entrées (signaler, contacter, partager, modifier le
+    // destinataire, annuler, supprimer) : la hauteur par défaut (9/16 de
+    // l'écran) ne suffit plus sur un petit téléphone, le contenu défile.
+    isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => _SenderOptionsSheet(bid: bid, outerContext: context),
   );
@@ -642,111 +648,127 @@ class _SenderOptionsSheet extends StatelessWidget {
         ),
       ),
       padding: EdgeInsets.fromLTRB(h, 0, h, bottomPad + DonySpacing.xl),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.outline,
-                borderRadius: BorderRadius.circular(2),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: cs.outline,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
-          Text(l.bidDetailOptionsTitle, style: tt.headlineMedium),
-          const SizedBox(height: DonySpacing.base),
-          _OptionTile(
-            iconAsset: 'flag',
-            iconColor: cs.error,
-            iconBg: cs.errorLight,
-            label: l.bidDetailReportTripLabel,
-            subtitle: l.bidDetailReportSubtitle,
-            onTap: () {
-              context.pop();
-              _showReportSheet(outerContext);
-            },
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          _OptionTile(
-            iconAsset: 'message-circle',
-            iconColor: cs.primary,
-            iconBg: cs.primaryContainer,
-            label: l.bidDetailContactTravelerLabel,
-            subtitle: l.bidDetailContactTravelerSubtitle,
-            onTap: () {
-              context.pop();
-              outerContext.read<ConversationOpenBloc>().add(
-                ConversationOpenRequested(bid.id),
-              );
-            },
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          if (bid.trackingToken != null) ...[
+            Text(l.bidDetailOptionsTitle, style: tt.headlineMedium),
+            const SizedBox(height: DonySpacing.base),
             _OptionTile(
-              iconAsset: 'share-2',
+              iconAsset: 'flag',
+              iconColor: cs.error,
+              iconBg: cs.errorLight,
+              label: l.bidDetailReportTripLabel,
+              subtitle: l.bidDetailReportSubtitle,
+              onTap: () {
+                context.pop();
+                _showReportSheet(outerContext);
+              },
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            _OptionTile(
+              iconAsset: 'message-circle',
               iconColor: cs.primary,
               iconBg: cs.primaryContainer,
-              label: l.bidDetailShareTracking,
-              subtitle: l.bidDetailShareTrackingSubtitle,
+              label: l.bidDetailContactTravelerLabel,
+              subtitle: l.bidDetailContactTravelerSubtitle,
               onTap: () {
-                final origin = sharePositionOriginFor(context);
                 context.pop();
-                shareTrackingLink(bid, sharePositionOrigin: origin);
+                outerContext.read<ConversationOpenBloc>().add(
+                  ConversationOpenRequested(bid.id),
+                );
               },
             ),
             const SizedBox(height: DonySpacing.sm),
+            if (bid.trackingToken != null) ...[
+              _OptionTile(
+                iconAsset: 'share-2',
+                iconColor: cs.primary,
+                iconBg: cs.primaryContainer,
+                label: l.bidDetailShareTracking,
+                subtitle: l.bidDetailShareTrackingSubtitle,
+                onTap: () {
+                  final origin = sharePositionOriginFor(context);
+                  context.pop();
+                  shareTrackingLink(bid, sharePositionOrigin: origin);
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
+            if (bid.canChangeRecipient) ...[
+              _OptionTile(
+                iconAsset: 'square-pen',
+                iconColor: cs.primary,
+                iconBg: cs.primaryContainer,
+                label: l.recipientChangeTitle,
+                subtitle: l.recipientChangeOptionSubtitle,
+                onTap: () {
+                  context.pop();
+                  openRecipientChangeSheet(outerContext, bid);
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
+            if (bid.canCancelBeforeHandover) ...[
+              _OptionTile(
+                iconAsset: 'ban',
+                iconColor: cs.error,
+                iconBg: cs.errorLight,
+                label: l.bidDetailCancelRequestLabel,
+                subtitle: l.bidDetailCancelRefundAutoSubtitle,
+                onTap: () {
+                  context.pop();
+                  showSenderCancelBidDialog(outerContext, bid);
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
+            // Annulation après remise (D5) — colis déjà chez le voyageur, avant le
+            // départ. L'expéditeur récupère son colis via le code de retour.
+            if (bid.canCancelAfterHandover) ...[
+              _OptionTile(
+                iconAsset: 'ban',
+                iconColor: cs.error,
+                iconBg: cs.errorLight,
+                label: l.bidDetailCancelRequestLabel,
+                subtitle: l.bidDetailCancelAfterHandoverOptionSubtitle,
+                onTap: () {
+                  context.pop();
+                  _showAfterHandoverCancelDialog(outerContext);
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
+            if (bid.status == 'COMPLETED' ||
+                bid.status == 'REJECTED' ||
+                bid.status == 'CANCELLED') ...[
+              _OptionTile(
+                iconAsset: 'trash-2',
+                iconColor: cs.error,
+                iconBg: cs.errorLight,
+                label: l.bidDetailDeleteRequest,
+                subtitle: l.bidDetailRemoveFromHistorySubtitle,
+                onTap: () {
+                  context.pop();
+                  _showDeleteDialog(outerContext);
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
           ],
-          if (bid.canCancelBeforeHandover) ...[
-            _OptionTile(
-              iconAsset: 'ban',
-              iconColor: cs.error,
-              iconBg: cs.errorLight,
-              label: l.bidDetailCancelRequestLabel,
-              subtitle: l.bidDetailCancelRefundAutoSubtitle,
-              onTap: () {
-                context.pop();
-                showSenderCancelBidDialog(outerContext, bid);
-              },
-            ),
-            const SizedBox(height: DonySpacing.sm),
-          ],
-          // Annulation après remise (D5) — colis déjà chez le voyageur, avant le
-          // départ. L'expéditeur récupère son colis via le code de retour.
-          if (bid.canCancelAfterHandover) ...[
-            _OptionTile(
-              iconAsset: 'ban',
-              iconColor: cs.error,
-              iconBg: cs.errorLight,
-              label: l.bidDetailCancelRequestLabel,
-              subtitle: l.bidDetailCancelAfterHandoverOptionSubtitle,
-              onTap: () {
-                context.pop();
-                _showAfterHandoverCancelDialog(outerContext);
-              },
-            ),
-            const SizedBox(height: DonySpacing.sm),
-          ],
-          if (bid.status == 'COMPLETED' ||
-              bid.status == 'REJECTED' ||
-              bid.status == 'CANCELLED') ...[
-            _OptionTile(
-              iconAsset: 'trash-2',
-              iconColor: cs.error,
-              iconBg: cs.errorLight,
-              label: l.bidDetailDeleteRequest,
-              subtitle: l.bidDetailRemoveFromHistorySubtitle,
-              onTap: () {
-                context.pop();
-                _showDeleteDialog(outerContext);
-              },
-            ),
-            const SizedBox(height: DonySpacing.sm),
-          ],
-        ],
+        ),
       ),
     );
   }

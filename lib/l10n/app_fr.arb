@@ -17620,5 +17620,37 @@
   "recipientAppConfirmedAnonymous": "Le destinataire suit le colis dans Yadony",
   "@recipientAppConfirmedAnonymous": {
     "description": "Vue expéditeur : le destinataire, sans nom saisi, a confirmé le colis dans l'app (prevenir_destinataire_card.dart)."
+  },
+  "recipientChangeTitle": "Modifier le destinataire",
+  "@recipientChangeTitle": {
+    "description": "Titre de la feuille et entrée du menu d'options expéditeur pour changer de destinataire (recipient_change_sheet.dart, bid_detail_action_bars.dart)."
+  },
+  "recipientChangeOptionSubtitle": "Nom ou numéro, jusqu'à la remise",
+  "@recipientChangeOptionSubtitle": {
+    "description": "Sous-titre de l'entrée « Modifier le destinataire » du menu d'options expéditeur."
+  },
+  "recipientChangePickFromBook": "Choisir dans mon carnet",
+  "@recipientChangePickFromBook": {
+    "description": "Lien de la feuille « Modifier le destinataire » qui ouvre le carnet de destinataires."
+  },
+  "recipientChangePhoneWarning": "Le code de retrait et le lien de suivi seront renouvelés. L'ancien destinataire n'y aura plus accès.",
+  "@recipientChangePhoneWarning": {
+    "description": "Avertissement de la feuille « Modifier le destinataire », affiché seulement quand le numéro change."
+  },
+  "recipientChangeSuccess": "Destinataire modifié. Envoyez-lui le nouveau lien de suivi.",
+  "@recipientChangeSuccess": {
+    "description": "Snackbar après un changement de destinataire avec un nouveau numéro."
+  },
+  "recipientChangeNameUpdated": "Nom du destinataire modifié.",
+  "@recipientChangeNameUpdated": {
+    "description": "Snackbar après un changement du seul nom du destinataire (même numéro, lien et code inchangés)."
+  },
+  "recipientChangeConflict": "Le colis a déjà été remis, le destinataire ne peut plus changer.",
+  "@recipientChangeConflict": {
+    "description": "Erreur 409 du changement de destinataire : le colis a été remis entre-temps."
+  },
+  "recipientChangeEditTooltip": "Modifier le destinataire",
+  "@recipientChangeEditTooltip": {
+    "description": "Nom accessible du bouton « Modifier » de la carte Colis & destinataire (vue expéditeur)."
   }
 }

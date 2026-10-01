@@ -8556,5 +8556,13 @@
   "receptionErrorDescription": "Check your connection and try again.",
   "recipientAppConfirmed": "{name} is following the parcel in Yadony",
   "recipientAppDeclined": "The owner of this number says this parcel isn't for them. Check the recipient's number.",
-  "recipientAppConfirmedAnonymous": "The recipient is following the parcel in Yadony"
+  "recipientAppConfirmedAnonymous": "The recipient is following the parcel in Yadony",
+  "recipientChangeTitle": "Change recipient",
+  "recipientChangeOptionSubtitle": "Name or number, until delivery",
+  "recipientChangePickFromBook": "Pick from my address book",
+  "recipientChangePhoneWarning": "The pickup code and tracking link will be renewed. The previous recipient will lose access to them.",
+  "recipientChangeSuccess": "Recipient changed. Send them the new tracking link.",
+  "recipientChangeNameUpdated": "Recipient name updated.",
+  "recipientChangeConflict": "The parcel has already been delivered, the recipient can no longer be changed.",
+  "recipientChangeEditTooltip": "Edit recipient"
 }

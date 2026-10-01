@@ -1,10 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/bid_photo_viewer_modal.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -69,6 +71,23 @@ class ColisDestinataireCard extends StatelessWidget {
               value: bid.recipientPhone ?? '-',
             ),
           ],
+          // Jusqu'à la remise, l'expéditeur peut changer de destinataire.
+          if (isSender && bid.canChangeRecipient)
+            Align(
+              alignment: Alignment.centerRight,
+              child: Tooltip(
+                message: l.recipientChangeEditTooltip,
+                child: TextButton.icon(
+                  onPressed: () => openRecipientChangeSheet(context, bid),
+                  icon: DonyIcon(
+                    'square-pen',
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  label: Text(l.commonEdit),
+                ),
+              ),
+            ),
         ],
       ),
     );

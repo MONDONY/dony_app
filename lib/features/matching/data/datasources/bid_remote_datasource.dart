@@ -194,6 +194,23 @@ class BidRemoteDatasource {
     return BidModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  /// L'expéditeur change de destinataire jusqu'à la remise (ACCEPTED,
+  /// HANDED_OVER, IN_TRANSIT, ARRIVED). Un numéro différent renouvelle le
+  /// lien de suivi et le code de retrait côté serveur ; le bid renvoyé porte
+  /// déjà les nouveaux. Un statut hors de la fenêtre lève un 409
+  /// (`recipient-change-not-allowed`).
+  Future<BidModel> changeRecipient(
+    String bidId, {
+    required String recipientName,
+    required String recipientPhone,
+  }) async {
+    final response = await _apiClient.dio.put(
+      '/bids/$bidId/recipient',
+      data: {'recipientName': recipientName, 'recipientPhone': recipientPhone},
+    );
+    return BidModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<void> hideBid(String bidId) async {
     await _apiClient.dio.delete('/bids/$bidId/me');
   }

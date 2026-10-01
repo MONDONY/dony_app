@@ -4,3 +4,14 @@
 /// call sites use this stricter form (matches `complete_details_screen`'s
 /// inline validator).
 final RegExp kRecipientPhoneE164 = RegExp(r'^\+[1-9]\d{6,14}$');
+
+/// Numéro saisi ramené à la forme E.164 attendue par le serveur : espaces,
+/// tirets, points et parenthèses retirés, préfixe international `00`
+/// remplacé par `+`. Le résultat se valide ensuite avec [kRecipientPhoneE164].
+String normalizeRecipientPhone(String raw) {
+  final compact = raw.trim().replaceAll(RegExp(r'[\s\-.()]'), '');
+  if (compact.startsWith('00')) {
+    return '+${compact.substring(2)}';
+  }
+  return compact;
+}
