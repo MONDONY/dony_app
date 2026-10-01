@@ -104,6 +104,7 @@ int _matchingBrace(String text, int openIndex) {
 /// Clés dont l'anglais est volontairement identique au français.
 /// Toute nouvelle entrée doit être justifiée en commentaire.
 const _sameInBothLanguages = <String>{
+  'recipientNotifyRoute', // « (Paris → Dakar) » : seulement le trajet, sans mot
   'commonOk', // « OK » se dit pareil
   'authEmailStepLabel', // « Email » se dit pareil
   'authOnboardingDestinationsEyebrow', // « Destinations » se dit pareil

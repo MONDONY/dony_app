@@ -8,6 +8,7 @@ import 'package:dony/features/matching/presentation/widgets/arrival_instructions
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/prevenir_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
@@ -107,6 +108,10 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
           ArrivalInstructionsCard.hasText(widget.bid.arrivalInstructions))
         ArrivalInstructionsCard(instructions: widget.bid.arrivalInstructions!),
       DeliveryNoShowCtaCell(bid: widget.bid, isSender: true),
+      // Le destinataire ne reçoit rien de Yadony : l'expéditeur le prévient
+      // lui-même sur WhatsApp, au moment où le lien puis le code existent.
+      if (PrevenirDestinataireCard.shouldShow(widget.bid))
+        PrevenirDestinataireCard(bid: widget.bid),
       // Profil du voyageur à tous les statuts ; les boutons de contact
       // n'apparaissent qu'une fois la demande acceptée.
       VoyageurContactCard(bid: widget.bid),

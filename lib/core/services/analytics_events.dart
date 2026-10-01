@@ -384,6 +384,7 @@ abstract final class AnalyticsEvents {
   static const travelerCallInitiated = 'traveler_call_initiated';
   static const senderCallInitiated = 'sender_call_initiated';
   static const trackingLinkShared = 'tracking_link_shared';
+  static const recipientNotified = 'recipient_notified';
   static const screenFeedbackSubmitted = 'screen_feedback_submitted';
 
   // Trip matching (Colis sur mes trajets)

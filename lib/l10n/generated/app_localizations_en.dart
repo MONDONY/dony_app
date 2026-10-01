@@ -7243,6 +7243,57 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String recipientNotifyTitle(String name) {
+    return 'Let $name know';
+  }
+
+  @override
+  String get recipientNotifyFallbackName => 'the recipient';
+
+  @override
+  String recipientNotifyBodyLink(String name) {
+    return 'Send the tracking link on WhatsApp: $name can follow the parcel in real time, no account needed.';
+  }
+
+  @override
+  String recipientNotifyBodyCode(String name) {
+    return 'The pickup code is ready. Send it to $name: the traveler will ask for it at handover.';
+  }
+
+  @override
+  String get recipientNotifyButtonLink => 'Notify on WhatsApp';
+
+  @override
+  String get recipientNotifyButtonCode => 'Send the code on WhatsApp';
+
+  @override
+  String recipientNotifyGreeting(String name) {
+    return 'Hi $name,';
+  }
+
+  @override
+  String get recipientNotifyGreetingAnonymous => 'Hi,';
+
+  @override
+  String recipientNotifyRoute(String from, String to) {
+    return ' ($from → $to)';
+  }
+
+  @override
+  String recipientNotifyMessageLink(String route, String url) {
+    return 'I\'m sending you a parcel with Yadony$route. Follow it in real time: $url';
+  }
+
+  @override
+  String recipientNotifyMessageCode(String route, String code, String url) {
+    return 'for your Yadony parcel$route, the traveler will ask you for this code at handover: $code\nLive tracking: $url';
+  }
+
+  @override
+  String get recipientNotifyMessageInvite =>
+      'Download Yadony to track your parcels and send your own: https://yadony.com';
+
+  @override
   String bidDetailTrackingShareSubject(String number) {
     return 'Yadony parcel tracking · $number';
   }

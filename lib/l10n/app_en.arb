@@ -3804,6 +3804,79 @@
       }
     }
   },
+  "recipientNotifyTitle": "Let {name} know",
+  "@recipientNotifyTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyFallbackName": "the recipient",
+  "recipientNotifyBodyLink": "Send the tracking link on WhatsApp: {name} can follow the parcel in real time, no account needed.",
+  "@recipientNotifyBodyLink": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyBodyCode": "The pickup code is ready. Send it to {name}: the traveler will ask for it at handover.",
+  "@recipientNotifyBodyCode": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyButtonLink": "Notify on WhatsApp",
+  "recipientNotifyButtonCode": "Send the code on WhatsApp",
+  "recipientNotifyGreeting": "Hi {name},",
+  "@recipientNotifyGreeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyGreetingAnonymous": "Hi,",
+  "recipientNotifyRoute": " ({from} → {to})",
+  "@recipientNotifyRoute": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyMessageLink": "I'm sending you a parcel with Yadony{route}. Follow it in real time: {url}",
+  "@recipientNotifyMessageLink": {
+    "placeholders": {
+      "route": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyMessageCode": "for your Yadony parcel{route}, the traveler will ask you for this code at handover: {code}\nLive tracking: {url}",
+  "@recipientNotifyMessageCode": {
+    "placeholders": {
+      "route": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientNotifyMessageInvite": "Download Yadony to track your parcels and send your own: https://yadony.com",
   "bidDetailTrackingShareSubject": "Yadony parcel tracking · {number}",
   "@bidDetailTrackingShareSubject": {
     "placeholders": {
