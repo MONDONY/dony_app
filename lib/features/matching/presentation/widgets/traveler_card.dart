@@ -3,6 +3,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/core/widgets/owner_views_label.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
@@ -214,6 +215,22 @@ class TravelerCard extends StatelessWidget {
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
+                    // Audience de mon trajet : visible de moi seul.
+                    if (OwnerViewsLabel.isVisible(
+                      count: announcement.uniqueViewerCount,
+                      isOwner: isOwnAnnouncement,
+                    )) ...[
+                      Text(
+                        '  ·  ',
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                      OwnerViewsLabel(
+                        count: announcement.uniqueViewerCount,
+                        isOwner: isOwnAnnouncement,
+                      ),
+                    ],
                   ],
                 ),
 

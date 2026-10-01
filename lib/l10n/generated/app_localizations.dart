@@ -8327,6 +8327,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{· {count} trajet} other{· {count} trajets}}'**
   String listingTravelerTrips(int count);
 
+  /// Fil Rechercher : nombre de personnes qui ont vu le trajet ou la demande, affiché à son seul propriétaire sur sa carte (traveler_card.dart, package_request_list_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} vue} other{{count} vues}}'**
+  String searchCardViews(int count);
+
   /// Titre de la feuille d'aperçu avant publication (announcement_preview_sheet.dart)
   ///
   /// In fr, this message translates to:

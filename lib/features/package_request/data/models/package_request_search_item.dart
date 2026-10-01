@@ -37,6 +37,7 @@ class PackageRequestSearchItem extends Equatable {
     this.currency = 'EUR',
     this.convertedDisplayPrice,
     this.convertedCurrency,
+    this.uniqueViewerCount,
     this.grossPriceEur,
   });
 
@@ -119,6 +120,10 @@ class PackageRequestSearchItem extends Equatable {
   /// Devise cible de [convertedDisplayPrice] : celle du lecteur.
   final String? convertedCurrency;
 
+  /// Personnes qui ont vu cette demande. Servi par la recherche au seul
+  /// expéditeur propriétaire ; nul pour tout autre lecteur et sur un back plus ancien.
+  final int? uniqueViewerCount;
+
   factory PackageRequestSearchItem.fromJson(
     Map<String, dynamic> json,
   ) => PackageRequestSearchItem(
@@ -164,6 +169,7 @@ class PackageRequestSearchItem extends Equatable {
     currency: json['currency'] as String? ?? 'EUR',
     convertedDisplayPrice: (json['convertedDisplayPrice'] as num?)?.toDouble(),
     convertedCurrency: json['convertedCurrency'] as String?,
+    uniqueViewerCount: (json['uniqueViewerCount'] as num?)?.toInt(),
     grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
   );
 
@@ -198,6 +204,7 @@ class PackageRequestSearchItem extends Equatable {
     convertedDisplayPrice,
     convertedCurrency,
     grossPriceEur,
+    uniqueViewerCount,
   ];
 }
 

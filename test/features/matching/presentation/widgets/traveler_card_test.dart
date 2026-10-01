@@ -31,6 +31,7 @@ AnnouncementModel _makeAnn({
   String pricingMode = 'KG',
   double? convertedPricePerKg,
   String? convertedCurrency,
+  int? uniqueViewerCount,
 }) => AnnouncementModel(
   id: 'a1',
   travelerId: 't1',
@@ -46,6 +47,7 @@ AnnouncementModel _makeAnn({
   pricingMode: pricingMode,
   convertedPricePerKg: convertedPricePerKg,
   convertedCurrency: convertedCurrency,
+  uniqueViewerCount: uniqueViewerCount,
   status: 'ACTIVE',
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
@@ -994,5 +996,58 @@ void main() {
         findsOneWidget,
       );
     });
+  });
+
+  group('audience (fil Rechercher, propriétaire seulement)', () {
+    testWidgets('mon trajet vu par 12 personnes → « 12 vues »', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(uniqueViewerCount: 12),
+            index: 0,
+            onTap: () {},
+            isOwnAnnouncement: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('12 vues'), findsOneWidget);
+    });
+
+    testWidgets('mon trajet vu par 1 personne → « 1 vue »', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(uniqueViewerCount: 1),
+            index: 0,
+            onTap: () {},
+            isOwnAnnouncement: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('1 vue'), findsOneWidget);
+    });
+
+    for (final (label, own, count) in [
+      ('trajet d’un autre, même avec un chiffre', false, 12),
+      ('mon trajet sans vue', true, 0),
+      ('mon trajet, ancien back sans le champ', true, null),
+    ]) {
+      testWidgets('rien n’est affiché : $label', (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            TravelerCard(
+              announcement: _makeAnn(uniqueViewerCount: count),
+              index: 0,
+              onTap: () {},
+              isOwnAnnouncement: own,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.textContaining(RegExp(r'^\d+ vues?$')), findsNothing);
+      });
+    }
   });
 }

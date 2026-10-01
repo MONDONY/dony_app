@@ -1369,6 +1369,7 @@
   "listingCashOnlyWarningBody": "Payment is made directly to the traveler in person. Yadony does not put your money on hold and cannot refund it automatically in case of a dispute.",
   "listingNewRatingLabel": "New",
   "listingTravelerTrips": "{count, plural, =1{· {count} trip} other{· {count} trips}}",
+  "searchCardViews": "{count, plural, =1{{count} view} other{{count} views}}",
   "listingPreviewTitle": "Preview your listing",
   "listingPublishButton": "Post the listing",
   "listingSaveDraftButton": "Save as draft",

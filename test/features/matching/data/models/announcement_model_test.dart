@@ -33,6 +33,34 @@ void main() {
     });
   });
 
+  group('AnnouncementModel.uniqueViewerCount', () {
+    Map<String, dynamic> json({int? viewers}) => {
+      'id': 'a1',
+      'travelerId': 't1',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'departureDate': '2026-10-13',
+      'availableKg': 10,
+      'totalKg': 20,
+      'pricePerKg': 5,
+      'status': 'ACTIVE',
+      'createdAt': '2026-10-01T10:00:00',
+      'updatedAt': '2026-10-01T10:00:00',
+      'uniqueViewerCount': ?viewers,
+    };
+
+    test('servi au voyageur propriétaire', () {
+      expect(
+        AnnouncementModel.fromJson(json(viewers: 12)).uniqueViewerCount,
+        12,
+      );
+    });
+
+    test('absent (autre lecteur, ancien back) : inconnu', () {
+      expect(AnnouncementModel.fromJson(json()).uniqueViewerCount, isNull);
+    });
+  });
+
   Map<String, dynamic> baseAnnouncementJson() => {
     'id': 'a1',
     'travelerId': 't1',

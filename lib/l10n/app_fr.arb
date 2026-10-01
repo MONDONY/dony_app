@@ -4370,6 +4370,15 @@
       }
     }
   },
+  "searchCardViews": "{count, plural, =1{{count} vue} other{{count} vues}}",
+  "@searchCardViews": {
+    "description": "Fil Rechercher : nombre de personnes qui ont vu le trajet ou la demande, affiché à son seul propriétaire sur sa carte (traveler_card.dart, package_request_list_card.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "listingPreviewTitle": "Aperçu de votre annonce",
   "@listingPreviewTitle": {
     "description": "Titre de la feuille d'aperçu avant publication (announcement_preview_sheet.dart)"
