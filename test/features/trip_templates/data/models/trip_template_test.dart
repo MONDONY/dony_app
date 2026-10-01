@@ -33,6 +33,7 @@ void main() {
       expect(t.arrivalTime, '06:30');
       expect(t.handoverLeadDays, isNull);
       expect(t.departureCountryCode, isNull);
+      expect(t.arrivalDayOffset, 0);
     });
 
     test('contrat complet : tous les champs lus', () {
@@ -59,6 +60,7 @@ void main() {
         'handoverLeadDays': 2,
         'departureCountryCode': 'CI',
         'arrivalCountryCode': 'FR',
+        'arrivalDayOffset': 1,
       });
 
       expect(t.currency, 'XOF');
@@ -78,6 +80,7 @@ void main() {
       expect(t.handoverLeadDays, 2);
       expect(t.departureCountryCode, 'CI');
       expect(t.arrivalCountryCode, 'FR');
+      expect(t.arrivalDayOffset, 1);
     });
 
     test('acceptedPaymentMethods explicite prime sur cashAccepted', () {
@@ -124,6 +127,7 @@ void main() {
         handoverLeadDays: 2,
         departureCountryCode: 'CI',
         arrivalCountryCode: 'FR',
+        arrivalDayOffset: 1,
       );
 
       final json = t.toJson();
@@ -144,6 +148,7 @@ void main() {
       expect(json['departureTime'], '22:00');
       expect(json['handoverLeadDays'], 2);
       expect(json['departureCountryCode'], 'CI');
+      expect(json['arrivalDayOffset'], 1);
     });
 
     test('cashAccepted vaut false quand CASH est absent des moyens', () {

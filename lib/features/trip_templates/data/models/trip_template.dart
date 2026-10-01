@@ -35,6 +35,7 @@ class TripTemplate {
     this.handoverLeadDays,
     this.departureCountryCode,
     this.arrivalCountryCode,
+    this.arrivalDayOffset = 0,
   }) : acceptedPaymentMethods =
            acceptedPaymentMethods ??
            (cashAccepted ? const ['STRIPE', 'CASH'] : const ['STRIPE']);
@@ -84,6 +85,10 @@ class TripTemplate {
   final String? departureCountryCode;
   final String? arrivalCountryCode;
 
+  /// Jour d'arrivée relatif au départ (0 = même jour, 1 = vol de nuit).
+  /// Absent d'un modèle enregistré avant FLUTTER-4E : même jour.
+  final int arrivalDayOffset;
+
   /// Miroir historique : vrai si CASH fait partie des moyens acceptés.
   bool get cashAccepted => acceptedPaymentMethods.contains('CASH');
 
@@ -122,6 +127,7 @@ class TripTemplate {
       handoverLeadDays: (json['handoverLeadDays'] as num?)?.toInt(),
       departureCountryCode: json['departureCountryCode'] as String?,
       arrivalCountryCode: json['arrivalCountryCode'] as String?,
+      arrivalDayOffset: (json['arrivalDayOffset'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -178,5 +184,6 @@ class TripTemplate {
     'handoverLeadDays': handoverLeadDays,
     'departureCountryCode': departureCountryCode,
     'arrivalCountryCode': arrivalCountryCode,
+    'arrivalDayOffset': arrivalDayOffset,
   };
 }

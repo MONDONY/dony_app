@@ -1890,6 +1890,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     _arrivalCountryCodeNotifier.value = t.arrivalCountryCode;
     _departureTimeNotifier.value = _timeOfDay(t.departureTime);
     _arrivalTimeNotifier.value = _timeOfDay(t.arrivalTime);
+    // Vol de nuit mémorisé dans le modèle (FLUTTER-4E) ; sans heure
+    // d'arrivée, retour au jour même.
+    _arrivalDayOffsetNotifier.value = t.arrivalTime == null
+        ? 0
+        : t.arrivalDayOffset;
     _transportModeNotifier.value =
         transportModeFromWire(t.transportMode) ?? TransportMode.plane;
     // Valeur optimiste immédiate ; `CapacityUnitChanged` ci-dessous réécrit

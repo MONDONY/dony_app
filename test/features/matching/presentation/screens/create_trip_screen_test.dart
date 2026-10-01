@@ -1227,6 +1227,7 @@ void main() {
       handoverLeadDays: 2,
       departureCountryCode: 'CI',
       arrivalCountryCode: 'FR',
+      arrivalDayOffset: 1,
     );
 
     setUp(() {
@@ -1343,6 +1344,7 @@ void main() {
           step.arrivalTimeNotifier.value,
           const TimeOfDay(hour: 6, minute: 30),
         );
+        expect(step.arrivalDayOffsetNotifier?.value, 1);
         expect(find.text('Publié en Franc CFA Ouest (XOF)'), findsOneWidget);
 
         // Étape 1 : adresses de remise/livraison — LieuxCapaciteStep reste
