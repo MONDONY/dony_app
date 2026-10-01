@@ -559,4 +559,46 @@ void main() {
       expect(m.isReturned, true);
     });
   });
+
+  group('RescheduleDecisionRequested', () {
+    blocTest<CancellationBloc, CancellationState>(
+      'garder → [Loading, RescheduleKept]',
+      build: buildBloc,
+      setUp: () => when(
+        () => mockRepo.decideReschedule('bid-1', keep: true),
+      ).thenAnswer((_) async {}),
+      act: (b) => b.add(RescheduleDecisionRequested('bid-1', keep: true)),
+      expect: () => [isA<CancellationLoading>(), isA<RescheduleKept>()],
+    );
+
+    blocTest<CancellationBloc, CancellationState>(
+      'se retirer → [Loading, RescheduleWithdrawn]',
+      build: buildBloc,
+      setUp: () => when(
+        () => mockRepo.decideReschedule('bid-1', keep: false),
+      ).thenAnswer((_) async {}),
+      act: (b) => b.add(RescheduleDecisionRequested('bid-1', keep: false)),
+      expect: () => [isA<CancellationLoading>(), isA<RescheduleWithdrawn>()],
+    );
+
+    blocTest<CancellationBloc, CancellationState>(
+      'délai dépassé → [Loading, Error]',
+      build: buildBloc,
+      setUp: () =>
+          when(
+            () => mockRepo.decideReschedule(any(), keep: any(named: 'keep')),
+          ).thenThrow(
+            DioException(
+              requestOptions: RequestOptions(),
+              response: Response(
+                requestOptions: RequestOptions(),
+                statusCode: 409,
+                data: {'code': 'reschedule-decision-closed'},
+              ),
+            ),
+          ),
+      act: (b) => b.add(RescheduleDecisionRequested('bid-1', keep: false)),
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
+    );
+  });
 }

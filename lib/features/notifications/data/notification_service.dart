@@ -34,6 +34,8 @@ const _criticalTypes = {
   'DELIVERY_CONFIRMED',
   'DISPUTE_OPENED',
   'HANDOVER_REMINDER_H2',
+  // Report du trajet d'un colis accepté : l'expéditeur doit répondre.
+  'TRIP_RESCHEDULED',
 };
 
 /// Jamais affiché à l'utilisateur : remonté à Sentry uniquement.

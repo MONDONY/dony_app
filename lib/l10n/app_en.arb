@@ -8293,5 +8293,89 @@
         "type": "int"
       }
     }
-  }
+  },
+  "tripRescheduleTile": "Reschedule",
+  "tripRescheduleTitle": "Reschedule the trip",
+  "tripRescheduleSubtitle": "Flight canceled or trip postponed: pick the new date.",
+  "tripRescheduleReasonLabel": "Reason",
+  "tripRescheduleReasonFlightCancelled": "Flight canceled",
+  "tripRescheduleReasonPostponed": "Trip postponed",
+  "tripRescheduleReasonOther": "Other reason",
+  "tripRescheduleNewDateLabel": "New departure date",
+  "tripRescheduleDepartureTimeLabel": "Departure time",
+  "tripRescheduleArrivalTimeLabel": "Arrival time (optional)",
+  "tripRescheduleHandoverLabel": "Parcel handover by",
+  "tripRescheduleNoteLabel": "Message to senders (optional)",
+  "tripRescheduleNoteHint": "E.g. flight canceled, new flight confirmed the next day",
+  "tripRescheduleSameDateHint": "Pick a different date or time from the current one.",
+  "tripRescheduleConsequences": "Senders whose parcel is accepted can keep it or cancel at no cost, and each cancellation counts against your reliability. A trip can be rescheduled twice at most.",
+  "tripRescheduleSubmit": "Reschedule trip",
+  "tripRescheduledSnackbar": "{count, plural, =0{Trip rescheduled. Senders have been notified.} =1{Trip rescheduled. 1 sender will confirm their parcel.} other{Trip rescheduled. {count} senders will confirm their parcels.}}",
+  "@tripRescheduledSnackbar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bidRescheduleTitle": "Trip rescheduled",
+  "bidRescheduleBody": "The traveler moved their trip from {previous} to {next} ({reason}).",
+  "@bidRescheduleBody": {
+    "placeholders": {
+      "previous": {
+        "type": "String"
+      },
+      "next": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "bidRescheduleNote": "Message from the traveler: {note}",
+  "@bidRescheduleNote": {
+    "placeholders": {
+      "note": {
+        "type": "String"
+      }
+    }
+  },
+  "bidRescheduleDecisionHint": "Reply before {deadline}. Without a reply, your parcel stays on the trip.",
+  "@bidRescheduleDecisionHint": {
+    "placeholders": {
+      "deadline": {
+        "type": "String"
+      }
+    }
+  },
+  "bidRescheduleTravelerHint": "The sender has until {deadline} to keep or withdraw their parcel.",
+  "@bidRescheduleTravelerHint": {
+    "placeholders": {
+      "deadline": {
+        "type": "String"
+      }
+    }
+  },
+  "bidRescheduleKeep": "Keep my parcel",
+  "bidRescheduleWithdraw": "Cancel at no cost",
+  "bidRescheduleWithdrawConfirmTitle": "Cancel your shipment?",
+  "bidRescheduleWithdrawConfirmMessage": "You get a full refund and we suggest other trips.",
+  "bidRescheduleWithdrawConfirmReturnMessage": "You get a full refund. The traveler returns the parcel against your return code.",
+  "bidRescheduleKeptSnackbar": "Got it: your parcel leaves on the new date.",
+  "bidRescheduleWithdrawnSnackbar": "Shipment canceled. Your refund is on its way.",
+  "errorRescheduleLimitReachedTitle": "Cannot reschedule",
+  "errorRescheduleLimitReachedMessage": "This trip has already been rescheduled twice. Cancel it and post a new trip.",
+  "errorRescheduleInTransitTitle": "Parcel already on its way",
+  "errorRescheduleInTransitMessage": "A parcel is already on its way: the trip can no longer be rescheduled.",
+  "errorRescheduleInvalidStatusTitle": "Cannot reschedule",
+  "errorRescheduleInvalidStatusMessage": "Only a published trip that has not ended can be rescheduled.",
+  "errorRescheduleSameDateTitle": "Same schedule",
+  "errorRescheduleSameDateMessage": "Pick a departure date or time different from the current one.",
+  "errorHandoverDeadlinePastTitle": "Handover date has passed",
+  "errorHandoverDeadlinePastMessage": "The handover deadline must be in the future.",
+  "errorNoReschedulePendingTitle": "Nothing to confirm",
+  "errorNoReschedulePendingMessage": "No trip change is waiting for your reply.",
+  "errorRescheduleDecisionClosedTitle": "Deadline passed",
+  "errorRescheduleDecisionClosedMessage": "The time to reply has passed: your parcel stays on the trip."
 }

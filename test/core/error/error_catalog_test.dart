@@ -148,6 +148,33 @@ void main() {
     });
   });
 
+  group('ErrorCatalog — report de trajet', () {
+    for (final (code, title) in const [
+      ('reschedule-limit-reached', 'Report impossible'),
+      ('reschedule-in-transit', 'Colis déjà en route'),
+      ('reschedule-invalid-status', 'Report impossible'),
+      ('reschedule-same-date', 'Même horaire'),
+      ('handover-deadline-past', 'Date de remise passée'),
+      ('no-reschedule-pending', 'Rien à confirmer'),
+      ('reschedule-decision-closed', 'Délai dépassé'),
+    ]) {
+      test('$code a son propre message', () {
+        final error = ConflictException('détail serveur', code: code);
+
+        expect(ErrorCatalog.isKnown(error), isTrue);
+        expect(ErrorCatalog.lookup(error).title, title);
+      });
+    }
+
+    test('délai dépassé : le colis reste sur le trajet', () {
+      const error = ConflictException('x', code: 'reschedule-decision-closed');
+      expect(
+        ErrorCatalog.lookup(error).message,
+        contains('votre colis reste sur le trajet'),
+      );
+    });
+  });
+
   group('ErrorCatalog — pro-limit-reached', () {
     // RÉGRESSION : sans entrée dédiée, une ForbiddenException(pro-limit-reached)
     // retombait sur le type-fallback `forbidden` (« Action non autorisée »), donc

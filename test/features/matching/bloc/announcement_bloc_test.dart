@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
@@ -65,6 +66,8 @@ void main() {
   setUpAll(() {
     registerFallbackValue(kTestPickupAddress);
     registerFallbackValue(TransportMode.other);
+    registerFallbackValue(TripRescheduleReason.other);
+    registerFallbackValue(DateTime(2026));
   });
 
   setUp(() {
@@ -1692,5 +1695,84 @@ void main() {
       expect(state.previousResults, hasLength(1));
       expect(state.previousResults!.first.id, ann.id);
     });
+  });
+
+  group('AnnouncementRescheduleRequested', () {
+    const result = TripRescheduleResult(
+      rescheduleId: 'r1',
+      rescheduleCount: 1,
+      remainingReschedules: 1,
+      parcelsAwaitingDecision: 2,
+      requestsInformed: 1,
+    );
+    AnnouncementRescheduleRequested event() => AnnouncementRescheduleRequested(
+      announcementId: 'ann-001',
+      departureDate: DateTime(2026, 10, 13),
+      departureTime: '22:00',
+      arrivalDate: '2026-10-14',
+      arrivalTime: '06:30',
+      handoverDeadline: DateTime(2026, 10, 12, 23, 59),
+      reason: TripRescheduleReason.flightCancelled,
+      note: 'Vol annulé',
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'report → [Loading, AnnouncementRescheduled] avec le trajet rechargé',
+      build: () {
+        when(
+          () => mockRepo.rescheduleTrip(
+            announcementId: 'ann-001',
+            departureDate: DateTime(2026, 10, 13),
+            departureTime: '22:00',
+            arrivalDate: '2026-10-14',
+            arrivalTime: '06:30',
+            handoverDeadline: DateTime(2026, 10, 12, 23, 59),
+            reason: TripRescheduleReason.flightCancelled,
+            note: 'Vol annulé',
+          ),
+        ).thenAnswer((_) async => result);
+        when(
+          () => mockRepo.getAnnouncementDetail('ann-001'),
+        ).thenAnswer((_) async => buildAnnouncement());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(event()),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementRescheduled>()
+            .having((s) => s.result.parcelsAwaitingDecision, 'parcels', 2)
+            .having((s) => s.announcement.id, 'id', 'ann-001'),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'refus du back → [Loading, AnnouncementError]',
+      build: () {
+        when(
+          () => mockRepo.rescheduleTrip(
+            announcementId: any(named: 'announcementId'),
+            departureDate: any(named: 'departureDate'),
+            departureTime: any(named: 'departureTime'),
+            arrivalDate: any(named: 'arrivalDate'),
+            arrivalTime: any(named: 'arrivalTime'),
+            handoverDeadline: any(named: 'handoverDeadline'),
+            reason: any(named: 'reason'),
+            note: any(named: 'note'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(),
+            response: Response(
+              requestOptions: RequestOptions(),
+              statusCode: 409,
+              data: {'code': 'reschedule-limit-reached', 'detail': 'x'},
+            ),
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(event()),
+      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
+    );
   });
 }

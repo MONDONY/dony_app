@@ -818,6 +818,49 @@ abstract final class ErrorCatalog {
     // tombait sur le message générique de validation et l'utilisateur ne
     // savait pas quoi faire (FLUTTER-3T). L'écran d'onboarding paiement
     // ajoute le bouton qui mène à l'ajout d'email.
+    // Report de trajet (vol annulé, voyage repoussé) et réponse de l'expéditeur.
+    'reschedule-limit-reached': _Entry(
+      title: (l) => l.errorRescheduleLimitReachedTitle,
+      message: (l) => l.errorRescheduleLimitReachedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.event_repeat_rounded,
+    ),
+    'reschedule-in-transit': _Entry(
+      title: (l) => l.errorRescheduleInTransitTitle,
+      message: (l) => l.errorRescheduleInTransitMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.flight_takeoff_rounded,
+    ),
+    'reschedule-invalid-status': _Entry(
+      title: (l) => l.errorRescheduleInvalidStatusTitle,
+      message: (l) => l.errorRescheduleInvalidStatusMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.event_busy_rounded,
+    ),
+    'reschedule-same-date': _Entry(
+      title: (l) => l.errorRescheduleSameDateTitle,
+      message: (l) => l.errorRescheduleSameDateMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.event_rounded,
+    ),
+    'handover-deadline-past': _Entry(
+      title: (l) => l.errorHandoverDeadlinePastTitle,
+      message: (l) => l.errorHandoverDeadlinePastMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.event_busy_rounded,
+    ),
+    'no-reschedule-pending': _Entry(
+      title: (l) => l.errorNoReschedulePendingTitle,
+      message: (l) => l.errorNoReschedulePendingMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.event_available_rounded,
+    ),
+    'reschedule-decision-closed': _Entry(
+      title: (l) => l.errorRescheduleDecisionClosedTitle,
+      message: (l) => l.errorRescheduleDecisionClosedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_clock_rounded,
+    ),
     'handover-deadline-passed': _Entry(
       title: (l) => l.errorHandoverDeadlinePassedTitle,
       message: (l) => l.errorHandoverDeadlinePassedMessage,

@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_reschedule_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -69,6 +70,12 @@ class OwnerActionGrid extends StatelessWidget {
             (a.bidsCount ?? 0) == 0) ||
         isCancelled;
     final isActive = a.status == 'ACTIVE';
+    // Report (vol annulé, voyage repoussé) : là où « Modifier » est bloqué par
+    // des demandes, sur un trajet encore à venir ou passé « en cours » à tort.
+    final canReschedule =
+        !canEdit &&
+        (a.bidsCount ?? 0) > 0 &&
+        const {'ACTIVE', 'FULL', 'IN_PROGRESS'}.contains(a.status);
 
     // Tuiles présentes selon le statut. Construites dans une liste pour éviter
     // les demi-tuiles vides (ex. trajet COMPLETED/FULL n'a ni Demandes ni
@@ -159,6 +166,13 @@ class OwnerActionGrid extends StatelessWidget {
             : null,
         disabledMessage: l.tripOwnerEditDisabledMessage,
       ),
+      if (canReschedule)
+        _tile(
+          iconAsset: 'calendar-sync',
+          label: l.tripRescheduleTile,
+          accent: cs.primary,
+          onTap: () => TripRescheduleBottomSheet.show(context, announcement: a),
+        ),
       // ── Supprimer (si supprimable) ou Annuler (si ACTIVE non supprimable) ──
       if (canDelete)
         _tile(

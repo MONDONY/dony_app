@@ -10,6 +10,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/details_a
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -98,6 +99,8 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       // pour éviter une double animation (fade × fade + slide × slide).
       ColisBillet(bid: widget.bid, isSender: true),
       SenderHeroCard(bid: widget.bid),
+      if (TripRescheduleCard.shouldShow(widget.bid))
+        TripRescheduleCard(bid: widget.bid, isSender: true),
       // Hors du hero, qui les masquait dès qu'une contestation, une absence
       // ou la livraison prenait la place.
       if (_activeStatuses.contains(status) &&

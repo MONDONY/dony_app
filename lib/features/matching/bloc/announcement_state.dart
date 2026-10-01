@@ -1,5 +1,6 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 
 abstract class AnnouncementState {}
 
@@ -104,4 +105,12 @@ class AnnouncementTripArrived extends AnnouncementState {
 class AnnouncementArrivalInstructionsUpdated extends AnnouncementState {
   final AnnouncementModel announcement;
   AnnouncementArrivalInstructionsUpdated(this.announcement);
+}
+
+/// Trajet reporté : `announcement` porte les nouveaux horaires, `result` le
+/// nombre d'expéditeurs prévenus et les reports restants.
+class AnnouncementRescheduled extends AnnouncementState {
+  final AnnouncementModel announcement;
+  final TripRescheduleResult result;
+  AnnouncementRescheduled(this.announcement, this.result);
 }

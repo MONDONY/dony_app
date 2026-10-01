@@ -22,6 +22,9 @@ class CancellationRepository {
 
   Future<void> contestNoShow(String bidId) => _datasource.contestNoShow(bidId);
 
+  Future<void> decideReschedule(String bidId, {required bool keep}) =>
+      _datasource.decideReschedule(bidId, keep: keep);
+
   Future<void> reportDeliveryNoShow(String bidId) =>
       _datasource.reportDeliveryNoShow(bidId);
 

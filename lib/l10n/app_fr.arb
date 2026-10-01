@@ -16960,5 +16960,208 @@
         "type": "int"
       }
     }
+  },
+  "tripRescheduleTile": "Reporter",
+  "@tripRescheduleTile": {
+    "description": "Tuile du trajet propriétaire (owner_action_grid.dart)"
+  },
+  "tripRescheduleTitle": "Reporter le trajet",
+  "@tripRescheduleTitle": {
+    "description": "Titre de la feuille de report (trip_reschedule_bottom_sheet.dart)"
+  },
+  "tripRescheduleSubtitle": "Vol annulé ou voyage repoussé : choisissez la nouvelle date.",
+  "@tripRescheduleSubtitle": {
+    "description": "Sous-titre de la feuille de report"
+  },
+  "tripRescheduleReasonLabel": "Motif",
+  "@tripRescheduleReasonLabel": {
+    "description": "Libellé des puces de motif"
+  },
+  "tripRescheduleReasonFlightCancelled": "Vol annulé",
+  "@tripRescheduleReasonFlightCancelled": {
+    "description": "Motif de report"
+  },
+  "tripRescheduleReasonPostponed": "Voyage repoussé",
+  "@tripRescheduleReasonPostponed": {
+    "description": "Motif de report"
+  },
+  "tripRescheduleReasonOther": "Autre raison",
+  "@tripRescheduleReasonOther": {
+    "description": "Motif de report"
+  },
+  "tripRescheduleNewDateLabel": "Nouvelle date de départ",
+  "@tripRescheduleNewDateLabel": {
+    "description": "Champ de la feuille de report"
+  },
+  "tripRescheduleDepartureTimeLabel": "Heure de départ",
+  "@tripRescheduleDepartureTimeLabel": {
+    "description": "Champ de la feuille de report"
+  },
+  "tripRescheduleArrivalTimeLabel": "Heure d'arrivée (facultatif)",
+  "@tripRescheduleArrivalTimeLabel": {
+    "description": "Champ de la feuille de report"
+  },
+  "tripRescheduleHandoverLabel": "Remise des colis au plus tard",
+  "@tripRescheduleHandoverLabel": {
+    "description": "Champ de la feuille de report"
+  },
+  "tripRescheduleNoteLabel": "Message aux expéditeurs (facultatif)",
+  "@tripRescheduleNoteLabel": {
+    "description": "Champ de la feuille de report"
+  },
+  "tripRescheduleNoteHint": "Ex. : vol annulé, nouveau vol confirmé le lendemain",
+  "@tripRescheduleNoteHint": {
+    "description": "Indice du message aux expéditeurs"
+  },
+  "tripRescheduleSameDateHint": "Choisissez une date ou une heure différente de l'actuelle.",
+  "@tripRescheduleSameDateHint": {
+    "description": "Feuille de report : même horaire que l'actuel"
+  },
+  "tripRescheduleConsequences": "Les expéditeurs dont le colis est accepté pourront le garder ou annuler sans frais, et chaque annulation compte dans votre fiabilité. Un trajet se reporte 2 fois au plus.",
+  "@tripRescheduleConsequences": {
+    "description": "Conséquences du report, en bas de la feuille"
+  },
+  "tripRescheduleSubmit": "Reporter le trajet",
+  "@tripRescheduleSubmit": {
+    "description": "Bouton de la feuille de report"
+  },
+  "tripRescheduledSnackbar": "{count, plural, =0{Trajet reporté. Les expéditeurs sont prévenus.} =1{Trajet reporté. 1 expéditeur va confirmer son colis.} other{Trajet reporté. {count} expéditeurs vont confirmer leur colis.}}",
+  "@tripRescheduledSnackbar": {
+    "description": "Confirmation après le report",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bidRescheduleTitle": "Trajet reporté",
+  "@bidRescheduleTitle": {
+    "description": "Carte de report dans le suivi du colis (trip_reschedule_card.dart)"
+  },
+  "bidRescheduleBody": "Le voyageur a reporté son trajet du {previous} au {next} ({reason}).",
+  "@bidRescheduleBody": {
+    "description": "Carte de report : ancienne date, nouvelle date, motif",
+    "placeholders": {
+      "previous": {
+        "type": "String"
+      },
+      "next": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "bidRescheduleNote": "Message du voyageur : {note}",
+  "@bidRescheduleNote": {
+    "description": "Carte de report : message libre du voyageur",
+    "placeholders": {
+      "note": {
+        "type": "String"
+      }
+    }
+  },
+  "bidRescheduleDecisionHint": "Répondez avant le {deadline}. Sans réponse, votre colis reste sur le trajet.",
+  "@bidRescheduleDecisionHint": {
+    "description": "Carte de report, expéditeur : délai de réponse",
+    "placeholders": {
+      "deadline": {
+        "type": "String"
+      }
+    }
+  },
+  "bidRescheduleTravelerHint": "L'expéditeur a jusqu'au {deadline} pour garder ou retirer son colis.",
+  "@bidRescheduleTravelerHint": {
+    "description": "Carte de report, voyageur : délai laissé à l'expéditeur",
+    "placeholders": {
+      "deadline": {
+        "type": "String"
+      }
+    }
+  },
+  "bidRescheduleKeep": "Garder mon colis",
+  "@bidRescheduleKeep": {
+    "description": "Bouton de la carte de report"
+  },
+  "bidRescheduleWithdraw": "Annuler sans frais",
+  "@bidRescheduleWithdraw": {
+    "description": "Bouton de la carte de report"
+  },
+  "bidRescheduleWithdrawConfirmTitle": "Annuler votre envoi ?",
+  "@bidRescheduleWithdrawConfirmTitle": {
+    "description": "Confirmation du retrait après report"
+  },
+  "bidRescheduleWithdrawConfirmMessage": "Vous êtes remboursé intégralement et nous vous proposons d'autres trajets.",
+  "@bidRescheduleWithdrawConfirmMessage": {
+    "description": "Confirmation du retrait, colis pas encore remis"
+  },
+  "bidRescheduleWithdrawConfirmReturnMessage": "Vous êtes remboursé intégralement. Le voyageur vous rend le colis contre votre code de retour.",
+  "@bidRescheduleWithdrawConfirmReturnMessage": {
+    "description": "Confirmation du retrait, colis déjà remis"
+  },
+  "bidRescheduleKeptSnackbar": "C'est noté : votre colis part à la nouvelle date.",
+  "@bidRescheduleKeptSnackbar": {
+    "description": "Confirmation après « Garder mon colis »"
+  },
+  "bidRescheduleWithdrawnSnackbar": "Envoi annulé. Votre remboursement est en cours.",
+  "@bidRescheduleWithdrawnSnackbar": {
+    "description": "Confirmation après le retrait"
+  },
+  "errorRescheduleLimitReachedTitle": "Report impossible",
+  "@errorRescheduleLimitReachedTitle": {
+    "description": "Erreur reschedule-limit-reached"
+  },
+  "errorRescheduleLimitReachedMessage": "Ce trajet a déjà été reporté 2 fois. Annulez-le et publiez un nouveau trajet.",
+  "@errorRescheduleLimitReachedMessage": {
+    "description": "Erreur reschedule-limit-reached"
+  },
+  "errorRescheduleInTransitTitle": "Colis déjà en route",
+  "@errorRescheduleInTransitTitle": {
+    "description": "Erreur reschedule-in-transit"
+  },
+  "errorRescheduleInTransitMessage": "Un colis est déjà en route : le trajet ne peut plus être reporté.",
+  "@errorRescheduleInTransitMessage": {
+    "description": "Erreur reschedule-in-transit"
+  },
+  "errorRescheduleInvalidStatusTitle": "Report impossible",
+  "@errorRescheduleInvalidStatusTitle": {
+    "description": "Erreur reschedule-invalid-status"
+  },
+  "errorRescheduleInvalidStatusMessage": "Seul un trajet publié et pas encore terminé peut être reporté.",
+  "@errorRescheduleInvalidStatusMessage": {
+    "description": "Erreur reschedule-invalid-status"
+  },
+  "errorRescheduleSameDateTitle": "Même horaire",
+  "@errorRescheduleSameDateTitle": {
+    "description": "Erreur reschedule-same-date"
+  },
+  "errorRescheduleSameDateMessage": "Choisissez une date ou une heure de départ différente de l'actuelle.",
+  "@errorRescheduleSameDateMessage": {
+    "description": "Erreur reschedule-same-date"
+  },
+  "errorHandoverDeadlinePastTitle": "Date de remise passée",
+  "@errorHandoverDeadlinePastTitle": {
+    "description": "Erreur handover-deadline-past"
+  },
+  "errorHandoverDeadlinePastMessage": "La date limite de remise doit être dans le futur.",
+  "@errorHandoverDeadlinePastMessage": {
+    "description": "Erreur handover-deadline-past"
+  },
+  "errorNoReschedulePendingTitle": "Rien à confirmer",
+  "@errorNoReschedulePendingTitle": {
+    "description": "Erreur no-reschedule-pending"
+  },
+  "errorNoReschedulePendingMessage": "Aucun report de trajet n'attend votre réponse.",
+  "@errorNoReschedulePendingMessage": {
+    "description": "Erreur no-reschedule-pending"
+  },
+  "errorRescheduleDecisionClosedTitle": "Délai dépassé",
+  "@errorRescheduleDecisionClosedTitle": {
+    "description": "Erreur reschedule-decision-closed"
+  },
+  "errorRescheduleDecisionClosedMessage": "Le délai pour répondre au report est dépassé : votre colis reste sur le trajet.",
+  "@errorRescheduleDecisionClosedMessage": {
+    "description": "Erreur reschedule-decision-closed"
   }
 }

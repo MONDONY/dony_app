@@ -24389,6 +24389,264 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{time} (+{days} j)'**
   String tripArrivalDayOffsetSuffix(String time, int days);
+
+  /// Tuile du trajet propriétaire (owner_action_grid.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Reporter'**
+  String get tripRescheduleTile;
+
+  /// Titre de la feuille de report (trip_reschedule_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Reporter le trajet'**
+  String get tripRescheduleTitle;
+
+  /// Sous-titre de la feuille de report
+  ///
+  /// In fr, this message translates to:
+  /// **'Vol annulé ou voyage repoussé : choisissez la nouvelle date.'**
+  String get tripRescheduleSubtitle;
+
+  /// Libellé des puces de motif
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif'**
+  String get tripRescheduleReasonLabel;
+
+  /// Motif de report
+  ///
+  /// In fr, this message translates to:
+  /// **'Vol annulé'**
+  String get tripRescheduleReasonFlightCancelled;
+
+  /// Motif de report
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyage repoussé'**
+  String get tripRescheduleReasonPostponed;
+
+  /// Motif de report
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre raison'**
+  String get tripRescheduleReasonOther;
+
+  /// Champ de la feuille de report
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle date de départ'**
+  String get tripRescheduleNewDateLabel;
+
+  /// Champ de la feuille de report
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure de départ'**
+  String get tripRescheduleDepartureTimeLabel;
+
+  /// Champ de la feuille de report
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure d\'arrivée (facultatif)'**
+  String get tripRescheduleArrivalTimeLabel;
+
+  /// Champ de la feuille de report
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise des colis au plus tard'**
+  String get tripRescheduleHandoverLabel;
+
+  /// Champ de la feuille de report
+  ///
+  /// In fr, this message translates to:
+  /// **'Message aux expéditeurs (facultatif)'**
+  String get tripRescheduleNoteLabel;
+
+  /// Indice du message aux expéditeurs
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. : vol annulé, nouveau vol confirmé le lendemain'**
+  String get tripRescheduleNoteHint;
+
+  /// Feuille de report : même horaire que l'actuel
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez une date ou une heure différente de l\'actuelle.'**
+  String get tripRescheduleSameDateHint;
+
+  /// Conséquences du report, en bas de la feuille
+  ///
+  /// In fr, this message translates to:
+  /// **'Les expéditeurs dont le colis est accepté pourront le garder ou annuler sans frais, et chaque annulation compte dans votre fiabilité. Un trajet se reporte 2 fois au plus.'**
+  String get tripRescheduleConsequences;
+
+  /// Bouton de la feuille de report
+  ///
+  /// In fr, this message translates to:
+  /// **'Reporter le trajet'**
+  String get tripRescheduleSubmit;
+
+  /// Confirmation après le report
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Trajet reporté. Les expéditeurs sont prévenus.} =1{Trajet reporté. 1 expéditeur va confirmer son colis.} other{Trajet reporté. {count} expéditeurs vont confirmer leur colis.}}'**
+  String tripRescheduledSnackbar(int count);
+
+  /// Carte de report dans le suivi du colis (trip_reschedule_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet reporté'**
+  String get bidRescheduleTitle;
+
+  /// Carte de report : ancienne date, nouvelle date, motif
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur a reporté son trajet du {previous} au {next} ({reason}).'**
+  String bidRescheduleBody(String previous, String next, String reason);
+
+  /// Carte de report : message libre du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Message du voyageur : {note}'**
+  String bidRescheduleNote(String note);
+
+  /// Carte de report, expéditeur : délai de réponse
+  ///
+  /// In fr, this message translates to:
+  /// **'Répondez avant le {deadline}. Sans réponse, votre colis reste sur le trajet.'**
+  String bidRescheduleDecisionHint(String deadline);
+
+  /// Carte de report, voyageur : délai laissé à l'expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur a jusqu\'au {deadline} pour garder ou retirer son colis.'**
+  String bidRescheduleTravelerHint(String deadline);
+
+  /// Bouton de la carte de report
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder mon colis'**
+  String get bidRescheduleKeep;
+
+  /// Bouton de la carte de report
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler sans frais'**
+  String get bidRescheduleWithdraw;
+
+  /// Confirmation du retrait après report
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler votre envoi ?'**
+  String get bidRescheduleWithdrawConfirmTitle;
+
+  /// Confirmation du retrait, colis pas encore remis
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes remboursé intégralement et nous vous proposons d\'autres trajets.'**
+  String get bidRescheduleWithdrawConfirmMessage;
+
+  /// Confirmation du retrait, colis déjà remis
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes remboursé intégralement. Le voyageur vous rend le colis contre votre code de retour.'**
+  String get bidRescheduleWithdrawConfirmReturnMessage;
+
+  /// Confirmation après « Garder mon colis »
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est noté : votre colis part à la nouvelle date.'**
+  String get bidRescheduleKeptSnackbar;
+
+  /// Confirmation après le retrait
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi annulé. Votre remboursement est en cours.'**
+  String get bidRescheduleWithdrawnSnackbar;
+
+  /// Erreur reschedule-limit-reached
+  ///
+  /// In fr, this message translates to:
+  /// **'Report impossible'**
+  String get errorRescheduleLimitReachedTitle;
+
+  /// Erreur reschedule-limit-reached
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet a déjà été reporté 2 fois. Annulez-le et publiez un nouveau trajet.'**
+  String get errorRescheduleLimitReachedMessage;
+
+  /// Erreur reschedule-in-transit
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis déjà en route'**
+  String get errorRescheduleInTransitTitle;
+
+  /// Erreur reschedule-in-transit
+  ///
+  /// In fr, this message translates to:
+  /// **'Un colis est déjà en route : le trajet ne peut plus être reporté.'**
+  String get errorRescheduleInTransitMessage;
+
+  /// Erreur reschedule-invalid-status
+  ///
+  /// In fr, this message translates to:
+  /// **'Report impossible'**
+  String get errorRescheduleInvalidStatusTitle;
+
+  /// Erreur reschedule-invalid-status
+  ///
+  /// In fr, this message translates to:
+  /// **'Seul un trajet publié et pas encore terminé peut être reporté.'**
+  String get errorRescheduleInvalidStatusMessage;
+
+  /// Erreur reschedule-same-date
+  ///
+  /// In fr, this message translates to:
+  /// **'Même horaire'**
+  String get errorRescheduleSameDateTitle;
+
+  /// Erreur reschedule-same-date
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez une date ou une heure de départ différente de l\'actuelle.'**
+  String get errorRescheduleSameDateMessage;
+
+  /// Erreur handover-deadline-past
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de remise passée'**
+  String get errorHandoverDeadlinePastTitle;
+
+  /// Erreur handover-deadline-past
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de remise doit être dans le futur.'**
+  String get errorHandoverDeadlinePastMessage;
+
+  /// Erreur no-reschedule-pending
+  ///
+  /// In fr, this message translates to:
+  /// **'Rien à confirmer'**
+  String get errorNoReschedulePendingTitle;
+
+  /// Erreur no-reschedule-pending
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun report de trajet n\'attend votre réponse.'**
+  String get errorNoReschedulePendingMessage;
+
+  /// Erreur reschedule-decision-closed
+  ///
+  /// In fr, this message translates to:
+  /// **'Délai dépassé'**
+  String get errorRescheduleDecisionClosedTitle;
+
+  /// Erreur reschedule-decision-closed
+  ///
+  /// In fr, this message translates to:
+  /// **'Le délai pour répondre au report est dépassé : votre colis reste sur le trajet.'**
+  String get errorRescheduleDecisionClosedMessage;
 }
 
 class _AppLocalizationsDelegate

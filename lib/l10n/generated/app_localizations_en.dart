@@ -14680,4 +14680,165 @@ class AppLocalizationsEn extends AppLocalizations {
   String tripArrivalDayOffsetSuffix(String time, int days) {
     return '$time (+${days}d)';
   }
+
+  @override
+  String get tripRescheduleTile => 'Reschedule';
+
+  @override
+  String get tripRescheduleTitle => 'Reschedule the trip';
+
+  @override
+  String get tripRescheduleSubtitle =>
+      'Flight canceled or trip postponed: pick the new date.';
+
+  @override
+  String get tripRescheduleReasonLabel => 'Reason';
+
+  @override
+  String get tripRescheduleReasonFlightCancelled => 'Flight canceled';
+
+  @override
+  String get tripRescheduleReasonPostponed => 'Trip postponed';
+
+  @override
+  String get tripRescheduleReasonOther => 'Other reason';
+
+  @override
+  String get tripRescheduleNewDateLabel => 'New departure date';
+
+  @override
+  String get tripRescheduleDepartureTimeLabel => 'Departure time';
+
+  @override
+  String get tripRescheduleArrivalTimeLabel => 'Arrival time (optional)';
+
+  @override
+  String get tripRescheduleHandoverLabel => 'Parcel handover by';
+
+  @override
+  String get tripRescheduleNoteLabel => 'Message to senders (optional)';
+
+  @override
+  String get tripRescheduleNoteHint =>
+      'E.g. flight canceled, new flight confirmed the next day';
+
+  @override
+  String get tripRescheduleSameDateHint =>
+      'Pick a different date or time from the current one.';
+
+  @override
+  String get tripRescheduleConsequences =>
+      'Senders whose parcel is accepted can keep it or cancel at no cost, and each cancellation counts against your reliability. A trip can be rescheduled twice at most.';
+
+  @override
+  String get tripRescheduleSubmit => 'Reschedule trip';
+
+  @override
+  String tripRescheduledSnackbar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Trip rescheduled. $count senders will confirm their parcels.',
+      one: 'Trip rescheduled. 1 sender will confirm their parcel.',
+      zero: 'Trip rescheduled. Senders have been notified.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bidRescheduleTitle => 'Trip rescheduled';
+
+  @override
+  String bidRescheduleBody(String previous, String next, String reason) {
+    return 'The traveler moved their trip from $previous to $next ($reason).';
+  }
+
+  @override
+  String bidRescheduleNote(String note) {
+    return 'Message from the traveler: $note';
+  }
+
+  @override
+  String bidRescheduleDecisionHint(String deadline) {
+    return 'Reply before $deadline. Without a reply, your parcel stays on the trip.';
+  }
+
+  @override
+  String bidRescheduleTravelerHint(String deadline) {
+    return 'The sender has until $deadline to keep or withdraw their parcel.';
+  }
+
+  @override
+  String get bidRescheduleKeep => 'Keep my parcel';
+
+  @override
+  String get bidRescheduleWithdraw => 'Cancel at no cost';
+
+  @override
+  String get bidRescheduleWithdrawConfirmTitle => 'Cancel your shipment?';
+
+  @override
+  String get bidRescheduleWithdrawConfirmMessage =>
+      'You get a full refund and we suggest other trips.';
+
+  @override
+  String get bidRescheduleWithdrawConfirmReturnMessage =>
+      'You get a full refund. The traveler returns the parcel against your return code.';
+
+  @override
+  String get bidRescheduleKeptSnackbar =>
+      'Got it: your parcel leaves on the new date.';
+
+  @override
+  String get bidRescheduleWithdrawnSnackbar =>
+      'Shipment canceled. Your refund is on its way.';
+
+  @override
+  String get errorRescheduleLimitReachedTitle => 'Cannot reschedule';
+
+  @override
+  String get errorRescheduleLimitReachedMessage =>
+      'This trip has already been rescheduled twice. Cancel it and post a new trip.';
+
+  @override
+  String get errorRescheduleInTransitTitle => 'Parcel already on its way';
+
+  @override
+  String get errorRescheduleInTransitMessage =>
+      'A parcel is already on its way: the trip can no longer be rescheduled.';
+
+  @override
+  String get errorRescheduleInvalidStatusTitle => 'Cannot reschedule';
+
+  @override
+  String get errorRescheduleInvalidStatusMessage =>
+      'Only a published trip that has not ended can be rescheduled.';
+
+  @override
+  String get errorRescheduleSameDateTitle => 'Same schedule';
+
+  @override
+  String get errorRescheduleSameDateMessage =>
+      'Pick a departure date or time different from the current one.';
+
+  @override
+  String get errorHandoverDeadlinePastTitle => 'Handover date has passed';
+
+  @override
+  String get errorHandoverDeadlinePastMessage =>
+      'The handover deadline must be in the future.';
+
+  @override
+  String get errorNoReschedulePendingTitle => 'Nothing to confirm';
+
+  @override
+  String get errorNoReschedulePendingMessage =>
+      'No trip change is waiting for your reply.';
+
+  @override
+  String get errorRescheduleDecisionClosedTitle => 'Deadline passed';
+
+  @override
+  String get errorRescheduleDecisionClosedMessage =>
+      'The time to reply has passed: your parcel stays on the trip.';
 }

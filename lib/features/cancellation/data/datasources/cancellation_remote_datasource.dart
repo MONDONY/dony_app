@@ -73,6 +73,16 @@ class CancellationRemoteDatasource {
     await _apiClient.dio.post('/bids/$bidId/cancel-after-handover');
   }
 
+  /// Réponse de l'expéditeur au report du trajet : garder son colis sur la
+  /// nouvelle date (`keep`) ou se retirer sans frais. Réponse 204, l'écran se
+  /// recharge via BidBloc.BidDetailRequested.
+  Future<void> decideReschedule(String bidId, {required bool keep}) async {
+    await _apiClient.dio.post(
+      '/cancellations/bids/$bidId/reschedule-decision',
+      data: {'decision': keep ? 'KEEP' : 'WITHDRAW'},
+    );
+  }
+
   /// Le voyageur saisit le code de retour détenu par l'expéditeur (D7).
   Future<ReturnCodeModel> confirmReturn(String bidId, String code) async {
     final response = await _apiClient.dio.post(

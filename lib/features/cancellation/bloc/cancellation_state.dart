@@ -47,3 +47,9 @@ class CancellationError extends CancellationState {
   final AppException error;
   CancellationError(this.error);
 }
+
+/// L'expéditeur a gardé son colis sur le trajet reporté.
+class RescheduleKept extends CancellationState {}
+
+/// L'expéditeur s'est retiré après le report : remboursement en cours.
+class RescheduleWithdrawn extends CancellationState {}

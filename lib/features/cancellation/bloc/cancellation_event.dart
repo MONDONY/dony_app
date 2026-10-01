@@ -75,3 +75,11 @@ class ReturnCodeRequested extends CancellationEvent {
   final String bidId;
   ReturnCodeRequested(this.bidId);
 }
+
+/// L'expéditeur répond au report du trajet de son colis : le garder sur la
+/// nouvelle date (`keep`) ou se retirer sans frais.
+class RescheduleDecisionRequested extends CancellationEvent {
+  final String bidId;
+  final bool keep;
+  RescheduleDecisionRequested(this.bidId, {required this.keep});
+}

@@ -14770,4 +14770,165 @@ class AppLocalizationsFr extends AppLocalizations {
   String tripArrivalDayOffsetSuffix(String time, int days) {
     return '$time (+$days j)';
   }
+
+  @override
+  String get tripRescheduleTile => 'Reporter';
+
+  @override
+  String get tripRescheduleTitle => 'Reporter le trajet';
+
+  @override
+  String get tripRescheduleSubtitle =>
+      'Vol annulé ou voyage repoussé : choisissez la nouvelle date.';
+
+  @override
+  String get tripRescheduleReasonLabel => 'Motif';
+
+  @override
+  String get tripRescheduleReasonFlightCancelled => 'Vol annulé';
+
+  @override
+  String get tripRescheduleReasonPostponed => 'Voyage repoussé';
+
+  @override
+  String get tripRescheduleReasonOther => 'Autre raison';
+
+  @override
+  String get tripRescheduleNewDateLabel => 'Nouvelle date de départ';
+
+  @override
+  String get tripRescheduleDepartureTimeLabel => 'Heure de départ';
+
+  @override
+  String get tripRescheduleArrivalTimeLabel => 'Heure d\'arrivée (facultatif)';
+
+  @override
+  String get tripRescheduleHandoverLabel => 'Remise des colis au plus tard';
+
+  @override
+  String get tripRescheduleNoteLabel => 'Message aux expéditeurs (facultatif)';
+
+  @override
+  String get tripRescheduleNoteHint =>
+      'Ex. : vol annulé, nouveau vol confirmé le lendemain';
+
+  @override
+  String get tripRescheduleSameDateHint =>
+      'Choisissez une date ou une heure différente de l\'actuelle.';
+
+  @override
+  String get tripRescheduleConsequences =>
+      'Les expéditeurs dont le colis est accepté pourront le garder ou annuler sans frais, et chaque annulation compte dans votre fiabilité. Un trajet se reporte 2 fois au plus.';
+
+  @override
+  String get tripRescheduleSubmit => 'Reporter le trajet';
+
+  @override
+  String tripRescheduledSnackbar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Trajet reporté. $count expéditeurs vont confirmer leur colis.',
+      one: 'Trajet reporté. 1 expéditeur va confirmer son colis.',
+      zero: 'Trajet reporté. Les expéditeurs sont prévenus.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bidRescheduleTitle => 'Trajet reporté';
+
+  @override
+  String bidRescheduleBody(String previous, String next, String reason) {
+    return 'Le voyageur a reporté son trajet du $previous au $next ($reason).';
+  }
+
+  @override
+  String bidRescheduleNote(String note) {
+    return 'Message du voyageur : $note';
+  }
+
+  @override
+  String bidRescheduleDecisionHint(String deadline) {
+    return 'Répondez avant le $deadline. Sans réponse, votre colis reste sur le trajet.';
+  }
+
+  @override
+  String bidRescheduleTravelerHint(String deadline) {
+    return 'L\'expéditeur a jusqu\'au $deadline pour garder ou retirer son colis.';
+  }
+
+  @override
+  String get bidRescheduleKeep => 'Garder mon colis';
+
+  @override
+  String get bidRescheduleWithdraw => 'Annuler sans frais';
+
+  @override
+  String get bidRescheduleWithdrawConfirmTitle => 'Annuler votre envoi ?';
+
+  @override
+  String get bidRescheduleWithdrawConfirmMessage =>
+      'Vous êtes remboursé intégralement et nous vous proposons d\'autres trajets.';
+
+  @override
+  String get bidRescheduleWithdrawConfirmReturnMessage =>
+      'Vous êtes remboursé intégralement. Le voyageur vous rend le colis contre votre code de retour.';
+
+  @override
+  String get bidRescheduleKeptSnackbar =>
+      'C\'est noté : votre colis part à la nouvelle date.';
+
+  @override
+  String get bidRescheduleWithdrawnSnackbar =>
+      'Envoi annulé. Votre remboursement est en cours.';
+
+  @override
+  String get errorRescheduleLimitReachedTitle => 'Report impossible';
+
+  @override
+  String get errorRescheduleLimitReachedMessage =>
+      'Ce trajet a déjà été reporté 2 fois. Annulez-le et publiez un nouveau trajet.';
+
+  @override
+  String get errorRescheduleInTransitTitle => 'Colis déjà en route';
+
+  @override
+  String get errorRescheduleInTransitMessage =>
+      'Un colis est déjà en route : le trajet ne peut plus être reporté.';
+
+  @override
+  String get errorRescheduleInvalidStatusTitle => 'Report impossible';
+
+  @override
+  String get errorRescheduleInvalidStatusMessage =>
+      'Seul un trajet publié et pas encore terminé peut être reporté.';
+
+  @override
+  String get errorRescheduleSameDateTitle => 'Même horaire';
+
+  @override
+  String get errorRescheduleSameDateMessage =>
+      'Choisissez une date ou une heure de départ différente de l\'actuelle.';
+
+  @override
+  String get errorHandoverDeadlinePastTitle => 'Date de remise passée';
+
+  @override
+  String get errorHandoverDeadlinePastMessage =>
+      'La date limite de remise doit être dans le futur.';
+
+  @override
+  String get errorNoReschedulePendingTitle => 'Rien à confirmer';
+
+  @override
+  String get errorNoReschedulePendingMessage =>
+      'Aucun report de trajet n\'attend votre réponse.';
+
+  @override
+  String get errorRescheduleDecisionClosedTitle => 'Délai dépassé';
+
+  @override
+  String get errorRescheduleDecisionClosedMessage =>
+      'Le délai pour répondre au report est dépassé : votre colis reste sur le trajet.';
 }
