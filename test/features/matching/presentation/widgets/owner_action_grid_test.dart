@@ -163,6 +163,32 @@ void main() {
     expect(find.text('Reporter le trajet'), findsWidgets);
   });
 
+  // Régression recette Redmi : `bidsCount` ne compte que les demandes en
+  // attente. Un trajet dont l'unique colis est accepté affichait « Modifier »
+  // et « Supprimer » au lieu de « Reporter ».
+  testWidgets(
+    'colis accepté seul (bidsCount 0) → Reporter, ni Modifier actif ni Supprimer',
+    (tester) async {
+      when(
+        () => bidBloc.state,
+      ).thenReturn(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        a: _makeAnnouncement(bidsCount: 0, confirmedParcelCount: 1),
+        isOwner: true,
+      );
+
+      expect(find.text('Reporter'), findsOneWidget);
+      expect(find.text('Supprimer'), findsNothing);
+      expect(
+        find.byTooltip("Modifiable tant qu'aucune demande"),
+        findsOneWidget,
+      );
+    },
+  );
+
   testWidgets('pas de Reporter sans demande ni sur un trajet terminé', (
     tester,
   ) async {
