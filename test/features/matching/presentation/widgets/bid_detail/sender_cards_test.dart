@@ -440,6 +440,36 @@ void main() {
       expect(find.textContaining('+221700000000'), findsWidgets);
     });
 
+    for (final status in ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
+      testWidgets('expéditeur, $status : bouton « Modifier » présent', (
+        tester,
+      ) async {
+        final bid = _bid(status: status, recipientPhone: '+221700000000');
+        await tester.pumpWidget(hostAs(bid, isSender: true));
+
+        expect(find.text('Modifier'), findsOneWidget);
+        expect(find.byTooltip('Modifier le destinataire'), findsOneWidget);
+      });
+    }
+
+    for (final status in ['PENDING', 'COMPLETED', 'CANCELLED']) {
+      testWidgets('expéditeur, $status : pas de bouton « Modifier »', (
+        tester,
+      ) async {
+        final bid = _bid(status: status, recipientPhone: '+221700000000');
+        await tester.pumpWidget(hostAs(bid, isSender: true));
+
+        expect(find.text('Modifier'), findsNothing);
+      });
+    }
+
+    testWidgets('voyageur : jamais de bouton « Modifier »', (tester) async {
+      final bid = _bid(status: 'IN_TRANSIT', recipientPhone: '+221700000000');
+      await tester.pumpWidget(hostAs(bid, isSender: false));
+
+      expect(find.text('Modifier'), findsNothing);
+    });
+
     testWidgets('shows weight, category and recipient', (tester) async {
       final bid = _bid(
         weightKg: 5.0,

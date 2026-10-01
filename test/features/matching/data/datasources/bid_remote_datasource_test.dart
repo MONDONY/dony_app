@@ -203,6 +203,72 @@ void main() {
     });
   });
 
+  // ── changeRecipient ─────────────────────────────────────────────────────────
+
+  group('changeRecipient', () {
+    test('PUT /bids/{id}/recipient avec nom et numéro, rend le bid', () async {
+      final updated = {
+        ..._bidJson,
+        'status': 'IN_TRANSIT',
+        'recipientName': 'Awa Ndiaye',
+        'recipientPhone': '+221781112233',
+        'trackingToken': 'nouveau-jeton',
+      };
+      dynamic capturedData;
+      when(
+        () => mockDio.put('/bids/bid-001/recipient', data: any(named: 'data')),
+      ).thenAnswer((invocation) async {
+        capturedData = invocation.namedArguments[const Symbol('data')];
+        return _ok(updated, '/bids/bid-001/recipient');
+      });
+
+      final result = await datasource.changeRecipient(
+        'bid-001',
+        recipientName: 'Awa Ndiaye',
+        recipientPhone: '+221781112233',
+      );
+
+      expect(capturedData, {
+        'recipientName': 'Awa Ndiaye',
+        'recipientPhone': '+221781112233',
+      });
+      expect(result.recipientName, 'Awa Ndiaye');
+      expect(result.trackingToken, 'nouveau-jeton');
+    });
+
+    test('409 : l\'erreur remonte telle quelle', () async {
+      final requestOptions = RequestOptions(path: '/bids/bid-001/recipient');
+      when(
+        () => mockDio.put('/bids/bid-001/recipient', data: any(named: 'data')),
+      ).thenThrow(
+        DioException(
+          requestOptions: requestOptions,
+          response: Response(
+            requestOptions: requestOptions,
+            statusCode: 409,
+            data: {'type': 'recipient-change-not-allowed'},
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+      );
+
+      expect(
+        () => datasource.changeRecipient(
+          'bid-001',
+          recipientName: 'Awa',
+          recipientPhone: '+221781112233',
+        ),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.response?.statusCode,
+            'statusCode',
+            409,
+          ),
+        ),
+      );
+    });
+  });
+
   // ── cancelBid ────────────────────────────────────────────────────────────────
 
   group('cancelBid', () {

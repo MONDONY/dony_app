@@ -386,6 +386,7 @@ abstract final class AnalyticsEvents {
   static const senderCallInitiated = 'sender_call_initiated';
   static const trackingLinkShared = 'tracking_link_shared';
   static const recipientNotified = 'recipient_notified';
+  static const bidRecipientChanged = 'bid_recipient_changed';
 
   // Colis à recevoir (lot 2 destinataire). Jamais le nom, le numéro ni le
   // code : seulement des statuts et des comptes.

@@ -15184,4 +15184,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get recipientAppConfirmedAnonymous =>
       'The recipient is following the parcel in Yadony';
+
+  @override
+  String get recipientChangeTitle => 'Change recipient';
+
+  @override
+  String get recipientChangeOptionSubtitle => 'Name or number, until delivery';
+
+  @override
+  String get recipientChangePickFromBook => 'Pick from my address book';
+
+  @override
+  String get recipientChangePhoneWarning =>
+      'The pickup code and tracking link will be renewed. The previous recipient will lose access to them.';
+
+  @override
+  String get recipientChangeSuccess =>
+      'Recipient changed. Send them the new tracking link.';
+
+  @override
+  String get recipientChangeNameUpdated => 'Recipient name updated.';
+
+  @override
+  String get recipientChangeConflict =>
+      'The parcel has already been delivered, the recipient can no longer be changed.';
+
+  @override
+  String get recipientChangeEditTooltip => 'Edit recipient';
 }

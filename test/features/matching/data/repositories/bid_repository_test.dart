@@ -239,6 +239,23 @@ void main() {
       expect(result.status, AcceptanceStatus.accepted);
     });
 
+    test('changeRecipient delegates correctly', () async {
+      when(
+        () => mockDs.changeRecipient(
+          'bid-001',
+          recipientName: 'Awa',
+          recipientPhone: '+221781112233',
+        ),
+      ).thenAnswer((_) async => _bid(status: 'ACCEPTED'));
+
+      final result = await repo.changeRecipient(
+        'bid-001',
+        recipientName: 'Awa',
+        recipientPhone: '+221781112233',
+      );
+      expect(result.status, 'ACCEPTED');
+    });
+
     test('confirmCommissionAcceptance delegates correctly', () async {
       const response = ConfirmResponse(accepted: true);
       when(

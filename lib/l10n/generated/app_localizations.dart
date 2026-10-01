@@ -25094,6 +25094,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le destinataire suit le colis dans Yadony'**
   String get recipientAppConfirmedAnonymous;
+
+  /// Titre de la feuille et entrée du menu d'options expéditeur pour changer de destinataire (recipient_change_sheet.dart, bid_detail_action_bars.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le destinataire'**
+  String get recipientChangeTitle;
+
+  /// Sous-titre de l'entrée « Modifier le destinataire » du menu d'options expéditeur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom ou numéro, jusqu\'à la remise'**
+  String get recipientChangeOptionSubtitle;
+
+  /// Lien de la feuille « Modifier le destinataire » qui ouvre le carnet de destinataires.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir dans mon carnet'**
+  String get recipientChangePickFromBook;
+
+  /// Avertissement de la feuille « Modifier le destinataire », affiché seulement quand le numéro change.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code de retrait et le lien de suivi seront renouvelés. L\'ancien destinataire n\'y aura plus accès.'**
+  String get recipientChangePhoneWarning;
+
+  /// Snackbar après un changement de destinataire avec un nouveau numéro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire modifié. Envoyez-lui le nouveau lien de suivi.'**
+  String get recipientChangeSuccess;
+
+  /// Snackbar après un changement du seul nom du destinataire (même numéro, lien et code inchangés).
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom du destinataire modifié.'**
+  String get recipientChangeNameUpdated;
+
+  /// Erreur 409 du changement de destinataire : le colis a été remis entre-temps.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis a déjà été remis, le destinataire ne peut plus changer.'**
+  String get recipientChangeConflict;
+
+  /// Nom accessible du bouton « Modifier » de la carte Colis & destinataire (vue expéditeur).
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le destinataire'**
+  String get recipientChangeEditTooltip;
 }
 
 class _AppLocalizationsDelegate

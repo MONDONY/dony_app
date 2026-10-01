@@ -15272,4 +15272,32 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get recipientAppConfirmedAnonymous =>
       'Le destinataire suit le colis dans Yadony';
+
+  @override
+  String get recipientChangeTitle => 'Modifier le destinataire';
+
+  @override
+  String get recipientChangeOptionSubtitle =>
+      'Nom ou numéro, jusqu\'à la remise';
+
+  @override
+  String get recipientChangePickFromBook => 'Choisir dans mon carnet';
+
+  @override
+  String get recipientChangePhoneWarning =>
+      'Le code de retrait et le lien de suivi seront renouvelés. L\'ancien destinataire n\'y aura plus accès.';
+
+  @override
+  String get recipientChangeSuccess =>
+      'Destinataire modifié. Envoyez-lui le nouveau lien de suivi.';
+
+  @override
+  String get recipientChangeNameUpdated => 'Nom du destinataire modifié.';
+
+  @override
+  String get recipientChangeConflict =>
+      'Le colis a déjà été remis, le destinataire ne peut plus changer.';
+
+  @override
+  String get recipientChangeEditTooltip => 'Modifier le destinataire';
 }

@@ -1,11 +1,15 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/recipient_change/recipient_change_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,6 +20,10 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../../helpers/l10n_test_helpers.dart';
 
 class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
+
+class _MockBidRepository extends Mock implements BidRepository {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class MockBidAcceptanceBloc
     extends MockBloc<ace.BidAcceptanceEvent, acs.BidAcceptanceState>
@@ -240,5 +248,80 @@ void main() {
         );
       },
     );
+  });
+
+  group('showSenderOptionsSheet — Modifier le destinataire', () {
+    Widget wrapSender(BidModel bid) => MaterialApp.router(
+      routerConfig: GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, _) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () => showSenderOptionsSheet(context, bid),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    BidModel withStatus(String status) => BidModel(
+      id: 'bid-001',
+      announcementId: 'ann-001',
+      senderId: 'sender-001',
+      status: status,
+      recipientName: 'Fatou Sow',
+      recipientPhone: '+221771234567',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    );
+
+    for (final status in ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
+      testWidgets('$status : entrée présente', (tester) async {
+        await tester.pumpWidget(wrapSender(withStatus(status)));
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Modifier le destinataire'), findsOneWidget);
+        expect(find.text("Nom ou numéro, jusqu'à la remise"), findsOneWidget);
+      });
+    }
+
+    for (final status in ['PENDING', 'COMPLETED', 'CANCELLED']) {
+      testWidgets('$status : entrée absente', (tester) async {
+        await tester.pumpWidget(wrapSender(withStatus(status)));
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Modifier le destinataire'), findsNothing);
+      });
+    }
+
+    testWidgets('tap : ferme le menu et ouvre la feuille de modification', (
+      tester,
+    ) async {
+      final analytics = _MockAnalyticsService();
+      getIt.registerFactory<RecipientChangeCubit>(
+        () => RecipientChangeCubit(_MockBidRepository(), analytics),
+      );
+      addTearDown(() => getIt.unregister<RecipientChangeCubit>());
+
+      await tester.pumpWidget(wrapSender(withStatus('IN_TRANSIT')));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Modifier le destinataire'));
+      await tester.pumpAndSettle();
+
+      // Le menu est fermé, la feuille est ouverte et pré-remplie.
+      expect(find.text("Nom ou numéro, jusqu'à la remise"), findsNothing);
+      expect(find.text('Modifier le destinataire'), findsOneWidget);
+      expect(find.text('Fatou Sow'), findsOneWidget);
+      expect(find.text('Enregistrer'), findsOneWidget);
+    });
   });
 }

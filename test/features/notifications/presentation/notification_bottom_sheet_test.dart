@@ -215,6 +215,11 @@ void main() {
       expect(await iconAssetFor(tester, 'RECIPIENT_DECLINED'), 'user-x');
       expect(await iconAssetFor(tester, 'RECIPIENT_PARCEL_CANCELLED'), 'ban');
       expect(
+        await iconAssetFor(tester, 'RECIPIENT_PARCEL_REASSIGNED'),
+        'user-x',
+      );
+      expect(await iconAssetFor(tester, 'RECIPIENT_CHANGED'), 'refresh-cw');
+      expect(
         await iconAssetFor(tester, 'RECIPIENT_PARCEL_RESCHEDULED'),
         'calendar',
       );
