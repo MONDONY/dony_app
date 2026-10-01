@@ -164,6 +164,10 @@ import 'package:dony/features/profile/data/repositories/help_center_repository.d
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/data/rating_repository.dart';
+import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
+import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
+import 'package:dony/features/receptions/data/datasources/reception_remote_datasource.dart';
+import 'package:dony/features/receptions/data/repositories/reception_repository.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/datasources/recipient_datasource.dart';
 import 'package:dony/features/recipients/data/repositories/recipient_repository.dart';
@@ -303,6 +307,26 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<NotificationDetailCubit>(
     () => NotificationDetailCubit(
       getIt<NotificationRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+
+  // Colis à recevoir (lot 2 destinataire)
+  getIt.registerLazySingleton<ReceptionRemoteDatasource>(
+    () => ReceptionRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ReceptionRepository>(
+    () => ReceptionRepository(getIt<ReceptionRemoteDatasource>()),
+  );
+  getIt.registerFactory<ReceptionsCubit>(
+    () => ReceptionsCubit(
+      getIt<ReceptionRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<ReceptionDetailCubit>(
+    () => ReceptionDetailCubit(
+      getIt<ReceptionRepository>(),
       getIt<AnalyticsService>(),
     ),
   );

@@ -456,6 +456,10 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `traveler_call_initiated` | Tap 📞 sur la carte voyageur (propriété `status`) |
 | `tracking_link_shared` | Partage de l'URL de suivi (app bar ou carte) |
 | `recipient_notified` | PrevenirDestinataireCard._notify — l'expéditeur prévient son destinataire depuis l'encart « Prévenir … » du détail d'envoi : WhatsApp pré-rempli (`wa.me`), repli sur la feuille de partage si le numéro n'est pas international ou si WhatsApp ne s'ouvre pas (propriétés `with_code` : le code de retrait est dans le message, `channel` : `whatsapp`/`share`, `status`). Jamais le numéro ni le nom du destinataire |
+| `receptions_section_viewed` | ReceptionsCubit.load — section « Colis à recevoir » de l'onglet Suivi affichée (liste non vide), une fois par ouverture de l'onglet (propriétés `count`, `pending` : colis encore à confirmer). Jamais émis sur un back antérieur au lot 2 (404, section masquée) |
+| `reception_opened` | ReceptionDetailCubit.load — écran `/receptions/{bidId}` chargé (section Suivi ou notification `RECIPIENT_PARCEL_*`), une fois par écran même après « Réessayer » (propriétés `link_status` : `PENDING`/`CONFIRMED`, `bid_status`). Jamais le nom, le numéro ni le code |
+| `reception_confirmed` | ReceptionDetailCubit.confirm — « Oui, c'est pour moi » accepté par le serveur (`POST /receptions/{bidId}/confirm`), propriété `bid_status` |
+| `reception_declined` | ReceptionDetailCubit.decline — « Ce n'est pas pour moi » confirmé dans le dialogue puis accepté par le serveur (204), propriété `bid_status`. Non émis sur un 409 (colis déjà confirmé ailleurs) |
 | `screen_feedback_submitted` | Envoi du rapport 🐞 DonyFeedbackButton (propriétés `route`, `attachment_count` : captures jointes par le testeur, jamais leur contenu) |
 | `profile_photo_updated` | AuthBloc._onAvatarUploadRequested() — upload photo de profil réussi |
 | `profile_about_updated` | AuthBloc._onUpdateProfileRequested() — bio « À propos » renseignée |

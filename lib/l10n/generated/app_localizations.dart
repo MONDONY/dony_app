@@ -17000,10 +17000,10 @@ abstract class AppLocalizations {
   /// **'OPTION 2 · CODE'**
   String get receptionCodeOptionLabel;
 
-  /// Titre du contenu de l'onglet code de reception_confirm_screen.dart (_CodeTabContent).
+  /// Titre de la carte du code de retrait (reception_detail_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Tapez le code reçu'**
+  /// **'VOTRE CODE DE RETRAIT'**
   String get receptionCodeTitle;
 
   /// Minuteur de reception_confirm_screen.dart (_CodeTabContent) — {time} est le compte à rebours mm:ss déjà formaté, mis en valeur via emphasizedSpans.
@@ -24845,6 +24845,234 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Au jour près sur votre profil public, pour rassurer ceux qui vous contactent.'**
   String get privacyShowLastSeenSubtitle;
+
+  /// Titre de la section des colis que l'utilisateur va recevoir, onglet Suivi (receptions_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis à recevoir'**
+  String get receptionsSectionTitle;
+
+  /// Prénom de l'expéditeur sur une ligne « Colis à recevoir » (receptions_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'De {name}'**
+  String receptionsRowFrom(String name);
+
+  /// Puce d'un colis à recevoir que l'utilisateur n'a pas encore confirmé (receptions_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'À confirmer'**
+  String get receptionsPendingChip;
+
+  /// Étape courte d'un colis confirmé, ligne « Colis à recevoir » (receptions_section.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{status, select, ACCEPTED{Bientôt récupéré} HANDED_OVER{En route} IN_TRANSIT{En route} ARRIVED{Arrivé} COMPLETED{Remis} other{En cours}}'**
+  String receptionsRowStep(String status);
+
+  /// Titre de l'écran de détail d'un colis à recevoir (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis à recevoir'**
+  String get receptionDetailTitle;
+
+  /// Titre d'un colis à confirmer, avec le prénom de l'expéditeur (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} vous envoie un colis'**
+  String receptionPendingHeadline(String name);
+
+  /// Titre d'un colis à confirmer quand le prénom de l'expéditeur est inconnu (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Un colis vous est envoyé'**
+  String get receptionPendingHeadlineAnonymous;
+
+  /// Date de départ du trajet (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ le {date}'**
+  String receptionDepartureOn(String date);
+
+  /// Nom du destinataire saisi par l'expéditeur, pour aider à reconnaître le colis (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire indiqué : {name}'**
+  String receptionRecipientName(String name);
+
+  /// Question posée au destinataire avant confirmation (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis est-il pour vous ?'**
+  String get receptionPendingQuestion;
+
+  /// Explication sous la question de confirmation (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmez pour suivre le colis dans Yadony et recevoir votre code de retrait. L\'expéditeur sera prévenu.'**
+  String get receptionPendingExplanation;
+
+  /// Bouton principal de confirmation du colis (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Oui, c\'est pour moi'**
+  String get receptionConfirmButton;
+
+  /// Bouton secondaire de refus du colis, et bouton de confirmation du dialogue (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce n\'est pas pour moi'**
+  String get receptionDeclineButton;
+
+  /// Titre du dialogue de confirmation du refus (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis n\'est pas pour vous ?'**
+  String get receptionDeclineDialogTitle;
+
+  /// Message du dialogue de confirmation du refus (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Il disparaîtra de votre liste et l\'expéditeur sera invité à vérifier le numéro du destinataire.'**
+  String get receptionDeclineDialogMessage;
+
+  /// Confirmation après le refus d'un colis (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est noté, ce colis a été retiré de votre liste.'**
+  String get receptionDeclinedSnackbar;
+
+  /// Confirmation après « Oui, c'est pour moi » (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est noté, vous suivez ce colis.'**
+  String get receptionConfirmedSnackbar;
+
+  /// Étape actuelle d'un colis confirmé (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{status, select, ACCEPTED{Le voyageur va récupérer le colis} HANDED_OVER{En route} IN_TRANSIT{En route} ARRIVED{Arrivé à destination} COMPLETED{Remis} other{En cours}}'**
+  String receptionStepHeadline(String status);
+
+  /// Étape « arrivé » avec la ville d'arrivée (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé à {city}'**
+  String receptionStepArrivedIn(String city);
+
+  /// Titre de la carte des détails du colis (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'DÉTAILS'**
+  String get receptionDetailsTitle;
+
+  /// Libellé du prénom du voyageur (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyageur'**
+  String get receptionTravelerLabel;
+
+  /// Libellé de la date de départ (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get receptionDepartureLabel;
+
+  /// Libellé de la date d'arrivée (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get receptionArrivalLabel;
+
+  /// Libellé du numéro de suivi (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de suivi'**
+  String get receptionTrackingNumberLabel;
+
+  /// Libellé du poids du colis (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids'**
+  String get receptionWeightLabel;
+
+  /// Titre de la carte des instructions de retrait laissées par le voyageur (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'INSTRUCTIONS DE RETRAIT'**
+  String get receptionInstructionsTitle;
+
+  /// Lecture d'écran du code de retrait (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Code de retrait : {code}'**
+  String receptionCodeSemantics(String code);
+
+  /// Explication sous le code de retrait (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Donnez ce code au voyageur à la remise du colis, pas avant.'**
+  String get receptionCodeExplanation;
+
+  /// Code de retrait pas encore généré (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre code de retrait apparaîtra ici dès que le voyageur aura pris en charge le colis.'**
+  String get receptionCodePending;
+
+  /// Bouton qui ouvre la frise du suivi (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le suivi'**
+  String get receptionViewTracking;
+
+  /// Colis à recevoir introuvable (404) (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis n\'est plus disponible'**
+  String get receptionNotFoundTitle;
+
+  /// Description du colis introuvable (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Il a peut-être été annulé ou retiré de votre liste.'**
+  String get receptionNotFoundDescription;
+
+  /// Bouton de retour à l'onglet Suivi (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour au suivi'**
+  String get receptionNotFoundAction;
+
+  /// Erreur de chargement d'un colis à recevoir (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger ce colis'**
+  String get receptionErrorTitle;
+
+  /// Description de l'erreur de chargement (reception_detail_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre connexion puis réessayez.'**
+  String get receptionErrorDescription;
+
+  /// Vue expéditeur : le destinataire a confirmé le colis dans l'app (prevenir_destinataire_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} suit le colis dans Yadony'**
+  String recipientAppConfirmed(String name);
+
+  /// Vue expéditeur : le titulaire du numéro a refusé le colis (prevenir_destinataire_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le titulaire de ce numéro indique que ce colis n\'est pas pour lui. Vérifiez le numéro du destinataire.'**
+  String get recipientAppDeclined;
+
+  /// Vue expéditeur : le destinataire, sans nom saisi, a confirmé le colis dans l'app (prevenir_destinataire_card.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le destinataire suit le colis dans Yadony'**
+  String get recipientAppConfirmedAnonymous;
 }
 
 class _AppLocalizationsDelegate

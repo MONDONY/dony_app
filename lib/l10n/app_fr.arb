@@ -17382,5 +17382,206 @@
   "privacyShowLastSeenSubtitle": "Au jour près sur votre profil public, pour rassurer ceux qui vous contactent.",
   "@privacyShowLastSeenSubtitle": {
     "description": "Réglage de confidentialité, sous-titre"
+  },
+  "receptionsSectionTitle": "Colis à recevoir",
+  "@receptionsSectionTitle": {
+    "description": "Titre de la section des colis que l'utilisateur va recevoir, onglet Suivi (receptions_section.dart)."
+  },
+  "receptionsRowFrom": "De {name}",
+  "@receptionsRowFrom": {
+    "description": "Prénom de l'expéditeur sur une ligne « Colis à recevoir » (receptions_section.dart).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionsPendingChip": "À confirmer",
+  "@receptionsPendingChip": {
+    "description": "Puce d'un colis à recevoir que l'utilisateur n'a pas encore confirmé (receptions_section.dart)."
+  },
+  "receptionsRowStep": "{status, select, ACCEPTED{Bientôt récupéré} HANDED_OVER{En route} IN_TRANSIT{En route} ARRIVED{Arrivé} COMPLETED{Remis} other{En cours}}",
+  "@receptionsRowStep": {
+    "description": "Étape courte d'un colis confirmé, ligne « Colis à recevoir » (receptions_section.dart).",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionDetailTitle": "Colis à recevoir",
+  "@receptionDetailTitle": {
+    "description": "Titre de l'écran de détail d'un colis à recevoir (reception_detail_screen.dart)."
+  },
+  "receptionPendingHeadline": "{name} vous envoie un colis",
+  "@receptionPendingHeadline": {
+    "description": "Titre d'un colis à confirmer, avec le prénom de l'expéditeur (reception_detail_screen.dart).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionPendingHeadlineAnonymous": "Un colis vous est envoyé",
+  "@receptionPendingHeadlineAnonymous": {
+    "description": "Titre d'un colis à confirmer quand le prénom de l'expéditeur est inconnu (reception_detail_screen.dart)."
+  },
+  "receptionDepartureOn": "Départ le {date}",
+  "@receptionDepartureOn": {
+    "description": "Date de départ du trajet (reception_detail_screen.dart).",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionRecipientName": "Destinataire indiqué : {name}",
+  "@receptionRecipientName": {
+    "description": "Nom du destinataire saisi par l'expéditeur, pour aider à reconnaître le colis (reception_detail_screen.dart).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionPendingQuestion": "Ce colis est-il pour vous ?",
+  "@receptionPendingQuestion": {
+    "description": "Question posée au destinataire avant confirmation (reception_detail_screen.dart)."
+  },
+  "receptionPendingExplanation": "Confirmez pour suivre le colis dans Yadony et recevoir votre code de retrait. L'expéditeur sera prévenu.",
+  "@receptionPendingExplanation": {
+    "description": "Explication sous la question de confirmation (reception_detail_screen.dart)."
+  },
+  "receptionConfirmButton": "Oui, c'est pour moi",
+  "@receptionConfirmButton": {
+    "description": "Bouton principal de confirmation du colis (reception_detail_screen.dart)."
+  },
+  "receptionDeclineButton": "Ce n'est pas pour moi",
+  "@receptionDeclineButton": {
+    "description": "Bouton secondaire de refus du colis, et bouton de confirmation du dialogue (reception_detail_screen.dart)."
+  },
+  "receptionDeclineDialogTitle": "Ce colis n'est pas pour vous ?",
+  "@receptionDeclineDialogTitle": {
+    "description": "Titre du dialogue de confirmation du refus (reception_detail_screen.dart)."
+  },
+  "receptionDeclineDialogMessage": "Il disparaîtra de votre liste et l'expéditeur sera invité à vérifier le numéro du destinataire.",
+  "@receptionDeclineDialogMessage": {
+    "description": "Message du dialogue de confirmation du refus (reception_detail_screen.dart)."
+  },
+  "receptionDeclinedSnackbar": "C'est noté, ce colis a été retiré de votre liste.",
+  "@receptionDeclinedSnackbar": {
+    "description": "Confirmation après le refus d'un colis (reception_detail_screen.dart)."
+  },
+  "receptionConfirmedSnackbar": "C'est noté, vous suivez ce colis.",
+  "@receptionConfirmedSnackbar": {
+    "description": "Confirmation après « Oui, c'est pour moi » (reception_detail_screen.dart)."
+  },
+  "receptionStepHeadline": "{status, select, ACCEPTED{Le voyageur va récupérer le colis} HANDED_OVER{En route} IN_TRANSIT{En route} ARRIVED{Arrivé à destination} COMPLETED{Remis} other{En cours}}",
+  "@receptionStepHeadline": {
+    "description": "Étape actuelle d'un colis confirmé (reception_detail_screen.dart).",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionStepArrivedIn": "Arrivé à {city}",
+  "@receptionStepArrivedIn": {
+    "description": "Étape « arrivé » avec la ville d'arrivée (reception_detail_screen.dart).",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionDetailsTitle": "DÉTAILS",
+  "@receptionDetailsTitle": {
+    "description": "Titre de la carte des détails du colis (reception_detail_screen.dart)."
+  },
+  "receptionTravelerLabel": "Voyageur",
+  "@receptionTravelerLabel": {
+    "description": "Libellé du prénom du voyageur (reception_detail_screen.dart)."
+  },
+  "receptionDepartureLabel": "Départ",
+  "@receptionDepartureLabel": {
+    "description": "Libellé de la date de départ (reception_detail_screen.dart)."
+  },
+  "receptionArrivalLabel": "Arrivée",
+  "@receptionArrivalLabel": {
+    "description": "Libellé de la date d'arrivée (reception_detail_screen.dart)."
+  },
+  "receptionTrackingNumberLabel": "Numéro de suivi",
+  "@receptionTrackingNumberLabel": {
+    "description": "Libellé du numéro de suivi (reception_detail_screen.dart)."
+  },
+  "receptionWeightLabel": "Poids",
+  "@receptionWeightLabel": {
+    "description": "Libellé du poids du colis (reception_detail_screen.dart)."
+  },
+  "receptionInstructionsTitle": "INSTRUCTIONS DE RETRAIT",
+  "@receptionInstructionsTitle": {
+    "description": "Titre de la carte des instructions de retrait laissées par le voyageur (reception_detail_screen.dart)."
+  },
+  "receptionCodeTitle": "VOTRE CODE DE RETRAIT",
+  "@receptionCodeTitle": {
+    "description": "Titre de la carte du code de retrait (reception_detail_screen.dart)."
+  },
+  "receptionCodeSemantics": "Code de retrait : {code}",
+  "@receptionCodeSemantics": {
+    "description": "Lecture d'écran du code de retrait (reception_detail_screen.dart).",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "receptionCodeExplanation": "Donnez ce code au voyageur à la remise du colis, pas avant.",
+  "@receptionCodeExplanation": {
+    "description": "Explication sous le code de retrait (reception_detail_screen.dart)."
+  },
+  "receptionCodePending": "Votre code de retrait apparaîtra ici dès que le voyageur aura pris en charge le colis.",
+  "@receptionCodePending": {
+    "description": "Code de retrait pas encore généré (reception_detail_screen.dart)."
+  },
+  "receptionViewTracking": "Voir le suivi",
+  "@receptionViewTracking": {
+    "description": "Bouton qui ouvre la frise du suivi (reception_detail_screen.dart)."
+  },
+  "receptionNotFoundTitle": "Ce colis n'est plus disponible",
+  "@receptionNotFoundTitle": {
+    "description": "Colis à recevoir introuvable (404) (reception_detail_screen.dart)."
+  },
+  "receptionNotFoundDescription": "Il a peut-être été annulé ou retiré de votre liste.",
+  "@receptionNotFoundDescription": {
+    "description": "Description du colis introuvable (reception_detail_screen.dart)."
+  },
+  "receptionNotFoundAction": "Retour au suivi",
+  "@receptionNotFoundAction": {
+    "description": "Bouton de retour à l'onglet Suivi (reception_detail_screen.dart)."
+  },
+  "receptionErrorTitle": "Impossible de charger ce colis",
+  "@receptionErrorTitle": {
+    "description": "Erreur de chargement d'un colis à recevoir (reception_detail_screen.dart)."
+  },
+  "receptionErrorDescription": "Vérifiez votre connexion puis réessayez.",
+  "@receptionErrorDescription": {
+    "description": "Description de l'erreur de chargement (reception_detail_screen.dart)."
+  },
+  "recipientAppConfirmed": "{name} suit le colis dans Yadony",
+  "@recipientAppConfirmed": {
+    "description": "Vue expéditeur : le destinataire a confirmé le colis dans l'app (prevenir_destinataire_card.dart).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientAppDeclined": "Le titulaire de ce numéro indique que ce colis n'est pas pour lui. Vérifiez le numéro du destinataire.",
+  "@recipientAppDeclined": {
+    "description": "Vue expéditeur : le titulaire du numéro a refusé le colis (prevenir_destinataire_card.dart)."
+  },
+  "recipientAppConfirmedAnonymous": "Le destinataire suit le colis dans Yadony",
+  "@recipientAppConfirmedAnonymous": {
+    "description": "Vue expéditeur : le destinataire, sans nom saisi, a confirmé le colis dans l'app (prevenir_destinataire_card.dart)."
   }
 }

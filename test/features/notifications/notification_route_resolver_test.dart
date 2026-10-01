@@ -394,6 +394,40 @@ void main() {
     });
   });
 
+  group('resolveNotificationRoute — destinataire avec l\'app (lot 2)', () {
+    for (final type in [
+      'RECIPIENT_PARCEL_INCOMING',
+      'RECIPIENT_PARCEL_DEPARTED',
+      'RECIPIENT_PARCEL_ARRIVED',
+      'RECIPIENT_PARCEL_DELIVERED',
+    ]) {
+      test('$type ouvre le colis à recevoir', () {
+        expect(
+          resolveNotificationRoute(type, {'bidId': bidId}),
+          '/receptions/$bidId',
+        );
+      });
+
+      test('$type sans bidId UUID : aucune route', () {
+        expect(resolveNotificationRoute(type, {}), isNull);
+        expect(resolveNotificationRoute(type, {'bidId': '../admin'}), isNull);
+      });
+    }
+
+    for (final type in ['RECIPIENT_CONFIRMED', 'RECIPIENT_DECLINED']) {
+      test('$type ouvre le détail d\'envoi de l\'expéditeur', () {
+        expect(
+          resolveNotificationRoute(type, {'bidId': bidId}),
+          '/bids/$bidId',
+        );
+      });
+
+      test('$type sans bidId : aucune route', () {
+        expect(resolveNotificationRoute(type, {}), isNull);
+      });
+    }
+  });
+
   group('isShellTabRoute', () {
     test('shell tabs use go()', () {
       for (final tab in [

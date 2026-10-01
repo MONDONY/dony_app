@@ -6,6 +6,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/utils/share_position.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
@@ -151,12 +152,32 @@ class PrevenirDestinataireCard extends StatelessWidget {
         ? l.recipientNotifyFallbackName
         : rawName;
     final hasCode = withCode(bid);
+    final appStatus = bid.recipientAppStatus;
 
     return DetailCard(
       title: l.recipientNotifyTitle(name),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (appStatus == 'CONFIRMED') ...[
+            _RecipientAppNotice(
+              key: const Key('recipient-app-confirmed'),
+              iconAsset: 'badge-check',
+              color: cs.success,
+              text: (rawName == null || rawName.isEmpty)
+                  ? l.recipientAppConfirmedAnonymous
+                  : l.recipientAppConfirmed(rawName),
+            ),
+            const SizedBox(height: DonySpacing.md),
+          ] else if (appStatus == 'DECLINED') ...[
+            _RecipientAppNotice(
+              key: const Key('recipient-app-declined'),
+              iconAsset: 'triangle-alert',
+              color: cs.warning,
+              text: l.recipientAppDeclined,
+            ),
+            const SizedBox(height: DonySpacing.md),
+          ],
           Text(
             hasCode
                 ? l.recipientNotifyBodyCode(name)
@@ -171,6 +192,51 @@ class PrevenirDestinataireCard extends StatelessWidget {
             iconAsset: 'message-circle',
             variant: DonyButtonVariant.secondary,
             onPressed: () => _notify(context),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Ligne d'état du destinataire dans Yadony (lot 2) : il suit le colis
+/// (`CONFIRMED`), ou le titulaire du numéro dit que le colis n'est pas pour
+/// lui (`DECLINED`). Le bouton WhatsApp reste en dessous dans les deux cas.
+class _RecipientAppNotice extends StatelessWidget {
+  const _RecipientAppNotice({
+    super.key,
+    required this.iconAsset,
+    required this.color,
+    required this.text,
+  });
+
+  final String iconAsset;
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DonyIcon(iconAsset, size: 18, color: color),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Text(
+              text,
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),

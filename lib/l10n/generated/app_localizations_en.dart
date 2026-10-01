@@ -10196,7 +10196,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get receptionCodeOptionLabel => 'OPTION 2 · CODE';
 
   @override
-  String get receptionCodeTitle => 'Enter the code you received';
+  String get receptionCodeTitle => 'YOUR PICKUP CODE';
 
   @override
   String receptionCodeExpiresIn(String time) {
@@ -15004,4 +15004,163 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get privacyShowLastSeenSubtitle =>
       'To the day on your public profile, so people reaching out know you are active.';
+
+  @override
+  String get receptionsSectionTitle => 'Parcels coming to you';
+
+  @override
+  String receptionsRowFrom(String name) {
+    return 'From $name';
+  }
+
+  @override
+  String get receptionsPendingChip => 'To confirm';
+
+  @override
+  String receptionsRowStep(String status) {
+    String _temp0 = intl.Intl.selectLogic(status, {
+      'ACCEPTED': 'Pickup soon',
+      'HANDED_OVER': 'On the way',
+      'IN_TRANSIT': 'On the way',
+      'ARRIVED': 'Arrived',
+      'COMPLETED': 'Delivered',
+      'other': 'In progress',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get receptionDetailTitle => 'Incoming parcel';
+
+  @override
+  String receptionPendingHeadline(String name) {
+    return '$name is sending you a parcel';
+  }
+
+  @override
+  String get receptionPendingHeadlineAnonymous =>
+      'A parcel is on its way to you';
+
+  @override
+  String receptionDepartureOn(String date) {
+    return 'Departs on $date';
+  }
+
+  @override
+  String receptionRecipientName(String name) {
+    return 'Recipient entered: $name';
+  }
+
+  @override
+  String get receptionPendingQuestion => 'Is this parcel for you?';
+
+  @override
+  String get receptionPendingExplanation =>
+      'Confirm to follow the parcel in Yadony and get your pickup code. The sender will be notified.';
+
+  @override
+  String get receptionConfirmButton => 'Yes, it\'s for me';
+
+  @override
+  String get receptionDeclineButton => 'It\'s not for me';
+
+  @override
+  String get receptionDeclineDialogTitle => 'Not your parcel?';
+
+  @override
+  String get receptionDeclineDialogMessage =>
+      'It will be removed from your list and the sender will be asked to check the recipient\'s number.';
+
+  @override
+  String get receptionDeclinedSnackbar =>
+      'Got it, this parcel has been removed from your list.';
+
+  @override
+  String get receptionConfirmedSnackbar =>
+      'Done, you are now following this parcel.';
+
+  @override
+  String receptionStepHeadline(String status) {
+    String _temp0 = intl.Intl.selectLogic(status, {
+      'ACCEPTED': 'The traveler will pick up the parcel',
+      'HANDED_OVER': 'On the way',
+      'IN_TRANSIT': 'On the way',
+      'ARRIVED': 'Arrived at destination',
+      'COMPLETED': 'Delivered',
+      'other': 'In progress',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String receptionStepArrivedIn(String city) {
+    return 'Arrived in $city';
+  }
+
+  @override
+  String get receptionDetailsTitle => 'DETAILS';
+
+  @override
+  String get receptionTravelerLabel => 'Traveler';
+
+  @override
+  String get receptionDepartureLabel => 'Departure';
+
+  @override
+  String get receptionArrivalLabel => 'Arrival';
+
+  @override
+  String get receptionTrackingNumberLabel => 'Tracking number';
+
+  @override
+  String get receptionWeightLabel => 'Weight';
+
+  @override
+  String get receptionInstructionsTitle => 'PICKUP INSTRUCTIONS';
+
+  @override
+  String receptionCodeSemantics(String code) {
+    return 'Pickup code: $code';
+  }
+
+  @override
+  String get receptionCodeExplanation =>
+      'Give this code to the traveler when you receive the parcel, not before.';
+
+  @override
+  String get receptionCodePending =>
+      'Your pickup code will appear here as soon as the traveler has the parcel.';
+
+  @override
+  String get receptionViewTracking => 'View tracking';
+
+  @override
+  String get receptionNotFoundTitle => 'This parcel is no longer available';
+
+  @override
+  String get receptionNotFoundDescription =>
+      'It may have been cancelled or removed from your list.';
+
+  @override
+  String get receptionNotFoundAction => 'Back to tracking';
+
+  @override
+  String get receptionErrorTitle => 'Couldn\'t load this parcel';
+
+  @override
+  String get receptionErrorDescription =>
+      'Check your connection and try again.';
+
+  @override
+  String recipientAppConfirmed(String name) {
+    return '$name is following the parcel in Yadony';
+  }
+
+  @override
+  String get recipientAppDeclined =>
+      'The owner of this number says this parcel isn\'t for them. Check the recipient\'s number.';
+
+  @override
+  String get recipientAppConfirmedAnonymous =>
+      'The recipient is following the parcel in Yadony';
 }

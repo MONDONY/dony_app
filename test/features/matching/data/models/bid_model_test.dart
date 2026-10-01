@@ -32,4 +32,17 @@ void main() {
       expect(out['arrivalInstructions'], 'Métro Châtelet, sortie 3');
     });
   });
+
+  group('BidModel.recipientAppStatus (lot 2 destinataire)', () {
+    test('fromJson lit le statut du lien et le renvoie en toJson', () {
+      final json = _minimalBid()..['recipientAppStatus'] = 'CONFIRMED';
+      final model = BidModel.fromJson(json);
+      expect(model.recipientAppStatus, 'CONFIRMED');
+      expect(model.toJson()['recipientAppStatus'], 'CONFIRMED');
+    });
+
+    test('ancien back sans le champ → null', () {
+      expect(BidModel.fromJson(_minimalBid()).recipientAppStatus, isNull);
+    });
+  });
 }

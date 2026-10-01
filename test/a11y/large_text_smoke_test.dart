@@ -65,6 +65,9 @@ import 'package:dony/features/price_grid/data/repositories/price_grid_repository
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
+import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
+import 'package:dony/features/receptions/data/models/reception.dart';
+import 'package:dony/features/receptions/data/repositories/reception_repository.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
@@ -747,6 +750,8 @@ class _SuiviMockAuthBloc extends MockBloc<AuthEvent, AuthState>
 
 class _SuiviMockBidRepo extends Mock implements BidRepository {}
 
+class _SuiviMockReceptionRepo extends Mock implements ReceptionRepository {}
+
 class _SuiviMockTrackingRepo extends Mock implements TrackingRepository {}
 
 class _SuiviMockOfflineSync extends Mock implements OfflineSyncService {}
@@ -852,6 +857,35 @@ Widget _suiviHarness(List<String> roles, {SuiviMode? mode}) {
     () => SuiviCubit(
       bidRepo,
       _SuiviMockTrackingRepo(),
+      makeDisabledAnalytics(MockAnalyticsBackend()),
+    ),
+  );
+  // Colis à recevoir : une ligne à confirmer et une confirmée, pour mesurer
+  // aussi la section destinataire à 200 %.
+  final receptionRepo = _SuiviMockReceptionRepo();
+  when(receptionRepo.getReceptions).thenAnswer(
+    (_) async => const [
+      Reception(
+        bidId: 'bid-r1',
+        linkStatus: Reception.pending,
+        bidStatus: 'ACCEPTED',
+        senderFirstName: 'Aminata',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+      ),
+      Reception(
+        bidId: 'bid-r2',
+        linkStatus: Reception.confirmed,
+        bidStatus: 'IN_TRANSIT',
+        senderFirstName: 'Ibrahima',
+        departureCity: 'Lyon',
+        arrivalCity: 'Abidjan',
+      ),
+    ],
+  );
+  register<ReceptionsCubit>(
+    () => ReceptionsCubit(
+      receptionRepo,
       makeDisabledAnalytics(MockAnalyticsBackend()),
     ),
   );

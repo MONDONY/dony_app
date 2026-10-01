@@ -660,6 +660,8 @@ class _NotificationIcon extends StatelessWidget {
       'negotiation_awaiting_trip' => (cs.success, 'circle-check'),
       'PAYMENT_RELEASED' => (cs.success, 'banknote'),
       'DELIVERY_CONFIRMED' => (cs.success, 'package'),
+      'RECIPIENT_PARCEL_DELIVERED' => (cs.success, 'circle-check'),
+      'RECIPIENT_CONFIRMED' => (cs.success, 'badge-check'),
 
       // Perdu
       'BID_REJECTED' => (cs.error, 'circle-x'),
@@ -679,6 +681,8 @@ class _NotificationIcon extends StatelessWidget {
       'DISPUTE_OPENED' => (cs.warning, 'triangle-alert'),
       'DELIVERY_NOSHOW_REPORTED' => (cs.warning, 'user-x'),
       'CONFIRMATION_CODE_READY' => (cs.warning, 'qr-code'),
+      'RECIPIENT_PARCEL_INCOMING' => (cs.warning, 'inbox'),
+      'RECIPIENT_DECLINED' => (cs.warning, 'user-x'),
 
       // Informe / met en relation
       'BID_CREATED' => (cs.primary, 'package'),
@@ -687,6 +691,8 @@ class _NotificationIcon extends StatelessWidget {
       // Même icône que la ligne épinglée « Support Yadony » des conversations.
       'SUPPORT_MESSAGE' => (cs.primary, 'circle-help'),
       'TRIP_IN_PROGRESS' => (cs.primary, 'plane-takeoff'),
+      'RECIPIENT_PARCEL_DEPARTED' => (cs.primary, 'plane-takeoff'),
+      'RECIPIENT_PARCEL_ARRIVED' => (cs.primary, 'plane-landing'),
       'negotiation_started' => (cs.info, 'arrow-left-right'),
       'negotiation_counter' => (cs.info, 'arrow-left-right'),
       'negotiation' => (cs.info, 'arrow-left-right'),

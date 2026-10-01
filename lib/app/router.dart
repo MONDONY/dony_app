@@ -161,6 +161,7 @@ import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.da
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/presentation/screens/my_reviews_screen.dart';
+import 'package:dony/features/receptions/presentation/screens/reception_detail_screen.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
@@ -1037,6 +1038,15 @@ final appRouter = GoRouter(
       path: '/notifications/:id',
       builder: (_, state) =>
           NotificationDetailScreen(id: state.pathParameters['id']!),
+    ),
+
+    // ── Colis à recevoir (hors shell) ────────────────────────────────────
+    // Ouvert depuis la section de l'onglet Suivi et les notifications
+    // RECIPIENT_PARCEL_* (deeplink `yadony://receptions/{bidId}`).
+    GoRoute(
+      path: '/receptions/:bidId',
+      builder: (_, state) =>
+          ReceptionDetailScreen(bidId: state.pathParameters['bidId']!),
     ),
 
     // ── Alertes corridor (hors shell) ────────────────────────────────────

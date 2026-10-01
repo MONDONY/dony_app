@@ -19,6 +19,9 @@ import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
+import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
+import 'package:dony/features/receptions/data/models/reception.dart';
+import 'package:dony/features/receptions/data/repositories/reception_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
@@ -58,6 +61,8 @@ class _MockAnnouncementRepo extends Mock implements AnnouncementRepository {}
 class _MockBidRepo extends Mock implements BidRepository {}
 
 class _MockTrackingRepo extends Mock implements TrackingRepository {}
+
+class _MockReceptionRepo extends Mock implements ReceptionRepository {}
 
 class _MockOfflineSync extends Mock implements OfflineSyncService {}
 
@@ -146,6 +151,7 @@ void main() {
   late _MockAnnouncementRepo annRepo;
   late _MockBidRepo bidRepo;
   late _MockTrackingRepo trackingRepo;
+  late _MockReceptionRepo receptionRepo;
   late _MockAnalytics analytics;
   late _MockOfflineSync offlineSync;
   late _MockLocator locator;
@@ -221,6 +227,9 @@ void main() {
     annRepo = _MockAnnouncementRepo();
     bidRepo = _MockBidRepo();
     trackingRepo = _MockTrackingRepo();
+    receptionRepo = _MockReceptionRepo();
+    // Personne ne reçoit de colis par défaut : la section reste masquée.
+    when(() => receptionRepo.getReceptions()).thenAnswer((_) async => []);
     analytics = _MockAnalytics();
     offlineSync = _MockOfflineSync();
     locator = _MockLocator();
@@ -277,6 +286,9 @@ void main() {
     getIt
       ..registerFactory<SuiviCubit>(
         () => SuiviCubit(bidRepo, trackingRepo, analytics),
+      )
+      ..registerFactory<ReceptionsCubit>(
+        () => ReceptionsCubit(receptionRepo, analytics),
       )
       ..registerFactory<ScanHubCubit>(
         () => ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo),
@@ -366,6 +378,7 @@ void main() {
         stub('/tracking/offline-queue'),
         stub('/announcements/trips'),
         stub('/bids/:id'),
+        stub('/receptions/:bidId'),
         stub(
           '/tracking/scan/qr-picker',
           page: (_) => Builder(
@@ -612,6 +625,54 @@ void main() {
       await settle(tester);
       expect(text('Suivi en lecture seule'), findsOneWidget);
       expect(route('Lyon', 'Abidjan'), findsWidgets);
+    });
+
+    testWidgets('colis à recevoir : section au-dessus de Mes envois', (
+      tester,
+    ) async {
+      when(() => receptionRepo.getReceptions()).thenAnswer(
+        (_) async => const [
+          Reception(
+            bidId: 'rec-1',
+            linkStatus: 'PENDING',
+            bidStatus: 'ACCEPTED',
+            senderFirstName: 'Awa',
+            departureCity: 'Lyon',
+            arrivalCity: 'Bamako',
+          ),
+        ],
+      );
+      await pump(tester, roles: ['SENDER']);
+
+      final section = find.textContaining(
+        'Colis à recevoir',
+        findRichText: true,
+      );
+      expect(section, findsOneWidget);
+      expect(route('Lyon', 'Bamako'), findsOneWidget);
+      expect(text('À confirmer'), findsOneWidget);
+      expect(text('De Awa'), findsOneWidget);
+      final shipments = find.textContaining('Mes envois', findRichText: true);
+      expect(
+        tester.getTopLeft(section).dy,
+        lessThan(tester.getTopLeft(shipments).dy),
+      );
+
+      await tester.tap(find.byKey(const Key('reception-row-rec-1')));
+      await settle(tester);
+      expect(visited, contains('/receptions/:bidId'));
+    });
+
+    testWidgets('colis à recevoir : ancien back → section masquée', (
+      tester,
+    ) async {
+      when(
+        () => receptionRepo.getReceptions(),
+      ).thenThrow(const NotFoundException());
+      await pump(tester, roles: ['SENDER']);
+
+      expect(find.byKey(const Key('receptions-section')), findsNothing);
+      expect(route('Paris', 'Dakar'), findsOneWidget);
     });
 
     testWidgets('échec de Mes envois → Réessayer', (tester) async {
@@ -1944,6 +2005,9 @@ Future<void> settle(WidgetTester tester, {int rounds = 6}) async {
 
 void _unregisterAll() {
   if (getIt.isRegistered<SuiviCubit>()) getIt.unregister<SuiviCubit>();
+  if (getIt.isRegistered<ReceptionsCubit>()) {
+    getIt.unregister<ReceptionsCubit>();
+  }
   if (getIt.isRegistered<ScanHubCubit>()) getIt.unregister<ScanHubCubit>();
   if (getIt.isRegistered<SuiviValidationCubit>()) {
     getIt.unregister<SuiviValidationCubit>();
