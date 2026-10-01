@@ -24,20 +24,26 @@ class PrivacySettingsLoaded extends PrivacySettingsState {
   /// « le réglage refuse de changer » : l'écran doit pouvoir le dire.
   final bool saveFailed;
 
+  /// Pays de résidence affiché sur le profil public (FLUTTER-4H).
+  final bool showResidenceCountry;
+
   const PrivacySettingsLoaded({
     required this.contactKycOnly,
     this.hidePhoneNumber = false,
     this.saveFailed = false,
+    this.showResidenceCountry = false,
   });
 
   PrivacySettingsLoaded copyWith({
     bool? contactKycOnly,
     bool? hidePhoneNumber,
     bool? saveFailed,
+    bool? showResidenceCountry,
   }) => PrivacySettingsLoaded(
     contactKycOnly: contactKycOnly ?? this.contactKycOnly,
     hidePhoneNumber: hidePhoneNumber ?? this.hidePhoneNumber,
     saveFailed: saveFailed ?? this.saveFailed,
+    showResidenceCountry: showResidenceCountry ?? this.showResidenceCountry,
   );
 
   @override
@@ -45,10 +51,16 @@ class PrivacySettingsLoaded extends PrivacySettingsState {
       other is PrivacySettingsLoaded &&
       other.contactKycOnly == contactKycOnly &&
       other.hidePhoneNumber == hidePhoneNumber &&
-      other.saveFailed == saveFailed;
+      other.saveFailed == saveFailed &&
+      other.showResidenceCountry == showResidenceCountry;
 
   @override
-  int get hashCode => Object.hash(contactKycOnly, hidePhoneNumber, saveFailed);
+  int get hashCode => Object.hash(
+    contactKycOnly,
+    hidePhoneNumber,
+    saveFailed,
+    showResidenceCountry,
+  );
 }
 
 /// Échec de chargement sans cache disponible. Marqueur sans donnée : ce

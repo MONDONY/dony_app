@@ -16,6 +16,7 @@ import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
+import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -308,6 +309,13 @@ class _LoadedView extends StatelessWidget {
             topBorder: false,
             child: _StatsRow(profile: profile),
           ).animate().fadeIn(delay: 60.ms, duration: 300.ms),
+        ),
+
+        // ── Vérifications (FLUTTER-4H) ────────────────────────────────────────
+        SliverToBoxAdapter(
+          child: _FlatSection(
+            child: _VerificationsSection(profile: profile),
+          ).animate().fadeIn(delay: 70.ms, duration: 300.ms),
         ),
 
         // ── À propos section ──────────────────────────────────────────────────
@@ -753,6 +761,102 @@ class _AboutSection extends StatelessWidget {
           style: tt.bodyMedium?.copyWith(color: cs.onSurface, height: 1.55),
         ),
       ],
+    );
+  }
+}
+
+// ─── Vérifications section (FLUTTER-4H) ─────────────────────────────────────
+
+/// Ce que la personne a vérifié (téléphone, e-mail, pièce d'identité) et, si
+/// elle l'a choisi, son pays de résidence : rassure les deux parties.
+class _VerificationsSection extends StatelessWidget {
+  const _VerificationsSection({required this.profile});
+  final ProfilePublicModel profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final country = profile.residenceCountry;
+    return Column(
+      key: const Key('profile-verifications'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionLabel(l.profilePublicVerificationsSectionLabel),
+        const SizedBox(height: DonySpacing.sm),
+        _VerificationRow(
+          label: l.profilePublicVerificationPhone,
+          verified: profile.phoneVerified,
+        ),
+        _VerificationRow(
+          label: l.profilePublicVerificationEmail,
+          verified: profile.emailVerified,
+        ),
+        _VerificationRow(
+          label: l.profilePublicVerificationIdentity,
+          verified: profile.kycVerified,
+        ),
+        if (country != null && country.isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.sm),
+          Row(
+            key: const Key('profile-residence-country'),
+            children: [
+              DonyIcon(
+                'map-pin',
+                size: 16,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Text(
+                  l.profilePublicResidesIn(countryName(l, country)),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _VerificationRow extends StatelessWidget {
+  const _VerificationRow({required this.label, required this.verified});
+  final String label;
+  final bool verified;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    return Semantics(
+      label:
+          '$label, ${verified ? l.profilePublicVerifiedValue : l.profilePublicNotVerifiedValue}',
+      excludeSemantics: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
+        child: Row(
+          children: [
+            DonyIcon(
+              verified ? 'circle-check' : 'circle-x',
+              size: 18,
+              color: verified ? cs.success : cs.onSurfaceVariant,
+            ),
+            const SizedBox(width: DonySpacing.sm),
+            Expanded(child: Text(label, style: tt.bodyMedium)),
+            Text(
+              verified
+                  ? l.profilePublicVerifiedValue
+                  : l.profilePublicNotVerifiedValue,
+              style: tt.bodySmall?.copyWith(
+                color: verified ? cs.success : cs.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

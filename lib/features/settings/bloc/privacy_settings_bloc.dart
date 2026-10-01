@@ -22,6 +22,12 @@ class PrivacySettingsBloc
     on<PrivacySettingsLoadRequested>(_onLoad);
     on<ContactKycOnlyToggled>(_onToggleKycOnly);
     on<HidePhoneNumberToggled>(_onToggleHidePhone);
+    on<ShowResidenceCountryToggled>(
+      (event, emit) => _push(
+        emit,
+        (current) => current.copyWith(showResidenceCountry: event.value),
+      ),
+    );
   }
 
   /// Lit Hive au démarrage : affichage immédiat sans état de chargement.
@@ -32,6 +38,9 @@ class PrivacySettingsBloc
         contactKycOnly: cached,
         hidePhoneNumber:
             box.get(HiveService.kHidePhoneNumber, defaultValue: false) as bool,
+        showResidenceCountry:
+            box.get(HiveService.kShowResidenceCountry, defaultValue: false)
+                as bool,
       );
     }
     return const PrivacySettingsInitial();
@@ -49,10 +58,15 @@ class PrivacySettingsBloc
       final settings = await _repo.fetch();
       await _box.put(HiveService.kContactKycOnly, settings.contactKycOnly);
       await _box.put(HiveService.kHidePhoneNumber, settings.hidePhoneNumber);
+      await _box.put(
+        HiveService.kShowResidenceCountry,
+        settings.showResidenceCountry,
+      );
       emit(
         PrivacySettingsLoaded(
           contactKycOnly: settings.contactKycOnly,
           hidePhoneNumber: settings.hidePhoneNumber,
+          showResidenceCountry: settings.showResidenceCountry,
         ),
       );
     } catch (_) {
@@ -112,6 +126,7 @@ class PrivacySettingsBloc
         PrivacySettingsModel(
           contactKycOnly: updated.contactKycOnly,
           hidePhoneNumber: updated.hidePhoneNumber,
+          showResidenceCountry: updated.showResidenceCountry,
         ),
       );
       return true;
@@ -128,5 +143,6 @@ class PrivacySettingsBloc
   Future<void> _write(PrivacySettingsLoaded s) async {
     await _box.put(HiveService.kContactKycOnly, s.contactKycOnly);
     await _box.put(HiveService.kHidePhoneNumber, s.hidePhoneNumber);
+    await _box.put(HiveService.kShowResidenceCountry, s.showResidenceCountry);
   }
 }

@@ -443,6 +443,10 @@ class _DonyAppState extends State<DonyApp> {
                               HiveService.kHidePhoneNumber,
                               s.hidePhoneNumber,
                             );
+                            prefs.put(
+                              HiveService.kShowResidenceCountry,
+                              s.showResidenceCountry,
+                            );
                           })
                           .catchError((_) {}),
                     );

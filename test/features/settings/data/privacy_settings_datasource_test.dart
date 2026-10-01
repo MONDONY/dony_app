@@ -50,7 +50,7 @@ void main() {
       },
     );
 
-    test('update envoie les deux préférences dans le PUT', () async {
+    test('update envoie toutes les préférences dans le PUT', () async {
       when(
         () =>
             mockDio.put('/auth/me/privacy-settings', data: any(named: 'data')),
@@ -63,7 +63,11 @@ void main() {
       verify(
         () => mockDio.put(
           '/auth/me/privacy-settings',
-          data: {'contactKycOnly': true, 'hidePhoneNumber': true},
+          data: {
+            'contactKycOnly': true,
+            'hidePhoneNumber': true,
+            'showResidenceCountry': false,
+          },
         ),
       ).called(1);
     });

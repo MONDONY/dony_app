@@ -341,6 +341,52 @@ void main() {
     expect(find.text('Fatou Diallo'), findsWidgets);
   });
 
+  // FLUTTER-4H : vérifications et pays de résidence.
+  testWidgets('section Vérifications : téléphone, e-mail, pièce d\'identité', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: const ProfilePublicModel(
+          userId: _userId,
+          displayName: 'Fatou Diallo',
+          kycVerified: true,
+          isProAccount: false,
+          isKiloPro: false,
+          completedBidsCount: 12,
+          averageRating: 4.8,
+          ratingCount: 7,
+          memberSince: 'mars 2025',
+          badges: [],
+          phoneVerified: true,
+          residenceCountry: 'FR',
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byKey(const Key('profile-verifications')), findsOneWidget);
+    expect(find.text('Numéro de téléphone'), findsOneWidget);
+    expect(find.text('Adresse e-mail'), findsOneWidget);
+    expect(find.text("Pièce d'identité"), findsOneWidget);
+    // Téléphone et identité vérifiés, e-mail non.
+    expect(find.text('Non vérifié'), findsOneWidget);
+    expect(find.text('Réside en France'), findsOneWidget);
+  });
+
+  testWidgets('pas de pays de résidence sans consentement', (tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    await tester.pumpWidget(_wrapLoaded(profile: _profile));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byKey(const Key('profile-residence-country')), findsNothing);
+  });
+
   testWidgets('hero has no blue gradient background', (tester) async {
     await tester.pumpWidget(_wrapLoaded(profile: _profile));
     await tester.pump(const Duration(milliseconds: 600));

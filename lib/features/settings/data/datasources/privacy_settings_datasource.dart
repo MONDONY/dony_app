@@ -19,6 +19,7 @@ class PrivacySettingsDatasource {
       data: {
         'contactKycOnly': settings.contactKycOnly,
         'hidePhoneNumber': settings.hidePhoneNumber,
+        'showResidenceCountry': settings.showResidenceCountry,
       },
     );
   }

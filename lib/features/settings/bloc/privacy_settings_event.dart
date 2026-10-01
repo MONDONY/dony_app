@@ -24,6 +24,19 @@ class ContactKycOnlyToggled extends PrivacySettingsEvent {
 
 /// Masque (true) ou révèle (false) mon numéro auprès de mes contreparties.
 /// Même traitement optimiste que [ContactKycOnlyToggled].
+/// Afficher ou non son pays de résidence sur son profil public (FLUTTER-4H).
+class ShowResidenceCountryToggled extends PrivacySettingsEvent {
+  final bool value;
+  const ShowResidenceCountryToggled(this.value);
+
+  @override
+  bool operator ==(Object other) =>
+      other is ShowResidenceCountryToggled && other.value == value;
+
+  @override
+  int get hashCode => value.hashCode;
+}
+
 class HidePhoneNumberToggled extends PrivacySettingsEvent {
   final bool value;
   const HidePhoneNumberToggled(this.value);
