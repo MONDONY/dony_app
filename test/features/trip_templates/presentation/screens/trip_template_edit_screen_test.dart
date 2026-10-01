@@ -427,6 +427,7 @@ void main() {
           departureTime: '22:00',
           arrivalTime: '06:30',
           handoverLeadDays: 1,
+          arrivalDayOffset: 1,
         );
         await tester.pumpWidget(
           _wrap(const TripTemplateEditScreen(template: template), bloc),
@@ -449,6 +450,17 @@ void main() {
                 as TripFormFields;
         expect(fields.transportMode.value, TransportMode.car);
         expect(fields.currency.value, SupportedCurrency.xof);
+        // Vol de nuit mémorisé : le jour d'arrivée n'est pas écrasé par le
+        // préremplissage des heures (FLUTTER-4E).
+        expect(find.byKey(const Key('arrival-day-chips')), findsOneWidget);
+        expect(
+          (tester.state<State<TripTemplateEditScreen>>(
+                    find.byType(TripTemplateEditScreen),
+                  )
+                  as dynamic)
+              .arrivalDayOffsetForTest,
+          1,
+        );
       },
     );
 
@@ -636,6 +648,8 @@ void main() {
         lng: -3.99,
       );
       fields.departureTime.value = const TimeOfDay(hour: 22, minute: 0);
+      // Arrivée plus tôt que le départ : vol de nuit, lendemain proposé.
+      fields.arrivalTime.value = const TimeOfDay(hour: 6, minute: 30);
       // Capacité par défaut du bloc (SUITCASE_23KG, 23 kg) explicitement
       // posée : sans dispatch, `_fields.availableKg` ne serait jamais
       // synchronisé par le `BlocListener` (constat #1) et resterait au
@@ -678,6 +692,8 @@ void main() {
       expect(data['deliveryAddress'], isNull);
       expect(data['departureTime'], '22:00');
       expect(data['handoverLeadDays'], isNull);
+      expect(data['arrivalTime'], '06:30');
+      expect(data['arrivalDayOffset'], 1);
       expect(data['capacityUnit'], 'SUITCASE_23KG');
       expect(data['availableKg'], 23);
       // Plus de sélecteur : le modèle part en avion, valeur exigée par l'API.

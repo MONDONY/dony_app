@@ -10,6 +10,7 @@ import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -367,7 +368,7 @@ class TrajetStep extends StatelessWidget {
               if (arrivalDayOffsetNotifier != null &&
                   arrivalTimeNotifier.value != null) ...[
                 const SizedBox(height: DonySpacing.sm),
-                _ArrivalDayChips(notifier: arrivalDayOffsetNotifier!),
+                ArrivalDayChips(notifier: arrivalDayOffsetNotifier!),
               ],
               const SizedBox(height: DonySpacing.sm),
               // ── Date de départ * — DonyTextField.tappable ─────────────
@@ -434,41 +435,4 @@ class TrajetStep extends StatelessWidget {
 /// relevait des rafales de taps (rage clicks) sur le haut de ce formulaire.
 void _showLocked(BuildContext context, String message) {
   DonySnackbar.show(context, message: message);
-}
-
-/// « Arrivée : le jour même / le lendemain / dans 2 jours » (FLUTTER-4E).
-class _ArrivalDayChips extends StatelessWidget {
-  const _ArrivalDayChips({required this.notifier});
-  final ValueNotifier<int> notifier;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Column(
-      key: const Key('arrival-day-chips'),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l.tripPublishArrivalDayLabel,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
-        const SizedBox(height: DonySpacing.xs),
-        Wrap(
-          spacing: DonySpacing.sm,
-          runSpacing: DonySpacing.xs,
-          children: [
-            for (final offset in const [0, 1, 2])
-              ChoiceChip(
-                key: Key('arrival-day-$offset'),
-                label: Text(l.tripPublishArrivalDayOption(offset)),
-                selected: notifier.value == offset,
-                onSelected: (_) => notifier.value = offset,
-              ),
-          ],
-        ),
-      ],
-    );
-  }
 }

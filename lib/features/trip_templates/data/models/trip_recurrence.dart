@@ -39,6 +39,7 @@ class TripRecurrence {
     required this.horizonDays,
     required this.active,
     this.lastGeneratedDate,
+    this.arrivalDayOffset = 0,
   });
 
   final String id;
@@ -61,6 +62,9 @@ class TripRecurrence {
   final int horizonDays;
   final bool active;
   final String? lastGeneratedDate;
+
+  /// Jour d'arrivée relatif au départ, repris du modèle (FLUTTER-4E).
+  final int arrivalDayOffset;
 
   factory TripRecurrence.fromJson(Map<String, dynamic> json) {
     String? time = json['departureTime'] as String?;
@@ -98,6 +102,7 @@ class TripRecurrence {
       horizonDays: (json['horizonDays'] as num).toInt(),
       active: json['active'] as bool,
       lastGeneratedDate: json['lastGeneratedDate'] as String?,
+      arrivalDayOffset: (json['arrivalDayOffset'] as num?)?.toInt() ?? 0,
     );
   }
 }

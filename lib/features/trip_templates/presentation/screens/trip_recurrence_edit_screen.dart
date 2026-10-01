@@ -98,6 +98,8 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
       },
       'departureTime': _timeWire,
       'arrivalTime': t.arrivalTime,
+      // Vol de nuit du modèle : chaque occurrence publiée arrive le lendemain.
+      'arrivalDayOffset': t.arrivalTime == null ? 0 : t.arrivalDayOffset,
       'cashAccepted': t.cashAccepted,
       'weekdays': _weekdaysString,
       'horizonDays': 14,

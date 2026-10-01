@@ -14,6 +14,7 @@ import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/arrival_day_chips.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
@@ -58,6 +59,9 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   final _labelCtrl = TextEditingController();
   final _step = ValueNotifier<int>(0);
   final _handoverLeadDays = ValueNotifier<int?>(null);
+  // Jour d'arrivée relatif au départ (FLUTTER-4E), proposé une fois l'heure
+  // d'arrivée posée.
+  final _arrivalDayOffset = ValueNotifier<int>(0);
   final _canContinue = ValueNotifier<bool>(false);
   bool _submitted = false;
 
@@ -65,6 +69,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 
   @visibleForTesting
   int? get handoverLeadDaysForTest => _handoverLeadDays.value;
+  int get arrivalDayOffsetForTest => _arrivalDayOffset.value;
   @visibleForTesting
   TripFormFields get fieldsForTest => _fields;
 
@@ -88,6 +93,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       _onCurrencyChanged();
     }
     _labelCtrl.addListener(_recomputeCanContinue);
+    _fields.arrivalTime.addListener(_onArrivalTimeChanged);
     _fields.departureCity.addListener(_recomputeCanContinue);
     _fields.arrivalCity.addListener(_recomputeCanContinue);
     _step.addListener(_recomputeCanContinue);
@@ -172,6 +178,9 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     _fields.departureTime.value = _timeOfDay(t.departureTime);
     _fields.arrivalTime.value = _timeOfDay(t.arrivalTime);
     _handoverLeadDays.value = t.handoverLeadDays;
+    // Après l'heure d'arrivée : `_onArrivalTimeChanged` ne doit pas écraser
+    // le jour mémorisé dans le modèle.
+    _arrivalDayOffset.value = t.arrivalTime == null ? 0 : t.arrivalDayOffset;
     _prefillConditions(t);
   }
 
@@ -262,6 +271,24 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     };
   }
 
+  /// Comme à la création de trajet : une arrivée plus tôt que le départ est un
+  /// vol de nuit, on propose le lendemain (modifiable). Sans heure d'arrivée,
+  /// le jour d'arrivée n'a pas de sens et revient au jour même.
+  void _onArrivalTimeChanged() {
+    final arrival = _fields.arrivalTime.value;
+    if (arrival == null) {
+      _arrivalDayOffset.value = 0;
+      return;
+    }
+    final departure = _fields.departureTime.value;
+    if (departure != null &&
+        _arrivalDayOffset.value == 0 &&
+        arrival.hour * 60 + arrival.minute <=
+            departure.hour * 60 + departure.minute) {
+      _arrivalDayOffset.value = 1;
+    }
+  }
+
   @override
   void dispose() {
     _fields.priceOption.removeListener(_recomputeCanContinue);
@@ -276,6 +303,8 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     _labelCtrl.dispose();
     _step.dispose();
     _handoverLeadDays.dispose();
+    _fields.arrivalTime.removeListener(_onArrivalTimeChanged);
+    _arrivalDayOffset.dispose();
     _canContinue.dispose();
     _fields.dispose();
     super.dispose();
@@ -336,6 +365,9 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       departureTime: _wire(_fields.departureTime.value),
       arrivalTime: _wire(_fields.arrivalTime.value),
       handoverLeadDays: _handoverLeadDays.value,
+      arrivalDayOffset: _fields.arrivalTime.value == null
+          ? 0
+          : _arrivalDayOffset.value,
     );
     return template.toJson();
   }
@@ -552,6 +584,15 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
         label: l.tripTemplateArrivalTimeFieldLabel,
         shortLabel: l.tripTemplateArrivalShortLabel,
         time: _fields.arrivalTime,
+      ),
+      ValueListenableBuilder<TimeOfDay?>(
+        valueListenable: _fields.arrivalTime,
+        builder: (context, arrival, _) => arrival == null
+            ? const SizedBox.shrink()
+            : Padding(
+                padding: const EdgeInsets.only(top: DonySpacing.sm),
+                child: ArrivalDayChips(notifier: _arrivalDayOffset),
+              ),
       ),
       const SizedBox(height: DonySpacing.xxl),
 
