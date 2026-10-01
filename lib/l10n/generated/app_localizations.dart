@@ -24432,36 +24432,6 @@ abstract class AppLocalizations {
   /// **'Autre raison'**
   String get tripRescheduleReasonOther;
 
-  /// Champ de la feuille de report
-  ///
-  /// In fr, this message translates to:
-  /// **'Nouvelle date de départ'**
-  String get tripRescheduleNewDateLabel;
-
-  /// Champ de la feuille de report
-  ///
-  /// In fr, this message translates to:
-  /// **'Heure de départ'**
-  String get tripRescheduleDepartureTimeLabel;
-
-  /// Champ de la feuille de report
-  ///
-  /// In fr, this message translates to:
-  /// **'Heure d\'arrivée (facultatif)'**
-  String get tripRescheduleArrivalTimeLabel;
-
-  /// Champ de la feuille de report
-  ///
-  /// In fr, this message translates to:
-  /// **'Remise des colis au plus tard'**
-  String get tripRescheduleHandoverLabel;
-
-  /// Champ de la feuille de report
-  ///
-  /// In fr, this message translates to:
-  /// **'Message aux expéditeurs (facultatif)'**
-  String get tripRescheduleNoteLabel;
-
   /// Indice du message aux expéditeurs
   ///
   /// In fr, this message translates to:
@@ -24647,6 +24617,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le délai pour répondre au report est dépassé : votre colis reste sur le trajet.'**
   String get errorRescheduleDecisionClosedMessage;
+
+  /// Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Actuellement'**
+  String get tripRescheduleCurrentLabel;
+
+  /// Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau départ'**
+  String get tripRescheduleSectionDeparture;
+
+  /// Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get tripRescheduleSectionArrival;
+
+  /// Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise des colis'**
+  String get tripRescheduleSectionHandover;
+
+  /// Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Message aux expéditeurs'**
+  String get tripRescheduleSectionMessage;
+
+  /// Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Jour'**
+  String get tripRescheduleDateShort;
+
+  /// Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure'**
+  String get tripRescheduleTimeShort;
+
+  /// Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Au plus tard le'**
+  String get tripRescheduleHandoverShort;
+
+  /// Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir'**
+  String get tripRescheduleChoose;
+
+  /// Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Facultatif'**
+  String get tripRescheduleOptional;
+
+  /// Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les expéditeurs vous remettent leur colis au plus tard ce jour-là. Elle suit la nouvelle date de départ.'**
+  String get tripRescheduleHandoverHint;
 }
 
 class _AppLocalizationsDelegate

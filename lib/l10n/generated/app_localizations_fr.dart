@@ -14794,21 +14794,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripRescheduleReasonOther => 'Autre raison';
 
   @override
-  String get tripRescheduleNewDateLabel => 'Nouvelle date de départ';
-
-  @override
-  String get tripRescheduleDepartureTimeLabel => 'Heure de départ';
-
-  @override
-  String get tripRescheduleArrivalTimeLabel => 'Heure d\'arrivée (facultatif)';
-
-  @override
-  String get tripRescheduleHandoverLabel => 'Remise des colis au plus tard';
-
-  @override
-  String get tripRescheduleNoteLabel => 'Message aux expéditeurs (facultatif)';
-
-  @override
   String get tripRescheduleNoteHint =>
       'Ex. : vol annulé, nouveau vol confirmé le lendemain';
 
@@ -14931,4 +14916,38 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorRescheduleDecisionClosedMessage =>
       'Le délai pour répondre au report est dépassé : votre colis reste sur le trajet.';
+
+  @override
+  String get tripRescheduleCurrentLabel => 'Actuellement';
+
+  @override
+  String get tripRescheduleSectionDeparture => 'Nouveau départ';
+
+  @override
+  String get tripRescheduleSectionArrival => 'Arrivée';
+
+  @override
+  String get tripRescheduleSectionHandover => 'Remise des colis';
+
+  @override
+  String get tripRescheduleSectionMessage => 'Message aux expéditeurs';
+
+  @override
+  String get tripRescheduleDateShort => 'Jour';
+
+  @override
+  String get tripRescheduleTimeShort => 'Heure';
+
+  @override
+  String get tripRescheduleHandoverShort => 'Au plus tard le';
+
+  @override
+  String get tripRescheduleChoose => 'Choisir';
+
+  @override
+  String get tripRescheduleOptional => 'Facultatif';
+
+  @override
+  String get tripRescheduleHandoverHint =>
+      'Les expéditeurs vous remettent leur colis au plus tard ce jour-là. Elle suit la nouvelle date de départ.';
 }

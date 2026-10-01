@@ -124,6 +124,43 @@ void main() {
     },
   );
 
+  // Recette Redmi : le champ restait inerte tant qu'aucune nouvelle date
+  // n'était choisie, sans rien qui l'explique.
+  testWidgets('remise des colis : pré-remplie et cliquable dès l\'ouverture', (
+    tester,
+  ) async {
+    await open(tester);
+
+    final day = departure.subtract(const Duration(days: 1));
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('reschedule-handover-field')),
+        matching: find.textContaining('${day.day}'),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('reschedule-handover-field')));
+    await tester.pumpAndSettle();
+    expect(find.byType(DatePickerDialog), findsOneWidget);
+  });
+
+  testWidgets('le résumé affiche le départ actuel puis le nouveau', (
+    tester,
+  ) async {
+    await open(tester);
+    expect(find.text('Actuellement'), findsOneWidget);
+
+    await pickNextDay(tester);
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('reschedule-summary')),
+        matching: find.textContaining('${departure.day + 1}'),
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('même date et même heure : refusé avant l\'envoi', (
     tester,
   ) async {

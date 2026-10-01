@@ -14704,21 +14704,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripRescheduleReasonOther => 'Other reason';
 
   @override
-  String get tripRescheduleNewDateLabel => 'New departure date';
-
-  @override
-  String get tripRescheduleDepartureTimeLabel => 'Departure time';
-
-  @override
-  String get tripRescheduleArrivalTimeLabel => 'Arrival time (optional)';
-
-  @override
-  String get tripRescheduleHandoverLabel => 'Parcel handover by';
-
-  @override
-  String get tripRescheduleNoteLabel => 'Message to senders (optional)';
-
-  @override
   String get tripRescheduleNoteHint =>
       'E.g. flight canceled, new flight confirmed the next day';
 
@@ -14841,4 +14826,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorRescheduleDecisionClosedMessage =>
       'The time to reply has passed: your parcel stays on the trip.';
+
+  @override
+  String get tripRescheduleCurrentLabel => 'Currently';
+
+  @override
+  String get tripRescheduleSectionDeparture => 'New departure';
+
+  @override
+  String get tripRescheduleSectionArrival => 'Arrival';
+
+  @override
+  String get tripRescheduleSectionHandover => 'Parcel handover';
+
+  @override
+  String get tripRescheduleSectionMessage => 'Message to senders';
+
+  @override
+  String get tripRescheduleDateShort => 'Date';
+
+  @override
+  String get tripRescheduleTimeShort => 'Time';
+
+  @override
+  String get tripRescheduleHandoverShort => 'No later than';
+
+  @override
+  String get tripRescheduleChoose => 'Choose';
+
+  @override
+  String get tripRescheduleOptional => 'Optional';
+
+  @override
+  String get tripRescheduleHandoverHint =>
+      'Senders hand you their parcel by this day at the latest. It follows the new departure date.';
 }
