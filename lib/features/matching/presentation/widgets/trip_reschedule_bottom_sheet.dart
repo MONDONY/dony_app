@@ -337,6 +337,16 @@ class _TripRescheduleBottomSheetState extends State<TripRescheduleBottomSheet> {
                     ? null
                     : '${day(date)}${time == null ? '' : ' · ${_wire(time)}'}',
               ),
+              if (widget.announcement.remainingReschedules != null) ...[
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  l.tripRescheduleRemaining(
+                    widget.announcement.remainingReschedules!,
+                  ),
+                  key: const Key('reschedule-remaining'),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
               const SizedBox(height: DonySpacing.lg),
               _SectionTitle(l.tripRescheduleReasonLabel),
               Wrap(

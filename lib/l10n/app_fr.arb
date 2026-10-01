@@ -17188,6 +17188,19 @@
   "@tripRescheduleHandoverHint": {
     "description": "Feuille de report de trajet (trip_reschedule_bottom_sheet.dart)"
   },
+  "tripRescheduleRemaining": "{count, plural, =1{Dernier report possible pour ce trajet.} other{Encore {count} reports possibles pour ce trajet.}}",
+  "@tripRescheduleRemaining": {
+    "description": "Reports restants, sous le résumé de la feuille de report",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripRescheduleLimitReachedMessage": "Déjà reporté 2 fois : annulez et publiez un nouveau trajet",
+  "@tripRescheduleLimitReachedMessage": {
+    "description": "Tuile Reporter grisée (owner_action_grid.dart)"
+  },
   "profilePublicLastSeenToday": "Vu aujourd'hui",
   "@profilePublicLastSeenToday": {
     "description": "Profil public : dernière connexion (profile_public_screen.dart)"

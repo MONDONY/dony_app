@@ -158,6 +158,10 @@ class AnnouncementModel {
   /// Instructions d'arrivée laissées par le voyageur pour l'expéditeur (ex :
   /// point de rendez-vous précis, consignes de retrait). Facultatif.
   final String? arrivalInstructions;
+
+  /// Reports encore possibles (vol annulé, voyage repoussé), sur 2. Nul pour
+  /// un back antérieur au compteur : inconnu, la tuile reste ouverte.
+  final int? remainingReschedules;
   final List<String>? acceptedContentTypes;
   final List<String>? refusedTypes;
   final DateTime createdAt;
@@ -254,6 +258,7 @@ class AnnouncementModel {
     this.traveler,
     this.description,
     this.arrivalInstructions,
+    this.remainingReschedules,
     this.acceptedContentTypes,
     this.refusedTypes,
     required this.createdAt,

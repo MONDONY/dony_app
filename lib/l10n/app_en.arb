@@ -8384,6 +8384,15 @@
   "tripRescheduleChoose": "Choose",
   "tripRescheduleOptional": "Optional",
   "tripRescheduleHandoverHint": "Senders hand you their parcel by this day at the latest. It follows the new departure date.",
+  "tripRescheduleRemaining": "{count, plural, =1{Last reschedule allowed for this trip.} other{{count} reschedules left for this trip.}}",
+  "@tripRescheduleRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripRescheduleLimitReachedMessage": "Already rescheduled twice: cancel and post a new trip",
   "profilePublicLastSeenToday": "Seen today",
   "profilePublicLastSeenYesterday": "Seen yesterday",
   "profilePublicLastSeenDaysAgo": "Seen {days} days ago",

@@ -14862,6 +14862,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Senders hand you their parcel by this day at the latest. It follows the new departure date.';
 
   @override
+  String tripRescheduleRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reschedules left for this trip.',
+      one: 'Last reschedule allowed for this trip.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripRescheduleLimitReachedMessage =>
+      'Already rescheduled twice: cancel and post a new trip';
+
+  @override
   String get profilePublicLastSeenToday => 'Seen today';
 
   @override

@@ -5,6 +5,34 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  group('AnnouncementModel.remainingReschedules', () {
+    Map<String, dynamic> json({int? remaining}) => {
+      'id': 'a1',
+      'travelerId': 't1',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'departureDate': '2026-10-13',
+      'availableKg': 10,
+      'totalKg': 20,
+      'pricePerKg': 5,
+      'status': 'ACTIVE',
+      'createdAt': '2026-10-01T10:00:00',
+      'updatedAt': '2026-10-01T10:00:00',
+      'remainingReschedules': ?remaining,
+    };
+
+    test('servi au propriétaire', () {
+      expect(
+        AnnouncementModel.fromJson(json(remaining: 1)).remainingReschedules,
+        1,
+      );
+    });
+
+    test('absent (autre lecteur, ancien back) : inconnu', () {
+      expect(AnnouncementModel.fromJson(json()).remainingReschedules, isNull);
+    });
+  });
+
   Map<String, dynamic> baseAnnouncementJson() => {
     'id': 'a1',
     'travelerId': 't1',

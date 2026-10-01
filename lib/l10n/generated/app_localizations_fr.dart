@@ -14952,6 +14952,21 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les expéditeurs vous remettent leur colis au plus tard ce jour-là. Elle suit la nouvelle date de départ.';
 
   @override
+  String tripRescheduleRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Encore $count reports possibles pour ce trajet.',
+      one: 'Dernier report possible pour ce trajet.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tripRescheduleLimitReachedMessage =>
+      'Déjà reporté 2 fois : annulez et publiez un nouveau trajet';
+
+  @override
   String get profilePublicLastSeenToday => 'Vu aujourd\'hui';
 
   @override

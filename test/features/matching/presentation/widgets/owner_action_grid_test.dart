@@ -189,6 +189,41 @@ void main() {
     },
   );
 
+  testWidgets(
+    'plus aucun report possible → tuile Reporter grisée avec le motif',
+    (tester) async {
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        a: AnnouncementModel(
+          id: 'ann-001',
+          travelerId: 'trav-001',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2026, 7),
+          availableKg: 10,
+          totalKg: 23,
+          pricePerKg: 8,
+          status: 'ACTIVE',
+          bidsCount: 2,
+          remainingReschedules: 0,
+          createdAt: DateTime(2026, 6),
+          updatedAt: DateTime(2026, 6),
+        ),
+        isOwner: true,
+      );
+
+      expect(find.text('Reporter'), findsOneWidget);
+      expect(
+        find.byTooltip(
+          'Déjà reporté 2 fois : annulez et publiez un nouveau trajet',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
   testWidgets('pas de Reporter sans demande ni sur un trajet terminé', (
     tester,
   ) async {
