@@ -991,6 +991,7 @@ class _FirmPriceCta extends StatelessWidget {
       initialDate: announcement?.departureDate,
       isFirmPrice: true,
       currency: request.currency,
+      displayPriceEur: request.grossPriceEur,
     );
     if (context.mounted) {
       onChanged?.call();
@@ -1001,8 +1002,12 @@ class _FirmPriceCta extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final price = request.targetPriceEur;
-    final label = price != null
-        ? l.requestPublicTakeAt(PriceDisplay.money(price, request.currency))
+    // Le prix publié (brut), le même que la carte « Prix ferme » et le fil :
+    // le bouton annonçait le net juste sous le brut (FLUTTER-56). Le net
+    // reste le montant envoyé, affiché « vous recevez » dans la feuille.
+    final shown = request.grossPriceEur ?? price;
+    final label = shown != null
+        ? l.requestPublicTakeAt(PriceDisplay.money(shown, request.currency))
         : l.requestPublicTakePackageCta;
 
     return BlocProvider(

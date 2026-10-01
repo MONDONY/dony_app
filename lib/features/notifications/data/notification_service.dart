@@ -21,6 +21,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:sentry_flutter/sentry_flutter.dart' show Breadcrumb, Sentry;
 
 // Must be top-level — Firebase requirement for background handler
 @pragma('vm:entry-point')
@@ -42,7 +43,7 @@ const _criticalTypes = {
 const _fcmTokenUnavailableMessage =
     'FCM token null — appareil non enregistré'; // i18n-ignore
 
-/// Jamais affiché à l'utilisateur : remonté à Sentry uniquement.
+/// Jamais affiché à l'utilisateur : fil d'Ariane Sentry uniquement.
 const _permissionDeniedMessage =
     'Notifications refusées dans les réglages système'; // i18n-ignore
 
@@ -432,19 +433,20 @@ class NotificationService {
       getAuthorizationStatus: () async =>
           (await _fcm.getNotificationSettings()).authorizationStatus,
       uploadToken: uploadCurrentToken,
+      // Un refus est un choix de l'utilisateur, pas une erreur : remonté en
+      // erreur, il ouvrait une issue Sentry à chaque session (FLUTTER-J, 55
+      // événements). Un fil d'Ariane le garde visible dans le contexte d'une
+      // vraie erreur de cet appareil, sans créer d'issue.
       reportDenied: () async {
         if (_permissionDeniedReported) return;
         _permissionDeniedReported = true;
-        await (_errorReporter?.report(
-              StateError(_permissionDeniedMessage),
-              operation: 'notifications.permission_denied',
-              context: {
-                'feature': 'notifications',
-                'channel': 'fcm',
-                'platform': Platform.operatingSystem,
-              },
-            ) ??
-            Future<void>.value());
+        await Sentry.addBreadcrumb(
+          Breadcrumb(
+            message: _permissionDeniedMessage,
+            category: 'notifications.permission_denied',
+            data: {'channel': 'fcm', 'platform': Platform.operatingSystem},
+          ),
+        );
       },
     );
   }

@@ -132,6 +132,7 @@ void main() {
     DateTime? initialDate,
     bool isFirmPrice = false,
     double? targetPriceEur,
+    double? displayPriceEur,
   }) => MaterialApp.router(
     routerConfig: GoRouter(
       routes: [
@@ -154,6 +155,7 @@ void main() {
                 initialDate: initialDate,
                 isFirmPrice: isFirmPrice,
                 targetPriceEur: targetPriceEur,
+                displayPriceEur: displayPriceEur,
               ),
               child: const Text('Ouvrir'),
             ),
@@ -367,6 +369,50 @@ void main() {
               that: isA<NegotiationStartRequested>()
                   .having((e) => e.proposedPriceEur, 'proposedPriceEur', 35.5)
                   .having((e) => e.isFirmPrice, 'isFirmPrice', true),
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    // FLUTTER-56 : le bouton annonçait le net sous une carte qui montrait le
+    // brut. La feuille montre le prix publié, le net en « vous recevez », et
+    // envoie toujours le net.
+    testWidgets(
+      'prix ferme publié en brut : brut affiché, « vous recevez » net, net envoyé',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            initialDate: DateTime(2026, 6, 12),
+            isFirmPrice: true,
+            targetPriceEur: 41,
+            displayPriceEur: 46,
+          ),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('46.00'), findsOneWidget);
+        expect(find.text('Prendre à 46,00\u{a0}€'), findsOneWidget);
+        expect(find.byKey(const Key('firm-price-you-receive')), findsOneWidget);
+        expect(find.textContaining('41,00'), findsOneWidget);
+
+        await tester.ensureVisible(
+          find.byKey(const Key('trip-tile-select-inkwell')),
+        );
+        await tester.tap(find.byKey(const Key('trip-tile-select-inkwell')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Prendre à 46,00\u{a0}€'));
+        await tester.pump();
+
+        verify(
+          () => negoBloc.add(
+            any(
+              that: isA<NegotiationStartRequested>().having(
+                (e) => e.proposedPriceEur,
+                'proposedPriceEur',
+                41,
+              ),
             ),
           ),
         ).called(1);

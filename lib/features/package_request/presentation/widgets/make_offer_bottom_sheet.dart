@@ -39,6 +39,7 @@ class MakeOfferBottomSheet {
     DateTime? initialDate,
     bool isFirmPrice = false,
     String currency = 'EUR',
+    double? displayPriceEur,
   }) async {
     PriceEstimate? estimate;
     try {
@@ -102,6 +103,7 @@ class MakeOfferBottomSheet {
           initialDate: initialDate,
           isFirmPrice: isFirmPrice,
           currency: currency,
+          displayPriceEur: displayPriceEur,
         ),
         stickyBottom: ValueListenableBuilder<AnnouncementModel?>(
           valueListenable: selectedTripNotifier,
@@ -115,9 +117,10 @@ class MakeOfferBottomSheet {
                   if (loading) {
                     label = l.requestCreateSendingLabel;
                   } else if (isFirmPrice) {
-                    label = targetPriceEur != null
+                    final shown = displayPriceEur ?? targetPriceEur;
+                    label = shown != null
                         ? l.negotiationMakeOfferTakeAtLabel(
-                            PriceDisplay.money(targetPriceEur, currency),
+                            PriceDisplay.money(shown, currency),
                           )
                         : l.requestPublicTakePackageCta;
                   } else {
@@ -174,6 +177,7 @@ class _MakeOfferContent extends StatefulWidget {
     this.initialDate,
     this.isFirmPrice = false,
     this.currency = 'EUR',
+    this.displayPriceEur,
   });
 
   final String packageRequestId;
@@ -198,6 +202,13 @@ class _MakeOfferContent extends StatefulWidget {
   final DateTime? initialDate;
   final bool isFirmPrice;
   final String currency;
+
+  /// Prix ferme tel que publié (brut, celui du fil et de la carte « Prix
+  /// ferme »). Affiché dans le champ verrouillé et sur « Prendre à » ; le net
+  /// [targetPriceEur] reste le montant envoyé et apparaît en « vous recevez ».
+  /// Le bouton affichait le net sous une carte qui montrait le brut
+  /// (FLUTTER-56). Null = le serveur ne sert pas le brut : net partout.
+  final double? displayPriceEur;
 
   @override
   State<_MakeOfferContent> createState() => _MakeOfferContentState();
@@ -267,11 +278,16 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
   void initState() {
     super.initState();
     widget.onSubmitReady(_submit);
+    // Prix ferme : champ verrouillé, purement informatif (le montant envoyé
+    // est [targetPriceEur], cf. `_submit`) ; il montre le prix publié.
+    final shownPrice = widget.isFirmPrice
+        ? widget.displayPriceEur ?? widget.targetPriceEur
+        : widget.targetPriceEur;
     _priceCtrl = TextEditingController(
-      text: widget.targetPriceEur != null
+      text: shownPrice != null
           // Prix ferme : valeur EXACTE (pas d'arrondi) — sinon le backend
           // rejette avec negotiation/firm-price-must-match.
-          ? widget.targetPriceEur!.toStringAsFixed(widget.isFirmPrice ? 2 : 0)
+          ? shownPrice.toStringAsFixed(widget.isFirmPrice ? 2 : 0)
           : '',
     );
     _kgCtrl = TextEditingController(text: widget.weightKg.toStringAsFixed(1));
@@ -292,6 +308,17 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
         _recomputeDirty();
       });
     });
+  }
+
+  /// « vous recevez X » sous un prix ferme publié en brut, comme la grille
+  /// de prix d'un trajet. Rien quand brut et net se confondent.
+  String? _firmNetHint(AppLocalizations l) {
+    final net = widget.targetPriceEur;
+    final shown = widget.displayPriceEur;
+    if (!widget.isFirmPrice || net == null || shown == null || shown == net) {
+      return null;
+    }
+    return l.priceGridYouReceive(PriceDisplay.money(net, widget.currency));
   }
 
   @override
@@ -465,6 +492,16 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                   ],
                 ),
               ),
+              if (_firmNetHint(l) case final hint?) ...[
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  hint,
+                  key: const Key('firm-price-you-receive'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
               const SizedBox(height: DonySpacing.md),
 
               // ── Date ──────────────────────────────────────────────────────

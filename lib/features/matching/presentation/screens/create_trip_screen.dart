@@ -2221,6 +2221,9 @@ class _TripFormContentState extends State<_TripFormContent> {
               mobileMoneyEnabledNotifier: _mobileMoneyEnabledNotifier,
               currencyNotifier: widget.currencyNotifier,
               mobileMoneyAccountActive: mobileMoneyAccountActive,
+              mobileMoneyCurrency: SupportedCurrency.fromCode(
+                mobileMoneyAccountCurrencyFrom(mobileMoneyState),
+              ),
               onMobileMoneySetupReturned: () => context
                   .read<MobileMoneyAccountBloc>()
                   .add(const MobileMoneyAccountRequested()),

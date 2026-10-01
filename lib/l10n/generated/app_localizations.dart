@@ -4790,6 +4790,27 @@ abstract class AppLocalizations {
   /// **'Le mobile money n\'est pas activé : vous ne pouvez pas encore l\'accepter sur ce trajet.'**
   String get tripPublishMobileMoneyInactiveNotice;
 
+  /// Encart sous la ligne Mobile money quand le compte est activé mais que la devise du trajet ne permet pas le mobile money
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre mobile money reçoit des {accountCurrency}. Ce trajet est en {tripCurrency} : publiez-le en {accountCurrency} pour accepter le mobile money.'**
+  String tripPublishMobileMoneyCurrencyNotice(
+    String accountCurrency,
+    String tripCurrency,
+  );
+
+  /// Même encart quand la devise du compte mobile money est inconnue
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre mobile money reçoit des francs CFA. Ce trajet est en {tripCurrency} : publiez-le en XOF ou XAF pour accepter le mobile money.'**
+  String tripPublishMobileMoneyCurrencyNoticeGeneric(String tripCurrency);
+
+  /// Bouton qui passe la devise du trajet à celle du compte mobile money
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier en {currency}'**
+  String tripPublishSwitchCurrencyCta(String currency);
+
   /// Lien vers l'écran d'activation du compte de versement mobile money
   ///
   /// In fr, this message translates to:

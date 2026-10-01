@@ -61,6 +61,7 @@ PackageRequest _makeRequest({
   String? viewerThreadId,
   bool negotiable = true,
   double? targetPriceEur,
+  double? grossPriceEur,
 }) => PackageRequest(
   id: 'pr-owner-test',
   senderId: _senderId,
@@ -77,6 +78,7 @@ PackageRequest _makeRequest({
   viewerThreadId: viewerThreadId,
   negotiable: negotiable,
   targetPriceEur: targetPriceEur,
+  grossPriceEur: grossPriceEur,
 );
 
 // ── Pump helper (pile navigable) ─────────────────────────────────────────────
@@ -497,5 +499,80 @@ void main() {
         expect(find.textContaining('Pas de connexion'), findsNothing);
       },
     );
+  });
+
+  group('FLUTTER-56, voyageur', () {
+    setUp(() {
+      final negoBloc = _MockNegotiationBloc();
+      when(() => negoBloc.state).thenReturn(const NegotiationInitial());
+      if (getIt.isRegistered<NegotiationBloc>()) {
+        getIt.unregister<NegotiationBloc>();
+      }
+      getIt.registerFactory<NegotiationBloc>(() => negoBloc);
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<NegotiationBloc>()) {
+        getIt.unregister<NegotiationBloc>();
+      }
+    });
+
+    // FLUTTER-56 : la carte « Prix ferme » montrait le brut (le prix publié,
+    // celui du fil), le bouton « Prendre à X » le net. Un seul montant à
+    // l'écran : le prix publié.
+    testWidgets('prix ferme : carte et bouton annoncent le même prix publié', (
+      tester,
+    ) async {
+      const traveler = UserModel(
+        id: 'traveler-firm-price',
+        roles: [],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+      );
+      when(() => repo.getById(any())).thenAnswer(
+        (_) async => _makeRequest(
+          negotiable: false,
+          targetPriceEur: 41,
+          grossPriceEur: 46,
+        ),
+      );
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(traveler));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(traveler),
+      );
+
+      await _pumpRouted(tester, authBloc: authBloc);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('41'), findsNothing);
+      // Carte de prix + bouton « Prendre à » : le même montant publié.
+      expect(find.textContaining('46'), findsAtLeastNWidgets(2));
+    });
+  });
+
+  testWidgets('prix ferme : un invité voit le même montant que le voyageur', (
+    tester,
+  ) async {
+    when(() => repo.getById(any())).thenAnswer(
+      (_) async => _makeRequest(
+        negotiable: false,
+        targetPriceEur: 41,
+        grossPriceEur: 46,
+      ),
+    );
+    when(() => authBloc.state).thenReturn(const AuthGuestSessionReady());
+    whenListen(
+      authBloc,
+      const Stream<AuthState>.empty(),
+      initialState: const AuthGuestSessionReady(),
+    );
+
+    await _pumpRouted(tester, authBloc: authBloc);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('41'), findsNothing);
+    expect(find.textContaining('46'), findsAtLeastNWidgets(2));
   });
 }

@@ -47,6 +47,7 @@ import 'package:dony/features/package_request/bloc/package_request_search_bloc.d
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
@@ -1219,12 +1220,12 @@ void main() {
       },
     );
 
+    // FLUTTER-58 : ses propres demandes étaient masquées du fil et de la carte,
+    // l'expéditeur croyait qu'elles n'étaient pas publiées. Elles restent
+    // affichées (marquées comme les siennes) et le compteur suit la liste.
     testWidgets(
-      'le compteur Colis ignore ses propres demandes, comme le feed',
+      'le compteur Colis compte ses propres demandes, affichées dans le fil',
       (tester) async {
-        // Le feed masque les demandes de l'utilisateur courant. Le compteur
-        // lisait la liste brute et annonçait donc un résultat de plus que ce
-        // qui était affiché.
         prSearchState = PackageRequestSearchState(
           status: SearchStatus.loaded,
           results: [
@@ -1239,15 +1240,38 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(
-          find.textContaining('Tirer pour voir les 2 colis'),
-          findsOneWidget,
-        );
-        expect(
           find.textContaining('Tirer pour voir les 3 colis'),
-          findsNothing,
+          findsOneWidget,
         );
       },
     );
+
+    testWidgets('ses propres demandes sont dans le fil, marquées', (
+      tester,
+    ) async {
+      prSearchState = PackageRequestSearchState(
+        status: SearchStatus.loaded,
+        results: [_makeRequest('r1'), _makeOwnRequest('r-moi')],
+      );
+
+      await pumpHome(tester, tripResults: [_makeAnn()]);
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Tirer pour voir'));
+      await tester.pumpAndSettle();
+
+      final cards = tester
+          .widgetList<PackageRequestListCard>(
+            find.byType(PackageRequestListCard),
+          )
+          .toList();
+      expect(cards.map((c) => c.item.id), containsAll(['r1', 'r-moi']));
+      expect(
+        cards.singleWhere((c) => c.item.id == 'r-moi').isOwnRequest,
+        isTrue,
+      );
+      expect(cards.singleWhere((c) => c.item.id == 'r1').isOwnRequest, isFalse);
+    });
 
     testWidgets('tap sur l\'indication peek agrandit le sheet en plein écran', (
       tester,

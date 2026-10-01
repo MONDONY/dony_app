@@ -1552,6 +1552,28 @@
   "@tripPublishMobileMoneyInactiveNotice": {
     "description": "Encart sous la ligne Mobile money quand le trajet est en franc CFA mais le compte de versement inactif"
   },
+  "tripPublishMobileMoneyCurrencyNotice": "Votre mobile money reçoit des {accountCurrency}. Ce trajet est en {tripCurrency} : publiez-le en {accountCurrency} pour accepter le mobile money.",
+  "@tripPublishMobileMoneyCurrencyNotice": {
+    "description": "Encart sous la ligne Mobile money quand le compte est activé mais que la devise du trajet ne permet pas le mobile money",
+    "placeholders": {
+      "accountCurrency": {"type": "String", "example": "XOF"},
+      "tripCurrency": {"type": "String", "example": "EUR"}
+    }
+  },
+  "tripPublishMobileMoneyCurrencyNoticeGeneric": "Votre mobile money reçoit des francs CFA. Ce trajet est en {tripCurrency} : publiez-le en XOF ou XAF pour accepter le mobile money.",
+  "@tripPublishMobileMoneyCurrencyNoticeGeneric": {
+    "description": "Même encart quand la devise du compte mobile money est inconnue",
+    "placeholders": {
+      "tripCurrency": {"type": "String", "example": "EUR"}
+    }
+  },
+  "tripPublishSwitchCurrencyCta": "Publier en {currency}",
+  "@tripPublishSwitchCurrencyCta": {
+    "description": "Bouton qui passe la devise du trajet à celle du compte mobile money",
+    "placeholders": {
+      "currency": {"type": "String", "example": "XOF"}
+    }
+  },
   "tripPublishActivateMobileMoneyCta": "Activer le mobile money",
   "@tripPublishActivateMobileMoneyCta": {
     "description": "Lien vers l'écran d'activation du compte de versement mobile money"
