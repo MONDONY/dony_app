@@ -572,6 +572,9 @@ class _TripFormContentState extends State<_TripFormContent> {
   final _departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   final _arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
 
+  /// Jours entre le départ et l'arrivée (vol de nuit, escale : FLUTTER-4E).
+  final _arrivalDayOffsetNotifier = ValueNotifier<int>(0);
+
   /// Date limite de dépôt : jour seul choisi par le voyageur, converti en
   /// instant à l'envoi (cf. [_resolveHandoverDeadline]).
   final _handoverDeadlineNotifier = ValueNotifier<DateTime?>(null);
@@ -718,6 +721,12 @@ class _TripFormContentState extends State<_TripFormContent> {
           minute: int.parse(parts[1]),
         );
       }
+      final arrivalDate = a.arrivalDate;
+      if (arrivalDate != null) {
+        _arrivalDayOffsetNotifier.value = DateUtils.dateOnly(
+          arrivalDate,
+        ).difference(DateUtils.dateOnly(a.departureDate)).inDays.clamp(0, 2);
+      }
       _pickupAddressNotifier.value = a.pickupAddress;
       _deliveryAddressNotifier.value = a.deliveryAddress;
       _transportModeNotifier.value = a.transportMode;
@@ -843,6 +852,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureTimeNotifier.addListener(_markStep0Touched);
     // Facultative, mais y toucher reste une interaction avec l'étape.
     _arrivalTimeNotifier.addListener(_markStep0Touched);
+    _arrivalDayOffsetNotifier.addListener(_markStep0Touched);
     _transportModeNotifier.addListener(_markStep0Touched);
     _handoverDeadlineNotifier.addListener(_markStep0Touched);
 
@@ -946,6 +956,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureDateNotifier,
     _departureTimeNotifier,
     _arrivalTimeNotifier,
+    _arrivalDayOffsetNotifier,
     _handoverDeadlineNotifier,
     _pickupAddressNotifier,
     _deliveryAddressNotifier,
@@ -986,6 +997,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       _departureDateNotifier.value,
       _departureTimeNotifier.value,
       _arrivalTimeNotifier.value,
+      _arrivalDayOffsetNotifier.value,
       _handoverDeadlineNotifier.value,
       _pickupAddressNotifier.value?.label,
       _deliveryAddressNotifier.value?.label,
@@ -1294,6 +1306,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureDateNotifier.dispose();
     _departureTimeNotifier.dispose();
     _arrivalTimeNotifier.dispose();
+    _arrivalDayOffsetNotifier.dispose();
     _handoverDeadlineNotifier.dispose();
     _availableKgNotifier.dispose();
     _priceOptionNotifier.dispose();
@@ -1382,6 +1395,17 @@ class _TripFormContentState extends State<_TripFormContent> {
     final arrivalTime = arrivalTimeVal != null
         ? _formatTime(arrivalTimeVal)
         : null;
+    // Envoyée seulement si l'arrivée est un autre jour que le départ.
+    final arrivalOffset = arrivalTimeVal != null
+        ? _arrivalDayOffsetNotifier.value
+        : 0;
+    final arrivalDate = arrivalOffset > 0
+        ? DateFormat('yyyy-MM-dd').format(
+            DateUtils.dateOnly(
+              departureDate,
+            ).add(Duration(days: arrivalOffset)),
+          )
+        : null;
 
     final allAccepted = acceptedContentWithPrecision(
       selected: _selectedContentNotifier.value,
@@ -1418,6 +1442,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           departureDate: departureDate,
           departureTime: departureTime,
           arrivalTime: arrivalTime,
+          arrivalDate: arrivalDate,
           pickupAddress: pickupAddress,
           deliveryAddress: deliveryAddress,
           description: description,
@@ -1442,6 +1467,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           departureDate: departureDate,
           departureTime: departureTime,
           arrivalTime: arrivalTime,
+          arrivalDate: arrivalDate,
           pickupAddress: pickupAddress,
           deliveryAddress: deliveryAddress,
           description: description,
@@ -1506,6 +1532,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           departureDate: departureDate,
           departureTime: departureTime,
           arrivalTime: arrivalTime,
+          arrivalDate: arrivalDate,
           pickupAddress: _pickupAddress!,
           deliveryAddress: _deliveryAddress!,
           availableKg: _availableKgNotifier.value,
@@ -1531,6 +1558,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           departureDate: departureDate,
           departureTime: departureTime,
           arrivalTime: arrivalTime,
+          arrivalDate: arrivalDate,
           pickupAddress: _pickupAddress!,
           deliveryAddress: _deliveryAddress!,
           availableKg: _availableKgNotifier.value,
@@ -1621,6 +1649,14 @@ class _TripFormContentState extends State<_TripFormContent> {
     );
     if (picked != null) {
       _arrivalTimeNotifier.value = picked;
+      // Arrivée plus tôt que le départ le même jour : c'est un vol de nuit,
+      // on propose le lendemain (modifiable).
+      final dep = _departureTimeNotifier.value;
+      if (dep != null &&
+          _arrivalDayOffsetNotifier.value == 0 &&
+          picked.hour * 60 + picked.minute <= dep.hour * 60 + dep.minute) {
+        _arrivalDayOffsetNotifier.value = 1;
+      }
     }
   }
 
@@ -2031,6 +2067,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           departureDateNotifier: _departureDateNotifier,
           departureTimeNotifier: _departureTimeNotifier,
           arrivalTimeNotifier: _arrivalTimeNotifier,
+          arrivalDayOffsetNotifier: _arrivalDayOffsetNotifier,
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,
           onSelectDate: _selectDate,

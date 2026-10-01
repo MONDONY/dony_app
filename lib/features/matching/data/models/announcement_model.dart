@@ -120,6 +120,8 @@ class AnnouncementModel {
   // "HH:mm" format, null if not set
   final String? departureTime;
   final String? arrivalTime;
+  // Date d'arrivée si différente du départ (vol de nuit) ; null = même jour.
+  final DateTime? arrivalDate;
   final AddressData? pickupAddress;
   final AddressData? deliveryAddress;
   final double availableKg;
@@ -237,6 +239,7 @@ class AnnouncementModel {
     required this.departureDate,
     this.departureTime,
     this.arrivalTime,
+    this.arrivalDate,
     this.pickupAddress,
     this.deliveryAddress,
     required this.availableKg,

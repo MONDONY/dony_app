@@ -11,6 +11,7 @@ import 'package:dony/features/cancellation/presentation/widgets/cancellation_bot
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/presentation/arrival_label.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -256,7 +257,12 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           ),
                           const SizedBox(width: DonySpacing.xs),
                           Text(
-                            a.arrivalTime!,
+                            arrivalTimeLabel(
+                              context.l10n,
+                              a.arrivalTime!,
+                              departureDate: a.departureDate,
+                              arrivalDate: a.arrivalDate,
+                            ),
                             style: tt.bodySmall?.copyWith(
                               color: cs.onPrimary.withValues(alpha: 0.85),
                               fontWeight: FontWeight.w600,

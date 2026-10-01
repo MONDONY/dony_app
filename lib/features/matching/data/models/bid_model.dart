@@ -139,6 +139,8 @@ class BidModel {
   // Référence du verrou d'annulation après remise.
   final DateTime? departureAt;
   final String? arrivalTime;
+  // Date d'arrivée si différente du départ (vol de nuit) ; null = même jour.
+  final DateTime? arrivalDate;
   final double? pricePerKg;
 
   /// Tarif/kg BRUT affiché à l'expéditeur (net + commission). L'API ne renvoie
@@ -260,6 +262,7 @@ class BidModel {
     this.departureTime,
     this.departureAt,
     this.arrivalTime,
+    this.arrivalDate,
     this.pricePerKg,
     this.pricePerKgSenderEur,
     this.trackingNumber,

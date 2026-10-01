@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/arrival_label.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -102,7 +103,9 @@ class AnnouncementDetailBody extends StatelessWidget {
                     _HeroChip(
                       label:
                           a.departureTime! +
-                          (a.arrivalTime != null ? ' → ${a.arrivalTime}' : ''),
+                          (a.arrivalTime != null
+                              ? ' → ${arrivalTimeLabel(context.l10n, a.arrivalTime!, departureDate: a.departureDate, arrivalDate: a.arrivalDate)}'
+                              : ''),
                     ),
                 ],
               ),

@@ -93,6 +93,7 @@ class DedicatedTripPayload extends Equatable {
     required this.departureDate,
     this.departureTime,
     this.arrivalTime,
+    this.arrivalDate,
     required this.pickupAddress,
     required this.deliveryAddress,
     this.description,
@@ -104,6 +105,7 @@ class DedicatedTripPayload extends Equatable {
   final DateTime departureDate;
   final String? departureTime;
   final String? arrivalTime;
+  final String? arrivalDate;
   final Map<String, dynamic> pickupAddress;
   final Map<String, dynamic> deliveryAddress;
   final String? description;
@@ -118,6 +120,7 @@ class DedicatedTripPayload extends Equatable {
     'departureDate': departureDate.toIso8601String().substring(0, 10),
     if (departureTime != null) 'departureTime': departureTime,
     if (arrivalTime != null) 'arrivalTime': arrivalTime,
+    if (arrivalDate != null) 'arrivalDate': arrivalDate,
     'pickupAddress': pickupAddress,
     'deliveryAddress': deliveryAddress,
     if (description != null) 'description': description,
@@ -132,6 +135,7 @@ class DedicatedTripPayload extends Equatable {
     departureDate,
     departureTime,
     arrivalTime,
+    arrivalDate,
     pickupAddress,
     deliveryAddress,
     description,
@@ -253,6 +257,7 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
     required this.departureDate,
     this.departureTime,
     this.arrivalTime,
+    this.arrivalDate,
     required this.pickupAddress,
     required this.deliveryAddress,
     this.description,
@@ -265,6 +270,7 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
   final DateTime departureDate;
   final String? departureTime;
   final String? arrivalTime;
+  final String? arrivalDate;
   final Map<String, dynamic> pickupAddress;
   final Map<String, dynamic> deliveryAddress;
   final String? description;
@@ -283,6 +289,7 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
     departureDate,
     departureTime,
     arrivalTime,
+    arrivalDate,
     pickupAddress,
     deliveryAddress,
     description,
@@ -856,6 +863,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         departureDate: e.departureDate,
         departureTime: e.departureTime,
         arrivalTime: e.arrivalTime,
+        arrivalDate: e.arrivalDate,
         pickupAddress: e.pickupAddress,
         deliveryAddress: e.deliveryAddress,
         description: e.description,

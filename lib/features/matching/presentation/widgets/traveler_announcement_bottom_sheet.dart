@@ -22,6 +22,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
+import 'package:dony/features/matching/presentation/arrival_label.dart';
 import 'package:dony/features/matching/presentation/existing_trip_request.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
@@ -592,7 +593,7 @@ class _HeroCorridorCard extends StatelessWidget {
     final depTime = announcement.departureTime;
     final arrTime = announcement.arrivalTime;
     final hoursLabel = (depTime != null && arrTime != null)
-        ? '$depTime → $arrTime'
+        ? '$depTime → ${arrivalTimeLabel(l, arrTime, departureDate: announcement.departureDate, arrivalDate: announcement.arrivalDate)}'
         : null;
 
     final cityStyle = tt.headlineSmall?.copyWith(

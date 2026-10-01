@@ -24311,6 +24311,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Tu as coché « Autre » : précise ce que tu acceptes avant de publier.'**
   String get tripPublishOtherContentPrecisionRequired;
+
+  /// Création de trajet : jour d'arrivée (trajet_step.dart, FLUTTER-4E)
+  ///
+  /// In fr, this message translates to:
+  /// **'Jour d\'arrivée'**
+  String get tripPublishArrivalDayLabel;
+
+  /// Création de trajet : jour d'arrivée (trajet_step.dart, FLUTTER-4E)
+  ///
+  /// In fr, this message translates to:
+  /// **'{offset, plural, =0{Le jour même} =1{Le lendemain} other{Dans {offset} jours}}'**
+  String tripPublishArrivalDayOption(int offset);
+
+  /// Affichage de l'arrivée quand elle est un autre jour que le départ (FLUTTER-4E)
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée le {date} à {time}'**
+  String tripArrivalOnDateAtTime(String date, String time);
+
+  /// Heure d'arrivée avec le décalage de jour, ex. « 06:30 (+1 j) » (arrival_label.dart, FLUTTER-4E)
+  ///
+  /// In fr, this message translates to:
+  /// **'{time} (+{days} j)'**
+  String tripArrivalDayOffsetSuffix(String time, int days);
 }
 
 class _AppLocalizationsDelegate

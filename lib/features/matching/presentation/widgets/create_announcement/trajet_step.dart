@@ -36,6 +36,11 @@ class TrajetStep extends StatelessWidget {
   final ValueNotifier<TimeOfDay?> departureTimeNotifier;
   final ValueNotifier<TimeOfDay?> arrivalTimeNotifier;
 
+  /// Jours entre le départ et l'arrivée (0 = le jour même), pour un vol de
+  /// nuit ou une escale (FLUTTER-4E). Null : le choix n'est pas proposé
+  /// (modèles de trajet).
+  final ValueNotifier<int>? arrivalDayOffsetNotifier;
+
   /// Callbacks vers les méthodes du state parent.
   final Future<void> Function() onSelectDepartureTime;
   final Future<void> Function() onSelectArrivalTime;
@@ -75,6 +80,7 @@ class TrajetStep extends StatelessWidget {
     required this.departureDateNotifier,
     required this.departureTimeNotifier,
     required this.arrivalTimeNotifier,
+    this.arrivalDayOffsetNotifier,
     required this.onSelectDepartureTime,
     required this.onSelectArrivalTime,
     required this.onSelectDate,
@@ -151,6 +157,7 @@ class TrajetStep extends StatelessWidget {
           departureDateNotifier,
           departureTimeNotifier,
           arrivalTimeNotifier,
+          ?arrivalDayOffsetNotifier,
         ]),
         builder: (context, _) {
           final dep = departureCityNotifier.value;
@@ -231,6 +238,7 @@ class TrajetStep extends StatelessWidget {
           departureDateNotifier,
           departureTimeNotifier,
           arrivalTimeNotifier,
+          ?arrivalDayOffsetNotifier,
         ]),
         builder: (context, _) {
           return Column(
@@ -356,6 +364,11 @@ class TrajetStep extends StatelessWidget {
                       ),
                 onTap: () => onSelectArrivalTime(),
               ),
+              if (arrivalDayOffsetNotifier != null &&
+                  arrivalTimeNotifier.value != null) ...[
+                const SizedBox(height: DonySpacing.sm),
+                _ArrivalDayChips(notifier: arrivalDayOffsetNotifier!),
+              ],
               const SizedBox(height: DonySpacing.sm),
               // ── Date de départ * — DonyTextField.tappable ─────────────
               DonyTextField.tappable(
@@ -421,4 +434,41 @@ class TrajetStep extends StatelessWidget {
 /// relevait des rafales de taps (rage clicks) sur le haut de ce formulaire.
 void _showLocked(BuildContext context, String message) {
   DonySnackbar.show(context, message: message);
+}
+
+/// « Arrivée : le jour même / le lendemain / dans 2 jours » (FLUTTER-4E).
+class _ArrivalDayChips extends StatelessWidget {
+  const _ArrivalDayChips({required this.notifier});
+  final ValueNotifier<int> notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      key: const Key('arrival-day-chips'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.tripPublishArrivalDayLabel,
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        Wrap(
+          spacing: DonySpacing.sm,
+          runSpacing: DonySpacing.xs,
+          children: [
+            for (final offset in const [0, 1, 2])
+              ChoiceChip(
+                key: Key('arrival-day-$offset'),
+                label: Text(l.tripPublishArrivalDayOption(offset)),
+                selected: notifier.value == offset,
+                onSelected: (_) => notifier.value = offset,
+              ),
+          ],
+        ),
+      ],
+    );
+  }
 }

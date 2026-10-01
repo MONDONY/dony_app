@@ -48,6 +48,9 @@ AnnouncementModel _$AnnouncementModelFromJson(
   departureDate: DateTime.parse(json['departureDate'] as String),
   departureTime: json['departureTime'] as String?,
   arrivalTime: json['arrivalTime'] as String?,
+  arrivalDate: json['arrivalDate'] == null
+      ? null
+      : DateTime.parse(json['arrivalDate'] as String),
   pickupAddress: json['pickupAddress'] == null
       ? null
       : AddressData.fromJson(json['pickupAddress'] as Map<String, dynamic>),
@@ -113,6 +116,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'departureDate': instance.departureDate.toIso8601String(),
       'departureTime': instance.departureTime,
       'arrivalTime': instance.arrivalTime,
+      'arrivalDate': instance.arrivalDate?.toIso8601String(),
       'pickupAddress': instance.pickupAddress,
       'deliveryAddress': instance.deliveryAddress,
       'availableKg': instance.availableKg,
