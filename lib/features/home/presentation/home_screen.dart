@@ -455,16 +455,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
       return _pullHint(cs, down: down, count: tripCount);
     }
     return BlocBuilder<PackageRequestSearchBloc, PackageRequestSearchState>(
-      // `_visibleRequests` et non `results` : le feed masque les demandes de
-      // l'utilisateur courant, donc compter la liste brute annonçait un
-      // résultat de plus que ce que l'écran affiche. Le compteur du mode
-      // Trajets ne souffrait pas du problème, sa liste étant déjà filtrée en
-      // amont.
-      builder: (ctx, prState) => _pullHint(
-        cs,
-        down: down,
-        count: _visibleRequests(prState.results).length,
-      ),
+      // Même liste que le fil, ses propres demandes comprises.
+      builder: (ctx, prState) =>
+          _pullHint(cs, down: down, count: prState.results.length),
     );
   }
 
@@ -1199,11 +1192,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
     _lastBuiltRequests = items;
 
     final markers = <Marker>{};
-    // On ne se voit jamais soi-même dans la recherche : les demandes dont
-    // l'utilisateur est l'expéditeur sont exclues de la carte.
-    final uid = context.read<AuthBloc>().state.currentUserId;
+    // Ses propres demandes restent sur la carte, comme ses trajets
+    // (FLUTTER-58) : il voit qu'elles sont publiées et visibles des voyageurs.
     for (final item in items) {
-      if (uid != null && item.sender.id == uid) continue;
       if (item.departureLat == null || item.departureLng == null) continue;
       // grossPriceEur (PR #219) est le brut réellement payé ; targetPriceEur
       // seul est un NET. Les marqueurs de trajets affichent déjà le brut
@@ -1224,10 +1215,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
           position: LatLng(item.departureLat!, item.departureLng!),
           icon: icon,
           onTap: () {
-            final authState = context.read<AuthBloc>().state;
-            final uid = authState.currentUserId;
-            if (uid != null && item.sender.id == uid) return;
-            PackageRequestPreviewBottomSheet.show(context, item: item);
+            final uid = context.read<AuthBloc>().state.currentUserId;
+            PackageRequestPreviewBottomSheet.show(
+              context,
+              item: item,
+              isOwnRequest: uid != null && item.sender.id == uid,
+            );
           },
         ),
       );
@@ -1237,10 +1230,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
     }
   }
 
-  /// Exclut les demandes de l'utilisateur courant : on ne se voit jamais
-  /// soi-même dans la recherche (les demandes restent accessibles via
-  /// « Mes colis »).
-  List<PackageRequestSearchItem> _visibleRequests(
+  /// Demandes des autres expéditeurs : celles qu'un voyageur peut emporter.
+  /// Ses propres demandes restent dans le fil et sur la carte, marquées
+  /// « Votre demande » (FLUTTER-58), mais ne comptent pas dans le titre
+  /// « N colis », comme ses trajets dans « N voyageurs ».
+  List<PackageRequestSearchItem> _othersRequests(
     List<PackageRequestSearchItem> items,
   ) {
     final uid = context.read<AuthBloc>().state.currentUserId;
@@ -1434,7 +1428,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           // mixte à deux onglets a disparu avec le mode « Tout ».
                           child: _mode.isParcels
                               ? NearMePackageRequestCarousel(
-                                      items: _visibleRequests(prState.results),
+                                      items: prState.results,
                                       userPosition: _userPosition != null
                                           ? (
                                               lat: _userPosition!.latitude,
@@ -1856,7 +1850,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             final matching = prState.matchingMyTrips == true;
                             // Inconnu reste inconnu : voir `knownActiveTrips`.
                             final trips = summaryState.knownActiveTrips;
-                            final parcels = _visibleRequests(
+                            final parcels = _othersRequests(
                               prState.results,
                             ).length;
                             return Column(
@@ -1993,7 +1987,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           ),
                         );
                       }
-                      final visibleResults = _visibleRequests(prState.results);
+                      final visibleResults = prState.results;
                       if (visibleResults.isEmpty) {
                         final hasFilters = _activeFilterCount > 0;
                         return _aboveFloatingControls(
@@ -2049,6 +2043,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     await PackageRequestPreviewBottomSheet.show(
                                       ctx,
                                       item: pr,
+                                      isOwnRequest: isOwn,
                                     );
                                     if (ctx.mounted) {
                                       ctx.read<PackageRequestSearchBloc>().add(
