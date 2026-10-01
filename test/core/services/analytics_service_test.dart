@@ -14,6 +14,7 @@ void main() {
 
   // Valeur de consentement « stockée » en mémoire, pilotée par les tests.
   Object? storedConsent;
+  Object? storedRepaired;
 
   setUp(() {
     backend = MockAnalyticsBackend();
@@ -21,6 +22,7 @@ void main() {
     hive = MockHiveService();
     box = MockBox();
     storedConsent = null;
+    storedRepaired = null;
 
     when(() => hive.userPrefs).thenReturn(box);
     when(
@@ -31,6 +33,16 @@ void main() {
     ) async {
       storedConsent = invocation.positionalArguments[1];
     });
+
+    when(
+      () => box.get(HiveService.kPosthogIdentityRepaired),
+    ).thenAnswer((_) => storedRepaired);
+    when(() => box.put(HiveService.kPosthogIdentityRepaired, any())).thenAnswer(
+      (invocation) async {
+        storedRepaired = invocation.positionalArguments[1];
+      },
+    );
+    when(() => backend.distinctId()).thenAnswer((_) async => 'anon-uuid');
 
     when(() => backend.optIn()).thenAnswer((_) async {});
     when(() => backend.optOut()).thenAnswer((_) async {});
@@ -370,6 +382,107 @@ void main() {
       clearInteractions(backend);
       await service.reset();
       verify(() => backend.reset()).called(1);
+    });
+  });
+
+  // Le SDK natif marque l'utilisateur identifié et bascule son distinctId
+  // AVANT d'envoyer `$identify`, puis jette l'event s'il est encore en
+  // opt-out. Un identify() qui part avant optIn() laisse donc le téléphone
+  // « identifié » côté SDK et anonyme côté PostHog, pour toujours.
+  group('ordre opt-in / écriture du consentement', () {
+    setUp(() async => service.onConfigured());
+
+    test('setConsent(true) active le SDK avant d\'écrire Hive', () async {
+      await service.setConsent(granted: true);
+
+      verifyInOrder([
+        () => backend.optIn(),
+        () => box.put(HiveService.kAnalyticsConsent, true),
+      ]);
+    });
+
+    test('setConsent(false) écrit Hive puis désactive le SDK', () async {
+      storedConsent = true;
+
+      await service.setConsent(granted: false);
+
+      verifyInOrder([
+        () => box.put(HiveService.kAnalyticsConsent, false),
+        () => backend.optOut(),
+      ]);
+    });
+
+    test('syncFromBackend(true) active le SDK avant d\'écrire Hive', () async {
+      when(() => remote.fetch()).thenAnswer((_) async => true);
+
+      await service.syncFromBackend();
+
+      verifyInOrder([
+        () => backend.optIn(),
+        () => box.put(HiveService.kAnalyticsConsent, true),
+      ]);
+    });
+  });
+
+  group('réparation des téléphones bloqués « identifiés sans \$identify »', () {
+    setUp(() async {
+      storedConsent = true;
+      await service.onConfigured();
+    });
+
+    test(
+      'distinctId déjà égal à l\'UID : reset puis identify, une fois',
+      () async {
+        when(() => backend.distinctId()).thenAnswer((_) async => 'user-1');
+
+        await service.identify('user-1');
+
+        verifyInOrder([
+          () => backend.reset(),
+          () => backend.identify('user-1', null),
+        ]);
+        expect(storedRepaired, isTrue);
+      },
+    );
+
+    test('distinctId anonyme : identify direct, sans reset', () async {
+      await service.identify('user-1');
+
+      verifyNever(() => backend.reset());
+      verify(() => backend.identify('user-1', null)).called(1);
+      expect(storedRepaired, isTrue);
+    });
+
+    test('réparation déjà faite : ni lecture du distinctId ni reset', () async {
+      storedRepaired = true;
+
+      await service.identify('user-1');
+
+      verifyNever(() => backend.distinctId());
+      verifyNever(() => backend.reset());
+      verify(() => backend.identify('user-1', null)).called(1);
+    });
+
+    test(
+      'deux identify concurrents ne déclenchent qu\'un seul reset',
+      () async {
+        when(() => backend.distinctId()).thenAnswer((_) async => 'user-1');
+
+        await Future.wait([
+          service.identify('user-1'),
+          service.identify('user-1'),
+        ]);
+
+        verify(() => backend.reset()).called(1);
+      },
+    );
+
+    test('une erreur du SDK n\'empêche pas identify', () async {
+      when(() => backend.distinctId()).thenThrow(Exception('canal natif'));
+
+      await service.identify('user-1');
+
+      verify(() => backend.identify('user-1', null)).called(1);
     });
   });
 }

@@ -54,6 +54,9 @@ abstract interface class AnalyticsBackend {
   Future<void> reset();
   Future<void> optIn();
   Future<void> optOut();
+
+  /// Identifiant courant du SDK (UUID anonyme, ou UID après identify).
+  Future<String> distinctId();
 }
 
 /// Implémentation PostHog par défaut.
@@ -80,6 +83,9 @@ class PosthogBackend implements AnalyticsBackend {
 
   @override
   Future<void> optOut() => Posthog().disable();
+
+  @override
+  Future<String> distinctId() => Posthog().getDistinctId();
 }
 
 /// Service central de tracking produit (PostHog) : events, écrans, identité.
@@ -102,6 +108,10 @@ class AnalyticsService {
   final AnalyticsConsentRemote _remote;
 
   bool _configured = false;
+
+  /// Réparation en cours, partagée entre les identify() concurrents (login +
+  /// consentement) pour ne jamais faire deux reset().
+  Future<void>? _identityRepair;
 
   /// `true` une fois `Posthog().setup()` appelé avec succès (clé présente).
   /// Quand `false` (ex: build sans `POSTHOG_API_KEY`, tests), tout est no-op.
@@ -129,6 +139,19 @@ class AnalyticsService {
   Future<void> _applyConsent() =>
       consent == true ? _backend.optIn() : _backend.optOut();
 
+  /// Écrit le consentement dans Hive en activant le SDK AVANT l'écriture.
+  ///
+  /// L'écriture notifie aussitôt `AnalyticsConsentGate`, qui appelle
+  /// [identify]. Le SDK natif marque l'utilisateur identifié et bascule son
+  /// `distinctId` avant d'envoyer `$identify`, puis jette l'event s'il est
+  /// encore en opt-out : le téléphone se croit identifié, PostHog n'a rien
+  /// reçu, et les identify() suivants ne font plus rien.
+  Future<void> _storeConsent(bool granted) async {
+    if (granted && _configured) await _backend.optIn();
+    await _hive.userPrefs.put(HiveService.kAnalyticsConsent, granted);
+    if (!granted && _configured) await _backend.optOut();
+  }
+
   /// Pousse la décision vers le backend sans jamais lever : la persistance
   /// distante est best-effort (toujours `unawaited`). Un échec réseau ne doit
   /// ni bloquer l'UX/tracking, ni produire une erreur async non gérée.
@@ -155,10 +178,7 @@ class AnalyticsService {
     required bool granted,
     String source = 'manual',
   }) async {
-    await _hive.userPrefs.put(HiveService.kAnalyticsConsent, granted);
-    if (_configured) {
-      await _applyConsent();
-    }
+    await _storeConsent(granted);
     unawaited(_safePush(granted, source));
   }
 
@@ -177,12 +197,10 @@ class AnalyticsService {
       final backendGranted = await _remote.fetch();
       if (backendGranted != null) {
         if (consent != backendGranted) {
-          await _hive.userPrefs.put(
-            HiveService.kAnalyticsConsent,
-            backendGranted,
-          );
+          await _storeConsent(backendGranted);
+        } else if (_configured) {
+          await _applyConsent();
         }
-        if (_configured) await _applyConsent();
       } else if (hasAnswered) {
         unawaited(_safePush(consent!, 'sync'));
       }
@@ -212,7 +230,25 @@ class AnalyticsService {
     Map<String, Object>? properties,
   }) async {
     if (!isEnabled) return;
+    await (_identityRepair ??= _repairStuckIdentity(userId));
     await _backend.identify(userId, properties);
+  }
+
+  /// Une fois par installation : un téléphone dont le SDK porte déjà l'UID
+  /// sans que `$identify` soit parti (identify en opt-out, cf.
+  /// [_storeConsent]) ne s'identifiera plus jamais tout seul. `reset()` lui
+  /// redonne un identifiant anonyme, l'identify qui suit envoie enfin
+  /// `$identify` et rattache la personne. Best-effort : une erreur du SDK ne
+  /// doit jamais bloquer identify.
+  Future<void> _repairStuckIdentity(String userId) async {
+    try {
+      final prefs = _hive.userPrefs;
+      if (prefs.get(HiveService.kPosthogIdentityRepaired) == true) return;
+      if (await _backend.distinctId() == userId) await _backend.reset();
+      await prefs.put(HiveService.kPosthogIdentityRepaired, true);
+    } catch (_) {
+      // SDK ou stockage indisponible : on retentera au prochain lancement.
+    }
   }
 
   /// À la déconnexion : dissocie la session courante de l'utilisateur.
