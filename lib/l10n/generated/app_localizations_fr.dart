@@ -14702,4 +14702,16 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidDetailContactTravelerAfterPaymentHint =>
       'Vous pourrez contacter le voyageur dès que votre paiement sera confirmé.';
+
+  @override
+  String get tripPublishOtherContentPrecisionLabel =>
+      'Précise ce que tu acceptes en « Autre »';
+
+  @override
+  String get tripPublishOtherContentPrecisionHint =>
+      'Ex. pièces auto, petit électroménager';
+
+  @override
+  String get tripPublishOtherContentPrecisionRequired =>
+      'Tu as coché « Autre » : précise ce que tu acceptes avant de publier.';
 }

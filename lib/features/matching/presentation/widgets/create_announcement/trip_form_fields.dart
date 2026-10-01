@@ -38,11 +38,8 @@ class TripFormFields {
   // Valeurs de donnée (libellés ContentCategory) : comparées au catalogue par
   // égalité de chaîne, jamais affichées telles quelles. Affichage traité par
   // la tâche B1.
-  final selectedContent = ValueNotifier<Set<String>>({
-    'Vêtements & tissus', // i18n-ignore : valeur de donnée ContentCategory
-    'Médicaments traditionnels', // i18n-ignore : valeur de donnée ContentCategory
-    'Documents & administratif', // i18n-ignore : valeur de donnée ContentCategory
-  });
+  // Rien de coché d'office (FLUTTER-1Y) : liste vide = tout accepté.
+  final selectedContent = ValueNotifier<Set<String>>({});
   final customAccepted = ValueNotifier<Set<String>>({});
   final refusedTypes = ValueNotifier<Set<String>>({});
   final catalogLabels = ValueNotifier<List<String>>(

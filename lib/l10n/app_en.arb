@@ -8203,5 +8203,17 @@
   "bidDetailContactTravelerAfterPaymentHint": "You'll be able to contact the traveler once your payment is confirmed.",
   "@bidDetailContactTravelerAfterPaymentHint": {
     "description": "Ligne sous la carte profil quand le contact n'est pas encore possible (FLUTTER-4T)"
+  },
+  "tripPublishOtherContentPrecisionLabel": "Specify what you accept under “Other”",
+  "@tripPublishOtherContentPrecisionLabel": {
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+  },
+  "tripPublishOtherContentPrecisionHint": "E.g. car parts, small appliances",
+  "@tripPublishOtherContentPrecisionHint": {
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
+  },
+  "tripPublishOtherContentPrecisionRequired": "You ticked “Other”: specify what you accept before publishing.",
+  "@tripPublishOtherContentPrecisionRequired": {
+    "description": "Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)"
   }
 }

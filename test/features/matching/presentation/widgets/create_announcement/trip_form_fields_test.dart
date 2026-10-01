@@ -13,7 +13,8 @@ void main() {
     expect(f.cashEnabled.value, isFalse);
     expect(f.mobileMoneyEnabled.value, isFalse);
     expect(f.negotiable.value, isFalse);
-    expect(f.selectedContent.value, contains('Vêtements & tissus'));
+    // Rien de coché d'office (FLUTTER-1Y) : liste vide = tout accepté.
+    expect(f.selectedContent.value, isEmpty);
     expect(f.presets, [5, 6, 7, 8]);
     f.dispose();
   });
