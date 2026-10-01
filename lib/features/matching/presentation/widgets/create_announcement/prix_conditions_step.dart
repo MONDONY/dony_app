@@ -53,6 +53,11 @@ class PrixConditionsStep extends StatelessWidget {
   /// bascule reste désactivée même en zone CFA.
   final bool mobileMoneyAccountActive;
 
+  /// Devise reçue par le compte mobile money actif (ex. XOF), `null` si
+  /// inconnue ou aucun compte actif. Sert à proposer de publier le trajet
+  /// dans cette devise quand celle du trajet ne permet pas le mobile money.
+  final SupportedCurrency? mobileMoneyCurrency;
+
   /// Appelé au retour de l'écran d'activation du mobile money, ouvert depuis
   /// l'encart « Activer le mobile money ». Le parent y recharge son
   /// `MobileMoneyAccountBloc`, sans quoi la bascule resterait désactivée
@@ -104,6 +109,7 @@ class PrixConditionsStep extends StatelessWidget {
     required this.mobileMoneyEnabledNotifier,
     required this.currencyNotifier,
     this.mobileMoneyAccountActive = false,
+    this.mobileMoneyCurrency,
     this.onMobileMoneySetupReturned,
     required this.negotiableNotifier,
     required this.selectedContentNotifier,
@@ -964,7 +970,12 @@ class PrixConditionsStep extends StatelessWidget {
             );
           },
         ),
-        // Hors zone CFA, rien à activer : le sous-titre suffit.
+        // Compte activé mais trajet dans une autre devise : l'option grisée
+        // ne disait pas pourquoi (FLUTTER-55). On l'explique et on propose de
+        // publier dans la devise du compte, comme le sélecteur de devise.
+        if (!eligible && mobileMoneyAccountActive)
+          _noticePadding(_mobileMoneyCurrencyNotice(l, tripCurrency: currency)),
+        // Hors zone CFA sans compte, rien à activer : le sous-titre suffit.
         if (eligible && !mobileMoneyAccountActive)
           Builder(
             builder: (context) => _noticePadding(
@@ -984,6 +995,31 @@ class PrixConditionsStep extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _mobileMoneyCurrencyNotice(
+    AppLocalizations l, {
+    required SupportedCurrency tripCurrency,
+  }) {
+    final target = mobileMoneyCurrency;
+    if (target == null || !target.isMobileMoneyEligible) {
+      return PaymentSetupNotice(
+        key: const Key('mobile-money-currency-notice'),
+        message: l.tripPublishMobileMoneyCurrencyNoticeGeneric(
+          tripCurrency.code,
+        ),
+      );
+    }
+    return PaymentSetupNotice(
+      key: const Key('mobile-money-currency-notice'),
+      message: l.tripPublishMobileMoneyCurrencyNotice(
+        target.code,
+        tripCurrency.code,
+      ),
+      ctaLabel: l.tripPublishSwitchCurrencyCta(target.code),
+      ctaKey: const Key('switch-to-mobile-money-currency-cta'),
+      onCtaTap: () => currencyNotifier.value = target,
     );
   }
 }

@@ -2804,6 +2804,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Mobile money isn\'t activated, so you can\'t accept it on this trip yet.';
 
   @override
+  String tripPublishMobileMoneyCurrencyNotice(
+    String accountCurrency,
+    String tripCurrency,
+  ) {
+    return 'Your mobile money receives $accountCurrency. This trip is in $tripCurrency: publish it in $accountCurrency to accept mobile money.';
+  }
+
+  @override
+  String tripPublishMobileMoneyCurrencyNoticeGeneric(String tripCurrency) {
+    return 'Your mobile money receives CFA francs. This trip is in $tripCurrency: publish it in XOF or XAF to accept mobile money.';
+  }
+
+  @override
+  String tripPublishSwitchCurrencyCta(String currency) {
+    return 'Publish in $currency';
+  }
+
+  @override
   String get tripPublishActivateMobileMoneyCta => 'Activate mobile money';
 
   @override

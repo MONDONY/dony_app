@@ -2815,6 +2815,24 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le mobile money n\'est pas activé : vous ne pouvez pas encore l\'accepter sur ce trajet.';
 
   @override
+  String tripPublishMobileMoneyCurrencyNotice(
+    String accountCurrency,
+    String tripCurrency,
+  ) {
+    return 'Votre mobile money reçoit des $accountCurrency. Ce trajet est en $tripCurrency : publiez-le en $accountCurrency pour accepter le mobile money.';
+  }
+
+  @override
+  String tripPublishMobileMoneyCurrencyNoticeGeneric(String tripCurrency) {
+    return 'Votre mobile money reçoit des francs CFA. Ce trajet est en $tripCurrency : publiez-le en XOF ou XAF pour accepter le mobile money.';
+  }
+
+  @override
+  String tripPublishSwitchCurrencyCta(String currency) {
+    return 'Publier en $currency';
+  }
+
+  @override
   String get tripPublishActivateMobileMoneyCta => 'Activer le mobile money';
 
   @override
