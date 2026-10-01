@@ -117,6 +117,12 @@ class BidModel {
   final String? contentCategory;
   final String? recipientName;
   final String? recipientPhone;
+
+  /// Lien du destinataire dans Yadony (lot 2), visible par l'expéditeur
+  /// seulement : `PENDING`, `CONFIRMED` (il suit le colis dans l'app),
+  /// `DECLINED` (le titulaire du numéro dit que le colis n'est pas pour lui).
+  /// `null` sans compte rattaché, pour le voyageur, ou sur un back antérieur.
+  final String? recipientAppStatus;
   final String status;
   final String? rejectionReason;
   final String? handoverLocation;
@@ -252,6 +258,7 @@ class BidModel {
     this.contentCategory,
     this.recipientName,
     this.recipientPhone,
+    this.recipientAppStatus,
     required this.status,
     this.rejectionReason,
     this.handoverLocation,

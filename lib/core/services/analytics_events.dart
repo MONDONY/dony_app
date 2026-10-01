@@ -385,6 +385,13 @@ abstract final class AnalyticsEvents {
   static const senderCallInitiated = 'sender_call_initiated';
   static const trackingLinkShared = 'tracking_link_shared';
   static const recipientNotified = 'recipient_notified';
+
+  // Colis à recevoir (lot 2 destinataire). Jamais le nom, le numéro ni le
+  // code : seulement des statuts et des comptes.
+  static const receptionsSectionViewed = 'receptions_section_viewed';
+  static const receptionOpened = 'reception_opened';
+  static const receptionConfirmed = 'reception_confirmed';
+  static const receptionDeclined = 'reception_declined';
   static const screenFeedbackSubmitted = 'screen_feedback_submitted';
 
   // Trip matching (Colis sur mes trajets)

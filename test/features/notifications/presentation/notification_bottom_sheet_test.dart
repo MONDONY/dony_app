@@ -197,6 +197,24 @@ void main() {
       expect(await iconAssetFor(tester, 'CORRIDOR_ALERT'), 'plane');
     });
 
+    testWidgets('colis à recevoir et réponse du destinataire', (tester) async {
+      expect(await iconAssetFor(tester, 'RECIPIENT_PARCEL_INCOMING'), 'inbox');
+      expect(
+        await iconAssetFor(tester, 'RECIPIENT_PARCEL_DEPARTED'),
+        'plane-takeoff',
+      );
+      expect(
+        await iconAssetFor(tester, 'RECIPIENT_PARCEL_ARRIVED'),
+        'plane-landing',
+      );
+      expect(
+        await iconAssetFor(tester, 'RECIPIENT_PARCEL_DELIVERED'),
+        'circle-check',
+      );
+      expect(await iconAssetFor(tester, 'RECIPIENT_CONFIRMED'), 'badge-check');
+      expect(await iconAssetFor(tester, 'RECIPIENT_DECLINED'), 'user-x');
+    });
+
     /// Les trois familles qui tombaient sur la cloche générique avant d'être
     /// cartographiées — le test garde la régression fermée.
     testWidgets(

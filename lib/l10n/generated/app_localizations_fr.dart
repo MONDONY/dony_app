@@ -10217,7 +10217,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get receptionCodeOptionLabel => 'OPTION 2 · CODE';
 
   @override
-  String get receptionCodeTitle => 'Tapez le code reçu';
+  String get receptionCodeTitle => 'VOTRE CODE DE RETRAIT';
 
   @override
   String receptionCodeExpiresIn(String time) {
@@ -15053,4 +15053,161 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get privacyShowLastSeenSubtitle =>
       'Au jour près sur votre profil public, pour rassurer ceux qui vous contactent.';
+
+  @override
+  String get receptionsSectionTitle => 'Colis à recevoir';
+
+  @override
+  String receptionsRowFrom(String name) {
+    return 'De $name';
+  }
+
+  @override
+  String get receptionsPendingChip => 'À confirmer';
+
+  @override
+  String receptionsRowStep(String status) {
+    String _temp0 = intl.Intl.selectLogic(status, {
+      'ACCEPTED': 'Bientôt récupéré',
+      'HANDED_OVER': 'En route',
+      'IN_TRANSIT': 'En route',
+      'ARRIVED': 'Arrivé',
+      'COMPLETED': 'Remis',
+      'other': 'En cours',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get receptionDetailTitle => 'Colis à recevoir';
+
+  @override
+  String receptionPendingHeadline(String name) {
+    return '$name vous envoie un colis';
+  }
+
+  @override
+  String get receptionPendingHeadlineAnonymous => 'Un colis vous est envoyé';
+
+  @override
+  String receptionDepartureOn(String date) {
+    return 'Départ le $date';
+  }
+
+  @override
+  String receptionRecipientName(String name) {
+    return 'Destinataire indiqué : $name';
+  }
+
+  @override
+  String get receptionPendingQuestion => 'Ce colis est-il pour vous ?';
+
+  @override
+  String get receptionPendingExplanation =>
+      'Confirmez pour suivre le colis dans Yadony et recevoir votre code de retrait. L\'expéditeur sera prévenu.';
+
+  @override
+  String get receptionConfirmButton => 'Oui, c\'est pour moi';
+
+  @override
+  String get receptionDeclineButton => 'Ce n\'est pas pour moi';
+
+  @override
+  String get receptionDeclineDialogTitle => 'Ce colis n\'est pas pour vous ?';
+
+  @override
+  String get receptionDeclineDialogMessage =>
+      'Il disparaîtra de votre liste et l\'expéditeur sera invité à vérifier le numéro du destinataire.';
+
+  @override
+  String get receptionDeclinedSnackbar =>
+      'C\'est noté, ce colis a été retiré de votre liste.';
+
+  @override
+  String get receptionConfirmedSnackbar => 'C\'est noté, vous suivez ce colis.';
+
+  @override
+  String receptionStepHeadline(String status) {
+    String _temp0 = intl.Intl.selectLogic(status, {
+      'ACCEPTED': 'Le voyageur va récupérer le colis',
+      'HANDED_OVER': 'En route',
+      'IN_TRANSIT': 'En route',
+      'ARRIVED': 'Arrivé à destination',
+      'COMPLETED': 'Remis',
+      'other': 'En cours',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String receptionStepArrivedIn(String city) {
+    return 'Arrivé à $city';
+  }
+
+  @override
+  String get receptionDetailsTitle => 'DÉTAILS';
+
+  @override
+  String get receptionTravelerLabel => 'Voyageur';
+
+  @override
+  String get receptionDepartureLabel => 'Départ';
+
+  @override
+  String get receptionArrivalLabel => 'Arrivée';
+
+  @override
+  String get receptionTrackingNumberLabel => 'Numéro de suivi';
+
+  @override
+  String get receptionWeightLabel => 'Poids';
+
+  @override
+  String get receptionInstructionsTitle => 'INSTRUCTIONS DE RETRAIT';
+
+  @override
+  String receptionCodeSemantics(String code) {
+    return 'Code de retrait : $code';
+  }
+
+  @override
+  String get receptionCodeExplanation =>
+      'Donnez ce code au voyageur à la remise du colis, pas avant.';
+
+  @override
+  String get receptionCodePending =>
+      'Votre code de retrait apparaîtra ici dès que le voyageur aura pris en charge le colis.';
+
+  @override
+  String get receptionViewTracking => 'Voir le suivi';
+
+  @override
+  String get receptionNotFoundTitle => 'Ce colis n\'est plus disponible';
+
+  @override
+  String get receptionNotFoundDescription =>
+      'Il a peut-être été annulé ou retiré de votre liste.';
+
+  @override
+  String get receptionNotFoundAction => 'Retour au suivi';
+
+  @override
+  String get receptionErrorTitle => 'Impossible de charger ce colis';
+
+  @override
+  String get receptionErrorDescription =>
+      'Vérifiez votre connexion puis réessayez.';
+
+  @override
+  String recipientAppConfirmed(String name) {
+    return '$name suit le colis dans Yadony';
+  }
+
+  @override
+  String get recipientAppDeclined =>
+      'Le titulaire de ce numéro indique que ce colis n\'est pas pour lui. Vérifiez le numéro du destinataire.';
+
+  @override
+  String get recipientAppConfirmedAnonymous =>
+      'Le destinataire suit le colis dans Yadony';
 }

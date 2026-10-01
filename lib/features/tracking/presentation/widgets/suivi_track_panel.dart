@@ -4,15 +4,18 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
+import 'package:dony/features/receptions/presentation/widgets/receptions_section.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/presentation/widgets/parcel_not_linked_notice.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
+import 'package:dony/features/tracking/presentation/widgets/shipment_progress_bar.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Contenu du mode « Suivre un colis » : numéro de suivi, lecteur QR plein
-/// écran (utilisateur sans caméra dans l'onglet) et « Mes envois ».
+/// écran (utilisateur sans caméra dans l'onglet), « Colis à recevoir » et
+/// « Mes envois ».
 /// Rien n'y est validé : chaque entrée ouvre le parcours en lecture seule.
 class SuiviTrackPanel extends StatelessWidget {
   const SuiviTrackPanel({super.key, this.onScanQr});
@@ -61,6 +64,8 @@ class SuiviTrackPanel extends StatelessWidget {
               ),
             ],
             const SizedBox(height: DonySpacing.xl),
+            // Colis à recevoir : masquée tant qu'elle est vide.
+            const ReceptionsSection(),
             _MyShipments(state: state),
           ],
         );
@@ -304,44 +309,9 @@ class _ShipmentRow extends StatelessWidget {
               ),
             ],
             const SizedBox(height: DonySpacing.md),
-            _ProgressBar(step: step),
+            ShipmentProgressBar(step: step),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Cinq segments : faits en bleu, l'étape en cours en terracotta.
-class _ProgressBar extends StatelessWidget {
-  const _ProgressBar({required this.step});
-
-  /// Étape courante, 1 à 5 (voir [shipmentStepFor]).
-  final int step;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return ExcludeSemantics(
-      child: Row(
-        children: [
-          for (var i = 1; i <= 5; i++) ...[
-            if (i > 1) const SizedBox(width: DonySpacing.xxs),
-            Expanded(
-              child: Container(
-                height: 4,
-                decoration: BoxDecoration(
-                  color: i < step
-                      ? cs.primary
-                      : i == step
-                      ? cs.secondary
-                      : cs.outline,
-                  borderRadius: BorderRadius.circular(DonyRadius.full),
-                ),
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }

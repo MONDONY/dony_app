@@ -18,6 +18,7 @@ BidModel _bid({
   String? confirmationCode,
   String? departureCity = 'Paris',
   String? arrivalCity = 'Dakar',
+  String? recipientAppStatus,
 }) => BidModel(
   id: 'bid-001',
   announcementId: 'ann-001',
@@ -31,6 +32,7 @@ BidModel _bid({
   confirmationCode: confirmationCode,
   departureCity: departureCity,
   arrivalCity: arrivalCity,
+  recipientAppStatus: recipientAppStatus,
 );
 
 void main() {
@@ -211,6 +213,52 @@ void main() {
 
       verifyNever(() => launcher.open(any()));
       expect(shared, hasLength(1));
+    });
+
+    testWidgets('destinataire dans Yadony : pastille en tête, WhatsApp reste', (
+      tester,
+    ) async {
+      await pump(tester, _bid(recipientAppStatus: 'CONFIRMED'));
+
+      expect(find.byKey(const Key('recipient-app-confirmed')), findsOneWidget);
+      expect(find.text('Fatou suit le colis dans Yadony'), findsOneWidget);
+      expect(find.byKey(const Key('recipient-app-declined')), findsNothing);
+      expect(find.text('Prévenir sur WhatsApp'), findsOneWidget);
+    });
+
+    testWidgets('destinataire sans nom : pastille générique', (tester) async {
+      await pump(
+        tester,
+        _bid(recipientName: null, recipientAppStatus: 'CONFIRMED'),
+      );
+
+      expect(
+        find.text('Le destinataire suit le colis dans Yadony'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('numéro refusé : avertissement de vérification', (
+      tester,
+    ) async {
+      await pump(tester, _bid(recipientAppStatus: 'DECLINED'));
+
+      expect(find.byKey(const Key('recipient-app-declined')), findsOneWidget);
+      expect(
+        find.textContaining('Vérifiez le numéro du destinataire.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('recipient-app-confirmed')), findsNothing);
+      expect(find.text('Prévenir sur WhatsApp'), findsOneWidget);
+    });
+
+    testWidgets('lien en attente ou absent : encart inchangé', (tester) async {
+      for (final status in [null, 'PENDING']) {
+        await pump(tester, _bid(recipientAppStatus: status));
+
+        expect(find.byKey(const Key('recipient-app-confirmed')), findsNothing);
+        expect(find.byKey(const Key('recipient-app-declined')), findsNothing);
+      }
     });
   });
 }
