@@ -108,6 +108,7 @@ const _sameInBothLanguages = <String>{
   'commonOk', // « OK » se dit pareil
   'travelerContactWhatsApp', // « WhatsApp » : nom de l'application
   'travelerContactSms', // « SMS » se dit pareil
+  'travelerContactInAppMessage', // « Message » se dit pareil
   'authEmailStepLabel', // « Email » se dit pareil
   'authOnboardingDestinationsEyebrow', // « Destinations » se dit pareil
   // Noms propres identiques en français et en anglais.

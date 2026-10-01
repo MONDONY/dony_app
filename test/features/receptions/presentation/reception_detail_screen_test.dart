@@ -4,6 +4,10 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/receptions/presentation/screens/reception_detail_screen.dart';
@@ -16,6 +20,10 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockCubit extends MockCubit<ReceptionDetailState>
     implements ReceptionDetailCubit {}
+
+class _MockConversationOpenBloc
+    extends MockBloc<ConversationOpenEvent, ConversationOpenState>
+    implements ConversationOpenBloc {}
 
 const _id = 'b1';
 
@@ -51,7 +59,12 @@ Reception _confirmed({
 
 void main() {
   late _MockCubit cubit;
+  late _MockConversationOpenBloc conversationOpen;
   late List<Reception> timelineOpened;
+
+  setUpAll(() {
+    registerFallbackValue(const ConversationOpenRequested('x'));
+  });
 
   setUp(() {
     DonySnackbar.clearDedup();
@@ -65,9 +78,21 @@ void main() {
       getIt.unregister<ReceptionDetailCubit>();
     }
     getIt.registerFactory<ReceptionDetailCubit>(() => cubit);
+    // Bouton « Écrire au voyageur » (lot 3C) : bloc résolu par GetIt.
+    conversationOpen = _MockConversationOpenBloc();
+    when(
+      () => conversationOpen.state,
+    ).thenReturn(const ConversationOpenInitial());
+    if (getIt.isRegistered<ConversationOpenBloc>()) {
+      getIt.unregister<ConversationOpenBloc>();
+    }
+    getIt.registerFactory<ConversationOpenBloc>(() => conversationOpen);
   });
 
-  tearDown(() => getIt.unregister<ReceptionDetailCubit>());
+  tearDown(() {
+    getIt.unregister<ReceptionDetailCubit>();
+    getIt.unregister<ConversationOpenBloc>();
+  });
 
   void stub(
     ReceptionDetailState state, {
@@ -94,6 +119,11 @@ void main() {
               child: const Text('onglet Suivi'),
             ),
           ),
+        ),
+        GoRoute(
+          path: '/conversations/:id',
+          builder: (_, state) =>
+              Scaffold(body: Text('chat ${state.pathParameters['id']}')),
         ),
         GoRoute(
           path: '/receptions/:bidId',
@@ -408,6 +438,109 @@ void main() {
       await tester.tap(find.text('Retour au suivi'));
       await tester.pumpAndSettle();
       expect(find.text('onglet Suivi'), findsOneWidget);
+    });
+  });
+
+  group('écrire au voyageur (lot 3C)', () {
+    final buttonKey = find.byKey(const Key('reception-message-traveler'));
+
+    for (final status in ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
+      testWidgets('$status : bouton présent', (tester) async {
+        stub(ReceptionDetailLoaded(_confirmed(bidStatus: status)));
+        await pump(tester);
+        expect(buttonKey, findsOneWidget);
+        expect(find.text('Écrire au voyageur'), findsOneWidget);
+      });
+    }
+
+    testWidgets('colis remis ou lien à confirmer : pas de bouton', (
+      tester,
+    ) async {
+      stub(ReceptionDetailLoaded(_confirmed(bidStatus: 'COMPLETED')));
+      await pump(tester);
+      expect(buttonKey, findsNothing);
+      expect(find.byKey(const Key('reception-view-tracking')), findsOneWidget);
+    });
+
+    testWidgets('lien à confirmer : pas de bouton', (tester) async {
+      stub(const ReceptionDetailLoaded(_pending));
+      await pump(tester);
+      expect(buttonKey, findsNothing);
+    });
+
+    testWidgets('tap : ouvre la conversation côté destinataire', (
+      tester,
+    ) async {
+      stub(ReceptionDetailLoaded(_confirmed()));
+      await pump(tester);
+
+      await tester.tap(buttonKey);
+      await tester.pump();
+
+      final event =
+          verify(() => conversationOpen.add(captureAny())).captured.single
+              as RecipientConversationOpenRequested;
+      expect(event.bidId, _id);
+      expect(event.role, RecipientConversationRole.recipient);
+    });
+
+    testWidgets('conversation ouverte : poussée vers le chat', (tester) async {
+      whenListen(
+        conversationOpen,
+        Stream<ConversationOpenState>.fromIterable(const [
+          ConversationOpenLoading(),
+          ConversationOpenSuccess(
+            ConversationModel(
+              id: 'conv-r',
+              bidId: _id,
+              firestoreConversationId: 'rconv_b1',
+              otherParticipant: ParticipantModel(id: 'u', name: 'Ibrahima'),
+              kind: ConversationModel.kindRecipientTraveler,
+            ),
+          ),
+        ]),
+        initialState: const ConversationOpenInitial(),
+      );
+      stub(ReceptionDetailLoaded(_confirmed()));
+      await pump(tester);
+
+      expect(find.text('chat conv-r'), findsOneWidget);
+    });
+
+    testWidgets('refus du serveur : snackbar générique, écran conservé', (
+      tester,
+    ) async {
+      whenListen(
+        conversationOpen,
+        Stream<ConversationOpenState>.fromIterable(const [
+          ConversationOpenError(ForbiddenException('interdit')),
+        ]),
+        initialState: const ConversationOpenInitial(),
+      );
+      stub(ReceptionDetailLoaded(_confirmed()));
+      await pump(tester);
+
+      expect(
+        find.text(
+          'Impossible d\'ouvrir la conversation pour le moment. '
+          'Réessayez plus tard.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('interdit'), findsNothing);
+      expect(buttonKey, findsOneWidget);
+    });
+
+    testWidgets('ouverture en cours : bouton inactif', (tester) async {
+      when(
+        () => conversationOpen.state,
+      ).thenReturn(const ConversationOpenLoading());
+      stub(ReceptionDetailLoaded(_confirmed()));
+      await pump(tester, settle: false);
+
+      await tester.tap(buttonKey, warnIfMissed: false);
+      await tester.pump();
+      verifyNever(() => conversationOpen.add(any()));
     });
   });
 }

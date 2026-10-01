@@ -10,6 +10,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
+import 'package:dony/features/messaging/presentation/widgets/recipient_conversation_launcher.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -146,7 +148,14 @@ Future<void> contactRecipient(
   DonySnackbar.show(context, message: l.travelerContactMessageCopied);
 }
 
-/// Trois boutons WhatsApp / SMS / Appeler vers le destinataire de [bid].
+/// Le destinataire de [bid] suit le colis dans Yadony (lien `CONFIRMED`) :
+/// le voyageur peut lui écrire dans la messagerie de l'app.
+bool recipientReachableInApp(BidModel bid) =>
+    bid.recipientAppStatus == 'CONFIRMED';
+
+/// Boutons WhatsApp / SMS / Appeler vers le destinataire de [bid], précédés
+/// de « Message » (conversation Yadony voyageur ↔ destinataire, lot 3C)
+/// quand il suit le colis dans l'app ([recipientReachableInApp]).
 ///
 /// Partagé par la feuille « Prévenir les destinataires » (écran trajet) et
 /// la vue voyageur d'un envoi.
@@ -187,6 +196,21 @@ class RecipientContactActions extends StatelessWidget {
 
     return Row(
       children: [
+        if (recipientReachableInApp(bid)) ...[
+          Expanded(
+            child: RecipientConversationLauncher(
+              bidId: bid.id,
+              role: RecipientConversationRole.traveler,
+              builder: (context, onPressed, _) => _ContactButton(
+                key: Key('recipient-contact-message-${bid.id}'),
+                iconAsset: 'send',
+                label: l.travelerContactInAppMessage,
+                onTap: onPressed,
+              ),
+            ),
+          ),
+          const SizedBox(width: DonySpacing.sm),
+        ],
         button(
           RecipientContactChannel.whatsapp,
           'message-circle',
@@ -216,7 +240,9 @@ class _ContactButton extends StatelessWidget {
 
   final String iconAsset;
   final String label;
-  final VoidCallback onTap;
+
+  /// `null` le temps d'une ouverture en cours : le bouton est inactif.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -224,6 +250,7 @@ class _ContactButton extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     return Semantics(
       button: true,
+      enabled: onTap != null,
       label: label,
       excludeSemantics: true,
       child: Material(

@@ -671,7 +671,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     ),
   );
   getIt.registerFactory<ConversationOpenBloc>(
-    () => ConversationOpenBloc(getIt<ConversationRepository>()),
+    () => ConversationOpenBloc(
+      getIt<ConversationRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   // Révélation du numéro au tap sur « appeler » (le numéro n'est plus dans les DTO).
   getIt.registerFactory<ContactRevealBloc>(

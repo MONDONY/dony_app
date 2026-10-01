@@ -143,4 +143,77 @@ void main() {
       );
     });
   });
+
+  group('conversation voyageur ↔ destinataire (lot 3C)', () {
+    ConversationModel recipientConversation({String? role, bool trip = true}) =>
+        ConversationModel(
+          id: 'conv-r',
+          bidId: 'bid-1',
+          firestoreConversationId: 'rconv_bid-1',
+          otherParticipant: ParticipantModel(
+            id: 'uid-2',
+            name: 'Awa',
+            role: role,
+          ),
+          tripOrigin: trip ? 'Paris' : null,
+          tripDestination: trip ? 'Dakar' : null,
+          kind: ConversationModel.kindRecipientTraveler,
+        );
+
+    testWidgets('préfixe le trajet du rôle servi', (tester) async {
+      await tester.pumpWidget(
+        _wrap(recipientConversation(role: 'Destinataire')),
+      );
+
+      expect(find.text('Destinataire · Paris → Dakar'), findsOneWidget);
+    });
+
+    testWidgets('rôle absent vu par le destinataire -> Voyageur', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap(recipientConversation()));
+
+      expect(find.text('Voyageur · Paris → Dakar'), findsOneWidget);
+    });
+
+    testWidgets('sans trajet, le rôle seul', (tester) async {
+      await tester.pumpWidget(
+        _wrap(recipientConversation(role: 'Destinataire', trip: false)),
+      );
+
+      expect(find.text('Destinataire'), findsOneWidget);
+    });
+
+    testWidgets('rôle vide vu par le voyageur -> repli traduit', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap(recipientConversation(role: ' ')));
+
+      // Rôle vide : rien ne dit que l'on est le voyageur, le repli est
+      // celui du destinataire qui regarde.
+      expect(find.text('Traveler · Paris → Dakar'), findsOneWidget);
+    });
+
+    testWidgets('fil expéditeur ↔ voyageur : trajet seul', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const ConversationModel(
+            id: 'conv-s',
+            bidId: 'bid-1',
+            firestoreConversationId: 'conv_bid-1',
+            otherParticipant: ParticipantModel(
+              id: 'uid-2',
+              name: 'Awa',
+              role: 'Voyageur',
+            ),
+            tripOrigin: 'Paris',
+            tripDestination: 'Dakar',
+          ),
+        ),
+      );
+
+      expect(find.text('Paris → Dakar'), findsOneWidget);
+    });
+  });
 }

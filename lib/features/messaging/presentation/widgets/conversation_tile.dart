@@ -90,10 +90,13 @@ class ConversationTile extends StatelessWidget {
                         ],
                       ],
                     ),
-                    if (conversation.tripLabel != null) ...[
+                    if (_contextLabel(l, conversation) case final label?) ...[
                       const SizedBox(height: 3),
                       _TripLabel(
-                        label: conversation.tripLabel!,
+                        label: label,
+                        iconAsset: conversation.isRecipientConversation
+                            ? 'package'
+                            : 'plane',
                         cs: cs,
                         tt: tt,
                       ),
@@ -136,6 +139,22 @@ class ConversationTile extends StatelessWidget {
   }
 }
 
+/// Ligne de contexte sous le nom : le trajet, précédé pour une conversation
+/// voyageur ↔ destinataire du rôle de l'interlocuteur tel que servi
+/// (« Destinataire · Paris → Dakar ») pour la distinguer du fil avec
+/// l'expéditeur du même colis.
+String? _contextLabel(AppLocalizations l, ConversationModel c) {
+  final trip = c.tripLabel;
+  if (!c.isRecipientConversation) return trip;
+  final served = c.otherParticipant.role?.trim();
+  final role = (served != null && served.isNotEmpty)
+      ? served
+      : (c.viewerIsRecipient
+            ? l.conversationKindTravelerFallback
+            : l.conversationKindRecipientFallback);
+  return trip == null ? role : '$role · $trip';
+}
+
 String _previewText(AppLocalizations l, ConversationModel c) {
   final preview = c.lastMessagePreview;
   if (preview == null || preview.isEmpty) {
@@ -166,16 +185,22 @@ String formatConversationTime(AppLocalizations l, DateTime dt) {
 
 class _TripLabel extends StatelessWidget {
   final String label;
+  final String iconAsset;
   final ColorScheme cs;
   final TextTheme tt;
-  const _TripLabel({required this.label, required this.cs, required this.tt});
+  const _TripLabel({
+    required this.label,
+    required this.iconAsset,
+    required this.cs,
+    required this.tt,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        DonyIcon('plane', size: 11, color: cs.primary),
+        DonyIcon(iconAsset, size: 11, color: cs.primary),
         const SizedBox(width: DonySpacing.xs),
         Flexible(
           child: Text(

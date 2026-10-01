@@ -229,4 +229,57 @@ void main() {
       expect(c.tripLabel, 'Paris → Dakar · Oct 6 · 5 kg');
     });
   });
+
+  group('ConversationModel.kind (lot 3C)', () {
+    Map<String, dynamic> json({Object? kind, String? role}) => {
+      'id': 'conv-k',
+      'bidId': 'bid-k',
+      'firestoreConversationId': 'rconv_bid-k',
+      'otherParticipant': {'id': 'uid-k', 'name': 'Awa', 'role': ?role},
+      'kind': ?kind,
+    };
+
+    test('kind absent (back antérieur) -> SENDER_TRAVELER', () {
+      final c = ConversationModel.fromJson(json());
+      expect(c.kind, ConversationModel.kindSenderTraveler);
+      expect(c.isRecipientConversation, isFalse);
+      expect(c.viewerIsRecipient, isFalse);
+    });
+
+    test('kind vide ou d\'un autre type -> SENDER_TRAVELER', () {
+      expect(
+        ConversationModel.fromJson(json(kind: '  ')).kind,
+        ConversationModel.kindSenderTraveler,
+      );
+      expect(
+        ConversationModel.fromJson(json(kind: 42)).kind,
+        ConversationModel.kindSenderTraveler,
+      );
+    });
+
+    test('RECIPIENT_TRAVELER vu par le voyageur', () {
+      final c = ConversationModel.fromJson(
+        json(kind: 'RECIPIENT_TRAVELER', role: 'Destinataire'),
+      );
+      expect(c.isRecipientConversation, isTrue);
+      expect(c.otherParticipant.isRecipientRole, isTrue);
+      expect(c.viewerIsRecipient, isFalse);
+    });
+
+    test('RECIPIENT_TRAVELER vu par le destinataire', () {
+      final c = ConversationModel.fromJson(
+        json(kind: 'RECIPIENT_TRAVELER', role: 'Voyageur'),
+      );
+      expect(c.isRecipientConversation, isTrue);
+      expect(c.viewerIsRecipient, isTrue);
+    });
+
+    test('copyWith conserve le type', () {
+      final c = ConversationModel.fromJson(
+        json(kind: 'RECIPIENT_TRAVELER', role: 'Recipient'),
+      ).copyWith(hasUnread: true);
+      expect(c.isRecipientConversation, isTrue);
+      expect(c.otherParticipant.isRecipientRole, isTrue);
+    });
+  });
 }

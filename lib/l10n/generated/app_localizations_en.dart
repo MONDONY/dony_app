@@ -15300,4 +15300,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifyRecipientsFallbackName => 'Recipient';
+
+  @override
+  String get travelerContactInAppMessage => 'Message';
+
+  @override
+  String get receptionMessageTraveler => 'Message the traveler';
+
+  @override
+  String get recipientConversationOpenError =>
+      'We couldn\'t open the conversation right now. Please try again later.';
+
+  @override
+  String get chatLinkedParcelLabel => 'Parcel to receive';
+
+  @override
+  String get conversationKindRecipientFallback => 'Recipient';
+
+  @override
+  String get conversationKindTravelerFallback => 'Traveler';
 }

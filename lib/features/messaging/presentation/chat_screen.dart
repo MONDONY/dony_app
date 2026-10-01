@@ -249,8 +249,12 @@ class _ChatScreenState extends State<ChatScreen> {
     // Le canal SMS OTP coupé n'empêche pas d'appeler (fonctionnalité
     // indépendante), mais tant qu'il l'est le concept même de "numéro" reste
     // masqué partout dans l'app — bouton retiré pour rester cohérent.
+    // Conversation voyageur ↔ destinataire (lot 3C) : le numéro n'y est
+    // jamais révélé, même si un back le laissait passer.
     final canCall =
-        participant.phoneAvailable && smsAuthEnabledListenable.value;
+        participant.phoneAvailable &&
+        smsAuthEnabledListenable.value &&
+        !conversation.isRecipientConversation;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -457,6 +461,14 @@ class _ChatScreenState extends State<ChatScreen> {
                   cs: cs,
                   tt: tt,
                   disabled: isReadOnly,
+                  // Le destinataire n'a pas accès au détail du bid : son
+                  // bandeau mène à l'écran du colis qu'il va recevoir.
+                  onTap: () => _navigate(
+                    conversation.viewerIsRecipient
+                        ? '/receptions/${conversation.bidId}'
+                        : '/bids/${conversation.bidId}',
+                    null,
+                  ),
                 ),
               if (isReadOnly) _ReadOnlyBanner(cs: cs, tt: tt),
               if (conversation.bidStatus != null)
@@ -673,11 +685,13 @@ class _TripBanner extends StatelessWidget {
   final ColorScheme cs;
   final TextTheme tt;
   final bool disabled;
+  final VoidCallback onTap;
 
   const _TripBanner({
     required this.conversation,
     required this.cs,
     required this.tt,
+    required this.onTap,
     this.disabled = false,
   });
 
@@ -686,9 +700,8 @@ class _TripBanner extends StatelessWidget {
     return Material(
       color: disabled ? cs.surfaceContainerLowest : cs.surface,
       child: InkWell(
-        onTap: disabled
-            ? null
-            : () => context.push('/bids/${conversation.bidId}'),
+        key: const Key('chat-trip-banner'),
+        onTap: disabled ? null : onTap,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -717,7 +730,9 @@ class _TripBanner extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          context.l10n.chatLinkedTripLabel,
+                          conversation.viewerIsRecipient
+                              ? context.l10n.chatLinkedParcelLabel
+                              : context.l10n.chatLinkedTripLabel,
                           style: tt.labelSmall?.copyWith(
                             color: cs.onSurfaceVariant,
                             fontSize: 11,

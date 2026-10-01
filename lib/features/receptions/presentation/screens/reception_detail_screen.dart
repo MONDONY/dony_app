@@ -6,6 +6,8 @@ import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/copy_code_button.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
+import 'package:dony/features/messaging/presentation/widgets/recipient_conversation_launcher.dart';
 import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
@@ -489,12 +491,35 @@ class _BottomBar extends StatelessWidget {
             DonySpacing.md,
           ),
           child: reception.isConfirmed
-              ? DonyButton(
-                  key: const Key('reception-view-tracking'),
-                  label: l.receptionViewTracking,
-                  iconAsset: 'route',
-                  variant: DonyButtonVariant.secondary,
-                  onPressed: () => openTimeline(context, reception),
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Le colis est encore en route : le destinataire écrit
+                    // au voyageur dans une conversation à part, que
+                    // l'expéditeur ne voit pas (lot 3C).
+                    if (reception.canMessageTraveler) ...[
+                      RecipientConversationLauncher(
+                        bidId: reception.bidId,
+                        role: RecipientConversationRole.recipient,
+                        builder: (context, onPressed, isLoading) => DonyButton(
+                          key: const Key('reception-message-traveler'),
+                          label: l.receptionMessageTraveler,
+                          iconAsset: 'message-circle',
+                          flat: true,
+                          isLoading: isLoading,
+                          onPressed: onPressed,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.sm),
+                    ],
+                    DonyButton(
+                      key: const Key('reception-view-tracking'),
+                      label: l.receptionViewTracking,
+                      iconAsset: 'route',
+                      variant: DonyButtonVariant.secondary,
+                      onPressed: () => openTimeline(context, reception),
+                    ),
+                  ],
                 )
               : Column(
                   mainAxisSize: MainAxisSize.min,

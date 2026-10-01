@@ -8585,5 +8585,11 @@
   "notifyRecipientsInAppChip": "On Yadony",
   "notifyRecipientsNotifiedInApp": "Notified in the app",
   "notifyRecipientsNoPhone": "No number available",
-  "notifyRecipientsFallbackName": "Recipient"
+  "notifyRecipientsFallbackName": "Recipient",
+  "travelerContactInAppMessage": "Message",
+  "receptionMessageTraveler": "Message the traveler",
+  "recipientConversationOpenError": "We couldn't open the conversation right now. Please try again later.",
+  "chatLinkedParcelLabel": "Parcel to receive",
+  "conversationKindRecipientFallback": "Recipient",
+  "conversationKindTravelerFallback": "Traveler"
 }

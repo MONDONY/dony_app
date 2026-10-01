@@ -157,4 +157,21 @@ void main() {
       verify(() => dio.post('/receptions/$_bidId/decline')).called(1);
     });
   });
+
+  group('Reception.canMessageTraveler (lot 3C)', () {
+    Reception reception(String link, String bid) =>
+        Reception(bidId: 'b', linkStatus: link, bidStatus: bid);
+
+    test('lien confirmé et colis en cours', () {
+      for (final status in Reception.activeBidStatuses) {
+        expect(reception('CONFIRMED', status).canMessageTraveler, isTrue);
+      }
+    });
+
+    test('colis terminé ou lien à confirmer : non', () {
+      expect(reception('CONFIRMED', 'COMPLETED').canMessageTraveler, isFalse);
+      expect(reception('CONFIRMED', '').canMessageTraveler, isFalse);
+      expect(reception('PENDING', 'IN_TRANSIT').canMessageTraveler, isFalse);
+    });
+  });
 }
