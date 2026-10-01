@@ -281,6 +281,7 @@ abstract final class AnalyticsEvents {
 
   // Détail trajet (propriétaire)
   static const tripOwnerDetailOpened = 'trip_owner_detail_opened';
+  static const tripAudienceLoaded = 'trip_audience_loaded';
   static const tripParcelsViewed = 'trip_parcels_viewed';
   static const tripParcelsFiltered = 'trip_parcels_filtered';
 

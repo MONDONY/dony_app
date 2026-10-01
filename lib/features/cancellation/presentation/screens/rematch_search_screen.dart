@@ -82,8 +82,8 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
 
   /// Tap sur une `TravelerCard` (carte entière tactile) : fetch le vrai
   /// [AnnouncementModel] par `suggestion.announcementId` via l'`AnnouncementBloc`
-  /// dédié à cette route (même chemin data que `AnnouncementDetailScreen` /
-  /// `TripOwnerDetailScreen` — `GET /announcements/{id}`, fonctionne aussi
+  /// dédié à cette route (même chemin data que `TripOwnerDetailScreen` —
+  /// `GET /announcements/{id}`, fonctionne aussi
   /// pour une annonce qui n'appartient pas à l'utilisateur courant, cf.
   /// `TravelerProfileScreen`). Un stub ne doit jamais atteindre
   /// `showTravelerAnnouncementSheet` : `travelerId`/`pricingMode`/

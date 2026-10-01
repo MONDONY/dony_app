@@ -4020,6 +4020,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String requestDetailViewers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'seen by $count people',
+      one: 'seen by $count person',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String requestDetailTravelersWillSee(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -4615,9 +4626,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listingTripDetailTitle => 'Trip details';
-
-  @override
-  String get listingTripDeletedMessage => 'Trip deleted';
 
   @override
   String get listingAnnouncementGoneMessage => 'This listing no longer exists';
@@ -7876,6 +7884,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripOwnerDraftBannerTitle => 'This trip is a draft';
+
+  @override
+  String tripAudienceViewers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people have seen your trip',
+      one: '$count person has seen your trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripAudiencePosterViews(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count views of your shared poster',
+      one: '$count view of your shared poster',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get tripOwnerDraftBannerMessage =>

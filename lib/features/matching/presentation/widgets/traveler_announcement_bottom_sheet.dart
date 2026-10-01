@@ -25,6 +25,7 @@ import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/arrival_label.dart';
 import 'package:dony/features/matching/presentation/existing_trip_request.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
+import 'package:dony/features/matching/presentation/trip_view_recording.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
@@ -55,6 +56,8 @@ Future<void> showTravelerAnnouncementSheet(
   // Sert à masquer le blocage sur son propre trajet. Lu ici, comme le reste :
   // la feuille s'affiche hors de l'arbre de providers.
   final lecteurId = authState.currentUserId;
+  // Audience du trajet : une personne de plus pour le voyageur, sans attendre.
+  recordTripView(announcement, viewerId: lecteurId);
   // Un expéditeur non vérifié peut quand même écrire à un voyageur qui a
   // désactivé « profils vérifiés uniquement » : sans cette exception, le réglage
   // du voyageur resterait sans effet, le client barrant la route avant l'appel.

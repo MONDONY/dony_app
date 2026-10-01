@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -900,6 +901,44 @@ void main() {
 
         expect(kg.totalKg, 6);
         expect(kg.trips.single.tripId, 't1');
+      },
+    );
+  });
+
+  // ── Audience d'un trajet ─────────────────────────────────────────────────────
+
+  group('recordView', () {
+    test('POST /announcements/{id}/views', () async {
+      when(() => mockDio.post('/announcements/ann-001/views')).thenAnswer(
+        (_) async => Response<dynamic>(
+          statusCode: 204,
+          requestOptions: RequestOptions(path: '/announcements/ann-001/views'),
+        ),
+      );
+
+      await datasource.recordView('ann-001');
+
+      verify(() => mockDio.post('/announcements/ann-001/views')).called(1);
+    });
+  });
+
+  group('getTripAudience', () {
+    test(
+      'GET /announcements/{id}/insights → personnes et vues de l\'affiche',
+      () async {
+        when(() => mockDio.get('/announcements/ann-001/insights')).thenAnswer(
+          (_) async => _ok({
+            'uniqueViewerCount': 12,
+            'shareViewCount': 7,
+          }, '/announcements/ann-001/insights'),
+        );
+
+        final audience = await datasource.getTripAudience('ann-001');
+
+        expect(
+          audience,
+          const TripAudienceModel(uniqueViewerCount: 12, shareViewCount: 7),
+        );
       },
     );
   });

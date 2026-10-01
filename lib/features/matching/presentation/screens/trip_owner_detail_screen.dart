@@ -26,6 +26,7 @@ import 'package:dony/features/matching/presentation/widgets/arrival_instructions
 import 'package:dony/features/matching/presentation/widgets/arrival_instructions_card.dart';
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_audience_section.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -338,6 +339,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                   ],
                   AnnouncementDetailBody(a: a),
                   const SizedBox(height: DonySpacing.lg),
+                  if (isOwner) TripAudienceSection(announcementId: a.id),
                   OwnerActionGrid(a: a, isOwner: isOwner),
                   const SizedBox(height: DonySpacing.lg),
                   const TripParcelsSection(),

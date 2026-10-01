@@ -23,6 +23,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
@@ -43,6 +44,9 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
+
+class _MockAnnouncementRepository extends Mock
+    implements AnnouncementRepository {}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
@@ -269,6 +273,23 @@ void main() {
     // dédiée, plus dans une ligne « Dépôt des colis … ».
     expect(find.text('date limite de dépôt'), findsOneWidget);
   });
+
+  testWidgets(
+    'ouverture par un expéditeur : la vue part au back (audience du trajet)',
+    (tester) async {
+      final repository = _MockAnnouncementRepository();
+      when(() => repository.recordView(any())).thenAnswer((_) async {});
+      getIt.registerSingleton<AnnouncementRepository>(repository);
+      addTearDown(() => getIt.unregister<AnnouncementRepository>());
+
+      final a = _buildAnnouncement(kycVerified: true);
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      verify(() => repository.recordView(a.id)).called(1);
+    },
+  );
 
   testWidgets('masque la fenêtre de remise quand absente (annonce legacy)', (
     tester,

@@ -3157,6 +3157,15 @@
       }
     }
   },
+  "requestDetailViewers": "{count, plural, =1{vue par {count} personne} other{vue par {count} personnes}}",
+  "@requestDetailViewers": {
+    "description": "Nombre de personnes distinctes qui ont vu la demande, dans le méta du billet (request_detail_view.dart). Remplace requestDetailViews quand le back le fournit",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "requestDetailTravelersWillSee": "{count, plural, =1{{count} voyageur la verra} other{{count} voyageurs la verront}}",
   "@requestDetailTravelersWillSee": {
     "description": "Pli replié « N voyageurs la verront » sur un brouillon (request_detail_view.dart)",
@@ -3933,10 +3942,6 @@
   "listingTripDetailTitle": "Détail du trajet",
   "@listingTripDetailTitle": {
     "description": "Titre de l'écran/feuille détail du trajet (announcement_detail_screen.dart, traveler_announcement_bottom_sheet.dart)"
-  },
-  "listingTripDeletedMessage": "Trajet supprimé",
-  "@listingTripDeletedMessage": {
-    "description": "Confirmation après suppression d'un trajet (announcement_detail_screen.dart)"
   },
   "listingAnnouncementGoneMessage": "Cette annonce n'existe plus",
   "@listingAnnouncementGoneMessage": {
@@ -8226,6 +8231,24 @@
   "tripOwnerDraftBannerTitle": "Ce trajet est un brouillon",
   "@tripOwnerDraftBannerTitle": {
     "description": "Titre du bandeau brouillon (trip_owner_detail_screen.dart)."
+  },
+  "tripAudienceViewers": "{count, plural, =1{{count} personne a vu ton trajet} other{{count} personnes ont vu ton trajet}}",
+  "@tripAudienceViewers": {
+    "description": "Carte d'audience de l'écran propriétaire d'un trajet : personnes distinctes qui l'ont ouvert dans l'app (trip_audience_section.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripAudiencePosterViews": "{count, plural, =1{{count} vue de ton affiche partagée} other{{count} vues de ton affiche partagée}}",
+  "@tripAudiencePosterViews": {
+    "description": "Carte d'audience : consultations de la page web publique de l'affiche du trajet (trip_audience_section.dart)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "tripOwnerDraftBannerMessage": "Il est invisible pour les expéditeurs tant qu'il n'est pas publié.",
   "@tripOwnerDraftBannerMessage": {
