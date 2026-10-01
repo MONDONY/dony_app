@@ -6820,7 +6820,7 @@ abstract class AppLocalizations {
   /// Nombre de personnes distinctes qui ont vu la demande, dans le méta du billet (request_detail_view.dart). Remplace requestDetailViews quand le back le fournit
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{vue par {count} personne} other{vue par {count} personnes}}'**
+  /// **'{count, plural, =0{pas encore vue} =1{vue par {count} personne} other{vue par {count} personnes}}'**
   String requestDetailViewers(int count);
 
   /// Pli replié « N voyageurs la verront » sur un brouillon (request_detail_view.dart)
@@ -8330,7 +8330,7 @@ abstract class AppLocalizations {
   /// Fil Rechercher : nombre de personnes qui ont vu le trajet ou la demande, affiché à son seul propriétaire sur sa carte (traveler_card.dart, package_request_list_card.dart)
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{{count} vue} other{{count} vues}}'**
+  /// **'{count, plural, =0{0 vue} =1{{count} vue} other{{count} vues}}'**
   String searchCardViews(int count);
 
   /// Titre de la feuille d'aperçu avant publication (announcement_preview_sheet.dart)
@@ -13290,7 +13290,7 @@ abstract class AppLocalizations {
   /// Carte d'audience de l'écran propriétaire d'un trajet : personnes distinctes qui l'ont ouvert dans l'app (trip_audience_section.dart)
   ///
   /// In fr, this message translates to:
-  /// **'{count, plural, =1{{count} personne a vu ton trajet} other{{count} personnes ont vu ton trajet}}'**
+  /// **'{count, plural, =0{Personne n\'a encore vu ton trajet} =1{{count} personne a vu ton trajet} other{{count} personnes ont vu ton trajet}}'**
   String tripAudienceViewers(int count);
 
   /// Carte d'audience : consultations de la page web publique de l'affiche du trajet (trip_audience_section.dart)

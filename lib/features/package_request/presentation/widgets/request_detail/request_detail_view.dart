@@ -76,14 +76,17 @@ class RequestDetailView extends StatelessWidget {
 
     final l = context.l10n;
     final insights = s.insights;
-    final viewers = insights?.uniqueViewerCount ?? 0;
+    final viewers = insights?.uniqueViewerCount;
     final meta = [
       // Personnes distinctes quand le back les compte. Sinon les ouvertures :
       // ancien back, ou demande publiée avant le décompte par personne.
-      if (viewers > 0)
+      // Jamais ouverte : « pas encore vue », pour que le compteur existe.
+      if (viewers != null && viewers > 0)
         l.requestDetailViewers(viewers)
       else if (insights != null && insights.viewCount > 0)
-        l.requestDetailViews(insights.viewCount),
+        l.requestDetailViews(insights.viewCount)
+      else if (viewers != null)
+        l.requestDetailViewers(0),
       requestTimeLabel(
         r.createdAt,
         now: now ?? DateTime.now(),

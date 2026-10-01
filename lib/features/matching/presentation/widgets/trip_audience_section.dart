@@ -9,8 +9,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///
 /// Monté seulement pour le propriétaire confirmé : c'est lui qui déclenche le
 /// chargement, un visiteur n'appelle donc jamais la route (404 côté back).
-/// Rien n'est affiché tant que rien n'est sûr : chargement, échec, ancien back,
-/// ou aucune vue encore.
+/// Rien n'est affiché tant que rien n'est sûr : chargement, échec, ancien back.
+/// Sans aucune vue, la carte le dit (« Personne n'a encore vu ton trajet ») :
+/// le voyageur sait que le compteur existe.
 class TripAudienceSection extends StatefulWidget {
   const TripAudienceSection({super.key, required this.announcementId});
 
@@ -32,9 +33,7 @@ class _TripAudienceSectionState extends State<TripAudienceSection> {
     return BlocBuilder<TripAudienceCubit, TripAudienceState>(
       builder: (context, state) {
         final audience = state.audience;
-        if (state.status != TripAudienceStatus.loaded ||
-            audience == null ||
-            audience.isEmpty) {
+        if (state.status != TripAudienceStatus.loaded || audience == null) {
           return const SizedBox.shrink();
         }
         final l = context.l10n;
@@ -56,7 +55,10 @@ class _TripAudienceSectionState extends State<TripAudienceSection> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (audience.uniqueViewerCount > 0)
+                      // À 0 dans l'app, la ligne ne s'affiche que si l'affiche
+                      // n'a pas été vue non plus : « personne » contredirait
+                      // les vues de l'affiche juste en dessous.
+                      if (audience.uniqueViewerCount > 0 || audience.isEmpty)
                         Text(
                           l.tripAudienceViewers(audience.uniqueViewerCount),
                           style: tt.bodyMedium?.copyWith(

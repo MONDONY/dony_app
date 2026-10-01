@@ -68,15 +68,39 @@ void main() {
     expect(find.textContaining('affiche'), findsNothing);
   });
 
-  for (final (label, state) in [
-    ('chargement', const TripAudienceState.loading()),
-    ('échec ou ancien back', const TripAudienceState.hidden()),
-    (
-      'personne encore',
+  testWidgets('personne encore : la carte le dit, avec 0', (tester) async {
+    when(() => cubit.state).thenReturn(
       const TripAudienceState.loaded(
         TripAudienceModel(uniqueViewerCount: 0, shareViewCount: 0),
       ),
-    ),
+    );
+
+    await _pump(tester, cubit);
+
+    expect(find.byKey(const Key('trip-audience-card')), findsOneWidget);
+    expect(find.text("Personne n'a encore vu ton trajet"), findsOneWidget);
+    expect(find.textContaining('affiche'), findsNothing);
+  });
+
+  testWidgets(
+    'personne dans l’app mais l’affiche consultée : seule la ligne affiche',
+    (tester) async {
+      when(() => cubit.state).thenReturn(
+        const TripAudienceState.loaded(
+          TripAudienceModel(uniqueViewerCount: 0, shareViewCount: 3),
+        ),
+      );
+
+      await _pump(tester, cubit);
+
+      expect(find.text('3 vues de ton affiche partagée'), findsOneWidget);
+      expect(find.textContaining('ton trajet'), findsNothing);
+    },
+  );
+
+  for (final (label, state) in [
+    ('chargement', const TripAudienceState.loading()),
+    ('échec ou ancien back', const TripAudienceState.hidden()),
   ]) {
     testWidgets('rien n’est affiché : $label', (tester) async {
       when(() => cubit.state).thenReturn(state);

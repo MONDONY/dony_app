@@ -174,6 +174,45 @@ void main() {
     },
   );
 
+  testWidgets('2 quinquies : jamais ouverte → « pas encore vue »', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.open),
+        threads: const [],
+        insights: const PackageRequestInsights(
+          viewCount: 0,
+          uniqueViewerCount: 0,
+          invitedAnnouncementIds: {},
+        ),
+        compatibleTrips: const [],
+      ),
+    );
+    expect(find.textContaining('pas encore vue'), findsOneWidget);
+  });
+
+  testWidgets(
+    '2 sexies : ancien back sans personnes distinctes ni ouverture → rien',
+    (tester) async {
+      await _pump(
+        tester,
+        PackageRequestDetailLoaded(
+          request: _req(PackageRequestStatus.open),
+          threads: const [],
+          insights: const PackageRequestInsights(
+            viewCount: 0,
+            invitedAnnouncementIds: {},
+          ),
+          compatibleTrips: const [],
+        ),
+      );
+      expect(find.textContaining('pas encore vue'), findsNothing);
+      expect(find.textContaining('vues'), findsNothing);
+    },
+  );
+
   testWidgets('2 bis : back sans invitations → pas de bouton Inviter', (
     tester,
   ) async {

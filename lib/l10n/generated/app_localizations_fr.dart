@@ -4044,6 +4044,7 @@ class AppLocalizationsFr extends AppLocalizations {
       locale: localeName,
       other: 'vue par $count personnes',
       one: 'vue par $count personne',
+      zero: 'pas encore vue',
     );
     return '$_temp0';
   }
@@ -4987,6 +4988,7 @@ class AppLocalizationsFr extends AppLocalizations {
       locale: localeName,
       other: '$count vues',
       one: '$count vue',
+      zero: '0 vue',
     );
     return '$_temp0';
   }
@@ -7996,6 +7998,7 @@ class AppLocalizationsFr extends AppLocalizations {
       locale: localeName,
       other: '$count personnes ont vu ton trajet',
       one: '$count personne a vu ton trajet',
+      zero: 'Personne n\'a encore vu ton trajet',
     );
     return '$_temp0';
   }

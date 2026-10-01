@@ -1029,9 +1029,23 @@ void main() {
       expect(find.text('1 vue'), findsOneWidget);
     });
 
+    testWidgets('mon trajet encore jamais vu → « 0 vue »', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(uniqueViewerCount: 0),
+            index: 0,
+            onTap: () {},
+            isOwnAnnouncement: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('0 vue'), findsOneWidget);
+    });
+
     for (final (label, own, count) in [
       ('trajet d’un autre, même avec un chiffre', false, 12),
-      ('mon trajet sans vue', true, 0),
       ('mon trajet, ancien back sans le champ', true, null),
     ]) {
       testWidgets('rien n’est affiché : $label', (tester) async {
