@@ -145,20 +145,30 @@ void main() {
   });
 
   group('conversation voyageur ↔ destinataire (lot 3C)', () {
-    ConversationModel recipientConversation({String? role, bool trip = true}) =>
-        ConversationModel(
-          id: 'conv-r',
-          bidId: 'bid-1',
-          firestoreConversationId: 'rconv_bid-1',
-          otherParticipant: ParticipantModel(
-            id: 'uid-2',
-            name: 'Awa',
-            role: role,
-          ),
-          tripOrigin: trip ? 'Paris' : null,
-          tripDestination: trip ? 'Dakar' : null,
-          kind: ConversationModel.kindRecipientTraveler,
-        );
+    ConversationModel recipientConversation({
+      String? role,
+      bool trip = true,
+      String? viewerRole,
+    }) => ConversationModel(
+      id: 'conv-r',
+      bidId: 'bid-1',
+      firestoreConversationId: 'rconv_bid-1',
+      otherParticipant: ParticipantModel(id: 'uid-2', name: 'Awa', role: role),
+      tripOrigin: trip ? 'Paris' : null,
+      tripDestination: trip ? 'Dakar' : null,
+      kind: ConversationModel.kindRecipientTraveler,
+      viewerRole: viewerRole,
+    );
+
+    testWidgets('rôle absent, viewerRole TRAVELER -> Destinataire', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(recipientConversation(viewerRole: 'TRAVELER')),
+      );
+
+      expect(find.text('Destinataire · Paris → Dakar'), findsOneWidget);
+    });
 
     testWidgets('préfixe le trajet du rôle servi', (tester) async {
       await tester.pumpWidget(

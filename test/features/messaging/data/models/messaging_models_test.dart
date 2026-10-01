@@ -231,13 +231,62 @@ void main() {
   });
 
   group('ConversationModel.kind (lot 3C)', () {
-    Map<String, dynamic> json({Object? kind, String? role}) => {
+    Map<String, dynamic> json({
+      Object? kind,
+      String? role,
+      Object? viewerRole,
+    }) => {
       'id': 'conv-k',
       'bidId': 'bid-k',
       'firestoreConversationId': 'rconv_bid-k',
       'otherParticipant': {'id': 'uid-k', 'name': 'Awa', 'role': ?role},
       'kind': ?kind,
+      'viewerRole': ?viewerRole,
     };
+
+    test('viewerRole fait foi sur la déduction par le rôle', () {
+      final recipient = ConversationModel.fromJson(
+        json(
+          kind: 'RECIPIENT_TRAVELER',
+          role: 'Destinataire',
+          viewerRole: 'RECIPIENT',
+        ),
+      );
+      expect(recipient.viewerRole, 'RECIPIENT');
+      expect(recipient.viewerIsRecipient, isTrue);
+
+      final traveler = ConversationModel.fromJson(
+        json(
+          kind: 'RECIPIENT_TRAVELER',
+          role: 'Voyageur',
+          viewerRole: 'traveler',
+        ),
+      );
+      expect(traveler.viewerRole, 'TRAVELER');
+      expect(traveler.viewerIsRecipient, isFalse);
+      expect(traveler.copyWith(hasUnread: true).viewerRole, 'TRAVELER');
+    });
+
+    test('viewerRole absent, vide ou inconnu : repli sur le rôle', () {
+      for (final value in [null, ' ', 42, 'AUTRE']) {
+        final c = ConversationModel.fromJson(
+          json(
+            kind: 'RECIPIENT_TRAVELER',
+            role: 'Destinataire',
+            viewerRole: value,
+          ),
+        );
+        expect(c.viewerIsRecipient, isFalse, reason: '$value');
+      }
+      expect(ConversationModel.fromJson(json()).viewerRole, isNull);
+      // Fil expéditeur ↔ voyageur : jamais destinataire, quel que soit le champ.
+      expect(
+        ConversationModel.fromJson(
+          json(viewerRole: 'RECIPIENT'),
+        ).viewerIsRecipient,
+        isFalse,
+      );
+    });
 
     test('kind absent (back antérieur) -> SENDER_TRAVELER', () {
       final c = ConversationModel.fromJson(json());

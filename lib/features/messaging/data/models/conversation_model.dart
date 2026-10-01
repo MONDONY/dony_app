@@ -76,6 +76,14 @@ class ConversationModel {
   static const kindSenderTraveler = 'SENDER_TRAVELER';
   static const kindRecipientTraveler = 'RECIPIENT_TRAVELER';
 
+  /// Côté de l'utilisateur courant dans une conversation
+  /// [kindRecipientTraveler] : `TRAVELER` ou `RECIPIENT`, `null` pour une
+  /// conversation expéditeur ↔ voyageur ou sur un back antérieur.
+  final String? viewerRole;
+
+  static const viewerRoleTraveler = 'TRAVELER';
+  static const viewerRoleRecipient = 'RECIPIENT';
+
   const ConversationModel({
     required this.id,
     required this.bidId,
@@ -93,6 +101,7 @@ class ConversationModel {
     this.readOnly = false,
     this.deletedBySelf = false,
     this.kind = kindSenderTraveler,
+    this.viewerRole,
   });
 
   /// Conversation séparée voyageur ↔ destinataire : l'expéditeur n'y est pas,
@@ -100,12 +109,18 @@ class ConversationModel {
   bool get isRecipientConversation => kind == kindRecipientTraveler;
 
   /// L'utilisateur courant est le destinataire de cette conversation
-  /// voyageur ↔ destinataire. Le DTO ne dit pas qui regarde : on le déduit du
-  /// rôle de l'autre participant. Un interlocuteur « Destinataire » signifie
-  /// que l'on est le voyageur ; tout autre rôle (« Voyageur », ou absent),
-  /// que l'on est le destinataire.
-  bool get viewerIsRecipient =>
-      isRecipientConversation && !otherParticipant.isRecipientRole;
+  /// voyageur ↔ destinataire. [viewerRole] fait foi quand le back le sert.
+  /// Sinon (back antérieur), on le déduit du rôle de l'autre participant :
+  /// un interlocuteur « Destinataire » signifie que l'on est le voyageur ;
+  /// tout autre rôle (« Voyageur », ou absent), que l'on est le destinataire.
+  bool get viewerIsRecipient {
+    if (!isRecipientConversation) return false;
+    return switch (viewerRole) {
+      viewerRoleRecipient => true,
+      viewerRoleTraveler => false,
+      _ => !otherParticipant.isRecipientRole,
+    };
+  }
 
   /// Formatted trip label for display, e.g. "Paris → Dakar · 12 jan · 5 kg"
   String? get tripLabel {
@@ -142,6 +157,7 @@ class ConversationModel {
     bidStatus: bidStatus,
     readOnly: readOnly ?? this.readOnly,
     kind: kind,
+    viewerRole: viewerRole,
   );
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) =>
@@ -170,6 +186,11 @@ class ConversationModel {
         kind: switch (json['kind']) {
           final String value when value.trim().isNotEmpty => value.trim(),
           _ => kindSenderTraveler,
+        },
+        viewerRole: switch (json['viewerRole']) {
+          final String value when value.trim().isNotEmpty =>
+            value.trim().toUpperCase(),
+          _ => null,
         },
       );
 }

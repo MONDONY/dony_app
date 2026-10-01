@@ -623,7 +623,10 @@ void main() {
     setUp(() => setSmsAuthEnabled(true));
     tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
 
-    ConversationModel recipientConversation(String role) => ConversationModel(
+    ConversationModel recipientConversation(
+      String role, {
+      String? viewerRole,
+    }) => ConversationModel(
       id: 'conv-r',
       bidId: 'bid-r',
       firestoreConversationId: 'rconv_bid-r',
@@ -637,6 +640,7 @@ void main() {
       tripOrigin: 'Paris',
       tripDestination: 'Dakar',
       kind: ConversationModel.kindRecipientTraveler,
+      viewerRole: viewerRole,
     );
 
     Future<List<String>> pumpRecipient(
@@ -695,6 +699,32 @@ void main() {
       expect(find.byTooltip('Appeler'), findsNothing);
       expect(find.text('Trajet lié'), findsOneWidget);
 
+      await tester.tap(find.byKey(const Key('chat-trip-banner')));
+      await tester.pump();
+
+      expect(routes, ['/bids/bid-r']);
+    });
+
+    testWidgets('viewerRole RECIPIENT prime sur le rôle servi', (tester) async {
+      final routes = await pumpRecipient(
+        tester,
+        recipientConversation('Destinataire', viewerRole: 'RECIPIENT'),
+      );
+
+      expect(find.text('Colis à recevoir'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('chat-trip-banner')));
+      await tester.pump();
+
+      expect(routes, ['/receptions/bid-r']);
+    });
+
+    testWidgets('viewerRole TRAVELER prime sur le rôle servi', (tester) async {
+      final routes = await pumpRecipient(
+        tester,
+        recipientConversation('Voyageur', viewerRole: 'TRAVELER'),
+      );
+
+      expect(find.text('Trajet lié'), findsOneWidget);
       await tester.tap(find.byKey(const Key('chat-trip-banner')));
       await tester.pump();
 
