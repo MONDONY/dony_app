@@ -5,6 +5,7 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
+import 'package:dony/core/utils/contact_links.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -13,30 +14,6 @@ import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-
-/// Lien `wa.me` qui ouvre la conversation WhatsApp avec [phone], message
-/// [text] pré-rempli.
-///
-/// Rend `null` quand le numéro n'est pas au format international (`+…` ou
-/// `00…`) : sans indicatif pays, `wa.me` ouvrirait la conversation d'un
-/// inconnu, voire d'un numéro d'un autre pays.
-Uri? whatsAppChatUri(String? phone, String text) {
-  if (phone == null) {
-    return null;
-  }
-  final trimmed = phone.trim();
-  if (!trimmed.startsWith('+') && !trimmed.startsWith('00')) {
-    return null;
-  }
-  var digits = trimmed.replaceAll(RegExp(r'\D'), '');
-  if (trimmed.startsWith('00')) {
-    digits = digits.substring(2);
-  }
-  if (digits.length < 8) {
-    return null;
-  }
-  return Uri.https('wa.me', '/$digits', {'text': text});
-}
 
 /// Message que l'expéditeur envoie au destinataire : lien de suivi, code de
 /// retrait quand il existe ([withCode]), invitation à installer Yadony.

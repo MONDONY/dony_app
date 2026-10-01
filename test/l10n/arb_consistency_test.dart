@@ -106,6 +106,8 @@ int _matchingBrace(String text, int openIndex) {
 const _sameInBothLanguages = <String>{
   'recipientNotifyRoute', // « (Paris → Dakar) » : seulement le trajet, sans mot
   'commonOk', // « OK » se dit pareil
+  'travelerContactWhatsApp', // « WhatsApp » : nom de l'application
+  'travelerContactSms', // « SMS » se dit pareil
   'authEmailStepLabel', // « Email » se dit pareil
   'authOnboardingDestinationsEyebrow', // « Destinations » se dit pareil
   // Noms propres identiques en français et en anglais.

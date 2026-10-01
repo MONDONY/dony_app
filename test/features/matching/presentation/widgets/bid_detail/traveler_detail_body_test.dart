@@ -10,6 +10,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_act
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
+import 'package:dony/features/matching/presentation/widgets/recipient_contact/recipient_contact.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
@@ -25,18 +26,20 @@ class _MockConvBloc
 class _MockCancelBloc extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
 
-BidModel _bid(String status, {String? trackingToken}) => BidModel(
-  id: 'b1',
-  announcementId: 'a1',
-  senderId: 's1',
-  status: status,
-  weightKg: 5,
-  trackingToken: trackingToken,
-  totalAmountEur: 48,
-  senderName: 'Mariama D.',
-  createdAt: DateTime(2026, 5),
-  updatedAt: DateTime(2026, 5),
-);
+BidModel _bid(String status, {String? trackingToken, String? recipientPhone}) =>
+    BidModel(
+      id: 'b1',
+      announcementId: 'a1',
+      senderId: 's1',
+      status: status,
+      weightKg: 5,
+      trackingToken: trackingToken,
+      totalAmountEur: 48,
+      senderName: 'Mariama D.',
+      recipientPhone: recipientPhone,
+      createdAt: DateTime(2026, 5),
+      updatedAt: DateTime(2026, 5),
+    );
 
 Future<void> _pump(WidgetTester tester, BidModel bid) async {
   final conv = _MockConvBloc();
@@ -102,6 +105,34 @@ void main() {
       expect(find.byType(TravelerGainCard), findsOneWidget);
     },
   );
+
+  group('contact du destinataire (lot 3B)', () {
+    for (final status in ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
+      testWidgets('$status + téléphone → rangée WhatsApp / SMS / Appeler', (
+        tester,
+      ) async {
+        await _pump(tester, _bid(status, recipientPhone: '+221700000000'));
+        expect(find.byType(TravelerRecipientContactCard), findsOneWidget);
+        expect(find.text('Contacter le destinataire'), findsOneWidget);
+        expect(
+          find.byKey(const Key('recipient-contact-sms-b1')),
+          findsOneWidget,
+        );
+      });
+    }
+
+    testWidgets('demande pas encore acceptée → rangée masquée', (tester) async {
+      await _pump(tester, _bid('PENDING', recipientPhone: '+221700000000'));
+      expect(find.byType(TravelerRecipientContactCard), findsNothing);
+    });
+
+    testWidgets('sans téléphone du destinataire → rangée masquée', (
+      tester,
+    ) async {
+      await _pump(tester, _bid('ARRIVED'));
+      expect(find.byType(TravelerRecipientContactCard), findsNothing);
+    });
+  });
 
   testWidgets('trackingToken présent → pas de lien ni action suivi voyageur', (
     tester,

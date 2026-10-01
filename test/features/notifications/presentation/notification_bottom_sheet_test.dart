@@ -223,6 +223,7 @@ void main() {
         await iconAssetFor(tester, 'RECIPIENT_PARCEL_RESCHEDULED'),
         'calendar',
       );
+      expect(await iconAssetFor(tester, 'RECIPIENT_PICKUP_UPDATED'), 'map-pin');
     });
 
     /// Les trois familles qui tombaient sur la cloche générique avant d'être
