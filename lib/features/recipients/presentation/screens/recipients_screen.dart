@@ -4,8 +4,10 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/features/recipients/bloc/sent_invitations_cubit.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:dony/features/recipients/data/recipient_filter.dart';
+import 'package:dony/features/recipients/presentation/widgets/sent_invitations_section.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -76,9 +78,18 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
             ),
             child: ContextualTutorialCard(context: TutorialContext.recipients),
           ),
+          // Destinataire qui a l'app : retrouvé par invitation (lot 4).
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: DonySpacing.lg),
+            child: InviteYadonyRecipientTile(),
+          ),
           Expanded(
             child: BlocBuilder<RecipientBloc, RecipientState>(
               builder: (context, state) {
+                final sentState = context.watch<SentInvitationsCubit>().state;
+                final hasSent =
+                    sentState.status == SentInvitationsStatus.loaded &&
+                    sentState.invitations.isNotEmpty;
                 if (state.status == RecipientStatus.loading &&
                     state.recipients.isEmpty) {
                   return const DonyEmptyState(
@@ -100,6 +111,14 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
                     onAction: () => context.read<RecipientBloc>().add(
                       const RecipientLoaded(),
                     ),
+                  );
+                }
+                if (state.recipients.isEmpty && hasSent) {
+                  // Carnet vide mais invitations en cours : elles restent
+                  // visibles, sinon l'expéditeur les perdrait de vue.
+                  return ListView(
+                    padding: const EdgeInsets.only(bottom: DonySpacing.huge),
+                    children: const [SentInvitationsSection()],
                   );
                 }
                 if (state.recipients.isEmpty) {
@@ -141,15 +160,16 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
                                 top: DonySpacing.sm,
                                 bottom: DonySpacing.huge,
                               ),
-                              itemCount: filtered.length,
+                              itemCount: filtered.length + (hasSent ? 1 : 0),
                               separatorBuilder: (_, _) => Divider(
                                 height: 1,
                                 thickness: 1,
                                 indent: DonySpacing.lg + 44 + DonySpacing.md,
                                 color: cs.outline.withValues(alpha: 0.5),
                               ),
-                              itemBuilder: (context, i) =>
-                                  _RecipientTile(recipient: filtered[i]),
+                              itemBuilder: (context, i) => i < filtered.length
+                                  ? _RecipientTile(recipient: filtered[i])
+                                  : const SentInvitationsSection(),
                             ),
                     ),
                   ],
@@ -271,6 +291,13 @@ class _RecipientTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (recipient.linkedOnYadony) ...[
+                        const SizedBox(width: DonySpacing.xs),
+                        DonyBadge(
+                          key: Key('recipient-linked-${recipient.id}'),
+                          label: l.recipientLinkedOnYadonyChip,
+                        ),
+                      ],
                       if (recipient.isDefault) ...[
                         const SizedBox(width: DonySpacing.xs),
                         DonyBadge(

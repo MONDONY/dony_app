@@ -15408,4 +15408,163 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get conversationKindTravelerFallback => 'Voyageur';
+
+  @override
+  String get recipientInviteAction => 'Ajouter un destinataire Yadony';
+
+  @override
+  String get recipientInviteActionSubtitle =>
+      'Retrouvez-le par son numéro ou son e-mail : ses colis lui seront rattachés.';
+
+  @override
+  String get recipientInviteSheetIntro =>
+      'Il recevra une demande dans Yadony. S\'il accepte, vos colis lui seront rattachés directement, sans confirmation.';
+
+  @override
+  String get recipientInviteChannelPhone => 'Numéro';
+
+  @override
+  String get recipientInviteChannelEmail => 'E-mail';
+
+  @override
+  String get recipientInvitePhoneLabel => 'Numéro de téléphone';
+
+  @override
+  String get recipientInvitePhoneHint => 'ex. +221 77 123 45 67';
+
+  @override
+  String get recipientInviteEmailLabel => 'Adresse e-mail';
+
+  @override
+  String get recipientInviteEmailHint => 'ex. awa@exemple.com';
+
+  @override
+  String get recipientInvitePhoneInvalid =>
+      'Saisissez le numéro avec l\'indicatif du pays (ex. +221).';
+
+  @override
+  String get recipientInviteEmailInvalid => 'Adresse e-mail invalide.';
+
+  @override
+  String get recipientInviteSubmit => 'Envoyer l\'invitation';
+
+  @override
+  String get recipientInviteSent =>
+      'Invitation envoyée. Si cette personne a Yadony, elle pourra accepter.';
+
+  @override
+  String get recipientInviteQuota =>
+      'Vous avez envoyé beaucoup d\'invitations aujourd\'hui. Réessayez demain.';
+
+  @override
+  String get recipientLinkedOnYadonyChip => 'Dans Yadony';
+
+  @override
+  String get recipientSentInvitationsTitle => 'Invitations envoyées';
+
+  @override
+  String get recipientSentInvitationPending => 'En attente';
+
+  @override
+  String get recipientSentInvitationAccepted => 'Acceptée';
+
+  @override
+  String get recipientSentInvitationCancelTitle => 'Annuler l\'invitation ?';
+
+  @override
+  String get recipientSentInvitationCancelMessage =>
+      'Ses colis ne lui seront plus rattachés directement.';
+
+  @override
+  String get recipientSentInvitationCancelAction => 'Annuler l\'invitation';
+
+  @override
+  String get recipientInvitationsTitle => 'Demandes d\'expéditeurs';
+
+  @override
+  String get recipientInvitationsPendingSection => 'Demandes reçues';
+
+  @override
+  String get recipientInvitationsAuthorizedSection => 'Expéditeurs autorisés';
+
+  @override
+  String recipientInvitationRequestTitle(String name) {
+    return '$name veut vous ajouter à ses destinataires';
+  }
+
+  @override
+  String recipientInvitationConsent(String name) {
+    return '$name verra votre nom et votre numéro, et ses colis vous seront rattachés directement.';
+  }
+
+  @override
+  String get recipientInvitationAccept => 'Accepter';
+
+  @override
+  String get recipientInvitationDecline => 'Refuser';
+
+  @override
+  String get recipientInvitationAuthorizedSubtitle =>
+      'Ses colis vous sont rattachés directement.';
+
+  @override
+  String get recipientInvitationRemove => 'Retirer';
+
+  @override
+  String recipientInvitationRemoveTitle(String name) {
+    return 'Retirer $name ?';
+  }
+
+  @override
+  String get recipientInvitationRemoveMessage =>
+      'Ses prochains colis vous demanderont à nouveau de confirmer qu\'ils sont pour vous.';
+
+  @override
+  String get recipientInvitationsEmptyTitle => 'Aucune demande';
+
+  @override
+  String get recipientInvitationsEmptyDescription =>
+      'Quand un expéditeur voudra vous ajouter à ses destinataires, sa demande apparaîtra ici.';
+
+  @override
+  String get recipientInvitationPhoneRequiredTitle => 'Ajoutez votre numéro';
+
+  @override
+  String get recipientInvitationPhoneRequiredMessage =>
+      'Pour accepter, votre compte doit avoir un numéro de téléphone : c\'est lui qui relie les colis à vous.';
+
+  @override
+  String get recipientInvitationPhoneRequiredAction => 'Ajouter un numéro';
+
+  @override
+  String recipientInvitationAcceptedMessage(String name) {
+    return '$name peut maintenant vous rattacher ses colis.';
+  }
+
+  @override
+  String recipientInvitationsBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count demandes d\'expéditeurs',
+      one: '1 demande d\'expéditeur',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipientInvitationsBannerSubtitle =>
+      'Acceptez pour suivre leurs colis sans rien confirmer.';
+
+  @override
+  String get privacyRecipientInvitationsSubtitle =>
+      'Qui peut vous rattacher ses colis';
+
+  @override
+  String get bidCreateRecipientPhoneInvalidError =>
+      'Numéro invalide : ajoutez l\'indicatif du pays (ex. +221 77 123 45 67).';
+
+  @override
+  String get recipientSectionLinkedOnYadony =>
+      'Dans Yadony : il suivra le colis dans l\'app.';
 }

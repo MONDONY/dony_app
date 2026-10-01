@@ -9,6 +9,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
+import 'package:dony/features/recipients/bloc/incoming_invitations_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_validation_cubit.dart';
@@ -96,6 +97,10 @@ class SuiviScreen extends StatelessWidget {
               // Colis à recevoir (lot 2) : section silencieuse en cas d'échec.
               BlocProvider<ReceptionsCubit>(
                 create: (_) => getIt<ReceptionsCubit>()..load(),
+              ),
+              // Demandes d'expéditeurs (lot 4) : bandeau muet en échec.
+              BlocProvider<IncomingInvitationsCubit>(
+                create: (_) => getIt<IncomingInvitationsCubit>()..load(),
               ),
               if (canValidate) ...[
                 BlocProvider<ScanHubCubit>(
@@ -203,6 +208,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
     _reloadTrips();
     unawaited(context.read<SuiviCubit>().refreshShipments());
     unawaited(context.read<ReceptionsCubit>().load());
+    unawaited(context.read<IncomingInvitationsCubit>().load());
   }
 
   void _flushValidations() {

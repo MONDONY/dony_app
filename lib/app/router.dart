@@ -162,8 +162,11 @@ import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/presentation/screens/my_reviews_screen.dart';
 import 'package:dony/features/receptions/presentation/screens/reception_detail_screen.dart';
+import 'package:dony/features/recipients/bloc/incoming_invitations_cubit.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/features/recipients/bloc/sent_invitations_cubit.dart';
 import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
+import 'package:dony/features/recipients/presentation/screens/recipient_invitations_screen.dart';
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
@@ -1040,6 +1043,17 @@ final appRouter = GoRouter(
           NotificationDetailScreen(id: state.pathParameters['id']!),
     ),
 
+    // ── Demandes d'expéditeurs (hors shell) ──────────────────────────────
+    // Invitations « destinataire Yadony » reçues (lot 4) : notification
+    // RECIPIENT_INVITATION, bandeau de l'onglet Suivi, Confidentialité.
+    GoRoute(
+      path: '/recipient-invitations',
+      builder: (_, _) => BlocProvider(
+        create: (_) => getIt<IncomingInvitationsCubit>()..load(),
+        child: const RecipientInvitationsScreen(),
+      ),
+    ),
+
     // ── Colis à recevoir (hors shell) ────────────────────────────────────
     // Ouvert depuis la section de l'onglet Suivi et les notifications
     // RECIPIENT_PARCEL_* (deeplink `yadony://receptions/{bidId}`).
@@ -1329,8 +1343,15 @@ final appRouter = GoRouter(
     // ── Recipients (hors shell) ───────────────────────────────────────────
     GoRoute(
       path: '/profile/recipients',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<RecipientBloc>()..add(const RecipientLoaded()),
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => getIt<RecipientBloc>()..add(const RecipientLoaded()),
+          ),
+          // Invitations « destinataire Yadony » (lot 4), silencieuses en
+          // échec.
+          BlocProvider(create: (_) => getIt<SentInvitationsCubit>()..load()),
+        ],
         child: const RecipientsScreen(),
       ),
       routes: [

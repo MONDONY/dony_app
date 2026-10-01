@@ -170,6 +170,27 @@ class PrivacySettingsScreen extends StatelessWidget {
                 // ── 3. Section "BLOCAGE" ──────────────────────────────────
                 SettingsSectionHeader(l.privacySectionBlocking),
                 const _BlockedUsersCard(),
+                const SizedBox(height: DonySpacing.md),
+                // Expéditeurs qui rattachent leurs colis sans confirmation
+                // (lot 4) : demandes reçues et retrait.
+                SettingsFlatGroup(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm,
+                      ),
+                      child: DonyListTile(
+                        key: const Key('privacy-authorized-senders'),
+                        label: l.recipientInvitationsAuthorizedSection,
+                        subtitle: l.privacyRecipientInvitationsSubtitle,
+                        iconAsset: 'user-plus',
+                        showDivider: false,
+                        trailing: const DonyIcon('chevron-right', size: 20),
+                        onTap: () => context.push('/recipient-invitations'),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── 4. Section "AMÉLIORATION DE L'APP" ────────────────────

@@ -68,7 +68,10 @@ import 'package:dony/features/profile/data/repositories/help_center_repository.d
 import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/receptions/data/repositories/reception_repository.dart';
+import 'package:dony/features/recipients/bloc/incoming_invitations_cubit.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/features/recipients/data/models/recipient_invitation.dart';
+import 'package:dony/features/recipients/data/repositories/recipient_invitation_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/suivi_cubit.dart';
@@ -752,6 +755,9 @@ class _SuiviMockBidRepo extends Mock implements BidRepository {}
 
 class _SuiviMockReceptionRepo extends Mock implements ReceptionRepository {}
 
+class _SuiviMockInvitationRepo extends Mock
+    implements RecipientInvitationRepository {}
+
 class _SuiviMockTrackingRepo extends Mock implements TrackingRepository {}
 
 class _SuiviMockOfflineSync extends Mock implements OfflineSyncService {}
@@ -886,6 +892,24 @@ Widget _suiviHarness(List<String> roles, {SuiviMode? mode}) {
   register<ReceptionsCubit>(
     () => ReceptionsCubit(
       receptionRepo,
+      makeDisabledAnalytics(MockAnalyticsBackend()),
+    ),
+  );
+  // Demandes d'expéditeurs (lot 4) : une en attente, pour mesurer aussi le
+  // bandeau à 200 %.
+  final invitationRepo = _SuiviMockInvitationRepo();
+  when(invitationRepo.getIncoming).thenAnswer(
+    (_) async => const [
+      IncomingRecipientInvitation(
+        id: 'inv-1',
+        inviterFirstName: 'Awa',
+        status: 'PENDING',
+      ),
+    ],
+  );
+  register<IncomingInvitationsCubit>(
+    () => IncomingInvitationsCubit(
+      invitationRepo,
       makeDisabledAnalytics(MockAnalyticsBackend()),
     ),
   );

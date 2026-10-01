@@ -25322,6 +25322,264 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Voyageur'**
   String get conversationKindTravelerFallback;
+
+  /// Carnet de destinataires : action qui ouvre la feuille d'invitation d'un destinataire qui a l'app.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un destinataire Yadony'**
+  String get recipientInviteAction;
+
+  /// Carnet de destinataires : sous-titre de l'action d'invitation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retrouvez-le par son numéro ou son e-mail : ses colis lui seront rattachés.'**
+  String get recipientInviteActionSubtitle;
+
+  /// Feuille d'invitation : texte d'introduction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il recevra une demande dans Yadony. S\'il accepte, vos colis lui seront rattachés directement, sans confirmation.'**
+  String get recipientInviteSheetIntro;
+
+  /// Feuille d'invitation : onglet de saisie par numéro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro'**
+  String get recipientInviteChannelPhone;
+
+  /// Feuille d'invitation : onglet de saisie par e-mail.
+  ///
+  /// In fr, this message translates to:
+  /// **'E-mail'**
+  String get recipientInviteChannelEmail;
+
+  /// Feuille d'invitation : libellé du champ numéro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de téléphone'**
+  String get recipientInvitePhoneLabel;
+
+  /// Feuille d'invitation : exemple du champ numéro.
+  ///
+  /// In fr, this message translates to:
+  /// **'ex. +221 77 123 45 67'**
+  String get recipientInvitePhoneHint;
+
+  /// Feuille d'invitation : libellé du champ e-mail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse e-mail'**
+  String get recipientInviteEmailLabel;
+
+  /// Feuille d'invitation : exemple du champ e-mail.
+  ///
+  /// In fr, this message translates to:
+  /// **'ex. awa@exemple.com'**
+  String get recipientInviteEmailHint;
+
+  /// Feuille d'invitation : erreur de format du numéro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez le numéro avec l\'indicatif du pays (ex. +221).'**
+  String get recipientInvitePhoneInvalid;
+
+  /// Feuille d'invitation : erreur de format de l'e-mail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse e-mail invalide.'**
+  String get recipientInviteEmailInvalid;
+
+  /// Feuille d'invitation : bouton d'envoi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer l\'invitation'**
+  String get recipientInviteSubmit;
+
+  /// Snackbar après l'envoi d'une invitation, identique que le compte existe ou non.
+  ///
+  /// In fr, this message translates to:
+  /// **'Invitation envoyée. Si cette personne a Yadony, elle pourra accepter.'**
+  String get recipientInviteSent;
+
+  /// Feuille d'invitation : quota d'invitations atteint (429).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez envoyé beaucoup d\'invitations aujourd\'hui. Réessayez demain.'**
+  String get recipientInviteQuota;
+
+  /// Carnet : puce d'un destinataire qui a accepté l'invitation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans Yadony'**
+  String get recipientLinkedOnYadonyChip;
+
+  /// Carnet : titre de la section des invitations envoyées.
+  ///
+  /// In fr, this message translates to:
+  /// **'Invitations envoyées'**
+  String get recipientSentInvitationsTitle;
+
+  /// Carnet : statut d'une invitation non acceptée.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente'**
+  String get recipientSentInvitationPending;
+
+  /// Carnet : statut d'une invitation acceptée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Acceptée'**
+  String get recipientSentInvitationAccepted;
+
+  /// Carnet : titre du dialogue d'annulation d'une invitation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler l\'invitation ?'**
+  String get recipientSentInvitationCancelTitle;
+
+  /// Carnet : message du dialogue d'annulation d'une invitation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ses colis ne lui seront plus rattachés directement.'**
+  String get recipientSentInvitationCancelMessage;
+
+  /// Carnet : action d'annulation d'une invitation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler l\'invitation'**
+  String get recipientSentInvitationCancelAction;
+
+  /// Écran invité : titre.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes d\'expéditeurs'**
+  String get recipientInvitationsTitle;
+
+  /// Écran invité : section des demandes en attente.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes reçues'**
+  String get recipientInvitationsPendingSection;
+
+  /// Écran invité et Confidentialité : expéditeurs qui rattachent leurs colis directement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Expéditeurs autorisés'**
+  String get recipientInvitationsAuthorizedSection;
+
+  /// Écran invité : titre d'une demande.
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} veut vous ajouter à ses destinataires'**
+  String recipientInvitationRequestTitle(String name);
+
+  /// Écran invité : texte d'accord sous une demande.
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} verra votre nom et votre numéro, et ses colis vous seront rattachés directement.'**
+  String recipientInvitationConsent(String name);
+
+  /// Écran invité : bouton d'acceptation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter'**
+  String get recipientInvitationAccept;
+
+  /// Écran invité : bouton de refus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser'**
+  String get recipientInvitationDecline;
+
+  /// Écran invité : sous-titre d'un expéditeur autorisé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ses colis vous sont rattachés directement.'**
+  String get recipientInvitationAuthorizedSubtitle;
+
+  /// Écran invité : bouton de retrait d'un expéditeur autorisé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer'**
+  String get recipientInvitationRemove;
+
+  /// Écran invité : titre du dialogue de retrait.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer {name} ?'**
+  String recipientInvitationRemoveTitle(String name);
+
+  /// Écran invité : message du dialogue de retrait.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ses prochains colis vous demanderont à nouveau de confirmer qu\'ils sont pour vous.'**
+  String get recipientInvitationRemoveMessage;
+
+  /// Écran invité : état vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande'**
+  String get recipientInvitationsEmptyTitle;
+
+  /// Écran invité : description de l'état vide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand un expéditeur voudra vous ajouter à ses destinataires, sa demande apparaîtra ici.'**
+  String get recipientInvitationsEmptyDescription;
+
+  /// Écran invité : dialogue quand le compte n'a pas de numéro (409).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez votre numéro'**
+  String get recipientInvitationPhoneRequiredTitle;
+
+  /// Écran invité : message du dialogue quand le compte n'a pas de numéro (409).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour accepter, votre compte doit avoir un numéro de téléphone : c\'est lui qui relie les colis à vous.'**
+  String get recipientInvitationPhoneRequiredMessage;
+
+  /// Écran invité : bouton vers l'ajout de numéro du profil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un numéro'**
+  String get recipientInvitationPhoneRequiredAction;
+
+  /// Écran invité : snackbar après acceptation.
+  ///
+  /// In fr, this message translates to:
+  /// **'{name} peut maintenant vous rattacher ses colis.'**
+  String recipientInvitationAcceptedMessage(String name);
+
+  /// Onglet Suivi : bandeau des demandes d'expéditeurs en attente.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 demande d\'expéditeur} other{{count} demandes d\'expéditeurs}}'**
+  String recipientInvitationsBanner(int count);
+
+  /// Onglet Suivi : sous-titre du bandeau des demandes d'expéditeurs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Acceptez pour suivre leurs colis sans rien confirmer.'**
+  String get recipientInvitationsBannerSubtitle;
+
+  /// Confidentialité : sous-titre de l'entrée Expéditeurs autorisés.
+  ///
+  /// In fr, this message translates to:
+  /// **'Qui peut vous rattacher ses colis'**
+  String get privacyRecipientInvitationsSubtitle;
+
+  /// Formulaire de réservation : numéro du destinataire qui n'est pas au format international.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro invalide : ajoutez l\'indicatif du pays (ex. +221 77 123 45 67).'**
+  String get bidCreateRecipientPhoneInvalidError;
+
+  /// Formulaire de réservation : mention sous le champ quand le destinataire choisi a accepté l'invitation.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans Yadony : il suivra le colis dans l\'app.'**
+  String get recipientSectionLinkedOnYadony;
 }
 
 class _AppLocalizationsDelegate

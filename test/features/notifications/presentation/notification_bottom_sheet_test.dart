@@ -226,6 +226,15 @@ void main() {
       expect(await iconAssetFor(tester, 'RECIPIENT_PICKUP_UPDATED'), 'map-pin');
     });
 
+    testWidgets('destinataire Yadony par invitation (lot 4)', (tester) async {
+      expect(await iconAssetFor(tester, 'RECIPIENT_INVITATION'), 'user-plus');
+      expect(
+        await iconAssetFor(tester, 'RECIPIENT_INVITATION_ACCEPTED'),
+        'badge-check',
+      );
+      expect(await iconAssetFor(tester, 'RECIPIENT_PARCEL_ANNOUNCED'), 'inbox');
+    });
+
     /// Les trois familles qui tombaient sur la cloche générique avant d'être
     /// cartographiées — le test garde la régression fermée.
     testWidgets(

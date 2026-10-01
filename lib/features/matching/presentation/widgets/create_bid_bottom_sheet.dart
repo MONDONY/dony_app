@@ -38,6 +38,7 @@ import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
+import 'package:dony/features/recipients/data/phone_validation.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -181,6 +182,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   final _descCtrl = TextEditingController();
   final _recipientNameCtrl = TextEditingController();
   final _recipientPhoneCtrl = TextEditingController();
+
+  /// Erreur de format du numéro du destinataire, affichée après la perte de
+  /// focus (jamais pendant la frappe).
+  final _recipientPhoneErrorNotifier = ValueNotifier<bool>(false);
   final _recipientSection = RecipientSectionController();
   late final ValueNotifier<double> _weightNotifier;
   final _categoriesNotifier = ValueNotifier<Set<String>>({});
@@ -336,6 +341,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _disclaimerNotifier.addListener(_syncFormButtonState);
     _gridQuantitiesNotifier.addListener(_syncFormButtonState);
     _customItemsNotifier.addListener(_syncFormButtonState);
+    _recipientPhoneCtrl.addListener(_syncFormButtonState);
+    _recipientPhoneCtrl.addListener(_clearRecipientPhoneErrorIfFixed);
 
     _weightNotifier.addListener(_invalidateQuote);
     _gridQuantitiesNotifier.addListener(_invalidateQuote);
@@ -462,7 +469,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _photosCubit.close();
     _descCtrl.dispose();
     _recipientNameCtrl.dispose();
+    _recipientPhoneCtrl.removeListener(_syncFormButtonState);
+    _recipientPhoneCtrl.removeListener(_clearRecipientPhoneErrorIfFixed);
     _recipientPhoneCtrl.dispose();
+    _recipientPhoneErrorNotifier.dispose();
     _promoCtrl.dispose();
     _payerPhoneCtrl.dispose();
     _weightNotifier.removeListener(_syncFormButtonState);
@@ -512,7 +522,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     // couvre déjà) — pas de combobox à remplir séparément.
     final categoriesOk = _isGridOnly || _categoriesNotifier.value.isNotEmpty;
     final canSubmit =
-        (weightOk || gridOk) && categoriesOk && _disclaimerNotifier.value;
+        (weightOk || gridOk) &&
+        categoriesOk &&
+        _disclaimerNotifier.value &&
+        // Numéro saisi mais pas international, même après l'indicatif du
+        // pays d'arrivée : bloqué, l'erreur s'affiche sous le champ. Vide, il
+        // reste réclamé à l'envoi par « Téléphone du destinataire
+        // obligatoire ».
+        (_recipientPhoneCtrl.text.trim().isEmpty || _recipientPhoneValid);
 
     if (widget.negotiation) {
       // Comme l'offre directe : le formulaire mène à l'étape « Comment veux-tu
@@ -537,6 +554,48 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       iconAsset: 'send',
       onPressed: canSubmit ? _goToPicker : null,
     );
+  }
+
+  // ── Numéro du destinataire ──────────────────────────────────────────────────
+
+  /// Numéro saisi au format international, indicatif du pays d'arrivée du
+  /// trajet ajouté s'il manque (cf. [internationalizeRecipientPhone]).
+  String get _recipientPhoneIntl => internationalizeRecipientPhone(
+    _recipientPhoneCtrl.text,
+    widget.announcement.arrivalCountryCode,
+  );
+
+  bool get _recipientPhoneValid =>
+      kRecipientPhoneE164.hasMatch(_recipientPhoneIntl);
+
+  /// Réécrit le champ au format international quand la saisie le permet, puis
+  /// signale une saisie qui reste invalide. À la perte de focus et à la
+  /// soumission.
+  void _applyRecipientPhoneFormat() {
+    final raw = _recipientPhoneCtrl.text;
+    if (raw.trim().isEmpty) {
+      _recipientPhoneErrorNotifier.value = false;
+      return;
+    }
+    final intl = _recipientPhoneIntl;
+    final valid = kRecipientPhoneE164.hasMatch(intl);
+    if (valid && intl != raw) _recipientPhoneCtrl.text = intl;
+    _recipientPhoneErrorNotifier.value = !valid;
+  }
+
+  void _clearRecipientPhoneErrorIfFixed() {
+    if (_recipientPhoneErrorNotifier.value && _recipientPhoneValid) {
+      _recipientPhoneErrorNotifier.value = false;
+    }
+  }
+
+  /// Contrôle du numéro avant envoi : `false` (et message) s'il n'est pas
+  /// international après préfixage.
+  bool _checkRecipientPhone() {
+    _applyRecipientPhoneFormat();
+    if (_recipientPhoneValid) return true;
+    _showError(context.l10n.bidCreateRecipientPhoneInvalidError);
+    return false;
   }
 
   void _syncPickerButtonState() {
@@ -637,6 +696,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _showError(context.l10n.bidCreateRecipientPhoneRequiredError);
       return;
     }
+    if (!_checkRecipientPhone()) return;
     if (_readProposal() == null) {
       _showError(context.l10n.bidCreatePriceRequiredError);
       return;
@@ -777,6 +837,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _showError(context.l10n.bidCreateRecipientPhoneRequiredError);
       return;
     }
+    if (!_checkRecipientPhone()) return;
 
     // Validation passed — save the manually-entered recipient now, while
     // RecipientSection is still mounted. Unlike the single-step hosts, this
@@ -1272,11 +1333,23 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   hint: context.l10n.bidCreateRecipientNameHint,
                 ).animate().fadeIn(delay: 160.ms),
                 const SizedBox(height: DonySpacing.md),
-                DonyTextField(
-                  controller: _recipientPhoneCtrl,
-                  label: context.l10n.bidCreateRecipientPhoneLabel,
-                  hint: context.l10n.bidCreateRecipientPhoneHint,
-                  keyboardType: TextInputType.phone,
+                Focus(
+                  onFocusChange: (focused) {
+                    if (!focused) _applyRecipientPhoneFormat();
+                  },
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _recipientPhoneErrorNotifier,
+                    builder: (context, invalid, _) => DonyTextField(
+                      key: const Key('bid-recipient-phone-field'),
+                      controller: _recipientPhoneCtrl,
+                      label: context.l10n.bidCreateRecipientPhoneLabel,
+                      hint: context.l10n.bidCreateRecipientPhoneHint,
+                      keyboardType: TextInputType.phone,
+                      errorText: invalid
+                          ? context.l10n.bidCreateRecipientPhoneInvalidError
+                          : null,
+                    ),
+                  ),
                 ).animate().fadeIn(delay: 180.ms),
               ],
             ),

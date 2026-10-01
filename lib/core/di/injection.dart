@@ -169,8 +169,13 @@ import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
 import 'package:dony/features/receptions/bloc/receptions_cubit.dart';
 import 'package:dony/features/receptions/data/datasources/reception_remote_datasource.dart';
 import 'package:dony/features/receptions/data/repositories/reception_repository.dart';
+import 'package:dony/features/recipients/bloc/incoming_invitations_cubit.dart';
+import 'package:dony/features/recipients/bloc/invite_recipient_cubit.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/features/recipients/bloc/sent_invitations_cubit.dart';
 import 'package:dony/features/recipients/data/datasources/recipient_datasource.dart';
+import 'package:dony/features/recipients/data/datasources/recipient_invitation_datasource.dart';
+import 'package:dony/features/recipients/data/repositories/recipient_invitation_repository.dart';
 import 'package:dony/features/recipients/data/repositories/recipient_repository.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/data/referral_datasource.dart';
@@ -1022,6 +1027,32 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<RecipientBloc>(
     () =>
         RecipientBloc(getIt<RecipientRepository>(), getIt<AnalyticsService>()),
+  );
+
+  // Destinataire Yadony par invitation (lot 4)
+  getIt.registerLazySingleton<RecipientInvitationDatasource>(
+    () => RecipientInvitationDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<RecipientInvitationRepository>(
+    () => RecipientInvitationRepository(getIt<RecipientInvitationDatasource>()),
+  );
+  getIt.registerFactory<InviteRecipientCubit>(
+    () => InviteRecipientCubit(
+      getIt<RecipientInvitationRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<SentInvitationsCubit>(
+    () => SentInvitationsCubit(
+      getIt<RecipientInvitationRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<IncomingInvitationsCubit>(
+    () => IncomingInvitationsCubit(
+      getIt<RecipientInvitationRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Subscriptions (abonnements voyageurs)

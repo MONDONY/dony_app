@@ -15319,4 +15319,163 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get conversationKindTravelerFallback => 'Traveler';
+
+  @override
+  String get recipientInviteAction => 'Add a Yadony recipient';
+
+  @override
+  String get recipientInviteActionSubtitle =>
+      'Find them by phone number or email: their parcels will be linked to them.';
+
+  @override
+  String get recipientInviteSheetIntro =>
+      'They will get a request in Yadony. If they accept, your parcels will be linked to them directly, with no confirmation.';
+
+  @override
+  String get recipientInviteChannelPhone => 'Phone number';
+
+  @override
+  String get recipientInviteChannelEmail => 'Email';
+
+  @override
+  String get recipientInvitePhoneLabel => 'Phone number';
+
+  @override
+  String get recipientInvitePhoneHint => 'e.g. +221 77 123 45 67';
+
+  @override
+  String get recipientInviteEmailLabel => 'Email address';
+
+  @override
+  String get recipientInviteEmailHint => 'e.g. awa@example.com';
+
+  @override
+  String get recipientInvitePhoneInvalid =>
+      'Enter the number with the country code (e.g. +221).';
+
+  @override
+  String get recipientInviteEmailInvalid => 'Invalid email address.';
+
+  @override
+  String get recipientInviteSubmit => 'Send invitation';
+
+  @override
+  String get recipientInviteSent =>
+      'Invitation sent. If this person has Yadony, they will be able to accept.';
+
+  @override
+  String get recipientInviteQuota =>
+      'You have sent a lot of invitations today. Please try again tomorrow.';
+
+  @override
+  String get recipientLinkedOnYadonyChip => 'On Yadony';
+
+  @override
+  String get recipientSentInvitationsTitle => 'Sent invitations';
+
+  @override
+  String get recipientSentInvitationPending => 'Pending';
+
+  @override
+  String get recipientSentInvitationAccepted => 'Accepted';
+
+  @override
+  String get recipientSentInvitationCancelTitle => 'Cancel this invitation?';
+
+  @override
+  String get recipientSentInvitationCancelMessage =>
+      'Your parcels will no longer be linked to them directly.';
+
+  @override
+  String get recipientSentInvitationCancelAction => 'Cancel invitation';
+
+  @override
+  String get recipientInvitationsTitle => 'Sender requests';
+
+  @override
+  String get recipientInvitationsPendingSection => 'Received requests';
+
+  @override
+  String get recipientInvitationsAuthorizedSection => 'Authorized senders';
+
+  @override
+  String recipientInvitationRequestTitle(String name) {
+    return '$name wants to add you as a recipient';
+  }
+
+  @override
+  String recipientInvitationConsent(String name) {
+    return '$name will see your name and phone number, and their parcels will be linked to you directly.';
+  }
+
+  @override
+  String get recipientInvitationAccept => 'Accept';
+
+  @override
+  String get recipientInvitationDecline => 'Decline';
+
+  @override
+  String get recipientInvitationAuthorizedSubtitle =>
+      'Their parcels are linked to you directly.';
+
+  @override
+  String get recipientInvitationRemove => 'Remove';
+
+  @override
+  String recipientInvitationRemoveTitle(String name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String get recipientInvitationRemoveMessage =>
+      'Their next parcels will ask you again to confirm they are for you.';
+
+  @override
+  String get recipientInvitationsEmptyTitle => 'No requests';
+
+  @override
+  String get recipientInvitationsEmptyDescription =>
+      'When a sender wants to add you as a recipient, their request will show up here.';
+
+  @override
+  String get recipientInvitationPhoneRequiredTitle => 'Add your phone number';
+
+  @override
+  String get recipientInvitationPhoneRequiredMessage =>
+      'To accept, your account needs a phone number: it is what links parcels to you.';
+
+  @override
+  String get recipientInvitationPhoneRequiredAction => 'Add a number';
+
+  @override
+  String recipientInvitationAcceptedMessage(String name) {
+    return '$name can now link their parcels to you.';
+  }
+
+  @override
+  String recipientInvitationsBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sender requests',
+      one: '1 sender request',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipientInvitationsBannerSubtitle =>
+      'Accept to follow their parcels without confirming anything.';
+
+  @override
+  String get privacyRecipientInvitationsSubtitle =>
+      'Who can link their parcels to you';
+
+  @override
+  String get bidCreateRecipientPhoneInvalidError =>
+      'Invalid number: add the country code (e.g. +221 77 123 45 67).';
+
+  @override
+  String get recipientSectionLinkedOnYadony =>
+      'On Yadony: they will follow the parcel in the app.';
 }

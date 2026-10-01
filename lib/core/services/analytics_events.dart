@@ -450,6 +450,10 @@ abstract final class AnalyticsEvents {
   static const recipientDefaultSet = 'recipient_default_set';
   static const recipientSelected = 'recipient_selected';
   static const recipientPickerOpened = 'recipient_picker_opened';
+  // Destinataire Yadony par invitation (lot 4). Jamais le numéro ni l'email.
+  static const recipientInvitationSent = 'recipient_invitation_sent';
+  static const recipientInvitationAnswered = 'recipient_invitation_answered';
+  static const recipientInvitationRevoked = 'recipient_invitation_revoked';
 
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';

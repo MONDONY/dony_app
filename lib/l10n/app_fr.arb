@@ -17796,5 +17796,202 @@
   "conversationKindTravelerFallback": "Voyageur",
   "@conversationKindTravelerFallback": {
     "description": "Liste des conversations : rôle de l'interlocuteur d'une conversation voyageur ↔ destinataire quand le serveur ne le donne pas (vu par le destinataire)."
+  },
+  "recipientInviteAction": "Ajouter un destinataire Yadony",
+  "@recipientInviteAction": {
+    "description": "Carnet de destinataires : action qui ouvre la feuille d'invitation d'un destinataire qui a l'app."
+  },
+  "recipientInviteActionSubtitle": "Retrouvez-le par son numéro ou son e-mail : ses colis lui seront rattachés.",
+  "@recipientInviteActionSubtitle": {
+    "description": "Carnet de destinataires : sous-titre de l'action d'invitation."
+  },
+  "recipientInviteSheetIntro": "Il recevra une demande dans Yadony. S'il accepte, vos colis lui seront rattachés directement, sans confirmation.",
+  "@recipientInviteSheetIntro": {
+    "description": "Feuille d'invitation : texte d'introduction."
+  },
+  "recipientInviteChannelPhone": "Numéro",
+  "@recipientInviteChannelPhone": {
+    "description": "Feuille d'invitation : onglet de saisie par numéro."
+  },
+  "recipientInviteChannelEmail": "E-mail",
+  "@recipientInviteChannelEmail": {
+    "description": "Feuille d'invitation : onglet de saisie par e-mail."
+  },
+  "recipientInvitePhoneLabel": "Numéro de téléphone",
+  "@recipientInvitePhoneLabel": {
+    "description": "Feuille d'invitation : libellé du champ numéro."
+  },
+  "recipientInvitePhoneHint": "ex. +221 77 123 45 67",
+  "@recipientInvitePhoneHint": {
+    "description": "Feuille d'invitation : exemple du champ numéro."
+  },
+  "recipientInviteEmailLabel": "Adresse e-mail",
+  "@recipientInviteEmailLabel": {
+    "description": "Feuille d'invitation : libellé du champ e-mail."
+  },
+  "recipientInviteEmailHint": "ex. awa@exemple.com",
+  "@recipientInviteEmailHint": {
+    "description": "Feuille d'invitation : exemple du champ e-mail."
+  },
+  "recipientInvitePhoneInvalid": "Saisissez le numéro avec l'indicatif du pays (ex. +221).",
+  "@recipientInvitePhoneInvalid": {
+    "description": "Feuille d'invitation : erreur de format du numéro."
+  },
+  "recipientInviteEmailInvalid": "Adresse e-mail invalide.",
+  "@recipientInviteEmailInvalid": {
+    "description": "Feuille d'invitation : erreur de format de l'e-mail."
+  },
+  "recipientInviteSubmit": "Envoyer l'invitation",
+  "@recipientInviteSubmit": {
+    "description": "Feuille d'invitation : bouton d'envoi."
+  },
+  "recipientInviteSent": "Invitation envoyée. Si cette personne a Yadony, elle pourra accepter.",
+  "@recipientInviteSent": {
+    "description": "Snackbar après l'envoi d'une invitation, identique que le compte existe ou non."
+  },
+  "recipientInviteQuota": "Vous avez envoyé beaucoup d'invitations aujourd'hui. Réessayez demain.",
+  "@recipientInviteQuota": {
+    "description": "Feuille d'invitation : quota d'invitations atteint (429)."
+  },
+  "recipientLinkedOnYadonyChip": "Dans Yadony",
+  "@recipientLinkedOnYadonyChip": {
+    "description": "Carnet : puce d'un destinataire qui a accepté l'invitation."
+  },
+  "recipientSentInvitationsTitle": "Invitations envoyées",
+  "@recipientSentInvitationsTitle": {
+    "description": "Carnet : titre de la section des invitations envoyées."
+  },
+  "recipientSentInvitationPending": "En attente",
+  "@recipientSentInvitationPending": {
+    "description": "Carnet : statut d'une invitation non acceptée."
+  },
+  "recipientSentInvitationAccepted": "Acceptée",
+  "@recipientSentInvitationAccepted": {
+    "description": "Carnet : statut d'une invitation acceptée."
+  },
+  "recipientSentInvitationCancelTitle": "Annuler l'invitation ?",
+  "@recipientSentInvitationCancelTitle": {
+    "description": "Carnet : titre du dialogue d'annulation d'une invitation."
+  },
+  "recipientSentInvitationCancelMessage": "Ses colis ne lui seront plus rattachés directement.",
+  "@recipientSentInvitationCancelMessage": {
+    "description": "Carnet : message du dialogue d'annulation d'une invitation."
+  },
+  "recipientSentInvitationCancelAction": "Annuler l'invitation",
+  "@recipientSentInvitationCancelAction": {
+    "description": "Carnet : action d'annulation d'une invitation."
+  },
+  "recipientInvitationsTitle": "Demandes d'expéditeurs",
+  "@recipientInvitationsTitle": {
+    "description": "Écran invité : titre."
+  },
+  "recipientInvitationsPendingSection": "Demandes reçues",
+  "@recipientInvitationsPendingSection": {
+    "description": "Écran invité : section des demandes en attente."
+  },
+  "recipientInvitationsAuthorizedSection": "Expéditeurs autorisés",
+  "@recipientInvitationsAuthorizedSection": {
+    "description": "Écran invité et Confidentialité : expéditeurs qui rattachent leurs colis directement."
+  },
+  "recipientInvitationRequestTitle": "{name} veut vous ajouter à ses destinataires",
+  "@recipientInvitationRequestTitle": {
+    "description": "Écran invité : titre d'une demande.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientInvitationConsent": "{name} verra votre nom et votre numéro, et ses colis vous seront rattachés directement.",
+  "@recipientInvitationConsent": {
+    "description": "Écran invité : texte d'accord sous une demande.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientInvitationAccept": "Accepter",
+  "@recipientInvitationAccept": {
+    "description": "Écran invité : bouton d'acceptation."
+  },
+  "recipientInvitationDecline": "Refuser",
+  "@recipientInvitationDecline": {
+    "description": "Écran invité : bouton de refus."
+  },
+  "recipientInvitationAuthorizedSubtitle": "Ses colis vous sont rattachés directement.",
+  "@recipientInvitationAuthorizedSubtitle": {
+    "description": "Écran invité : sous-titre d'un expéditeur autorisé."
+  },
+  "recipientInvitationRemove": "Retirer",
+  "@recipientInvitationRemove": {
+    "description": "Écran invité : bouton de retrait d'un expéditeur autorisé."
+  },
+  "recipientInvitationRemoveTitle": "Retirer {name} ?",
+  "@recipientInvitationRemoveTitle": {
+    "description": "Écran invité : titre du dialogue de retrait.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientInvitationRemoveMessage": "Ses prochains colis vous demanderont à nouveau de confirmer qu'ils sont pour vous.",
+  "@recipientInvitationRemoveMessage": {
+    "description": "Écran invité : message du dialogue de retrait."
+  },
+  "recipientInvitationsEmptyTitle": "Aucune demande",
+  "@recipientInvitationsEmptyTitle": {
+    "description": "Écran invité : état vide."
+  },
+  "recipientInvitationsEmptyDescription": "Quand un expéditeur voudra vous ajouter à ses destinataires, sa demande apparaîtra ici.",
+  "@recipientInvitationsEmptyDescription": {
+    "description": "Écran invité : description de l'état vide."
+  },
+  "recipientInvitationPhoneRequiredTitle": "Ajoutez votre numéro",
+  "@recipientInvitationPhoneRequiredTitle": {
+    "description": "Écran invité : dialogue quand le compte n'a pas de numéro (409)."
+  },
+  "recipientInvitationPhoneRequiredMessage": "Pour accepter, votre compte doit avoir un numéro de téléphone : c'est lui qui relie les colis à vous.",
+  "@recipientInvitationPhoneRequiredMessage": {
+    "description": "Écran invité : message du dialogue quand le compte n'a pas de numéro (409)."
+  },
+  "recipientInvitationPhoneRequiredAction": "Ajouter un numéro",
+  "@recipientInvitationPhoneRequiredAction": {
+    "description": "Écran invité : bouton vers l'ajout de numéro du profil."
+  },
+  "recipientInvitationAcceptedMessage": "{name} peut maintenant vous rattacher ses colis.",
+  "@recipientInvitationAcceptedMessage": {
+    "description": "Écran invité : snackbar après acceptation.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipientInvitationsBanner": "{count, plural, =1{1 demande d'expéditeur} other{{count} demandes d'expéditeurs}}",
+  "@recipientInvitationsBanner": {
+    "description": "Onglet Suivi : bandeau des demandes d'expéditeurs en attente.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipientInvitationsBannerSubtitle": "Acceptez pour suivre leurs colis sans rien confirmer.",
+  "@recipientInvitationsBannerSubtitle": {
+    "description": "Onglet Suivi : sous-titre du bandeau des demandes d'expéditeurs."
+  },
+  "privacyRecipientInvitationsSubtitle": "Qui peut vous rattacher ses colis",
+  "@privacyRecipientInvitationsSubtitle": {
+    "description": "Confidentialité : sous-titre de l'entrée Expéditeurs autorisés."
+  },
+  "bidCreateRecipientPhoneInvalidError": "Numéro invalide : ajoutez l'indicatif du pays (ex. +221 77 123 45 67).",
+  "@bidCreateRecipientPhoneInvalidError": {
+    "description": "Formulaire de réservation : numéro du destinataire qui n'est pas au format international."
+  },
+  "recipientSectionLinkedOnYadony": "Dans Yadony : il suivra le colis dans l'app.",
+  "@recipientSectionLinkedOnYadony": {
+    "description": "Formulaire de réservation : mention sous le champ quand le destinataire choisi a accepté l'invitation."
   }
 }

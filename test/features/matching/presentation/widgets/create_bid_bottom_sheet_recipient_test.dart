@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
@@ -413,6 +413,87 @@ void main() {
       verifyNever(
         () => _currentRecipientBloc.add(any(that: isA<RecipientCreated>())),
       );
+    });
+  });
+
+  group('Numéro du destinataire au format international (lot 4)', () {
+    Finder phoneField() => find.byKey(const Key('bid-recipient-phone-field'));
+
+    DonyButton sendButton(WidgetTester tester) =>
+        tester.widget<DonyButton>(find.widgetWithText(DonyButton, 'Envoyer'));
+
+    testWidgets("perte de focus : l'indicatif du pays d'arrivée est ajouté", (
+      tester,
+    ) async {
+      await _openSheet(tester, _announcement());
+      // Côte d'Ivoire : le zéro initial fait partie du numéro.
+      await _fillMandatoryFields(tester, phone: '07 48 84 08 74');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump();
+
+      final field = tester.widget<TextField>(
+        find.descendant(of: phoneField(), matching: find.byType(TextField)),
+      );
+      expect(field.controller!.text, '+2250748840874');
+    });
+
+    testWidgets('envoi sans perte de focus : numéro préfixé envoyé', (
+      tester,
+    ) async {
+      await _openSheet(tester, _announcement());
+      await _enableSubmitButton(tester);
+      await _fillMandatoryFields(tester, phone: '07 48 84 08 74');
+
+      await tester.tap(find.text('Envoyer'));
+      await tester.pump();
+
+      final checkout = verify(
+        () => _currentBidBloc.add(captureAny()),
+      ).captured.whereType<BidCheckoutRequested>().single;
+      expect(checkout.recipientPhone, '+2250748840874');
+      final created = verify(
+        () => _currentRecipientBloc.add(captureAny()),
+      ).captured.whereType<RecipientCreated>().single;
+      expect(created.phoneE164, '+2250748840874');
+    });
+
+    testWidgets('00 devient + avant envoi', (tester) async {
+      await _openSheet(tester, _announcement());
+      await _enableSubmitButton(tester);
+      await _fillMandatoryFields(tester, phone: '00221 77 111 22 33');
+
+      await tester.tap(find.text('Envoyer'));
+      await tester.pump();
+
+      final checkout = verify(
+        () => _currentBidBloc.add(captureAny()),
+      ).captured.whereType<BidCheckoutRequested>().single;
+      expect(checkout.recipientPhone, '+221771112233');
+    });
+
+    testWidgets('numéro invalide : erreur sous le champ et envoi bloqué', (
+      tester,
+    ) async {
+      await _openSheet(tester, _announcement());
+      await _enableSubmitButton(tester);
+      await _fillMandatoryFields(tester, phone: '12');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump();
+
+      expect(
+        find.text(
+          "Numéro invalide : ajoutez l'indicatif du pays "
+          '(ex. +221 77 123 45 67).',
+        ),
+        findsOneWidget,
+      );
+      expect(sendButton(tester).onPressed, isNull);
+
+      // Corrigé : l'erreur disparaît et l'envoi se débloque.
+      await tester.enterText(phoneField(), '+221771112233');
+      await tester.pump();
+      expect(find.textContaining('Numéro invalide'), findsNothing);
+      expect(sendButton(tester).onPressed, isNotNull);
     });
   });
 }
