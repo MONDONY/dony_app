@@ -602,11 +602,9 @@ class _TripFormContentState extends State<_TripFormContent> {
     const <_Step1Field>{},
   );
 
-  final _selectedContentNotifier = ValueNotifier<Set<String>>({
-    'Vêtements & tissus', // i18n-ignore : valeur stockée (ContentCategory.label)
-    'Médicaments traditionnels', // i18n-ignore
-    'Documents & administratif', // i18n-ignore : idem, sans accent
-  });
+  // Rien de coché d'office : trois catégories présélectionnées étaient
+  // « pas utiles » (FLUTTER-1Y). Une liste vide = tous les contenus acceptés.
+  final _selectedContentNotifier = ValueNotifier<Set<String>>({});
   final _customAcceptedNotifier = ValueNotifier<Set<String>>({});
   // Catalogue de types de contenu — seedé synchrone avec le catalogue
   // embarqué (fallbackCatalog), puis remplacé par le catalogue live du
@@ -1385,10 +1383,15 @@ class _TripFormContentState extends State<_TripFormContent> {
         ? _formatTime(arrivalTimeVal)
         : null;
 
-    final allAccepted = {
-      ..._selectedContentNotifier.value,
-      ..._customAcceptedNotifier.value,
-    }.toList();
+    final allAccepted = acceptedContentWithPrecision(
+      selected: _selectedContentNotifier.value,
+      custom: _customAcceptedNotifier.value,
+      otherPrecision: _customAcceptedCtrl.text,
+    );
+    if (allAccepted == null) {
+      _showError(context.l10n.tripPublishOtherContentPrecisionRequired);
+      return;
+    }
     final refused = _refusedTypesNotifier.value.toList();
     final description = _descriptionCtrl.text.trim().isEmpty
         ? null

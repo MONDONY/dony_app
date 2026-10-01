@@ -575,22 +575,39 @@ class PrixConditionsStep extends StatelessWidget {
               ...customAcceptedNotifier.value,
             }.toList();
 
+            final otherSelected = combinedSelected.contains(kOtherContentLabel);
             return CaSectionCard(
               child: Padding(
                 padding: const EdgeInsets.all(DonySpacing.base),
-                child: ContentCategoryComboBox(
-                  keyPrefix: 'accepted-content',
-                  catalog: catalog,
-                  selected: combinedSelected,
-                  onChanged: (labels) {
-                    final labelSet = labels.toSet();
-                    selectedContentNotifier.value = labelSet
-                        .where(catalogSet.contains)
-                        .toSet();
-                    customAcceptedNotifier.value = labelSet
-                        .where((l) => !catalogSet.contains(l))
-                        .toSet();
-                  },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ContentCategoryComboBox(
+                      keyPrefix: 'accepted-content',
+                      catalog: catalog,
+                      selected: combinedSelected,
+                      onChanged: (labels) {
+                        final labelSet = labels.toSet();
+                        selectedContentNotifier.value = labelSet
+                            .where(catalogSet.contains)
+                            .toSet();
+                        customAcceptedNotifier.value = labelSet
+                            .where((l) => !catalogSet.contains(l))
+                            .toSet();
+                      },
+                    ),
+                    // « Autre » seul ne dit rien à l'expéditeur : une
+                    // précision est obligatoire (FLUTTER-4G).
+                    if (otherSelected) ...[
+                      const SizedBox(height: DonySpacing.md),
+                      DonyTextField(
+                        key: const Key('accepted-other-precision'),
+                        label: l.tripPublishOtherContentPrecisionLabel,
+                        hint: l.tripPublishOtherContentPrecisionHint,
+                        controller: customAcceptedCtrl,
+                      ),
+                    ],
+                  ],
                 ),
               ),
             );
@@ -1135,4 +1152,26 @@ class _LockedAgreedPriceCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Libellé de la catégorie « Autre » du catalogue (valeur de donnée).
+const kOtherContentLabel = 'Autre'; // i18n-ignore : valeur ContentCategory
+
+/// Contenus acceptés envoyés au back : « Autre » est remplacé par la
+/// précision du voyageur (FLUTTER-4G). `null` quand « Autre » est coché sans
+/// précision : l'appelant doit bloquer la publication.
+List<String>? acceptedContentWithPrecision({
+  required Set<String> selected,
+  required Set<String> custom,
+  required String otherPrecision,
+}) {
+  final all = {...selected, ...custom};
+  if (!all.contains(kOtherContentLabel)) return all.toList();
+  // Le back découpe les contenus sur « , » : pas de virgule dans un libellé.
+  final precision = otherPrecision
+      .replaceAll(',', ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
+  if (precision.isEmpty) return null;
+  return {...all.where((c) => c != kOtherContentLabel), precision}.toList();
 }

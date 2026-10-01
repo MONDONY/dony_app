@@ -14613,4 +14613,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidDetailContactTravelerAfterPaymentHint =>
       'You\'ll be able to contact the traveler once your payment is confirmed.';
+
+  @override
+  String get tripPublishOtherContentPrecisionLabel =>
+      'Specify what you accept under “Other”';
+
+  @override
+  String get tripPublishOtherContentPrecisionHint =>
+      'E.g. car parts, small appliances';
+
+  @override
+  String get tripPublishOtherContentPrecisionRequired =>
+      'You ticked “Other”: specify what you accept before publishing.';
 }

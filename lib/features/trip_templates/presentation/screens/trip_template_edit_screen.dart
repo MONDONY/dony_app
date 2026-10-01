@@ -310,10 +310,18 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       availableKg: _fields.availableKg.value.round(),
       pricingMode: formState.pricingMode == PricingMode.mixed ? 'MIXED' : 'KG',
       pricePerKg: _fields.pricePerKg,
-      acceptedCategories: {
-        ..._fields.selectedContent.value,
-        ..._fields.customAccepted.value,
-      }.toList(),
+      // Modèle : sans précision, « Autre » est gardé tel quel ; elle sera
+      // exigée à la publication du trajet (FLUTTER-4G).
+      acceptedCategories:
+          acceptedContentWithPrecision(
+            selected: _fields.selectedContent.value,
+            custom: _fields.customAccepted.value,
+            otherPrecision: _fields.customAcceptedCtrl.text,
+          ) ??
+          {
+            ..._fields.selectedContent.value,
+            ..._fields.customAccepted.value,
+          }.toList(),
       currency: _fields.currency.value.code,
       acceptedPaymentMethods: _fields.acceptedPaymentMethodsFor(
         stripeConfigured: stripeConfigured,

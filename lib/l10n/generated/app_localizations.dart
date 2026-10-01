@@ -24293,6 +24293,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Vous pourrez contacter le voyageur dès que votre paiement sera confirmé.'**
   String get bidDetailContactTravelerAfterPaymentHint;
+
+  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)
+  ///
+  /// In fr, this message translates to:
+  /// **'Précise ce que tu acceptes en « Autre »'**
+  String get tripPublishOtherContentPrecisionLabel;
+
+  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. pièces auto, petit électroménager'**
+  String get tripPublishOtherContentPrecisionHint;
+
+  /// Création de trajet, contenus acceptés : précision obligatoire quand « Autre » est coché (prix_conditions_step.dart, FLUTTER-4G)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu as coché « Autre » : précise ce que tu acceptes avant de publier.'**
+  String get tripPublishOtherContentPrecisionRequired;
 }
 
 class _AppLocalizationsDelegate
