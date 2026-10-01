@@ -71,6 +71,7 @@ AnnouncementModel _$AnnouncementModelFromJson(
       : TravelerProfile.fromJson(json['traveler'] as Map<String, dynamic>),
   description: json['description'] as String?,
   arrivalInstructions: json['arrivalInstructions'] as String?,
+  remainingReschedules: (json['remainingReschedules'] as num?)?.toInt(),
   acceptedContentTypes: (json['acceptedContentTypes'] as List<dynamic>?)
       ?.map((e) => e as String)
       .toList(),
@@ -131,6 +132,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'traveler': instance.traveler,
       'description': instance.description,
       'arrivalInstructions': instance.arrivalInstructions,
+      'remainingReschedules': instance.remainingReschedules,
       'acceptedContentTypes': instance.acceptedContentTypes,
       'refusedTypes': instance.refusedTypes,
       'createdAt': instance.createdAt.toIso8601String(),

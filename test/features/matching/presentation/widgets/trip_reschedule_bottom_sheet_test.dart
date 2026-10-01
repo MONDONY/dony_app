@@ -48,6 +48,7 @@ void main() {
     pricePerKg: 5,
     status: 'FULL',
     bidsCount: 2,
+    remainingReschedules: 1,
     createdAt: DateTime(2026, 9),
     updatedAt: DateTime(2026, 9),
   );
@@ -157,6 +158,15 @@ void main() {
         of: find.byKey(const Key('reschedule-summary')),
         matching: find.textContaining('${departure.day + 1}'),
       ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('annonce le dernier report possible', (tester) async {
+    await open(tester);
+
+    expect(
+      find.text('Dernier report possible pour ce trajet.'),
       findsOneWidget,
     );
   });
