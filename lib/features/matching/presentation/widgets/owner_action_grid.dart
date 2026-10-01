@@ -171,7 +171,10 @@ class OwnerActionGrid extends StatelessWidget {
           iconAsset: 'calendar-sync',
           label: l.tripRescheduleTile,
           accent: cs.primary,
-          onTap: () => TripRescheduleBottomSheet.show(context, announcement: a),
+          onTap: a.remainingReschedules == 0
+              ? null
+              : () => TripRescheduleBottomSheet.show(context, announcement: a),
+          disabledMessage: l.tripRescheduleLimitReachedMessage,
         ),
       // ── Supprimer (si supprimable) ou Annuler (si ACTIVE non supprimable) ──
       if (canDelete)

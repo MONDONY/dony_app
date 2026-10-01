@@ -24683,6 +24683,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Les expéditeurs vous remettent leur colis au plus tard ce jour-là. Elle suit la nouvelle date de départ.'**
   String get tripRescheduleHandoverHint;
+
+  /// Reports restants, sous le résumé de la feuille de report
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Dernier report possible pour ce trajet.} other{Encore {count} reports possibles pour ce trajet.}}'**
+  String tripRescheduleRemaining(int count);
+
+  /// Tuile Reporter grisée (owner_action_grid.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Déjà reporté 2 fois : annulez et publiez un nouveau trajet'**
+  String get tripRescheduleLimitReachedMessage;
 }
 
 class _AppLocalizationsDelegate
