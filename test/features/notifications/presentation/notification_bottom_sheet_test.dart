@@ -213,6 +213,11 @@ void main() {
       );
       expect(await iconAssetFor(tester, 'RECIPIENT_CONFIRMED'), 'badge-check');
       expect(await iconAssetFor(tester, 'RECIPIENT_DECLINED'), 'user-x');
+      expect(await iconAssetFor(tester, 'RECIPIENT_PARCEL_CANCELLED'), 'ban');
+      expect(
+        await iconAssetFor(tester, 'RECIPIENT_PARCEL_RESCHEDULED'),
+        'calendar',
+      );
     });
 
     /// Les trois familles qui tombaient sur la cloche générique avant d'être

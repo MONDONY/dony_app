@@ -668,6 +668,7 @@ class _NotificationIcon extends StatelessWidget {
       'PARCEL_REFUSED' => (cs.error, 'circle-x'),
       'negotiation_commission_declined' => (cs.error, 'circle-x'),
       'TRIP_CANCELLED' => (cs.error, 'ban'),
+      'RECIPIENT_PARCEL_CANCELLED' => (cs.error, 'ban'),
       'TRIP_RESCHEDULED' => (cs.warning, 'calendar-sync'),
       'TRIP_RESCHEDULE_KEPT' => (cs.success, 'check'),
       'TRIP_RESCHEDULE_WITHDRAWN' => (cs.error, 'calendar-x'),
@@ -682,6 +683,7 @@ class _NotificationIcon extends StatelessWidget {
       'DELIVERY_NOSHOW_REPORTED' => (cs.warning, 'user-x'),
       'CONFIRMATION_CODE_READY' => (cs.warning, 'qr-code'),
       'RECIPIENT_PARCEL_INCOMING' => (cs.warning, 'inbox'),
+      'RECIPIENT_PARCEL_RESCHEDULED' => (cs.warning, 'calendar'),
       'RECIPIENT_DECLINED' => (cs.warning, 'user-x'),
 
       // Informe / met en relation

@@ -75,7 +75,9 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'RECIPIENT_PARCEL_INCOMING' ||
     'RECIPIENT_PARCEL_DEPARTED' ||
     'RECIPIENT_PARCEL_ARRIVED' ||
-    'RECIPIENT_PARCEL_DELIVERED' when _isUuid(bidId) => '/receptions/$bidId',
+    'RECIPIENT_PARCEL_DELIVERED' ||
+    'RECIPIENT_PARCEL_CANCELLED' ||
+    'RECIPIENT_PARCEL_RESCHEDULED' when _isUuid(bidId) => '/receptions/$bidId',
     // Expéditeur : le destinataire a confirmé ou refusé, le détail d'envoi
     // le dit dans l'encart « Prévenir … ».
     'RECIPIENT_CONFIRMED' ||
