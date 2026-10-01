@@ -317,6 +317,31 @@ void main() {
     );
   });
 
+  // FLUTTER-J : un refus des notifications est un choix de l'utilisateur, pas
+  // une erreur. Il créait une issue Sentry à chaque session (55 événements).
+  test('notifications refusées : rien n\'est remonté comme erreur', () async {
+    final sink = _RecordingErrorSink();
+    final fcm = MockFirebaseMessaging();
+    final sessionProbe = MockFirebaseSessionProbe();
+    final deniedService = NotificationService(
+      apiClient,
+      repository,
+      deviceIdService,
+      ErrorReportingService(sink),
+      sessionProbe,
+      fcm,
+    );
+    when(() => sessionProbe.hasRealSession).thenReturn(true);
+    when(
+      () => fcm.getNotificationSettings(),
+    ).thenAnswer((_) async => _authSettings(AuthorizationStatus.denied));
+
+    await deniedService.onAppResumed();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(sink.contexts, isEmpty);
+  });
+
   group('NotificationService.retryOperation', () {
     test('retries transient failures until the operation succeeds', () async {
       var attempts = 0;
