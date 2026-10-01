@@ -400,6 +400,8 @@ void main() {
       'RECIPIENT_PARCEL_DEPARTED',
       'RECIPIENT_PARCEL_ARRIVED',
       'RECIPIENT_PARCEL_DELIVERED',
+      'RECIPIENT_PARCEL_CANCELLED',
+      'RECIPIENT_PARCEL_RESCHEDULED',
     ]) {
       test('$type ouvre le colis à recevoir', () {
         expect(
