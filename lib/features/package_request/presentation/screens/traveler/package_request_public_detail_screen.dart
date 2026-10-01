@@ -318,29 +318,11 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
         _ => l.requestCreateRecapSize,
       };
 
-  bool get _isOwner => currentUserId == request.senderId;
-
-  /// Montant affiché selon qui regarde, jamais les deux côte à côte (le taux
-  /// de commission se lirait par soustraction). L'expéditeur voit ce qu'il
-  /// paie : le brut, repli sur le net si le serveur ne le sert pas encore.
-  /// Un voyageur voit ce qu'il recevra : le net (`targetPriceEur`, PR #219),
-  /// le même montant que « Prendre à X » et la feuille d'offre. La carte
-  /// affichait le brut au voyageur et le bouton le net (FLUTTER-56).
-  double? get _displayPrice => _isOwner
-      ? request.grossPriceEur ?? request.targetPriceEur
-      : request.targetPriceEur;
-
-  /// Repère « environ » du serveur, calculé sur le brut : ramené au net pour
-  /// un voyageur (conversion linéaire, même ratio net/brut).
-  double? get _displayConvertedPrice {
-    final converted = request.convertedDisplayPrice;
-    final gross = request.grossPriceEur;
-    final net = request.targetPriceEur;
-    if (converted == null || _isOwner || gross == null || net == null) {
-      return converted;
-    }
-    return gross > 0 ? converted * net / gross : converted;
-  }
+  /// Prix réellement payé par l'expéditeur. `targetPriceEur` seul est un
+  /// NET (PR #219) : jamais afficher les deux montants côte à côte, ça
+  /// révélerait le taux de commission par soustraction. Repli sur le net
+  /// uniquement si le serveur ne sert pas encore le brut.
+  double? get _displayPrice => request.grossPriceEur ?? request.targetPriceEur;
 
   @override
   Widget build(BuildContext context) {
@@ -536,7 +518,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                     padding: const EdgeInsets.only(top: DonySpacing.xxs),
                     child: ConvertedPriceLabel(
                       originalCurrency: r.currency,
-                      convertedPricePerKg: _displayConvertedPrice,
+                      convertedPricePerKg: r.convertedDisplayPrice,
                       convertedCurrency: r.convertedCurrency,
                       suffix: '',
                     ),
@@ -584,7 +566,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                         )
                       : l.requestPublicTakePackageCta,
                 )
-              : _isOwner
+              : currentUserId == r.senderId
               ? _OwnerCta(request: r, onChanged: onChanged)
               : r.viewerThreadId != null
               ? DonyButton(
@@ -1009,6 +991,7 @@ class _FirmPriceCta extends StatelessWidget {
       initialDate: announcement?.departureDate,
       isFirmPrice: true,
       currency: request.currency,
+      displayPriceEur: request.grossPriceEur,
     );
     if (context.mounted) {
       onChanged?.call();
@@ -1019,8 +1002,12 @@ class _FirmPriceCta extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final price = request.targetPriceEur;
-    final label = price != null
-        ? l.requestPublicTakeAt(PriceDisplay.money(price, request.currency))
+    // Le prix publié (brut), le même que la carte « Prix ferme » et le fil :
+    // le bouton annonçait le net juste sous le brut (FLUTTER-56). Le net
+    // reste le montant envoyé, affiché « vous recevez » dans la feuille.
+    final shown = request.grossPriceEur ?? price;
+    final label = shown != null
+        ? l.requestPublicTakeAt(PriceDisplay.money(shown, request.currency))
         : l.requestPublicTakePackageCta;
 
     return BlocProvider(

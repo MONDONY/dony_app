@@ -517,9 +517,10 @@ void main() {
       }
     });
 
-    // FLUTTER-56 : la carte « Prix ferme » montrait le brut au voyageur, le
-    // bouton « Prendre à X » le net. Le voyageur ne doit voir que le net.
-    testWidgets('prix ferme : le voyageur voit le net, jamais le brut', (
+    // FLUTTER-56 : la carte « Prix ferme » montrait le brut (le prix publié,
+    // celui du fil), le bouton « Prendre à X » le net. Un seul montant à
+    // l'écran : le prix publié.
+    testWidgets('prix ferme : carte et bouton annoncent le même prix publié', (
       tester,
     ) async {
       const traveler = UserModel(
@@ -545,9 +546,9 @@ void main() {
       await _pumpRouted(tester, authBloc: authBloc);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('46'), findsNothing);
-      // Carte de prix + bouton « Prendre à » : le même montant net.
-      expect(find.textContaining('41'), findsAtLeastNWidgets(2));
+      expect(find.textContaining('41'), findsNothing);
+      // Carte de prix + bouton « Prendre à » : le même montant publié.
+      expect(find.textContaining('46'), findsAtLeastNWidgets(2));
     });
   });
 
@@ -571,7 +572,7 @@ void main() {
     await _pumpRouted(tester, authBloc: authBloc);
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('46'), findsNothing);
-    expect(find.textContaining('41'), findsAtLeastNWidgets(2));
+    expect(find.textContaining('41'), findsNothing);
+    expect(find.textContaining('46'), findsAtLeastNWidgets(2));
   });
 }
