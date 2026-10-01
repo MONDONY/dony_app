@@ -14745,4 +14745,29 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get privacyShowResidenceCountrySubtitle =>
       'Visible sur votre profil public. Votre pays se modifie dans Préférences.';
+
+  @override
+  String get tripPublishArrivalDayLabel => 'Jour d\'arrivée';
+
+  @override
+  String tripPublishArrivalDayOption(int offset) {
+    String _temp0 = intl.Intl.pluralLogic(
+      offset,
+      locale: localeName,
+      other: 'Dans $offset jours',
+      one: 'Le lendemain',
+      zero: 'Le jour même',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripArrivalOnDateAtTime(String date, String time) {
+    return 'Arrivée le $date à $time';
+  }
+
+  @override
+  String tripArrivalDayOffsetSuffix(String time, int days) {
+    return '$time (+$days j)';
+  }
 }

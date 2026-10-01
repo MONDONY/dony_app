@@ -235,6 +235,14 @@ class _BilletDates extends StatelessWidget {
     final dateStr = _formatDate(bid.departureDate, l.localeName);
     final depTime = _trimTime(bid.departureTime);
     final arrTime = _trimTime(bid.arrivalTime);
+    // Arrivée un autre jour (vol de nuit) : sa date, comme pour le départ
+    // (FLUTTER-4E). Le même jour, l'heure seule suffit.
+    final arrivalDate = bid.arrivalDate;
+    final arrDateStr =
+        arrivalDate != null &&
+            !DateUtils.isSameDay(arrivalDate, bid.departureDate)
+        ? _formatDate(arrivalDate, l.localeName)
+        : null;
 
     final labelStyle = tt.bodySmall?.copyWith(
       color: cs.onSurfaceVariant,
@@ -277,7 +285,8 @@ class _BilletDates extends StatelessWidget {
               children: [
                 Text(l.ticketArrivalLabel, style: labelStyle),
                 Text(
-                  arrTime,
+                  arrDateStr != null ? '$arrDateStr · $arrTime' : arrTime,
+                  key: const Key('billet-arrival-value'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: valueStyle,

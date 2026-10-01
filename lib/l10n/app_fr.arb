@@ -16923,5 +16923,42 @@
   "privacyShowResidenceCountrySubtitle": "Visible sur votre profil public. Votre pays se modifie dans Préférences.",
   "@privacyShowResidenceCountrySubtitle": {
     "description": "Réglages de confidentialité : afficher le pays de résidence sur le profil public (FLUTTER-4H)"
+  },
+  "tripPublishArrivalDayLabel": "Jour d'arrivée",
+  "@tripPublishArrivalDayLabel": {
+    "description": "Création de trajet : jour d'arrivée (trajet_step.dart, FLUTTER-4E)"
+  },
+  "tripPublishArrivalDayOption": "{offset, plural, =0{Le jour même} =1{Le lendemain} other{Dans {offset} jours}}",
+  "@tripPublishArrivalDayOption": {
+    "description": "Création de trajet : jour d'arrivée (trajet_step.dart, FLUTTER-4E)",
+    "placeholders": {
+      "offset": {
+        "type": "int"
+      }
+    }
+  },
+  "tripArrivalOnDateAtTime": "Arrivée le {date} à {time}",
+  "@tripArrivalOnDateAtTime": {
+    "description": "Affichage de l'arrivée quand elle est un autre jour que le départ (FLUTTER-4E)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "tripArrivalDayOffsetSuffix": "{time} (+{days} j)",
+  "@tripArrivalDayOffsetSuffix": {
+    "description": "Heure d'arrivée avec le décalage de jour, ex. « 06:30 (+1 j) » (arrival_label.dart, FLUTTER-4E)",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
   }
 }

@@ -12,6 +12,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final DateTime departureDate;
   final String? departureTime;
   final String? arrivalTime;
+  final String? arrivalDate;
   final AddressData pickupAddress;
   final AddressData deliveryAddress;
   final double availableKg;
@@ -41,6 +42,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     required this.departureDate,
     this.departureTime,
     this.arrivalTime,
+    this.arrivalDate,
     required this.pickupAddress,
     required this.deliveryAddress,
     required this.availableKg,
@@ -173,6 +175,7 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   final DateTime departureDate;
   final String? departureTime;
   final String? arrivalTime;
+  final String? arrivalDate;
   final AddressData pickupAddress;
   final AddressData deliveryAddress;
   final double availableKg;
@@ -198,6 +201,7 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     required this.departureDate,
     this.departureTime,
     this.arrivalTime,
+    this.arrivalDate,
     required this.pickupAddress,
     required this.deliveryAddress,
     required this.availableKg,

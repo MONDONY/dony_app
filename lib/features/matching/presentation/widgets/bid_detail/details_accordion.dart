@@ -93,6 +93,22 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
     return '${from ?? '-'} → ${to ?? '-'}';
   }
 
+  /// Heure d'arrivée, précédée de sa date quand le trajet arrive un autre
+  /// jour que le départ (FLUTTER-4E).
+  String _arrivalValue(BuildContext context) {
+    final time = _hhmm(bid.arrivalTime!);
+    final date = bid.arrivalDate;
+    if (date == null ||
+        (bid.departureDate != null &&
+            DateUtils.isSameDay(date, bid.departureDate))) {
+      return time;
+    }
+    return context.l10n.tripArrivalOnDateAtTime(
+      DateFormat.MMMEd(context.l10n.localeName).format(date),
+      time,
+    );
+  }
+
   /// « 14:30:00 » (LocalTime du back) → « 14:30 ».
   static String _hhmm(String time) =>
       time.length >= 5 ? time.substring(0, 5) : time;
@@ -260,7 +276,7 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                           const SizedBox(height: DonySpacing.sm),
                           InfoRow(
                             label: l.bidDetailArrivalTimeLabel,
-                            value: _hhmm(bid.arrivalTime!),
+                            value: _arrivalValue(context),
                           ),
                         ],
                         if (bid.arrivalInstructions != null &&
