@@ -1,5 +1,7 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
+
 export 'package:dony/features/matching/data/models/transport_mode.dart';
 
 abstract class AnnouncementEvent {}
@@ -215,5 +217,28 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     this.pricingMode = 'KG',
     required this.handoverDeadline,
     this.negotiable = false,
+  });
+}
+
+/// Report du trajet par son voyageur (vol annulé, voyage repoussé).
+class AnnouncementRescheduleRequested extends AnnouncementEvent {
+  final String announcementId;
+  final DateTime departureDate;
+  final String departureTime;
+  final String? arrivalDate;
+  final String? arrivalTime;
+  final DateTime handoverDeadline;
+  final TripRescheduleReason reason;
+  final String? note;
+
+  AnnouncementRescheduleRequested({
+    required this.announcementId,
+    required this.departureDate,
+    required this.departureTime,
+    this.arrivalDate,
+    this.arrivalTime,
+    required this.handoverDeadline,
+    required this.reason,
+    this.note,
   });
 }

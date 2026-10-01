@@ -26,6 +26,7 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     on<CancelAfterHandoverRequested>(_onCancelAfterHandover);
     on<ReturnConfirmRequested>(_onReturnConfirm);
     on<ReturnCodeRequested>(_onReturnCodeRequested);
+    on<RescheduleDecisionRequested>(_onRescheduleDecision);
   }
 
   Future<void> _onTripCancellationRequested(
@@ -177,6 +178,26 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
         _analytics.logEvent(
           AnalyticsEvents.cancelAfterHandoverInitiated,
           properties: {'actor': event.actor},
+        ),
+      );
+    } catch (e) {
+      emit(CancellationError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onRescheduleDecision(
+    RescheduleDecisionRequested event,
+    Emitter<CancellationState> emit,
+  ) async {
+    if (state is CancellationLoading) return;
+    emit(CancellationLoading());
+    try {
+      await _repository.decideReschedule(event.bidId, keep: event.keep);
+      emit(event.keep ? RescheduleKept() : RescheduleWithdrawn());
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.tripRescheduleDecided,
+          properties: {'decision': event.keep ? 'keep' : 'withdraw'},
         ),
       );
     } catch (e) {

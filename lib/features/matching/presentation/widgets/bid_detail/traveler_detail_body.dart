@@ -10,6 +10,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_de
     show RatingDoneBadge;
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/trip_reschedule_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -84,6 +85,8 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
       // pour éviter une double animation (fade × fade + slide × slide).
       ColisBillet(bid: widget.bid, isSender: false),
       TravelerHeroCard(bid: widget.bid),
+      if (TripRescheduleCard.shouldShow(widget.bid))
+        TripRescheduleCard(bid: widget.bid, isSender: false),
       DeliveryNoShowCtaCell(bid: widget.bid, isSender: false),
       // Profil de l'expéditeur à tous les statuts ; les boutons de contact
       // n'apparaissent qu'une fois la demande acceptée.

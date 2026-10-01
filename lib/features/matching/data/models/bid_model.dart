@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
+import 'package:dony/features/matching/data/models/trip_reschedule_info.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'bid_model.g.dart';
@@ -232,6 +233,10 @@ class BidModel {
   @JsonKey(defaultValue: 'EUR')
   final String currency;
 
+  /// Dernier report du trajet et réponse attendue de l'expéditeur. Nul si le
+  /// trajet n'a jamais été reporté (ou back antérieur au report de trajet).
+  final TripRescheduleInfo? reschedule;
+
   const BidModel({
     required this.id,
     required this.announcementId,
@@ -302,6 +307,7 @@ class BidModel {
     this.travelerAvatarUrl,
     this.photos = const [],
     this.currency = 'EUR',
+    this.reschedule,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>

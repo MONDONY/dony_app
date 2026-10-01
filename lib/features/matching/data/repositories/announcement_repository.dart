@@ -3,7 +3,9 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
+import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
+
 export 'package:dony/features/matching/data/models/transport_mode.dart';
 
 class AnnouncementRepository {
@@ -256,5 +258,25 @@ class AnnouncementRepository {
   }) => _remoteDatasource.updateArrivalInstructions(
     announcementId: announcementId,
     arrivalInstructions: arrivalInstructions,
+  );
+
+  Future<TripRescheduleResult> rescheduleTrip({
+    required String announcementId,
+    required DateTime departureDate,
+    required String departureTime,
+    String? arrivalDate,
+    String? arrivalTime,
+    required DateTime handoverDeadline,
+    required TripRescheduleReason reason,
+    String? note,
+  }) => _remoteDatasource.rescheduleTrip(
+    announcementId: announcementId,
+    departureDate: departureDate,
+    departureTime: departureTime,
+    arrivalDate: arrivalDate,
+    arrivalTime: arrivalTime,
+    handoverDeadline: handoverDeadline,
+    reason: reason,
+    note: note,
   );
 }

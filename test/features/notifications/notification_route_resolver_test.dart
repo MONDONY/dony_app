@@ -64,6 +64,9 @@ void main() {
       'RETURN_DEADLINE_WARNING',
       'RETURN_DEADLINE_EXPIRED',
       'TRIP_ARRIVED',
+      'TRIP_RESCHEDULED',
+      'TRIP_RESCHEDULE_KEPT',
+      'TRIP_RESCHEDULE_WITHDRAWN',
     ]) {
       test('$type routes to bid detail', () {
         expect(

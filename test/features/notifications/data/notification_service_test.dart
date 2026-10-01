@@ -466,6 +466,19 @@ void main() {
       verify(() => repository.ack('notif-h2')).called(1);
     });
 
+    // Report du trajet d'un colis accepté : critique côté back (SMS de repli),
+    // l'ACK évite le SMS quand le push est bien arrivé.
+    test('sends ACK for TRIP_RESCHEDULED', () async {
+      when(() => repository.ack('notif-rs')).thenAnswer((_) async {});
+
+      await service.testAckIfCritical({
+        'type': 'TRIP_RESCHEDULED',
+        'notificationId': 'notif-rs',
+      });
+
+      verify(() => repository.ack('notif-rs')).called(1);
+    });
+
     test('does NOT send ACK for non-critical type (BID_ACCEPTED)', () async {
       await service.testAckIfCritical({
         'type': 'BID_ACCEPTED',

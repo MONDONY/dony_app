@@ -325,6 +325,20 @@ class _BidDetailViewState extends State<_BidDetailView> {
               message: l.bidDetailCancelledAfterHandoverSnackbar,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+          } else if (state is RescheduleKept) {
+            DonySnackbar.show(
+              context,
+              message: l.bidRescheduleKeptSnackbar,
+              type: DonySnackbarType.success,
+            );
+            context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+          } else if (state is RescheduleWithdrawn) {
+            DonySnackbar.show(
+              context,
+              message: l.bidRescheduleWithdrawnSnackbar,
+              type: DonySnackbarType.success,
+            );
+            context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is ReturnConfirmed) {
             DonySnackbar.show(
               context,

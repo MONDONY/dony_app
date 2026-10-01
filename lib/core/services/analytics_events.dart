@@ -450,6 +450,8 @@ abstract final class AnalyticsEvents {
 
   // Arrivée à destination (trajet)
   static const tripMarkedArrived = 'trip_marked_arrived';
+  static const tripRescheduled = 'trip_rescheduled';
+  static const tripRescheduleDecided = 'trip_reschedule_decided';
   static const arrivalInstructionsUpdated = 'arrival_instructions_updated';
   // Négociation du prix d'un trajet. L'entonnoir se lit dans cet ordre :
   // ouverture du mode → première proposition → contre-offres → issue.

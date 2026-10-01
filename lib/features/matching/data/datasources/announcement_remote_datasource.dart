@@ -4,8 +4,10 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:intl/intl.dart';
+
 export 'package:dony/features/matching/data/models/transport_mode.dart';
 
 class AnnouncementRemoteDatasource {
@@ -410,5 +412,33 @@ class AnnouncementRemoteDatasource {
     );
 
     return AnnouncementModel.fromJson(response.data);
+  }
+
+  /// Report d'un trajet publié (vol annulé, voyage repoussé), même avec des
+  /// colis acceptés : les expéditeurs concernés choisissent ensuite de garder
+  /// leur colis ou de se retirer sans frais.
+  Future<TripRescheduleResult> rescheduleTrip({
+    required String announcementId,
+    required DateTime departureDate,
+    required String departureTime,
+    String? arrivalDate,
+    String? arrivalTime,
+    required DateTime handoverDeadline,
+    required TripRescheduleReason reason,
+    String? note,
+  }) async {
+    final response = await _apiClient.dio.post(
+      '/announcements/$announcementId/reschedule',
+      data: {
+        'departureDate': DateFormat('yyyy-MM-dd').format(departureDate),
+        'departureTime': departureTime,
+        'arrivalDate': ?arrivalDate,
+        'arrivalTime': ?arrivalTime,
+        'handoverDeadline': handoverDeadline.toUtc().toIso8601String(),
+        'reason': reason.wire,
+        if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
+      },
+    );
+    return TripRescheduleResult.fromJson(response.data as Map<String, dynamic>);
   }
 }

@@ -144,6 +144,47 @@ void main() {
     expect(find.byType(OwnerActionGrid), findsOneWidget);
   });
 
+  // Report (vol annulé, voyage repoussé) : proposé là où « Modifier » est
+  // bloqué par des demandes.
+  testWidgets('trajet avec demandes → tuile Reporter qui ouvre la feuille', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      annBloc: annBloc,
+      bidBloc: bidBloc,
+      a: _makeAnnouncement(status: 'FULL', bidsCount: 2),
+      isOwner: true,
+    );
+
+    expect(find.text('Reporter'), findsOneWidget);
+    await tester.tap(find.text('Reporter'));
+    await tester.pumpAndSettle();
+    expect(find.text('Reporter le trajet'), findsWidgets);
+  });
+
+  testWidgets('pas de Reporter sans demande ni sur un trajet terminé', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      annBloc: annBloc,
+      bidBloc: bidBloc,
+      a: _makeAnnouncement(bidsCount: 0),
+      isOwner: true,
+    );
+    expect(find.text('Reporter'), findsNothing);
+
+    await _pump(
+      tester,
+      annBloc: annBloc,
+      bidBloc: bidBloc,
+      a: _makeAnnouncement(status: 'COMPLETED', bidsCount: 2),
+      isOwner: true,
+    );
+    expect(find.text('Reporter'), findsNothing);
+  });
+
   testWidgets('ACTIVE bidsCount=0 → Modifier actif + Supprimer (pas Annuler)', (
     tester,
   ) async {

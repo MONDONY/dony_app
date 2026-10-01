@@ -213,6 +213,11 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               context.read<BidBloc>().add(
                 BidListRequested(widget.announcementId),
               );
+            } else if (state is AnnouncementRescheduled) {
+              _current = state.announcement;
+              context.read<BidBloc>().add(
+                BidListRequested(widget.announcementId),
+              );
             } else if (state is AnnouncementArrivalInstructionsUpdated) {
               _current = state.announcement;
               context.read<BidBloc>().add(

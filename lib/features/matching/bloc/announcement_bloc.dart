@@ -29,6 +29,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     on<AnnouncementSearchRequested>(_onSearchRequested);
     on<AnnouncementSurplusOpenRequested>(_onSurplusOpenRequested);
     on<AnnouncementTripMarkArrivedRequested>(_onTripMarkArrivedRequested);
+    on<AnnouncementRescheduleRequested>(_onRescheduleRequested);
     on<AnnouncementArrivalInstructionsUpdateRequested>(
       _onArrivalInstructionsUpdateRequested,
     );
@@ -373,6 +374,38 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       final announcement = await action();
       emit(onSuccess(announcement));
       unawaited(_analytics.logEvent(analyticsEvent));
+    } catch (e) {
+      emit(AnnouncementError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onRescheduleRequested(
+    AnnouncementRescheduleRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    if (state is AnnouncementLoading) return;
+    emit(AnnouncementLoading());
+    try {
+      final result = await _repository.rescheduleTrip(
+        announcementId: event.announcementId,
+        departureDate: event.departureDate,
+        departureTime: event.departureTime,
+        arrivalDate: event.arrivalDate,
+        arrivalTime: event.arrivalTime,
+        handoverDeadline: event.handoverDeadline,
+        reason: event.reason,
+        note: event.note,
+      );
+      final announcement = await _repository.getAnnouncementDetail(
+        event.announcementId,
+      );
+      emit(AnnouncementRescheduled(announcement, result));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.tripRescheduled,
+          properties: {'reason': event.reason.wire},
+        ),
+      );
     } catch (e) {
       emit(AnnouncementError(unwrapDioError(e)));
     }
