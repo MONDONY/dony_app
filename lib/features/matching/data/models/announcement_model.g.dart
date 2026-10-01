@@ -64,6 +64,7 @@ AnnouncementModel _$AnnouncementModelFromJson(
   transportMode: transportModeFromWire(json['transportMode'] as String?),
   status: json['status'] as String,
   bidsCount: (json['bidsCount'] as num?)?.toInt(),
+  uniqueViewerCount: (json['uniqueViewerCount'] as num?)?.toInt(),
   pendingBidCount: (json['pendingBidCount'] as num?)?.toInt() ?? 0,
   confirmedParcelCount: (json['confirmedParcelCount'] as num?)?.toInt() ?? 0,
   traveler: json['traveler'] == null
@@ -127,6 +128,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'transportMode': _transportModeToWireOrNull(instance.transportMode),
       'status': instance.status,
       'bidsCount': instance.bidsCount,
+      'uniqueViewerCount': instance.uniqueViewerCount,
       'pendingBidCount': instance.pendingBidCount,
       'confirmedParcelCount': instance.confirmedParcelCount,
       'traveler': instance.traveler,

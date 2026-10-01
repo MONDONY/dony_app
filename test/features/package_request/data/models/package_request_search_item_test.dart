@@ -235,6 +235,20 @@ void main() {
       expect(item.matchedTripDepartureDate, isNull);
     });
 
+    test('uniqueViewerCount servi à l\'expéditeur propriétaire', () {
+      final item = PackageRequestSearchItem.fromJson(
+        _baseJson()..['uniqueViewerCount'] = 5,
+      );
+      expect(item.uniqueViewerCount, 5);
+    });
+
+    test('uniqueViewerCount absent (autre lecteur, ancien back) : inconnu', () {
+      expect(
+        PackageRequestSearchItem.fromJson(_baseJson()).uniqueViewerCount,
+        isNull,
+      );
+    });
+
     test('matchScore participe à l\'égalité (props)', () {
       final avec = PackageRequestSearchItem.fromJson(
         _baseJson()..['matchScore'] = 94,

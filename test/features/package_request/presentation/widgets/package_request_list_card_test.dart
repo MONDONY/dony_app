@@ -25,6 +25,7 @@ PackageRequestSearchItem _item({
   int? matchScore,
   String? matchedTripId,
   DateTime? matchedTripDepartureDate,
+  int? uniqueViewerCount,
 }) => PackageRequestSearchItem(
   id: 'pr1',
   departureCity: 'Paris',
@@ -42,6 +43,7 @@ PackageRequestSearchItem _item({
   matchScore: matchScore,
   matchedTripId: matchedTripId,
   matchedTripDepartureDate: matchedTripDepartureDate,
+  uniqueViewerCount: uniqueViewerCount,
   sender: SenderPublicProfile(
     id: 's1',
     displayName: 'Marie Diop',
@@ -62,6 +64,40 @@ void main() {
       body: SingleChildScrollView(child: SizedBox(width: 360, child: child)),
     ),
   );
+
+  group('audience (fil Rechercher, propriétaire seulement)', () {
+    testWidgets('ma demande vue par 5 personnes → « 5 vues »', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          PackageRequestListCard(
+            item: _item(uniqueViewerCount: 5),
+            isOwnRequest: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('5 vues'), findsOneWidget);
+    });
+
+    for (final (label, own, count) in [
+      ('demande d’un autre, même avec un chiffre', false, 5),
+      ('ma demande sans vue', true, 0),
+      ('ma demande, ancien back sans le champ', true, null),
+    ]) {
+      testWidgets('rien n’est affiché : $label', (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            PackageRequestListCard(
+              item: _item(uniqueViewerCount: count),
+              isOwnRequest: own,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.textContaining(RegExp(r'^\d+ vues?$')), findsNothing);
+      });
+    }
+  });
 
   group('PackageRequestListCard', () {
     testWidgets(

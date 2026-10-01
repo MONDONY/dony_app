@@ -4958,6 +4958,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String searchCardViews(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count views',
+      one: '$count view',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get listingPreviewTitle => 'Preview your listing';
 
   @override

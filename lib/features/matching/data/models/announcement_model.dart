@@ -143,6 +143,10 @@ class AnnouncementModel {
   final String status;
   final int? bidsCount;
 
+  /// Personnes qui ont vu ce trajet. Servi par la recherche au seul voyageur
+  /// propriétaire ; nul pour tout autre lecteur et sur un back plus ancien.
+  final int? uniqueViewerCount;
+
   /// Nombre de demandes (bids) en attente d'acceptation pour ce trajet.
   /// Exposé par `GET /announcements/my`. `0` si absent (ex: endpoint search).
   @JsonKey(defaultValue: 0)
@@ -253,6 +257,7 @@ class AnnouncementModel {
     this.transportMode,
     required this.status,
     this.bidsCount,
+    this.uniqueViewerCount,
     this.pendingBidCount = 0,
     this.confirmedParcelCount = 0,
     this.traveler,

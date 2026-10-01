@@ -3,6 +3,7 @@ import 'package:dony/core/currency/converted_price.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/core/widgets/owner_views_label.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
@@ -201,6 +202,20 @@ class PackageRequestListCard extends StatelessWidget {
                                       _RouteMeta(item: item, cs: cs, tt: tt),
                                       const SizedBox(height: DonySpacing.xs),
                                       _Budget(item: item, cs: cs, tt: tt),
+                                      // Audience de ma demande, visible de moi
+                                      // seul : sous le budget plutôt que sur la
+                                      // ligne du trajet, dont la date serait
+                                      // tronquée.
+                                      if (OwnerViewsLabel.isVisible(
+                                        count: item.uniqueViewerCount,
+                                        isOwner: isOwnRequest,
+                                      )) ...[
+                                        const SizedBox(height: DonySpacing.xxs),
+                                        OwnerViewsLabel(
+                                          count: item.uniqueViewerCount,
+                                          isOwner: isOwnRequest,
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),
