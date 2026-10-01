@@ -14627,6 +14627,36 @@ class AppLocalizationsEn extends AppLocalizations {
       'You ticked “Other”: specify what you accept before publishing.';
 
   @override
+  String get profilePublicVerificationsSectionLabel => 'VERIFICATIONS';
+
+  @override
+  String get profilePublicVerificationPhone => 'Phone number';
+
+  @override
+  String get profilePublicVerificationEmail => 'Email address';
+
+  @override
+  String get profilePublicVerificationIdentity => 'ID document';
+
+  @override
+  String get profilePublicVerifiedValue => 'Verified';
+
+  @override
+  String get profilePublicNotVerifiedValue => 'Not verified';
+
+  @override
+  String profilePublicResidesIn(String country) {
+    return 'Lives in $country';
+  }
+
+  @override
+  String get privacyShowResidenceCountryLabel => 'Show my country of residence';
+
+  @override
+  String get privacyShowResidenceCountrySubtitle =>
+      'Visible on your public profile. Change your country in Preferences.';
+
+  @override
   String get tripPublishArrivalDayLabel => 'Arrival day';
 
   @override

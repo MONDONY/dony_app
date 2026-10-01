@@ -14716,6 +14716,37 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tu as coché « Autre » : précise ce que tu acceptes avant de publier.';
 
   @override
+  String get profilePublicVerificationsSectionLabel => 'VÉRIFICATIONS';
+
+  @override
+  String get profilePublicVerificationPhone => 'Numéro de téléphone';
+
+  @override
+  String get profilePublicVerificationEmail => 'Adresse e-mail';
+
+  @override
+  String get profilePublicVerificationIdentity => 'Pièce d\'identité';
+
+  @override
+  String get profilePublicVerifiedValue => 'Vérifié';
+
+  @override
+  String get profilePublicNotVerifiedValue => 'Non vérifié';
+
+  @override
+  String profilePublicResidesIn(String country) {
+    return 'Réside en $country';
+  }
+
+  @override
+  String get privacyShowResidenceCountryLabel =>
+      'Afficher mon pays de résidence';
+
+  @override
+  String get privacyShowResidenceCountrySubtitle =>
+      'Visible sur votre profil public. Votre pays se modifie dans Préférences.';
+
+  @override
   String get tripPublishArrivalDayLabel => 'Jour d\'arrivée';
 
   @override

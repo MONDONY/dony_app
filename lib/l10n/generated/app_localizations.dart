@@ -24312,6 +24312,60 @@ abstract class AppLocalizations {
   /// **'Tu as coché « Autre » : précise ce que tu acceptes avant de publier.'**
   String get tripPublishOtherContentPrecisionRequired;
 
+  /// Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)
+  ///
+  /// In fr, this message translates to:
+  /// **'VÉRIFICATIONS'**
+  String get profilePublicVerificationsSectionLabel;
+
+  /// Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de téléphone'**
+  String get profilePublicVerificationPhone;
+
+  /// Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse e-mail'**
+  String get profilePublicVerificationEmail;
+
+  /// Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pièce d\'identité'**
+  String get profilePublicVerificationIdentity;
+
+  /// Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifié'**
+  String get profilePublicVerifiedValue;
+
+  /// Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)
+  ///
+  /// In fr, this message translates to:
+  /// **'Non vérifié'**
+  String get profilePublicNotVerifiedValue;
+
+  /// Profil public, section Vérifications (profile_public_screen.dart, FLUTTER-4H)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réside en {country}'**
+  String profilePublicResidesIn(String country);
+
+  /// Réglages de confidentialité : afficher le pays de résidence sur le profil public (FLUTTER-4H)
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher mon pays de résidence'**
+  String get privacyShowResidenceCountryLabel;
+
+  /// Réglages de confidentialité : afficher le pays de résidence sur le profil public (FLUTTER-4H)
+  ///
+  /// In fr, this message translates to:
+  /// **'Visible sur votre profil public. Votre pays se modifie dans Préférences.'**
+  String get privacyShowResidenceCountrySubtitle;
+
   /// Création de trajet : jour d'arrivée (trajet_step.dart, FLUTTER-4E)
   ///
   /// In fr, this message translates to:
