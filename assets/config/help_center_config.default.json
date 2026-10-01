@@ -33,9 +33,9 @@
       "id": "tuto_recherche",
       "title": "Rechercher un trajet ou un colis",
       "description": "Comment utiliser la recherche pour trouver un trajet ou une demande compatible.",
-      "youtubeVideoId": "dQw4w9WgXcQ",
+      "youtubeVideoId": "l3NQvNJvG94",
       "order": 1,
-      "active": true,
+      "active": false,
       "contexts": ["search"],
       "durationLabel": "1:30"
     },
@@ -43,46 +43,49 @@
       "id": "tuto_activites",
       "title": "Suivre mes activités",
       "description": "Vue d'ensemble du hub Activités : trajets, envois, demandes, négociations.",
-      "youtubeVideoId": "jNQXAC9IVRw",
+      "youtubeVideoId": "CbRcG5lrYSY",
       "order": 2,
       "active": true,
-      "contexts": ["activities"]
+      "contexts": ["activities"],
+      "durationLabel": "1:54"
     },
     {
       "id": "tuto_publier_trajet",
       "title": "Publier un trajet",
       "description": "Étapes pour publier un trajet et déclarer l'espace bagage disponible.",
-      "youtubeVideoId": "9bZkp7q19f0",
+      "youtubeVideoId": "rHaqqQUaPXU",
       "order": 3,
       "active": true,
       "contexts": ["tripPublish"],
-      "durationLabel": "2:10"
+      "durationLabel": "6:28"
     },
     {
       "id": "tuto_publier_demande",
       "title": "Envoyer une demande de colis",
       "description": "Comment décrire un colis et publier une demande d'envoi.",
-      "youtubeVideoId": "L_jWHffIx5E",
+      "youtubeVideoId": "0LoEdvquUkI",
       "order": 4,
       "active": true,
-      "contexts": ["requestPublish"]
+      "contexts": ["requestPublish"],
+      "durationLabel": "3:21"
     },
     {
       "id": "tuto_negociation",
       "title": "Négocier une offre",
       "description": "Comprendre les contre-offres et accepter un prix.",
-      "youtubeVideoId": "kJQP7kiw5Fk",
+      "youtubeVideoId": "6qEiHiuKf4E",
       "order": 5,
       "active": true,
-      "contexts": ["negotiation"]
+      "contexts": ["negotiation"],
+      "durationLabel": "1:18"
     },
     {
       "id": "tuto_paiement",
       "title": "Payer en toute sécurité",
       "description": "Le paiement sécurisé (séquestre) et son déblocage à la livraison.",
-      "youtubeVideoId": "M7lc1UVf-VE",
+      "youtubeVideoId": "l3NQvNJvG94",
       "order": 6,
-      "active": true,
+      "active": false,
       "contexts": ["payment"],
       "durationLabel": "1:45"
     },
@@ -90,63 +93,65 @@
       "id": "tuto_remise_qr",
       "title": "Remettre le colis (QR code)",
       "description": "Scanner le QR code de remise et confirmer la prise en charge du colis.",
-      "youtubeVideoId": "fJ9rUzIMcZQ",
+      "youtubeVideoId": "l3NQvNJvG94",
       "order": 7,
-      "active": true,
+      "active": false,
       "contexts": ["qrHandover"]
     },
     {
       "id": "tuto_suivi",
       "title": "Suivre mon colis",
       "description": "Lire la timeline de suivi et comprendre chaque étape.",
-      "youtubeVideoId": "60ItHLz5WEA",
+      "youtubeVideoId": "l3NQvNJvG94",
       "order": 8,
-      "active": true,
+      "active": false,
       "contexts": ["tracking"]
     },
     {
       "id": "tuto_litige",
       "title": "Ouvrir un litige",
       "description": "Quand et comment ouvrir un litige en cas de problème.",
-      "youtubeVideoId": "eYq7WapuDLU",
+      "youtubeVideoId": "l3NQvNJvG94",
       "order": 9,
-      "active": true,
+      "active": false,
       "contexts": ["dispute"]
     },
     {
       "id": "tuto_alertes_corridor",
       "title": "Créer une alerte corridor",
       "description": "Être prévenu automatiquement dès qu'un trajet ou un colis apparaît sur ton corridor.",
-      "youtubeVideoId": "OPf0YbXqDm0",
+      "youtubeVideoId": "22_4Rnh9FpQ",
       "order": 10,
       "active": true,
-      "contexts": ["corridorAlerts"]
+      "contexts": ["corridorAlerts"],
+      "durationLabel": "1:40"
     },
     {
       "id": "tuto_modeles_trajet",
       "title": "Créer un modèle de trajet",
       "description": "Publier tes trajets récurrents en quelques secondes grâce aux modèles.",
-      "youtubeVideoId": "JGwWNGJdvx8",
+      "youtubeVideoId": "l3NQvNJvG94",
       "order": 11,
-      "active": true,
+      "active": false,
       "contexts": ["tripTemplates"]
     },
     {
       "id": "tuto_destinataires",
       "title": "Gérer mes destinataires",
       "description": "Enregistrer tes proches pour envoyer un colis en un seul tap.",
-      "youtubeVideoId": "3JZ_D3ELwOQ",
+      "youtubeVideoId": "jV2E3J1H8gM",
       "order": 12,
       "active": true,
-      "contexts": ["recipients"]
+      "contexts": ["recipients"],
+      "durationLabel": "1:01"
     },
     {
       "id": "tuto_demandes_recues",
       "title": "Gérer les demandes reçues",
       "description": "Accepter ou refuser une demande d'expéditeur sur l'un de tes trajets.",
-      "youtubeVideoId": "CevxZvSJLk8",
+      "youtubeVideoId": "l3NQvNJvG94",
       "order": 13,
-      "active": true,
+      "active": false,
       "contexts": ["receivedRequests"]
     }
   ]
