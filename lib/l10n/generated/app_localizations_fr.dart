@@ -4038,6 +4038,17 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String requestDetailViewers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'vue par $count personnes',
+      one: 'vue par $count personne',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String requestDetailTravelersWillSee(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -4636,9 +4647,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get listingTripDetailTitle => 'Détail du trajet';
-
-  @override
-  String get listingTripDeletedMessage => 'Trajet supprimé';
 
   @override
   String get listingAnnouncementGoneMessage => 'Cette annonce n\'existe plus';
@@ -7969,6 +7977,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripOwnerDraftBannerTitle => 'Ce trajet est un brouillon';
+
+  @override
+  String tripAudienceViewers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count personnes ont vu ton trajet',
+      one: '$count personne a vu ton trajet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tripAudiencePosterViews(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count vues de ton affiche partagée',
+      one: '$count vue de ton affiche partagée',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get tripOwnerDraftBannerMessage =>

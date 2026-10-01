@@ -91,6 +91,7 @@ import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/tools_completion_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
+import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
@@ -411,6 +412,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<TripFilterCubit>(
     () => TripFilterCubit(getIt<AnalyticsService>()),
+  );
+  getIt.registerFactory<TripAudienceCubit>(
+    () => TripAudienceCubit(
+      getIt<AnnouncementRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   // Singleton partagé : le hub Activités, l'écran Demandes ET le point
   // d'attention de l'onglet Activités (bottom nav) lisent le même décompte de

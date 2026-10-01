@@ -6817,6 +6817,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{{count} vue} other{{count} vues}}'**
   String requestDetailViews(int count);
 
+  /// Nombre de personnes distinctes qui ont vu la demande, dans le méta du billet (request_detail_view.dart). Remplace requestDetailViews quand le back le fournit
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{vue par {count} personne} other{vue par {count} personnes}}'**
+  String requestDetailViewers(int count);
+
   /// Pli replié « N voyageurs la verront » sur un brouillon (request_detail_view.dart)
   ///
   /// In fr, this message translates to:
@@ -7762,12 +7768,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Détail du trajet'**
   String get listingTripDetailTitle;
-
-  /// Confirmation après suppression d'un trajet (announcement_detail_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Trajet supprimé'**
-  String get listingTripDeletedMessage;
 
   /// Message affiché quand l'annonce a disparu (announcement_detail_screen.dart)
   ///
@@ -13280,6 +13280,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce trajet est un brouillon'**
   String get tripOwnerDraftBannerTitle;
+
+  /// Carte d'audience de l'écran propriétaire d'un trajet : personnes distinctes qui l'ont ouvert dans l'app (trip_audience_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} personne a vu ton trajet} other{{count} personnes ont vu ton trajet}}'**
+  String tripAudienceViewers(int count);
+
+  /// Carte d'audience : consultations de la page web publique de l'affiche du trajet (trip_audience_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} vue de ton affiche partagée} other{{count} vues de ton affiche partagée}}'**
+  String tripAudiencePosterViews(int count);
 
   /// Message du bandeau brouillon (trip_owner_detail_screen.dart).
   ///

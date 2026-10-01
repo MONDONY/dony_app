@@ -3,6 +3,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
+import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -312,6 +313,23 @@ void main() {
     when(() => mockDs.deleteAnnouncement('ann-1')).thenAnswer((_) async {});
 
     await expectLater(repo.deleteAnnouncement('ann-1'), completes);
+  });
+
+  test('recordView délègue au datasource', () async {
+    when(() => mockDs.recordView('ann-1')).thenAnswer((_) async {});
+
+    await repo.recordView('ann-1');
+
+    verify(() => mockDs.recordView('ann-1')).called(1);
+  });
+
+  test('getTripAudience délègue au datasource', () async {
+    const audience = TripAudienceModel(uniqueViewerCount: 4, shareViewCount: 2);
+    when(
+      () => mockDs.getTripAudience('ann-1'),
+    ).thenAnswer((_) async => audience);
+
+    expect(await repo.getTripAudience('ann-1'), audience);
   });
 
   test('updateAnnouncement delegates correctly', () async {

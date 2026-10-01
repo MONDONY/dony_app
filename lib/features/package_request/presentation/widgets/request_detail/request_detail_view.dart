@@ -75,9 +75,15 @@ class RequestDetailView extends StatelessWidget {
     final trips = s.compatibleTrips ?? const <AnnouncementModel>[];
 
     final l = context.l10n;
+    final insights = s.insights;
+    final viewers = insights?.uniqueViewerCount ?? 0;
     final meta = [
-      if (s.insights != null && s.insights!.viewCount > 0)
-        l.requestDetailViews(s.insights!.viewCount),
+      // Personnes distinctes quand le back les compte. Sinon les ouvertures :
+      // ancien back, ou demande publiée avant le décompte par personne.
+      if (viewers > 0)
+        l.requestDetailViewers(viewers)
+      else if (insights != null && insights.viewCount > 0)
+        l.requestDetailViews(insights.viewCount),
       requestTimeLabel(
         r.createdAt,
         now: now ?? DateTime.now(),

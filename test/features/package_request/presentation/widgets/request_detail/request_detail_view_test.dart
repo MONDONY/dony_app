@@ -133,6 +133,47 @@ void main() {
     expect(find.textContaining('8 kg libres'), findsOneWidget);
   });
 
+  testWidgets(
+    '2 ter : back à jour → personnes distinctes, pas les ouvertures',
+    (tester) async {
+      await _pump(
+        tester,
+        PackageRequestDetailLoaded(
+          request: _req(PackageRequestStatus.open),
+          threads: const [],
+          insights: const PackageRequestInsights(
+            viewCount: 14,
+            uniqueViewerCount: 5,
+            invitedAnnouncementIds: {},
+          ),
+          compatibleTrips: const [],
+        ),
+      );
+      expect(find.textContaining('vue par 5 personnes'), findsOneWidget);
+      expect(find.textContaining('14 vues'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    '2 quater : demande publiée avant le décompte par personne → ouvertures',
+    (tester) async {
+      await _pump(
+        tester,
+        PackageRequestDetailLoaded(
+          request: _req(PackageRequestStatus.open),
+          threads: const [],
+          insights: const PackageRequestInsights(
+            viewCount: 14,
+            uniqueViewerCount: 0,
+            invitedAnnouncementIds: {},
+          ),
+          compatibleTrips: const [],
+        ),
+      );
+      expect(find.textContaining('14 vues'), findsOneWidget);
+    },
+  );
+
   testWidgets('2 bis : back sans invitations → pas de bouton Inviter', (
     tester,
   ) async {

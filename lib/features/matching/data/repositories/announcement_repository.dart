@@ -3,6 +3,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
+import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 
@@ -179,6 +180,11 @@ class AnnouncementRepository {
   Future<void> deleteAnnouncement(String id) async {
     return _remoteDatasource.deleteAnnouncement(id);
   }
+
+  Future<void> recordView(String id) => _remoteDatasource.recordView(id);
+
+  Future<TripAudienceModel> getTripAudience(String id) =>
+      _remoteDatasource.getTripAudience(id);
 
   /// Ouvre au public la capacité excédentaire d'un trajet dédié, puis renvoie
   /// l'annonce rechargée (le back répond 204 sans corps).

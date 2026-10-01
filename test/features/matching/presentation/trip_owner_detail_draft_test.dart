@@ -30,6 +30,7 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -56,6 +57,17 @@ class _MockCancellationBloc
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
+
+class _MockTripAudienceCubit extends MockCubit<TripAudienceState>
+    implements TripAudienceCubit {}
+
+/// Audience masquée : ces tests ne portent pas sur la carte d'audience.
+TripAudienceCubit _hiddenAudience() {
+  final cubit = _MockTripAudienceCubit();
+  when(() => cubit.state).thenReturn(const TripAudienceState.hidden());
+  when(() => cubit.load(any())).thenAnswer((_) async {});
+  return cubit;
+}
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
@@ -112,6 +124,7 @@ Future<void> _pump(
             BlocProvider<AnnouncementBloc>.value(value: annBloc),
             BlocProvider<BidBloc>.value(value: bidBloc),
             BlocProvider<CancellationBloc>.value(value: cancelBloc),
+            BlocProvider<TripAudienceCubit>.value(value: _hiddenAudience()),
             BlocProvider<AuthBloc>.value(value: authBloc),
             // Fourni à l'échelle de l'app dans `app.dart` : le corps de détail
             // le lit pour savoir si Stripe couvre le pays du voyageur.

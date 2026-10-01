@@ -69,6 +69,7 @@ import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_audience_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -1165,6 +1166,8 @@ final appRouter = GoRouter(
               create: (_) => getIt<BidBloc>()..add(BidListRequested(id)),
             ),
             BlocProvider(create: (_) => getIt<CancellationBloc>()),
+            // Chargé par TripAudienceSection, monté pour le seul propriétaire.
+            BlocProvider(create: (_) => getIt<TripAudienceCubit>()),
           ],
           child: TripOwnerDetailScreen(announcementId: id, initial: extra),
         );

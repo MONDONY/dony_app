@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trip_audience_model.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:intl/intl.dart';
@@ -340,6 +341,17 @@ class AnnouncementRemoteDatasource {
 
   Future<void> deleteAnnouncement(String id) async {
     await _apiClient.dio.delete('/announcements/$id');
+  }
+
+  /// Signale qu'une personne a ouvert le trajet. 204 dans tous les cas où le
+  /// back ne la compte pas (voyageur lui-même, trajet hors ligne, déjà vue).
+  Future<void> recordView(String id) async {
+    await _apiClient.dio.post('/announcements/$id/views');
+  }
+
+  Future<TripAudienceModel> getTripAudience(String id) async {
+    final response = await _apiClient.dio.get('/announcements/$id/insights');
+    return TripAudienceModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   /// Ouvre au public la capacité excédentaire d'un trajet dédié.

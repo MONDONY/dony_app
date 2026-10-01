@@ -343,8 +343,9 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `kyc_completed` | KycBloc._onStatusRefreshed() — une fois par instance, et une fois par compte et par appareil (`KycCompletionTracker`, clé Hive par UID) : rouvrir l'écran de statut d'un compte déjà vérifié ne le réémet plus |
 | `kyc_failed` | KycBloc._onSessionRequested() |
 | `announcement_created` | AnnouncementBloc._onCreateRequested() |
-| `announcement_viewed` | AnnouncementDetailScreen (BlocListener) |
+| `announcement_viewed` | `recordTripView` (`trip_view_recording.dart`), appelé à l'ouverture de la feuille trajet expéditeur (`showTravelerAnnouncementSheet`) par toute personne autre que le voyageur, invités compris (propriétés `announcement_id`, `corridor`). Le même appel signale la vue au back (`POST /announcements/{id}/views`) pour un compte connecté uniquement |
 | `trip_owner_detail_opened` | TripOwnerDetailScreen._evaluateViewer — émis quand le viewer est confirmé propriétaire (annonce chargée + auth résolue), une fois par écran (propriété `status`). Un visiteur non propriétaire (deep link d'affiche partagée) est basculé vers la sheet expéditeur sans émettre l'événement |
+| `trip_audience_loaded` | TripAudienceCubit.load — audience du trajet chargée sur l'écran propriétaire (`GET /announcements/{id}/insights`), propriétés `unique_viewers` (personnes distinctes dans l'app) et `share_views` (vues de la page web de l'affiche). Non émis en cas d'échec ou sur un back sans la route |
 | `trip_parcels_viewed` | TripParcelsSection — chargement de la liste des colis embarqués (propriété `count`) |
 | `trip_parcels_filtered` | TripParcelsSection — chip de filtre statut tapée dans « Colis dans le trajet » (propriété `status`, `all` si « Tous ») |
 | `surplus_opened` | AnnouncementBloc._onSurplusOpenRequested() |
