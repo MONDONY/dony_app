@@ -1067,29 +1067,51 @@ class _TextContent extends StatelessWidget {
           horizontal: DonySpacing.md,
           vertical: DonySpacing.sm,
         ),
-        child: SelectableText(
-          body,
-          style: tt.bodyMedium?.copyWith(
-            color: isMe ? cs.onPrimary : cs.onSurface,
-          ),
-          contextMenuBuilder: (menuContext, editableTextState) =>
-              AdaptiveTextSelectionToolbar.buttonItems(
-                anchors: editableTextState.contextMenuAnchors,
-                buttonItems: [
-                  ...editableTextState.contextMenuButtonItems,
-                  ContextMenuButtonItem(
-                    label: copyLabel,
-                    onPressed: () {
-                      editableTextState.hideToolbar();
-                      _copy(context);
-                    },
-                  ),
-                ],
-              ),
-        ),
+        child: isMe
+            ? Theme(
+                data: Theme.of(
+                  context,
+                ).copyWith(textSelectionTheme: ownBubbleSelectionTheme(cs)),
+                child: _selectable(context, copyLabel),
+              )
+            : _selectable(context, copyLabel),
       ),
     );
   }
+
+  Widget _selectable(BuildContext context, String copyLabel) {
+    return SelectableText(
+      body,
+      style: tt.bodyMedium?.copyWith(color: isMe ? cs.onPrimary : cs.onSurface),
+      contextMenuBuilder: (menuContext, editableTextState) =>
+          AdaptiveTextSelectionToolbar.buttonItems(
+            anchors: editableTextState.contextMenuAnchors,
+            buttonItems: [
+              ...editableTextState.contextMenuButtonItems,
+              ContextMenuButtonItem(
+                label: copyLabel,
+                onPressed: () {
+                  editableTextState.hideToolbar();
+                  _copy(context);
+                },
+              ),
+            ],
+          ),
+    );
+  }
+}
+
+/// Sélection dans sa propre bulle (fond `primary`, texte `onPrimary`) : le
+/// surlignage par défaut est lui aussi `primary`, le texte sélectionné
+/// disparaissait (Sentry FLUTTER-8E). Voile sombre sous le texte blanc, et
+/// poignées foncées, lisibles sur la bulle comme sur le fond clair du fil.
+@visibleForTesting
+TextSelectionThemeData ownBubbleSelectionTheme(ColorScheme cs) {
+  return TextSelectionThemeData(
+    selectionColor: Colors.black.withValues(alpha: 0.32),
+    selectionHandleColor: cs.onSurface,
+    cursorColor: cs.onPrimary,
+  );
 }
 
 class _ImageContent extends StatelessWidget {

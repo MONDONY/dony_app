@@ -9364,6 +9364,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String bidCreateContentRefusedByTraveler(String category) {
+    return 'This traveler doesn\'t accept “$category”.';
+  }
+
+  @override
+  String get profilePhotoViewAction => 'View profile photo';
+
+  @override
+  String get walletTopupMethodPhoneHint =>
+      'Enter your mobile money number: your networks will show up here.';
+
+  @override
   String get walletTopupMethodNoNetworks =>
       'No mobile money network available for this number.';
 
@@ -12115,6 +12127,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get prefsCurrencyLabel => 'Currency';
+
+  @override
+  String prefsCurrencyLockedSheetTitle(String currency) {
+    return 'Your currency stays $currency for now';
+  }
+
+  @override
+  String prefsCurrencyLockedSheetBody(String currency) {
+    return 'Your wallet still holds money in $currency: until it is back to zero, the currency can\'t change, so your balance is never converted without you. To unlock it, use this balance for a shipment, or request a refund from the wallet. Currency choice reopens as soon as the balance is zero.';
+  }
+
+  @override
+  String get prefsCurrencyLockedSheetWalletCta => 'Open my wallet';
 
   @override
   String get prefsCurrencyLockedSubtitle =>

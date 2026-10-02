@@ -126,7 +126,7 @@ void main() {
     );
   }
 
-  Widget buildHarness() {
+  Widget buildHarness({ThemeData? theme}) {
     final mmCubit = WalletTopupMobileMoneyCubit(
       repo,
       makeEnabledAnalytics(analyticsBackend),
@@ -148,7 +148,10 @@ void main() {
         ),
       ],
     );
-    return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
+    return MaterialApp.router(
+      routerConfig: router,
+      theme: theme ?? AppTheme.light(),
+    );
   }
 
   /// Sélectionne la tuile mobile money, laisse le temps à sa section (avec
@@ -227,6 +230,118 @@ void main() {
       );
     },
   );
+
+  // Sentry FLUTTER-8B : sur le pavé téléphone iOS, rien n'invitait à quitter
+  // le champ, les opérateurs ne se chargeaient jamais et le bouton restait
+  // grisé sans explication.
+  group('FLUTTER-8B — numéro saisi sans quitter le champ', () {
+    testWidgets('consigne affichée tant que rien n\'est chargé, puis '
+        'opérateurs chargés après une pause de saisie, bouton actif', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mobile money'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wallet-topup-phone-hint')), findsOneWidget);
+      expect(
+        find.text(
+          'Saisis ton numéro mobile money : tes opérateurs s\'affichent ici.',
+        ),
+        findsOneWidget,
+      );
+
+      await tester.enterText(
+        find.byKey(const Key('wallet-topup-payer-phone-field')),
+        '+221 77 123 45 67',
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      verifyNever(() => repo.topupProviders(any()));
+
+      await tester.pump(walletTopupPhoneDebounceDelay);
+      await tester.pumpAndSettle();
+
+      verify(() => repo.topupProviders('+221771234567')).called(1);
+      // Le champ garde le focus : c'est bien la pause, pas un blur.
+      expect(FocusManager.instance.primaryFocus?.context, isNotNull);
+      expect(find.byKey(const Key('wallet-topup-phone-hint')), findsNothing);
+      expect(
+        tester.widget<DonyButton>(find.byType(DonyButton).last).onPressed,
+        isNotNull,
+      );
+
+      // Le blur qui suit ne relance pas le même numéro.
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      verifyNever(() => repo.topupProviders(any()));
+    });
+
+    testWidgets('numéro encore incomplet : aucun appel au serveur', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mobile money'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('wallet-topup-payer-phone-field')),
+        '+221 77',
+      );
+      await tester.pump(walletTopupPhoneDebounceDelay * 2);
+      await tester.pumpAndSettle();
+
+      verifyNever(() => repo.topupProviders(any()));
+      expect(find.byKey(const Key('wallet-topup-phone-hint')), findsOneWidget);
+    });
+
+    testWidgets('touche « Terminé » du clavier : quitte le champ et charge', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mobile money'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('wallet-topup-payer-phone-field')),
+        '+221 77 123 45 67',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      verify(() => repo.topupProviders('+221771234567')).called(1);
+      expect(find.byKey(const Key('network-ORANGE_SEN')), findsOneWidget);
+
+      // La pause de saisie expire ensuite sans relancer le même numéro.
+      await tester.pump(walletTopupPhoneDebounceDelay);
+      await tester.pumpAndSettle();
+      verifyNever(() => repo.topupProviders(any()));
+    });
+  });
+
+  testWidgets('thème sombre : la carte sélectionnée garde un fond sombre, '
+      'lisible sous le texte clair (FLUTTER-8B)', (tester) async {
+    final dark = AppTheme.dark();
+    await tester.pumpWidget(buildHarness(theme: dark));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mobile money'));
+    await tester.pumpAndSettle();
+
+    final card = tester.widget<AnimatedContainer>(
+      find
+          .ancestor(
+            of: find.text('Mobile money'),
+            matching: find.byType(AnimatedContainer),
+          )
+          .first,
+    );
+    final bg = (card.decoration! as BoxDecoration).color!;
+    expect(bg, isNot(DonyColors.blue50));
+    expect(bg.computeLuminance(), lessThan(0.2));
+    expect(dark.colorScheme.onSurface.computeLuminance(), greaterThan(0.5));
+  });
 
   testWidgets(
     'Stripe inchangé : sélection puis Suivant transmet method STRIPE sans cubit',

@@ -214,6 +214,35 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
     });
 
+    // Sentry FLUTTER-8E : dans sa propre bulle (fond primary), le surlignage
+    // par défaut, primary lui aussi, cachait le texte sélectionné.
+    testWidgets('ma bulle : sélection sur voile sombre, poignées foncées ; '
+        'bulle reçue : thème par défaut', (tester) async {
+      when(() => bloc.state).thenReturn(
+        ChatLoaded([
+          // Sans Firebase en test, mon UID vaut '' : ce message est le mien.
+          _makeMsg(id: 'm1', body: 'merci la destinataire', senderId: ''),
+          _makeMsg(id: 'm2', body: '146205'),
+        ]),
+      );
+      await _pump(tester, bloc);
+
+      final cs = AppTheme.light().colorScheme;
+      final mine = Theme.of(
+        tester.element(
+          find.widgetWithText(SelectableText, 'merci la destinataire'),
+        ),
+      ).textSelectionTheme;
+      expect(mine, ownBubbleSelectionTheme(cs));
+      expect(mine.selectionColor, isNot(cs.primary));
+      expect(mine.selectionHandleColor, cs.onSurface);
+
+      final theirs = Theme.of(
+        tester.element(find.widgetWithText(SelectableText, '146205')),
+      ).textSelectionTheme;
+      expect(theirs, AppTheme.light().textSelectionTheme);
+    });
+
     testWidgets(
       'lecteur d\'écran : action « Copier le message » sur la bulle',
       (tester) async {

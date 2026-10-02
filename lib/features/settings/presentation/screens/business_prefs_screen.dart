@@ -127,9 +127,14 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                               color: cs.onSurfaceVariant,
                             ),
                           ),
-                          enabled: !state.currencyLocked,
-                          onTap: () =>
-                              unawaited(_openCurrencySelector(context, state)),
+                          // Verrouillée, la ligne reste touchable : elle
+                          // explique comment la débloquer. Inerte, elle
+                          // passait pour un bug (Sentry FLUTTER-8A).
+                          onTap: () => unawaited(
+                            state.currencyLocked
+                                ? _showCurrencyLockedSheet(context, state)
+                                : _openCurrencySelector(context, state),
+                          ),
                         ),
                         DonyListTile(
                           iconAsset: 'eye',
@@ -251,6 +256,42 @@ Future<void> _openCountryPicker(
 /// dépend seulement de [SupportedCurrency.isStripeEligible], pas d'un compte
 /// Connect (même approximation que le wizard de demande de colis). Le
 /// serveur reste seul décideur au paiement réel.
+/// Pourquoi la devise est figée et comment la libérer : le solde détenu, quel
+/// qu'il soit, ancre la devise (`CurrencyLockService` côté serveur). Une fois
+/// le portefeuille dépensé ou remboursé, le choix se rouvre de lui-même.
+Future<void> _showCurrencyLockedSheet(
+  BuildContext context,
+  BusinessPrefsState state,
+) {
+  final l = context.l10n;
+  final tt = Theme.of(context).textTheme;
+  final cs = Theme.of(context).colorScheme;
+  return DonyBottomSheet.show<void>(
+    context,
+    title: l.prefsCurrencyLockedSheetTitle(state.currencyCode),
+    stickyBottom: Builder(
+      builder: (sheetContext) => DonyButton(
+        key: const Key('prefs-currency-locked-open-wallet'),
+        label: l.prefsCurrencyLockedSheetWalletCta,
+        onPressed: () {
+          Navigator.of(sheetContext).pop();
+          unawaited(context.push('/payments/wallet'));
+        },
+      ),
+    ),
+    child: Column(
+      key: const Key('prefs-currency-locked-sheet'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.prefsCurrencyLockedSheetBody(state.currencyCode),
+          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        ),
+      ],
+    ),
+  );
+}
+
 Future<void> _openCurrencySelector(
   BuildContext context,
   BusinessPrefsState state,

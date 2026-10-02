@@ -15557,6 +15557,24 @@ abstract class AppLocalizations {
   /// **'Le solde est crédité en {code}, la devise de l\'opérateur.'**
   String walletTopupMethodCurrencyNotice(String code);
 
+  /// Avertissement quand l'expéditeur ajoute un contenu refusé par le voyageur (create_bid_bottom_sheet.dart _onCategoriesChanged, Sentry FLUTTER-8C).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur n\'accepte pas « {category} ».'**
+  String bidCreateContentRefusedByTraveler(String category);
+
+  /// Libellé d'accessibilité de la photo du profil public, qui s'ouvre en grand au toucher (profile_public_screen.dart _HeroAvatar, Sentry FLUTTER-8D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir la photo de profil'**
+  String get profilePhotoViewAction;
+
+  /// Consigne sous le champ numéro tant que les opérateurs ne sont pas chargés (wallet_topup_method_screen.dart _MobileMoneySection, Sentry FLUTTER-8B).
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisis ton numéro mobile money : tes opérateurs s\'affichent ici.'**
+  String get walletTopupMethodPhoneHint;
+
   /// Avertissement quand le catalogue d'opérateurs est vide pour le numéro saisi (wallet_topup_method_screen.dart _MobileMoneySection).
   ///
   /// In fr, this message translates to:
@@ -20278,6 +20296,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Devise'**
   String get prefsCurrencyLabel;
+
+  /// Titre de la feuille ouverte au toucher de la devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet, Sentry FLUTTER-8A).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre devise reste {currency} pour l\'instant'**
+  String prefsCurrencyLockedSheetTitle(String currency);
+
+  /// Explication de la feuille de devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre portefeuille contient encore de l\'argent en {currency} : tant qu\'il n\'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour un envoi, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.'**
+  String prefsCurrencyLockedSheetBody(String currency);
+
+  /// Bouton de la feuille de devise verrouillée vers le portefeuille (business_prefs_screen.dart _showCurrencyLockedSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir mon portefeuille'**
+  String get prefsCurrencyLockedSheetWalletCta;
 
   /// Sous-titre quand la devise est verrouillée (business_prefs_screen.dart)
   ///
