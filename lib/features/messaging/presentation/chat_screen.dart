@@ -11,6 +11,7 @@ import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/calls/presentation/call_screen.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
@@ -176,6 +177,65 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  /// Seul l'appel Yadony est possible : un tap le lance. Les deux : choix
+  /// dans une feuille.
+  Future<void> _onCallTapped(
+    ParticipantModel participant,
+    bool canCallByPhone,
+  ) async {
+    if (!canCallByPhone) {
+      _startInAppCall(participant);
+      return;
+    }
+    final l = context.l10n;
+    final choice = await DonyBottomSheet.show<String>(
+      context,
+      title: l.chatCallChooserTitle(participant.name),
+      child: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.wifi_calling_3_rounded),
+              title: Text(l.chatCallInApp),
+              subtitle: Text(l.chatCallInAppSubtitle),
+              onTap: () => Navigator.of(sheetContext).pop('yadony'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.phone_rounded),
+              title: Text(l.chatCallByPhone),
+              subtitle: Text(l.chatCallByPhoneSubtitle),
+              onTap: () => Navigator.of(sheetContext).pop('phone'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || choice == null) return;
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.callModeChosen,
+        properties: {'mode': choice},
+      ),
+    );
+    if (choice == 'yadony') {
+      _startInAppCall(participant);
+    } else {
+      _requestCall();
+    }
+  }
+
+  void _startInAppCall(ParticipantModel participant) {
+    _navigate(
+      '/calls/pending',
+      CallScreenArgs(
+        remoteName: participant.name,
+        remoteAvatarUrl: participant.avatarUrl,
+        conversationId: widget.conversation.id,
+      ),
+    );
+  }
+
   void _requestCall() {
     unawaited(
       getIt<AnalyticsService>().logEvent(
@@ -257,7 +317,12 @@ class _ChatScreenState extends State<ChatScreen> {
     // masqué partout dans l'app — bouton retiré pour rester cohérent.
     // Conversation voyageur ↔ destinataire (lot 3C) : le numéro n'y est
     // jamais révélé, même si un back le laissait passer.
-    final canCall =
+    // Appel Yadony (audio dans l'app) : décidé par le back (`callAvailable`).
+    // Le téléphone n'est jamais proposé seul : seulement en second choix,
+    // quand l'appel Yadony existe et que le numéro est partageable.
+    final canCallInApp = conversation.callAvailable;
+    final canCallByPhone =
+        canCallInApp &&
         participant.phoneAvailable &&
         smsAuthEnabledListenable.value &&
         !conversation.isRecipientConversation;
@@ -322,7 +387,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
         actions: [
-          if (canCall)
+          if (canCallInApp)
             BlocConsumer<ContactRevealBloc, ContactRevealState>(
               listener: (context, state) {
                 if (state is ContactRevealSuccess) {
@@ -335,7 +400,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 final isRevealing = state is ContactRevealLoading;
                 return IconButton(
                   tooltip: l.chatCallTooltip,
-                  onPressed: isRevealing ? null : _requestCall,
+                  onPressed: isRevealing
+                      ? null
+                      : () => _onCallTapped(participant, canCallByPhone),
                   icon: Container(
                     width: 38,
                     height: 38,

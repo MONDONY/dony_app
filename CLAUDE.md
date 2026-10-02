@@ -396,6 +396,12 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `conversation_opened` | ChatScreen.initState |
 | `message_sent` | ChatBloc._onSendText() |
 | `conversation_call_initiated` | ChatScreen._call() — tap 📞 dans le header chat (numéro révélé) |
+| `call_mode_chosen` | ChatScreen — choix dans la feuille d'appel quand les deux modes existent (propriété `mode` : `yadony`/`phone`). Non émis quand un seul mode est possible (un tap direct) |
+| `call_started` | CallBloc._onStart — appel Yadony créé par le back (`POST /conversations/{id}/calls` accepté), avant la sonnerie |
+| `call_connected` | CallBloc._onSnapshot — l'autre partie a décroché, une fois par appel |
+| `call_ended` | CallBloc._onSnapshot — fin d'appel signalée par Stream (propriété `reason` : `hangup`/`rejected`/`missed`/`failed`) |
+| `call_failed` | CallBloc._onStart — lancement refusé ou impossible (propriété `code` : code d'erreur du back, ex. `call-out-of-window`, ou `unknown`) |
+| `call_incoming_accepted` | CallBloc._onIncomingAccept — appel entrant décroché (propriété `native` : vrai si décroché depuis CallKit ou la notification Android) |
 | `message_blocked` | ChatScreen._sendText() — message refusé par ChatMessageValidator (propriété `reason`) |
 | `wallet_topup_started` | WalletTopupAmountScreen.initState |
 | `wallet_topup_completed` | WalletBloc (après topup réussi) |

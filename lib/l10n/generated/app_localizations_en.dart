@@ -375,6 +375,58 @@ class AppLocalizationsEn extends AppLocalizations {
       'The parcel must be delivered before you can do this.';
 
   @override
+  String get errorCallInProgressTitle => 'Call already in progress';
+
+  @override
+  String get errorCallInProgressMessage =>
+      'A call is already in progress in this conversation.';
+
+  @override
+  String get errorCallOutOfWindowTitle => 'Calling no longer available';
+
+  @override
+  String get errorCallOutOfWindowMessage =>
+      'Calling is available from order acceptance until 3 days after delivery.';
+
+  @override
+  String get errorCallBlockedTitle => 'Call not possible';
+
+  @override
+  String get errorCallBlockedMessage => 'You can\'t call this person.';
+
+  @override
+  String get errorCallCalleeUnavailableTitle => 'Person unreachable';
+
+  @override
+  String get errorCallCalleeUnavailableMessage =>
+      'This person can\'t be called right now. Send them a message instead.';
+
+  @override
+  String get errorCallConversationClosedTitle => 'Conversation closed';
+
+  @override
+  String get errorCallConversationClosedMessage =>
+      'This conversation is closed, calling is no longer possible.';
+
+  @override
+  String get errorCallNotParticipantMessage =>
+      'You\'re not part of this conversation.';
+
+  @override
+  String get errorCallProviderUnavailableTitle =>
+      'Calling temporarily unavailable';
+
+  @override
+  String get errorCallProviderUnavailableMessage =>
+      'The call couldn\'t be started. Try again in a moment.';
+
+  @override
+  String get errorCallsDisabledTitle => 'Calls unavailable';
+
+  @override
+  String get errorCallsDisabledMessage => 'Calls aren\'t available right now.';
+
+  @override
   String get errorInvalidBidStatusTitle => 'Invalid parcel status';
 
   @override
@@ -15580,6 +15632,60 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidCreateWeightRequiredHint =>
       'Enter the estimated weight, e.g. 0.5 kg for a phone.';
+
+  @override
+  String get callStatusConnecting => 'Connecting…';
+
+  @override
+  String get callStatusRinging => 'Ringing…';
+
+  @override
+  String get callStatusEnded => 'Call ended';
+
+  @override
+  String get callStatusRejected => 'Call declined';
+
+  @override
+  String get callStatusMissed => 'No answer';
+
+  @override
+  String get callStatusFailed => 'The call could not be completed';
+
+  @override
+  String get callMute => 'Mute';
+
+  @override
+  String get callUnmute => 'Unmute';
+
+  @override
+  String get callSpeaker => 'Speaker';
+
+  @override
+  String get callHangUp => 'Hang up';
+
+  @override
+  String get callMicrophoneDenied =>
+      'Allow the microphone in Settings to call.';
+
+  @override
+  String get callOpenSettings => 'Open Settings';
+
+  @override
+  String get chatCallInApp => 'Yadony call';
+
+  @override
+  String get chatCallInAppSubtitle => 'Free, without showing your number';
+
+  @override
+  String get chatCallByPhone => 'Phone call';
+
+  @override
+  String get chatCallByPhoneSubtitle => 'Uses your phone plan';
+
+  @override
+  String chatCallChooserTitle(String name) {
+    return 'Call $name';
+  }
 
   @override
   String get trackingTimelineOpenParcel => 'View parcel';

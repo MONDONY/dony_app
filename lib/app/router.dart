@@ -24,6 +24,8 @@ import 'package:dony/features/auth/presentation/screens/otp_verification_screen.
 import 'package:dony/features/auth/presentation/screens/personal_info_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
+import 'package:dony/features/calls/bloc/call_bloc.dart';
+import 'package:dony/features/calls/presentation/call_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
@@ -1134,6 +1136,35 @@ final appRouter = GoRouter(
     ),
 
     // ── Messagerie — conversation individuelle (hors shell) ─────────────
+    // Appel audio Yadony, sortant (depuis une conversation) ou entrant
+    // (décroché). `:callId` vaut `pending` tant que le back n'a pas créé
+    // l'appel ; les détails passent par `extra` (CallScreenArgs), ou par
+    // l'URL pour un appel entrant (CallScreenArgs.incomingLocation).
+    GoRoute(
+      path: '/calls/:callId',
+      pageBuilder: (context, state) {
+        final args = state.extra is CallScreenArgs
+            ? state.extra! as CallScreenArgs
+            : CallScreenArgs.fromRoute(
+                state.pathParameters['callId']!,
+                state.uri.queryParameters,
+              );
+        return CustomTransitionPage<void>(
+          name: '/calls',
+          child: BlocProvider<CallBloc>(
+            create: (_) {
+              final bloc = getIt<CallBloc>();
+              final initial = args.initialEvent;
+              if (initial != null) bloc.add(initial);
+              return bloc;
+            },
+            child: CallScreen(args: args),
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              FadeTransition(opacity: animation, child: child),
+        );
+      },
+    ),
     GoRoute(
       path: '/conversations/:id',
       builder: (context, state) {

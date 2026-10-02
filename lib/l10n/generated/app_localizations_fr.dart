@@ -378,6 +378,60 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette action nécessite que le colis ait été livré.';
 
   @override
+  String get errorCallInProgressTitle => 'Appel déjà en cours';
+
+  @override
+  String get errorCallInProgressMessage =>
+      'Un appel est déjà en cours dans cette conversation.';
+
+  @override
+  String get errorCallOutOfWindowTitle => 'Appel plus disponible';
+
+  @override
+  String get errorCallOutOfWindowMessage =>
+      'L\'appel est possible de l\'acceptation de la commande jusqu\'à 3 jours après la livraison.';
+
+  @override
+  String get errorCallBlockedTitle => 'Appel impossible';
+
+  @override
+  String get errorCallBlockedMessage =>
+      'Tu ne peux pas appeler cette personne.';
+
+  @override
+  String get errorCallCalleeUnavailableTitle => 'Personne injoignable';
+
+  @override
+  String get errorCallCalleeUnavailableMessage =>
+      'Cette personne ne peut pas être appelée pour le moment. Écris-lui dans la conversation.';
+
+  @override
+  String get errorCallConversationClosedTitle => 'Conversation fermée';
+
+  @override
+  String get errorCallConversationClosedMessage =>
+      'Cette conversation est fermée, l\'appel n\'est plus possible.';
+
+  @override
+  String get errorCallNotParticipantMessage =>
+      'Tu ne participes pas à cette conversation.';
+
+  @override
+  String get errorCallProviderUnavailableTitle =>
+      'Appel momentanément indisponible';
+
+  @override
+  String get errorCallProviderUnavailableMessage =>
+      'L\'appel n\'a pas pu être lancé. Réessaie dans un instant.';
+
+  @override
+  String get errorCallsDisabledTitle => 'Appels indisponibles';
+
+  @override
+  String get errorCallsDisabledMessage =>
+      'Les appels ne sont pas disponibles pour le moment.';
+
+  @override
   String get errorInvalidBidStatusTitle => 'État du colis invalide';
 
   @override
@@ -15669,6 +15723,60 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidCreateWeightRequiredHint =>
       'Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.';
+
+  @override
+  String get callStatusConnecting => 'Connexion…';
+
+  @override
+  String get callStatusRinging => 'Ça sonne…';
+
+  @override
+  String get callStatusEnded => 'Appel terminé';
+
+  @override
+  String get callStatusRejected => 'Appel refusé';
+
+  @override
+  String get callStatusMissed => 'Pas de réponse';
+
+  @override
+  String get callStatusFailed => 'L\'appel n\'a pas pu aboutir';
+
+  @override
+  String get callMute => 'Couper le micro';
+
+  @override
+  String get callUnmute => 'Réactiver le micro';
+
+  @override
+  String get callSpeaker => 'Haut-parleur';
+
+  @override
+  String get callHangUp => 'Raccrocher';
+
+  @override
+  String get callMicrophoneDenied =>
+      'Autorisez le micro dans les réglages pour appeler.';
+
+  @override
+  String get callOpenSettings => 'Ouvrir les réglages';
+
+  @override
+  String get chatCallInApp => 'Appel Yadony';
+
+  @override
+  String get chatCallInAppSubtitle => 'Gratuit, sans montrer votre numéro';
+
+  @override
+  String get chatCallByPhone => 'Appel téléphone';
+
+  @override
+  String get chatCallByPhoneSubtitle => 'Avec votre forfait';
+
+  @override
+  String chatCallChooserTitle(String name) {
+    return 'Appeler $name';
+  }
 
   @override
   String get trackingTimelineOpenParcel => 'Voir le colis';
