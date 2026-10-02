@@ -4938,6 +4938,26 @@
       }
     }
   },
+  "bidCreateContentRefusedByTraveler": "This traveler doesn't accept “{category}”.",
+  "@bidCreateContentRefusedByTraveler": {
+    "description": "Avertissement quand l'expéditeur ajoute un contenu refusé par le voyageur (create_bid_bottom_sheet.dart _onCategoriesChanged, Sentry FLUTTER-8C).",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+
+  "profilePhotoViewAction": "View profile photo",
+  "@profilePhotoViewAction": {
+    "description": "Libellé d'accessibilité de la photo du profil public, qui s'ouvre en grand au toucher (profile_public_screen.dart _HeroAvatar, Sentry FLUTTER-8D)."
+  },
+
+  "walletTopupMethodPhoneHint": "Enter your mobile money number: your networks will show up here.",
+  "@walletTopupMethodPhoneHint": {
+    "description": "Consigne sous le champ numéro tant que les opérateurs ne sont pas chargés (wallet_topup_method_screen.dart _MobileMoneySection, Sentry FLUTTER-8B)."
+  },
+
   "walletTopupMethodNoNetworks": "No mobile money network available for this number.",
   "@walletTopupMethodNoNetworks": {
     "description": "Avertissement quand le catalogue d'opérateurs est vide pour le numéro saisi (wallet_topup_method_screen.dart _MobileMoneySection)."
@@ -7072,6 +7092,31 @@
   "prefsCountryLockedSubtitle": "Locked: a shipment is in progress or your payment account has been created",
   "prefsCountryPlaceholder": "Choose my country",
   "prefsCurrencyLabel": "Currency",
+  "prefsCurrencyLockedSheetTitle": "Your currency stays {currency} for now",
+  "@prefsCurrencyLockedSheetTitle": {
+    "description": "Titre de la feuille ouverte au toucher de la devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet, Sentry FLUTTER-8A).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+
+  "prefsCurrencyLockedSheetBody": "Your wallet still holds money in {currency}: until it is back to zero, the currency can't change, so your balance is never converted without you. To unlock it, use this balance for a shipment, or request a refund from the wallet. Currency choice reopens as soon as the balance is zero.",
+  "@prefsCurrencyLockedSheetBody": {
+    "description": "Explication de la feuille de devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+
+  "prefsCurrencyLockedSheetWalletCta": "Open my wallet",
+  "@prefsCurrencyLockedSheetWalletCta": {
+    "description": "Bouton de la feuille de devise verrouillée vers le portefeuille (business_prefs_screen.dart _showCurrencyLockedSheet)."
+  },
+
   "prefsCurrencyLockedSubtitle": "Locked: empty your wallet to change it",
   "prefsDisplayCurrencyLabel": "Display currency",
   "prefsDisplayCurrencySubtitle": "Prices posted in another currency are converted for reference only",

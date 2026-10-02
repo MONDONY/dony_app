@@ -9473,6 +9473,18 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String bidCreateContentRefusedByTraveler(String category) {
+    return 'Ce voyageur n\'accepte pas « $category ».';
+  }
+
+  @override
+  String get profilePhotoViewAction => 'Voir la photo de profil';
+
+  @override
+  String get walletTopupMethodPhoneHint =>
+      'Saisis ton numéro mobile money : tes opérateurs s\'affichent ici.';
+
+  @override
   String get walletTopupMethodNoNetworks =>
       'Aucun réseau mobile money disponible pour ce numéro.';
 
@@ -12243,6 +12255,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get prefsCurrencyLabel => 'Devise';
+
+  @override
+  String prefsCurrencyLockedSheetTitle(String currency) {
+    return 'Votre devise reste $currency pour l\'instant';
+  }
+
+  @override
+  String prefsCurrencyLockedSheetBody(String currency) {
+    return 'Votre portefeuille contient encore de l\'argent en $currency : tant qu\'il n\'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour un envoi, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.';
+  }
+
+  @override
+  String get prefsCurrencyLockedSheetWalletCta => 'Ouvrir mon portefeuille';
 
   @override
   String get prefsCurrencyLockedSubtitle =>

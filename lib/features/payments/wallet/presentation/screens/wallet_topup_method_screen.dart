@@ -27,6 +27,10 @@ import 'package:go_router/go_router.dart';
 /// instance survit à tout le parcours de recharge — c'est elle qui est
 /// transmise en aval via [WalletTopupMethodSelection.cubit], jamais une
 /// nouvelle (le sondage démarré par `initiate()` ne doit jamais être perdu).
+/// Pause de saisie après laquelle les opérateurs du numéro sont chargés.
+@visibleForTesting
+const walletTopupPhoneDebounceDelay = Duration(milliseconds: 700);
+
 class WalletTopupMethodScreen extends StatefulWidget {
   const WalletTopupMethodScreen({super.key});
 
@@ -46,6 +50,15 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
   /// relancer un appel identique à chaque perte de focus si le champ n'a pas
   /// changé depuis.
   String? _lastLoadedPhone;
+
+  /// Chargement des opérateurs dès que la saisie marque une pause : sur le
+  /// pavé téléphone iOS, rien n'invite à quitter le champ, et le bouton
+  /// restait grisé sans explication (Sentry FLUTTER-8B).
+  Timer? _phoneDebounce;
+
+  /// En dessous, le numéro est forcément incomplet : inutile d'interroger
+  /// le serveur à chaque chiffre.
+  static const _minPhoneDigits = 8;
 
   static _MethodDef _cardMethod(AppLocalizations l) => _MethodDef(
     iconAsset: 'credit-card',
@@ -73,6 +86,17 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
     final normalized = normalizePayerPhone(_phoneController.text);
     if (normalized == null || normalized.isEmpty) return;
     _requestProviders(normalized);
+  }
+
+  void _onPhoneChanged(String value) {
+    _phoneDebounce?.cancel();
+    final normalized = normalizePayerPhone(value);
+    if (normalized == null) return;
+    final digits = normalized.replaceAll(RegExp(r'\D'), '');
+    if (digits.length < _minPhoneDigits) return;
+    _phoneDebounce = Timer(walletTopupPhoneDebounceDelay, () {
+      if (mounted) _requestProviders(normalized);
+    });
   }
 
   /// Le catalogue affiché correspond-il encore à [phoneNumber] ? Seuls les
@@ -116,6 +140,7 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
 
   @override
   void dispose() {
+    _phoneDebounce?.cancel();
     _phoneFocusNode.removeListener(_onPhoneFocusChange);
     _phoneFocusNode.dispose();
     _phoneController.dispose();
@@ -272,6 +297,7 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
                       _MobileMoneySection(
                             phoneController: _phoneController,
                             phoneFocusNode: _phoneFocusNode,
+                            onPhoneChanged: _onPhoneChanged,
                             state: mobileMoneyState,
                             onRetry: () {
                               final normalized = normalizePayerPhone(
@@ -317,12 +343,14 @@ class _MobileMoneySection extends StatelessWidget {
   const _MobileMoneySection({
     required this.phoneController,
     required this.phoneFocusNode,
+    required this.onPhoneChanged,
     required this.state,
     required this.onRetry,
   });
 
   final TextEditingController phoneController;
   final FocusNode phoneFocusNode;
+  final ValueChanged<String> onPhoneChanged;
   final WalletTopupMobileMoneyState state;
   final VoidCallback onRetry;
 
@@ -354,6 +382,9 @@ class _MobileMoneySection extends StatelessWidget {
             focusNode: phoneFocusNode,
             label: l.mobileMoneyPayingNumberLabel,
             keyboardType: TextInputType.phone,
+            textInputAction: TextInputAction.done,
+            onChanged: onPhoneChanged,
+            onSubmitted: (_) => phoneFocusNode.unfocus(),
           ),
           if (currencyCode != null) ...[
             const SizedBox(height: DonySpacing.xs),
@@ -400,6 +431,13 @@ class _MobileMoneySection extends StatelessWidget {
                 onPressed: onRetry,
                 child: Text(l.commonRetry),
               ),
+            ),
+            // Rien n'est encore chargé : dire quoi faire, plutôt que de
+            // laisser un bouton grisé sans explication.
+            WalletTopupMobileMoneyIdle() => Text(
+              l.walletTopupMethodPhoneHint,
+              key: const Key('wallet-topup-phone-hint'),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             _ => const SizedBox.shrink(),
           },
@@ -537,7 +575,14 @@ class _MethodCard extends StatelessWidget {
           duration: const Duration(milliseconds: 160),
           curve: Curves.easeOut,
           decoration: BoxDecoration(
-            color: isSelected ? DonyColors.blue50 : cs.surface,
+            // Teintes dérivées du thème : un blue50 en dur passait sous le
+            // texte clair du thème sombre, illisible (Sentry FLUTTER-8B).
+            color: isSelected
+                ? Color.alphaBlend(
+                    cs.primary.withValues(alpha: 0.10),
+                    cs.surface,
+                  )
+                : cs.surface,
             borderRadius: BorderRadius.circular(DonyRadius.card),
             border: Border.all(
               color: isSelected ? cs.primary : cs.outline,
@@ -565,8 +610,8 @@ class _MethodCard extends StatelessWidget {
                 height: DonySpacing.icon,
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? DonyColors.blue100
-                      : DonyColors.neutral100,
+                      ? cs.primary.withValues(alpha: 0.16)
+                      : cs.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                 ),
                 child: def.iconAsset != null
