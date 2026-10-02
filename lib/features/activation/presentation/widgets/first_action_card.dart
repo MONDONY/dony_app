@@ -20,6 +20,13 @@ bool shouldShowFirstActionCard(
 }) =>
     isKycVerified && state is ActivationLoaded && !state.status.firstActionDone;
 
+/// Retour sur l'accueil alors que la carte est affichée : la personne vient
+/// peut-être de publier, réserver ou créer une alerte, le statut est relu.
+bool shouldRefreshActivationOnHome(String path, ActivationState state) =>
+    path == '/home' &&
+    state is ActivationLoaded &&
+    !state.status.firstActionDone;
+
 /// Rappel fixe (pas de croix) qui mène aux premiers pas tant que la personne
 /// n'a ni publié, ni réservé, ni fait d'offre, ni créé d'alerte.
 class FirstActionCard extends StatelessWidget {

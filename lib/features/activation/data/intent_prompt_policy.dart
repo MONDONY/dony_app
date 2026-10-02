@@ -13,7 +13,9 @@ class IntentPromptPolicy {
     final count = (_prefs.get(HiveService.kIntentPromptCount) as int?) ?? 0;
     if (count == 0) return true;
     if (count >= 2) return false;
-    final last = DateTime.tryParse(_prefs.get(HiveService.kIntentPromptLastAt) as String? ?? '');
+    final last = DateTime.tryParse(
+      _prefs.get(HiveService.kIntentPromptLastAt) as String? ?? '',
+    );
     return last == null || !now.isBefore(last.add(_gap));
   }
 

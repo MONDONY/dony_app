@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/activation/presentation/screens/intent_step_screen.dart';
@@ -14,6 +16,9 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockIntentCubit extends MockCubit<IntentFormState>
     implements IntentCubit {}
+
+class _MockActivationCubit extends MockCubit<ActivationState>
+    implements ActivationCubit {}
 
 void main() {
   setUpAll(() => registerFallbackValue(IntentSource.signup));
@@ -113,6 +118,29 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Parrainage'), findsOneWidget);
+    await states.close();
+  });
+
+  testWidgets('saved : recharge le statut d\'activation avant la suite', (
+    tester,
+  ) async {
+    final activation = _MockActivationCubit();
+    when(() => activation.state).thenReturn(const ActivationInitial());
+    when(() => activation.load()).thenAnswer((_) async {});
+    getIt.registerSingleton<ActivationCubit>(activation);
+    addTearDown(() => getIt.unregister<ActivationCubit>());
+    final cubit = _MockIntentCubit();
+    final states = StreamController<IntentFormState>();
+    await pump(tester, cubit, states);
+    states.add(
+      const IntentFormState(
+        intent: UserIntent.sender,
+        destination: 'SN',
+        status: IntentFormStatus.saved,
+      ),
+    );
+    await tester.pumpAndSettle();
+    verify(() => activation.load()).called(1);
     await states.close();
   });
 }

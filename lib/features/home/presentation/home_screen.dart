@@ -294,6 +294,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Retour au premier plan : la carte « première action » disparaît dès que
   /// la personne a publié, réservé ou créé une alerte ailleurs.
   late final AppLifecycleListener _activationLifecycle;
+  GoRouter? _router;
+
+  void _onRouteChanged() {
+    final cubit = _activationCubit;
+    final router = _router;
+    if (cubit == null || router == null || !mounted) return;
+    final path = router.routerDelegate.currentConfiguration.uri.path;
+    if (shouldRefreshActivationOnHome(path, cubit.state)) {
+      unawaited(cubit.load());
+    }
+  }
 
   final _sheetController = DraggableScrollableController();
 
@@ -358,6 +369,16 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _pendingSearchNotifier!.addListener(_consumePendingSearch);
     }
     _sheetController.addListener(_onSheetSizeChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Retour sur l'accueil : relire le statut tant que la carte « première
+      // action » est affichée ; et poser la question d'intention si le statut
+      // était déjà chargé avant le montage de l'accueil.
+      _router = GoRouter.maybeOf(context);
+      _router?.routerDelegate.addListener(_onRouteChanged);
+      final activation = _activationCubit?.state;
+      if (activation != null) unawaited(_maybeAskIntent(context, activation));
+    });
     _activationLifecycle = AppLifecycleListener(
       onResume: () {
         if (_activationCubit?.state is ActivationLoaded) {
@@ -553,6 +574,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   @override
   void dispose() {
+    _router?.routerDelegate.removeListener(_onRouteChanged);
     _activationLifecycle.dispose();
     _blockSub?.cancel();
     _pendingSearchNotifier?.removeListener(_consumePendingSearch);

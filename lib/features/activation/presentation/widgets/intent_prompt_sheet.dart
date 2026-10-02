@@ -19,7 +19,9 @@ abstract final class IntentPromptSheet {
     UserIntent? initialIntent,
     String? initialDestination,
   }) {
-    final cubit = getIt<IntentCubit>(param1: (intent: initialIntent, destination: initialDestination));
+    final cubit = getIt<IntentCubit>(
+      param1: (intent: initialIntent, destination: initialDestination),
+    );
     final l = context.l10n;
     return DonyBottomSheet.show<bool>(
       context,
@@ -32,7 +34,11 @@ abstract final class IntentPromptSheet {
             if (state.status == IntentFormStatus.saved) {
               ctx.pop(true);
             } else if (state.status == IntentFormStatus.error) {
-              DonySnackbar.show(ctx, message: ctx.l10n.intentSaveError, type: DonySnackbarType.error);
+              DonySnackbar.show(
+                ctx,
+                message: ctx.l10n.intentSaveError,
+                type: DonySnackbarType.error,
+              );
             }
           },
           child: content,
@@ -46,7 +52,9 @@ abstract final class IntentPromptSheet {
           key: const Key('intent-sheet-continue'),
           label: l.intentContinue,
           isLoading: state.status == IntentFormStatus.saving,
-          onPressed: state.isValid && state.status != IntentFormStatus.saving ? () => cubit.submit(source) : null,
+          onPressed: state.isValid && state.status != IntentFormStatus.saving
+              ? () => cubit.submit(source)
+              : null,
         ),
       ),
       child: const IntentForm(),

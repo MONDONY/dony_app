@@ -1,4 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/get_it_safe.dart';
+import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/bloc/intent_cubit.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/activation/presentation/widgets/intent_form.dart';
@@ -40,6 +42,10 @@ class IntentStepScreen extends StatelessWidget {
       listener: (context, state) {
         // Une erreur n'empêche jamais de finir l'inscription : l'intention
         // sera redemandée sur l'accueil (comptes sans intention).
+        if (state.status == IntentFormStatus.saved) {
+          // Les premiers pas, plus loin, s'afficheront déjà personnalisés.
+          getItSafe<ActivationCubit>()?.load();
+        }
         if (state.status == IntentFormStatus.saved ||
             state.status == IntentFormStatus.error) {
           context.go(args.next, extra: args.nextExtra);
