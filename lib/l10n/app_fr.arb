@@ -16872,6 +16872,40 @@
       }
     }
   },
+  "trackingStepArrivedAtDestination": "Arrivé à destination",
+  "@trackingStepArrivedAtDestination": {
+    "description": "Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar)."
+  },
+  "trackingHeadlineArrivedIn": "Arrivé à {city}",
+  "@trackingHeadlineArrivedIn": {
+    "description": "Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar).",
+    "placeholders": {
+      "city": { "type": "String" }
+    }
+  },
+  "travelerArrivalPromptTitle": "Vous êtes arrivé à {city} ?",
+  "@travelerArrivalPromptTitle": {
+    "description": "Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar).",
+    "placeholders": {
+      "city": { "type": "String" }
+    }
+  },
+  "travelerArrivalPromptTitleGeneric": "Vous êtes arrivé à destination ?",
+  "@travelerArrivalPromptTitleGeneric": {
+    "description": "Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar)."
+  },
+  "travelerArrivalPromptMessage": "L'expéditeur sera prévenu de votre arrivée et pourra préparer le code de retrait avec le destinataire.",
+  "@travelerArrivalPromptMessage": {
+    "description": "Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar)."
+  },
+  "travelerArrivalPromptConfirm": "Oui, je suis arrivé",
+  "@travelerArrivalPromptConfirm": {
+    "description": "Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar)."
+  },
+  "travelerArrivalPromptSkip": "Pas encore, remettre le colis",
+  "@travelerArrivalPromptSkip": {
+    "description": "Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar)."
+  },
   "trackingHeadlineOnTheWay": "En route",
   "@trackingHeadlineOnTheWay": {
     "description": "Phrase d'état sans ville d'arrivée, et étape en cours de la frise entre le départ et la remise (tracking_timeline_bottom_sheet.dart)."

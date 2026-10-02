@@ -356,10 +356,12 @@ class _SuiviBodyState extends State<_SuiviBody> {
         :final transportMode,
         :final arrivalInstructions,
         :final trackingNumber,
+        :final bidStatus,
       ):
         await showTrackingTimelineSheet(
           context,
           bidId: bidId,
+          bidStatus: bidStatus,
           departureCity: departureCity,
           arrivalCity: arrivalCity,
           transportMode: transportMode,

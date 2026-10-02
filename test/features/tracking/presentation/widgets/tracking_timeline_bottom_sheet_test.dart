@@ -54,6 +54,7 @@ Future<void> _openSheet(
   VoidCallback? onShare,
   ThemeMode themeMode = ThemeMode.light,
   bool settle = true,
+  String? bidStatus,
 }) async {
   if (getIt.isRegistered<TrackingBloc>()) {
     getIt.unregister<TrackingBloc>();
@@ -82,6 +83,7 @@ Future<void> _openSheet(
               trackingNumber: trackingNumber,
               arrivalInstructions: arrivalInstructions,
               onShareTracking: onShare,
+              bidStatus: bidStatus,
             ),
             child: const Text('Ouvrir'),
           ),
@@ -169,6 +171,34 @@ void main() {
       expect(find.text('Partager le suivi'), findsOneWidget);
     });
   }
+
+  // Sentry FLUTTER-5S : arrivée déclarée sans scan, la frise restait « En route ».
+  testWidgets('arrivée déclarée (ARRIVED) : arrivé, remise en cours', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
+    await _openSheet(tester, bloc, bidStatus: 'ARRIVED');
+
+    expect(find.text('Arrivé à Dakar'), findsOneWidget);
+    expect(find.text('Arrivé à destination'), findsOneWidget);
+    expect(steps('done'), findsNWidgets(2));
+    expect(steps('current'), findsOneWidget);
+    expect(steps('upcoming'), findsNothing);
+    expect(find.text('Remise au destinataire'), findsOneWidget);
+    expect(find.text('En route'), findsNothing);
+  });
+
+  testWidgets('retour dans l\'app : le parcours est rechargé', (tester) async {
+    when(() => bloc.state).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
+    await _openSheet(tester, bloc);
+    clearInteractions(bloc);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+
+    verify(() => bloc.add(any(that: isA<TrackingEventsRequested>()))).called(1);
+  });
 
   testWidgets('aucune étape : attente de la remise au voyageur', (
     tester,

@@ -1,9 +1,12 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 enum _TravelerAction {
@@ -94,7 +97,10 @@ class TravelerStickyBar extends StatelessWidget {
       case _TravelerAction.scan:
         return const _ScanBar();
       case _TravelerAction.deliver:
-        return _DeliverBar(offerOptionalTransit: bid.status == 'HANDED_OVER');
+        return _DeliverBar(
+          bid: bid,
+          offerOptionalTransit: bid.status == 'HANDED_OVER',
+        );
       case _TravelerAction.awaitingMobileMoneyPayment:
         return const _AwaitingMobileMoneyPaymentBar();
     }
@@ -174,11 +180,47 @@ class _ScanBar extends StatelessWidget {
 // ── Deliver bar ───────────────────────────────────────────────────────────────
 
 class _DeliverBar extends StatelessWidget {
-  const _DeliverBar({this.offerOptionalTransit = false});
+  const _DeliverBar({required this.bid, this.offerOptionalTransit = false});
+
+  final BidModel bid;
 
   /// Colis récupéré, transit pas encore scanné : propose le scan Transit en
   /// action secondaire, jamais comme un passage obligé.
   final bool offerOptionalTransit;
+
+  /// Remise au destinataire. Si le voyageur n'a pas encore déclaré son
+  /// arrivée, on la lui propose d'abord : sans elle, l'expéditeur n'est pas
+  /// prévenu et son suivi reste « En route » pendant qu'on lui demande le
+  /// code (Sentry FLUTTER-5S). « Pas encore » continue sans rien déclarer.
+  Future<void> _deliver(BuildContext context) async {
+    if (bid.status == 'HANDED_OVER' || bid.status == 'IN_TRANSIT') {
+      final l = context.l10n;
+      final city = bid.arrivalCity?.trim() ?? '';
+      final arrived = await DonyDialog.show(
+        context,
+        title: city.isEmpty
+            ? l.travelerArrivalPromptTitleGeneric
+            : l.travelerArrivalPromptTitle(city),
+        message: l.travelerArrivalPromptMessage,
+        confirmLabel: l.travelerArrivalPromptConfirm,
+        cancelLabel: l.travelerArrivalPromptSkip,
+        iconAsset: 'plane-landing',
+      );
+      if (!context.mounted || arrived == null) return;
+      if (arrived) {
+        context.read<AnnouncementBloc>().add(
+          AnnouncementTripMarkArrivedRequested(
+            announcementId: bid.announcementId,
+          ),
+        );
+      }
+    }
+    if (!context.mounted) return;
+    await context.push<void>(
+      '/tracking/scan/identify',
+      extra: <String, dynamic>{'etape': 'ARRIVEE', 'focusNumber': false},
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -202,13 +244,7 @@ class _DeliverBar extends StatelessWidget {
             label: context.l10n.bidDetailConfirmHandover,
             iconAsset: 'badge-check',
             variant: DonyButtonVariant.success,
-            onPressed: () => context.push(
-              '/tracking/scan/identify',
-              extra: <String, dynamic>{
-                'etape': 'ARRIVEE',
-                'focusNumber': false,
-              },
-            ),
+            onPressed: () => _deliver(context),
           ),
           if (offerOptionalTransit) ...[
             const SizedBox(height: DonySpacing.sm),

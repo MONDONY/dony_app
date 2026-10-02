@@ -1,5 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart';
@@ -21,11 +24,16 @@ class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 class _MockAcceptBloc extends MockBloc<BidAcceptanceEvent, BidAcceptanceState>
     implements BidAcceptanceBloc {}
 
+class _MockAnnouncementBloc
+    extends MockBloc<AnnouncementEvent, AnnouncementState>
+    implements AnnouncementBloc {}
+
 BidModel _bid({
   required String status,
   bool voyageurConfirmed = false,
   DateTime? windowEnd,
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+  String? arrivalCity,
 }) => BidModel(
   id: 'b1',
   announcementId: 'a1',
@@ -35,6 +43,7 @@ BidModel _bid({
   voyageurConfirmed: voyageurConfirmed,
   handoverDeadline: windowEnd,
   paymentMethod: paymentMethod,
+  arrivalCity: arrivalCity,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
 );
@@ -320,15 +329,18 @@ void main() {
     expect(pushedRoutes, contains('/tracking/scan/identify'));
   });
 
-  testWidgets('tap Valider la remise → GoRouter push déclenché', (
-    tester,
+  /// Barre voyageur sous un vrai GoRouter, avec un AnnouncementBloc mocké :
+  /// renvoie les routes poussées.
+  Future<List<String>> pumpDeliver(
+    WidgetTester tester,
+    String status,
+    AnnouncementBloc announcementBloc,
   ) async {
     final bidBloc = _MockBidBloc();
     final acceptBloc = _MockAcceptBloc();
     when(() => bidBloc.state).thenReturn(BidInitial());
     when(() => acceptBloc.state).thenReturn(BidAcceptanceInitial());
-
-    final List<String> pushedRoutes = [];
+    final pushedRoutes = <String>[];
     final router = GoRouter(
       routes: [
         GoRoute(
@@ -338,9 +350,10 @@ void main() {
               providers: [
                 BlocProvider<BidBloc>.value(value: bidBloc),
                 BlocProvider<BidAcceptanceBloc>.value(value: acceptBloc),
+                BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
               ],
               child: TravelerStickyBar(
-                bid: _bid(status: 'IN_TRANSIT'),
+                bid: _bid(status: status, arrivalCity: 'Dakar'),
                 isLoading: false,
               ),
             ),
@@ -355,16 +368,72 @@ void main() {
         ),
       ],
     );
-
     await tester.pumpWidget(
       MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
     );
     await tester.pumpAndSettle();
-
-    // « Valider la remise » redirige vers l'étape Arrivée du hub de scan.
     await tester.tap(find.text('Valider la remise'));
     await tester.pumpAndSettle();
-    expect(pushedRoutes, contains('/tracking/scan/identify'));
+    return pushedRoutes;
+  }
+
+  group('Valider la remise', () {
+    late _MockAnnouncementBloc announcementBloc;
+
+    setUpAll(() {
+      registerFallbackValue(
+        AnnouncementTripMarkArrivedRequested(announcementId: 'x'),
+      );
+    });
+
+    setUp(() {
+      announcementBloc = _MockAnnouncementBloc();
+      when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+    });
+
+    testWidgets('arrivée déjà déclarée (ARRIVED) : remise directe', (
+      tester,
+    ) async {
+      final pushed = await pumpDeliver(tester, 'ARRIVED', announcementBloc);
+
+      expect(find.text('Vous êtes arrivé à Dakar ?'), findsNothing);
+      expect(pushed, contains('/tracking/scan/identify'));
+      verifyNever(() => announcementBloc.add(any()));
+    });
+
+    // Sentry FLUTTER-5S : sans déclaration, l'expéditeur n'était pas prévenu.
+    testWidgets('en route : « Oui, je suis arrivé » déclare puis remet', (
+      tester,
+    ) async {
+      final pushed = await pumpDeliver(tester, 'IN_TRANSIT', announcementBloc);
+      expect(pushed, isEmpty);
+      expect(find.text('Vous êtes arrivé à Dakar ?'), findsOneWidget);
+
+      await tester.tap(find.text('Oui, je suis arrivé'));
+      await tester.pumpAndSettle();
+
+      final added = verify(
+        () => announcementBloc.add(captureAny()),
+      ).captured.single;
+      expect(added, isA<AnnouncementTripMarkArrivedRequested>());
+      expect(
+        (added as AnnouncementTripMarkArrivedRequested).announcementId,
+        'a1',
+      );
+      expect(pushed, contains('/tracking/scan/identify'));
+    });
+
+    testWidgets('en route : « Pas encore » remet sans rien déclarer', (
+      tester,
+    ) async {
+      final pushed = await pumpDeliver(tester, 'HANDED_OVER', announcementBloc);
+
+      await tester.tap(find.text('Pas encore, remettre le colis'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => announcementBloc.add(any()));
+      expect(pushed, contains('/tracking/scan/identify'));
+    });
   });
 
   testWidgets('anglais — HANDED_OVER : transit facultatif traduit', (
