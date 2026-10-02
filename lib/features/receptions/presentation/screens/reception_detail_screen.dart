@@ -252,6 +252,14 @@ class _PendingContent extends StatelessWidget {
             ],
           ),
         ),
+        if (reception.senderId case final senderId?) ...[
+          const SizedBox(height: DonySpacing.base),
+          _SenderCard(
+            senderId: senderId,
+            name: sender,
+            avatarUrl: reception.senderAvatarUrl,
+          ),
+        ],
         const SizedBox(height: DonySpacing.xl),
         Text(
           l.receptionPendingQuestion,
@@ -347,6 +355,14 @@ class _ConfirmedContent extends StatelessWidget {
             ],
           ),
         ),
+        if (reception.senderId case final senderId?) ...[
+          const SizedBox(height: DonySpacing.base),
+          _SenderCard(
+            senderId: senderId,
+            name: reception.senderFirstName,
+            avatarUrl: reception.senderAvatarUrl,
+          ),
+        ],
         if (reception.travelerId case final travelerId?) ...[
           const SizedBox(height: DonySpacing.base),
           _TravelerCard(
@@ -510,19 +526,81 @@ class _TravelerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final display = name ?? l.receptionTravelerLabel;
+    return _ProfileCard(
+      cardKey: const Key('reception-traveler-card'),
+      userId: travelerId,
+      role: l.receptionTravelerLabel,
+      display: display,
+      avatarUrl: avatarUrl,
+      semanticsLabel: l.receptionViewTravelerProfile(display),
+    );
+  }
+}
+
+/// L'expéditeur, photo comprise : le titre « {prénom} vous envoie un colis »
+/// ne menait nulle part, un tap sur cette carte ouvre son profil public
+/// (Sentry FLUTTER-7P).
+class _SenderCard extends StatelessWidget {
+  const _SenderCard({
+    required this.senderId,
+    required this.name,
+    required this.avatarUrl,
+  });
+
+  final String senderId;
+  final String? name;
+  final String? avatarUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final display = name ?? l.receptionSenderLabel;
+    return _ProfileCard(
+      cardKey: const Key('reception-sender-card'),
+      userId: senderId,
+      role: l.receptionSenderLabel,
+      display: display,
+      avatarUrl: avatarUrl,
+      semanticsLabel: l.receptionViewSenderProfile(display),
+    );
+  }
+}
+
+/// Carte d'une personne liée au colis (rôle, photo, prénom) qui ouvre son
+/// profil public.
+class _ProfileCard extends StatelessWidget {
+  const _ProfileCard({
+    required this.cardKey,
+    required this.userId,
+    required this.role,
+    required this.display,
+    required this.avatarUrl,
+    required this.semanticsLabel,
+  });
+
+  final Key cardKey;
+  final String userId;
+  final String role;
+  final String display;
+  final String? avatarUrl;
+  final String semanticsLabel;
+
+  @override
+  Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final display = name ?? l.receptionTravelerLabel;
     return Semantics(
       button: true,
-      label: l.receptionViewTravelerProfile(display),
+      label: semanticsLabel,
       excludeSemantics: true,
       child: DonyPressable(
-        key: const Key('reception-traveler-card'),
+        key: cardKey,
         onTap: () => context.push(
           '/profile/public',
-          extra: ProfilePublicArgs(userId: travelerId),
+          extra: ProfilePublicArgs(userId: userId),
         ),
         child: Container(
           padding: const EdgeInsets.all(DonySpacing.base),
@@ -540,7 +618,7 @@ class _TravelerCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l.receptionTravelerLabel,
+                      role,
                       style: tt.labelSmall?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),

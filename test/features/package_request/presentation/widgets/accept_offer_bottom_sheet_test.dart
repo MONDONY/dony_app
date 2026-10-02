@@ -328,6 +328,65 @@ void main() {
         expect(find.textContaining('tu remets le montant'), findsNothing);
       },
     );
+
+    // Sentry FLUTTER-7J : la feuille s'ouvre depuis le fil, atteint par `go`.
+    // L'ancien CTA « Voir le suivi » faisait `go` vers l'adresse affichée,
+    // go_router ne reconstruisait rien et l'écran de succès restait bloqué.
+    testWidgets(
+      'depuis /negotiations/{id} : « Voir la négociation » retire l\'écran de '
+      'succès et ramène au fil',
+      (tester) async {
+        final router = GoRouter(
+          initialLocation: '/home',
+          routes: [
+            GoRoute(
+              path: '/home',
+              builder: (_, _) => const Scaffold(body: Text('Accueil')),
+            ),
+            GoRoute(
+              path: '/negotiations/:id',
+              builder: (ctx, state) => Scaffold(
+                body: Column(
+                  children: [
+                    Text('Fil ${state.pathParameters['id']}'),
+                    Builder(
+                      builder: (ctx) => ElevatedButton(
+                        key: const Key('open'),
+                        onPressed: () => AcceptOfferBottomSheet.show(
+                          ctx,
+                          bloc: bloc,
+                          threadId: 't-1',
+                          priceEur: 35.0,
+                        ),
+                        child: const Text('Ouvrir'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+        await tester.pumpWidget(
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+        );
+        router.go('/negotiations/t-1');
+        await tester.pumpAndSettle();
+
+        await accept(tester);
+        await tester.pumpAndSettle();
+        expect(find.byType(DonySuccessScreen), findsOneWidget);
+        expect(find.text('Voir le suivi'), findsNothing);
+
+        await tester.ensureVisible(find.text('Voir la négociation'));
+        await tester.tap(find.text('Voir la négociation'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DonySuccessScreen), findsNothing);
+        expect(find.text('Fil t-1'), findsOneWidget);
+      },
+    );
   });
 
   group('Paiement checkout Stripe réussi', () {

@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/features/recipients/bloc/invite_recipient_cubit.dart';
 import 'package:dony/features/recipients/data/repositories/recipient_invitation_repository.dart';
 import 'package:dony/features/recipients/presentation/widgets/invite_recipient_sheet.dart';
@@ -14,6 +16,8 @@ import '../../helpers/l10n_test_helpers.dart';
 class _MockRepo extends Mock implements RecipientInvitationRepository {}
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
+
+class _MockContactPicker extends Mock implements ContactPickerService {}
 
 void main() {
   late _MockRepo repo;
@@ -30,7 +34,7 @@ void main() {
     result = null;
   });
 
-  Future<void> open(WidgetTester tester) async {
+  Future<void> open(WidgetTester tester, {String? userCountry}) async {
     await tester.pumpWidget(
       localizedApp(
         Builder(
@@ -39,6 +43,7 @@ void main() {
               onPressed: () async {
                 result = await InviteRecipientSheet.show(
                   context,
+                  userCountry: userCountry,
                   createCubit: () => InviteRecipientCubit(repo, analytics),
                 );
               },
@@ -188,5 +193,117 @@ void main() {
     await tester.tap(find.byTooltip('Fermer'));
     await tester.pumpAndSettle();
     expect(result, isFalse);
+  });
+
+  group('nom et contacts (FLUTTER-7V)', () {
+    late _MockContactPicker picker;
+
+    setUp(() {
+      picker = _MockContactPicker();
+      if (getIt.isRegistered<ContactPickerService>()) {
+        getIt.unregister<ContactPickerService>();
+      }
+      getIt.registerSingleton<ContactPickerService>(picker);
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<ContactPickerService>()) {
+        getIt.unregister<ContactPickerService>();
+      }
+    });
+
+    testWidgets('choisir un contact : numéro internationalisé et nom repris', (
+      tester,
+    ) async {
+      when(() => picker.pick()).thenAnswer(
+        (_) async =>
+            const PickedContact(fullName: 'Awa Diallo', phone: '0612345678'),
+      );
+      when(
+        () => repo.sendToPhone(any(), name: any(named: 'name')),
+      ).thenAnswer((_) async {});
+      await open(tester, userCountry: 'FR');
+
+      await tester.tap(find.byKey(const Key('invite-recipient-pick-contact')));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<TextField>(
+              find.descendant(
+                of: find.byKey(const Key('invite-recipient-phone')),
+                matching: find.byType(TextField),
+              ),
+            )
+            .controller!
+            .text,
+        '+33612345678',
+      );
+      expect(find.text('Awa Diallo'), findsOneWidget);
+
+      await tester.tap(submit());
+      await tester.pumpAndSettle();
+      verify(
+        () => repo.sendToPhone('+33612345678', name: 'Awa Diallo'),
+      ).called(1);
+      expect(result, isTrue);
+    });
+
+    testWidgets('contact annulé : formulaire inchangé', (tester) async {
+      when(() => picker.pick()).thenAnswer((_) async => null);
+      await open(tester, userCountry: 'FR');
+
+      await tester.tap(find.byKey(const Key('invite-recipient-pick-contact')));
+      await tester.pumpAndSettle();
+      expect(submitButton(tester).onPressed, isNull);
+    });
+
+    testWidgets("le lien contacts n'existe qu'en mode numéro", (tester) async {
+      await open(tester);
+      expect(
+        find.byKey(const Key('invite-recipient-pick-contact')),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('E-mail'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('invite-recipient-pick-contact')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('nom saisi : envoyé avec le numéro', (tester) async {
+      when(
+        () => repo.sendToPhone(any(), name: any(named: 'name')),
+      ).thenAnswer((_) async {});
+      await open(tester);
+      await tester.enterText(
+        find.byKey(const Key('invite-recipient-phone')),
+        '+221771234567',
+      );
+      await tester.enterText(
+        find.byKey(const Key('invite-recipient-name')),
+        'Fatou',
+      );
+      await tester.pump();
+      await tester.tap(submit());
+      await tester.pumpAndSettle();
+      verify(() => repo.sendToPhone('+221771234567', name: 'Fatou')).called(1);
+    });
+
+    testWidgets('nom trop long : erreur et envoi bloqué', (tester) async {
+      await open(tester);
+      await tester.enterText(
+        find.byKey(const Key('invite-recipient-phone')),
+        '+221771234567',
+      );
+      await tester.enterText(
+        find.byKey(const Key('invite-recipient-name')),
+        'a' * 101,
+      );
+      await tester.pump();
+      expect(find.text('100 caractères au maximum.'), findsOneWidget);
+      expect(submitButton(tester).onPressed, isNull);
+    });
   });
 }

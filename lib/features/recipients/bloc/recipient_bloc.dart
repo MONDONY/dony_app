@@ -32,7 +32,11 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
     try {
       final recipients = await _repository.getAll();
       emit(
-        state.copyWith(status: RecipientStatus.success, recipients: recipients),
+        state.copyWith(
+          status: RecipientStatus.success,
+          recipients: recipients,
+          loaded: true,
+        ),
       );
     } catch (e) {
       emit(

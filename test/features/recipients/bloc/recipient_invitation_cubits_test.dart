@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/features/recipients/bloc/incoming_invitations_cubit.dart';
 import 'package:dony/features/recipients/bloc/invite_recipient_cubit.dart';
 import 'package:dony/features/recipients/bloc/sent_invitations_cubit.dart';
@@ -33,6 +34,14 @@ const _sentAccepted = SentRecipientInvitation(
   channel: 'EMAIL',
   maskedTarget: 'a••••@gmail.com',
   status: 'ACCEPTED',
+);
+
+const _sentPendingNamed = SentRecipientInvitation(
+  id: 's3',
+  channel: 'PHONE',
+  maskedTarget: '+225 •• •• •• 34',
+  status: 'PENDING',
+  name: 'Fatou Koné',
 );
 
 const _pending = IncomingRecipientInvitation(
@@ -187,6 +196,99 @@ void main() {
       ],
     );
 
+    test(
+      'nom renseigné : envoyé avec le numéro, sans espaces autour',
+      () async {
+        when(
+          () => repository.sendToPhone(any(), name: any(named: 'name')),
+        ).thenAnswer((_) async {});
+        final cubit = build()
+          ..inputChanged('+221771234567')
+          ..nameChanged('  Awa Diallo ');
+        await cubit.submit();
+        verify(
+          () => repository.sendToPhone('+221771234567', name: 'Awa Diallo'),
+        ).called(1);
+      },
+    );
+
+    test('nom vide : non envoyé', () async {
+      when(
+        () => repository.sendToEmail(any(), name: any(named: 'name')),
+      ).thenAnswer((_) async {});
+      final cubit = build()
+        ..selectChannel(InvitationChannel.email)
+        ..inputChanged('awa@example.com')
+        ..nameChanged('   ');
+      expect(cubit.state.trimmedName, isNull);
+      await cubit.submit();
+      verify(() => repository.sendToEmail('awa@example.com')).called(1);
+    });
+
+    test('nom de plus de 100 caractères : envoi bloqué', () async {
+      final cubit = build()
+        ..inputChanged('+221771234567')
+        ..nameChanged('a' * 101);
+      expect(cubit.state.nameTooLong, isTrue);
+      expect(cubit.state.isValid, isFalse);
+      expect(cubit.state.showsError, isFalse);
+      await cubit.submit();
+      verifyNever(
+        () => repository.sendToPhone(any(), name: any(named: 'name')),
+      );
+      cubit.nameChanged('a' * 100);
+      expect(cubit.state.isValid, isTrue);
+    });
+
+    test('le nom survit au changement de moyen', () {
+      final cubit = build()
+        ..nameChanged('Awa')
+        ..selectChannel(InvitationChannel.email);
+      expect(cubit.state.name, 'Awa');
+    });
+
+    test(
+      'contact au format national : numéro internationalisé, nom repris',
+      () {
+        final cubit = build()
+          ..selectChannel(InvitationChannel.email)
+          ..contactPicked(
+            const PickedContact(fullName: 'Awa Diallo', phone: '0612345678'),
+            countryCode: 'FR',
+          );
+        expect(cubit.state.channel, InvitationChannel.phone);
+        expect(cubit.state.input, '+33612345678');
+        expect(cubit.state.name, 'Awa Diallo');
+        expect(cubit.state.isValid, isTrue);
+      },
+    );
+
+    test('contact ivoirien : le zéro national est gardé', () {
+      final cubit = build()
+        ..contactPicked(
+          const PickedContact(fullName: 'Koffi', phone: '0707070707'),
+          countryCode: 'CI',
+        );
+      expect(cubit.state.input, '+2250707070707');
+    });
+
+    test('contact sans numéro : seul le nom est repris', () {
+      final cubit = build()
+        ..inputChanged('+221771234567')
+        ..contactPicked(const PickedContact(fullName: 'Awa'));
+      expect(cubit.state.input, '+221771234567');
+      expect(cubit.state.name, 'Awa');
+    });
+
+    test('contact au nom trop long : tronqué à 100 caractères', () {
+      final cubit = build()
+        ..contactPicked(
+          PickedContact(fullName: 'b' * 150, phone: '+221771234567'),
+        );
+      expect(cubit.state.name.length, 100);
+      expect(cubit.state.isValid, isTrue);
+    });
+
     test('autre erreur : failed sans quota', () async {
       when(
         () => repository.sendToPhone(any()),
@@ -208,10 +310,12 @@ void main() {
       ).thenAnswer((_) async => [_sentPending, _sentAccepted]),
       build: build,
       act: (c) => c.load(),
+      // FLUTTER-7V : l'invitation acceptée n'est plus listée, la personne
+      // figure déjà dans le carnet.
       expect: () => [
         isA<SentInvitationsState>()
             .having((s) => s.status, 's', SentInvitationsStatus.loaded)
-            .having((s) => s.invitations.length, 'n', 2),
+            .having((s) => s.invitations.map((i) => i.id), 'ids', ['s1']),
       ],
     );
 
@@ -250,9 +354,9 @@ void main() {
     blocTest<SentInvitationsCubit, SentInvitationsState>(
       'annulation : retirée de la liste + événement inviter',
       setUp: () {
-        when(
-          () => repository.getSent(),
-        ).thenAnswer((_) async => [_sentPending, _sentAccepted]);
+        when(() => repository.getSent()).thenAnswer(
+          (_) async => [_sentPending, _sentAccepted, _sentPendingNamed],
+        );
         when(() => repository.revoke(any())).thenAnswer((_) async {});
       },
       build: build,
@@ -261,7 +365,7 @@ void main() {
         await c.revoke('s1');
       },
       verify: (c) {
-        expect(c.state.invitations.map((i) => i.id), ['s2']);
+        expect(c.state.invitations.map((i) => i.id), ['s3']);
         expect(c.state.busyId, isNull);
         verify(
           () => analytics.logEvent(

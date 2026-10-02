@@ -13,6 +13,7 @@ import 'package:dony/features/package_request/presentation/widgets/thread/linked
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -71,6 +72,8 @@ NegotiationThread _thread({
   LinkedTripSummary? linkedTrip,
   List<NegotiationMessage> messages = const [],
   double? grossPriceEur,
+  String? senderName,
+  String? senderId,
 }) => NegotiationThread(
   id: 't-1',
   packageRequestId: 'pr-1',
@@ -88,6 +91,8 @@ NegotiationThread _thread({
   travelerRating: travelerRating,
   travelerTripsCount: travelerTripsCount,
   linkedTrip: linkedTrip,
+  senderName: senderName,
+  senderId: senderId,
 );
 
 const _sampleLinkedTrip = LinkedTripSummary(
@@ -163,6 +168,14 @@ void main() {
           builder: (_, _) => NegotiationThreadScreen(
             threadId: 't-1',
             viewerUserId: viewerUserId,
+          ),
+        ),
+        GoRoute(
+          path: '/profile/public',
+          builder: (_, state) => Scaffold(
+            body: Text(
+              'ProfileStub:${(state.extra! as ProfilePublicArgs).userId}',
+            ),
           ),
         ),
         GoRoute(
@@ -366,6 +379,55 @@ void main() {
         expect(find.text('LISTE_NEGOCIATIONS'), findsOneWidget);
       },
     );
+  });
+
+  // Sentry FLUTTER-7K/7M : l'en-tête du fil ne menait nulle part.
+  group('En-tête : profil de l\'autre partie', () {
+    testWidgets('expéditeur : tap sur l\'en-tête → profil public du voyageur', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(NegotiationLoaded(_thread()));
+      await tester.pumpWidget(wrapWithHelpCenter());
+      await tester.pumpAndSettle();
+
+      expect(
+        find.bySemanticsLabel('Voir le profil de Fatou Ndiaye'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('negotiation-partner-header')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ProfileStub:tr-1'), findsOneWidget);
+    });
+
+    testWidgets('voyageur : tap sur l\'en-tête → profil public de '
+        'l\'expéditeur (senderId)', (tester) async {
+      when(() => bloc.state).thenReturn(
+        NegotiationLoaded(
+          _thread(senderName: 'Awa Diop', senderId: 'sender-uuid-1'),
+        ),
+      );
+      await tester.pumpWidget(wrapWithHelpCenter(viewerUserId: 'tr-1'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('negotiation-partner-header')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ProfileStub:sender-uuid-1'), findsOneWidget);
+    });
+
+    testWidgets('voyageur, ancien back sans senderId : en-tête non cliquable', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationLoaded(_thread(senderName: 'Awa Diop')));
+      await tester.pumpWidget(wrapWithHelpCenter(viewerUserId: 'tr-1'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Awa Diop'), findsOneWidget);
+      expect(find.byKey(const Key('negotiation-partner-header')), findsNothing);
+    });
   });
 
   group('Carte tutoriel contextuelle', () {

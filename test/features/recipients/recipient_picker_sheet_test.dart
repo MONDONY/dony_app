@@ -563,6 +563,73 @@ void main() {
     },
   );
 
+  testWidgets(
+    'FLUTTER-7T : contact déjà dans le carnet (format national) : sélectionné, '
+    'aucune création',
+    (tester) async {
+      final bloc = MockRecipientBloc();
+      when(() => bloc.state).thenReturn(
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_r4Default, _r1],
+          loaded: true,
+        ),
+      );
+      when(() => contactPicker.pick()).thenAnswer(
+        (_) async =>
+            const PickedContact(fullName: 'Mamadou', phone: '77 123 45 67'),
+      );
+      final results = <Recipient?>[];
+      await pumpSheet(tester, bloc, resultHolder: results);
+
+      await tester.tap(find.text('Choisir dans mes contacts'));
+      await tester.pumpAndSettle();
+      expect(find.text('New Recipient'), findsNothing);
+
+      await tester.tap(find.text('Confirmer ce destinataire'));
+      await tester.pumpAndSettle();
+
+      expect(results, [_r1]);
+      verify(
+        () => bloc.add(
+          any(
+            that: isA<RecipientPicked>().having(
+              (e) => e.source,
+              'source',
+              'phone_contact',
+            ),
+          ),
+        ),
+      ).called(1);
+    },
+  );
+
+  testWidgets('FLUTTER-7E : badge Yadony sur un destinataire lié', (
+    tester,
+  ) async {
+    const linked = Recipient(
+      id: 'r-linked',
+      fullName: 'Awa Linked',
+      phoneE164: '+221700000001',
+      country: 'SN',
+      linkedOnYadony: true,
+    );
+    final bloc = MockRecipientBloc();
+    when(() => bloc.state).thenReturn(
+      const RecipientState(
+        status: RecipientStatus.success,
+        recipients: [linked, _r1],
+      ),
+    );
+    await pumpSheet(tester, bloc, resultHolder: <Recipient?>[]);
+
+    expect(
+      find.byKey(const Key('recipient-picker-linked-r-linked')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('recipient-picker-linked-r-1')), findsNothing);
+  });
+
   testWidgets('shows loading indicator while first load is in flight', (
     tester,
   ) async {

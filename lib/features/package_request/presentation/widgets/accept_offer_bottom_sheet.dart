@@ -9,13 +9,13 @@ import 'package:dony/features/package_request/data/models/negotiation_quote.dart
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/package_request/presentation/widgets/thread/return_to_thread.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class AcceptOfferBottomSheet {
@@ -183,8 +183,9 @@ class AcceptOfferBottomSheet {
                                       subtitle: lb
                                           .negotiationOfferAcceptedPaidSubtitle,
                                       ctaLabel: lb.negotiationTrackShipmentCta,
-                                      onCta: () => routeContext.go(
-                                        '/negotiations/$threadId',
+                                      onCta: () => returnToNegotiationThread(
+                                        routeContext,
+                                        threadId,
                                       ),
                                       analyticsContext: 'negotiation_payment',
                                     ),
@@ -224,9 +225,12 @@ class AcceptOfferBottomSheet {
                                     title:
                                         lb.negotiationAgreementConfirmedTitle,
                                     subtitle: subtitle,
-                                    ctaLabel: lb.negotiationTrackShipmentCta,
-                                    onCta: () => routeContext.go(
-                                      '/negotiations/$threadId',
+                                    // Accord de prix seul : rien à suivre
+                                    // encore, on ramène au fil (FLUTTER-7J).
+                                    ctaLabel: lb.negotiationViewNegotiationCta,
+                                    onCta: () => returnToNegotiationThread(
+                                      routeContext,
+                                      threadId,
                                     ),
                                     analyticsContext: 'negotiation_agreement',
                                   ),

@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/recipients/bloc/sent_invitations_cubit.dart';
 import 'package:dony/features/recipients/data/models/recipient_invitation.dart';
 import 'package:dony/features/recipients/presentation/widgets/invite_recipient_sheet.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,7 +16,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// message que le compte existe ou non et recharge les invitations envoyées.
 Future<void> inviteYadonyRecipient(BuildContext context) async {
   final cubit = context.read<SentInvitationsCubit>();
-  final sent = await InviteRecipientSheet.show(context);
+  final sent = await InviteRecipientSheet.show(
+    context,
+    userCountry: _userCountry(),
+  );
   if (!sent || !context.mounted) return;
   DonySnackbar.show(
     context,
@@ -23,6 +28,12 @@ Future<void> inviteYadonyRecipient(BuildContext context) async {
   );
   await cubit.load();
 }
+
+/// Pays de résidence de l'utilisateur, pour mettre au format international
+/// un numéro repris de ses contacts. `null` s'il n'est pas connu.
+String? _userCountry() => getIt.isRegistered<BusinessPrefsBloc>()
+    ? getIt<BusinessPrefsBloc>().state.country
+    : null;
 
 /// Entrée « Ajouter un destinataire Yadony » du carnet. Masquée sur un back
 /// antérieur au lot 4 (404 sur les invitations).
@@ -123,7 +134,7 @@ class _SentInvitationRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final accepted = invitation.isAccepted;
+    final name = invitation.name;
     return Padding(
       key: Key('sent-invitation-${invitation.id}'),
       padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
@@ -139,21 +150,36 @@ class _SentInvitationRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  invitation.maskedTarget,
-                  style: tt.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                // Le nom, quand l'expéditeur l'a donné, se lit avant la cible
+                // masquée, qui passe alors en dessous.
+                if (name != null) ...[
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                   ),
-                ),
+                  Text(
+                    invitation.maskedTarget,
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ] else
+                  Text(
+                    invitation.maskedTarget,
+                    style: tt.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
                 const SizedBox(height: 2),
+                // Seules les invitations en attente restent listées : une
+                // invitation acceptée rejoint le carnet (badge Yadony).
                 DonyBadge(
-                  label: accepted
-                      ? l.recipientSentInvitationAccepted
-                      : l.recipientSentInvitationPending,
-                  type: accepted
-                      ? DonyBadgeType.success
-                      : DonyBadgeType.warning,
+                  label: l.recipientSentInvitationPending,
+                  type: DonyBadgeType.warning,
                 ),
               ],
             ),

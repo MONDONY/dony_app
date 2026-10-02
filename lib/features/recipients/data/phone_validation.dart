@@ -1,4 +1,5 @@
 import 'package:dony/core/phone/phone_country.dart';
+import 'package:dony/features/recipients/data/models/recipient.dart';
 
 /// E.164 phone regex shared across the recipients feature: `+` followed by
 /// 7 to 15 digits total (country code + subscriber number), first digit
@@ -37,4 +38,39 @@ String internationalizeRecipientPhone(String raw, String? countryCode) {
   final country = countryCode == null ? null : phoneCountryForCode(countryCode);
   if (country == null) return compact;
   return toE164(country.dialCode, compact);
+}
+
+/// Chiffres seuls d'un numéro (indicatif compris), pour comparer deux
+/// écritures du même numéro : `+33 6 12…`, `0033612…` et `+33612…` donnent
+/// la même suite.
+String recipientPhoneDigits(String raw) =>
+    normalizeRecipientPhone(raw).replaceAll(RegExp(r'\D'), '');
+
+/// Entrée du carnet qui porte déjà [rawPhone], ou `null`.
+///
+/// Le numéro peut venir du carnet du téléphone au format national (`07…`) :
+/// il est internationalisé avec [countryCode] s'il est connu, puis avec le
+/// pays de chaque entrée, avant de comparer les chiffres (Sentry FLUTTER-7T,
+/// doublons dans le carnet).
+Recipient? findRecipientByPhone(
+  List<Recipient> recipients,
+  String rawPhone, {
+  String? countryCode,
+}) {
+  if (normalizeRecipientPhone(rawPhone).isEmpty) return null;
+  final viaCountry = countryCode == null
+      ? null
+      : recipientPhoneDigits(
+          internationalizeRecipientPhone(rawPhone, countryCode),
+        );
+  for (final r in recipients) {
+    final known = recipientPhoneDigits(r.phoneE164);
+    if (known.isEmpty) continue;
+    if (viaCountry == known) return r;
+    final viaRecipient = recipientPhoneDigits(
+      internationalizeRecipientPhone(rawPhone, r.country),
+    );
+    if (viaRecipient == known) return r;
+  }
+  return null;
 }

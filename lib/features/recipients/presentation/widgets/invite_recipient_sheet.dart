@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/contact_picker_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/recipients/bloc/invite_recipient_cubit.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -11,9 +13,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Feuille « Ajouter un destinataire Yadony » : l'expéditeur invite par numéro
 /// ou par e-mail. Rend `true` quand l'invitation est partie : l'appelant
 /// affiche alors le message, identique que le compte existe ou non.
+///
+/// [userCountry] (code ISO du pays de l'utilisateur) sert à mettre au format
+/// international un numéro repris du carnet du téléphone (`07…`).
 abstract final class InviteRecipientSheet {
   static Future<bool> show(
     BuildContext context, {
+    String? userCountry,
     @visibleForTesting InviteRecipientCubit Function()? createCubit,
   }) async {
     final sent = await DonyBottomSheet.show<bool>(
@@ -39,14 +45,16 @@ abstract final class InviteRecipientSheet {
           );
         },
       ),
-      child: const _InviteRecipientContent(),
+      child: _InviteRecipientContent(userCountry: userCountry),
     );
     return sent ?? false;
   }
 }
 
 class _InviteRecipientContent extends StatefulWidget {
-  const _InviteRecipientContent();
+  const _InviteRecipientContent({this.userCountry});
+
+  final String? userCountry;
 
   @override
   State<_InviteRecipientContent> createState() =>
@@ -58,12 +66,24 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
   // feuille reste affichée pendant son animation de sortie.
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _nameCtrl = TextEditingController();
 
   @override
   void dispose() {
     _phoneCtrl.dispose();
     _emailCtrl.dispose();
+    _nameCtrl.dispose();
     super.dispose();
+  }
+
+  /// « Choisir dans mes contacts » : le numéro et le nom du contact
+  /// remplissent le formulaire, le numéro mis au format international.
+  Future<void> _pickContact(InviteRecipientCubit cubit) async {
+    final contact = await getIt<ContactPickerService>().pick();
+    if (!mounted || contact == null || cubit.isClosed) return;
+    cubit.contactPicked(contact, countryCode: widget.userCountry);
+    _phoneCtrl.text = cubit.state.input;
+    _nameCtrl.text = cubit.state.name;
   }
 
   void _onChannel(InviteRecipientCubit cubit, InvitationChannel channel) {
@@ -123,6 +143,18 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
               onSelectionChanged: (s) => _onChannel(cubit, s.first),
             ),
             const SizedBox(height: DonySpacing.base),
+            if (isPhone) ...[
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  key: const Key('invite-recipient-pick-contact'),
+                  onPressed: () => _pickContact(cubit),
+                  icon: DonyIcon('contact', size: 18, color: cs.primary),
+                  label: Text(l.recipientImportContactsAction),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
             Focus(
               onFocusChange: (focused) {
                 if (!focused) cubit.fieldBlurred();
@@ -152,6 +184,18 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
                           ? l.recipientInviteEmailInvalid
                           : null,
                     ),
+            ),
+            const SizedBox(height: DonySpacing.base),
+            DonyTextField(
+              key: const Key('invite-recipient-name'),
+              controller: _nameCtrl,
+              label: l.recipientInviteNameLabel,
+              hint: l.recipientInviteNameHint,
+              keyboardType: TextInputType.name,
+              onChanged: cubit.nameChanged,
+              errorText: state.nameTooLong
+                  ? l.recipientInviteNameTooLong
+                  : null,
             ),
             const SizedBox(height: DonySpacing.sm),
           ],

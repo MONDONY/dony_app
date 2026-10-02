@@ -2573,10 +2573,6 @@
   "@negotiationRejectedSnackbar": {
     "description": "Snackbar de rejet via reject_bottom_sheet (negotiation_thread_screen.dart)"
   },
-  "negotiationCommissionSettledSnackbar": "Service fee paid: this parcel is yours!",
-  "@negotiationCommissionSettledSnackbar": {
-    "description": "Snackbar de succès du règlement de la commission (negotiation_thread_screen.dart)"
-  },
   "negotiationGaveUpParcelSnackbar": "You've given up this parcel, it's available to another traveler again.",
   "@negotiationGaveUpParcelSnackbar": {
     "description": "Snackbar de confirmation du renoncement (negotiation_thread_screen.dart)"
@@ -5526,10 +5522,6 @@
   "chatMessageCopied": "Message copied",
   "@chatMessageCopied": {
     "description": "Toast après la copie d'un message par appui long sur sa bulle (chat_screen.dart _TextContent)."
-  },
-  "chatCopyMessageHint": "copy the message",
-  "@chatCopyMessageHint": {
-    "description": "Indice lu par le lecteur d'écran pour l'appui long sur une bulle de texte (chat_screen.dart _TextContent)."
   },
   "chatOpenParticipantProfileSemantics": "View {name}'s profile",
   "@chatOpenParticipantProfileSemantics": {
@@ -8690,7 +8682,6 @@
   "recipientLinkedOnYadonyChip": "On Yadony",
   "recipientSentInvitationsTitle": "Sent invitations",
   "recipientSentInvitationPending": "Pending",
-  "recipientSentInvitationAccepted": "Accepted",
   "recipientSentInvitationCancelTitle": "Cancel this invitation?",
   "recipientSentInvitationCancelMessage": "Your parcels will no longer be linked to them directly.",
   "recipientSentInvitationCancelAction": "Cancel invitation",
@@ -8715,5 +8706,21 @@
   "recipientInvitationsBannerSubtitle": "Accept to follow their parcels without confirming anything.",
   "privacyRecipientInvitationsSubtitle": "Who can link their parcels to you",
   "bidCreateRecipientPhoneInvalidError": "Invalid number: add the country code (e.g. +221 77 123 45 67).",
-  "recipientSectionLinkedOnYadony": "On Yadony: they will follow the parcel in the app."
+  "recipientSectionLinkedOnYadony": "On Yadony: they will follow the parcel in the app.",
+  "recipientInviteNameLabel": "Name (optional)",
+  "recipientInviteNameHint": "e.g. Awa Diallo",
+  "recipientInviteNameTooLong": "100 characters maximum.",
+  "negotiationViewNegotiationCta": "View negotiation",
+  "negotiationOpenPartnerProfileSemantics": "View {name}'s profile",
+  "@negotiationOpenPartnerProfileSemantics": {"placeholders": {"name": {"type": "String"}}},
+  "negotiationCommissionSettledTitle": "This parcel is yours!",
+  "negotiationCommissionSettledSubtitle": "The Yadony service fee is paid and the agreement is sealed. Find the shipment and the next steps in the negotiation.",
+  "bidAcceptedSuccessTitle": "Request accepted!",
+  "bidAcceptedSuccessSubtitle": "The parcel is booked on your trip. Open the request to see its details and the next steps with the sender.",
+  "bidAcceptedSuccessCta": "View request",
+  "receptionSenderLabel": "Sender",
+  "receptionViewSenderProfile": "View {name}'s profile",
+  "@receptionViewSenderProfile": {"placeholders": {"name": {"type": "String"}}},
+  "chatCopyMessageAction": "Copy message",
+  "bidCreateWeightRequiredHint": "Enter the estimated weight, e.g. 0.5 kg for a phone."
 }

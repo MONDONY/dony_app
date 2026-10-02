@@ -26,6 +26,8 @@ class Reception {
     this.updatedAt,
     this.travelerId,
     this.travelerAvatarUrl,
+    this.senderId,
+    this.senderAvatarUrl,
   });
 
   static const pending = 'PENDING';
@@ -61,6 +63,12 @@ class Reception {
   /// FLUTTER-6G/6H). `null` avant confirmation ou sur un back antérieur.
   final String? travelerId;
   final String? travelerAvatarUrl;
+
+  /// Expéditeur : ouvre son profil public depuis la carte « Expéditeur »
+  /// (Sentry FLUTTER-7P). `null` sur un back antérieur, la carte est alors
+  /// absente et seul le titre nomme l'expéditeur.
+  final String? senderId;
+  final String? senderAvatarUrl;
 
   bool get isPending => linkStatus == pending;
   bool get isConfirmed => linkStatus == confirmed;
@@ -113,6 +121,8 @@ class Reception {
       updatedAt: date('updatedAt'),
       travelerId: text('travelerId'),
       travelerAvatarUrl: text('travelerAvatarUrl'),
+      senderId: text('senderId'),
+      senderAvatarUrl: text('senderAvatarUrl'),
     );
   }
 }

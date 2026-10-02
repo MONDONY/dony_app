@@ -84,6 +84,20 @@ void main() {
     expect(t.weightKg, isNull);
   });
 
+  // Contrat back additif (FLUTTER-7K/7M) : `senderId` ouvre le profil de
+  // l'expéditeur depuis l'en-tête vu par le voyageur.
+  test('fromJson lit senderId quand le back le fournit', () {
+    final t = NegotiationThread.fromJson(
+      _baseJson(overrides: {'senderId': 'sender-uuid-1'}),
+    );
+    expect(t.senderId, 'sender-uuid-1');
+  });
+
+  test('fromJson tolère un ancien back sans senderId', () {
+    final t = NegotiationThread.fromJson(_baseJson());
+    expect(t.senderId, isNull);
+  });
+
   test(
     'NegotiationThread.fromJson parse le statut AWAITING_TRIP correctement',
     () {

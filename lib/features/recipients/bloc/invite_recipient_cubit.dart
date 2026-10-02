@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/features/recipients/data/phone_validation.dart';
 import 'package:dony/features/recipients/data/repositories/recipient_invitation_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,9 +20,22 @@ class InviteRecipientState {
     this.status = InviteRecipientStatus.editing,
     this.error,
     this.touched = false,
+    this.name = '',
   });
 
+  /// Longueur maximale du nom accepté par `POST /recipient-invitations`.
+  static const nameMaxLength = 100;
+
   final InvitationChannel channel;
+
+  /// Nom facultatif de la personne invitée, saisi ou repris du contact.
+  final String name;
+
+  /// Nom envoyé au serveur, `null` s'il est vide.
+  String? get trimmedName {
+    final n = name.trim();
+    return n.isEmpty ? null : n;
+  }
 
   /// Saisie brute du champ actif.
   final String input;
@@ -39,12 +53,18 @@ class InviteRecipientState {
       ? normalizeRecipientPhone(input)
       : input.trim().toLowerCase();
 
-  bool get isValid => channel == InvitationChannel.phone
+  /// Nom au-delà de ce que le serveur accepte : l'envoi est bloqué.
+  bool get nameTooLong => name.trim().length > nameMaxLength;
+
+  /// Numéro ou e-mail au bon format.
+  bool get targetIsValid => channel == InvitationChannel.phone
       ? kRecipientPhoneE164.hasMatch(target)
       : kRecipientEmail.hasMatch(target);
 
+  bool get isValid => targetIsValid && !nameTooLong;
+
   /// Saisie commencée mais invalide : le champ affiche son erreur.
-  bool get showsError => touched && input.trim().isNotEmpty && !isValid;
+  bool get showsError => touched && input.trim().isNotEmpty && !targetIsValid;
 
   bool get isQuotaExceeded => error is RateLimitException;
 
@@ -54,12 +74,14 @@ class InviteRecipientState {
     InviteRecipientStatus? status,
     AppException? error,
     bool? touched,
+    String? name,
   }) => InviteRecipientState(
     channel: channel ?? this.channel,
     input: input ?? this.input,
     status: status ?? this.status,
     error: error,
     touched: touched ?? this.touched,
+    name: name ?? this.name,
   );
 }
 
@@ -76,7 +98,38 @@ class InviteRecipientCubit extends Cubit<InviteRecipientState> {
 
   void selectChannel(InvitationChannel channel) {
     if (channel == state.channel) return;
-    emit(InviteRecipientState(channel: channel));
+    // Le nom vaut pour les deux moyens : il survit au changement d'onglet.
+    emit(InviteRecipientState(channel: channel, name: state.name));
+  }
+
+  void nameChanged(String value) {
+    if (state.status == InviteRecipientStatus.submitting) return;
+    emit(state.copyWith(name: value, status: InviteRecipientStatus.editing));
+  }
+
+  /// Contact choisi dans le carnet du téléphone : bascule sur le numéro, le
+  /// met au format international avec le pays de l'utilisateur
+  /// ([countryCode], un contact s'écrit souvent au format national `07…`) et
+  /// reprend son nom. Un contact sans numéro ne garde que le nom.
+  void contactPicked(PickedContact contact, {String? countryCode}) {
+    if (state.status == InviteRecipientStatus.submitting) return;
+    final phone = contact.phone;
+    final fullName = contact.fullName?.trim() ?? '';
+    final name = fullName.length > InviteRecipientState.nameMaxLength
+        ? fullName.substring(0, InviteRecipientState.nameMaxLength)
+        : fullName;
+    final keptName = name.isEmpty ? state.name : name;
+    if (phone == null || phone.isEmpty) {
+      emit(state.copyWith(name: keptName));
+      return;
+    }
+    emit(
+      InviteRecipientState(
+        input: internationalizeRecipientPhone(phone, countryCode),
+        name: keptName,
+        touched: true,
+      ),
+    );
   }
 
   void inputChanged(String value) {
@@ -95,11 +148,12 @@ class InviteRecipientCubit extends Cubit<InviteRecipientState> {
     }
     emit(state.copyWith(status: InviteRecipientStatus.submitting));
     final channel = state.channel;
+    final name = state.trimmedName;
     try {
       if (channel == InvitationChannel.phone) {
-        await _repository.sendToPhone(state.target);
+        await _repository.sendToPhone(state.target, name: name);
       } else {
-        await _repository.sendToEmail(state.target);
+        await _repository.sendToEmail(state.target, name: name);
       }
       if (isClosed) return;
       emit(state.copyWith(status: InviteRecipientStatus.sent));

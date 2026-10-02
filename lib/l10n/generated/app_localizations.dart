@@ -10152,12 +10152,6 @@ abstract class AppLocalizations {
   /// **'Négociation rejetée'**
   String get negotiationRejectedSnackbar;
 
-  /// Snackbar de succès du règlement de la commission (negotiation_thread_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Commission réglée : ce colis est à toi !'**
-  String get negotiationCommissionSettledSnackbar;
-
   /// Snackbar de confirmation du renoncement (negotiation_thread_screen.dart)
   ///
   /// In fr, this message translates to:
@@ -16318,12 +16312,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Message copié'**
   String get chatMessageCopied;
-
-  /// Indice lu par le lecteur d'écran pour l'appui long sur une bulle de texte (chat_screen.dart _TextContent).
-  ///
-  /// In fr, this message translates to:
-  /// **'copier le message'**
-  String get chatCopyMessageHint;
 
   /// Nom accessible de l'en-tête du chat (avatar + nom) qui ouvre le profil public du correspondant (chat_screen.dart _ParticipantHeader).
   ///
@@ -25533,12 +25521,6 @@ abstract class AppLocalizations {
   /// **'En attente'**
   String get recipientSentInvitationPending;
 
-  /// Carnet : statut d'une invitation acceptée.
-  ///
-  /// In fr, this message translates to:
-  /// **'Acceptée'**
-  String get recipientSentInvitationAccepted;
-
   /// Carnet : titre du dialogue d'annulation d'une invitation.
   ///
   /// In fr, this message translates to:
@@ -25688,6 +25670,90 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Dans Yadony : il suivra le colis dans l\'app.'**
   String get recipientSectionLinkedOnYadony;
+
+  /// Feuille « Ajouter un destinataire Yadony » : libellé du champ nom de la personne invitée.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom (facultatif)'**
+  String get recipientInviteNameLabel;
+
+  /// Feuille « Ajouter un destinataire Yadony » : exemple dans le champ nom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. Awa Diallo'**
+  String get recipientInviteNameHint;
+
+  /// Feuille « Ajouter un destinataire Yadony » : erreur quand le nom dépasse 100 caractères.
+  ///
+  /// In fr, this message translates to:
+  /// **'100 caractères au maximum.'**
+  String get recipientInviteNameTooLong;
+
+  /// CTA des écrans de succès qui ramènent au fil de négociation quand il n'y a encore rien à suivre : accord de prix, accord en espèces, commission réglée (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_commission_settled_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir la négociation'**
+  String get negotiationViewNegotiationCta;
+
+  /// Nom accessible de l'en-tête du fil de négociation (avatar + nom) qui ouvre le profil public de l'autre partie (negotiation_thread_screen.dart _PartnerTitle).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le profil de {name}'**
+  String negotiationOpenPartnerProfileSemantics(String name);
+
+  /// Titre de l'écran de succès affiché au voyageur quand il a réglé la commission d'un accord en espèces (negotiation_commission_settled_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce colis est à toi !'**
+  String get negotiationCommissionSettledTitle;
+
+  /// Sous-titre de l'écran de succès après règlement de la commission d'un accord en espèces (negotiation_commission_settled_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'La commission Yadony est réglée et l\'accord est scellé. Retrouve l\'envoi et les prochaines étapes dans la négociation.'**
+  String get negotiationCommissionSettledSubtitle;
+
+  /// Titre de l'écran de succès affiché au voyageur quand il accepte une demande depuis « À traiter » (bid_accepted_success_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande acceptée !'**
+  String get bidAcceptedSuccessTitle;
+
+  /// Sous-titre de l'écran de succès après acceptation d'une demande (bid_accepted_success_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis est réservé sur ton trajet. Ouvre la demande pour voir son détail et les prochaines étapes avec l\'expéditeur.'**
+  String get bidAcceptedSuccessSubtitle;
+
+  /// CTA de l'écran de succès après acceptation d'une demande, ouvre son détail (bid_accepted_success_screen.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir la demande'**
+  String get bidAcceptedSuccessCta;
+
+  /// Écran d'un colis à recevoir : rôle affiché sur la carte de l'expéditeur, qui ouvre son profil public (reception_detail_screen.dart _SenderCard).
+  ///
+  /// In fr, this message translates to:
+  /// **'Expéditeur'**
+  String get receptionSenderLabel;
+
+  /// Nom accessible de la carte expéditeur de l'écran d'un colis à recevoir, qui ouvre son profil public.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le profil de {name}'**
+  String receptionViewSenderProfile(String name);
+
+  /// Entrée ajoutée au menu de sélection d'une bulle de texte, et action du lecteur d'écran, qui copie le message entier (chat_screen.dart _TextContent).
+  ///
+  /// In fr, this message translates to:
+  /// **'Copier le message'**
+  String get chatCopyMessageAction;
+
+  /// Formulaire de demande sur un trajet au kilo : aide affichée au-dessus du bouton tant qu'aucun poids n'est saisi (create_bid_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.'**
+  String get bidCreateWeightRequiredHint;
 }
 
 class _AppLocalizationsDelegate

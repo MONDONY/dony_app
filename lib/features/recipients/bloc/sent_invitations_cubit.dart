@@ -55,7 +55,12 @@ class SentInvitationsCubit extends Cubit<SentInvitationsState> {
   /// la liste déjà affichée.
   Future<void> load() async {
     try {
-      final invitations = await _repository.getSent();
+      // Une invitation acceptée a fait son œuvre : la personne figure déjà
+      // dans le carnet, avec le badge Yadony. La garder ici la montrait deux
+      // fois (Sentry FLUTTER-7V).
+      final invitations = (await _repository.getSent())
+          .where((i) => !i.isAccepted)
+          .toList();
       if (isClosed) return;
       emit(
         SentInvitationsState(

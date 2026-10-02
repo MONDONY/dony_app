@@ -177,7 +177,8 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
         ),
       );
       emit(ready); // failure transitoire (snackbar) puis bouton ré-armé
-    } on PaymentConfirmationException catch (e) {
+    } on PaymentConfirmationException catch (e, stackTrace) {
+      _reportStripeFailure(e, stackTrace, method);
       emit(
         PaymentSheetFailure(
           reason: PaymentSheetFailureReason.declined,
@@ -205,6 +206,37 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
       );
       emit(ready);
     }
+  }
+
+  /// Remonte à Sentry un échec Stripe (hors annulation, déjà mappée en
+  /// [PaymentCancelledException]) avec les codes du SDK : l'utilisateur ne
+  /// voit qu'un message générique, et sans cette trace un refus de carte
+  /// restait indiagnosticable (FLUTTER-7S). Le message affiché ne change pas.
+  void _reportStripeFailure(
+    PaymentConfirmationException e,
+    StackTrace stackTrace,
+    PaymentMethodKind method,
+  ) {
+    if (!e.isFromStripe) return;
+    final message = e.stripeMessage;
+    unawaited(
+      _errorReporter?.report(
+        e,
+        operation: 'payment.stripe_confirm',
+        stackTrace: stackTrace,
+        context: {
+          'feature': 'payments',
+          'method': method.name,
+          'stripe_code': ?e.stripeCode,
+          'stripe_error_code': ?e.stripeErrorCode,
+          'decline_code': ?e.declineCode,
+          'stripe_error_type': ?e.stripeErrorType,
+          'stripe_message': ?(message == null || message.length <= 200
+              ? message
+              : message.substring(0, 200)),
+        },
+      ),
+    );
   }
 
   PaymentSheetResolved? get _currentReady => switch (state) {

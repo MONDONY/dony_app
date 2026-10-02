@@ -64,6 +64,7 @@ class NegotiationThread extends Equatable {
     this.weightKg,
     // Champs calculés côté serveur (NegotiationThreadResponse v2)
     this.senderName,
+    this.senderId,
     this.isMyTurn = false,
     this.canAccept = false,
     this.canCounter = false,
@@ -109,6 +110,11 @@ class NegotiationThread extends Equatable {
 
   // Champs calculés côté serveur (NegotiationThreadResponse v2)
   final String? senderName;
+
+  /// Identifiant de l'expéditeur (UUID). Ajouté côté back pour ouvrir son
+  /// profil public depuis l'en-tête du fil vu par le voyageur ; absent des
+  /// anciens payloads, l'en-tête reste alors non cliquable.
+  final String? senderId;
   final bool isMyTurn;
   final bool canAccept;
   final bool canCounter;
@@ -200,6 +206,7 @@ class NegotiationThread extends Equatable {
     arrivalCity: json['arrivalCity'] as String?,
     weightKg: (json['weightKg'] as num?)?.toDouble(),
     senderName: json['senderName'] as String?,
+    senderId: json['senderId'] as String?,
     isMyTurn: json['isMyTurn'] as bool? ?? false,
     canAccept: json['canAccept'] as bool? ?? false,
     canCounter: json['canCounter'] as bool? ?? false,
@@ -272,6 +279,7 @@ class NegotiationThread extends Equatable {
     arrivalCity,
     weightKg,
     senderName,
+    senderId,
     isMyTurn,
     canAccept,
     canCounter,

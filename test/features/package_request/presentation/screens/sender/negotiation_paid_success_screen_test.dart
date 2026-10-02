@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/negotiation_paid_success_screen.dart';
 import 'package:flutter/material.dart';
@@ -55,6 +57,51 @@ void main() {
 
     expect(find.text('Fil de négociation thread-42'), findsOneWidget);
   });
+
+  testWidgets(
+    'poussé au-dessus du fil : le CTA dépile l\'écran au lieu de réinitialiser '
+    'la pile',
+    (tester) async {
+      final router = GoRouter(
+        initialLocation: '/home',
+        routes: [
+          GoRoute(
+            path: '/home',
+            builder: (_, _) => const Scaffold(body: Text('Accueil')),
+          ),
+          GoRoute(
+            path: '/negotiations/:id/paid',
+            builder: (_, state) => NegotiationPaidSuccessScreen(
+              threadId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/negotiations/:id',
+            builder: (_, state) => Scaffold(
+              body: Text('Fil de négociation ${state.pathParameters['id']}'),
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+      );
+      unawaited(router.push('/negotiations/t-9'));
+      await tester.pumpAndSettle();
+      unawaited(router.push('/negotiations/t-9/paid'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Voir le suivi'));
+      await tester.tap(find.text('Voir le suivi'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(NegotiationPaidSuccessScreen), findsNothing);
+      expect(find.text('Fil de négociation t-9'), findsOneWidget);
+      // L'accueil reste dessous : le retour du fil y ramène toujours.
+      expect(router.canPop(), isTrue);
+    },
+  );
 
   testWidgets('anglais : titre, sous-titre et CTA traduits', (tester) async {
     useEnglish();

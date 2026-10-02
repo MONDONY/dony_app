@@ -78,6 +78,7 @@ import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
+import 'package:dony/features/matching/presentation/screens/bid_accepted_success_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_negotiation_thread_screen.dart';
@@ -115,6 +116,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/packag
 import 'package:dony/features/package_request/presentation/screens/shared/my_negotiations_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/traveler/negotiation_commission_settled_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
@@ -581,6 +583,14 @@ final appRouter = GoRouter(
       },
     ),
 
+    // ── Demande acceptée : écran de succès (hors shell) ──────────────────
+    // Déclarée avant `/bids/:bidId`, même raison que `/negotiation`.
+    GoRoute(
+      path: '/bids/:bidId/accepted',
+      builder: (_, state) =>
+          BidAcceptedSuccessScreen(bidId: state.pathParameters['bidId']!),
+    ),
+
     // ── Bid detail (hors shell) ──────────────────────────────────────────
     GoRoute(
       path: '/bids/:bidId',
@@ -627,6 +637,14 @@ final appRouter = GoRouter(
       path: '/negotiations/:id/paid',
       builder: (_, state) =>
           NegotiationPaidSuccessScreen(threadId: state.pathParameters['id']!),
+    ),
+    // Écran de succès « Ce colis est à toi ! » (hors shell) : poussé par le
+    // fil quand le voyageur a réglé la commission d'un accord en espèces.
+    GoRoute(
+      path: '/negotiations/:id/commission-settled',
+      builder: (_, state) => NegotiationCommissionSettledScreen(
+        threadId: state.pathParameters['id']!,
+      ),
     ),
 
     // ── Cancellation (hors shell) ────────────────────────────────────────

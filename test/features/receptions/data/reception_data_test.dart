@@ -26,6 +26,8 @@ Map<String, dynamic> _confirmedJson() => {
   'travelerFirstName': 'Ibrahima',
   'travelerId': 'trav-1',
   'travelerAvatarUrl': 'https://cdn.test/a.jpg',
+  'senderId': 'send-1',
+  'senderAvatarUrl': 'https://cdn.test/s.jpg',
   'arrivalInstructions': 'Sortie B, parking P2.',
   'weightKg': 4,
   'confirmationCode': '482913',
@@ -55,6 +57,8 @@ void main() {
       expect(r.travelerFirstName, 'Ibrahima');
       expect(r.travelerId, 'trav-1');
       expect(r.travelerAvatarUrl, 'https://cdn.test/a.jpg');
+      expect(r.senderId, 'send-1');
+      expect(r.senderAvatarUrl, 'https://cdn.test/s.jpg');
       expect(r.arrivalInstructions, 'Sortie B, parking P2.');
       expect(r.weightKg, 4.0);
       expect(r.confirmationCode, '482913');
@@ -75,6 +79,9 @@ void main() {
       expect(r.trackingNumber, isNull);
       expect(r.travelerFirstName, isNull);
       expect(r.travelerId, isNull);
+      // Back antérieur au contrat FLUTTER-7P : pas d'expéditeur cliquable.
+      expect(r.senderId, isNull);
+      expect(r.senderAvatarUrl, isNull);
       expect(r.arrivalInstructions, isNull);
       expect(r.weightKg, isNull);
       expect(r.confirmationCode, isNull);

@@ -11,16 +11,20 @@ class SentRecipientInvitation {
     required this.maskedTarget,
     required this.status,
     this.createdAt,
+    this.name,
   });
 
-  factory SentRecipientInvitation.fromJson(Map<String, dynamic> json) =>
-      SentRecipientInvitation(
-        id: json['id'] as String,
-        channel: json['channel'] as String? ?? 'PHONE',
-        maskedTarget: json['maskedTarget'] as String? ?? '',
-        status: json['status'] as String? ?? 'PENDING',
-        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
-      );
+  factory SentRecipientInvitation.fromJson(Map<String, dynamic> json) {
+    final name = (json['name'] as String?)?.trim();
+    return SentRecipientInvitation(
+      id: json['id'] as String,
+      channel: json['channel'] as String? ?? 'PHONE',
+      maskedTarget: json['maskedTarget'] as String? ?? '',
+      status: json['status'] as String? ?? 'PENDING',
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+      name: (name == null || name.isEmpty) ? null : name,
+    );
+  }
 
   final String id;
 
@@ -31,6 +35,10 @@ class SentRecipientInvitation {
   /// `PENDING` ou `ACCEPTED`.
   final String status;
   final DateTime? createdAt;
+
+  /// Nom donné par l'expéditeur à l'invitation. Absent sur un back antérieur
+  /// ou quand il ne l'a pas renseigné.
+  final String? name;
 
   bool get isAccepted => status == 'ACCEPTED';
   bool get isEmail => channel == 'EMAIL';

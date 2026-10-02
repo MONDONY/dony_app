@@ -193,33 +193,30 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
               title: l.walletTopupSuccessTitle,
               subtitle: l.walletTopupSuccessSubtitle,
               ctaLabel: l.walletTopupSuccessCta,
-              onCta: () {
-                Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
-                // pop(true) plutôt que go() : préserve la pile de navigation (le
-                // bouton retour du wallet continue de fonctionner) et signale au
-                // wallet qu'il doit recharger son solde (crédité de façon
-                // asynchrone via webhook).
-                context.pop(true);
-              },
-              // Le bouton fermer (X) par défaut navigue directement vers /home
-              // sans repasser par pop(true) — le wallet, strictement dépendant
-              // du bool renvoyé par le push (`ok != true` → pas de refresh),
-              // resterait alors avec un solde périmé. On capture le router
-              // AVANT les pops (routeContext est dépilé par le premier pop, la
-              // classe de bug est la même que le fix bid-payé feb86b71), puis
-              // on préserve le contrat bool avant de quitter vers /home.
-              onClose: () {
-                final router = GoRouter.of(routeContext);
-                Navigator.of(routeContext).pop();
-                context.pop(true);
-                router.go('/home');
-              },
+              onCta: () => _leaveAfterSuccess(routeContext, context),
+              // Le bouton fermer (X) suit le même chemin que le CTA. Il allait
+              // auparavant vers /home juste après les pops : l'écran de choix
+              // de méthode, encore monté, se dépilait à son tour en retard
+              // (`pop(true)` sur le `true` reçu) pendant que `go` réécrivait
+              // la pile, et l'appelant (« À traiter », règlement de
+              // commission) relançait l'action qu'il attendait de ce `true`
+              // depuis un écran en train de disparaître (FLUTTER-7N).
+              onClose: () => _leaveAfterSuccess(routeContext, context),
               analyticsContext: 'wallet_topup',
             ),
           ),
         );
       },
     );
+  }
+
+  /// Ferme l'écran de succès puis cet écran de montant avec `true` : préserve
+  /// la pile (le retour de l'appelant continue de fonctionner) et signale à
+  /// l'appelant qu'il doit recharger son solde (crédité de façon asynchrone
+  /// via webhook) ou relancer l'action qui attendait la recharge.
+  void _leaveAfterSuccess(BuildContext successContext, BuildContext context) {
+    Navigator.of(successContext).pop(); // ferme DonySuccessScreen
+    context.pop(true);
   }
 
   @override
@@ -250,8 +247,12 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
           // sans code), et l'ErrorCatalog retombait toujours sur son message
           // générique — les entrées dédiées ne servaient à rien.
           unawaited(ErrorPresenter.show(context, state.error));
-        } else if (state is WalletLoaded) {
-          // Rechargement réussi → retour au wallet
+        } else if (state is WalletLoaded &&
+            (ModalRoute.of(context)?.isCurrent ?? false)) {
+          // Rechargement réussi → retour au wallet. Seulement si cet écran
+          // est au premier plan : `context.pop` dépile la route du dessus,
+          // et sous l'écran de succès il fermerait celui-ci au lieu de
+          // l'écran de montant (une route de trop).
           context.pop(true);
         }
       },

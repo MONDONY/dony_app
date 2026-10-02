@@ -34,6 +34,25 @@ String routeForNotification(NotificationModel n) {
       NotificationDetailScreen.routeFor(n.id);
 }
 
+/// Route que la ligne peut réellement ouvrir, ou `null` si aucune n'existe.
+///
+/// Le deeplink garde la main ; s'il vise une route que cette version de
+/// l'app ne connaît pas (`/recipients` au lieu de `/profile/recipients` pour
+/// RECIPIENT_INVITATION_ACCEPTED, Sentry FLUTTER-7W), le resolver partagé
+/// avec le tap sur push est tenté avant de renoncer.
+String? openableRouteForNotification(
+  NotificationModel n,
+  bool Function(String route) exists,
+) {
+  final primary = routeForNotification(n);
+  if (exists(primary)) return primary;
+  final fallback = resolveNotificationRoute(n.type, n.data);
+  if (fallback != null && fallback != primary && exists(fallback)) {
+    return fallback;
+  }
+  return null;
+}
+
 /// `true` si [route] est connue du routeur : un deeplink périmé ou malformé
 /// n'ouvre pas la page d'erreur par défaut, le sheet le dit et reste ouvert.
 bool notificationRouteExists(GoRouter router, String route) {
@@ -330,8 +349,11 @@ class _NotificationList extends StatelessWidget {
     unawaited(consumeSubscriptionBadge(notif.type, notif.data));
     final router = GoRouter.maybeOf(context);
     if (router == null) return;
-    final route = routeForNotification(notif);
-    if (!notificationRouteExists(router, route)) {
+    final route = openableRouteForNotification(
+      notif,
+      (r) => notificationRouteExists(router, r),
+    );
+    if (route == null) {
       // Deeplink périmé ou inconnu de cette version de l'app : on le dit,
       // plutôt que d'ouvrir une page vide, et le sheet reste ouvert.
       DonySnackbar.show(

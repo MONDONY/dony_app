@@ -11,10 +11,20 @@ class RecipientInvitationDatasource {
 
   /// Exactement l'un des deux. Le serveur répond toujours `202` pour un
   /// format valide, que le compte existe ou non : rien à lire en retour.
-  /// `429` au-delà du quota, `422` pour un format refusé.
-  Future<void> send({String? phone, String? email}) async {
+  /// `429` au-delà du quota, `422` pour un format refusé. [name] (facultatif,
+  /// 100 caractères au plus) n'est envoyé que renseigné : un back antérieur
+  /// ne le connaît pas.
+  Future<void> send({String? phone, String? email, String? name}) async {
     assert((phone == null) != (email == null), 'phone XOR email');
-    await _apiClient.dio.post(_base, data: {'phone': ?phone, 'email': ?email});
+    final trimmed = name?.trim();
+    await _apiClient.dio.post(
+      _base,
+      data: {
+        'phone': ?phone,
+        'email': ?email,
+        if (trimmed != null && trimmed.isNotEmpty) 'name': trimmed,
+      },
+    );
   }
 
   Future<List<SentRecipientInvitation>> fetchSent() async {

@@ -11,3 +11,10 @@ import 'package:intl/intl.dart';
 /// plus la virgule quelle que soit la langue effective.
 String formatWeightKg(AppLocalizations l, double kg) =>
     '${NumberFormat('#0.#', l.localeName).format(kg)} kg';
+
+/// Valeur seule d'un poids, sans unité, à la langue [localeName] : deux
+/// décimales au plus, aucune quand le poids est entier (« 0,5 », « 0,25 »,
+/// « 3 » en français). Pour les surfaces qui posent « kg » à part (gros
+/// chiffre du formulaire de demande, champ de saisie).
+String formatWeightValue(String localeName, double kg) =>
+    NumberFormat('#0.##', localeName).format(kg);

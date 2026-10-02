@@ -134,9 +134,15 @@ class _RecipientSectionState extends State<RecipientSection> {
     setState(() => _selected = recipient);
   }
 
-  bool get _phoneIsKnown => _bloc.state.recipients.any(
-    (r) => r.phoneE164 == widget.phoneCtrl.text.trim(),
-  );
+  /// Numéro déjà dans le carnet, quelle que soit son écriture (espaces,
+  /// `00`, format national) : la comparaison porte sur les chiffres.
+  bool get _phoneIsKnown =>
+      findRecipientByPhone(
+        _bloc.state.recipients,
+        widget.phoneCtrl.text,
+        countryCode: widget.fallbackCountry,
+      ) !=
+      null;
 
   bool get _toggleVisible =>
       _selected == null &&
@@ -144,7 +150,11 @@ class _RecipientSectionState extends State<RecipientSection> {
       !_phoneIsKnown;
 
   void _maybeSave() {
-    if (!_toggleVisible || !_save) {
+    // Le bloc naît avec ce widget : tant que le carnet n'est pas chargé, une
+    // liste vide ne dit pas que le numéro est nouveau, et enregistrer
+    // créerait un doublon (Sentry FLUTTER-7T). Mieux vaut ne rien
+    // enregistrer que dupliquer.
+    if (!_bloc.state.loaded || !_toggleVisible || !_save) {
       return;
     }
     final phone = widget.phoneCtrl.text.trim();

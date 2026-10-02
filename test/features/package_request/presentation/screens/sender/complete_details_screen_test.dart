@@ -121,7 +121,9 @@ void main() {
   setUp(() {
     completeDetailsBloc = _MockCompleteDetailsBloc();
     recipientBloc = _MockRecipientBloc();
-    when(() => recipientBloc.state).thenReturn(const RecipientState());
+    when(
+      () => recipientBloc.state,
+    ).thenReturn(const RecipientState(loaded: true));
 
     if (getIt.isRegistered<CompleteDetailsBloc>()) {
       getIt.unregister<CompleteDetailsBloc>();

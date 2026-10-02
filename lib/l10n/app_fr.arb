@@ -5864,10 +5864,6 @@
   "@negotiationRejectedSnackbar": {
     "description": "Snackbar de rejet via reject_bottom_sheet (negotiation_thread_screen.dart)"
   },
-  "negotiationCommissionSettledSnackbar": "Commission réglée : ce colis est à toi !",
-  "@negotiationCommissionSettledSnackbar": {
-    "description": "Snackbar de succès du règlement de la commission (negotiation_thread_screen.dart)"
-  },
   "negotiationGaveUpParcelSnackbar": "Tu as renoncé à ce colis, il reste disponible pour un autre voyageur.",
   "@negotiationGaveUpParcelSnackbar": {
     "description": "Snackbar de confirmation du renoncement (negotiation_thread_screen.dart)"
@@ -10740,10 +10736,6 @@
   "chatMessageCopied": "Message copié",
   "@chatMessageCopied": {
     "description": "Toast après la copie d'un message par appui long sur sa bulle (chat_screen.dart _TextContent)."
-  },
-  "chatCopyMessageHint": "copier le message",
-  "@chatCopyMessageHint": {
-    "description": "Indice lu par le lecteur d'écran pour l'appui long sur une bulle de texte (chat_screen.dart _TextContent)."
   },
   "chatOpenParticipantProfileSemantics": "Voir le profil de {name}",
   "@chatOpenParticipantProfileSemantics": {
@@ -17946,10 +17938,6 @@
   "@recipientSentInvitationPending": {
     "description": "Carnet : statut d'une invitation non acceptée."
   },
-  "recipientSentInvitationAccepted": "Acceptée",
-  "@recipientSentInvitationAccepted": {
-    "description": "Carnet : statut d'une invitation acceptée."
-  },
   "recipientSentInvitationCancelTitle": "Annuler l'invitation ?",
   "@recipientSentInvitationCancelTitle": {
     "description": "Carnet : titre du dialogue d'annulation d'une invitation."
@@ -18074,5 +18062,33 @@
   "recipientSectionLinkedOnYadony": "Dans Yadony : il suivra le colis dans l'app.",
   "@recipientSectionLinkedOnYadony": {
     "description": "Formulaire de réservation : mention sous le champ quand le destinataire choisi a accepté l'invitation."
-  }
+  },
+  "recipientInviteNameLabel": "Nom (facultatif)",
+  "@recipientInviteNameLabel": {"description": "Feuille « Ajouter un destinataire Yadony » : libellé du champ nom de la personne invitée."},
+  "recipientInviteNameHint": "Ex. Awa Diallo",
+  "@recipientInviteNameHint": {"description": "Feuille « Ajouter un destinataire Yadony » : exemple dans le champ nom."},
+  "recipientInviteNameTooLong": "100 caractères au maximum.",
+  "@recipientInviteNameTooLong": {"description": "Feuille « Ajouter un destinataire Yadony » : erreur quand le nom dépasse 100 caractères."},
+  "negotiationViewNegotiationCta": "Voir la négociation",
+  "@negotiationViewNegotiationCta": {"description": "CTA des écrans de succès qui ramènent au fil de négociation quand il n'y a encore rien à suivre : accord de prix, accord en espèces, commission réglée (accept_offer_bottom_sheet.dart, payment_recap_bottom_sheet.dart, negotiation_commission_settled_screen.dart)."},
+  "negotiationOpenPartnerProfileSemantics": "Voir le profil de {name}",
+  "@negotiationOpenPartnerProfileSemantics": {"description": "Nom accessible de l'en-tête du fil de négociation (avatar + nom) qui ouvre le profil public de l'autre partie (negotiation_thread_screen.dart _PartnerTitle).", "placeholders": {"name": {"type": "String"}}},
+  "negotiationCommissionSettledTitle": "Ce colis est à toi !",
+  "@negotiationCommissionSettledTitle": {"description": "Titre de l'écran de succès affiché au voyageur quand il a réglé la commission d'un accord en espèces (negotiation_commission_settled_screen.dart)."},
+  "negotiationCommissionSettledSubtitle": "La commission Yadony est réglée et l'accord est scellé. Retrouve l'envoi et les prochaines étapes dans la négociation.",
+  "@negotiationCommissionSettledSubtitle": {"description": "Sous-titre de l'écran de succès après règlement de la commission d'un accord en espèces (negotiation_commission_settled_screen.dart)."},
+  "bidAcceptedSuccessTitle": "Demande acceptée !",
+  "@bidAcceptedSuccessTitle": {"description": "Titre de l'écran de succès affiché au voyageur quand il accepte une demande depuis « À traiter » (bid_accepted_success_screen.dart)."},
+  "bidAcceptedSuccessSubtitle": "Le colis est réservé sur ton trajet. Ouvre la demande pour voir son détail et les prochaines étapes avec l'expéditeur.",
+  "@bidAcceptedSuccessSubtitle": {"description": "Sous-titre de l'écran de succès après acceptation d'une demande (bid_accepted_success_screen.dart)."},
+  "bidAcceptedSuccessCta": "Voir la demande",
+  "@bidAcceptedSuccessCta": {"description": "CTA de l'écran de succès après acceptation d'une demande, ouvre son détail (bid_accepted_success_screen.dart)."},
+  "receptionSenderLabel": "Expéditeur",
+  "@receptionSenderLabel": {"description": "Écran d'un colis à recevoir : rôle affiché sur la carte de l'expéditeur, qui ouvre son profil public (reception_detail_screen.dart _SenderCard)."},
+  "receptionViewSenderProfile": "Voir le profil de {name}",
+  "@receptionViewSenderProfile": {"description": "Nom accessible de la carte expéditeur de l'écran d'un colis à recevoir, qui ouvre son profil public.", "placeholders": {"name": {"type": "String"}}},
+  "chatCopyMessageAction": "Copier le message",
+  "@chatCopyMessageAction": {"description": "Entrée ajoutée au menu de sélection d'une bulle de texte, et action du lecteur d'écran, qui copie le message entier (chat_screen.dart _TextContent)."},
+  "bidCreateWeightRequiredHint": "Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.",
+  "@bidCreateWeightRequiredHint": {"description": "Formulaire de demande sur un trajet au kilo : aide affichée au-dessus du bouton tant qu'aucun poids n'est saisi (create_bid_bottom_sheet.dart)."}
 }
