@@ -134,6 +134,7 @@ dependencies:
   # Importé directement par le code (Bloc/Emitter/Transition) et pas seulement
   # via flutter_bloc : depend_on_referenced_packages exige la déclaration.
   bloc: ^8.1.4
+  shared_preferences: ^2.5.5
   smart_auth: ^3.2.0
   stream_video_flutter: ^1.6.0
   stream_video_push_notification: ^1.6.0

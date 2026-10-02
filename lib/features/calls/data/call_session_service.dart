@@ -15,7 +15,18 @@ class CallSessionService {
   final CallGateway _gateway;
   String? _connectedUserId;
 
-  Future<void> onSignedIn(UserModel user) async {
+  /// Les changements de session passent un par un : deux connexions
+  /// rapprochées ne créent pas deux clients, une déconnexion attend la
+  /// connexion en cours au lieu de la manquer.
+  Future<void> _queue = Future<void>.value();
+
+  Future<void> _serial(Future<void> Function() task) {
+    final next = _queue.then((_) => task());
+    _queue = next.catchError((Object _) {});
+    return next;
+  }
+
+  Future<void> onSignedIn(UserModel user) => _serial(() async {
     if (_connectedUserId == user.id && _gateway.isConnected) return;
     try {
       if (_gateway.isConnected) await _gateway.disconnect();
@@ -34,12 +45,12 @@ class CallSessionService {
       _connectedUserId = null;
       AppLog.warn('Calls unavailable for this session: $e');
     }
-  }
+  });
 
-  Future<void> onSignedOut() async {
+  Future<void> onSignedOut() => _serial(() async {
     _connectedUserId = null;
     if (_gateway.isConnected) await _gateway.disconnect();
-  }
+  });
 
   /// Nom montré à l'autre partie sur l'écran d'appel : prénom + initiale,
   /// comme le back (`publicDisplayName`), jamais le nom complet.

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
@@ -159,5 +161,30 @@ void main() {
       await syncCallSession(const AuthLoading(), service);
       expect(gateway.log, isEmpty);
     });
+  });
+
+  group('appels concurrents (revue finale)', () {
+    test('deux connexions rapprochées du même compte : un seul client', () async {
+      when(() => repository.fetchToken()).thenAnswer((_) async => _token('u1'));
+
+      await Future.wait([service.onSignedIn(_awa), service.onSignedIn(_awa)]);
+
+      expect(gateway.log.where((l) => l.startsWith('connect')), hasLength(1));
+    });
+
+    test(
+      'déconnexion pendant une connexion en cours : rien ne reste connecté',
+      () async {
+        final token = Completer<CallToken>();
+        when(() => repository.fetchToken()).thenAnswer((_) => token.future);
+
+        final signIn = service.onSignedIn(_awa);
+        final signOut = service.onSignedOut();
+        token.complete(_token('u1'));
+        await Future.wait([signIn, signOut]);
+
+        expect(gateway.isConnected, isFalse);
+      },
+    );
   });
 }

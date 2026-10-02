@@ -11,6 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart' show CompositeSubscription;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stream_video_flutter/stream_video_flutter.dart' hide CallUser;
 import 'package:stream_video_push_notification/stream_video_push_notification.dart';
 import 'package:stream_webrtc_flutter/stream_webrtc_flutter.dart' as rtc;
@@ -57,6 +58,15 @@ class StreamCallGateway implements CallGateway {
     if (_client != null) {
       await disconnect();
     }
+    // Le SDK ne réinscrit pas un jeton push qu'il croit déjà inscrit ; or un
+    // désenregistrement raté (déconnexion hors ligne) le laisse en mémoire et
+    // le compte suivant ne recevrait aucun appel. On repart à zéro : le jeton
+    // est réinscrit pour ce compte (Stream le retire à l'ancien).
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(StreamVideoPushNotificationManager.userDeviceTokenKey);
+    await prefs.remove(
+      StreamVideoPushNotificationManager.userDeviceTokenVoIPKey,
+    );
     final client = StreamVideo(
       apiKey,
       user: User.regular(
