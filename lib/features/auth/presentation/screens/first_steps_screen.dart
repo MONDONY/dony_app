@@ -5,9 +5,13 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/activation/bloc/activation_cubit.dart';
+import 'package:dony/features/activation/data/models/activation_status.dart';
+import 'package:dony/features/activation/presentation/widgets/first_steps_personalized.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Route de l'écran de fin d'inscription.
@@ -23,15 +27,33 @@ const String firstStepsRoute = '/first-steps';
 /// juste après. Cet écran pose la question une fois, à la fin du parcours, et
 /// mène droit à l'intro de publication choisie ; « Plus tard » garde l'ancien
 /// comportement.
-class FirstStepsScreen extends StatelessWidget {
+class FirstStepsScreen extends StatefulWidget {
   const FirstStepsScreen({super.key, this.analytics});
 
   /// Injectable pour les tests ; `null` lit le service du conteneur.
   final AnalyticsService? analytics;
 
-  void _choose(BuildContext context, String choice, String route) {
+  @override
+  State<FirstStepsScreen> createState() => _FirstStepsScreenState();
+}
+
+class _FirstStepsScreenState extends State<FirstStepsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Statut d'activation (intention, trajets ou colis de la ligne) : la vue
+    // personnalisée remplace les tuiles dès qu'il est connu.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(context.read<ActivationCubit>().load());
+    });
+  }
+
+  void _choose(BuildContext context, String choice, String route) =>
+      _track(choice, null, () => context.go(route));
+
+  void _track(String choice, String? variant, VoidCallback go) {
     final service =
-        analytics ??
+        widget.analytics ??
         (getIt.isRegistered<AnalyticsService>()
             ? getIt<AnalyticsService>()
             : null);
@@ -39,11 +61,45 @@ class FirstStepsScreen extends StatelessWidget {
       unawaited(
         service.logEvent(
           AnalyticsEvents.firstStepsChoice,
-          properties: {'choice': choice},
+          properties: {'choice': choice, 'variant': ?variant},
         ),
       );
     }
-    context.go(route);
+    go();
+  }
+
+  Widget _personalized(BuildContext context, ActivationStatus status) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DonySpacing.lg,
+            DonySpacing.xl,
+            DonySpacing.lg,
+            DonySpacing.base,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: FirstStepsPersonalized(status: status, onChoose: _track),
+              ),
+              DonyButton(
+                key: const Key('first-steps-later'),
+                label: context.l10n.firstStepsLater,
+                variant: DonyButtonVariant.ghost,
+                onPressed: () => _track(
+                  'later',
+                  firstStepsVariant(status),
+                  () => context.go('/home'),
+                ),
+              ),
+            ],
+          ),
+        ).animate().fadeIn(duration: 240.ms).slideY(begin: 0.03),
+      ),
+    );
   }
 
   @override
@@ -51,6 +107,10 @@ class FirstStepsScreen extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
+    final activation = context.watch<ActivationCubit>().state;
+    if (activation is ActivationLoaded && activation.status.intent != null) {
+      return _personalized(context, activation.status);
+    }
 
     return Scaffold(
       backgroundColor: cs.surface,
