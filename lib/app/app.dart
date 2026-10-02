@@ -125,19 +125,16 @@ class _DonyAppState extends State<DonyApp> {
     // est déjà à l'écran : il lui faut la route courante.
     getIt<NotificationService>().currentLocationProvider = () =>
         appRouter.routerDelegate.currentConfiguration.uri.path;
+    // Appel audio décroché depuis CallKit / la notification Android : on
+    // ouvre l'écran d'appel, qui rejoint l'appel. Même porte que les liens
+    // profonds : poussé sur le verrou PIN, il serait détruit par le `go()` du
+    // déverrouillage et l'appel raccroché.
+    _incomingCallsSub = getIt<CallGateway>().incomingCalls.listen(
+      (call) => _deepLinkGate.dispatch(CallScreenArgs.incomingLocation(call)),
+    );
     // Même porte que les liens profonds : une notification touchée sur le
     // verrou PIN s'empilait par-dessus, puis le déverrouillage (`go('/home')`)
     // effaçait la pile et la cible était perdue au premier essai (FLUTTER-4B).
-    // Appel audio décroché depuis CallKit / la notification Android : on
-    // ouvre l'écran d'appel, qui rejoint l'appel.
-    _incomingCallsSub = getIt<CallGateway>().incomingCalls.listen(
-      (call) => unawaited(
-        appRouter.push(
-          '/calls/${call.callId}',
-          extra: CallScreenArgs.incoming(call),
-        ),
-      ),
-    );
     _navSub = getIt<NotificationService>().navigationStream.listen(
       _deepLinkGate.dispatch,
     );

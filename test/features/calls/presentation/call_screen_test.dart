@@ -250,4 +250,30 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
     expect(closed, 1);
   });
+
+  group('route d\'un appel entrant (porte des liens profonds)', () {
+    test('aller-retour par l\'URL : nom, avatar, décroché natif', () {
+      final location = CallScreenArgs.incomingLocation(
+        const IncomingCall(
+          callId: 'abc-1',
+          callerName: 'Awa D. & co',
+          callerImageUrl: 'https://img/a.png?x=1',
+          acceptedNatively: true,
+        ),
+      );
+      final uri = Uri.parse(location);
+      expect(uri.path, '/calls/abc-1');
+
+      final args = CallScreenArgs.fromRoute('abc-1', uri.queryParameters);
+      expect(args.remoteName, 'Awa D. & co');
+      expect(args.remoteAvatarUrl, 'https://img/a.png?x=1');
+      final event = args.initialEvent! as CallIncomingAcceptRequested;
+      expect(event.callId, 'abc-1');
+      expect(event.acceptedNatively, isTrue);
+    });
+
+    test('sans paramètres : aucun événement (route inconnue)', () {
+      expect(CallScreenArgs.fromRoute('x', const {}).initialEvent, isNull);
+    });
+  });
 }

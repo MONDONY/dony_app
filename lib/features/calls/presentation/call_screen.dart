@@ -38,6 +38,34 @@ class CallScreenArgs {
     acceptedNatively: call.acceptedNatively,
   );
 
+  /// Route d'un appel entrant, tout dans l'URL : elle peut ainsi attendre
+  /// derrière le verrou PIN ou la connexion (porte des liens profonds) sans
+  /// perdre ses détails, ce qu'un `extra` ne permet pas.
+  static String incomingLocation(IncomingCall call) => Uri(
+    path: '/calls/${call.callId}',
+    queryParameters: {
+      'name': call.callerName,
+      'avatar': ?call.callerImageUrl,
+      if (call.acceptedNatively) 'native': '1',
+    },
+  ).toString();
+
+  /// Inverse de [incomingLocation]. Sans nom, la route ne vient pas d'un
+  /// appel entrant : l'écran n'engage rien.
+  factory CallScreenArgs.fromRoute(
+    String callId,
+    Map<String, String> query,
+  ) {
+    final name = query['name'];
+    if (name == null) return const CallScreenArgs(remoteName: '');
+    return CallScreenArgs(
+      remoteName: name,
+      remoteAvatarUrl: query['avatar'],
+      incomingCallId: callId,
+      acceptedNatively: query['native'] == '1',
+    );
+  }
+
   /// Ce que l'écran demande au [CallBloc] en s'ouvrant.
   CallEvent? get initialEvent {
     if (conversationId != null) {

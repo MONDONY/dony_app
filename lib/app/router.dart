@@ -1138,13 +1138,17 @@ final appRouter = GoRouter(
     // ── Messagerie — conversation individuelle (hors shell) ─────────────
     // Appel audio Yadony, sortant (depuis une conversation) ou entrant
     // (décroché). `:callId` vaut `pending` tant que le back n'a pas créé
-    // l'appel ; les détails passent par `extra` (CallScreenArgs).
+    // l'appel ; les détails passent par `extra` (CallScreenArgs), ou par
+    // l'URL pour un appel entrant (CallScreenArgs.incomingLocation).
     GoRoute(
       path: '/calls/:callId',
       pageBuilder: (context, state) {
         final args = state.extra is CallScreenArgs
             ? state.extra! as CallScreenArgs
-            : const CallScreenArgs(remoteName: '');
+            : CallScreenArgs.fromRoute(
+                state.pathParameters['callId']!,
+                state.uri.queryParameters,
+              );
         return CustomTransitionPage<void>(
           name: '/calls',
           child: BlocProvider<CallBloc>(
