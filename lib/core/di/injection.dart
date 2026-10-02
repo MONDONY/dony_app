@@ -30,8 +30,11 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/billing/bloc/subscription_bloc.dart';
 import 'package:dony/features/billing/data/billing_repository.dart';
+import 'package:dony/features/calls/data/call_gateway.dart';
+import 'package:dony/features/calls/data/call_session_service.dart';
 import 'package:dony/features/calls/data/datasources/calls_datasource.dart';
 import 'package:dony/features/calls/data/repositories/calls_repository.dart';
+import 'package:dony/features/calls/data/stream_call_gateway.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/datasources/cancellation_remote_datasource.dart';
 import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
@@ -1037,6 +1040,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<CallsRepository>(
     () => CallsRepository(getIt<CallsDatasource>()),
+  );
+  getIt.registerLazySingleton<CallGateway>(StreamCallGateway.new);
+  getIt.registerLazySingleton<CallSessionService>(
+    () => CallSessionService(getIt<CallsRepository>(), getIt<CallGateway>()),
   );
 
   // Destinataire Yadony par invitation (lot 4)

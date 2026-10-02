@@ -22,6 +22,7 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
+import 'package:dony/features/calls/data/call_session_service.dart';
 import 'package:dony/features/connectivity/bloc/connectivity_cubit.dart';
 import 'package:dony/features/connectivity/presentation/widgets/connectivity_banner.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
@@ -381,6 +382,9 @@ class _DonyAppState extends State<DonyApp> {
               ],
               child: BlocListener<AuthBloc, AuthState>(
                 listener: (context, state) {
+                  // Appels audio : client Stream connecté pour le compte
+                  // courant, déconnecté à la sortie.
+                  unawaited(syncCallSession(state, getIt<CallSessionService>()));
                   if (AccountResetGuard.shouldResetAccountScopedBlocs(state)) {
                     // `BusinessPrefsBloc`/`StripeAccountBloc` sont des
                     // `lazySingleton` GetIt jamais recréés par `AuthBloc` —
