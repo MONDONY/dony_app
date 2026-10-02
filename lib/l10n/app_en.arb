@@ -782,6 +782,14 @@
   "tripPublishCardPaymentTitle": "Card payment (Stripe)",
   "tripPublishCardPaymentSubtitle": "Secure payment by default",
   "tripPublishCashLabel": "Cash",
+  "tripPublishCashLockedSubtitle": "Always accepted on this trip. Commission collected from the traveler at handover",
+  "@tripPublishCashLockedSubtitle": {
+    "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M)."
+  },
+  "tripPublishCashLockedExplanation": "Without card payment on this trip, cash always stays accepted: it is how senders can book.",
+  "@tripPublishCashLockedExplanation": {
+    "description": "Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M)."
+  },
   "tripPublishCashSubtitle": "Service fee charged to the traveler at drop-off",
   "tripPublishAcceptedContentSectionLabel": "What I accept",
   "tripPublishRefusedContentSectionLabel": "What I refuse",

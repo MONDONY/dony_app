@@ -2801,6 +2801,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishCashLabel => 'Cash';
 
   @override
+  String get tripPublishCashLockedSubtitle =>
+      'Always accepted on this trip. Commission collected from the traveler at handover';
+
+  @override
+  String get tripPublishCashLockedExplanation =>
+      'Without card payment on this trip, cash always stays accepted: it is how senders can book.';
+
+  @override
   String get tripPublishCashSubtitle =>
       'Service fee charged to the traveler at drop-off';
 

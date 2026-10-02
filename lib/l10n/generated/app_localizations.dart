@@ -4790,6 +4790,18 @@ abstract class AppLocalizations {
   /// **'Espèces'**
   String get tripPublishCashLabel;
 
+  /// Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M).
+  ///
+  /// In fr, this message translates to:
+  /// **'Toujours accepté sur ce trajet. Commission prélevée au voyageur à la remise'**
+  String get tripPublishCashLockedSubtitle;
+
+  /// Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans paiement par carte sur ce trajet, les espèces restent toujours acceptées : c\'est le mode qui permet aux expéditeurs de réserver.'**
+  String get tripPublishCashLockedExplanation;
+
   /// Sous-titre de la ligne paiement en espèces
   ///
   /// In fr, this message translates to:
