@@ -26,7 +26,31 @@ class LanguageSyncGate extends StatefulWidget {
   State<LanguageSyncGate> createState() => _LanguageSyncGateState();
 }
 
-class _LanguageSyncGateState extends State<LanguageSyncGate> {
+class _LanguageSyncGateState extends State<LanguageSyncGate>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Retour au premier plan : une synchro échouée (réseau) n'était retentée
+  /// qu'au prochain changement de langue ou d'état d'auth, et les
+  /// notifications restaient dans l'ancienne langue (Sentry FLUTTER-6X). Le
+  /// cubit ne fait rien si la langue serveur est déjà la bonne.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      _sync(context, context.read<AuthBloc>().state);
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
