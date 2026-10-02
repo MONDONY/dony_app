@@ -520,7 +520,10 @@ void main() {
     });
 
     test('sans identifiant valide : la messagerie', () {
-      expect(resolveNotificationRoute('CALL_MISSED', {'conversationId': 'x'}), '/messages');
+      expect(
+        resolveNotificationRoute('CALL_MISSED', {'conversationId': 'x'}),
+        '/messages',
+      );
       expect(resolveNotificationRoute('CALL_MISSED', {}), '/messages');
     });
   });

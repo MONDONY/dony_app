@@ -164,13 +164,18 @@ void main() {
   });
 
   group('appels concurrents (revue finale)', () {
-    test('deux connexions rapprochées du même compte : un seul client', () async {
-      when(() => repository.fetchToken()).thenAnswer((_) async => _token('u1'));
+    test(
+      'deux connexions rapprochées du même compte : un seul client',
+      () async {
+        when(
+          () => repository.fetchToken(),
+        ).thenAnswer((_) async => _token('u1'));
 
-      await Future.wait([service.onSignedIn(_awa), service.onSignedIn(_awa)]);
+        await Future.wait([service.onSignedIn(_awa), service.onSignedIn(_awa)]);
 
-      expect(gateway.log.where((l) => l.startsWith('connect')), hasLength(1));
-    });
+        expect(gateway.log.where((l) => l.startsWith('connect')), hasLength(1));
+      },
+    );
 
     test(
       'déconnexion pendant une connexion en cours : rien ne reste connecté',

@@ -52,10 +52,7 @@ class CallScreenArgs {
 
   /// Inverse de [incomingLocation]. Sans nom, la route ne vient pas d'un
   /// appel entrant : l'écran n'engage rien.
-  factory CallScreenArgs.fromRoute(
-    String callId,
-    Map<String, String> query,
-  ) {
+  factory CallScreenArgs.fromRoute(String callId, Map<String, String> query) {
     final name = query['name'];
     if (name == null) return const CallScreenArgs(remoteName: '');
     return CallScreenArgs(

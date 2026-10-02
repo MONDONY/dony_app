@@ -46,8 +46,7 @@ class FakeCallGateway implements CallGateway {
   }
 
   @override
-  Future<void> cancelOutgoing(String callId) async =>
-      log.add('cancel:$callId');
+  Future<void> cancelOutgoing(String callId) async => log.add('cancel:$callId');
 
   @override
   Future<void> acceptIncoming(String callId) async => log.add('accept:$callId');

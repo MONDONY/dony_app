@@ -17,15 +17,17 @@ void main() {
       expect(d.action, CallFlowAction.none);
     });
 
-    test('l\'appelé refuse avant de décrocher : fin « rejected » et on quitte',
-        () {
-      final d = outgoing().onObservation(
-        const CallObservation(otherMemberRejected: true),
-      );
-      expect(d.snapshot?.phase, CallPhase.ended);
-      expect(d.snapshot?.endReason, 'rejected');
-      expect(d.action, CallFlowAction.leave);
-    });
+    test(
+      'l\'appelé refuse avant de décrocher : fin « rejected » et on quitte',
+      () {
+        final d = outgoing().onObservation(
+          const CallObservation(otherMemberRejected: true),
+        );
+        expect(d.snapshot?.phase, CallPhase.ended);
+        expect(d.snapshot?.endReason, 'rejected');
+        expect(d.action, CallFlowAction.leave);
+      },
+    );
 
     test('sonnerie sans réponse : fin « missed », sonnerie annulée', () {
       final flow = outgoing()..onObservation(alone);
@@ -56,13 +58,15 @@ void main() {
       expect(d.snapshot?.remoteName, 'Awa D.');
     });
 
-    test('l\'autre disparaît : délai de grâce, pas de retour à « ça sonne »',
-        () {
-      final flow = outgoing()..onObservation(withRemote);
-      final d = flow.onObservation(alone);
-      expect(d.snapshot, isNull);
-      expect(d.action, CallFlowAction.armRemoteGoneTimer);
-    });
+    test(
+      'l\'autre disparaît : délai de grâce, pas de retour à « ça sonne »',
+      () {
+        final flow = outgoing()..onObservation(withRemote);
+        final d = flow.onObservation(alone);
+        expect(d.snapshot, isNull);
+        expect(d.action, CallFlowAction.armRemoteGoneTimer);
+      },
+    );
 
     test('l\'autre revient pendant le délai : minuteur annulé, connecté', () {
       final flow = outgoing()
@@ -114,8 +118,10 @@ void main() {
 
   group('appel entrant', () {
     test('en attente de l\'autre : connexion, jamais « ça sonne »', () {
-      expect(incoming().onObservation(alone).snapshot?.phase,
-          CallPhase.connecting);
+      expect(
+        incoming().onObservation(alone).snapshot?.phase,
+        CallPhase.connecting,
+      );
     });
 
     test('le refus d\'un membre ne termine pas un appel entrant', () {
@@ -128,10 +134,7 @@ void main() {
 
   group('incomingSteps', () {
     test('sonnerie non décrochée : accepter puis rejoindre', () {
-      final s = incomingSteps(
-        ringingNotAccepted: true,
-        alreadyActive: false,
-      );
+      final s = incomingSteps(ringingNotAccepted: true, alreadyActive: false);
       expect((s.accept, s.join), (true, true));
     });
 

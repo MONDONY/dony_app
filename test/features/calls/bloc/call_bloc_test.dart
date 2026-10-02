@@ -324,25 +324,18 @@ void main() {
   });
 
   group('revue finale', () {
-    test(
-      'écran fermé pendant la création de l\'appel : sonnerie annulée, '
-      'jamais rejoint',
-      () async {
-        final created = Completer<StartedCall>();
-        when(
-          () => repository.startCall('c1'),
-        ).thenAnswer((_) => created.future);
-        final bloc = build()..add(const CallStartRequested('c1', 'Moussa'));
-        await Future<void>.delayed(Duration.zero);
-        await bloc.close();
-        created.complete(
-          const StartedCall(callId: 'x1', callType: 'audio_call'),
-        );
-        await Future<void>.delayed(Duration.zero);
-        expect(gateway.log, contains('cancel:x1'));
-        expect(gateway.log, isNot(contains('join:x1')));
-      },
-    );
+    test('écran fermé pendant la création de l\'appel : sonnerie annulée, '
+        'jamais rejoint', () async {
+      final created = Completer<StartedCall>();
+      when(() => repository.startCall('c1')).thenAnswer((_) => created.future);
+      final bloc = build()..add(const CallStartRequested('c1', 'Moussa'));
+      await Future<void>.delayed(Duration.zero);
+      await bloc.close();
+      created.complete(const StartedCall(callId: 'x1', callType: 'audio_call'));
+      await Future<void>.delayed(Duration.zero);
+      expect(gateway.log, contains('cancel:x1'));
+      expect(gateway.log, isNot(contains('join:x1')));
+    });
 
     blocTest<CallBloc, CallState>(
       'raccrocher soi-même journalise call_ended (hangup)',
