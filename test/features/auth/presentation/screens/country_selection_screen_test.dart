@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/activation/presentation/screens/intent_step_screen.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -63,6 +64,15 @@ Future<void> _wrap(
       GoRoute(
         path: '/auth/referral-code',
         builder: (_, _) => const Scaffold(body: Text('Referral route')),
+      ),
+      GoRoute(
+        path: intentStepRoute,
+        builder: (_, state) {
+          final args = state.extra! as IntentStepArgs;
+          return Scaffold(
+            body: Text('Intent next=${args.next} extra=${args.nextExtra}'),
+          );
+        },
       ),
     ],
   );
@@ -287,7 +297,10 @@ void main() {
       // fraîche possible — plus fraîche qu'une relecture de
       // `BusinessPrefsBloc`, dont le singleton app-wide ne se resynchronise
       // pas automatiquement quand ce cubit écrit directement dans Hive.
-      expect(find.text('Personal info route extra=CA'), findsOneWidget);
+      expect(
+        find.text('Intent next=/auth/personal-info extra=CA'),
+        findsOneWidget,
+      );
       verify(() => authBloc.add(const AuthProfileRefreshRequested())).called(1);
     },
   );
@@ -312,7 +325,10 @@ void main() {
       await _wrap(tester, cubit, authBloc: authBloc);
       await tester.pumpAndSettle();
 
-      expect(find.text('Referral route'), findsOneWidget);
+      expect(
+        find.text('Intent next=/auth/referral-code extra=null'),
+        findsOneWidget,
+      );
       expect(find.text('Residence route'), findsNothing);
       verifyNever(() => authBloc.add(const AuthProfileRefreshRequested()));
     },
@@ -338,7 +354,10 @@ void main() {
       await _wrap(tester, cubit, authBloc: authBloc);
       await tester.pumpAndSettle();
 
-      expect(find.text('Referral route'), findsOneWidget);
+      expect(
+        find.text('Intent next=/auth/referral-code extra=null'),
+        findsOneWidget,
+      );
       expect(find.text('Residence route'), findsNothing);
       verifyNever(() => authBloc.add(const AuthProfileRefreshRequested()));
     },

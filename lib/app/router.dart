@@ -5,6 +5,8 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/activation/bloc/intent_cubit.dart';
+import 'package:dony/features/activation/presentation/screens/intent_step_screen.dart';
 import 'package:dony/features/app_update/presentation/screens/force_update_screen.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -243,6 +245,7 @@ const _publicRoutes = {
   '/auth/referral-code',
   '/auth/analytics-consent',
   '/auth/country-selection',
+  intentStepRoute,
   '/auth/personal-info',
   '/auth/local',
   '/home',
@@ -414,6 +417,22 @@ final appRouter = GoRouter(
             context,
             current: OnboardingStep.country,
           ),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: intentStepRoute,
+      builder: (context, state) => BlocProvider(
+        create: (_) =>
+            getIt<IntentCubit>(param1: (intent: null, destination: null)),
+        child: IntentStepScreen(
+          progress: readOnboardingProgress(
+            context,
+            reachedPast: OnboardingStep.country,
+          ),
+          args:
+              state.extra as IntentStepArgs? ??
+              const IntentStepArgs(next: '/auth/referral-code'),
         ),
       ),
     ),

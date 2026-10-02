@@ -1,6 +1,7 @@
 import 'package:dony/core/currency/country_catalog.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/activation/presentation/screens/intent_step_screen.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
@@ -65,9 +66,19 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
             // `BusinessPrefsBloc`, dont le singleton app-wide est construit
             // avant cet écran et ne se resynchronise pas automatiquement
             // quand ce cubit écrit directement dans Hive (voir router.dart).
-            context.go('/auth/personal-info', extra: _lastAttemptedCountryCode);
+            // Étape « Votre projet » (intention + pays visé) avant la suite.
+            context.go(
+              intentStepRoute,
+              extra: IntentStepArgs(
+                next: '/auth/personal-info',
+                nextExtra: _lastAttemptedCountryCode,
+              ),
+            );
           } else {
-            context.go('/auth/referral-code');
+            context.go(
+              intentStepRoute,
+              extra: const IntentStepArgs(next: '/auth/referral-code'),
+            );
           }
         } else if (state is CountryOnboardingError) {
           DonySnackbar.show(
