@@ -1766,6 +1766,12 @@ class _TripFormContentState extends State<_TripFormContent> {
                 ? state.announcement
                 : (state as AnnouncementUpdated).announcement;
             final isEdit = state is AnnouncementUpdated;
+            final stripe = context.read<StripeAccountBloc>().state;
+            final needsPayouts =
+                !isEdit &&
+                stripe is StripeAccountReady &&
+                stripe.accountStatus.needsOnboarding &&
+                stripe.connectAvailableInCountry;
             unawaited(
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -1818,6 +1824,20 @@ class _TripFormContentState extends State<_TripFormContent> {
                               extra: announcement,
                             );
                           },
+                    // Guidage après KYC : les paiements ne sont plus demandés
+                    // à l'inscription ; on les propose ici, une fois le premier
+                    // trajet publié, si le compte Stripe reste à configurer.
+                    tertiaryLabel: needsPayouts
+                        ? routeContext.l10n.tripPublishSuccessPayoutsCta
+                        : null,
+                    onTertiary: needsPayouts
+                        ? () {
+                            final router = GoRouter.of(routeContext);
+                            Navigator.of(routeContext).pop();
+                            Navigator.of(context).pop(true);
+                            router.push('/connect/onboarding/intro');
+                          }
+                        : null,
                   ),
                 ),
               ),

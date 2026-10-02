@@ -25,6 +25,8 @@ void main() {
     String? analyticsContext,
     String? secondaryLabel,
     VoidCallback? onSecondary,
+    String? tertiaryLabel,
+    VoidCallback? onTertiary,
   }) => MaterialApp(
     theme: AppTheme.light(),
     home: DonySuccessScreen(
@@ -37,6 +39,8 @@ void main() {
       analyticsContext: analyticsContext,
       secondaryLabel: secondaryLabel,
       onSecondary: onSecondary,
+      tertiaryLabel: tertiaryLabel,
+      onTertiary: onTertiary,
     ),
   );
 
@@ -401,5 +405,57 @@ void main() {
         ).called(1);
       },
     );
+  });
+
+  // ── Action tertiaire (ex. « Configurer mes paiements ») ─────────────────
+
+  group('action tertiaire', () {
+    tearDown(getIt.reset);
+
+    testWidgets('fournie : bouton affiché sous le secondaire, callback appelé '
+        'et tap tracé', (tester) async {
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      getIt.registerLazySingleton<AnalyticsService>(() => analytics);
+      var tapped = 0;
+
+      await tester.pumpWidget(
+        host(
+          onCta: () {},
+          analyticsContext: 'trip_published',
+          secondaryLabel: 'Partager mon trajet',
+          onSecondary: () {},
+          tertiaryLabel: 'Configurer mes paiements',
+          onTertiary: () => tapped++,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byType(DonyButton), findsNWidgets(3));
+      // Trois boutons : le tertiaire passe sous la surface de test (800×600),
+      // l'écran défile comme sur un petit téléphone.
+      await tester.ensureVisible(
+        find.byKey(const Key('success-screen-tertiary')),
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('success-screen-tertiary')));
+      await tester.pump();
+
+      expect(tapped, 1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.successScreenTertiaryTapped,
+          properties: {'context': 'trip_published'},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('absente : aucun bouton tertiaire', (tester) async {
+      await tester.pumpWidget(host(onCta: () {}));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byKey(const Key('success-screen-tertiary')), findsNothing);
+    });
   });
 }

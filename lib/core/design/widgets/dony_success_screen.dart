@@ -35,6 +35,8 @@ class DonySuccessScreen extends StatefulWidget {
     this.analyticsContext,
     this.secondaryLabel,
     this.onSecondary,
+    this.tertiaryLabel,
+    this.onTertiary,
   });
 
   final DonyMascotteType mascotteType;
@@ -57,6 +59,14 @@ class DonySuccessScreen extends StatefulWidget {
   /// [secondaryLabel] ET [onSecondary] sont non-null — sinon rien n'est ajouté
   /// à l'écran (comportement inchangé pour les appelants existants).
   final VoidCallback? onSecondary;
+
+  /// Action tertiaire optionnelle, discrète (ex. « Configurer mes paiements »
+  /// après la publication d'un trajet). Rendue seulement si [tertiaryLabel] ET
+  /// [onTertiary] sont non-null.
+  final String? tertiaryLabel;
+
+  /// Callback de l'action tertiaire.
+  final VoidCallback? onTertiary;
 
   /// Slug identifiant le flux d'origine (ex: `trip_published`) — envoyé comme
   /// propriété `context` sur les events analytics de cet écran (vue,
@@ -176,6 +186,11 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
   void _handleSecondaryTap() {
     _trackEvent(AnalyticsEvents.successScreenSecondaryTapped);
     widget.onSecondary!();
+  }
+
+  void _handleTertiaryTap() {
+    _trackEvent(AnalyticsEvents.successScreenTertiaryTapped);
+    widget.onTertiary!();
   }
 
   void _handleClose(BuildContext context) {
@@ -310,6 +325,16 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
                             variant: DonyButtonVariant.secondary,
                             iconAsset: 'share-2',
                             onPressed: _handleSecondaryTap,
+                          ),
+                        ],
+                        if (widget.tertiaryLabel != null &&
+                            widget.onTertiary != null) ...[
+                          const SizedBox(height: DonySpacing.sm),
+                          DonyButton(
+                            key: const Key('success-screen-tertiary'),
+                            label: widget.tertiaryLabel!,
+                            variant: DonyButtonVariant.ghost,
+                            onPressed: _handleTertiaryTap,
                           ),
                         ],
                       ],
