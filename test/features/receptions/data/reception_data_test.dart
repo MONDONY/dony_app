@@ -24,6 +24,8 @@ Map<String, dynamic> _confirmedJson() => {
   'recipientName': 'Moussa Diop',
   'trackingNumber': 'DON-AB12CD',
   'travelerFirstName': 'Ibrahima',
+  'travelerId': 'trav-1',
+  'travelerAvatarUrl': 'https://cdn.test/a.jpg',
   'arrivalInstructions': 'Sortie B, parking P2.',
   'weightKg': 4,
   'confirmationCode': '482913',
@@ -51,6 +53,8 @@ void main() {
       expect(r.recipientName, 'Moussa Diop');
       expect(r.trackingNumber, 'DON-AB12CD');
       expect(r.travelerFirstName, 'Ibrahima');
+      expect(r.travelerId, 'trav-1');
+      expect(r.travelerAvatarUrl, 'https://cdn.test/a.jpg');
       expect(r.arrivalInstructions, 'Sortie B, parking P2.');
       expect(r.weightKg, 4.0);
       expect(r.confirmationCode, '482913');
@@ -70,6 +74,7 @@ void main() {
       expect(r.recipientName, isNull);
       expect(r.trackingNumber, isNull);
       expect(r.travelerFirstName, isNull);
+      expect(r.travelerId, isNull);
       expect(r.arrivalInstructions, isNull);
       expect(r.weightKg, isNull);
       expect(r.confirmationCode, isNull);

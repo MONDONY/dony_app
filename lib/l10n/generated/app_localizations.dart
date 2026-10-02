@@ -25005,6 +25005,60 @@ abstract class AppLocalizations {
   /// **'DÉTAILS'**
   String get receptionDetailsTitle;
 
+  /// Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H).
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis confié au voyageur'**
+  String get receptionTimelineHandedOver;
+
+  /// Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voyage en cours'**
+  String get receptionTimelineInTransit;
+
+  /// Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé à destination'**
+  String get receptionTimelineArrived;
+
+  /// Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remis au destinataire'**
+  String get receptionTimelineDelivered;
+
+  /// Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H).
+  ///
+  /// In fr, this message translates to:
+  /// **'fait'**
+  String get receptionStepDoneSemantics;
+
+  /// Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H).
+  ///
+  /// In fr, this message translates to:
+  /// **'en cours'**
+  String get receptionStepCurrentSemantics;
+
+  /// Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H).
+  ///
+  /// In fr, this message translates to:
+  /// **'à venir'**
+  String get receptionStepTodoSemantics;
+
+  /// Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir son profil'**
+  String get receptionSeeTravelerProfile;
+
+  /// Nom accessible de la carte voyageur de l'écran Réceptions, qui ouvre son profil public.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le profil de {name}'**
+  String receptionViewTravelerProfile(String name);
+
   /// Libellé du prénom du voyageur (reception_detail_screen.dart).
   ///
   /// In fr, this message translates to:

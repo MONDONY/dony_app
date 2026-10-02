@@ -15133,6 +15133,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get receptionDetailsTitle => 'DETAILS';
 
   @override
+  String get receptionTimelineHandedOver => 'Parcel handed to the traveler';
+
+  @override
+  String get receptionTimelineInTransit => 'Traveling';
+
+  @override
+  String get receptionTimelineArrived => 'Arrived at destination';
+
+  @override
+  String get receptionTimelineDelivered => 'Delivered to the recipient';
+
+  @override
+  String get receptionStepDoneSemantics => 'done';
+
+  @override
+  String get receptionStepCurrentSemantics => 'in progress';
+
+  @override
+  String get receptionStepTodoSemantics => 'upcoming';
+
+  @override
+  String get receptionSeeTravelerProfile => 'View profile';
+
+  @override
+  String receptionViewTravelerProfile(String name) {
+    return 'View $name\'s profile';
+  }
+
+  @override
   String get receptionTravelerLabel => 'Traveler';
 
   @override
