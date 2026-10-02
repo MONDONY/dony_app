@@ -1105,6 +1105,30 @@ void main() {
       expect(find.byKey(const Key('own-trip-pill')), findsOneWidget);
     });
 
+    // Sentry FLUTTER-6P/6Q : titre 19 (hors soi), indication 20 (chargés),
+    // recherche 22 (total serveur). Un seul nombre désormais : le total.
+    testWidgets('titre et indication : même total serveur, soi compris', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(
+        _buildHomeRouter(
+          announcementState: AnnouncementSearchLoaded([
+            _makeAnn(id: 'a-own', travelerId: 'uid-1'),
+            _makeAnn(id: 'a-other', travelerId: 'uid-2'),
+          ], totalElements: 22),
+          visitedTripIds: <String>[],
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      expect(titreListe(tester), startsWith('22 '));
+      expect(find.textContaining('Tirer pour voir les 22'), findsOneWidget);
+    });
+
     testWidgets('shows empty message when search loaded with no results', (
       tester,
     ) async {

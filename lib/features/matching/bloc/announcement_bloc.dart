@@ -8,6 +8,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/announcement_search_page.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,6 +28,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     on<AnnouncementUpdateRequested>(_onUpdateRequested);
     on<AnnouncementDeleteRequested>(_onDeleteRequested);
     on<AnnouncementSearchRequested>(_onSearchRequested);
+    on<AnnouncementSearchMoreRequested>(_onSearchMoreRequested);
     on<AnnouncementSurplusOpenRequested>(_onSurplusOpenRequested);
     on<AnnouncementTripMarkArrivedRequested>(_onTripMarkArrivedRequested);
     on<AnnouncementRescheduleRequested>(_onRescheduleRequested);
@@ -200,28 +202,14 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       emit(AnnouncementLoading());
     }
     try {
-      final results = await _repository.searchAnnouncements(
-        departureCity: event.departureCity,
-        arrivalCity: event.arrivalCity,
-        departureDateFrom: event.departureDateFrom,
-        departureDateTo: event.departureDateTo,
-        minAvailableKg: event.minAvailableKg,
-        maxAvailableKg: event.maxAvailableKg,
-        maxPricePerKg: event.maxPricePerKg,
-        kiloProOnly: event.kiloProOnly,
-        minRating: event.minRating,
-        weekendOnly: event.weekendOnly,
-        transportMode: event.transportMode,
-        kycVerifiedOnly: event.kycVerifiedOnly,
-        contentType: event.contentType,
-        userLat: event.userLat,
-        userLng: event.userLng,
-        radiusKm: event.radiusKm,
-        sortBy: event.sortBy,
-        sortDir: event.sortDir,
-        urgent: event.urgent,
+      _lastSearch = event;
+      final result = await _fetchSearchPage(event, page: 0);
+      emit(
+        AnnouncementSearchLoaded(
+          result.content,
+          totalElements: result.totalElements,
+        ),
       );
-      emit(AnnouncementSearchLoaded(results));
     } catch (e, stacktrace) {
       if (kDebugMode) debugPrint('=== SEARCH ERROR ===');
       if (kDebugMode) debugPrint(e.toString());
@@ -232,6 +220,86 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
           previousResults: current is AnnouncementSearchLoaded
               ? current.results
               : null,
+        ),
+      );
+    }
+  }
+
+  /// Dernière recherche lancée : la page suivante reprend ses critères.
+  AnnouncementSearchRequested? _lastSearch;
+
+  Future<AnnouncementSearchPage> _fetchSearchPage(
+    AnnouncementSearchRequested event, {
+    required int page,
+  }) {
+    return _repository.searchAnnouncementsPage(
+      departureCity: event.departureCity,
+      arrivalCity: event.arrivalCity,
+      departureDateFrom: event.departureDateFrom,
+      departureDateTo: event.departureDateTo,
+      minAvailableKg: event.minAvailableKg,
+      maxAvailableKg: event.maxAvailableKg,
+      maxPricePerKg: event.maxPricePerKg,
+      kiloProOnly: event.kiloProOnly,
+      minRating: event.minRating,
+      weekendOnly: event.weekendOnly,
+      transportMode: event.transportMode,
+      kycVerifiedOnly: event.kycVerifiedOnly,
+      contentType: event.contentType,
+      userLat: event.userLat,
+      userLng: event.userLng,
+      radiusKm: event.radiusKm,
+      sortBy: event.sortBy,
+      sortDir: event.sortDir,
+      urgent: event.urgent,
+      page: page,
+    );
+  }
+
+  Future<void> _onSearchMoreRequested(
+    AnnouncementSearchMoreRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    final current = state;
+    final search = _lastSearch;
+    if (search == null ||
+        current is! AnnouncementSearchLoaded ||
+        current.isLoadingMore ||
+        current.isReloading ||
+        !current.hasMore) {
+      return;
+    }
+    emit(
+      AnnouncementSearchLoaded(
+        current.results,
+        totalElements: current.totalElements,
+        page: current.page,
+        isLoadingMore: true,
+      ),
+    );
+    try {
+      final next = await _fetchSearchPage(search, page: current.page + 1);
+      // Une recherche relancée entre-temps a remplacé la liste : on jette.
+      if (!identical(search, _lastSearch)) return;
+      final known = {for (final a in current.results) a.id};
+      emit(
+        AnnouncementSearchLoaded(
+          [
+            ...current.results,
+            ...next.content.where((a) => !known.contains(a.id)),
+          ],
+          totalElements: next.totalElements,
+          page: next.page,
+        ),
+      );
+    } catch (_) {
+      // La liste déjà chargée reste ; le prochain défilement réessaiera.
+      if (!identical(search, _lastSearch)) return;
+      emit(
+        AnnouncementSearchLoaded(
+          current.results,
+          totalElements: current.totalElements,
+          page: current.page,
         ),
       );
     }

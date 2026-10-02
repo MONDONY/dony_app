@@ -1,6 +1,7 @@
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/announcement_search_page.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -175,7 +176,56 @@ class AnnouncementRemoteDatasource {
     return AnnouncementModel.fromJson(response.data);
   }
 
+  /// Première page seulement, sans le total : pour les appelants qui n'ont
+  /// besoin que d'une liste (trajets proposés sur une demande, etc.).
   Future<List<AnnouncementModel>> searchAnnouncements({
+    String? departureCity,
+    String? arrivalCity,
+    DateTime? departureDateFrom,
+    DateTime? departureDateTo,
+    double? minAvailableKg,
+    double? maxAvailableKg,
+    double? maxPricePerKg,
+    bool? kiloProOnly,
+    double? minRating,
+    bool? weekendOnly,
+    TransportMode? transportMode,
+    bool? kycVerifiedOnly,
+    String? contentType,
+    double? userLat,
+    double? userLng,
+    double? radiusKm,
+    String sortBy = 'date',
+    String sortDir = 'asc',
+    int page = 0,
+    bool? urgent,
+  }) async {
+    final result = await searchAnnouncementsPage(
+      departureCity: departureCity,
+      arrivalCity: arrivalCity,
+      departureDateFrom: departureDateFrom,
+      departureDateTo: departureDateTo,
+      minAvailableKg: minAvailableKg,
+      maxAvailableKg: maxAvailableKg,
+      maxPricePerKg: maxPricePerKg,
+      kiloProOnly: kiloProOnly,
+      minRating: minRating,
+      weekendOnly: weekendOnly,
+      transportMode: transportMode,
+      kycVerifiedOnly: kycVerifiedOnly,
+      contentType: contentType,
+      userLat: userLat,
+      userLng: userLng,
+      radiusKm: radiusKm,
+      sortBy: sortBy,
+      sortDir: sortDir,
+      page: page,
+      urgent: urgent,
+    );
+    return result.content;
+  }
+
+  Future<AnnouncementSearchPage> searchAnnouncementsPage({
     String? departureCity,
     String? arrivalCity,
     DateTime? departureDateFrom,
@@ -226,9 +276,10 @@ class AnnouncementRemoteDatasource {
       '/announcements',
       queryParameters: params,
     );
-    return (response.data['content'] as List)
-        .map((json) => AnnouncementModel.fromJson(json))
-        .toList();
+    return AnnouncementSearchPage.fromJson(
+      response.data as Map<String, dynamic>,
+      page: page,
+    );
   }
 
   /// Nombre de trajets correspondant aux critères, sans charger les résultats.

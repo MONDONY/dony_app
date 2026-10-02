@@ -1230,16 +1230,23 @@ class _MapSenderViewState extends State<_MapSenderView> {
     }
   }
 
-  /// Demandes des autres expéditeurs : celles qu'un voyageur peut emporter.
-  /// Ses propres demandes restent dans le fil et sur la carte, marquées
-  /// « Votre demande » (FLUTTER-58), mais ne comptent pas dans le titre
-  /// « N colis », comme ses trajets dans « N voyageurs ».
-  List<PackageRequestSearchItem> _othersRequests(
-    List<PackageRequestSearchItem> items,
-  ) {
-    final uid = context.read<AuthBloc>().state.currentUserId;
-    if (uid == null) return items;
-    return items.where((it) => it.sender.id != uid).toList();
+  /// Page suivante du fil en approchant du bas de la liste : trajets ou
+  /// colis selon le mode. Les blocs ignorent l'appel s'il n'y a plus rien à
+  /// charger ou si une page est déjà en route.
+  void _loadMoreResults() {
+    if (_mode.isParcels) {
+      final pr = context.read<PackageRequestSearchBloc>();
+      if (pr.state.status == SearchStatus.loaded && pr.state.hasMore) {
+        pr.add(const SearchLoadMore());
+      }
+      return;
+    }
+    final trips = context.read<AnnouncementBloc>().state;
+    if (trips is AnnouncementSearchLoaded &&
+        trips.hasMore &&
+        !trips.isLoadingMore) {
+      context.read<AnnouncementBloc>().add(AnnouncementSearchMoreRequested());
+    }
   }
 
   @override
@@ -1411,6 +1418,13 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             isKycVerified: isKycVerified,
                             tripsFailed: state is AnnouncementError,
                             tripsLoading: state is AnnouncementLoading,
+                            // Filtre d'urgence local : seul ce qui est chargé
+                            // compte. Sinon le total serveur, toutes pages.
+                            tripsTotal:
+                                urgencyFilter == null &&
+                                    state is AnnouncementSearchLoaded
+                                ? state.displayCount
+                                : null,
                           ),
                         );
                       },
@@ -1739,15 +1753,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
     required bool isKycVerified,
     required bool tripsFailed,
     required bool tripsLoading,
+    int? tripsTotal,
   }) {
     final tt = Theme.of(ctx).textTheme;
     final cs = Theme.of(ctx).colorScheme;
     final count = announcements.length;
-    // « N voyageurs peuvent emporter ton colis » : sans ses propres trajets,
-    // affichés dans la liste mais qui ne peuvent pas emporter son colis.
-    final othersCount = currentUserId == null
-        ? count
-        : announcements.where((a) => a.travelerId != currentUserId).length;
+    // Un seul nombre partout (titre, sous-titre, indication, recherche) : le
+    // total serveur, ses propres trajets compris puisqu'ils sont listés avec
+    // leur pastille. Le titre les retirait et la liste s'arrêtait à 20 : le
+    // testeur lisait 19, 20 et 22 pour la même recherche (Sentry FLUTTER-6P,
+    // FLUTTER-6Q).
+    final tripCount = tripsTotal ?? count;
 
     final statusBarHeight = MediaQuery.of(ctx).padding.top;
 
@@ -1782,7 +1798,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
             ),
           ),
           if (_isMapHidden) ...[
-            _pullHintForMode(cs, down: true, tripCount: count),
+            _pullHintForMode(cs, down: true, tripCount: tripCount),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 DonySpacing.lg,
@@ -1850,9 +1866,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             final matching = prState.matchingMyTrips == true;
                             // Inconnu reste inconnu : voir `knownActiveTrips`.
                             final trips = summaryState.knownActiveTrips;
-                            final parcels = _othersRequests(
-                              prState.results,
-                            ).length;
+                            // Même liste que le fil, ses demandes comprises.
+                            final parcels = prState.results.length;
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -1862,7 +1877,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     context.l10n,
                                     mode: _mode,
                                     filters: _filters,
-                                    trips: othersCount,
+                                    trips: tripCount,
                                     parcels: parcels,
                                     matching: matching,
                                   ),
@@ -1876,7 +1891,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   homeListSubtitle(
                                     context.l10n,
                                     mode: _mode,
-                                    trips: othersCount,
+                                    trips: tripCount,
                                     parcels: parcels,
                                     matching: matching,
                                     activeTrips: trips,
@@ -1931,290 +1946,298 @@ class _MapSenderViewState extends State<_MapSenderView> {
             ),
           ),
           if (!_isMapHidden)
-            _pullHintForMode(cs, down: false, tripCount: count),
+            _pullHintForMode(cs, down: false, tripCount: tripCount),
           Divider(height: 1, color: cs.outline),
           Expanded(
-            child: CustomScrollView(
-              controller: scrollCtrl,
-              slivers: [
-                SliverToBoxAdapter(
-                  child: EvergreenGuidanceCarousel(
-                    hiveService: getIt<HiveService>(),
-                    isKycVerified: isKycVerified,
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (n) {
+                if (n.metrics.extentAfter < 600) _loadMoreResults();
+                return false;
+              },
+              child: CustomScrollView(
+                controller: scrollCtrl,
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: EvergreenGuidanceCarousel(
+                      hiveService: getIt<HiveService>(),
+                      isKycVerified: isKycVerified,
+                    ),
                   ),
-                ),
-                if (_mode.isParcels)
-                  BlocBuilder<
-                    PackageRequestSearchBloc,
-                    PackageRequestSearchState
-                  >(
-                    builder: (ctx, prState) {
-                      if (prState.status == SearchStatus.loading) {
-                        return SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(
-                            DonySpacing.base,
-                            DonySpacing.sm,
-                            DonySpacing.base,
-                            DonySpacing.huge,
-                          ),
-                          sliver: SliverList.separated(
-                            itemCount: 4,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: DonySpacing.md),
-                            itemBuilder: (_, _) =>
-                                const DonyTicketCardSkeleton(),
-                          ),
-                        );
-                      }
-                      // Backend injoignable : surtout ne pas afficher « aucun
-                      // résultat », qui laisserait croire que le corridor est
-                      // vide. On propose un réessai explicite.
-                      if (prState.status == SearchStatus.error) {
-                        return _aboveFloatingControls(
-                          bottomPad,
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: DonyEmptyState(
-                              type: DonyEmptyStateType.error,
-                              title: ctx.l10n.homeConnectionErrorTitle,
-                              description: ctx.l10n.homeRequestsLoadError,
-                              mascotte: DonyMascotteType.erreurLegere,
-                              actionLabel: ctx.l10n.commonRetry,
-                              onAction: () => ctx
-                                  .read<PackageRequestSearchBloc>()
-                                  .add(const SearchRefresh()),
-                            ),
-                          ),
-                        );
-                      }
-                      final visibleResults = prState.results;
-                      if (visibleResults.isEmpty) {
-                        final hasFilters = _activeFilterCount > 0;
-                        return _aboveFloatingControls(
-                          bottomPad,
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            // L'autre mode a des résultats sur les mêmes filtres :
-                            // la bascule est proposée sous le message.
-                            child: _emptyWithCrossDiscovery(
-                              DonyEmptyState(
-                                title: hasFilters
-                                    ? ctx.l10n.homeEmptyParcelsFiltered
-                                    : ctx.l10n.homeEmptyParcelsSoon,
-                                description: hasFilters
-                                    ? ctx.l10n.homeEmptyParcelsFilteredHint
-                                    : ctx.l10n.homeEmptyParcelsSoonHint,
-                                mascotte: DonyMascotteType.aucunResultat,
-                                actionLabel: hasFilters
-                                    ? ctx.l10n.commonClearFilters
-                                    : null,
-                                onAction: hasFilters ? _resetFilters : null,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                      return SliverMainAxisGroup(
-                        slivers: [
-                          SliverPadding(
-                            padding: EdgeInsets.fromLTRB(
+                  if (_mode.isParcels)
+                    BlocBuilder<
+                      PackageRequestSearchBloc,
+                      PackageRequestSearchState
+                    >(
+                      builder: (ctx, prState) {
+                        if (prState.status == SearchStatus.loading) {
+                          return SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(
                               DonySpacing.base,
                               DonySpacing.sm,
                               DonySpacing.base,
-                              bottomPad +
-                                  DonySpacing.huge +
-                                  _kFloatingNavClearance,
+                              DonySpacing.huge,
                             ),
                             sliver: SliverList.separated(
-                              itemCount: visibleResults.length,
+                              itemCount: 4,
                               separatorBuilder: (_, _) =>
                                   const SizedBox(height: DonySpacing.md),
-                              itemBuilder: (_, i) {
-                                final pr = visibleResults[i];
-                                final isOwn =
-                                    currentUserId != null &&
-                                    pr.sender.id == currentUserId;
-                                return PackageRequestListCard(
-                                  item: pr,
-                                  index: i,
-                                  isOwnRequest: isOwn,
-                                  showFavorite: _isTraveler && !isOwn,
-                                  onTap: () async {
-                                    await PackageRequestPreviewBottomSheet.show(
-                                      ctx,
-                                      item: pr,
-                                      isOwnRequest: isOwn,
-                                    );
-                                    if (ctx.mounted) {
-                                      ctx.read<PackageRequestSearchBloc>().add(
-                                        const SearchRefresh(),
-                                      );
-                                    }
-                                  },
-                                  onMakeOffer: isOwn
-                                      ? null
-                                      : () =>
-                                            PackageRequestPreviewBottomSheet.show(
-                                              ctx,
-                                              item: pr,
-                                            ),
-                                );
-                              },
+                              itemBuilder: (_, _) =>
+                                  const DonyTicketCardSkeleton(),
                             ),
+                          );
+                        }
+                        // Backend injoignable : surtout ne pas afficher « aucun
+                        // résultat », qui laisserait croire que le corridor est
+                        // vide. On propose un réessai explicite.
+                        if (prState.status == SearchStatus.error) {
+                          return _aboveFloatingControls(
+                            bottomPad,
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: DonyEmptyState(
+                                type: DonyEmptyStateType.error,
+                                title: ctx.l10n.homeConnectionErrorTitle,
+                                description: ctx.l10n.homeRequestsLoadError,
+                                mascotte: DonyMascotteType.erreurLegere,
+                                actionLabel: ctx.l10n.commonRetry,
+                                onAction: () => ctx
+                                    .read<PackageRequestSearchBloc>()
+                                    .add(const SearchRefresh()),
+                              ),
+                            ),
+                          );
+                        }
+                        final visibleResults = prState.results;
+                        if (visibleResults.isEmpty) {
+                          final hasFilters = _activeFilterCount > 0;
+                          return _aboveFloatingControls(
+                            bottomPad,
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              // L'autre mode a des résultats sur les mêmes filtres :
+                              // la bascule est proposée sous le message.
+                              child: _emptyWithCrossDiscovery(
+                                DonyEmptyState(
+                                  title: hasFilters
+                                      ? ctx.l10n.homeEmptyParcelsFiltered
+                                      : ctx.l10n.homeEmptyParcelsSoon,
+                                  description: hasFilters
+                                      ? ctx.l10n.homeEmptyParcelsFilteredHint
+                                      : ctx.l10n.homeEmptyParcelsSoonHint,
+                                  mascotte: DonyMascotteType.aucunResultat,
+                                  actionLabel: hasFilters
+                                      ? ctx.l10n.commonClearFilters
+                                      : null,
+                                  onAction: hasFilters ? _resetFilters : null,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        return SliverMainAxisGroup(
+                          slivers: [
+                            SliverPadding(
+                              padding: EdgeInsets.fromLTRB(
+                                DonySpacing.base,
+                                DonySpacing.sm,
+                                DonySpacing.base,
+                                bottomPad +
+                                    DonySpacing.huge +
+                                    _kFloatingNavClearance,
+                              ),
+                              sliver: SliverList.separated(
+                                itemCount: visibleResults.length,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(height: DonySpacing.md),
+                                itemBuilder: (_, i) {
+                                  final pr = visibleResults[i];
+                                  final isOwn =
+                                      currentUserId != null &&
+                                      pr.sender.id == currentUserId;
+                                  return PackageRequestListCard(
+                                    item: pr,
+                                    index: i,
+                                    isOwnRequest: isOwn,
+                                    showFavorite: _isTraveler && !isOwn,
+                                    onTap: () async {
+                                      await PackageRequestPreviewBottomSheet.show(
+                                        ctx,
+                                        item: pr,
+                                        isOwnRequest: isOwn,
+                                      );
+                                      if (ctx.mounted) {
+                                        ctx
+                                            .read<PackageRequestSearchBloc>()
+                                            .add(const SearchRefresh());
+                                      }
+                                    },
+                                    onMakeOffer: isOwn
+                                        ? null
+                                        : () =>
+                                              PackageRequestPreviewBottomSheet.show(
+                                                ctx,
+                                                item: pr,
+                                              ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    )
+                  else if (tripsLoading && count == 0)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.base,
+                        DonySpacing.sm,
+                        DonySpacing.base,
+                        DonySpacing.huge,
+                      ),
+                      sliver: SliverList.separated(
+                        itemCount: 4,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: DonySpacing.md),
+                        itemBuilder: (_, _) => const DonyTripCardSkeleton(),
+                      ),
+                    )
+                  // Backend injoignable : « aucun voyageur » serait un mensonge.
+                  else if (tripsFailed && count == 0)
+                    _aboveFloatingControls(
+                      bottomPad,
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: DonyEmptyState(
+                          type: DonyEmptyStateType.error,
+                          title: ctx.l10n.homeConnectionErrorTitle,
+                          description: ctx.l10n.homeTripsLoadError,
+                          mascotte: DonyMascotteType.erreurLegere,
+                          actionLabel: ctx.l10n.commonRetry,
+                          onAction: _dispatchSearch,
+                        ),
+                      ),
+                    )
+                  else if (count == 0)
+                    _aboveFloatingControls(
+                      bottomPad,
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: _emptyWithCrossDiscovery(
+                          DonyEmptyState(
+                            title: _isNearMeActive
+                                ? ctx.l10n.homeEmptyTravelersNearby
+                                : _activeFilterCount > 0
+                                ? ctx.l10n.homeEmptyTravelersFiltered
+                                : ctx.l10n.homeEmptyTravelersRoute,
+                            description: _isNearMeActive
+                                ? ctx.l10n.homeEmptyNearbyHint
+                                : _activeFilterCount > 0
+                                ? ctx.l10n.homeEmptyTravelersFilteredHint
+                                : ctx.l10n.homeEmptyTravelersRouteHint,
+                            mascotte: DonyMascotteType.aucunResultat,
+                            actionLabel:
+                                !_isNearMeActive && _activeFilterCount > 0
+                                ? ctx.l10n.commonClearFilters
+                                : null,
+                            onAction: !_isNearMeActive && _activeFilterCount > 0
+                                ? _resetFilters
+                                : null,
                           ),
-                        ],
-                      );
-                    },
-                  )
-                else if (tripsLoading && count == 0)
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(
-                      DonySpacing.base,
-                      DonySpacing.sm,
-                      DonySpacing.base,
-                      DonySpacing.huge,
-                    ),
-                    sliver: SliverList.separated(
-                      itemCount: 4,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: DonySpacing.md),
-                      itemBuilder: (_, _) => const DonyTripCardSkeleton(),
-                    ),
-                  )
-                // Backend injoignable : « aucun voyageur » serait un mensonge.
-                else if (tripsFailed && count == 0)
-                  _aboveFloatingControls(
-                    bottomPad,
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: DonyEmptyState(
-                        type: DonyEmptyStateType.error,
-                        title: ctx.l10n.homeConnectionErrorTitle,
-                        description: ctx.l10n.homeTripsLoadError,
-                        mascotte: DonyMascotteType.erreurLegere,
-                        actionLabel: ctx.l10n.commonRetry,
-                        onAction: _dispatchSearch,
-                      ),
-                    ),
-                  )
-                else if (count == 0)
-                  _aboveFloatingControls(
-                    bottomPad,
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: _emptyWithCrossDiscovery(
-                        DonyEmptyState(
-                          title: _isNearMeActive
-                              ? ctx.l10n.homeEmptyTravelersNearby
-                              : _activeFilterCount > 0
-                              ? ctx.l10n.homeEmptyTravelersFiltered
-                              : ctx.l10n.homeEmptyTravelersRoute,
-                          description: _isNearMeActive
-                              ? ctx.l10n.homeEmptyNearbyHint
-                              : _activeFilterCount > 0
-                              ? ctx.l10n.homeEmptyTravelersFilteredHint
-                              : ctx.l10n.homeEmptyTravelersRouteHint,
-                          mascotte: DonyMascotteType.aucunResultat,
-                          actionLabel:
-                              !_isNearMeActive && _activeFilterCount > 0
-                              ? ctx.l10n.commonClearFilters
-                              : null,
-                          onAction: !_isNearMeActive && _activeFilterCount > 0
-                              ? _resetFilters
-                              : null,
                         ),
                       ),
-                    ),
-                  )
-                else
-                  SliverMainAxisGroup(
-                    slivers: [
-                      SliverPadding(
-                        padding: EdgeInsets.fromLTRB(
-                          DonySpacing.base,
-                          DonySpacing.sm,
-                          DonySpacing.base,
-                          bottomPad + DonySpacing.huge + _kFloatingNavClearance,
-                        ),
-                        sliver: BlocBuilder<BidBloc, BidState>(
-                          buildWhen: (prev, curr) =>
-                              curr is BidListLoaded || prev is BidListLoaded,
-                          builder: (context, bidState) {
-                            final myActiveBidsByAnnouncement = bidState
-                                .activeBidsByAnnouncement();
-                            return SliverList.separated(
-                              itemCount: count,
-                              separatorBuilder: (_, _) =>
-                                  const SizedBox(height: DonySpacing.md),
-                              itemBuilder: (context, i) {
-                                final a = announcements[i];
-                                final authState = context
-                                    .read<AuthBloc>()
-                                    .state;
-                                final currentUserId = authState.currentUserId;
-                                final isOwn =
-                                    currentUserId != null &&
-                                    a.travelerId == currentUserId;
-                                final badge = _isNearMeActive
-                                    ? buildDistanceBadge(
-                                        a,
-                                        _userPosition != null
-                                            ? (
-                                                lat: _userPosition!.latitude,
-                                                lng: _userPosition!.longitude,
-                                              )
-                                            : null,
-                                      )
-                                    : null;
-                                final existingBid =
-                                    myActiveBidsByAnnouncement[a.id];
-                                return TravelerCard(
-                                  announcement: a,
-                                  index: i,
-                                  isOwnAnnouncement: isOwn,
-                                  showFavorite: !isOwn,
-                                  distanceBadge: badge,
-                                  existingBidStatus: existingBid?.status,
-                                  onTap: isOwn
-                                      ? () async {
-                                          final changed = await context
-                                              .push<bool>(
-                                                '/announcements/${a.id}/trip',
-                                                extra: a,
-                                              );
-                                          if ((changed ?? false) &&
-                                              context.mounted) {
-                                            _dispatchSearch();
+                    )
+                  else
+                    SliverMainAxisGroup(
+                      slivers: [
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(
+                            DonySpacing.base,
+                            DonySpacing.sm,
+                            DonySpacing.base,
+                            bottomPad +
+                                DonySpacing.huge +
+                                _kFloatingNavClearance,
+                          ),
+                          sliver: BlocBuilder<BidBloc, BidState>(
+                            buildWhen: (prev, curr) =>
+                                curr is BidListLoaded || prev is BidListLoaded,
+                            builder: (context, bidState) {
+                              final myActiveBidsByAnnouncement = bidState
+                                  .activeBidsByAnnouncement();
+                              return SliverList.separated(
+                                itemCount: count,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(height: DonySpacing.md),
+                                itemBuilder: (context, i) {
+                                  final a = announcements[i];
+                                  final authState = context
+                                      .read<AuthBloc>()
+                                      .state;
+                                  final currentUserId = authState.currentUserId;
+                                  final isOwn =
+                                      currentUserId != null &&
+                                      a.travelerId == currentUserId;
+                                  final badge = _isNearMeActive
+                                      ? buildDistanceBadge(
+                                          a,
+                                          _userPosition != null
+                                              ? (
+                                                  lat: _userPosition!.latitude,
+                                                  lng: _userPosition!.longitude,
+                                                )
+                                              : null,
+                                        )
+                                      : null;
+                                  final existingBid =
+                                      myActiveBidsByAnnouncement[a.id];
+                                  return TravelerCard(
+                                    announcement: a,
+                                    index: i,
+                                    isOwnAnnouncement: isOwn,
+                                    showFavorite: !isOwn,
+                                    distanceBadge: badge,
+                                    existingBidStatus: existingBid?.status,
+                                    onTap: isOwn
+                                        ? () async {
+                                            final changed = await context
+                                                .push<bool>(
+                                                  '/announcements/${a.id}/trip',
+                                                  extra: a,
+                                                );
+                                            if ((changed ?? false) &&
+                                                context.mounted) {
+                                              _dispatchSearch();
+                                            }
                                           }
-                                        }
-                                      : existingBid != null
-                                      ? () async {
-                                          await context.push(
-                                            '/bids/${existingBid.id}',
-                                            extra: existingBid,
-                                          );
-                                          if (!context.mounted) {
-                                            return;
+                                        : existingBid != null
+                                        ? () async {
+                                            await context.push(
+                                              '/bids/${existingBid.id}',
+                                              extra: existingBid,
+                                            );
+                                            if (!context.mounted) {
+                                              return;
+                                            }
+                                            context.read<BidBloc>().add(
+                                              const BidMyListAutoRefreshRequested(
+                                                force: true,
+                                              ),
+                                            );
                                           }
-                                          context.read<BidBloc>().add(
-                                            const BidMyListAutoRefreshRequested(
-                                              force: true,
-                                            ),
-                                          );
-                                        }
-                                      : () => showTravelerAnnouncementSheet(
-                                          context,
-                                          announcement: a,
-                                        ),
-                                );
-                              },
-                            );
-                          },
+                                        : () => showTravelerAnnouncementSheet(
+                                            context,
+                                            announcement: a,
+                                          ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-              ],
+                      ],
+                    ),
+                ],
+              ),
             ),
           ),
         ],

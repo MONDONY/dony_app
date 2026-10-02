@@ -81,6 +81,11 @@ class AnnouncementDetailRequested extends AnnouncementEvent {
   AnnouncementDetailRequested(this.id);
 }
 
+/// Page suivante de la dernière recherche (défilement en bas de la liste
+/// d'accueil). Sans effet si rien ne reste à charger ou si une page est déjà
+/// en cours.
+class AnnouncementSearchMoreRequested extends AnnouncementEvent {}
+
 class AnnouncementSearchRequested extends AnnouncementEvent {
   final String? departureCity;
   final String? arrivalCity;

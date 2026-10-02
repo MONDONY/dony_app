@@ -1,6 +1,7 @@
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/announcement_search_page.dart';
 import 'package:dony/features/matching/data/models/kg_sold_model.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/trip_audience_model.dart';
@@ -132,6 +133,53 @@ class AnnouncementRepository {
       sortBy: sortBy,
       sortDir: sortDir,
       urgent: urgent,
+    );
+  }
+
+  /// Page [page] de la recherche avec le total serveur (accueil paginé).
+  Future<AnnouncementSearchPage> searchAnnouncementsPage({
+    String? departureCity,
+    String? arrivalCity,
+    DateTime? departureDateFrom,
+    DateTime? departureDateTo,
+    double? minAvailableKg,
+    double? maxAvailableKg,
+    double? maxPricePerKg,
+    bool? kiloProOnly,
+    double? minRating,
+    bool? weekendOnly,
+    TransportMode? transportMode,
+    bool? kycVerifiedOnly,
+    String? contentType,
+    double? userLat,
+    double? userLng,
+    double? radiusKm,
+    String sortBy = 'date',
+    String sortDir = 'asc',
+    bool? urgent,
+    int page = 0,
+  }) {
+    return _remoteDatasource.searchAnnouncementsPage(
+      departureCity: departureCity,
+      arrivalCity: arrivalCity,
+      departureDateFrom: departureDateFrom,
+      departureDateTo: departureDateTo,
+      minAvailableKg: minAvailableKg,
+      maxAvailableKg: maxAvailableKg,
+      maxPricePerKg: maxPricePerKg,
+      kiloProOnly: kiloProOnly,
+      minRating: minRating,
+      weekendOnly: weekendOnly,
+      transportMode: transportMode,
+      kycVerifiedOnly: kycVerifiedOnly,
+      contentType: contentType,
+      userLat: userLat,
+      userLng: userLng,
+      radiusKm: radiusKm,
+      sortBy: sortBy,
+      sortDir: sortDir,
+      urgent: urgent,
+      page: page,
     );
   }
 
