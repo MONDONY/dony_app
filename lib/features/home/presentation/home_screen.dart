@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -11,6 +12,10 @@ import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/activation/bloc/activation_cubit.dart';
+import 'package:dony/features/activation/data/intent_prompt_policy.dart';
+import 'package:dony/features/activation/data/models/activation_status.dart';
+import 'package:dony/features/activation/presentation/widgets/intent_prompt_sheet.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
@@ -282,6 +287,9 @@ class _MapSenderView extends StatefulWidget {
 }
 
 class _MapSenderViewState extends State<_MapSenderView> {
+  /// Statut d'activation (guidage après KYC) ; `null` hors DI complète.
+  final ActivationCubit? _activationCubit = getItSafe<ActivationCubit>();
+
   final _sheetController = DraggableScrollableController();
 
   /// Hauteur repliée de la feuille, recalculée à chaque build (texte agrandi,
@@ -1260,7 +1268,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final authState = context.watch<AuthBloc>().state;
     final currentUserId = authState.currentUserId;
     final isKycVerified = authState.currentUser?.isKycVerified ?? false;
-    return Scaffold(
+    final activation = _activationCubit;
+    final scaffold = Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
         builder: (context, state) {
@@ -1543,6 +1552,36 @@ class _MapSenderViewState extends State<_MapSenderView> {
         },
       ),
     );
+    if (activation == null) return scaffold;
+    // Bloc passé explicitement : même instance que le provider global de
+    // l'app, et l'accueil reste montable sans lui (tests, aperçus).
+    return BlocListener<ActivationCubit, ActivationState>(
+      bloc: activation,
+      listenWhen: (p, c) => c is ActivationLoaded && p is! ActivationLoaded,
+      listener: _maybeAskIntent,
+      child: scaffold,
+    );
+  }
+
+  /// Comptes existants sans intention : la question est posée au plus deux
+  /// fois, à 7 jours d'écart (guidage après KYC).
+  Future<void> _maybeAskIntent(
+    BuildContext context,
+    ActivationState state,
+  ) async {
+    if (state is! ActivationLoaded || state.status.intent != null) return;
+    final policy = IntentPromptPolicy(getIt<HiveService>().userPrefs);
+    final now = DateTime.now();
+    if (!policy.shouldShow(now)) return;
+    policy.markShown(now);
+    unawaited(
+      getIt<AnalyticsService>().logEvent(AnalyticsEvents.intentPromptShown),
+    );
+    final saved = await IntentPromptSheet.show(
+      context,
+      source: IntentSource.prompt,
+    );
+    if (saved == true) unawaited(_activationCubit?.load());
   }
 
   Future<double?> _showMaxWeightSheet(BuildContext ctx) async {

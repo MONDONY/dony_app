@@ -422,6 +422,9 @@ class _DonyAppState extends State<DonyApp> {
                     context.read<ActiveRoleCubit>().syncWithRoles(
                       state.user.roles,
                     );
+                    // Statut d'activation (intention, première action) : chargé à
+                    // la connexion seulement, un visiteur n'y a pas accès.
+                    unawaited(context.read<ActivationCubit>().load());
                     // One-shot migration: push legacy Hive-saved trips to server,
                     // then reload favorites so migrated items appear immediately.
                     // Capture cubit ref before the async gap to avoid
