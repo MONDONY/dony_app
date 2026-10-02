@@ -43,34 +43,22 @@ const _connectDone = StripeAccountReady(
 void main() {
   group('onboardingSteps — le parrainage n\'entre jamais dans le décompte', () {
     test(
-      'pays couvert par Stripe → cinq étapes, vos infos avant identité (ordre '
-      'du parcours réel, pas celui de la spec §2)',
+      'les paiements ne font plus partie de l\'inscription : quatre étapes, '
+      'vos infos avant identité, quel que soit le pays (guidage après KYC)',
       () {
-        expect(onboardingSteps(_connectOk), const [
+        const four = [
           OnboardingStep.consent,
           OnboardingStep.country,
           OnboardingStep.personalInfo,
           OnboardingStep.identity,
-          OnboardingStep.payouts,
-        ]);
+        ];
+        expect(onboardingSteps(_connectOk), four);
+        expect(onboardingSteps(_connectUnavailable), four);
+        expect(onboardingSteps(const StripeAccountInitial()), four);
+        expect(onboardingSteps(const StripeAccountLoading()), four);
+        expect(onboardingSteps(const StripeAccountLoadError()), four);
       },
     );
-
-    test('pays non couvert → quatre étapes, 4/4 réellement atteignable', () {
-      expect(onboardingSteps(_connectUnavailable), const [
-        OnboardingStep.consent,
-        OnboardingStep.country,
-        OnboardingStep.personalInfo,
-        OnboardingStep.identity,
-      ]);
-    });
-
-    test('statut non chargé → optimiste, le segment n\'est jamais perdu '
-        'par accident réseau', () {
-      expect(onboardingSteps(const StripeAccountInitial()).length, 5);
-      expect(onboardingSteps(const StripeAccountLoading()).length, 5);
-      expect(onboardingSteps(const StripeAccountLoadError()).length, 5);
-    });
   });
 
   group('nextStep — une combinaison d\'états par test', () {
@@ -115,14 +103,15 @@ void main() {
       );
     });
 
-    test('5. compte de paiement incomplet → payouts', () {
+    test('5. compte de paiement incomplet → null : les paiements viennent '
+        'après la première publication, plus pendant l\'inscription', () {
       expect(
         nextStep(
           user: _user(country: 'FR', kycStatus: 'VERIFIED', hasName: true),
           stripe: _connectOk,
           analyticsAnswered: true,
         ),
-        OnboardingStep.payouts,
+        isNull,
       );
     });
 
@@ -269,13 +258,13 @@ void main() {
         current: OnboardingStep.identity,
       );
 
-      expect(p.total, 5);
+      // Les paiements ne sont plus une étape d'inscription (guidage après KYC).
+      expect(p.total, 4);
       expect(p.segments, const [
         DonyGaugeSegment.done, // consentement
         DonyGaugeSegment.done, // pays
         DonyGaugeSegment.done, // vos infos — derrière l'écran courant
         DonyGaugeSegment.current, // identité
-        DonyGaugeSegment.todo, // paiements
       ]);
     });
 
@@ -296,7 +285,6 @@ void main() {
         DonyGaugeSegment.done, // pays passé : franchi positionnellement
         DonyGaugeSegment.current,
         DonyGaugeSegment.todo,
-        DonyGaugeSegment.todo,
       ]);
     });
 
@@ -311,12 +299,11 @@ void main() {
 
       expect(p.current, isNull);
       // Trois segments pleins (consentement, pays, vos infos franchis), soit
-      // « 3 / 5 · Parrainage » au libellé de la jauge.
+      // « 3 / 4 · Parrainage » au libellé de la jauge.
       expect(p.segments, const [
         DonyGaugeSegment.done,
         DonyGaugeSegment.done,
         DonyGaugeSegment.done,
-        DonyGaugeSegment.todo,
         DonyGaugeSegment.todo,
       ]);
     });
@@ -335,7 +322,6 @@ void main() {
         DonyGaugeSegment.done,
         DonyGaugeSegment.done,
         DonyGaugeSegment.todo, // vos infos jamais remplies : vide au profil
-        DonyGaugeSegment.todo,
         DonyGaugeSegment.todo,
       ]);
     });

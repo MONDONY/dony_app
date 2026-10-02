@@ -1,15 +1,16 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
-import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
@@ -125,17 +126,24 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     // un trajet, envoyer un colis) plutôt que l'accueil — seulement une fois
     // vérifié : un statut encore en attente n'y donnerait pas accès.
     final returnTo = justVerified ? widget.returnTo : null;
-    final destination =
-        progress?.routeAfter(OnboardingStep.identity) ?? returnTo ?? '/home';
-    if (progress != null && destination == '/home') {
+    final onboardingDestination = progress?.routeAfter(OnboardingStep.identity);
+    if (onboardingDestination == '/home') {
       unawaited(
         getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}),
       );
-      // Fin du parcours : « Par quoi commencer ? » plutôt que l'accueil.
-      context.go(firstStepsRoute);
-      return;
     }
-    context.go(destination);
+    // Hors inscription et sans action demandée : premiers pas tant que la
+    // personne n'a rien fait (guidage après KYC), sinon l'accueil.
+    context.go(
+      kycExitRoute(
+        onboardingDestination: onboardingDestination,
+        returnTo: returnTo,
+        justVerified: justVerified,
+        // Même instance que le provider global ; tolère l'absence de DI.
+        activation:
+            getItSafe<ActivationCubit>()?.state ?? const ActivationInitial(),
+      ),
+    );
   }
 
   @override

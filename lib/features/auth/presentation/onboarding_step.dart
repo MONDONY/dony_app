@@ -98,12 +98,14 @@ String onboardingEntrySuffix({required bool fromOnboarding}) =>
 /// 4/4. `connectAvailableInCountry` est optimiste tant que le statut n'est pas
 /// chargé (`stripe_account_state.dart`), donc un segment n'est jamais perdu par
 /// accident réseau.
-List<OnboardingStep> onboardingSteps(StripeAccountState stripe) => [
+// Les paiements ne sont plus une étape d'inscription : ils sont proposés après
+// la première publication (guidage après KYC, 02/10/2026). `stripe` reste en
+// paramètre pour les appelants qui calculent la progression.
+List<OnboardingStep> onboardingSteps(StripeAccountState stripe) => const [
   OnboardingStep.consent,
   OnboardingStep.country,
   OnboardingStep.personalInfo,
   OnboardingStep.identity,
-  if (stripe.connectAvailableInCountry) OnboardingStep.payouts,
 ];
 
 /// Première étape non satisfaite, ou `null` si le compte est complet.
