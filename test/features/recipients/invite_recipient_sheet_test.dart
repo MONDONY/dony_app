@@ -34,7 +34,11 @@ void main() {
     result = null;
   });
 
-  Future<void> open(WidgetTester tester, {String? userCountry}) async {
+  Future<void> open(
+    WidgetTester tester, {
+    String? userCountry,
+    VoidCallback? onSent,
+  }) async {
     await tester.pumpWidget(
       localizedApp(
         Builder(
@@ -44,6 +48,7 @@ void main() {
                 result = await InviteRecipientSheet.show(
                   context,
                   userCountry: userCountry,
+                  onSent: onSent,
                   createCubit: () => InviteRecipientCubit(repo, analytics),
                 );
               },
@@ -113,6 +118,48 @@ void main() {
     verify(() => repo.sendToPhone('+221771234567')).called(1);
     expect(submit(), findsNothing);
     expect(result, isTrue);
+  });
+
+  testWidgets('FLUTTER-88 : onSent prévient l\'appelant dès le succès', (
+    tester,
+  ) async {
+    when(() => repo.sendToPhone(any())).thenAnswer((_) async {});
+    var sentCalls = 0;
+    bool? resultWhenSent;
+    await open(
+      tester,
+      onSent: () {
+        sentCalls++;
+        resultWhenSent = result;
+      },
+    );
+    await tester.enterText(
+      find.byKey(const Key('invite-recipient-phone')),
+      '+221 77 123 45 67',
+    );
+    await tester.pump();
+    await tester.tap(submit());
+    await tester.pumpAndSettle();
+
+    expect(sentCalls, 1);
+    // Appelé avant la fermeture : le résultat n'était pas encore rendu.
+    expect(resultWhenSent, isNull);
+    expect(result, isTrue);
+  });
+
+  testWidgets('envoi raté : onSent n\'est pas appelé', (tester) async {
+    when(() => repo.sendToPhone(any())).thenThrow(Exception('boom'));
+    var sentCalls = 0;
+    await open(tester, onSent: () => sentCalls++);
+    await tester.enterText(
+      find.byKey(const Key('invite-recipient-phone')),
+      '+221 77 123 45 67',
+    );
+    await tester.pump();
+    await tester.tap(submit());
+    await tester.pumpAndSettle();
+
+    expect(sentCalls, 0);
   });
 
   testWidgets('bascule e-mail : champ dédié, validation e-mail', (

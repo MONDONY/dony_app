@@ -18,11 +18,19 @@ class FavoriteHeartButton extends StatefulWidget {
     required this.isFavorite,
     required this.onToggle,
     this.size = 26,
+    this.onDark = false,
   });
 
   final bool isFavorite;
   final VoidCallback onToggle;
   final double size;
+
+  /// Posé sur un fond sombre (carte héro bleu nuit de la feuille « Détail du
+  /// trajet ») : signet blanc sur une pastille translucide. Les couleurs par
+  /// défaut (primaire / onSurfaceVariant) y étaient presque invisibles
+  /// (FLUTTER-83). L'état actif reste lisible : signet plein et pastille plus
+  /// opaque.
+  final bool onDark;
 
   @override
   State<FavoriteHeartButton> createState() => _FavoriteHeartButtonState();
@@ -88,9 +96,19 @@ class _FavoriteHeartButtonState extends State<FavoriteHeartButton>
           minWidth: kDonyMinTapTarget,
           minHeight: kDonyMinTapTarget,
         ),
+        style: widget.onDark
+            ? IconButton.styleFrom(
+                backgroundColor: Colors.white.withValues(
+                  alpha: widget.isFavorite ? 0.28 : 0.16,
+                ),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.32)),
+              )
+            : null,
         icon: Icon(
           widget.isFavorite ? Icons.bookmark : Icons.bookmark_border,
-          color: widget.isFavorite ? DonyColors.primary : cs.onSurfaceVariant,
+          color: widget.onDark
+              ? Colors.white
+              : (widget.isFavorite ? DonyColors.primary : cs.onSurfaceVariant),
           size: widget.size,
         ),
         onPressed: _handleToggle,

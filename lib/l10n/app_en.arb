@@ -8681,7 +8681,7 @@
   "recipientInviteQuota": "You have sent a lot of invitations today. Please try again tomorrow.",
   "recipientLinkedOnYadonyChip": "On Yadony",
   "recipientSentInvitationsTitle": "Sent invitations",
-  "recipientSentInvitationPending": "Pending",
+  "recipientSentInvitationPending": "Invitation sent",
   "recipientSentInvitationCancelTitle": "Cancel this invitation?",
   "recipientSentInvitationCancelMessage": "Your parcels will no longer be linked to them directly.",
   "recipientSentInvitationCancelAction": "Cancel invitation",
@@ -8727,5 +8727,11 @@
   "receptionShowQrTitle": "Show the parcel QR",
   "receptionShowQrExplanation": "The traveler scans this QR, then enters your pickup code.",
   "receptionStepCounter": "Step {current} of {total}",
-  "@receptionStepCounter": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}}
+  "@receptionStepCounter": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "chatBlockedContactTerm": "Your message seems to contain contact details (\"{term}\"). For your safety, keep conversations and payment on Yadony.",
+  "@chatBlockedContactTerm": {"placeholders": {"term": {"type": "String"}}},
+  "recipientSentInvitationsHelp": "They will get the invitation in Yadony if they have an account. Otherwise, invite them to install the app.",
+  "recipientSentInvitationShareAction": "Share the app link",
+  "recipientSentInvitationShareMessage": "I invited you to Yadony so you can track the parcels I send you. Get the app here: https://yadony.com",
+  "trackingStepPhotoOpen": "Enlarge photo"
 }

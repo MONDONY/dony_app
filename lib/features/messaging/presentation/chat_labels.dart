@@ -23,11 +23,16 @@ String chatPreviewLabel(AppLocalizations l, String preview) {
 /// code renvoyé par [ChatValidationBlocked.reason] (aussi la propriété
 /// `reason` de l'événement analytics `message_blocked`, jamais traduite).
 /// `empty` (et tout code inconnu) rend `''` : l'envoi est ignoré en silence.
-String chatBlockedMessage(AppLocalizations l, String reason) {
+/// [term] (cf. [ChatValidationBlocked.term]) précise, pour `contact`, ce qui a
+/// déclenché le blocage.
+String chatBlockedMessage(AppLocalizations l, String reason, {String? term}) {
   return switch (reason) {
     'length' => l.chatBlockedLength(ChatMessageRules.maxLength),
     'duplicate' => l.chatBlockedDuplicate,
     'rate' => l.chatBlockedRate,
+    'contact' when term != null && term.isNotEmpty => l.chatBlockedContactTerm(
+      term,
+    ),
     'contact' => l.chatBlockedContact,
     'banking' => l.chatBlockedBanking,
     'url' => l.chatBlockedUrl,

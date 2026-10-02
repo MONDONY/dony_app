@@ -37,14 +37,52 @@ class OtpVerificationScreen extends StatefulWidget {
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
 }
 
-class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
+class _OtpVerificationScreenState extends State<OtpVerificationScreen>
+    with WidgetsBindingObserver {
   final _codeController = TextEditingController();
+
+  /// Ancre des six cases : ramenées dans la zone visible quand le clavier
+  /// s'ouvre (FLUTTER-87, Redmi 360 × 820 : le clavier, ouvert d'office par
+  /// l'autofocus, couvrait les cases, et sans clavier elles passaient à
+  /// moitié sous la zone du bouton).
+  final _codeFieldKey = GlobalKey();
   int _attemptCount = 0;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _revealCodeField());
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _codeController.dispose();
     super.dispose();
+  }
+
+  /// Le clavier change la hauteur de la fenêtre : on attend la frame suivante
+  /// (corps du Scaffold déjà réduit) avant de recaler le défilement.
+  @override
+  void didChangeMetrics() {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _revealCodeField());
+  }
+
+  /// Saut immédiat, sans animation : pendant que le clavier monte, les
+  /// métriques changent à chaque frame et le champ de saisie recale aussi le
+  /// défilement. Une animation y était interrompue aussitôt et les cases
+  /// restaient sous le clavier ; un saut par frame suit le clavier.
+  void _revealCodeField() {
+    if (!mounted) return;
+    final fieldContext = _codeFieldKey.currentContext;
+    if (fieldContext == null) return;
+    unawaited(
+      Scrollable.ensureVisible(
+        fieldContext,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      ),
+    );
   }
 
   String get _otpCode => _codeController.text;
@@ -260,10 +298,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                       ),
                                 footnote: context.l10n.authOtpFootnote,
                               ),
-                              const SizedBox(height: DonySpacing.xxl),
+                              const SizedBox(height: DonySpacing.lg),
 
                               // OTP 6-digit input
                               Center(
+                                key: _codeFieldKey,
                                 child: OtpCodeField(
                                   controller: _codeController,
                                   onCompleted: _onCodeCompleted,

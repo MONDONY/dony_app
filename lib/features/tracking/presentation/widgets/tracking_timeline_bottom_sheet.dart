@@ -4,6 +4,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_detail/request_photo_viewer.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -553,28 +554,38 @@ class _JourneyRow extends StatelessWidget {
                   ],
                   if (photo != null) ...[
                     const SizedBox(height: DonySpacing.sm),
+                    // Miniature touchable : la photo s'ouvre en plein écran,
+                    // zoomable (FLUTTER-82, elle ne s'agrandissait pas).
                     Semantics(
                       image: true,
+                      button: true,
                       label: l.trackingStepPhotoLabel,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                        child: DonyImage(
-                          url: photo,
-                          width: 64,
-                          height: 64,
-                          placeholder: (_) => ColoredBox(
-                            color: cs.surfaceWarm,
-                            child: const SizedBox(width: 64, height: 64),
-                          ),
-                          errorWidget: (_) => Container(
+                      hint: l.trackingStepPhotoOpen,
+                      child: GestureDetector(
+                        key: const Key('tracking-step-photo'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () =>
+                            RequestPhotoViewer.show(context, urls: [photo]),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
+                          child: DonyImage(
+                            url: photo,
                             width: 64,
                             height: 64,
-                            color: cs.surfaceWarm,
-                            alignment: Alignment.center,
-                            child: DonyIcon(
-                              'image-off',
-                              size: 18,
-                              color: cs.onSurfaceVariant,
+                            placeholder: (_) => ColoredBox(
+                              color: cs.surfaceWarm,
+                              child: const SizedBox(width: 64, height: 64),
+                            ),
+                            errorWidget: (_) => Container(
+                              width: 64,
+                              height: 64,
+                              color: cs.surfaceWarm,
+                              alignment: Alignment.center,
+                              child: DonyIcon(
+                                'image-off',
+                                size: 18,
+                                color: cs.onSurfaceVariant,
+                              ),
                             ),
                           ),
                         ),

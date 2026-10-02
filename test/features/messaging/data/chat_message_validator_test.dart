@@ -66,6 +66,74 @@ void main() {
     });
   });
 
+  group('faux positifs (FLUTTER-80/81/84/85) : mots courants autorisés', () {
+    for (final t in [
+      'ok un instant svp',
+      "j'ai eu un bug que j'ai signalé je ne sais pas si tu l'as vu",
+      'je vais signaler le problème',
+      'pas de signal ici, je te réponds ce soir',
+      "il faut installer l'appli",
+      'Instantly done',
+      'une instance du bug',
+      "l'hôtel est tellement loin",
+      'tel quel, merci',
+      'je fais un snapshot',
+      'primo, le colis pèse 3 kg',
+      'mon code de retrait est 821921',
+      '821921',
+      'D\'accord.Merci beaucoup',
+      'Salut.Comment ça va ?',
+      'la tribune et la ribambelle',
+      'le mailing est parti',
+      'rendez-vous le 22-06-2026',
+      'prix 1 500 000 FCFA',
+      'rdv @ 14h',
+    ]) {
+      test('autorisé: "$t"', () {
+        expect(v.validate(t, now: now), isA<ChatValidationOk>());
+      });
+    }
+  });
+
+  group('vrais cas : bloqués avec le terme repéré', () {
+    String? termOf(String t) {
+      final r = v.validate(t, now: now);
+      expect(r, isA<ChatValidationBlocked>(), reason: t);
+      expect((r as ChatValidationBlocked).reason, 'contact', reason: t);
+      return r.term;
+    }
+
+    for (final (input, term) in [
+      ('06 12 34 56 78', '06 12 34 56 78'),
+      ('+33612345678', '+33612345678'),
+      ('appelle le 06-12-34-56-78', '06-12-34-56-78'),
+      ("mon insta c'est @abc", 'insta'),
+      ('mon Insta', 'Insta'),
+      ('va voir instagram.com/kadi', 'instagram'),
+      ('wa.me/33612345678', 'wa.me'),
+      ('écris sur wa.me/kadi', 'wa.me'),
+      ('écris à x@gmail.com', 'x@gmail.com'),
+      ('ajoute moi sur WhatsApp', 'WhatsApp'),
+      ('mon watsap', 'watsap'),
+      ('on parle sur telegram', 'telegram'),
+      ('mon snap', 'snap'),
+      ('écris-moi sur signal', 'signal'),
+      ('via imo', 'imo'),
+      ('mon fb', 'fb'),
+      ('suis-moi @kadi_221', '@kadi_221'),
+      ('voici t.me/kadi', 't.me'),
+    ]) {
+      test('bloqué: "$input" → « $term »', () {
+        expect(termOf(input), term);
+      });
+    }
+
+    test('analytics : la raison reste « contact »', () {
+      final r = v.validate('mon insta', now: now) as ChatValidationBlocked;
+      expect(r.reason, 'contact');
+    });
+  });
+
   group('contenu interdit', () {
     test('IBAN → banking', () {
       expect(
@@ -75,8 +143,17 @@ void main() {
         'banking',
       );
     });
+    test('IBAN espacé → banking', () {
+      expect(
+        blockReason(
+          v.validate('IBAN FR76 3000 6000 0112 3456 7890 189', now: now),
+        ),
+        'banking',
+      );
+    });
     for (final u in [
       'https://arnaque.io',
+      'yadony.com',
       'www.exemple.fr',
       'va sur monsite.com',
     ]) {

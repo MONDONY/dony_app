@@ -167,9 +167,20 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
                                 indent: DonySpacing.lg + 44 + DonySpacing.md,
                                 color: cs.outline.withValues(alpha: 0.5),
                               ),
-                              itemBuilder: (context, i) => i < filtered.length
-                                  ? _RecipientTile(recipient: filtered[i])
-                                  : const SentInvitationsSection(),
+                              // Invitations en tête de liste : placées après
+                              // le carnet, elles tombaient sous le pli (et
+                              // sous le bouton « Ajouter ») et l'invitation à
+                              // peine envoyée semblait ne pas apparaître
+                              // (FLUTTER-88).
+                              itemBuilder: (context, i) {
+                                if (hasSent && i == 0) {
+                                  return const SentInvitationsSection();
+                                }
+                                final index = hasSent ? i - 1 : i;
+                                return _RecipientTile(
+                                  recipient: filtered[index],
+                                );
+                              },
                             ),
                     ),
                   ],

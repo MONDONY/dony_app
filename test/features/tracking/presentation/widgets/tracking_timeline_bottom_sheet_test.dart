@@ -123,6 +123,33 @@ void main() {
   Finder steps(String state) =>
       find.byKey(Key('tracking-step-$state'), skipOffstage: false);
 
+  testWidgets('FLUTTER-82 : toucher la photo d\'une étape l\'ouvre en grand', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(
+      TrackingEventsLoaded([
+        _event('DEPART', photoUrl: 'https://example.com/depart.jpg'),
+      ]),
+    );
+    await _openSheet(tester, bloc);
+    expect(find.byType(InteractiveViewer), findsNothing);
+
+    await tester.tap(find.byKey(const Key('tracking-step-photo')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // Visionneuse plein écran zoomable, au-dessus de la feuille.
+    expect(find.byType(InteractiveViewer), findsOneWidget);
+    final close = find.byTooltip('Fermer').last;
+    await tester.tap(close);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.byType(InteractiveViewer), findsNothing);
+    // La feuille de suivi reste ouverte derrière.
+    expect(find.text('Suivi en lecture seule'), findsOneWidget);
+  });
+
   testWidgets('chargement : en-tête lecture seule et indicateur', (
     tester,
   ) async {

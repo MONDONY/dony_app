@@ -15519,7 +15519,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recipientSentInvitationsTitle => 'Invitations envoyées';
 
   @override
-  String get recipientSentInvitationPending => 'En attente';
+  String get recipientSentInvitationPending => 'Invitation envoyée';
 
   @override
   String get recipientSentInvitationCancelTitle => 'Annuler l\'invitation ?';
@@ -15684,4 +15684,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String receptionStepCounter(int current, int total) {
     return 'Étape $current sur $total';
   }
+
+  @override
+  String chatBlockedContactTerm(String term) {
+    return 'Ton message semble contenir des coordonnées (« $term »). Pour ta sécurité, garde les échanges et le paiement sur Yadony.';
+  }
+
+  @override
+  String get recipientSentInvitationsHelp =>
+      'La personne recevra l\'invitation dans Yadony si elle a un compte. Sinon, invite-la à installer l\'app.';
+
+  @override
+  String get recipientSentInvitationShareAction => 'Partager le lien de l\'app';
+
+  @override
+  String get recipientSentInvitationShareMessage =>
+      'Je t\'ai invité(e) sur Yadony pour suivre les colis que je t\'envoie. Installe l\'app ici : https://yadony.com';
+
+  @override
+  String get trackingStepPhotoOpen => 'Agrandir la photo';
 }

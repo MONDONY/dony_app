@@ -502,4 +502,26 @@ void main() {
     expect(find.text('Code sent to +33600000000'), findsOneWidget);
     expect(find.text('2 / 3 · SMS code'), findsOneWidget);
   });
+
+  testWidgets(
+    'FLUTTER-87 : code SMS, petit écran clavier levé, cases visibles',
+    (tester) async {
+      tester.view.physicalSize = const Size(720, 1640);
+      tester.view.devicePixelRatio = 2.0;
+      tester.view.viewInsets = const FakeViewPadding(bottom: 600);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetViewInsets);
+
+      await tester.pumpWidget(buildPhoneScreenNoStream());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final field = tester.getRect(find.byType(Pinput));
+      final button = tester.getRect(find.byType(DonyButton));
+      expect(field.top, greaterThanOrEqualTo(0));
+      expect(field.bottom, lessThanOrEqualTo(button.top));
+      expect(button.bottom, lessThanOrEqualTo(820 - 300));
+    },
+  );
 }

@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -327,4 +328,61 @@ void main() {
       expect(find.text('Country selection'), findsOneWidget);
     },
   );
+
+  group('FLUTTER-87 : petit écran Android (720 × 1640, ratio 2)', () {
+    void smallScreen(WidgetTester tester) {
+      tester.view.physicalSize = const Size(720, 1640);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetViewInsets);
+    }
+
+    void expectCodeFieldVisible(WidgetTester tester, double keyboardHeight) {
+      final field = tester.getRect(find.byType(Pinput));
+      final button = tester.getRect(find.byType(DonyButton));
+      // Les cases sont entières, au-dessus de la zone du bouton…
+      expect(field.top, greaterThanOrEqualTo(0));
+      expect(field.bottom, lessThanOrEqualTo(button.top));
+      // … et le bouton suit le clavier.
+      expect(button.bottom, lessThanOrEqualTo(820 - keyboardHeight));
+    }
+
+    testWidgets('sans clavier, les cases ne passent pas sous le bouton', (
+      tester,
+    ) async {
+      smallScreen(tester);
+      await tester.pumpWidget(_buildEmail(bloc: mockBloc));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expectCodeFieldVisible(tester, 0);
+    });
+
+    testWidgets('clavier ouvert : les cases restent au-dessus du clavier', (
+      tester,
+    ) async {
+      smallScreen(tester);
+      await tester.pumpWidget(_buildEmail(bloc: mockBloc));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Clavier Android de 300 dp (600 px physiques).
+      tester.view.viewInsets = const FakeViewPadding(bottom: 600);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expectCodeFieldVisible(tester, 300);
+    });
+
+    testWidgets('écran ouvert clavier déjà levé : cases visibles', (
+      tester,
+    ) async {
+      smallScreen(tester);
+      tester.view.viewInsets = const FakeViewPadding(bottom: 600);
+      await tester.pumpWidget(_buildEmail(bloc: mockBloc));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expectCodeFieldVisible(tester, 300);
+    });
+  });
 }
