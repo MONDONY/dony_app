@@ -50,6 +50,7 @@ BidModel _bid({
   String? arrivalCity = 'Dakar',
   String? arrivalInstructions,
   String? recipientAppStatus,
+  bool recipientPhoneHidden = false,
 }) => BidModel(
   id: 'bid-1',
   announcementId: 'ann-1',
@@ -64,6 +65,7 @@ BidModel _bid({
   arrivalCity: arrivalCity,
   arrivalInstructions: arrivalInstructions,
   recipientAppStatus: recipientAppStatus,
+  recipientPhoneHidden: recipientPhoneHidden,
 );
 
 void main() {
@@ -182,6 +184,26 @@ void main() {
         isFalse,
       );
     });
+
+    // Sentry FLUTTER-6J : numéro masqué mais messagerie de l'app ouverte.
+    test('numéro masqué : carte affichée si le destinataire suit le colis', () {
+      expect(
+        TravelerRecipientContactCard.shouldShow(
+          _bid(
+            recipientPhone: null,
+            recipientPhoneHidden: true,
+            recipientAppStatus: 'CONFIRMED',
+          ),
+        ),
+        isTrue,
+      );
+      expect(
+        TravelerRecipientContactCard.shouldShow(
+          _bid(recipientPhone: null, recipientPhoneHidden: true),
+        ),
+        isFalse,
+      );
+    });
   });
 
   group('contactRecipient', () {
@@ -245,6 +267,30 @@ void main() {
       expect(find.text('WhatsApp'), findsOneWidget);
       expect(find.text('SMS'), findsOneWidget);
       expect(find.text('Appeler'), findsOneWidget);
+    });
+
+    testWidgets('numéro masqué : messagerie seule, aucun canal téléphone', (
+      tester,
+    ) async {
+      await pumpCard(
+        tester,
+        _bid(
+          recipientPhone: null,
+          recipientPhoneHidden: true,
+          recipientAppStatus: 'CONFIRMED',
+        ),
+      );
+      expect(
+        find.textContaining('préfère être contacté via Yadony'),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('recipient-contact-message-bid-1')),
+        findsOneWidget,
+      );
+      expect(find.text('WhatsApp'), findsNothing);
+      expect(find.text('SMS'), findsNothing);
+      expect(find.text('Appeler'), findsNothing);
     });
 
     testWidgets('WhatsApp : wa.me pré-rempli en externalApplication', (

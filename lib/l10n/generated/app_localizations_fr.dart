@@ -15397,6 +15397,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get receptionMessageTraveler => 'Écrire au voyageur';
 
   @override
+  String get recipientPhoneHiddenLabel => 'Masqué par le destinataire';
+
+  @override
+  String get travelerContactInAppOnlyNotice =>
+      'Le destinataire préfère être contacté via Yadony : écrivez-lui dans la messagerie de l\'app.';
+
+  @override
   String get recipientConversationOpenError =>
       'Impossible d\'ouvrir la conversation pour le moment. Réessayez plus tard.';
 

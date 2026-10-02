@@ -25299,6 +25299,18 @@ abstract class AppLocalizations {
   /// **'Écrire au voyageur'**
   String get receptionMessageTraveler;
 
+  /// Vue voyageur : à la place du numéro du destinataire quand il l'a masqué dans ses réglages (colis_destinataire_card, notify_recipients_sheet). Sentry FLUTTER-6J.
+  ///
+  /// In fr, this message translates to:
+  /// **'Masqué par le destinataire'**
+  String get recipientPhoneHiddenLabel;
+
+  /// Vue voyageur, carte Contacter le destinataire : le destinataire a masqué son numéro, seule la messagerie de l'app est proposée (recipient_contact.dart _InAppOnlyContact).
+  ///
+  /// In fr, this message translates to:
+  /// **'Le destinataire préfère être contacté via Yadony : écrivez-lui dans la messagerie de l\'app.'**
+  String get travelerContactInAppOnlyNotice;
+
   /// Snackbar : la conversation voyageur ↔ destinataire n'a pas pu s'ouvrir (refus, panne ou serveur pas à jour).
   ///
   /// In fr, this message translates to:

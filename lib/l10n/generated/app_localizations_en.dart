@@ -15308,6 +15308,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get receptionMessageTraveler => 'Message the traveler';
 
   @override
+  String get recipientPhoneHiddenLabel => 'Hidden by the recipient';
+
+  @override
+  String get travelerContactInAppOnlyNotice =>
+      'The recipient prefers to be contacted through Yadony: message them in the app.';
+
+  @override
   String get recipientConversationOpenError =>
       'We couldn\'t open the conversation right now. Please try again later.';
 
