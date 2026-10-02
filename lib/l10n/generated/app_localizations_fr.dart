@@ -15996,4 +15996,26 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripPublishSuccessPayoutsCta => 'Configurer mes paiements';
+
+  @override
+  String messagesNegotiationsShortcutOpen(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count discussions en cours',
+      one: '1 discussion en cours',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String messagesNegotiationsShortcutAwaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count offres attendent votre réponse',
+      one: 'Une offre attend votre réponse',
+    );
+    return '$_temp0';
+  }
 }

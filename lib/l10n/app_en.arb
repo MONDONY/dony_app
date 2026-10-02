@@ -8857,5 +8857,7 @@
   "firstActionCardTravelerNone": "Publish your first trip",
   "firstActionCardUnknown": "Your identity is verified: take your first step",
   "firstActionCardCta": "See",
-  "tripPublishSuccessPayoutsCta": "Set up my payouts"
+  "tripPublishSuccessPayoutsCta": "Set up my payouts",
+  "messagesNegotiationsShortcutOpen": "{count, plural, =1{1 ongoing discussion} other{{count} ongoing discussions}}",
+  "messagesNegotiationsShortcutAwaiting": "{count, plural, =1{An offer is waiting for your reply} other{{count} offers are waiting for your reply}}"
 }

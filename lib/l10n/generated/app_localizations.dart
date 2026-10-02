@@ -26282,6 +26282,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Configurer mes paiements'**
   String get tripPublishSuccessPayoutsCta;
+
+  /// Sous-titre de la ligne « Discussions de prix » épinglée en tête de Messages quand aucune offre n'attend l'utilisateur (negotiations_shortcut_tile.dart, Sentry FLUTTER-44).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 discussion en cours} other{{count} discussions en cours}}'**
+  String messagesNegotiationsShortcutOpen(int count);
+
+  /// Sous-titre de la ligne « Discussions de prix » de Messages quand c'est à l'utilisateur de répondre ou de payer (negotiations_shortcut_tile.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{Une offre attend votre réponse} other{{count} offres attendent votre réponse}}'**
+  String messagesNegotiationsShortcutAwaiting(int count);
 }
 
 class _AppLocalizationsDelegate

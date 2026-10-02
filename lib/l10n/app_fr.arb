@@ -18454,5 +18454,23 @@
   "tripPublishSuccessPayoutsCta": "Configurer mes paiements",
   "@tripPublishSuccessPayoutsCta": {
     "description": "Bouton après publication d'un trajet sans paiements configurés"
+  },
+  "messagesNegotiationsShortcutOpen": "{count, plural, =1{1 discussion en cours} other{{count} discussions en cours}}",
+  "@messagesNegotiationsShortcutOpen": {
+    "description": "Sous-titre de la ligne « Discussions de prix » épinglée en tête de Messages quand aucune offre n'attend l'utilisateur (negotiations_shortcut_tile.dart, Sentry FLUTTER-44).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messagesNegotiationsShortcutAwaiting": "{count, plural, =1{Une offre attend votre réponse} other{{count} offres attendent votre réponse}}",
+  "@messagesNegotiationsShortcutAwaiting": {
+    "description": "Sous-titre de la ligne « Discussions de prix » de Messages quand c'est à l'utilisateur de répondre ou de payer (negotiations_shortcut_tile.dart).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }
