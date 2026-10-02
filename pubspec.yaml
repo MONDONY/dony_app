@@ -134,11 +134,13 @@ dependencies:
   # Importé directement par le code (Bloc/Emitter/Transition) et pas seulement
   # via flutter_bloc : depend_on_referenced_packages exige la déclaration.
   bloc: ^8.1.4
+  # Idem : vérifie/demande la permission micro avant un appel, sans passer par
+  # le SDK WebRTC (cf. stream_call_gateway.dart, ensureMicrophone).
+  permission_handler: ^12.0.3
   shared_preferences: ^2.5.5
   smart_auth: ^3.2.0
   stream_video_flutter: ^1.6.0
   stream_video_push_notification: ^1.6.0
-  stream_webrtc_flutter: ^3.2.0
 
 dev_dependencies:
   flutter_test:

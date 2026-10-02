@@ -10,11 +10,11 @@ import 'package:dony/features/calls/data/models/call_token.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:rxdart/rxdart.dart' show CompositeSubscription;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stream_video_flutter/stream_video_flutter.dart' hide CallUser;
 import 'package:stream_video_push_notification/stream_video_push_notification.dart';
-import 'package:stream_webrtc_flutter/stream_webrtc_flutter.dart' as rtc;
 
 /// Seul point de l'app qui parle au SDK Stream Video. Type d'appel `audio_call`
 /// (vidéo coupée côté Stream) ; les appels sont créés par le back, l'app ne
@@ -127,21 +127,16 @@ class StreamCallGateway implements CallGateway {
 
   @override
   Future<bool> ensureMicrophone() async {
-    try {
-      // Ouvre puis relâche aussitôt le micro : déclenche la demande système la
-      // première fois, échoue si l'utilisateur l'a refusée.
-      final stream = await rtc.navigator.mediaDevices.getUserMedia({
-        'audio': true,
-        'video': false,
-      });
-      for (final track in stream.getTracks()) {
-        await track.stop();
-      }
-      await stream.dispose();
-      return true;
-    } catch (_) {
-      return false;
-    }
+    // Demande la permission système, sans passer par le SDK WebRTC : à ce
+    // stade aucun appel n'existe encore, donc aucune « factory » n'est créée
+    // côté natif. `getUserMedia` sans factory échoue toujours sur Android
+    // avec ce SDK (`unknown factoryId null`, MethodCallHandlerImpl.resolveFactory
+    // ne connaît jamais `null`) : vu en recette, le message confondait un bug
+    // avec un refus réel de permission.
+    final status = await Permission.microphone.status;
+    if (status.isGranted) return true;
+    if (status.isPermanentlyDenied || status.isRestricted) return false;
+    return (await Permission.microphone.request()).isGranted;
   }
 
   Call _makeCall(String callId) => _requireClient().makeCall(
