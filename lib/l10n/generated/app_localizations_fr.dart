@@ -15758,6 +15758,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.';
 
   @override
+  String get callNotificationTitle => 'Appel Yadony en cours';
+
+  @override
   String get callStatusConnecting => 'Connexion…';
 
   @override

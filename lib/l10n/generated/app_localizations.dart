@@ -25893,6 +25893,12 @@ abstract class AppLocalizations {
   /// **'Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.'**
   String get bidCreateWeightRequiredHint;
 
+  /// No description provided for @callNotificationTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel Yadony en cours'**
+  String get callNotificationTitle;
+
   /// Statut de l'écran d'appel pendant la connexion.
   ///
   /// In fr, this message translates to:

@@ -15667,6 +15667,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter the estimated weight, e.g. 0.5 kg for a phone.';
 
   @override
+  String get callNotificationTitle => 'Yadony call in progress';
+
+  @override
   String get callStatusConnecting => 'Connecting…';
 
   @override

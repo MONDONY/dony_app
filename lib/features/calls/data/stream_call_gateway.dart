@@ -7,14 +7,15 @@ import 'package:dony/core/firebase/firebase_options.dart';
 import 'package:dony/features/calls/data/call_flow.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
 import 'package:dony/features/calls/data/models/call_token.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:rxdart/rxdart.dart' show CompositeSubscription;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stream_video_flutter/stream_video_flutter.dart' hide CallUser;
 import 'package:stream_video_push_notification/stream_video_push_notification.dart';
-import 'package:stream_webrtc_flutter/stream_webrtc_flutter.dart' as rtc;
 
 /// Seul point de l'app qui parle au SDK Stream Video. Type d'appel `audio_call`
 /// (vidéo coupée côté Stream) ; les appels sont créés par le back, l'app ne
@@ -87,6 +88,18 @@ class StreamCallGateway implements CallGateway {
     }
     _client = client;
 
+    // Android : service de premier plan + notification « appel en cours »
+    // pendant chaque appel actif. Sans lui, l'appel est coupé (micro, réseau)
+    // dès que l'app passe en arrière-plan ou que l'écran se verrouille.
+    StreamBackgroundService.init(
+      client,
+      callNotificationOptionsBuilder: _callNotificationOptions,
+      // Par défaut le SDK quitte tous les appels quand l'activité Android est
+      // détachée. Le moteur Flutter lui survit (MainActivity), l'appel doit
+      // donc continuer : on raccroche depuis l'écran ou la notification.
+      onPlatformUiLayerDestroyed: (_) async {},
+    );
+
     // Décroché depuis CallKit ou la notification Android.
     _ringing = client.observeCoreRingingEvents(onCallAccepted: _onNativeAccept);
     // Android : appel décroché pendant que l'app était tuée.
@@ -127,21 +140,16 @@ class StreamCallGateway implements CallGateway {
 
   @override
   Future<bool> ensureMicrophone() async {
-    try {
-      // Ouvre puis relâche aussitôt le micro : déclenche la demande système la
-      // première fois, échoue si l'utilisateur l'a refusée.
-      final stream = await rtc.navigator.mediaDevices.getUserMedia({
-        'audio': true,
-        'video': false,
-      });
-      for (final track in stream.getTracks()) {
-        await track.stop();
-      }
-      await stream.dispose();
-      return true;
-    } catch (_) {
-      return false;
-    }
+    // Demande la permission système, sans passer par le SDK WebRTC : à ce
+    // stade aucun appel n'existe encore, donc aucune « factory » n'est créée
+    // côté natif. `getUserMedia` sans factory échoue toujours sur Android
+    // avec ce SDK (`unknown factoryId null`, MethodCallHandlerImpl.resolveFactory
+    // ne connaît jamais `null`) : vu en recette, le message confondait un bug
+    // avec un refus réel de permission.
+    final status = await Permission.microphone.status;
+    if (status.isGranted) return true;
+    if (status.isPermanentlyDenied || status.isRestricted) return false;
+    return (await Permission.microphone.request()).isGranted;
   }
 
   Call _makeCall(String callId) => _requireClient().makeCall(
@@ -311,6 +319,10 @@ class StreamCallGateway implements CallGateway {
         await call.reject(reason: CallRejectReason.cancel());
       case CallFlowAction.leave:
         _unbindIf(call);
+        // Appel à deux : raccrocher termine l'appel pour l'autre aussi, sinon
+        // son écran reste « en appel ». `end` exige un droit côté Stream ; à
+        // défaut, quitter suffit (l'autre conclut seul après le délai de grâce).
+        await call.end();
         await call.leave();
       case CallFlowAction.none:
         if (_flow?.ended ?? false) _unbindIf(call);
@@ -345,6 +357,21 @@ class StreamCallGateway implements CallGateway {
       throw StateError('Stream Video operation failed: $result');
     }
   }
+}
+
+/// Notification Android de l'appel en cours : nom de l'autre partie, toucher
+/// la notification rouvre l'app sur l'écran d'appel.
+NotificationOptions _callNotificationOptions(Call call) {
+  final l = AppL10n.current;
+  final remote = call.state.valueOrNull?.callParticipants
+      .where((p) => !p.isLocal)
+      .firstOrNull;
+  return NotificationOptions(
+    content: NotificationContent(
+      title: l.callNotificationTitle,
+      text: remote?.name ?? l.callStatusConnecting,
+    ),
+  );
 }
 
 /// Push Stream reçu app fermée ou en arrière-plan : l'isolate ne partage rien

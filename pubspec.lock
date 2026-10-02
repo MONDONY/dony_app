@@ -1645,7 +1645,7 @@ packages:
     source: hosted
     version: "2.3.0"
   permission_handler:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: permission_handler
       sha256: fe54465bcc62a4564c6e4db337bbaded6c0c0fa6e10487414436d163114784f6
@@ -2194,7 +2194,7 @@ packages:
     source: hosted
     version: "1.6.0"
   stream_webrtc_flutter:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: stream_webrtc_flutter
       sha256: "6938c87d6054e7ddcd5114641f7173e84f000f14aedfc57651c1115726dcf356"

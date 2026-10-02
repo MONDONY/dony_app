@@ -87,6 +87,13 @@
               android:name="flutter_deeplinking_enabled"
               android:value="false"
               />
+            <!-- Toucher la notification « Appel Yadony en cours » (SDK Stream :
+                 <package>.intent.action.STREAM_CALL, intent implicite) rouvre l'app
+                 sur l'appel. Sans ce filtre, le toucher ne menait nulle part. -->
+            <intent-filter>
+                <action android:name="${applicationId}.intent.action.STREAM_CALL"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
