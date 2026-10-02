@@ -52,8 +52,29 @@ class AnnouncementSearchLoaded extends AnnouncementState {
   final bool isEmpty;
   final bool isReloading;
 
-  AnnouncementSearchLoaded(this.results, {this.isReloading = false})
-    : isEmpty = results.isEmpty;
+  /// Total serveur des trajets correspondant aux critères (toutes pages),
+  /// `null` quand il n'est pas connu.
+  final int? totalElements;
+
+  /// Dernière page chargée (0 = première).
+  final int page;
+
+  /// Page suivante en cours de chargement.
+  final bool isLoadingMore;
+
+  AnnouncementSearchLoaded(
+    this.results, {
+    this.isReloading = false,
+    this.totalElements,
+    this.page = 0,
+    this.isLoadingMore = false,
+  }) : isEmpty = results.isEmpty;
+
+  /// D'autres trajets restent à charger.
+  bool get hasMore => totalElements != null && results.length < totalElements!;
+
+  /// Nombre à afficher : le total serveur s'il est connu, sinon la liste.
+  int get displayCount => totalElements ?? results.length;
 }
 
 class AnnouncementNotFound extends AnnouncementState {}

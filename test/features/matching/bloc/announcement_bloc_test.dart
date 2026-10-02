@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/announcement_search_page.dart';
 import 'package:dony/features/matching/data/models/trip_reschedule_result.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -57,6 +58,16 @@ AnnouncementModel buildAnnouncement({String id = 'ann-001'}) =>
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
+
+AnnouncementSearchPage _page(
+  List<AnnouncementModel> content, {
+  int? total,
+  int page = 0,
+}) => AnnouncementSearchPage(
+  content: content,
+  totalElements: total ?? content.length,
+  page: page,
+);
 
 void main() {
   late MockAnnouncementRepository mockRepo;
@@ -843,12 +854,92 @@ void main() {
 
   // ─── AnnouncementSearchRequested ──────────────────────────────────────────────
 
+  // Sentry FLUTTER-6P/6Q : la liste d'accueil s'arrêtait à 20 trajets
+  // alors que la recherche en annonçait 22.
+  group('AnnouncementSearchMoreRequested', () {
+    void stubPage(int page, AnnouncementSearchPage result) {
+      when(
+        () => mockRepo.searchAnnouncementsPage(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDateFrom: any(named: 'departureDateFrom'),
+          departureDateTo: any(named: 'departureDateTo'),
+          minAvailableKg: any(named: 'minAvailableKg'),
+          userLat: any(named: 'userLat'),
+          userLng: any(named: 'userLng'),
+          radiusKm: any(named: 'radiusKm'),
+          sortBy: any(named: 'sortBy'),
+          sortDir: any(named: 'sortDir'),
+          urgent: any(named: 'urgent'),
+          page: page,
+        ),
+      ).thenAnswer((_) async => result);
+    }
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'page suivante ajoutée, doublons écartés, total conservé',
+      build: () {
+        stubPage(
+          0,
+          _page([
+            buildAnnouncement(id: 'a'),
+            buildAnnouncement(id: 'b'),
+          ], total: 3),
+        );
+        stubPage(
+          1,
+          _page(
+            [buildAnnouncement(id: 'b'), buildAnnouncement(id: 'c')],
+            total: 3,
+            page: 1,
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(AnnouncementSearchRequested());
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(AnnouncementSearchMoreRequested());
+      },
+      skip: 2,
+      expect: () => [
+        predicate<AnnouncementState>(
+          (s) => s is AnnouncementSearchLoaded && s.isLoadingMore,
+        ),
+        predicate<AnnouncementState>(
+          (s) =>
+              s is AnnouncementSearchLoaded &&
+              !s.isLoadingMore &&
+              s.page == 1 &&
+              s.results.map((a) => a.id).join() == 'abc' &&
+              s.displayCount == 3 &&
+              !s.hasMore,
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'tout est chargé : aucune requête',
+      build: () {
+        stubPage(0, _page([buildAnnouncement(id: 'a')], total: 1));
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(AnnouncementSearchRequested());
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(AnnouncementSearchMoreRequested());
+      },
+      skip: 2,
+      expect: () => <AnnouncementState>[],
+    );
+  });
+
   group('AnnouncementSearchRequested', () {
     blocTest<AnnouncementBloc, AnnouncementState>(
       'recherche avec résultats → [Loading, AnnouncementSearchLoaded]',
       build: () {
         when(
-          () => mockRepo.searchAnnouncements(
+          () => mockRepo.searchAnnouncementsPage(
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDateFrom: any(named: 'departureDateFrom'),
@@ -860,8 +951,9 @@ void main() {
             sortBy: any(named: 'sortBy'),
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
+            page: any(named: 'page'),
           ),
-        ).thenAnswer((_) async => [buildAnnouncement()]);
+        ).thenAnswer((_) async => _page([buildAnnouncement()]));
         return buildBloc();
       },
       act: (bloc) => bloc.add(
@@ -882,7 +974,7 @@ void main() {
       'recherche sans résultats → AnnouncementSearchLoaded.isEmpty = true',
       build: () {
         when(
-          () => mockRepo.searchAnnouncements(
+          () => mockRepo.searchAnnouncementsPage(
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDateFrom: any(named: 'departureDateFrom'),
@@ -894,8 +986,9 @@ void main() {
             sortBy: any(named: 'sortBy'),
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
+            page: any(named: 'page'),
           ),
-        ).thenAnswer((_) async => []);
+        ).thenAnswer((_) async => _page([]));
         return buildBloc();
       },
       act: (bloc) => bloc.add(AnnouncementSearchRequested()),
@@ -911,7 +1004,7 @@ void main() {
       'erreur recherche → [Loading, AnnouncementError]',
       build: () {
         when(
-          () => mockRepo.searchAnnouncements(
+          () => mockRepo.searchAnnouncementsPage(
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDateFrom: any(named: 'departureDateFrom'),
@@ -923,6 +1016,7 @@ void main() {
             sortBy: any(named: 'sortBy'),
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
+            page: any(named: 'page'),
           ),
         ).thenThrow(Exception('Network error'));
         return buildBloc();
@@ -935,7 +1029,7 @@ void main() {
       'recherche relancée après Loaded → [Loaded(isReloading:true), Loaded]',
       build: () {
         when(
-          () => mockRepo.searchAnnouncements(
+          () => mockRepo.searchAnnouncementsPage(
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDateFrom: any(named: 'departureDateFrom'),
@@ -947,8 +1041,9 @@ void main() {
             sortBy: any(named: 'sortBy'),
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
+            page: any(named: 'page'),
           ),
-        ).thenAnswer((_) async => [buildAnnouncement(id: 'new')]);
+        ).thenAnswer((_) async => _page([buildAnnouncement(id: 'new')]));
         return buildBloc();
       },
       seed: () => AnnouncementSearchLoaded([buildAnnouncement(id: 'old')]),
@@ -980,7 +1075,7 @@ void main() {
       'erreur après Loaded → AnnouncementError avec previousResults',
       build: () {
         when(
-          () => mockRepo.searchAnnouncements(
+          () => mockRepo.searchAnnouncementsPage(
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDateFrom: any(named: 'departureDateFrom'),
@@ -992,6 +1087,7 @@ void main() {
             sortBy: any(named: 'sortBy'),
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
+            page: any(named: 'page'),
           ),
         ).thenThrow(Exception('network down'));
         return buildBloc();
@@ -1021,7 +1117,7 @@ void main() {
       'AnnouncementSearchRequested with radius → repo called with userLat/userLng/radiusKm',
       build: () {
         when(
-          () => mockRepo.searchAnnouncements(
+          () => mockRepo.searchAnnouncementsPage(
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDateFrom: any(named: 'departureDateFrom'),
@@ -1033,8 +1129,9 @@ void main() {
             sortBy: any(named: 'sortBy'),
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
+            page: any(named: 'page'),
           ),
-        ).thenAnswer((_) async => const []);
+        ).thenAnswer((_) async => _page(const []));
         return buildBloc();
       },
       act: (bloc) => bloc.add(
@@ -1048,7 +1145,7 @@ void main() {
       ),
       verify: (_) {
         verify(
-          () => mockRepo.searchAnnouncements(
+          () => mockRepo.searchAnnouncementsPage(
             departureCity: 'Paris',
             arrivalCity: 'Dakar',
             departureDateFrom: any(named: 'departureDateFrom'),
@@ -1060,6 +1157,7 @@ void main() {
             sortBy: any(named: 'sortBy'),
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
+            page: any(named: 'page'),
           ),
         ).called(1);
       },
@@ -1069,7 +1167,7 @@ void main() {
       'AnnouncementSearchRequested(urgent: true) → repo appelé avec urgent: true',
       build: () {
         when(
-          () => mockRepo.searchAnnouncements(
+          () => mockRepo.searchAnnouncementsPage(
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDateFrom: any(named: 'departureDateFrom'),
@@ -1081,14 +1179,15 @@ void main() {
             sortBy: any(named: 'sortBy'),
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
+            page: any(named: 'page'),
           ),
-        ).thenAnswer((_) async => const []);
+        ).thenAnswer((_) async => _page(const []));
         return buildBloc();
       },
       act: (bloc) => bloc.add(AnnouncementSearchRequested(urgent: true)),
       verify: (_) {
         verify(
-          () => mockRepo.searchAnnouncements(
+          () => mockRepo.searchAnnouncementsPage(
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDateFrom: any(named: 'departureDateFrom'),
@@ -1100,6 +1199,7 @@ void main() {
             sortBy: any(named: 'sortBy'),
             sortDir: any(named: 'sortDir'),
             urgent: true,
+            page: any(named: 'page'),
           ),
         ).called(1);
       },
@@ -1109,7 +1209,7 @@ void main() {
       'AnnouncementSearchRequested sans urgent → repo appelé avec urgent: null (jamais false)',
       build: () {
         when(
-          () => mockRepo.searchAnnouncements(
+          () => mockRepo.searchAnnouncementsPage(
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDateFrom: any(named: 'departureDateFrom'),
@@ -1121,14 +1221,15 @@ void main() {
             sortBy: any(named: 'sortBy'),
             sortDir: any(named: 'sortDir'),
             urgent: any(named: 'urgent'),
+            page: any(named: 'page'),
           ),
-        ).thenAnswer((_) async => const []);
+        ).thenAnswer((_) async => _page(const []));
         return buildBloc();
       },
       act: (bloc) => bloc.add(AnnouncementSearchRequested()),
       verify: (_) {
         verify(
-          () => mockRepo.searchAnnouncements(
+          () => mockRepo.searchAnnouncementsPage(
             departureCity: any(named: 'departureCity'),
             arrivalCity: any(named: 'arrivalCity'),
             departureDateFrom: any(named: 'departureDateFrom'),
