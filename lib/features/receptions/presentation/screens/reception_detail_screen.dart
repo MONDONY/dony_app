@@ -3,11 +3,13 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/copy_code_button.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/presentation/widgets/recipient_conversation_launcher.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
@@ -293,8 +295,10 @@ class _ConfirmedContent extends StatelessWidget {
     final instructions = reception.arrivalInstructions;
 
     final details = <Widget>[
-      if (reception.travelerFirstName case final traveler?)
-        DonyInfoRow(label: l.receptionTravelerLabel, value: traveler),
+      // Avec un id, la ligne voyageur devient sa carte (photo + profil).
+      if (reception.travelerId == null)
+        if (reception.travelerFirstName case final traveler?)
+          DonyInfoRow(label: l.receptionTravelerLabel, value: traveler),
       if (_formatDate(l, reception.departureDate) case final date?)
         DonyInfoRow(label: l.receptionDepartureLabel, value: date),
       if (_formatDate(l, reception.arrivalDate) case final date?)
@@ -338,9 +342,19 @@ class _ConfirmedContent extends StatelessWidget {
               ShipmentProgressBar(
                 step: shipmentStepFor(reception.bidStatus) ?? 1,
               ),
+              const SizedBox(height: DonySpacing.md),
+              _ReceptionSteps(reception: reception),
             ],
           ),
         ),
+        if (reception.travelerId case final travelerId?) ...[
+          const SizedBox(height: DonySpacing.base),
+          _TravelerCard(
+            travelerId: travelerId,
+            name: reception.travelerFirstName,
+            avatarUrl: reception.travelerAvatarUrl,
+          ),
+        ],
         const SizedBox(height: DonySpacing.base),
         if (code != null)
           _PickupCodeCard(code: code)
@@ -375,6 +389,180 @@ class _ConfirmedContent extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Les quatre étapes du colis, avec leur libellé : la barre seule ne disait
+/// pas ce qui était fait (Sentry FLUTTER-6E, « le colis a été donné mais
+/// l'étape n'est pas complète »).
+class _ReceptionSteps extends StatelessWidget {
+  const _ReceptionSteps({required this.reception});
+
+  final Reception reception;
+
+  /// Étapes faites selon le statut du colis.
+  int get _doneCount => switch (reception.bidStatus) {
+    'HANDED_OVER' || 'IN_TRANSIT' => 1,
+    'ARRIVED' => 3,
+    'COMPLETED' => 4,
+    _ => 0,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final labels = [
+      l.receptionTimelineHandedOver,
+      l.receptionTimelineInTransit,
+      l.receptionTimelineArrived,
+      l.receptionTimelineDelivered,
+    ];
+    final done = _doneCount;
+    return Column(
+      key: const Key('reception-steps'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < labels.length; i++)
+          _StepRow(
+            key: Key('reception-step-$i'),
+            label: labels[i],
+            state: i < done
+                ? _StepState.done
+                : i == done
+                ? _StepState.current
+                : _StepState.todo,
+          ),
+      ],
+    );
+  }
+}
+
+enum _StepState { done, current, todo }
+
+class _StepRow extends StatelessWidget {
+  const _StepRow({super.key, required this.label, required this.state});
+
+  final String label;
+  final _StepState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final (Widget icon, Color color, String status) = switch (state) {
+      _StepState.done => (
+        DonyIcon('circle-check', size: 18, color: cs.primary),
+        cs.onSurface,
+        l.receptionStepDoneSemantics,
+      ),
+      _StepState.current => (
+        DonyIcon('circle-dot', size: 18, color: cs.secondary),
+        cs.onSurface,
+        l.receptionStepCurrentSemantics,
+      ),
+      _StepState.todo => (
+        DonyIcon('circle', size: 18, color: cs.outline),
+        cs.onSurfaceVariant,
+        l.receptionStepTodoSemantics,
+      ),
+    };
+    return Semantics(
+      label: '$label, $status',
+      excludeSemantics: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: DonySpacing.xxs),
+        child: Row(
+          children: [
+            icon,
+            const SizedBox(width: DonySpacing.sm),
+            Expanded(
+              child: Text(
+                label,
+                style: tt.bodyMedium?.copyWith(
+                  color: color,
+                  fontWeight: state == _StepState.current
+                      ? FontWeight.w700
+                      : FontWeight.w400,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Le voyageur, photo comprise : un tap ouvre son profil public (Sentry
+/// FLUTTER-6F, 6G, 6H).
+class _TravelerCard extends StatelessWidget {
+  const _TravelerCard({
+    required this.travelerId,
+    required this.name,
+    required this.avatarUrl,
+  });
+
+  final String travelerId;
+  final String? name;
+  final String? avatarUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    final display = name ?? l.receptionTravelerLabel;
+    return Semantics(
+      button: true,
+      label: l.receptionViewTravelerProfile(display),
+      excludeSemantics: true,
+      child: DonyPressable(
+        key: const Key('reception-traveler-card'),
+        onTap: () => context.push(
+          '/profile/public',
+          extra: ProfilePublicArgs(userId: travelerId),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(DonySpacing.base),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+            border: Border.all(color: cs.outline),
+          ),
+          child: Row(
+            children: [
+              DonyAvatar(name: display, imageUrl: avatarUrl),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.receptionTravelerLabel,
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      display,
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      l.receptionSeeTravelerProfile,
+                      style: tt.bodySmall?.copyWith(color: cs.primary),
+                    ),
+                  ],
+                ),
+              ),
+              DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

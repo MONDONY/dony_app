@@ -352,8 +352,20 @@ class ProfileFollowUpSection extends StatelessWidget {
               iconBgColor: cs.tertiaryContainer.withValues(alpha: 0.5),
               label: l.profileTrackingSubscriptions,
               subtitle: l.profileTrackingSubscriptionsSubtitle,
-              showDivider: false,
               onTap: () => context.push('/profile/subscriptions'),
+            ),
+            // Demandes d'expéditeurs et expéditeurs autorisés : la page
+            // n'était joignable que par un bandeau (demande en attente) ou
+            // les réglages de confidentialité (Sentry FLUTTER-6K).
+            DonyListTile(
+              key: const Key('profile-recipient-invitations'),
+              iconAsset: 'user-plus',
+              iconColor: cs.primary,
+              iconBgColor: cs.primaryContainer.withValues(alpha: 0.5),
+              label: l.recipientInvitationsAuthorizedSection,
+              subtitle: l.privacyRecipientInvitationsSubtitle,
+              showDivider: false,
+              onTap: () => context.push('/recipient-invitations'),
             ),
           ],
         ),

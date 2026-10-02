@@ -24,6 +24,8 @@ class Reception {
     this.weightKg,
     this.confirmationCode,
     this.updatedAt,
+    this.travelerId,
+    this.travelerAvatarUrl,
   });
 
   static const pending = 'PENDING';
@@ -54,6 +56,11 @@ class Reception {
   final double? weightKg;
   final String? confirmationCode;
   final DateTime? updatedAt;
+
+  /// Voyageur, une fois le colis confirmé : ouvre son profil public (Sentry
+  /// FLUTTER-6G/6H). `null` avant confirmation ou sur un back antérieur.
+  final String? travelerId;
+  final String? travelerAvatarUrl;
 
   bool get isPending => linkStatus == pending;
   bool get isConfirmed => linkStatus == confirmed;
@@ -104,6 +111,8 @@ class Reception {
       weightKg: (json['weightKg'] as num?)?.toDouble(),
       confirmationCode: text('confirmationCode'),
       updatedAt: date('updatedAt'),
+      travelerId: text('travelerId'),
+      travelerAvatarUrl: text('travelerAvatarUrl'),
     );
   }
 }

@@ -17535,6 +17535,45 @@
   "@receptionDetailsTitle": {
     "description": "Titre de la carte des détails du colis (reception_detail_screen.dart)."
   },
+  "receptionTimelineHandedOver": "Colis confié au voyageur",
+  "@receptionTimelineHandedOver": {
+    "description": "Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H)."
+  },
+  "receptionTimelineInTransit": "Voyage en cours",
+  "@receptionTimelineInTransit": {
+    "description": "Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H)."
+  },
+  "receptionTimelineArrived": "Arrivé à destination",
+  "@receptionTimelineArrived": {
+    "description": "Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H)."
+  },
+  "receptionTimelineDelivered": "Remis au destinataire",
+  "@receptionTimelineDelivered": {
+    "description": "Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H)."
+  },
+  "receptionStepDoneSemantics": "fait",
+  "@receptionStepDoneSemantics": {
+    "description": "Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H)."
+  },
+  "receptionStepCurrentSemantics": "en cours",
+  "@receptionStepCurrentSemantics": {
+    "description": "Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H)."
+  },
+  "receptionStepTodoSemantics": "à venir",
+  "@receptionStepTodoSemantics": {
+    "description": "Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H)."
+  },
+  "receptionSeeTravelerProfile": "Voir son profil",
+  "@receptionSeeTravelerProfile": {
+    "description": "Écran Réceptions (vue destinataire), reception_detail_screen.dart : étapes libellées du colis et carte voyageur (Sentry FLUTTER-6E/6G/6H)."
+  },
+  "receptionViewTravelerProfile": "Voir le profil de {name}",
+  "@receptionViewTravelerProfile": {
+    "description": "Nom accessible de la carte voyageur de l'écran Réceptions, qui ouvre son profil public.",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
   "receptionTravelerLabel": "Voyageur",
   "@receptionTravelerLabel": {
     "description": "Libellé du prénom du voyageur (reception_detail_screen.dart)."

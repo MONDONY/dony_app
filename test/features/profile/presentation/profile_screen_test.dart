@@ -195,6 +195,10 @@ Widget _buildTestHarness({
       path: '/profile/subscriptions',
       builder: (_, _) => stub('Subscriptions'),
     ),
+    GoRoute(
+      path: '/recipient-invitations',
+      builder: (_, _) => stub('RecipientInvitations'),
+    ),
     GoRoute(path: '/profile/edit', builder: (_, _) => stub('EditProfile')),
   ];
 
@@ -629,6 +633,8 @@ void main() {
       ('Contacter le support', 'Contact'),
       ('Mes litiges', 'Disputes'),
       ('Mes abonnements', 'Subscriptions'),
+      // Sentry FLUTTER-6K : la page n'avait pas d'entrée visible.
+      ('Expéditeurs autorisés', 'RecipientInvitations'),
       ('Mon profil public', 'PublicProfile'),
       ('Mes avis reçus', 'Reviews'),
       ('Parrainages', 'Referral'),

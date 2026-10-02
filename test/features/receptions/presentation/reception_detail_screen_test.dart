@@ -9,6 +9,7 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/receptions/presentation/screens/reception_detail_screen.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
@@ -41,6 +42,7 @@ Reception _confirmed({
   String bidStatus = 'IN_TRANSIT',
   String? code = '482913',
   String? instructions = 'Sortie B, parking P2.',
+  String? travelerId,
 }) => Reception(
   bidId: _id,
   linkStatus: 'CONFIRMED',
@@ -55,6 +57,7 @@ Reception _confirmed({
   arrivalInstructions: instructions,
   weightKg: 4.5,
   confirmationCode: code,
+  travelerId: travelerId,
 );
 
 void main() {
@@ -118,6 +121,12 @@ void main() {
               onPressed: () => context.push('/receptions/$_id'),
               child: const Text('onglet Suivi'),
             ),
+          ),
+        ),
+        GoRoute(
+          path: '/profile/public',
+          builder: (_, state) => Scaffold(
+            body: Text('profil ${(state.extra! as ProfilePublicArgs).userId}'),
           ),
         ),
         GoRoute(
@@ -395,6 +404,68 @@ void main() {
       expect(find.text('Remis'), findsOneWidget);
       expect(find.byKey(const Key('reception-code')), findsNothing);
       expect(find.byKey(const Key('reception-code-pending')), findsNothing);
+    });
+
+    // Sentry FLUTTER-6E : étapes libellées, remis = tout fait.
+    testWidgets('étapes libellées : confié fait, voyage en cours', (
+      tester,
+    ) async {
+      stub(ReceptionDetailLoaded(_confirmed(bidStatus: 'HANDED_OVER')));
+      await pump(tester);
+
+      expect(find.byKey(const Key('reception-steps')), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Colis confié au voyageur, fait'),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel('Voyage en cours, en cours'),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel('Remis au destinataire, à venir'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('remis : toutes les étapes faites', (tester) async {
+      stub(
+        ReceptionDetailLoaded(_confirmed(bidStatus: 'COMPLETED', code: null)),
+      );
+      await pump(tester);
+
+      expect(
+        find.bySemanticsLabel('Remis au destinataire, fait'),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel(RegExp(r', (en cours|à venir)$')),
+        findsNothing,
+      );
+    });
+
+    // Sentry FLUTTER-6G/6H : profil du voyageur depuis l'écran Réceptions.
+    testWidgets('carte voyageur : ouvre son profil public', (tester) async {
+      stub(ReceptionDetailLoaded(_confirmed(travelerId: 'trav-1')));
+      await pump(tester);
+
+      await tester.ensureVisible(
+        find.byKey(const Key('reception-traveler-card')),
+      );
+      await tester.tap(find.byKey(const Key('reception-traveler-card')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('profil trav-1'), findsOneWidget);
+    });
+
+    testWidgets('sans id voyageur (back antérieur) : simple ligne', (
+      tester,
+    ) async {
+      stub(ReceptionDetailLoaded(_confirmed()));
+      await pump(tester);
+
+      expect(find.byKey(const Key('reception-traveler-card')), findsNothing);
+      expect(find.text('Ibrahima'), findsOneWidget);
     });
 
     testWidgets('« Voir le suivi » ouvre la frise du colis', (tester) async {
