@@ -75,7 +75,8 @@ class CallBloc extends Bloc<CallEvent, CallState> {
         properties: {'native': event.acceptedNatively},
       ),
     );
-    if (event.acceptedNatively) return;
+    // Même décroché depuis CallKit, il reste à rejoindre l'appel ;
+    // l'adaptateur saute l'accept déjà fait.
     try {
       await _gateway.acceptIncoming(event.callId);
     } catch (e) {

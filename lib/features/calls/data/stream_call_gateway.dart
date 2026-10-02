@@ -1,7 +1,14 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
+import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/config/stream_push_providers.dart';
+import 'package:dony/core/firebase/firebase_options.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
+import 'package:dony/features/calls/data/models/call_token.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart' show CompositeSubscription;
 import 'package:stream_video_flutter/stream_video_flutter.dart' hide CallUser;
 import 'package:stream_video_push_notification/stream_video_push_notification.dart';
@@ -20,7 +27,6 @@ class StreamCallGateway implements CallGateway {
   bool _outgoing = false;
   DateTime? _connectedAt;
   CompositeSubscription? _ringing;
-  StreamSubscription<Call?>? _incomingSub;
   StreamSubscription<CallState>? _stateSub;
   final _active = StreamController<ActiveCallSnapshot>.broadcast();
   final _incoming = StreamController<IncomingCall>.broadcast();
@@ -54,20 +60,7 @@ class StreamCallGateway implements CallGateway {
       tokenLoader: (_) => tokenLoader(),
       failIfSingletonExists: false,
       options: StreamVideoOptions(keepConnectionsAliveWhenInBackground: true),
-      pushNotificationManagerProvider:
-          StreamVideoPushNotificationManager.create(
-            iosPushProvider: StreamVideoPushProvider.apn(
-              name: streamIosPushProvider,
-            ),
-            androidPushProvider: StreamVideoPushProvider.firebase(
-              name: streamAndroidPushProvider,
-            ),
-            pushConfiguration: const StreamVideoPushConfiguration(
-              android: AndroidPushConfiguration(
-                telecom: TelecomPushConfiguration(enabled: true),
-              ),
-            ),
-          ),
+      pushNotificationManagerProvider: _pushManager(),
     );
     final result = await client.connect();
     if (result.isFailure) {
@@ -78,17 +71,6 @@ class StreamCallGateway implements CallGateway {
 
     // Décroché depuis CallKit ou la notification Android.
     _ringing = client.observeCoreRingingEvents(onCallAccepted: _onNativeAccept);
-    // App ouverte : l'appel entrant s'affiche dans l'app.
-    _incomingSub = client.state.incomingCall.listen((call) {
-      if (call == null) return;
-      _incoming.add(
-        IncomingCall(
-          callId: call.id,
-          callerName: call.state.value.createdByUser.name,
-          callerImageUrl: call.state.value.createdByUser.image,
-        ),
-      );
-    });
     // Android : appel décroché pendant que l'app était tuée.
     unawaited(
       client.consumeAndAcceptActiveCall(onCallAccepted: _onNativeAccept),
@@ -110,10 +92,8 @@ class StreamCallGateway implements CallGateway {
   @override
   Future<void> disconnect() async {
     await _stateSub?.cancel();
-    await _incomingSub?.cancel();
     unawaited(_ringing?.cancel());
     _stateSub = null;
-    _incomingSub = null;
     _ringing = null;
     _call = null;
     if (_client != null) {
@@ -195,6 +175,11 @@ class StreamCallGateway implements CallGateway {
     }
   }
 
+  @override
+  Future<void> handlePush(Map<String, dynamic> data) async {
+    await _client?.handleRingingFlowNotifications(data);
+  }
+
   void _bind(Call call, {required bool outgoing}) {
     if (identical(_call, call)) return;
     unawaited(_stateSub?.cancel());
@@ -257,3 +242,53 @@ class StreamCallGateway implements CallGateway {
     }
   }
 }
+
+/// Push Stream reçu app fermée ou en arrière-plan : l'isolate ne partage rien
+/// avec l'app (ni GetIt, ni ApiClient), on reconstruit un client Stream avec
+/// un jeton frais du back, le temps de faire sonner puis de résoudre l'appel.
+/// Tout échec est avalé : au pire, pas de sonnerie (le back enregistre
+/// l'appel manqué et envoie son push).
+@pragma('vm:entry-point')
+Future<void> handleStreamVideoBackgroundPush(Map<String, dynamic> data) async {
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+    final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+    if (idToken == null || idToken.isEmpty) return;
+    final response = await Dio(BaseOptions(baseUrl: kApiBaseUrl))
+        .get<Map<String, dynamic>>(
+          '/calls/token',
+          options: Options(
+            headers: {'Authorization': 'Bearer $idToken'},
+          ), // i18n-ignore
+        );
+    final token = CallToken.fromJson(response.data!);
+    final client = StreamVideo(
+      token.apiKey,
+      user: User.regular(userId: token.userId),
+      userToken: token.token,
+      failIfSingletonExists: false,
+      pushNotificationManagerProvider: _pushManager(),
+    );
+    final ringing = client.observeCoreRingingEventsForBackground();
+    client.disposeAfterResolvingRinging(disposingCallback: ringing.cancel);
+    await client.handleRingingFlowNotifications(data);
+  } catch (e) {
+    if (kDebugMode) debugPrint('[calls] background push failed: $e');
+  }
+}
+
+PNManagerProvider _pushManager() => StreamVideoPushNotificationManager.create(
+  iosPushProvider: StreamVideoPushProvider.apn(name: streamIosPushProvider),
+  androidPushProvider: StreamVideoPushProvider.firebase(
+    name: streamAndroidPushProvider,
+  ),
+  pushConfiguration: const StreamVideoPushConfiguration(
+    android: AndroidPushConfiguration(
+      telecom: TelecomPushConfiguration(enabled: true),
+    ),
+  ),
+);

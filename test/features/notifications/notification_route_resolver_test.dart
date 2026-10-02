@@ -508,4 +508,20 @@ void main() {
       }
     });
   });
+
+  group('resolveNotificationRoute — CALL_MISSED', () {
+    test('ouvre la conversation pour rappeler', () {
+      expect(
+        resolveNotificationRoute('CALL_MISSED', {
+          'conversationId': '11111111-2222-3333-4444-555555555555',
+        }),
+        '/conversations/11111111-2222-3333-4444-555555555555',
+      );
+    });
+
+    test('sans identifiant valide : la messagerie', () {
+      expect(resolveNotificationRoute('CALL_MISSED', {'conversationId': 'x'}), '/messages');
+      expect(resolveNotificationRoute('CALL_MISSED', {}), '/messages');
+    });
+  });
 }

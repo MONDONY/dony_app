@@ -61,6 +61,9 @@ class FakeCallGateway implements CallGateway {
   Future<void> setSpeakerOn(bool on) async => log.add('speaker:$on');
 
   @override
+  Future<void> handlePush(Map<String, dynamic> data) async => log.add('push');
+
+  @override
   Stream<ActiveCallSnapshot> get activeCall => activeCallController.stream;
 
   @override

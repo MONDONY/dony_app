@@ -53,6 +53,9 @@ abstract class CallGateway {
 
   Future<void> setSpeakerOn(bool on);
 
+  /// Push Stream reçu app ouverte : fait sonner (notification d'appel native).
+  Future<void> handlePush(Map<String, dynamic> data);
+
   /// État de l'appel en cours, tant qu'il y en a un.
   Stream<ActiveCallSnapshot> get activeCall;
 

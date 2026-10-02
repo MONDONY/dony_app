@@ -259,13 +259,14 @@ void main() {
     );
 
     blocTest<CallBloc, CallState>(
-      'déjà décroché depuis CallKit : pas de second accept',
+      'décroché depuis CallKit : l\'appel est quand même rejoint',
       build: build,
       act: (bloc) => bloc.add(
         const CallIncomingAcceptRequested('x2', 'Awa', acceptedNatively: true),
       ),
       expect: () => [isA<CallInProgress>()],
-      verify: (_) => expect(gateway.log, ['hangUp']),
+      // L'adaptateur saute l'accept déjà fait par CallKit, mais rejoint l'appel.
+      verify: (_) => expect(gateway.log, ['accept:x2', 'hangUp']),
     );
   });
 

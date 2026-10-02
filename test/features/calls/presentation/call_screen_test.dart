@@ -181,4 +181,14 @@ void main() {
       expect(const CallScreenArgs(remoteName: 'X').initialEvent, isNull);
     });
   });
+
+  test('CallScreenArgs.incoming : décroché natif, rejoint à l\'ouverture', () {
+    final args = CallScreenArgs.incoming(
+      const IncomingCall(callId: 'x3', callerName: 'Awa D.', callerImageUrl: 'u', acceptedNatively: true),
+    );
+    expect(args.remoteName, 'Awa D.');
+    expect(args.remoteAvatarUrl, 'u');
+    expect(args.incomingCallId, 'x3');
+    expect(args.initialEvent, isA<CallIncomingAcceptRequested>().having((e) => e.acceptedNatively, 'native', true));
+  });
 }

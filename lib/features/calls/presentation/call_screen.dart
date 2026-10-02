@@ -29,6 +29,14 @@ class CallScreenArgs {
   final String? incomingCallId;
   final bool acceptedNatively;
 
+  /// Appel entrant décroché depuis CallKit ou la notification Android.
+  factory CallScreenArgs.incoming(IncomingCall call) => CallScreenArgs(
+    remoteName: call.callerName,
+    remoteAvatarUrl: call.callerImageUrl,
+    incomingCallId: call.callId,
+    acceptedNatively: call.acceptedNatively,
+  );
+
   /// Ce que l'écran demande au [CallBloc] en s'ouvrant.
   CallEvent? get initialEvent {
     if (conversationId != null) {

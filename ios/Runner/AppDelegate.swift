@@ -6,6 +6,7 @@ import FirebaseAuth
 import FirebaseMessaging
 import Sentry
 import UserNotifications
+import stream_video_push_notification
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -30,6 +31,9 @@ import UserNotifications
     // reste portée par `requestPermission()`. iOS délivre le jeton APNs dès que
     // l'utilisateur a accordé les notifications.
     application.registerForRemoteNotifications()
+    // Appels audio (Stream Video) : jeton VoIP PushKit, pour que CallKit fasse
+    // sonner l'iPhone même app fermée ou écran verrouillé.
+    StreamVideoPKDelegateManager.shared.registerForPushNotifications()
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

@@ -10,6 +10,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/features/calls/data/stream_video_push.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:dony/features/subscriptions/data/subscription_badge_consumer.dart';
@@ -26,6 +27,12 @@ import 'package:sentry_flutter/sentry_flutter.dart' show Breadcrumb, Sentry;
 // Must be top-level — Firebase requirement for background handler
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Sonnerie d'un appel audio : affaire du SDK Stream, pas des notifications
+  // Yadony (aucun ACK, aucune notification locale).
+  if (isStreamVideoPush(message.data)) {
+    await backgroundStreamVideoPushHandler(message.data);
+    return;
+  }
   if (kDebugMode) debugPrint('[FCM] Background message: ${message.messageId}');
   await ackCriticalFromBackground(message.data);
 }
@@ -755,6 +762,12 @@ class NotificationService {
       _handleSupportForeground(data);
 
   void _handleForegroundMessage(RemoteMessage message) {
+    if (dispatchStreamVideoPush(
+      message.data,
+      foregroundStreamVideoPushHandler,
+    )) {
+      return;
+    }
     _ackIfCritical(message.data);
     _newNotificationController.add(null);
     if (_handleSupportForeground(message.data)) return;
