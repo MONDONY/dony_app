@@ -8,6 +8,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -173,9 +174,8 @@ class _PackageRequestPublicDetailScreenState
   }
 
   void _showReportSheet() {
-    final authState = context.read<AuthBloc>().state;
-    final isAuthenticated =
-        authState is AuthAuthenticated || authState is AuthProfileUpdated;
+    // Session Firebase, pas AuthBloc (FLUTTER-7X).
+    final isAuthenticated = getIt<FirebaseSessionProbe>().hasRealSession;
     if (!isAuthenticated) {
       unawaited(
         AuthRequiredSheet.show(context, reason: AuthRequiredReason.report),

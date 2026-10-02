@@ -17949,7 +17949,7 @@
   "@recipientSentInvitationsTitle": {
     "description": "Carnet : titre de la section des invitations envoyées."
   },
-  "recipientSentInvitationPending": "En attente",
+  "recipientSentInvitationPending": "Invitation envoyée",
   "@recipientSentInvitationPending": {
     "description": "Carnet : statut d'une invitation non acceptée."
   },
@@ -18178,5 +18178,23 @@
         "type": "String"
       }
     }
-  }
+  },
+  "trackingTimelineOpenParcel": "Voir le colis",
+  "@trackingTimelineOpenParcel": {"description": "Bouton principal de la feuille du parcours d'un colis ouverte depuis « Mes envois » de l'onglet Suivi : ouvre le détail de l'envoi (tracking_timeline_bottom_sheet.dart)."},
+  "receptionShowQrTitle": "Montrer le QR du colis",
+  "@receptionShowQrTitle": {"description": "Écran d'un colis à recevoir : tuile qui ouvre le QR du colis (luminosité max, enregistrer, partager), visible tant que le colis n'est pas remis (reception_detail_screen.dart _ParcelQrTile)."},
+  "receptionShowQrExplanation": "Le voyageur scanne ce QR puis saisit votre code de retrait.",
+  "@receptionShowQrExplanation": {"description": "Écran d'un colis à recevoir : explication sous la tuile du QR. La remise exige toujours le code de retrait."},
+  "receptionStepCounter": "Étape {current} sur {total}",
+  "@receptionStepCounter": {"description": "Écran d'un colis à recevoir : pastille de l'en-tête qui situe le colis dans ses étapes.", "placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "chatBlockedContactTerm": "Ton message semble contenir des coordonnées (« {term} »). Pour ta sécurité, garde les échanges et le paiement sur Yadony.",
+  "@chatBlockedContactTerm": {"description": "Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'contact' quand ChatMessageValidator connaît l'extrait repéré (mot, numéro, email).", "placeholders": {"term": {"type": "String"}}},
+  "recipientSentInvitationsHelp": "La personne recevra l'invitation dans Yadony si elle a un compte. Sinon, invite-la à installer l'app.",
+  "@recipientSentInvitationsHelp": {"description": "Carnet : aide sous le titre « Invitations envoyées ». Ne révèle jamais si un numéro a un compte (FLUTTER-89)."},
+  "recipientSentInvitationShareAction": "Partager le lien de l'app",
+  "@recipientSentInvitationShareAction": {"description": "Carnet : bouton d'une invitation envoyée qui partage le lien d'installation de Yadony (feuille de partage système)."},
+  "recipientSentInvitationShareMessage": "Je t'ai invité(e) sur Yadony pour suivre les colis que je t'envoie. Installe l'app ici : https://yadony.com",
+  "@recipientSentInvitationShareMessage": {"description": "Carnet : texte partagé par « Partager le lien de l'app » pour inviter la personne à installer Yadony."},
+  "trackingStepPhotoOpen": "Agrandir la photo",
+  "@trackingStepPhotoOpen": {"description": "Suivi en lecture seule : action d'accessibilité sur la miniature photo d'une étape, qui l'ouvre en plein écran (FLUTTER-82)."}
 }

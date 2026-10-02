@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 
-Widget _harness() => MaterialApp(
+Widget _harness({bool showFeedback = false}) => MaterialApp(
   theme: AppTheme.light(),
   home: Scaffold(
     body: Builder(
@@ -12,6 +12,7 @@ Widget _harness() => MaterialApp(
         onPressed: () => DonyBottomSheet.show<void>(
           context,
           title: 'Titre',
+          showFeedback: showFeedback,
           child: const SizedBox(height: 40),
         ),
         child: const Text('ouvrir'),
@@ -39,5 +40,28 @@ void main() {
 
     expect(find.byTooltip('Close'), findsOneWidget);
     expect(find.byTooltip('Fermer'), findsNothing);
+  });
+
+  testWidgets('sans showFeedback : pas de scarabée', (tester) async {
+    await tester.pumpWidget(_harness());
+    await tester.tap(find.text('ouvrir'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonyFeedbackButton), findsNothing);
+  });
+
+  testWidgets('showFeedback : scarabée avant la croix de l\'en-tête', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_harness(showFeedback: true));
+    await tester.tap(find.text('ouvrir'));
+    await tester.pumpAndSettle();
+
+    final scarabee = find.byType(DonyFeedbackButton);
+    expect(scarabee, findsOneWidget);
+    expect(
+      tester.getCenter(scarabee).dx,
+      lessThan(tester.getCenter(find.byTooltip('Fermer')).dx),
+    );
   });
 }

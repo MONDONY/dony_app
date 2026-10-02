@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -248,6 +249,21 @@ Widget _harness({
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
+
+/// Utilisateur réellement connecté : la feuille lit la session Firebase, plus
+/// AuthBloc, pour décider s'il faut demander de se connecter (FLUTTER-7X).
+class _RealSessionProbe implements FirebaseSessionProbe {
+  const _RealSessionProbe();
+
+  @override
+  bool get hasSession => true;
+
+  @override
+  bool get isAnonymous => false;
+
+  @override
+  bool get hasRealSession => true;
+}
 
 void main() {
   setUpAll(() {
@@ -628,6 +644,9 @@ void main() {
 
     setUp(() {
       GetIt.I.reset();
+      GetIt.I.registerSingleton<FirebaseSessionProbe>(
+        const _RealSessionProbe(),
+      );
 
       mockKycBloc = _MockKycBloc();
       when(() => mockKycBloc.stream).thenAnswer((_) => const Stream.empty());
@@ -1384,6 +1403,39 @@ void main() {
       expect(find.byType(FavoriteHeartButton), findsNothing);
       expect(find.text('Détail du trajet'), findsOneWidget);
     });
+
+    testWidgets(
+      'FLUTTER-83 : signet blanc sur la carte bleu nuit, actif lisible',
+      (tester) async {
+        final a = _buildAnnouncement();
+        await ouvrir(tester, a);
+
+        final bouton = tester.widget<FavoriteHeartButton>(
+          find.byType(FavoriteHeartButton),
+        );
+        expect(bouton.onDark, isTrue);
+        final icone = tester.widget<Icon>(
+          find.descendant(
+            of: find.byType(FavoriteHeartButton),
+            matching: find.byType(Icon),
+          ),
+        );
+        expect(icone.icon, Icons.bookmark_border);
+        expect(icone.color, Colors.white);
+
+        cubit.emitSeed(trips: {a.id}, requests: {});
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        final iconeActive = tester.widget<Icon>(
+          find.descendant(
+            of: find.byType(FavoriteHeartButton),
+            matching: find.byType(Icon),
+          ),
+        );
+        expect(iconeActive.icon, Icons.bookmark);
+        expect(iconeActive.color, Colors.white);
+      },
+    );
   });
 
   // ─── Blocage, reporté de l'écran supprimé (PR #301) ───────────────────────
@@ -1433,5 +1485,23 @@ void main() {
     expect(find.text('Trip details'), findsOneWidget);
     expect(find.text('Flexible kg'), findsOneWidget);
     expect(find.text('Détail du trajet'), findsNothing);
+  });
+
+  testWidgets('FLUTTER-83 : scarabée de signalement dans l\'en-tête', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_harness(announcement: _buildAnnouncement()));
+    await tester.tap(find.text('Ouvrir'));
+    await tester.pumpAndSettle();
+
+    final scarabee = find.byType(DonyFeedbackButton);
+    expect(scarabee, findsOneWidget);
+    // Sur la ligne du titre, à gauche de la croix de fermeture.
+    final titre = tester.getCenter(find.text('Détail du trajet'));
+    final croix = tester.getCenter(find.byTooltip('Fermer'));
+    final bug = tester.getCenter(scarabee);
+    expect((bug.dy - titre.dy).abs(), lessThan(24));
+    expect(bug.dx, lessThan(croix.dx));
+    expect(bug.dx, greaterThan(titre.dx));
   });
 }

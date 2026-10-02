@@ -461,6 +461,8 @@ abstract final class AnalyticsEvents {
   static const recipientInvitationSent = 'recipient_invitation_sent';
   static const recipientInvitationAnswered = 'recipient_invitation_answered';
   static const recipientInvitationRevoked = 'recipient_invitation_revoked';
+  static const recipientInvitationAppLinkShared =
+      'recipient_invitation_app_link_shared';
 
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';

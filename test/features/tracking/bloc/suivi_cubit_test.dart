@@ -446,6 +446,9 @@ void main() {
       final effect = c.state.effect! as SuiviShowTimeline;
       expect(effect.bidId, 'ship-1');
       expect((effect.departureCity, effect.arrivalCity), ('Paris', 'Dakar'));
+      // Colis lu par QR : pas de « Voir le colis », même s'il est connu.
+      expect(effect.source, 'qr');
+      expect(effect.fromMyShipments, isFalse);
       verify(
         () => analytics.logEvent(
           AnalyticsEvents.suiviQrScanned,
@@ -495,8 +498,14 @@ void main() {
     test('trackShipment → parcours, source my_shipments', () async {
       final c = build()..start(canValidate: false);
       await Future<void>.delayed(Duration.zero);
-      c.trackShipment(c.state.shipments.single);
-      expect((c.state.effect! as SuiviShowTimeline).bidId, 'ship-1');
+      final shipment = c.state.shipments.single;
+      c.trackShipment(shipment);
+      final effect = c.state.effect! as SuiviShowTimeline;
+      expect(effect.bidId, 'ship-1');
+      // L'effet porte le colis pour « Voir le colis » (FLUTTER-7Z).
+      expect(effect.bid, same(shipment));
+      expect(effect.source, 'my_shipments');
+      expect(effect.fromMyShipments, isTrue);
       verify(
         () => analytics.logEvent(
           AnalyticsEvents.suiviTrackSubmitted,
@@ -531,6 +540,10 @@ void main() {
         ('Marseille', 'Bamako'),
       );
       expect(effect.arrivalInstructions, 'Gare routière');
+      // Colis d'un tiers retrouvé par numéro : rien à ouvrir.
+      expect(effect.bid, isNull);
+      expect(effect.source, 'number');
+      expect(effect.fromMyShipments, isFalse);
       expect(c.state.searchStatus, SuiviLoadStatus.idle);
       verify(
         () => analytics.logEvent(

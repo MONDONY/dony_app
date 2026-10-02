@@ -92,6 +92,33 @@ void main() {
       },
     );
 
+    test('contact avec terme → avertissement qui cite le terme', () {
+      expect(
+        chatBlockedMessage(fr, 'contact', term: 'insta'),
+        'Ton message semble contenir des coordonnées (« insta »). '
+        'Pour ta sécurité, garde les échanges et le paiement sur Yadony.',
+      );
+      expect(
+        chatBlockedMessage(en, 'contact', term: 'insta'),
+        'Your message seems to contain contact details ("insta"). '
+        'For your safety, keep conversations and payment on Yadony.',
+      );
+    });
+
+    test('contact avec terme vide → message générique', () {
+      expect(
+        chatBlockedMessage(fr, 'contact', term: ''),
+        chatBlockedMessage(fr, 'contact'),
+      );
+    });
+
+    test('terme ignoré pour les autres codes', () {
+      expect(
+        chatBlockedMessage(fr, 'url', term: 'x'),
+        chatBlockedMessage(fr, 'url'),
+      );
+    });
+
     test('banking → même message que l\'ancien texte fixe en fr', () {
       expect(
         chatBlockedMessage(fr, 'banking'),

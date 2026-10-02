@@ -81,6 +81,15 @@ class SentInvitationsCubit extends Cubit<SentInvitationsState> {
     }
   }
 
+  /// « Partager le lien de l'app » touché sur une invitation en attente :
+  /// la feuille de partage système s'ouvre. Mesuré sans destinataire ni
+  /// canal choisi (la feuille système ne le dit pas).
+  void trackAppLinkShared() {
+    unawaited(
+      _analytics.logEvent(AnalyticsEvents.recipientInvitationAppLinkShared),
+    );
+  }
+
   Future<void> revoke(String id) async {
     if (state.busyId != null) return;
     emit(state.copyWith(busyId: id));

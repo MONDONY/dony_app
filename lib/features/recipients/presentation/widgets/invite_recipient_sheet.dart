@@ -16,10 +16,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///
 /// [userCountry] (code ISO du pays de l'utilisateur) sert à mettre au format
 /// international un numéro repris du carnet du téléphone (`07…`).
+///
+/// [onSent] est appelé dès que le serveur a accepté l'invitation, avant la
+/// fermeture de la feuille : l'appelant y rafraîchit ses invitations envoyées
+/// sans attendre la fin de l'animation de sortie (FLUTTER-88).
 abstract final class InviteRecipientSheet {
   static Future<bool> show(
     BuildContext context, {
     String? userCountry,
+    VoidCallback? onSent,
     @visibleForTesting InviteRecipientCubit Function()? createCubit,
   }) async {
     final sent = await DonyBottomSheet.show<bool>(
@@ -45,16 +50,17 @@ abstract final class InviteRecipientSheet {
           );
         },
       ),
-      child: _InviteRecipientContent(userCountry: userCountry),
+      child: _InviteRecipientContent(userCountry: userCountry, onSent: onSent),
     );
     return sent ?? false;
   }
 }
 
 class _InviteRecipientContent extends StatefulWidget {
-  const _InviteRecipientContent({this.userCountry});
+  const _InviteRecipientContent({this.userCountry, this.onSent});
 
   final String? userCountry;
+  final VoidCallback? onSent;
 
   @override
   State<_InviteRecipientContent> createState() =>
@@ -103,6 +109,7 @@ class _InviteRecipientContentState extends State<_InviteRecipientContent> {
       listenWhen: (p, c) => p.status != c.status,
       listener: (context, state) {
         if (state.status == InviteRecipientStatus.sent) {
+          widget.onSent?.call();
           Navigator.of(context).pop(true);
         } else if (state.status == InviteRecipientStatus.failed) {
           if (state.isQuotaExceeded) {

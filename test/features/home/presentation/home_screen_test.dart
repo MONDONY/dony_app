@@ -2999,6 +2999,58 @@ void main() {
   });
 
   group('HomeScreen — _NotificationBell', () {
+    // FLUTTER-7X : la cloche se fiait à AuthBloc.currentUser, nul tant que le
+    // profil n'est pas chargé (AuthLoading, AuthError) ; un utilisateur bien
+    // connecté voyait alors « Connexion requise ».
+    testWidgets(
+      'profil non chargé mais session réelle : la cloche ne demande pas de se connecter',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildHome(
+            authState: const AuthLoading(),
+            notificationState: const NotificationLoaded(
+              notifications: [],
+              unreadCount: 0,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell'),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Connexion requise'), findsNothing);
+      },
+    );
+
+    testWidgets('un invité qui touche la cloche voit « Connexion requise »', (
+      tester,
+    ) async {
+      getIt.unregister<FirebaseSessionProbe>();
+      getIt.registerSingleton<FirebaseSessionProbe>(
+        const _StubSessionProbe.guest(),
+      );
+      await tester.pumpWidget(
+        _buildHome(
+          authState: const AuthGuestSessionReady(),
+          notificationState: const NotificationLoaded(
+            notifications: [],
+            unreadCount: 0,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Connexion requise'), findsOneWidget);
+    });
+
     testWidgets('shows outlined bell icon when no unread notifications', (
       tester,
     ) async {

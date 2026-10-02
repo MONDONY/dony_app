@@ -28,6 +28,7 @@ abstract final class DonyBottomSheet {
     bool isDanger = false,
     double? heightFraction,
     Widget Function(Widget)? wrapper,
+    bool showFeedback = false,
   }) {
     final screenHeight = MediaQuery.of(context).size.height;
     return showModalBottomSheet<T>(
@@ -51,6 +52,7 @@ abstract final class DonyBottomSheet {
           isDanger: isDanger,
           expand: heightFraction != null,
           stickyBottom: stickyBottom,
+          showFeedback: showFeedback,
           child: child,
         );
         return wrapper != null ? wrapper(content) : content;
@@ -68,6 +70,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
     this.showHandle = true,
     this.isDanger = false,
     this.expand = false,
+    this.showFeedback = false,
   });
 
   final Widget child;
@@ -77,6 +80,12 @@ class _DonyBottomSheetContent extends StatelessWidget {
   final bool showHandle;
   final bool isDanger;
   final bool expand;
+
+  /// Scarabée de signalement ([DonyFeedbackButton]) avant la croix de
+  /// l'en-tête. Facultatif : une feuille qui tient lieu d'écran (détail d'un
+  /// trajet) le porte, une feuille d'action courte s'en passe. Sans titre,
+  /// pas d'en-tête, donc pas de scarabée.
+  final bool showFeedback;
 
   @override
   Widget build(BuildContext context) {
@@ -148,6 +157,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (showFeedback) const DonyFeedbackButton(),
                   IconButton(
                     tooltip: context.l10n.commonClose,
                     // `maybePop` consulte `PopScope`, contrairement à `pop` :

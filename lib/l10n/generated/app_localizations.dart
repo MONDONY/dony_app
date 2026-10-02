@@ -25608,7 +25608,7 @@ abstract class AppLocalizations {
   /// Carnet : statut d'une invitation non acceptée.
   ///
   /// In fr, this message translates to:
-  /// **'En attente'**
+  /// **'Invitation envoyée'**
   String get recipientSentInvitationPending;
 
   /// Carnet : titre du dialogue d'annulation d'une invitation.
@@ -25946,6 +25946,60 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Appeler {name}'**
   String chatCallChooserTitle(String name);
+
+  /// Bouton principal de la feuille du parcours d'un colis ouverte depuis « Mes envois » de l'onglet Suivi : ouvre le détail de l'envoi (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le colis'**
+  String get trackingTimelineOpenParcel;
+
+  /// Écran d'un colis à recevoir : tuile qui ouvre le QR du colis (luminosité max, enregistrer, partager), visible tant que le colis n'est pas remis (reception_detail_screen.dart _ParcelQrTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Montrer le QR du colis'**
+  String get receptionShowQrTitle;
+
+  /// Écran d'un colis à recevoir : explication sous la tuile du QR. La remise exige toujours le code de retrait.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur scanne ce QR puis saisit votre code de retrait.'**
+  String get receptionShowQrExplanation;
+
+  /// Écran d'un colis à recevoir : pastille de l'en-tête qui situe le colis dans ses étapes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape {current} sur {total}'**
+  String receptionStepCounter(int current, int total);
+
+  /// Message affiché par chatBlockedMessage (chat_labels.dart) pour le code 'contact' quand ChatMessageValidator connaît l'extrait repéré (mot, numéro, email).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton message semble contenir des coordonnées (« {term} »). Pour ta sécurité, garde les échanges et le paiement sur Yadony.'**
+  String chatBlockedContactTerm(String term);
+
+  /// Carnet : aide sous le titre « Invitations envoyées ». Ne révèle jamais si un numéro a un compte (FLUTTER-89).
+  ///
+  /// In fr, this message translates to:
+  /// **'La personne recevra l\'invitation dans Yadony si elle a un compte. Sinon, invite-la à installer l\'app.'**
+  String get recipientSentInvitationsHelp;
+
+  /// Carnet : bouton d'une invitation envoyée qui partage le lien d'installation de Yadony (feuille de partage système).
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager le lien de l\'app'**
+  String get recipientSentInvitationShareAction;
+
+  /// Carnet : texte partagé par « Partager le lien de l'app » pour inviter la personne à installer Yadony.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je t\'ai invité(e) sur Yadony pour suivre les colis que je t\'envoie. Installe l\'app ici : https://yadony.com'**
+  String get recipientSentInvitationShareMessage;
+
+  /// Suivi en lecture seule : action d'accessibilité sur la miniature photo d'une étape, qui l'ouvre en plein écran (FLUTTER-82).
+  ///
+  /// In fr, this message translates to:
+  /// **'Agrandir la photo'**
+  String get trackingStepPhotoOpen;
 }
 
 class _AppLocalizationsDelegate

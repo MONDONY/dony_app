@@ -109,8 +109,21 @@ final class SuiviShowTimeline extends SuiviEffect {
     this.arrivalInstructions,
     this.trackingNumber,
     this.bidStatus,
+    this.bid,
+    this.source,
   });
   final String bidId;
+
+  /// Colis quand il est connu de l'app (liste « Mes envois »), `null` pour un
+  /// colis d'un tiers retrouvé par numéro ou par QR.
+  final BidModel? bid;
+
+  /// D'où vient la demande : `my_shipments`, `qr`, `number`… Seule une ligne
+  /// de « Mes envois » propose « Voir le colis » (FLUTTER-7Z).
+  final String? source;
+
+  /// Ligne de « Mes envois » : la feuille propose d'ouvrir le colis.
+  bool get fromMyShipments => source == 'my_shipments' && bid != null;
 
   /// Statut du colis quand il est connu de l'app (`ARRIVED` : arrivée
   /// déclarée par le voyageur, sans scan).
@@ -602,6 +615,7 @@ class SuiviCubit extends Cubit<SuiviState> {
             arrivalCity: result.arrivalCity,
             arrivalInstructions: result.arrivalInstructions,
             trackingNumber: result.trackingNumber,
+            source: 'number',
           ),
         ),
       );
@@ -646,6 +660,8 @@ class SuiviCubit extends Cubit<SuiviState> {
             known?.arrivalInstructions ?? trip?.arrivalInstructions,
         trackingNumber: known?.trackingNumber,
         bidStatus: known?.status,
+        bid: known,
+        source: source,
       ),
     );
   }

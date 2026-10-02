@@ -12,6 +12,9 @@ import 'package:dony/features/profile/presentation/screens/profile_public_screen
 import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/receptions/presentation/screens/reception_detail_screen.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_event.dart';
+import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +24,9 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockCubit extends MockCubit<ReceptionDetailState>
     implements ReceptionDetailCubit {}
+
+class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
+    implements TrackingBloc {}
 
 class _MockConversationOpenBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
@@ -66,15 +72,18 @@ void main() {
   late _MockCubit cubit;
   late _MockConversationOpenBloc conversationOpen;
   late List<Reception> timelineOpened;
+  late List<Reception> qrOpened;
 
   setUpAll(() {
     registerFallbackValue(const ConversationOpenRequested('x'));
+    registerFallbackValue(TrackingQrCodeRequested('x'));
   });
 
   setUp(() {
     DonySnackbar.clearDedup();
     cubit = _MockCubit();
     timelineOpened = [];
+    qrOpened = [];
     when(() => cubit.load(any())).thenAnswer((_) async {});
     when(() => cubit.retry()).thenAnswer((_) async {});
     when(() => cubit.confirm()).thenAnswer((_) async {});
@@ -112,6 +121,9 @@ void main() {
     WidgetTester tester, {
     Locale locale = AppL10n.fr,
     bool settle = true,
+    bool realQrSheet = false,
+    ThemeData? theme,
+    double textScale = 1,
   }) async {
     final router = GoRouter(
       initialLocation: '/tracking',
@@ -141,6 +153,9 @@ void main() {
           builder: (_, state) => ReceptionDetailScreen(
             bidId: state.pathParameters['bidId']!,
             openTimeline: (_, reception) async => timelineOpened.add(reception),
+            openQr: realQrSheet
+                ? null
+                : (_, reception) async => qrOpened.add(reception),
           ),
         ),
       ],
@@ -148,8 +163,14 @@ void main() {
     addTearDown(router.dispose);
     await tester.pumpWidget(
       MaterialApp.router(
-        theme: AppTheme.light(),
+        theme: theme ?? AppTheme.light(),
         locale: locale,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router,
@@ -373,7 +394,14 @@ void main() {
 
       expect(find.text('En route'), findsOneWidget);
       expect(find.byKey(const Key('reception-code')), findsOneWidget);
-      expect(find.text('482913'), findsOneWidget);
+      // Un chiffre par case, lu d'un bloc par le lecteur d'écran.
+      expect(
+        find.bySemanticsLabel('Code de retrait : 4 8 2 9 1 3'),
+        findsOneWidget,
+      );
+      for (var i = 0; i < 6; i++) {
+        expect(find.byKey(Key('reception-code-digit-$i')), findsOneWidget);
+      }
       expect(
         find.text(
           'Donnez ce code au voyageur à la remise du colis, pas avant.',
@@ -394,11 +422,19 @@ void main() {
       stub(ReceptionDetailLoaded(_confirmed()));
       await pump(tester);
 
-      final code = tester.widget<Text>(find.text('482913'));
-      expect(
-        code.style?.fontFeatures,
-        contains(const FontFeature.tabularFigures()),
-      );
+      for (var i = 0; i < 6; i++) {
+        final digit = tester.widget<Text>(
+          find.descendant(
+            of: find.byKey(Key('reception-code-digit-$i')),
+            matching: find.byType(Text),
+          ),
+        );
+        expect(digit.data, '482913'[i]);
+        expect(
+          digit.style?.fontFeatures,
+          contains(const FontFeature.tabularFigures()),
+        );
+      }
     });
 
     testWidgets('code pas encore généré : explication d\'attente', (
@@ -665,6 +701,137 @@ void main() {
       await tester.tap(buttonKey, warnIfMissed: false);
       await tester.pump();
       verifyNever(() => conversationOpen.add(any()));
+    });
+  });
+
+  // FLUTTER-7Y : le destinataire montre le QR du colis au voyageur.
+  group('QR du colis', () {
+    final tile = find.byKey(const Key('reception-show-qr'));
+
+    for (final status in ['ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED']) {
+      testWidgets('$status : tuile visible avec son explication', (
+        tester,
+      ) async {
+        stub(
+          ReceptionDetailLoaded(
+            _confirmed(
+              bidStatus: status,
+              code: status == 'ACCEPTED' ? null : '482913',
+            ),
+          ),
+        );
+        await pump(tester);
+
+        expect(tile, findsOneWidget);
+        expect(find.text('Montrer le QR du colis'), findsOneWidget);
+        expect(
+          find.text(
+            'Le voyageur scanne ce QR puis saisit votre code de retrait.',
+          ),
+          findsOneWidget,
+        );
+      });
+    }
+
+    testWidgets('colis remis : pas de QR', (tester) async {
+      stub(
+        ReceptionDetailLoaded(_confirmed(bidStatus: 'COMPLETED', code: null)),
+      );
+      await pump(tester);
+      expect(tile, findsNothing);
+    });
+
+    testWidgets('lien à confirmer : pas de QR', (tester) async {
+      stub(const ReceptionDetailLoaded(_pending));
+      await pump(tester);
+      expect(tile, findsNothing);
+    });
+
+    testWidgets('tap : ouvre le QR de ce colis', (tester) async {
+      stub(ReceptionDetailLoaded(_confirmed()));
+      await pump(tester);
+
+      await tester.ensureVisible(tile);
+      await tester.tap(tile);
+      await tester.pump();
+
+      expect(qrOpened.single.bidId, _id);
+    });
+
+    testWidgets('anglais : tuile traduite', (tester) async {
+      stub(ReceptionDetailLoaded(_confirmed()));
+      await pump(tester, locale: AppL10n.en);
+
+      expect(find.text('Show the parcel QR'), findsOneWidget);
+      expect(
+        find.text('The traveler scans this QR, then enters your pickup code.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('refus du serveur (403) : message dans la feuille, écran '
+        'conservé', (tester) async {
+      final tracking = _MockTrackingBloc();
+      const error = ForbiddenException('interdit');
+      whenListen<TrackingState>(
+        tracking,
+        Stream<TrackingState>.fromIterable([TrackingQrError(error)]),
+        initialState: TrackingQrError(error),
+      );
+      if (getIt.isRegistered<TrackingBloc>()) {
+        getIt.unregister<TrackingBloc>();
+      }
+      getIt.registerFactory<TrackingBloc>(() => tracking);
+      addTearDown(() => getIt.unregister<TrackingBloc>());
+
+      stub(ReceptionDetailLoaded(_confirmed()));
+      await pump(tester, realQrSheet: true);
+
+      await tester.ensureVisible(tile);
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+
+      verify(
+        () => tracking.add(any(that: isA<TrackingQrCodeRequested>())),
+      ).called(1);
+      expect(find.text('QR du colis'), findsOneWidget);
+      expect(
+        find.text('Tu n\'as pas les droits nécessaires pour cette action.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('interdit'), findsNothing);
+
+      // La feuille se referme : l'écran et le code restent là.
+      await tester.tapAt(const Offset(20, 20));
+      await tester.pumpAndSettle();
+      expect(find.text('QR du colis'), findsNothing);
+      expect(find.byKey(const Key('reception-code')), findsOneWidget);
+    });
+  });
+
+  group('rendu', () {
+    testWidgets('thème sombre et texte agrandi : aucun débordement', (
+      tester,
+    ) async {
+      stub(
+        ReceptionDetailLoaded(
+          _confirmed(travelerId: 'trav-1', senderId: 'send-1'),
+        ),
+      );
+      await pump(tester, theme: AppTheme.dark(), textScale: 2);
+
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('reception-code')), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const Key('reception-show-qr')));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('à confirmer, thème sombre et texte agrandi', (tester) async {
+      stub(const ReceptionDetailLoaded(_pending));
+      await pump(tester, theme: AppTheme.dark(), textScale: 2);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Ce colis est-il pour vous ?'), findsOneWidget);
     });
   });
 }

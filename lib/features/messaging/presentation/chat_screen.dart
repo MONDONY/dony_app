@@ -257,7 +257,11 @@ class _ChatScreenState extends State<ChatScreen> {
     // Règles de contenu (cf. ChatMessageValidator) — bloque + avertit.
     final result = _validator.validate(raw, recent: _recentSends, now: now);
     if (result is ChatValidationBlocked) {
-      final message = chatBlockedMessage(context.l10n, result.reason);
+      final message = chatBlockedMessage(
+        context.l10n,
+        result.reason,
+        term: result.term,
+      );
       if (message.isNotEmpty) {
         DonySnackbar.show(
           context,
@@ -267,6 +271,7 @@ class _ChatScreenState extends State<ChatScreen> {
         unawaited(
           getIt<AnalyticsService>().logEvent(
             AnalyticsEvents.messageBlocked,
+            // Jamais `result.term` : c'est du contenu utilisateur.
             properties: {'reason': result.reason},
           ),
         );
