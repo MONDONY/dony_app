@@ -91,6 +91,21 @@ void main() {
     verify(() => cubit.sync(effective: 'en', user: _user())).called(1);
   });
 
+  // Sentry FLUTTER-6X : une synchro échouée n'était plus retentée avant le
+  // prochain changement de langue.
+  testWidgets('retour au premier plan : sync rappelée', (tester) async {
+    await tester.pumpWidget(
+      localizedApp(wrap(const LanguageSyncGate(child: SizedBox.shrink()))),
+    );
+    verify(() => cubit.sync(effective: 'fr', user: _user())).called(1);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+
+    verify(() => cubit.sync(effective: 'fr', user: _user())).called(1);
+  });
+
   testWidgets(
     'connexion pendant que le gate est monté : sync rappelée avec le nouvel utilisateur',
     (tester) async {
