@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -281,6 +282,10 @@ class _MapSenderView extends StatefulWidget {
 
 class _MapSenderViewState extends State<_MapSenderView> {
   final _sheetController = DraggableScrollableController();
+
+  /// Hauteur repliée de la feuille, recalculée à chaque build (texte agrandi,
+  /// paysage) : la poignée y revient au lieu d'un 0.30 en dur.
+  double _peekSize = 0.30;
   double _sheetSize = 0.20;
   bool get _isMapHidden => _sheetSize > 0.92;
 
@@ -476,7 +481,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       onTap: () {
         if (!_sheetController.isAttached) return;
         _sheetController.animateTo(
-          down ? 0.30 : 1.0,
+          down ? _peekSize : 1.0,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutCubic,
         );
@@ -1394,8 +1399,21 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         // dépassent encore 55 % sur les petits écrans. Une
                         // peek plus haute garde le contenu utilisable sans
                         // modifier la taille normale à 100 %.
-                        final peekSize = (0.30 * textScale).clamp(0.30, 0.70);
-                        final middleSnap = peekSize >= 0.6 ? 0.8 : 0.6;
+                        // Plancher en pixels : en paysage (≈360 dp de haut),
+                        // 30 % ne laissait que ≈108 dp pour ≈110 dp de
+                        // contenu replié (Sentry FLUTTER-4X, 2 px).
+                        final screenHeight = MediaQuery.sizeOf(sheetCtx).height;
+                        final minPeek = screenHeight > 0
+                            ? (120 * textScale) / screenHeight
+                            : 0.30;
+                        final peekSize = math
+                            .max(0.30 * textScale, minPeek)
+                            .clamp(0.30, 0.90)
+                            .toDouble();
+                        _peekSize = peekSize;
+                        final middleSnap = peekSize < 0.5
+                            ? 0.6
+                            : (peekSize + 1) / 2;
                         return DraggableScrollableSheet(
                           controller: _sheetController,
                           initialChildSize: peekSize,

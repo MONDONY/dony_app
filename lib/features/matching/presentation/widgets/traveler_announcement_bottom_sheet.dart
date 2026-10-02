@@ -1207,14 +1207,40 @@ class _LocationRow extends StatelessWidget {
 /// de la card Lieux. Tap = ouvre la carte native centrée sur la remise. En
 /// `liteMode` sur Android (bitmap léger) ; sur iOS, une carte figée (tous les
 /// gestes désactivés). Un `GestureDetector` par-dessus capte le tap partout.
-class _RouteMiniMap extends StatelessWidget {
+class _RouteMiniMap extends StatefulWidget {
   const _RouteMiniMap({required this.pickup, required this.delivery});
 
   final AddressData pickup;
   final AddressData delivery;
 
   @override
+  State<_RouteMiniMap> createState() => _RouteMiniMapState();
+}
+
+class _RouteMiniMapState extends State<_RouteMiniMap> {
+  /// Cadre la carte sur l'itinéraire à la frame suivante. La feuille peut
+  /// être fermée entre-temps : la carte détruite, `animateCamera` lève un
+  /// StateError (Sentry FLUTTER-4K). On vérifie `mounted` et on avale l'échec,
+  /// le cadrage n'étant qu'un confort visuel.
+  void _fitBounds(GoogleMapController controller, LatLngBounds bounds) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      try {
+        unawaited(
+          controller
+              .animateCamera(CameraUpdate.newLatLngBounds(bounds, 40))
+              .catchError((Object _) {}),
+        );
+      } on StateError catch (_) {
+        // Carte détruite entre le contrôle de mounted et l'appel.
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final pickup = widget.pickup;
+    final delivery = widget.delivery;
     final swLat = pickup.lat < delivery.lat ? pickup.lat : delivery.lat;
     final swLng = pickup.lng < delivery.lng ? pickup.lng : delivery.lng;
     final neLat = pickup.lat > delivery.lat ? pickup.lat : delivery.lat;
@@ -1253,19 +1279,13 @@ class _RouteMiniMap extends StatelessWidget {
                 position: LatLng(delivery.lat, delivery.lng),
               ),
             },
-            onMapCreated: (c) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                c.animateCamera(
-                  CameraUpdate.newLatLngBounds(
-                    LatLngBounds(
-                      southwest: LatLng(swLat, swLng),
-                      northeast: LatLng(neLat, neLng),
-                    ),
-                    40,
-                  ),
-                );
-              });
-            },
+            onMapCreated: (c) => _fitBounds(
+              c,
+              LatLngBounds(
+                southwest: LatLng(swLat, swLng),
+                northeast: LatLng(neLat, neLng),
+              ),
+            ),
           ),
           Positioned.fill(
             child: GestureDetector(

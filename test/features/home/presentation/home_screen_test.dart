@@ -1288,6 +1288,23 @@ void main() {
       expect(find.textContaining('voir la carte'), findsOneWidget);
     });
 
+    // Sentry FLUTTER-4X : en paysage (≈360 dp de haut), 30 % de hauteur ne
+    // suffisaient pas au contenu replié de la feuille (débordement de 2 px).
+    testWidgets('paysage : la feuille repliée ne déborde pas', (tester) async {
+      tester.view.physicalSize = const Size(820, 360);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Tirer pour voir'), findsOneWidget);
+    });
+
     testWidgets(
       'shows NearMeCarousel and hides sheet when near-me FAB activated',
       (tester) async {
