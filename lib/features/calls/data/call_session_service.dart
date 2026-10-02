@@ -32,7 +32,7 @@ class CallSessionService {
       _connectedUserId = user.id;
     } catch (e) {
       _connectedUserId = null;
-      AppLog.warn('Appels indisponibles pour cette session : $e');
+      AppLog.warn('Calls unavailable for this session: $e');
     }
   }
 

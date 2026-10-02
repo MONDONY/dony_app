@@ -72,7 +72,7 @@ class StreamCallGateway implements CallGateway {
     final result = await client.connect();
     if (result.isFailure) {
       await StreamVideo.reset(disconnect: true);
-      throw StateError('Connexion Stream Video impossible');
+      throw StateError('Stream Video connection failed');
     }
     _client = client;
 
@@ -247,13 +247,13 @@ class StreamCallGateway implements CallGateway {
 
   StreamVideo _requireClient() {
     final client = _client;
-    if (client == null) throw StateError('Stream Video non connecté');
+    if (client == null) throw StateError('Stream Video not connected');
     return client;
   }
 
   static void _check(Result<Object?> result) {
     if (result.isFailure) {
-      throw StateError('Opération Stream Video refusée : $result');
+      throw StateError('Stream Video operation failed: $result');
     }
   }
 }
