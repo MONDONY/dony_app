@@ -18108,5 +18108,210 @@
   "recipientSentInvitationShareMessage": "Je t'ai invité(e) sur Yadony pour suivre les colis que je t'envoie. Installe l'app ici : https://yadony.com",
   "@recipientSentInvitationShareMessage": {"description": "Carnet : texte partagé par « Partager le lien de l'app » pour inviter la personne à installer Yadony."},
   "trackingStepPhotoOpen": "Agrandir la photo",
-  "@trackingStepPhotoOpen": {"description": "Suivi en lecture seule : action d'accessibilité sur la miniature photo d'une étape, qui l'ouvre en plein écran (FLUTTER-82)."}
+  "@trackingStepPhotoOpen": {"description": "Suivi en lecture seule : action d'accessibilité sur la miniature photo d'une étape, qui l'ouvre en plein écran (FLUTTER-82)."},
+  "authStepIntent": "Votre projet",
+  "@authStepIntent": {
+    "description": "Libellé de l'étape d'inscription où l'utilisateur déclare son intention"
+  },
+  "intentTitle": "Vous utilisez Yadony pour…",
+  "@intentTitle": {
+    "description": "Titre de l'étape intention"
+  },
+  "intentSubtitle": "On vous montre directement ce qui vous intéresse.",
+  "@intentSubtitle": {
+    "description": "Sous-titre de l'étape intention"
+  },
+  "intentSender": "Envoyer des colis",
+  "@intentSender": {
+    "description": "Choix d'intention : expéditeur"
+  },
+  "intentSenderHint": "Je cherche un voyageur pour mon colis",
+  "@intentSenderHint": {
+    "description": "Précision du choix expéditeur"
+  },
+  "intentTraveler": "Je voyage et j'ai de la place",
+  "@intentTraveler": {
+    "description": "Choix d'intention : voyageur"
+  },
+  "intentTravelerHint": "Je rentabilise mes kilos disponibles",
+  "@intentTravelerHint": {
+    "description": "Précision du choix voyageur"
+  },
+  "intentBoth": "Les deux",
+  "@intentBoth": {
+    "description": "Choix d'intention : expéditeur et voyageur"
+  },
+  "intentBothHint": "J'envoie et je voyage",
+  "@intentBothHint": {
+    "description": "Précision du choix les deux"
+  },
+  "intentDestinationTitle": "Vers quel pays ?",
+  "@intentDestinationTitle": {
+    "description": "Question du pays de destination visé"
+  },
+  "intentDestinationOther": "Autre",
+  "@intentDestinationOther": {
+    "description": "Choix d'un pays de destination non listé"
+  },
+  "intentContinue": "Continuer",
+  "@intentContinue": {
+    "description": "Bouton de validation de l'intention"
+  },
+  "intentSaveError": "Impossible d'enregistrer votre choix pour l'instant.",
+  "@intentSaveError": {
+    "description": "Erreur d'enregistrement de l'intention"
+  },
+  "intentSheetTitle": "Que faites-vous sur Yadony ?",
+  "@intentSheetTitle": {
+    "description": "Titre de la feuille d'intention pour les comptes existants"
+  },
+  "intentSaved": "C'est noté",
+  "@intentSaved": {
+    "description": "Confirmation après modification de l'intention"
+  },
+  "settingsIntentLabel": "Ce que je fais sur Yadony",
+  "@settingsIntentLabel": {
+    "description": "Ligne des réglages pour modifier l'intention"
+  },
+  "settingsIntentSubtitle": "Envoyer, voyager ou les deux",
+  "@settingsIntentSubtitle": {
+    "description": "Sous-titre de la ligne intention des réglages"
+  },
+  "firstStepsVerified": "Identité vérifiée",
+  "@firstStepsVerified": {
+    "description": "Badge en tête des premiers pas personnalisés"
+  },
+  "firstStepsSenderTripsTitle": "{count, plural, =1{1 voyageur part vers {country} dans les 15 jours} other{{count} voyageurs partent vers {country} dans les 15 jours}}",
+  "@firstStepsSenderTripsTitle": {
+    "description": "Titre des premiers pas expéditeur avec trajets",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "firstStepsSenderTripsCta": "Voir les trajets",
+  "@firstStepsSenderTripsCta": {
+    "description": "Bouton principal expéditeur avec trajets"
+  },
+  "firstStepsSenderPublishLink": "Publier ma demande de colis",
+  "@firstStepsSenderPublishLink": {
+    "description": "Lien secondaire expéditeur"
+  },
+  "firstStepsSenderNoTripsTitle": "Aucun voyageur vers {country} pour l'instant",
+  "@firstStepsSenderNoTripsTitle": {
+    "description": "Titre des premiers pas expéditeur sans trajet",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "firstStepsSenderNoTripsSubtitle": "Créez une alerte, on vous prévient dès qu'un voyageur part.",
+  "@firstStepsSenderNoTripsSubtitle": {
+    "description": "Sous-titre expéditeur sans trajet"
+  },
+  "firstStepsSenderAlertCta": "Me prévenir dès qu'un voyageur part",
+  "@firstStepsSenderAlertCta": {
+    "description": "Bouton principal expéditeur sans trajet"
+  },
+  "firstStepsTravelerPackagesTitle": "{count, plural, =1{1 colis attend un voyageur vers {country}} other{{count} colis attendent un voyageur vers {country}}}",
+  "@firstStepsTravelerPackagesTitle": {
+    "description": "Titre des premiers pas voyageur avec colis",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "firstStepsTravelerNoPackagesTitle": "Publiez votre trajet, les expéditeurs de votre ligne seront prévenus",
+  "@firstStepsTravelerNoPackagesTitle": {
+    "description": "Titre des premiers pas voyageur sans colis"
+  },
+  "firstStepsTravelerCta": "Publier mon trajet",
+  "@firstStepsTravelerCta": {
+    "description": "Bouton principal voyageur"
+  },
+  "firstStepsBothTravelLink": "Vous voyagez aussi ? Publiez votre trajet",
+  "@firstStepsBothTravelLink": {
+    "description": "Lien pour les utilisateurs qui envoient et voyagent"
+  },
+  "firstStepsYourDestination": "votre destination",
+  "@firstStepsYourDestination": {
+    "description": "Remplace le pays quand la destination est inconnue"
+  },
+  "firstStepsTripLine": "{from} vers {to}",
+  "@firstStepsTripLine": {
+    "description": "Trajet ou colis : ville de départ et d'arrivée",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "firstStepsKgAvailable": "{kg} kg disponibles",
+  "@firstStepsKgAvailable": {
+    "description": "Kilos disponibles d'un trajet",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "firstStepsPackageWeight": "{kg} kg",
+  "@firstStepsPackageWeight": {
+    "description": "Poids d'un colis",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "firstActionCardSenderTrips": "Des voyageurs partent vers {country}",
+  "@firstActionCardSenderTrips": {
+    "description": "Carte d'accueil expéditeur avec trajets",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "firstActionCardSenderNone": "Soyez prévenu dès qu'un voyageur part",
+  "@firstActionCardSenderNone": {
+    "description": "Carte d'accueil expéditeur sans trajet"
+  },
+  "firstActionCardTravelerPackages": "Des colis attendent un voyageur vers {country}",
+  "@firstActionCardTravelerPackages": {
+    "description": "Carte d'accueil voyageur avec colis",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "firstActionCardTravelerNone": "Publiez votre premier trajet",
+  "@firstActionCardTravelerNone": {
+    "description": "Carte d'accueil voyageur sans colis"
+  },
+  "firstActionCardUnknown": "Votre identité est vérifiée : passez à l'action",
+  "@firstActionCardUnknown": {
+    "description": "Carte d'accueil intention inconnue"
+  },
+  "firstActionCardCta": "Voir",
+  "@firstActionCardCta": {
+    "description": "Action de la carte d'accueil"
+  },
+  "tripPublishSuccessPayoutsCta": "Configurer mes paiements",
+  "@tripPublishSuccessPayoutsCta": {
+    "description": "Bouton après publication d'un trajet sans paiements configurés"
+  }
 }

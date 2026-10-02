@@ -15703,4 +15703,156 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get trackingStepPhotoOpen => 'Agrandir la photo';
+
+  @override
+  String get authStepIntent => 'Votre projet';
+
+  @override
+  String get intentTitle => 'Vous utilisez Yadony pour…';
+
+  @override
+  String get intentSubtitle =>
+      'On vous montre directement ce qui vous intéresse.';
+
+  @override
+  String get intentSender => 'Envoyer des colis';
+
+  @override
+  String get intentSenderHint => 'Je cherche un voyageur pour mon colis';
+
+  @override
+  String get intentTraveler => 'Je voyage et j\'ai de la place';
+
+  @override
+  String get intentTravelerHint => 'Je rentabilise mes kilos disponibles';
+
+  @override
+  String get intentBoth => 'Les deux';
+
+  @override
+  String get intentBothHint => 'J\'envoie et je voyage';
+
+  @override
+  String get intentDestinationTitle => 'Vers quel pays ?';
+
+  @override
+  String get intentDestinationOther => 'Autre';
+
+  @override
+  String get intentContinue => 'Continuer';
+
+  @override
+  String get intentSaveError =>
+      'Impossible d\'enregistrer votre choix pour l\'instant.';
+
+  @override
+  String get intentSheetTitle => 'Que faites-vous sur Yadony ?';
+
+  @override
+  String get intentSaved => 'C\'est noté';
+
+  @override
+  String get settingsIntentLabel => 'Ce que je fais sur Yadony';
+
+  @override
+  String get settingsIntentSubtitle => 'Envoyer, voyager ou les deux';
+
+  @override
+  String get firstStepsVerified => 'Identité vérifiée';
+
+  @override
+  String firstStepsSenderTripsTitle(int count, String country) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs partent vers $country dans les 15 jours',
+      one: '1 voyageur part vers $country dans les 15 jours',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get firstStepsSenderTripsCta => 'Voir les trajets';
+
+  @override
+  String get firstStepsSenderPublishLink => 'Publier ma demande de colis';
+
+  @override
+  String firstStepsSenderNoTripsTitle(String country) {
+    return 'Aucun voyageur vers $country pour l\'instant';
+  }
+
+  @override
+  String get firstStepsSenderNoTripsSubtitle =>
+      'Créez une alerte, on vous prévient dès qu\'un voyageur part.';
+
+  @override
+  String get firstStepsSenderAlertCta => 'Me prévenir dès qu\'un voyageur part';
+
+  @override
+  String firstStepsTravelerPackagesTitle(int count, String country) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis attendent un voyageur vers $country',
+      one: '1 colis attend un voyageur vers $country',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get firstStepsTravelerNoPackagesTitle =>
+      'Publiez votre trajet, les expéditeurs de votre ligne seront prévenus';
+
+  @override
+  String get firstStepsTravelerCta => 'Publier mon trajet';
+
+  @override
+  String get firstStepsBothTravelLink =>
+      'Vous voyagez aussi ? Publiez votre trajet';
+
+  @override
+  String get firstStepsYourDestination => 'votre destination';
+
+  @override
+  String firstStepsTripLine(String from, String to) {
+    return '$from vers $to';
+  }
+
+  @override
+  String firstStepsKgAvailable(String kg) {
+    return '$kg kg disponibles';
+  }
+
+  @override
+  String firstStepsPackageWeight(String kg) {
+    return '$kg kg';
+  }
+
+  @override
+  String firstActionCardSenderTrips(String country) {
+    return 'Des voyageurs partent vers $country';
+  }
+
+  @override
+  String get firstActionCardSenderNone =>
+      'Soyez prévenu dès qu\'un voyageur part';
+
+  @override
+  String firstActionCardTravelerPackages(String country) {
+    return 'Des colis attendent un voyageur vers $country';
+  }
+
+  @override
+  String get firstActionCardTravelerNone => 'Publiez votre premier trajet';
+
+  @override
+  String get firstActionCardUnknown =>
+      'Votre identité est vérifiée : passez à l\'action';
+
+  @override
+  String get firstActionCardCta => 'Voir';
+
+  @override
+  String get tripPublishSuccessPayoutsCta => 'Configurer mes paiements';
 }
