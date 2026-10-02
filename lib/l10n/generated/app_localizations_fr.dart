@@ -15669,4 +15669,19 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidCreateWeightRequiredHint =>
       'Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.';
+
+  @override
+  String get trackingTimelineOpenParcel => 'Voir le colis';
+
+  @override
+  String get receptionShowQrTitle => 'Montrer le QR du colis';
+
+  @override
+  String get receptionShowQrExplanation =>
+      'Le voyageur scanne ce QR puis saisit votre code de retrait.';
+
+  @override
+  String receptionStepCounter(int current, int total) {
+    return 'Étape $current sur $total';
+  }
 }

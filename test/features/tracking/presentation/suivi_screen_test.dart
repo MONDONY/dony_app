@@ -165,6 +165,7 @@ void main() {
   late ChangeNotifier queue;
   late List<String> visited;
   late Map<String, dynamic>? lastExtra;
+  late Object? lastExtraObject;
   ValueChanged<String>? scan;
   ValueListenable<bool>? cameraPaused;
 
@@ -271,6 +272,7 @@ void main() {
     queue = ChangeNotifier();
     visited = [];
     lastExtra = null;
+    lastExtraObject = null;
     scan = null;
     cameraPaused = null;
 
@@ -340,7 +342,9 @@ void main() {
     path: path,
     builder: (_, state) {
       visited.add(path);
-      lastExtra = state.extra as Map<String, dynamic>?;
+      lastExtraObject = state.extra;
+      final extra = state.extra;
+      lastExtra = extra is Map<String, dynamic> ? extra : null;
       return page?.call(state) ?? Scaffold(body: Text('page $path'));
     },
   );
@@ -588,6 +592,21 @@ void main() {
       expect(route('Paris', 'Dakar'), findsWidgets);
     });
 
+    testWidgets('Voir le colis ferme le parcours et ouvre /bids/:id', (
+      tester,
+    ) async {
+      await pump(tester, roles: ['SENDER']);
+      await tester.tap(find.byKey(const Key('suivi-shipment-ship-1')));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('tracking-open-parcel')));
+      await settle(tester);
+      expect(text('Suivi en lecture seule'), findsNothing);
+      expect(visited, contains('/bids/:id'));
+      expect(text('page /bids/:id'), findsOneWidget);
+      expect(lastExtraObject, isA<BidModel>());
+      expect((lastExtraObject! as BidModel).id, 'ship-1');
+    });
+
     testWidgets('lecteur QR plein écran → parcours du colis lu', (
       tester,
     ) async {
@@ -597,6 +616,8 @@ void main() {
       await tester.tap(text('lire le QR'));
       await settle(tester);
       expect(text('Suivi en lecture seule'), findsOneWidget);
+      // Colis lu par QR : pas de « Voir le colis ».
+      expect(find.byKey(const Key('tracking-open-parcel')), findsNothing);
     });
 
     testWidgets('numéro trouvé → parcours ; introuvable → erreur', (
@@ -639,6 +660,8 @@ void main() {
       await settle(tester);
       expect(text('Suivi en lecture seule'), findsOneWidget);
       expect(route('Lyon', 'Abidjan'), findsWidgets);
+      // Colis d'un tiers retrouvé par numéro : pas de « Voir le colis ».
+      expect(find.byKey(const Key('tracking-open-parcel')), findsNothing);
     });
 
     testWidgets('colis à recevoir : section au-dessus de Mes envois', (

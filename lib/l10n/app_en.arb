@@ -8722,5 +8722,10 @@
   "receptionViewSenderProfile": "View {name}'s profile",
   "@receptionViewSenderProfile": {"placeholders": {"name": {"type": "String"}}},
   "chatCopyMessageAction": "Copy message",
-  "bidCreateWeightRequiredHint": "Enter the estimated weight, e.g. 0.5 kg for a phone."
+  "bidCreateWeightRequiredHint": "Enter the estimated weight, e.g. 0.5 kg for a phone.",
+  "trackingTimelineOpenParcel": "View parcel",
+  "receptionShowQrTitle": "Show the parcel QR",
+  "receptionShowQrExplanation": "The traveler scans this QR, then enters your pickup code.",
+  "receptionStepCounter": "Step {current} of {total}",
+  "@receptionStepCounter": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}}
 }

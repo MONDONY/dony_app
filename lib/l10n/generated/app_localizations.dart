@@ -25754,6 +25754,30 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.'**
   String get bidCreateWeightRequiredHint;
+
+  /// Bouton principal de la feuille du parcours d'un colis ouverte depuis « Mes envois » de l'onglet Suivi : ouvre le détail de l'envoi (tracking_timeline_bottom_sheet.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le colis'**
+  String get trackingTimelineOpenParcel;
+
+  /// Écran d'un colis à recevoir : tuile qui ouvre le QR du colis (luminosité max, enregistrer, partager), visible tant que le colis n'est pas remis (reception_detail_screen.dart _ParcelQrTile).
+  ///
+  /// In fr, this message translates to:
+  /// **'Montrer le QR du colis'**
+  String get receptionShowQrTitle;
+
+  /// Écran d'un colis à recevoir : explication sous la tuile du QR. La remise exige toujours le code de retrait.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur scanne ce QR puis saisit votre code de retrait.'**
+  String get receptionShowQrExplanation;
+
+  /// Écran d'un colis à recevoir : pastille de l'en-tête qui situe le colis dans ses étapes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape {current} sur {total}'**
+  String receptionStepCounter(int current, int total);
 }
 
 class _AppLocalizationsDelegate

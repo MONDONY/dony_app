@@ -4,16 +4,14 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/copy_code_button.dart';
-import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
-import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/presentation/widgets/recipient_conversation_launcher.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/receptions/bloc/reception_detail_cubit.dart';
 import 'package:dony/features/receptions/data/models/reception.dart';
 import 'package:dony/features/tracking/presentation/widgets/route_label.dart';
-import 'package:dony/features/tracking/presentation/widgets/shipment_progress_bar.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +24,10 @@ import 'package:intl/intl.dart';
 typedef ReceptionTimelineOpener =
     Future<void> Function(BuildContext context, Reception reception);
 
+/// Signature de l'ouverture du QR du colis, injectable pour les tests.
+typedef ReceptionQrOpener =
+    Future<void> Function(BuildContext context, Reception reception);
+
 Future<void> _openTimeline(BuildContext context, Reception reception) =>
     showTrackingTimelineSheet(
       context,
@@ -36,17 +38,25 @@ Future<void> _openTimeline(BuildContext context, Reception reception) =>
       arrivalInstructions: reception.arrivalInstructions,
     );
 
+/// La même feuille que l'expéditeur (luminosité maximale, enregistrer,
+/// partager) : `GET /tracking/{bidId}/qr-code` est ouvert au destinataire
+/// dont le lien est confirmé. Un refus (403, back antérieur) s'affiche dans
+/// la feuille, sans rien bloquer : le code de retrait suffit à la remise.
+Future<void> _openQr(BuildContext context, Reception reception) =>
+    QrSheet.show(context, bidId: reception.bidId, status: reception.bidStatus);
+
 /// Un colis que l'utilisateur va recevoir (lot 2 destinataire).
 ///
 /// - Lien `PENDING` : l'expéditeur a saisi son numéro. Il confirme que le
 ///   colis est pour lui, ou le refuse.
-/// - Lien `CONFIRMED` : étape du colis, détails, et surtout le code de
-///   retrait, sans que l'expéditeur ait à le lui transmettre.
+/// - Lien `CONFIRMED` : étape du colis, code de retrait, QR du colis à
+///   montrer au voyageur, personnes et détails.
 class ReceptionDetailScreen extends StatelessWidget {
   const ReceptionDetailScreen({
     super.key,
     required this.bidId,
     this.openTimeline,
+    this.openQr,
   });
 
   final String bidId;
@@ -54,19 +64,29 @@ class ReceptionDetailScreen extends StatelessWidget {
   /// Injecté en test ; sinon la feuille du suivi.
   final ReceptionTimelineOpener? openTimeline;
 
+  /// Injecté en test ; sinon la [QrSheet].
+  final ReceptionQrOpener? openQr;
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<ReceptionDetailCubit>()..load(bidId),
-      child: _ReceptionDetailView(openTimeline: openTimeline ?? _openTimeline),
+      child: _ReceptionDetailView(
+        openTimeline: openTimeline ?? _openTimeline,
+        openQr: openQr ?? _openQr,
+      ),
     );
   }
 }
 
 class _ReceptionDetailView extends StatelessWidget {
-  const _ReceptionDetailView({required this.openTimeline});
+  const _ReceptionDetailView({
+    required this.openTimeline,
+    required this.openQr,
+  });
 
   final ReceptionTimelineOpener openTimeline;
+  final ReceptionQrOpener openQr;
 
   void _onAction(BuildContext context, ReceptionDetailLoaded state) {
     final l = context.l10n;
@@ -145,19 +165,18 @@ class _ReceptionDetailView extends StatelessWidget {
             onAction: () => context.read<ReceptionDetailCubit>().retry(),
           ),
           ReceptionDetailLoaded(:final reception) => SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
+              DonyLayout.hPadding(context),
               DonySpacing.lg,
-              DonySpacing.xl,
-              DonySpacing.lg,
+              DonyLayout.hPadding(context),
               DonySpacing.huge,
             ),
-            child:
-                (reception.isConfirmed
-                        ? _ConfirmedContent(reception: reception)
-                        : _PendingContent(reception: reception))
-                    .animate()
-                    .fadeIn(duration: 300.ms)
-                    .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+            child: DonyLayout.constrained(
+              context,
+              reception.isConfirmed
+                  ? _ConfirmedContent(reception: reception, openQr: openQr)
+                  : _PendingContent(reception: reception),
+            ),
           ),
         },
         bottomNavigationBar: state is ReceptionDetailLoaded
@@ -170,6 +189,258 @@ class _ReceptionDetailView extends StatelessWidget {
 
 String? _formatDate(AppLocalizations l, DateTime? date) =>
     date == null ? null : DateFormat.yMMMMd(l.localeName).format(date);
+
+// ─────────────────────────────────────────────────────────────
+// Briques partagées
+// ─────────────────────────────────────────────────────────────
+
+/// Sections de l'écran, entrées une à une : fondu et léger glissement,
+/// décalés de 60 ms. L'animation ne rejoue pas aux rebuilds du même écran
+/// (geste en cours, snackbar) : `Animate` garde son état.
+class _StaggeredColumn extends StatelessWidget {
+  const _StaggeredColumn({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <Widget>[];
+    for (var i = 0; i < children.length; i++) {
+      if (i > 0) items.add(const SizedBox(height: DonySpacing.base));
+      items.add(
+        children[i]
+            .animate(delay: (60 * i).ms)
+            .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
+            .slideY(begin: 0.06, duration: 300.ms, curve: Curves.easeOutCubic),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: items,
+    );
+  }
+}
+
+/// Surface de carte : ombre douce plutôt qu'une bordure pleine, avec un
+/// liseré léger qui garde la carte lisible en mode sombre (où l'ombre
+/// encre ne porte presque pas).
+class _Surface extends StatelessWidget {
+  const _Surface({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(DonySpacing.base),
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.5)),
+        boxShadow: DonyShadow.sm,
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Pastille ronde teintée portant une icône.
+class _IconBubble extends StatelessWidget {
+  const _IconBubble({required this.icon, required this.color});
+
+  final String icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: DonySpacing.icon,
+      height: DonySpacing.icon,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        shape: BoxShape.circle,
+      ),
+      child: DonyIcon(icon, size: DonySpacing.iconSm, color: color),
+    );
+  }
+}
+
+/// Titre de section en petites capitales.
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return _Surface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            style: tt.labelMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+              letterSpacing: 0.6,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+/// En-tête héros : dégradé, statut en grand, trajet. Le texte reste blanc
+/// sur un dégradé foncé, lisible dans les deux thèmes.
+class _Hero extends StatelessWidget {
+  const _Hero({
+    super.key,
+    required this.colors,
+    required this.eyebrow,
+    required this.title,
+    required this.children,
+  });
+
+  final List<Color> colors;
+  final Widget eyebrow;
+  final String title;
+  final List<Widget> children;
+
+  static const white = Color(0xFFFFFFFF);
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final radius = BorderRadius.circular(DonyRadius.xl);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: [
+          BoxShadow(
+            color: colors.last.withValues(alpha: 0.28),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: colors,
+                  ),
+                ),
+              ),
+            ),
+            // Halo décoratif dans le coin : donne de la profondeur au
+            // dégradé sans charger le contenu.
+            Positioned(
+              top: -60,
+              right: -40,
+              child: IgnorePointer(
+                child: Container(
+                  width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        white.withValues(alpha: 0.18),
+                        white.withValues(alpha: 0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(DonySpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  eyebrow,
+                  const SizedBox(height: DonySpacing.md),
+                  Text(
+                    title,
+                    style: tt.headlineMedium?.copyWith(
+                      color: white,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  ...children,
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Pastille translucide de l'en-tête héros.
+class _HeroPill extends StatelessWidget {
+  const _HeroPill({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.md,
+        vertical: DonySpacing.xs + 2,
+      ),
+      decoration: BoxDecoration(
+        color: _Hero.white.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        border: Border.all(color: _Hero.white.withValues(alpha: 0.22)),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _HeroPillText extends StatelessWidget {
+  const _HeroPillText(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+        color: _Hero.white,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.2,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
+  }
+}
 
 // ─────────────────────────────────────────────────────────────
 // Lien à confirmer
@@ -190,85 +461,90 @@ class _PendingContent extends StatelessWidget {
     final to = reception.arrivalCity;
     final departure = _formatDate(l, reception.departureDate);
     final recipient = reception.recipientName;
+    final muted = tt.bodyMedium?.copyWith(
+      color: _Hero.white.withValues(alpha: 0.85),
+    );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return _StaggeredColumn(
       children: [
-        Container(
-          padding: const EdgeInsets.all(DonySpacing.base),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: cs.outline),
+        _Hero(
+          key: const Key('reception-pending-hero'),
+          colors: const [DonyColors.ink500, DonyColors.ink800],
+          eyebrow: _HeroPill(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const DonyEmoji.parcel(size: 14),
+                const SizedBox(width: DonySpacing.xs),
+                Flexible(child: _HeroPillText(l.receptionsPendingChip)),
+              ],
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: DonySpacing.icon,
-                    height: DonySpacing.icon,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: cs.warning.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(DonyRadius.md),
-                    ),
-                    child: const DonyEmoji.parcel(size: DonySpacing.iconSm),
-                  ),
-                  const SizedBox(width: DonySpacing.md),
-                  Expanded(
-                    child: Text(
-                      sender != null
-                          ? l.receptionPendingHeadline(sender)
-                          : l.receptionPendingHeadlineAnonymous,
-                      style: tt.headlineMedium?.copyWith(color: cs.onSurface),
-                    ),
-                  ),
-                ],
+          title: sender != null
+              ? l.receptionPendingHeadline(sender)
+              : l.receptionPendingHeadlineAnonymous,
+          children: [
+            if (from != null && to != null) ...[
+              const SizedBox(height: DonySpacing.sm),
+              RouteLabel(
+                from: from,
+                to: to,
+                style: tt.titleLarge?.copyWith(
+                  color: _Hero.white,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              if (from != null && to != null) ...[
-                const SizedBox(height: DonySpacing.md),
-                RouteLabel(
-                  from: from,
-                  to: to,
-                  style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ],
-              if (departure != null) ...[
-                const SizedBox(height: DonySpacing.xs),
-                Text(
-                  l.receptionDepartureOn(departure),
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
-              if (recipient != null) ...[
-                const SizedBox(height: DonySpacing.xs),
-                Text(
-                  l.receptionRecipientName(recipient),
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
+            ],
+            if (departure != null) ...[
+              const SizedBox(height: DonySpacing.sm),
+              Text(l.receptionDepartureOn(departure), style: muted),
+            ],
+            if (recipient != null) ...[
+              const SizedBox(height: DonySpacing.xxs),
+              Text(l.receptionRecipientName(recipient), style: muted),
+            ],
+          ],
+        ),
+        if (reception.senderId case final senderId?)
+          _PeopleCard(
+            rows: [
+              _ProfileRow.sender(
+                senderId: senderId,
+                name: sender,
+                avatarUrl: reception.senderAvatarUrl,
+              ),
             ],
           ),
-        ),
-        if (reception.senderId case final senderId?) ...[
-          const SizedBox(height: DonySpacing.base),
-          _SenderCard(
-            senderId: senderId,
-            name: sender,
-            avatarUrl: reception.senderAvatarUrl,
+        _Surface(
+          key: const Key('reception-pending-question'),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _IconBubble(icon: 'circle-help', color: cs.primary),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.receptionPendingQuestion,
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.xs),
+                    Text(
+                      l.receptionPendingExplanation,
+                      style: tt.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-        const SizedBox(height: DonySpacing.xl),
-        Text(
-          l.receptionPendingQuestion,
-          style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: DonySpacing.xs),
-        Text(
-          l.receptionPendingExplanation,
-          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
       ],
     );
@@ -279,10 +555,21 @@ class _PendingContent extends StatelessWidget {
 // Lien confirmé
 // ─────────────────────────────────────────────────────────────
 
+/// Étapes faites selon le statut du colis.
+int _doneSteps(String bidStatus) => switch (bidStatus) {
+  'HANDED_OVER' || 'IN_TRANSIT' => 1,
+  'ARRIVED' => 3,
+  'COMPLETED' => 4,
+  _ => 0,
+};
+
+const _stepCount = 4;
+
 class _ConfirmedContent extends StatelessWidget {
-  const _ConfirmedContent({required this.reception});
+  const _ConfirmedContent({required this.reception, required this.openQr});
 
   final Reception reception;
+  final ReceptionQrOpener openQr;
 
   String _stepHeadline(AppLocalizations l) {
     final city = reception.arrivalCity;
@@ -295,135 +582,150 @@ class _ConfirmedContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final from = reception.departureCity;
     final to = reception.arrivalCity;
     final code = reception.confirmationCode;
     final instructions = reception.arrivalInstructions;
+    final done = _doneSteps(reception.bidStatus);
+    final heroColors = reception.bidStatus == 'COMPLETED'
+        ? const [DonyColors.success500, DonyColors.success700]
+        : const [DonyColors.blue500, DonyColors.blue800];
 
     final details = <Widget>[
       // Avec un id, la ligne voyageur devient sa carte (photo + profil).
       if (reception.travelerId == null)
         if (reception.travelerFirstName case final traveler?)
-          DonyInfoRow(label: l.receptionTravelerLabel, value: traveler),
+          DonyInfoRow(
+            icon: Icons.person_outline_rounded,
+            label: l.receptionTravelerLabel,
+            value: traveler,
+          ),
       if (_formatDate(l, reception.departureDate) case final date?)
-        DonyInfoRow(label: l.receptionDepartureLabel, value: date),
+        DonyInfoRow(
+          icon: Icons.flight_takeoff_rounded,
+          label: l.receptionDepartureLabel,
+          value: date,
+        ),
       if (_formatDate(l, reception.arrivalDate) case final date?)
-        DonyInfoRow(label: l.receptionArrivalLabel, value: date),
+        DonyInfoRow(
+          icon: Icons.flight_land_rounded,
+          label: l.receptionArrivalLabel,
+          value: date,
+        ),
       if (reception.trackingNumber case final number?)
-        DonyInfoRow(label: l.receptionTrackingNumberLabel, value: number),
+        DonyInfoRow(
+          icon: Icons.tag_rounded,
+          label: l.receptionTrackingNumberLabel,
+          value: number,
+        ),
       if (reception.weightKg case final kg?)
         DonyInfoRow(
+          icon: Icons.scale_rounded,
           label: l.receptionWeightLabel,
           value: formatWeightKg(l, kg),
         ),
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          key: const Key('reception-step'),
-          padding: const EdgeInsets.all(DonySpacing.base),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: cs.outline),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                _stepHeadline(l),
-                style: tt.headlineMedium?.copyWith(color: cs.onSurface),
-              ),
-              if (from != null && to != null) ...[
-                const SizedBox(height: DonySpacing.xs),
-                RouteLabel(
-                  from: from,
-                  to: to,
-                  style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
-              const SizedBox(height: DonySpacing.md),
-              ShipmentProgressBar(
-                step: shipmentStepFor(reception.bidStatus) ?? 1,
-              ),
-              const SizedBox(height: DonySpacing.md),
-              _ReceptionSteps(reception: reception),
-            ],
-          ),
+    final people = <_ProfileRow>[
+      if (reception.senderId case final senderId?)
+        _ProfileRow.sender(
+          senderId: senderId,
+          name: reception.senderFirstName,
+          avatarUrl: reception.senderAvatarUrl,
         ),
-        if (reception.senderId case final senderId?) ...[
-          const SizedBox(height: DonySpacing.base),
-          _SenderCard(
-            senderId: senderId,
-            name: reception.senderFirstName,
-            avatarUrl: reception.senderAvatarUrl,
+      if (reception.travelerId case final travelerId?)
+        _ProfileRow.traveler(
+          travelerId: travelerId,
+          name: reception.travelerFirstName,
+          avatarUrl: reception.travelerAvatarUrl,
+        ),
+    ];
+
+    return _StaggeredColumn(
+      children: [
+        _Hero(
+          key: const Key('reception-step'),
+          colors: heroColors,
+          eyebrow: _HeroPill(
+            child: _HeroPillText(
+              l.receptionStepCounter(
+                done < _stepCount ? done + 1 : _stepCount,
+                _stepCount,
+              ),
+            ),
           ),
-        ],
-        if (reception.travelerId case final travelerId?) ...[
-          const SizedBox(height: DonySpacing.base),
-          _TravelerCard(
-            travelerId: travelerId,
-            name: reception.travelerFirstName,
-            avatarUrl: reception.travelerAvatarUrl,
-          ),
-        ],
-        const SizedBox(height: DonySpacing.base),
+          title: _stepHeadline(l),
+          children: [
+            if (from != null && to != null) ...[
+              const SizedBox(height: DonySpacing.xs),
+              RouteLabel(
+                from: from,
+                to: to,
+                style: tt.bodyLarge?.copyWith(
+                  color: _Hero.white.withValues(alpha: 0.9),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+            const SizedBox(height: DonySpacing.lg),
+            _ReceptionSteps(done: done, accent: heroColors.last),
+          ],
+        ),
         if (code != null)
           _PickupCodeCard(code: code)
         else if (reception.bidStatus == 'ACCEPTED')
-          Container(
+          _Surface(
             key: const Key('reception-code-pending'),
-            padding: const EdgeInsets.all(DonySpacing.base),
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(DonyRadius.card),
-            ),
-            child: Text(
-              l.receptionCodePending,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+            child: Row(
+              children: [
+                _IconBubble(icon: 'clock', color: cs.primary),
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Text(
+                    l.receptionCodePending,
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.onSurface,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        if (details.isNotEmpty) ...[
-          const SizedBox(height: DonySpacing.base),
-          DetailCard(
-            title: l.receptionDetailsTitle,
-            child: Column(children: details),
-          ),
-        ],
-        if (instructions != null) ...[
-          const SizedBox(height: DonySpacing.base),
-          DetailCard(
+        if (reception.canShowParcelQr)
+          _ParcelQrTile(onTap: () => openQr(context, reception)),
+        if (instructions != null)
+          _SectionCard(
             title: l.receptionInstructionsTitle,
             child: Text(
               instructions,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+              style: tt.bodyMedium?.copyWith(color: cs.onSurface, height: 1.45),
             ),
           ),
-        ],
+        if (people.isNotEmpty) _PeopleCard(rows: people),
+        if (details.isNotEmpty)
+          _SectionCard(
+            title: l.receptionDetailsTitle,
+            child: Column(children: details),
+          ),
       ],
     );
   }
 }
 
-/// Les quatre étapes du colis, avec leur libellé : la barre seule ne disait
-/// pas ce qui était fait (Sentry FLUTTER-6E, « le colis a été donné mais
-/// l'étape n'est pas complète »).
+/// Les quatre étapes du colis, en frise verticale, avec leur libellé : la
+/// barre seule ne disait pas ce qui était fait (Sentry FLUTTER-6E, « le colis
+/// a été donné mais l'étape n'est pas complète »).
 class _ReceptionSteps extends StatelessWidget {
-  const _ReceptionSteps({required this.reception});
+  const _ReceptionSteps({required this.done, required this.accent});
 
-  final Reception reception;
+  /// Étapes faites (0 à 4).
+  final int done;
 
-  /// Étapes faites selon le statut du colis.
-  int get _doneCount => switch (reception.bidStatus) {
-    'HANDED_OVER' || 'IN_TRANSIT' => 1,
-    'ARRIVED' => 3,
-    'COMPLETED' => 4,
-    _ => 0,
-  };
+  /// Teinte du dégradé, reprise par la coche des étapes faites.
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -434,7 +736,6 @@ class _ReceptionSteps extends StatelessWidget {
       l.receptionTimelineArrived,
       l.receptionTimelineDelivered,
     ];
-    final done = _doneCount;
     return Column(
       key: const Key('reception-steps'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -443,11 +744,15 @@ class _ReceptionSteps extends StatelessWidget {
           _StepRow(
             key: Key('reception-step-$i'),
             label: labels[i],
+            accent: accent,
+            isLast: i == labels.length - 1,
             state: i < done
                 ? _StepState.done
                 : i == done
                 ? _StepState.current
                 : _StepState.todo,
+            // Le trait vers l'étape suivante est plein si celle-ci est faite.
+            nextDone: i + 1 < done,
           ),
       ],
     );
@@ -457,50 +762,112 @@ class _ReceptionSteps extends StatelessWidget {
 enum _StepState { done, current, todo }
 
 class _StepRow extends StatelessWidget {
-  const _StepRow({super.key, required this.label, required this.state});
+  const _StepRow({
+    super.key,
+    required this.label,
+    required this.accent,
+    required this.state,
+    required this.isLast,
+    required this.nextDone,
+  });
 
   final String label;
+  final Color accent;
   final _StepState state;
+  final bool isLast;
+  final bool nextDone;
+
+  static const _node = 22.0;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final (Widget icon, Color color, String status) = switch (state) {
-      _StepState.done => (
-        DonyIcon('circle-check', size: 18, color: cs.primary),
-        cs.onSurface,
-        l.receptionStepDoneSemantics,
+    const white = _Hero.white;
+    final status = switch (state) {
+      _StepState.done => l.receptionStepDoneSemantics,
+      _StepState.current => l.receptionStepCurrentSemantics,
+      _StepState.todo => l.receptionStepTodoSemantics,
+    };
+
+    final Widget node = switch (state) {
+      _StepState.done => Container(
+        width: _node,
+        height: _node,
+        decoration: const BoxDecoration(color: white, shape: BoxShape.circle),
+        alignment: Alignment.center,
+        child: DonyIcon('check', size: 14, color: accent),
       ),
-      _StepState.current => (
-        DonyIcon('circle-dot', size: 18, color: cs.secondary),
-        cs.onSurface,
-        l.receptionStepCurrentSemantics,
+      _StepState.current => Container(
+        width: _node,
+        height: _node,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: white, width: 2),
+          color: white.withValues(alpha: 0.18),
+        ),
+        alignment: Alignment.center,
+        child: Container(
+          width: 8,
+          height: 8,
+          decoration: const BoxDecoration(color: white, shape: BoxShape.circle),
+        ),
       ),
-      _StepState.todo => (
-        DonyIcon('circle', size: 18, color: cs.outline),
-        cs.onSurfaceVariant,
-        l.receptionStepTodoSemantics,
+      _StepState.todo => Container(
+        width: _node,
+        height: _node,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: white.withValues(alpha: 0.4), width: 2),
+        ),
       ),
     };
+
     return Semantics(
       label: '$label, $status',
       excludeSemantics: true,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: DonySpacing.xxs),
+      child: IntrinsicHeight(
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            icon,
-            const SizedBox(width: DonySpacing.sm),
+            SizedBox(
+              width: _node,
+              child: Column(
+                children: [
+                  node,
+                  if (!isLast)
+                    Expanded(
+                      child: Container(
+                        width: 2,
+                        margin: const EdgeInsets.symmetric(
+                          vertical: DonySpacing.xxs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: white.withValues(alpha: nextDone ? 0.9 : 0.3),
+                          borderRadius: BorderRadius.circular(DonyRadius.full),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: DonySpacing.md),
             Expanded(
-              child: Text(
-                label,
-                style: tt.bodyMedium?.copyWith(
-                  color: color,
-                  fontWeight: state == _StepState.current
-                      ? FontWeight.w700
-                      : FontWeight.w400,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: 1,
+                  bottom: isLast ? 0 : DonySpacing.md,
+                ),
+                child: Text(
+                  label,
+                  style: tt.bodyMedium?.copyWith(
+                    color: state == _StepState.todo
+                        ? white.withValues(alpha: 0.7)
+                        : white,
+                    fontWeight: state == _StepState.current
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                  ),
                 ),
               ),
             ),
@@ -511,107 +878,119 @@ class _StepRow extends StatelessWidget {
   }
 }
 
-/// Le voyageur, photo comprise : un tap ouvre son profil public (Sentry
+/// Une personne liée au colis (rôle, photo, prénom) qui ouvre son profil
+/// public : l'expéditeur (Sentry FLUTTER-7P) ou le voyageur (Sentry
 /// FLUTTER-6F, 6G, 6H).
-class _TravelerCard extends StatelessWidget {
-  const _TravelerCard({
-    required this.travelerId,
-    required this.name,
-    required this.avatarUrl,
-  });
-
-  final String travelerId;
-  final String? name;
-  final String? avatarUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final display = name ?? l.receptionTravelerLabel;
-    return _ProfileCard(
-      cardKey: const Key('reception-traveler-card'),
-      userId: travelerId,
-      role: l.receptionTravelerLabel,
-      display: display,
-      avatarUrl: avatarUrl,
-      semanticsLabel: l.receptionViewTravelerProfile(display),
-    );
-  }
-}
-
-/// L'expéditeur, photo comprise : le titre « {prénom} vous envoie un colis »
-/// ne menait nulle part, un tap sur cette carte ouvre son profil public
-/// (Sentry FLUTTER-7P).
-class _SenderCard extends StatelessWidget {
-  const _SenderCard({
-    required this.senderId,
-    required this.name,
-    required this.avatarUrl,
-  });
-
-  final String senderId;
-  final String? name;
-  final String? avatarUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final display = name ?? l.receptionSenderLabel;
-    return _ProfileCard(
-      cardKey: const Key('reception-sender-card'),
-      userId: senderId,
-      role: l.receptionSenderLabel,
-      display: display,
-      avatarUrl: avatarUrl,
-      semanticsLabel: l.receptionViewSenderProfile(display),
-    );
-  }
-}
-
-/// Carte d'une personne liée au colis (rôle, photo, prénom) qui ouvre son
-/// profil public.
-class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({
-    required this.cardKey,
+class _ProfileRow {
+  const _ProfileRow({
+    required this.rowKey,
     required this.userId,
     required this.role,
-    required this.display,
+    required this.name,
     required this.avatarUrl,
-    required this.semanticsLabel,
   });
 
-  final Key cardKey;
+  factory _ProfileRow.sender({
+    required String senderId,
+    required String? name,
+    required String? avatarUrl,
+  }) => _ProfileRow(
+    rowKey: const Key('reception-sender-card'),
+    userId: senderId,
+    role: _Role.sender,
+    name: name,
+    avatarUrl: avatarUrl,
+  );
+
+  factory _ProfileRow.traveler({
+    required String travelerId,
+    required String? name,
+    required String? avatarUrl,
+  }) => _ProfileRow(
+    rowKey: const Key('reception-traveler-card'),
+    userId: travelerId,
+    role: _Role.traveler,
+    name: name,
+    avatarUrl: avatarUrl,
+  );
+
+  final Key rowKey;
   final String userId;
-  final String role;
-  final String display;
+  final _Role role;
+  final String? name;
   final String? avatarUrl;
-  final String semanticsLabel;
+}
+
+enum _Role { sender, traveler }
+
+/// Expéditeur et voyageur réunis dans une seule carte, séparés d'un trait.
+class _PeopleCard extends StatelessWidget {
+  const _PeopleCard({required this.rows});
+
+  final List<_ProfileRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final children = <Widget>[];
+    for (var i = 0; i < rows.length; i++) {
+      if (i > 0) {
+        children.add(
+          Divider(
+            height: 1,
+            indent: DonySpacing.base + DonySpacing.icon + DonySpacing.md,
+            color: cs.outline.withValues(alpha: 0.6),
+          ),
+        );
+      }
+      children.add(_PersonTile(row: rows[i]));
+    }
+    return _Surface(
+      key: const Key('reception-people'),
+      padding: EdgeInsets.zero,
+      child: Column(mainAxisSize: MainAxisSize.min, children: children),
+    );
+  }
+}
+
+class _PersonTile extends StatelessWidget {
+  const _PersonTile({required this.row});
+
+  final _ProfileRow row;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
+    final role = row.role == _Role.sender
+        ? l.receptionSenderLabel
+        : l.receptionTravelerLabel;
+    final display = row.name ?? role;
+    final semantics = row.role == _Role.sender
+        ? l.receptionViewSenderProfile(display)
+        : l.receptionViewTravelerProfile(display);
+
     return Semantics(
       button: true,
-      label: semanticsLabel,
+      label: semantics,
       excludeSemantics: true,
       child: DonyPressable(
-        key: cardKey,
+        key: row.rowKey,
+        scale: 0.98,
         onTap: () => context.push(
           '/profile/public',
-          extra: ProfilePublicArgs(userId: userId),
+          extra: ProfilePublicArgs(userId: row.userId),
         ),
         child: Container(
-          padding: const EdgeInsets.all(DonySpacing.base),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: cs.outline),
+          color: Colors.transparent,
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.md,
           ),
           child: Row(
             children: [
-              DonyAvatar(name: display, imageUrl: avatarUrl),
+              DonyAvatar(name: display, imageUrl: row.avatarUrl),
               const SizedBox(width: DonySpacing.md),
               Expanded(
                 child: Column(
@@ -625,6 +1004,8 @@ class _ProfileCard extends StatelessWidget {
                     ),
                     Text(
                       display,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: tt.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -645,8 +1026,9 @@ class _ProfileCard extends StatelessWidget {
   }
 }
 
-/// Le code de retrait en grand : le destinataire le dicte au voyageur à la
-/// remise. Chiffres à chasse fixe, pour qu'aucun ne se confonde.
+/// Le code de retrait mis en vedette : le destinataire le dicte au voyageur
+/// à la remise. Un chiffre par case, à chasse fixe, pour qu'aucun ne se
+/// confonde.
 class _PickupCodeCard extends StatelessWidget {
   const _PickupCodeCard({required this.code});
 
@@ -658,43 +1040,35 @@ class _PickupCodeCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Container(
+    return _Surface(
       key: const Key('reception-code'),
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.primary.withValues(alpha: 0.3)),
-      ),
+      padding: const EdgeInsets.all(DonySpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l.receptionCodeTitle,
-            style: tt.labelMedium?.copyWith(
-              color: cs.onSurfaceVariant,
-              letterSpacing: 0.5,
-            ),
+          Row(
+            children: [
+              _IconBubble(icon: 'key-round', color: cs.primary),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Text(
+                  l.receptionCodeTitle,
+                  style: tt.labelMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: DonySpacing.md),
+          const SizedBox(height: DonySpacing.lg),
           Semantics(
             label: l.receptionCodeSemantics(code.split('').join(' ')),
             excludeSemantics: true,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                code,
-                textAlign: TextAlign.center,
-                style: tt.displaySmall?.copyWith(
-                  color: cs.onSurface,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 8,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ),
+            child: _CodeDigits(code: code),
           ),
-          const SizedBox(height: DonySpacing.md),
+          const SizedBox(height: DonySpacing.lg),
           CopyCodeButton(
             code: code,
             label: l.ticketCopyCodeButton,
@@ -703,9 +1077,131 @@ class _PickupCodeCard extends StatelessWidget {
           const SizedBox(height: DonySpacing.md),
           Text(
             l.receptionCodeExplanation,
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            textAlign: TextAlign.center,
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              height: 1.45,
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Une case par chiffre, largeur adaptée à la place disponible. Couleurs
+/// inversées (fond texte, chiffre surface) : contraste maximal dans les deux
+/// thèmes.
+class _CodeDigits extends StatelessWidget {
+  const _CodeDigits({required this.code});
+
+  final String code;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final digits = code.split('');
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = DonySpacing.sm;
+        final n = digits.length;
+        final width = ((constraints.maxWidth - gap * (n - 1)) / n).clamp(
+          24.0,
+          52.0,
+        );
+        final height = (width * 1.2).clamp(32.0, 62.0);
+        final fontSize = (width * 0.55).clamp(16.0, 28.0);
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var i = 0; i < n; i++) ...[
+              if (i > 0) const SizedBox(width: gap),
+              Container(
+                    key: Key('reception-code-digit-$i'),
+                    width: width,
+                    height: height,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: cs.onSurface,
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                    ),
+                    child: Text(
+                      digits[i],
+                      style: tt.headlineMedium?.copyWith(
+                        color: cs.surface,
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  )
+                  .animate(delay: (200 + 40 * i).ms)
+                  .fadeIn(duration: 250.ms, curve: Curves.easeOutCubic)
+                  .slideY(
+                    begin: 0.25,
+                    duration: 250.ms,
+                    curve: Curves.easeOutCubic,
+                  ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Accès au QR du colis : le voyageur le scanne pour identifier le colis,
+/// puis saisit le code de retrait. Le QR seul ne vaut pas remise.
+class _ParcelQrTile extends StatelessWidget {
+  const _ParcelQrTile({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      label: '${l.receptionShowQrTitle}. ${l.receptionShowQrExplanation}',
+      excludeSemantics: true,
+      child: DonyPressable(
+        key: const Key('reception-show-qr'),
+        onTap: onTap,
+        child: _Surface(
+          child: Row(
+            children: [
+              _IconBubble(icon: 'qr-code', color: cs.primary),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.receptionShowQrTitle,
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.xxs),
+                    Text(
+                      l.receptionShowQrExplanation,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -745,7 +1241,10 @@ class _BottomBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: cs.surface,
-        border: Border(top: BorderSide(color: cs.outline)),
+        border: Border(
+          top: BorderSide(color: cs.outline.withValues(alpha: 0.6)),
+        ),
+        boxShadow: DonyShadow.sticky,
       ),
       child: SafeArea(
         top: false,

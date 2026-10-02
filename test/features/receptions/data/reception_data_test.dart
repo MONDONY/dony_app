@@ -186,4 +186,20 @@ void main() {
       expect(reception('PENDING', 'IN_TRANSIT').canMessageTraveler, isFalse);
     });
   });
+
+  group('Reception.canShowParcelQr (FLUTTER-7Y)', () {
+    Reception reception(String link, String bid) =>
+        Reception(bidId: 'b', linkStatus: link, bidStatus: bid);
+
+    test('lien confirmé et colis pas encore remis', () {
+      for (final status in Reception.activeBidStatuses) {
+        expect(reception('CONFIRMED', status).canShowParcelQr, isTrue);
+      }
+    });
+
+    test('colis remis ou lien à confirmer : non', () {
+      expect(reception('CONFIRMED', 'COMPLETED').canShowParcelQr, isFalse);
+      expect(reception('PENDING', 'ACCEPTED').canShowParcelQr, isFalse);
+    });
+  });
 }

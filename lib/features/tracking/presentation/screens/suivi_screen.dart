@@ -351,6 +351,8 @@ class _SuiviBodyState extends State<_SuiviBody> {
         }
       case SuiviShowTimeline(
         :final bidId,
+        :final bid,
+        :final fromMyShipments,
         :final departureCity,
         :final arrivalCity,
         :final transportMode,
@@ -358,6 +360,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
         :final trackingNumber,
         :final bidStatus,
       ):
+        BidModel? parcelToOpen;
         await showTrackingTimelineSheet(
           context,
           bidId: bidId,
@@ -367,9 +370,20 @@ class _SuiviBodyState extends State<_SuiviBody> {
           transportMode: transportMode,
           arrivalInstructions: arrivalInstructions,
           trackingNumber: trackingNumber,
+          // Colis de l'utilisateur seulement : rien à ouvrir pour un colis
+          // d'un tiers retrouvé par numéro ou par QR (FLUTTER-7Z).
+          onOpenParcel: fromMyShipments && bid != null
+              ? () {
+                  parcelToOpen = bid;
+                }
+              : null,
         );
         if (!mounted) return;
         cubit.releaseScan();
+        final parcel = parcelToOpen;
+        if (parcel != null) {
+          await context.push<void>('/bids/${parcel.id}', extra: parcel);
+        }
     }
   }
 
