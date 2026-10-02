@@ -57,7 +57,7 @@ dependencies:
 
   # Networking
   dio: ^5.7.0
-  connectivity_plus: ^6.0.0
+  connectivity_plus: ^7.0.0
 
   # State management
   flutter_bloc: ^8.1.6
@@ -116,14 +116,14 @@ dependencies:
   app_links: ^6.3.4
 
   # Utils
-  package_info_plus: ^8.3.0
+  package_info_plus: ^9.0.0
   intl: ^0.20.2
   equatable: ^2.0.7
   json_annotation: ^4.9.0
   share_plus: ^10.0.0
   screen_brightness: ^2.1.0
   uuid: ^4.4.0
-  device_info_plus: ^10.1.2
+  device_info_plus: ^12.1.0
   crypto: ^3.0.6
   path_provider: ^2.1.0
   flutter_localizations:
@@ -135,6 +135,8 @@ dependencies:
   # via flutter_bloc : depend_on_referenced_packages exige la déclaration.
   bloc: ^8.1.4
   smart_auth: ^3.2.0
+  stream_video_flutter: ^1.6.0
+  stream_video_push_notification: ^1.6.0
 
 dev_dependencies:
   flutter_test:
