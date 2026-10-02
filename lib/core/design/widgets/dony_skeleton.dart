@@ -304,54 +304,60 @@ class DonyDetailSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return DonyShimmer(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg,
-          DonySpacing.xl,
-          DonySpacing.lg,
-          DonySpacing.huge,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                DonySkeletonCircle(),
-                SizedBox(width: DonySpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DonySkeletonBox(width: 140, height: 15),
-                      SizedBox(height: DonySpacing.xs),
-                      DonySkeletonBox(width: 90, height: 11),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: DonySpacing.xl),
-            const DonySkeletonBox(
-              width: double.infinity,
-              height: 140,
-              radius: DonyRadius.card,
-            ),
-            const SizedBox(height: DonySpacing.xl),
-            for (var i = 0; i < 3; i++) ...[
+    // Hauteur naturelle d'environ 450 dp : sur un petit écran avec une barre
+    // d'action en bas, la Column débordait (Sentry FLUTTER-4M, 26 px sur
+    // /bids/:bidId). Le contenu est rogné au lieu de déborder, sans défilement.
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: DonyShimmer(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DonySpacing.lg,
+            DonySpacing.xl,
+            DonySpacing.lg,
+            DonySpacing.huge,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               const Row(
                 children: [
-                  DonySkeletonBox(width: 90),
-                  Spacer(),
-                  DonySkeletonBox(width: 70),
+                  DonySkeletonCircle(),
+                  SizedBox(width: DonySpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DonySkeletonBox(width: 140, height: 15),
+                        SizedBox(height: DonySpacing.xs),
+                        DonySkeletonBox(width: 90, height: 11),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: DonySpacing.md),
+              const SizedBox(height: DonySpacing.xl),
+              const DonySkeletonBox(
+                width: double.infinity,
+                height: 140,
+                radius: DonyRadius.card,
+              ),
+              const SizedBox(height: DonySpacing.xl),
+              for (var i = 0; i < 3; i++) ...[
+                const Row(
+                  children: [
+                    DonySkeletonBox(width: 90),
+                    Spacer(),
+                    DonySkeletonBox(width: 70),
+                  ],
+                ),
+                const SizedBox(height: DonySpacing.md),
+              ],
+              Container(height: 1, color: cs.outline),
+              const SizedBox(height: DonySpacing.xl),
+              const DonySkeletonBox(width: double.infinity, height: 52),
             ],
-            Container(height: 1, color: cs.outline),
-            const SizedBox(height: DonySpacing.xl),
-            const DonySkeletonBox(width: double.infinity, height: 52),
-          ],
+          ),
         ),
       ),
     );
