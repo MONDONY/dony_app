@@ -52,6 +52,10 @@ void main() {
             child: const BusinessPrefsScreen(),
           ),
         ),
+        GoRoute(
+          path: '/payments/wallet',
+          builder: (_, _) => const Scaffold(body: Text('Portefeuille')),
+        ),
       ],
     ),
   );
@@ -378,8 +382,8 @@ void main() {
   );
 
   testWidgets(
-    'solde non nul : la tuile Devise est grisée et explique que le solde '
-    'doit être vidé',
+    'solde non nul : la tuile Devise explique que le solde doit être vidé ; '
+    'un toucher ouvre l\'explication, jamais le sélecteur (FLUTTER-8A)',
     (tester) async {
       mockPrefsBloc = stubBusinessPrefsBloc(
         state: const BusinessPrefsState(currencyLocked: true),
@@ -394,7 +398,8 @@ void main() {
           matching: find.byType(DonyListTile),
         ),
       );
-      expect(tile.enabled, isFalse);
+      // Touchable : inerte, la ligne passait pour un bug.
+      expect(tile.enabled, isTrue);
       expect(tile.subtitle, isNotNull);
       expect(find.textContaining('videz votre portefeuille'), findsOneWidget);
 
@@ -402,6 +407,26 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Choisir une devise'), findsNothing);
+      expect(
+        find.byKey(const Key('prefs-currency-locked-sheet')),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Votre devise reste EUR pour l\'instant'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('demandez son remboursement'), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const Key('prefs-currency-locked-open-wallet')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Portefeuille'), findsOneWidget);
+      expect(
+        find.byKey(const Key('prefs-currency-locked-sheet')),
+        findsNothing,
+      );
     },
   );
 
@@ -465,7 +490,8 @@ void main() {
         ),
       );
       expect(countryTile.enabled, isTrue);
-      expect(currencyTile.enabled, isFalse);
+      expect(countryTile.subtitle, isNull);
+      expect(currencyTile.subtitle, isNotNull);
     },
   );
 }

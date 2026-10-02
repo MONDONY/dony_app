@@ -1,5 +1,14 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Appels audio Yadony (Stream Video) : micro et sortie audio (haut-parleur). -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <!-- Partage d'écran du SDK d'appel jamais utilisé : on retire son service
+         et sa permission (déclaration Play Store inutile). -->
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"
+        tools:node="remove"/>
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -30,6 +39,9 @@
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
         android:localeConfig="@xml/locales_config">
+        <service
+            android:name="io.getstream.video.flutter.stream_video_flutter.service.StreamScreenShareService"
+            tools:node="remove"/>
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${GOOGLE_MAPS_API_KEY}" />

@@ -342,6 +342,51 @@ void main() {
     expect(find.text('Fatou Diallo'), findsWidgets);
   });
 
+  // FLUTTER-8D : la vignette de 64 px ne laissait pas voir le visage.
+  testWidgets('photo de profil : un toucher l\'ouvre en grand, zoomable', (
+    tester,
+  ) async {
+    const withPhoto = ProfilePublicModel(
+      userId: _userId,
+      displayName: 'Fatou Diallo',
+      kycVerified: true,
+      isProAccount: false,
+      isKiloPro: false,
+      completedBidsCount: 12,
+      averageRating: 4.8,
+      ratingCount: 7,
+      memberSince: 'mars 2025',
+      badges: [],
+      avatarUrl: 'https://cdn.example.com/avatars/fatou.jpg',
+    );
+    await tester.pumpWidget(_wrapLoaded(profile: withPhoto));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is Semantics &&
+            w.properties.button == true &&
+            w.properties.label == 'Voir la photo de profil',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(InteractiveViewer), findsNothing);
+
+    await tester.tap(find.byKey(const Key('profile-public-avatar')));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.byType(InteractiveViewer), findsOneWidget);
+  });
+
+  testWidgets('sans photo : initiales, rien à agrandir', (tester) async {
+    await tester.pumpWidget(_wrapLoaded(profile: _profile));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byKey(const Key('profile-public-avatar')), findsNothing);
+    expect(find.text('FD'), findsOneWidget);
+  });
+
   // FLUTTER-4H : vérifications et pays de résidence.
   testWidgets('section Vérifications : téléphone, e-mail, pièce d\'identité', (
     tester,

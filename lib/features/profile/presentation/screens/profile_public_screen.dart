@@ -6,6 +6,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_detail/request_photo_viewer.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
@@ -524,7 +525,8 @@ class _HeroAvatar extends StatelessWidget {
       avatar = _initialsCircle(initials, size);
     }
 
-    return Stack(
+    final hasPhoto = imageUrl != null && imageUrl!.isNotEmpty;
+    final avatarStack = Stack(
       clipBehavior: Clip.none,
       children: [
         Container(
@@ -566,6 +568,19 @@ class _HeroAvatar extends StatelessWidget {
             ),
           ),
       ],
+    );
+    if (!hasPhoto) return avatarStack;
+    // Toucher la photo l'ouvre en grand, zoomable : la vignette de 64 px ne
+    // laisse pas voir le visage (Sentry FLUTTER-8D).
+    return Semantics(
+      button: true,
+      label: context.l10n.profilePhotoViewAction,
+      child: GestureDetector(
+        key: const Key('profile-public-avatar'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => RequestPhotoViewer.show(context, urls: [imageUrl!]),
+        child: avatarStack,
+      ),
     );
   }
 

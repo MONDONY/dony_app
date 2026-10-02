@@ -106,6 +106,21 @@
   "errorBidNotAcceptedMessage": "The traveler must accept this request before this step.",
   "errorBidNotDeliveredTitle": "Parcel not delivered",
   "errorBidNotDeliveredMessage": "The parcel must be delivered before you can do this.",
+  "errorCallInProgressTitle": "Call already in progress",
+  "errorCallInProgressMessage": "A call is already in progress in this conversation.",
+  "errorCallOutOfWindowTitle": "Calling no longer available",
+  "errorCallOutOfWindowMessage": "Calling is available from order acceptance until 3 days after delivery.",
+  "errorCallBlockedTitle": "Call not possible",
+  "errorCallBlockedMessage": "You can't call this person.",
+  "errorCallCalleeUnavailableTitle": "Person unreachable",
+  "errorCallCalleeUnavailableMessage": "This person can't be called right now. Send them a message instead.",
+  "errorCallConversationClosedTitle": "Conversation closed",
+  "errorCallConversationClosedMessage": "This conversation is closed, calling is no longer possible.",
+  "errorCallNotParticipantMessage": "You're not part of this conversation.",
+  "errorCallProviderUnavailableTitle": "Calling temporarily unavailable",
+  "errorCallProviderUnavailableMessage": "The call couldn't be started. Try again in a moment.",
+  "errorCallsDisabledTitle": "Calls unavailable",
+  "errorCallsDisabledMessage": "Calls aren't available right now.",
   "errorInvalidBidStatusTitle": "Invalid parcel status",
   "errorInvalidBidStatusMessage": "The parcel's current status doesn't allow this.",
   "errorUseConfirmDeliveryTitle": "Confirm the delivery",
@@ -767,6 +782,14 @@
   "tripPublishCardPaymentTitle": "Card payment (Stripe)",
   "tripPublishCardPaymentSubtitle": "Secure payment by default",
   "tripPublishCashLabel": "Cash",
+  "tripPublishCashLockedSubtitle": "Always accepted on this trip. Commission collected from the traveler at handover",
+  "@tripPublishCashLockedSubtitle": {
+    "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M)."
+  },
+  "tripPublishCashLockedExplanation": "Without card payment on this trip, cash always stays accepted: it is how senders can book.",
+  "@tripPublishCashLockedExplanation": {
+    "description": "Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M)."
+  },
   "tripPublishCashSubtitle": "Service fee charged to the traveler at drop-off",
   "tripPublishAcceptedContentSectionLabel": "What I accept",
   "tripPublishRefusedContentSectionLabel": "What I refuse",
@@ -4923,6 +4946,26 @@
       }
     }
   },
+  "bidCreateContentRefusedByTraveler": "This traveler doesn't accept “{category}”.",
+  "@bidCreateContentRefusedByTraveler": {
+    "description": "Avertissement quand l'expéditeur ajoute un contenu refusé par le voyageur (create_bid_bottom_sheet.dart _onCategoriesChanged, Sentry FLUTTER-8C).",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+
+  "profilePhotoViewAction": "View profile photo",
+  "@profilePhotoViewAction": {
+    "description": "Libellé d'accessibilité de la photo du profil public, qui s'ouvre en grand au toucher (profile_public_screen.dart _HeroAvatar, Sentry FLUTTER-8D)."
+  },
+
+  "walletTopupMethodPhoneHint": "Enter your mobile money number: your networks will show up here.",
+  "@walletTopupMethodPhoneHint": {
+    "description": "Consigne sous le champ numéro tant que les opérateurs ne sont pas chargés (wallet_topup_method_screen.dart _MobileMoneySection, Sentry FLUTTER-8B)."
+  },
+
   "walletTopupMethodNoNetworks": "No mobile money network available for this number.",
   "@walletTopupMethodNoNetworks": {
     "description": "Avertissement quand le catalogue d'opérateurs est vide pour le numéro saisi (wallet_topup_method_screen.dart _MobileMoneySection)."
@@ -7057,6 +7100,31 @@
   "prefsCountryLockedSubtitle": "Locked: a shipment is in progress or your payment account has been created",
   "prefsCountryPlaceholder": "Choose my country",
   "prefsCurrencyLabel": "Currency",
+  "prefsCurrencyLockedSheetTitle": "Your currency stays {currency} for now",
+  "@prefsCurrencyLockedSheetTitle": {
+    "description": "Titre de la feuille ouverte au toucher de la devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet, Sentry FLUTTER-8A).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+
+  "prefsCurrencyLockedSheetBody": "Your wallet still holds money in {currency}: until it is back to zero, the currency can't change, so your balance is never converted without you. To unlock it, use this balance for a shipment, or request a refund from the wallet. Currency choice reopens as soon as the balance is zero.",
+  "@prefsCurrencyLockedSheetBody": {
+    "description": "Explication de la feuille de devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+
+  "prefsCurrencyLockedSheetWalletCta": "Open my wallet",
+  "@prefsCurrencyLockedSheetWalletCta": {
+    "description": "Bouton de la feuille de devise verrouillée vers le portefeuille (business_prefs_screen.dart _showCurrencyLockedSheet)."
+  },
+
   "prefsCurrencyLockedSubtitle": "Locked: empty your wallet to change it",
   "prefsDisplayCurrencyLabel": "Display currency",
   "prefsDisplayCurrencySubtitle": "Prices posted in another currency are converted for reference only",
@@ -8723,6 +8791,23 @@
   "@receptionViewSenderProfile": {"placeholders": {"name": {"type": "String"}}},
   "chatCopyMessageAction": "Copy message",
   "bidCreateWeightRequiredHint": "Enter the estimated weight, e.g. 0.5 kg for a phone.",
+  "callStatusConnecting": "Connecting…",
+  "callStatusRinging": "Ringing…",
+  "callStatusEnded": "Call ended",
+  "callStatusRejected": "Call declined",
+  "callStatusMissed": "No answer",
+  "callStatusFailed": "The call could not be completed",
+  "callMute": "Mute",
+  "callUnmute": "Unmute",
+  "callSpeaker": "Speaker",
+  "callHangUp": "Hang up",
+  "callMicrophoneDenied": "Allow the microphone in Settings to call.",
+  "callOpenSettings": "Open Settings",
+  "chatCallInApp": "Yadony call",
+  "chatCallInAppSubtitle": "Free, without showing your number",
+  "chatCallByPhone": "Phone call",
+  "chatCallByPhoneSubtitle": "Uses your phone plan",
+  "chatCallChooserTitle": "Call {name}",
   "trackingTimelineOpenParcel": "View parcel",
   "receptionShowQrTitle": "Show the parcel QR",
   "receptionShowQrExplanation": "The traveler scans this QR, then enters your pickup code.",

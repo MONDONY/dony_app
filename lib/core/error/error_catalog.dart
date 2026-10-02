@@ -447,6 +447,55 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.badge_outlined,
     ),
+    // ─── Appels audio (POST /conversations/{id}/calls) ────────────────
+    'call-already-in-progress': _Entry(
+      title: (l) => l.errorCallInProgressTitle,
+      message: (l) => l.errorCallInProgressMessage,
+      severity: ErrorSeverity.info,
+      icon: Icons.phone_in_talk_rounded,
+    ),
+    'call-out-of-window': _Entry(
+      title: (l) => l.errorCallOutOfWindowTitle,
+      message: (l) => l.errorCallOutOfWindowMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
+    'call-blocked': _Entry(
+      title: (l) => l.errorCallBlockedTitle,
+      message: (l) => l.errorCallBlockedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
+    'call-callee-unavailable': _Entry(
+      title: (l) => l.errorCallCalleeUnavailableTitle,
+      message: (l) => l.errorCallCalleeUnavailableMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
+    'call-conversation-closed': _Entry(
+      title: (l) => l.errorCallConversationClosedTitle,
+      message: (l) => l.errorCallConversationClosedMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_outline_rounded,
+    ),
+    'call-not-participant': _Entry(
+      title: (l) => l.errorCallBlockedTitle,
+      message: (l) => l.errorCallNotParticipantMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
+    'call-provider-unavailable': _Entry(
+      title: (l) => l.errorCallProviderUnavailableTitle,
+      message: (l) => l.errorCallProviderUnavailableMessage,
+      severity: ErrorSeverity.error,
+      icon: Icons.cloud_off_rounded,
+    ),
+    'calls-disabled': _Entry(
+      title: (l) => l.errorCallsDisabledTitle,
+      message: (l) => l.errorCallsDisabledMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
     'bid-not-accepted': _Entry(
       title: (l) => l.errorBidNotAcceptedTitle,
       message: (l) => l.errorBidNotAcceptedMessage,

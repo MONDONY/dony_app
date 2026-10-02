@@ -6,6 +6,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/calls/presentation/call_screen.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
@@ -212,6 +213,35 @@ void main() {
       expect(find.text('Message copié'), findsOneWidget);
       expect(find.text('Copier le message'), findsNothing);
       await tester.pump(const Duration(seconds: 5));
+    });
+
+    // Sentry FLUTTER-8E : dans sa propre bulle (fond primary), le surlignage
+    // par défaut, primary lui aussi, cachait le texte sélectionné.
+    testWidgets('ma bulle : sélection sur voile sombre, poignées foncées ; '
+        'bulle reçue : thème par défaut', (tester) async {
+      when(() => bloc.state).thenReturn(
+        ChatLoaded([
+          // Sans Firebase en test, mon UID vaut '' : ce message est le mien.
+          _makeMsg(id: 'm1', body: 'merci la destinataire', senderId: ''),
+          _makeMsg(id: 'm2', body: '146205'),
+        ]),
+      );
+      await _pump(tester, bloc);
+
+      final cs = AppTheme.light().colorScheme;
+      final mine = Theme.of(
+        tester.element(
+          find.widgetWithText(SelectableText, 'merci la destinataire'),
+        ),
+      ).textSelectionTheme;
+      expect(mine, ownBubbleSelectionTheme(cs));
+      expect(mine.selectionColor, isNot(cs.primary));
+      expect(mine.selectionHandleColor, cs.onSurface);
+
+      final theirs = Theme.of(
+        tester.element(find.widgetWithText(SelectableText, '146205')),
+      ).textSelectionTheme;
+      expect(theirs, AppTheme.light().textSelectionTheme);
     });
 
     testWidgets(
@@ -640,6 +670,8 @@ void main() {
           bidId: 'bid-2',
           firestoreConversationId: 'conv_bid-2',
           otherParticipant: participant,
+          // Le téléphone n'est proposé qu'à côté de l'appel Yadony.
+          callAvailable: true,
         );
 
         final reveal = _MockContactRevealBloc();
@@ -803,6 +835,7 @@ void main() {
           ),
           tripOrigin: 'Paris',
           tripDestination: 'Dakar',
+          callAvailable: true,
         ),
       );
 
@@ -812,5 +845,145 @@ void main() {
 
       expect(routes, ['/bids/bid-s']);
     });
+  });
+
+  group('appel Yadony ou téléphone (appels audio)', () {
+    setUpAll(
+      () => registerFallbackValue(const ContactRevealRequested('fallback')),
+    );
+    setUp(() => setSmsAuthEnabled(true));
+    tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
+
+    ConversationModel conversation({
+      required bool callAvailable,
+      bool phoneAvailable = true,
+      String kind = ConversationModel.kindSenderTraveler,
+    }) => ConversationModel(
+      id: 'conv-c',
+      bidId: 'bid-c',
+      firestoreConversationId: 'conv_bid-c',
+      otherParticipant: ParticipantModel(
+        id: 'uid-c',
+        name: 'Moussa K.',
+        phoneAvailable: phoneAvailable,
+      ),
+      kind: kind,
+      callAvailable: callAvailable,
+    );
+
+    Future<(List<(String, Object?)>, _MockContactRevealBloc)> pumpChat(
+      WidgetTester tester,
+      ConversationModel conv,
+    ) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      final reveal = _MockContactRevealBloc();
+      when(() => reveal.state).thenReturn(const ContactRevealInitial());
+      final routes = <(String, Object?)>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: MultiBlocProvider(
+            providers: [
+              BlocProvider<ChatBloc>.value(value: bloc),
+              BlocProvider<ContactRevealBloc>.value(value: reveal),
+            ],
+            child: ChatScreen(
+              conversation: conv,
+              onNavigate: (path, extra) => routes.add((path, extra)),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      return (routes, reveal);
+    }
+
+    Future<void> openSheet(WidgetTester tester) async {
+      await tester.tap(find.byTooltip('Appeler'));
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+    }
+
+    testWidgets(
+      'les deux modes : la feuille propose Yadony ou téléphone, Yadony ouvre l\'appel',
+      (tester) async {
+        final (routes, _) = await pumpChat(
+          tester,
+          conversation(callAvailable: true),
+        );
+
+        await openSheet(tester);
+        expect(find.text('Appel Yadony'), findsOneWidget);
+        expect(find.text('Appel téléphone'), findsOneWidget);
+
+        await tester.tap(find.text('Appel Yadony'));
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(routes.single.$1, '/calls/pending');
+        final args = routes.single.$2! as CallScreenArgs;
+        expect(args.conversationId, 'conv-c');
+        expect(args.remoteName, 'Moussa K.');
+      },
+    );
+
+    testWidgets('les deux modes : téléphone révèle le numéro', (tester) async {
+      final (routes, reveal) = await pumpChat(
+        tester,
+        conversation(callAvailable: true),
+      );
+
+      await openSheet(tester);
+      await tester.tap(find.text('Appel téléphone'));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      verify(
+        () => reveal.add(any(that: isA<ContactRevealRequested>())),
+      ).called(1);
+      expect(routes, isEmpty);
+    });
+
+    testWidgets(
+      'numéro masqué : un seul tap lance l\'appel Yadony, sans feuille',
+      (tester) async {
+        final (routes, _) = await pumpChat(
+          tester,
+          conversation(callAvailable: true, phoneAvailable: false),
+        );
+
+        await tester.tap(find.byTooltip('Appeler'));
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.text('Appel téléphone'), findsNothing);
+        expect(routes.single.$1, '/calls/pending');
+      },
+    );
+
+    testWidgets(
+      'appel Yadony impossible : pas de bouton, même avec le numéro',
+      (tester) async {
+        await pumpChat(tester, conversation(callAvailable: false));
+        expect(find.byTooltip('Appeler'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'destinataire : jamais le téléphone, un tap lance l\'appel Yadony',
+      (tester) async {
+        final (routes, reveal) = await pumpChat(
+          tester,
+          conversation(
+            callAvailable: true,
+            kind: ConversationModel.kindRecipientTraveler,
+          ),
+        );
+
+        await tester.tap(find.byTooltip('Appeler'));
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(routes.single.$1, '/calls/pending');
+        verifyNever(() => reveal.add(any()));
+      },
+    );
   });
 }

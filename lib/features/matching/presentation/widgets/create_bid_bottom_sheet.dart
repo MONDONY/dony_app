@@ -309,10 +309,16 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         ', ',
       );
 
+  /// Catalogue proposé à l'expéditeur, sans jamais un type refusé par le
+  /// voyageur : sans liste d'acceptés, tout le catalogue était proposé, refus
+  /// compris, et le choix refusé s'effaçait aussitôt (Sentry FLUTTER-8C).
   List<String> get _acceptedCategories {
+    final refusedLower = _refusedCategories.map((e) => e.toLowerCase()).toSet();
     final accepted = widget.announcement.acceptedContentTypes;
-    if (accepted != null && accepted.isNotEmpty) return accepted;
-    return _catalogNotifier.value.map((c) => c.label).toList();
+    final base = (accepted != null && accepted.isNotEmpty)
+        ? accepted
+        : _catalogNotifier.value.map((c) => c.label).toList();
+    return base.where((l) => !refusedLower.contains(l.toLowerCase())).toList();
   }
 
   List<String> get _refusedCategories =>
@@ -816,13 +822,31 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   // ── Content helpers ─────────────────────────────────────────────────────────
 
   /// Sélection émise par le combobox de contenu. Les types refusés par le
-  /// voyageur sont écartés en silence (le catalogue proposé ne les liste déjà
-  /// pas, mais un ajout libre pourrait retomber sur un libellé refusé).
+  /// voyageur sont écartés (le catalogue proposé ne les liste pas, mais un
+  /// ajout libre peut retomber sur un libellé refusé), et l'expéditeur en est
+  /// averti : un choix qui disparaît sans un mot passait pour un blocage de
+  /// l'app (Sentry FLUTTER-8C).
   void _onCategoriesChanged(List<String> labels) {
     final refusedLower = _refusedCategories.map((e) => e.toLowerCase()).toSet();
-    _categoriesNotifier.value = labels
-        .where((l) => !refusedLower.contains(l.toLowerCase()))
-        .toSet();
+    final kept = <String>{};
+    String? dropped;
+    for (final label in labels) {
+      if (refusedLower.contains(label.toLowerCase())) {
+        dropped ??= label;
+      } else {
+        kept.add(label);
+      }
+    }
+    _categoriesNotifier.value = kept;
+    if (dropped != null && mounted) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.bidCreateContentRefusedByTraveler(
+          contentCategoryDisplayName(context.l10n, dropped),
+        ),
+        type: DonySnackbarType.warning,
+      );
+    }
   }
 
   List<Map<String, dynamic>>? _selectedGridItems() {

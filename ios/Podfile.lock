@@ -1204,6 +1204,8 @@ PODS:
     - PromisesObjC (~> 2.4)
     - PromisesSwift (~> 2.4)
     - RecaptchaInterop (~> 101.0)
+  - battery_plus (1.0.0):
+    - Flutter
   - BoringSSL-GRPC (0.0.37):
     - BoringSSL-GRPC/Implementation (= 0.0.37)
     - BoringSSL-GRPC/Interface (= 0.0.37)
@@ -1216,6 +1218,7 @@ PODS:
     - Flutter
   - connectivity_plus (0.0.1):
     - Flutter
+  - CryptoSwift (1.10.0)
   - device_info_plus (0.0.1):
     - Flutter
   - Firebase/Auth (12.17.0):
@@ -1516,6 +1519,8 @@ PODS:
     - Flutter
   - package_info_plus (0.4.5):
     - Flutter
+  - permission_handler_apple (9.4.8):
+    - Flutter
   - PostHog (3.69.2)
   - posthog_flutter (0.0.1):
     - Flutter
@@ -1540,11 +1545,22 @@ PODS:
     - Sentry/HybridSDK (= 8.58.3)
   - share_plus (0.0.1):
     - Flutter
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - sign_in_with_apple (0.0.1):
     - Flutter
   - sqflite_darwin (0.0.4):
     - Flutter
     - FlutterMacOS
+  - stream_video_flutter (1.6.0):
+    - Flutter
+    - stream_webrtc_flutter
+  - stream_video_push_notification (1.6.0):
+    - CryptoSwift (~> 1.8)
+    - Flutter
+  - stream_webrtc_flutter (3.2.0):
+    - Flutter
   - Stripe (25.9.0):
     - StripeApplePay (= 25.9.0)
     - StripeCore (= 25.9.0)
@@ -1605,6 +1621,8 @@ PODS:
     - StripeUICore (= 25.9.0)
   - StripeUICore (25.9.0):
     - StripeCore (= 25.9.0)
+  - thermal (0.0.1):
+    - Flutter
   - url_launcher_ios (0.0.1):
     - Flutter
   - webview_flutter_wkwebview (0.0.1):
@@ -1614,6 +1632,7 @@ PODS:
 DEPENDENCIES:
   - app_links (from `.symlinks/plugins/app_links/ios`)
   - app_settings (from `.symlinks/plugins/app_settings/ios`)
+  - battery_plus (from `.symlinks/plugins/battery_plus/ios`)
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
   - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
@@ -1638,13 +1657,19 @@ DEPENDENCIES:
   - mobile_scanner (from `.symlinks/plugins/mobile_scanner/darwin`)
   - native_exif (from `.symlinks/plugins/native_exif/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - posthog_flutter (from `.symlinks/plugins/posthog_flutter/darwin`)
   - screen_brightness_ios (from `.symlinks/plugins/screen_brightness_ios/ios`)
   - sentry_flutter (from `.symlinks/plugins/sentry_flutter/ios`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
+  - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sign_in_with_apple (from `.symlinks/plugins/sign_in_with_apple/ios`)
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
+  - stream_video_flutter (from `.symlinks/plugins/stream_video_flutter/ios`)
+  - stream_video_push_notification (from `.symlinks/plugins/stream_video_push_notification/ios`)
+  - stream_webrtc_flutter (from `.symlinks/plugins/stream_webrtc_flutter/ios`)
   - stripe_ios (from `.symlinks/plugins/stripe_ios/ios`)
+  - thermal (from `.symlinks/plugins/thermal/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
   - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
 
@@ -1654,6 +1679,7 @@ SPEC REPOS:
     - AppAuth
     - AppCheckCore
     - BoringSSL-GRPC
+    - CryptoSwift
     - Firebase
     - FirebaseABTesting
     - FirebaseAppCheckInterop
@@ -1704,6 +1730,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/app_links/ios"
   app_settings:
     :path: ".symlinks/plugins/app_settings/ios"
+  battery_plus:
+    :path: ".symlinks/plugins/battery_plus/ios"
   cloud_firestore:
     :path: ".symlinks/plugins/cloud_firestore/ios"
   connectivity_plus:
@@ -1752,6 +1780,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/native_exif/ios"
   package_info_plus:
     :path: ".symlinks/plugins/package_info_plus/ios"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
   posthog_flutter:
     :path: ".symlinks/plugins/posthog_flutter/darwin"
   screen_brightness_ios:
@@ -1760,12 +1790,22 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/sentry_flutter/ios"
   share_plus:
     :path: ".symlinks/plugins/share_plus/ios"
+  shared_preferences_foundation:
+    :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
   sign_in_with_apple:
     :path: ".symlinks/plugins/sign_in_with_apple/ios"
   sqflite_darwin:
     :path: ".symlinks/plugins/sqflite_darwin/darwin"
+  stream_video_flutter:
+    :path: ".symlinks/plugins/stream_video_flutter/ios"
+  stream_video_push_notification:
+    :path: ".symlinks/plugins/stream_video_push_notification/ios"
+  stream_webrtc_flutter:
+    :path: ".symlinks/plugins/stream_webrtc_flutter/ios"
   stripe_ios:
     :path: ".symlinks/plugins/stripe_ios/ios"
+  thermal:
+    :path: ".symlinks/plugins/thermal/ios"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
   webview_flutter_wkwebview:
@@ -1777,10 +1817,12 @@ SPEC CHECKSUMS:
   app_settings: 5127ae0678de1dcc19f2293271c51d37c89428b2
   AppAuth: d4f13a8fe0baf391b2108511793e4b479691fb73
   AppCheckCore: e215d35177a9cf469927863e69c13e220df32a8b
+  battery_plus: b42253f6d2dde71712f8c36fef456d99121c5977
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   cloud_firestore: 511375ce1aea4e819e2df382fb1a141015cb8c60
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
-  device_info_plus: 71ffc6ab7634ade6267c7a93088ed7e4f74e5896
+  CryptoSwift: e2e7776512f250e66205955da748e7a4e4abffe0
+  device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
   Firebase: e8400c058702940d53f31fc0653e4e7a06332326
   firebase_auth: 3e82fa3e632856cd5a8e2bedf458d682740c8168
   firebase_core: c94f9efeed0ded590b7eecaf6110a374eb865d7a
@@ -1830,6 +1872,7 @@ SPEC CHECKSUMS:
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   native_exif: 0eb73d3d5b3ca892719228df8d2d1b13d1ae396c
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
+  permission_handler_apple: 92d754bbaa7361d436db2d6c3c1c2a0fdcec462e
   PostHog: 164b2e333cc1741dd754ca4a57112a693af81c72
   posthog_flutter: 03b15ff7a78e2a4162baaf11f8db37b079412106
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
@@ -1841,8 +1884,12 @@ SPEC CHECKSUMS:
   Sentry: 108fdbb76299c4189af12246bf0308c09c278922
   sentry_flutter: 32e67cb4756ce3de42bbd56581fa935922ff328f
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
+  shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sign_in_with_apple: c5dcc141574c8c54d5ac99dd2163c0c72ad22418
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
+  stream_video_flutter: 120a7f3373e511b023df2bf8f08584337bea36e5
+  stream_video_push_notification: 0f18fe34dd2a7e49038aa9ea0993f16a81d0067f
+  stream_webrtc_flutter: 23a7c531cbc85b61a8220352313c5facbec3d1ea
   Stripe: 604acd978f3ec2921098f477ccaa229e12690373
   stripe_ios: 1f895b7e517569a02c732967c48042d941e7352e
   StripeApplePay: 9dabe2d3d897419a7a7663dc3338ff4bc51b9f54
@@ -1853,6 +1900,7 @@ SPEC CHECKSUMS:
   StripePaymentSheet: 0fc945d26c9884ad5781d6c636e1b8adedf9a886
   StripePaymentsUI: e2f00f9be6fea280d6188b805fdb5199a96e1151
   StripeUICore: bfe8754c2d78eeb0fc4ce147316a7e5129b58423
+  thermal: 4af85650493d757113f1decbc792862e2272e0c0
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
 

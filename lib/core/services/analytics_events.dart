@@ -177,6 +177,13 @@ abstract final class AnalyticsEvents {
   static const conversationOpened = 'conversation_opened';
   static const messageSent = 'message_sent';
   static const conversationCallInitiated = 'conversation_call_initiated';
+  // Appels audio Yadony (Stream Video).
+  static const callModeChosen = 'call_mode_chosen';
+  static const callStarted = 'call_started';
+  static const callConnected = 'call_connected';
+  static const callEnded = 'call_ended';
+  static const callFailed = 'call_failed';
+  static const callIncomingAccepted = 'call_incoming_accepted';
   static const messageBlocked = 'message_blocked';
 
   // Wallet

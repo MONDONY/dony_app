@@ -109,6 +109,9 @@
 	<string>Yadony utilise ta position uniquement pendant que tu utilises l'application, pour te proposer les trajets depuis ta ville. Aucun suivi en arrière-plan.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
+	<!-- Appels audio Yadony (Stream Video). -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Yadony utilise le micro pour vos appels audio avec l'autre partie de votre colis.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Yadony enregistre le QR code de ton colis dans tes photos pour que tu puisses le retrouver hors ligne.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
@@ -139,6 +142,8 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
+		<string>audio</string>
+		<string>voip</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

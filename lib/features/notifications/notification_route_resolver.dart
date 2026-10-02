@@ -175,6 +175,10 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'NEW_MESSAGE' when _isUuid(conversationId) =>
       '/conversations/$conversationId',
     'NEW_MESSAGE' => '/messages',
+    // Appel audio manqué : la conversation, d'où l'on peut rappeler.
+    'CALL_MISSED' when _isUuid(conversationId) =>
+      '/conversations/$conversationId',
+    'CALL_MISSED' => '/messages',
 
     // Automatisations voyageur — même cible que la notif métier équivalente :
     // une alerte de capacité parle d'un trajet à moi, une offre de dernière

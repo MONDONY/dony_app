@@ -1227,4 +1227,47 @@ void main() {
       expect(pEn.message, "One of the screenshots isn't yours.");
     });
   });
+
+  group('ErrorCatalog — appels audio', () {
+    const cases = <String, (AppException, String)>{
+      'call-already-in-progress': (
+        ConflictException('x', code: 'call-already-in-progress'),
+        'Appel déjà en cours',
+      ),
+      'call-out-of-window': (
+        ValidationException('x', code: 'call-out-of-window'),
+        'Appel plus disponible',
+      ),
+      'call-blocked': (
+        ValidationException('x', code: 'call-blocked'),
+        'Appel impossible',
+      ),
+      'call-callee-unavailable': (
+        ValidationException('x', code: 'call-callee-unavailable'),
+        'Personne injoignable',
+      ),
+      'call-conversation-closed': (
+        ValidationException('x', code: 'call-conversation-closed'),
+        'Conversation fermée',
+      ),
+      'call-not-participant': (
+        ForbiddenException('x', 'call-not-participant'),
+        'Appel impossible',
+      ),
+      'call-provider-unavailable': (
+        ServerException('x', 'call-provider-unavailable'),
+        'Appel momentanément indisponible',
+      ),
+      'calls-disabled': (
+        ServerException('x', 'calls-disabled'),
+        'Appels indisponibles',
+      ),
+    };
+
+    for (final MapEntry(key: code, value: (error, title)) in cases.entries) {
+      test('$code → message dédié, pas le générique', () {
+        expect(ErrorCatalog.lookup(error).title, title);
+      });
+    }
+  });
 }

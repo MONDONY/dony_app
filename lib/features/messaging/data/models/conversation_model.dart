@@ -84,6 +84,11 @@ class ConversationModel {
   static const viewerRoleTraveler = 'TRAVELER';
   static const viewerRoleRecipient = 'RECIPIENT';
 
+  /// Appel audio Yadony possible maintenant (règle du back : commande acceptée
+  /// jusqu'à J+3 après livraison, pas de blocage…). Absent sur un ancien back :
+  /// faux, et aucun bouton d'appel n'est proposé.
+  final bool callAvailable;
+
   const ConversationModel({
     required this.id,
     required this.bidId,
@@ -102,6 +107,7 @@ class ConversationModel {
     this.deletedBySelf = false,
     this.kind = kindSenderTraveler,
     this.viewerRole,
+    this.callAvailable = false,
   });
 
   /// Conversation séparée voyageur ↔ destinataire : l'expéditeur n'y est pas,
@@ -158,6 +164,7 @@ class ConversationModel {
     readOnly: readOnly ?? this.readOnly,
     kind: kind,
     viewerRole: viewerRole,
+    callAvailable: callAvailable,
   );
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) =>
@@ -192,5 +199,6 @@ class ConversationModel {
             value.trim().toUpperCase(),
           _ => null,
         },
+        callAvailable: json['callAvailable'] == true,
       );
 }

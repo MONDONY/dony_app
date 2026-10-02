@@ -848,8 +848,16 @@ class PrixConditionsStep extends StatelessWidget {
                   SwitchListTile(
                     key: const Key('payment-method-cash'),
                     value: cashOn,
+                    // Verrouillées, les espèces restent un interrupteur
+                    // actif à l'œil : désactivé, il s'affichait grisé et se
+                    // lisait « espèces indisponibles » alors qu'elles sont
+                    // acceptées d'office (Sentry FLUTTER-8M). Un toucher
+                    // explique pourquoi elles ne se désactivent pas.
                     onChanged: cashLocked
-                        ? null
+                        ? (_) => DonySnackbar.show(
+                            ctx,
+                            message: l.tripPublishCashLockedExplanation,
+                          )
                         : (val) => cashEnabledNotifier.value = val,
                     activeThumbColor: cs.primary,
                     title: Row(
@@ -868,7 +876,9 @@ class PrixConditionsStep extends StatelessWidget {
                       ],
                     ),
                     subtitle: Text(
-                      l.tripPublishCashSubtitle,
+                      cashLocked
+                          ? l.tripPublishCashLockedSubtitle
+                          : l.tripPublishCashSubtitle,
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                     contentPadding: const EdgeInsets.symmetric(

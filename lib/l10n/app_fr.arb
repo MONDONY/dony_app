@@ -118,6 +118,21 @@
   "errorBidNotAcceptedMessage": "Cette demande doit être acceptée par le voyageur avant cette étape.",
   "errorBidNotDeliveredTitle": "Colis non livré",
   "errorBidNotDeliveredMessage": "Cette action nécessite que le colis ait été livré.",
+  "errorCallInProgressTitle": "Appel déjà en cours",
+  "errorCallInProgressMessage": "Un appel est déjà en cours dans cette conversation.",
+  "errorCallOutOfWindowTitle": "Appel plus disponible",
+  "errorCallOutOfWindowMessage": "L'appel est possible de l'acceptation de la commande jusqu'à 3 jours après la livraison.",
+  "errorCallBlockedTitle": "Appel impossible",
+  "errorCallBlockedMessage": "Tu ne peux pas appeler cette personne.",
+  "errorCallCalleeUnavailableTitle": "Personne injoignable",
+  "errorCallCalleeUnavailableMessage": "Cette personne ne peut pas être appelée pour le moment. Écris-lui dans la conversation.",
+  "errorCallConversationClosedTitle": "Conversation fermée",
+  "errorCallConversationClosedMessage": "Cette conversation est fermée, l'appel n'est plus possible.",
+  "errorCallNotParticipantMessage": "Tu ne participes pas à cette conversation.",
+  "errorCallProviderUnavailableTitle": "Appel momentanément indisponible",
+  "errorCallProviderUnavailableMessage": "L'appel n'a pas pu être lancé. Réessaie dans un instant.",
+  "errorCallsDisabledTitle": "Appels indisponibles",
+  "errorCallsDisabledMessage": "Les appels ne sont pas disponibles pour le moment.",
   "errorInvalidBidStatusTitle": "État du colis invalide",
   "errorInvalidBidStatusMessage": "Le statut actuel du colis ne permet pas cette action.",
   "errorUseConfirmDeliveryTitle": "Confirme la livraison",
@@ -1485,6 +1500,14 @@
   "tripPublishCashLabel": "Espèces",
   "@tripPublishCashLabel": {
     "description": "Titre de la ligne paiement en espèces"
+  },
+  "tripPublishCashLockedSubtitle": "Toujours accepté sur ce trajet. Commission prélevée au voyageur à la remise",
+  "@tripPublishCashLockedSubtitle": {
+    "description": "Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M)."
+  },
+  "tripPublishCashLockedExplanation": "Sans paiement par carte sur ce trajet, les espèces restent toujours acceptées : c'est le mode qui permet aux expéditeurs de réserver.",
+  "@tripPublishCashLockedExplanation": {
+    "description": "Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M)."
   },
   "tripPublishCashSubtitle": "Commission prélevée au voyageur à la remise",
   "@tripPublishCashSubtitle": {
@@ -10137,6 +10160,26 @@
       }
     }
   },
+  "bidCreateContentRefusedByTraveler": "Ce voyageur n'accepte pas « {category} ».",
+  "@bidCreateContentRefusedByTraveler": {
+    "description": "Avertissement quand l'expéditeur ajoute un contenu refusé par le voyageur (create_bid_bottom_sheet.dart _onCategoriesChanged, Sentry FLUTTER-8C).",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+
+  "profilePhotoViewAction": "Voir la photo de profil",
+  "@profilePhotoViewAction": {
+    "description": "Libellé d'accessibilité de la photo du profil public, qui s'ouvre en grand au toucher (profile_public_screen.dart _HeroAvatar, Sentry FLUTTER-8D)."
+  },
+
+  "walletTopupMethodPhoneHint": "Saisis ton numéro mobile money : tes opérateurs s'affichent ici.",
+  "@walletTopupMethodPhoneHint": {
+    "description": "Consigne sous le champ numéro tant que les opérateurs ne sont pas chargés (wallet_topup_method_screen.dart _MobileMoneySection, Sentry FLUTTER-8B)."
+  },
+
   "walletTopupMethodNoNetworks": "Aucun réseau mobile money disponible pour ce numéro.",
   "@walletTopupMethodNoNetworks": {
     "description": "Avertissement quand le catalogue d'opérateurs est vide pour le numéro saisi (wallet_topup_method_screen.dart _MobileMoneySection)."
@@ -13612,6 +13655,31 @@
   "@prefsCurrencyLabel": {
     "description": "Libellé de la tuile devise (business_prefs_screen.dart)"
   },
+  "prefsCurrencyLockedSheetTitle": "Votre devise reste {currency} pour l'instant",
+  "@prefsCurrencyLockedSheetTitle": {
+    "description": "Titre de la feuille ouverte au toucher de la devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet, Sentry FLUTTER-8A).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+
+  "prefsCurrencyLockedSheetBody": "Votre portefeuille contient encore de l'argent en {currency} : tant qu'il n'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour un envoi, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.",
+  "@prefsCurrencyLockedSheetBody": {
+    "description": "Explication de la feuille de devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet).",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+
+  "prefsCurrencyLockedSheetWalletCta": "Ouvrir mon portefeuille",
+  "@prefsCurrencyLockedSheetWalletCta": {
+    "description": "Bouton de la feuille de devise verrouillée vers le portefeuille (business_prefs_screen.dart _showCurrencyLockedSheet)."
+  },
+
   "prefsCurrencyLockedSubtitle": "Verrouillée : videz votre portefeuille pour en changer",
   "@prefsCurrencyLockedSubtitle": {
     "description": "Sous-titre quand la devise est verrouillée (business_prefs_screen.dart)"
@@ -18091,6 +18159,79 @@
   "@chatCopyMessageAction": {"description": "Entrée ajoutée au menu de sélection d'une bulle de texte, et action du lecteur d'écran, qui copie le message entier (chat_screen.dart _TextContent)."},
   "bidCreateWeightRequiredHint": "Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.",
   "@bidCreateWeightRequiredHint": {"description": "Formulaire de demande sur un trajet au kilo : aide affichée au-dessus du bouton tant qu'aucun poids n'est saisi (create_bid_bottom_sheet.dart)."},
+  "callStatusConnecting": "Connexion…",
+  "@callStatusConnecting": {
+    "description": "Statut de l'écran d'appel pendant la connexion."
+  },
+  "callStatusRinging": "Ça sonne…",
+  "@callStatusRinging": {
+    "description": "Statut de l'écran d'appel pendant que le téléphone de l'autre sonne."
+  },
+  "callStatusEnded": "Appel terminé",
+  "@callStatusEnded": {
+    "description": "Statut de l'écran d'appel à la fin de l'appel."
+  },
+  "callStatusRejected": "Appel refusé",
+  "@callStatusRejected": {
+    "description": "Statut quand l'autre partie refuse l'appel."
+  },
+  "callStatusMissed": "Pas de réponse",
+  "@callStatusMissed": {
+    "description": "Statut quand l'autre partie ne décroche pas."
+  },
+  "callStatusFailed": "L'appel n'a pas pu aboutir",
+  "@callStatusFailed": {
+    "description": "Statut quand l'appel échoue (réseau, service)."
+  },
+  "callMute": "Couper le micro",
+  "@callMute": {
+    "description": "Bouton de l'écran d'appel qui coupe le micro."
+  },
+  "callUnmute": "Réactiver le micro",
+  "@callUnmute": {
+    "description": "Bouton de l'écran d'appel qui réactive le micro."
+  },
+  "callSpeaker": "Haut-parleur",
+  "@callSpeaker": {
+    "description": "Bouton de l'écran d'appel qui active le haut-parleur."
+  },
+  "callHangUp": "Raccrocher",
+  "@callHangUp": {
+    "description": "Bouton rouge de l'écran d'appel."
+  },
+  "callMicrophoneDenied": "Autorisez le micro dans les réglages pour appeler.",
+  "@callMicrophoneDenied": {
+    "description": "Message quand l'accès au micro est refusé."
+  },
+  "callOpenSettings": "Ouvrir les réglages",
+  "@callOpenSettings": {
+    "description": "Bouton qui ouvre les réglages du téléphone après un refus du micro."
+  },
+  "chatCallInApp": "Appel Yadony",
+  "@chatCallInApp": {
+    "description": "Choix de la feuille d'appel : appel audio dans l'app."
+  },
+  "chatCallInAppSubtitle": "Gratuit, sans montrer votre numéro",
+  "@chatCallInAppSubtitle": {
+    "description": "Sous-titre du choix appel Yadony."
+  },
+  "chatCallByPhone": "Appel téléphone",
+  "@chatCallByPhone": {
+    "description": "Choix de la feuille d'appel : appel téléphonique classique."
+  },
+  "chatCallByPhoneSubtitle": "Avec votre forfait",
+  "@chatCallByPhoneSubtitle": {
+    "description": "Sous-titre du choix appel téléphone."
+  },
+  "chatCallChooserTitle": "Appeler {name}",
+  "@chatCallChooserTitle": {
+    "description": "Titre de la feuille de choix du mode d'appel.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "trackingTimelineOpenParcel": "Voir le colis",
   "@trackingTimelineOpenParcel": {"description": "Bouton principal de la feuille du parcours d'un colis ouverte depuis « Mes envois » de l'onglet Suivi : ouvre le détail de l'envoi (tracking_timeline_bottom_sheet.dart)."},
   "receptionShowQrTitle": "Montrer le QR du colis",

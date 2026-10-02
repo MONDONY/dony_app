@@ -308,6 +308,42 @@ void main() {
 
       // Aucun tag « Hi-fi » : le contenu refusé par le voyageur est bloqué.
       expect(find.byKey(const Key('bid-content-tag-Hi-fi')), findsNothing);
+      // …et l'expéditeur sait pourquoi (FLUTTER-8C : un choix qui s'efface
+      // sans un mot passait pour un blocage de l'app).
+      expect(
+        find.text('Ce voyageur n\'accepte pas « Hi-fi ».'),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    // Sentry FLUTTER-8C : sans liste d'acceptés, tout le catalogue était
+    // proposé, y compris le type refusé, qui s'effaçait aussitôt choisi.
+    testWidgets('sans liste d\'acceptés : le type refusé n\'est pas proposé', (
+      tester,
+    ) async {
+      await openSheet(
+        tester,
+        _announcement(refusedTypes: ['Téléphone & électronique']),
+      );
+
+      await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
+      await tester.tap(find.byKey(const Key('bid-content-field')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('bid-content-field')), 'él');
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('bid-content-item-Téléphone & électronique')),
+        findsNothing,
+      );
+
+      await tester.enterText(find.byKey(const Key('bid-content-field')), 'Vêt');
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('bid-content-item-Vêtements & tissus')),
+        findsOneWidget,
+      );
     });
   });
 }

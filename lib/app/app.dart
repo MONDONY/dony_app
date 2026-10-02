@@ -23,6 +23,9 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
+import 'package:dony/features/calls/data/call_gateway.dart';
+import 'package:dony/features/calls/data/call_session_service.dart';
+import 'package:dony/features/calls/presentation/call_screen.dart';
 import 'package:dony/features/connectivity/bloc/connectivity_cubit.dart';
 import 'package:dony/features/connectivity/presentation/widgets/connectivity_banner.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
@@ -63,6 +66,7 @@ class DonyApp extends StatefulWidget {
 
 class _DonyAppState extends State<DonyApp> {
   StreamSubscription<String>? _navSub;
+  StreamSubscription<IncomingCall>? _incomingCallsSub;
   StreamSubscription<User?>? _authSub;
   StreamSubscription<Uri>? _deepLinkSub;
   AppLifecycleListener? _lifecycleListener;
@@ -122,6 +126,13 @@ class _DonyAppState extends State<DonyApp> {
     // est déjà à l'écran : il lui faut la route courante.
     getIt<NotificationService>().currentLocationProvider = () =>
         appRouter.routerDelegate.currentConfiguration.uri.path;
+    // Appel audio décroché depuis CallKit / la notification Android : on
+    // ouvre l'écran d'appel, qui rejoint l'appel. Même porte que les liens
+    // profonds : poussé sur le verrou PIN, il serait détruit par le `go()` du
+    // déverrouillage et l'appel raccroché.
+    _incomingCallsSub = getIt<CallGateway>().incomingCalls.listen(
+      (call) => _deepLinkGate.dispatch(CallScreenArgs.incomingLocation(call)),
+    );
     // Même porte que les liens profonds : une notification touchée sur le
     // verrou PIN s'empilait par-dessus, puis le déverrouillage (`go('/home')`)
     // effaçait la pile et la cible était perdue au premier essai (FLUTTER-4B).
@@ -247,6 +258,7 @@ class _DonyAppState extends State<DonyApp> {
   @override
   void dispose() {
     _navSub?.cancel();
+    _incomingCallsSub?.cancel();
     _authSub?.cancel();
     _deepLinkSub?.cancel();
     appRouter.routerDelegate.removeListener(_onRouterChanged);
@@ -385,6 +397,11 @@ class _DonyAppState extends State<DonyApp> {
               ],
               child: BlocListener<AuthBloc, AuthState>(
                 listener: (context, state) {
+                  // Appels audio : client Stream connecté pour le compte
+                  // courant, déconnecté à la sortie.
+                  unawaited(
+                    syncCallSession(state, getIt<CallSessionService>()),
+                  );
                   if (AccountResetGuard.shouldResetAccountScopedBlocs(state)) {
                     // `BusinessPrefsBloc`/`StripeAccountBloc` sont des
                     // `lazySingleton` GetIt jamais recréés par `AuthBloc` —

@@ -734,6 +734,96 @@ abstract class AppLocalizations {
   /// **'Cette action nécessite que le colis ait été livré.'**
   String get errorBidNotDeliveredMessage;
 
+  /// No description provided for @errorCallInProgressTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel déjà en cours'**
+  String get errorCallInProgressTitle;
+
+  /// No description provided for @errorCallInProgressMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un appel est déjà en cours dans cette conversation.'**
+  String get errorCallInProgressMessage;
+
+  /// No description provided for @errorCallOutOfWindowTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel plus disponible'**
+  String get errorCallOutOfWindowTitle;
+
+  /// No description provided for @errorCallOutOfWindowMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'appel est possible de l\'acceptation de la commande jusqu\'à 3 jours après la livraison.'**
+  String get errorCallOutOfWindowMessage;
+
+  /// No description provided for @errorCallBlockedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel impossible'**
+  String get errorCallBlockedTitle;
+
+  /// No description provided for @errorCallBlockedMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu ne peux pas appeler cette personne.'**
+  String get errorCallBlockedMessage;
+
+  /// No description provided for @errorCallCalleeUnavailableTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Personne injoignable'**
+  String get errorCallCalleeUnavailableTitle;
+
+  /// No description provided for @errorCallCalleeUnavailableMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette personne ne peut pas être appelée pour le moment. Écris-lui dans la conversation.'**
+  String get errorCallCalleeUnavailableMessage;
+
+  /// No description provided for @errorCallConversationClosedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation fermée'**
+  String get errorCallConversationClosedTitle;
+
+  /// No description provided for @errorCallConversationClosedMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette conversation est fermée, l\'appel n\'est plus possible.'**
+  String get errorCallConversationClosedMessage;
+
+  /// No description provided for @errorCallNotParticipantMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu ne participes pas à cette conversation.'**
+  String get errorCallNotParticipantMessage;
+
+  /// No description provided for @errorCallProviderUnavailableTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel momentanément indisponible'**
+  String get errorCallProviderUnavailableTitle;
+
+  /// No description provided for @errorCallProviderUnavailableMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'appel n\'a pas pu être lancé. Réessaie dans un instant.'**
+  String get errorCallProviderUnavailableMessage;
+
+  /// No description provided for @errorCallsDisabledTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appels indisponibles'**
+  String get errorCallsDisabledTitle;
+
+  /// No description provided for @errorCallsDisabledMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les appels ne sont pas disponibles pour le moment.'**
+  String get errorCallsDisabledMessage;
+
   /// No description provided for @errorInvalidBidStatusTitle.
   ///
   /// In fr, this message translates to:
@@ -4699,6 +4789,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Espèces'**
   String get tripPublishCashLabel;
+
+  /// Sous-titre de la ligne espèces quand elles sont le seul mode possible, activées d'office (prix_conditions_step.dart, Sentry FLUTTER-8M).
+  ///
+  /// In fr, this message translates to:
+  /// **'Toujours accepté sur ce trajet. Commission prélevée au voyageur à la remise'**
+  String get tripPublishCashLockedSubtitle;
+
+  /// Message au toucher de l'interrupteur espèces verrouillé (prix_conditions_step.dart, Sentry FLUTTER-8M).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans paiement par carte sur ce trajet, les espèces restent toujours acceptées : c\'est le mode qui permet aux expéditeurs de réserver.'**
+  String get tripPublishCashLockedExplanation;
 
   /// Sous-titre de la ligne paiement en espèces
   ///
@@ -15557,6 +15659,24 @@ abstract class AppLocalizations {
   /// **'Le solde est crédité en {code}, la devise de l\'opérateur.'**
   String walletTopupMethodCurrencyNotice(String code);
 
+  /// Avertissement quand l'expéditeur ajoute un contenu refusé par le voyageur (create_bid_bottom_sheet.dart _onCategoriesChanged, Sentry FLUTTER-8C).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce voyageur n\'accepte pas « {category} ».'**
+  String bidCreateContentRefusedByTraveler(String category);
+
+  /// Libellé d'accessibilité de la photo du profil public, qui s'ouvre en grand au toucher (profile_public_screen.dart _HeroAvatar, Sentry FLUTTER-8D).
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir la photo de profil'**
+  String get profilePhotoViewAction;
+
+  /// Consigne sous le champ numéro tant que les opérateurs ne sont pas chargés (wallet_topup_method_screen.dart _MobileMoneySection, Sentry FLUTTER-8B).
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisis ton numéro mobile money : tes opérateurs s\'affichent ici.'**
+  String get walletTopupMethodPhoneHint;
+
   /// Avertissement quand le catalogue d'opérateurs est vide pour le numéro saisi (wallet_topup_method_screen.dart _MobileMoneySection).
   ///
   /// In fr, this message translates to:
@@ -20278,6 +20398,24 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Devise'**
   String get prefsCurrencyLabel;
+
+  /// Titre de la feuille ouverte au toucher de la devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet, Sentry FLUTTER-8A).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre devise reste {currency} pour l\'instant'**
+  String prefsCurrencyLockedSheetTitle(String currency);
+
+  /// Explication de la feuille de devise verrouillée (business_prefs_screen.dart _showCurrencyLockedSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre portefeuille contient encore de l\'argent en {currency} : tant qu\'il n\'est pas à zéro, la devise ne peut pas changer, pour que votre solde ne soit jamais converti sans vous. Pour la libérer, utilisez ce solde pour un envoi, ou demandez son remboursement depuis le portefeuille. Le choix de la devise se rouvre dès que le solde est à zéro.'**
+  String prefsCurrencyLockedSheetBody(String currency);
+
+  /// Bouton de la feuille de devise verrouillée vers le portefeuille (business_prefs_screen.dart _showCurrencyLockedSheet).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir mon portefeuille'**
+  String get prefsCurrencyLockedSheetWalletCta;
 
   /// Sous-titre quand la devise est verrouillée (business_prefs_screen.dart)
   ///
@@ -25754,6 +25892,108 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.'**
   String get bidCreateWeightRequiredHint;
+
+  /// Statut de l'écran d'appel pendant la connexion.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion…'**
+  String get callStatusConnecting;
+
+  /// Statut de l'écran d'appel pendant que le téléphone de l'autre sonne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ça sonne…'**
+  String get callStatusRinging;
+
+  /// Statut de l'écran d'appel à la fin de l'appel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel terminé'**
+  String get callStatusEnded;
+
+  /// Statut quand l'autre partie refuse l'appel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel refusé'**
+  String get callStatusRejected;
+
+  /// Statut quand l'autre partie ne décroche pas.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de réponse'**
+  String get callStatusMissed;
+
+  /// Statut quand l'appel échoue (réseau, service).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'appel n\'a pas pu aboutir'**
+  String get callStatusFailed;
+
+  /// Bouton de l'écran d'appel qui coupe le micro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Couper le micro'**
+  String get callMute;
+
+  /// Bouton de l'écran d'appel qui réactive le micro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réactiver le micro'**
+  String get callUnmute;
+
+  /// Bouton de l'écran d'appel qui active le haut-parleur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Haut-parleur'**
+  String get callSpeaker;
+
+  /// Bouton rouge de l'écran d'appel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Raccrocher'**
+  String get callHangUp;
+
+  /// Message quand l'accès au micro est refusé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autorisez le micro dans les réglages pour appeler.'**
+  String get callMicrophoneDenied;
+
+  /// Bouton qui ouvre les réglages du téléphone après un refus du micro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir les réglages'**
+  String get callOpenSettings;
+
+  /// Choix de la feuille d'appel : appel audio dans l'app.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel Yadony'**
+  String get chatCallInApp;
+
+  /// Sous-titre du choix appel Yadony.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gratuit, sans montrer votre numéro'**
+  String get chatCallInAppSubtitle;
+
+  /// Choix de la feuille d'appel : appel téléphonique classique.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel téléphone'**
+  String get chatCallByPhone;
+
+  /// Sous-titre du choix appel téléphone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Avec votre forfait'**
+  String get chatCallByPhoneSubtitle;
+
+  /// Titre de la feuille de choix du mode d'appel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler {name}'**
+  String chatCallChooserTitle(String name);
 
   /// Bouton principal de la feuille du parcours d'un colis ouverte depuis « Mes envois » de l'onglet Suivi : ouvre le détail de l'envoi (tracking_timeline_bottom_sheet.dart).
   ///
