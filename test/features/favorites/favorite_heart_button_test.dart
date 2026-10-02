@@ -329,4 +329,43 @@ void main() {
       );
     });
   });
+
+  group('FavoriteHeartButton — sur fond sombre (FLUTTER-83)', () {
+    Color? pastille(WidgetTester tester) => tester
+        .widget<IconButton>(find.byType(IconButton))
+        .style
+        ?.backgroundColor
+        ?.resolve({});
+
+    testWidgets('signet blanc sur pastille translucide, plus opaque si actif', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          FavoriteHeartButton(isFavorite: false, onDark: true, onToggle: () {}),
+        ),
+      );
+      final inactif = tester.widget<Icon>(find.byType(Icon));
+      expect(inactif.icon, Icons.bookmark_border);
+      expect(inactif.color, Colors.white);
+      final fondInactif = pastille(tester)!;
+
+      await tester.pumpWidget(
+        _wrap(
+          FavoriteHeartButton(isFavorite: true, onDark: true, onToggle: () {}),
+        ),
+      );
+      final actif = tester.widget<Icon>(find.byType(Icon));
+      expect(actif.icon, Icons.bookmark);
+      expect(actif.color, Colors.white);
+      expect(pastille(tester)!.a, greaterThan(fondInactif.a));
+    });
+
+    testWidgets('par défaut, aucune pastille', (tester) async {
+      await tester.pumpWidget(
+        _wrap(FavoriteHeartButton(isFavorite: false, onToggle: () {})),
+      );
+      expect(pastille(tester), isNull);
+    });
+  });
 }

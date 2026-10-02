@@ -118,6 +118,9 @@ Future<void> showTravelerAnnouncementSheet(
   return DonyBottomSheet.show<void>(
     context,
     title: context.l10n.listingTripDetailTitle,
+    // Scarabée de signalement dans l'en-tête, comme sur les écrans
+    // (FLUTTER-83 : la feuille en était dépourvue).
+    showFeedback: true,
     wrapper: favoris == null
         ? null
         : (child) => BlocProvider<FavoriteIdsCubit>.value(
@@ -540,6 +543,8 @@ class _HeroWithFavorite extends StatelessWidget {
               top: DonySpacing.xs,
               right: DonySpacing.xs,
               child: FavoriteHeartButton(
+                // Carte héro bleu nuit : signet clair (FLUTTER-83).
+                onDark: true,
                 isFavorite: estFavori,
                 onToggle: () =>
                     unawaited(_basculerFavori(context, announcement.id)),

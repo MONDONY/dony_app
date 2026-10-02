@@ -16,6 +16,7 @@ import 'package:dony/features/recipients/data/models/recipient_invitation.dart';
 import 'package:dony/features/recipients/data/repositories/recipient_invitation_repository.dart';
 import 'package:dony/features/recipients/presentation/screens/recipient_invitations_screen.dart';
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
+import 'package:dony/features/recipients/presentation/widgets/sent_invitations_section.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -188,7 +189,18 @@ void main() {
 
       expect(find.text('Invitations envoyées'), findsOneWidget);
       expect(find.text('+221 •• •• •• 12'), findsOneWidget);
-      expect(find.text('EN ATTENTE'), findsNWidgets(2));
+      // FLUTTER-89 : statut explicite, identique que le numéro ait un compte
+      // ou non, et aide sous le titre.
+      expect(find.text('INVITATION ENVOYÉE'), findsNWidgets(2));
+      expect(find.text('EN ATTENTE'), findsNothing);
+      expect(
+        find.text(
+          "La personne recevra l'invitation dans Yadony si elle a un compte. "
+          "Sinon, invite-la à installer l'app.",
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('sent-invitation-share-s1')), findsOneWidget);
       // FLUTTER-7V : l'invitation acceptée a rejoint le carnet, elle ne
       // figure plus parmi les invitations envoyées.
       expect(find.text('a••••@gmail.com'), findsNothing);
@@ -287,6 +299,45 @@ void main() {
       // Premier chargement + rechargement après l'envoi.
       verify(() => repo.getSent()).called(2);
     });
+
+    testWidgets(
+      'FLUTTER-88 : la section apparaît dès l\'envoi, en tête du carnet',
+      (tester) async {
+        var calls = 0;
+        when(() => repo.getSent()).thenAnswer((_) async {
+          calls++;
+          return calls == 1 ? const [] : [_sent.first];
+        });
+        when(() => repo.sendToPhone(any())).thenAnswer((_) async {});
+        await pumpCarnet(tester, recipients: [_plain, _linked]);
+        expect(find.byKey(const Key('sent-invitations-section')), findsNothing);
+
+        await tester.tap(find.byKey(const Key('invite-yadony-recipient')));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('invite-recipient-phone')),
+          '+221771234567',
+        );
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('invite-recipient-submit')));
+        await tester.pumpAndSettle();
+
+        // Sans recharger l'écran : l'invitation est déjà listée…
+        expect(
+          find.byKey(const Key('sent-invitations-section')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('sent-invitation-s1')), findsOneWidget);
+        // … au-dessus des destinataires du carnet, donc visible sans défiler.
+        final sectionY = tester
+            .getTopLeft(find.byKey(const Key('sent-invitations-section')))
+            .dy;
+        final firstRecipientY = tester
+            .getTopLeft(find.text('Moussa Traoré'))
+            .dy;
+        expect(sectionY, lessThan(firstRecipientY));
+      },
+    );
   });
 
   group('écran invité', () {
@@ -446,6 +497,61 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Aucune demande'), findsOneWidget);
+    });
+  });
+
+  group('FLUTTER-89 : partager le lien de l\'app', () {
+    testWidgets('ouvre le partage avec le lien yadony.com et le mesure', (
+      tester,
+    ) async {
+      when(() => repo.getSent()).thenAnswer((_) async => _sent);
+      final shared = <String>[];
+      await tester.pumpWidget(
+        BlocProvider(
+          create: (_) => SentInvitationsCubit(repo, analytics)..load(),
+          child: MaterialApp(
+            locale: AppL10n.fr,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SentInvitationsSection(
+                share: (text, _) async => shared.add(text),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('sent-invitation-share-s3')));
+      await tester.pump();
+
+      expect(shared, hasLength(1));
+      expect(shared.single, contains('https://yadony.com'));
+      expect(shared.single, contains('Yadony'));
+      verify(
+        () => analytics.logEvent('recipient_invitation_app_link_shared'),
+      ).called(1);
+    });
+
+    testWidgets('en anglais : aide, statut et bouton traduits', (tester) async {
+      when(() => repo.getSent()).thenAnswer((_) async => [_sent.first]);
+      await tester.pumpWidget(
+        BlocProvider(
+          create: (_) => SentInvitationsCubit(repo, analytics)..load(),
+          child: const MaterialApp(
+            locale: AppL10n.en,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: SentInvitationsSection()),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('INVITATION SENT'), findsOneWidget);
+      expect(find.text('Share the app link'), findsOneWidget);
+      expect(find.textContaining('if they have an account'), findsOneWidget);
     });
   });
 }
