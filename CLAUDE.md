@@ -332,7 +332,11 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `onboarding_step_viewed` | `resolvePostSignupRoute` — étape retenue à l'entrée du parcours d'onboarding progressif (propriétés `step` énumération fermée, `index`, `total`) |
 | `onboarding_step_completed` | CountryOnboardingCubit.select() (`step: 'country'`) · PersonalInfoCubit.submit() (`step: 'personal_info'`) · AnalyticsConsentScreen._respond() (`step: 'consent'`) — étape du parcours d'onboarding progressif complétée |
 | `onboarding_completed` | `resolvePostSignupRoute` — `nextStep` rend `null`, le compte est complet (propriété `steps_total`) |
-| `first_steps_choice` | FirstStepsScreen._choose — écran de fin d'inscription `/first-steps` (« Par quoi voulez-vous commencer ? »), émis depuis l'écran comme les tuiles du hub Activités : c'est un choix de navigation, sans état métier (propriété `choice` : `trip`/`parcel`/`later`) |
+| `first_steps_choice` | FirstStepsScreen._track — écran `/first-steps`, émis depuis l'écran (choix de navigation sans état métier). Propriété `choice` : `trip`/`parcel`/`later` (écran historique) ou `see_trips`/`open_trip`/`publish_parcel`/`create_alert`/`publish_trip`/`open_package`/`later` (écran personnalisé) ; `variant` (écran personnalisé seulement) : `sender_full`/`sender_empty`/`traveler_full`/`traveler_empty`/`both_full`/`both_empty` |
+| `intent_declared` | IntentCubit.submit — intention enregistrée (`/auth/intent`, feuille d'intention, Réglages). Propriétés : `intent` (`SENDER`/`TRAVELER`/`BOTH`), `destination_country` (code pays ou `OTHER`), `source` (`SIGNUP`/`PROMPT`/`SETTINGS`) |
+| `intent_prompt_shown` | _MapSenderViewState._maybeAskIntent — feuille d'intention affichée à un compte existant sans intention (2 fois max, 7 jours d'écart) |
+| `first_action_card_tapped` | FirstActionCard — carte épinglée de l'accueil (KYC vérifié, aucune première action). Propriété `variant` (mêmes valeurs que `first_steps_choice.variant`, plus `unknown`) |
+| `success_screen_tertiary_tapped` | DonySuccessScreen — action tertiaire (ex. « Configurer mes paiements » après la publication d'un trajet). Propriété `context` |
 | `login_success` | AuthBloc (check / phone / social / email) |
 | `login_failed` | AuthBloc._onCheckRequested() |
 | `guest_session_started` | AuthBloc._onGuestSessionRequested() — session Firebase anonyme ouverte avec succès depuis « Parcourir sans compte » |
