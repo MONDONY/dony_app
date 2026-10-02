@@ -1,3 +1,4 @@
+import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 // Résout la route GoRouter correspondant à un type + payload de notification —
 // utilisé à la fois par le tap sur push (foreground/background/terminated) et
 // par le tap dans la boîte de réception in-app, pour garantir que les deux
@@ -194,6 +195,9 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // Relance d'un onboarding Connect abandonné : la seule action utile est de
     // le reprendre, on ouvre donc directement l'écran d'inscription.
     'STRIPE_ONBOARDING_INCOMPLETE' => '/connect/onboarding/intro',
+    // Relance « première action » après KYC : les premiers pas adaptés à
+    // l'intention (trajets ou colis de la ligne).
+    'FIRST_ACTION_REMINDER' => firstStepsRoute,
     'CARD_EXPIRING' => '/payments/commission-method',
 
     // Message de l'équipe support → détail du ticket si l'id est valide,

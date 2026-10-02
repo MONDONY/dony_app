@@ -1,4 +1,6 @@
+import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
+import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart';
 
 /// Query param de `/kyc/verify` portant l'écran où revenir une fois
 /// l'identité vérifiée, hors onboarding.
@@ -31,4 +33,26 @@ String kycVerifyLocation({required bool fromOnboarding, String? returnTo}) {
     path: '/kyc/verify',
     queryParameters: params.isEmpty ? null : params,
   ).toString();
+}
+
+/// Sortie de l'écran KYC (guidage après KYC). Inscription : `/first-steps`
+/// quand l'onboarding se termine, sinon l'étape suivante. Hors inscription :
+/// retour à l'action demandée, sinon premiers pas tant qu'aucune première
+/// action n'est faite, sinon l'accueil.
+String kycExitRoute({
+  required String? onboardingDestination,
+  required String? returnTo,
+  required bool justVerified,
+  required ActivationState activation,
+}) {
+  if (onboardingDestination != null) {
+    return onboardingDestination == '/home'
+        ? firstStepsRoute
+        : onboardingDestination;
+  }
+  if (!justVerified) return '/home';
+  if (returnTo != null) return returnTo;
+  final notDone =
+      activation is ActivationLoaded && !activation.status.firstActionDone;
+  return notDone ? firstStepsRoute : '/home';
 }

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/activation/bloc/activation_cubit.dart';
+import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -26,6 +28,9 @@ class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
 
 class _MockAuthRepository extends Mock implements AuthRepository {}
+
+class _MockActivationCubit extends MockCubit<ActivationState>
+    implements ActivationCubit {}
 
 class _FakeKycEvent extends Fake implements KycEvent {}
 
@@ -366,6 +371,38 @@ void main() {
 
       verifyNever(() => authRepository.markOnboardingSeen());
       expect(find.text('Home route'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'VERIFIED depuis le profil sans écran de retour ni première action : '
+    'premiers pas (guidage après KYC)',
+    (tester) async {
+      final activation = _MockActivationCubit();
+      when(() => activation.state).thenReturn(
+        const ActivationLoaded(
+          ActivationStatus(intent: UserIntent.sender, firstActionDone: false),
+        ),
+      );
+      getIt.registerSingleton<ActivationCubit>(activation);
+      addTearDown(() => getIt.unregister<ActivationCubit>());
+      const verified = KycStatusLoaded(
+        kycStatus: 'VERIFIED',
+        verificationStatus: 'verified',
+      );
+      whenListen<KycState>(
+        kycBloc,
+        Stream.value(verified),
+        initialState: verified,
+      );
+
+      await _wrap(tester, kycBloc: kycBloc, authBloc: authBloc);
+
+      await tester.pump(const Duration(milliseconds: 1600));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => authRepository.markOnboardingSeen());
+      expect(find.text('First steps route'), findsOneWidget);
     },
   );
 

@@ -1534,6 +1534,52 @@ void main() {
       });
     });
 
+    /// Guidage après KYC : après une création, l'écran de succès propose de
+    /// configurer les paiements quand le compte Stripe reste à faire.
+    Future<void> emitCreated(
+      WidgetTester tester,
+      ConnectAccountStatus stripeStatus,
+    ) async {
+      final stripe = _MockStripeAccountBloc();
+      when(() => stripe.state).thenReturn(StripeAccountReady(stripeStatus));
+      when(() => stripe.stream).thenAnswer((_) => const Stream.empty());
+      getIt.unregister<StripeAccountBloc>();
+      getIt.registerFactory<StripeAccountBloc>(() => stripe);
+      addTearDown(() {
+        getIt.unregister<StripeAccountBloc>();
+        getIt.registerFactory<StripeAccountBloc>(_makeStripeBloc);
+      });
+      final states = StreamController<AnnouncementState>.broadcast();
+      addTearDown(states.close);
+      when(() => announcementBloc.stream).thenAnswer((_) => states.stream);
+
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+      states.add(AnnouncementCreated(_makeFullAnnouncement()));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+    }
+
+    testWidgets('création avec paiements à configurer : bouton « Configurer '
+        'mes paiements » sur l\'écran de succès', (tester) async {
+      await emitCreated(
+        tester,
+        const ConnectAccountStatus(status: 'NOT_CREATED'),
+      );
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.byKey(const Key('success-screen-tertiary')), findsOneWidget);
+      expect(find.text('Configurer mes paiements'), findsOneWidget);
+    });
+
+    testWidgets('création avec paiements déjà configurés : pas de bouton '
+        'paiements', (tester) async {
+      await emitCreated(
+        tester,
+        const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+      );
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.byKey(const Key('success-screen-tertiary')), findsNothing);
+    });
+
     /// Navigue jusqu'à l'étape 2 (mode édition, "Enregistrer") avec un
     /// `AnnouncementModel` complet. `_wrapWithRouter`'s `_makeStripeBloc()`
     /// reste sur `StripeAccountInitial()` (Stripe non configuré) — le

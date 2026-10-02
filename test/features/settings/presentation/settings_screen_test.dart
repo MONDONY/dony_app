@@ -158,6 +158,24 @@ void main() {
       expect(find.text('Paramètres'), findsOneWidget);
     });
 
+    testWidgets('PERSONNALISATION : ligne « Ce que je fais sur Yadony »', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('settings-intent')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('settings-intent')), findsOneWidget);
+      expect(find.text('Ce que je fais sur Yadony'), findsOneWidget);
+      expect(find.text('Envoyer, voyager ou les deux'), findsOneWidget);
+    });
+
     testWidgets('APPARENCE : ligne Thème sans segmented', (tester) async {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();

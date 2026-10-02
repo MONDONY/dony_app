@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -11,6 +12,11 @@ import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/activation/bloc/activation_cubit.dart';
+import 'package:dony/features/activation/data/intent_prompt_policy.dart';
+import 'package:dony/features/activation/data/models/activation_status.dart';
+import 'package:dony/features/activation/presentation/widgets/first_action_card.dart';
+import 'package:dony/features/activation/presentation/widgets/intent_prompt_sheet.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
@@ -282,6 +288,24 @@ class _MapSenderView extends StatefulWidget {
 }
 
 class _MapSenderViewState extends State<_MapSenderView> {
+  /// Statut d'activation (guidage après KYC) ; `null` hors DI complète.
+  final ActivationCubit? _activationCubit = getItSafe<ActivationCubit>();
+
+  /// Retour au premier plan : la carte « première action » disparaît dès que
+  /// la personne a publié, réservé ou créé une alerte ailleurs.
+  late final AppLifecycleListener _activationLifecycle;
+  GoRouter? _router;
+
+  void _onRouteChanged() {
+    final cubit = _activationCubit;
+    final router = _router;
+    if (cubit == null || router == null || !mounted) return;
+    final path = router.routerDelegate.currentConfiguration.uri.path;
+    if (shouldRefreshActivationOnHome(path, cubit.state)) {
+      unawaited(cubit.load());
+    }
+  }
+
   final _sheetController = DraggableScrollableController();
 
   /// Hauteur repliée de la feuille, recalculée à chaque build (texte agrandi,
@@ -345,6 +369,23 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _pendingSearchNotifier!.addListener(_consumePendingSearch);
     }
     _sheetController.addListener(_onSheetSizeChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Retour sur l'accueil : relire le statut tant que la carte « première
+      // action » est affichée ; et poser la question d'intention si le statut
+      // était déjà chargé avant le montage de l'accueil.
+      _router = GoRouter.maybeOf(context);
+      _router?.routerDelegate.addListener(_onRouteChanged);
+      final activation = _activationCubit?.state;
+      if (activation != null) unawaited(_maybeAskIntent(context, activation));
+    });
+    _activationLifecycle = AppLifecycleListener(
+      onResume: () {
+        if (_activationCubit?.state is ActivationLoaded) {
+          unawaited(_activationCubit!.load());
+        }
+      },
+    );
     // Blocage ou déblocage : le serveur ne renvoie plus (ou renvoie de nouveau)
     // les trajets et demandes de cette personne. On relance la recherche du mode
     // affiché plutôt que de laisser une liste que le serveur désavoue.
@@ -533,6 +574,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   @override
   void dispose() {
+    _router?.routerDelegate.removeListener(_onRouteChanged);
+    _activationLifecycle.dispose();
     _blockSub?.cancel();
     _pendingSearchNotifier?.removeListener(_consumePendingSearch);
     _sheetController.removeListener(_onSheetSizeChanged);
@@ -1260,7 +1303,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final authState = context.watch<AuthBloc>().state;
     final currentUserId = authState.currentUserId;
     final isKycVerified = authState.currentUser?.isKycVerified ?? false;
-    return Scaffold(
+    final activation = _activationCubit;
+    final scaffold = Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
         builder: (context, state) {
@@ -1543,6 +1587,36 @@ class _MapSenderViewState extends State<_MapSenderView> {
         },
       ),
     );
+    if (activation == null) return scaffold;
+    // Bloc passé explicitement : même instance que le provider global de
+    // l'app, et l'accueil reste montable sans lui (tests, aperçus).
+    return BlocListener<ActivationCubit, ActivationState>(
+      bloc: activation,
+      listenWhen: (p, c) => c is ActivationLoaded && p is! ActivationLoaded,
+      listener: _maybeAskIntent,
+      child: scaffold,
+    );
+  }
+
+  /// Comptes existants sans intention : la question est posée au plus deux
+  /// fois, à 7 jours d'écart (guidage après KYC).
+  Future<void> _maybeAskIntent(
+    BuildContext context,
+    ActivationState state,
+  ) async {
+    if (state is! ActivationLoaded || state.status.intent != null) return;
+    final policy = IntentPromptPolicy(getIt<HiveService>().userPrefs);
+    final now = DateTime.now();
+    if (!policy.shouldShow(now)) return;
+    policy.markShown(now);
+    unawaited(
+      getIt<AnalyticsService>().logEvent(AnalyticsEvents.intentPromptShown),
+    );
+    final saved = await IntentPromptSheet.show(
+      context,
+      source: IntentSource.prompt,
+    );
+    if (saved == true) unawaited(_activationCubit?.load());
   }
 
   Future<double?> _showMaxWeightSheet(BuildContext ctx) async {
@@ -1976,6 +2050,32 @@ class _MapSenderViewState extends State<_MapSenderView> {
               child: CustomScrollView(
                 controller: scrollCtrl,
                 slivers: [
+                  // Guidage après KYC : rappel fixe tant qu'aucune première
+                  // action n'est faite (au-dessus du carrousel, sans croix).
+                  if (_activationCubit != null)
+                    BlocBuilder<ActivationCubit, ActivationState>(
+                      bloc: _activationCubit,
+                      builder: (context, activation) => SliverToBoxAdapter(
+                        child:
+                            shouldShowFirstActionCard(
+                              activation,
+                              isKycVerified: isKycVerified,
+                            )
+                            ? Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  DonySpacing.base,
+                                  DonySpacing.sm,
+                                  DonySpacing.base,
+                                  0,
+                                ),
+                                child: FirstActionCard(
+                                  status:
+                                      (activation as ActivationLoaded).status,
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ),
                   SliverToBoxAdapter(
                     child: EvergreenGuidanceCarousel(
                       hiveService: getIt<HiveService>(),

@@ -15,6 +15,7 @@ import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/analytics_consent_gate.dart';
+import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/auth/account_reset_guard.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -311,6 +312,9 @@ class _DonyAppState extends State<DonyApp> {
                 BlocProvider<ActiveRoleCubit>(
                   create: (_) => getIt<ActiveRoleCubit>(),
                 ),
+                BlocProvider<ActivationCubit>.value(
+                  value: getIt<ActivationCubit>(),
+                ),
                 // lazy: false + AuthCheckRequested : le profil serveur est
                 // chargé dès le démarrage, EN ARRIÈRE-PLAN. La navigation
                 // initiale, elle, ne l'attend pas (cf. resolveInitialLocation)
@@ -412,6 +416,7 @@ class _DonyAppState extends State<DonyApp> {
                     context.read<StripeAccountBloc>().add(
                       const StripeAccountReset(),
                     );
+                    context.read<ActivationCubit>().reset();
                   }
                   // Garde-fou de démarrage : session Firebase valide mais
                   // compte absent côté backend (404 → AuthInitial). On ne peut
@@ -434,6 +439,9 @@ class _DonyAppState extends State<DonyApp> {
                     context.read<ActiveRoleCubit>().syncWithRoles(
                       state.user.roles,
                     );
+                    // Statut d'activation (intention, première action) : chargé à
+                    // la connexion seulement, un visiteur n'y a pas accès.
+                    unawaited(context.read<ActivationCubit>().load());
                     // One-shot migration: push legacy Hive-saved trips to server,
                     // then reload favorites so migrated items appear immediately.
                     // Capture cubit ref before the async gap to avoid

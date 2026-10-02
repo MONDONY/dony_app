@@ -509,6 +509,13 @@ void main() {
     });
   });
 
+  test('FIRST_ACTION_REMINDER ouvre les premiers pas', () {
+    expect(
+      resolveNotificationRoute('FIRST_ACTION_REMINDER', {}),
+      '/first-steps',
+    );
+  });
+
   group('resolveNotificationRoute — CALL_MISSED', () {
     test('ouvre la conversation pour rappeler', () {
       expect(

@@ -528,6 +528,10 @@ abstract final class AnalyticsEvents {
 
   /// Choix de l'écran de fin d'inscription : trip, parcel ou later.
   static const firstStepsChoice = 'first_steps_choice';
+  static const intentDeclared = 'intent_declared';
+  static const intentPromptShown = 'intent_prompt_shown';
+  static const firstActionCardTapped = 'first_action_card_tapped';
+  static const successScreenTertiaryTapped = 'success_screen_tertiary_tapped';
 
   // Langue serveur — synchronisation de la langue effective de l'app avec
   // `preferredLanguage` du compte (`LanguageSyncCubit`).

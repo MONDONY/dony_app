@@ -15753,4 +15753,152 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackingStepPhotoOpen => 'Enlarge photo';
+
+  @override
+  String get authStepIntent => 'Your plan';
+
+  @override
+  String get intentTitle => 'You use Yadony to…';
+
+  @override
+  String get intentSubtitle => 'We show you what matters to you right away.';
+
+  @override
+  String get intentSender => 'Send parcels';
+
+  @override
+  String get intentSenderHint => 'I am looking for a traveler for my parcel';
+
+  @override
+  String get intentTraveler => 'I travel and have spare room';
+
+  @override
+  String get intentTravelerHint => 'I make the most of my spare kilos';
+
+  @override
+  String get intentBoth => 'Both';
+
+  @override
+  String get intentBothHint => 'I send and I travel';
+
+  @override
+  String get intentDestinationTitle => 'To which country?';
+
+  @override
+  String get intentDestinationOther => 'Other';
+
+  @override
+  String get intentContinue => 'Continue';
+
+  @override
+  String get intentSaveError => 'We could not save your choice right now.';
+
+  @override
+  String get intentSheetTitle => 'What do you do on Yadony?';
+
+  @override
+  String get intentSaved => 'Got it';
+
+  @override
+  String get settingsIntentLabel => 'What I do on Yadony';
+
+  @override
+  String get settingsIntentSubtitle => 'Send, travel or both';
+
+  @override
+  String get firstStepsVerified => 'Identity verified';
+
+  @override
+  String firstStepsSenderTripsTitle(int count, String country) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers leave for $country within 15 days',
+      one: '1 traveler leaves for $country within 15 days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get firstStepsSenderTripsCta => 'See trips';
+
+  @override
+  String get firstStepsSenderPublishLink => 'Post my parcel request';
+
+  @override
+  String firstStepsSenderNoTripsTitle(String country) {
+    return 'No traveler to $country yet';
+  }
+
+  @override
+  String get firstStepsSenderNoTripsSubtitle =>
+      'Create an alert and we will tell you as soon as a traveler leaves.';
+
+  @override
+  String get firstStepsSenderAlertCta => 'Notify me when a traveler leaves';
+
+  @override
+  String firstStepsTravelerPackagesTitle(int count, String country) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels are waiting for a traveler to $country',
+      one: '1 parcel is waiting for a traveler to $country',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get firstStepsTravelerNoPackagesTitle =>
+      'Publish your trip, senders on your route will be notified';
+
+  @override
+  String get firstStepsTravelerCta => 'Publish my trip';
+
+  @override
+  String get firstStepsBothTravelLink => 'Traveling too? Publish your trip';
+
+  @override
+  String get firstStepsYourDestination => 'your destination';
+
+  @override
+  String firstStepsTripLine(String from, String to) {
+    return '$from to $to';
+  }
+
+  @override
+  String firstStepsKgAvailable(String kg) {
+    return '$kg kg available';
+  }
+
+  @override
+  String firstStepsPackageWeight(String kg) {
+    return '$kg kg weight';
+  }
+
+  @override
+  String firstActionCardSenderTrips(String country) {
+    return 'Travelers are leaving for $country';
+  }
+
+  @override
+  String get firstActionCardSenderNone => 'Get notified when a traveler leaves';
+
+  @override
+  String firstActionCardTravelerPackages(String country) {
+    return 'Parcels are waiting for a traveler to $country';
+  }
+
+  @override
+  String get firstActionCardTravelerNone => 'Publish your first trip';
+
+  @override
+  String get firstActionCardUnknown =>
+      'Your identity is verified: take your first step';
+
+  @override
+  String get firstActionCardCta => 'See';
+
+  @override
+  String get tripPublishSuccessPayoutsCta => 'Set up my payouts';
 }

@@ -26048,6 +26048,240 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Agrandir la photo'**
   String get trackingStepPhotoOpen;
+
+  /// Libellé de l'étape d'inscription où l'utilisateur déclare son intention
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre projet'**
+  String get authStepIntent;
+
+  /// Titre de l'étape intention
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous utilisez Yadony pour…'**
+  String get intentTitle;
+
+  /// Sous-titre de l'étape intention
+  ///
+  /// In fr, this message translates to:
+  /// **'On vous montre directement ce qui vous intéresse.'**
+  String get intentSubtitle;
+
+  /// Choix d'intention : expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer des colis'**
+  String get intentSender;
+
+  /// Précision du choix expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Je cherche un voyageur pour mon colis'**
+  String get intentSenderHint;
+
+  /// Choix d'intention : voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Je voyage et j\'ai de la place'**
+  String get intentTraveler;
+
+  /// Précision du choix voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Je rentabilise mes kilos disponibles'**
+  String get intentTravelerHint;
+
+  /// Choix d'intention : expéditeur et voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Les deux'**
+  String get intentBoth;
+
+  /// Précision du choix les deux
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'envoie et je voyage'**
+  String get intentBothHint;
+
+  /// Question du pays de destination visé
+  ///
+  /// In fr, this message translates to:
+  /// **'Vers quel pays ?'**
+  String get intentDestinationTitle;
+
+  /// Choix d'un pays de destination non listé
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get intentDestinationOther;
+
+  /// Bouton de validation de l'intention
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer'**
+  String get intentContinue;
+
+  /// Erreur d'enregistrement de l'intention
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'enregistrer votre choix pour l\'instant.'**
+  String get intentSaveError;
+
+  /// Titre de la feuille d'intention pour les comptes existants
+  ///
+  /// In fr, this message translates to:
+  /// **'Que faites-vous sur Yadony ?'**
+  String get intentSheetTitle;
+
+  /// Confirmation après modification de l'intention
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est noté'**
+  String get intentSaved;
+
+  /// Ligne des réglages pour modifier l'intention
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que je fais sur Yadony'**
+  String get settingsIntentLabel;
+
+  /// Sous-titre de la ligne intention des réglages
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer, voyager ou les deux'**
+  String get settingsIntentSubtitle;
+
+  /// Badge en tête des premiers pas personnalisés
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée'**
+  String get firstStepsVerified;
+
+  /// Titre des premiers pas expéditeur avec trajets
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 voyageur part vers {country} dans les 15 jours} other{{count} voyageurs partent vers {country} dans les 15 jours}}'**
+  String firstStepsSenderTripsTitle(int count, String country);
+
+  /// Bouton principal expéditeur avec trajets
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les trajets'**
+  String get firstStepsSenderTripsCta;
+
+  /// Lien secondaire expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier ma demande de colis'**
+  String get firstStepsSenderPublishLink;
+
+  /// Titre des premiers pas expéditeur sans trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun voyageur vers {country} pour l\'instant'**
+  String firstStepsSenderNoTripsTitle(String country);
+
+  /// Sous-titre expéditeur sans trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Créez une alerte, on vous prévient dès qu\'un voyageur part.'**
+  String get firstStepsSenderNoTripsSubtitle;
+
+  /// Bouton principal expéditeur sans trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Me prévenir dès qu\'un voyageur part'**
+  String get firstStepsSenderAlertCta;
+
+  /// Titre des premiers pas voyageur avec colis
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 colis attend un voyageur vers {country}} other{{count} colis attendent un voyageur vers {country}}}'**
+  String firstStepsTravelerPackagesTitle(int count, String country);
+
+  /// Titre des premiers pas voyageur sans colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Publiez votre trajet, les expéditeurs de votre ligne seront prévenus'**
+  String get firstStepsTravelerNoPackagesTitle;
+
+  /// Bouton principal voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier mon trajet'**
+  String get firstStepsTravelerCta;
+
+  /// Lien pour les utilisateurs qui envoient et voyagent
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous voyagez aussi ? Publiez votre trajet'**
+  String get firstStepsBothTravelLink;
+
+  /// Remplace le pays quand la destination est inconnue
+  ///
+  /// In fr, this message translates to:
+  /// **'votre destination'**
+  String get firstStepsYourDestination;
+
+  /// Trajet ou colis : ville de départ et d'arrivée
+  ///
+  /// In fr, this message translates to:
+  /// **'{from} vers {to}'**
+  String firstStepsTripLine(String from, String to);
+
+  /// Kilos disponibles d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} kg disponibles'**
+  String firstStepsKgAvailable(String kg);
+
+  /// Poids d'un colis
+  ///
+  /// In fr, this message translates to:
+  /// **'{kg} kg'**
+  String firstStepsPackageWeight(String kg);
+
+  /// Carte d'accueil expéditeur avec trajets
+  ///
+  /// In fr, this message translates to:
+  /// **'Des voyageurs partent vers {country}'**
+  String firstActionCardSenderTrips(String country);
+
+  /// Carte d'accueil expéditeur sans trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Soyez prévenu dès qu\'un voyageur part'**
+  String get firstActionCardSenderNone;
+
+  /// Carte d'accueil voyageur avec colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Des colis attendent un voyageur vers {country}'**
+  String firstActionCardTravelerPackages(String country);
+
+  /// Carte d'accueil voyageur sans colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Publiez votre premier trajet'**
+  String get firstActionCardTravelerNone;
+
+  /// Carte d'accueil intention inconnue
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre identité est vérifiée : passez à l\'action'**
+  String get firstActionCardUnknown;
+
+  /// Action de la carte d'accueil
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir'**
+  String get firstActionCardCta;
+
+  /// Bouton après publication d'un trajet sans paiements configurés
+  ///
+  /// In fr, this message translates to:
+  /// **'Configurer mes paiements'**
+  String get tripPublishSuccessPayoutsCta;
 }
 
 class _AppLocalizationsDelegate

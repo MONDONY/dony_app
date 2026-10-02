@@ -339,7 +339,7 @@ void main() {
         () => backend.capture(captureAny(), captureAny()),
       ).captured;
       expect(captured[0], AnalyticsEvents.onboardingStepViewed);
-      expect(captured[1], {'step': 'personal_info', 'index': 3, 'total': 5});
+      expect(captured[1], {'step': 'personal_info', 'index': 3, 'total': 4});
       expect(captured.toString(), isNot(contains('u1')));
     });
 
@@ -364,7 +364,7 @@ void main() {
 
         verify(
           () => backend.capture(AnalyticsEvents.onboardingCompleted, {
-            'steps_total': 5,
+            'steps_total': 4,
           }),
         ).called(1);
         verifyNever(

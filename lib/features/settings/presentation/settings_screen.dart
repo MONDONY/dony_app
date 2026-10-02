@@ -6,6 +6,9 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/activation/bloc/activation_cubit.dart';
+import 'package:dony/features/activation/data/models/activation_status.dart';
+import 'package:dony/features/activation/presentation/widgets/intent_prompt_sheet.dart';
 import 'package:dony/features/home/presentation/widgets/evergreen_guidance_carousel.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/data/models/user_preferences_model.dart';
@@ -140,6 +143,15 @@ class SettingsScreen extends StatelessWidget {
               SettingsFlatGroup(
                 children: [
                   DonyListTile(
+                    key: const Key('settings-intent'),
+                    iconAsset: 'route',
+                    iconColor: cs.primary,
+                    iconBgColor: cs.primaryContainer,
+                    label: l.settingsIntentLabel,
+                    subtitle: l.settingsIntentSubtitle,
+                    onTap: () => _editIntent(context),
+                  ),
+                  DonyListTile(
                     iconAsset: 'bell',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
@@ -224,6 +236,25 @@ class SettingsScreen extends StatelessWidget {
   /// dans le reste de l'app (une clé par tutoriel) : sans ça, une fois
   /// toutes les cartes fermées, ces zones de suggestions restent vides pour
   /// toujours, sans moyen de revenir en arrière.
+  /// Modifier l'intention (envoyer, voyager, les deux) et le pays visé.
+  Future<void> _editIntent(BuildContext context) async {
+    final activation = context.read<ActivationCubit>().state;
+    final status = activation is ActivationLoaded ? activation.status : null;
+    final saved = await IntentPromptSheet.show(
+      context,
+      source: IntentSource.settings,
+      initialIntent: status?.intent,
+      initialDestination: status?.destinationCountry,
+    );
+    if (saved != true || !context.mounted) return;
+    unawaited(context.read<ActivationCubit>().load());
+    DonySnackbar.show(
+      context,
+      message: context.l10n.intentSaved,
+      type: DonySnackbarType.success,
+    );
+  }
+
   void _resetGuidanceCards(BuildContext context) {
     unawaited(
       getIt<AnalyticsService>().logEvent(
