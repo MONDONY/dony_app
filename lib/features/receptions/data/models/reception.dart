@@ -88,6 +88,13 @@ class Reception {
   bool get canMessageTraveler =>
       isConfirmed && activeBidStatuses.contains(bidStatus);
 
+  /// Le destinataire peut montrer le QR du colis au voyageur : lien
+  /// `CONFIRMED` (le back refuse le QR sinon, en 403) et colis pas encore
+  /// remis. Le QR identifie le colis au scan ; la remise exige toujours le
+  /// code de retrait.
+  bool get canShowParcelQr =>
+      isConfirmed && activeBidStatuses.contains(bidStatus);
+
   factory Reception.fromJson(Map<String, dynamic> json) {
     String? text(String key) {
       final value = json[key];

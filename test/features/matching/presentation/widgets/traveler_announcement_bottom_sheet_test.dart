@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -248,6 +249,21 @@ Widget _harness({
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
+
+/// Utilisateur réellement connecté : la feuille lit la session Firebase, plus
+/// AuthBloc, pour décider s'il faut demander de se connecter (FLUTTER-7X).
+class _RealSessionProbe implements FirebaseSessionProbe {
+  const _RealSessionProbe();
+
+  @override
+  bool get hasSession => true;
+
+  @override
+  bool get isAnonymous => false;
+
+  @override
+  bool get hasRealSession => true;
+}
 
 void main() {
   setUpAll(() {
@@ -628,6 +644,9 @@ void main() {
 
     setUp(() {
       GetIt.I.reset();
+      GetIt.I.registerSingleton<FirebaseSessionProbe>(
+        const _RealSessionProbe(),
+      );
 
       mockKycBloc = _MockKycBloc();
       when(() => mockKycBloc.stream).thenAnswer((_) => const Stream.empty());

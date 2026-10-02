@@ -18090,5 +18090,13 @@
   "chatCopyMessageAction": "Copier le message",
   "@chatCopyMessageAction": {"description": "Entrée ajoutée au menu de sélection d'une bulle de texte, et action du lecteur d'écran, qui copie le message entier (chat_screen.dart _TextContent)."},
   "bidCreateWeightRequiredHint": "Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.",
-  "@bidCreateWeightRequiredHint": {"description": "Formulaire de demande sur un trajet au kilo : aide affichée au-dessus du bouton tant qu'aucun poids n'est saisi (create_bid_bottom_sheet.dart)."}
+  "@bidCreateWeightRequiredHint": {"description": "Formulaire de demande sur un trajet au kilo : aide affichée au-dessus du bouton tant qu'aucun poids n'est saisi (create_bid_bottom_sheet.dart)."},
+  "trackingTimelineOpenParcel": "Voir le colis",
+  "@trackingTimelineOpenParcel": {"description": "Bouton principal de la feuille du parcours d'un colis ouverte depuis « Mes envois » de l'onglet Suivi : ouvre le détail de l'envoi (tracking_timeline_bottom_sheet.dart)."},
+  "receptionShowQrTitle": "Montrer le QR du colis",
+  "@receptionShowQrTitle": {"description": "Écran d'un colis à recevoir : tuile qui ouvre le QR du colis (luminosité max, enregistrer, partager), visible tant que le colis n'est pas remis (reception_detail_screen.dart _ParcelQrTile)."},
+  "receptionShowQrExplanation": "Le voyageur scanne ce QR puis saisit votre code de retrait.",
+  "@receptionShowQrExplanation": {"description": "Écran d'un colis à recevoir : explication sous la tuile du QR. La remise exige toujours le code de retrait."},
+  "receptionStepCounter": "Étape {current} sur {total}",
+  "@receptionStepCounter": {"description": "Écran d'un colis à recevoir : pastille de l'en-tête qui situe le colis dans ses étapes.", "placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}}
 }

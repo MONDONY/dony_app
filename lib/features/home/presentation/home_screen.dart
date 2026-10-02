@@ -8,6 +8,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/block_events_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -66,7 +67,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isGuest = context.read<AuthBloc>().state.currentUser == null;
+    final isGuest = !getIt<FirebaseSessionProbe>().hasRealSession;
     return MultiBlocProvider(
       providers: [
         BlocProvider<PackageRequestSearchBloc>(
@@ -367,7 +368,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       // AutoRefresh (non forcé) : silencieux si la liste est déjà en cache et
       // fraîche — BidMyListRequested émettrait BidLoading et écraserait l'état
       // partagé à chaque retour sur l'accueil.
-      final isGuest = context.read<AuthBloc>().state.currentUser == null;
+      final isGuest = !getIt<FirebaseSessionProbe>().hasRealSession;
       if (!isGuest) {
         context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
       }
@@ -3251,7 +3252,10 @@ class _NotificationBell extends StatelessWidget {
         final unreadCount = state is NotificationLoaded ? state.unreadCount : 0;
         return GestureDetector(
           onTap: () {
-            if (context.read<AuthBloc>().state.currentUser == null) {
+            // Session Firebase, pas AuthBloc : le profil peut ne pas être
+            // chargé (AuthLoading, AuthError) chez un utilisateur bien
+            // connecté, qui voyait alors « Connexion requise » (FLUTTER-7X).
+            if (!getIt<FirebaseSessionProbe>().hasRealSession) {
               AuthRequiredSheet.show(context);
               return;
             }

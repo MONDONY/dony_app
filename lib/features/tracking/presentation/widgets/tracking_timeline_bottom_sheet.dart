@@ -29,6 +29,9 @@ import 'package:intl/intl.dart';
 /// [bidStatus] : statut du colis s'il est connu. `ARRIVED` affiche l'arrivée
 /// à destination même sans scan : « Je suis arrivé » ne crée pas d'étape de
 /// suivi, et la frise restait sur « En route » (Sentry FLUTTER-5S).
+/// [onOpenParcel] : bouton principal « Voir le colis », visible dès
+/// l'ouverture, pour un colis de l'utilisateur (« Mes envois » de l'onglet
+/// Suivi, FLUTTER-7Z). Avec [onShareTracking], les deux boutons s'empilent.
 Future<void> showTrackingTimelineSheet(
   BuildContext context, {
   required String bidId,
@@ -39,6 +42,7 @@ Future<void> showTrackingTimelineSheet(
   String? arrivalInstructions,
   String? trackingNumber,
   String? bidStatus,
+  VoidCallback? onOpenParcel,
 }) {
   return DonyBottomSheet.show<void>(
     context,
@@ -46,21 +50,11 @@ Future<void> showTrackingTimelineSheet(
       create: (_) => getIt<TrackingBloc>()..add(TrackingEventsRequested(bidId)),
       child: child,
     ),
-    stickyBottom: onShareTracking == null
+    stickyBottom: onOpenParcel == null && onShareTracking == null
         ? null
-        : BlocBuilder<TrackingBloc, TrackingState>(
-            builder: (context, state) {
-              if (state is! TrackingEventsLoaded) {
-                return const SizedBox.shrink();
-              }
-              return DonyButton(
-                key: const Key('tracking-share'),
-                label: context.l10n.trackingTimelineShare,
-                iconAsset: 'share-2',
-                variant: DonyButtonVariant.secondary,
-                onPressed: onShareTracking,
-              );
-            },
+        : _TimelineActions(
+            onOpenParcel: onOpenParcel,
+            onShareTracking: onShareTracking,
           ),
     child: _TrackingTimelineContent(
       bidId: bidId,
@@ -72,6 +66,61 @@ Future<void> showTrackingTimelineSheet(
       arrivalInstructions: arrivalInstructions,
     ),
   );
+}
+
+/// Boutons du bas de la feuille : « Voir le colis » tout de suite (ferme la
+/// feuille avant d'appeler [onOpenParcel]), « Partager le suivi » une fois le
+/// parcours chargé.
+class _TimelineActions extends StatelessWidget {
+  const _TimelineActions({this.onOpenParcel, this.onShareTracking});
+
+  final VoidCallback? onOpenParcel;
+  final VoidCallback? onShareTracking;
+
+  @override
+  Widget build(BuildContext context) {
+    final open = onOpenParcel;
+    final share = onShareTracking;
+    final Widget? openButton = open == null
+        ? null
+        : DonyButton(
+            key: const Key('tracking-open-parcel'),
+            label: context.l10n.trackingTimelineOpenParcel,
+            iconAsset: 'package',
+            // La feuille se ferme d'abord, l'appelant ouvre ensuite le colis.
+            onPressed: () {
+              Navigator.of(context).pop();
+              open();
+            },
+          );
+    if (share == null) return openButton ?? const SizedBox.shrink();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ?openButton,
+        BlocBuilder<TrackingBloc, TrackingState>(
+          builder: (context, state) {
+            if (state is! TrackingEventsLoaded) {
+              return const SizedBox.shrink();
+            }
+            return Padding(
+              padding: EdgeInsets.only(
+                top: openButton == null ? 0 : DonySpacing.sm,
+              ),
+              child: DonyButton(
+                key: const Key('tracking-share'),
+                label: context.l10n.trackingTimelineShare,
+                iconAsset: 'share-2',
+                variant: DonyButtonVariant.secondary,
+                onPressed: share,
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
 }
 
 class _TrackingTimelineContent extends StatefulWidget {

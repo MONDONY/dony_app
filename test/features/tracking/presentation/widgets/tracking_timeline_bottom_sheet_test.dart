@@ -52,6 +52,7 @@ Future<void> _openSheet(
   TransportMode? transportMode,
   String? trackingNumber = 'DON-4K7Q2M',
   VoidCallback? onShare,
+  VoidCallback? onOpenParcel,
   ThemeMode themeMode = ThemeMode.light,
   bool settle = true,
   String? bidStatus,
@@ -83,6 +84,7 @@ Future<void> _openSheet(
               trackingNumber: trackingNumber,
               arrivalInstructions: arrivalInstructions,
               onShareTracking: onShare,
+              onOpenParcel: onOpenParcel,
               bidStatus: bidStatus,
             ),
             child: const Text('Ouvrir'),
@@ -292,6 +294,82 @@ void main() {
     await tester.tap(find.byTooltip('Fermer'));
     await tester.pumpAndSettle();
     expect(find.text('Suivi en lecture seule'), findsNothing);
+  });
+
+  group('Voir le colis (FLUTTER-7Z)', () {
+    testWidgets('sans onOpenParcel : pas de bouton', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
+      await _openSheet(tester, bloc);
+      expect(find.byKey(const Key('tracking-open-parcel')), findsNothing);
+      expect(find.text('Voir le colis'), findsNothing);
+    });
+
+    testWidgets('visible dès le chargement ; le tap ferme puis ouvre', (
+      tester,
+    ) async {
+      var opened = 0;
+      when(() => bloc.state).thenReturn(TrackingEventsLoading());
+      await _openSheet(
+        tester,
+        bloc,
+        settle: false,
+        onOpenParcel: () => opened++,
+      );
+      expect(find.byKey(const Key('tracking-open-parcel')), findsOneWidget);
+      expect(find.text('Voir le colis'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('tracking-open-parcel')));
+      expect(opened, 1);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.text('Suivi en lecture seule'), findsNothing);
+    });
+
+    testWidgets('avec partage : deux boutons empilés une fois chargé', (
+      tester,
+    ) async {
+      var shared = 0;
+      when(
+        () => bloc.state,
+      ).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
+      await _openSheet(
+        tester,
+        bloc,
+        onShare: () => shared++,
+        onOpenParcel: () {},
+      );
+      final open = find.byKey(const Key('tracking-open-parcel'));
+      final share = find.byKey(const Key('tracking-share'));
+      expect(open, findsOneWidget);
+      expect(share, findsOneWidget);
+      expect(tester.getTopLeft(open).dy, lessThan(tester.getTopLeft(share).dy));
+      await tester.tap(share);
+      expect(shared, 1);
+    });
+
+    testWidgets('avec partage pendant le chargement : seul Voir le colis', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(TrackingEventsLoading());
+      await _openSheet(
+        tester,
+        bloc,
+        settle: false,
+        onShare: () {},
+        onOpenParcel: () {},
+      );
+      expect(find.byKey(const Key('tracking-open-parcel')), findsOneWidget);
+      expect(find.byKey(const Key('tracking-share')), findsNothing);
+    });
+
+    testWidgets('en anglais : View parcel', (tester) async {
+      when(() => bloc.state).thenReturn(TrackingEventsLoading());
+      useEnglish();
+      await _openSheet(tester, bloc, settle: false, onOpenParcel: () {});
+      expect(find.text('View parcel'), findsOneWidget);
+    });
   });
 
   testWidgets('erreur : message et Réessayer relance le chargement', (

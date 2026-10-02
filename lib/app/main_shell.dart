@@ -10,6 +10,7 @@ import 'package:dony/core/services/app_badge_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
@@ -248,6 +249,17 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     final stripeBloc = context.read<StripeAccountBloc>();
     if (!stripeBloc.isClosed) {
       stripeBloc.add(const StripeAccountStatusRefreshed());
+    }
+    // Profil jamais chargé alors que la session Firebase est réelle (ex. /auth/me
+    // échoué au démarrage, réseau pas prêt au déverrouillage) : AuthBloc ne se
+    // relance pas seul et l'app prenait l'utilisateur pour un invité pendant des
+    // heures (FLUTTER-7X). Rafraîchissement silencieux : il n'émet pas
+    // AuthLoading et n'ouvre donc pas de nouvelle fenêtre « invité ».
+    final authBloc = context.read<AuthBloc>();
+    if (!authBloc.isClosed &&
+        authBloc.state.currentUser == null &&
+        authBloc.state is! AuthLoading) {
+      authBloc.add(const AuthProfileRefreshRequested());
     }
   }
 

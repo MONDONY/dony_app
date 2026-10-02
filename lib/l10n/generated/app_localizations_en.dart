@@ -15580,4 +15580,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidCreateWeightRequiredHint =>
       'Enter the estimated weight, e.g. 0.5 kg for a phone.';
+
+  @override
+  String get trackingTimelineOpenParcel => 'View parcel';
+
+  @override
+  String get receptionShowQrTitle => 'Show the parcel QR';
+
+  @override
+  String get receptionShowQrExplanation =>
+      'The traveler scans this QR, then enters your pickup code.';
+
+  @override
+  String receptionStepCounter(int current, int total) {
+    return 'Step $current of $total';
+  }
 }

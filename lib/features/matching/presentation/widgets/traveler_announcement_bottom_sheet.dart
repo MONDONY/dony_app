@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/utils/map_launcher.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -176,7 +177,8 @@ Future<void> showTravelerAnnouncementSheet(
           final navigator = Navigator.of(innerCtx, rootNavigator: true);
           final rootCtx = navigator.context;
           navigator.pop();
-          if (authState.currentUser == null) {
+          // Session Firebase, pas AuthBloc (FLUTTER-7X).
+          if (!getIt<FirebaseSessionProbe>().hasRealSession) {
             await AuthRequiredSheet.show(
               rootCtx,
               reason: AuthRequiredReason.offer,
