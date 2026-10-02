@@ -7,6 +7,7 @@ import 'package:dony/core/firebase/firebase_options.dart';
 import 'package:dony/features/calls/data/call_flow.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
 import 'package:dony/features/calls/data/models/call_token.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -86,6 +87,18 @@ class StreamCallGateway implements CallGateway {
       throw StateError('Stream Video connection failed');
     }
     _client = client;
+
+    // Android : service de premier plan + notification « appel en cours »
+    // pendant chaque appel actif. Sans lui, l'appel est coupé (micro, réseau)
+    // dès que l'app passe en arrière-plan ou que l'écran se verrouille.
+    StreamBackgroundService.init(
+      client,
+      callNotificationOptionsBuilder: _callNotificationOptions,
+      // Par défaut le SDK quitte tous les appels quand l'activité Android est
+      // détachée. Le moteur Flutter lui survit (MainActivity), l'appel doit
+      // donc continuer : on raccroche depuis l'écran ou la notification.
+      onPlatformUiLayerDestroyed: (_) async {},
+    );
 
     // Décroché depuis CallKit ou la notification Android.
     _ringing = client.observeCoreRingingEvents(onCallAccepted: _onNativeAccept);
@@ -306,6 +319,10 @@ class StreamCallGateway implements CallGateway {
         await call.reject(reason: CallRejectReason.cancel());
       case CallFlowAction.leave:
         _unbindIf(call);
+        // Appel à deux : raccrocher termine l'appel pour l'autre aussi, sinon
+        // son écran reste « en appel ». `end` exige un droit côté Stream ; à
+        // défaut, quitter suffit (l'autre conclut seul après le délai de grâce).
+        await call.end();
         await call.leave();
       case CallFlowAction.none:
         if (_flow?.ended ?? false) _unbindIf(call);
@@ -340,6 +357,21 @@ class StreamCallGateway implements CallGateway {
       throw StateError('Stream Video operation failed: $result');
     }
   }
+}
+
+/// Notification Android de l'appel en cours : nom de l'autre partie, toucher
+/// la notification rouvre l'app sur l'écran d'appel.
+NotificationOptions _callNotificationOptions(Call call) {
+  final l = AppL10n.current;
+  final remote = call.state.valueOrNull?.callParticipants
+      .where((p) => !p.isLocal)
+      .firstOrNull;
+  return NotificationOptions(
+    content: NotificationContent(
+      title: l.callNotificationTitle,
+      text: remote?.name ?? l.callStatusConnecting,
+    ),
+  );
 }
 
 /// Push Stream reçu app fermée ou en arrière-plan : l'isolate ne partage rien

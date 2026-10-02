@@ -18159,6 +18159,7 @@
   "@chatCopyMessageAction": {"description": "Entrée ajoutée au menu de sélection d'une bulle de texte, et action du lecteur d'écran, qui copie le message entier (chat_screen.dart _TextContent)."},
   "bidCreateWeightRequiredHint": "Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.",
   "@bidCreateWeightRequiredHint": {"description": "Formulaire de demande sur un trajet au kilo : aide affichée au-dessus du bouton tant qu'aucun poids n'est saisi (create_bid_bottom_sheet.dart)."},
+  "callNotificationTitle": "Appel Yadony en cours",
   "callStatusConnecting": "Connexion…",
   "@callStatusConnecting": {
     "description": "Statut de l'écran d'appel pendant la connexion."

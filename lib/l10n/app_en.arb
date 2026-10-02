@@ -8791,6 +8791,7 @@
   "@receptionViewSenderProfile": {"placeholders": {"name": {"type": "String"}}},
   "chatCopyMessageAction": "Copy message",
   "bidCreateWeightRequiredHint": "Enter the estimated weight, e.g. 0.5 kg for a phone.",
+  "callNotificationTitle": "Yadony call in progress",
   "callStatusConnecting": "Connecting…",
   "callStatusRinging": "Ringing…",
   "callStatusEnded": "Call ended",
