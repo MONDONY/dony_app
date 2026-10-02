@@ -15669,4 +15669,58 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get bidCreateWeightRequiredHint =>
       'Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.';
+
+  @override
+  String get callStatusConnecting => 'Connexion…';
+
+  @override
+  String get callStatusRinging => 'Ça sonne…';
+
+  @override
+  String get callStatusEnded => 'Appel terminé';
+
+  @override
+  String get callStatusRejected => 'Appel refusé';
+
+  @override
+  String get callStatusMissed => 'Pas de réponse';
+
+  @override
+  String get callStatusFailed => 'L\'appel n\'a pas pu aboutir';
+
+  @override
+  String get callMute => 'Couper le micro';
+
+  @override
+  String get callUnmute => 'Réactiver le micro';
+
+  @override
+  String get callSpeaker => 'Haut-parleur';
+
+  @override
+  String get callHangUp => 'Raccrocher';
+
+  @override
+  String get callMicrophoneDenied =>
+      'Autorisez le micro dans les réglages pour appeler.';
+
+  @override
+  String get callOpenSettings => 'Ouvrir les réglages';
+
+  @override
+  String get chatCallInApp => 'Appel Yadony';
+
+  @override
+  String get chatCallInAppSubtitle => 'Gratuit, sans montrer votre numéro';
+
+  @override
+  String get chatCallByPhone => 'Appel téléphone';
+
+  @override
+  String get chatCallByPhoneSubtitle => 'Avec votre forfait';
+
+  @override
+  String chatCallChooserTitle(String name) {
+    return 'Appeler $name';
+  }
 }

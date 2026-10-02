@@ -25754,6 +25754,108 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.'**
   String get bidCreateWeightRequiredHint;
+
+  /// Statut de l'écran d'appel pendant la connexion.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion…'**
+  String get callStatusConnecting;
+
+  /// Statut de l'écran d'appel pendant que le téléphone de l'autre sonne.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ça sonne…'**
+  String get callStatusRinging;
+
+  /// Statut de l'écran d'appel à la fin de l'appel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel terminé'**
+  String get callStatusEnded;
+
+  /// Statut quand l'autre partie refuse l'appel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel refusé'**
+  String get callStatusRejected;
+
+  /// Statut quand l'autre partie ne décroche pas.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas de réponse'**
+  String get callStatusMissed;
+
+  /// Statut quand l'appel échoue (réseau, service).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'appel n\'a pas pu aboutir'**
+  String get callStatusFailed;
+
+  /// Bouton de l'écran d'appel qui coupe le micro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Couper le micro'**
+  String get callMute;
+
+  /// Bouton de l'écran d'appel qui réactive le micro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réactiver le micro'**
+  String get callUnmute;
+
+  /// Bouton de l'écran d'appel qui active le haut-parleur.
+  ///
+  /// In fr, this message translates to:
+  /// **'Haut-parleur'**
+  String get callSpeaker;
+
+  /// Bouton rouge de l'écran d'appel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Raccrocher'**
+  String get callHangUp;
+
+  /// Message quand l'accès au micro est refusé.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autorisez le micro dans les réglages pour appeler.'**
+  String get callMicrophoneDenied;
+
+  /// Bouton qui ouvre les réglages du téléphone après un refus du micro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir les réglages'**
+  String get callOpenSettings;
+
+  /// Choix de la feuille d'appel : appel audio dans l'app.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel Yadony'**
+  String get chatCallInApp;
+
+  /// Sous-titre du choix appel Yadony.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gratuit, sans montrer votre numéro'**
+  String get chatCallInAppSubtitle;
+
+  /// Choix de la feuille d'appel : appel téléphonique classique.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel téléphone'**
+  String get chatCallByPhone;
+
+  /// Sous-titre du choix appel téléphone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Avec votre forfait'**
+  String get chatCallByPhoneSubtitle;
+
+  /// Titre de la feuille de choix du mode d'appel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appeler {name}'**
+  String chatCallChooserTitle(String name);
 }
 
 class _AppLocalizationsDelegate

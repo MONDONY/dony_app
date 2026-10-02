@@ -8722,5 +8722,22 @@
   "receptionViewSenderProfile": "View {name}'s profile",
   "@receptionViewSenderProfile": {"placeholders": {"name": {"type": "String"}}},
   "chatCopyMessageAction": "Copy message",
-  "bidCreateWeightRequiredHint": "Enter the estimated weight, e.g. 0.5 kg for a phone."
+  "bidCreateWeightRequiredHint": "Enter the estimated weight, e.g. 0.5 kg for a phone.",
+  "callStatusConnecting": "Connecting…",
+  "callStatusRinging": "Ringing…",
+  "callStatusEnded": "Call ended",
+  "callStatusRejected": "Call declined",
+  "callStatusMissed": "No answer",
+  "callStatusFailed": "The call could not be completed",
+  "callMute": "Mute",
+  "callUnmute": "Unmute",
+  "callSpeaker": "Speaker",
+  "callHangUp": "Hang up",
+  "callMicrophoneDenied": "Allow the microphone in Settings to call.",
+  "callOpenSettings": "Open Settings",
+  "chatCallInApp": "Yadony call",
+  "chatCallInAppSubtitle": "Free, without showing your number",
+  "chatCallByPhone": "Phone call",
+  "chatCallByPhoneSubtitle": "Uses your phone plan",
+  "chatCallChooserTitle": "Call {name}"
 }

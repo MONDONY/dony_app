@@ -18090,5 +18090,78 @@
   "chatCopyMessageAction": "Copier le message",
   "@chatCopyMessageAction": {"description": "Entrée ajoutée au menu de sélection d'une bulle de texte, et action du lecteur d'écran, qui copie le message entier (chat_screen.dart _TextContent)."},
   "bidCreateWeightRequiredHint": "Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.",
-  "@bidCreateWeightRequiredHint": {"description": "Formulaire de demande sur un trajet au kilo : aide affichée au-dessus du bouton tant qu'aucun poids n'est saisi (create_bid_bottom_sheet.dart)."}
+  "@bidCreateWeightRequiredHint": {"description": "Formulaire de demande sur un trajet au kilo : aide affichée au-dessus du bouton tant qu'aucun poids n'est saisi (create_bid_bottom_sheet.dart)."},
+  "callStatusConnecting": "Connexion…",
+  "@callStatusConnecting": {
+    "description": "Statut de l'écran d'appel pendant la connexion."
+  },
+  "callStatusRinging": "Ça sonne…",
+  "@callStatusRinging": {
+    "description": "Statut de l'écran d'appel pendant que le téléphone de l'autre sonne."
+  },
+  "callStatusEnded": "Appel terminé",
+  "@callStatusEnded": {
+    "description": "Statut de l'écran d'appel à la fin de l'appel."
+  },
+  "callStatusRejected": "Appel refusé",
+  "@callStatusRejected": {
+    "description": "Statut quand l'autre partie refuse l'appel."
+  },
+  "callStatusMissed": "Pas de réponse",
+  "@callStatusMissed": {
+    "description": "Statut quand l'autre partie ne décroche pas."
+  },
+  "callStatusFailed": "L'appel n'a pas pu aboutir",
+  "@callStatusFailed": {
+    "description": "Statut quand l'appel échoue (réseau, service)."
+  },
+  "callMute": "Couper le micro",
+  "@callMute": {
+    "description": "Bouton de l'écran d'appel qui coupe le micro."
+  },
+  "callUnmute": "Réactiver le micro",
+  "@callUnmute": {
+    "description": "Bouton de l'écran d'appel qui réactive le micro."
+  },
+  "callSpeaker": "Haut-parleur",
+  "@callSpeaker": {
+    "description": "Bouton de l'écran d'appel qui active le haut-parleur."
+  },
+  "callHangUp": "Raccrocher",
+  "@callHangUp": {
+    "description": "Bouton rouge de l'écran d'appel."
+  },
+  "callMicrophoneDenied": "Autorisez le micro dans les réglages pour appeler.",
+  "@callMicrophoneDenied": {
+    "description": "Message quand l'accès au micro est refusé."
+  },
+  "callOpenSettings": "Ouvrir les réglages",
+  "@callOpenSettings": {
+    "description": "Bouton qui ouvre les réglages du téléphone après un refus du micro."
+  },
+  "chatCallInApp": "Appel Yadony",
+  "@chatCallInApp": {
+    "description": "Choix de la feuille d'appel : appel audio dans l'app."
+  },
+  "chatCallInAppSubtitle": "Gratuit, sans montrer votre numéro",
+  "@chatCallInAppSubtitle": {
+    "description": "Sous-titre du choix appel Yadony."
+  },
+  "chatCallByPhone": "Appel téléphone",
+  "@chatCallByPhone": {
+    "description": "Choix de la feuille d'appel : appel téléphonique classique."
+  },
+  "chatCallByPhoneSubtitle": "Avec votre forfait",
+  "@chatCallByPhoneSubtitle": {
+    "description": "Sous-titre du choix appel téléphone."
+  },
+  "chatCallChooserTitle": "Appeler {name}",
+  "@chatCallChooserTitle": {
+    "description": "Titre de la feuille de choix du mode d'appel.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

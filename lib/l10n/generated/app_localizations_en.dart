@@ -15580,4 +15580,58 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bidCreateWeightRequiredHint =>
       'Enter the estimated weight, e.g. 0.5 kg for a phone.';
+
+  @override
+  String get callStatusConnecting => 'Connecting…';
+
+  @override
+  String get callStatusRinging => 'Ringing…';
+
+  @override
+  String get callStatusEnded => 'Call ended';
+
+  @override
+  String get callStatusRejected => 'Call declined';
+
+  @override
+  String get callStatusMissed => 'No answer';
+
+  @override
+  String get callStatusFailed => 'The call could not be completed';
+
+  @override
+  String get callMute => 'Mute';
+
+  @override
+  String get callUnmute => 'Unmute';
+
+  @override
+  String get callSpeaker => 'Speaker';
+
+  @override
+  String get callHangUp => 'Hang up';
+
+  @override
+  String get callMicrophoneDenied =>
+      'Allow the microphone in Settings to call.';
+
+  @override
+  String get callOpenSettings => 'Open Settings';
+
+  @override
+  String get chatCallInApp => 'Yadony call';
+
+  @override
+  String get chatCallInAppSubtitle => 'Free, without showing your number';
+
+  @override
+  String get chatCallByPhone => 'Phone call';
+
+  @override
+  String get chatCallByPhoneSubtitle => 'Uses your phone plan';
+
+  @override
+  String chatCallChooserTitle(String name) {
+    return 'Call $name';
+  }
 }

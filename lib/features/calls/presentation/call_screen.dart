@@ -1,0 +1,209 @@
+import 'dart:async';
+
+import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/features/calls/bloc/call_bloc.dart';
+import 'package:dony/features/calls/data/call_gateway.dart';
+import 'package:dony/features/calls/presentation/widgets/call_controls.dart';
+import 'package:dony/l10n/l10n.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+/// Ce que l'écran d'appel affiche avant que l'appel ne soit connecté.
+class CallScreenArgs {
+  const CallScreenArgs({
+    required this.remoteName,
+    this.remoteAvatarUrl,
+    this.conversationId,
+    this.incomingCallId,
+    this.acceptedNatively = false,
+  });
+
+  final String remoteName;
+  final String? remoteAvatarUrl;
+
+  /// Appel sortant : conversation depuis laquelle on appelle.
+  final String? conversationId;
+
+  /// Appel entrant : identifiant Stream de l'appel décroché.
+  final String? incomingCallId;
+  final bool acceptedNatively;
+
+  /// Ce que l'écran demande au [CallBloc] en s'ouvrant.
+  CallEvent? get initialEvent {
+    if (conversationId != null) {
+      return CallStartRequested(conversationId!, remoteName);
+    }
+    if (incomingCallId != null) {
+      return CallIncomingAcceptRequested(
+        incomingCallId!,
+        remoteName,
+        acceptedNatively: acceptedNatively,
+      );
+    }
+    return null;
+  }
+}
+
+/// Écran plein écran d'un appel audio : nom, statut, chronomètre, et trois
+/// commandes (micro, haut-parleur, raccrocher). Se ferme seul à la fin.
+class CallScreen extends StatelessWidget {
+  const CallScreen({
+    super.key,
+    required this.args,
+    @visibleForTesting this.onClose,
+  });
+
+  final CallScreenArgs args;
+  final VoidCallback? onClose;
+
+  static const _closeDelay = Duration(milliseconds: 1500);
+
+  void _close(BuildContext context) {
+    if (onClose != null) {
+      onClose!();
+    } else if (context.canPop()) {
+      context.pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return BlocConsumer<CallBloc, CallState>(
+      listenWhen: (previous, current) =>
+          current is CallEnded || current is CallFailure,
+      listener: (context, state) {
+        if (state is CallFailure) {
+          unawaited(ErrorPresenter.show(context, state.error));
+        }
+        Future<void>.delayed(_closeDelay, () {
+          if (context.mounted) _close(context);
+        });
+      },
+      builder: (context, state) {
+        final inProgress = state is CallInProgress ? state : null;
+        final name = inProgress?.remoteName ?? args.remoteName;
+        return Scaffold(
+          backgroundColor: cs.surface,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 48, 24, 32),
+              child: Column(
+                children: [
+                  _Avatar(name: name, url: args.remoteAvatarUrl),
+                  const SizedBox(height: 20),
+                  Text(
+                    name,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  _StatusLine(state: state),
+                  const Spacer(),
+                  CallControls(
+                    muted: inProgress?.muted ?? false,
+                    speakerOn: inProgress?.speakerOn ?? false,
+                    enabled: inProgress != null,
+                    onMute: () => context.read<CallBloc>().add(
+                      const CallMuteToggleRequested(),
+                    ),
+                    onSpeaker: () => context.read<CallBloc>().add(
+                      const CallSpeakerToggleRequested(),
+                    ),
+                    onHangUp: () => context.read<CallBloc>().add(
+                      const CallHangUpRequested(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.name, this.url});
+
+  final String name;
+  final String? url;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final initial = name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
+    return CircleAvatar(
+      radius: 48,
+      backgroundColor: cs.primaryContainer,
+      foregroundImage: url == null ? null : NetworkImage(url!),
+      child: Text(
+        initial,
+        style: Theme.of(
+          context,
+        ).textTheme.headlineMedium?.copyWith(color: cs.onPrimaryContainer),
+      ),
+    );
+  }
+}
+
+class _StatusLine extends StatelessWidget {
+  const _StatusLine({required this.state});
+
+  final CallState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final style = Theme.of(context).textTheme.bodyLarge?.copyWith(
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    );
+    final current = state;
+    if (current is CallInProgress &&
+        current.phase == CallPhase.connected &&
+        current.connectedAt != null) {
+      return _Timer(since: current.connectedAt!, style: style);
+    }
+    final text = switch (current) {
+      CallInProgress(phase: CallPhase.ringing) => l.callStatusRinging,
+      CallEnded(reason: 'rejected') => l.callStatusRejected,
+      CallEnded(reason: 'missed') => l.callStatusMissed,
+      CallEnded(reason: 'failed') => l.callStatusFailed,
+      CallEnded() => l.callStatusEnded,
+      CallFailure() => l.callStatusFailed,
+      _ => l.callStatusConnecting,
+    };
+    return Text(text, style: style, textAlign: TextAlign.center);
+  }
+}
+
+class _Timer extends StatelessWidget {
+  const _Timer({required this.since, this.style});
+
+  final DateTime since;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<int>(
+      stream: Stream<int>.periodic(const Duration(seconds: 1), (i) => i),
+      builder: (context, _) {
+        final elapsed = DateTime.now().difference(since);
+        final minutes = elapsed.inMinutes.toString().padLeft(2, '0');
+        final seconds = (elapsed.inSeconds % 60).toString().padLeft(2, '0');
+        return Text(
+          '$minutes:$seconds',
+          style: style?.copyWith(
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        );
+      },
+    );
+  }
+}

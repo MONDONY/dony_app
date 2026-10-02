@@ -1,0 +1,184 @@
+import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/calls/bloc/call_bloc.dart';
+import 'package:dony/features/calls/data/call_gateway.dart';
+import 'package:dony/features/calls/presentation/call_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/l10n_test_helpers.dart';
+
+class _MockCallBloc extends MockBloc<CallEvent, CallState>
+    implements CallBloc {}
+
+void main() {
+  late _MockCallBloc bloc;
+  late int closed;
+
+  setUpAll(() => registerFallbackValue(const CallHangUpRequested()));
+
+  setUp(() {
+    bloc = _MockCallBloc();
+    closed = 0;
+  });
+
+  Future<void> pump(
+    WidgetTester tester,
+    CallState state, {
+    Stream<CallState>? states,
+  }) async {
+    if (states != null) {
+      whenListen(bloc, states, initialState: state);
+    } else {
+      when(() => bloc.state).thenReturn(state);
+    }
+    await tester.pumpWidget(
+      localizedApp(
+        BlocProvider<CallBloc>.value(
+          value: bloc,
+          child: CallScreen(
+            args: const CallScreenArgs(remoteName: 'Moussa K.'),
+            onClose: () => closed++,
+          ),
+        ),
+      ),
+    );
+  }
+
+  testWidgets('sonnerie : nom et « Ça sonne… »', (tester) async {
+    await pump(
+      tester,
+      const CallInProgress(phase: CallPhase.ringing, remoteName: 'Moussa K.'),
+    );
+    expect(find.text('Moussa K.'), findsOneWidget);
+    expect(find.text('Ça sonne…'), findsOneWidget);
+  });
+
+  testWidgets('demande en cours : « Connexion… »', (tester) async {
+    await pump(tester, const CallStarting());
+    expect(find.text('Connexion…'), findsOneWidget);
+  });
+
+  testWidgets('connecté : chronomètre qui avance', (tester) async {
+    final start = DateTime.now().subtract(const Duration(seconds: 65));
+    await pump(
+      tester,
+      CallInProgress(
+        phase: CallPhase.connected,
+        remoteName: 'Moussa K.',
+        connectedAt: start,
+      ),
+    );
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.textContaining(RegExp(r'^01:0[5-7]$')), findsOneWidget);
+  });
+
+  testWidgets('micro, haut-parleur et raccrocher envoient leurs événements', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const CallInProgress(phase: CallPhase.connected, remoteName: 'Moussa K.'),
+    );
+    await tester.tap(find.bySemanticsLabel('Couper le micro'));
+    await tester.tap(find.bySemanticsLabel('Haut-parleur'));
+    await tester.tap(find.bySemanticsLabel('Raccrocher'));
+    verify(() => bloc.add(any(that: isA<CallMuteToggleRequested>()))).called(1);
+    verify(
+      () => bloc.add(any(that: isA<CallSpeakerToggleRequested>())),
+    ).called(1);
+    verify(() => bloc.add(any(that: isA<CallHangUpRequested>()))).called(1);
+  });
+
+  testWidgets('micro coupé : le bouton propose de le réactiver', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const CallInProgress(
+        phase: CallPhase.connected,
+        remoteName: 'Moussa K.',
+        muted: true,
+      ),
+    );
+    expect(find.bySemanticsLabel('Réactiver le micro'), findsOneWidget);
+  });
+
+  testWidgets('refusé : « Appel refusé » puis fermeture', (tester) async {
+    await pump(
+      tester,
+      const CallInProgress(phase: CallPhase.ringing, remoteName: 'Moussa K.'),
+      states: Stream.value(const CallEnded(reason: 'rejected')),
+    );
+    await tester.pump();
+    expect(find.text('Appel refusé'), findsOneWidget);
+    expect(closed, 0);
+    await tester.pump(const Duration(milliseconds: 1600));
+    expect(closed, 1);
+  });
+
+  testWidgets('pas de réponse : « Pas de réponse »', (tester) async {
+    await pump(tester, const CallEnded(reason: 'missed'));
+    expect(find.text('Pas de réponse'), findsOneWidget);
+  });
+
+  testWidgets('échec du back : message du catalogue puis fermeture', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const CallStarting(),
+      states: Stream.value(
+        const CallFailure(
+          ConflictException('x', code: 'call-already-in-progress'),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1600));
+    expect(closed, 1);
+  });
+
+  testWidgets('en anglais', (tester) async {
+    enableEnglish();
+    when(() => bloc.state).thenReturn(
+      const CallInProgress(phase: CallPhase.ringing, remoteName: 'Moussa K.'),
+    );
+    await tester.pumpWidget(
+      localizedApp(
+        BlocProvider<CallBloc>.value(
+          value: bloc,
+          child: CallScreen(
+            args: const CallScreenArgs(remoteName: 'Moussa K.'),
+            onClose: () {},
+          ),
+        ),
+        locale: const Locale('en'),
+      ),
+    );
+    expect(find.text('Ringing…'), findsOneWidget);
+  });
+
+  group('CallScreenArgs.initialEvent', () {
+    test('sortant : lancer l\'appel depuis la conversation', () {
+      final e = const CallScreenArgs(remoteName: 'Moussa', conversationId: 'c1').initialEvent;
+      expect(e, isA<CallStartRequested>().having((e) => e.conversationId, 'conversationId', 'c1'));
+    });
+
+    test('entrant : décrocher', () {
+      final e = const CallScreenArgs(remoteName: 'Awa', incomingCallId: 'x2', acceptedNatively: true).initialEvent;
+      expect(
+        e,
+        isA<CallIncomingAcceptRequested>()
+            .having((e) => e.callId, 'callId', 'x2')
+            .having((e) => e.acceptedNatively, 'acceptedNatively', true),
+      );
+    });
+
+    test('sans conversation ni appel : rien', () {
+      expect(const CallScreenArgs(remoteName: 'X').initialEvent, isNull);
+    });
+  });
+}
