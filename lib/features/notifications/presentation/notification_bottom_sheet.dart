@@ -110,13 +110,45 @@ void showNotificationBottomSheet(BuildContext context) {
     useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) =>
-        BlocProvider.value(value: bloc, child: const NotificationBottomSheet()),
+    builder: (_) => BlocProvider.value(
+      value: bloc,
+      child: NotificationBottomSheet(
+        onReturn: () {
+          if (context.mounted) showNotificationBottomSheet(context);
+        },
+      ),
+    ),
   );
 }
 
+/// Pousse [route] depuis le sheet, puis le rouvre au retour : le sheet se
+/// ferme avant la navigation, et le bouton retour ramenait à l'écran de
+/// dessous au lieu des notifications (Sentry FLUTTER-8K). Le sheet ne revient
+/// que si l'utilisateur est bien revenu là où il l'avait ouvert, jamais après
+/// un changement d'onglet en cours de route.
+Future<void> _pushThenReturnToSheet(
+  BuildContext sheetContext,
+  GoRouter router,
+  String route,
+) async {
+  final reopen = sheetContext
+      .findAncestorWidgetOfExactType<NotificationBottomSheet>()
+      ?.onReturn;
+  final origin = router.routerDelegate.currentConfiguration.uri.toString();
+  Navigator.of(sheetContext, rootNavigator: true).pop();
+  await router.push(route);
+  if (reopen == null) return;
+  if (router.routerDelegate.currentConfiguration.uri.toString() != origin) {
+    return;
+  }
+  reopen();
+}
+
 class NotificationBottomSheet extends StatefulWidget {
-  const NotificationBottomSheet({super.key});
+  const NotificationBottomSheet({super.key, this.onReturn});
+
+  /// Rouvre le sheet au retour d'une notification ouverte depuis lui.
+  final VoidCallback? onReturn;
 
   @override
   State<NotificationBottomSheet> createState() =>
@@ -363,11 +395,11 @@ class _NotificationList extends StatelessWidget {
       );
       return;
     }
-    Navigator.of(context, rootNavigator: true).pop();
     if (isShellTabRoute(route)) {
+      Navigator.of(context, rootNavigator: true).pop();
       router.go(route);
     } else {
-      router.push(route);
+      unawaited(_pushThenReturnToSheet(context, router, route));
     }
   }
 
@@ -413,15 +445,13 @@ class _AnnouncementsCard extends StatelessWidget {
   final AnnouncementsSummary summary;
   const _AnnouncementsCard({required this.summary});
 
-  /// Le sheet se ferme avant d'ouvrir la boîte ; au retour, le feed se
-  /// recharge pour que la carte reflète ce qui a été lu dans la liste.
-  Future<void> _open(BuildContext context) async {
-    final bloc = context.read<NotificationBloc>();
-    final router = GoRouter.of(context);
-    Navigator.of(context, rootNavigator: true).pop();
-    await router.push(AnnouncementsInboxScreen.route);
-    if (!bloc.isClosed) bloc.add(const NotificationsLoadRequested());
-  }
+  /// Le sheet se ferme avant d'ouvrir la boîte, et revient au retour : il
+  /// se recharge alors à l'ouverture, la carte reflète ce qui a été lu.
+  Future<void> _open(BuildContext context) => _pushThenReturnToSheet(
+    context,
+    GoRouter.of(context),
+    AnnouncementsInboxScreen.route,
+  );
 
   @override
   Widget build(BuildContext context) {

@@ -2654,14 +2654,33 @@ void main() {
       final cashSwitch = find.byKey(const Key('payment-method-cash'));
       expect(cashSwitch, findsOneWidget);
 
-      // Sans Stripe, CASH est la seule méthode possible : la ligne est
-      // affichée à ON et non désactivable (onChanged == null).
+      // Sans Stripe, CASH est la seule méthode possible : la ligne reste à
+      // ON. L'interrupteur n'est plus désactivé (grisé, il se lisait
+      // « indisponible », Sentry FLUTTER-8M) : un toucher explique, sans
+      // jamais le couper.
       final tile = tester.widget<SwitchListTile>(cashSwitch);
       expect(tile.value, isTrue);
-      expect(tile.onChanged, isNull);
+      expect(tile.onChanged, isNotNull);
+      expect(
+        find.textContaining('Toujours accepté sur ce trajet'),
+        findsOneWidget,
+      );
+
+      await tester.ensureVisible(cashSwitch);
+      await tester.pump();
+      await tester.tap(cashSwitch);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(
+        find.textContaining('les espèces restent toujours acceptées'),
+        findsOneWidget,
+      );
+      expect(tester.widget<SwitchListTile>(cashSwitch).value, isTrue);
 
       // L'encart commission reste visible puisque CASH est actif.
       expect(find.byType(CashCommissionNotice), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
     });
   });
 

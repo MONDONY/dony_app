@@ -2812,6 +2812,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishCashLabel => 'Espèces';
 
   @override
+  String get tripPublishCashLockedSubtitle =>
+      'Toujours accepté sur ce trajet. Commission prélevée au voyageur à la remise';
+
+  @override
+  String get tripPublishCashLockedExplanation =>
+      'Sans paiement par carte sur ce trajet, les espèces restent toujours acceptées : c\'est le mode qui permet aux expéditeurs de réserver.';
+
+  @override
   String get tripPublishCashSubtitle =>
       'Commission prélevée au voyageur à la remise';
 

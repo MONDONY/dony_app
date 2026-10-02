@@ -452,7 +452,8 @@ void main() {
         find.byKey(const Key('payment-method-cash')),
       );
       expect(cashSwitch.value, isTrue, reason: 'Seul mode garanti sans carte');
-      expect(cashSwitch.onChanged, isNull);
+      // Touchable (FLUTTER-8M) : grisé, il se lisait « indisponible ».
+      expect(cashSwitch.onChanged, isNotNull);
     });
 
     testWidgets('Stripe non configuré et trajet en XOF : la devise prime, pas '
@@ -478,11 +479,29 @@ void main() {
           find.byKey(const Key('payment-method-cash')),
         );
         expect(cashSwitch.value, isTrue, reason: 'CASH forcé ON sans Stripe');
+        // Touchable mais jamais coupé (≥1 méthode requise) : un toucher
+        // explique pourquoi (Sentry FLUTTER-8M).
+        await tester.ensureVisible(
+          find.byKey(const Key('payment-method-cash')),
+        );
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('payment-method-cash')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
         expect(
-          cashSwitch.onChanged,
-          isNull,
+          tester
+              .widget<SwitchListTile>(
+                find.byKey(const Key('payment-method-cash')),
+              )
+              .value,
+          isTrue,
           reason: 'CASH non désactivable (≥1 méthode requise)',
         );
+        expect(
+          find.textContaining('les espèces restent toujours acceptées'),
+          findsOneWidget,
+        );
+        await tester.pump(const Duration(seconds: 5));
 
         final stripeSwitch = tester.widget<SwitchListTile>(
           find.byKey(const Key('payment-method-stripe')),
