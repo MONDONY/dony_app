@@ -24201,6 +24201,48 @@ abstract class AppLocalizations {
   /// **'En route vers {city}'**
   String trackingHeadlineOnTheWayTo(String city);
 
+  /// Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé à destination'**
+  String get trackingStepArrivedAtDestination;
+
+  /// Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivé à {city}'**
+  String trackingHeadlineArrivedIn(String city);
+
+  /// Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes arrivé à {city} ?'**
+  String travelerArrivalPromptTitle(String city);
+
+  /// Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous êtes arrivé à destination ?'**
+  String get travelerArrivalPromptTitleGeneric;
+
+  /// Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'expéditeur sera prévenu de votre arrivée et pourra préparer le code de retrait avec le destinataire.'**
+  String get travelerArrivalPromptMessage;
+
+  /// Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Oui, je suis arrivé'**
+  String get travelerArrivalPromptConfirm;
+
+  /// Suivi d'un colis (Sentry FLUTTER-5S) : arrivée déclarée par le voyageur sans scan (tracking_timeline_bottom_sheet), et proposition de déclarer l'arrivée avant la remise (traveler_sticky_bar _DeliverBar).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore, remettre le colis'**
+  String get travelerArrivalPromptSkip;
+
   /// Phrase d'état sans ville d'arrivée, et étape en cours de la frise entre le départ et la remise (tracking_timeline_bottom_sheet.dart).
   ///
   /// In fr, this message translates to:

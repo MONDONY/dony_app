@@ -14601,6 +14601,33 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get trackingStepArrivedAtDestination => 'Arrived at destination';
+
+  @override
+  String trackingHeadlineArrivedIn(String city) {
+    return 'Arrived in $city';
+  }
+
+  @override
+  String travelerArrivalPromptTitle(String city) {
+    return 'Have you arrived in $city?';
+  }
+
+  @override
+  String get travelerArrivalPromptTitleGeneric =>
+      'Have you arrived at your destination?';
+
+  @override
+  String get travelerArrivalPromptMessage =>
+      'The sender will be told you have arrived and can get the pickup code ready with the recipient.';
+
+  @override
+  String get travelerArrivalPromptConfirm => 'Yes, I\'ve arrived';
+
+  @override
+  String get travelerArrivalPromptSkip => 'Not yet, hand over the parcel';
+
+  @override
   String get trackingHeadlineOnTheWay => 'On the way';
 
   @override

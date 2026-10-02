@@ -108,8 +108,13 @@ final class SuiviShowTimeline extends SuiviEffect {
     this.transportMode,
     this.arrivalInstructions,
     this.trackingNumber,
+    this.bidStatus,
   });
   final String bidId;
+
+  /// Statut du colis quand il est connu de l'app (`ARRIVED` : arrivée
+  /// déclarée par le voyageur, sans scan).
+  final String? bidStatus;
 
   /// Numéro DON affiché en tête du parcours, `null` s'il n'est pas connu.
   final String? trackingNumber;
@@ -640,6 +645,7 @@ class SuiviCubit extends Cubit<SuiviState> {
         arrivalInstructions:
             known?.arrivalInstructions ?? trip?.arrivalInstructions,
         trackingNumber: known?.trackingNumber,
+        bidStatus: known?.status,
       ),
     );
   }

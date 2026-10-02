@@ -26,6 +26,9 @@ import 'package:intl/intl.dart';
 /// d'état. [transportMode] choisit l'icône du trajet (avion par défaut).
 /// [trackingNumber] : numéro DON affiché au-dessus du titre, s'il est connu.
 /// [onShareTracking] : bouton « Partager le suivi » en bas de la feuille.
+/// [bidStatus] : statut du colis s'il est connu. `ARRIVED` affiche l'arrivée
+/// à destination même sans scan : « Je suis arrivé » ne crée pas d'étape de
+/// suivi, et la frise restait sur « En route » (Sentry FLUTTER-5S).
 Future<void> showTrackingTimelineSheet(
   BuildContext context, {
   required String bidId,
@@ -35,6 +38,7 @@ Future<void> showTrackingTimelineSheet(
   VoidCallback? onShareTracking,
   String? arrivalInstructions,
   String? trackingNumber,
+  String? bidStatus,
 }) {
   return DonyBottomSheet.show<void>(
     context,
@@ -60,6 +64,7 @@ Future<void> showTrackingTimelineSheet(
           ),
     child: _TrackingTimelineContent(
       bidId: bidId,
+      bidStatus: bidStatus,
       departureCity: departureCity,
       arrivalCity: arrivalCity,
       transportMode: transportMode,
@@ -69,9 +74,10 @@ Future<void> showTrackingTimelineSheet(
   );
 }
 
-class _TrackingTimelineContent extends StatelessWidget {
+class _TrackingTimelineContent extends StatefulWidget {
   const _TrackingTimelineContent({
     required this.bidId,
+    this.bidStatus,
     this.departureCity,
     this.arrivalCity,
     this.transportMode,
@@ -80,11 +86,47 @@ class _TrackingTimelineContent extends StatelessWidget {
   });
 
   final String bidId;
+  final String? bidStatus;
   final String? departureCity;
   final String? arrivalCity;
   final TransportMode? transportMode;
   final String? trackingNumber;
   final String? arrivalInstructions;
+
+  @override
+  State<_TrackingTimelineContent> createState() =>
+      _TrackingTimelineContentState();
+}
+
+/// Recharge le parcours au retour dans l'app : la feuille restait figée sur
+/// les étapes de son ouverture pendant que le colis avançait.
+class _TrackingTimelineContentState extends State<_TrackingTimelineContent>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      context.read<TrackingBloc>().add(TrackingEventsRequested(widget.bidId));
+    }
+  }
+
+  String get bidId => widget.bidId;
+  String? get departureCity => widget.departureCity;
+  String? get arrivalCity => widget.arrivalCity;
+  TransportMode? get transportMode => widget.transportMode;
+  String? get trackingNumber => widget.trackingNumber;
+  String? get arrivalInstructions => widget.arrivalInstructions;
 
   @override
   Widget build(BuildContext context) {
@@ -121,6 +163,7 @@ class _TrackingTimelineContent extends StatelessWidget {
             ),
             TrackingEventsLoaded(:final events) => _Journey(
               events: events,
+              arrived: widget.bidStatus == 'ARRIVED',
               departureCity: departureCity,
               arrivalCity: arrivalCity,
               transportMode: transportMode,
@@ -181,14 +224,20 @@ class _JourneyStep {
 /// Étapes du parcours, dans l'ordre : faites (événements enregistrés), en
 /// cours, puis à venir. Le transit, facultatif, n'apparaît que s'il a été
 /// scanné.
+///
+/// [arrived] : le voyageur a déclaré son arrivée (colis `ARRIVED`). Aucun
+/// scan ne la trace : l'étape est faite sans heure, et la remise au
+/// destinataire devient l'étape en cours.
 List<_JourneyStep> _journeySteps(
   AppLocalizations l,
-  List<TrackingEventModel> events,
-) {
+  List<TrackingEventModel> events, {
+  bool arrived = false,
+}) {
   final sorted = [...events]
     ..sort((a, b) => a.scannedAt.compareTo(b.scannedAt));
   final departed = sorted.any((e) => e.eventType == 'DEPART');
   final delivered = sorted.any((e) => e.eventType == 'ARRIVEE');
+  final arrivedOnly = arrived && departed && !delivered;
   return [
     for (final event in sorted)
       _JourneyStep(_StepState.done, _doneTitle(l, event), event: event),
@@ -196,10 +245,15 @@ List<_JourneyStep> _journeySteps(
       _JourneyStep(_StepState.current, l.trackingStepHandoverToTraveler),
       _JourneyStep(_StepState.upcoming, l.trackingStepDeparture),
     ],
-    if (!delivered && departed)
-      _JourneyStep(_StepState.current, l.trackingHeadlineOnTheWay),
-    if (!delivered)
-      _JourneyStep(_StepState.upcoming, l.trackingStepHandoverToRecipient),
+    if (arrivedOnly) ...[
+      _JourneyStep(_StepState.done, l.trackingStepArrivedAtDestination),
+      _JourneyStep(_StepState.current, l.trackingStepHandoverToRecipient),
+    ] else ...[
+      if (!delivered && departed)
+        _JourneyStep(_StepState.current, l.trackingHeadlineOnTheWay),
+      if (!delivered)
+        _JourneyStep(_StepState.upcoming, l.trackingStepHandoverToRecipient),
+    ],
   ];
 }
 
@@ -214,8 +268,9 @@ String _doneTitle(AppLocalizations l, TrackingEventModel event) =>
 String _headline(
   AppLocalizations l,
   List<TrackingEventModel> events,
-  String? arrivalCity,
-) {
+  String? arrivalCity, {
+  bool arrived = false,
+}) {
   if (events.any((e) => e.eventType == 'ARRIVEE')) {
     return l.trackingHeadlineDelivered;
   }
@@ -223,6 +278,11 @@ String _headline(
     return l.trackingHeadlineAwaitingHandover;
   }
   final city = arrivalCity?.trim() ?? '';
+  if (arrived) {
+    return city.isEmpty
+        ? l.trackingStepArrivedAtDestination
+        : l.trackingHeadlineArrivedIn(city);
+  }
   return city.isEmpty
       ? l.trackingHeadlineOnTheWay
       : l.trackingHeadlineOnTheWayTo(city);
@@ -231,6 +291,7 @@ String _headline(
 class _Journey extends StatelessWidget {
   const _Journey({
     required this.events,
+    this.arrived = false,
     this.departureCity,
     this.arrivalCity,
     this.transportMode,
@@ -239,6 +300,7 @@ class _Journey extends StatelessWidget {
   });
 
   final List<TrackingEventModel> events;
+  final bool arrived;
   final String? departureCity;
   final String? arrivalCity;
   final TransportMode? transportMode;
@@ -250,7 +312,7 @@ class _Journey extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final l = context.l10n;
-    final steps = _journeySteps(l, events);
+    final steps = _journeySteps(l, events, arrived: arrived);
     final number = trackingNumber?.trim() ?? '';
     final instructions = arrivalInstructions?.trim() ?? '';
     final from = departureCity?.trim() ?? '';
@@ -273,7 +335,7 @@ class _Journey extends StatelessWidget {
           const SizedBox(height: DonySpacing.xs),
         ],
         Text(
-          _headline(l, events, arrivalCity),
+          _headline(l, events, arrivalCity, arrived: arrived),
           key: const Key('tracking-headline'),
           style: tt.headlineLarge?.copyWith(fontWeight: FontWeight.w800),
         ),

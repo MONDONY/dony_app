@@ -75,6 +75,7 @@ class QuickActionsRow extends StatelessWidget {
               arrivalCity: bid.arrivalCity,
               arrivalInstructions: bid.arrivalInstructions,
               trackingNumber: bid.trackingNumber,
+              bidStatus: bid.status,
               onShareTracking: hasToken
                   ? () => shareTrackingLink(
                       bid,

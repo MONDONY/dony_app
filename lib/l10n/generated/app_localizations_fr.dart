@@ -14688,6 +14688,33 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get trackingStepArrivedAtDestination => 'Arrivé à destination';
+
+  @override
+  String trackingHeadlineArrivedIn(String city) {
+    return 'Arrivé à $city';
+  }
+
+  @override
+  String travelerArrivalPromptTitle(String city) {
+    return 'Vous êtes arrivé à $city ?';
+  }
+
+  @override
+  String get travelerArrivalPromptTitleGeneric =>
+      'Vous êtes arrivé à destination ?';
+
+  @override
+  String get travelerArrivalPromptMessage =>
+      'L\'expéditeur sera prévenu de votre arrivée et pourra préparer le code de retrait avec le destinataire.';
+
+  @override
+  String get travelerArrivalPromptConfirm => 'Oui, je suis arrivé';
+
+  @override
+  String get travelerArrivalPromptSkip => 'Pas encore, remettre le colis';
+
+  @override
   String get trackingHeadlineOnTheWay => 'En route';
 
   @override
