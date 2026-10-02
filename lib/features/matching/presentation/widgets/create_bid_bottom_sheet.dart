@@ -8,6 +8,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/phone/normalize_payer_phone.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -58,10 +59,40 @@ class _BtnConfig {
     required this.label,
     required this.iconAsset,
     this.onPressed,
+    this.hint,
   });
   final String label;
   final String iconAsset;
   final VoidCallback? onPressed;
+
+  /// Explication affichée au-dessus du bouton quand il est désactivé pour
+  /// une raison que l'utilisateur ne devinerait pas (poids manquant).
+  final String? hint;
+}
+
+/// Pas de saisie du poids : un téléphone (environ 300 g) se déclare 0,5 kg
+/// au lieu d'un kilo entier (Sentry FLUTTER-7Q). Le back accepte les
+/// décimales (`DECIMAL(5,2)`, strictement positif).
+const double _kWeightStep = 0.5;
+
+/// Arrondit au pas de [_kWeightStep] : le slider discrétisé et les additions
+/// successives du stepper produisent sinon des restes binaires (1,5000000002).
+double _snapWeight(double kg) => (kg / _kWeightStep).round() * _kWeightStep;
+
+/// Lit un poids saisi au clavier, virgule ou point comme séparateur.
+double? _parseWeight(String raw) =>
+    double.tryParse(raw.trim().replaceAll(',', '.'));
+
+/// Saisie décimale du poids : chiffres, un seul séparateur (virgule ou
+/// point) et deux décimales au plus, comme la colonne `DECIMAL(5,2)` du back.
+class _WeightInputFormatter extends TextInputFormatter {
+  static final _pattern = RegExp(r'^\d{0,3}([.,]\d{0,2})?$');
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) => _pattern.hasMatch(newValue.text) ? newValue : oldValue;
 }
 
 class _CollectedFormData {
@@ -521,6 +552,16 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     // En grille pure, le contenu se déduit des articles choisis (gridOk le
     // couvre déjà) — pas de combobox à remplir séparément.
     final categoriesOk = _isGridOnly || _categoriesNotifier.value.isNotEmpty;
+    // Poids manquant sur un trajet au kilo, sans article de grille pour le
+    // remplacer : le bouton reste grisé, on dit pourquoi (FLUTTER-7Q).
+    final missingWeight =
+        hasKgPricing &&
+        !weightOk &&
+        !gridOk &&
+        (widget.announcement.isKgFree || _maxKg > 0);
+    final weightHint = missingWeight
+        ? context.l10n.bidCreateWeightRequiredHint
+        : null;
     final canSubmit =
         (weightOk || gridOk) &&
         categoriesOk &&
@@ -540,11 +581,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               label: context.l10n.commonContinue,
               iconAsset: 'arrow-right',
               onPressed: canSubmit ? _goToNegotiationPicker : null,
+              hint: weightHint,
             )
           : _BtnConfig(
               label: context.l10n.bidCreateSendProposalButton,
               iconAsset: 'send',
               onPressed: canSubmit ? _goToNegotiationPicker : null,
+              hint: weightHint,
             );
       return;
     }
@@ -553,6 +596,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       label: context.l10n.commonSend,
       iconAsset: 'send',
       onPressed: canSubmit ? _goToPicker : null,
+      hint: weightHint,
     );
   }
 
@@ -1815,12 +1859,36 @@ class _StickyBottom extends StatelessWidget {
               DonySpacing.lg,
               bottomInset + DonySpacing.md,
             ),
-            child: DonyButton(
-              key: const Key('bid-submit-btn'),
-              label: config?.label ?? context.l10n.commonSend,
-              iconAsset: config?.iconAsset ?? 'send',
-              isLoading: isLoading,
-              onPressed: isLoading ? null : config?.onPressed,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (config?.hint case final hint?) ...[
+                  Row(
+                    key: const Key('bid-submit-hint'),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DonyIcon('info', size: 14, color: cs.onSurfaceVariant),
+                      const SizedBox(width: DonySpacing.xs),
+                      Expanded(
+                        child: Text(
+                          hint,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: DonySpacing.sm),
+                ],
+                DonyButton(
+                  key: const Key('bid-submit-btn'),
+                  label: config?.label ?? context.l10n.commonSend,
+                  iconAsset: config?.iconAsset ?? 'send',
+                  isLoading: isLoading,
+                  onPressed: isLoading ? null : config?.onPressed,
+                ),
+              ],
             ),
           );
         },
@@ -1913,19 +1981,39 @@ class _WeightSectionState extends State<_WeightSection> {
   void initState() {
     super.initState();
     if (widget.isKgFree) {
-      _kgCtrl = TextEditingController(text: widget.weightKg.toStringAsFixed(0));
+      // Texte posé dans didChangeDependencies : il dépend de la langue, que
+      // le contexte ne fournit pas encore ici.
+      _kgCtrl = TextEditingController();
       _kgFocus = FocusNode()..addListener(_onFocusChanged);
     }
   }
+
+  String _localeName = 'fr';
+  bool _fieldTextInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _localeName = context.l10n.localeName;
+    final ctrl = _kgCtrl;
+    if (ctrl != null && !_fieldTextInitialized) {
+      _fieldTextInitialized = true;
+      ctrl.text = _fieldText(widget.weightKg);
+    }
+  }
+
+  /// Poids tel qu'affiché dans le champ, au séparateur décimal de la langue
+  /// (« 0,5 » en français, « 0.5 » en anglais ; entier sans décimale).
+  String _fieldText(double kg) => formatWeightValue(_localeName, kg);
 
   @override
   void didUpdateWidget(covariant _WeightSection oldWidget) {
     super.didUpdateWidget(oldWidget);
     final ctrl = _kgCtrl;
     if (ctrl != null && !(_kgFocus?.hasFocus ?? false)) {
-      final current = double.tryParse(ctrl.text.trim());
+      final current = _parseWeight(ctrl.text);
       if (current == null || current != widget.weightKg) {
-        final text = widget.weightKg.toStringAsFixed(0);
+        final text = _fieldText(widget.weightKg);
         ctrl.value = TextEditingValue(
           text: text,
           selection: TextSelection.collapsed(offset: text.length),
@@ -1944,17 +2032,17 @@ class _WeightSectionState extends State<_WeightSection> {
 
   void _setWeight(double value) {
     final clamped = value < _min ? _min : value;
-    widget.onChanged(clamped);
+    widget.onChanged(_snapWeight(clamped));
   }
 
   void _onFocusChanged() {
     if (_kgFocus?.hasFocus ?? false) return;
     final ctrl = _kgCtrl;
     if (ctrl == null) return;
-    final parsed = double.tryParse(ctrl.text.trim());
+    final parsed = _parseWeight(ctrl.text);
     final value = parsed == null ? _min : (parsed < _min ? _min : parsed);
     if (value != widget.weightKg) widget.onChanged(value);
-    final text = value.toStringAsFixed(0);
+    final text = _fieldText(value);
     if (ctrl.text != text) {
       ctrl.value = TextEditingValue(
         text: text,
@@ -1966,7 +2054,7 @@ class _WeightSectionState extends State<_WeightSection> {
   void _onFieldChanged(String raw) {
     final trimmed = raw.trim();
     if (trimmed.isEmpty) return;
-    final parsed = double.tryParse(trimmed);
+    final parsed = _parseWeight(trimmed);
     if (parsed == null) return;
     final value = parsed < _min ? _min : parsed;
     widget.onChanged(value);
@@ -2003,7 +2091,9 @@ class _WeightSectionState extends State<_WeightSection> {
             _StepperButton(
               key: const Key('weight-decrement'),
               iconAsset: 'minus',
-              onPressed: canDecrement ? () => _setWeight(weightKg - 1) : null,
+              onPressed: canDecrement
+                  ? () => _setWeight(weightKg - _kWeightStep)
+                  : null,
             ),
             const SizedBox(width: DonySpacing.base),
             Expanded(
@@ -2017,8 +2107,10 @@ class _WeightSectionState extends State<_WeightSection> {
                       controller: _kgCtrl,
                       focusNode: _kgFocus,
                       onChanged: _onFieldChanged,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [_WeightInputFormatter()],
                       textAlign: TextAlign.center,
                       style: tt.displayLarge?.copyWith(color: cs.onSurface),
                       cursorColor: cs.primary,
@@ -2048,7 +2140,7 @@ class _WeightSectionState extends State<_WeightSection> {
             _StepperButton(
               key: const Key('weight-increment'),
               iconAsset: 'plus',
-              onPressed: () => _setWeight(weightKg + 1),
+              onPressed: () => _setWeight(weightKg + _kWeightStep),
             ),
           ],
         ),
@@ -2087,7 +2179,14 @@ class _WeightSectionState extends State<_WeightSection> {
       );
     }
 
-    final divisions = (maxKg - sliderMin).round();
+    // Un cran tous les 0,5 kg. Le slider s'arrête au dernier demi-kilo
+    // entier sous la capacité (10,3 kg → 10 kg) pour que chaque cran tombe
+    // juste ; une capacité inférieure au pas reste en continu.
+    final divisions = ((maxKg - sliderMin) / _kWeightStep).floor();
+    final sliderMax = divisions > 0
+        ? sliderMin + divisions * _kWeightStep
+        : maxKg;
+    final l = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2106,7 +2205,8 @@ class _WeightSectionState extends State<_WeightSection> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              weightKg.toStringAsFixed(0),
+              formatWeightValue(l.localeName, weightKg),
+              key: const Key('weight-value'),
               style: tt.displayLarge?.copyWith(color: cs.onSurface),
             ),
             const SizedBox(width: DonySpacing.xs),
@@ -2147,10 +2247,10 @@ class _WeightSectionState extends State<_WeightSection> {
             thumbShape: const RoundSliderThumbShape(),
           ),
           child: Slider(
-            value: weightKg,
-            max: maxKg,
+            value: weightKg.clamp(sliderMin, sliderMax),
+            max: sliderMax,
             divisions: divisions > 0 ? divisions : null,
-            onChanged: onChanged,
+            onChanged: (v) => onChanged(divisions > 0 ? _snapWeight(v) : v),
           ),
         ),
         Row(
@@ -2760,7 +2860,8 @@ class _PriceBreakdown extends StatelessWidget {
       lines.add(
         _line(
           tt,
-          '${formatKgPrice(weightKg)} kg × ${formatPriceIn(pricePerKg, currency)}',
+          '${formatWeightValue(context.l10n.localeName, weightKg)} kg × '
+          '${formatPriceIn(pricePerKg, currency)}',
           fmt(kgDisplay),
         ),
       );

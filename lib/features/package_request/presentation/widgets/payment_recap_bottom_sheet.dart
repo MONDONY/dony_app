@@ -14,6 +14,7 @@ import 'package:dony/features/package_request/data/models/payment_method.dart'
     as dony;
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
+import 'package:dony/features/package_request/presentation/widgets/thread/return_to_thread.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
@@ -167,8 +168,9 @@ class PaymentRecapBottomSheet {
                                       subtitle: lb
                                           .negotiationOfferAcceptedPaidSubtitle,
                                       ctaLabel: lb.negotiationTrackShipmentCta,
-                                      onCta: () => routeContext.go(
-                                        '/negotiations/${thread.id}',
+                                      onCta: () => returnToNegotiationThread(
+                                        routeContext,
+                                        thread.id,
                                       ),
                                       analyticsContext: 'negotiation_payment',
                                     ),
@@ -213,9 +215,14 @@ class PaymentRecapBottomSheet {
                                   title: lb.negotiationAgreementConfirmedTitle,
                                   subtitle: lb
                                       .negotiationPaymentRecapCashSuccessSubtitle,
-                                  ctaLabel: lb.negotiationTrackShipmentCta,
-                                  onCta: () => routeContext.go(
-                                    '/negotiations/${thread.id}',
+                                  // Pas de suivi tant que la commission
+                                  // espèces n'est pas réglée : on ramène au
+                                  // fil, d'où le libellé « Voir la
+                                  // négociation » (FLUTTER-7J).
+                                  ctaLabel: lb.negotiationViewNegotiationCta,
+                                  onCta: () => returnToNegotiationThread(
+                                    routeContext,
+                                    thread.id,
                                   ),
                                   analyticsContext:
                                       'negotiation_cash_agreement',

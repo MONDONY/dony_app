@@ -88,6 +88,13 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
   /// L'event d'intention « ouverture À traiter » n'est tiré qu'une fois.
   bool _analyticsFired = false;
 
+  /// Dernière demande dont l'acceptation espèces a été lancée (tap sur
+  /// « Accepter », relance après recharge ou paiement de la commission par
+  /// carte). [acs.BidAccepted] ne porte pas d'id : sans ce rappel, l'écran de
+  /// succès ne saurait pas vers quelle demande pointer. Simple mémoire, aucun
+  /// rendu n'en dépend.
+  String? _lastCashAcceptBidId;
+
   void _addProcessing(String bidId) =>
       setState(() => _processingBidIds.add(bidId));
 
@@ -116,12 +123,8 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
   ) {
     if (state is acs.BidAccepted) {
       setState(() => _processingBidIds.clear());
-      DonySnackbar.show(
-        context,
-        message: context.l10n.bidListAcceptedSnackbar,
-        type: DonySnackbarType.success,
-      );
       context.read<BidBloc>().add(BidListRequested(widget.announcementId));
+      _showAcceptedConfirmation(context, _lastCashAcceptBidId);
     } else if (state is acs.BidWalletInsufficient) {
       _showWalletInsufficientSheet(context, state);
     } else if (state is acs.BidFailed) {
@@ -142,12 +145,8 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
   void _onStateChange(BuildContext context, BidState state) {
     if (state is BidAccepted) {
       _removeProcessing(state.bid.id);
-      DonySnackbar.show(
-        context,
-        message: context.l10n.bidListAcceptedSnackbar,
-        type: DonySnackbarType.success,
-      );
       context.read<BidBloc>().add(BidListRequested(widget.announcementId));
+      _showAcceptedConfirmation(context, state.bid.id);
     } else if (state is BidRejected) {
       DonySnackbar.show(context, message: context.l10n.bidListRejectedSnackbar);
       context.read<BidBloc>().add(BidListRequested(widget.announcementId));
@@ -175,6 +174,25 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
       }
       ErrorPresenter.show(context, state.error);
     }
+  }
+
+  /// Confirmation durable d'une acceptation (FLUTTER-7N) : la demande quitte
+  /// aussitôt la liste « À traiter », une snackbar furtive laissait le
+  /// voyageur devant « Aucune demande à traiter » sans comprendre ce qui
+  /// s'était passé, surtout au retour d'une recharge de portefeuille. L'écran
+  /// de succès mène à la demande. Sans id connu (cas théorique), on retombe
+  /// sur la snackbar.
+  void _showAcceptedConfirmation(BuildContext context, String? bidId) {
+    _lastCashAcceptBidId = null;
+    if (bidId == null) {
+      DonySnackbar.show(
+        context,
+        message: context.l10n.bidListAcceptedSnackbar,
+        type: DonySnackbarType.success,
+      );
+      return;
+    }
+    unawaited(context.push('/bids/$bidId/accepted'));
   }
 
   // ── Sheets ───────────────────────────────────────────────────────────────
@@ -264,6 +282,7 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
                 '/payments/wallet/topup/method',
               );
               if ((recharged ?? false) && context.mounted) {
+                _lastCashAcceptBidId = state.bidId;
                 context.read<BidAcceptanceBloc>().add(
                   ace.BidAcceptRequested(state.bidId),
                 );
@@ -277,6 +296,7 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
               variant: DonyButtonVariant.secondary,
               onPressed: () {
                 context.pop();
+                _lastCashAcceptBidId = state.bidId;
                 context.read<BidAcceptanceBloc>().add(
                   ace.BidAcceptWithCardRequested(state.bidId),
                 );
@@ -333,6 +353,9 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
   ) {
     _addProcessing(bidId);
     final bid = pendingBids.firstWhere((b) => b.id == bidId);
+    if (bid.paymentMethod == BidPaymentMethod.cash) {
+      _lastCashAcceptBidId = bidId;
+    }
     dispatchBidAccept(context, bid);
   }
 

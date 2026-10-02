@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
@@ -12,6 +11,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/screens/bid_accepted_success_screen.dart';
 import 'package:dony/features/matching/presentation/screens/pending_bids_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -78,10 +78,26 @@ Future<void> _pump(
         ),
       ),
       GoRoute(
+        path: '/bids/:bidId/accepted',
+        builder: (_, state) =>
+            BidAcceptedSuccessScreen(bidId: state.pathParameters['bidId']!),
+      ),
+      GoRoute(
         path: '/bids/:id',
         builder: (_, state) => Scaffold(
           appBar: AppBar(),
           body: Text('Bid detail ${state.pathParameters['id']}'),
+        ),
+      ),
+      // Recharge du portefeuille : le stub revient aussitôt avec `true`.
+      GoRoute(
+        path: '/payments/wallet/topup/method',
+        builder: (ctx, _) => Scaffold(
+          body: ElevatedButton(
+            key: const Key('topup-done'),
+            onPressed: () => ctx.pop(true),
+            child: const Text('rechargé'),
+          ),
         ),
       ),
       GoRoute(
@@ -386,6 +402,137 @@ void main() {
       verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
     },
   );
+
+  // ── Confirmation durable de l'acceptation (Sentry FLUTTER-7N) ────────────────
+  // La demande acceptée quitte la liste ; une snackbar furtive laissait le
+  // voyageur devant « Aucune demande à traiter » sans comprendre.
+
+  group('confirmation après acceptation', () {
+    StreamController<acs.BidAcceptanceState> wireAcceptance() {
+      final ctrl = StreamController<acs.BidAcceptanceState>.broadcast();
+      whenListen(
+        acceptanceBloc,
+        ctrl.stream,
+        initialState: acs.BidAcceptanceInitial(),
+      );
+      return ctrl;
+    }
+
+    testWidgets('espèces : BidAccepted → écran « Demande acceptée ! » puis '
+        '« Voir la demande » ouvre la demande acceptée', (tester) async {
+      final ctrl = _wireStates(bidBloc);
+      addTearDown(ctrl.close);
+      final acceptance = wireAcceptance();
+      addTearDown(acceptance.close);
+
+      await _pump(tester, bidBloc, acceptanceBloc);
+      ctrl.add(
+        BidListLoaded([
+          _makeBid(
+            status: 'PENDING',
+            id: 'cash-1',
+            paymentMethod: BidPaymentMethod.cash,
+          ),
+        ]),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Accepter'));
+      await tester.pump();
+      acceptance.add(acs.BidAccepted());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Demande acceptée !'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Voir la demande'));
+      await tester.tap(find.text('Voir la demande'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bid detail cash-1'), findsOneWidget);
+    });
+
+    testWidgets('solde insuffisant → recharge → relance → écran de succès vers '
+        'la bonne demande', (tester) async {
+      final ctrl = _wireStates(bidBloc);
+      addTearDown(ctrl.close);
+      final acceptance = wireAcceptance();
+      addTearDown(acceptance.close);
+
+      await _pump(tester, bidBloc, acceptanceBloc);
+      ctrl.add(
+        BidListLoaded([
+          _makeBid(
+            status: 'PENDING',
+            id: 'w-1',
+            paymentMethod: BidPaymentMethod.cash,
+          ),
+        ]),
+      );
+      await tester.pumpAndSettle();
+
+      acceptance.add(
+        acs.BidWalletInsufficient(
+          availableBalance: 1,
+          requiredCommission: 5,
+          hasCard: false,
+          bidId: 'w-1',
+          currency: 'EUR',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Recharger mon portefeuille'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('topup-done')));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => acceptanceBloc.add(
+          any(
+            that: isA<ace.BidAcceptRequested>().having(
+              (e) => e.bidId,
+              'bidId',
+              'w-1',
+            ),
+          ),
+        ),
+      ).called(1);
+
+      acceptance.add(acs.BidAccepted());
+      await tester.pumpAndSettle();
+      expect(find.text('Demande acceptée !'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Voir la demande'));
+      await tester.tap(find.text('Voir la demande'));
+      await tester.pumpAndSettle();
+      expect(find.text('Bid detail w-1'), findsOneWidget);
+    });
+
+    testWidgets(
+      'carte : BidAccepted du BidBloc → écran de succès de la demande',
+      (tester) async {
+        final ctrl = _wireStates(bidBloc);
+        addTearDown(ctrl.close);
+
+        await _pump(tester, bidBloc, acceptanceBloc);
+        ctrl.add(
+          BidListLoaded([_makeBid(status: 'PAYMENT_ESCROWED', id: 's-1')]),
+        );
+        await tester.pumpAndSettle();
+
+        ctrl.add(BidAccepted(_makeBid(status: 'ACCEPTED', id: 's-1')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Demande acceptée !'), findsOneWidget);
+        await tester.tap(find.bySemanticsLabel('Fermer'));
+        await tester.pumpAndSettle();
+        // Le bouton fermer ramène à la liste « À traiter ».
+        expect(find.byType(DonySuccessScreen), findsNothing);
+        expect(find.text('À traiter'), findsOneWidget);
+      },
+    );
+  });
 
   // ── Empty state ─────────────────────────────────────────────────────────────
 

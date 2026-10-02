@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_stripe/flutter_stripe.dart';
 
@@ -24,9 +25,48 @@ class PaymentCancelledException implements Exception {
 /// ni `message` sur son erreur. Quand présent, c'est déjà le message localisé
 /// par Stripe dans la langue du téléphone (`localizedMessage`) — affiché tel
 /// quel. `null` retombe sur le libellé générique de la raison côté UI.
+///
+/// Les champs `stripe*` décrivent l'erreur brute du SDK quand l'échec vient
+/// de lui ([PaymentConfirmationException.fromStripe]) : ils ne s'affichent
+/// jamais, ils servent au diagnostic remonté à Sentry (FLUTTER-7S, un échec
+/// de carte n'y laissait aucune trace, seul le message générique s'affichait).
 class PaymentConfirmationException implements Exception {
   final String? message;
-  const PaymentConfirmationException([this.message]);
+
+  /// `FailureCode` du SDK (`Failed`, `Timeout`, `Unknown`), jamais `Canceled`
+  /// (mappé en [PaymentCancelledException]).
+  final String? stripeCode;
+
+  /// Code d'erreur Stripe (ex. `card_declined`, `expired_card`).
+  final String? stripeErrorCode;
+
+  /// Motif de refus de la banque (ex. `insufficient_funds`).
+  final String? declineCode;
+
+  /// Type d'erreur Stripe (ex. `card_error`, `invalid_request_error`).
+  final String? stripeErrorType;
+
+  /// Message brut, non localisé, du SDK.
+  final String? stripeMessage;
+
+  const PaymentConfirmationException([this.message])
+    : stripeCode = null,
+      stripeErrorCode = null,
+      declineCode = null,
+      stripeErrorType = null,
+      stripeMessage = null;
+
+  const PaymentConfirmationException.fromStripe(
+    this.message, {
+    required this.stripeCode,
+    this.stripeErrorCode,
+    this.declineCode,
+    this.stripeErrorType,
+    this.stripeMessage,
+  });
+
+  /// Vrai quand l'échec vient du SDK Stripe et mérite un diagnostic.
+  bool get isFromStripe => stripeCode != null;
 }
 
 /// Abstraction testable du SDK flutter_stripe pour la DonyPaymentSheet.
@@ -130,15 +170,29 @@ class StripePaymentGateway implements PaymentGateway {
     try {
       await action();
     } on StripeException catch (e) {
-      if (e.error.code == FailureCode.Canceled) {
-        throw const PaymentCancelledException();
-      }
-      // Pas de repli français ici : `providerMessage` reste `null` quand le
-      // SDK ne fournit rien, et c'est l'UI qui affiche alors le libellé
-      // générique de la raison (`PaymentSheetFailureReason.declined`).
-      throw PaymentConfirmationException(
-        e.error.localizedMessage ?? e.error.message,
-      );
+      throw mapStripeException(e);
     }
   }
+}
+
+/// Traduit une erreur du SDK Stripe en exception du domaine : annulation par
+/// l'utilisateur ([PaymentCancelledException], silencieuse) ou échec
+/// ([PaymentConfirmationException] portant les codes du SDK pour Sentry).
+///
+/// Pas de repli français ici : `message` reste `null` quand le SDK ne
+/// fournit rien, et c'est l'UI qui affiche alors le libellé générique de la
+/// raison (`PaymentSheetFailureReason.declined`).
+@visibleForTesting
+Exception mapStripeException(StripeException e) {
+  if (e.error.code == FailureCode.Canceled) {
+    return const PaymentCancelledException();
+  }
+  return PaymentConfirmationException.fromStripe(
+    e.error.localizedMessage ?? e.error.message,
+    stripeCode: e.error.code.name,
+    stripeErrorCode: e.error.stripeErrorCode,
+    declineCode: e.error.declineCode,
+    stripeErrorType: e.error.type,
+    stripeMessage: e.error.message,
+  );
 }

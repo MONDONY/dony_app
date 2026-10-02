@@ -29,6 +29,7 @@ import 'package:dony/features/profile/presentation/screens/profile_public_screen
 import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1029,9 +1030,8 @@ class _TextContent extends StatelessWidget {
     required this.tt,
   });
 
-  // Appui long = copie du message entier, comme dans les messageries
-  // courantes : une adresse ou un numéro reçu se recolle ailleurs (Sentry
-  // FLUTTER-5F). Le `Text` seul n'offrait aucune sélection.
+  // « Copier le message » recopie la bulle entière : une adresse ou un
+  // numéro reçu se recolle ailleurs (Sentry FLUTTER-5F).
   Future<void> _copy(BuildContext context) async {
     final message = context.l10n.chatMessageCopied;
     unawaited(HapticFeedback.mediumImpact());
@@ -1044,28 +1044,43 @@ class _TextContent extends StatelessWidget {
     );
   }
 
+  // Texte sélectionnable : l'appui long sélectionne un mot (un code, un
+  // numéro) et ouvre le menu natif (Copier, Tout sélectionner…), auquel on
+  // ajoute « Copier le message » pour la bulle entière (Sentry FLUTTER-7H :
+  // l'ancien appui long copiait toujours tout, impossible de n'en prendre
+  // qu'un mot). Le lecteur d'écran garde la copie de la bulle entière par
+  // une action dédiée.
   @override
   Widget build(BuildContext context) {
+    final copyLabel = context.l10n.chatCopyMessageAction;
     return Semantics(
-      onLongPressHint: context.l10n.chatCopyMessageHint,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onLongPress: () => _copy(context),
-        child: _body(),
-      ),
-    );
-  }
-
-  Widget _body() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.md,
-        vertical: DonySpacing.sm,
-      ),
-      child: Text(
-        body,
-        style: tt.bodyMedium?.copyWith(
-          color: isMe ? cs.onPrimary : cs.onSurface,
+      customSemanticsActions: {
+        CustomSemanticsAction(label: copyLabel): () => _copy(context),
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.sm,
+        ),
+        child: SelectableText(
+          body,
+          style: tt.bodyMedium?.copyWith(
+            color: isMe ? cs.onPrimary : cs.onSurface,
+          ),
+          contextMenuBuilder: (menuContext, editableTextState) =>
+              AdaptiveTextSelectionToolbar.buttonItems(
+                anchors: editableTextState.contextMenuAnchors,
+                buttonItems: [
+                  ...editableTextState.contextMenuButtonItems,
+                  ContextMenuButtonItem(
+                    label: copyLabel,
+                    onPressed: () {
+                      editableTextState.hideToolbar();
+                      _copy(context);
+                    },
+                  ),
+                ],
+              ),
         ),
       ),
     );

@@ -241,4 +241,27 @@ void main() {
       expect(topupResult, isTrue);
     },
   );
+
+  // FLUTTER-7N : le X partait vers /home pendant que l'écran de méthode, encore
+  // monté, se dépilait en retard sur le `true` reçu. Il suit désormais le
+  // chemin du CTA : retour à l'appelant avec `true`, rien de plus.
+  testWidgets('bouton fermer de DonySuccessScreen : même sortie que le CTA, '
+      'retour à l\'appelant avec true, sans détour par l\'accueil', (
+    tester,
+  ) async {
+    topupResult = null;
+    await driveToPaymentSuccess(tester);
+    expect(find.byType(DonySuccessScreen), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Fermer'));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    expect(find.byType(DonySuccessScreen), findsNothing);
+    expect(find.byType(WalletTopupAmountScreen), findsNothing);
+    expect(find.text('Ouvrir'), findsOneWidget);
+    expect(find.text('Accueil'), findsNothing);
+    expect(topupResult, isTrue);
+  });
 }

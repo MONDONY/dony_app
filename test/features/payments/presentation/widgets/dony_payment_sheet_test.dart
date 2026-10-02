@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
@@ -219,6 +221,76 @@ void main() {
       expect(find.byKey(const Key('paymentSheetEscrowNote')), findsOneWidget);
       expect(find.text('Paiement confirmé'), findsOneWidget);
       expect(find.byKey(const Key('paymentSheetDoneButton')), findsOneWidget);
+    });
+  });
+
+  // Le bouton « Terminé » et la fermeture automatique (900 ms) visaient la
+  // même sortie : un tap juste avant l'échéance laissait la minuterie fermer
+  // une seconde route (l'écran de succès poussé par l'appelant) et rappeler
+  // onSuccess.
+  group('Fermeture après succès', () {
+    testWidgets('« Terminé » puis échéance : onSuccess une seule fois, aucune '
+        'route de trop dépilée', (tester) async {
+      const ready = PaymentSheetResolved(
+        walletAvailable: false,
+        paypalAvailable: false,
+      );
+      final controller = StreamController<PaymentSheetState>();
+      addTearDown(controller.close);
+      whenListen<PaymentSheetState>(
+        bloc,
+        controller.stream,
+        initialState: ready,
+      );
+      var successCount = 0;
+      final navigatorKey = GlobalKey<NavigatorState>();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navigatorKey,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => TextButton(
+                onPressed: () => DonyPaymentSheet.show(
+                  ctx,
+                  config: _config,
+                  contextLabel: 'Envoi vers Dakar',
+                  onSuccess: () {
+                    successCount++;
+                    // Comme les appelants : un écran de succès est poussé.
+                    navigatorKey.currentState!.push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            const Scaffold(body: Text('Écran de succès')),
+                      ),
+                    );
+                  },
+                  bloc: bloc,
+                ),
+                child: const Text('Ouvrir'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      when(
+        () => bloc.state,
+      ).thenReturn(const PaymentSheetSuccess(method: PaymentMethodKind.card));
+      controller.add(const PaymentSheetSuccess(method: PaymentMethodKind.card));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
+
+      // Tap juste avant l'échéance : la sheet s'anime encore à la sortie
+      // quand la minuterie se déclenche.
+      await tester.tap(find.byKey(const Key('paymentSheetDoneButton')));
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pumpAndSettle();
+
+      expect(successCount, 1);
+      expect(find.text('Écran de succès'), findsOneWidget);
     });
   });
 

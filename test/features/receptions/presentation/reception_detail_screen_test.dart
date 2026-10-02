@@ -43,6 +43,7 @@ Reception _confirmed({
   String? code = '482913',
   String? instructions = 'Sortie B, parking P2.',
   String? travelerId,
+  String? senderId,
 }) => Reception(
   bidId: _id,
   linkStatus: 'CONFIRMED',
@@ -58,6 +59,7 @@ Reception _confirmed({
   weightKg: 4.5,
   confirmationCode: code,
   travelerId: travelerId,
+  senderId: senderId,
 );
 
 void main() {
@@ -194,6 +196,32 @@ void main() {
       // Aucun code ni détail tant que le lien n'est pas confirmé.
       expect(find.byKey(const Key('reception-code')), findsNothing);
       expect(find.byKey(const Key('reception-view-tracking')), findsNothing);
+    });
+
+    testWidgets('lien à confirmer : carte expéditeur vers son profil', (
+      tester,
+    ) async {
+      stub(
+        const ReceptionDetailLoaded(
+          Reception(
+            bidId: _id,
+            linkStatus: 'PENDING',
+            bidStatus: 'ACCEPTED',
+            senderFirstName: 'Awa',
+            senderId: 'send-1',
+          ),
+        ),
+      );
+      await pump(tester);
+
+      expect(find.text('Expéditeur'), findsOneWidget);
+      await tester.ensureVisible(
+        find.byKey(const Key('reception-sender-card')),
+      );
+      await tester.tap(find.byKey(const Key('reception-sender-card')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('profil send-1'), findsOneWidget);
     });
 
     testWidgets('expéditeur inconnu et date de départ', (tester) async {
@@ -456,6 +484,31 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('profil trav-1'), findsOneWidget);
+    });
+
+    // Sentry FLUTTER-7P : le titre « Awa vous envoie un colis » ne menait
+    // nulle part ; la carte expéditeur ouvre son profil.
+    testWidgets('carte expéditeur : ouvre son profil public', (tester) async {
+      stub(ReceptionDetailLoaded(_confirmed(senderId: 'send-1')));
+      await pump(tester);
+
+      await tester.ensureVisible(
+        find.byKey(const Key('reception-sender-card')),
+      );
+      expect(find.bySemanticsLabel('Voir le profil de Awa'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('reception-sender-card')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('profil send-1'), findsOneWidget);
+    });
+
+    testWidgets('sans id expéditeur (back antérieur) : pas de carte', (
+      tester,
+    ) async {
+      stub(ReceptionDetailLoaded(_confirmed()));
+      await pump(tester);
+
+      expect(find.byKey(const Key('reception-sender-card')), findsNothing);
     });
 
     testWidgets('sans id voyageur (back antérieur) : simple ligne', (

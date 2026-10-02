@@ -384,13 +384,83 @@ void main() {
 
         expect(find.byType(DonySuccessScreen), findsOneWidget);
         expect(find.text('Accord confirmé !'), findsOneWidget);
+        // Pas de suivi tant que la commission espèces n'est pas réglée.
+        expect(find.text('Voir le suivi'), findsNothing);
 
-        await tester.ensureVisible(find.text('Voir le suivi'));
-        await tester.tap(find.text('Voir le suivi'));
+        await tester.ensureVisible(find.text('Voir la négociation'));
+        await tester.tap(find.text('Voir la négociation'));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
 
         expect(find.text('Fil de négociation thread-recap-1'), findsOneWidget);
+      },
+    );
+
+    // Sentry FLUTTER-7J : la feuille est ouverte depuis le fil lui-même, atteint
+    // par `go` (notification, écran de succès précédent). Le CTA faisait
+    // `go('/negotiations/{id}')` vers l'adresse déjà affichée : go_router ne
+    // reconstruisait rien et l'écran de succès (PopScope canPop: false)
+    // restait affiché, sans issue.
+    testWidgets(
+      'feuille ouverte depuis /negotiations/{id} : le CTA retire l\'écran de '
+      'succès et ramène au fil',
+      (tester) async {
+        final thread = _makeThread(paymentMethod: PaymentMethod.cash);
+        final router = GoRouter(
+          initialLocation: '/home',
+          routes: [
+            GoRoute(
+              path: '/home',
+              builder: (_, _) => const Scaffold(body: Text('Accueil')),
+            ),
+            GoRoute(
+              path: '/negotiations/:id',
+              builder: (ctx, state) => Scaffold(
+                body: Column(
+                  children: [
+                    Text('Fil de négociation ${state.pathParameters['id']}'),
+                    Builder(
+                      builder: (ctx) => ElevatedButton(
+                        key: const Key('open'),
+                        onPressed: () => PaymentRecapBottomSheet.show(
+                          ctx,
+                          bloc: bloc,
+                          thread: thread,
+                        ),
+                        child: const Text('Ouvrir'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+        await tester.pumpWidget(
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+        );
+        router.go('/negotiations/thread-recap-1');
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.widgetWithText(DonyButton, 'Confirmer l\'accord'),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(DonySuccessScreen), findsOneWidget);
+
+        await tester.ensureVisible(find.text('Voir la négociation'));
+        await tester.tap(find.text('Voir la négociation'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DonySuccessScreen), findsNothing);
+        expect(find.text('Fil de négociation thread-recap-1'), findsOneWidget);
+        expect(
+          router.routerDelegate.currentConfiguration.uri.path,
+          '/negotiations/thread-recap-1',
+        );
       },
     );
 
@@ -417,7 +487,7 @@ void main() {
         expect(find.byType(DonySuccessScreen), findsOneWidget);
         expect(find.text('Agreement confirmed!'), findsOneWidget);
         expect(find.textContaining('Cash payment'), findsOneWidget);
-        expect(find.text('Track your shipment'), findsOneWidget);
+        expect(find.text('View negotiation'), findsOneWidget);
       },
     );
   });

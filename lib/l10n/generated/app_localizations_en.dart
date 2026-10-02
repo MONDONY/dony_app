@@ -6095,10 +6095,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get negotiationRejectedSnackbar => 'Negotiation declined';
 
   @override
-  String get negotiationCommissionSettledSnackbar =>
-      'Service fee paid: this parcel is yours!';
-
-  @override
   String get negotiationGaveUpParcelSnackbar =>
       'You\'ve given up this parcel, it\'s available to another traveler again.';
 
@@ -9819,9 +9815,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatMessageCopied => 'Message copied';
-
-  @override
-  String get chatCopyMessageHint => 'copy the message';
 
   @override
   String chatOpenParticipantProfileSemantics(String name) {
@@ -15440,9 +15433,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recipientSentInvitationPending => 'Pending';
 
   @override
-  String get recipientSentInvitationAccepted => 'Accepted';
-
-  @override
   String get recipientSentInvitationCancelTitle => 'Cancel this invitation?';
 
   @override
@@ -15541,4 +15531,53 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get recipientSectionLinkedOnYadony =>
       'On Yadony: they will follow the parcel in the app.';
+
+  @override
+  String get recipientInviteNameLabel => 'Name (optional)';
+
+  @override
+  String get recipientInviteNameHint => 'e.g. Awa Diallo';
+
+  @override
+  String get recipientInviteNameTooLong => '100 characters maximum.';
+
+  @override
+  String get negotiationViewNegotiationCta => 'View negotiation';
+
+  @override
+  String negotiationOpenPartnerProfileSemantics(String name) {
+    return 'View $name\'s profile';
+  }
+
+  @override
+  String get negotiationCommissionSettledTitle => 'This parcel is yours!';
+
+  @override
+  String get negotiationCommissionSettledSubtitle =>
+      'The Yadony service fee is paid and the agreement is sealed. Find the shipment and the next steps in the negotiation.';
+
+  @override
+  String get bidAcceptedSuccessTitle => 'Request accepted!';
+
+  @override
+  String get bidAcceptedSuccessSubtitle =>
+      'The parcel is booked on your trip. Open the request to see its details and the next steps with the sender.';
+
+  @override
+  String get bidAcceptedSuccessCta => 'View request';
+
+  @override
+  String get receptionSenderLabel => 'Sender';
+
+  @override
+  String receptionViewSenderProfile(String name) {
+    return 'View $name\'s profile';
+  }
+
+  @override
+  String get chatCopyMessageAction => 'Copy message';
+
+  @override
+  String get bidCreateWeightRequiredHint =>
+      'Enter the estimated weight, e.g. 0.5 kg for a phone.';
 }

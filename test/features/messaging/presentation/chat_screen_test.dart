@@ -21,6 +21,7 @@ import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:dony/features/settings/data/models/blocked_user_model.dart';
 import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -165,8 +166,11 @@ void main() {
       expect(find.text('Bonjour, colis reçu !'), findsOneWidget);
     });
 
-    // Sentry FLUTTER-5F : le texte d'une bulle n'était pas copiable.
-    testWidgets('appui long sur une bulle → message copié + toast', (
+    // Sentry FLUTTER-5F puis FLUTTER-7H : la bulle se copie entière, mais le
+    // testeur voulait n'en prendre qu'un mot (un code). Le texte est désormais
+    // sélectionnable, et le menu de sélection garde « Copier le message ».
+    testWidgets('bulle de texte sélectionnable : appui long → menu avec '
+        '« Copier le message » qui copie la bulle entière + toast', (
       tester,
     ) async {
       String? copied;
@@ -186,18 +190,69 @@ void main() {
         ),
       );
       when(() => bloc.state).thenReturn(
-        ChatLoaded([_makeMsg(id: 'm1', body: '12 rue des Lilas, Cocody')]),
+        ChatLoaded([_makeMsg(id: 'm1', body: 'Le code est 482913 merci')]),
       );
       await _pump(tester, bloc);
 
-      await tester.longPress(find.text('12 rue des Lilas, Cocody'));
+      expect(
+        find.widgetWithText(SelectableText, 'Le code est 482913 merci'),
+        findsOneWidget,
+      );
+
+      await tester.longPress(find.text('Le code est 482913 merci'));
+      await tester.pumpAndSettle();
+
+      // Menu natif (Copier, Tout sélectionner…) enrichi de l'entrée maison.
+      expect(find.text('Copier le message'), findsOneWidget);
+      await tester.tap(find.text('Copier le message'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(copied, '12 rue des Lilas, Cocody');
+      expect(copied, 'Le code est 482913 merci');
       expect(find.text('Message copié'), findsOneWidget);
+      expect(find.text('Copier le message'), findsNothing);
       await tester.pump(const Duration(seconds: 5));
     });
+
+    testWidgets(
+      'lecteur d\'écran : action « Copier le message » sur la bulle',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        when(() => bloc.state).thenReturn(
+          ChatLoaded([_makeMsg(id: 'm1', body: 'Adresse : 12 rue des Lilas')]),
+        );
+        await _pump(tester, bloc);
+
+        // Parcourt tout l'arbre sémantique : l'action est fusionnée dans le
+        // nœud qui porte la bulle.
+        final labels = <String?>[];
+        void visit(SemanticsNode node) {
+          final ids = node.getSemanticsData().customSemanticsActionIds ?? [];
+          labels.addAll(
+            ids.map((id) => CustomSemanticsAction.getAction(id)?.label),
+          );
+          node.visitChildren((child) {
+            visit(child);
+            return true;
+          });
+        }
+
+        // Laisse finir l'apparition en fondu de la bulle : à opacité nulle, sa
+        // sémantique est exclue de l'arbre.
+        await tester.pump(const Duration(seconds: 1));
+        visit(
+          tester
+              .binding
+              .renderViews
+              .first
+              .owner!
+              .semanticsOwner!
+              .rootSemanticsNode!,
+        );
+        expect(labels, contains('Copier le message'));
+        handle.dispose();
+      },
+    );
 
     // Régression finale F : 'd MMMM y' + 'HH:mm' fixes (AppL10n.localeName)
     // → DateFormat.yMMMMd/.jm(l.localeName). Rendu fr identique à l'ancien

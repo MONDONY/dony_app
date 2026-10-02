@@ -290,6 +290,9 @@ void main() {
   testWidgets(
     'maybeSaveManualEntry dispatches RecipientCreated with phone-derived country',
     (tester) async {
+      when(
+        () => sectionBloc.state,
+      ).thenReturn(const RecipientState(loaded: true));
       await tester.pumpWidget(buildSut(fallbackCity: 'Dakar'));
       await tester.pump();
 
@@ -317,6 +320,9 @@ void main() {
   testWidgets(
     'maybeSaveManualEntry uses fallbackCountry over phone-derived country',
     (tester) async {
+      when(
+        () => sectionBloc.state,
+      ).thenReturn(const RecipientState(loaded: true));
       await tester.pumpWidget(
         buildSut(fallbackCity: 'Dakar', fallbackCountry: 'CI'),
       );
@@ -340,6 +346,45 @@ void main() {
       expect(event.phoneE164, '+221771234567');
       expect(event.country, 'CI'); // fallbackCountry wins, not 'SN' from phone
       expect(event.city, 'Dakar');
+    },
+  );
+
+  testWidgets('FLUTTER-7T : carnet pas encore chargé, rien n\'est enregistré', (
+    tester,
+  ) async {
+    // État initial du bloc recréé au montage : liste vide, jamais chargée.
+    await tester.pumpWidget(buildSut(fallbackCity: 'Dakar'));
+    await tester.pump();
+
+    nameCtrl.text = 'Mamadou Diallo';
+    phoneCtrl.text = _r1.phoneE164;
+    await tester.pump();
+
+    controller.maybeSaveManualEntry();
+
+    verifyNever(() => sectionBloc.add(any(that: isA<RecipientCreated>())));
+  });
+
+  testWidgets(
+    'FLUTTER-7T : numéro déjà dans le carnet chargé, rien n\'est enregistré',
+    (tester) async {
+      when(() => sectionBloc.state).thenReturn(
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_r1],
+          loaded: true,
+        ),
+      );
+      await tester.pumpWidget(buildSut(fallbackCity: 'Dakar'));
+      await tester.pump();
+
+      nameCtrl.text = 'Mamadou';
+      phoneCtrl.text = _r1.phoneE164;
+      await tester.pump();
+
+      controller.maybeSaveManualEntry();
+
+      verifyNever(() => sectionBloc.add(any(that: isA<RecipientCreated>())));
     },
   );
 

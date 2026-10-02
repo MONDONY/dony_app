@@ -1,7 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/package_request/presentation/widgets/thread/return_to_thread.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 /// Écran plein « Offre acceptée et payée ! » affiché une fois le paiement
 /// d'un fil de négociation séquestré, route hors shell
@@ -26,7 +26,7 @@ class NegotiationPaidSuccessScreen extends StatelessWidget {
       title: l.negotiationOfferAcceptedPaidTitle,
       subtitle: l.negotiationOfferAcceptedPaidSubtitle,
       ctaLabel: l.negotiationTrackShipmentCta,
-      onCta: () => context.go('/negotiations/$threadId'),
+      onCta: () => returnToNegotiationThread(context, threadId),
       analyticsContext: 'negotiation_payment',
     );
   }

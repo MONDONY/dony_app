@@ -267,8 +267,8 @@ void main() {
         _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
       );
 
-      // Départ à 0, +1 répété → on franchit largement 10.
-      for (var i = 0; i < 12; i++) {
+      // Départ à 0, +0,5 répété → on franchit largement 10.
+      for (var i = 0; i < 24; i++) {
         await tester.tap(find.byKey(const Key('weight-increment')));
         await tester.pump();
       }
@@ -336,7 +336,7 @@ void main() {
     });
 
     testWidgets(
-      'le « + » incrémente de 1 et le prix parent (_weightNotifier) suit',
+      'le « + » incrémente de 0,5 kg et le prix parent (_weightNotifier) suit',
       (tester) async {
         await openSheet(
           tester,
@@ -351,11 +351,11 @@ void main() {
         await tester.tap(find.byKey(const Key('weight-increment')));
         await tester.pump();
 
-        // Affichage incrémenté de 1…
-        expect(displayedWeight(tester), '1');
-        // …et le parent (_weightNotifier) a bien reçu 1 → récap enfin affiché
-        // (pricePerKg = 12 → ligne « 1 kg × 12€ »).
-        expect(find.textContaining('1 kg ×'), findsOneWidget);
+        // Affichage incrémenté d'un demi-kilo (FLUTTER-7Q)…
+        expect(displayedWeight(tester), '0,5');
+        // …et le parent (_weightNotifier) a bien reçu 0,5 → récap enfin
+        // affiché (ligne « 0,5 kg × … »).
+        expect(find.textContaining('0,5 kg ×'), findsOneWidget);
       },
     );
 
@@ -373,6 +373,115 @@ void main() {
       await tester.pump();
 
       expect(displayedWeight(tester), '1');
+    });
+  });
+
+  // ── 3. Demi-kilo et aide au poids (Sentry FLUTTER-7Q) ───────────────────────
+  // Un téléphone (environ 300 g) ne pouvait se déclarer qu'à 1 kg, et le
+  // bouton restait grisé sans dire qu'il manquait le poids.
+
+  group('Poids au demi-kilo', () {
+    testWidgets('slider : un cran tous les 0,5 kg, valeur affichée « 0,5 »', (
+      tester,
+    ) async {
+      await openSheet(tester, _announcement(capacityUnit: 'SUITCASE_23KG'));
+
+      final slider = tester.widget<Slider>(find.byType(Slider));
+      expect(slider.divisions, 20);
+      expect(slider.max, 10);
+
+      slider.onChanged!(0.5000000001);
+      await tester.pump();
+
+      final value = tester.widget<Text>(find.byKey(const Key('weight-value')));
+      expect(value.data, '0,5');
+      expect(find.textContaining('0,5 kg ×'), findsOneWidget);
+    });
+
+    testWidgets('slider : capacité non multiple du pas → arrêt au demi-kilo '
+        'inférieur', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(capacityUnit: 'SUITCASE_23KG', availableKg: 10.3),
+      );
+
+      final slider = tester.widget<Slider>(find.byType(Slider));
+      expect(slider.divisions, 20);
+      expect(slider.max, 10);
+    });
+
+    testWidgets('kilo libre : saisie décimale à la virgule « 0,5 »', (
+      tester,
+    ) async {
+      await openSheet(
+        tester,
+        _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
+      );
+
+      await tester.enterText(find.byKey(const Key('weight-field')), '0,5');
+      await tester.pump();
+
+      expect(displayedWeight(tester), '0,5');
+      expect(find.textContaining('0,5 kg ×'), findsOneWidget);
+    });
+
+    testWidgets(
+      'kilo libre : saisie au point « 1.5 » acceptée, reformatée à la '
+      'perte de focus',
+      (tester) async {
+        await openSheet(
+          tester,
+          _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
+        );
+
+        await tester.enterText(find.byKey(const Key('weight-field')), '1.5');
+        await tester.pump();
+        expect(find.textContaining('1,5 kg ×'), findsOneWidget);
+
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pumpAndSettle();
+        expect(displayedWeight(tester), '1,5');
+      },
+    );
+
+    testWidgets('kilo libre : lettres et second séparateur refusés', (
+      tester,
+    ) async {
+      await openSheet(
+        tester,
+        _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
+      );
+
+      await tester.enterText(find.byKey(const Key('weight-field')), '2,5');
+      await tester.pump();
+      await tester.enterText(find.byKey(const Key('weight-field')), '2,5,1');
+      await tester.pump();
+      expect(displayedWeight(tester), '2,5');
+
+      await tester.enterText(find.byKey(const Key('weight-field')), 'abc');
+      await tester.pump();
+      expect(displayedWeight(tester), '2,5');
+    });
+
+    testWidgets('aide visible tant que le poids manque, retirée dès qu\'il est '
+        'saisi', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
+      );
+
+      expect(find.byKey(const Key('bid-submit-hint')), findsOneWidget);
+      expect(
+        find.text(
+          'Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.',
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const Key('weight-increment')));
+      await tester.pump();
+
+      expect(find.byKey(const Key('bid-submit-hint')), findsNothing);
     });
   });
 }

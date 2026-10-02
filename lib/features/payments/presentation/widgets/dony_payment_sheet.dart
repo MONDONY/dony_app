@@ -338,6 +338,19 @@ class _StickyBottom extends StatelessWidget {
 
   final VoidCallback onSuccess;
 
+  /// Ferme la sheet puis signale le succès, une seule fois. Deux chemins y
+  /// mènent : le bouton « Terminé » et la fermeture automatique 900 ms après
+  /// le succès. Sans garde, un tap sur « Terminé » juste avant l'échéance
+  /// laissait la minuterie fermer une seconde route (l'écran de succès que
+  /// l'appelant venait de pousser, voire l'écran du dessous) et rappeler
+  /// [onSuccess]. La sheet n'est plus la route courante dès son premier `pop`.
+  void _closeOnce(BuildContext context) {
+    if (!context.mounted) return;
+    if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    Navigator.of(context).pop();
+    onSuccess();
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<PaymentSheetBloc, PaymentSheetState>(
@@ -345,10 +358,7 @@ class _StickyBottom extends StatelessWidget {
       listener: (context, state) {
         // Laisse la vue succès s'afficher brièvement avant de fermer la sheet.
         Future.delayed(const Duration(milliseconds: 900), () {
-          if (context.mounted) {
-            Navigator.of(context).pop();
-            onSuccess();
-          }
+          if (context.mounted) _closeOnce(context);
         });
       },
       builder: (context, state) {
@@ -357,10 +367,7 @@ class _StickyBottom extends StatelessWidget {
           return DonyButton(
             key: const Key('paymentSheetDoneButton'),
             label: l.commonDone,
-            onPressed: () {
-              Navigator.of(context).pop();
-              onSuccess();
-            },
+            onPressed: () => _closeOnce(context),
           );
         }
 

@@ -67,6 +67,43 @@ void main() {
       ).called(1);
     });
 
+    test('nom renseigné : envoyé, débarrassé de ses espaces', () async {
+      when(
+        () => dio.post<dynamic>(any(), data: any(named: 'data')),
+      ).thenAnswer((_) async => _response({'status': 'SENT'}, status: 202));
+
+      await repository.sendToPhone('+221771234567', name: ' Awa Diallo ');
+      await repository.sendToEmail('awa@example.com', name: 'Awa');
+
+      verify(
+        () => dio.post<dynamic>(
+          '/recipient-invitations',
+          data: {'phone': '+221771234567', 'name': 'Awa Diallo'},
+        ),
+      ).called(1);
+      verify(
+        () => dio.post<dynamic>(
+          '/recipient-invitations',
+          data: {'email': 'awa@example.com', 'name': 'Awa'},
+        ),
+      ).called(1);
+    });
+
+    test('nom vide : le champ name n\'est pas envoyé', () async {
+      when(
+        () => dio.post<dynamic>(any(), data: any(named: 'data')),
+      ).thenAnswer((_) async => _response({'status': 'SENT'}, status: 202));
+
+      await repository.sendToPhone('+221771234567', name: '   ');
+
+      verify(
+        () => dio.post<dynamic>(
+          '/recipient-invitations',
+          data: {'phone': '+221771234567'},
+        ),
+      ).called(1);
+    });
+
     test('429 : le quota remonte en RateLimitException', () async {
       when(
         () => dio.post<dynamic>(any(), data: any(named: 'data')),
@@ -101,6 +138,7 @@ void main() {
             'channel': 'EMAIL',
             'maskedTarget': 'a••••@gmail.com',
             'status': 'ACCEPTED',
+            'name': null,
           },
           'ignoré',
         ]),
@@ -116,6 +154,23 @@ void main() {
       expect(sent[1].isAccepted, isTrue);
       expect(sent[1].isEmail, isTrue);
       expect(sent[1].createdAt, isNull);
+      // Ancien back (champ absent) comme nom nul : aucun nom.
+      expect(sent[0].name, isNull);
+      expect(sent[1].name, isNull);
+    });
+
+    test('envoyées : nom renseigné lu, nom blanc ignoré', () async {
+      when(() => dio.get<dynamic>('/recipient-invitations/sent')).thenAnswer(
+        (_) async => _response([
+          {'id': 'i1', 'name': ' Fatou Koné '},
+          {'id': 'i2', 'name': '  '},
+        ]),
+      );
+
+      final sent = await repository.getSent();
+
+      expect(sent[0].name, 'Fatou Koné');
+      expect(sent[1].name, isNull);
     });
 
     test('envoyées : réponse inattendue → liste vide', () async {

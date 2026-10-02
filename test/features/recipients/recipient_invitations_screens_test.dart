@@ -75,6 +75,13 @@ const _sent = [
     maskedTarget: 'a••••@gmail.com',
     status: 'ACCEPTED',
   ),
+  SentRecipientInvitation(
+    id: 's3',
+    channel: 'PHONE',
+    maskedTarget: '+225 •• •• •• 34',
+    status: 'PENDING',
+    name: 'Fatou Koné',
+  ),
 ];
 
 void main() {
@@ -181,10 +188,34 @@ void main() {
 
       expect(find.text('Invitations envoyées'), findsOneWidget);
       expect(find.text('+221 •• •• •• 12'), findsOneWidget);
-      expect(find.text('a••••@gmail.com'), findsOneWidget);
-      expect(find.text('EN ATTENTE'), findsOneWidget);
-      expect(find.text('ACCEPTÉE'), findsOneWidget);
+      expect(find.text('EN ATTENTE'), findsNWidgets(2));
+      // FLUTTER-7V : l'invitation acceptée a rejoint le carnet, elle ne
+      // figure plus parmi les invitations envoyées.
+      expect(find.text('a••••@gmail.com'), findsNothing);
+      expect(find.byKey(const Key('sent-invitation-s2')), findsNothing);
+      expect(find.text('ACCEPTÉE'), findsNothing);
     });
+
+    testWidgets(
+      'invitation nommée : le nom en titre, le numéro masqué dessous',
+      (tester) async {
+        when(() => repo.getSent()).thenAnswer((_) async => _sent);
+        await pumpCarnet(tester, recipients: [_plain]);
+
+        final row = find.byKey(const Key('sent-invitation-s3'));
+        expect(
+          find.descendant(of: row, matching: find.text('Fatou Koné')),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: row, matching: find.text('+225 •• •• •• 34')),
+          findsOneWidget,
+        );
+        final nameY = tester.getTopLeft(find.text('Fatou Koné')).dy;
+        final targetY = tester.getTopLeft(find.text('+225 •• •• •• 34')).dy;
+        expect(nameY, lessThan(targetY));
+      },
+    );
 
     testWidgets('carnet vide : les invitations restent visibles', (
       tester,
@@ -211,7 +242,7 @@ void main() {
 
       verify(() => repo.revoke('s1')).called(1);
       expect(find.byKey(const Key('sent-invitation-s1')), findsNothing);
-      expect(find.byKey(const Key('sent-invitation-s2')), findsOneWidget);
+      expect(find.byKey(const Key('sent-invitation-s3')), findsOneWidget);
     });
 
     testWidgets('annulation ratée : erreur affichée', (tester) async {

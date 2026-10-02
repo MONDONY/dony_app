@@ -8,6 +8,7 @@ import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
+import 'package:dony/features/recipients/data/phone_validation.dart';
 import 'package:dony/features/recipients/data/recipient_filter.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -124,6 +125,24 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
     }
     setState(() => _importing = false);
     if (contact == null) {
+      return;
+    }
+    // Contact déjà dans le carnet (même numéro, quelle que soit son
+    // écriture) : on le sélectionne au lieu d'ouvrir une création qui
+    // ferait un doublon (Sentry FLUTTER-7T).
+    final phone = contact.phone;
+    final existing = phone == null
+        ? null
+        : findRecipientByPhone(
+            context.read<RecipientBloc>().state.recipients,
+            phone,
+          );
+    if (existing != null) {
+      _searchCtrl.clear();
+      setState(() {
+        _selectedId = existing.id;
+        _pendingSource = 'phone_contact';
+      });
       return;
     }
     await _createNew(
@@ -428,6 +447,13 @@ class _RecipientRow extends StatelessWidget {
               style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
+          if (recipient.linkedOnYadony) ...[
+            const SizedBox(width: DonySpacing.xs),
+            DonyBadge(
+              key: Key('recipient-picker-linked-${recipient.id}'),
+              label: l.recipientLinkedOnYadonyChip,
+            ),
+          ],
           if (recipient.isDefault) ...[
             const SizedBox(width: DonySpacing.xs),
             Container(

@@ -116,6 +116,14 @@ class ErrorReportingService {
       'apns_token_available',
       'platform',
       'attempts',
+      // Échec Stripe (FLUTTER-7S) : codes fermés du SDK et message brut,
+      // générique, de Stripe (« Your card was declined. »), sans donnée de
+      // carte ni d'identité.
+      'stripe_code',
+      'stripe_error_code',
+      'decline_code',
+      'stripe_error_type',
+      'stripe_message',
     };
     final output = <String, Object>{};
     for (final entry in context.entries) {

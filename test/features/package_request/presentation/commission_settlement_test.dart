@@ -622,6 +622,39 @@ void main() {
           ),
         );
 
+    // L'écran de succès est une route GoRouter : le fil est monté sous un
+    // routeur, avec un stub de la route poussée.
+    Widget wrapRouted() => BlocProvider<HelpCenterBloc>(
+      create: (_) => HelpCenterBloc(
+        HelpCenterRepository(
+          const _StaticHelpCenterSource(_emptyHelpConfigJson),
+          fallbackJsonLoader: () async => _emptyHelpConfigJson,
+        ),
+        makeDisabledAnalytics(MockAnalyticsBackend()),
+      )..add(const HelpCenterLoadRequested()),
+      child: MaterialApp.router(
+        theme: AppTheme.light(),
+        routerConfig: GoRouter(
+          initialLocation: '/negotiations/t1',
+          routes: [
+            GoRoute(
+              path: '/negotiations/:id/commission-settled',
+              builder: (_, state) => Scaffold(
+                body: Text('Succès commission ${state.pathParameters['id']}'),
+              ),
+            ),
+            GoRoute(
+              path: '/negotiations/:id',
+              builder: (_, _) => const NegotiationThreadScreen(
+                threadId: 't1',
+                viewerUserId: _viewerTraveler,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
     testWidgets('solde insuffisant → sheet avec recharge et carte', (
       tester,
     ) async {
@@ -707,7 +740,9 @@ void main() {
       },
     );
 
-    testWidgets('commission réglée → snackbar de succès et rafraîchit le fil', (
+    // Sentry FLUTTER-7N : la snackbar furtive passait inaperçue au retour
+    // d'une recharge, un écran de succès la remplace.
+    testWidgets('commission réglée → écran de succès et rafraîchit le fil', (
       tester,
     ) async {
       final controller = StreamController<NegotiationState>();
@@ -723,7 +758,7 @@ void main() {
         ),
       );
 
-      await tester.pumpWidget(wrap());
+      await tester.pumpWidget(wrapRouted());
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
 
@@ -733,18 +768,16 @@ void main() {
 
       controller.add(const NegotiationCommissionSettled('t1'));
       // pump() ciblé, jamais pumpAndSettle : l'écran porte des timers (compte à
-      // rebours, auto-fermeture de la snackbar) qui empêchent toute stabilisation.
+      // rebours) qui empêchent toute stabilisation.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
 
+      expect(find.text('Succès commission t1'), findsOneWidget);
       expect(
         find.text('Commission réglée : ce colis est à toi !'),
-        findsOneWidget,
+        findsNothing,
       );
       verify(() => bloc.add(const NegotiationFetchRequested('t1'))).called(1);
-
-      // Flush the snackbar's auto-dismiss timer.
-      await tester.pump(const Duration(seconds: 5));
     });
 
     testWidgets('renoncement confirmé → snackbar puis retour arrière', (

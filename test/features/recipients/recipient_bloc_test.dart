@@ -57,14 +57,13 @@ void main() {
       },
       act: (bloc) => bloc.add(const RecipientLoaded()),
       expect: () => [
-        isA<RecipientState>().having(
-          (s) => s.status,
-          'status',
-          RecipientStatus.loading,
-        ),
+        isA<RecipientState>()
+            .having((s) => s.status, 'status', RecipientStatus.loading)
+            .having((s) => s.loaded, 'loaded', isFalse),
         isA<RecipientState>()
             .having((s) => s.status, 'status', RecipientStatus.success)
-            .having((s) => s.recipients, 'recipients', [_r1, _r2]),
+            .having((s) => s.recipients, 'recipients', [_r1, _r2])
+            .having((s) => s.loaded, 'loaded', isTrue),
       ],
     );
 
@@ -88,6 +87,7 @@ void main() {
         ),
         isA<RecipientState>()
             .having((s) => s.status, 'status', RecipientStatus.error)
+            .having((s) => s.loaded, 'loaded', isFalse)
             // Verrouille unwrapDioError : une DioException connectionError
             // devient une OfflineException, pas une erreur non typée.
             .having((s) => s.error, 'error', isA<OfflineException>()),

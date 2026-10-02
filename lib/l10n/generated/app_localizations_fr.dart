@@ -6121,10 +6121,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get negotiationRejectedSnackbar => 'Négociation rejetée';
 
   @override
-  String get negotiationCommissionSettledSnackbar =>
-      'Commission réglée : ce colis est à toi !';
-
-  @override
   String get negotiationGaveUpParcelSnackbar =>
       'Tu as renoncé à ce colis, il reste disponible pour un autre voyageur.';
 
@@ -9879,9 +9875,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatMessageCopied => 'Message copié';
-
-  @override
-  String get chatCopyMessageHint => 'copier le message';
 
   @override
   String chatOpenParticipantProfileSemantics(String name) {
@@ -15529,9 +15522,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recipientSentInvitationPending => 'En attente';
 
   @override
-  String get recipientSentInvitationAccepted => 'Acceptée';
-
-  @override
   String get recipientSentInvitationCancelTitle => 'Annuler l\'invitation ?';
 
   @override
@@ -15630,4 +15620,53 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get recipientSectionLinkedOnYadony =>
       'Dans Yadony : il suivra le colis dans l\'app.';
+
+  @override
+  String get recipientInviteNameLabel => 'Nom (facultatif)';
+
+  @override
+  String get recipientInviteNameHint => 'Ex. Awa Diallo';
+
+  @override
+  String get recipientInviteNameTooLong => '100 caractères au maximum.';
+
+  @override
+  String get negotiationViewNegotiationCta => 'Voir la négociation';
+
+  @override
+  String negotiationOpenPartnerProfileSemantics(String name) {
+    return 'Voir le profil de $name';
+  }
+
+  @override
+  String get negotiationCommissionSettledTitle => 'Ce colis est à toi !';
+
+  @override
+  String get negotiationCommissionSettledSubtitle =>
+      'La commission Yadony est réglée et l\'accord est scellé. Retrouve l\'envoi et les prochaines étapes dans la négociation.';
+
+  @override
+  String get bidAcceptedSuccessTitle => 'Demande acceptée !';
+
+  @override
+  String get bidAcceptedSuccessSubtitle =>
+      'Le colis est réservé sur ton trajet. Ouvre la demande pour voir son détail et les prochaines étapes avec l\'expéditeur.';
+
+  @override
+  String get bidAcceptedSuccessCta => 'Voir la demande';
+
+  @override
+  String get receptionSenderLabel => 'Expéditeur';
+
+  @override
+  String receptionViewSenderProfile(String name) {
+    return 'Voir le profil de $name';
+  }
+
+  @override
+  String get chatCopyMessageAction => 'Copier le message';
+
+  @override
+  String get bidCreateWeightRequiredHint =>
+      'Indiquez le poids estimé, par ex. 0,5 kg pour un téléphone.';
 }

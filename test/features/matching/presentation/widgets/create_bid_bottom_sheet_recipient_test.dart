@@ -275,7 +275,9 @@ void main() {
     when(() => _currentPhotosCubit.readyKeys).thenReturn(const <String>[]);
 
     _currentRecipientBloc = _MockRecipientBloc();
-    when(() => _currentRecipientBloc.state).thenReturn(const RecipientState());
+    when(
+      () => _currentRecipientBloc.state,
+    ).thenReturn(const RecipientState(loaded: true));
     when(
       () => _currentRecipientBloc.stream,
     ).thenAnswer((_) => const Stream.empty());

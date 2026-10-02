@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -14,6 +16,7 @@ import 'package:dony/features/package_request/presentation/widgets/thread/thread
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_state_cta_bar.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/trip_detail_bottom_sheet.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -107,15 +110,16 @@ class _ThreadViewState extends State<_ThreadView> {
         }
         // Commission réglée : l'accord est scellé. On recharge le fil pour
         // afficher l'état ACCEPTED réel (l'état émis par le bloc ne porte que
-        // l'id, pas le thread rafraîchi).
+        // l'id, pas le thread rafraîchi), et on le confirme par un écran de
+        // succès plutôt qu'une snackbar furtive que le voyageur, de retour
+        // d'une recharge de portefeuille, n'avait pas le temps de lire
+        // (FLUTTER-7N). Le fil se recharge dessous pendant ce temps.
         if (state is NegotiationCommissionSettled) {
-          DonySnackbar.show(
-            ctx,
-            message: l.negotiationCommissionSettledSnackbar,
-            type: DonySnackbarType.success,
-          );
           ctx.read<NegotiationBloc>().add(
             NegotiationFetchRequested(state.threadId),
+          );
+          unawaited(
+            ctx.push('/negotiations/${state.threadId}/commission-settled'),
           );
         }
         // Renoncement confirmé : la demande est aussitôt libérée pour un
@@ -279,6 +283,9 @@ class _ThreadViewState extends State<_ThreadView> {
 // ── Partner title in AppBar ───────────────────────────────────────────────────
 // Shows the OTHER party's name: if viewer is the traveler, show the sender;
 // if viewer is the sender, show the traveler (with rating + trips count).
+// Tappable towards the partner's public profile when their id is known
+// (FLUTTER-7K/7M) : `travelerId` is always there, `senderId` only from the
+// back version that exposes it (older payloads → plain, non-tappable title).
 
 class _PartnerTitle extends StatelessWidget {
   const _PartnerTitle({required this.thread, required this.viewerUserId});
@@ -299,6 +306,7 @@ class _PartnerTitle extends StatelessWidget {
     final String? photoUrl = iAmTraveler
         ? thread.senderPhotoUrl
         : thread.travelerPhotoUrl;
+    final String? partnerId = iAmTraveler ? thread.senderId : thread.travelerId;
 
     String meta = '';
     if (rating != null) {
@@ -308,7 +316,7 @@ class _PartnerTitle extends StatelessWidget {
       }
     }
 
-    return Row(
+    final content = Row(
       children: [
         DonyAvatar(
           name: name,
@@ -349,6 +357,26 @@ class _PartnerTitle extends StatelessWidget {
           ),
         ),
       ],
+    );
+
+    if (partnerId == null || partnerId.isEmpty) return content;
+    return Semantics(
+      button: true,
+      container: true,
+      excludeSemantics: true,
+      label: l.negotiationOpenPartnerProfileSemantics(name),
+      child: InkWell(
+        key: const Key('negotiation-partner-header'),
+        onTap: () => context.push(
+          '/profile/public',
+          extra: ProfilePublicArgs(userId: partnerId),
+        ),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
+          child: content,
+        ),
+      ),
     );
   }
 }
