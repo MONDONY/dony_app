@@ -14,6 +14,7 @@ class FakeCallGateway implements CallGateway {
   Future<String> Function()? tokenLoader;
   Object? throwOnJoin;
   Object? throwOnConnect;
+  bool microphoneAllowed = true;
 
   @override
   Future<void> connect({
@@ -59,6 +60,12 @@ class FakeCallGateway implements CallGateway {
 
   @override
   Future<void> setSpeakerOn(bool on) async => log.add('speaker:$on');
+
+  @override
+  Future<bool> ensureMicrophone() async {
+    log.add('mic-check');
+    return microphoneAllowed;
+  }
 
   @override
   Future<void> handlePush(Map<String, dynamic> data) async => log.add('push');

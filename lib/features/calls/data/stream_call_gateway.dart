@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart' show CompositeSubscription;
 import 'package:stream_video_flutter/stream_video_flutter.dart' hide CallUser;
 import 'package:stream_video_push_notification/stream_video_push_notification.dart';
+import 'package:stream_webrtc_flutter/stream_webrtc_flutter.dart' as rtc;
 
 /// Seul point de l'app qui parle au SDK Stream Video. Type d'appel `audio_call`
 /// (vidéo coupée côté Stream) ; les appels sont créés par le back, l'app ne
@@ -99,6 +100,25 @@ class StreamCallGateway implements CallGateway {
     if (_client != null) {
       _client = null;
       await StreamVideo.reset(disconnect: true);
+    }
+  }
+
+  @override
+  Future<bool> ensureMicrophone() async {
+    try {
+      // Ouvre puis relâche aussitôt le micro : déclenche la demande système la
+      // première fois, échoue si l'utilisateur l'a refusée.
+      final stream = await rtc.navigator.mediaDevices.getUserMedia({
+        'audio': true,
+        'video': false,
+      });
+      for (final track in stream.getTracks()) {
+        await track.stop();
+      }
+      await stream.dispose();
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 

@@ -2,6 +2,8 @@
 /// connaissent que cette interface : seul `StreamCallGateway` touche au SDK.
 library;
 
+import 'package:dony/core/error/app_exception.dart';
+
 enum CallPhase { connecting, ringing, connected, ended }
 
 class CallUser {
@@ -36,6 +38,10 @@ abstract class CallGateway {
   });
 
   Future<void> disconnect();
+
+  /// Vrai si le micro est utilisable ; demande l'autorisation système la
+  /// première fois. Appelé avant de faire sonner qui que ce soit.
+  Future<bool> ensureMicrophone();
 
   bool get isConnected;
 
@@ -79,4 +85,10 @@ class IncomingCall {
   /// Déjà décroché depuis CallKit ou la notification Android : il ne reste
   /// qu'à ouvrir l'écran d'appel.
   final bool acceptedNatively;
+}
+
+/// Accès au micro refusé par le système : l'appel ne peut pas avoir lieu.
+class CallPermissionDeniedException extends AppException {
+  const CallPermissionDeniedException()
+    : super('Microphone permission denied', code: 'microphone-denied');
 }

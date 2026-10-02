@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_settings/app_settings.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/calls/bloc/call_bloc.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
@@ -75,6 +76,18 @@ class CallScreen extends StatelessWidget {
     }
   }
 
+  static bool _isMicrophoneDenied(CallState state) =>
+      state is CallFailure && state.error is CallPermissionDeniedException;
+
+  /// Pendant un appel : raccrocher. Appel déjà terminé ou impossible : fermer.
+  void _onHangUp(BuildContext context, CallState state) {
+    if (state is CallStarting || state is CallInProgress) {
+      context.read<CallBloc>().add(const CallHangUpRequested());
+    } else {
+      _close(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -82,6 +95,8 @@ class CallScreen extends StatelessWidget {
       listenWhen: (previous, current) =>
           current is CallEnded || current is CallFailure,
       listener: (context, state) {
+        // Micro refusé : l'écran reste ouvert pour guider vers les réglages.
+        if (_isMicrophoneDenied(state)) return;
         if (state is CallFailure) {
           unawaited(ErrorPresenter.show(context, state.error));
         }
@@ -112,6 +127,13 @@ class CallScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   _StatusLine(state: state),
+                  if (_isMicrophoneDenied(state)) ...[
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () => unawaited(AppSettings.openAppSettings()),
+                      child: Text(context.l10n.callOpenSettings),
+                    ),
+                  ],
                   const Spacer(),
                   CallControls(
                     muted: inProgress?.muted ?? false,
@@ -123,9 +145,7 @@ class CallScreen extends StatelessWidget {
                     onSpeaker: () => context.read<CallBloc>().add(
                       const CallSpeakerToggleRequested(),
                     ),
-                    onHangUp: () => context.read<CallBloc>().add(
-                      const CallHangUpRequested(),
-                    ),
+                    onHangUp: () => _onHangUp(context, state),
                   ),
                 ],
               ),
@@ -184,6 +204,8 @@ class _StatusLine extends StatelessWidget {
       CallEnded(reason: 'missed') => l.callStatusMissed,
       CallEnded(reason: 'failed') => l.callStatusFailed,
       CallEnded() => l.callStatusEnded,
+      CallFailure(error: CallPermissionDeniedException()) =>
+        l.callMicrophoneDenied,
       CallFailure() => l.callStatusFailed,
       _ => l.callStatusConnecting,
     };

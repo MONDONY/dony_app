@@ -163,12 +163,26 @@ void main() {
 
   group('CallScreenArgs.initialEvent', () {
     test('sortant : lancer l\'appel depuis la conversation', () {
-      final e = const CallScreenArgs(remoteName: 'Moussa', conversationId: 'c1').initialEvent;
-      expect(e, isA<CallStartRequested>().having((e) => e.conversationId, 'conversationId', 'c1'));
+      final e = const CallScreenArgs(
+        remoteName: 'Moussa',
+        conversationId: 'c1',
+      ).initialEvent;
+      expect(
+        e,
+        isA<CallStartRequested>().having(
+          (e) => e.conversationId,
+          'conversationId',
+          'c1',
+        ),
+      );
     });
 
     test('entrant : décrocher', () {
-      final e = const CallScreenArgs(remoteName: 'Awa', incomingCallId: 'x2', acceptedNatively: true).initialEvent;
+      final e = const CallScreenArgs(
+        remoteName: 'Awa',
+        incomingCallId: 'x2',
+        acceptedNatively: true,
+      ).initialEvent;
       expect(
         e,
         isA<CallIncomingAcceptRequested>()
@@ -184,11 +198,40 @@ void main() {
 
   test('CallScreenArgs.incoming : décroché natif, rejoint à l\'ouverture', () {
     final args = CallScreenArgs.incoming(
-      const IncomingCall(callId: 'x3', callerName: 'Awa D.', callerImageUrl: 'u', acceptedNatively: true),
+      const IncomingCall(
+        callId: 'x3',
+        callerName: 'Awa D.',
+        callerImageUrl: 'u',
+        acceptedNatively: true,
+      ),
     );
     expect(args.remoteName, 'Awa D.');
     expect(args.remoteAvatarUrl, 'u');
     expect(args.incomingCallId, 'x3');
-    expect(args.initialEvent, isA<CallIncomingAcceptRequested>().having((e) => e.acceptedNatively, 'native', true));
+    expect(
+      args.initialEvent,
+      isA<CallIncomingAcceptRequested>().having(
+        (e) => e.acceptedNatively,
+        'native',
+        true,
+      ),
+    );
   });
+
+  testWidgets(
+    'micro refusé : explication, lien vers les réglages, pas de fermeture automatique',
+    (tester) async {
+      await pump(tester, const CallFailure(CallPermissionDeniedException()));
+      expect(
+        find.text('Autorisez le micro dans les réglages pour appeler.'),
+        findsOneWidget,
+      );
+      expect(find.text('Ouvrir les réglages'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+      expect(closed, 0);
+
+      await tester.tap(find.bySemanticsLabel('Raccrocher'));
+      expect(closed, 1);
+    },
+  );
 }

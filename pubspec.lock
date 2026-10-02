@@ -2194,7 +2194,7 @@ packages:
     source: hosted
     version: "1.6.0"
   stream_webrtc_flutter:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: stream_webrtc_flutter
       sha256: "6938c87d6054e7ddcd5114641f7173e84f000f14aedfc57651c1115726dcf356"

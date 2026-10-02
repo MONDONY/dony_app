@@ -52,7 +52,7 @@ void main() {
       ],
       verify: (_) {
         // close() (fin du blocTest) raccroche l'appel encore en cours.
-        expect(gateway.log, ['join:x1', 'hangUp']);
+        expect(gateway.log, ['mic-check', 'join:x1', 'hangUp']);
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.callStarted,
@@ -143,7 +143,7 @@ void main() {
           isA<CallFailure>().having((s) => s.error.code, 'code', code),
         ],
         verify: (_) {
-          expect(gateway.log, isEmpty);
+          expect(gateway.log, ['mic-check']);
           verify(
             () => analytics.logEvent(
               AnalyticsEvents.callFailed,
@@ -167,7 +167,7 @@ void main() {
         isA<CallInProgress>(),
         isA<CallFailure>(),
       ],
-      verify: (_) => expect(gateway.log, ['join:x1', 'hangUp']),
+      verify: (_) => expect(gateway.log, ['mic-check', 'join:x1', 'hangUp']),
     );
 
     blocTest<CallBloc, CallState>(
@@ -248,7 +248,7 @@ void main() {
             .having((s) => s.remoteName, 'remoteName', 'Awa'),
       ],
       verify: (_) {
-        expect(gateway.log, ['accept:x2', 'hangUp']);
+        expect(gateway.log, ['mic-check', 'accept:x2', 'hangUp']);
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.callIncomingAccepted,
@@ -266,7 +266,7 @@ void main() {
       ),
       expect: () => [isA<CallInProgress>()],
       // L'adaptateur saute l'accept déjà fait par CallKit, mais rejoint l'appel.
-      verify: (_) => expect(gateway.log, ['accept:x2', 'hangUp']),
+      verify: (_) => expect(gateway.log, ['mic-check', 'accept:x2', 'hangUp']),
     );
   });
 
@@ -283,5 +283,41 @@ void main() {
     final bloc = build()..emit(const CallEnded(reason: 'hangup'));
     await bloc.close();
     expect(gateway.log, isEmpty);
+  });
+
+  group('micro refusé', () {
+    blocTest<CallBloc, CallState>(
+      'sortant : échec avant de faire sonner l\'autre',
+      build: build,
+      setUp: () => gateway.microphoneAllowed = false,
+      act: (bloc) => bloc.add(const CallStartRequested('c1', 'Moussa')),
+      expect: () => [
+        isA<CallStarting>(),
+        isA<CallFailure>().having(
+          (s) => s.error.code,
+          'code',
+          'microphone-denied',
+        ),
+      ],
+      verify: (_) {
+        verifyNever(() => repository.startCall(any()));
+        expect(gateway.log, ['mic-check']);
+      },
+    );
+
+    blocTest<CallBloc, CallState>(
+      'entrant : échec, l\'appel n\'est pas décroché',
+      build: build,
+      setUp: () => gateway.microphoneAllowed = false,
+      act: (bloc) => bloc.add(const CallIncomingAcceptRequested('x2', 'Awa')),
+      expect: () => [
+        isA<CallFailure>().having(
+          (s) => s.error,
+          'error',
+          isA<CallPermissionDeniedException>(),
+        ),
+      ],
+      verify: (_) => expect(gateway.log, ['mic-check', 'reject:x2']),
+    );
   });
 }

@@ -39,6 +39,16 @@ class CallBloc extends Bloc<CallEvent, CallState> {
   ) async {
     if (_live) return;
     emit(const CallStarting());
+    if (!await _gateway.ensureMicrophone()) {
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.callFailed,
+          properties: {'code': 'microphone-denied'},
+        ),
+      );
+      emit(const CallFailure(CallPermissionDeniedException()));
+      return;
+    }
     var joining = false;
     try {
       final call = await _repository.startCall(event.conversationId);
@@ -66,6 +76,11 @@ class CallBloc extends Bloc<CallEvent, CallState> {
     Emitter<CallState> emit,
   ) async {
     if (_live) return;
+    if (!await _gateway.ensureMicrophone()) {
+      await _gateway.rejectIncoming(event.callId);
+      emit(const CallFailure(CallPermissionDeniedException()));
+      return;
+    }
     emit(
       CallInProgress(phase: CallPhase.connecting, remoteName: event.remoteName),
     );

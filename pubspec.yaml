@@ -137,6 +137,7 @@ dependencies:
   smart_auth: ^3.2.0
   stream_video_flutter: ^1.6.0
   stream_video_push_notification: ^1.6.0
+  stream_webrtc_flutter: ^3.2.0
 
 dev_dependencies:
   flutter_test:
