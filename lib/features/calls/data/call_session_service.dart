@@ -22,7 +22,11 @@ class CallSessionService {
       final token = await _repository.fetchToken();
       await _gateway.connect(
         apiKey: token.apiKey,
-        user: CallUser(id: token.userId, name: publicName(user), imageUrl: user.avatarUrl),
+        user: CallUser(
+          id: token.userId,
+          name: publicName(user),
+          imageUrl: user.avatarUrl,
+        ),
         tokenLoader: () async => (await _repository.fetchToken()).token,
       );
       _connectedUserId = user.id;
@@ -49,7 +53,10 @@ class CallSessionService {
 
 /// Suit l'état d'authentification : session d'appel ouverte pour un compte
 /// connecté, fermée à la déconnexion ou à la suppression du compte.
-Future<void> syncCallSession(AuthState state, CallSessionService service) async {
+Future<void> syncCallSession(
+  AuthState state,
+  CallSessionService service,
+) async {
   if (state is AuthAuthenticated) {
     await service.onSignedIn(state.user);
   } else if (state is AuthInitial || state is AuthAccountDeleted) {

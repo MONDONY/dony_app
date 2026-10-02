@@ -28,7 +28,13 @@ const _awa = UserModel(
   status: 'ACTIVE',
 );
 
-const _moussa = UserModel(id: 'u2', firstName: 'Moussa', roles: [], kycStatus: 'VERIFIED', status: 'ACTIVE');
+const _moussa = UserModel(
+  id: 'u2',
+  firstName: 'Moussa',
+  roles: [],
+  kycStatus: 'VERIFIED',
+  status: 'ACTIVE',
+);
 
 void main() {
   late _MockCallsRepository repository;
@@ -43,17 +49,22 @@ void main() {
 
   tearDown(() => gateway.dispose());
 
-  test('connexion avec le nom public (prénom + initiale), jamais le nom complet', () async {
-    when(() => repository.fetchToken()).thenAnswer((_) async => _token('u1'));
+  test(
+    'connexion avec le nom public (prénom + initiale), jamais le nom complet',
+    () async {
+      when(() => repository.fetchToken()).thenAnswer((_) async => _token('u1'));
 
-    await service.onSignedIn(_awa);
+      await service.onSignedIn(_awa);
 
-    expect(gateway.log, ['connect:key:u1:Awa D.']);
-    expect(gateway.isConnected, isTrue);
-  });
+      expect(gateway.log, ['connect:key:u1:Awa D.']);
+      expect(gateway.isConnected, isTrue);
+    },
+  );
 
   test('le chargeur de jeton redemande un jeton au back', () async {
-    when(() => repository.fetchToken()).thenAnswer((_) async => _token('u1', token: 't2'));
+    when(
+      () => repository.fetchToken(),
+    ).thenAnswer((_) async => _token('u1', token: 't2'));
 
     await service.onSignedIn(_awa);
 
@@ -77,7 +88,11 @@ void main() {
 
     await service.onSignedIn(_moussa);
 
-    expect(gateway.log, ['connect:key:u1:Awa D.', 'disconnect', 'connect:key:u2:Moussa']);
+    expect(gateway.log, [
+      'connect:key:u1:Awa D.',
+      'disconnect',
+      'connect:key:u2:Moussa',
+    ]);
   });
 
   test('déconnexion du compte', () async {
@@ -95,24 +110,32 @@ void main() {
     expect(gateway.log, isEmpty);
   });
 
-  test('appels coupés côté back (503) : pas de connexion, pas d\'exception', () async {
-    when(() => repository.fetchToken()).thenThrow(const ServerException('off', 'calls-disabled'));
+  test(
+    'appels coupés côté back (503) : pas de connexion, pas d\'exception',
+    () async {
+      when(
+        () => repository.fetchToken(),
+      ).thenThrow(const ServerException('off', 'calls-disabled'));
 
-    await service.onSignedIn(_awa);
+      await service.onSignedIn(_awa);
 
-    expect(gateway.log, isEmpty);
-  });
+      expect(gateway.log, isEmpty);
+    },
+  );
 
-  test('échec de connexion Stream : avalé, nouvelle tentative au prochain login', () async {
-    when(() => repository.fetchToken()).thenAnswer((_) async => _token('u1'));
-    gateway.throwOnConnect = StateError('ko');
+  test(
+    'échec de connexion Stream : avalé, nouvelle tentative au prochain login',
+    () async {
+      when(() => repository.fetchToken()).thenAnswer((_) async => _token('u1'));
+      gateway.throwOnConnect = StateError('ko');
 
-    await service.onSignedIn(_awa);
-    gateway.throwOnConnect = null;
-    await service.onSignedIn(_awa);
+      await service.onSignedIn(_awa);
+      gateway.throwOnConnect = null;
+      await service.onSignedIn(_awa);
 
-    expect(gateway.isConnected, isTrue);
-  });
+      expect(gateway.isConnected, isTrue);
+    },
+  );
 
   group('syncCallSession', () {
     test('connecté : session ouverte', () async {

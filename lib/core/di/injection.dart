@@ -30,6 +30,7 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/billing/bloc/subscription_bloc.dart';
 import 'package:dony/features/billing/data/billing_repository.dart';
+import 'package:dony/features/calls/bloc/call_bloc.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
 import 'package:dony/features/calls/data/call_session_service.dart';
 import 'package:dony/features/calls/data/datasources/calls_datasource.dart';
@@ -1044,6 +1045,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<CallGateway>(StreamCallGateway.new);
   getIt.registerLazySingleton<CallSessionService>(
     () => CallSessionService(getIt<CallsRepository>(), getIt<CallGateway>()),
+  );
+  getIt.registerFactory<CallBloc>(
+    () => CallBloc(
+      getIt<CallsRepository>(),
+      getIt<CallGateway>(),
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Destinataire Yadony par invitation (lot 4)
