@@ -331,4 +331,31 @@ void main() {
       expect(c.otherParticipant.isRecipientRole, isTrue);
     });
   });
+
+  group('ConversationModel.callAvailable (appels audio)', () {
+    Map<String, dynamic> json([Object? callAvailable]) => {
+      'id': 'conv-c',
+      'bidId': 'bid-c',
+      'firestoreConversationId': 'conv_bid-c',
+      'otherParticipant': {'id': 'uid-c', 'name': 'Awa'},
+      'callAvailable': ?callAvailable,
+    };
+
+    test('lu depuis le back', () {
+      expect(ConversationModel.fromJson(json(true)).callAvailable, isTrue);
+    });
+
+    test('ancien back sans le champ : faux', () {
+      expect(ConversationModel.fromJson(json()).callAvailable, isFalse);
+    });
+
+    test('valeur non booléenne ignorée', () {
+      expect(ConversationModel.fromJson(json('yes')).callAvailable, isFalse);
+    });
+
+    test('copyWith (mise à jour des non-lus) le conserve', () {
+      final c = ConversationModel.fromJson(json(true));
+      expect(c.copyWith(hasUnread: true).callAvailable, isTrue);
+    });
+  });
 }
