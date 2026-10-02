@@ -340,6 +340,12 @@ abstract final class AnalyticsEvents {
   static const activitesHubDemandesOpened = 'activites_hub_demandes_opened';
   static const activitesHubNegotiationsOpened =
       'activites_hub_negotiations_opened';
+
+  /// Ligne « Discussions de prix » épinglée en tête de Messages (FLUTTER-44),
+  /// raccourci vers `/negotiations`. Propriétés `open_count`,
+  /// `awaiting_me_count`.
+  static const messagesNegotiationsShortcutOpened =
+      'messages_negotiations_shortcut_opened';
   static const activitesHubTripCreateOpened =
       'activites_hub_trip_create_opened';
   static const activitesHubRequestCreateOpened =

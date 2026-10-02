@@ -15901,4 +15901,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishSuccessPayoutsCta => 'Set up my payouts';
+
+  @override
+  String messagesNegotiationsShortcutOpen(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ongoing discussions',
+      one: '1 ongoing discussion',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String messagesNegotiationsShortcutAwaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count offers are waiting for your reply',
+      one: 'An offer is waiting for your reply',
+    );
+    return '$_temp0';
+  }
 }

@@ -7,6 +7,7 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/widgets/conversation_tile.dart';
+import 'package:dony/features/messaging/presentation/widgets/negotiations_shortcut_tile.dart';
 import 'package:dony/features/support/bloc/support_summary_cubit.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/presentation/widgets/support_conversation_tile.dart';
@@ -107,6 +108,11 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
                     );
                   },
                 ),
+                // Raccourci vers Activités › Discussions de prix : les
+                // négociations ne sont pas des conversations, mais c'est ici
+                // qu'on les cherche (FLUTTER-44). Masqué sans négociation
+                // ouverte.
+                const NegotiationsShortcutSection(),
                 Expanded(child: _buildBody(context, state)),
               ],
             );
