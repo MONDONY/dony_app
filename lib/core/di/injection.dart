@@ -17,6 +17,7 @@ import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/services/screen_feedback_sender.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/activation/data/activation_repository.dart';
 import 'package:dony/features/app_update/data/datasources/app_update_remote_config_datasource.dart';
 import 'package:dony/features/app_update/data/services/app_update_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
@@ -372,6 +373,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       appleTokenRevoker: getIt<AppleTokenRevoker>(),
       forgetDeviceToken: getIt<NotificationService>().forgetDeviceToken,
     ),
+  );
+  getIt.registerLazySingleton<ActivationRepository>(
+    () => ActivationRepository(getIt<ApiClient>()),
   );
   getIt.registerFactory<CountryOnboardingCubit>(
     () => CountryOnboardingCubit(
