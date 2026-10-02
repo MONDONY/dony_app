@@ -17781,6 +17781,14 @@
   "@receptionMessageTraveler": {
     "description": "Écran du colis à recevoir : ouvre la conversation du destinataire avec le voyageur, tant que le colis est en cours (reception_detail_screen.dart, lot 3C)."
   },
+  "recipientPhoneHiddenLabel": "Masqué par le destinataire",
+  "@recipientPhoneHiddenLabel": {
+    "description": "Vue voyageur : à la place du numéro du destinataire quand il l'a masqué dans ses réglages (colis_destinataire_card, notify_recipients_sheet). Sentry FLUTTER-6J."
+  },
+  "travelerContactInAppOnlyNotice": "Le destinataire préfère être contacté via Yadony : écrivez-lui dans la messagerie de l'app.",
+  "@travelerContactInAppOnlyNotice": {
+    "description": "Vue voyageur, carte Contacter le destinataire : le destinataire a masqué son numéro, seule la messagerie de l'app est proposée (recipient_contact.dart _InAppOnlyContact)."
+  },
   "recipientConversationOpenError": "Impossible d'ouvrir la conversation pour le moment. Réessayez plus tard.",
   "@recipientConversationOpenError": {
     "description": "Snackbar : la conversation voyageur ↔ destinataire n'a pas pu s'ouvrir (refus, panne ou serveur pas à jour)."

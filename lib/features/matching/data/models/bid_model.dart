@@ -123,6 +123,12 @@ class BidModel {
   /// `DECLINED` (le titulaire du numéro dit que le colis n'est pas pour lui).
   /// `null` sans compte rattaché, pour le voyageur, ou sur un back antérieur.
   final String? recipientAppStatus;
+
+  /// Vue voyageur : le destinataire inscrit a masqué son numéro
+  /// ([recipientPhone] est alors `null`) ; il se joint par la messagerie de
+  /// l'app seulement (Sentry FLUTTER-6J). `false` sur un back antérieur.
+  @JsonKey(defaultValue: false)
+  final bool recipientPhoneHidden;
   final String status;
   final String? rejectionReason;
   final String? handoverLocation;
@@ -259,6 +265,7 @@ class BidModel {
     this.recipientName,
     this.recipientPhone,
     this.recipientAppStatus,
+    this.recipientPhoneHidden = false,
     required this.status,
     this.rejectionReason,
     this.handoverLocation,

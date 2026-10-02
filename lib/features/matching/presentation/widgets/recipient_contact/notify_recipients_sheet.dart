@@ -189,6 +189,8 @@ class _RecipientRow extends StatelessWidget {
           Text(
             hasPhone
                 ? '${_statusLabel(l)} · $phone'
+                : bid.recipientPhoneHidden
+                ? '${_statusLabel(l)} · ${l.recipientPhoneHiddenLabel}'
                 : '${_statusLabel(l)} · ${l.notifyRecipientsNoPhone}',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
@@ -210,7 +212,7 @@ class _RecipientRow extends StatelessWidget {
               ],
             ),
           ],
-          if (hasPhone) ...[
+          if (hasPhone || (bid.recipientPhoneHidden && inApp)) ...[
             const SizedBox(height: DonySpacing.md),
             RecipientContactActions(
               bid: bid,

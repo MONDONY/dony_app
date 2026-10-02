@@ -68,7 +68,9 @@ class ColisDestinataireCard extends StatelessWidget {
             const SizedBox(height: DonySpacing.sm),
             InfoRow(
               label: l.bidDetailPhoneLabel,
-              value: bid.recipientPhone ?? '-',
+              value: bid.recipientPhoneHidden
+                  ? l.recipientPhoneHiddenLabel
+                  : bid.recipientPhone ?? '-',
             ),
           ],
           // Jusqu'à la remise, l'expéditeur peut changer de destinataire.

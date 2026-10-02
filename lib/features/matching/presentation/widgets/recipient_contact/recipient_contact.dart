@@ -194,6 +194,12 @@ class RecipientContactActions extends StatelessWidget {
           ),
         );
 
+    // Le destinataire a masqué son numéro (Sentry FLUTTER-6J) : ni WhatsApp,
+    // ni SMS, ni appel ; seule la messagerie de l'app reste.
+    if (bid.recipientPhoneHidden) {
+      return _InAppOnlyContact(bid: bid);
+    }
+
     return Row(
       children: [
         if (recipientReachableInApp(bid)) ...[
@@ -224,6 +230,44 @@ class RecipientContactActions extends StatelessWidget {
         ),
         const SizedBox(width: DonySpacing.sm),
         button(RecipientContactChannel.call, 'phone', l.travelerContactCall),
+      ],
+    );
+  }
+}
+
+/// Destinataire joignable dans l'app seulement : bouton « Message » pleine
+/// largeur et explication, à la place des canaux téléphoniques.
+class _InAppOnlyContact extends StatelessWidget {
+  const _InAppOnlyContact({required this.bid});
+
+  final BidModel bid;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l.travelerContactInAppOnlyNotice,
+          key: Key('recipient-contact-in-app-only-${bid.id}'),
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        if (recipientReachableInApp(bid)) ...[
+          const SizedBox(height: DonySpacing.sm),
+          RecipientConversationLauncher(
+            bidId: bid.id,
+            role: RecipientConversationRole.traveler,
+            builder: (context, onPressed, _) => _ContactButton(
+              key: Key('recipient-contact-message-${bid.id}'),
+              iconAsset: 'send',
+              label: l.travelerContactInAppMessage,
+              onTap: onPressed,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -310,7 +354,8 @@ class TravelerRecipientContactCard extends StatelessWidget {
   /// du destinataire connu.
   static bool shouldShow(BidModel bid) =>
       bidAllowsContact(bid.status) &&
-      (bid.recipientPhone?.trim().isNotEmpty ?? false);
+      ((bid.recipientPhone?.trim().isNotEmpty ?? false) ||
+          (bid.recipientPhoneHidden && recipientReachableInApp(bid)));
 
   @override
   Widget build(BuildContext context) {

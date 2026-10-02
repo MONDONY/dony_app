@@ -8588,6 +8588,14 @@
   "notifyRecipientsFallbackName": "Recipient",
   "travelerContactInAppMessage": "Message",
   "receptionMessageTraveler": "Message the traveler",
+  "recipientPhoneHiddenLabel": "Hidden by the recipient",
+  "@recipientPhoneHiddenLabel": {
+    "description": "Vue voyageur : à la place du numéro du destinataire quand il l'a masqué dans ses réglages (colis_destinataire_card, notify_recipients_sheet). Sentry FLUTTER-6J."
+  },
+  "travelerContactInAppOnlyNotice": "The recipient prefers to be contacted through Yadony: message them in the app.",
+  "@travelerContactInAppOnlyNotice": {
+    "description": "Vue voyageur, carte Contacter le destinataire : le destinataire a masqué son numéro, seule la messagerie de l'app est proposée (recipient_contact.dart _InAppOnlyContact)."
+  },
   "recipientConversationOpenError": "We couldn't open the conversation right now. Please try again later.",
   "chatLinkedParcelLabel": "Parcel to receive",
   "conversationKindRecipientFallback": "Recipient",
