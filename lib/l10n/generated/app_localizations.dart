@@ -734,6 +734,96 @@ abstract class AppLocalizations {
   /// **'Cette action nécessite que le colis ait été livré.'**
   String get errorBidNotDeliveredMessage;
 
+  /// No description provided for @errorCallInProgressTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel déjà en cours'**
+  String get errorCallInProgressTitle;
+
+  /// No description provided for @errorCallInProgressMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un appel est déjà en cours dans cette conversation.'**
+  String get errorCallInProgressMessage;
+
+  /// No description provided for @errorCallOutOfWindowTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel plus disponible'**
+  String get errorCallOutOfWindowTitle;
+
+  /// No description provided for @errorCallOutOfWindowMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'appel est possible de l\'acceptation de la commande jusqu\'à 3 jours après la livraison.'**
+  String get errorCallOutOfWindowMessage;
+
+  /// No description provided for @errorCallBlockedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel impossible'**
+  String get errorCallBlockedTitle;
+
+  /// No description provided for @errorCallBlockedMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu ne peux pas appeler cette personne.'**
+  String get errorCallBlockedMessage;
+
+  /// No description provided for @errorCallCalleeUnavailableTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Personne injoignable'**
+  String get errorCallCalleeUnavailableTitle;
+
+  /// No description provided for @errorCallCalleeUnavailableMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette personne ne peut pas être appelée pour le moment. Écris-lui dans la conversation.'**
+  String get errorCallCalleeUnavailableMessage;
+
+  /// No description provided for @errorCallConversationClosedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conversation fermée'**
+  String get errorCallConversationClosedTitle;
+
+  /// No description provided for @errorCallConversationClosedMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette conversation est fermée, l\'appel n\'est plus possible.'**
+  String get errorCallConversationClosedMessage;
+
+  /// No description provided for @errorCallNotParticipantMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu ne participes pas à cette conversation.'**
+  String get errorCallNotParticipantMessage;
+
+  /// No description provided for @errorCallProviderUnavailableTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel momentanément indisponible'**
+  String get errorCallProviderUnavailableTitle;
+
+  /// No description provided for @errorCallProviderUnavailableMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'appel n\'a pas pu être lancé. Réessaie dans un instant.'**
+  String get errorCallProviderUnavailableMessage;
+
+  /// No description provided for @errorCallsDisabledTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appels indisponibles'**
+  String get errorCallsDisabledTitle;
+
+  /// No description provided for @errorCallsDisabledMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les appels ne sont pas disponibles pour le moment.'**
+  String get errorCallsDisabledMessage;
+
   /// No description provided for @errorInvalidBidStatusTitle.
   ///
   /// In fr, this message translates to:
