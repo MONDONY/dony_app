@@ -76,6 +76,9 @@ class CallScreen extends StatelessWidget {
     }
   }
 
+  static bool _isTerminal(CallState state) =>
+      state is CallEnded || state is CallFailure;
+
   static bool _isMicrophoneDenied(CallState state) =>
       state is CallFailure && state.error is CallPermissionDeniedException;
 
@@ -92,8 +95,9 @@ class CallScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return BlocConsumer<CallBloc, CallState>(
+      // Une seule fermeture, même si une seconde fin arrive.
       listenWhen: (previous, current) =>
-          current is CallEnded || current is CallFailure,
+          _isTerminal(current) && !_isTerminal(previous),
       listener: (context, state) {
         // Micro refusé : l'écran reste ouvert pour guider vers les réglages.
         if (_isMicrophoneDenied(state)) return;

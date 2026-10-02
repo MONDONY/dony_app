@@ -49,15 +49,23 @@ class CallBloc extends Bloc<CallEvent, CallState> {
       emit(const CallFailure(CallPermissionDeniedException()));
       return;
     }
+    if (isClosed) return;
     var joining = false;
     try {
       final call = await _repository.startCall(event.conversationId);
+      // Écran fermé pendant la création : l'autre sonne déjà, personne ne
+      // rejoindra l'appel de ce côté.
+      if (isClosed) {
+        await _gateway.cancelOutgoing(call.callId);
+        return;
+      }
       unawaited(_analytics.logEvent(AnalyticsEvents.callStarted));
       emit(
         CallInProgress(phase: CallPhase.ringing, remoteName: event.remoteName),
       );
       joining = true;
       await _gateway.joinOutgoing(call.callId);
+      if (isClosed) await _gateway.hangUp();
     } catch (e) {
       if (joining) await _gateway.hangUp();
       final error = unwrapDioError(e);
@@ -128,6 +136,13 @@ class CallBloc extends Bloc<CallEvent, CallState> {
   ) async {
     if (!_live) return;
     await _gateway.hangUp();
+    if (!_live) return;
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.callEnded,
+        properties: {'reason': 'hangup'},
+      ),
+    );
     emit(const CallEnded(reason: 'hangup'));
   }
 

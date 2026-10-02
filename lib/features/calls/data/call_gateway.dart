@@ -48,6 +48,10 @@ abstract class CallGateway {
   /// Rejoint un appel déjà créé (et mis en sonnerie) par le back.
   Future<void> joinOutgoing(String callId);
 
+  /// Annule la sonnerie d'un appel créé par le back mais jamais rejoint
+  /// (écran fermé pendant la création).
+  Future<void> cancelOutgoing(String callId);
+
   /// Décroche l'appel entrant [callId].
   Future<void> acceptIncoming(String callId);
 

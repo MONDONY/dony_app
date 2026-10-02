@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/config/stream_push_providers.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
+import 'package:dony/features/calls/data/call_flow.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
 import 'package:dony/features/calls/data/models/call_token.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
@@ -23,12 +24,18 @@ import 'package:stream_webrtc_flutter/stream_webrtc_flutter.dart' as rtc;
 class StreamCallGateway implements CallGateway {
   static const _callType = 'audio_call';
 
+  /// Absence tolérée de l'autre partie (coupure réseau) avant de conclure
+  /// qu'elle a raccroché.
+  static const _remoteGoneGrace = Duration(seconds: 8);
+
   StreamVideo? _client;
   Call? _call;
-  bool _outgoing = false;
-  DateTime? _connectedAt;
+  CallFlow? _flow;
+  Timer? _ringTimer;
+  Timer? _remoteGoneTimer;
   CompositeSubscription? _ringing;
   StreamSubscription<CallState>? _stateSub;
+  final _announced = SeenCallIds();
   final _active = StreamController<ActiveCallSnapshot>.broadcast();
   final _incoming = StreamController<IncomingCall>.broadcast();
 
@@ -79,6 +86,8 @@ class StreamCallGateway implements CallGateway {
   }
 
   void _onNativeAccept(Call call) {
+    // Le SDK peut signaler plusieurs fois le même décroché.
+    if (!_announced.firstTime(call.id)) return;
     _bind(call, outgoing: false);
     _incoming.add(
       IncomingCall(
@@ -92,11 +101,14 @@ class StreamCallGateway implements CallGateway {
 
   @override
   Future<void> disconnect() async {
-    await _stateSub?.cancel();
+    // Un appel en cours ne survit pas à la déconnexion : sinon micro et
+    // audio continuent sans écran.
+    final call = _call;
+    _flow?.onLocalHangUp();
+    _unbind();
+    if (call != null) await call.leave();
     unawaited(_ringing?.cancel());
-    _stateSub = null;
     _ringing = null;
-    _call = null;
     if (_client != null) {
       _client = null;
       await StreamVideo.reset(disconnect: true);
@@ -122,53 +134,69 @@ class StreamCallGateway implements CallGateway {
     }
   }
 
+  Call _makeCall(String callId) => _requireClient().makeCall(
+    callType: StreamCallType.custom(_callType),
+    id: callId,
+  );
+
   @override
   Future<void> joinOutgoing(String callId) async {
-    final call = _requireClient().makeCall(
-      callType: StreamCallType.custom(_callType),
-      id: callId,
-    );
+    final call = _makeCall(callId);
     _bind(call, outgoing: true);
     _check(await call.join());
+    // Côté appelant le SDK n'arme pas la fin de sonnerie (appel créé par le
+    // back) : on l'arme ici, avec le réglage du type d'appel.
+    if (identical(_call, call) && !(_flow?.ended ?? true)) {
+      _ringTimer?.cancel();
+      _ringTimer = Timer(
+        call.state.value.settings.ring.autoCancelTimeout,
+        () => _apply(call, _flow?.onRingTimeout()),
+      );
+    }
+  }
+
+  @override
+  Future<void> cancelOutgoing(String callId) async {
+    await _makeCall(callId).reject(reason: CallRejectReason.cancel());
   }
 
   @override
   Future<void> acceptIncoming(String callId) async {
-    final call = _call?.id == callId
-        ? _call!
-        : _requireClient().makeCall(
-            callType: StreamCallType.custom(_callType),
-            id: callId,
-          );
+    final client = _requireClient();
+    final call = _call?.id == callId ? _call! : _makeCall(callId);
     _bind(call, outgoing: false);
-    if (call.state.value.status is CallStatusIncoming) {
-      _check(await call.accept());
-    }
-    _check(await call.join());
+    final status = call.state.value.status;
+    final steps = incomingSteps(
+      ringingNotAccepted: status is CallStatusIncoming && !status.acceptedByMe,
+      alreadyActive: client.state.activeCalls.value.any(
+        (c) => c.callCid == call.callCid,
+      ),
+    );
+    if (steps.accept) _check(await call.accept());
+    if (steps.join) _check(await call.join());
   }
 
   @override
   Future<void> rejectIncoming(String callId) async {
-    final call = _requireClient().makeCall(
-      callType: StreamCallType.custom(_callType),
-      id: callId,
-    );
-    await call.reject(reason: CallRejectReason.decline());
+    final bound = _call;
+    if (bound != null && bound.id == callId) {
+      // Déjà décroché nativement (voire rejoint) : refuser cet appel-là.
+      _flow?.onLocalHangUp();
+      _unbind();
+      await bound.reject(reason: CallRejectReason.decline());
+      return;
+    }
+    await _makeCall(callId).reject(reason: CallRejectReason.decline());
   }
 
   @override
   Future<void> hangUp() async {
     final call = _call;
-    if (call == null) return;
-    // Raccrocher avant que l'autre décroche annule la sonnerie (le back
-    // l'enregistre en appel manqué, pas en refus).
-    if (_outgoing && _connectedAt == null) {
-      await call.reject(reason: CallRejectReason.cancel());
-    }
-    await call.leave();
-    _active.add(
-      const ActiveCallSnapshot(phase: CallPhase.ended, endReason: 'hangup'),
-    );
+    final flow = _flow;
+    if (call == null || flow == null) return;
+    // La fin d'un raccroché local est émise par le bloc, pas ici : la
+    // déconnexion qui suit est ignorée par le flow.
+    await _execute(call, flow.onLocalHangUp().action);
   }
 
   @override
@@ -202,42 +230,88 @@ class StreamCallGateway implements CallGateway {
 
   void _bind(Call call, {required bool outgoing}) {
     if (identical(_call, call)) return;
-    unawaited(_stateSub?.cancel());
+    _unbind();
     _call = call;
-    _outgoing = outgoing;
-    _connectedAt = null;
-    _stateSub = call.state.listen(_onState);
+    _flow = CallFlow(outgoing: outgoing);
+    _stateSub = call.state.listen((state) => _onState(call, state));
   }
 
-  void _onState(CallState state) {
+  void _unbind() {
+    _ringTimer?.cancel();
+    _remoteGoneTimer?.cancel();
+    _ringTimer = null;
+    _remoteGoneTimer = null;
+    unawaited(_stateSub?.cancel());
+    _stateSub = null;
+    _call = null;
+    _flow = null;
+  }
+
+  void _onState(Call call, CallState state) {
+    final flow = _flow;
+    if (flow == null || !identical(_call, call)) return;
     final remote = state.callParticipants.where((p) => !p.isLocal).firstOrNull;
     final status = state.status;
-    if (status is CallStatusDisconnected) {
-      _active.add(
-        ActiveCallSnapshot(
-          phase: CallPhase.ended,
+    _apply(
+      call,
+      flow.onObservation(
+        CallObservation(
+          remotePresent: remote != null,
           remoteName: remote?.name,
-          endReason: _endReason(status.reason),
+          otherMemberRejected: state.callMembers.any(
+            (m) => m.userId != state.currentUserId && m.callRejectedAt != null,
+          ),
+          disconnectReason: status is CallStatusDisconnected
+              ? _endReason(status.reason)
+              : null,
         ),
-      );
-      return;
+      ),
+    );
+  }
+
+  void _apply(Call call, CallFlowDecision? decision) {
+    if (decision == null || !identical(_call, call)) return;
+    final snapshot = decision.snapshot;
+    if (snapshot != null) _active.add(snapshot);
+    switch (decision.action) {
+      case CallFlowAction.armRemoteGoneTimer:
+        _remoteGoneTimer?.cancel();
+        _remoteGoneTimer = Timer(
+          _remoteGoneGrace,
+          () => _apply(call, _flow?.onRemoteGoneTimeout()),
+        );
+      case CallFlowAction.cancelRemoteGoneTimer:
+        _remoteGoneTimer?.cancel();
+      case CallFlowAction.none:
+      case CallFlowAction.leave:
+      case CallFlowAction.cancelRinging:
+        unawaited(_execute(call, decision.action));
     }
-    if (remote != null) {
-      _connectedAt ??= DateTime.now();
-      _active.add(
-        ActiveCallSnapshot(
-          phase: CallPhase.connected,
-          connectedAt: _connectedAt,
-          remoteName: remote.name,
-        ),
-      );
-    } else {
-      _active.add(
-        ActiveCallSnapshot(
-          phase: _outgoing ? CallPhase.ringing : CallPhase.connecting,
-        ),
-      );
+    if (_flow?.ended ?? false) {
+      _ringTimer?.cancel();
+      _remoteGoneTimer?.cancel();
     }
+  }
+
+  Future<void> _execute(Call call, CallFlowAction action) async {
+    switch (action) {
+      case CallFlowAction.cancelRinging:
+        // Le back enregistre l'appel en manqué, pas en refus.
+        _unbindIf(call);
+        await call.reject(reason: CallRejectReason.cancel());
+      case CallFlowAction.leave:
+        _unbindIf(call);
+        await call.leave();
+      case CallFlowAction.none:
+        if (_flow?.ended ?? false) _unbindIf(call);
+      case CallFlowAction.armRemoteGoneTimer:
+      case CallFlowAction.cancelRemoteGoneTimer:
+        break;
+    }
+  }
+
+  void _unbindIf(Call call) {
+    if (identical(_call, call)) _unbind();
   }
 
   static String _endReason(DisconnectReason reason) => switch (reason) {

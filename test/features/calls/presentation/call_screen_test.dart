@@ -234,4 +234,20 @@ void main() {
       expect(closed, 1);
     },
   );
+
+  testWidgets('deux fins successives : l\'écran ne se ferme qu\'une fois', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const CallInProgress(phase: CallPhase.ringing, remoteName: 'Moussa K.'),
+      states: Stream.fromIterable(const [
+        CallEnded(reason: 'rejected'),
+        CallEnded(reason: 'hangup'),
+      ]),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+    expect(closed, 1);
+  });
 }
