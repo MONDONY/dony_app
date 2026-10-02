@@ -508,4 +508,11 @@ void main() {
       }
     });
   });
+
+  test('FIRST_ACTION_REMINDER ouvre les premiers pas', () {
+    expect(
+      resolveNotificationRoute('FIRST_ACTION_REMINDER', {}),
+      '/first-steps',
+    );
+  });
 }

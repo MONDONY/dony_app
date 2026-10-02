@@ -15,6 +15,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/data/intent_prompt_policy.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
+import 'package:dony/features/activation/presentation/widgets/first_action_card.dart';
 import 'package:dony/features/activation/presentation/widgets/intent_prompt_sheet.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -290,6 +291,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Statut d'activation (guidage après KYC) ; `null` hors DI complète.
   final ActivationCubit? _activationCubit = getItSafe<ActivationCubit>();
 
+  /// Retour au premier plan : la carte « première action » disparaît dès que
+  /// la personne a publié, réservé ou créé une alerte ailleurs.
+  late final AppLifecycleListener _activationLifecycle;
+
   final _sheetController = DraggableScrollableController();
 
   /// Hauteur repliée de la feuille, recalculée à chaque build (texte agrandi,
@@ -353,6 +358,13 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _pendingSearchNotifier!.addListener(_consumePendingSearch);
     }
     _sheetController.addListener(_onSheetSizeChanged);
+    _activationLifecycle = AppLifecycleListener(
+      onResume: () {
+        if (_activationCubit?.state is ActivationLoaded) {
+          unawaited(_activationCubit!.load());
+        }
+      },
+    );
     // Blocage ou déblocage : le serveur ne renvoie plus (ou renvoie de nouveau)
     // les trajets et demandes de cette personne. On relance la recherche du mode
     // affiché plutôt que de laisser une liste que le serveur désavoue.
@@ -541,6 +553,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   @override
   void dispose() {
+    _activationLifecycle.dispose();
     _blockSub?.cancel();
     _pendingSearchNotifier?.removeListener(_consumePendingSearch);
     _sheetController.removeListener(_onSheetSizeChanged);
@@ -2015,6 +2028,32 @@ class _MapSenderViewState extends State<_MapSenderView> {
               child: CustomScrollView(
                 controller: scrollCtrl,
                 slivers: [
+                  // Guidage après KYC : rappel fixe tant qu'aucune première
+                  // action n'est faite (au-dessus du carrousel, sans croix).
+                  if (_activationCubit != null)
+                    BlocBuilder<ActivationCubit, ActivationState>(
+                      bloc: _activationCubit,
+                      builder: (context, activation) => SliverToBoxAdapter(
+                        child:
+                            shouldShowFirstActionCard(
+                              activation,
+                              isKycVerified: isKycVerified,
+                            )
+                            ? Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  DonySpacing.base,
+                                  DonySpacing.sm,
+                                  DonySpacing.base,
+                                  0,
+                                ),
+                                child: FirstActionCard(
+                                  status:
+                                      (activation as ActivationLoaded).status,
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ),
                   SliverToBoxAdapter(
                     child: EvergreenGuidanceCarousel(
                       hiveService: getIt<HiveService>(),
