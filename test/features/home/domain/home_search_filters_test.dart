@@ -12,6 +12,26 @@ void main() {
       expect(f.otherModeCountIsMeaningful, isFalse);
     });
 
+    test('activeKeys : vide, puis une clé par filtre posé, sans valeur', () {
+      expect(const HomeSearchFilters().activeKeys, isEmpty);
+
+      const f = HomeSearchFilters(
+        departureCity: 'Paris',
+        urgentOnly: true,
+        maxPricePerKg: 12,
+        weightMin: 5,
+        weightMax: 20,
+        matchingMyTrips: true,
+      );
+      expect(f.activeKeys, {
+        'departure',
+        'urgent',
+        'price',
+        'weight',
+        'matching_my_trips',
+      });
+    });
+
     test('le corridor est partagé : il survit au changement de mode', () {
       const f = HomeSearchFilters(departureCity: 'Paris', arrivalCity: 'Dakar');
 

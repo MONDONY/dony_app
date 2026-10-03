@@ -273,6 +273,30 @@ class HomeSearchFilters {
     );
   }
 
+  /// Clés des filtres actifs, énumération fermée et sans valeur : sert au
+  /// tracking `search_filter_applied` / `search_filter_cleared`, qui compare
+  /// deux jeux de filtres pour savoir lequel vient d'être posé ou retiré. Ne
+  /// jamais y mettre une ville, un poids ou un prix.
+  Set<String> get activeKeys => {
+    if (departureCity != null) 'departure',
+    if (arrivalCity != null) 'arrival',
+    if (datePreset != DonyDatePreset.none) 'date',
+    if (urgentOnly) 'urgent',
+    if (nearMeActive) 'near_me',
+    if (kiloProOnly) 'kilo_pro',
+    if (minRating != null) 'rating',
+    if (weightMin != null || weightMax != null) 'weight',
+    if (maxPricePerKg != null) 'price',
+    if (weekendOnly) 'weekend',
+    if (transportMode != null) 'transport_mode',
+    if (kycVerifiedOnly) 'kyc_verified',
+    if (contentType != null) 'content_type',
+    if (urgencyFilter != null) 'urgency',
+    if (maxWeight != null) 'max_weight',
+    if (parcelSize != null) 'parcel_size',
+    if (matchingMyTrips) 'matching_my_trips',
+  };
+
   int get _commonActiveCount {
     var n = 0;
     if (departureCity != null || arrivalCity != null) {
