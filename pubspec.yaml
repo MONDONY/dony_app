@@ -141,6 +141,9 @@ dependencies:
   smart_auth: ^3.2.0
   stream_video_flutter: ^1.6.0
   stream_video_push_notification: ^1.6.0
+  # Tonalité de retour d'appel côté appelant (FLUTTER-9V) : Stream ne la joue
+  # pas, l'appel étant créé par le back (cf. ringback_tone.dart).
+  audioplayers: ^6.8.1
 
 dev_dependencies:
   flutter_test:
@@ -225,6 +228,7 @@ flutter:
     - assets/icons/
     - assets/icons_3d/
     - assets/config/help_center_config.default.json
+    - assets/sounds/
 
   # Polices embarquees, declarees en `fonts:` et NON en `assets:`.
   #

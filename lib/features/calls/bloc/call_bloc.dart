@@ -5,6 +5,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
 import 'package:dony/features/calls/data/repositories/calls_repository.dart';
+import 'package:dony/features/calls/data/ringback_tone.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'call_event.dart';
@@ -13,8 +14,13 @@ part 'call_state.dart';
 /// Un appel audio, sortant (créé par le back puis rejoint) ou entrant
 /// (décroché). Fermer le bloc pendant l'appel raccroche.
 class CallBloc extends Bloc<CallEvent, CallState> {
-  CallBloc(this._repository, this._gateway, this._analytics)
-    : super(const CallIdle()) {
+  CallBloc(
+    this._repository,
+    this._gateway,
+    this._analytics, {
+    RingbackTone? ringback,
+  }) : _ringback = ringback,
+       super(const CallIdle()) {
     on<CallStartRequested>(_onStart);
     on<CallIncomingAcceptRequested>(_onIncomingAccept);
     on<CallMuteToggleRequested>(_onMuteToggle);
@@ -29,7 +35,23 @@ class CallBloc extends Bloc<CallEvent, CallState> {
   final CallsRepository _repository;
   final CallGateway _gateway;
   final AnalyticsService _analytics;
+
+  /// Tonalité de retour d'appel chez l'appelant (FLUTTER-9V), `null` en test.
+  final RingbackTone? _ringback;
   late final StreamSubscription<ActiveCallSnapshot> _snapshots;
+
+  /// La tonalité suit l'état : elle joue tant qu'un appel sortant sonne
+  /// chez l'autre, et se tait à tout autre état (décroché, refus, sans
+  /// réponse, raccroché, échec).
+  @override
+  void onChange(Change<CallState> change) {
+    super.onChange(change);
+    final ringback = _ringback;
+    if (ringback == null) return;
+    final next = change.nextState;
+    final ringing = next is CallInProgress && next.phase == CallPhase.ringing;
+    unawaited(ringing ? ringback.start() : ringback.stop());
+  }
 
   bool get _live => state is CallStarting || state is CallInProgress;
 
@@ -207,6 +229,7 @@ class CallBloc extends Bloc<CallEvent, CallState> {
   @override
   Future<void> close() async {
     await _snapshots.cancel();
+    await _ringback?.dispose();
     if (_live) await _gateway.hangUp();
     return super.close();
   }
