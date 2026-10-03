@@ -87,32 +87,6 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
                   activeFilter: filter,
                   searchQuery: searchQuery,
                 ),
-                // Ligne épinglée Support Yadony — toujours en tête, non
-                // filtrable, non déplaçable.
-                // Aperçu et compteur viennent du même `/support/summary`
-                // (SupportUnreadCubit.refresh alimente les deux).
-                BlocBuilder<SupportSummaryCubit, SupportSummaryState>(
-                  bloc: getIt<SupportSummaryCubit>(),
-                  builder: (context, summaryState) {
-                    final summary = summaryState.summary;
-                    return BlocBuilder<SupportUnreadCubit, int>(
-                      bloc: getIt<SupportUnreadCubit>(),
-                      builder: (context, supportUnread) {
-                        return SupportConversationTile(
-                          unreadCount: supportUnread,
-                          latestTicket: summary?.latestTicket,
-                          onReturned: () =>
-                              getIt<SupportUnreadCubit>().refresh(),
-                        );
-                      },
-                    );
-                  },
-                ),
-                // Raccourci vers Activités › Discussions de prix : les
-                // négociations ne sont pas des conversations, mais c'est ici
-                // qu'on les cherche (FLUTTER-44). Masqué sans négociation
-                // ouverte.
-                const NegotiationsShortcutSection(),
                 Expanded(child: _buildBody(context, state)),
               ],
             );
@@ -122,44 +96,100 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
     );
   }
 
+  /// Clé globale : les lignes épinglées changent de parent entre le
+  /// chargement, la liste vide et la liste chargée. Sans elle, chaque passage
+  /// recréerait le raccourci, qui relance ses deux chargements en initState.
+  final _pinnedRowsKey = GlobalKey(debugLabel: 'messages-pinned-rows');
+
+  /// Lignes épinglées en tête de liste : Support Yadony puis le raccourci
+  /// Discussions de prix. Toujours au-dessus des conversations, non
+  /// filtrables, mais elles défilent avec la liste au lieu de rester figées
+  /// sous l'en-tête, où elles mangeaient l'écran (FLUTTER-A8).
+  Widget _pinnedRows() {
+    return Column(
+      key: _pinnedRowsKey,
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Aperçu et compteur viennent du même `/support/summary`
+        // (SupportUnreadCubit.refresh alimente les deux).
+        BlocBuilder<SupportSummaryCubit, SupportSummaryState>(
+          bloc: getIt<SupportSummaryCubit>(),
+          builder: (context, summaryState) {
+            final summary = summaryState.summary;
+            return BlocBuilder<SupportUnreadCubit, int>(
+              bloc: getIt<SupportUnreadCubit>(),
+              builder: (context, supportUnread) {
+                return SupportConversationTile(
+                  unreadCount: supportUnread,
+                  latestTicket: summary?.latestTicket,
+                  onReturned: () => getIt<SupportUnreadCubit>().refresh(),
+                );
+              },
+            );
+          },
+        ),
+        // Raccourci vers Activités › Discussions de prix : les négociations
+        // ne sont pas des conversations, mais c'est ici qu'on les cherche
+        // (FLUTTER-44). Masqué sans négociation ouverte.
+        const NegotiationsShortcutSection(),
+      ],
+    );
+  }
+
+  Widget _errorState(BuildContext context, ConversationListError state) {
+    final l = context.l10n;
+    return DonyEmptyState(
+      type: DonyEmptyStateType.error,
+      mascotte: DonyMascotteType.erreurLegere,
+      iconAsset: 'wifi-off',
+      title: l.commonLoadError,
+      description: ErrorPresenter.resolve(state.error, l10n: l).message,
+      actionLabel: l.commonRetry,
+      onAction: () => context.read<ConversationListBloc>().add(
+        const ConversationsLoadRequested(),
+      ),
+    );
+  }
+
   Widget _buildBody(BuildContext context, ConversationListState state) {
     final cs = Theme.of(context).colorScheme;
     final l = context.l10n;
 
     if (state is ConversationListLoading || state is ConversationListInitial) {
-      return ListView.builder(
-        padding: EdgeInsets.only(
-          bottom: 100 + MediaQuery.paddingOf(context).bottom,
-        ),
-        itemCount: 6,
-        itemBuilder: (_, _) => const DonyConversationTileSkeleton(),
+      return CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: _pinnedRows()),
+          SliverPadding(
+            padding: EdgeInsets.only(
+              bottom: 100 + MediaQuery.paddingOf(context).bottom,
+            ),
+            sliver: SliverList.builder(
+              itemCount: 6,
+              itemBuilder: (_, _) => const DonyConversationTileSkeleton(),
+            ),
+          ),
+        ],
       );
     }
 
     if (state is ConversationListError) {
-      return DonyEmptyState(
-        type: DonyEmptyStateType.error,
-        mascotte: DonyMascotteType.erreurLegere,
-        iconAsset: 'wifi-off',
-        title: l.commonLoadError,
-        description: ErrorPresenter.resolve(
-          state.error,
-          l10n: context.l10n,
-        ).message,
-        actionLabel: l.commonRetry,
-        onAction: () => context.read<ConversationListBloc>().add(
-          const ConversationsLoadRequested(),
-        ),
+      return Column(
+        children: [
+          _pinnedRows(),
+          Expanded(child: _errorState(context, state)),
+        ],
       );
     }
 
     if (state is ConversationListLoaded) {
       if (state.displayed.isEmpty) {
-        return LayoutBuilder(
-          builder: (ctx, constraints) => SingleChildScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+        return CustomScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          slivers: [
+            SliverToBoxAdapter(child: _pinnedRows()),
+            SliverFillRemaining(
+              hasScrollBody: false,
               child: DonyEmptyState(
                 mascotte: DonyMascotteType.assis,
                 title: state.searchQuery.isNotEmpty
@@ -172,7 +202,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
                     : l.conversationListEmptyDescription,
               ),
             ),
-          ),
+          ],
         );
       }
 
@@ -183,37 +213,46 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
         onRefresh: () async => context.read<ConversationListBloc>().add(
           const ConversationsLoadRequested(),
         ),
-        child: ListView.builder(
-          // Padding bas = hauteur de la nav flottante (~100) + safe area,
-          // pour que les derniers éléments scrollent au-dessus de l'île de
-          // nav (même pattern que announcement_list_screen).
-          padding: EdgeInsets.only(
-            bottom: 100 + MediaQuery.paddingOf(context).bottom,
-          ),
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            final item = items[index];
+        // SliverToBoxAdapter garde les lignes épinglées montées quand elles
+        // sortent de l'écran : un ListView les détruirait au défilement.
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _pinnedRows()),
+            SliverPadding(
+              // Padding bas = hauteur de la nav flottante (~100) + safe area,
+              // pour que les derniers éléments scrollent au-dessus de l'île de
+              // nav (même pattern que announcement_list_screen).
+              padding: EdgeInsets.only(
+                bottom: 100 + MediaQuery.paddingOf(context).bottom,
+              ),
+              sliver: SliverList.builder(
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
 
-            if (item is _SectionItem) {
-              return _SectionLabel(label: item.label);
-            }
+                  if (item is _SectionItem) {
+                    return _SectionLabel(label: item.label);
+                  }
 
-            final conv = (item as _ConvItem).conv;
-            return _SlidableTile(conversation: conv)
-                .animate()
-                .fadeIn(
-                  delay: Duration(milliseconds: 40 * index.clamp(0, 8)),
-                  duration: 260.ms,
-                  curve: Curves.easeOutCubic,
-                )
-                .slideY(
-                  begin: 0.03,
-                  end: 0,
-                  delay: Duration(milliseconds: 40 * index.clamp(0, 8)),
-                  duration: 260.ms,
-                  curve: Curves.easeOutCubic,
-                );
-          },
+                  final conv = (item as _ConvItem).conv;
+                  return _SlidableTile(conversation: conv)
+                      .animate()
+                      .fadeIn(
+                        delay: Duration(milliseconds: 40 * index.clamp(0, 8)),
+                        duration: 260.ms,
+                        curve: Curves.easeOutCubic,
+                      )
+                      .slideY(
+                        begin: 0.03,
+                        end: 0,
+                        delay: Duration(milliseconds: 40 * index.clamp(0, 8)),
+                        duration: 260.ms,
+                        curve: Curves.easeOutCubic,
+                      );
+                },
+              ),
+            ),
+          ],
         ),
       );
     }

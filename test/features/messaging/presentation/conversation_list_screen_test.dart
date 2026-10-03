@@ -493,7 +493,7 @@ void main() {
       when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
       await _pump(tester, bloc);
 
-      await tester.drag(find.byType(ListView), const Offset(0, 400));
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, 400));
       await tester.pump(const Duration(milliseconds: 100));
 
       verify(
@@ -516,6 +516,47 @@ void main() {
       );
       expect(find.text('Support Yadony'), findsOneWidget);
     });
+
+    testWidgets(
+      'la ligne Support défile avec les conversations, en tête (FLUTTER-A8)',
+      (tester) async {
+        final convs = [
+          for (var i = 0; i < 20; i++)
+            ConversationModel(
+              id: 'conv-$i',
+              bidId: 'bid-$i',
+              firestoreConversationId: 'conv_bid-$i',
+              otherParticipant: ParticipantModel(
+                id: 'uid-$i',
+                name: 'Personne $i',
+              ),
+              lastMessagePreview: 'Message $i',
+              lastMessageAt: DateTime.now(),
+            ),
+        ];
+        when(() => bloc.state).thenReturn(ConversationListLoaded(convs));
+        await _pump(tester, bloc);
+
+        final support = find.byType(SupportConversationTile);
+        final top = tester.getTopLeft(support).dy;
+        // La ligne Support est au-dessus de la première conversation.
+        expect(top, lessThan(tester.getTopLeft(find.text('Personne 0')).dy));
+
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+        await tester.pumpAndSettle();
+
+        // Elle n'est plus figée sous l'en-tête : elle est remontée avec la
+        // liste, et reste montée hors écran (pas de rechargement au retour).
+        expect(
+          tester
+              .getTopLeft(
+                find.byType(SupportConversationTile, skipOffstage: false),
+              )
+              .dy,
+          lessThan(top),
+        );
+      },
+    );
   });
 
   testWidgets('la ligne Support montre l aperçu du résumé serveur', (
