@@ -3950,42 +3950,6 @@ abstract class AppLocalizations {
   /// **'Reviens dans un instant, de nouvelles demandes sont publiées chaque jour'**
   String get homeMapEmptyHint;
 
-  /// No description provided for @homeGuidancePublishTrip.
-  ///
-  /// In fr, this message translates to:
-  /// **'Publier mon trajet'**
-  String get homeGuidancePublishTrip;
-
-  /// No description provided for @homeGuidancePublishParcel.
-  ///
-  /// In fr, this message translates to:
-  /// **'Publier un colis'**
-  String get homeGuidancePublishParcel;
-
-  /// No description provided for @homeGuidanceCreateAlert.
-  ///
-  /// In fr, this message translates to:
-  /// **'Créer une alerte'**
-  String get homeGuidanceCreateAlert;
-
-  /// No description provided for @homeGuidanceVerifyIdentity.
-  ///
-  /// In fr, this message translates to:
-  /// **'Vérifier mon identité'**
-  String get homeGuidanceVerifyIdentity;
-
-  /// No description provided for @homeGuidanceHowItWorks.
-  ///
-  /// In fr, this message translates to:
-  /// **'Comment ça marche ?'**
-  String get homeGuidanceHowItWorks;
-
-  /// No description provided for @homeGuidanceDontShowAgain.
-  ///
-  /// In fr, this message translates to:
-  /// **'Ne plus afficher'**
-  String get homeGuidanceDontShowAgain;
-
   /// No description provided for @homeNoActiveTripTitle.
   ///
   /// In fr, this message translates to:

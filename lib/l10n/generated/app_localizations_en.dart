@@ -2317,24 +2317,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check back soon, new parcel requests are posted every day';
 
   @override
-  String get homeGuidancePublishTrip => 'Post my trip';
-
-  @override
-  String get homeGuidancePublishParcel => 'Post a parcel';
-
-  @override
-  String get homeGuidanceCreateAlert => 'Create an alert';
-
-  @override
-  String get homeGuidanceVerifyIdentity => 'Verify my identity';
-
-  @override
-  String get homeGuidanceHowItWorks => 'How does it work?';
-
-  @override
-  String get homeGuidanceDontShowAgain => 'Don\'t show again';
-
-  @override
   String get homeNoActiveTripTitle => 'No active trip';
 
   @override

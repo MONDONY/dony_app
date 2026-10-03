@@ -9,7 +9,6 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/activation/bloc/activation_cubit.dart';
 import 'package:dony/features/activation/data/models/activation_status.dart';
 import 'package:dony/features/activation/presentation/widgets/intent_prompt_sheet.dart';
-import 'package:dony/features/home/presentation/widgets/evergreen_guidance_carousel.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/data/models/user_preferences_model.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
@@ -231,11 +230,6 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  /// Efface les flags de fermeture manuelle (X) du carousel de guidance de
-  /// l'écran Recherche ainsi que ceux des `ContextualTutorialCard` semées
-  /// dans le reste de l'app (une clé par tutoriel) : sans ça, une fois
-  /// toutes les cartes fermées, ces zones de suggestions restent vides pour
-  /// toujours, sans moyen de revenir en arrière.
   /// Modifier l'intention (envoyer, voyager, les deux) et le pays visé.
   Future<void> _editIntent(BuildContext context) async {
     final activation = context.read<ActivationCubit>().state;
@@ -255,6 +249,10 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  /// Efface les flags de fermeture des `ContextualTutorialCard` semées dans
+  /// l'app (une clé par tutoriel) : sans ça, une fois toutes les cartes
+  /// fermées, ces zones de suggestions restent vides pour toujours, sans
+  /// moyen de revenir en arrière.
   void _resetGuidanceCards(BuildContext context) {
     unawaited(
       getIt<AnalyticsService>().logEvent(
@@ -262,14 +260,6 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
     final hive = getIt<HiveService>();
-    for (final id in EvergreenGuidanceCarousel.guidanceSlideIds) {
-      unawaited(
-        hive.userPrefs.put(
-          '${HiveService.kGuidanceSlideDismissedPrefix}$id',
-          false,
-        ),
-      );
-    }
     final tutorialKeys = hive.userPrefs.keys.where(
       (key) =>
           key is String &&

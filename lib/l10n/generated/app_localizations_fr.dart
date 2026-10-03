@@ -2320,24 +2320,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Reviens dans un instant, de nouvelles demandes sont publiées chaque jour';
 
   @override
-  String get homeGuidancePublishTrip => 'Publier mon trajet';
-
-  @override
-  String get homeGuidancePublishParcel => 'Publier un colis';
-
-  @override
-  String get homeGuidanceCreateAlert => 'Créer une alerte';
-
-  @override
-  String get homeGuidanceVerifyIdentity => 'Vérifier mon identité';
-
-  @override
-  String get homeGuidanceHowItWorks => 'Comment ça marche ?';
-
-  @override
-  String get homeGuidanceDontShowAgain => 'Ne plus afficher';
-
-  @override
   String get homeNoActiveTripTitle => 'Aucun trajet actif';
 
   @override

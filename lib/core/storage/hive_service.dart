@@ -24,18 +24,10 @@ class HiveService {
   static const String kContextualTutorialDismissedPrefix =
       'contextual_tutorial_dismissed_';
 
-  // Préfixe des clés de fermeture manuelle (X) des slides de
-  // EvergreenGuidanceCarousel (écran Recherche), une par slide id
-  // (trip/parcel/alert/kyc/tutorial). Masquage définitif, indépendant de la
-  // condition d'éligibilité de la slide (ex : une slide "trip" peut être
-  // fermée par l'utilisateur même si aucun trajet n'a encore été publié).
   /// Question d'intention aux comptes existants : nombre d'affichages et date
   /// du dernier (guidage après KYC, 2 affichages max à 7 jours d'écart).
   static const String kIntentPromptCount = 'intent_prompt_count';
   static const String kIntentPromptLastAt = 'intent_prompt_last_at';
-
-  static const String kGuidanceSlideDismissedPrefix =
-      'guidance_slide_dismissed_';
 
   // ── Préférences app ──────────────────────────────────────────────────────
   static const String kThemeMode = 'theme_mode'; // 'system' | 'light' | 'dark'

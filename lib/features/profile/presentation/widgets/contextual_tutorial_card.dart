@@ -27,8 +27,7 @@ import 'package:hive/hive.dart';
 /// permanence (`StatefulShellRoute.indexedStack`) : sans écoute réactive de
 /// la clé Hive, un reset externe (Réglages › Réafficher les suggestions) ne
 /// referait jamais réapparaître une carte déjà construite. D'où le
-/// `ValueListenableBuilder` sur `HiveService.listenUserPrefs`, identique au
-/// mécanisme d'`EvergreenGuidanceCarousel`.
+/// `ValueListenableBuilder` sur `HiveService.listenUserPrefs`.
 class ContextualTutorialCard extends StatefulWidget {
   const ContextualTutorialCard({required this.context, super.key});
 

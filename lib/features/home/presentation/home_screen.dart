@@ -26,7 +26,6 @@ import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_aler
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
-import 'package:dony/features/home/presentation/widgets/evergreen_guidance_carousel.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
 import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
 import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
@@ -2051,7 +2050,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 controller: scrollCtrl,
                 slivers: [
                   // Guidage après KYC : rappel fixe tant qu'aucune première
-                  // action n'est faite (au-dessus du carrousel, sans croix).
+                  // action n'est faite (sans croix).
                   if (_activationCubit != null)
                     BlocBuilder<ActivationCubit, ActivationState>(
                       bloc: _activationCubit,
@@ -2076,12 +2075,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             : const SizedBox.shrink(),
                       ),
                     ),
-                  SliverToBoxAdapter(
-                    child: EvergreenGuidanceCarousel(
-                      hiveService: getIt<HiveService>(),
-                      isKycVerified: isKycVerified,
-                    ),
-                  ),
                   if (_mode.isParcels)
                     BlocBuilder<
                       PackageRequestSearchBloc,

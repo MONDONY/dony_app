@@ -257,17 +257,9 @@ void main() {
       await tester.tap(find.text('Réafficher les suggestions'));
       await tester.pump();
 
-      for (final id in const ['trip', 'parcel', 'alert', 'kyc', 'tutorial']) {
-        verify(
-          () => mockBox.put(
-            '${HiveService.kGuidanceSlideDismissedPrefix}$id',
-            false,
-          ),
-        ).called(1);
-      }
-      // Toutes les ContextualTutorialCard fermées ailleurs dans l'app
-      // (une clé par tutoriel) doivent aussi être effacées, sans toucher
-      // aux autres préférences stockées dans la même box.
+      // Toutes les ContextualTutorialCard fermées dans l'app (une clé par
+      // tutoriel) sont effacées, sans toucher aux autres préférences
+      // stockées dans la même box.
       verify(
         () => mockBox.delete(
           '${HiveService.kContextualTutorialDismissedPrefix}search_basics',

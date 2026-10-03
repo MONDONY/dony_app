@@ -528,9 +528,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `home_search_mode_changed` | HomeScreen._onModeChanged — bascule du sélecteur de mode Trajets/Colis (propriété `mode`) |
 | `home_cross_discovery_tapped` | HomeScreen._onCrossDiscoveryTap — bascule proposée depuis l'état vide (propriétés `from_mode`, `count`) |
 | `home_matching_trips_filter_toggled` | HomeScreen._showFilterSheet — pastille « Pour mes trajets » de la feuille de filtres colis (propriétés `active`, `active_trips`) |
-| `home_guidance_carousel_cta_tapped` | EvergreenGuidanceCarousel — tap sur une carte du carousel de guidance evergreen (Recherche), toute la carte est cliquable (propriété `slide` : trip/parcel/alert/kyc/tutorial) |
-| `home_guidance_carousel_slide_dismissed` | EvergreenGuidanceCarousel — croix (X) de fermeture manuelle d'une slide, masquage définitif (propriété `slide` : trip/parcel/alert/kyc/tutorial) |
-| `settings_guidance_cards_reset` | SettingsScreen._resetGuidanceCards — tuile « Réafficher les suggestions », efface tous les flags de fermeture manuelle du carousel de guidance (Recherche) et des `ContextualTutorialCard` fermées ailleurs dans l'app |
+| `settings_guidance_cards_reset` | SettingsScreen._resetGuidanceCards — tuile « Réafficher les suggestions », efface les flags de fermeture des `ContextualTutorialCard` fermées dans l'app |
 | `accessibility_setting_changed` | AccessibilityBloc — un réglage d'accessibilité est modifié (propriétés `setting`, `value`) ou réinitialisation complète (`setting: reset`) |
 | `trip_marked_arrived` | AnnouncementBloc._onTripMarkArrivedRequested() — voyageur marque son trajet arrivé à destination |
 | `arrival_instructions_updated` | AnnouncementBloc._onArrivalInstructionsUpdateRequested() — édition des instructions de retrait après le marquage initial |
