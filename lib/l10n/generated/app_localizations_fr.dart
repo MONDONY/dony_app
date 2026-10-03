@@ -13826,17 +13826,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recipientListTitle => 'Mes destinataires';
 
   @override
-  String get recipientAddFabLabel => 'Ajouter';
-
-  @override
   String get recipientEmptyTitle => 'Aucun destinataire enregistré';
 
   @override
   String get recipientEmptyDescription =>
       'Ajoute tes proches en Afrique pour envoyer en 1 tap.';
-
-  @override
-  String get recipientEmptyActionLabel => 'Ajouter mon premier destinataire';
 
   @override
   String get recipientNoResultsLabel => 'Aucun résultat';

@@ -15657,10 +15657,6 @@
   "@recipientListTitle": {
     "description": "Titre de l'écran liste des destinataires (recipients_screen.dart)."
   },
-  "recipientAddFabLabel": "Ajouter",
-  "@recipientAddFabLabel": {
-    "description": "Libellé du FAB d'ajout (recipients_screen.dart)."
-  },
   "recipientEmptyTitle": "Aucun destinataire enregistré",
   "@recipientEmptyTitle": {
     "description": "Titre de l'état vide (recipients_screen.dart)."
@@ -15668,10 +15664,6 @@
   "recipientEmptyDescription": "Ajoute tes proches en Afrique pour envoyer en 1 tap.",
   "@recipientEmptyDescription": {
     "description": "Description de l'état vide (recipients_screen.dart)."
-  },
-  "recipientEmptyActionLabel": "Ajouter mon premier destinataire",
-  "@recipientEmptyActionLabel": {
-    "description": "Bouton d'action de l'état vide (recipients_screen.dart)."
   },
   "recipientNoResultsLabel": "Aucun résultat",
   "@recipientNoResultsLabel": {

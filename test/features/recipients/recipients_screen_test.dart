@@ -300,21 +300,11 @@ void main() {
     });
   });
 
-  group('add recipient FAB', () {
-    testWidgets('shows the "Ajouter" floating action button', (tester) async {
-      when(() => bloc.state).thenReturn(
-        const RecipientState(
-          status: RecipientStatus.success,
-          recipients: [_r1],
-        ),
-      );
-      await tester.pumpWidget(_wrap(bloc));
-      await tester.pump(const Duration(milliseconds: 600));
-      expect(find.byType(FloatingActionButton), findsOneWidget);
-      expect(find.text('Ajouter'), findsOneWidget);
-    });
-
-    testWidgets('tapping the FAB navigates and reloads on return', (
+  // FLUTTER-96 : l'entrée « Ajouter un destinataire Yadony » en tête de liste
+  // est le seul point d'ajout du carnet, ni bouton flottant ni bouton dans
+  // l'état vide.
+  group('single add entry point', () {
+    testWidgets('no floating action button when the list has recipients', (
       tester,
     ) async {
       when(() => bloc.state).thenReturn(
@@ -325,10 +315,19 @@ void main() {
       );
       await tester.pumpWidget(_wrap(bloc));
       await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byType(FloatingActionButton), findsNothing);
+      expect(find.text('Ajouter'), findsNothing);
+    });
 
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
-      expect(find.text('New Recipient'), findsOneWidget);
+    testWidgets('empty state has no create button', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(const RecipientState(status: RecipientStatus.success));
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.textContaining('Aucun destinataire'), findsOneWidget);
+      expect(find.text('Ajouter mon premier destinataire'), findsNothing);
+      expect(find.byType(FloatingActionButton), findsNothing);
     });
   });
 
@@ -430,7 +429,7 @@ void main() {
     );
   });
 
-  testWidgets('en anglais : titre, FAB et badge traduits', (tester) async {
+  testWidgets('en anglais : titre et badge traduits', (tester) async {
     useEnglish();
     when(() => bloc.state).thenReturn(
       const RecipientState(
@@ -442,7 +441,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('My recipients'), findsOneWidget);
-    expect(find.text('Add'), findsOneWidget);
     expect(find.text('DEFAULT'), findsOneWidget);
   });
 

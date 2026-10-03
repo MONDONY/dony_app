@@ -22925,12 +22925,6 @@ abstract class AppLocalizations {
   /// **'Mes destinataires'**
   String get recipientListTitle;
 
-  /// Libellé du FAB d'ajout (recipients_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Ajouter'**
-  String get recipientAddFabLabel;
-
   /// Titre de l'état vide (recipients_screen.dart).
   ///
   /// In fr, this message translates to:
@@ -22942,12 +22936,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ajoute tes proches en Afrique pour envoyer en 1 tap.'**
   String get recipientEmptyDescription;
-
-  /// Bouton d'action de l'état vide (recipients_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Ajouter mon premier destinataire'**
-  String get recipientEmptyActionLabel;
 
   /// Titre/texte affiché quand la recherche ne trouve rien, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42).
   ///

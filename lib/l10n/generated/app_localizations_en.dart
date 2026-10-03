@@ -13738,17 +13738,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recipientListTitle => 'My recipients';
 
   @override
-  String get recipientAddFabLabel => 'Add';
-
-  @override
   String get recipientEmptyTitle => 'No recipients saved';
 
   @override
   String get recipientEmptyDescription =>
       'Add your loved ones in Africa to send in 1 tap.';
-
-  @override
-  String get recipientEmptyActionLabel => 'Add my first recipient';
 
   @override
   String get recipientNoResultsLabel => 'No results';
