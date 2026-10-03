@@ -179,18 +179,16 @@ class RecipientContactActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     Widget button(RecipientContactChannel channel, String icon, String label) =>
-        Expanded(
-          child: _ContactButton(
-            key: Key('recipient-contact-${channel.name}-${bid.id}'),
-            iconAsset: icon,
-            label: label,
-            onTap: () => contactRecipient(
-              context,
-              bid,
-              channel,
-              instructions: instructions,
-              launcher: launcher,
-            ),
+        _ContactButton(
+          key: Key('recipient-contact-${channel.name}-${bid.id}'),
+          iconAsset: icon,
+          label: label,
+          onTap: () => contactRecipient(
+            context,
+            bid,
+            channel,
+            instructions: instructions,
+            launcher: launcher,
           ),
         );
 
@@ -200,37 +198,82 @@ class RecipientContactActions extends StatelessWidget {
       return _InAppOnlyContact(bid: bid);
     }
 
-    return Row(
-      children: [
-        if (recipientReachableInApp(bid)) ...[
-          Expanded(
-            child: RecipientConversationLauncher(
-              bidId: bid.id,
-              role: RecipientConversationRole.traveler,
-              builder: (context, onPressed, _) => _ContactButton(
-                key: Key('recipient-contact-message-${bid.id}'),
-                iconAsset: 'send',
-                label: l.travelerContactInAppMessage,
-                onTap: onPressed,
-              ),
-            ),
+    final buttons = [
+      if (recipientReachableInApp(bid))
+        RecipientConversationLauncher(
+          bidId: bid.id,
+          role: RecipientConversationRole.traveler,
+          builder: (context, onPressed, _) => _ContactButton(
+            key: Key('recipient-contact-message-${bid.id}'),
+            iconAsset: 'send',
+            label: l.travelerContactInAppMessage,
+            onTap: onPressed,
           ),
-          const SizedBox(width: DonySpacing.sm),
-        ],
-        button(
-          RecipientContactChannel.whatsapp,
-          'message-circle',
-          l.travelerContactWhatsApp,
         ),
-        const SizedBox(width: DonySpacing.sm),
-        button(
-          RecipientContactChannel.sms,
-          'messages-square',
-          l.travelerContactSms,
-        ),
-        const SizedBox(width: DonySpacing.sm),
-        button(RecipientContactChannel.call, 'phone', l.travelerContactCall),
-      ],
+      button(
+        RecipientContactChannel.whatsapp,
+        'message-circle',
+        l.travelerContactWhatsApp,
+      ),
+      button(
+        RecipientContactChannel.sms,
+        'messages-square',
+        l.travelerContactSms,
+      ),
+      button(RecipientContactChannel.call, 'phone', l.travelerContactCall),
+    ];
+
+    return _ContactButtonsLayout(children: buttons);
+  }
+}
+
+/// Une seule rangée quand chaque bouton garde la place de son libellé ;
+/// sinon une grille de deux colonnes. Sur un petit écran, quatre boutons
+/// côte à côte réduisaient les libellés à « Me… », « Wh… », « Ap… » : on ne
+/// savait plus quelle icône ouvrait quel canal (FLUTTER-AA).
+class _ContactButtonsLayout extends StatelessWidget {
+  const _ContactButtonsLayout({required this.children});
+
+  final List<Widget> children;
+
+  /// Largeur sous laquelle un libellé (« WhatsApp », « Message ») est coupé.
+  static const _minButtonWidth = 112.0;
+
+  @override
+  Widget build(BuildContext context) {
+    const gap = DonySpacing.sm;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final count = children.length;
+        final perButton = (constraints.maxWidth - gap * (count - 1)) / count;
+        // Texte agrandi : la largeur utile d'un libellé grandit avec lui.
+        final needed = MediaQuery.textScalerOf(context).scale(_minButtonWidth);
+        if (perButton >= needed) {
+          return Row(
+            children: [
+              for (var i = 0; i < count; i++) ...[
+                if (i > 0) const SizedBox(width: gap),
+                Expanded(child: children[i]),
+              ],
+            ],
+          );
+        }
+        final half = (constraints.maxWidth - gap) / 2;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (var i = 0; i < count; i++)
+              SizedBox(
+                // Nombre impair : le dernier bouton prend toute la largeur.
+                width: count.isOdd && i == count - 1
+                    ? constraints.maxWidth
+                    : half,
+                child: children[i],
+              ),
+          ],
+        );
+      },
     );
   }
 }
