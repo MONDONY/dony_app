@@ -151,6 +151,20 @@ paiement, remise QR, timeline de suivi, liste des litiges). Un tutoriel peut
 lister plusieurs contextes dans son tableau `contexts` s'il est pertinent
 pour plusieurs écrans ; l'exemple ci-dessus reste 1:1 par simplicité.
 
+Contextes ajoutés depuis : `corridorAlerts`, `tripTemplates`, `recipients`,
+`receivedRequests`, `walletTopup` (choix du moyen de recharge du
+portefeuille) et `payoutSetup` (comptes de versement : « Versement mobile
+money », « Recevoir mes paiements » et l'introduction Stripe Connect,
+FLUTTER-AB).
+
+**Compatibilité des anciens builds.** Jusqu'au build qui introduit
+`payoutSetup`, l'app rejetait **tout le tutoriel** dès qu'un nom de
+`contexts` lui était inconnu. Ajouter un nouveau contexte à une entrée
+existante (ex. `["walletTopup", "payoutSetup"]`) la fait donc disparaître
+des anciens builds. Tant qu'ils circulent, publier le nouveau contexte dans
+une entrée séparée (autre `id`, même vidéo possible). Les builds récents
+ignorent les contextes inconnus et gardent ceux qu'ils connaissent.
+
 ## 2. Validation locale avant publication
 
 `HelpCenterConfig.fromJson` (voir
@@ -179,8 +193,8 @@ règles suivantes — à vérifier avant de coller un JSON dans la console :
 - Chaque tutoriel exige : `id`, `title`, `description` (chaînes non
   vides), `youtubeVideoId` (11 caractères `[A-Za-z0-9_-]`), `order`
   (entier, sert au tri croissant final), `active` (booléen), `contexts`
-  (liste non vide de noms d'enum `TutorialContext` valides, sans doublon
-  interne). `durationLabel` est une chaîne optionnelle (`null` accepté).
+  (liste non vide, sans doublon interne ; les noms inconnus de ce build
+  sont ignorés, l'entrée n'est rejetée que s'il n'en reste aucun connu). `durationLabel` est une chaîne optionnelle (`null` accepté).
 - Chaque réseau social exige : `network` (un des 5 noms d'enum
   `SocialNetwork` : `whatsapp`, `facebook`, `instagram`, `tiktok`,
   `youtube`), `url` (https, hôte non vide), `active` (booléen).

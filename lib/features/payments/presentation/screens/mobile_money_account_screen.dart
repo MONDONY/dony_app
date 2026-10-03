@@ -13,6 +13,8 @@ import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/payments/data/models/mobile_money_account.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:dony/features/payments/presentation/widgets/mobile_money_networks_checklist.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/l10n/country_names.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
@@ -390,6 +392,11 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Tutoriel vidéo du compte de versement (FLUTTER-AB).
+                const ContextualTutorialCard(
+                  context: TutorialContext.payoutSetup,
+                  padding: EdgeInsets.only(bottom: DonySpacing.lg),
+                ),
                 DonyCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -672,6 +679,11 @@ class _ActiveView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Tutoriel vidéo du compte de versement (FLUTTER-AB).
+                const ContextualTutorialCard(
+                  context: TutorialContext.payoutSetup,
+                  padding: EdgeInsets.only(bottom: DonySpacing.lg),
+                ),
                 DonyCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

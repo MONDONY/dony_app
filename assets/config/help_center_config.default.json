@@ -161,7 +161,7 @@
       "youtubeVideoId": "iBQQPfrBioQ",
       "order": 14,
       "active": true,
-      "contexts": ["walletTopup"]
+      "contexts": ["walletTopup", "payoutSetup"]
     }
   ]
 }

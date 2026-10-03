@@ -19,6 +19,7 @@ enum TutorialContext {
   recipients,
   receivedRequests,
   walletTopup,
+  payoutSetup,
 }
 
 final class SocialLink extends Equatable {
@@ -282,18 +283,25 @@ List<TutorialContext> _tutorialContextsFromJson(Object? value) {
     throw const FormatException('invalid_context');
   }
 
+  // Un contexte inconnu (ajouté par une version plus récente de l'app) est
+  // ignoré plutôt que de rejeter tout le tutoriel : ce build garde les
+  // contextes qu'il connaît. L'entrée n'est rejetée que s'il n'en reste
+  // aucun.
   final contexts = <TutorialContext>[];
+  final seen = <String>{};
   for (final item in value) {
-    if (item is! String) {
+    if (item is! String || !seen.add(item)) {
       throw const FormatException('invalid_context');
     }
     final context = TutorialContext.values
         .where((candidate) => candidate.name == item)
         .firstOrNull;
-    if (context == null || contexts.contains(context)) {
-      throw const FormatException('invalid_context');
+    if (context != null) {
+      contexts.add(context);
     }
-    contexts.add(context);
+  }
+  if (contexts.isEmpty) {
+    throw const FormatException('invalid_context');
   }
   return contexts;
 }
