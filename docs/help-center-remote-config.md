@@ -151,6 +151,26 @@ paiement, remise QR, timeline de suivi, liste des litiges). Un tutoriel peut
 lister plusieurs contextes dans son tableau `contexts` s'il est pertinent
 pour plusieurs écrans ; l'exemple ci-dessus reste 1:1 par simplicité.
 
+Contextes ajoutés depuis : `corridorAlerts`, `tripTemplates`, `recipients`,
+`receivedRequests` et `walletTopup` (écran « Méthode de recharge » du solde,
+carte bancaire comme mobile money).
+
+**Complément par le catalogue embarqué.** Le catalogue publié remplace le
+catalogue embarqué (`assets/config/help_center_config.default.json`), mais
+un écran qu'il ne couvre pas garde le tutoriel embarqué : un tutoriel
+embarqué est ajouté si son `id` est absent du catalogue publié et si aucun
+de ses `contexts` n'y apparaît, actif ou non. Pour masquer un tutoriel
+embarqué depuis la console, publier une entrée `"active": false` sur son
+contexte.
+
+**Compatibilité des anciens builds.** Jusqu'au build 102 inclus,
+l'app rejetait **tout le tutoriel** dès qu'un nom de
+`contexts` lui était inconnu. Ajouter un nouveau contexte à une entrée
+existante (ex. `["walletTopup", "payment"]`) la fait donc disparaître
+des anciens builds. Tant qu'ils circulent, publier le nouveau contexte dans
+une entrée séparée (autre `id`, même vidéo possible). Les builds récents
+ignorent les contextes inconnus et gardent ceux qu'ils connaissent.
+
 ## 2. Validation locale avant publication
 
 `HelpCenterConfig.fromJson` (voir
@@ -179,8 +199,8 @@ règles suivantes — à vérifier avant de coller un JSON dans la console :
 - Chaque tutoriel exige : `id`, `title`, `description` (chaînes non
   vides), `youtubeVideoId` (11 caractères `[A-Za-z0-9_-]`), `order`
   (entier, sert au tri croissant final), `active` (booléen), `contexts`
-  (liste non vide de noms d'enum `TutorialContext` valides, sans doublon
-  interne). `durationLabel` est une chaîne optionnelle (`null` accepté).
+  (liste non vide, sans doublon interne ; les noms inconnus de ce build
+  sont ignorés, l'entrée n'est rejetée que s'il n'en reste aucun connu). `durationLabel` est une chaîne optionnelle (`null` accepté).
 - Chaque réseau social exige : `network` (un des 5 noms d'enum
   `SocialNetwork` : `whatsapp`, `facebook`, `instagram`, `tiktok`,
   `youtube`), `url` (https, hôte non vide), `active` (booléen).

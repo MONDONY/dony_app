@@ -11,6 +11,7 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -456,5 +457,45 @@ void main() {
       expect(event.bidId, 'bid-1');
       expect(event.role, RecipientConversationRole.traveler);
     });
+
+    // Sentry FLUTTER-AA : quatre boutons sur un téléphone de 360 dp
+    // tronquaient les libellés (« Mes… », « Wha… »).
+    Future<void> pumpAtWidth(WidgetTester tester, double width) async {
+      tester.view.physicalSize = Size(width, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await pumpActions(tester, _bid(recipientAppStatus: 'CONFIRMED'));
+    }
+
+    double top(WidgetTester tester, String label) =>
+        tester.getTopLeft(find.text(label)).dy;
+
+    testWidgets('écran large : les quatre canaux sur une rangée', (
+      tester,
+    ) async {
+      _registerConversationOpenBloc();
+      await pumpAtWidth(tester, 800);
+      final row = top(tester, 'Message');
+      for (final label in ['WhatsApp', 'SMS', 'Appeler']) {
+        expect(top(tester, label), row, reason: label);
+      }
+    });
+
+    testWidgets(
+      'écran étroit : grille de deux colonnes, libellés entiers (FLUTTER-AA)',
+      (tester) async {
+        _registerConversationOpenBloc();
+        await pumpAtWidth(tester, 320);
+        expect(top(tester, 'WhatsApp'), top(tester, 'Message'));
+        expect(top(tester, 'Appeler'), top(tester, 'SMS'));
+        expect(top(tester, 'SMS'), greaterThan(top(tester, 'Message')));
+        for (final label in ['Message', 'WhatsApp', 'SMS', 'Appeler']) {
+          final paragraph = tester.renderObject<RenderParagraph>(
+            find.text(label),
+          );
+          expect(paragraph.didExceedMaxLines, isFalse, reason: label);
+        }
+      },
+    );
   });
 }

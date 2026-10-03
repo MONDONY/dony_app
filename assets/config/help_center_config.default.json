@@ -156,8 +156,8 @@
     },
     {
       "id": "tuto_recharge_mobile_money",
-      "title": "Recharger avec le mobile money",
-      "description": "Recharger ton portefeuille Yadony avec Orange Money, Wave ou MTN MoMo.",
+      "title": "Recharger mon solde",
+      "description": "Recharger ton portefeuille Yadony par carte bancaire ou mobile money (Orange Money, Wave, MTN MoMo).",
       "youtubeVideoId": "iBQQPfrBioQ",
       "order": 14,
       "active": true,

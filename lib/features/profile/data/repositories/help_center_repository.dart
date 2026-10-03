@@ -27,6 +27,7 @@ final class HelpCenterRepository {
   final Future<String> Function() _fallbackJsonLoader;
   final ExternalUrlLauncher _urlLauncher;
   HelpCenterConfig _lastValid = HelpCenterConfig.empty;
+  HelpCenterConfig? _bundled;
   Future<void> _operationTail = Future.value();
 
   Future<HelpCenterRepositoryResult> load() => _serialize(_load);
@@ -39,12 +40,13 @@ final class HelpCenterRepository {
       // Une source défaillante ne doit pas empêcher l’utilisation du fallback.
     }
     if (activated != null) {
-      return _success(activated);
+      return _success(activated.completedWith(await _bundledConfig()));
     }
 
     try {
       final fallback = _parse(await _fallbackJsonLoader());
       if (fallback != null) {
+        _bundled = fallback;
         return _success(fallback);
       }
     } catch (_) {
@@ -70,7 +72,7 @@ final class HelpCenterRepository {
       }
       final config = _parse(fetched);
       if (config != null) {
-        return _success(config);
+        return _success(config.completedWith(await _bundledConfig()));
       }
       return HelpCenterRepositoryResult(
         config: _lastValid,
@@ -86,6 +88,23 @@ final class HelpCenterRepository {
   }
 
   Future<bool> openExternal(Uri uri) => _urlLauncher.open(uri);
+
+  /// Catalogue embarqué, lu une fois : il complète le catalogue distant pour
+  /// les écrans que celui-ci ne couvre pas (voir
+  /// [HelpCenterConfig.completedWith]).
+  Future<HelpCenterConfig> _bundledConfig() async {
+    final cached = _bundled;
+    if (cached != null) {
+      return cached;
+    }
+    HelpCenterConfig? parsed;
+    try {
+      parsed = _parse(await _fallbackJsonLoader());
+    } catch (_) {
+      // Sans catalogue embarqué lisible, le catalogue distant reste tel quel.
+    }
+    return _bundled = parsed ?? HelpCenterConfig.empty;
+  }
 
   HelpCenterRepositoryResult _success(HelpCenterConfig config) {
     _lastValid = config;

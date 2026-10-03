@@ -115,6 +115,36 @@ void main() {
       expect(config.tutorials.map((item) => item.id), ['search-basics']);
     });
 
+    // Un contexte ajouté par une version plus récente ne doit
+    // plus faire disparaître le tutoriel des builds qui ne le connaissent pas.
+    test('garde les contextes connus et ignore les inconnus', () {
+      final config = HelpCenterConfig.fromJson({
+        'schemaVersion': 1,
+        'tutorials': [
+          {
+            ...validTutorialsJson.last,
+            'contexts': const ['payment', 'futureContext'],
+          },
+        ],
+      });
+
+      expect(config.tutorials.single.contexts, [TutorialContext.payment]);
+    });
+
+    test('refuse toujours un contexte en double', () {
+      final config = HelpCenterConfig.fromJson({
+        'schemaVersion': 1,
+        'tutorials': [
+          {
+            ...validTutorialsJson.last,
+            'contexts': const ['payment', 'payment'],
+          },
+        ],
+      });
+
+      expect(config.tutorials, isEmpty);
+    });
+
     test('ignore un tutoriel dont l’identifiant est dupliqué', () {
       final config = HelpCenterConfig.fromJson({
         'schemaVersion': 1,

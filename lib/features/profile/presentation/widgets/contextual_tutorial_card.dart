@@ -29,10 +29,19 @@ import 'package:hive/hive.dart';
 /// referait jamais réapparaître une carte déjà construite. D'où le
 /// `ValueListenableBuilder` sur `HiveService.listenUserPrefs`.
 class ContextualTutorialCard extends StatefulWidget {
-  const ContextualTutorialCard({required this.context, super.key});
+  const ContextualTutorialCard({
+    required this.context,
+    this.padding = EdgeInsets.zero,
+    super.key,
+  });
 
   /// Le point du parcours où cette carte est affichée.
   final TutorialContext context;
+
+  /// Marge autour de la carte, absente quand aucune carte n'est rendue : un
+  /// espacement posé à côté laisserait un trou sans tutoriel actif ou une
+  /// fois la carte fermée.
+  final EdgeInsetsGeometry padding;
 
   @override
   State<ContextualTutorialCard> createState() => _ContextualTutorialCardState();
@@ -83,7 +92,10 @@ class _ContextualTutorialCardState extends State<ContextualTutorialCard> {
       if (_dismissedThisSession) {
         return const SizedBox.shrink();
       }
-      return _buildCard(context, tutorial);
+      return Padding(
+        padding: widget.padding,
+        child: _buildCard(context, tutorial),
+      );
     }
 
     final dismissKey = _dismissKey(tutorial.id);
@@ -94,7 +106,10 @@ class _ContextualTutorialCardState extends State<ContextualTutorialCard> {
         if (dismissed) {
           return const SizedBox.shrink();
         }
-        return _buildCard(context, tutorial);
+        return Padding(
+          padding: widget.padding,
+          child: _buildCard(context, tutorial),
+        );
       },
     );
   }

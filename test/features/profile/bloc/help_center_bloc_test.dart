@@ -27,7 +27,7 @@ const _cachedJson = '''
       "youtubeVideoId": "dQw4w9WgXcQ",
       "order": 1,
       "active": true,
-      "contexts": ["search"]
+      "contexts": ["tripPublish"]
     }
   ]
 }

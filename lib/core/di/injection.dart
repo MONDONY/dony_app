@@ -41,6 +41,7 @@ import 'package:dony/features/calls/data/call_lock_screen_service.dart';
 import 'package:dony/features/calls/data/call_session_service.dart';
 import 'package:dony/features/calls/data/datasources/calls_datasource.dart';
 import 'package:dony/features/calls/data/repositories/calls_repository.dart';
+import 'package:dony/features/calls/data/ringback_tone.dart';
 import 'package:dony/features/calls/data/stream_call_gateway.dart';
 import 'package:dony/features/calls/data/stream_video_push.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
@@ -1080,6 +1081,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<CallsRepository>(),
       getIt<CallGateway>(),
       getIt<AnalyticsService>(),
+      ringback: AudioPlayersRingbackTone(),
     ),
   );
   // Appels Yadony sur l'écran verrouillé (FLUTTER-92).

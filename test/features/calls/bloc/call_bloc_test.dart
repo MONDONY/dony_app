@@ -8,6 +8,7 @@ import 'package:dony/features/calls/bloc/call_bloc.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
 import 'package:dony/features/calls/data/models/started_call.dart';
 import 'package:dony/features/calls/data/repositories/calls_repository.dart';
+import 'package:dony/features/calls/data/ringback_tone.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -16,6 +17,20 @@ import '../../../helpers/fake_call_gateway.dart';
 class _MockCallsRepository extends Mock implements CallsRepository {}
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
+
+/// Trace les ordres donnés à la tonalité de retour d'appel.
+class _FakeRingback implements RingbackTone {
+  final log = <String>[];
+
+  @override
+  Future<void> start() async => log.add('start');
+
+  @override
+  Future<void> stop() async => log.add('stop');
+
+  @override
+  Future<void> dispose() async => log.add('dispose');
+}
 
 void main() {
   late _MockCallsRepository repository;
@@ -395,6 +410,62 @@ void main() {
           properties: {'reason': 'hangup'},
         ),
       ).called(1),
+    );
+  });
+
+  group('tonalité de retour d\'appel (FLUTTER-9V)', () {
+    late _FakeRingback ringback;
+    setUp(() => ringback = _FakeRingback());
+    CallBloc buildWithTone() =>
+        CallBloc(repository, gateway, analytics, ringback: ringback);
+
+    blocTest<CallBloc, CallState>(
+      'joue pendant que ça sonne, se tait au décroché',
+      build: buildWithTone,
+      setUp: backStarts,
+      act: (bloc) async {
+        bloc.add(const CallStartRequested('c1', 'Moussa'));
+        await Future<void>.delayed(Duration.zero);
+        expect(ringback.log.last, 'start');
+        gateway.activeCallController.add(
+          ActiveCallSnapshot(phase: CallPhase.connected, connectedAt: t0),
+        );
+        await Future<void>.delayed(Duration.zero);
+      },
+      verify: (_) => expect(ringback.log, [
+        'stop', // CallStarting
+        'start', // ça sonne
+        'stop', // décroché
+        'dispose', // écran fermé
+      ]),
+    );
+
+    blocTest<CallBloc, CallState>(
+      'se tait quand l\'autre refuse',
+      build: buildWithTone,
+      setUp: backStarts,
+      act: (bloc) async {
+        bloc.add(const CallStartRequested('c1', 'Moussa'));
+        await Future<void>.delayed(Duration.zero);
+        gateway.activeCallController.add(
+          const ActiveCallSnapshot(
+            phase: CallPhase.ended,
+            endReason: 'rejected',
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+      },
+      verify: (_) => expect(ringback.log.sublist(ringback.log.length - 2), [
+        'stop',
+        'dispose',
+      ]),
+    );
+
+    blocTest<CallBloc, CallState>(
+      'appel entrant décroché : jamais de tonalité',
+      build: buildWithTone,
+      act: (bloc) => bloc.add(const CallIncomingAcceptRequested('x9', 'Awa')),
+      verify: (_) => expect(ringback.log, isNot(contains('start'))),
     );
   });
 }
