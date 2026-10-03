@@ -15,7 +15,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../../../helpers/help_center_test_doubles.dart';
 import '../../../helpers/l10n_test_helpers.dart';
 
 class MockConnectOnboardingBloc
@@ -78,7 +77,6 @@ Widget _wrap(
           path: '/',
           builder: (_, _) => MultiBlocProvider(
             providers: [
-              emptyHelpCenterProvider(),
               BlocProvider<ConnectOnboardingBloc>.value(value: bloc),
               BlocProvider<StripeAccountBloc>.value(
                 value: stripeBloc ?? _stripeBloc(),

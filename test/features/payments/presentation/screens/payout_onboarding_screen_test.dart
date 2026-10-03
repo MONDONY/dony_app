@@ -21,7 +21,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
-import '../../../../helpers/help_center_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 // `MockStripeAccountBloc` est déjà déclaré localement ci-dessous : on n'importe
 // que la constante d'état pour éviter la collision de noms.
@@ -94,7 +93,6 @@ Widget _wrap(
           path: '/',
           builder: (_, _) => MultiBlocProvider(
             providers: [
-              emptyHelpCenterProvider(),
               BlocProvider<AuthBloc>.value(value: auth),
               BlocProvider<PaymentBloc>.value(value: bloc),
               BlocProvider<StripeAccountBloc>.value(value: stripe),

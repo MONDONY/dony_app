@@ -5,8 +5,6 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/widgets/connect_pending_bottom_sheet.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/connect_unavailable_view.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/identity_required_view.dart';
@@ -182,12 +180,6 @@ class _IntroView extends StatelessWidget {
                     ),
                   ).animate().fadeIn(delay: 100.ms),
                   const SizedBox(height: DonySpacing.xxl),
-
-                  // Tutoriel vidéo des versements (FLUTTER-AB)
-                  const ContextualTutorialCard(
-                    context: TutorialContext.payoutSetup,
-                    padding: EdgeInsets.only(bottom: DonySpacing.xxl),
-                  ),
 
                   // Benefits
                   _BenefitsList().animate().fadeIn(delay: 140.ms),

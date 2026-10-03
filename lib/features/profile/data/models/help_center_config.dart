@@ -19,7 +19,6 @@ enum TutorialContext {
   recipients,
   receivedRequests,
   walletTopup,
-  payoutSetup,
 }
 
 final class SocialLink extends Equatable {

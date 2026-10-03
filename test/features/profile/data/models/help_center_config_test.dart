@@ -115,7 +115,7 @@ void main() {
       expect(config.tutorials.map((item) => item.id), ['search-basics']);
     });
 
-    // FLUTTER-AB : un contexte ajouté par une version plus récente ne doit
+    // Un contexte ajouté par une version plus récente ne doit
     // plus faire disparaître le tutoriel des builds qui ne le connaissent pas.
     test('garde les contextes connus et ignore les inconnus', () {
       final config = HelpCenterConfig.fromJson({
@@ -143,20 +143,6 @@ void main() {
       });
 
       expect(config.tutorials, isEmpty);
-    });
-
-    test('payoutSetup : tutoriel des comptes de versement', () {
-      final config = HelpCenterConfig.fromJson({
-        'schemaVersion': 1,
-        'tutorials': [
-          {
-            ...validTutorialsJson.last,
-            'contexts': const ['payoutSetup'],
-          },
-        ],
-      });
-
-      expect(config.tutorialFor(TutorialContext.payoutSetup), isNotNull);
     });
 
     test('ignore un tutoriel dont l’identifiant est dupliqué', () {

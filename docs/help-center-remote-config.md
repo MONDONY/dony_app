@@ -152,15 +152,13 @@ lister plusieurs contextes dans son tableau `contexts` s'il est pertinent
 pour plusieurs écrans ; l'exemple ci-dessus reste 1:1 par simplicité.
 
 Contextes ajoutés depuis : `corridorAlerts`, `tripTemplates`, `recipients`,
-`receivedRequests`, `walletTopup` (choix du moyen de recharge du
-portefeuille) et `payoutSetup` (comptes de versement : « Versement mobile
-money », « Recevoir mes paiements » et l'introduction Stripe Connect,
-FLUTTER-AB).
+`receivedRequests` et `walletTopup` (écran « Méthode de recharge » du solde,
+carte bancaire comme mobile money).
 
-**Compatibilité des anciens builds.** Jusqu'au build qui introduit
-`payoutSetup`, l'app rejetait **tout le tutoriel** dès qu'un nom de
+**Compatibilité des anciens builds.** Jusqu'au build 102 inclus,
+l'app rejetait **tout le tutoriel** dès qu'un nom de
 `contexts` lui était inconnu. Ajouter un nouveau contexte à une entrée
-existante (ex. `["walletTopup", "payoutSetup"]`) la fait donc disparaître
+existante (ex. `["walletTopup", "payment"]`) la fait donc disparaître
 des anciens builds. Tant qu'ils circulent, publier le nouveau contexte dans
 une entrée séparée (autre `id`, même vidéo possible). Les builds récents
 ignorent les contextes inconnus et gardent ceux qu'ils connaissent.

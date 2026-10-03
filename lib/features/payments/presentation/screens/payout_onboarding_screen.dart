@@ -11,8 +11,6 @@ import 'package:dony/features/auth/presentation/screens/first_steps_screen.dart'
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/stripe_onboarding_return.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/connect_unavailable_view.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/identity_required_view.dart';
@@ -301,11 +299,6 @@ class _OnboardingView extends StatelessWidget {
                         children: [
                           const _HeroSection(),
                           const SizedBox(height: DonySpacing.lg),
-                          // Tutoriel vidéo des versements (FLUTTER-AB).
-                          const ContextualTutorialCard(
-                            context: TutorialContext.payoutSetup,
-                            padding: EdgeInsets.only(bottom: DonySpacing.lg),
-                          ),
                           const _BenefitsSection(),
                           const SizedBox(height: DonySpacing.lg),
                           if (isPending) ...[

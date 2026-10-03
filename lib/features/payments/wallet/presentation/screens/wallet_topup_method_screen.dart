@@ -268,14 +268,13 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
                     DonySpacing.xxl,
                   ),
                   children: [
-                    // Tutoriel vidéo de la recharge mobile money (FLUTTER-8G),
-                    // seulement quand ce rail est proposé.
-                    if (mobileMoneyAvailable) ...[
-                      const ContextualTutorialCard(
-                        context: TutorialContext.walletTopup,
-                      ),
-                      const SizedBox(height: DonySpacing.lg),
-                    ],
+                    // Tutoriel vidéo de la recharge du solde (FLUTTER-8G), carte
+                    // bancaire comme mobile money : affiché quel que soit le
+                    // rail proposé (FLUTTER-AB).
+                    const ContextualTutorialCard(
+                      context: TutorialContext.walletTopup,
+                      padding: EdgeInsets.only(bottom: DonySpacing.lg),
+                    ),
                     Text(
                       l.walletTopupMethodSectionLabel,
                       style: tt.labelMedium?.copyWith(

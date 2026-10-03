@@ -20,7 +20,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../../../../helpers/help_center_test_doubles.dart';
 import '../../../../helpers/l10n_test_helpers.dart';
 
 class _MockBloc extends Mock implements MobileMoneyAccountBloc {}
@@ -140,11 +139,8 @@ void main() {
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, _) => MultiBlocProvider(
-            providers: [
-              emptyHelpCenterProvider(),
-              BlocProvider<MobileMoneyAccountBloc>.value(value: bloc),
-            ],
+          builder: (_, _) => BlocProvider<MobileMoneyAccountBloc>.value(
+            value: bloc,
             child: const MobileMoneyAccountScreen(),
           ),
         ),

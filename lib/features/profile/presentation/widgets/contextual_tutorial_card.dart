@@ -39,7 +39,8 @@ class ContextualTutorialCard extends StatefulWidget {
   final TutorialContext context;
 
   /// Marge autour de la carte, absente quand aucune carte n'est rendue : un
-  /// espacement posé à côté laisserait un trou sans tutoriel actif.
+  /// espacement posé à côté laisserait un trou sans tutoriel actif ou une
+  /// fois la carte fermée.
   final EdgeInsetsGeometry padding;
 
   @override

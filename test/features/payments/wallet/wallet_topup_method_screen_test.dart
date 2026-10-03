@@ -646,6 +646,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Mobile money'), findsNothing);
+      // Le tutoriel couvre aussi la recharge par carte (FLUTTER-AB).
+      expect(find.byKey(const Key('contextual-tutorial-card')), findsOneWidget);
       expect(find.text('Carte bancaire'), findsOneWidget);
 
       await tester.tap(find.text('Carte bancaire'));
