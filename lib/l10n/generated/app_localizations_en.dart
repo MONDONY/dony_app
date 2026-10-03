@@ -4901,6 +4901,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'You already have a parcel on this trip';
 
   @override
+  String get listingTripClosedMessage =>
+      'This trip has left: it no longer accepts requests.';
+
+  @override
   String get listingSeeMyParcelButton => 'See my parcel';
 
   @override
@@ -7007,13 +7011,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidDetailDeclineRequestSubtitle =>
-      'Would you like to give the sender a reason?';
+      'Choose a reason: the sender will see it.';
 
   @override
   String get bidDetailConfirmDecline => 'Confirm the decline';
 
   @override
-  String get bidDetailReasonHint => 'Reason (optional)';
+  String get bidRejectionReasonNoCapacity => 'Not enough room';
+
+  @override
+  String get bidRejectionReasonContentNotAccepted =>
+      'Parcel contents not accepted';
+
+  @override
+  String get bidRejectionReasonHandoverNotPossible =>
+      'Handover not possible (place or time)';
+
+  @override
+  String get bidRejectionReasonTripChanged => 'Change of trip plans';
+
+  @override
+  String get bidRejectionReasonOther => 'Other reason';
+
+  @override
+  String bidRejectionReasonShown(String reason) {
+    return 'Traveler\'s reason: $reason';
+  }
 
   @override
   String get bidDetailConfirmPresence => 'Confirm my presence';
@@ -7923,13 +7946,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bidListAddCardButton => 'Add a card';
-
-  @override
-  String get bidListDeclineDialogTitle => 'Decline this request?';
-
-  @override
-  String get bidListDeclineDialogMessage =>
-      'The sender will be notified. This action is irreversible.';
 
   @override
   String get bidListDeclineButton => 'Decline';

@@ -92,7 +92,7 @@ void main() {
   });
 
   group('TravelerPendingBar — Refuser (bid carte / PAYMENT_ESCROWED)', () {
-    testWidgets('tap Refuser ouvre la feuille de raison', (tester) async {
+    testWidgets('tap Refuser ouvre la feuille du motif', (tester) async {
       await tester.pumpWidget(
         _wrap(_makeBid(BidPaymentMethod.stripe), bidBloc, accBloc),
       );
@@ -106,7 +106,7 @@ void main() {
     });
 
     testWidgets(
-      'Confirmer le refus dispatch BidRejectRequested et ferme la feuille',
+      'motif choisi puis Confirmer le refus dispatch BidRejectRequested et ferme la feuille',
       (tester) async {
         await tester.pumpWidget(
           _wrap(_makeBid(BidPaymentMethod.stripe), bidBloc, accBloc),
@@ -116,14 +116,24 @@ void main() {
         await tester.tap(find.widgetWithText(OutlinedButton, 'Refuser'));
         await tester.pumpAndSettle();
 
+        await tester.tap(find.text('Contenu du colis non accepté'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Confirmer le refus'));
         await tester.pumpAndSettle();
 
         // La feuille doit être fermée…
         expect(find.text('Refuser la demande'), findsNothing);
-        // …et l'événement de refus dispatché.
+        // …et l'événement de refus dispatché avec le code du motif.
         verify(
-          () => bidBloc.add(any(that: isA<BidRejectRequested>())),
+          () => bidBloc.add(
+            any(
+              that: isA<BidRejectRequested>().having(
+                (e) => e.reason,
+                'reason',
+                'CONTENT_NOT_ACCEPTED',
+              ),
+            ),
+          ),
         ).called(1);
       },
     );

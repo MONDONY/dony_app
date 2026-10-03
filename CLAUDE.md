@@ -355,7 +355,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `surplus_opened` | AnnouncementBloc._onSurplusOpenRequested() |
 | `bid_submitted` | BidBloc._onCreateRequested() |
 | `bid_accepted` | BidAcceptanceBloc._handleResponse() |
-| `bid_rejected` | BidBloc._onRejectRequested() |
+| `bid_rejected` | BidBloc._onRejectRequested() — refus confirmé par le serveur, depuis la feuille du motif (`RejectReasonSheet`, FLUTTER-AF). Propriétés `bid_id`, `reason` : code de la liste fermée (`NO_CAPACITY`/`CONTENT_NOT_ACCEPTED`/`HANDOVER_NOT_POSSIBLE`/`TRIP_CHANGED`/`OTHER`), jamais un texte saisi |
 | `payment_initiated` | PaymentScreen._pay() |
 | `payment_succeeded` | PaymentBloc._onPaymentSheetCompleted() (`/payments/pay`) · `confirmBidPaymentSafely` (paiement carte d'une offre, `context: bid`) · NegotiationBloc._onCheckout() (paiement carte d'une demande négociée, `context: negotiation`, seulement pour un PaymentIntent `pi_…`, jamais pour un accord en espèces) |
 | `connect_onboarding_link_opened` | ConnectOnboardingBloc._onLinkRequested — lien du formulaire Stripe Connect obtenu |

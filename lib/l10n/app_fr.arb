@@ -4259,6 +4259,10 @@
   "@listingAlreadyHasParcelMessage": {
     "description": "Message quand l'expéditeur a déjà un colis actif sur ce trajet (traveler_announcement_bottom_sheet.dart)"
   },
+  "listingTripClosedMessage": "Ce trajet est parti : il n'accepte plus de demande.",
+  "@listingTripClosedMessage": {
+    "description": "Pied de la feuille trajet quand le trajet est parti, arrivé ou annulé : plus de demande possible, FLUTTER-AE (traveler_announcement_bottom_sheet.dart)"
+  },
   "listingSeeMyParcelButton": "Voir mon colis",
   "@listingSeeMyParcelButton": {
     "description": "Bouton vers le colis déjà en cours sur ce trajet (traveler_announcement_bottom_sheet.dart)"
@@ -7021,7 +7025,7 @@
   "@bidDetailDeclineRequestTitle": {
     "description": "Titre du sheet de refus (bid_detail_action_bars.dart)"
   },
-  "bidDetailDeclineRequestSubtitle": "Souhaitez-vous indiquer une raison à l'expéditeur ?",
+  "bidDetailDeclineRequestSubtitle": "Choisissez le motif : l'expéditeur le verra.",
   "@bidDetailDeclineRequestSubtitle": {
     "description": "Sous-titre du sheet de refus (bid_detail_action_bars.dart)"
   },
@@ -7029,9 +7033,34 @@
   "@bidDetailConfirmDecline": {
     "description": "Bouton de confirmation du sheet de refus (bid_detail_action_bars.dart)"
   },
-  "bidDetailReasonHint": "Raison (optionnelle)",
-  "@bidDetailReasonHint": {
-    "description": "Hint du champ de raison de refus (bid_detail_action_bars.dart)"
+  "bidRejectionReasonNoCapacity": "Plus assez de place",
+  "@bidRejectionReasonNoCapacity": {
+    "description": "Motif de refus d'une demande par le voyageur (FLUTTER-AF) : feuille de refus (reject_reason_sheet.dart) et talon du billet (billet_talon.dart)."
+  },
+  "bidRejectionReasonContentNotAccepted": "Contenu du colis non accepté",
+  "@bidRejectionReasonContentNotAccepted": {
+    "description": "Motif de refus d'une demande par le voyageur (FLUTTER-AF) : feuille de refus (reject_reason_sheet.dart) et talon du billet (billet_talon.dart)."
+  },
+  "bidRejectionReasonHandoverNotPossible": "Remise impossible (lieu ou horaire)",
+  "@bidRejectionReasonHandoverNotPossible": {
+    "description": "Motif de refus d'une demande par le voyageur (FLUTTER-AF) : feuille de refus (reject_reason_sheet.dart) et talon du billet (billet_talon.dart)."
+  },
+  "bidRejectionReasonTripChanged": "Changement de voyage",
+  "@bidRejectionReasonTripChanged": {
+    "description": "Motif de refus d'une demande par le voyageur (FLUTTER-AF) : feuille de refus (reject_reason_sheet.dart) et talon du billet (billet_talon.dart)."
+  },
+  "bidRejectionReasonOther": "Autre raison",
+  "@bidRejectionReasonOther": {
+    "description": "Motif de refus d'une demande par le voyageur (FLUTTER-AF) : feuille de refus (reject_reason_sheet.dart) et talon du billet (billet_talon.dart)."
+  },
+  "bidRejectionReasonShown": "Motif du voyageur : {reason}",
+  "@bidRejectionReasonShown": {
+    "description": "Motif de refus d'une demande par le voyageur (FLUTTER-AF) : feuille de refus (reject_reason_sheet.dart) et talon du billet (billet_talon.dart).",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
   },
   "bidDetailConfirmPresence": "Confirmer ma présence",
   "@bidDetailConfirmPresence": {
@@ -8259,14 +8288,6 @@
   "bidListAddCardButton": "Ajouter une carte",
   "@bidListAddCardButton": {
     "description": "Bouton ajout de carte de la sheet solde insuffisant (pending_bids_screen.dart, demandes_screen.dart)."
-  },
-  "bidListDeclineDialogTitle": "Refuser cette demande ?",
-  "@bidListDeclineDialogTitle": {
-    "description": "Titre du dialogue de refus d'une demande (pending_bids_screen.dart, demandes_screen.dart)."
-  },
-  "bidListDeclineDialogMessage": "L'expéditeur sera informé. Cette action est irréversible.",
-  "@bidListDeclineDialogMessage": {
-    "description": "Message du dialogue de refus d'une demande (pending_bids_screen.dart, demandes_screen.dart)."
   },
   "bidListDeclineButton": "Refuser",
   "@bidListDeclineButton": {

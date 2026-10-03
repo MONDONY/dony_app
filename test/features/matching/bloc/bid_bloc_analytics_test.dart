@@ -121,6 +121,24 @@ void main() {
     ).called(1);
   });
 
+  test('bid_rejected carries the closed reason code', () async {
+    when(
+      () => repo.rejectBid('bid1', reason: 'TRIP_CHANGED'),
+    ).thenAnswer((_) async => _buildBid());
+
+    final bloc = makeBloc();
+    bloc.add(BidRejectRequested('bid1', reason: 'TRIP_CHANGED'));
+    await bloc.stream.firstWhere((s) => s is BidRejected);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(
+      () => backend.capture(AnalyticsEvents.bidRejected, {
+        'bid_id': 'bid1',
+        'reason': 'TRIP_CHANGED',
+      }),
+    ).called(1);
+  });
+
   test('bid_cancelled fires with actor on BidCancelRequested', () async {
     when(
       () => repo.cancelBid('bid1', reason: any(named: 'reason')),
