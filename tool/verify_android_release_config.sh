@@ -108,10 +108,11 @@ fi
 
 echo "OK : $WHERE est bien sur le projet $EXPECTED_ID ($EXPECTED_NUMBER)."
 
-# La clé Google Maps du manifest natif ne passe PAS par --dart-define-from-file :
-# build.gradle.kts lit $GOOGLE_MAPS_API_KEY, puis à défaut env.dev.json. Un build
-# lancé depuis un worktree qui n'a que env.staging.json reçoit donc une chaîne
-# vide. Même classe de panne que la divergence Firebase ci-dessus : ça compile,
+# La clé Google Maps du manifest natif est résolue par build.gradle.kts :
+# $GOOGLE_MAPS_API_KEY, puis le fichier passé à --dart-define-from-file, puis
+# env.dev.json. La tâche Gradle qui lance ce script lui exporte la clé retenue :
+# c'est elle qui est contrôlée. Avant la lecture des dart-defines, un build lancé
+# avec env.staging.json recevait la clé de env.dev.json, ou une chaîne vide. Même classe de panne que la divergence Firebase ci-dessus : ça compile,
 # ça s'installe, ça se lance, et aucune carte ne s'affiche. Les builds 1.0.0+78
 # à +83 sont partis ainsi. build-release.yml exporte la variable depuis un
 # secret ; rien ne couvrait les builds lancés à la main.
