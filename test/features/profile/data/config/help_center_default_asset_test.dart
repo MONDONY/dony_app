@@ -37,6 +37,7 @@ void main() {
           'tuto_negociation': '6qEiHiuKf4E',
           'tuto_alertes_corridor': '22_4Rnh9FpQ',
           'tuto_destinataires': 'jV2E3J1H8gM',
+          'tuto_recharge_mobile_money': 'iBQQPfrBioQ',
         });
       },
     );

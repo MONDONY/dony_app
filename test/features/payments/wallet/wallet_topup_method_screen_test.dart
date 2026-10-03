@@ -16,6 +16,9 @@ import 'package:dony/features/payments/wallet/data/repositories/wallet_repositor
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_method_screen.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_method_selection.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_mobile_money_awaiting_screen.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,6 +35,38 @@ class _MockWalletRepository extends Mock implements WalletRepository {}
 
 class _MockWalletRemoteDatasource extends Mock
     implements WalletRemoteDatasource {}
+
+// Tutoriel de la recharge mobile money (FLUTTER-8G) : la carte du haut de
+// l'écran lit HelpCenterBloc.
+const _helpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": [
+    {
+      "id": "tuto_recharge_mobile_money",
+      "title": "Recharger avec le mobile money",
+      "description": "Orange Money, Wave ou MTN MoMo.",
+      "youtubeVideoId": "iBQQPfrBioQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["walletTopup"]
+    }
+  ]
+}
+''';
+
+class _StaticHelpCenterSource implements HelpCenterConfigSource {
+  const _StaticHelpCenterSource(this.json);
+
+  final String json;
+
+  @override
+  String get activatedJson => json;
+
+  @override
+  Future<String?> fetchAndActivate() async => json;
+}
 
 void main() {
   late _MockWalletRepository repo;
@@ -115,6 +150,15 @@ void main() {
   Widget wrapMethodScreen(WalletTopupMobileMoneyCubit mmCubit) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<HelpCenterBloc>(
+          create: (_) => HelpCenterBloc(
+            HelpCenterRepository(
+              const _StaticHelpCenterSource(_helpConfigJson),
+              fallbackJsonLoader: () async => _helpConfigJson,
+            ),
+            makeDisabledAnalytics(MockAnalyticsBackend()),
+          )..add(const HelpCenterLoadRequested()),
+        ),
         BlocProvider<WalletTopupMobileMoneyCubit>.value(value: mmCubit),
         BlocProvider<WalletTopupMobileMoneyAvailabilityCubit>(
           create: (_) =>
@@ -167,6 +211,16 @@ void main() {
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
   }
+
+  testWidgets(
+    'tutoriel vidéo de la recharge mobile money en tête (FLUTTER-8G)',
+    (tester) async {
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('contextual-tutorial-card')), findsOneWidget);
+    },
+  );
 
   testWidgets('tuile mobile money visible et sélectionnable', (tester) async {
     await tester.pumpWidget(buildHarness());
@@ -562,6 +616,8 @@ void main() {
 
       // Cocher un réseau précis fonctionne normalement (pas de régression
       // sur le choix individuel).
+      await tester.ensureVisible(find.byKey(const Key('network-WAVE_CIV')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('network-WAVE_CIV')));
       await tester.pump();
 

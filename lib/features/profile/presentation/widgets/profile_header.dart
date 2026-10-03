@@ -18,6 +18,7 @@ class ProfileHeader extends StatelessWidget {
     this.city,
     this.topPadding,
     this.trailingInset = 0,
+    this.onTap,
   });
 
   final String displayName;
@@ -43,6 +44,10 @@ class ProfileHeader extends StatelessWidget {
   /// L'écran passe la largeur réelle de ses actions.
   final double trailingInset;
 
+  /// Tap sur l'avatar ou le nom (FLUTTER-9X) : ouvre le profil. Le reste du
+  /// fond reste inerte, les actions de l'AppBar se dessinent par-dessus.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -64,70 +69,103 @@ class ProfileHeader extends StatelessWidget {
         children: [
           // ── Row : avatar + infos ─────────────────────────────────────
           // Le crayon « Modifier le profil » a quitté ce header : l'édition
-          // vit dans la feuille de menu du burger, avec le reste du compte.
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DonyAvatar(
-                name: displayName,
-                imageUrl: avatarUrl,
-                size: DonyAvatarSize.xl,
-                verified: isKycVerified,
-                pro: isProAccount,
-              ),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Nom + badge PRO, à l'écart des actions de
-                    // la SliverAppBar (voir [trailingInset]).
-                    Padding(
-                      padding: EdgeInsets.only(right: trailingInset),
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              displayName,
-                              style: tt.headlineMedium?.copyWith(
-                                color: cs.onSurface,
-                                fontWeight: FontWeight.w800,
+          // vit dans la feuille de menu du burger, et derrière un tap sur
+          // l'avatar ou le nom (FLUTTER-9X).
+          _Tappable(
+            onTap: onTap,
+            label: context.l10n.profileHeaderOpenSemantics,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DonyAvatar(
+                  name: displayName,
+                  imageUrl: avatarUrl,
+                  size: DonyAvatarSize.xl,
+                  verified: isKycVerified,
+                  pro: isProAccount,
+                ),
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Nom + badge PRO, à l'écart des actions de
+                      // la SliverAppBar (voir [trailingInset]).
+                      Padding(
+                        padding: EdgeInsets.only(right: trailingInset),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                displayName,
+                                style: tt.headlineMedium?.copyWith(
+                                  color: cs.onSurface,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          // Pas de badge « VÉRIFIÉ » ici : la puce « Identité ✓ »
-                          // en dessous le dit déjà. Seul PRO reste à côté du nom.
-                          if (isKycVerified && isProAccount) ...[
-                            const SizedBox(width: DonySpacing.xs),
-                            const _ProBadge(),
+                            // Pas de badge « VÉRIFIÉ » ici : la puce « Identité ✓ »
+                            // en dessous le dit déjà. Seul PRO reste à côté du nom.
+                            if (isKycVerified && isProAccount) ...[
+                              const SizedBox(width: DonySpacing.xs),
+                              const _ProBadge(),
+                            ],
                           ],
-                        ],
-                      ),
-                    ),
-                    if (city != null && city!.isNotEmpty) ...[
-                      const SizedBox(height: DonySpacing.xxs),
-                      Text(
-                        city!,
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
                         ),
                       ),
+                      if (city != null && city!.isNotEmpty) ...[
+                        const SizedBox(height: DonySpacing.xxs),
+                        Text(
+                          city!,
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: DonySpacing.sm),
+                      // Chips tél / email / KYC
+                      _ContactChips(
+                        phoneNumber: phoneNumber,
+                        email: email,
+                        isKycVerified: isKycVerified,
+                      ),
                     ],
-                    const SizedBox(height: DonySpacing.sm),
-                    // Chips tél / email / KYC
-                    _ContactChips(
-                      phoneNumber: phoneNumber,
-                      email: email,
-                      isKycVerified: isKycVerified,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _Tappable extends StatelessWidget {
+  const _Tappable({
+    required this.onTap,
+    required this.label,
+    required this.child,
+  });
+
+  final VoidCallback? onTap;
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final tap = onTap;
+    if (tap == null) return child;
+    return Semantics(
+      button: true,
+      label: label,
+      child: InkWell(
+        key: const Key('profile-header-open'),
+        onTap: tap,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        child: child,
       ),
     );
   }

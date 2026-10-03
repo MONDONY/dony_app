@@ -12234,6 +12234,10 @@
   "@profileMenuButtonTooltip": {
     "description": "Tooltip et semantics du bouton burger de l'onglet Moi (profile_screen.dart, _appBar)."
   },
+  "profileHeaderOpenSemantics": "Ouvrir mon profil",
+  "@profileHeaderOpenSemantics": {
+    "description": "Lecteur d'écran : en-tête de l'onglet Moi, ouvre la modification du profil (FLUTTER-9X)"
+  },
   "profileFooterVersion": "Yadony v1.0.0 · Made with ❤️ in Paris",
   "@profileFooterVersion": {
     "description": "Pied de page de l'onglet Moi (profile_screen.dart, _sections)."

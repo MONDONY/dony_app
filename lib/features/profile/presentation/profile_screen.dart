@@ -222,6 +222,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   city: user.city,
                   topPadding: topPad,
                   trailingInset: _kHeaderActionsInset,
+                  onTap: () {
+                    _logEvent(AnalyticsEvents.profileHeaderTapped);
+                    unawaited(context.push('/profile/edit'));
+                  },
                 );
 
                 // Mesure la hauteur réelle du header (sonde hors-écran) pour

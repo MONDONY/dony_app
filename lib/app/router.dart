@@ -723,6 +723,16 @@ final appRouter = GoRouter(
         child: const QrScannerScreen(),
       ),
     ),
+    // Mode Valider sur le trajet d'un colis, poussé depuis son détail : le
+    // retour ramène au colis, ce que l'onglet Suivi (go) ne permettait pas
+    // (FLUTTER-9N).
+    GoRoute(
+      path: '/tracking/validate',
+      builder: (context, state) => SuiviScreen(
+        requestedMode: SuiviMode.valider,
+        tripId: state.uri.queryParameters['trip'],
+      ),
+    ),
     GoRoute(
       path: '/tracking/scan/qr-picker',
       builder: (context, state) => const QrPickerScreen(),

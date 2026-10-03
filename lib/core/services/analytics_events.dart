@@ -368,6 +368,7 @@ abstract final class AnalyticsEvents {
   // ── Onglet Moi : feuille de menu du burger ─────────────────────────────────
   static const profileMenuOpened = 'profile_menu_opened';
   static const profileMenuEditOpened = 'profile_menu_edit_opened';
+  static const profileHeaderTapped = 'profile_header_tapped';
   static const profileMenuSettingsOpened = 'profile_menu_settings_opened';
   static const profileMenuExportOpened = 'profile_menu_export_opened';
   static const profileMenuLogoutTapped = 'profile_menu_logout_tapped';

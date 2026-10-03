@@ -6745,6 +6745,7 @@
   "profileLogoutConfirmTitle": "Sign out?",
   "profileLogoutConfirmMessage": "You'll need to sign in again to continue.",
   "profileMenuButtonTooltip": "Menu",
+  "profileHeaderOpenSemantics": "Open my profile",
   "profileFooterVersion": "Yadony v1.0.0 · Made with ❤️ in Paris",
   "editProfileImageOnlyError": "Only images are accepted (no video).",
   "editProfilePhotoTooLarge": "Photo too large (max {maxMb} MB).",

@@ -57,10 +57,19 @@ Widget _defaultCamera(
 /// Un utilisateur non voyageur n'a que « Suivre », sans sélecteur ni caméra
 /// ouverte (le lecteur QR s'ouvre à la demande).
 class SuiviScreen extends StatelessWidget {
-  const SuiviScreen({super.key, this.requestedMode, this.cameraBuilder});
+  const SuiviScreen({
+    super.key,
+    this.requestedMode,
+    this.tripId,
+    this.cameraBuilder,
+  });
 
   /// Mode imposé par l'URL (`/tracking?mode=suivre`).
   final SuiviMode? requestedMode;
+
+  /// Trajet à afficher en mode Valider (`/tracking/validate?trip=…`, ouvert
+  /// depuis le détail d'un colis, FLUTTER-9N).
+  final String? tripId;
 
   final SuiviCameraBuilder? cameraBuilder;
 
@@ -104,7 +113,8 @@ class SuiviScreen extends StatelessWidget {
               ),
               if (canValidate) ...[
                 BlocProvider<ScanHubCubit>(
-                  create: (_) => getIt<ScanHubCubit>()..load(),
+                  create: (_) =>
+                      getIt<ScanHubCubit>()..load(preferredTripId: tripId),
                 ),
                 // Fermé avec l'onglet : les validations en attente partent
                 // alors aussitôt (SuiviValidationCubit.close).

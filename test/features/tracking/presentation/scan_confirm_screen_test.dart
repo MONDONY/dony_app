@@ -58,10 +58,13 @@ Widget _wrap(
   String? gpsLabel,
   ScanMethod? scanMethod,
 }) {
+  // Vraie route de l'écran : la fin du scan referme les étapes du flux
+  // (`leaveScanFlow`), puis retombe sur l'onglet Suivi s'il n'y a rien dessous.
   final router = GoRouter(
+    initialLocation: '/tracking/scan/confirm',
     routes: [
       GoRoute(
-        path: '/',
+        path: '/tracking/scan/confirm',
         builder: (_, _) => MultiBlocProvider(
           providers: [
             BlocProvider<TrackingBloc>.value(value: bloc),

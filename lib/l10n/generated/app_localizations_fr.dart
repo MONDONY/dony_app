@@ -11076,6 +11076,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileMenuButtonTooltip => 'Menu';
 
   @override
+  String get profileHeaderOpenSemantics => 'Ouvrir mon profil';
+
+  @override
   String get profileFooterVersion => 'Yadony v1.0.0 · Made with ❤️ in Paris';
 
   @override
