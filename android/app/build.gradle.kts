@@ -20,9 +20,29 @@ if (hasReleaseKeystore) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
-// Read GOOGLE_MAPS_API_KEY: env var first (CI/release), then env.dev.json (local dev fallback)
+// Clé Google Maps du manifest natif. Elle ne passe pas par le code Dart : Gradle
+// la lit, dans cet ordre :
+//   1. la variable d'environnement GOOGLE_MAPS_API_KEY (CI, build-release.yml) ;
+//   2. le fichier passé à --dart-define-from-file (env.staging.json,
+//      env.prod.json…), que Flutter transmet à Gradle dans la propriété
+//      `dart-defines` (entrées KEY=VALUE encodées en base64) ;
+//   3. env.dev.json, repli historique du développement local.
+// Sans l'étape 2, un build lancé à la main avec env.staging.json prenait la
+// clé de env.dev.json, ou rien : l'app se lançait et la carte restait vide
+// (builds 1.0.0+78 à +83, puis Sentry FLUTTER-A7 sur le build 100).
+val dartDefines: Map<String, String> =
+    (findProperty("dart-defines") as? String).orEmpty()
+        .split(",")
+        .filter { it.isNotBlank() }
+        .mapNotNull { encoded ->
+            runCatching { String(java.util.Base64.getDecoder().decode(encoded), Charsets.UTF_8) }.getOrNull()
+        }
+        .filter { it.contains("=") }
+        .associate { it.substringBefore("=") to it.substringAfter("=") }
+
 val googleMapsApiKey: String = run {
     System.getenv("GOOGLE_MAPS_API_KEY")?.takeIf { it.isNotBlank() }?.let { return@run it }
+    dartDefines["GOOGLE_MAPS_API_KEY"]?.takeIf { it.isNotBlank() }?.let { return@run it }
     val envFile = rootProject.file("../env.dev.json")
     if (envFile.exists()) {
         @Suppress("UNCHECKED_CAST")
@@ -109,6 +129,9 @@ val verifyAndroidReleaseConfig = tasks.register<Exec>("verifyAndroidReleaseConfi
     val repoRoot = rootProject.projectDir.parentFile
     workingDir = repoRoot
     commandLine("$repoRoot/tool/verify_android_release_config.sh")
+    // La clé réellement injectée dans le manifest, pas une relecture des
+    // fichiers par le script : c'est elle qui décide si la carte s'affiche.
+    environment("GOOGLE_MAPS_API_KEY", googleMapsApiKey)
 }
 
 tasks.matching { it.name.startsWith("bundle") && it.name.endsWith("Release") }
