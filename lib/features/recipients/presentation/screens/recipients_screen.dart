@@ -417,7 +417,20 @@ class _KebabMenu extends StatelessWidget {
               variant: DonyDialogVariant.destructive,
             );
             if ((confirmed ?? false) && context.mounted) {
-              context.read<RecipientBloc>().add(RecipientDeleted(recipient.id));
+              final bloc = context.read<RecipientBloc>();
+              final sent = context.read<SentInvitationsCubit>();
+              bloc.add(RecipientDeleted(recipient.id));
+              // Supprimer un destinataire Yadony révoque son invitation côté
+              // serveur (FLUTTER-8Z) : elle doit quitter « Invitations
+              // envoyées » sans attendre le prochain chargement.
+              if (recipient.linkedOnYadony) {
+                await bloc.stream.firstWhere(
+                  (s) =>
+                      s.status == RecipientStatus.error ||
+                      s.recipients.every((r) => r.id != recipient.id),
+                );
+                if (!sent.isClosed) await sent.load();
+              }
             }
         }
       },
