@@ -215,6 +215,49 @@ void main() {
       verify: (_) => expect(gateway.log, ['speaker:true', 'hangUp']),
     );
 
+    // FLUTTER-A5/A6 : Stream refuse le haut-parleur tant que l'autre n'a
+    // pas décroché ; le choix attend le décroché au lieu de planter.
+    blocTest<CallBloc, CallState>(
+      'haut-parleur pendant la sonnerie : retenu puis appliqué au décroché',
+      build: build,
+      seed: () =>
+          const CallInProgress(phase: CallPhase.ringing, remoteName: 'Moussa'),
+      act: (bloc) async {
+        bloc.add(const CallSpeakerToggleRequested());
+        await Future<void>.delayed(Duration.zero);
+        expect(gateway.log, isEmpty);
+        gateway.activeCallController.add(
+          ActiveCallSnapshot(phase: CallPhase.connected, connectedAt: t0),
+        );
+        await Future<void>.delayed(Duration.zero);
+      },
+      expect: () => [
+        isA<CallInProgress>()
+            .having((s) => s.speakerOn, 'speakerOn', true)
+            .having((s) => s.phase, 'phase', CallPhase.ringing),
+        isA<CallInProgress>()
+            .having((s) => s.speakerOn, 'speakerOn', true)
+            .having((s) => s.phase, 'phase', CallPhase.connected),
+      ],
+      verify: (_) => expect(gateway.log, ['speaker:true', 'hangUp']),
+    );
+
+    blocTest<CallBloc, CallState>(
+      'haut-parleur refusé par Stream : pas de plantage, bouton remis',
+      build: build,
+      setUp: () => gateway.throwOnSpeaker = StateError('Call not connected'),
+      seed: () => const CallInProgress(
+        phase: CallPhase.connected,
+        remoteName: 'Moussa',
+      ),
+      act: (bloc) => bloc.add(const CallSpeakerToggleRequested()),
+      expect: () => [
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', true),
+        isA<CallInProgress>().having((s) => s.speakerOn, 'speakerOn', false),
+      ],
+      errors: () => isEmpty,
+    );
+
     blocTest<CallBloc, CallState>(
       'raccrocher',
       build: build,

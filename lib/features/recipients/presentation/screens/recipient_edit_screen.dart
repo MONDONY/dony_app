@@ -254,7 +254,10 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
                   .fadeIn(delay: 80.ms, duration: 280.ms)
                   .slideY(begin: 0.03),
               const SizedBox(height: DonySpacing.base),
-              SwitchListTile.adaptive(
+              // Pas `.adaptive` : sa version iOS plantait au dessin pendant
+              // l'animation d'entrée (Sentry FLUTTER-A1/A2). Même interrupteur
+              // que le reste de l'app.
+              SwitchListTile(
                 value: _isDefault,
                 onChanged: (v) => setState(() => _isDefault = v),
                 tileColor: cs.primary.withValues(alpha: 0.06),

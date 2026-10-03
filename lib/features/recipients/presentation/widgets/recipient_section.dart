@@ -192,7 +192,10 @@ class _RecipientSectionState extends State<RecipientSection> {
               ],
               if (_toggleVisible) ...[
                 const SizedBox(height: DonySpacing.sm),
-                SwitchListTile.adaptive(
+                // Pas `.adaptive` : sa version iOS plantait au dessin pendant
+                // l'animation d'entrée (Sentry FLUTTER-A1/A2). Même interrupteur
+                // que le reste de l'app.
+                SwitchListTile(
                   value: _save,
                   onChanged: (v) => setState(() => _save = v),
                   contentPadding: EdgeInsets.zero,

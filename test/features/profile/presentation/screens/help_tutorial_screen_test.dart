@@ -224,6 +224,31 @@ void main() {
     );
   });
 
+  testWidgets(
+    'propose « Ouvrir dans YouTube » sous le lecteur, hors erreur (FLUTTER-A4)',
+    (tester) async {
+      final harness = _TutorialHarness();
+      await tester.pumpWidget(harness.build());
+      await tester.pumpAndSettle();
+
+      final open = find.byKey(const Key('help-tutorial-open-youtube'));
+      expect(open, findsOneWidget);
+      await tester.ensureVisible(open);
+      await tester.tap(open);
+      await tester.pumpAndSettle();
+
+      expect(harness.launcher.launchedUrls, [
+        'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      ]);
+
+      // En erreur, la carte de secours porte déjà le bouton : pas de doublon.
+      harness.sessions.last.emit(HelpTutorialPlayerEvent.error);
+      await tester.pumpAndSettle();
+      expect(open, findsNothing);
+      expect(find.text('Ouvrir dans YouTube'), findsOneWidget);
+    },
+  );
+
   testWidgets('ouvre la chaîne distante depuis S’abonner à la chaîne', (
     tester,
   ) async {
