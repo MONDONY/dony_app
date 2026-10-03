@@ -18377,6 +18377,12 @@ abstract class AppLocalizations {
   /// **'Menu'**
   String get profileMenuButtonTooltip;
 
+  /// Lecteur d'écran : en-tête de l'onglet Moi, ouvre la modification du profil (FLUTTER-9X)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir mon profil'**
+  String get profileHeaderOpenSemantics;
+
   /// Pied de page de l'onglet Moi (profile_screen.dart, _sections).
   ///
   /// In fr, this message translates to:

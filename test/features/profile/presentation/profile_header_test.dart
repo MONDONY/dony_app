@@ -17,6 +17,7 @@ Widget _buildHeader({
   String? city,
   String displayName = 'Ibrahima Diallo',
   double trailingInset = 0,
+  VoidCallback? onTap,
 }) {
   return MaterialApp(
     theme: AppTheme.light(),
@@ -32,6 +33,7 @@ Widget _buildHeader({
         email: email,
         city: city,
         trailingInset: trailingInset,
+        onTap: onTap,
       ),
     ),
   );
@@ -244,6 +246,21 @@ void main() {
       expect(find.text('Phone ✓'), findsOneWidget);
       expect(find.text('Identity ✓'), findsOneWidget);
       expect(find.text('Pro'), findsOneWidget);
+    });
+
+    testWidgets('un tap sur l\'avatar ou le nom ouvre le profil (FLUTTER-9X)', (
+      tester,
+    ) async {
+      var taps = 0;
+      await tester.pumpWidget(_buildHeader(onTap: () => taps++));
+      await tester.tap(find.text('Ibrahima Diallo'));
+      await tester.pump();
+      expect(taps, 1);
+    });
+
+    testWidgets('sans onTap, le header reste inerte', (tester) async {
+      await tester.pumpWidget(_buildHeader());
+      expect(find.byKey(const Key('profile-header-open')), findsNothing);
     });
   });
 }
