@@ -1,4 +1,5 @@
 import 'package:dony/core/services/device_id_service.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -45,6 +46,43 @@ void main() {
       expect(id, isNotEmpty);
       verify(() => storage.write(key: 'dony_device_id', value: id)).called(1);
     });
+
+    // FLUTTER-AC : trousseau iOS verrouillé (app réveillée en arrière-plan).
+    test('trousseau verrouillé : exception typée, rien en cache', () async {
+      when(
+        () => storage.read(key: 'dony_device_id'),
+      ).thenThrow(PlatformException(code: 'Unexpected security result code'));
+
+      await expectLater(
+        service.getDeviceId(),
+        throwsA(isA<DeviceIdUnavailableException>()),
+      );
+
+      when(
+        () => storage.read(key: 'dony_device_id'),
+      ).thenAnswer((_) async => 'later-uuid');
+      expect(await service.getDeviceId(), 'later-uuid');
+    });
+
+    test(
+      'écriture refusée : exception typée, aucun identifiant retenu',
+      () async {
+        when(
+          () => storage.read(key: 'dony_device_id'),
+        ).thenAnswer((_) async => null);
+        when(
+          () => storage.write(
+            key: 'dony_device_id',
+            value: any(named: 'value'),
+          ),
+        ).thenThrow(PlatformException(code: '-25308'));
+
+        await expectLater(
+          service.getDeviceId(),
+          throwsA(isA<DeviceIdUnavailableException>()),
+        );
+      },
+    );
 
     test('met en cache le deviceId — un seul read sur deux appels', () async {
       when(

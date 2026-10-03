@@ -251,8 +251,12 @@ class _AuthInterceptor extends Interceptor {
             options.path.contains('/bids/checkout');
         final token = await user.getIdToken(isCritical);
         options.headers['Authorization'] = 'Bearer $token';
-        final deviceId = await _deviceIdService.getDeviceId();
-        options.headers['X-Device-Id'] = deviceId;
+        try {
+          options.headers['X-Device-Id'] = await _deviceIdService.getDeviceId();
+        } on DeviceIdUnavailableException {
+          // Trousseau verrouillé (app réveillée en arrière-plan) : la requête
+          // part sans l'en-tête, seul l'écran Appareils connectés l'exige.
+        }
       }
     } on FirebaseException catch (e) {
       if (e.code == 'no-app') {
