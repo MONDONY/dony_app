@@ -226,6 +226,8 @@ const _sameInBothLanguages = <String>{
   'deliveryAddressInstructionsSectionTitle', // « Instructions » se dit pareil (tâche I3)
   'priceGridItemMenuTooltip', // « Options » se dit pareil (tâche I3)
   'dsUrgent', // « 🔥 Urgent » se dit pareil (tâche J1)
+  'feedbackKindBug', // « Bug » se dit pareil
+  'feedbackKindSuggestion', // « Suggestion » se dit pareil
 };
 
 void main() {
