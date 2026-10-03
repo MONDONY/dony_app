@@ -184,6 +184,16 @@ abstract final class AnalyticsEvents {
   static const callEnded = 'call_ended';
   static const callFailed = 'call_failed';
   static const callIncomingAccepted = 'call_incoming_accepted';
+
+  /// Feuille « Ne manquez aucun appel » montrée (une fois) à l'ouverture d'une
+  /// conversation avec appel Yadony. Propriété `kind` :
+  /// `full_screen_intent` / `manufacturer`.
+  static const callLockScreenPromptShown = 'call_lock_screen_prompt_shown';
+
+  /// Réglage système ouvert pour afficher les appels écran verrouillé.
+  /// Propriétés `kind` et `source` (`prompt` / `settings`).
+  static const callLockScreenSettingsOpened =
+      'call_lock_screen_settings_opened';
   static const messageBlocked = 'message_blocked';
 
   // Wallet

@@ -11,7 +11,9 @@ import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/calls/bloc/call_lock_screen_cubit.dart';
 import 'package:dony/features/calls/presentation/call_screen.dart';
+import 'package:dony/features/calls/presentation/widgets/call_lock_screen_prompt.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
@@ -89,6 +91,13 @@ class _ChatScreenState extends State<ChatScreen> {
           properties: {'context': 'conversation'},
         ),
       );
+      // Appel Yadony possible ici : prévenir, une fois, si le téléphone
+      // masquerait un appel entrant écran verrouillé (FLUTTER-92).
+      if (widget.conversation.callAvailable &&
+          !widget.conversation.readOnly &&
+          getIt.isRegistered<CallLockScreenCubit>()) {
+        unawaited(CallLockScreenPrompt.maybeShow(context));
+      }
     });
     // Abonnement côté widget (et non dans ChatBloc) : ce qu'il déclenche est une
     // navigation, qui n'appartient pas au BLoC.

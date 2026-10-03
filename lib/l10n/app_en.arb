@@ -8852,5 +8852,13 @@
   "firstActionCardCta": "See",
   "tripPublishSuccessPayoutsCta": "Set up my payouts",
   "messagesNegotiationsShortcutOpen": "{count, plural, =1{1 ongoing discussion} other{{count} ongoing discussions}}",
-  "messagesNegotiationsShortcutAwaiting": "{count, plural, =1{An offer is waiting for your reply} other{{count} offers are waiting for your reply}}"
+  "messagesNegotiationsShortcutAwaiting": "{count, plural, =1{An offer is waiting for your reply} other{{count} offers are waiting for your reply}}",
+  "callLockScreenTitle": "Don't miss a call",
+  "callLockScreenBodyFullScreen": "To see a Yadony call when your phone is locked, allow Yadony to show calls full screen.",
+  "callLockScreenBodyManufacturer": "On your phone, Yadony calls may stay hidden on the lock screen. In Yadony’s settings, open Permissions › Other permissions and turn on “Show on Lock screen” and “Display pop-up windows while running in the background”.",
+  "callLockScreenOpenSettings": "Open settings",
+  "callLockScreenLater": "Later",
+  "callLockScreenSettingsLabel": "Calls on the lock screen",
+  "callLockScreenSettingsAllowed": "Yadony calls show up even when your phone is locked.",
+  "notificationSettingsSectionCalls": "CALLS"
 }

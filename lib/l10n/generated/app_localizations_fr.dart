@@ -15997,4 +15997,31 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get callLockScreenTitle => 'Ne manquez aucun appel';
+
+  @override
+  String get callLockScreenBodyFullScreen =>
+      'Pour voir un appel Yadony quand votre téléphone est verrouillé, autorisez Yadony à afficher les appels en plein écran.';
+
+  @override
+  String get callLockScreenBodyManufacturer =>
+      'Sur votre téléphone, les appels Yadony peuvent rester invisibles écran verrouillé. Dans les réglages de Yadony, ouvrez Autorisations › Autres autorisations et activez « Afficher sur l\'écran de verrouillage » et « Afficher des fenêtres pop-up en arrière-plan ».';
+
+  @override
+  String get callLockScreenOpenSettings => 'Ouvrir les réglages';
+
+  @override
+  String get callLockScreenLater => 'Plus tard';
+
+  @override
+  String get callLockScreenSettingsLabel => 'Appels sur l\'écran verrouillé';
+
+  @override
+  String get callLockScreenSettingsAllowed =>
+      'Les appels Yadony s’affichent même téléphone verrouillé.';
+
+  @override
+  String get notificationSettingsSectionCalls => 'APPELS';
 }

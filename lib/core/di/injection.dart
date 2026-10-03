@@ -35,7 +35,9 @@ import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/billing/bloc/subscription_bloc.dart';
 import 'package:dony/features/billing/data/billing_repository.dart';
 import 'package:dony/features/calls/bloc/call_bloc.dart';
+import 'package:dony/features/calls/bloc/call_lock_screen_cubit.dart';
 import 'package:dony/features/calls/data/call_gateway.dart';
+import 'package:dony/features/calls/data/call_lock_screen_service.dart';
 import 'package:dony/features/calls/data/call_session_service.dart';
 import 'package:dony/features/calls/data/datasources/calls_datasource.dart';
 import 'package:dony/features/calls/data/repositories/calls_repository.dart';
@@ -1078,6 +1080,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CallBloc(
       getIt<CallsRepository>(),
       getIt<CallGateway>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  // Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  getIt.registerLazySingleton<CallLockScreenService>(CallLockScreenService.new);
+  getIt.registerFactory<CallLockScreenCubit>(
+    () => CallLockScreenCubit(
+      getIt<CallLockScreenService>(),
+      getIt<HiveService>(),
       getIt<AnalyticsService>(),
     ),
   );

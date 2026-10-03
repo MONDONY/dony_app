@@ -18459,5 +18459,37 @@
         "type": "int"
       }
     }
+  },
+  "callLockScreenTitle": "Ne manquez aucun appel",
+  "@callLockScreenTitle": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "callLockScreenBodyFullScreen": "Pour voir un appel Yadony quand votre téléphone est verrouillé, autorisez Yadony à afficher les appels en plein écran.",
+  "@callLockScreenBodyFullScreen": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "callLockScreenBodyManufacturer": "Sur votre téléphone, les appels Yadony peuvent rester invisibles écran verrouillé. Dans les réglages de Yadony, ouvrez Autorisations › Autres autorisations et activez « Afficher sur l'écran de verrouillage » et « Afficher des fenêtres pop-up en arrière-plan ».",
+  "@callLockScreenBodyManufacturer": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "callLockScreenOpenSettings": "Ouvrir les réglages",
+  "@callLockScreenOpenSettings": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "callLockScreenLater": "Plus tard",
+  "@callLockScreenLater": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "callLockScreenSettingsLabel": "Appels sur l'écran verrouillé",
+  "@callLockScreenSettingsLabel": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "callLockScreenSettingsAllowed": "Les appels Yadony s’affichent même téléphone verrouillé.",
+  "@callLockScreenSettingsAllowed": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "notificationSettingsSectionCalls": "APPELS",
+  "@notificationSettingsSectionCalls": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
   }
 }

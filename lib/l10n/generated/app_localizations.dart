@@ -26252,6 +26252,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{count, plural, =1{Une offre attend votre réponse} other{{count} offres attendent votre réponse}}'**
   String messagesNegotiationsShortcutAwaiting(int count);
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne manquez aucun appel'**
+  String get callLockScreenTitle;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour voir un appel Yadony quand votre téléphone est verrouillé, autorisez Yadony à afficher les appels en plein écran.'**
+  String get callLockScreenBodyFullScreen;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sur votre téléphone, les appels Yadony peuvent rester invisibles écran verrouillé. Dans les réglages de Yadony, ouvrez Autorisations › Autres autorisations et activez « Afficher sur l\'écran de verrouillage » et « Afficher des fenêtres pop-up en arrière-plan ».'**
+  String get callLockScreenBodyManufacturer;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir les réglages'**
+  String get callLockScreenOpenSettings;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get callLockScreenLater;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Appels sur l\'écran verrouillé'**
+  String get callLockScreenSettingsLabel;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les appels Yadony s’affichent même téléphone verrouillé.'**
+  String get callLockScreenSettingsAllowed;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'APPELS'**
+  String get notificationSettingsSectionCalls;
 }
 
 class _AppLocalizationsDelegate

@@ -407,6 +407,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `call_ended` | CallBloc._onSnapshot — fin d'appel signalée par Stream (propriété `reason` : `hangup`/`rejected`/`missed`/`failed`) |
 | `call_failed` | CallBloc._onStart — lancement refusé ou impossible (propriété `code` : code d'erreur du back, ex. `call-out-of-window`, ou `unknown`) |
 | `call_incoming_accepted` | CallBloc._onIncomingAccept — appel entrant décroché (propriété `native` : vrai si décroché depuis CallKit ou la notification Android) |
+| `call_lock_screen_prompt_shown` | CallLockScreenCubit.markPromptShown — feuille « Ne manquez aucun appel » montrée une seule fois par installation, à l'ouverture d'une conversation avec appel Yadony, quand un réglage Android masquerait un appel entrant écran verrouillé (FLUTTER-92). Propriété `kind` : `full_screen_intent` (Android 14+, plein écran refusé) / `manufacturer` (Xiaomi, Redmi, POCO : « Afficher sur l'écran de verrouillage » illisible, simple rappel) |
+| `call_lock_screen_settings_opened` | CallLockScreenCubit.openSettings — réglage système ouvert depuis la feuille ou la ligne « Appels sur l'écran verrouillé » de Réglages › Notifications (Android seulement). Propriétés `kind`, `source` : `prompt` / `settings` |
 | `message_blocked` | ChatScreen._sendText() — message refusé par ChatMessageValidator (propriété `reason`) |
 | `wallet_topup_started` | WalletTopupAmountScreen.initState |
 | `wallet_topup_completed` | WalletBloc (après topup réussi) |

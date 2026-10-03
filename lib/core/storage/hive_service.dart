@@ -15,6 +15,11 @@ class HiveService {
   // evergreen de l'écran Recherche une fois l'action faite.
   static const String kHasActiveCorridorAlert = 'has_active_corridor_alert';
 
+  // Feuille « Ne manquez aucun appel » (appels Yadony sur l'écran verrouillé,
+  // FLUTTER-92), montrée une seule fois par installation.
+  static const String kCallLockScreenPromptShown =
+      'call_lock_screen_prompt_shown';
+
   // Carte d'introduction du hub Activités, fermée manuellement (X).
   static const String kHubIntroDismissed = 'hub_intro_dismissed';
 

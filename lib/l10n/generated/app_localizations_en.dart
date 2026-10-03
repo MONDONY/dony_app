@@ -15902,4 +15902,31 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get callLockScreenTitle => 'Don\'t miss a call';
+
+  @override
+  String get callLockScreenBodyFullScreen =>
+      'To see a Yadony call when your phone is locked, allow Yadony to show calls full screen.';
+
+  @override
+  String get callLockScreenBodyManufacturer =>
+      'On your phone, Yadony calls may stay hidden on the lock screen. In Yadony’s settings, open Permissions › Other permissions and turn on “Show on Lock screen” and “Display pop-up windows while running in the background”.';
+
+  @override
+  String get callLockScreenOpenSettings => 'Open settings';
+
+  @override
+  String get callLockScreenLater => 'Later';
+
+  @override
+  String get callLockScreenSettingsLabel => 'Calls on the lock screen';
+
+  @override
+  String get callLockScreenSettingsAllowed =>
+      'Yadony calls show up even when your phone is locked.';
+
+  @override
+  String get notificationSettingsSectionCalls => 'CALLS';
 }
