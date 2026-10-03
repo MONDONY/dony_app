@@ -62,7 +62,10 @@ void main() {
 
   group('PriceGridBloc', () {
     test('initial state is PriceGridInitial', () {
-      expect(PriceGridBloc(repository, analytics).state, isA<PriceGridInitial>());
+      expect(
+        PriceGridBloc(repository, analytics).state,
+        isA<PriceGridInitial>(),
+      );
     });
 
     blocTest<PriceGridBloc, PriceGridState>(

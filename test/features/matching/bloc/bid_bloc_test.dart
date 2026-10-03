@@ -739,12 +739,13 @@ void main() {
         ).thenAnswer((_) async => buildBid(status: 'CANCELLED'));
         return buildBloc();
       },
-      act: (bloc) =>
-          bloc.add(BidCancelRequested(
-            'bid-001',
-            reason: 'Colis trop lourd',
-            actor: 'traveler',
-          )),
+      act: (bloc) => bloc.add(
+        BidCancelRequested(
+          'bid-001',
+          reason: 'Colis trop lourd',
+          actor: 'traveler',
+        ),
+      ),
       verify: (_) {
         verify(
           () => mockRepo.cancelBid('bid-001', reason: 'Colis trop lourd'),

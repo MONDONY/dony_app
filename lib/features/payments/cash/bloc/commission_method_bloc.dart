@@ -12,7 +12,8 @@ class CommissionMethodBloc
   final CommissionMethodRepository _repo;
   final AnalyticsService _analytics;
 
-  CommissionMethodBloc(this._repo, this._analytics) : super(CommissionMethodInitial()) {
+  CommissionMethodBloc(this._repo, this._analytics)
+    : super(CommissionMethodInitial()) {
     on<CommissionMethodLoadRequested>(_load);
     on<CommissionMethodSetupRequested>(_setup);
     on<CommissionMethodSetupCompleted>(_saveAndReload);

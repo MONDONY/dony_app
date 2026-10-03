@@ -171,9 +171,8 @@ void main() {
         }),
       ).called(1);
       verify(
-        () => backend.capture(AnalyticsEvents.toolsSetupCompleted, {
-          'total': 5,
-        }),
+        () =>
+            backend.capture(AnalyticsEvents.toolsSetupCompleted, {'total': 5}),
       ).called(1);
     },
   );

@@ -504,10 +504,8 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PriceGridRepository(getIt<PriceGridDatasource>()),
   );
   getIt.registerFactory<PriceGridBloc>(
-    () => PriceGridBloc(
-      getIt<PriceGridRepository>(),
-      getIt<AnalyticsService>(),
-    ),
+    () =>
+        PriceGridBloc(getIt<PriceGridRepository>(), getIt<AnalyticsService>()),
   );
 
   // Matching — formulaire de publication d'un trajet
