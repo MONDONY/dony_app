@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/l10n_test_helpers.dart';
 
@@ -456,6 +457,72 @@ void main() {
       );
 
       expect(sortSupportTickets([a, b]).map((t) => t.id), ['a', 'b']);
+    });
+  });
+
+  group('retirer un ticket résolu (FLUTTER-9W)', () {
+    const resolved = SupportTicket(
+      id: 'ticket-9',
+      category: 'DELIVERY',
+      subject: 'Colis en retard',
+      status: SupportTicketStatuses.resolved,
+    );
+
+    testWidgets(
+      'seul un ticket résolu propose « Retirer », après confirmation',
+      (tester) async {
+        stubState(
+          const SupportState(
+            homeStatus: SupportViewStatus.ready,
+            tickets: [_ticket, resolved],
+          ),
+        );
+        await tester.pumpWidget(_harness(bloc));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('support-ticket-hide-ticket-1')),
+          findsNothing,
+        );
+        await tester.tap(
+          find.byKey(const ValueKey('support-ticket-hide-ticket-9')),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Retirer ce ticket ?'), findsOneWidget);
+
+        await tester.tap(find.text('Retirer'));
+        await tester.pumpAndSettle();
+        verify(
+          () => bloc.add(const SupportTicketHideRequested('ticket-9')),
+        ).called(1);
+      },
+    );
+
+    testWidgets('échec du retrait : message d\'erreur', (tester) async {
+      whenListen(
+        bloc,
+        Stream.fromIterable([
+          const SupportState(
+            homeStatus: SupportViewStatus.ready,
+            tickets: [resolved],
+            hideStatus: SupportActionStatus.failure,
+            failure: SupportFailure.hideFailed,
+          ),
+        ]),
+        initialState: const SupportState(
+          homeStatus: SupportViewStatus.ready,
+          tickets: [resolved],
+        ),
+      );
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Impossible de retirer ce ticket pour le moment. Réessayez plus tard.',
+        ),
+        findsOneWidget,
+      );
     });
   });
 }

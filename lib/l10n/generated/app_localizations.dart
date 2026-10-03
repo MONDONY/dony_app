@@ -21341,6 +21341,36 @@ abstract class AppLocalizations {
   /// **'Une erreur est survenue. Réessayez.'**
   String get supportGenericError;
 
+  /// No description provided for @supportTicketHideTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer de la liste'**
+  String get supportTicketHideTooltip;
+
+  /// No description provided for @supportTicketHideConfirmTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer ce ticket ?'**
+  String get supportTicketHideConfirmTitle;
+
+  /// No description provided for @supportTicketHideConfirmMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il disparaîtra de votre liste. L’équipe Yadony garde l’historique de l’échange.'**
+  String get supportTicketHideConfirmMessage;
+
+  /// No description provided for @supportTicketHideConfirmAction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer'**
+  String get supportTicketHideConfirmAction;
+
+  /// No description provided for @supportTicketHideError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de retirer ce ticket pour le moment. Réessayez plus tard.'**
+  String get supportTicketHideError;
+
   /// Titre de l'app bar de l'accueil support (support_home_screen.dart). Identique en anglais : _sameInBothLanguages.
   ///
   /// In fr, this message translates to:

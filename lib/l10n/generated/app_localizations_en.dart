@@ -12738,6 +12738,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportGenericError => 'Something went wrong. Try again.';
 
   @override
+  String get supportTicketHideTooltip => 'Remove from list';
+
+  @override
+  String get supportTicketHideConfirmTitle => 'Remove this ticket?';
+
+  @override
+  String get supportTicketHideConfirmMessage =>
+      'It will disappear from your list. The Yadony team keeps the conversation history.';
+
+  @override
+  String get supportTicketHideConfirmAction => 'Remove';
+
+  @override
+  String get supportTicketHideError =>
+      'This ticket could not be removed right now. Please try again later.';
+
+  @override
   String get supportScreenTitle => 'Support';
 
   @override

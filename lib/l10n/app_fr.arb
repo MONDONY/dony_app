@@ -14369,6 +14369,11 @@
   "@supportGenericError": {
     "description": "Repli générique affiché quand un échec support n'a pas de detail serveur (support_home_screen.dart, supportErrorMessage ; SupportState.failure == generic)."
   },
+  "supportTicketHideTooltip": "Retirer de la liste",
+  "supportTicketHideConfirmTitle": "Retirer ce ticket ?",
+  "supportTicketHideConfirmMessage": "Il disparaîtra de votre liste. L’équipe Yadony garde l’historique de l’échange.",
+  "supportTicketHideConfirmAction": "Retirer",
+  "supportTicketHideError": "Impossible de retirer ce ticket pour le moment. Réessayez plus tard.",
   "supportScreenTitle": "Support",
   "@supportScreenTitle": {
     "description": "Titre de l'app bar de l'accueil support (support_home_screen.dart). Identique en anglais : _sameInBothLanguages."

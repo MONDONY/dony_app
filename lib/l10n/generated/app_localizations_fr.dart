@@ -12819,6 +12819,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get supportGenericError => 'Une erreur est survenue. Réessayez.';
 
   @override
+  String get supportTicketHideTooltip => 'Retirer de la liste';
+
+  @override
+  String get supportTicketHideConfirmTitle => 'Retirer ce ticket ?';
+
+  @override
+  String get supportTicketHideConfirmMessage =>
+      'Il disparaîtra de votre liste. L’équipe Yadony garde l’historique de l’échange.';
+
+  @override
+  String get supportTicketHideConfirmAction => 'Retirer';
+
+  @override
+  String get supportTicketHideError =>
+      'Impossible de retirer ce ticket pour le moment. Réessayez plus tard.';
+
+  @override
   String get supportScreenTitle => 'Support';
 
   @override

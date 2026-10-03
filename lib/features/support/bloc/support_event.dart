@@ -76,6 +76,16 @@ final class SupportAttachmentRemoved extends SupportEvent {
 
 /// Un message support est arrivé en direct (push au premier plan) pour le
 /// ticket affiché : le fil est rechargé sans repasser par le spinner.
+/// Retire un ticket résolu de la liste de l'utilisateur (FLUTTER-9W).
+final class SupportTicketHideRequested extends SupportEvent {
+  const SupportTicketHideRequested(this.ticketId);
+
+  final String ticketId;
+
+  @override
+  List<Object?> get props => [ticketId];
+}
+
 final class SupportTicketLiveRefreshRequested extends SupportEvent {
   const SupportTicketLiveRefreshRequested(this.ticketId);
 

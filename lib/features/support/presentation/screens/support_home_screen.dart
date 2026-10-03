@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/presentation/widgets/support_conversation_tile.dart'
@@ -59,6 +60,7 @@ String? supportErrorMessage(AppLocalizations l, SupportState state) {
   if (detail != null) return detail; // i18n-ignore
   return switch (state.failure) {
     SupportFailure.ticketResolved => l.supportTicketResolvedError,
+    SupportFailure.hideFailed => l.supportTicketHideError,
     SupportFailure.generic => l.supportGenericError,
     null => null,
   };
@@ -91,6 +93,13 @@ class SupportHomeScreen extends StatelessWidget {
                 type: DonySnackbarType.error,
               );
             }
+          }
+          if (state.hideStatus == SupportActionStatus.failure) {
+            DonySnackbar.show(
+              context,
+              message: context.l10n.supportTicketHideError,
+              type: DonySnackbarType.error,
+            );
           }
           if (state.createStatus == SupportActionStatus.success &&
               state.createdTicketId != null) {
@@ -375,6 +384,20 @@ class _TicketCard extends StatelessWidget {
                 label: SupportLabels.status(context.l10n, ticket.status),
                 type: SupportLabels.statusBadge(ticket.status),
               ),
+              // Un ticket résolu se retire de la liste (FLUTTER-9W). Un
+              // échange en cours, non : le support attend une réponse.
+              if (ticket.isResolved)
+                IconButton(
+                  key: ValueKey('support-ticket-hide-${ticket.id}'),
+                  tooltip: context.l10n.supportTicketHideTooltip,
+                  style: IconButton.styleFrom(minimumSize: const Size(44, 44)),
+                  onPressed: () => _confirmHide(context, ticket),
+                  icon: DonyIcon(
+                    'trash-2',
+                    size: 18,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
             ],
           ),
           if (_hasPreview) ...[
@@ -584,4 +607,18 @@ class _CreateTicketFormState extends State<_CreateTicketForm> {
       ],
     );
   }
+}
+
+Future<void> _confirmHide(BuildContext context, SupportTicket ticket) async {
+  final l = context.l10n;
+  final bloc = context.read<SupportBloc>();
+  final confirmed = await DonyDialog.show(
+    context,
+    title: l.supportTicketHideConfirmTitle,
+    message: l.supportTicketHideConfirmMessage,
+    confirmLabel: l.supportTicketHideConfirmAction,
+    variant: DonyDialogVariant.destructive,
+    iconAsset: 'trash-2',
+  );
+  if (confirmed ?? false) bloc.add(SupportTicketHideRequested(ticket.id));
 }
