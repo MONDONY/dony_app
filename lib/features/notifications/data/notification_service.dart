@@ -21,6 +21,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sentry_flutter/sentry_flutter.dart' show Breadcrumb, Sentry;
 
@@ -607,6 +608,11 @@ class NotificationService {
         );
       }, onAttempt: (attempt) => attempts = attempt);
       if (kDebugMode) debugPrint('[FCM] Token uploaded to backend');
+    } on DeviceIdUnavailableException {
+      // Téléphone verrouillé, app réveillée en arrière-plan (FLUTTER-AC) :
+      // l'identifiant d'appareil est illisible. On réessaie au retour au
+      // premier plan au lieu de remonter une erreur.
+      _uploadWhenResumed();
     } catch (e, stackTrace) {
       if (kDebugMode) debugPrint('[FCM] Token upload failed: $e');
       if (!_shouldReportFailure(e)) return;
@@ -623,6 +629,24 @@ class NotificationService {
           },
         ),
       );
+    }
+  }
+
+  AppLifecycleListener? _resumeRetry;
+
+  void _uploadWhenResumed() {
+    if (_resumeRetry != null) return;
+    try {
+      _resumeRetry = AppLifecycleListener(
+        onResume: () {
+          _resumeRetry?.dispose();
+          _resumeRetry = null;
+          unawaited(uploadCurrentToken());
+        },
+      );
+    } catch (_) {
+      // Sans binding Flutter (isolate d'arrière-plan) : le prochain
+      // démarrage enverra le jeton.
     }
   }
 

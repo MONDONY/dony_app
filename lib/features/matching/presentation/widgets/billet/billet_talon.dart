@@ -2,11 +2,13 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_rejection_reason.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/open_trip_validation.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/return_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_tracking_strip.dart';
+import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -198,19 +200,51 @@ class _RejectedBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isSender &&
+    final showRematch =
+        isSender &&
         bid.tripCancellationId != null &&
-        bid.tripCancellationRematchStatus == 'SUGGESTED') {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const _TerminalBlock(),
+        bid.tripCancellationRematchStatus == 'SUGGESTED';
+    // Motif choisi par le voyageur (FLUTTER-AF), absent pour un refus
+    // automatique ou d'une ancienne version de l'app.
+    final reason = BidRejectionReason.fromCode(bid.rejectionReason);
+    if (!showRematch && reason == null) return const _TerminalBlock();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (reason != null) _RejectionReasonLine(reason: reason),
+        const _TerminalBlock(),
+        if (showRematch) ...[
           const SizedBox(height: DonySpacing.sm),
           _RematchCta(tripCancellationId: bid.tripCancellationId!),
         ],
-      );
-    }
-    return const _TerminalBlock();
+      ],
+    );
+  }
+}
+
+/// « Motif du voyageur : … » au-dessus du message terminal d'un refus.
+class _RejectionReasonLine extends StatelessWidget {
+  final BidRejectionReason reason;
+
+  const _RejectionReasonLine({required this.reason});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.only(top: DonySpacing.sm),
+      child: Text(
+        l.bidRejectionReasonShown(bidRejectionReasonLabel(l, reason)),
+        key: const Key('billet-rejection-reason'),
+        textAlign: TextAlign.center,
+        style: tt.bodyMedium?.copyWith(
+          color: cs.onSurface,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
   }
 }
 

@@ -16,6 +16,7 @@ import 'package:dony/features/matching/presentation/bid_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
+import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -319,17 +320,12 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
   }
 
   Future<void> _showRejectDialog(BuildContext context, String bidId) async {
-    final l = context.l10n;
-    final confirmed = await DonyDialog.show(
-      context,
-      title: l.bidListDeclineDialogTitle,
-      message: l.bidListDeclineDialogMessage,
-      confirmLabel: l.bidListDeclineButton,
-      variant: DonyDialogVariant.destructive,
-      iconAsset: 'circle-x',
-    );
-    if (confirmed == true && context.mounted) {
-      context.read<BidBloc>().add(BidRejectRequested(bidId));
+    final reason = await RejectReasonSheet.show(context);
+    if (reason != null && context.mounted) {
+      // bid_rejected est tracé dans BidBloc au succès.
+      context.read<BidBloc>().add(
+        BidRejectRequested(bidId, reason: reason.code),
+      );
     }
   }
 

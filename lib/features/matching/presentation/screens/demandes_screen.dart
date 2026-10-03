@@ -22,6 +22,7 @@ import 'package:dony/features/matching/presentation/traveler_bids_labels.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
+import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
@@ -249,18 +250,12 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
   }
 
   Future<void> _onReject(String bidId) async {
-    final l = context.l10n;
-    final confirmed = await DonyDialog.show(
-      context,
-      title: l.bidListDeclineDialogTitle,
-      message: l.bidListDeclineDialogMessage,
-      confirmLabel: l.bidListDeclineButton,
-      variant: DonyDialogVariant.destructive,
-      iconAsset: 'circle-x',
-    );
-    if (confirmed == true && mounted) {
+    final reason = await RejectReasonSheet.show(context);
+    if (reason != null && mounted) {
       // bid_rejected est tracé dans BidBloc au succès.
-      context.read<BidBloc>().add(BidRejectRequested(bidId));
+      context.read<BidBloc>().add(
+        BidRejectRequested(bidId, reason: reason.code),
+      );
     }
   }
 

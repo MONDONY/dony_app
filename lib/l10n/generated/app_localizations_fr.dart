@@ -4926,6 +4926,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous avez déjà un colis sur ce trajet';
 
   @override
+  String get listingTripClosedMessage =>
+      'Ce trajet est parti : il n\'accepte plus de demande.';
+
+  @override
   String get listingSeeMyParcelButton => 'Voir mon colis';
 
   @override
@@ -7044,13 +7048,32 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidDetailDeclineRequestSubtitle =>
-      'Souhaitez-vous indiquer une raison à l\'expéditeur ?';
+      'Choisissez le motif : l\'expéditeur le verra.';
 
   @override
   String get bidDetailConfirmDecline => 'Confirmer le refus';
 
   @override
-  String get bidDetailReasonHint => 'Raison (optionnelle)';
+  String get bidRejectionReasonNoCapacity => 'Plus assez de place';
+
+  @override
+  String get bidRejectionReasonContentNotAccepted =>
+      'Contenu du colis non accepté';
+
+  @override
+  String get bidRejectionReasonHandoverNotPossible =>
+      'Remise impossible (lieu ou horaire)';
+
+  @override
+  String get bidRejectionReasonTripChanged => 'Changement de voyage';
+
+  @override
+  String get bidRejectionReasonOther => 'Autre raison';
+
+  @override
+  String bidRejectionReasonShown(String reason) {
+    return 'Motif du voyageur : $reason';
+  }
 
   @override
   String get bidDetailConfirmPresence => 'Confirmer ma présence';
@@ -7967,13 +7990,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bidListAddCardButton => 'Ajouter une carte';
-
-  @override
-  String get bidListDeclineDialogTitle => 'Refuser cette demande ?';
-
-  @override
-  String get bidListDeclineDialogMessage =>
-      'L\'expéditeur sera informé. Cette action est irréversible.';
 
   @override
   String get bidListDeclineButton => 'Refuser';

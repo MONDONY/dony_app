@@ -34,6 +34,7 @@ BidModel _bid({
   DateTime? returnedAt,
   String? tripCancellationId,
   String? tripCancellationRematchStatus,
+  String? rejectionReason,
 }) => BidModel(
   paymentMethod: paymentMethod,
   id: 'bid-1',
@@ -51,6 +52,7 @@ BidModel _bid({
   returnedAt: returnedAt,
   tripCancellationId: tripCancellationId,
   tripCancellationRematchStatus: tripCancellationRematchStatus,
+  rejectionReason: rejectionReason,
 );
 
 Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
@@ -207,6 +209,32 @@ void main() {
   testWidgets('sender + REJECTED → message terminal', (tester) async {
     await _pump(tester, _bid(status: 'REJECTED'), true);
     expect(find.textContaining('Cette demande est terminée'), findsOneWidget);
+  });
+
+  testWidgets('sender + REJECTED avec motif → motif du voyageur affiché', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _bid(status: 'REJECTED', rejectionReason: 'HANDOVER_NOT_POSSIBLE'),
+      true,
+    );
+    expect(
+      find.text('Motif du voyageur : Remise impossible (lieu ou horaire)'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Cette demande est terminée'), findsOneWidget);
+  });
+
+  testWidgets('sender + REJECTED motif hors liste → pas de ligne motif', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _bid(status: 'REJECTED', rejectionReason: 'TRAVELER_NO_RESPONSE'),
+      true,
+    );
+    expect(find.byKey(const Key('billet-rejection-reason')), findsNothing);
   });
 
   testWidgets('sender + CANCELLED → message terminal', (tester) async {
