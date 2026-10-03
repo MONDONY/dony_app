@@ -3950,42 +3950,6 @@ abstract class AppLocalizations {
   /// **'Reviens dans un instant, de nouvelles demandes sont publiées chaque jour'**
   String get homeMapEmptyHint;
 
-  /// No description provided for @homeGuidancePublishTrip.
-  ///
-  /// In fr, this message translates to:
-  /// **'Publier mon trajet'**
-  String get homeGuidancePublishTrip;
-
-  /// No description provided for @homeGuidancePublishParcel.
-  ///
-  /// In fr, this message translates to:
-  /// **'Publier un colis'**
-  String get homeGuidancePublishParcel;
-
-  /// No description provided for @homeGuidanceCreateAlert.
-  ///
-  /// In fr, this message translates to:
-  /// **'Créer une alerte'**
-  String get homeGuidanceCreateAlert;
-
-  /// No description provided for @homeGuidanceVerifyIdentity.
-  ///
-  /// In fr, this message translates to:
-  /// **'Vérifier mon identité'**
-  String get homeGuidanceVerifyIdentity;
-
-  /// No description provided for @homeGuidanceHowItWorks.
-  ///
-  /// In fr, this message translates to:
-  /// **'Comment ça marche ?'**
-  String get homeGuidanceHowItWorks;
-
-  /// No description provided for @homeGuidanceDontShowAgain.
-  ///
-  /// In fr, this message translates to:
-  /// **'Ne plus afficher'**
-  String get homeGuidanceDontShowAgain;
-
   /// No description provided for @homeNoActiveTripTitle.
   ///
   /// In fr, this message translates to:
@@ -22925,12 +22889,6 @@ abstract class AppLocalizations {
   /// **'Mes destinataires'**
   String get recipientListTitle;
 
-  /// Libellé du FAB d'ajout (recipients_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Ajouter'**
-  String get recipientAddFabLabel;
-
   /// Titre de l'état vide (recipients_screen.dart).
   ///
   /// In fr, this message translates to:
@@ -22942,12 +22900,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ajoute tes proches en Afrique pour envoyer en 1 tap.'**
   String get recipientEmptyDescription;
-
-  /// Bouton d'action de l'état vide (recipients_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Ajouter mon premier destinataire'**
-  String get recipientEmptyActionLabel;
 
   /// Titre/texte affiché quand la recherche ne trouve rien, réutilisé entre recipients_screen.dart et recipient_picker_sheet.dart (même feature, R42).
   ///
@@ -26300,6 +26252,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'{count, plural, =1{Une offre attend votre réponse} other{{count} offres attendent votre réponse}}'**
   String messagesNegotiationsShortcutAwaiting(int count);
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ne manquez aucun appel'**
+  String get callLockScreenTitle;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour voir un appel Yadony quand votre téléphone est verrouillé, autorisez Yadony à afficher les appels en plein écran.'**
+  String get callLockScreenBodyFullScreen;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Sur votre téléphone, les appels Yadony peuvent rester invisibles écran verrouillé. Dans les réglages de Yadony, ouvrez Autorisations › Autres autorisations et activez « Afficher sur l\'écran de verrouillage » et « Afficher des fenêtres pop-up en arrière-plan ».'**
+  String get callLockScreenBodyManufacturer;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir les réglages'**
+  String get callLockScreenOpenSettings;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get callLockScreenLater;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Appels sur l\'écran verrouillé'**
+  String get callLockScreenSettingsLabel;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'Les appels Yadony s’affichent même téléphone verrouillé.'**
+  String get callLockScreenSettingsAllowed;
+
+  /// Appels Yadony sur l'écran verrouillé (FLUTTER-92).
+  ///
+  /// In fr, this message translates to:
+  /// **'APPELS'**
+  String get notificationSettingsSectionCalls;
 }
 
 class _AppLocalizationsDelegate

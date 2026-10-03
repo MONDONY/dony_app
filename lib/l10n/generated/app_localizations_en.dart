@@ -2317,24 +2317,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check back soon, new parcel requests are posted every day';
 
   @override
-  String get homeGuidancePublishTrip => 'Post my trip';
-
-  @override
-  String get homeGuidancePublishParcel => 'Post a parcel';
-
-  @override
-  String get homeGuidanceCreateAlert => 'Create an alert';
-
-  @override
-  String get homeGuidanceVerifyIdentity => 'Verify my identity';
-
-  @override
-  String get homeGuidanceHowItWorks => 'How does it work?';
-
-  @override
-  String get homeGuidanceDontShowAgain => 'Don\'t show again';
-
-  @override
   String get homeNoActiveTripTitle => 'No active trip';
 
   @override
@@ -13738,17 +13720,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recipientListTitle => 'My recipients';
 
   @override
-  String get recipientAddFabLabel => 'Add';
-
-  @override
   String get recipientEmptyTitle => 'No recipients saved';
 
   @override
   String get recipientEmptyDescription =>
       'Add your loved ones in Africa to send in 1 tap.';
-
-  @override
-  String get recipientEmptyActionLabel => 'Add my first recipient';
 
   @override
   String get recipientNoResultsLabel => 'No results';
@@ -15926,4 +15902,31 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get callLockScreenTitle => 'Don\'t miss a call';
+
+  @override
+  String get callLockScreenBodyFullScreen =>
+      'To see a Yadony call when your phone is locked, allow Yadony to show calls full screen.';
+
+  @override
+  String get callLockScreenBodyManufacturer =>
+      'On your phone, Yadony calls may stay hidden on the lock screen. In Yadony’s settings, open Permissions › Other permissions and turn on “Show on Lock screen” and “Display pop-up windows while running in the background”.';
+
+  @override
+  String get callLockScreenOpenSettings => 'Open settings';
+
+  @override
+  String get callLockScreenLater => 'Later';
+
+  @override
+  String get callLockScreenSettingsLabel => 'Calls on the lock screen';
+
+  @override
+  String get callLockScreenSettingsAllowed =>
+      'Yadony calls show up even when your phone is locked.';
+
+  @override
+  String get notificationSettingsSectionCalls => 'CALLS';
 }

@@ -26,7 +26,6 @@ import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_aler
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
-import 'package:dony/features/home/presentation/widgets/evergreen_guidance_carousel.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
 import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
 import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
@@ -413,37 +412,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       if (!isGuest) {
         context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
       }
-      // Réaligne la carte d'onboarding « première publication » sur l'état réel
-      // du serveur : si l'utilisateur a déjà un trajet ou une demande, la carte
-      // ne doit plus s'afficher (le flag Hive local pouvait être absent —
-      // trajet créé sur un autre appareil, avant ce mécanisme, ou après
-      // réinstallation).
-      if (!isGuest) {
-        unawaited(_syncGuidanceFlags());
-      }
     });
-  }
-
-  /// Synchronise les drapeaux d'onboarding avec l'état serveur. Non bloquant :
-  /// en cas d'échec réseau la carte reste affichée (dégradation silencieuse).
-  Future<void> _syncGuidanceFlags() async {
-    final box = getIt<HiveService>().userPrefs;
-    try {
-      final trips = await getIt<AnnouncementRepository>().getMyAnnouncements();
-      if (trips.totalElements > 0) {
-        await box.put(HiveService.kHasPublishedAsTraveler, true);
-      }
-    } catch (_) {
-      // silencieux
-    }
-    try {
-      final requests = await getIt<PackageRequestRepository>().findMine();
-      if (requests.totalElements > 0) {
-        await box.put(HiveService.kHasPublishedAsSender, true);
-      }
-    } catch (_) {
-      // silencieux
-    }
   }
 
   void _consumePendingSearch() {
@@ -2051,7 +2020,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 controller: scrollCtrl,
                 slivers: [
                   // Guidage après KYC : rappel fixe tant qu'aucune première
-                  // action n'est faite (au-dessus du carrousel, sans croix).
+                  // action n'est faite (sans croix).
                   if (_activationCubit != null)
                     BlocBuilder<ActivationCubit, ActivationState>(
                       bloc: _activationCubit,
@@ -2076,12 +2045,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             : const SizedBox.shrink(),
                       ),
                     ),
-                  SliverToBoxAdapter(
-                    child: EvergreenGuidanceCarousel(
-                      hiveService: getIt<HiveService>(),
-                      isKycVerified: isKycVerified,
-                    ),
-                  ),
                   if (_mode.isParcels)
                     BlocBuilder<
                       PackageRequestSearchBloc,

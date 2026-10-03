@@ -39,13 +39,6 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
     super.dispose();
   }
 
-  Future<void> _addRecipient(BuildContext context) async {
-    final changed = await context.push<bool>('/profile/recipients/new');
-    if ((changed ?? false) && context.mounted) {
-      context.read<RecipientBloc>().add(const RecipientLoaded());
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -58,15 +51,10 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
       // CorridorAlertListScreen. Un padding horizontal ici s'ajouterait au
       // leur et doublerait la marge gauche/droite.
       padding: const EdgeInsets.fromLTRB(0, DonySpacing.xl, 0, DonySpacing.lg),
-      floatingActionButton: Builder(
-        builder: (fabCtx) => FloatingActionButton.extended(
-          backgroundColor: cs.primary,
-          foregroundColor: cs.onPrimary,
-          icon: const Icon(Icons.add_rounded),
-          label: Text(l.recipientAddFabLabel),
-          onPressed: () => _addRecipient(fabCtx),
-        ),
-      ),
+      // Pas de bouton « Ajouter » flottant ni dans l'état vide : l'entrée
+      // « Ajouter un destinataire Yadony » en tête de liste est le seul point
+      // d'ajout du carnet (FLUTTER-96). La création manuelle reste possible
+      // depuis la feuille de choix du destinataire d'un envoi.
       body: Column(
         children: [
           const Padding(
@@ -126,8 +114,6 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
                     mascotte: DonyMascotteType.assis,
                     title: l.recipientEmptyTitle,
                     description: l.recipientEmptyDescription,
-                    actionLabel: l.recipientEmptyActionLabel,
-                    onAction: () => _addRecipient(context),
                   );
                 }
 
@@ -168,8 +154,8 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
                                 color: cs.outline.withValues(alpha: 0.5),
                               ),
                               // Invitations en tête de liste : placées après
-                              // le carnet, elles tombaient sous le pli (et
-                              // sous le bouton « Ajouter ») et l'invitation à
+                              // le carnet, elles tombaient sous le pli et
+                              // l'invitation à
                               // peine envoyée semblait ne pas apparaître
                               // (FLUTTER-88).
                               itemBuilder: (context, i) {
@@ -431,7 +417,20 @@ class _KebabMenu extends StatelessWidget {
               variant: DonyDialogVariant.destructive,
             );
             if ((confirmed ?? false) && context.mounted) {
-              context.read<RecipientBloc>().add(RecipientDeleted(recipient.id));
+              final bloc = context.read<RecipientBloc>();
+              final sent = context.read<SentInvitationsCubit>();
+              bloc.add(RecipientDeleted(recipient.id));
+              // Supprimer un destinataire Yadony révoque son invitation côté
+              // serveur (FLUTTER-8Z) : elle doit quitter « Invitations
+              // envoyées » sans attendre le prochain chargement.
+              if (recipient.linkedOnYadony) {
+                await bloc.stream.firstWhere(
+                  (s) =>
+                      s.status == RecipientStatus.error ||
+                      s.recipients.every((r) => r.id != recipient.id),
+                );
+                if (!sent.isClosed) await sent.load();
+              }
             }
         }
       },

@@ -5,15 +5,10 @@ class HiveService {
   static const String offlineQueueBox = 'offline_queue';
   static const String userPrefsBox = 'user_prefs';
 
-  // Clés pour les flags "premier pas" (onboarding par rôle)
-  static const String kHasPublishedAsTraveler = 'has_published_as_traveler';
-  static const String kHasPublishedAsSender = 'has_published_as_sender';
-
-  // Alerte corridor active : posé à la première création/édition réussie,
-  // jamais réinitialisé (même précédent que kHasPublishedAsTraveler/Sender).
-  // Sert uniquement à masquer la slide "Créer une alerte" du carousel
-  // evergreen de l'écran Recherche une fois l'action faite.
-  static const String kHasActiveCorridorAlert = 'has_active_corridor_alert';
+  // Feuille « Ne manquez aucun appel » (appels Yadony sur l'écran verrouillé,
+  // FLUTTER-92), montrée une seule fois par installation.
+  static const String kCallLockScreenPromptShown =
+      'call_lock_screen_prompt_shown';
 
   // Carte d'introduction du hub Activités, fermée manuellement (X).
   static const String kHubIntroDismissed = 'hub_intro_dismissed';
@@ -24,18 +19,10 @@ class HiveService {
   static const String kContextualTutorialDismissedPrefix =
       'contextual_tutorial_dismissed_';
 
-  // Préfixe des clés de fermeture manuelle (X) des slides de
-  // EvergreenGuidanceCarousel (écran Recherche), une par slide id
-  // (trip/parcel/alert/kyc/tutorial). Masquage définitif, indépendant de la
-  // condition d'éligibilité de la slide (ex : une slide "trip" peut être
-  // fermée par l'utilisateur même si aucun trajet n'a encore été publié).
   /// Question d'intention aux comptes existants : nombre d'affichages et date
   /// du dernier (guidage après KYC, 2 affichages max à 7 jours d'écart).
   static const String kIntentPromptCount = 'intent_prompt_count';
   static const String kIntentPromptLastAt = 'intent_prompt_last_at';
-
-  static const String kGuidanceSlideDismissedPrefix =
-      'guidance_slide_dismissed_';
 
   // ── Préférences app ──────────────────────────────────────────────────────
   static const String kThemeMode = 'theme_mode'; // 'system' | 'light' | 'dark'

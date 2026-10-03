@@ -723,6 +723,7 @@ class _NotificationIcon extends StatelessWidget {
       'TRIP_CANCELLED' => (cs.error, 'ban'),
       'RECIPIENT_PARCEL_CANCELLED' => (cs.error, 'ban'),
       'RECIPIENT_PARCEL_REASSIGNED' => (cs.error, 'user-x'),
+      'RECIPIENT_INVITATION_REMOVED' => (cs.error, 'user-x'),
       'TRIP_RESCHEDULED' => (cs.warning, 'calendar-sync'),
       'TRIP_RESCHEDULE_KEPT' => (cs.success, 'check'),
       'TRIP_RESCHEDULE_WITHDRAWN' => (cs.error, 'calendar-x'),

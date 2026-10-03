@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/calls/presentation/widgets/call_lock_screen_prompt.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
@@ -142,6 +143,13 @@ class _NotificationSettingsScreenState
                       // la ligne reviendra sans que personne ait été abonné à son insu.
                     ],
                   ),
+                  // Appels Yadony écran verrouillé (FLUTTER-92) : réglage
+                  // système propre à Android, sans objet sur iOS (CallKit).
+                  if (CallLockScreenTile.isAvailable) ...[
+                    const SizedBox(height: DonySpacing.xl),
+                    SettingsSectionHeader(l.notificationSettingsSectionCalls),
+                    const SettingsFlatGroup(children: [CallLockScreenTile()]),
+                  ],
                 ],
               )
               .animate()

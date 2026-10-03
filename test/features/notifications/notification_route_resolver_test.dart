@@ -445,6 +445,13 @@ void main() {
       );
     });
 
+    test('RECIPIENT_INVITATION_REMOVED ouvre les expéditeurs autorisés', () {
+      expect(
+        resolveNotificationRoute('RECIPIENT_INVITATION_REMOVED', {}),
+        '/recipient-invitations',
+      );
+    });
+
     test('RECIPIENT_PARCEL_ANNOUNCED ouvre le colis rattaché', () {
       expect(
         resolveNotificationRoute('RECIPIENT_PARCEL_ANNOUNCED', {

@@ -4,7 +4,6 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -15,10 +14,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   final AnnouncementRepository _repository;
-  final HiveService _hive;
   final AnalyticsService _analytics;
 
-  AnnouncementBloc(this._repository, this._hive, this._analytics)
+  AnnouncementBloc(this._repository, this._analytics)
     : super(AnnouncementInitial()) {
     on<AnnouncementCreateRequested>(_onCreateRequested);
     on<AnnouncementPublishRequested>(_onPublishRequested);
@@ -73,11 +71,6 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         saveAsDraft: event.saveAsDraft,
         currency: event.currency,
       );
-      // Un brouillon n'est pas une publication : le flag "premier pas voyageur"
-      // ne doit être posé que lorsque le trajet est réellement actif/visible.
-      if (!event.saveAsDraft) {
-        await _hive.userPrefs.put(HiveService.kHasPublishedAsTraveler, true);
-      }
       emit(AnnouncementCreated(announcement));
       unawaited(
         _analytics.logEvent(
@@ -116,7 +109,6 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     emit(AnnouncementLoading());
     try {
       final announcement = await _repository.publishAnnouncement(event.id);
-      await _hive.userPrefs.put(HiveService.kHasPublishedAsTraveler, true);
       emit(AnnouncementPublished(announcement));
     } catch (e) {
       final error = unwrapDioError(e);

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
@@ -300,21 +302,11 @@ void main() {
     });
   });
 
-  group('add recipient FAB', () {
-    testWidgets('shows the "Ajouter" floating action button', (tester) async {
-      when(() => bloc.state).thenReturn(
-        const RecipientState(
-          status: RecipientStatus.success,
-          recipients: [_r1],
-        ),
-      );
-      await tester.pumpWidget(_wrap(bloc));
-      await tester.pump(const Duration(milliseconds: 600));
-      expect(find.byType(FloatingActionButton), findsOneWidget);
-      expect(find.text('Ajouter'), findsOneWidget);
-    });
-
-    testWidgets('tapping the FAB navigates and reloads on return', (
+  // FLUTTER-96 : l'entrée « Ajouter un destinataire Yadony » en tête de liste
+  // est le seul point d'ajout du carnet, ni bouton flottant ni bouton dans
+  // l'état vide.
+  group('single add entry point', () {
+    testWidgets('no floating action button when the list has recipients', (
       tester,
     ) async {
       when(() => bloc.state).thenReturn(
@@ -325,11 +317,79 @@ void main() {
       );
       await tester.pumpWidget(_wrap(bloc));
       await tester.pump(const Duration(milliseconds: 600));
-
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
-      expect(find.text('New Recipient'), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsNothing);
+      expect(find.text('Ajouter'), findsNothing);
     });
+
+    testWidgets('empty state has no create button', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(const RecipientState(status: RecipientStatus.success));
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.textContaining('Aucun destinataire'), findsOneWidget);
+      expect(find.text('Ajouter mon premier destinataire'), findsNothing);
+      expect(find.byType(FloatingActionButton), findsNothing);
+    });
+  });
+
+  // FLUTTER-8Z : supprimer un destinataire Yadony révoque son invitation côté
+  // serveur, la section « Invitations envoyées » est rechargée aussitôt.
+  testWidgets('supprimer un destinataire Yadony recharge les invitations '
+      'envoyées', (tester) async {
+    final original = FlutterError.onError;
+    FlutterError.onError = (details) {
+      if (details.exceptionAsString().contains('overflowed')) return;
+      original?.call(details);
+    };
+    addTearDown(() => FlutterError.onError = original);
+
+    const linked = Recipient(
+      id: 'r-linked',
+      fullName: 'Fatou Sow',
+      phoneE164: '+221771234512',
+      country: 'SN',
+      linkedOnYadony: true,
+    );
+    final states = StreamController<RecipientState>();
+    addTearDown(states.close);
+    whenListen(
+      bloc,
+      states.stream,
+      initialState: const RecipientState(
+        status: RecipientStatus.success,
+        recipients: [linked],
+      ),
+    );
+    when(() => bloc.add(any(that: isA<RecipientDeleted>()))).thenAnswer(
+      (_) => states.add(const RecipientState(status: RecipientStatus.success)),
+    );
+    final repo = _MockInvitationRepo();
+    when(repo.getSent).thenAnswer((_) async => const []);
+    final sent = SentInvitationsCubit(
+      repo,
+      makeDisabledAnalytics(MockAnalyticsBackend()),
+    );
+
+    await tester.pumpWidget(_wrap(bloc, sent: sent));
+    await tester.pump(const Duration(milliseconds: 600));
+    clearInteractions(repo);
+
+    await tester.tap(_kebabFinder);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Supprimer').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Supprimer').last);
+    await tester.pumpAndSettle();
+
+    verify(
+      () => bloc.add(
+        any(
+          that: isA<RecipientDeleted>().having((e) => e.id, 'id', 'r-linked'),
+        ),
+      ),
+    ).called(1);
+    verify(repo.getSent).called(1);
   });
 
   group('kebab menu — set as default', () {
@@ -430,7 +490,7 @@ void main() {
     );
   });
 
-  testWidgets('en anglais : titre, FAB et badge traduits', (tester) async {
+  testWidgets('en anglais : titre et badge traduits', (tester) async {
     useEnglish();
     when(() => bloc.state).thenReturn(
       const RecipientState(
@@ -442,7 +502,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('My recipients'), findsOneWidget);
-    expect(find.text('Add'), findsOneWidget);
     expect(find.text('DEFAULT'), findsOneWidget);
   });
 

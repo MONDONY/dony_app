@@ -985,12 +985,6 @@
   "homeMapNoRequestsYet": "Aucune demande pour le moment",
   "homeMapEmptyNearbyHint": "Élargis ta zone ou désactive “Près de moi”",
   "homeMapEmptyHint": "Reviens dans un instant, de nouvelles demandes sont publiées chaque jour",
-  "homeGuidancePublishTrip": "Publier mon trajet",
-  "homeGuidancePublishParcel": "Publier un colis",
-  "homeGuidanceCreateAlert": "Créer une alerte",
-  "homeGuidanceVerifyIdentity": "Vérifier mon identité",
-  "homeGuidanceHowItWorks": "Comment ça marche ?",
-  "homeGuidanceDontShowAgain": "Ne plus afficher",
   "homeNoActiveTripTitle": "Aucun trajet actif",
   "homeNoActiveTripBody": "Ce filtre ne montre que les colis compatibles avec tes trajets à venir. Publie un trajet pour t'en servir.",
   "homeNoActiveTripPublish": "Publier un trajet",
@@ -15657,10 +15651,6 @@
   "@recipientListTitle": {
     "description": "Titre de l'écran liste des destinataires (recipients_screen.dart)."
   },
-  "recipientAddFabLabel": "Ajouter",
-  "@recipientAddFabLabel": {
-    "description": "Libellé du FAB d'ajout (recipients_screen.dart)."
-  },
   "recipientEmptyTitle": "Aucun destinataire enregistré",
   "@recipientEmptyTitle": {
     "description": "Titre de l'état vide (recipients_screen.dart)."
@@ -15668,10 +15658,6 @@
   "recipientEmptyDescription": "Ajoute tes proches en Afrique pour envoyer en 1 tap.",
   "@recipientEmptyDescription": {
     "description": "Description de l'état vide (recipients_screen.dart)."
-  },
-  "recipientEmptyActionLabel": "Ajouter mon premier destinataire",
-  "@recipientEmptyActionLabel": {
-    "description": "Bouton d'action de l'état vide (recipients_screen.dart)."
   },
   "recipientNoResultsLabel": "Aucun résultat",
   "@recipientNoResultsLabel": {
@@ -18473,5 +18459,37 @@
         "type": "int"
       }
     }
+  },
+  "callLockScreenTitle": "Ne manquez aucun appel",
+  "@callLockScreenTitle": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "callLockScreenBodyFullScreen": "Pour voir un appel Yadony quand votre téléphone est verrouillé, autorisez Yadony à afficher les appels en plein écran.",
+  "@callLockScreenBodyFullScreen": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "callLockScreenBodyManufacturer": "Sur votre téléphone, les appels Yadony peuvent rester invisibles écran verrouillé. Dans les réglages de Yadony, ouvrez Autorisations › Autres autorisations et activez « Afficher sur l'écran de verrouillage » et « Afficher des fenêtres pop-up en arrière-plan ».",
+  "@callLockScreenBodyManufacturer": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "callLockScreenOpenSettings": "Ouvrir les réglages",
+  "@callLockScreenOpenSettings": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "callLockScreenLater": "Plus tard",
+  "@callLockScreenLater": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "callLockScreenSettingsLabel": "Appels sur l'écran verrouillé",
+  "@callLockScreenSettingsLabel": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "callLockScreenSettingsAllowed": "Les appels Yadony s’affichent même téléphone verrouillé.",
+  "@callLockScreenSettingsAllowed": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "notificationSettingsSectionCalls": "APPELS",
+  "@notificationSettingsSectionCalls": {
+    "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
   }
 }

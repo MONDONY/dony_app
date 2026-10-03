@@ -2320,24 +2320,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Reviens dans un instant, de nouvelles demandes sont publiées chaque jour';
 
   @override
-  String get homeGuidancePublishTrip => 'Publier mon trajet';
-
-  @override
-  String get homeGuidancePublishParcel => 'Publier un colis';
-
-  @override
-  String get homeGuidanceCreateAlert => 'Créer une alerte';
-
-  @override
-  String get homeGuidanceVerifyIdentity => 'Vérifier mon identité';
-
-  @override
-  String get homeGuidanceHowItWorks => 'Comment ça marche ?';
-
-  @override
-  String get homeGuidanceDontShowAgain => 'Ne plus afficher';
-
-  @override
   String get homeNoActiveTripTitle => 'Aucun trajet actif';
 
   @override
@@ -13826,17 +13808,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recipientListTitle => 'Mes destinataires';
 
   @override
-  String get recipientAddFabLabel => 'Ajouter';
-
-  @override
   String get recipientEmptyTitle => 'Aucun destinataire enregistré';
 
   @override
   String get recipientEmptyDescription =>
       'Ajoute tes proches en Afrique pour envoyer en 1 tap.';
-
-  @override
-  String get recipientEmptyActionLabel => 'Ajouter mon premier destinataire';
 
   @override
   String get recipientNoResultsLabel => 'Aucun résultat';
@@ -16021,4 +15997,31 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get callLockScreenTitle => 'Ne manquez aucun appel';
+
+  @override
+  String get callLockScreenBodyFullScreen =>
+      'Pour voir un appel Yadony quand votre téléphone est verrouillé, autorisez Yadony à afficher les appels en plein écran.';
+
+  @override
+  String get callLockScreenBodyManufacturer =>
+      'Sur votre téléphone, les appels Yadony peuvent rester invisibles écran verrouillé. Dans les réglages de Yadony, ouvrez Autorisations › Autres autorisations et activez « Afficher sur l\'écran de verrouillage » et « Afficher des fenêtres pop-up en arrière-plan ».';
+
+  @override
+  String get callLockScreenOpenSettings => 'Ouvrir les réglages';
+
+  @override
+  String get callLockScreenLater => 'Plus tard';
+
+  @override
+  String get callLockScreenSettingsLabel => 'Appels sur l\'écran verrouillé';
+
+  @override
+  String get callLockScreenSettingsAllowed =>
+      'Les appels Yadony s’affichent même téléphone verrouillé.';
+
+  @override
+  String get notificationSettingsSectionCalls => 'APPELS';
 }

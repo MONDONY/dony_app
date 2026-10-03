@@ -4,7 +4,6 @@ import 'package:bloc/bloc.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:equatable/equatable.dart';
@@ -61,12 +60,8 @@ class CorridorAlertListState extends Equatable {
 
 class CorridorAlertListBloc
     extends Bloc<CorridorAlertListEvent, CorridorAlertListState> {
-  CorridorAlertListBloc(
-    this._repository,
-    this._analytics, {
-    HiveService? hiveService,
-  }) : _hiveService = hiveService,
-       super(const CorridorAlertListState()) {
+  CorridorAlertListBloc(this._repository, this._analytics)
+    : super(const CorridorAlertListState()) {
     on<CorridorAlertListRequested>(_onLoad);
     on<CorridorAlertActiveToggled>(_onToggle);
     on<CorridorAlertDeleted>(_onDelete);
@@ -74,7 +69,6 @@ class CorridorAlertListBloc
 
   final CorridorAlertRepository _repository;
   final AnalyticsService _analytics;
-  final HiveService? _hiveService;
 
   Future<void> _onLoad(
     CorridorAlertListRequested e,
@@ -86,18 +80,6 @@ class CorridorAlertListBloc
       emit(
         state.copyWith(status: CorridorAlertListStatus.loaded, alerts: alerts),
       );
-      // Rattrapage pour les utilisateurs ayant des alertes actives créées
-      // avant ce flag (kHasActiveCorridorAlert n'était posé qu'à la
-      // création/édition réussie via CorridorAlertFormCubit.submit()) :
-      // sans ça, la slide "Créer une alerte" du carousel evergreen
-      // continuerait de s'afficher à tort tant qu'aucune création/édition
-      // n'a lieu.
-      final hive = _hiveService;
-      if (hive != null && alerts.isNotEmpty) {
-        unawaited(
-          hive.userPrefs.put(HiveService.kHasActiveCorridorAlert, true),
-        );
-      }
     } catch (err) {
       emit(
         state.copyWith(

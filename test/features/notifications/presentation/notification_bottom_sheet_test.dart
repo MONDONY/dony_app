@@ -232,6 +232,10 @@ void main() {
         await iconAssetFor(tester, 'RECIPIENT_INVITATION_ACCEPTED'),
         'badge-check',
       );
+      expect(
+        await iconAssetFor(tester, 'RECIPIENT_INVITATION_REMOVED'),
+        'user-x',
+      );
       expect(await iconAssetFor(tester, 'RECIPIENT_PARCEL_ANNOUNCED'), 'inbox');
     });
 

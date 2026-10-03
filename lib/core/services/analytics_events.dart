@@ -184,6 +184,16 @@ abstract final class AnalyticsEvents {
   static const callEnded = 'call_ended';
   static const callFailed = 'call_failed';
   static const callIncomingAccepted = 'call_incoming_accepted';
+
+  /// Feuille « Ne manquez aucun appel » montrée (une fois) à l'ouverture d'une
+  /// conversation avec appel Yadony. Propriété `kind` :
+  /// `full_screen_intent` / `manufacturer`.
+  static const callLockScreenPromptShown = 'call_lock_screen_prompt_shown';
+
+  /// Réglage système ouvert pour afficher les appels écran verrouillé.
+  /// Propriétés `kind` et `source` (`prompt` / `settings`).
+  static const callLockScreenSettingsOpened =
+      'call_lock_screen_settings_opened';
   static const messageBlocked = 'message_blocked';
 
   // Wallet
@@ -310,22 +320,8 @@ abstract final class AnalyticsEvents {
   static const homeMatchingTripsFilterToggled =
       'home_matching_trips_filter_toggled';
 
-  /// Tap sur une carte du carousel de guidance evergreen (écran Recherche),
-  /// déclenché depuis `EvergreenGuidanceCarousel` (toute la carte est
-  /// cliquable, pas de bouton CTA séparé).
-  /// Propriété `slide` : trip / parcel / alert / kyc / tutorial.
-  static const homeGuidanceCarouselCtaTapped =
-      'home_guidance_carousel_cta_tapped';
-
-  /// `EvergreenGuidanceCarousel` — fermeture manuelle (X) d'une slide,
-  /// masquage définitif indépendant de son état d'éligibilité.
-  /// Propriété `slide` : trip / parcel / alert / kyc / tutorial.
-  static const homeGuidanceCarouselSlideDismissed =
-      'home_guidance_carousel_slide_dismissed';
-
   /// SettingsScreen._resetGuidanceCards — tuile « Réafficher les
-  /// suggestions », efface tous les flags de fermeture manuelle des slides
-  /// du carousel de guidance evergreen (Recherche).
+  /// suggestions », réaffiche les `ContextualTutorialCard` fermées.
   static const settingsGuidanceCardsReset = 'settings_guidance_cards_reset';
   // Filtre urgent (chip 🔥 Urgent — Accueil)
   static const urgentFilterToggled = 'urgent_filter_toggled';

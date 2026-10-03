@@ -203,13 +203,7 @@ class _HomeMockTripsSummaryCubit extends MockCubit<TripsSummaryState>
 
 class _HomeFakeBox extends Fake implements Box<dynamic> {
   @override
-  dynamic get(dynamic key, {dynamic defaultValue}) {
-    if (key == HiveService.kHasPublishedAsTraveler ||
-        key == HiveService.kHasPublishedAsSender) {
-      return true;
-    }
-    return defaultValue;
-  }
+  dynamic get(dynamic key, {dynamic defaultValue}) => defaultValue;
 
   @override
   Future<void> put(dynamic key, dynamic value) async {}
