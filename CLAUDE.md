@@ -477,6 +477,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `reception_opened` | ReceptionDetailCubit.load — écran `/receptions/{bidId}` chargé (section Suivi ou notification `RECIPIENT_PARCEL_*`), une fois par écran même après « Réessayer » (propriétés `link_status` : `PENDING`/`CONFIRMED`, `bid_status`). Jamais le nom, le numéro ni le code |
 | `reception_confirmed` | ReceptionDetailCubit.confirm — « Oui, c'est pour moi » accepté par le serveur (`POST /receptions/{bidId}/confirm`), propriété `bid_status` |
 | `reception_declined` | ReceptionDetailCubit.decline — « Ce n'est pas pour moi » confirmé dans le dialogue puis accepté par le serveur (204), propriété `bid_status`. Non émis sur un 409 (colis déjà confirmé ailleurs) |
+| `reception_withdrawn` | ReceptionDetailCubit.decline — « Me retirer de ce colis » confirmé dans le dialogue puis accepté par le serveur (`POST /receptions/{bidId}/decline` sur un lien `CONFIRMED`, 204), tant que le colis est en cours (FLUTTER-9F). L'expéditeur et le voyageur reçoivent `RECIPIENT_WITHDRAWN`. Propriété `bid_status`. Non émis sur un 409 (`reception-not-withdrawable`, colis déjà livré) |
 | `screen_feedback_submitted` | Envoi du rapport 🐞 DonyFeedbackButton (propriétés `route`, `attachment_count` : captures jointes par le testeur, jamais leur contenu) |
 | `profile_photo_updated` | AuthBloc._onAvatarUploadRequested() — upload photo de profil réussi |
 | `profile_about_updated` | AuthBloc._onUpdateProfileRequested() — bio « À propos » renseignée |
@@ -486,6 +487,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `faq_contact_requested` | FaqBloc — tap sur « Contacter le support » depuis le Centre d’aide |
 | `support_ticket_created` | SupportBloc._onCreateRequested — ticket support créé avec succès (propriété `category`, énumération fermée backend ; jamais le sujet ni le message) |
 | `support_ticket_message_sent` | SupportBloc._onMessageSendRequested — message utilisateur envoyé dans un ticket existant, avant rechargement du fil. Aucune propriété : le contenu ne part jamais dans l'analytics |
+| `support_ticket_hidden` | SupportBloc._onHideRequested — ticket résolu retiré de « Mes tickets » (bouton corbeille puis confirmation), confirmé par le serveur (`DELETE /support/tickets/{id}`, FLUTTER-9W). Le ticket reste visible du back-office. Aucune propriété |
 | `support_attachment_added` | SupportBloc — image jointe uploadée avec succès dans un fil support. Aucune propriété : ni chemin, ni taille, ni contenu ne partent dans l'analytics |
 | `trip_matching_viewed` | PackageRequestSearchBloc._onFiltersChanged — chargement d'une recherche colis filtrée « Pour mes trajets » (propriété `count`) |
 | `package_match_alert_toggled` | NotificationPrefsBloc._onPackageMatchAlertToggled — ligne « Nouveaux colis compatibles » des réglages de notifications (propriété `enabled`) |

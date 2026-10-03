@@ -695,4 +695,68 @@ void main() {
       await bloc.close();
     });
   });
+
+  group('SupportTicketHideRequested (FLUTTER-9W)', () {
+    const loaded = SupportState(
+      homeStatus: SupportViewStatus.ready,
+      tickets: [_ticket, _resolvedTicket],
+    );
+
+    blocTest<SupportBloc, SupportState>(
+      'retire aussitôt un ticket résolu et le confirme au back',
+      build: () {
+        when(() => repository.hideTicket('ticket-2')).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      seed: () => loaded,
+      act: (bloc) => bloc.add(const SupportTicketHideRequested('ticket-2')),
+      expect: () => [
+        const SupportState(
+          homeStatus: SupportViewStatus.ready,
+          tickets: [_ticket],
+        ),
+      ],
+      verify: (_) {
+        verify(() => repository.hideTicket('ticket-2')).called(1);
+        verify(
+          () => backend.capture(AnalyticsEvents.supportTicketHidden, null),
+        ).called(1);
+      },
+    );
+
+    blocTest<SupportBloc, SupportState>(
+      'échec : la liste revient et l\'erreur est signalée',
+      build: () {
+        when(
+          () => repository.hideTicket('ticket-2'),
+        ).thenThrow(Exception('réseau'));
+        return buildBloc();
+      },
+      seed: () => loaded,
+      act: (bloc) => bloc.add(const SupportTicketHideRequested('ticket-2')),
+      expect: () => [
+        const SupportState(
+          homeStatus: SupportViewStatus.ready,
+          tickets: [_ticket],
+        ),
+        isA<SupportState>()
+            .having((s) => s.tickets, 'tickets', [_ticket, _resolvedTicket])
+            .having(
+              (s) => s.hideStatus,
+              'hideStatus',
+              SupportActionStatus.failure,
+            )
+            .having((s) => s.failure, 'failure', SupportFailure.hideFailed),
+      ],
+    );
+
+    blocTest<SupportBloc, SupportState>(
+      'un ticket en cours ne se retire pas : aucun appel',
+      build: buildBloc,
+      seed: () => loaded,
+      act: (bloc) => bloc.add(const SupportTicketHideRequested('ticket-1')),
+      expect: () => <SupportState>[],
+      verify: (_) => verifyNever(() => repository.hideTicket(any())),
+    );
+  });
 }

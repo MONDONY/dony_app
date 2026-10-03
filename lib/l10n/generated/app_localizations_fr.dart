@@ -12819,6 +12819,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get supportGenericError => 'Une erreur est survenue. Réessayez.';
 
   @override
+  String get supportTicketHideTooltip => 'Retirer de la liste';
+
+  @override
+  String get supportTicketHideConfirmTitle => 'Retirer ce ticket ?';
+
+  @override
+  String get supportTicketHideConfirmMessage =>
+      'Il disparaîtra de votre liste. L’équipe Yadony garde l’historique de l’échange.';
+
+  @override
+  String get supportTicketHideConfirmAction => 'Retirer';
+
+  @override
+  String get supportTicketHideError =>
+      'Impossible de retirer ce ticket pour le moment. Réessayez plus tard.';
+
+  @override
   String get supportScreenTitle => 'Support';
 
   @override
@@ -15366,6 +15383,23 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get receptionDeclinedSnackbar =>
       'C\'est noté, ce colis a été retiré de votre liste.';
+
+  @override
+  String get receptionWithdrawButton => 'Me retirer de ce colis';
+
+  @override
+  String get receptionWithdrawDialogTitle => 'Vous retirer de ce colis ?';
+
+  @override
+  String get receptionWithdrawDialogMessage =>
+      'Vous ne le suivrez plus et ne verrez plus son code de retrait. L’expéditeur et le voyageur seront prévenus.';
+
+  @override
+  String get receptionWithdrawConfirm => 'Me retirer';
+
+  @override
+  String get receptionWithdrawnSnackbar =>
+      'C’est noté, l’expéditeur et le voyageur sont prévenus.';
 
   @override
   String get receptionConfirmedSnackbar => 'C\'est noté, vous suivez ce colis.';

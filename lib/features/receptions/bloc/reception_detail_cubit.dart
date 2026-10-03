@@ -14,6 +14,9 @@ enum ReceptionAction {
   declining,
   confirmed,
   declined,
+
+  /// Destinataire confirmé retiré du colis (FLUTTER-9F) : l'écran se ferme.
+  withdrawn,
   failed,
 }
 
@@ -119,19 +122,31 @@ class ReceptionDetailCubit extends Cubit<ReceptionDetailState> {
     }
   }
 
-  /// « Ce n'est pas pour moi », après la confirmation de l'écran.
+  /// « Ce n'est pas pour moi » (lien en attente) ou « Me retirer de ce
+  /// colis » (lien confirmé, FLUTTER-9F), après la confirmation de l'écran.
+  /// Même route côté back, qui distingue les deux cas.
   Future<void> decline() async {
     final current = state;
     if (current is! ReceptionDetailLoaded || current.busy) return;
     final reception = current.reception;
+    final withdraw = reception.isConfirmed;
     emit(ReceptionDetailLoaded(reception, action: ReceptionAction.declining));
     try {
       await _repository.decline(reception.bidId);
       if (isClosed) return;
-      emit(ReceptionDetailLoaded(reception, action: ReceptionAction.declined));
+      emit(
+        ReceptionDetailLoaded(
+          reception,
+          action: withdraw
+              ? ReceptionAction.withdrawn
+              : ReceptionAction.declined,
+        ),
+      );
       unawaited(
         _analytics.logEvent(
-          AnalyticsEvents.receptionDeclined,
+          withdraw
+              ? AnalyticsEvents.receptionWithdrawn
+              : AnalyticsEvents.receptionDeclined,
           properties: {'bid_status': reception.bidStatus},
         ),
       );

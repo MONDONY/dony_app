@@ -476,7 +476,11 @@ void main() {
       expect(isShellTabRoute(route!), isTrue);
     });
 
-    for (final type in ['RECIPIENT_CONFIRMED', 'RECIPIENT_DECLINED']) {
+    for (final type in [
+      'RECIPIENT_CONFIRMED',
+      'RECIPIENT_DECLINED',
+      'RECIPIENT_WITHDRAWN',
+    ]) {
       test('$type ouvre le détail d\'envoi de l\'expéditeur', () {
         expect(
           resolveNotificationRoute(type, {'bidId': bidId}),

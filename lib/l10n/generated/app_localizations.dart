@@ -21341,6 +21341,36 @@ abstract class AppLocalizations {
   /// **'Une erreur est survenue. Réessayez.'**
   String get supportGenericError;
 
+  /// No description provided for @supportTicketHideTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer de la liste'**
+  String get supportTicketHideTooltip;
+
+  /// No description provided for @supportTicketHideConfirmTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer ce ticket ?'**
+  String get supportTicketHideConfirmTitle;
+
+  /// No description provided for @supportTicketHideConfirmMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Il disparaîtra de votre liste. L’équipe Yadony garde l’historique de l’échange.'**
+  String get supportTicketHideConfirmMessage;
+
+  /// No description provided for @supportTicketHideConfirmAction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer'**
+  String get supportTicketHideConfirmAction;
+
+  /// No description provided for @supportTicketHideError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de retirer ce ticket pour le moment. Réessayez plus tard.'**
+  String get supportTicketHideError;
+
   /// Titre de l'app bar de l'accueil support (support_home_screen.dart). Identique en anglais : _sameInBothLanguages.
   ///
   /// In fr, this message translates to:
@@ -25268,6 +25298,36 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'C\'est noté, ce colis a été retiré de votre liste.'**
   String get receptionDeclinedSnackbar;
+
+  /// No description provided for @receptionWithdrawButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Me retirer de ce colis'**
+  String get receptionWithdrawButton;
+
+  /// No description provided for @receptionWithdrawDialogTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous retirer de ce colis ?'**
+  String get receptionWithdrawDialogTitle;
+
+  /// No description provided for @receptionWithdrawDialogMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne le suivrez plus et ne verrez plus son code de retrait. L’expéditeur et le voyageur seront prévenus.'**
+  String get receptionWithdrawDialogMessage;
+
+  /// No description provided for @receptionWithdrawConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Me retirer'**
+  String get receptionWithdrawConfirm;
+
+  /// No description provided for @receptionWithdrawnSnackbar.
+  ///
+  /// In fr, this message translates to:
+  /// **'C’est noté, l’expéditeur et le voyageur sont prévenus.'**
+  String get receptionWithdrawnSnackbar;
 
   /// Confirmation après « Oui, c'est pour moi » (reception_detail_screen.dart).
   ///

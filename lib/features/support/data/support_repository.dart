@@ -65,6 +65,12 @@ class SupportRepository {
   }
 
   /// Marque un ticket comme lu. Renvoie 204 sans corps.
+  /// Retire un ticket résolu de la boîte support (FLUTTER-9W). Le back le
+  /// garde pour le back-office ; 409 si le ticket est encore en cours.
+  Future<void> hideTicket(String ticketId) async {
+    await _api.dio.delete('/support/tickets/$ticketId');
+  }
+
   Future<void> markRead(String ticketId) async {
     await _api.dio.post('/support/tickets/$ticketId/read');
   }

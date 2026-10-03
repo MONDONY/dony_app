@@ -34,6 +34,7 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
     on<SupportAttachmentPickRequested>(_onAttachmentPickRequested);
     on<SupportAttachmentRemoved>(_onAttachmentRemoved);
     on<SupportTicketLiveRefreshRequested>(_onLiveRefreshRequested);
+    on<SupportTicketHideRequested>(_onHideRequested);
     _incomingSub = incomingMessages?.listen((ticketId) {
       final ticket = state.ticket;
       if (ticket != null &&
@@ -78,6 +79,36 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
         state.copyWith(
           homeStatus: SupportViewStatus.failure,
           failure: SupportFailure.generic,
+          serverDetail: _serverDetail(e),
+        ),
+      );
+    }
+  }
+
+  /// Retire aussitôt le ticket de la liste, puis le confirme au back ; en
+  /// cas d'échec, la liste revient telle qu'elle était (FLUTTER-9W).
+  Future<void> _onHideRequested(
+    SupportTicketHideRequested event,
+    Emitter<SupportState> emit,
+  ) async {
+    final before = state.tickets;
+    final ticket = before.where((t) => t.id == event.ticketId).firstOrNull;
+    // Règle appliquée avant tout appel : seul un ticket résolu se retire.
+    if (ticket == null || !ticket.isResolved) return;
+    emit(
+      state.copyWith(
+        tickets: before.where((t) => t.id != event.ticketId).toList(),
+      ),
+    );
+    try {
+      await _repository.hideTicket(event.ticketId);
+      unawaited(_analytics.logEvent(AnalyticsEvents.supportTicketHidden));
+    } catch (e) {
+      emit(
+        state.copyWith(
+          tickets: before,
+          hideStatus: SupportActionStatus.failure,
+          failure: SupportFailure.hideFailed,
           serverDetail: _serverDetail(e),
         ),
       );

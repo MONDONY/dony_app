@@ -12738,6 +12738,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportGenericError => 'Something went wrong. Try again.';
 
   @override
+  String get supportTicketHideTooltip => 'Remove from list';
+
+  @override
+  String get supportTicketHideConfirmTitle => 'Remove this ticket?';
+
+  @override
+  String get supportTicketHideConfirmMessage =>
+      'It will disappear from your list. The Yadony team keeps the conversation history.';
+
+  @override
+  String get supportTicketHideConfirmAction => 'Remove';
+
+  @override
+  String get supportTicketHideError =>
+      'This ticket could not be removed right now. Please try again later.';
+
+  @override
   String get supportScreenTitle => 'Support';
 
   @override
@@ -15274,6 +15291,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get receptionDeclinedSnackbar =>
       'Got it, this parcel has been removed from your list.';
+
+  @override
+  String get receptionWithdrawButton => 'Withdraw from this parcel';
+
+  @override
+  String get receptionWithdrawDialogTitle => 'Withdraw from this parcel?';
+
+  @override
+  String get receptionWithdrawDialogMessage =>
+      'You will no longer follow it or see its pickup code. The sender and the traveler will be notified.';
+
+  @override
+  String get receptionWithdrawConfirm => 'Withdraw';
+
+  @override
+  String get receptionWithdrawnSnackbar =>
+      'Done, the sender and the traveler have been notified.';
 
   @override
   String get receptionConfirmedSnackbar =>

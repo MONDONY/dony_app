@@ -385,6 +385,37 @@ void main() {
   });
 
   group('confirmé', () {
+    testWidgets(
+      'colis en cours : « Me retirer de ce colis » après confirmation '
+      '(FLUTTER-9F)',
+      (tester) async {
+        stub(ReceptionDetailLoaded(_confirmed()));
+        await pump(tester);
+
+        await tester.ensureVisible(find.byKey(const Key('reception-withdraw')));
+        await tester.tap(find.byKey(const Key('reception-withdraw')));
+        await tester.pumpAndSettle();
+        expect(find.text('Vous retirer de ce colis ?'), findsOneWidget);
+
+        await tester.tap(
+          find.descendant(
+            of: find.byType(Dialog),
+            matching: find.text('Me retirer'),
+          ),
+        );
+        await tester.pumpAndSettle();
+        verify(() => cubit.decline()).called(1);
+      },
+    );
+
+    testWidgets('colis remis : plus de retrait possible', (tester) async {
+      stub(
+        ReceptionDetailLoaded(_confirmed(bidStatus: 'COMPLETED', code: null)),
+      );
+      await pump(tester);
+      expect(find.byKey(const Key('reception-withdraw')), findsNothing);
+    });
+
     testWidgets('étape, code de retrait, détails et instructions', (
       tester,
     ) async {

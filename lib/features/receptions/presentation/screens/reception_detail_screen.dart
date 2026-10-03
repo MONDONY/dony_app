@@ -97,10 +97,15 @@ class _ReceptionDetailView extends StatelessWidget {
           message: l.receptionConfirmedSnackbar,
           type: DonySnackbarType.success,
         );
-      case ReceptionAction.declined:
+      case ReceptionAction.declined || ReceptionAction.withdrawn:
         // Message posé avant de quitter l'écran : le ScaffoldMessenger de
         // l'app le garde affiché sur l'onglet Suivi.
-        DonySnackbar.show(context, message: l.receptionDeclinedSnackbar);
+        DonySnackbar.show(
+          context,
+          message: state.action == ReceptionAction.withdrawn
+              ? l.receptionWithdrawnSnackbar
+              : l.receptionDeclinedSnackbar,
+        );
         if (context.canPop()) {
           context.pop(true);
         } else {
@@ -1217,6 +1222,22 @@ class _BottomBar extends StatelessWidget {
   final ReceptionDetailLoaded state;
   final ReceptionTimelineOpener openTimeline;
 
+  /// « Me retirer de ce colis » (FLUTTER-9F) : destructif, l'expéditeur et
+  /// le voyageur sont prévenus.
+  Future<void> _withdraw(BuildContext context) async {
+    final l = context.l10n;
+    final cubit = context.read<ReceptionDetailCubit>();
+    final confirmed = await DonyDialog.show(
+      context,
+      title: l.receptionWithdrawDialogTitle,
+      message: l.receptionWithdrawDialogMessage,
+      confirmLabel: l.receptionWithdrawConfirm,
+      variant: DonyDialogVariant.destructive,
+      iconAsset: 'user-x',
+    );
+    if (confirmed ?? false) await cubit.decline();
+  }
+
   Future<void> _decline(BuildContext context) async {
     final l = context.l10n;
     final cubit = context.read<ReceptionDetailCubit>();
@@ -1236,7 +1257,10 @@ class _BottomBar extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final reception = state.reception;
     // Après le refus, l'écran se ferme : plus aucun geste possible.
-    final locked = state.busy || state.action == ReceptionAction.declined;
+    final locked =
+        state.busy ||
+        state.action == ReceptionAction.declined ||
+        state.action == ReceptionAction.withdrawn;
 
     return Container(
       decoration: BoxDecoration(
@@ -1284,6 +1308,16 @@ class _BottomBar extends StatelessWidget {
                       variant: DonyButtonVariant.secondary,
                       onPressed: () => openTimeline(context, reception),
                     ),
+                    if (reception.canWithdraw) ...[
+                      const SizedBox(height: DonySpacing.xs),
+                      DonyButton(
+                        key: const Key('reception-withdraw'),
+                        label: l.receptionWithdrawButton,
+                        variant: DonyButtonVariant.ghost,
+                        isLoading: state.action == ReceptionAction.declining,
+                        onPressed: locked ? null : () => _withdraw(context),
+                      ),
+                    ],
                   ],
                 )
               : Column(

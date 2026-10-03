@@ -14369,6 +14369,11 @@
   "@supportGenericError": {
     "description": "Repli générique affiché quand un échec support n'a pas de detail serveur (support_home_screen.dart, supportErrorMessage ; SupportState.failure == generic)."
   },
+  "supportTicketHideTooltip": "Retirer de la liste",
+  "supportTicketHideConfirmTitle": "Retirer ce ticket ?",
+  "supportTicketHideConfirmMessage": "Il disparaîtra de votre liste. L’équipe Yadony garde l’historique de l’échange.",
+  "supportTicketHideConfirmAction": "Retirer",
+  "supportTicketHideError": "Impossible de retirer ce ticket pour le moment. Réessayez plus tard.",
   "supportScreenTitle": "Support",
   "@supportScreenTitle": {
     "description": "Titre de l'app bar de l'accueil support (support_home_screen.dart). Identique en anglais : _sameInBothLanguages."
@@ -17631,6 +17636,11 @@
   "@receptionDeclinedSnackbar": {
     "description": "Confirmation après le refus d'un colis (reception_detail_screen.dart)."
   },
+  "receptionWithdrawButton": "Me retirer de ce colis",
+  "receptionWithdrawDialogTitle": "Vous retirer de ce colis ?",
+  "receptionWithdrawDialogMessage": "Vous ne le suivrez plus et ne verrez plus son code de retrait. L’expéditeur et le voyageur seront prévenus.",
+  "receptionWithdrawConfirm": "Me retirer",
+  "receptionWithdrawnSnackbar": "C’est noté, l’expéditeur et le voyageur sont prévenus.",
   "receptionConfirmedSnackbar": "C'est noté, vous suivez ce colis.",
   "@receptionConfirmedSnackbar": {
     "description": "Confirmation après « Oui, c'est pour moi » (reception_detail_screen.dart)."
