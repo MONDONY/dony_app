@@ -208,6 +208,11 @@ class DonyTextField extends StatelessWidget {
           focusNode: focusNode,
           textInputAction: textInputAction,
           onFieldSubmitted: onSubmitted,
+          // Toucher hors du champ ferme le clavier (FLUTTER-A3). Flutter ne
+          // le fait que sur ordinateur : sur téléphone, le pavé numérique
+          // d'iOS n'a pas de touche « OK », et un formulaire court qui ne
+          // défile pas laissait le clavier ouvert sans moyen de le fermer.
+          onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
           scrollPadding: kDonyKeyboardScrollPadding,
           decoration: _decoration(context),
         );

@@ -13,6 +13,7 @@ class FakeCallGateway implements CallGateway {
   String? connectedUserId;
   Future<String> Function()? tokenLoader;
   Object? throwOnJoin;
+  Object? throwOnSpeaker;
   Object? throwOnConnect;
   bool microphoneAllowed = true;
 
@@ -62,7 +63,10 @@ class FakeCallGateway implements CallGateway {
       log.add('mic:$enabled');
 
   @override
-  Future<void> setSpeakerOn(bool on) async => log.add('speaker:$on');
+  Future<void> setSpeakerOn(bool on) async {
+    if (throwOnSpeaker != null) throw throwOnSpeaker!;
+    log.add('speaker:$on');
+  }
 
   @override
   Future<bool> ensureMicrophone() async {

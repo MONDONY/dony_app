@@ -69,11 +69,16 @@ class _HelpTutorialContent extends StatelessWidget {
     required this.tutorial,
     required this.youtubeChannelUrl,
     required this.playerArea,
+    this.onOpenExternal,
   });
 
   final HelpTutorial tutorial;
   final Uri? youtubeChannelUrl;
   final Widget playerArea;
+
+  /// « Ouvrir dans YouTube » sous le lecteur (FLUTTER-A4). Absent quand la
+  /// carte d'erreur du lecteur le propose déjà.
+  final VoidCallback? onOpenExternal;
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +132,16 @@ class _HelpTutorialContent extends StatelessWidget {
             .slideY(begin: 0.04, end: 0, curve: DonyCurve.enter),
         const SizedBox(height: DonySpacing.xl),
         playerArea,
+        if (onOpenExternal case final open?) ...[
+          const SizedBox(height: DonySpacing.md),
+          DonyButton(
+            key: const Key('help-tutorial-open-youtube'),
+            label: context.l10n.helpTutorialOpenInYoutubeButton,
+            iconAsset: 'external-link',
+            variant: DonyButtonVariant.ghost,
+            onPressed: open,
+          ),
+        ],
         if (youtubeChannelUrl case final channelUrl?) ...[
           const SizedBox(height: DonySpacing.xl),
           DonyButton(
@@ -347,6 +362,9 @@ class _HelpTutorialExperienceState extends State<_HelpTutorialExperience> {
       body: _HelpTutorialContent(
         tutorial: widget.tutorial,
         youtubeChannelUrl: widget.youtubeChannelUrl,
+        onOpenExternal: status == _PlayerViewStatus.error
+            ? null
+            : _openExternal,
         playerArea: AnimatedSwitcher(
           duration: DonyDuration.base,
           switchInCurve: DonyCurve.enter,

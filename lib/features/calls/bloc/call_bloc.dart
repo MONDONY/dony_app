@@ -126,8 +126,29 @@ class CallBloc extends Bloc<CallEvent, CallState> {
     final current = state;
     if (current is! CallInProgress) return;
     final on = !current.speakerOn;
-    await _gateway.setSpeakerOn(on);
+    // Choix affiché tout de suite : pendant la sonnerie, Stream refuse de
+    // changer de sortie (« Call not connected », Sentry FLUTTER-A5/A6) ; le
+    // choix est alors appliqué au décroché (_applySpeakerOnConnect).
     emit(current.copyWith(speakerOn: on));
+    if (current.phase != CallPhase.connected) return;
+    try {
+      await _gateway.setSpeakerOn(on);
+    } catch (_) {
+      // Sortie audio inchangée : le bouton revient à l'état réel.
+      final latest = state;
+      if (latest is CallInProgress) emit(latest.copyWith(speakerOn: !on));
+    }
+  }
+
+  /// Haut-parleur choisi pendant la sonnerie : appliqué dès que l'autre
+  /// décroche. Un échec laisse la sortie par défaut, et le bouton le dit.
+  Future<void> _applySpeakerOnConnect(Emitter<CallState> emit) async {
+    try {
+      await _gateway.setSpeakerOn(true);
+    } catch (_) {
+      final latest = state;
+      if (latest is CallInProgress) emit(latest.copyWith(speakerOn: false));
+    }
   }
 
   Future<void> _onHangUp(
@@ -146,7 +167,10 @@ class CallBloc extends Bloc<CallEvent, CallState> {
     emit(const CallEnded(reason: 'hangup'));
   }
 
-  void _onSnapshot(_CallSnapshotReceived event, Emitter<CallState> emit) {
+  Future<void> _onSnapshot(
+    _CallSnapshotReceived event,
+    Emitter<CallState> emit,
+  ) async {
     final current = state;
     if (current is! CallInProgress) return;
     final snapshot = event.snapshot;
@@ -160,7 +184,8 @@ class CallBloc extends Bloc<CallEvent, CallState> {
         );
         emit(CallEnded(reason: snapshot.endReason));
       case CallPhase.connected:
-        if (current.phase != CallPhase.connected) {
+        final justConnected = current.phase != CallPhase.connected;
+        if (justConnected) {
           unawaited(_analytics.logEvent(AnalyticsEvents.callConnected));
         }
         emit(
@@ -170,6 +195,9 @@ class CallBloc extends Bloc<CallEvent, CallState> {
             remoteName: snapshot.remoteName,
           ),
         );
+        if (justConnected && current.speakerOn) {
+          await _applySpeakerOnConnect(emit);
+        }
       case CallPhase.ringing:
       case CallPhase.connecting:
         emit(current.copyWith(phase: snapshot.phase));
