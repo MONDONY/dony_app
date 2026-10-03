@@ -12371,6 +12371,44 @@
   "@profileLanguageArabic": {
     "description": "Libellé affiché de la langue parlée « Arabe » (profile_labels.dart, spokenLanguageLabel)."
   },
+  "profileLanguagePortuguese": "Portugais",
+  "profileLanguageGerman": "Allemand",
+  "profileLanguageItalian": "Italien",
+  "profileLanguageChinese": "Chinois",
+  "profileLanguageHindi": "Hindi",
+  "profileLanguageRussian": "Russe",
+  "profileLanguageTurkish": "Turc",
+  "profileLanguageDioula": "Dioula",
+  "profileLanguageFula": "Peul",
+  "profileLanguageSoninke": "Soninké",
+  "profileLanguageMalinke": "Malinké",
+  "profileLanguageHausa": "Haoussa",
+  "profileLanguageYoruba": "Yoruba",
+  "profileLanguageIgbo": "Igbo",
+  "profileLanguageLingala": "Lingala",
+  "profileLanguageSwahili": "Swahili",
+  "profileLanguageAmharic": "Amharique",
+  "profileLanguageMoore": "Moré",
+  "profileEditLanguagesAdd": "Ajouter une langue",
+  "@profileEditLanguagesAdd": {
+    "description": "Bouton du formulaire de profil qui ouvre la liste des langues parlées (FLUTTER-9Z)"
+  },
+  "profileLanguagesSheetSearchHint": "Rechercher une langue",
+  "profileLanguagesSheetOther": "Autre langue",
+  "profileLanguagesSheetOtherHint": "Nom de la langue",
+  "profileLanguagesSheetOtherAdd": "Ajouter",
+  "profileLanguagesSheetValidate": "Valider",
+  "profileLanguagesSheetNoMatch": "Aucune langue trouvée. Ajoutez-la avec « Autre langue ».",
+  "profileEditLanguageRemove": "Retirer {language}",
+  "@profileEditLanguageRemove": {
+    "description": "Lecteur d'écran : retire une langue parlée du profil",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "profileEditViewPhotoSemantics": "Voir la photo de profil en grand",
   "profilePublicOwnProfileTitle": "Ce que les autres voient",
   "@profilePublicOwnProfileTitle": {
     "description": "Titre de l'app bar en mode « mon profil » (profile_public_screen.dart)"

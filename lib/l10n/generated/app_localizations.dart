@@ -18575,6 +18575,168 @@ abstract class AppLocalizations {
   /// **'Arabe'**
   String get profileLanguageArabic;
 
+  /// No description provided for @profileLanguagePortuguese.
+  ///
+  /// In fr, this message translates to:
+  /// **'Portugais'**
+  String get profileLanguagePortuguese;
+
+  /// No description provided for @profileLanguageGerman.
+  ///
+  /// In fr, this message translates to:
+  /// **'Allemand'**
+  String get profileLanguageGerman;
+
+  /// No description provided for @profileLanguageItalian.
+  ///
+  /// In fr, this message translates to:
+  /// **'Italien'**
+  String get profileLanguageItalian;
+
+  /// No description provided for @profileLanguageChinese.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chinois'**
+  String get profileLanguageChinese;
+
+  /// No description provided for @profileLanguageHindi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Hindi'**
+  String get profileLanguageHindi;
+
+  /// No description provided for @profileLanguageRussian.
+  ///
+  /// In fr, this message translates to:
+  /// **'Russe'**
+  String get profileLanguageRussian;
+
+  /// No description provided for @profileLanguageTurkish.
+  ///
+  /// In fr, this message translates to:
+  /// **'Turc'**
+  String get profileLanguageTurkish;
+
+  /// No description provided for @profileLanguageDioula.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dioula'**
+  String get profileLanguageDioula;
+
+  /// No description provided for @profileLanguageFula.
+  ///
+  /// In fr, this message translates to:
+  /// **'Peul'**
+  String get profileLanguageFula;
+
+  /// No description provided for @profileLanguageSoninke.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soninké'**
+  String get profileLanguageSoninke;
+
+  /// No description provided for @profileLanguageMalinke.
+  ///
+  /// In fr, this message translates to:
+  /// **'Malinké'**
+  String get profileLanguageMalinke;
+
+  /// No description provided for @profileLanguageHausa.
+  ///
+  /// In fr, this message translates to:
+  /// **'Haoussa'**
+  String get profileLanguageHausa;
+
+  /// No description provided for @profileLanguageYoruba.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yoruba'**
+  String get profileLanguageYoruba;
+
+  /// No description provided for @profileLanguageIgbo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Igbo'**
+  String get profileLanguageIgbo;
+
+  /// No description provided for @profileLanguageLingala.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lingala'**
+  String get profileLanguageLingala;
+
+  /// No description provided for @profileLanguageSwahili.
+  ///
+  /// In fr, this message translates to:
+  /// **'Swahili'**
+  String get profileLanguageSwahili;
+
+  /// No description provided for @profileLanguageAmharic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Amharique'**
+  String get profileLanguageAmharic;
+
+  /// No description provided for @profileLanguageMoore.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moré'**
+  String get profileLanguageMoore;
+
+  /// Bouton du formulaire de profil qui ouvre la liste des langues parlées (FLUTTER-9Z)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une langue'**
+  String get profileEditLanguagesAdd;
+
+  /// No description provided for @profileLanguagesSheetSearchHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher une langue'**
+  String get profileLanguagesSheetSearchHint;
+
+  /// No description provided for @profileLanguagesSheetOther.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre langue'**
+  String get profileLanguagesSheetOther;
+
+  /// No description provided for @profileLanguagesSheetOtherHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de la langue'**
+  String get profileLanguagesSheetOtherHint;
+
+  /// No description provided for @profileLanguagesSheetOtherAdd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter'**
+  String get profileLanguagesSheetOtherAdd;
+
+  /// No description provided for @profileLanguagesSheetValidate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider'**
+  String get profileLanguagesSheetValidate;
+
+  /// No description provided for @profileLanguagesSheetNoMatch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune langue trouvée. Ajoutez-la avec « Autre langue ».'**
+  String get profileLanguagesSheetNoMatch;
+
+  /// Lecteur d'écran : retire une langue parlée du profil
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer {language}'**
+  String profileEditLanguageRemove(String language);
+
+  /// No description provided for @profileEditViewPhotoSemantics.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir la photo de profil en grand'**
+  String get profileEditViewPhotoSemantics;
+
   /// Titre de l'app bar en mode « mon profil » (profile_public_screen.dart)
   ///
   /// In fr, this message translates to:
