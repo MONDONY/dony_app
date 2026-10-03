@@ -412,37 +412,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       if (!isGuest) {
         context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
       }
-      // Réaligne la carte d'onboarding « première publication » sur l'état réel
-      // du serveur : si l'utilisateur a déjà un trajet ou une demande, la carte
-      // ne doit plus s'afficher (le flag Hive local pouvait être absent —
-      // trajet créé sur un autre appareil, avant ce mécanisme, ou après
-      // réinstallation).
-      if (!isGuest) {
-        unawaited(_syncGuidanceFlags());
-      }
     });
-  }
-
-  /// Synchronise les drapeaux d'onboarding avec l'état serveur. Non bloquant :
-  /// en cas d'échec réseau la carte reste affichée (dégradation silencieuse).
-  Future<void> _syncGuidanceFlags() async {
-    final box = getIt<HiveService>().userPrefs;
-    try {
-      final trips = await getIt<AnnouncementRepository>().getMyAnnouncements();
-      if (trips.totalElements > 0) {
-        await box.put(HiveService.kHasPublishedAsTraveler, true);
-      }
-    } catch (_) {
-      // silencieux
-    }
-    try {
-      final requests = await getIt<PackageRequestRepository>().findMine();
-      if (requests.totalElements > 0) {
-        await box.put(HiveService.kHasPublishedAsSender, true);
-      }
-    } catch (_) {
-      // silencieux
-    }
   }
 
   void _consumePendingSearch() {

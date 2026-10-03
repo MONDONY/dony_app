@@ -91,7 +91,7 @@ void main() {
   AnnouncementBloc buildBloc() {
     final analytics = makeDisabledAnalytics(MockAnalyticsBackend());
     analytics.onConfigured();
-    return AnnouncementBloc(mockRepo, mockHive, analytics);
+    return AnnouncementBloc(mockRepo, analytics);
   }
 
   // ─── État initial ────────────────────────────────────────────────────────────
@@ -360,51 +360,6 @@ void main() {
       },
     );
 
-    // VERROU : la création DIRECTE (saveAsDraft: false, comportement par défaut)
-    // doit écrire le flag Hive "premier pas voyageur" — seul le cas brouillon
-    // (testé plus bas, group « brouillon ») en est dispensé. Sans ce test, une
-    // inversion de la condition `!event.saveAsDraft` (announcement_bloc.dart:66)
-    // passerait inaperçue : le test brouillon vérifie `isNull`, mais aucun test
-    // n'affirmait le `isTrue` symétrique côté publication directe.
-    blocTest<AnnouncementBloc, AnnouncementState>(
-      'création directe (sans saveAsDraft) écrit kHasPublishedAsTraveler',
-      build: () {
-        when(
-          () => mockRepo.createAnnouncement(
-            departureCity: any(named: 'departureCity'),
-            arrivalCity: any(named: 'arrivalCity'),
-            departureDate: any(named: 'departureDate'),
-            departureTime: any(named: 'departureTime'),
-            arrivalTime: any(named: 'arrivalTime'),
-            pickupAddress: any(named: 'pickupAddress'),
-            deliveryAddress: any(named: 'deliveryAddress'),
-            availableKg: any(named: 'availableKg'),
-            pricePerKg: any(named: 'pricePerKg'),
-            transportMode: any(named: 'transportMode'),
-            handoverDeadline: any(named: 'handoverDeadline'),
-          ),
-        ).thenAnswer((_) async => ann);
-        return buildBloc();
-      },
-      act: (bloc) => bloc.add(
-        AnnouncementCreateRequested(
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          departureDate: DateTime.now().add(const Duration(days: 10)),
-          pickupAddress: kTestPickupAddress,
-          deliveryAddress: kTestDeliveryAddress,
-          availableKg: 20.0,
-          pricePerKg: 5.0,
-          transportMode: TransportMode.plane,
-          handoverDeadline: DateTime(2026, 6, 14, 18),
-        ),
-      ),
-      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementCreated>()],
-      verify: (_) {
-        expect(userPrefsBox.get(HiveService.kHasPublishedAsTraveler), isTrue);
-      },
-    );
-
     blocTest<AnnouncementBloc, AnnouncementState>(
       'ForbiddenException autre code → [Loading, AnnouncementError]',
       build: () {
@@ -448,7 +403,7 @@ void main() {
     final ann = buildAnnouncement();
 
     blocTest<AnnouncementBloc, AnnouncementState>(
-      'création en brouillon propage saveAsDraft et n\'écrit pas kHasPublishedAsTraveler',
+      'création en brouillon propage saveAsDraft',
       build: () {
         when(
           () => mockRepo.createAnnouncement(
@@ -501,7 +456,6 @@ void main() {
           ),
         ).captured;
         expect(captured.single, isTrue);
-        expect(userPrefsBox.get(HiveService.kHasPublishedAsTraveler), isNull);
       },
     );
 
@@ -616,7 +570,7 @@ void main() {
     final ann = buildAnnouncement();
 
     blocTest<AnnouncementBloc, AnnouncementState>(
-      'publication réussie → [Loading, AnnouncementPublished] + kHasPublishedAsTraveler',
+      'publication réussie → [Loading, AnnouncementPublished]',
       build: () {
         when(
           () => mockRepo.publishAnnouncement('a1'),
@@ -625,9 +579,6 @@ void main() {
       },
       act: (bloc) => bloc.add(AnnouncementPublishRequested('a1')),
       expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementPublished>()],
-      verify: (_) {
-        expect(userPrefsBox.get(HiveService.kHasPublishedAsTraveler), isTrue);
-      },
     );
 
     blocTest<AnnouncementBloc, AnnouncementState>(

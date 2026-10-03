@@ -456,7 +456,6 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<AnnouncementBloc>(
     () => AnnouncementBloc(
       getIt<AnnouncementRepository>(),
-      getIt<HiveService>(),
       getIt<AnalyticsService>(),
     ),
   );
@@ -1161,7 +1160,6 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CorridorAlertListBloc(
       getIt<CorridorAlertRepository>(),
       getIt<AnalyticsService>(),
-      hiveService: getIt<HiveService>(),
     ),
   );
   // param1 = record {editing, direction, prefill} — direction forcée par rôle
@@ -1181,7 +1179,6 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       editing: params.editing,
       initialDirection: params.direction,
       prefill: params.prefill,
-      hiveService: getIt<HiveService>(),
     ),
   );
   // param1 = alertId (String), param2 = alerte déjà connue (null depuis un

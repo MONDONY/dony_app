@@ -210,17 +210,9 @@ class _MockGeolocatorPlatform extends Mock
   );
 }
 
-// Simule un utilisateur qui a déjà publié et déjà créé une alerte.
 class _FakeBox extends Fake implements Box<dynamic> {
   @override
-  dynamic get(dynamic key, {dynamic defaultValue}) {
-    if (key == HiveService.kHasPublishedAsTraveler ||
-        key == HiveService.kHasPublishedAsSender ||
-        key == HiveService.kHasActiveCorridorAlert) {
-      return true;
-    }
-    return defaultValue;
-  }
+  dynamic get(dynamic key, {dynamic defaultValue}) => defaultValue;
 
   @override
   Future<void> put(dynamic key, dynamic value) async {}

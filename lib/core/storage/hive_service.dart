@@ -5,16 +5,6 @@ class HiveService {
   static const String offlineQueueBox = 'offline_queue';
   static const String userPrefsBox = 'user_prefs';
 
-  // Clés pour les flags "premier pas" (onboarding par rôle)
-  static const String kHasPublishedAsTraveler = 'has_published_as_traveler';
-  static const String kHasPublishedAsSender = 'has_published_as_sender';
-
-  // Alerte corridor active : posé à la première création/édition réussie,
-  // jamais réinitialisé (même précédent que kHasPublishedAsTraveler/Sender).
-  // Sert uniquement à masquer la slide "Créer une alerte" du carousel
-  // evergreen de l'écran Recherche une fois l'action faite.
-  static const String kHasActiveCorridorAlert = 'has_active_corridor_alert';
-
   // Feuille « Ne manquez aucun appel » (appels Yadony sur l'écran verrouillé,
   // FLUTTER-92), montrée une seule fois par installation.
   static const String kCallLockScreenPromptShown =

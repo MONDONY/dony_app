@@ -4,7 +4,6 @@ import 'package:bloc/bloc.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_notify_mode.dart';
@@ -144,10 +143,8 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
     this._analytics, {
     CorridorAlertModel? editing,
     AlertDirection initialDirection = AlertDirection.travelerWantsPackages,
-    HiveService? hiveService,
     CorridorAlertDraft? prefill,
   }) : _editingId = editing?.id,
-       _hiveService = hiveService,
        super(
          editing == null
              ? (prefill == null
@@ -190,7 +187,6 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
 
   final CorridorAlertRepository _repository;
   final AnalyticsService _analytics;
-  final HiveService? _hiveService;
   final String? _editingId;
 
   bool get isEditing => _editingId != null;
@@ -300,12 +296,6 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
       } else {
         await _repository.create(draft);
         unawaited(_analytics.logEvent(AnalyticsEvents.corridorAlertCreated));
-      }
-      final hive = _hiveService;
-      if (hive != null) {
-        unawaited(
-          hive.userPrefs.put(HiveService.kHasActiveCorridorAlert, true),
-        );
       }
       emit(state.copyWith(status: CorridorAlertFormStatus.success));
     } catch (err) {

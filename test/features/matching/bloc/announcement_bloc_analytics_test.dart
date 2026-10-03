@@ -42,7 +42,7 @@ void main() {
         ? makeEnabledAnalytics(backend)
         : makeDisabledAnalytics(backend);
     a.onConfigured();
-    return AnnouncementBloc(repo, hive, a);
+    return AnnouncementBloc(repo, a);
   }
 
   AnnouncementModel fakeAnnouncement() => AnnouncementModel(
