@@ -719,7 +719,7 @@ void main() {
         ).thenAnswer((_) async => buildBid(status: 'CANCELLED'));
         return buildBloc();
       },
-      act: (bloc) => bloc.add(BidCancelRequested('bid-001')),
+      act: (bloc) => bloc.add(BidCancelRequested('bid-001', actor: 'sender')),
       verify: (_) {
         verify(() => mockRepo.cancelBid('bid-001')).called(1);
       },
@@ -739,8 +739,13 @@ void main() {
         ).thenAnswer((_) async => buildBid(status: 'CANCELLED'));
         return buildBloc();
       },
-      act: (bloc) =>
-          bloc.add(BidCancelRequested('bid-001', reason: 'Colis trop lourd')),
+      act: (bloc) => bloc.add(
+        BidCancelRequested(
+          'bid-001',
+          reason: 'Colis trop lourd',
+          actor: 'traveler',
+        ),
+      ),
       verify: (_) {
         verify(
           () => mockRepo.cancelBid('bid-001', reason: 'Colis trop lourd'),
@@ -772,7 +777,7 @@ void main() {
         );
         return buildBloc();
       },
-      act: (bloc) => bloc.add(BidCancelRequested('bid-001')),
+      act: (bloc) => bloc.add(BidCancelRequested('bid-001', actor: 'sender')),
       expect: () => [
         isA<BidLoading>(),
         predicate<BidState>(
@@ -789,7 +794,7 @@ void main() {
         ).thenThrow(Exception('timeout'));
         return buildBloc();
       },
-      act: (bloc) => bloc.add(BidCancelRequested('bid-001')),
+      act: (bloc) => bloc.add(BidCancelRequested('bid-001', actor: 'sender')),
       expect: () => [isA<BidLoading>(), isA<BidError>()],
     );
   });

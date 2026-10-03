@@ -26,6 +26,13 @@ class ConversationOpenBloc
     RecipientConversationOpenRequested event,
     Emitter<ConversationOpenState> emit,
   ) async {
+    // À l'appui, avant la réponse : le refus (403/404) est aussi une intention.
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.recipientMessageTapped,
+        properties: {'role': event.role.name},
+      ),
+    );
     final opened = await _open(
       emit,
       () => _repository.getRecipientConversation(event.bidId),

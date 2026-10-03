@@ -242,7 +242,11 @@ class _TravelerOptionsSheet extends StatelessWidget {
       );
     } else {
       context.read<BidBloc>().add(
-        BidCancelRequested(bid.id, reason: reason.isEmpty ? null : reason),
+        BidCancelRequested(
+          bid.id,
+          reason: reason.isEmpty ? null : reason,
+          actor: 'traveler',
+        ),
       );
     }
   }

@@ -14267,6 +14267,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedbackSubmitButton => 'Send report';
 
   @override
+  String get feedbackKindLabel => 'Type of feedback';
+
+  @override
+  String get feedbackKindBug => 'Bug';
+
+  @override
+  String get feedbackKindFeedback => 'Feedback';
+
+  @override
+  String get feedbackKindSuggestion => 'Suggestion';
+
+  @override
   String get currencySelectorTitle => 'Choose a currency';
 
   @override

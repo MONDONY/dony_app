@@ -903,6 +903,12 @@ void main() {
           properties: {'active': true},
         ),
       ).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': 'urgent', 'mode': 'trips'},
+        ),
+      ).called(1);
 
       verify(
         () => announcementBloc.add(

@@ -14358,6 +14358,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get feedbackSubmitButton => 'Envoyer le rapport';
 
   @override
+  String get feedbackKindLabel => 'Type de retour';
+
+  @override
+  String get feedbackKindBug => 'Bug';
+
+  @override
+  String get feedbackKindFeedback => 'Avis';
+
+  @override
+  String get feedbackKindSuggestion => 'Suggestion';
+
+  @override
   String get currencySelectorTitle => 'Choisir une devise';
 
   @override

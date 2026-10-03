@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
@@ -6,6 +8,8 @@ import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/mock_analytics_backend.dart';
 
 class MockCommissionMethodRepository extends Mock
     implements CommissionMethodRepository {}
@@ -20,16 +24,20 @@ const _fakeCard = CommissionMethod(
 
 void main() {
   late MockCommissionMethodRepository repo;
+  late MockAnalyticsBackend backend;
+  late AnalyticsService analytics;
 
   setUp(() {
     repo = MockCommissionMethodRepository();
+    backend = MockAnalyticsBackend();
+    analytics = makeEnabledAnalytics(backend)..onConfigured();
   });
 
   blocTest<CommissionMethodBloc, CommissionMethodState>(
     'load emits Loading then Loaded when repo returns card',
     build: () {
       when(() => repo.load()).thenAnswer((_) async => _fakeCard);
-      return CommissionMethodBloc(repo);
+      return CommissionMethodBloc(repo, analytics);
     },
     act: (b) => b.add(CommissionMethodLoadRequested()),
     expect: () => [
@@ -42,7 +50,7 @@ void main() {
     'load emits NotConfigured when repo returns null',
     build: () {
       when(() => repo.load()).thenAnswer((_) async => null);
-      return CommissionMethodBloc(repo);
+      return CommissionMethodBloc(repo, analytics);
     },
     act: (b) => b.add(CommissionMethodLoadRequested()),
     expect: () => [
@@ -55,7 +63,7 @@ void main() {
     'load emits Error on exception',
     build: () {
       when(() => repo.load()).thenThrow(Exception('network'));
-      return CommissionMethodBloc(repo);
+      return CommissionMethodBloc(repo, analytics);
     },
     act: (b) => b.add(CommissionMethodLoadRequested()),
     expect: () => [
@@ -68,7 +76,7 @@ void main() {
     'setup emits SetupInProgress with clientSecret',
     build: () {
       when(() => repo.startSetup()).thenAnswer((_) async => 'seti_x');
-      return CommissionMethodBloc(repo);
+      return CommissionMethodBloc(repo, analytics);
     },
     act: (b) => b.add(CommissionMethodSetupRequested()),
     expect: () => [isA<CommissionMethodSetupInProgress>()],
@@ -83,20 +91,41 @@ void main() {
     build: () {
       when(() => repo.savePaymentMethod(any())).thenAnswer((_) async {});
       when(() => repo.load()).thenAnswer((_) async => _fakeCard);
-      return CommissionMethodBloc(repo);
+      return CommissionMethodBloc(repo, analytics);
     },
     act: (b) => b.add(CommissionMethodSetupCompleted('pm_test_123')),
     expect: () => [
       isA<CommissionMethodLoading>(),
       isA<CommissionMethodLoaded>(),
     ],
+    verify: (_) => verify(
+      () => backend.capture(AnalyticsEvents.paymentCardSaved, {
+        'context': 'commission',
+      }),
+    ).called(1),
+  );
+
+  blocTest<CommissionMethodBloc, CommissionMethodState>(
+    'SetupCompleted en échec → pas de payment_card_saved',
+    build: () {
+      when(() => repo.savePaymentMethod(any())).thenThrow(Exception('boom'));
+      return CommissionMethodBloc(repo, analytics);
+    },
+    act: (b) => b.add(CommissionMethodSetupCompleted('pm_test_123')),
+    expect: () => [
+      isA<CommissionMethodLoading>(),
+      isA<CommissionMethodError>(),
+    ],
+    verify: (_) => verifyNever(
+      () => backend.capture(AnalyticsEvents.paymentCardSaved, any()),
+    ),
   );
 
   blocTest<CommissionMethodBloc, CommissionMethodState>(
     'SetupCancelled triggers reload',
     build: () {
       when(() => repo.load()).thenAnswer((_) async => null);
-      return CommissionMethodBloc(repo);
+      return CommissionMethodBloc(repo, analytics);
     },
     act: (b) => b.add(CommissionMethodSetupCancelled()),
     expect: () => [
@@ -110,7 +139,7 @@ void main() {
     build: () {
       when(() => repo.remove()).thenAnswer((_) async {});
       when(() => repo.load()).thenAnswer((_) async => null);
-      return CommissionMethodBloc(repo);
+      return CommissionMethodBloc(repo, analytics);
     },
     act: (b) => b.add(CommissionMethodDeleteRequested()),
     expect: () => [

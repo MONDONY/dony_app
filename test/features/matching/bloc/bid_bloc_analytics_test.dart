@@ -139,6 +139,37 @@ void main() {
     ).called(1);
   });
 
+  test('bid_cancelled fires with actor on BidCancelRequested', () async {
+    when(
+      () => repo.cancelBid('bid1', reason: any(named: 'reason')),
+    ).thenAnswer((_) async => _buildBid());
+
+    final bloc = makeBloc();
+    bloc.add(BidCancelRequested('bid1', actor: 'sender'));
+    await bloc.stream.firstWhere((s) => s is BidCancelled);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(
+      () => backend.capture(AnalyticsEvents.bidCancelled, {
+        'actor': 'sender',
+        'status': 'PENDING',
+      }),
+    ).called(1);
+  });
+
+  test('bid_cancelled absent when the cancellation fails', () async {
+    when(
+      () => repo.cancelBid('bid1', reason: any(named: 'reason')),
+    ).thenThrow(Exception('boom'));
+
+    final bloc = makeBloc();
+    bloc.add(BidCancelRequested('bid1', actor: 'traveler'));
+    await bloc.stream.firstWhere((s) => s is BidError);
+    await Future<void>.delayed(Duration.zero);
+
+    verifyNever(() => backend.capture(AnalyticsEvents.bidCancelled, any()));
+  });
+
   test('no events when disabled', () async {
     when(
       () => repo.createBid(

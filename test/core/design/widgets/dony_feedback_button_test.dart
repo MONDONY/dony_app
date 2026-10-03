@@ -536,6 +536,59 @@ void main() {
   test('FeedbackReport n\'a pas de pièce jointe par défaut', () {
     const report = FeedbackReport(message: 'x');
     expect(report.attachments, isEmpty);
+    expect(report.kind, FeedbackKind.bug);
+  });
+
+  test('chaque type de retour a sa valeur wire et son étiquette', () {
+    expect(FeedbackKind.bug.wire, 'bug');
+    expect(FeedbackKind.bug.tag, 'BUG');
+    expect(FeedbackKind.feedback.wire, 'feedback');
+    expect(FeedbackKind.feedback.tag, 'AVIS');
+    expect(FeedbackKind.suggestion.wire, 'suggestion');
+    expect(FeedbackKind.suggestion.tag, 'SUGGESTION');
+  });
+
+  testWidgets(
+    'le type de retour est « Bug » par défaut et part dans le rapport',
+    (tester) async {
+      FeedbackReport? sent;
+      await tester.pumpWidget(
+        withPicker(pick: (_) async => null, onSubmit: (r) async => sent = r),
+      );
+      await openSheet(tester);
+      expect(find.text('Type de retour'), findsOneWidget);
+      expect(find.text('Bug'), findsOneWidget);
+      expect(find.text('Avis'), findsOneWidget);
+      expect(find.text('Suggestion'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'Bouton muet');
+      await tester.pump();
+      await tester.tap(find.text('Envoyer le rapport'));
+      await tester.pumpAndSettle();
+
+      expect(sent!.kind, FeedbackKind.bug);
+    },
+  );
+
+  testWidgets('choisir « Avis » puis « Suggestion » change le type envoyé', (
+    tester,
+  ) async {
+    FeedbackReport? sent;
+    await tester.pumpWidget(
+      withPicker(pick: (_) async => null, onSubmit: (r) async => sent = r),
+    );
+    await openSheet(tester);
+
+    await tester.tap(find.text('Avis'));
+    await tester.pump();
+    await tester.tap(find.text('Suggestion'));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), 'Ajouter un filtre');
+    await tester.pump();
+    await tester.tap(find.text('Envoyer le rapport'));
+    await tester.pumpAndSettle();
+
+    expect(sent!.kind, FeedbackKind.suggestion);
   });
 
   // ── Route lue au tap + envoi backend ───────────────────────────────────────

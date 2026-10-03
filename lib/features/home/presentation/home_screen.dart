@@ -700,9 +700,36 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// [_openComposer], seul endroit où l'utilisateur valide vraiment une
   /// recherche via le bouton « Rechercher ».
   void _onFiltersChanged(HomeSearchFilters next) {
+    _trackFilterDiff(_filters, next);
     setState(() => _filters = next);
     _dispatchForMode();
     unawaited(_dispatchOtherModeCount());
+  }
+
+  /// Un event par filtre posé (`search_filter_applied`) ou retiré
+  /// (`search_filter_cleared`), pour savoir lesquels servent le plus. Seule la
+  /// clé du filtre part (`filter`) avec le mode : jamais la valeur choisie
+  /// (ville, poids, prix).
+  void _trackFilterDiff(HomeSearchFilters before, HomeSearchFilters after) {
+    final was = before.activeKeys;
+    final now = after.activeKeys;
+    final analytics = getIt<AnalyticsService>();
+    for (final key in now.difference(was)) {
+      unawaited(
+        analytics.logEvent(
+          AnalyticsEvents.searchFilterApplied,
+          properties: {'filter': key, 'mode': _mode.name},
+        ),
+      );
+    }
+    for (final key in was.difference(now)) {
+      unawaited(
+        analytics.logEvent(
+          AnalyticsEvents.searchFilterCleared,
+          properties: {'filter': key, 'mode': _mode.name},
+        ),
+      );
+    }
   }
 
   /// Nombre de trajets actifs, source unique du filtre « Pour mes trajets ».

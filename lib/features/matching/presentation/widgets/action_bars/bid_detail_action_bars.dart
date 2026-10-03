@@ -67,7 +67,9 @@ void showSenderCancelBidDialog(BuildContext context, BidModel bid) {
         FilledButton(
           onPressed: () {
             ctx.pop();
-            context.read<BidBloc>().add(BidCancelRequested(bid.id));
+            context.read<BidBloc>().add(
+              BidCancelRequested(bid.id, actor: 'sender'),
+            );
           },
           style: FilledButton.styleFrom(
             backgroundColor: cs.error,

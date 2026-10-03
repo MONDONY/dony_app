@@ -23819,6 +23819,30 @@ abstract class AppLocalizations {
   /// **'Envoyer le rapport'**
   String get feedbackSubmitButton;
 
+  /// Libellé au-dessus des puces de type de retour de la feuille du scarabée (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Type de retour'**
+  String get feedbackKindLabel;
+
+  /// Puce « Bug » du type de retour de la feuille du scarabée (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Bug'**
+  String get feedbackKindBug;
+
+  /// Puce « Avis » du type de retour de la feuille du scarabée (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Avis'**
+  String get feedbackKindFeedback;
+
+  /// Puce « Suggestion » du type de retour de la feuille du scarabée (dony_feedback_button.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Suggestion'**
+  String get feedbackKindSuggestion;
+
   /// Titre de la bottom sheet de sélection de devise (currency_selector.dart).
   ///
   /// In fr, this message translates to:

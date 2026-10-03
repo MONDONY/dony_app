@@ -69,7 +69,9 @@ class ScreenFeedbackSender {
     return _repository.submit(
       targetType: IncidentTargetType.app,
       reason: reason,
-      description: report.message,
+      // Préfixe `[BUG]` / `[AVIS]` / `[SUGGESTION]` : le motif backend reste
+      // `SCREEN_BUG` (contrat figé), le type se lit et se filtre dans le texte.
+      description: '[${report.kind.tag}] ${report.message}',
       photoKeys: keys,
       screenRoute: route == unknownRoute ? null : route,
     );
