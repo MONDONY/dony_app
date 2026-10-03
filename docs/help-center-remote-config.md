@@ -155,6 +155,14 @@ Contextes ajoutés depuis : `corridorAlerts`, `tripTemplates`, `recipients`,
 `receivedRequests` et `walletTopup` (écran « Méthode de recharge » du solde,
 carte bancaire comme mobile money).
 
+**Complément par le catalogue embarqué.** Le catalogue publié remplace le
+catalogue embarqué (`assets/config/help_center_config.default.json`), mais
+un écran qu'il ne couvre pas garde le tutoriel embarqué : un tutoriel
+embarqué est ajouté si son `id` est absent du catalogue publié et si aucun
+de ses `contexts` n'y apparaît, actif ou non. Pour masquer un tutoriel
+embarqué depuis la console, publier une entrée `"active": false` sur son
+contexte.
+
 **Compatibilité des anciens builds.** Jusqu'au build 102 inclus,
 l'app rejetait **tout le tutoriel** dès qu'un nom de
 `contexts` lui était inconnu. Ajouter un nouveau contexte à une entrée

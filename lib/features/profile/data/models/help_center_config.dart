@@ -118,6 +118,33 @@ final class HelpCenterConfig extends Equatable {
     );
   }
 
+  /// Complète ce catalogue (Remote Config) avec les tutoriels du catalogue
+  /// embarqué [fallback] pour les écrans qu'il ne couvre pas.
+  ///
+  /// Un tutoriel embarqué est ajouté si son `id` est absent d'ici et si aucun
+  /// de ses contextes n'apparaît dans un tutoriel d'ici, actif ou non. Pour
+  /// masquer un tutoriel embarqué depuis la console, il suffit donc de publier
+  /// une entrée inactive sur son contexte. Sans ce complément, un écran ajouté
+  /// dans l'app restait vide tant que la console n'était pas mise à jour
+  /// (FLUTTER-AB).
+  HelpCenterConfig completedWith(HelpCenterConfig fallback) {
+    final ids = {for (final item in _tutorials) item.id};
+    final covered = {for (final item in _tutorials) ...item.contexts};
+    final missing = fallback._tutorials.where(
+      (item) => !ids.contains(item.id) && !item.contexts.any(covered.contains),
+    );
+    if (missing.isEmpty) {
+      return this;
+    }
+    return HelpCenterConfig(
+      schemaVersion: schemaVersion,
+      socialLinks: _socialLinks,
+      tutorials: [..._tutorials, ...missing]
+        ..sort((a, b) => a.order.compareTo(b.order)),
+      youtubeChannelUrl: youtubeChannelUrl,
+    );
+  }
+
   HelpTutorial? tutorialFor(TutorialContext context) {
     for (final item in tutorials) {
       if (item.active && item.contexts.contains(context)) {

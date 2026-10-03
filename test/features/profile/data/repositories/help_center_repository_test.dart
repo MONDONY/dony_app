@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:url_launcher_platform_interface/link.dart';
@@ -181,6 +182,76 @@ void main() {
         }
       },
     );
+
+    // FLUTTER-AB : un écran sans entrée dans Remote Config garde le
+    // tutoriel du catalogue embarqué.
+    group('complément par le catalogue embarqué', () {
+      String catalog(List<String> tutorials) =>
+          '{"schemaVersion": 1, "socialLinks": [], '
+          '"tutorials": [${tutorials.join(',')}]}';
+      String tutorial(String id, String context, {bool active = true}) =>
+          '{"id": "$id", "title": "T $id", "description": "D $id", '
+          '"youtubeVideoId": "dQw4w9WgXcQ", "order": 1, "active": $active, '
+          '"contexts": ["$context"]}';
+
+      test('ajoute le tutoriel d’un écran absent du distant', () async {
+        final repository = HelpCenterRepository(
+          _FakeHelpCenterConfigSource(
+            catalog([tutorial('remote-pay', 'payment')]),
+          ),
+          fallbackJsonLoader: () async => catalog([
+            tutorial('bundled-pay', 'payment'),
+            tutorial('bundled-topup', 'walletTopup'),
+          ]),
+        );
+
+        final config = (await repository.load()).config;
+
+        expect(config.tutorials.map((t) => t.id), [
+          'remote-pay',
+          'bundled-topup',
+        ]);
+        expect(
+          config.tutorialFor(TutorialContext.walletTopup)?.id,
+          'bundled-topup',
+        );
+      });
+
+      test(
+        'une entrée distante inactive masque le tutoriel embarqué',
+        () async {
+          final repository = HelpCenterRepository(
+            _FakeHelpCenterConfigSource(
+              catalog([tutorial('off', 'walletTopup', active: false)]),
+            ),
+            fallbackJsonLoader: () async =>
+                catalog([tutorial('bundled-topup', 'walletTopup')]),
+          );
+
+          final config = (await repository.load()).config;
+
+          expect(config.tutorialFor(TutorialContext.walletTopup), isNull);
+        },
+      );
+
+      test('refresh complète aussi la configuration distante', () async {
+        final repository = HelpCenterRepository(
+          _FakeHelpCenterConfigSource(
+            '',
+            fetchedJson: catalog([tutorial('remote-pay', 'payment')]),
+          ),
+          fallbackJsonLoader: () async =>
+              catalog([tutorial('bundled-topup', 'walletTopup')]),
+        );
+
+        final config = (await repository.refresh()).config;
+
+        expect(
+          config.tutorialFor(TutorialContext.walletTopup)?.id,
+          'bundled-topup',
+        );
+      });
+    });
 
     test('openExternal refuse un schéma non HTTPS', () async {
       final launcher = _FakeUrlLauncherPlatform();
