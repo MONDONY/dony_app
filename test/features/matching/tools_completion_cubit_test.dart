@@ -115,4 +115,100 @@ void main() {
     expect(const ToolsCompletionState.loaded(model).model, same(model));
     expect(const ToolsCompletionState.hidden().model, isNull);
   });
+
+  const complete = ToolsCompletionModel(
+    tools: [
+      ToolStatus(key: ToolKey.addresses, count: 2),
+      ToolStatus(key: ToolKey.recipients, count: 4),
+      ToolStatus(key: ToolKey.alerts, count: 1),
+      ToolStatus(key: ToolKey.tripTemplates, count: 1),
+      ToolStatus(key: ToolKey.priceGrid, count: 6),
+    ],
+  );
+
+  blocTest<ToolsCompletionCubit, ToolsCompletionState>(
+    'un outil qui passe de 0 à 1 → tool_configured, sans tools_setup_completed',
+    build: () {
+      when(
+        () => repository.getToolsCompletion(),
+      ).thenAnswer((_) async => model2);
+      final analytics = makeEnabledAnalytics(backend)..onConfigured();
+      return ToolsCompletionCubit(repository, analytics);
+    },
+    seed: () => const ToolsCompletionState.loaded(model),
+    act: (c) => c.load(),
+    verify: (_) {
+      verify(
+        () => backend.capture(AnalyticsEvents.toolConfigured, {
+          'tool': 'recipients',
+          'ready': 4,
+          'total': 5,
+        }),
+      ).called(1);
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.toolsSetupCompleted, any()),
+      );
+    },
+  );
+
+  blocTest<ToolsCompletionCubit, ToolsCompletionState>(
+    'dernier outil rempli → tool_configured puis tools_setup_completed',
+    build: () {
+      when(
+        () => repository.getToolsCompletion(),
+      ).thenAnswer((_) async => complete);
+      final analytics = makeEnabledAnalytics(backend)..onConfigured();
+      return ToolsCompletionCubit(repository, analytics);
+    },
+    seed: () => const ToolsCompletionState.loaded(model2),
+    act: (c) => c.load(),
+    verify: (_) {
+      verify(
+        () => backend.capture(AnalyticsEvents.toolConfigured, {
+          'tool': 'alerts',
+          'ready': 5,
+          'total': 5,
+        }),
+      ).called(1);
+      verify(
+        () => backend.capture(AnalyticsEvents.toolsSetupCompleted, {
+          'total': 5,
+        }),
+      ).called(1);
+    },
+  );
+
+  blocTest<ToolsCompletionCubit, ToolsCompletionState>(
+    'premier chargement déjà complet → aucun event de progression',
+    build: () {
+      when(
+        () => repository.getToolsCompletion(),
+      ).thenAnswer((_) async => complete);
+      final analytics = makeEnabledAnalytics(backend)..onConfigured();
+      return ToolsCompletionCubit(repository, analytics);
+    },
+    act: (c) => c.load(),
+    verify: (_) {
+      verifyNever(() => backend.capture(AnalyticsEvents.toolConfigured, any()));
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.toolsSetupCompleted, any()),
+      );
+    },
+  );
+
+  blocTest<ToolsCompletionCubit, ToolsCompletionState>(
+    'rechargement sans progression → aucun event de progression',
+    build: () {
+      when(
+        () => repository.getToolsCompletion(),
+      ).thenAnswer((_) async => model);
+      final analytics = makeEnabledAnalytics(backend)..onConfigured();
+      return ToolsCompletionCubit(repository, analytics);
+    },
+    seed: () => const ToolsCompletionState.loaded(model),
+    act: (c) => c.load(),
+    verify: (_) {
+      verifyNever(() => backend.capture(AnalyticsEvents.toolConfigured, any()));
+    },
+  );
 }

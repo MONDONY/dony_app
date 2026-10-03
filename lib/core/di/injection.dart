@@ -504,7 +504,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PriceGridRepository(getIt<PriceGridDatasource>()),
   );
   getIt.registerFactory<PriceGridBloc>(
-    () => PriceGridBloc(getIt<PriceGridRepository>()),
+    () => PriceGridBloc(
+      getIt<PriceGridRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Matching — formulaire de publication d'un trajet
@@ -584,7 +587,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CommissionMethodRepository(getIt<CommissionMethodRemoteDatasource>()),
   );
   getIt.registerFactory<CommissionMethodBloc>(
-    () => CommissionMethodBloc(getIt<CommissionMethodRepository>()),
+    () => CommissionMethodBloc(
+      getIt<CommissionMethodRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerFactory<BidAcceptanceBloc>(
     () => BidAcceptanceBloc(

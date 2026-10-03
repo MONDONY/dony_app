@@ -86,7 +86,7 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr');
     registerFallbackValue(TravelerNoShowReportRequested('bid-001'));
-    registerFallbackValue(BidCancelRequested('bid-001'));
+    registerFallbackValue(BidCancelRequested('bid-001', actor: 'sender'));
     registerFallbackValue(NoShowContestRequested('bid-001'));
     registerFallbackValue(DeliveryNoShowContestRequested('bid-001'));
   });

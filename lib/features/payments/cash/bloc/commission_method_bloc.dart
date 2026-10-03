@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
@@ -6,8 +10,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class CommissionMethodBloc
     extends Bloc<CommissionMethodEvent, CommissionMethodState> {
   final CommissionMethodRepository _repo;
+  final AnalyticsService _analytics;
 
-  CommissionMethodBloc(this._repo) : super(CommissionMethodInitial()) {
+  CommissionMethodBloc(this._repo, this._analytics) : super(CommissionMethodInitial()) {
     on<CommissionMethodLoadRequested>(_load);
     on<CommissionMethodSetupRequested>(_setup);
     on<CommissionMethodSetupCompleted>(_saveAndReload);
@@ -47,6 +52,12 @@ class CommissionMethodBloc
     emit(CommissionMethodLoading());
     try {
       await _repo.savePaymentMethod(event.paymentMethodId);
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.paymentCardSaved,
+          properties: {'context': 'commission'},
+        ),
+      );
       final card = await _repo.load();
       emit(
         card == null

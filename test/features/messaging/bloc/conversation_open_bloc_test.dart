@@ -133,6 +133,46 @@ void main() {
             properties: {'role': 'traveler'},
           ),
         ).called(1);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.recipientMessageTapped,
+            properties: {'role': 'traveler'},
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<ConversationOpenBloc, ConversationOpenState>(
+      "l'appui est tracé même quand l'ouverture est refusée",
+      build: () {
+        when(
+          () => repo.getRecipientConversation('bid-abc'),
+        ).thenThrow(Exception('403'));
+        return ConversationOpenBloc(repo, analytics);
+      },
+      act: (b) => b.add(
+        const RecipientConversationOpenRequested(
+          'bid-abc',
+          role: RecipientConversationRole.recipient,
+        ),
+      ),
+      expect: () => [
+        const ConversationOpenLoading(),
+        isA<ConversationOpenError>(),
+      ],
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.recipientMessageTapped,
+            properties: {'role': 'recipient'},
+          ),
+        ).called(1);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.recipientConversationOpened,
+            properties: any(named: 'properties'),
+          ),
+        );
       },
     );
 

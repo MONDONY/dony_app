@@ -1,6 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_state.dart';
@@ -8,6 +10,8 @@ import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart'
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockPriceGridRepository extends Mock implements PriceGridRepository {}
 
@@ -47,14 +51,18 @@ const _item1AtBottom = PriceGridItemModel(
 
 void main() {
   late MockPriceGridRepository repository;
+  late MockAnalyticsBackend backend;
+  late AnalyticsService analytics;
 
   setUp(() {
     repository = MockPriceGridRepository();
+    backend = MockAnalyticsBackend();
+    analytics = makeEnabledAnalytics(backend)..onConfigured();
   });
 
   group('PriceGridBloc', () {
     test('initial state is PriceGridInitial', () {
-      expect(PriceGridBloc(repository).state, isA<PriceGridInitial>());
+      expect(PriceGridBloc(repository, analytics).state, isA<PriceGridInitial>());
     });
 
     blocTest<PriceGridBloc, PriceGridState>(
@@ -63,7 +71,7 @@ void main() {
         when(
           () => repository.getItems(),
         ).thenAnswer((_) async => [_item1, _item2]);
-        return PriceGridBloc(repository);
+        return PriceGridBloc(repository, analytics);
       },
       act: (b) => b.add(const PriceGridLoadRequested()),
       expect: () => [
@@ -84,7 +92,7 @@ void main() {
             type: DioExceptionType.connectionError,
           ),
         );
-        return PriceGridBloc(repository);
+        return PriceGridBloc(repository, analytics);
       },
       act: (b) => b.add(const PriceGridLoadRequested()),
       expect: () => [
@@ -111,7 +119,7 @@ void main() {
         when(
           () => repository.getItems(),
         ).thenAnswer((_) async => [_item1, _item2]);
-        return PriceGridBloc(repository);
+        return PriceGridBloc(repository, analytics);
       },
       act: (b) => b.add(
         const PriceGridItemAddRequested(
@@ -133,6 +141,88 @@ void main() {
     );
 
     blocTest<PriceGridBloc, PriceGridState>(
+      'ajout dans une grille vide → price_grid_item_added et price_grid_created',
+      build: () {
+        when(
+          () => repository.addItem(
+            label: any(named: 'label'),
+            unitPriceNet: any(named: 'unitPriceNet'),
+          ),
+        ).thenAnswer((_) async => _item1);
+        when(() => repository.getItems()).thenAnswer((_) async => [_item1]);
+        return PriceGridBloc(repository, analytics);
+      },
+      seed: () => const PriceGridLoaded([]),
+      act: (b) => b.add(
+        const PriceGridItemAddRequested(label: 'Valise', unitPriceNet: 10.0),
+      ),
+      expect: () => [isA<PriceGridLoaded>()],
+      verify: (_) {
+        verify(
+          () => backend.capture(AnalyticsEvents.priceGridItemAdded, any()),
+        ).called(1);
+        verify(
+          () => backend.capture(AnalyticsEvents.priceGridCreated, any()),
+        ).called(1);
+      },
+    );
+
+    blocTest<PriceGridBloc, PriceGridState>(
+      'ajout dans une grille déjà remplie → pas de price_grid_created',
+      build: () {
+        when(
+          () => repository.addItem(
+            label: any(named: 'label'),
+            unitPriceNet: any(named: 'unitPriceNet'),
+          ),
+        ).thenAnswer((_) async => _item2);
+        when(
+          () => repository.getItems(),
+        ).thenAnswer((_) async => [_item1, _item2]);
+        return PriceGridBloc(repository, analytics);
+      },
+      seed: () => const PriceGridLoaded([_item1]),
+      act: (b) => b.add(
+        const PriceGridItemAddRequested(label: 'Sac', unitPriceNet: 15.0),
+      ),
+      expect: () => [isA<PriceGridLoaded>()],
+      verify: (_) {
+        verify(
+          () => backend.capture(AnalyticsEvents.priceGridItemAdded, any()),
+        ).called(1);
+        verifyNever(
+          () => backend.capture(AnalyticsEvents.priceGridCreated, any()),
+        );
+      },
+    );
+
+    blocTest<PriceGridBloc, PriceGridState>(
+      'ajout en échec → aucun event',
+      build: () {
+        when(
+          () => repository.addItem(
+            label: any(named: 'label'),
+            unitPriceNet: any(named: 'unitPriceNet'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/price-grid'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
+        return PriceGridBloc(repository, analytics);
+      },
+      seed: () => const PriceGridLoaded([]),
+      act: (b) => b.add(
+        const PriceGridItemAddRequested(label: 'Valise', unitPriceNet: 10.0),
+      ),
+      expect: () => [isA<PriceGridError>(), isA<PriceGridLoaded>()],
+      verify: (_) {
+        verifyNever(() => backend.capture(any(), any()));
+      },
+    );
+
+    blocTest<PriceGridBloc, PriceGridState>(
       'PriceGridItemUpdateRequested recharge la grille sans état de chargement',
       build: () {
         when(
@@ -145,7 +235,7 @@ void main() {
         when(
           () => repository.getItems(),
         ).thenAnswer((_) async => [_item1, _item2]);
-        return PriceGridBloc(repository);
+        return PriceGridBloc(repository, analytics);
       },
       act: (b) => b.add(
         const PriceGridItemUpdateRequested(
@@ -167,7 +257,7 @@ void main() {
       build: () {
         when(() => repository.deleteItem(any())).thenAnswer((_) async {});
         when(() => repository.getItems()).thenAnswer((_) async => [_item2]);
-        return PriceGridBloc(repository);
+        return PriceGridBloc(repository, analytics);
       },
       act: (b) => b.add(const PriceGridItemDeleteRequested('uuid-1')),
       expect: () => [
@@ -179,7 +269,7 @@ void main() {
       'une suppression qui échoue rétablit la grille précédente',
       build: () {
         when(() => repository.deleteItem(any())).thenThrow(Exception('réseau'));
-        return PriceGridBloc(repository);
+        return PriceGridBloc(repository, analytics);
       },
       seed: () => const PriceGridLoaded([_item1, _item2]),
       act: (b) => b.add(const PriceGridItemDeleteRequested('uuid-1')),
@@ -202,7 +292,7 @@ void main() {
         when(
           () => repository.reorder(['uuid-2', 'uuid-1']),
         ).thenAnswer((_) async => [_item2AtTop, _item1AtBottom]);
-        return PriceGridBloc(repository);
+        return PriceGridBloc(repository, analytics);
       },
       seed: () => const PriceGridLoaded([_item1, _item2]),
       act: (b) =>
@@ -228,7 +318,7 @@ void main() {
       'refuse',
       build: () {
         when(() => repository.reorder(any())).thenThrow(Exception('réseau'));
-        return PriceGridBloc(repository);
+        return PriceGridBloc(repository, analytics);
       },
       seed: () => const PriceGridLoaded([_item1, _item2]),
       act: (b) =>
@@ -255,7 +345,7 @@ void main() {
         when(
           () => repository.reorder(['uuid-2', 'uuid-1']),
         ).thenAnswer((_) async => [_item2, _item1]);
-        return PriceGridBloc(repository);
+        return PriceGridBloc(repository, analytics);
       },
       act: (b) =>
           b.add(const PriceGridItemsReorderRequested(['uuid-2', 'uuid-1'])),

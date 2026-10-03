@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_state.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
@@ -7,8 +11,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
   final PriceGridRepository _repository;
+  final AnalyticsService _analytics;
 
-  PriceGridBloc(this._repository) : super(const PriceGridInitial()) {
+  PriceGridBloc(this._repository, this._analytics)
+    : super(const PriceGridInitial()) {
     on<PriceGridLoadRequested>(_onLoad);
     on<PriceGridItemAddRequested>(_onAdd);
     on<PriceGridItemUpdateRequested>(_onUpdate);
@@ -37,7 +43,7 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
   /// position de défilement et sortirait du mode réorganisation. En cas
   /// d'échec, l'état d'erreur déclenche le message puis la liste précédente
   /// est rétablie : le serveur, lui, n'a rien changé.
-  Future<void> _mutate(
+  Future<bool> _mutate(
     Emitter<PriceGridState> emit,
     Future<void> Function() action,
   ) async {
@@ -46,22 +52,35 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
     try {
       await action();
       emit(PriceGridLoaded(await _repository.getItems()));
+      return true;
     } catch (e) {
       emit(PriceGridError(unwrapDioError(e)));
       if (previous != null) emit(PriceGridLoaded(previous));
+      return false;
     }
   }
 
+  /// `price_grid_created` marque le tout premier article : c'est ce qui rend
+  /// l'outil « grille de prix » prêt. Jamais le libellé ni le prix.
   Future<void> _onAdd(
     PriceGridItemAddRequested event,
     Emitter<PriceGridState> emit,
-  ) => _mutate(
-    emit,
-    () => _repository.addItem(
-      label: event.label,
-      unitPriceNet: event.unitPriceNet,
-    ),
-  );
+  ) async {
+    final current = state;
+    final wasEmpty = current is PriceGridLoaded && current.items.isEmpty;
+    final ok = await _mutate(
+      emit,
+      () => _repository.addItem(
+        label: event.label,
+        unitPriceNet: event.unitPriceNet,
+      ),
+    );
+    if (!ok) return;
+    unawaited(_analytics.logEvent(AnalyticsEvents.priceGridItemAdded));
+    if (wasEmpty) {
+      unawaited(_analytics.logEvent(AnalyticsEvents.priceGridCreated));
+    }
+  }
 
   Future<void> _onUpdate(
     PriceGridItemUpdateRequested event,

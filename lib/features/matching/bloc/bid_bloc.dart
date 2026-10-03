@@ -274,6 +274,12 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         reason: event.reason,
       );
       emit(BidCancelled(bid));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.bidCancelled,
+          properties: {'actor': event.actor, 'status': bid.status},
+        ),
+      );
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
     }

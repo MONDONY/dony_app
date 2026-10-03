@@ -141,7 +141,10 @@ class BidConfirmPresenceRequested extends BidEvent {
 class BidCancelRequested extends BidEvent {
   final String bidId;
   final String? reason;
-  BidCancelRequested(this.bidId, {this.reason});
+
+  /// Qui annule : `sender` ou `traveler`. Part tel quel dans l'analytics.
+  final String actor;
+  BidCancelRequested(this.bidId, {this.reason, required this.actor});
 }
 
 class BidHideRequested extends BidEvent {

@@ -216,6 +216,7 @@ abstract final class AnalyticsEvents {
 
   // Cancellations
   static const cancellationInitiated = 'cancellation_initiated';
+  static const bidCancelled = 'bid_cancelled';
   static const rematchAccepted = 'rematch_accepted';
   static const rematchAlternativesOpened = 'rematch_alternatives_opened';
   static const noShowReportedBySender = 'no_show_reported_by_sender';
@@ -384,6 +385,11 @@ abstract final class AnalyticsEvents {
   static const activitesHubToolsCompletionLoaded =
       'activites_hub_tools_completion_loaded';
   static const activitesHubToolsCtaTapped = 'activites_hub_tools_cta_tapped';
+  static const toolConfigured = 'tool_configured';
+  static const toolsSetupCompleted = 'tools_setup_completed';
+  static const paymentCardSaved = 'payment_card_saved';
+  static const priceGridItemAdded = 'price_grid_item_added';
+  static const priceGridCreated = 'price_grid_created';
 
   // Écran Demandes — filtre appliqué (tiré dans TravelerBidsBloc)
   static const travelerBidsFilterApplied = 'traveler_bids_filter_applied';
@@ -409,6 +415,7 @@ abstract final class AnalyticsEvents {
   // Conversation séparée voyageur ↔ destinataire (lot 3C). Seulement le côté
   // qui l'ouvre (`role` : traveler/recipient), jamais d'identité.
   static const recipientConversationOpened = 'recipient_conversation_opened';
+  static const recipientMessageTapped = 'recipient_message_tapped';
 
   // Colis à recevoir (lot 2 destinataire). Jamais le nom, le numéro ni le
   // code : seulement des statuts et des comptes.
