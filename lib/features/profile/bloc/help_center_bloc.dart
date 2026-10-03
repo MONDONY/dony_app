@@ -169,4 +169,5 @@ String _sourceName(TutorialContext? source) => switch (source) {
   TutorialContext.tripTemplates => 'trip_templates',
   TutorialContext.recipients => 'recipients',
   TutorialContext.receivedRequests => 'received_requests',
+  TutorialContext.walletTopup => 'wallet_topup',
 };

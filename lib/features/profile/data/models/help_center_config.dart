@@ -18,6 +18,7 @@ enum TutorialContext {
   tripTemplates,
   recipients,
   receivedRequests,
+  walletTopup,
 }
 
 final class SocialLink extends Equatable {
