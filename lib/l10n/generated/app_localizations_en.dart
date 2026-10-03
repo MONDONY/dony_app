@@ -11121,6 +11121,90 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileLanguageArabic => 'Arabic';
 
   @override
+  String get profileLanguagePortuguese => 'Portuguese';
+
+  @override
+  String get profileLanguageGerman => 'German';
+
+  @override
+  String get profileLanguageItalian => 'Italian';
+
+  @override
+  String get profileLanguageChinese => 'Chinese';
+
+  @override
+  String get profileLanguageHindi => 'Hindi';
+
+  @override
+  String get profileLanguageRussian => 'Russian';
+
+  @override
+  String get profileLanguageTurkish => 'Turkish';
+
+  @override
+  String get profileLanguageDioula => 'Dyula';
+
+  @override
+  String get profileLanguageFula => 'Fula';
+
+  @override
+  String get profileLanguageSoninke => 'Soninke';
+
+  @override
+  String get profileLanguageMalinke => 'Malinke';
+
+  @override
+  String get profileLanguageHausa => 'Hausa';
+
+  @override
+  String get profileLanguageYoruba => 'Yoruba';
+
+  @override
+  String get profileLanguageIgbo => 'Igbo';
+
+  @override
+  String get profileLanguageLingala => 'Lingala';
+
+  @override
+  String get profileLanguageSwahili => 'Swahili';
+
+  @override
+  String get profileLanguageAmharic => 'Amharic';
+
+  @override
+  String get profileLanguageMoore => 'Mooré';
+
+  @override
+  String get profileEditLanguagesAdd => 'Add a language';
+
+  @override
+  String get profileLanguagesSheetSearchHint => 'Search a language';
+
+  @override
+  String get profileLanguagesSheetOther => 'Other language';
+
+  @override
+  String get profileLanguagesSheetOtherHint => 'Language name';
+
+  @override
+  String get profileLanguagesSheetOtherAdd => 'Add';
+
+  @override
+  String get profileLanguagesSheetValidate => 'Done';
+
+  @override
+  String get profileLanguagesSheetNoMatch =>
+      'No language found. Add it with “Other language”.';
+
+  @override
+  String profileEditLanguageRemove(String language) {
+    return 'Remove $language';
+  }
+
+  @override
+  String get profileEditViewPhotoSemantics => 'View profile photo full size';
+
+  @override
   String get profilePublicOwnProfileTitle => 'What others see';
 
   @override

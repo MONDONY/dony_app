@@ -369,6 +369,8 @@ abstract final class AnalyticsEvents {
   static const profileMenuOpened = 'profile_menu_opened';
   static const profileMenuEditOpened = 'profile_menu_edit_opened';
   static const profileHeaderTapped = 'profile_header_tapped';
+  static const profilePhotoViewed = 'profile_photo_viewed';
+  static const profileLanguagesPicked = 'profile_languages_picked';
   static const profileMenuSettingsOpened = 'profile_menu_settings_opened';
   static const profileMenuExportOpened = 'profile_menu_export_opened';
   static const profileMenuLogoutTapped = 'profile_menu_logout_tapped';

@@ -11181,6 +11181,91 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileLanguageArabic => 'Arabe';
 
   @override
+  String get profileLanguagePortuguese => 'Portugais';
+
+  @override
+  String get profileLanguageGerman => 'Allemand';
+
+  @override
+  String get profileLanguageItalian => 'Italien';
+
+  @override
+  String get profileLanguageChinese => 'Chinois';
+
+  @override
+  String get profileLanguageHindi => 'Hindi';
+
+  @override
+  String get profileLanguageRussian => 'Russe';
+
+  @override
+  String get profileLanguageTurkish => 'Turc';
+
+  @override
+  String get profileLanguageDioula => 'Dioula';
+
+  @override
+  String get profileLanguageFula => 'Peul';
+
+  @override
+  String get profileLanguageSoninke => 'Soninké';
+
+  @override
+  String get profileLanguageMalinke => 'Malinké';
+
+  @override
+  String get profileLanguageHausa => 'Haoussa';
+
+  @override
+  String get profileLanguageYoruba => 'Yoruba';
+
+  @override
+  String get profileLanguageIgbo => 'Igbo';
+
+  @override
+  String get profileLanguageLingala => 'Lingala';
+
+  @override
+  String get profileLanguageSwahili => 'Swahili';
+
+  @override
+  String get profileLanguageAmharic => 'Amharique';
+
+  @override
+  String get profileLanguageMoore => 'Moré';
+
+  @override
+  String get profileEditLanguagesAdd => 'Ajouter une langue';
+
+  @override
+  String get profileLanguagesSheetSearchHint => 'Rechercher une langue';
+
+  @override
+  String get profileLanguagesSheetOther => 'Autre langue';
+
+  @override
+  String get profileLanguagesSheetOtherHint => 'Nom de la langue';
+
+  @override
+  String get profileLanguagesSheetOtherAdd => 'Ajouter';
+
+  @override
+  String get profileLanguagesSheetValidate => 'Valider';
+
+  @override
+  String get profileLanguagesSheetNoMatch =>
+      'Aucune langue trouvée. Ajoutez-la avec « Autre langue ».';
+
+  @override
+  String profileEditLanguageRemove(String language) {
+    return 'Retirer $language';
+  }
+
+  @override
+  String get profileEditViewPhotoSemantics =>
+      'Voir la photo de profil en grand';
+
+  @override
   String get profilePublicOwnProfileTitle => 'Ce que les autres voient';
 
   @override

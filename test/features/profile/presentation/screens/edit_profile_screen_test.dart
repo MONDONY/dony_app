@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/design/widgets/dony_search_field.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -250,14 +251,17 @@ void main() {
         await tester.pumpAndSettle();
         await _enterEditMode(tester);
 
-        expect(find.byType(FilterChip), findsWidgets);
-        final chip = tester.widget<FilterChip>(
+        // Langues du profil en puces retirables, plus « Ajouter une langue »
+        // qui ouvre la liste déroulante (FLUTTER-9Z).
+        final chip = tester.widget<InputChip>(
           find.ancestor(
             of: find.text('Français'),
-            matching: find.byType(FilterChip),
+            matching: find.byType(InputChip),
           ),
         );
         expect(chip.selected, isTrue);
+        expect(chip.onDeleted, isNotNull);
+        expect(find.byKey(const ValueKey('language-add-chip')), findsOneWidget);
       },
     );
 
@@ -279,14 +283,21 @@ void main() {
 
       // Puces affichées en anglais.
       expect(find.text('French'), findsOneWidget);
-      expect(find.text('English'), findsOneWidget);
       expect(find.text('Wolof'), findsOneWidget);
       expect(find.text('Français'), findsNothing);
 
-      // Sélection : le libellé anglais ajoute la valeur française brute.
-      await tester.ensureVisible(find.text('English'));
-      await tester.tap(find.text('English'), warnIfMissed: false);
+      // Sélection dans la liste : le libellé anglais ajoute la valeur
+      // française brute.
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('language-add-chip')),
+      );
+      await tester.tap(find.byKey(const ValueKey('language-add-chip')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('spoken-language-Anglais')));
       await tester.pump();
+      await tester.tap(find.byKey(const Key('spoken-languages-validate')));
+      await tester.pumpAndSettle();
+      expect(find.text('English'), findsOneWidget);
       await tester.tap(find.widgetWithText(DonyButton, 'Save'));
       await tester.pump();
 
@@ -563,7 +574,7 @@ void main() {
   // ── Tap avatar dispatche AuthAvatarUploadRequested ────────────────────────
 
   testWidgets(
-    'tap sur l\'avatar dispatche AuthAvatarUploadRequested avec le path du fichier',
+    '« Modifier la photo » dispatche AuthAvatarUploadRequested avec le path du fichier',
     (tester) async {
       whenListen<AuthState>(
         mockAuthBloc,
@@ -602,8 +613,9 @@ void main() {
       );
       await tester.pump();
 
-      // Tap then allow all async work (pick → length() → dispatch) to complete.
-      await tester.tap(find.byKey(const ValueKey('avatar_pick_gesture')));
+      // « Modifier la photo » est un vrai bouton (FLUTTER-9Y) : il ouvre la
+      // galerie. Tap then allow all async work (pick → length() → dispatch).
+      await tester.tap(find.byKey(const ValueKey('avatar_change_button')));
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 50)),
       );
@@ -696,4 +708,217 @@ void main() {
       expect(find.text('86%'), findsOneWidget);
     },
   );
+
+  // ── FLUTTER-9Y : photo en grand ───────────────────────────────────────────
+
+  group('photo de profil (FLUTTER-9Y)', () {
+    DonyMediaService fakeMedia(String path) {
+      final picker = _MockImagePicker();
+      when(
+        () => picker.pickImage(
+          source: any(named: 'source'),
+          imageQuality: any(named: 'imageQuality'),
+        ),
+      ).thenAnswer((_) async => XFile(path));
+      return DonyMediaService(imagePicker: picker, compressor: (f) async => f);
+    }
+
+    String tmpImage() {
+      final path =
+          '${Directory.systemTemp.path}/dony_test_avatar_${DateTime.now().microsecondsSinceEpoch}.jpg';
+      File(path).writeAsBytesSync([0xFF, 0xD8, 0xFF, 0xE0]);
+      return path;
+    }
+
+    testWidgets('avec photo : le tap l\'ouvre en grand, sans rien envoyer', (
+      tester,
+    ) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(_senderUser),
+      );
+      await tester.pumpWidget(
+        _wrap(
+          EditProfileScreen(mediaService: fakeMedia(tmpImage())),
+          mockAuthBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('avatar_pick_gesture')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        find.byKey(const Key('profile-photo-viewer-change')),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byTooltip('Fermer'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        find.byKey(const Key('profile-photo-viewer-change')),
+        findsNothing,
+      );
+      verifyNever(
+        () => mockAuthBloc.add(any(that: isA<AuthAvatarUploadRequested>())),
+      );
+    });
+
+    testWidgets('« Modifier la photo » de la vue en grand ouvre la galerie', (
+      tester,
+    ) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(_senderUser),
+      );
+      await tester.pumpWidget(
+        _wrap(
+          EditProfileScreen(mediaService: fakeMedia(tmpImage())),
+          mockAuthBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('avatar_pick_gesture')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.byKey(const Key('profile-photo-viewer-change')));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pump();
+
+      verify(
+        () => mockAuthBloc.add(any(that: isA<AuthAvatarUploadRequested>())),
+      ).called(1);
+    });
+
+    testWidgets('sans photo : le tap ouvre directement la galerie', (
+      tester,
+    ) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(_travelerUser),
+      );
+      await tester.pumpWidget(
+        _wrap(
+          EditProfileScreen(mediaService: fakeMedia(tmpImage())),
+          mockAuthBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('avatar_pick_gesture')));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pump();
+
+      expect(
+        find.byKey(const Key('profile-photo-viewer-change')),
+        findsNothing,
+      );
+      verify(
+        () => mockAuthBloc.add(any(that: isA<AuthAvatarUploadRequested>())),
+      ).called(1);
+    });
+  });
+
+  // ── FLUTTER-9Z : liste déroulante des langues ─────────────────────────────
+
+  group('langues parlées (FLUTTER-9Z)', () {
+    Future<void> openSheet(WidgetTester tester) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(_travelerUser),
+      );
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+      await _enterEditMode(tester);
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('language-add-chip')),
+      );
+      await tester.tap(find.byKey(const ValueKey('language-add-chip')));
+      await tester.pumpAndSettle();
+    }
+
+    AuthUpdateProfileRequested saved() =>
+        verify(
+              () => mockAuthBloc.add(
+                captureAny(that: isA<AuthUpdateProfileRequested>()),
+              ),
+            ).captured.single
+            as AuthUpdateProfileRequested;
+
+    testWidgets('propose les langues les plus parlées, déjà cochées', (
+      tester,
+    ) async {
+      await openSheet(tester);
+      expect(find.text('Rechercher une langue'), findsOneWidget);
+      final french = tester.widget<CheckboxListTile>(
+        find.byKey(const ValueKey('spoken-language-Français')),
+      );
+      expect(french.value, isTrue);
+
+      // La recherche filtre la liste.
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(DonySearchField),
+          matching: find.byType(TextField),
+        ),
+        'swah',
+      );
+      await tester.pump();
+      expect(find.text('Swahili'), findsOneWidget);
+      expect(find.byKey(const ValueKey('spoken-language-Wolof')), findsNothing);
+    });
+
+    testWidgets('« Autre langue » ajoute une langue absente de la liste', (
+      tester,
+    ) async {
+      await openSheet(tester);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('spoken-language-other')),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.tap(find.byKey(const Key('spoken-language-other')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('spoken-language-other-field')),
+        'Kabyle',
+      );
+      await tester.tap(find.byKey(const Key('spoken-language-other-add')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('spoken-languages-validate')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Kabyle'), findsOneWidget);
+      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
+      await tester.pump();
+      expect(saved().languages, ['Français', 'Wolof', 'Kabyle']);
+    });
+
+    testWidgets('la croix d\'une puce retire la langue', (tester) async {
+      await openSheet(tester);
+      await tester.tap(find.byKey(const Key('spoken-languages-validate')));
+      await tester.pumpAndSettle();
+
+      final wolof = find.byKey(const ValueKey('language-chip-Wolof'));
+      await tester.tap(
+        find.descendant(of: wolof, matching: find.byIcon(Icons.clear)),
+      );
+      await tester.pump();
+      expect(wolof, findsNothing);
+
+      await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
+      await tester.pump();
+      expect(saved().languages, ['Français']);
+    });
+  });
 }

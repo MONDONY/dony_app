@@ -9,8 +9,10 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/presentation/profile_labels.dart';
+import 'package:dony/features/profile/presentation/widgets/profile_photo_viewer.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart'
     show profileCompletionTierColor;
+import 'package:dony/features/profile/presentation/widgets/spoken_languages_sheet.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -71,18 +73,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   DonyMediaService get _mediaService =>
       widget._mediaService ?? getIt<DonyMediaService>();
 
-  // Valeurs enregistrées dans le profil (sélection, sauvegarde, comparaison
-  // dans `_selectedLanguages`) : elles restent en français quelle que soit la
-  // langue de l'app. Seul l'affichage (`spokenLanguageLabel`) est traduit.
-  static const _kAvailableLanguages = [
-    'Français', // i18n-ignore — valeur de donnée
-    'Wolof', // i18n-ignore — valeur de donnée
-    'Bambara', // i18n-ignore — valeur de donnée
-    'Anglais', // i18n-ignore — valeur de donnée
-    'Espagnol', // i18n-ignore — valeur de donnée
-    'Arabe', // i18n-ignore — valeur de donnée
-  ];
-
   @override
   void dispose() {
     _firstNameCtrl.dispose();
@@ -104,14 +94,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _selectedLanguages = List<String>.from(user.languages);
   }
 
-  void _toggleLanguage(String lang) {
+  void _removeLanguage(String lang) {
     setState(() {
-      if (_selectedLanguages.contains(lang)) {
-        _selectedLanguages = List.from(_selectedLanguages)..remove(lang);
-      } else {
-        _selectedLanguages = List.from(_selectedLanguages)..add(lang);
-      }
+      _selectedLanguages = List.from(_selectedLanguages)..remove(lang);
     });
+  }
+
+  /// Liste déroulante des langues, avec « Autre langue » (FLUTTER-9Z). Les
+  /// valeurs enregistrées restent en français quelle que soit la langue de
+  /// l'app ; seul l'affichage (`spokenLanguageLabel`) est traduit.
+  Future<void> _openLanguagesSheet() async {
+    final picked = await SpokenLanguagesSheet.show(
+      context,
+      selected: _selectedLanguages,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _selectedLanguages = picked);
+  }
+
+  /// Photo présente : elle s'ouvre en grand, d'où « Modifier la photo »
+  /// mène à la galerie (FLUTTER-9Y). Sans photo, rien à montrer : la
+  /// galerie s'ouvre directement.
+  Future<void> _onAvatarTap(String? avatarUrl) async {
+    if (avatarUrl == null || avatarUrl.isEmpty) {
+      return _pickAndUploadAvatar();
+    }
+    final change = await ProfilePhotoViewer.show(context, url: avatarUrl);
+    if (change && mounted) await _pickAndUploadAvatar();
   }
 
   void _save(bool isTraveler) {
@@ -271,10 +280,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               container: true,
                               excludeSemantics: true,
                               enabled: !isLoading,
-                              label: l.profileEditChangePhotoSemantics,
+                              label: (user.avatarUrl ?? '').isEmpty
+                                  ? l.profileEditChangePhotoSemantics
+                                  : l.profileEditViewPhotoSemantics,
                               child: GestureDetector(
                                 key: const ValueKey('avatar_pick_gesture'),
-                                onTap: isLoading ? null : _pickAndUploadAvatar,
+                                onTap: isLoading
+                                    ? null
+                                    : () => _onAvatarTap(user.avatarUrl),
                                 child: SizedBox(
                                   // Enforce min 44pt touch target around the 72pt avatar.
                                   width: 88,
@@ -348,15 +361,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: DonySpacing.sm),
-                            Text(
-                              l.profileEditChangePhotoLabel,
-                              style: Theme.of(context).textTheme.labelMedium
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                  ),
+                            // Vrai bouton : « Modifier la photo » n'était
+                            // qu'un texte, le toucher ne faisait rien
+                            // (FLUTTER-9Y).
+                            TextButton(
+                              key: const ValueKey('avatar_change_button'),
+                              onPressed: isLoading
+                                  ? null
+                                  : _pickAndUploadAvatar,
+                              style: TextButton.styleFrom(
+                                minimumSize: const Size(44, 44),
+                              ),
+                              child: Text(
+                                l.profileEditChangePhotoLabel,
+                                style: Theme.of(context).textTheme.labelMedium
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                              ),
                             ),
                           ],
                         ),
@@ -529,18 +553,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           Wrap(
                             spacing: DonySpacing.sm,
                             runSpacing: DonySpacing.sm,
-                            children: _kAvailableLanguages.map((lang) {
-                              final selected = _selectedLanguages.contains(
-                                lang,
-                              );
-                              return FilterChip(
-                                label: Text(spokenLanguageLabel(l, lang)),
-                                selected: selected,
-                                onSelected: isSaving
+                            children: [
+                              for (final lang in _selectedLanguages)
+                                InputChip(
+                                  key: ValueKey('language-chip-$lang'),
+                                  label: Text(spokenLanguageLabel(l, lang)),
+                                  selected: true,
+                                  showCheckmark: false,
+                                  deleteButtonTooltipMessage: l
+                                      .profileEditLanguageRemove(
+                                        spokenLanguageLabel(l, lang),
+                                      ),
+                                  onDeleted: isSaving
+                                      ? null
+                                      : () => _removeLanguage(lang),
+                                ),
+                              ActionChip(
+                                key: const ValueKey('language-add-chip'),
+                                avatar: const DonyIcon('plus', size: 16),
+                                label: Text(l.profileEditLanguagesAdd),
+                                onPressed: isSaving
                                     ? null
-                                    : (_) => _toggleLanguage(lang),
-                              );
-                            }).toList(),
+                                    : _openLanguagesSheet,
+                              ),
+                            ],
                           ),
                         ],
                         const SizedBox(height: DonySpacing.xxl),
