@@ -420,7 +420,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
             child: FilledButton(
               onPressed: () {
                 ctx.pop();
-                context.go('/tracking');
+                leaveScanFlow(context);
               },
               style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
@@ -458,7 +458,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
             );
             if (!context.mounted) return;
             context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
-            context.go('/tracking');
+            leaveScanFlow(context);
           },
           analyticsContext: 'delivery_confirmed',
         ),
@@ -509,7 +509,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
             child: FilledButton(
               onPressed: () {
                 ctx.pop();
-                context.go('/tracking');
+                leaveScanFlow(context);
               },
               style: FilledButton.styleFrom(
                 backgroundColor: cs.warning,
@@ -566,4 +566,23 @@ class _MetaRow extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Fin d'un scan : retour à l'écran qui l'a lancé (détail du colis, mode
+/// Valider d'un trajet), en refermant les étapes du flux. Avant, un
+/// `go('/tracking')` vidait la pile et le voyageur ne pouvait plus revenir
+/// au colis (FLUTTER-9N). Lancé depuis l'onglet Suivi, ou ouvert sans
+/// rien dessous (lien), on retombe sur l'onglet comme avant.
+@visibleForTesting
+void leaveScanFlow(BuildContext context) {
+  final router = GoRouter.of(context);
+  var landed = false;
+  Navigator.of(context, rootNavigator: true).popUntil((route) {
+    final name = route.settings.name;
+    // Sans nom : feuilles, dialogues et écran de succès du flux.
+    final inFlow = name == null || name.startsWith('/tracking/scan');
+    if (!inFlow) landed = true;
+    return !inFlow || route.isFirst;
+  });
+  if (!landed) router.go('/tracking');
 }

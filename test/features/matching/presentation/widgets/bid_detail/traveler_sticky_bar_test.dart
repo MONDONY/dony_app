@@ -284,7 +284,9 @@ void main() {
     },
   );
 
-  testWidgets('tap Scanner le colis → GoRouter push déclenché', (tester) async {
+  testWidgets('tap Scanner le colis → Suivi poussé sur le trajet du colis', (
+    tester,
+  ) async {
     final bidBloc = _MockBidBloc();
     final acceptBloc = _MockAcceptBloc();
     when(() => bidBloc.state).thenReturn(BidInitial());
@@ -309,9 +311,9 @@ void main() {
           ),
         ),
         GoRoute(
-          path: '/tracking/scan/identify',
+          path: '/tracking/validate',
           builder: (context, state) {
-            pushedRoutes.add('/tracking/scan/identify');
+            pushedRoutes.add(state.uri.toString());
             return const Scaffold();
           },
         ),
@@ -323,10 +325,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // « Scanner le colis » redirige vers l'étape Départ du hub de scan.
+    // Mode Valider du Suivi, sur le trajet du colis (FLUTTER-9N).
     await tester.tap(find.text('Lire le QR du colis'));
     await tester.pumpAndSettle();
-    expect(pushedRoutes, contains('/tracking/scan/identify'));
+    expect(pushedRoutes, [
+      '/tracking/validate?trip=${_bid(status: 'ACCEPTED', voyageurConfirmed: true).announcementId}',
+    ]);
   });
 
   /// Barre voyageur sous un vrai GoRouter, avec un AnnouncementBloc mocké :

@@ -53,6 +53,23 @@ class SuiviHeader extends StatelessWidget {
         children: [
           Row(
             children: [
+              // Poussé depuis le détail d'un colis (`/tracking/validate`) :
+              // retour au colis. Jamais dans l'onglet, premier de sa pile.
+              if (ModalRoute.of(context)?.canPop ?? false)
+                Padding(
+                  padding: const EdgeInsets.only(right: DonySpacing.xs),
+                  child: IconButton(
+                    key: const Key('suivi-back'),
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).backButtonTooltip,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(44, 44),
+                    ),
+                    icon: DonyIcon('arrow-left', color: fg, size: 20),
+                    onPressed: () => context.pop(),
+                  ),
+                ),
               Expanded(
                 child: Semantics(
                   header: true,

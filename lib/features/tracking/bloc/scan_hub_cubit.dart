@@ -108,7 +108,10 @@ class ScanHubCubit extends Cubit<ScanHubState> {
   ///
   /// Trajet affiché : le choix du voyageur tant qu'il reste scannable,
   /// sinon la sélection automatique ([defaultScanTripId]).
-  Future<void> load({bool silent = false}) async {
+  ///
+  /// [preferredTripId] : trajet du colis depuis lequel le scan a été ouvert
+  /// (FLUTTER-9N). Retenu comme un choix du voyageur s'il est scannable.
+  Future<void> load({bool silent = false, String? preferredTripId}) async {
     if (silent && _silentLoading) return;
     final previous = state;
     final keepContent =
@@ -128,6 +131,10 @@ class ScanHubCubit extends Cubit<ScanHubState> {
         bidsByTrip[trip.id] = await _bidRepo.getBidsForAnnouncement(trip.id);
       }
 
+      if (preferredTripId != null &&
+          trips.any((t) => t.id == preferredTripId)) {
+        _chosenTripId = preferredTripId;
+      }
       // Trajet choisi disparu (terminé, annulé) : le choix est oublié.
       if (!trips.any((t) => t.id == _chosenTripId)) _chosenTripId = null;
       final selectedTripId =

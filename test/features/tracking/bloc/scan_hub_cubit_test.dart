@@ -131,6 +131,68 @@ void main() {
     ],
   );
 
+  group('load(preferredTripId) — ouvert depuis un colis (FLUTTER-9N)', () {
+    void stubTwoTrips() {
+      when(() => annRepo.getMyAnnouncements()).thenAnswer(
+        (_) async => (
+          announcements: [
+            _trip('later', 'IN_PROGRESS', DateTime(2026, 7)),
+            _trip('soonest', 'IN_PROGRESS', DateTime(2026, 6)),
+          ],
+          totalElements: 2,
+        ),
+      );
+      when(
+        () => bidRepo.getBidsForAnnouncement(any()),
+      ).thenAnswer((_) async => []);
+      when(
+        () => trackingRepo.getTripScanHistory(any()),
+      ).thenAnswer((_) async => []);
+    }
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      'le trajet du colis prime sur la sélection automatique, et le reste',
+      build: () {
+        stubTwoTrips();
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) async {
+        await c.load(preferredTripId: 'later');
+        await c.load(silent: true);
+      },
+      expect: () => [
+        isA<ScanHubLoading>(),
+        isA<ScanHubLoaded>().having(
+          (s) => s.selectedTripId,
+          'selectedTripId',
+          'later',
+        ),
+        isA<ScanHubLoaded>().having(
+          (s) => s.selectedTripId,
+          'selectedTripId',
+          'later',
+        ),
+      ],
+    );
+
+    blocTest<ScanHubCubit, ScanHubState>(
+      'trajet du colis non scannable → sélection automatique',
+      build: () {
+        stubTwoTrips();
+        return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+      },
+      act: (c) => c.load(preferredTripId: 'gone'),
+      expect: () => [
+        isA<ScanHubLoading>(),
+        isA<ScanHubLoaded>().having(
+          (s) => s.selectedTripId,
+          'selectedTripId',
+          'soonest',
+        ),
+      ],
+    );
+  });
+
   blocTest<ScanHubCubit, ScanHubState>(
     'erreur réseau → ScanHubError',
     build: () {

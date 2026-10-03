@@ -4,6 +4,7 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/open_trip_validation.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -95,7 +96,7 @@ class TravelerStickyBar extends StatelessWidget {
       case _TravelerAction.delete:
         return TravelerRejectedBar(bid: bid, isLoading: isLoading);
       case _TravelerAction.scan:
-        return const _ScanBar();
+        return _ScanBar(bid: bid);
       case _TravelerAction.deliver:
         return _DeliverBar(
           bid: bid,
@@ -149,7 +150,9 @@ class _AwaitingMobileMoneyPaymentBar extends StatelessWidget {
 // ── Scan bar ──────────────────────────────────────────────────────────────────
 
 class _ScanBar extends StatelessWidget {
-  const _ScanBar();
+  const _ScanBar({required this.bid});
+
+  final BidModel bid;
 
   @override
   Widget build(BuildContext context) {
@@ -163,15 +166,12 @@ class _ScanBar extends StatelessWidget {
         h,
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
-      // Redirige vers l'étape Départ du hub de scan (identify → photo →
-      // confirm), cohérent avec le flux d'étapes du Suivi.
+      // Mode Valider du Suivi, sur le trajet de ce colis (FLUTTER-9N) :
+      // le QR lu y ouvre l'étape suivante, le retour ramène au colis.
       child: DonyButton(
         label: context.l10n.bidDetailScanParcelQr,
         iconAsset: 'scan-line',
-        onPressed: () => context.push(
-          '/tracking/scan/identify',
-          extra: <String, dynamic>{'etape': 'DEPART', 'focusNumber': false},
-        ),
+        onPressed: () => openTripValidation(context, bid),
       ),
     );
   }

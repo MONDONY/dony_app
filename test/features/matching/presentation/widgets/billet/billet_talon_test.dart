@@ -527,50 +527,59 @@ void main() {
     );
   });
 
-  testWidgets('voyageur : le lien ouvre l\'onglet Suivi en mode Valider', (
-    tester,
-  ) async {
-    final t = _MockTrackingBloc();
-    final b = _MockBidBloc();
-    when(() => t.state).thenReturn(TrackingInitial());
-    when(() => b.state).thenReturn(BidInitial());
-    final visited = <String>[];
-    final router = GoRouter(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, _) => Scaffold(
-            body: MultiBlocProvider(
-              providers: [
-                BlocProvider<TrackingBloc>.value(value: t),
-                BlocProvider<BidBloc>.value(value: b),
-              ],
-              child: BilletTalon(
-                bid: _bid(status: 'HANDED_OVER'),
-                isSender: false,
+  testWidgets(
+    'voyageur : le lien ouvre le Suivi sur le trajet du colis, retour au colis',
+    (tester) async {
+      final t = _MockTrackingBloc();
+      final b = _MockBidBloc();
+      when(() => t.state).thenReturn(TrackingInitial());
+      when(() => b.state).thenReturn(BidInitial());
+      when(() => b.isClosed).thenReturn(false);
+      registerFallbackValue(BidDetailRequested('fallback'));
+      final visited = <String>[];
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => Scaffold(
+              body: MultiBlocProvider(
+                providers: [
+                  BlocProvider<TrackingBloc>.value(value: t),
+                  BlocProvider<BidBloc>.value(value: b),
+                ],
+                child: BilletTalon(
+                  bid: _bid(status: 'HANDED_OVER'),
+                  isSender: false,
+                ),
               ),
             ),
           ),
-        ),
-        GoRoute(
-          path: '/tracking',
-          builder: (_, state) {
-            visited.add(state.uri.toString());
-            return const Scaffold(body: Text('suivi'));
-          },
-        ),
-      ],
-    );
-    addTearDown(router.dispose);
-    await tester.pumpWidget(
-      MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
-    );
-    await tester.pump(const Duration(milliseconds: 400));
+          GoRoute(
+            path: '/tracking/validate',
+            builder: (_, state) {
+              visited.add(state.uri.toString());
+              return const Scaffold(body: Text('suivi'));
+            },
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
 
-    await tester.tap(find.text('Lire les QR des étapes'));
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(visited, ['/tracking?mode=valider']);
-  });
+      await tester.tap(find.text('Lire les QR des étapes'));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(visited, ['/tracking/validate?trip=a-1']);
+
+      // Poussé (FLUTTER-9N) : le retour ramène au colis, rechargé.
+      router.pop();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Lire les QR des étapes'), findsOneWidget);
+      verify(() => b.add(any(that: isA<BidDetailRequested>()))).called(1);
+    },
+  );
 
   testWidgets('voyageur + IN_TRANSIT → lien "Scanner les étapes" (Suivi)', (
     tester,

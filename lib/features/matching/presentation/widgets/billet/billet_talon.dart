@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/open_trip_validation.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/return_code_sheet.dart';
@@ -113,7 +114,7 @@ class BilletTalon extends StatelessWidget {
       'ACCEPTED' ||
       'HANDED_OVER' ||
       'IN_TRANSIT' ||
-      'ARRIVED' => const _TravelerScanStepsButton(),
+      'ARRIVED' => _TravelerScanStepsButton(bid: bid),
       'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
       'CANCELLED' => _CancelledBlock(bid: bid, isSender: false),
       'REJECTED' => _RejectedBlock(bid: bid, isSender: false),
@@ -339,16 +340,19 @@ class _RetraitTalonButton extends StatelessWidget {
   }
 }
 
-/// traveler / HANDED_OVER · IN_TRANSIT — lien vers l'onglet Suivi en mode
-/// « Valider une étape », où le voyageur scanne (QR) ou saisit le numéro.
+/// traveler / HANDED_OVER · IN_TRANSIT — mode « Valider une étape » sur le
+/// trajet de ce colis, où le voyageur scanne (QR) ou saisit le numéro.
+/// Poussé, pas `go` : le retour ramène au colis (FLUTTER-9N).
 class _TravelerScanStepsButton extends StatelessWidget {
-  const _TravelerScanStepsButton();
+  const _TravelerScanStepsButton({required this.bid});
+
+  final BidModel bid;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return OutlinedButton.icon(
-      onPressed: () => context.go('/tracking?mode=valider'),
+      onPressed: () => openTripValidation(context, bid),
       icon: DonyIcon('scan-line', size: 20, color: cs.primary),
       label: Text(
         context.l10n.ticketScanStepsButton,
