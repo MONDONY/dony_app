@@ -37,6 +37,9 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 
+/// Statuts d'un trajet qui n'accepte plus de nouvelle demande.
+const _kClosedTripStatuses = {'IN_PROGRESS', 'COMPLETED', 'CANCELLED'};
+
 /// Rend la feuille et se termine à sa fermeture.
 ///
 /// Le `Future` sert à la route `/traveler/:announcementId`, qui doit se refermer
@@ -174,6 +177,31 @@ Future<void> showTravelerAnnouncementSheet(
                       },
               ),
             ],
+          );
+        }
+        // Trajet parti, arrivé ou annulé : il n'accepte plus de demande, le
+        // back la refuserait (FLUTTER-AE). On le dit plutôt que d'ouvrir un
+        // formulaire voué au refus.
+        if (_kClosedTripStatuses.contains(announcement.status)) {
+          final tt = Theme.of(innerCtx).textTheme;
+          final cs = Theme.of(innerCtx).colorScheme;
+          return Padding(
+            key: const Key('trip-closed-message'),
+            padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                DonyIcon('info', size: 16, color: cs.onSurfaceVariant),
+                const SizedBox(width: DonySpacing.xs),
+                Flexible(
+                  child: Text(
+                    innerCtx.l10n.listingTripClosedMessage,
+                    textAlign: TextAlign.center,
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ),
+              ],
+            ),
           );
         }
         Future<void> openCreateBid({required bool negotiation}) async {

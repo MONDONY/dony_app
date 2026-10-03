@@ -115,6 +115,7 @@ AnnouncementModel _buildAnnouncement({
   Set<BidPaymentMethod> acceptedPaymentMethods = const {
     BidPaymentMethod.stripe,
   },
+  String status = 'ACTIVE',
 }) {
   final now = DateTime.now();
   return AnnouncementModel(
@@ -130,7 +131,7 @@ AnnouncementModel _buildAnnouncement({
     pricePerKg: 8,
     capacityUnit: capacityUnit,
     currency: currency,
-    status: 'ACTIVE',
+    status: status,
     negotiable: negotiable,
     pricingMode: pricingMode,
     priceGridItems: priceGridItems,
@@ -411,6 +412,21 @@ void main() {
     expect(find.text('Ibrahima Diallo'), findsOneWidget);
     expect(find.text('Faire une demande'), findsOneWidget);
   });
+
+  for (final status in ['IN_PROGRESS', 'COMPLETED']) {
+    testWidgets('trajet $status → plus de « Faire une demande » (FLUTTER-AE)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _harness(announcement: _buildAnnouncement(status: status)),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('trip-closed-message')), findsOneWidget);
+      expect(find.text('Faire une demande'), findsNothing);
+    });
+  }
 
   testWidgets('affiche le badge KYC quand le voyageur est vérifié', (
     tester,

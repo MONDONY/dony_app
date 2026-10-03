@@ -187,7 +187,11 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.bidRejected,
-          properties: {'bid_id': bid.id},
+          properties: {
+            'bid_id': bid.id,
+            // Code de la liste fermée (FLUTTER-AF), jamais un texte saisi.
+            if (event.reason != null) 'reason': event.reason!,
+          },
         ),
       );
     } catch (e) {

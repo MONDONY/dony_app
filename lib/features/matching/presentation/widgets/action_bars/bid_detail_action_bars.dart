@@ -11,6 +11,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/recipient_change_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/reject_reason_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
@@ -161,75 +162,13 @@ class TravelerPendingBar extends StatelessWidget {
     );
   }
 
-  void _showRejectDialog(BuildContext context) {
-    // DonyBottomSheet (useRootNavigator: true + contenu scrollable inset-aware) :
-    // un showModalBottomSheet brut avec un TextField autofocus gérait mal le
-    // clavier et figeait la feuille sur device réel. Bouton dans stickyBottom
-    // (règle CLAUDE.md). Le refus est dispatché sur le BidBloc du détail via le
-    // [context] capturé (la feuille root-navigator n'a pas le provider).
-    final l = context.l10n;
-    final reasonNotifier = ValueNotifier<String>('');
-    DonyBottomSheet.show<void>(
-      context,
-      title: l.bidDetailDeclineRequestTitle,
-      subtitle: l.bidDetailDeclineRequestSubtitle,
-      isDanger: true,
-      stickyBottom: DonyButton(
-        label: l.bidDetailConfirmDecline,
-        variant: DonyButtonVariant.destructive,
-        onPressed: () {
-          final reason = reasonNotifier.value.trim();
-          context.pop();
-          context.read<BidBloc>().add(
-            BidRejectRequested(bid.id, reason: reason.isEmpty ? null : reason),
-          );
-        },
-      ),
-      child: _RejectReasonField(onChanged: (v) => reasonNotifier.value = v),
-    ).whenComplete(reasonNotifier.dispose);
-  }
-}
-
-// ── Reject reason field ───────────────────────────────────────────────────────
-
-/// Champ de saisie de la raison de refus. StatefulWidget pour posséder le
-/// `TextEditingController` (disposé proprement à son retrait) au lieu d'un
-/// controller créé dans la closure du sheet, qui levait
-/// « used after being disposed » pendant l'animation de fermeture.
-class _RejectReasonField extends StatefulWidget {
-  const _RejectReasonField({required this.onChanged});
-
-  final ValueChanged<String> onChanged;
-
-  @override
-  State<_RejectReasonField> createState() => _RejectReasonFieldState();
-}
-
-class _RejectReasonFieldState extends State<_RejectReasonField> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return TextField(
-      controller: _controller,
-      maxLines: 3,
-      autofocus: true,
-      onChanged: widget.onChanged,
-      decoration: InputDecoration(
-        hintText: context.l10n.bidDetailReasonHint,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-        ),
-        hintStyle: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-      ),
+  Future<void> _showRejectDialog(BuildContext context) async {
+    // La feuille vit sur le navigateur racine, sans le BidBloc du détail : le
+    // refus est dispatché via le [context] capturé, une fois la feuille fermée.
+    final reason = await RejectReasonSheet.show(context);
+    if (reason == null || !context.mounted) return;
+    context.read<BidBloc>().add(
+      BidRejectRequested(bid.id, reason: reason.code),
     );
   }
 }

@@ -8234,6 +8234,12 @@ abstract class AppLocalizations {
   /// **'Vous avez déjà un colis sur ce trajet'**
   String get listingAlreadyHasParcelMessage;
 
+  /// Pied de la feuille trajet quand le trajet est parti, arrivé ou annulé : plus de demande possible, FLUTTER-AE (traveler_announcement_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet est parti : il n\'accepte plus de demande.'**
+  String get listingTripClosedMessage;
+
   /// Bouton vers le colis déjà en cours sur ce trajet (traveler_announcement_bottom_sheet.dart)
   ///
   /// In fr, this message translates to:
@@ -11673,7 +11679,7 @@ abstract class AppLocalizations {
   /// Sous-titre du sheet de refus (bid_detail_action_bars.dart)
   ///
   /// In fr, this message translates to:
-  /// **'Souhaitez-vous indiquer une raison à l\'expéditeur ?'**
+  /// **'Choisissez le motif : l\'expéditeur le verra.'**
   String get bidDetailDeclineRequestSubtitle;
 
   /// Bouton de confirmation du sheet de refus (bid_detail_action_bars.dart)
@@ -11682,11 +11688,41 @@ abstract class AppLocalizations {
   /// **'Confirmer le refus'**
   String get bidDetailConfirmDecline;
 
-  /// Hint du champ de raison de refus (bid_detail_action_bars.dart)
+  /// Motif de refus d'une demande par le voyageur (FLUTTER-AF) : feuille de refus (reject_reason_sheet.dart) et talon du billet (billet_talon.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Raison (optionnelle)'**
-  String get bidDetailReasonHint;
+  /// **'Plus assez de place'**
+  String get bidRejectionReasonNoCapacity;
+
+  /// Motif de refus d'une demande par le voyageur (FLUTTER-AF) : feuille de refus (reject_reason_sheet.dart) et talon du billet (billet_talon.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu du colis non accepté'**
+  String get bidRejectionReasonContentNotAccepted;
+
+  /// Motif de refus d'une demande par le voyageur (FLUTTER-AF) : feuille de refus (reject_reason_sheet.dart) et talon du billet (billet_talon.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Remise impossible (lieu ou horaire)'**
+  String get bidRejectionReasonHandoverNotPossible;
+
+  /// Motif de refus d'une demande par le voyageur (FLUTTER-AF) : feuille de refus (reject_reason_sheet.dart) et talon du billet (billet_talon.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Changement de voyage'**
+  String get bidRejectionReasonTripChanged;
+
+  /// Motif de refus d'une demande par le voyageur (FLUTTER-AF) : feuille de refus (reject_reason_sheet.dart) et talon du billet (billet_talon.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre raison'**
+  String get bidRejectionReasonOther;
+
+  /// Motif de refus d'une demande par le voyageur (FLUTTER-AF) : feuille de refus (reject_reason_sheet.dart) et talon du billet (billet_talon.dart).
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif du voyageur : {reason}'**
+  String bidRejectionReasonShown(String reason);
 
   /// Bouton ConfirmPresenceBar (bid_detail_action_bars.dart)
   ///
@@ -13241,18 +13277,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ajouter une carte'**
   String get bidListAddCardButton;
-
-  /// Titre du dialogue de refus d'une demande (pending_bids_screen.dart, demandes_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'Refuser cette demande ?'**
-  String get bidListDeclineDialogTitle;
-
-  /// Message du dialogue de refus d'une demande (pending_bids_screen.dart, demandes_screen.dart).
-  ///
-  /// In fr, this message translates to:
-  /// **'L\'expéditeur sera informé. Cette action est irréversible.'**
-  String get bidListDeclineDialogMessage;
 
   /// Bouton « Refuser » (bid_card.dart _PendingActions) ; réutilisé comme confirmLabel du dialogue de refus (pending_bids_screen.dart, demandes_screen.dart — même préfixe).
   ///

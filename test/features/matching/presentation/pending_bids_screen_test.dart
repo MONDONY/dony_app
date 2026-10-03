@@ -331,10 +331,10 @@ void main() {
     },
   );
 
-  // ── Refuser → dialog → confirmer ────────────────────────────────────────────
+  // ── Refuser → motif → confirmer ─────────────────────────────────────────────
 
   testWidgets(
-    'tap Refuser → confirme le dialog → BidBloc.add(BidRejectRequested)',
+    'tap Refuser → choisit un motif → BidBloc.add(BidRejectRequested) avec le code',
     (tester) async {
       final ctrl = _wireStates(bidBloc);
       addTearDown(ctrl.close);
@@ -346,14 +346,26 @@ void main() {
       await tester.tap(find.text('Refuser'));
       await tester.pumpAndSettle();
 
-      // Dialog de confirmation ouvert.
-      expect(find.textContaining('Refuser cette demande'), findsOneWidget);
+      // Feuille du motif ouverte, confirmation bloquée tant qu'aucun motif.
+      expect(find.text('Refuser la demande'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('reject-reason-confirm')));
+      await tester.pumpAndSettle();
+      verifyNever(() => bidBloc.add(any(that: isA<BidRejectRequested>())));
 
-      // Bouton de confirmation = dernier « Refuser » (celui du dialog).
-      await tester.tap(find.text('Refuser').last);
+      await tester.tap(find.text('Plus assez de place'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('reject-reason-confirm')));
       await tester.pumpAndSettle();
 
-      verify(() => bidBloc.add(any(that: isA<BidRejectRequested>()))).called(1);
+      verify(
+        () => bidBloc.add(
+          any(
+            that: isA<BidRejectRequested>()
+                .having((e) => e.bidId, 'bidId', 'bid-r1')
+                .having((e) => e.reason, 'reason', 'NO_CAPACITY'),
+          ),
+        ),
+      ).called(1);
     },
   );
 
