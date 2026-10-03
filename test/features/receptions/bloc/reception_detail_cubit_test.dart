@@ -194,6 +194,55 @@ void main() {
     );
   });
 
+  group('se retirer d\'un colis confirmé (FLUTTER-9F)', () {
+    blocTest<ReceptionDetailCubit, ReceptionDetailState>(
+      'succès : retiré et événement reception_withdrawn',
+      build: () {
+        when(() => repository.decline(_id)).thenAnswer((_) async {});
+        return ReceptionDetailCubit(repository, analytics);
+      },
+      seed: () => const ReceptionDetailLoaded(_confirmed),
+      act: (cubit) => cubit.decline(),
+      expect: () => [
+        isA<ReceptionDetailLoaded>().having(
+          (s) => s.action,
+          'action',
+          ReceptionAction.declining,
+        ),
+        isA<ReceptionDetailLoaded>().having(
+          (s) => s.action,
+          'action',
+          ReceptionAction.withdrawn,
+        ),
+      ],
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.receptionWithdrawn,
+            properties: {'bid_status': 'ACCEPTED'},
+          ),
+        ).called(1);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.receptionDeclined,
+            properties: any(named: 'properties'),
+          ),
+        );
+      },
+    );
+
+    test('possible tant que le colis est en cours, plus après', () {
+      expect(_confirmed.canWithdraw, isTrue);
+      expect(_pending.canWithdraw, isFalse);
+      const delivered = Reception(
+        bidId: _id,
+        linkStatus: 'CONFIRMED',
+        bidStatus: 'COMPLETED',
+      );
+      expect(delivered.canWithdraw, isFalse);
+    });
+  });
+
   group('decline', () {
     blocTest<ReceptionDetailCubit, ReceptionDetailState>(
       'succès : refusé et événement',

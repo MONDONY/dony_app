@@ -15385,6 +15385,23 @@ class AppLocalizationsFr extends AppLocalizations {
       'C\'est noté, ce colis a été retiré de votre liste.';
 
   @override
+  String get receptionWithdrawButton => 'Me retirer de ce colis';
+
+  @override
+  String get receptionWithdrawDialogTitle => 'Vous retirer de ce colis ?';
+
+  @override
+  String get receptionWithdrawDialogMessage =>
+      'Vous ne le suivrez plus et ne verrez plus son code de retrait. L’expéditeur et le voyageur seront prévenus.';
+
+  @override
+  String get receptionWithdrawConfirm => 'Me retirer';
+
+  @override
+  String get receptionWithdrawnSnackbar =>
+      'C’est noté, l’expéditeur et le voyageur sont prévenus.';
+
+  @override
   String get receptionConfirmedSnackbar => 'C\'est noté, vous suivez ce colis.';
 
   @override

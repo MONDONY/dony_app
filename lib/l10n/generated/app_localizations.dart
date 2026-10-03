@@ -25299,6 +25299,36 @@ abstract class AppLocalizations {
   /// **'C\'est noté, ce colis a été retiré de votre liste.'**
   String get receptionDeclinedSnackbar;
 
+  /// No description provided for @receptionWithdrawButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Me retirer de ce colis'**
+  String get receptionWithdrawButton;
+
+  /// No description provided for @receptionWithdrawDialogTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous retirer de ce colis ?'**
+  String get receptionWithdrawDialogTitle;
+
+  /// No description provided for @receptionWithdrawDialogMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne le suivrez plus et ne verrez plus son code de retrait. L’expéditeur et le voyageur seront prévenus.'**
+  String get receptionWithdrawDialogMessage;
+
+  /// No description provided for @receptionWithdrawConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Me retirer'**
+  String get receptionWithdrawConfirm;
+
+  /// No description provided for @receptionWithdrawnSnackbar.
+  ///
+  /// In fr, this message translates to:
+  /// **'C’est noté, l’expéditeur et le voyageur sont prévenus.'**
+  String get receptionWithdrawnSnackbar;
+
   /// Confirmation après « Oui, c'est pour moi » (reception_detail_screen.dart).
   ///
   /// In fr, this message translates to:

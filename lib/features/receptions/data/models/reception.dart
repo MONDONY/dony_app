@@ -95,6 +95,11 @@ class Reception {
   bool get canShowParcelQr =>
       isConfirmed && activeBidStatuses.contains(bidStatus);
 
+  /// Le destinataire peut se retirer du colis (FLUTTER-9F) : lien
+  /// `CONFIRMED` et colis encore en cours. Le back prévient l'expéditeur,
+  /// invité à désigner quelqu'un d'autre, et le voyageur.
+  bool get canWithdraw => isConfirmed && activeBidStatuses.contains(bidStatus);
+
   factory Reception.fromJson(Map<String, dynamic> json) {
     String? text(String key) {
       final value = json[key];

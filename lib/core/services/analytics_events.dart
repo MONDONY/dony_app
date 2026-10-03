@@ -416,6 +416,7 @@ abstract final class AnalyticsEvents {
   static const receptionOpened = 'reception_opened';
   static const receptionConfirmed = 'reception_confirmed';
   static const receptionDeclined = 'reception_declined';
+  static const receptionWithdrawn = 'reception_withdrawn';
   static const screenFeedbackSubmitted = 'screen_feedback_submitted';
 
   // Trip matching (Colis sur mes trajets)

@@ -15293,6 +15293,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Got it, this parcel has been removed from your list.';
 
   @override
+  String get receptionWithdrawButton => 'Withdraw from this parcel';
+
+  @override
+  String get receptionWithdrawDialogTitle => 'Withdraw from this parcel?';
+
+  @override
+  String get receptionWithdrawDialogMessage =>
+      'You will no longer follow it or see its pickup code. The sender and the traveler will be notified.';
+
+  @override
+  String get receptionWithdrawConfirm => 'Withdraw';
+
+  @override
+  String get receptionWithdrawnSnackbar =>
+      'Done, the sender and the traveler have been notified.';
+
+  @override
   String get receptionConfirmedSnackbar =>
       'Done, you are now following this parcel.';
 
