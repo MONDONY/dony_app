@@ -1,5 +1,6 @@
 import groovy.json.JsonSlurper
 import java.io.FileInputStream
+import java.util.Base64
 import java.util.Properties
 
 plugins {
@@ -35,7 +36,7 @@ val dartDefines: Map<String, String> =
         .split(",")
         .filter { it.isNotBlank() }
         .mapNotNull { encoded ->
-            runCatching { String(java.util.Base64.getDecoder().decode(encoded), Charsets.UTF_8) }.getOrNull()
+            runCatching { String(Base64.getDecoder().decode(encoded), Charsets.UTF_8) }.getOrNull()
         }
         .filter { it.contains("=") }
         .associate { it.substringBefore("=") to it.substringAfter("=") }
