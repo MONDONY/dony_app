@@ -18,6 +18,23 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+/// Type d'un retour envoyé depuis le scarabée. Sa valeur `wire` part telle
+/// quelle dans Sentry (tag `feedback_kind`), PostHog (`kind`) et, en préfixe
+/// `[BUG]` / `[AVIS]` / `[SUGGESTION]`, dans la description du signalement
+/// backend : l'admin › Signalements filtre ainsi sans nouveau contrat API.
+enum FeedbackKind {
+  bug('bug', 'BUG'),
+  feedback('feedback', 'AVIS'),
+  suggestion('suggestion', 'SUGGESTION');
+
+  const FeedbackKind(this.wire, this.tag);
+
+  final String wire;
+
+  /// Étiquette en majuscules, préfixe de la description backend.
+  final String tag;
+}
+
 /// Contenu d'un rapport de bug d'écran : le message du testeur et les
 /// captures qu'il a jointes lui-même (chemins locaux, max
 /// [DonyFeedbackButton.maxAttachments]). La capture automatique de l'écran
@@ -27,9 +44,13 @@ class FeedbackReport {
     required this.message,
     this.attachments = const [],
     this.route = 'unknown',
+    this.kind = FeedbackKind.bug,
   });
 
   final String message;
+
+  /// Type de retour choisi par le testeur (« Bug » par défaut).
+  final FeedbackKind kind;
   final List<String> attachments;
 
   /// Route GoRouter de l'écran d'où part le rapport, lue AU TAP sur le
@@ -222,6 +243,7 @@ class DonyFeedbackButton extends StatelessWidget {
           scope.addAttachment(attachment);
         }
         await scope.setTag('feedback_route', route);
+        await scope.setTag('feedback_kind', report.kind.wire);
         await scope.setTag('feedback_attachments', '${attachments.length}');
       },
     );
@@ -239,6 +261,7 @@ class DonyFeedbackButton extends StatelessWidget {
             AnalyticsEvents.screenFeedbackSubmitted,
             properties: {
               'route': route,
+              'kind': report.kind.wire,
               'attachment_count': report.attachments.length,
             },
           ),
@@ -322,6 +345,7 @@ class _FeedbackFormState {
     required this.canSend,
     required this.sending,
     required this.attachments,
+    required this.kind,
     required this.route,
     required this.screenshot,
     required this.onSubmitOverride,
@@ -331,6 +355,7 @@ class _FeedbackFormState {
   });
 
   final TextEditingController controller;
+  final ValueNotifier<FeedbackKind> kind;
   final ValueNotifier<bool> canSend;
   final ValueNotifier<bool> sending;
   final ValueNotifier<List<String>> attachments;
@@ -389,10 +414,12 @@ class _FeedbackFormProviderState extends State<_FeedbackFormProvider> {
   late final ValueNotifier<bool> _canSend;
   late final ValueNotifier<bool> _sending;
   late final ValueNotifier<List<String>> _attachments;
+  late final ValueNotifier<FeedbackKind> _kind;
 
   @override
   void initState() {
     super.initState();
+    _kind = ValueNotifier<FeedbackKind>(FeedbackKind.bug);
     _controller = TextEditingController();
     _canSend = ValueNotifier<bool>(false);
     _sending = ValueNotifier<bool>(false);
@@ -411,6 +438,7 @@ class _FeedbackFormProviderState extends State<_FeedbackFormProvider> {
     _canSend.dispose();
     _sending.dispose();
     _attachments.dispose();
+    _kind.dispose();
     super.dispose();
   }
 
@@ -422,6 +450,7 @@ class _FeedbackFormProviderState extends State<_FeedbackFormProvider> {
         canSend: _canSend,
         sending: _sending,
         attachments: _attachments,
+        kind: _kind,
         route: widget.route,
         screenshot: widget.screenshot,
         onSubmitOverride: widget.onSubmitOverride,
@@ -447,6 +476,13 @@ class _FeedbackFormBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        Text(
+          l.feedbackKindLabel,
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        const _FeedbackKindChips(),
+        const SizedBox(height: DonySpacing.base),
         TextField(
           controller: formState.controller,
           minLines: 3,
@@ -463,6 +499,37 @@ class _FeedbackFormBody extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         const _FeedbackAttachments(),
       ],
+    );
+  }
+}
+
+/// Puces « Bug / Avis / Suggestion » : le type de retour du testeur.
+class _FeedbackKindChips extends StatelessWidget {
+  const _FeedbackKindChips();
+
+  @override
+  Widget build(BuildContext context) {
+    final formState = _FeedbackFormInherited.of(context);
+    final l = context.l10n;
+    final labels = {
+      FeedbackKind.bug: l.feedbackKindBug,
+      FeedbackKind.feedback: l.feedbackKindFeedback,
+      FeedbackKind.suggestion: l.feedbackKindSuggestion,
+    };
+    return ValueListenableBuilder<FeedbackKind>(
+      valueListenable: formState.kind,
+      builder: (context, selected, _) => Wrap(
+        spacing: DonySpacing.sm,
+        runSpacing: DonySpacing.sm,
+        children: [
+          for (final kind in FeedbackKind.values)
+            ChoiceChip(
+              label: Text(labels[kind]!),
+              selected: kind == selected,
+              onSelected: (_) => formState.kind.value = kind,
+            ),
+        ],
+      ),
     );
   }
 }
@@ -658,6 +725,7 @@ class _FeedbackSubmitButtonState extends State<_FeedbackSubmitButton> {
       message: formState.controller.text.trim(),
       attachments: List<String>.unmodifiable(formState.attachments.value),
       route: formState.route,
+      kind: formState.kind.value,
     );
     formState.sending.value = true;
     try {

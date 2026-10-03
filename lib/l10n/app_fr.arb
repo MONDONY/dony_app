@@ -16307,6 +16307,22 @@
   "@feedbackSubmitButton": {
     "description": "Bouton d'envoi de la feuille de signalement (dony_feedback_button.dart)."
   },
+  "feedbackKindLabel": "Type de retour",
+  "@feedbackKindLabel": {
+    "description": "Libellé au-dessus des puces de type de retour de la feuille du scarabée (dony_feedback_button.dart)."
+  },
+  "feedbackKindBug": "Bug",
+  "@feedbackKindBug": {
+    "description": "Puce « Bug » du type de retour de la feuille du scarabée (dony_feedback_button.dart)."
+  },
+  "feedbackKindFeedback": "Avis",
+  "@feedbackKindFeedback": {
+    "description": "Puce « Avis » du type de retour de la feuille du scarabée (dony_feedback_button.dart)."
+  },
+  "feedbackKindSuggestion": "Suggestion",
+  "@feedbackKindSuggestion": {
+    "description": "Puce « Suggestion » du type de retour de la feuille du scarabée (dony_feedback_button.dart)."
+  },
   "currencySelectorTitle": "Choisir une devise",
   "@currencySelectorTitle": {
     "description": "Titre de la bottom sheet de sélection de devise (currency_selector.dart)."

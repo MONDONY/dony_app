@@ -78,7 +78,7 @@ void main() {
         () => repository.submit(
           targetType: IncidentTargetType.app,
           reason: ScreenFeedbackSender.reason,
-          description: 'Le badge passe sous le bouton',
+          description: '[BUG] Le badge passe sous le bouton',
           photoKeys: any(named: 'photoKeys', that: hasLength(3)),
           screenRoute: '/profile',
         ),
@@ -98,12 +98,45 @@ void main() {
         () => repository.submit(
           targetType: IncidentTargetType.app,
           reason: ScreenFeedbackSender.reason,
-          description: 'x',
+          description: '[BUG] x',
           screenRoute: '/home',
         ),
       ).called(1);
     },
   );
+
+  test('le type de retour préfixe la description du signalement', () async {
+    await sender.send(
+      report: const FeedbackReport(
+        message: 'Très fluide',
+        kind: FeedbackKind.feedback,
+      ),
+      route: '/home',
+    );
+    await sender.send(
+      report: const FeedbackReport(
+        message: 'Ajouter un filtre',
+        kind: FeedbackKind.suggestion,
+      ),
+      route: '/home',
+    );
+    verify(
+      () => repository.submit(
+        targetType: IncidentTargetType.app,
+        reason: ScreenFeedbackSender.reason,
+        description: '[AVIS] Très fluide',
+        screenRoute: '/home',
+      ),
+    ).called(1);
+    verify(
+      () => repository.submit(
+        targetType: IncidentTargetType.app,
+        reason: ScreenFeedbackSender.reason,
+        description: '[SUGGESTION] Ajouter un filtre',
+        screenRoute: '/home',
+      ),
+    ).called(1);
+  });
 
   test('une route inconnue est envoyée vide', () async {
     await sender.send(
