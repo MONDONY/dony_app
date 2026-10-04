@@ -228,6 +228,84 @@ void main() {
   // relance de l'upload de jeton ne doit avoir lieu QUE si l'utilisateur n'a
   // pas refusé la permission ET a une session réelle — jamais l'un sans
   // l'autre.
+  group('NotificationService._uploadToken — jeton déjà enregistré', () {
+    // Le jeton partait à chaque retour au premier plan (≈ 22 PUT par
+    // utilisateur et par jour sur staging), alors qu'il change rarement.
+    late MockDio mockDio;
+
+    Response<dynamic> ok() => Response(
+      requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
+      statusCode: 204,
+    );
+
+    setUp(() {
+      mockDio = MockDio();
+      when(() => apiClient.dio).thenReturn(mockDio);
+      when(
+        () => deviceIdService.getDeviceId(),
+      ).thenAnswer((_) async => 'dev-1');
+      when(
+        () => mockDio.put('/auth/me/fcm-token', data: any(named: 'data')),
+      ).thenAnswer((_) async => ok());
+    });
+
+    test('le même jeton n\'est pas renvoyé', () async {
+      await service.testUploadToken('jeton-a');
+      await service.testUploadToken('jeton-a');
+
+      verify(
+        () => mockDio.put('/auth/me/fcm-token', data: any(named: 'data')),
+      ).called(1);
+    });
+
+    test('un nouveau jeton est envoyé', () async {
+      await service.testUploadToken('jeton-a');
+      await service.testUploadToken('jeton-b');
+
+      verify(
+        () => mockDio.put('/auth/me/fcm-token', data: any(named: 'data')),
+      ).called(2);
+    });
+
+    test('après la déconnexion, le même jeton repart', () async {
+      when(
+        () => mockDio.delete<void>(
+          '/auth/me/fcm-token',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => Response<void>(
+          requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
+          statusCode: 204,
+        ),
+      );
+
+      await service.testUploadToken('jeton-a');
+      await service.forgetDeviceToken();
+      await service.testUploadToken('jeton-a');
+
+      verify(
+        () => mockDio.put('/auth/me/fcm-token', data: any(named: 'data')),
+      ).called(2);
+    });
+
+    test('après un échec, le même jeton est retenté', () async {
+      var calls = 0;
+      when(
+        () => mockDio.put('/auth/me/fcm-token', data: any(named: 'data')),
+      ).thenAnswer((_) async {
+        calls++;
+        if (calls == 1) throw Exception('serveur indisponible');
+        return ok();
+      });
+
+      await service.testUploadToken('jeton-a');
+      await service.testUploadToken('jeton-a');
+
+      expect(calls, 2);
+    });
+  });
+
   group('NotificationService.requestPermission', () {
     late MockFirebaseMessaging fcm;
     late MockFirebaseSessionProbe sessionProbe;

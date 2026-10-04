@@ -34,4 +34,18 @@ extension StripeAccountAvailability on StripeAccountState {
       accountStatus.connectAvailableInCountry,
     _ => true,
   };
+
+  /// Faut-il redemander le statut à Stripe au retour au premier plan ?
+  ///
+  /// Seulement si le statut peut encore changer : inscription en cours ou
+  /// compte suspendu. Un compte complet est tenu à jour par le webhook
+  /// `account.updated`, un compte absent ferait répondre 409, et chaque appel
+  /// coûte environ 400 ms d'aller-retour Stripe côté serveur.
+  bool get shouldResyncOnResume => switch (this) {
+    StripeAccountReady(:final accountStatus) =>
+      accountStatus.connectAvailableInCountry &&
+          (accountStatus.isOnboardingIncomplete || accountStatus.isDisabled),
+    StripeAccountLoadError() => true,
+    _ => false,
+  };
 }

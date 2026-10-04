@@ -88,6 +88,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
     'ARRIVED',
   };
 
+  /// Relecture d'un colis en cours. 10 s auparavant : un colis reste dans ces
+  /// statuts des jours entiers, et les pushs signalent déjà les changements.
+  static const Duration _kPollingInterval = Duration(seconds: 30);
+
   late BidModel _bid;
   bool _skeletonLoading = false;
   Timer? _refreshTimer;
@@ -103,10 +107,19 @@ class _BidDetailViewState extends State<_BidDetailView> {
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
     _loadPaymentStatus();
     if (_kPollingStatuses.contains(_bid.status)) {
-      _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-        if (mounted) context.read<BidBloc>().add(BidDetailRequested(_bid.id));
-      });
+      _refreshTimer = Timer.periodic(_kPollingInterval, (_) => _pollDetail());
     }
+  }
+
+  /// Relit le colis, sauf si personne ne le regarde : un autre écran ouvert
+  /// par-dessus (conversation, suivi) ou l'application en arrière-plan. Le
+  /// statut se met aussi à jour par les pushs, ce relevé n'est qu'un filet.
+  void _pollDetail() {
+    if (!mounted) return;
+    if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (lifecycle != null && lifecycle != AppLifecycleState.resumed) return;
+    context.read<BidBloc>().add(BidDetailRequested(_bid.id));
   }
 
   @override
@@ -447,14 +460,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
                   if (_kPollingStatuses.contains(state.bid.status) &&
                       _refreshTimer == null) {
                     _refreshTimer = Timer.periodic(
-                      const Duration(seconds: 10),
-                      (_) {
-                        if (mounted) {
-                          context.read<BidBloc>().add(
-                            BidDetailRequested(_bid.id),
-                          );
-                        }
-                      },
+                      _kPollingInterval,
+                      (_) => _pollDetail(),
                     );
                   } else if (!_kPollingStatuses.contains(state.bid.status)) {
                     _refreshTimer?.cancel();

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/app/resume_refresh_policy.dart';
 import 'package:dony/app/widgets/dony_nav_item.dart';
 import 'package:dony/app/widgets/dony_nav_orb.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -27,6 +28,7 @@ import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/notifications/foreground_push_refresh.dart';
 import 'package:dony/features/notifications/presentation/widgets/notification_badge_listener.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
@@ -61,12 +63,16 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
-  StreamSubscription<void>? _fcmSub;
+  StreamSubscription<String?>? _fcmSub;
   StreamSubscription<int>? _badgeMessagesSub;
   StreamSubscription<int>? _badgeSupportSub;
   bool _ratingPromptShown = false;
   DateTime? _lastHomeRefreshAt;
   DateTime? _lastMessagesRefreshAt;
+
+  /// Dernier passage en arrière-plan, remis à `null` au retour (voir
+  /// [isResumeRefreshDue]).
+  DateTime? _hiddenAt;
 
   // En dessous de ce délai, retaper un onglet ne redéclenche pas son refresh
   // réseau : un va-et-vient rapide entre Accueil/Activités/Messages tirait
@@ -179,17 +185,22 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       // Onglet affiché au montage du shell (aucun tap ne l'a déclenché) : on
       // émet son $screen manuellement pour ne pas perdre la 1re vue.
       _logTabScreen(widget.navigationShell.currentIndex);
-      _fcmSub = getIt<NotificationService>().newNotificationStream.listen((_) {
-        if (mounted) {
+      _fcmSub = getIt<NotificationService>().newNotificationStream.listen((
+        type,
+      ) {
+        if (!mounted) return;
+        final refresh = ForegroundPushRefresh.forType(type);
+        if (refresh.notificationFeed) {
+          // Relit aussi le compteur, que NotificationBadgeListener reporte
+          // sur l'icône : pas de relecture séparée pour la pastille.
           context.read<NotificationBloc>().add(
             const NotificationsLoadRequested(),
           );
+        }
+        if (refresh.activityIndicators) {
           // Une push peut être une nouvelle demande reçue ou une offre de
           // négociation : rafraîchir les compteurs de l'onglet aussi.
           _loadActivityIndicators();
-          // La push vient de poser une pastille calculée côté serveur, qui
-          // ignore messagerie et support : on réaligne l'icône sur le total réel.
-          unawaited(_syncNotificationBadge());
         }
       });
     });
@@ -211,7 +222,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     final support = getIt<SupportUnreadCubit>();
     unawaited(badge.setSupport(support.state));
     _badgeSupportSub = support.stream.listen(badge.setSupport);
-    unawaited(_syncNotificationBadge());
+    // Le compteur de notifications arrive par NotificationsLoadRequested,
+    // lancé juste avant, et NotificationBadgeListener le reporte sur l'icône.
   }
 
   /// Relit le nombre de notifications non lues et le reporte sur l'icône.
@@ -232,6 +244,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     // Un visiteur n'a pas de compte Stripe à rafraîchir.
     if (!getIt<FirebaseSessionProbe>().hasRealSession) return;
     if (state == AppLifecycleState.hidden) {
+      _hiddenAt = DateTime.now();
       // Départ vers l'accueil du téléphone : dernière relecture avant que
       // l'icône ne redevienne visible. Rattrape les lectures faites hors du
       // NotificationBloc (écran de détail, boîte des annonces).
@@ -242,13 +255,20 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     // Retour au premier plan : c'est le seul moment où l'application peut
     // corriger une pastille laissée par une push reçue écran éteint.
     unawaited(_syncNotificationBadge());
-    unawaited(getIt<SupportUnreadCubit>().refresh());
-    // Le bloc est un singleton DI : il peut être fermé (ex. logout) alors
-    // que ce shell est encore mounted — mounted seul ne protège pas contre
-    // ce cas, d'où le check isClosed avant le add().
-    final stripeBloc = context.read<StripeAccountBloc>();
-    if (!stripeBloc.isClosed) {
-      stripeBloc.add(const StripeAccountStatusRefreshed());
+    final hiddenAt = _hiddenAt;
+    _hiddenAt = null;
+    // Support et compte Stripe ne bougent pas en quelques secondes : on ne les
+    // relit qu'après une vraie absence, pas après Face ID ou un coup d'œil au
+    // centre de notifications.
+    if (isResumeRefreshDue(hiddenAt: hiddenAt, now: DateTime.now())) {
+      unawaited(getIt<SupportUnreadCubit>().refresh());
+      // Le bloc est un singleton DI : il peut être fermé (ex. logout) alors
+      // que ce shell est encore mounted — mounted seul ne protège pas contre
+      // ce cas, d'où le check isClosed avant le add().
+      final stripeBloc = context.read<StripeAccountBloc>();
+      if (!stripeBloc.isClosed && stripeBloc.state.shouldResyncOnResume) {
+        stripeBloc.add(const StripeAccountStatusRefreshed());
+      }
     }
     // Profil jamais chargé alors que la session Firebase est réelle (ex. /auth/me
     // échoué au démarrage, réseau pas prêt au déverrouillage) : AuthBloc ne se
