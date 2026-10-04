@@ -267,10 +267,13 @@ class _CountryListState extends State<_CountryList> {
               if (widget.isSaving) {
                 return const Iterable<Country>.empty();
               }
+              // Toute la liste, pas seulement les premiers résultats : la
+              // liste défile, et un pays absent obligeait à chercher
+              // (FLUTTER-BQ).
               return CountryCatalog.search(
                 value.text,
                 localizedName: localizedName,
-              ).take(8);
+              );
             },
             onSelected: (country) =>
                 context.read<CountryOnboardingCubit>().select(country.code),

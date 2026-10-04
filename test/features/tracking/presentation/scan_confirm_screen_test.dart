@@ -146,6 +146,29 @@ void main() {
     expect(find.text('DON-TEST01'), findsOneWidget);
   });
 
+  // ─── ARRIVEE — clavier ouvert : le bouton reste visible (FLUTTER-BN, BF) ───
+  testWidgets(
+    'ARRIVEE — clavier ouvert : le bouton reste au-dessus du clavier',
+    (tester) async {
+      tester.view.physicalSize = const Size(720, 1280);
+      tester.view.devicePixelRatio = 1;
+      tester.view.viewInsets = const FakeViewPadding(bottom: 450);
+      addTearDown(tester.view.reset);
+
+      final bloc = MockTrackingBloc();
+      when(() => bloc.state).thenReturn(TrackingInitial());
+      whenListen(bloc, const Stream<TrackingState>.empty());
+      await tester.pumpWidget(_wrap('ARRIVEE', bloc));
+      await tester.pump();
+
+      final button = find.text('Confirmer la livraison');
+      expect(button, findsOneWidget);
+      // Sans défilement : le bas du bouton est au-dessus du clavier (450 px).
+      expect(tester.getBottomLeft(button).dy, lessThanOrEqualTo(1280 - 450));
+      expect(tester.getTopLeft(button).dy, greaterThan(0));
+    },
+  );
+
   // ─── ARRIVEE — code too short → no dispatch ───────────────────────────────
   testWidgets('ARRIVEE — code < 6 chiffres → pas de dispatch', (tester) async {
     final bloc = MockTrackingBloc();

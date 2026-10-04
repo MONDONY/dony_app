@@ -129,6 +129,28 @@ void main() {
     expect(find.text('Europe · EUR · €'), findsNothing);
   });
 
+  testWidgets('la liste propose tous les pays, pas seulement les 8 premiers '
+      '(FLUTTER-BQ)', (tester) async {
+    await _wrap(tester, cubit);
+
+    await tester.enterText(find.byType(TextField), 'a');
+    await tester.pumpAndSettle();
+
+    final list = tester.widget<ListView>(find.byType(ListView));
+    final delegate = list.childrenDelegate as SliverChildBuilderDelegate;
+    expect(delegate.estimatedChildCount, greaterThan(8));
+  });
+
+  testWidgets("l'apostrophe courbe du clavier trouve Côte d'Ivoire "
+      '(FLUTTER-BR)', (tester) async {
+    await _wrap(tester, cubit);
+
+    await tester.enterText(find.byType(TextField), 'côte d’ivoire');
+    await tester.pumpAndSettle();
+
+    expect(find.text("Côte d'Ivoire"), findsOneWidget);
+  });
+
   testWidgets('la recherche filtre la liste des pays', (tester) async {
     await _wrap(tester, cubit);
 

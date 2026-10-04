@@ -13206,7 +13206,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportReasonProhibitedItem => 'Prohibited item';
 
   @override
-  String get reportReasonFalseInformation => 'False or misleading information';
+  String get reportReasonFalseInformation =>
+      'Inaccurate or misleading information';
 
   @override
   String get reportReasonInappropriateContent => 'Inappropriate content';
@@ -13233,10 +13234,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportReasonLabel => 'Reason';
 
   @override
-  String get reportDescriptionLabel => 'Description';
+  String get reportDescriptionLabel => 'Explanation (optional)';
 
   @override
-  String get reportDescriptionHint => 'Describe the problem you encountered…';
+  String get reportDescriptionHint =>
+      'Briefly tell us why you are reporting this…';
 
   @override
   String get reportScreenshotsLabel => 'Screenshots (optional)';
@@ -16136,4 +16138,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get listingTripFullMessage =>
       'This trip is full: it no longer accepts requests.';
+
+  @override
+  String get reportSentTitle => 'Report sent';
 }
