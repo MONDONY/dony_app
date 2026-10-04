@@ -16132,4 +16132,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorTrackingNumberRequiredMessage =>
       'Enter the tracking number given by the sender to confirm the handover.';
+
+  @override
+  String get listingTripFullMessage =>
+      'This trip is full: it no longer accepts requests.';
 }

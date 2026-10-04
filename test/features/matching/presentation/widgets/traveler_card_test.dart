@@ -32,6 +32,7 @@ AnnouncementModel _makeAnn({
   double? convertedPricePerKg,
   String? convertedCurrency,
   int? uniqueViewerCount,
+  String status = 'ACTIVE',
 }) => AnnouncementModel(
   id: 'a1',
   travelerId: 't1',
@@ -48,7 +49,7 @@ AnnouncementModel _makeAnn({
   convertedPricePerKg: convertedPricePerKg,
   convertedCurrency: convertedCurrency,
   uniqueViewerCount: uniqueViewerCount,
-  status: 'ACTIVE',
+  status: status,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
   acceptedContentTypes: acceptedContentTypes,
@@ -632,6 +633,80 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byKey(chipKey), findsNothing);
+    });
+  });
+
+  group('TravelerCard – grisée mais cliquable (FLUTTER-BG)', () {
+    const opacityKey = Key('traveler-card-opacity');
+    const fullChipKey = Key('traveler-card-full-chip');
+
+    double opacityOf(WidgetTester tester) =>
+        tester.widget<Opacity>(find.byKey(opacityKey)).opacity;
+
+    Future<void> pumpCard(
+      WidgetTester tester, {
+      String status = 'ACTIVE',
+      String? existingBidStatus,
+      bool isOwn = false,
+      VoidCallback? onTap,
+    }) async {
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(status: status),
+            index: 0,
+            isOwnAnnouncement: isOwn,
+            onTap: onTap ?? () {},
+            existingBidStatus: existingBidStatus,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('trajet libre : pleine opacité, pas de pastille Complet', (
+      tester,
+    ) async {
+      await pumpCard(tester);
+      expect(opacityOf(tester), 1);
+      expect(find.byKey(fullChipKey), findsNothing);
+    });
+
+    testWidgets('demande déjà envoyée : carte grisée, pastille gardée, '
+        'toujours cliquable', (tester) async {
+      var taps = 0;
+      await pumpCard(tester, existingBidStatus: 'PENDING', onTap: () => taps++);
+      expect(opacityOf(tester), lessThan(1));
+      expect(find.text('Demande en attente'), findsOneWidget);
+
+      await tester.tap(find.text('Paris'));
+      expect(taps, 1);
+    });
+
+    testWidgets('trajet complet : carte grisée avec pastille Complet, '
+        'toujours cliquable', (tester) async {
+      var taps = 0;
+      await pumpCard(tester, status: 'FULL', onTap: () => taps++);
+      expect(opacityOf(tester), lessThan(1));
+      expect(find.byKey(fullChipKey), findsOneWidget);
+      expect(find.text('Complet'), findsOneWidget);
+
+      await tester.tap(find.text('Paris'));
+      expect(taps, 1);
+    });
+
+    testWidgets('mon propre trajet complet : jamais grisé', (tester) async {
+      await pumpCard(tester, status: 'FULL', isOwn: true);
+      expect(opacityOf(tester), 1);
+      expect(find.byKey(fullChipKey), findsNothing);
+    });
+
+    testWidgets('trajet complet avec ma demande : la pastille de la demande '
+        'prime', (tester) async {
+      await pumpCard(tester, status: 'FULL', existingBidStatus: 'ACCEPTED');
+      expect(find.byKey(fullChipKey), findsNothing);
+      expect(find.text('Demande acceptée'), findsOneWidget);
+      expect(opacityOf(tester), lessThan(1));
     });
   });
 

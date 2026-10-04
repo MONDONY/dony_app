@@ -26666,6 +26666,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Saisis le numéro de suivi donné par l\'expéditeur pour valider la remise.'**
   String get errorTrackingNumberRequiredMessage;
+
+  /// Pied de la feuille trajet quand le trajet est complet : bouton de demande grisé, FLUTTER-BG (traveler_announcement_bottom_sheet.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce trajet est complet : il n\'accepte plus de demande.'**
+  String get listingTripFullMessage;
 }
 
 class _AppLocalizationsDelegate

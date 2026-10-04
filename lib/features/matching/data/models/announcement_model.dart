@@ -301,6 +301,9 @@ class AnnouncementModel {
   /// Toujours vrai quand `capacityUnit == 'KG_FREE'`.
   bool get isKgFree => capacityUnit == 'KG_FREE';
 
+  /// Trajet complet : il n'accepte plus de demande, mais reste consultable.
+  bool get isFull => status == 'FULL';
+
   /// Urgence effective : la valeur backend prime ; repli sur le calcul local
   /// depuis [departureDate] uniquement si absente (ancien backend).
   bool get isUrgent => urgent ?? isUrgentDate(departureDate);
