@@ -9,6 +9,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_reschedule_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -188,6 +189,37 @@ void main() {
       );
     },
   );
+
+  for (final status in ['IN_TRANSIT', 'ARRIVED', 'COMPLETED']) {
+    testWidgets('colis $status → tuile Reporter verrouillée (FLUTTER-BD)', (
+      tester,
+    ) async {
+      when(() => bidBloc.state).thenReturn(
+        BidListLoaded([
+          _makeBid(status: 'ACCEPTED'),
+          _makeBid(status: status, id: 'bid-2'),
+        ]),
+      );
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        a: _makeAnnouncement(bidsCount: 1, confirmedParcelCount: 2),
+        isOwner: true,
+      );
+
+      expect(find.text('Reporter'), findsOneWidget);
+      expect(
+        find.byTooltip(
+          'Un colis est déjà en route, arrivé ou livré : le trajet ne peut plus être reporté.',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Reporter'));
+      await tester.pumpAndSettle();
+      expect(find.byType(TripRescheduleBottomSheet), findsNothing);
+    });
+  }
 
   testWidgets(
     'plus aucun report possible → tuile Reporter grisée avec le motif',

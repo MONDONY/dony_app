@@ -14,6 +14,7 @@ import 'package:dony/features/tracking/data/models/scan_method.dart';
 import 'package:dony/features/tracking/presentation/tracking_labels.dart';
 import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -68,7 +69,15 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
     final photo = widget.photoPath != null ? XFile(widget.photoPath!) : null;
     if (_isArrivee) {
       final code = _codeCtrl.text.trim();
-      if (code.length != 6) return;
+      // Le bouton ne réagissait pas à un code incomplet, sans un mot : le
+      // voyageur concluait que le code ne marchait pas (FLUTTER-BA).
+      if (code.length != 6) {
+        DonySnackbar.show(
+          context,
+          message: context.l10n.scanConfirmCodeIncomplete,
+        );
+        return;
+      }
       context.read<TrackingBloc>().add(
         ConfirmDeliveryRequested(
           bidId: widget.bidId,
@@ -293,6 +302,10 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                     enabled: !isSubmitting,
                     keyboardType: TextInputType.number,
                     maxLength: 6,
+                    // Chiffres seuls : un code collé avec une espace (« 123 456 »)
+                    // était tronqué à 6 caractères puis refusé par le serveur.
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    autofillHints: const [AutofillHints.oneTimeCode],
                     textAlign: TextAlign.center,
                     style: tt.displayMedium?.copyWith(letterSpacing: 10),
                     decoration: InputDecoration(

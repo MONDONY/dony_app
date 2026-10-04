@@ -227,7 +227,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Mobile money'), findsOneWidget);
-    expect(find.text('Orange Money, Wave, MTN MoMo'), findsOneWidget);
+    expect(find.text('Orange Money, MTN MoMo, Moov'), findsOneWidget);
 
     await tester.tap(find.text('Mobile money'));
     await tester.pumpAndSettle();

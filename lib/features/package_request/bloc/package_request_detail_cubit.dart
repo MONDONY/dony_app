@@ -39,6 +39,14 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
   final String requestId;
   int _noticeSerial = 0;
 
+  /// Un chargement peut finir après la fermeture de l'écran ou de la sheet
+  /// (retour arrière pendant l'appel) : son résultat est alors ignoré
+  /// (FLUTTER-B0/B1, « Cannot emit new states after calling close »).
+  @override
+  void emit(PackageRequestDetailState state) {
+    if (!isClosed) super.emit(state);
+  }
+
   Future<void> load() async {
     final previous = state;
     // Le back soft-delete une demande annulée : un rafraîchissement (pull-to-

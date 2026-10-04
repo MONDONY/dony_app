@@ -5390,6 +5390,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidCreatePhotosSectionLabel => 'PHOTOS DU COLIS (OPTIONNEL)';
 
   @override
+  String get bidCreateDescriptionSectionLabelOptional =>
+      'DESCRIPTION (OPTIONNELLE)';
+
+  @override
   String get bidCreateDescriptionSectionLabel => 'DESCRIPTION (AU VOYAGEUR)';
 
   @override
@@ -5499,7 +5503,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bidCreateCardModeSubtitle => 'Bloqué jusqu\'à la livraison';
 
   @override
-  String get bidCreateMobileMoneySubtitle => 'Orange Money, Wave, MTN';
+  String get bidCreateMobileMoneySubtitle => 'Orange Money, MTN, Moov';
 
   @override
   String get bidCreateCashModeSubtitle => 'En main propre, à la remise';
@@ -9470,7 +9474,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletTopupMethodMobileMoneySubtitle =>
-      'Orange Money, Wave, MTN MoMo';
+      'Orange Money, MTN MoMo, Moov';
 
   @override
   String get walletTopupMethodTitle => 'Recharger · Étape 1/2';
@@ -10810,7 +10814,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profileMoneyMobileMoneyPayoutSubtitle =>
-      'Zone CFA : Orange Money, Wave, MTN';
+      'Zone CFA : Orange Money, MTN, Moov';
 
   @override
   String get profileMoneyCashCommissionCard => 'Carte commission espèces';
@@ -15311,6 +15315,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get tripRescheduleParcelOnTheWayMessage =>
+      'Un colis est déjà en route, arrivé ou livré : le trajet ne peut plus être reporté.';
+
+  @override
   String get tripRescheduleLimitReachedMessage =>
       'Déjà reporté 2 fois : annulez et publiez un nouveau trajet';
 
@@ -16182,4 +16190,8 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationSettingsSectionCalls => 'APPELS';
+
+  @override
+  String get scanConfirmCodeIncomplete =>
+      'Le code de retrait contient 6 chiffres.';
 }

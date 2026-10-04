@@ -4857,6 +4857,10 @@
   "@bidCreatePhotosSectionLabel": {
     "description": "Titre de la section photos du formulaire d'offre (create_bid_bottom_sheet.dart)"
   },
+  "bidCreateDescriptionSectionLabelOptional": "DESCRIPTION (OPTIONNELLE)",
+  "@bidCreateDescriptionSectionLabelOptional": {
+    "description": "Titre de la section description quand seuls des articles de la grille sont choisis : la description devient facultative (FLUTTER-B7)"
+  },
   "bidCreateDescriptionSectionLabel": "DESCRIPTION (AU VOYAGEUR)",
   "@bidCreateDescriptionSectionLabel": {
     "description": "Titre de la section description du formulaire d'offre (create_bid_bottom_sheet.dart)"
@@ -5000,7 +5004,7 @@
   "@bidCreateCardModeSubtitle": {
     "description": "Sous-titre du choix de paiement par carte (create_bid_bottom_sheet.dart)"
   },
-  "bidCreateMobileMoneySubtitle": "Orange Money, Wave, MTN",
+  "bidCreateMobileMoneySubtitle": "Orange Money, MTN, Moov",
   "@bidCreateMobileMoneySubtitle": {
     "description": "Sous-titre du choix de paiement mobile money, noms de marque (create_bid_bottom_sheet.dart)"
   },
@@ -10158,7 +10162,7 @@
   "@walletTopupMethodCardSubtitle": {
     "description": "Sous-titre de la tuile carte bancaire : noms de marques, identique fr/en (wallet_topup_method_screen.dart _cardMethod)."
   },
-  "walletTopupMethodMobileMoneySubtitle": "Orange Money, Wave, MTN MoMo",
+  "walletTopupMethodMobileMoneySubtitle": "Orange Money, MTN MoMo, Moov",
   "@walletTopupMethodMobileMoneySubtitle": {
     "description": "Sous-titre de la tuile mobile money : noms de marques, identique fr/en (wallet_topup_method_screen.dart _mobileMoneyMethod)."
   },
@@ -11878,7 +11882,7 @@
   "@profileMoneyMobileMoneyPayout": {
     "description": "Tuile de la section ARGENT (profile_sections.dart)."
   },
-  "profileMoneyMobileMoneyPayoutSubtitle": "Zone CFA : Orange Money, Wave, MTN",
+  "profileMoneyMobileMoneyPayoutSubtitle": "Zone CFA : Orange Money, MTN, Moov",
   "@profileMoneyMobileMoneyPayoutSubtitle": {
     "description": "Sous-titre de la tuile « Versement mobile money » (profile_sections.dart)."
   },
@@ -17533,6 +17537,10 @@
       }
     }
   },
+  "tripRescheduleParcelOnTheWayMessage": "Un colis est déjà en route, arrivé ou livré : le trajet ne peut plus être reporté.",
+  "@tripRescheduleParcelOnTheWayMessage": {
+    "description": "Tuile Reporter grisée : un colis du trajet est en route, arrivé ou livré (FLUTTER-BD)"
+  },
   "tripRescheduleLimitReachedMessage": "Déjà reporté 2 fois : annulez et publiez un nouveau trajet",
   "@tripRescheduleLimitReachedMessage": {
     "description": "Tuile Reporter grisée (owner_action_grid.dart)"
@@ -18588,5 +18596,9 @@
   "notificationSettingsSectionCalls": "APPELS",
   "@notificationSettingsSectionCalls": {
     "description": "Appels Yadony sur l'écran verrouillé (FLUTTER-92)."
+  },
+  "scanConfirmCodeIncomplete": "Le code de retrait contient 6 chiffres.",
+  "@scanConfirmCodeIncomplete": {
+    "description": "Confirmation de remise : code saisi incomplet (FLUTTER-BA)"
   }
 }

@@ -76,6 +76,14 @@ class OwnerActionGrid extends StatelessWidget {
     // cours » à tort.
     final canReschedule =
         hasBids && const {'ACTIVE', 'FULL', 'IN_PROGRESS'}.contains(a.status);
+    // Un colis en route, arrivé ou livré : le voyage a eu lieu, le report est
+    // verrouillé (FLUTTER-BD). Même règle que le back
+    // (`TripRescheduleRules.BLOCKING_STATUSES`), qui refuse de toute façon.
+    final parcelOnTheWay =
+        loadedBids?.any(
+          (b) => _rescheduleBlockingStatuses.contains(b.status),
+        ) ??
+        false;
 
     // Tuiles présentes selon le statut. Construites dans une liste pour éviter
     // les demi-tuiles vides (ex. trajet COMPLETED/FULL n'a ni Demandes ni
@@ -171,10 +179,12 @@ class OwnerActionGrid extends StatelessWidget {
           iconAsset: 'calendar-sync',
           label: l.tripRescheduleTile,
           accent: cs.primary,
-          onTap: a.remainingReschedules == 0
+          onTap: parcelOnTheWay || a.remainingReschedules == 0
               ? null
               : () => TripRescheduleBottomSheet.show(context, announcement: a),
-          disabledMessage: l.tripRescheduleLimitReachedMessage,
+          disabledMessage: parcelOnTheWay
+              ? l.tripRescheduleParcelOnTheWayMessage
+              : l.tripRescheduleLimitReachedMessage,
         ),
       // ── Supprimer (si supprimable) ou Annuler (si ACTIVE non supprimable) ──
       if (canDelete)
@@ -233,6 +243,9 @@ class OwnerActionGrid extends StatelessWidget {
     );
   }
 }
+
+/// Statuts de colis qui interdisent de reporter le trajet.
+const _rescheduleBlockingStatuses = {'IN_TRANSIT', 'ARRIVED', 'COMPLETED'};
 
 /// Construit une tuile d'action. Quand [onTap] est `null` et [disabledMessage]
 /// fourni, la tuile est grisée (opacity 0.4) + tooltip et n'est plus tappable.
