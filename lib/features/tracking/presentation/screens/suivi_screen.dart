@@ -431,11 +431,12 @@ class _SuiviBodyState extends State<_SuiviBody> {
       if (mounted) _reloadTrips();
       return;
     }
-    // Remise du colis : le numéro de suivi, que seul l'expéditeur possède,
-    // est demandé AVANT la photo, quel que soit le chemin (QR, numéro,
-    // bouton de la ligne). Les étapes suivantes ne le redemandent pas.
-    String? trackingNumber;
-    if (step == 'DEPART') {
+    // Remise du colis : le voyageur scanne le QR OU saisit le numéro de suivi
+    // (que seul l'expéditeur possède), avant la photo. Le QR et le numéro déjà
+    // saisi suffisent ; le bouton d'une ligne colis n'identifie rien, le
+    // numéro lui est demandé ici. Les étapes suivantes ne le redemandent pas.
+    String? trackingNumber = step == 'DEPART' ? effect.trackingNumber : null;
+    if (effect.needsTrackingNumber) {
       final suivi = context.read<SuiviCubit>();
       trackingNumber = await showSuiviTrackingNumberSheet(
         context,

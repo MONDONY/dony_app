@@ -50,17 +50,29 @@ sealed class SuiviEffect {
 /// [confirmNumber] : colis identifié par un numéro saisi, à confirmer sur
 /// un récapitulatif avant la photo. Le bouton d'une ligne colis n'en a pas
 /// besoin : le voyageur a déjà choisi le colis dans la liste.
+///
+/// [trackingNumber] : numéro saisi pour identifier le colis. À la remise
+/// (DEPART), le voyageur prouve qu'il tient le colis en scannant le QR OU en
+/// saisissant le numéro de suivi, que seul l'expéditeur possède. Le bouton
+/// d'une ligne colis n'identifie rien : la remise y demande donc le numéro
+/// avant la photo (FLUTTER-BC).
 final class SuiviValidateStep extends SuiviEffect {
   const SuiviValidateStep(
     this.bid,
     this.step, {
     this.method = ScanMethod.qr,
     this.confirmNumber = false,
+    this.trackingNumber,
   });
   final BidModel bid;
   final String step;
   final ScanMethod method;
   final bool confirmNumber;
+  final String? trackingNumber;
+
+  /// Remise sans QR ni numéro saisi : le numéro doit être demandé.
+  bool get needsTrackingNumber =>
+      step == 'DEPART' && method == ScanMethod.manual && trackingNumber == null;
 
   bool get photoRequired => step != 'TRANSIT' || method == ScanMethod.manual;
 }
@@ -462,8 +474,9 @@ class SuiviCubit extends Cubit<SuiviState> {
     ({BidModel bid, AnnouncementModel trip}) located,
     ScanHubLoaded hub,
     ScanMethod method,
-    Set<String> pendingBidIds,
-  ) {
+    Set<String> pendingBidIds, {
+    String? trackingNumber,
+  }) {
     final bid = located.bid;
     if (located.trip.id != hub.selectedTripId) {
       return SuiviParcelOnOtherTrip(bid, located.trip);
@@ -485,6 +498,7 @@ class SuiviCubit extends Cubit<SuiviState> {
       forced ?? next,
       method: method,
       confirmNumber: method == ScanMethod.manual,
+      trackingNumber: trackingNumber,
     );
   }
 
@@ -552,7 +566,13 @@ class SuiviCubit extends Cubit<SuiviState> {
       }
     }
     _emitValidation(
-      _validationOf(located, hub, ScanMethod.manual, pendingBidIds),
+      _validationOf(
+        located,
+        hub,
+        ScanMethod.manual,
+        pendingBidIds,
+        trackingNumber: number,
+      ),
     );
   }
 

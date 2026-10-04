@@ -58,7 +58,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     _showScanSheet(bidId, ScanMethod.qr);
   }
 
-  void _showScanSheet(String bidId, ScanMethod method) {
+  void _showScanSheet(
+    String bidId,
+    ScanMethod method, {
+    String? trackingNumber,
+  }) {
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -73,6 +77,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         child: _ScanConfirmSheet(
           bidId: bidId,
           scanMethod: method,
+          trackingNumber: trackingNumber,
           onClose: () {
             _detectedNotifier.value = false;
             _resumeScanning();
@@ -330,7 +335,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                           ctx.pop();
                           _detectedNotifier.value = true;
                           _pausedNotifier.value = true;
-                          _showScanSheet(result.bidId, ScanMethod.manual);
+                          _showScanSheet(
+                            result.bidId,
+                            ScanMethod.manual,
+                            trackingNumber: number,
+                          );
                         }
                       } catch (_) {
                         setDialogState(() => loading = false);
@@ -513,11 +522,16 @@ class _ScanConfirmSheet extends StatefulWidget {
   final VoidCallback onClose;
   final void Function(String bidId)? onDeliveryConfirmed;
 
+  /// Numéro de suivi saisi pour identifier le colis (scan manuel) : il part
+  /// avec la remise (DEPART), où le serveur le vérifie.
+  final String? trackingNumber;
+
   const _ScanConfirmSheet({
     required this.bidId,
     required this.scanMethod,
     required this.onClose,
     this.onDeliveryConfirmed,
+    this.trackingNumber,
   });
 
   @override
@@ -533,9 +547,6 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
   bool _photoTooBig = false;
   final _codeController = TextEditingController();
 
-  /// Numéro de suivi saisi à la remise du colis (DEPART), avant la photo.
-  final _trackingNumberController = TextEditingController();
-
   // Codes + icônes uniquement : le libellé se calcule dans build() via
   // trackingStepLabel, jamais gardé en dur dans un champ de State.
   static const _eventTypes = <(String, String?, String?)>[
@@ -547,7 +558,6 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
   @override
   void dispose() {
     _codeController.dispose();
-    _trackingNumberController.dispose();
     super.dispose();
   }
 
@@ -674,10 +684,6 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
         ),
       );
     } else {
-      final trackingNumber = _trackingNumberController.text
-          .trim()
-          .toUpperCase();
-      if (_eventType == 'DEPART' && trackingNumber.isEmpty) return;
       context.read<TrackingBloc>().add(
         QrScanSubmitRequested(
           bidId: widget.bidId,
@@ -687,15 +693,11 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
           gpsLon: _position?.longitude,
           gpsLabel: _gpsLabel,
           scanMethod: widget.scanMethod,
-          trackingNumber: _eventType == 'DEPART' ? trackingNumber : null,
+          trackingNumber: _eventType == 'DEPART' ? widget.trackingNumber : null,
         ),
       );
     }
   }
-
-  /// À la remise (DEPART), ni photo ni envoi sans le numéro de suivi.
-  bool get _trackingNumberMissing =>
-      _eventType == 'DEPART' && _trackingNumberController.text.trim().isEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -899,25 +901,6 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   ),
                 ),
               ] else ...[
-                if (_eventType == 'DEPART') ...[
-                  Text(
-                    l.suiviTrackingNumberBody(
-                      widget.bidId.length > 8
-                          ? widget.bidId.substring(0, 8)
-                          : widget.bidId,
-                    ),
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: DonySpacing.sm),
-                  DonyTextField(
-                    key: const Key('scan-sheet-tracking-number'),
-                    controller: _trackingNumberController,
-                    label: l.suiviTrackingNumberLabel,
-                    enabled: !isSubmitting,
-                    onChanged: (_) => setState(() {}),
-                  ),
-                  const SizedBox(height: DonySpacing.md),
-                ],
                 Text(
                   l.scanPhotoOfParcelLabel,
                   style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
@@ -926,12 +909,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
 
                 if (_photo == null)
                   GestureDetector(
-                    onTap:
-                        isSubmitting ||
-                            _loadingLocation ||
-                            _trackingNumberMissing
-                        ? null
-                        : _pickPhoto,
+                    onTap: isSubmitting || _loadingLocation ? null : _pickPhoto,
                     child: Container(
                       height: 80,
                       decoration: BoxDecoration(
@@ -1072,9 +1050,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                           ? l.scanConfirmDeliveryButton
                           : l.scanConfirmReadingLabel),
                 iconAsset: isArrivee ? 'badge-check' : 'check',
-                onPressed: isSubmitting || _trackingNumberMissing
-                    ? null
-                    : () => _submit(context),
+                onPressed: isSubmitting ? null : () => _submit(context),
                 isLoading: isSubmitting,
               ),
 
