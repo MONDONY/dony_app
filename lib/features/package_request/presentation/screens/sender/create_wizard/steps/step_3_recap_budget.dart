@@ -10,6 +10,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/payment_setup_notice.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -25,6 +26,7 @@ import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 /// Étape 3 / 3 — Budget & photo (match maquette `v3/expéditeur_publie`).
@@ -32,11 +34,25 @@ import 'package:intl/intl.dart';
 /// Layout : titre "Budget" · récap · choix du mode de prix · budget requis ·
 /// aperçu net voyageur · modes de paiement · mention CGU au-dessus du CTA.
 class Step3RecapBudget extends StatefulWidget {
-  const Step3RecapBudget({super.key, this.canContinueNotifier, this.currency});
+  const Step3RecapBudget({
+    super.key,
+    this.canContinueNotifier,
+    this.currency,
+    this.mobileMoneyAccountActive,
+    this.onMobileMoneySetupReturned,
+  });
 
   /// Piloté par l'étape, lu par le bouton « Publier » de la coque.
   final ValueNotifier<bool>? canContinueNotifier;
   final SupportedCurrency? currency;
+
+  /// Le compte mobile money de l'expéditeur est-il configuré et actif ?
+  /// Une demande qui accepte le mobile money ne part pas sans lui
+  /// (FLUTTER-B2). `null` : état inconnu, l'étape ne bloque rien.
+  final bool? mobileMoneyAccountActive;
+
+  /// Appelé au retour de l'écran d'activation, pour recharger le compte.
+  final VoidCallback? onMobileMoneySetupReturned;
 
   @override
   State<Step3RecapBudget> createState() => Step3RecapBudgetState();
@@ -109,11 +125,20 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
   void _sync() {
     if (!mounted) return;
     final s = context.read<PackageRequestFormBloc>().state;
-    widget.canContinueNotifier?.value = PackageRequestLimits.isBudgetValid(
-      s.totalBudgetEur,
-      _resolveCurrency(s),
-    );
+    widget.canContinueNotifier?.value =
+        PackageRequestLimits.isBudgetValid(
+          s.totalBudgetEur,
+          _resolveCurrency(s),
+        ) &&
+        !_mobileMoneyAccountMissing(s);
   }
+
+  /// Le mobile money est coché, possible dans la devise, et l'expéditeur n'a
+  /// pas de compte mobile money actif : la demande ne peut pas partir.
+  bool _mobileMoneyAccountMissing(PackageRequestFormState s) =>
+      widget.mobileMoneyAccountActive == false &&
+      _resolveCurrency(s).isMobileMoneyEligible &&
+      s.acceptedPaymentMethods.contains(PaymentMethod.mobileMoney);
 
   Future<void> _applyPromoCode() async {
     final budget = context.read<PackageRequestFormBloc>().state.totalBudgetEur;
@@ -178,6 +203,9 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
 
   void submit({bool saveAsDraft = false}) {
     final state = context.read<PackageRequestFormBloc>().state;
+    // Backstop : le bouton est déjà grisé, l'encart sous les modes de
+    // paiement explique pourquoi et mène à l'activation.
+    if (_mobileMoneyAccountMissing(state)) return;
     if (!_formKey.currentState!.validate() ||
         !PackageRequestLimits.isBudgetValid(
           state.totalBudgetEur,
@@ -444,6 +472,21 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                   selected: state.acceptedPaymentMethods,
                   currency: currency,
                 ),
+                if (_mobileMoneyAccountMissing(state)) ...[
+                  const SizedBox(height: DonySpacing.sm),
+                  PaymentSetupNotice(
+                    key: const Key('request-mobile-money-setup-notice'),
+                    message: l10n.requestCreateMobileMoneyAccountRequired,
+                    ctaLabel: l10n.requestCreateMobileMoneyAccountCta,
+                    ctaKey: const Key('request-activate-mobile-money-cta'),
+                    onCtaTap: () async {
+                      await context.push<void>(
+                        '/payments/mobile-money/account',
+                      );
+                      if (mounted) widget.onMobileMoneySetupReturned?.call();
+                    },
+                  ),
+                ],
                 const SizedBox(height: DonySpacing.base),
 
                 // L'écran s'arrêtait sur la mention CGU, qui répond à une

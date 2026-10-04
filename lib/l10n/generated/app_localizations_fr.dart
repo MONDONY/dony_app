@@ -3802,6 +3802,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Choisissez comment vous paierez le voyageur.';
 
   @override
+  String get requestCreateMobileMoneyAccountRequired =>
+      'Pour accepter le mobile money, configurez d\'abord votre compte mobile money. Sinon, décochez Mobile money pour publier.';
+
+  @override
+  String get requestCreateMobileMoneyAccountCta =>
+      'Configurer mon compte mobile money';
+
+  @override
   String get requestCreateKeepOnePaymentMethod =>
       'Gardez au moins un mode de paiement.';
 

@@ -1,3 +1,4 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -13,6 +14,9 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
@@ -76,6 +80,10 @@ class _StaticHelpCenterSource implements HelpCenterConfigSource {
 class _MockRepo extends Mock implements PackageRequestRepository {}
 
 class _MockCityRepo extends Mock implements CityRepository {}
+
+class _MockMobileMoneyAccountBloc
+    extends MockBloc<MobileMoneyAccountEvent, MobileMoneyAccountState>
+    implements MobileMoneyAccountBloc {}
 
 void main() {
   late _MockRepo repo;
@@ -225,6 +233,11 @@ void main() {
         makeDisabledAnalytics(MockAnalyticsBackend()),
       ),
     );
+    getIt.registerFactory<MobileMoneyAccountBloc>(() {
+      final b = _MockMobileMoneyAccountBloc();
+      when(() => b.state).thenReturn(const MobileMoneyAccountInitial());
+      return b;
+    });
     getIt.registerFactory<CitySearchBloc>(
       () => CitySearchBloc(_MockCityRepo()),
     );
@@ -237,6 +250,9 @@ void main() {
     }
     if (getIt.isRegistered<PackageRequestPhotosCubit>()) {
       getIt.unregister<PackageRequestPhotosCubit>();
+    }
+    if (getIt.isRegistered<MobileMoneyAccountBloc>()) {
+      getIt.unregister<MobileMoneyAccountBloc>();
     }
     if (getIt.isRegistered<CitySearchBloc>()) {
       getIt.unregister<CitySearchBloc>();

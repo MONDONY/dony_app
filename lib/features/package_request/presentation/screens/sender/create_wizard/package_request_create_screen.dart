@@ -18,6 +18,10 @@ import 'package:dony/features/package_request/presentation/screens/sender/create
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_3_recap_budget.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_step_indicator.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_sheet.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -218,6 +222,14 @@ class _PackageRequestCreateScreenState
             }
             return cubit;
           },
+        ),
+        // Accepter le mobile money exige un compte mobile money configuré
+        // (FLUTTER-B2) : l'étape budget en a besoin pour bloquer la
+        // publication et proposer le lien d'activation.
+        BlocProvider<MobileMoneyAccountBloc>(
+          create: (_) =>
+              getIt<MobileMoneyAccountBloc>()
+                ..add(const MobileMoneyAccountRequested()),
         ),
       ],
       child: BlocConsumer<PackageRequestFormBloc, PackageRequestFormState>(
@@ -461,11 +473,23 @@ class _PackageRequestCreateScreenState
                   key: _step2Key,
                   canContinueNotifier: _canContinueNotifier,
                 ),
-                _ => Step3RecapBudget(
-                  key: _step3Key,
-                  canContinueNotifier: _canContinueNotifier,
-                  currency: _activeCurrency,
-                ),
+                _ =>
+                  BlocBuilder<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+                    builder: (context, mobileMoneyState) => Step3RecapBudget(
+                      key: _step3Key,
+                      canContinueNotifier: _canContinueNotifier,
+                      currency: _activeCurrency,
+                      mobileMoneyAccountActive: mobileMoneyAccountActiveFrom(
+                        mobileMoneyState,
+                      ),
+                      // L'écran d'activation a sa propre instance du bloc :
+                      // sans rechargement au retour, l'étape afficherait
+                      // encore « non configuré » après l'activation.
+                      onMobileMoneySetupReturned: () => context
+                          .read<MobileMoneyAccountBloc>()
+                          .add(const MobileMoneyAccountRequested()),
+                    ),
+                  ),
               },
             ),
             _StickyCta(
