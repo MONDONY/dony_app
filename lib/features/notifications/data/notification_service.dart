@@ -151,6 +151,17 @@ class NotificationService {
 
   Future<void>? _inFlightUpload;
   Future<void>? _inFlightTokenUpload;
+
+  /// Dernier jeton enregistré côté serveur (clé `uid|jeton`) et l'heure de
+  /// l'envoi. Le jeton partait à chaque retour au premier plan alors qu'il
+  /// change rarement : il n'est renvoyé que s'il change, si le compte change,
+  /// après une déconnexion ou au bout de [tokenReuploadInterval].
+  String? _uploadedTokenKey;
+  DateTime? _uploadedTokenAt;
+
+  /// Filet de sécurité : même inchangé, le jeton est réenregistré une fois
+  /// par jour au plus, au cas où le serveur l'aurait perdu.
+  static const Duration tokenReuploadInterval = Duration(hours: 24);
   bool _permissionDeniedReported = false;
   bool _tokenResolutionFailureReported = false;
 
@@ -206,8 +217,12 @@ class NotificationService {
   }
 
   // Emits void whenever a new foreground notification arrives (for badge refresh)
-  final _newNotificationController = StreamController<void>.broadcast();
-  Stream<void> get newNotificationStream => _newNotificationController.stream;
+  final _newNotificationController = StreamController<String?>.broadcast();
+
+  /// Une push reçue application ouverte, portant son `type` (`null` s'il
+  /// manque) pour que l'abonné ne recharge que ce qu'elle concerne.
+  Stream<String?> get newNotificationStream =>
+      _newNotificationController.stream;
 
   /// Résolus sans `BuildContext` (pas encore disponible à [initialize]) à
   /// partir de [AppL10n.current]. [refreshChannelNames] les recrée ensuite
@@ -578,11 +593,19 @@ class NotificationService {
   }
 
   Future<void> _uploadToken(String token) {
+    final key = '${_currentUid() ?? ''}|$token';
+    final uploadedAt = _uploadedTokenAt;
+    if (key == _uploadedTokenKey &&
+        uploadedAt != null &&
+        DateTime.now().difference(uploadedAt) < tokenReuploadInterval) {
+      return Future<void>.value();
+    }
+
     final activeUpload = _inFlightTokenUpload;
     if (activeUpload != null) return activeUpload;
 
     late final Future<void> upload;
-    upload = _performTokenUpload(token).whenComplete(() {
+    upload = _performTokenUpload(token, key).whenComplete(() {
       if (identical(_inFlightTokenUpload, upload)) {
         _inFlightTokenUpload = null;
       }
@@ -591,7 +614,16 @@ class NotificationService {
     return upload;
   }
 
-  Future<void> _performTokenUpload(String token) async {
+  /// UID de la session, `null` si Firebase n'est pas initialisé (tests).
+  String? _currentUid() {
+    try {
+      return FirebaseAuth.instance.currentUser?.uid;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _performTokenUpload(String token, String key) async {
     var attempts = 0;
     try {
       await retryOperation(() async {
@@ -607,6 +639,8 @@ class NotificationService {
           },
         );
       }, onAttempt: (attempt) => attempts = attempt);
+      _uploadedTokenKey = key;
+      _uploadedTokenAt = DateTime.now();
       if (kDebugMode) debugPrint('[FCM] Token uploaded to backend');
     } on DeviceIdUnavailableException {
       // Téléphone verrouillé, app réveillée en arrière-plan (FLUTTER-AC) :
@@ -657,6 +691,9 @@ class NotificationService {
   /// reste : `DELETE /auth/me/fcm-token` supprime la ligne `user_devices` de
   /// cet appareil et vide la colonne héritée `users.fcm_token`.
   Future<void> forgetDeviceToken() async {
+    // Le prochain compte connecté sur ce téléphone doit réenregistrer le jeton.
+    _uploadedTokenKey = null;
+    _uploadedTokenAt = null;
     try {
       final deviceId = await _deviceIdService.getDeviceId();
       await _apiClient.dio
@@ -793,7 +830,7 @@ class NotificationService {
       return;
     }
     _ackIfCritical(message.data);
-    _newNotificationController.add(null);
+    _newNotificationController.add(message.data['type'] as String?);
     if (_handleSupportForeground(message.data)) return;
     final notification = message.notification;
     if (notification == null) return;

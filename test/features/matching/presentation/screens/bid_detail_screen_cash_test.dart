@@ -99,7 +99,7 @@ UserModel _user(String id) => UserModel(
 
 // ── Harness ───────────────────────────────────────────────────────────────────
 
-Future<void> _pump(
+Future<GoRouter> _pump(
   WidgetTester tester, {
   required BidModel bid,
   required _MockAuthBloc authBloc,
@@ -137,6 +137,7 @@ Future<void> _pump(
   // se terminent complètement, évitant les timers "pending" en fin de test.
   await tester.pump(const Duration(milliseconds: 400));
   await tester.pump(); // microtasks de _loadPaymentStatus
+  return router;
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────────
@@ -779,11 +780,11 @@ void main() {
     );
   });
 
-  // ── Régression ARRIVED : le polling 10 s doit rester actif ───────────────────
+  // ── Régression ARRIVED : le polling doit rester actif ────────────────────────
   // Le colis arrivé attend son retrait : son statut peut passer à COMPLETED à
   // tout moment. Avant le fix, ARRIVED n'armait aucun timer et l'écran restait
-  // figé jusqu'à un retour manuel.
-  group('Polling 10 s', () {
+  // figé jusqu'à un retour manuel. Tick de 30 s (10 s avant le 05/10).
+  group('Polling 30 s', () {
     testWidgets('bid ARRIVED → refetch périodique déclenché', (tester) async {
       final authBloc = _MockAuthBloc();
       when(
@@ -798,9 +799,9 @@ void main() {
         bid: _makeBid(status: 'ARRIVED'),
         authBloc: authBloc,
       );
-      // 1er add à l'initState, puis un par tick de 10 s.
-      await tester.pump(const Duration(seconds: 10));
-      await tester.pump(const Duration(seconds: 10));
+      // 1er add à l'initState, puis un par tick de 30 s.
+      await tester.pump(const Duration(seconds: 30));
+      await tester.pump(const Duration(seconds: 30));
 
       verify(
         () => bidBloc.add(any(that: isA<BidDetailRequested>())),
@@ -821,8 +822,8 @@ void main() {
         bid: _makeBid(status: 'COMPLETED'),
         authBloc: authBloc,
       );
-      await tester.pump(const Duration(seconds: 10));
-      await tester.pump(const Duration(seconds: 10));
+      await tester.pump(const Duration(seconds: 30));
+      await tester.pump(const Duration(seconds: 30));
 
       verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
     });
@@ -968,5 +969,50 @@ void main() {
         );
       },
     );
+  });
+
+  // ── Relecture périodique du détail ─────────────────────────────────────────
+  // Un colis ACCEPTED/HANDED_OVER/IN_TRANSIT/ARRIVED reste ouvert des jours :
+  // la relecture toutes les 10 s, y compris sous un autre écran, faisait de
+  // GET /bids/{id} le 4e appel le plus fréquent de l'API.
+
+  group('Relecture périodique', () {
+    _MockAuthBloc traveler() {
+      final authBloc = _MockAuthBloc();
+      when(
+        () => authBloc.state,
+      ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+      return authBloc;
+    }
+
+    testWidgets('colis en cours : relu toutes les 30 s, plus toutes les 10 s', (
+      tester,
+    ) async {
+      await _pump(tester, bid: _makeBid(), authBloc: traveler());
+      clearInteractions(bidBloc);
+
+      await tester.pump(const Duration(seconds: 10));
+      verifyNever(() => bidBloc.add(any(that: isA<BidDetailRequested>())));
+
+      await tester.pump(const Duration(seconds: 20));
+      verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
+    });
+
+    testWidgets('écran recouvert par un autre : pas de relecture', (
+      tester,
+    ) async {
+      final router = await _pump(tester, bid: _makeBid(), authBloc: traveler());
+      unawaited(router.push('/home'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      clearInteractions(bidBloc);
+
+      await tester.pump(const Duration(seconds: 30));
+
+      verifyNever(() => bidBloc.add(any(that: isA<BidDetailRequested>())));
+    });
   });
 }
