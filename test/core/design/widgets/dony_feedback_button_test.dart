@@ -63,6 +63,29 @@ void main() {
     expect(btn.onPressed, isNull);
   });
 
+  testWidgets('FLUTTER-AP : clavier fermé à l\'ouverture, puces et captures '
+      'au-dessus du champ', (tester) async {
+    await tester.pumpWidget(subject());
+    await tester.tap(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+    );
+    await tester.pumpAndSettle();
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.autofocus, isFalse);
+    expect(FocusManager.instance.primaryFocus?.context?.widget, isNot(field));
+
+    final fieldTop = tester.getTopLeft(find.byType(TextField)).dy;
+    expect(
+      tester.getTopLeft(find.byType(ChoiceChip).first).dy,
+      lessThan(fieldTop),
+    );
+    expect(
+      tester.getTopLeft(find.bySemanticsLabel('Ajouter une capture')).dy,
+      lessThan(fieldTop),
+    );
+  });
+
   testWidgets('saisie active le bouton et l\'envoi appelle onSubmit', (
     tester,
   ) async {

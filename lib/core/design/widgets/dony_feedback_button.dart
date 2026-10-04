@@ -472,6 +472,10 @@ class _FeedbackFormBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final formState = _FeedbackFormInherited.of(context);
     final l = context.l10n;
+    // Puces et captures AVANT le champ, sans focus automatique (FLUTTER-AP) :
+    // le clavier ouvert d'office cachait les puces et la tuile « Ajouter »
+    // sur un petit écran. Le champ, en dernier, reste visible au-dessus du
+    // clavier une fois touché, et tout le reste au-dessus de lui.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -483,21 +487,20 @@ class _FeedbackFormBody extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         const _FeedbackKindChips(),
         const SizedBox(height: DonySpacing.base),
-        TextField(
-          controller: formState.controller,
-          minLines: 3,
-          maxLines: 4,
-          decoration: InputDecoration(hintText: l.feedbackHint),
-          autofocus: true,
-          textInputAction: TextInputAction.newline,
-        ),
-        const SizedBox(height: DonySpacing.base),
         Text(
           l.feedbackAttachmentsLabel,
           style: Theme.of(context).textTheme.labelLarge,
         ),
         const SizedBox(height: DonySpacing.sm),
         const _FeedbackAttachments(),
+        const SizedBox(height: DonySpacing.base),
+        TextField(
+          controller: formState.controller,
+          minLines: 3,
+          maxLines: 4,
+          decoration: InputDecoration(hintText: l.feedbackHint),
+          textInputAction: TextInputAction.newline,
+        ),
       ],
     );
   }
