@@ -131,6 +131,59 @@ void main() {
       );
       expect(entry['scanMethod'], 'MANUAL');
     });
+
+    test(
+      'garde le numéro de suivi saisi à la remise, le rejoue à l\'envoi',
+      () async {
+        await service.queueScan(
+          bidId: 'bid-5',
+          eventType: 'DEPART',
+          trackingNumber: 'DON-AB23CD45',
+        );
+        final entry = Map<String, dynamic>.from(
+          _hiveService.offlineQueue.values.first,
+        );
+        expect(entry['trackingNumber'], 'DON-AB23CD45');
+
+        when(
+          () => mockRepo.postScan(
+            bidId: any(named: 'bidId'),
+            eventType: any(named: 'eventType'),
+            gpsLat: any(named: 'gpsLat'),
+            gpsLon: any(named: 'gpsLon'),
+            gpsLabel: any(named: 'gpsLabel'),
+            photoUrl: any(named: 'photoUrl'),
+            scanMethod: any(named: 'scanMethod'),
+            trackingNumber: 'DON-AB23CD45',
+            offlineTimestamp: any(named: 'offlineTimestamp'),
+          ),
+        ).thenAnswer((_) async => _fakeEvent());
+
+        await service.syncAll();
+
+        verify(
+          () => mockRepo.postScan(
+            bidId: 'bid-5',
+            eventType: 'DEPART',
+            gpsLat: any(named: 'gpsLat'),
+            gpsLon: any(named: 'gpsLon'),
+            gpsLabel: any(named: 'gpsLabel'),
+            photoUrl: any(named: 'photoUrl'),
+            scanMethod: any(named: 'scanMethod'),
+            trackingNumber: 'DON-AB23CD45',
+            offlineTimestamp: any(named: 'offlineTimestamp'),
+          ),
+        ).called(1);
+      },
+    );
+
+    test('sans numéro de suivi, la clé n\'existe pas dans l\'entrée', () async {
+      await service.queueScan(bidId: 'bid-6', eventType: 'TRANSIT');
+      final entry = Map<String, dynamic>.from(
+        _hiveService.offlineQueue.values.first,
+      );
+      expect(entry.containsKey('trackingNumber'), isFalse);
+    });
   });
 
   group('syncAll', () {

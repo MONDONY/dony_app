@@ -134,6 +134,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
     required ScanMethod method,
     String? photoPath,
     ScanPosition? position,
+    String? trackingNumber,
   }) {
     if (isClosed || state.pendingBidIds.contains(bidId)) return null;
     final id = ++_lastId;
@@ -148,6 +149,7 @@ class SuiviValidationCubit extends Cubit<SuiviValidationState> {
       gpsLon: position?.lon,
       gpsLabel: position?.label,
       scanMethod: method,
+      trackingNumber: trackingNumber,
       notBefore: deadline.add(replayGrace),
     )..ignore();
     _positions[id] = position != null

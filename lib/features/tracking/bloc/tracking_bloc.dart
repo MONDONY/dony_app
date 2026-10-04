@@ -135,6 +135,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
         gpsLon: event.gpsLon,
         gpsLabel: event.gpsLabel,
         scanMethod: event.scanMethod,
+        trackingNumber: event.trackingNumber,
       );
       if (result is! ScanSubmitSent) {
         emit(QrScanQueued());

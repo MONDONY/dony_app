@@ -123,6 +123,8 @@ void main() {
             as QrScanSubmitRequested;
     expect(event.bidId, 'bid-9');
     expect(event.scanMethod, ScanMethod.manual);
+    // Le numéro saisi pour identifier le colis part avec la remise (DEPART).
+    expect(event.trackingNumber, 'DON-ABC123');
     await tester.pump(const Duration(seconds: 2));
   });
 

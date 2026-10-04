@@ -27,6 +27,11 @@ SuiviMode? suiviModeFromQuery(String? raw) => switch (raw) {
 
 enum SuiviLoadStatus { idle, loading, loaded, error }
 
+/// Verdict sur le numéro de suivi saisi à la remise d'un colis (DEPART).
+/// [unverified] : le serveur n'a pas pu répondre (hors ligne) ; la saisie est
+/// gardée et il la vérifiera à la réception de l'étape.
+enum TrackingNumberCheck { ok, wrong, unverified }
+
 /// Effet ponctuel à jouer par l'écran (navigation, feuille). Chaque émission
 /// incrémente [SuiviState.effectId] : l'écran n'écoute que ce compteur.
 sealed class SuiviEffect {
@@ -45,17 +50,29 @@ sealed class SuiviEffect {
 /// [confirmNumber] : colis identifié par un numéro saisi, à confirmer sur
 /// un récapitulatif avant la photo. Le bouton d'une ligne colis n'en a pas
 /// besoin : le voyageur a déjà choisi le colis dans la liste.
+///
+/// [trackingNumber] : numéro saisi pour identifier le colis. À la remise
+/// (DEPART), le voyageur prouve qu'il tient le colis en scannant le QR OU en
+/// saisissant le numéro de suivi, que seul l'expéditeur possède. Le bouton
+/// d'une ligne colis n'identifie rien : la remise y demande donc le numéro
+/// avant la photo (FLUTTER-BC).
 final class SuiviValidateStep extends SuiviEffect {
   const SuiviValidateStep(
     this.bid,
     this.step, {
     this.method = ScanMethod.qr,
     this.confirmNumber = false,
+    this.trackingNumber,
   });
   final BidModel bid;
   final String step;
   final ScanMethod method;
   final bool confirmNumber;
+  final String? trackingNumber;
+
+  /// Remise sans QR ni numéro saisi : le numéro doit être demandé.
+  bool get needsTrackingNumber =>
+      step == 'DEPART' && method == ScanMethod.manual && trackingNumber == null;
 
   bool get photoRequired => step != 'TRANSIT' || method == ScanMethod.manual;
 }
@@ -457,8 +474,9 @@ class SuiviCubit extends Cubit<SuiviState> {
     ({BidModel bid, AnnouncementModel trip}) located,
     ScanHubLoaded hub,
     ScanMethod method,
-    Set<String> pendingBidIds,
-  ) {
+    Set<String> pendingBidIds, {
+    String? trackingNumber,
+  }) {
     final bid = located.bid;
     if (located.trip.id != hub.selectedTripId) {
       return SuiviParcelOnOtherTrip(bid, located.trip);
@@ -480,7 +498,29 @@ class SuiviCubit extends Cubit<SuiviState> {
       forced ?? next,
       method: method,
       confirmNumber: method == ScanMethod.manual,
+      trackingNumber: trackingNumber,
     );
+  }
+
+  /// Le [number] saisi à la remise est-il bien celui du colis [bidId] ?
+  /// Seul l'expéditeur le connaît (FLUTTER-BC).
+  Future<TrackingNumberCheck> checkTrackingNumber(
+    String bidId,
+    String number,
+  ) async {
+    try {
+      final result = await _trackingRepo.searchByTrackingNumber(number);
+      return result.bidId == bidId
+          ? TrackingNumberCheck.ok
+          : TrackingNumberCheck.wrong;
+    } catch (e) {
+      final error = unwrapDioError(e);
+      // Numéro inconnu (404) ou d'un autre colis (403) : refusé. Le reste
+      // (réseau coupé, serveur injoignable) ne dit rien du numéro.
+      return error is NotFoundException || error is ForbiddenException
+          ? TrackingNumberCheck.wrong
+          : TrackingNumberCheck.unverified;
+    }
   }
 
   /// Numéro saisi dans la feuille du mode Valider (QR illisible) : le colis
@@ -526,7 +566,13 @@ class SuiviCubit extends Cubit<SuiviState> {
       }
     }
     _emitValidation(
-      _validationOf(located, hub, ScanMethod.manual, pendingBidIds),
+      _validationOf(
+        located,
+        hub,
+        ScanMethod.manual,
+        pendingBidIds,
+        trackingNumber: number,
+      ),
     );
   }
 

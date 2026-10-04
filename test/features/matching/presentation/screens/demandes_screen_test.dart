@@ -102,6 +102,11 @@ Future<_MockPackageRequestBloc> _pump(
 
   final travelerBids = _MockTravelerBidsBloc();
   when(() => travelerBids.state).thenReturn(travelerBidsState);
+  // Un rechargement qui attend sa réponse (`done`) la reçoit tout de suite.
+  when(() => travelerBids.add(any())).thenAnswer((invocation) {
+    final event = invocation.positionalArguments.first;
+    if (event is TravelerBidsRequested) event.done?.complete(null);
+  });
   // Réutilise les mocks fournis par l'appelant (nécessaire pour vérifier les
   // events dispatchés, ex. tap Accepter) sinon en crée de nouveaux avec un
   // état par défaut neutre.
@@ -319,6 +324,36 @@ void main() {
         () => bidBloc.add(any(that: isA<BidAcceptMobileMoneyRequested>())),
       ).called(1);
       verifyNever(() => acceptance.add(any()));
+    },
+  );
+
+  testWidgets(
+    'demande acceptée : la liste est rechargée et le serveur fait foi '
+    '(FLUTTER-B9)',
+    (tester) async {
+      final bidBloc = _MockBidBloc();
+      final accepted = _bid('mm-1', 'AWAITING_PAYMENT');
+      whenListen(
+        bidBloc,
+        Stream<BidState>.fromIterable([BidAccepted(accepted)]),
+        initialState: BidListLoaded(const []),
+      );
+
+      await _pump(
+        tester,
+        travelerBidsState: loaded([_bid('mm-1', 'PAYMENT_ESCROWED')]),
+        bidBloc: bidBloc,
+      );
+      final travelerBids = BlocProvider.of<TravelerBidsBloc>(
+        tester.element(find.byType(DemandesScreenTesting)),
+      );
+      await tester.pumpAndSettle();
+
+      final captured = verify(() => travelerBids.add(captureAny())).captured;
+      final reloads = captured.whereType<TravelerBidsRequested>().where(
+        (e) => e.force && e.done != null,
+      );
+      expect(reloads, isNotEmpty);
     },
   );
 

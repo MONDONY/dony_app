@@ -8911,5 +8911,15 @@
   "callLockScreenSettingsLabel": "Calls on the lock screen",
   "callLockScreenSettingsAllowed": "Yadony calls show up even when your phone is locked.",
   "notificationSettingsSectionCalls": "CALLS",
-  "scanConfirmCodeIncomplete": "The pickup code has 6 digits."
+  "scanConfirmCodeIncomplete": "The pickup code has 6 digits.",
+  "suiviTrackingNumberTitle": "Parcel tracking number",
+  "suiviTrackingNumberBody": "Ask the sender for the tracking number of parcel {parcel}: only they know it. It proves you are picking up the right parcel, before the photo.",
+  "suiviTrackingNumberLabel": "Tracking number",
+  "suiviTrackingNumberContinue": "Continue to the photo",
+  "suiviTrackingNumberRequired": "Enter the tracking number.",
+  "suiviTrackingNumberWrong": "This number does not match this parcel. Check it with the sender.",
+  "errorTrackingNumberMismatchTitle": "Wrong tracking number",
+  "errorTrackingNumberMismatchMessage": "This number does not match this parcel. Ask the sender for it.",
+  "errorTrackingNumberRequiredTitle": "Tracking number required",
+  "errorTrackingNumberRequiredMessage": "Enter the tracking number given by the sender to confirm the handover."
 }

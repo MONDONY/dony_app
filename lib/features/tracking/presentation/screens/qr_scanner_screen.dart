@@ -58,7 +58,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     _showScanSheet(bidId, ScanMethod.qr);
   }
 
-  void _showScanSheet(String bidId, ScanMethod method) {
+  void _showScanSheet(
+    String bidId,
+    ScanMethod method, {
+    String? trackingNumber,
+  }) {
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -73,6 +77,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         child: _ScanConfirmSheet(
           bidId: bidId,
           scanMethod: method,
+          trackingNumber: trackingNumber,
           onClose: () {
             _detectedNotifier.value = false;
             _resumeScanning();
@@ -330,7 +335,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                           ctx.pop();
                           _detectedNotifier.value = true;
                           _pausedNotifier.value = true;
-                          _showScanSheet(result.bidId, ScanMethod.manual);
+                          _showScanSheet(
+                            result.bidId,
+                            ScanMethod.manual,
+                            trackingNumber: number,
+                          );
                         }
                       } catch (_) {
                         setDialogState(() => loading = false);
@@ -513,11 +522,16 @@ class _ScanConfirmSheet extends StatefulWidget {
   final VoidCallback onClose;
   final void Function(String bidId)? onDeliveryConfirmed;
 
+  /// Numéro de suivi saisi pour identifier le colis (scan manuel) : il part
+  /// avec la remise (DEPART), où le serveur le vérifie.
+  final String? trackingNumber;
+
   const _ScanConfirmSheet({
     required this.bidId,
     required this.scanMethod,
     required this.onClose,
     this.onDeliveryConfirmed,
+    this.trackingNumber,
   });
 
   @override
@@ -679,6 +693,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
           gpsLon: _position?.longitude,
           gpsLabel: _gpsLabel,
           scanMethod: widget.scanMethod,
+          trackingNumber: _eventType == 'DEPART' ? widget.trackingNumber : null,
         ),
       );
     }

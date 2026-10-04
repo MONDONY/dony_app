@@ -94,6 +94,7 @@ class OfflineSyncService {
     String? gpsLabel,
     String? photoPath,
     ScanMethod? scanMethod,
+    String? trackingNumber,
     DateTime? notBefore,
   }) {
     final entry = <String, dynamic>{
@@ -106,6 +107,9 @@ class OfflineSyncService {
       // Absent des entrées mises en file avant la provenance : rien n'est
       // alors envoyé au back.
       'scanMethod': ?scanMethod?.wire,
+      // Numéro saisi à la remise (DEPART) : il doit survivre à un envoi
+      // différé, le serveur le vérifie à la réception.
+      'trackingNumber': ?trackingNumber,
       'offlineTimestamp': _now().toUtc().toIso8601String(),
       'notBefore': ?notBefore?.toUtc().toIso8601String(),
     };
@@ -230,6 +234,7 @@ class OfflineSyncService {
         gpsLabel: entry['gpsLabel'] as String?,
         photoUrl: photoKey,
         scanMethod: ScanMethod.fromWire(entry['scanMethod']),
+        trackingNumber: entry['trackingNumber'] as String?,
         offlineTimestamp: deferred
             ? DateTime.parse(entry['offlineTimestamp'] as String)
             : null,

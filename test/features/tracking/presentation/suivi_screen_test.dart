@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -254,6 +255,7 @@ void main() {
         gpsLon: any(named: 'gpsLon'),
         gpsLabel: any(named: 'gpsLabel'),
         scanMethod: any(named: 'scanMethod'),
+        trackingNumber: any(named: 'trackingNumber'),
         notBefore: any(named: 'notBefore'),
       ),
     ).thenAnswer((_) async => 1);
@@ -468,6 +470,7 @@ void main() {
     required String step,
     required ScanMethod method,
     String? photoPath,
+    String? trackingNumber,
     ScanPosition? at,
   }) async {
     verify(
@@ -479,6 +482,7 @@ void main() {
         gpsLon: any(named: 'gpsLon'),
         gpsLabel: any(named: 'gpsLabel'),
         scanMethod: method,
+        trackingNumber: trackingNumber,
         notBefore: any(named: 'notBefore'),
       ),
     ).called(1);
@@ -494,6 +498,32 @@ void main() {
       final sent = await position;
       expect((sent?.lat, sent?.lon, sent?.label), (at.lat, at.lon, at.label));
     }
+  }
+
+  /// Remise du colis (DEPART) : le numéro de suivi est demandé avant la
+  /// photo (FLUTTER-BC). Le serveur le reconnaît comme celui du colis [bidId].
+  Future<void> enterTrackingNumber(
+    WidgetTester tester, {
+    required String bidId,
+    String number = 'DON-AB23CD45',
+  }) async {
+    when(() => trackingRepo.searchByTrackingNumber(number)).thenAnswer(
+      (_) async => TrackingSearchModel(
+        trackingNumber: number,
+        bidId: bidId,
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        currentStep: 'ACCEPTED',
+        stepLabel: 'Accepté',
+        paymentStatus: 'PAID',
+      ),
+    );
+    await tester.enterText(
+      find.byKey(const Key('suivi-tracking-number-field')),
+      number.toLowerCase(),
+    );
+    await tester.tap(find.byKey(const Key('suivi-tracking-number-continue')));
+    await settle(tester);
   }
 
   /// Trajet avec un colis remis (étape suivante : transit) et un colis au
@@ -937,6 +967,11 @@ void main() {
 
       scan!('madou');
       await settle(tester);
+      // Le QR identifie le colis : pas de numéro à saisir, direct la photo.
+      expect(
+        find.byKey(const Key('suivi-tracking-number-field')),
+        findsNothing,
+      );
       expect(visited, contains('/tracking/scan/photo'));
       expect(lastExtra, {
         'bidId': 'madou',
@@ -966,6 +1001,71 @@ void main() {
       expect(text('Madou récupéré'), findsNothing);
       // Position relevée avant la photo : pas de nouveau relevé.
       verifyNever(() => locator.capture());
+    });
+
+    testWidgets('numéro de suivi d\'un autre colis → refusé, pas de photo', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester);
+      await tapVisible(tester, const Key('suivi-validate-madou'));
+      await enterTrackingNumber(tester, bidId: 'un-autre-colis');
+      expect(
+        text(
+          'Ce numéro ne correspond pas à ce colis. Vérifie-le avec l\'expéditeur.',
+        ),
+        findsOneWidget,
+      );
+      expect(visited, isNot(contains('/tracking/scan/photo')));
+    });
+
+    testWidgets('numéro de suivi vide → message, pas de photo', (tester) async {
+      stubDefaultTrips();
+      await pump(tester);
+      await tapVisible(tester, const Key('suivi-validate-madou'));
+      await tester.tap(find.byKey(const Key('suivi-tracking-number-continue')));
+      await settle(tester);
+      expect(text('Saisis le numéro de suivi.'), findsOneWidget);
+      expect(visited, isNot(contains('/tracking/scan/photo')));
+    });
+
+    testWidgets(
+      'hors ligne : le numéro saisi est gardé, le serveur le vérifie',
+      (tester) async {
+        stubDefaultTrips();
+        await pump(tester);
+        await tapVisible(tester, const Key('suivi-validate-madou'));
+        when(
+          () => trackingRepo.searchByTrackingNumber('DON-AB23CD45'),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/tracking/search'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
+        await tester.enterText(
+          find.byKey(const Key('suivi-tracking-number-field')),
+          'DON-AB23CD45',
+        );
+        await tester.tap(
+          find.byKey(const Key('suivi-tracking-number-continue')),
+        );
+        await settle(tester);
+        expect(visited, contains('/tracking/scan/photo'));
+      },
+    );
+
+    testWidgets('l\'arrivée ne redemande pas le numéro de suivi', (
+      tester,
+    ) async {
+      stubDefaultTrips();
+      await pump(tester);
+      await tapVisible(tester, const Key('suivi-validate-kadi'));
+      expect(
+        find.byKey(const Key('suivi-tracking-number-field')),
+        findsNothing,
+      );
+      expect(visited.last, '/tracking/scan/photo');
     });
 
     testWidgets('photo du départ abandonnée → rien n\'est programmé', (
@@ -1098,6 +1198,7 @@ void main() {
         expect(visited, isNot(contains('/tracking/scan/identify')));
         // Colis choisi dans la liste : pas de récapitulatif du numéro.
         expect(text('Valider avec le numéro'), findsNothing);
+        await enterTrackingNumber(tester, bidId: 'madou');
         expect(visited.last, '/tracking/scan/photo');
         expect(lastExtra, {
           'bidId': 'madou',
@@ -1118,6 +1219,7 @@ void main() {
           step: 'DEPART',
           method: ScanMethod.manual,
           photoPath: '/tmp/colis.jpg',
+          trackingNumber: 'DON-AB23CD45',
           at: _here,
         );
       },
@@ -1648,6 +1750,36 @@ void main() {
       expect(text('Étape : transit, facultatif'), findsOneWidget);
       await tapVisible(tester, const Key('suivi-step-auto'));
       expect(text('Étape : automatique'), findsOneWidget);
+    });
+
+    testWidgets('numéro saisi pour la remise : il part avec le départ, sans '
+        'être redemandé (FLUTTER-BC)', (tester) async {
+      stubDefaultTrips();
+      await pump(tester);
+      await openNumberField(tester);
+      await submitNumber(tester, 'don-mad001');
+
+      expect(text('Valider avec le numéro'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('suivi-number-photo')));
+      await settle(tester);
+      expect(
+        find.byKey(const Key('suivi-tracking-number-field')),
+        findsNothing,
+      );
+      expect(visited.last, '/tracking/scan/photo');
+
+      await tester.tap(text('page /tracking/scan/photo'));
+      await settle(tester, rounds: 2);
+      await tester.pump(const Duration(seconds: 5));
+      await settle(tester, rounds: 2);
+      await verifySent(
+        bidId: 'madou',
+        step: 'DEPART',
+        method: ScanMethod.manual,
+        photoPath: '/tmp/colis.jpg',
+        trackingNumber: 'DON-MAD001',
+        at: _here,
+      );
     });
 
     testWidgets('numéro, transit forcé : récap, photo obligatoire, bandeau', (

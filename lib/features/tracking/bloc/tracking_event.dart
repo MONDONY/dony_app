@@ -29,6 +29,9 @@ class QrScanSubmitRequested extends TrackingEvent {
   /// Provenance envoyée au back ; `null` : rien n'est envoyé.
   final ScanMethod? scanMethod;
 
+  /// Numéro de suivi saisi à la remise du colis (DEPART).
+  final String? trackingNumber;
+
   QrScanSubmitRequested({
     required this.bidId,
     required this.eventType,
@@ -37,6 +40,7 @@ class QrScanSubmitRequested extends TrackingEvent {
     this.gpsLon,
     this.gpsLabel,
     this.scanMethod,
+    this.trackingNumber,
   });
 }
 

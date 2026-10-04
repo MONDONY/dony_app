@@ -20,6 +20,7 @@ import 'package:dony/features/tracking/presentation/widgets/qr_camera_view.dart'
 import 'package:dony/features/tracking/presentation/widgets/suivi_header.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_parcel_sheets.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_track_panel.dart';
+import 'package:dony/features/tracking/presentation/widgets/suivi_tracking_number_sheet.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_validate_content.dart';
 import 'package:dony/features/tracking/presentation/widgets/suivi_validation_toast.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
@@ -430,6 +431,20 @@ class _SuiviBodyState extends State<_SuiviBody> {
       if (mounted) _reloadTrips();
       return;
     }
+    // Remise du colis : le voyageur scanne le QR OU saisit le numéro de suivi
+    // (que seul l'expéditeur possède), avant la photo. Le QR et le numéro déjà
+    // saisi suffisent ; le bouton d'une ligne colis n'identifie rien, le
+    // numéro lui est demandé ici. Les étapes suivantes ne le redemandent pas.
+    String? trackingNumber = step == 'DEPART' ? effect.trackingNumber : null;
+    if (effect.needsTrackingNumber) {
+      final suivi = context.read<SuiviCubit>();
+      trackingNumber = await showSuiviTrackingNumberSheet(
+        context,
+        parcelLabel: label,
+        check: (number) => suivi.checkTrackingNumber(bid.id, number),
+      );
+      if (!mounted || trackingNumber == null) return;
+    }
     ScanPhotoResult? photo;
     if (effect.photoRequired) {
       photo = await context.push<ScanPhotoResult>(
@@ -450,6 +465,7 @@ class _SuiviBodyState extends State<_SuiviBody> {
       method: method,
       photoPath: photo?.photoPath,
       position: photo?.position,
+      trackingNumber: trackingNumber,
     );
   }
 
