@@ -98,6 +98,19 @@ void main() {
     expect(CountryCatalog.search('CANADA').map((c) => c.code), contains('CA'));
   });
 
+  test(
+    "l'apostrophe courbe du clavier iPhone trouve Côte d'Ivoire (FLUTTER-BR)",
+    () {
+      for (final query in ['côte d’ivoire', "côte d'ivoire", 'Cote d’Ivoire']) {
+        expect(
+          CountryCatalog.search(query).map((c) => c.code),
+          contains('CI'),
+          reason: query,
+        );
+      }
+    },
+  );
+
   test('une recherche vide renvoie le catalogue complet', () {
     expect(CountryCatalog.search(''), CountryCatalog.all);
     expect(CountryCatalog.search('   '), CountryCatalog.all);

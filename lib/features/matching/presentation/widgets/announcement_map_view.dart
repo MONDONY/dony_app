@@ -96,8 +96,27 @@ class AnnouncementMapView extends StatefulWidget {
   State<AnnouncementMapView> createState() => _AnnouncementMapViewState();
 }
 
-class _AnnouncementMapViewState extends State<AnnouncementMapView> {
+/// Durée de pause au-delà de laquelle la carte native est recréée.
+const Duration kMapRecreateAfterPause = Duration(seconds: 3);
+
+/// L'app est-elle restée assez longtemps en arrière-plan pour que la vue
+/// native de la carte ait pu être détruite (FLUTTER-BK) ?
+@visibleForTesting
+bool shouldRecreateNativeMap(Duration pausedFor) =>
+    pausedFor >= kMapRecreateAfterPause;
+
+class _AnnouncementMapViewState extends State<AnnouncementMapView>
+    with WidgetsBindingObserver {
   GoogleMapController? _mapController;
+
+  /// Génération de la carte native : elle change quand l'app revient au
+  /// premier plan après une vraie pause, ce qui recrée la vue native (FLUTTER-BK).
+  int _mapGeneration = 0;
+  DateTime? _pausedAt;
+
+  /// Dernière position de la caméra, pour recréer la carte au même endroit.
+  CameraPosition? _lastCamera;
+
   Set<Marker> _markers = {};
   final Map<int, BitmapDescriptor> _clusterIcons = {};
   double _currentZoom = 3.5;
@@ -117,6 +136,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // `_prewarmCommonIcons` construit des marqueurs via `_buildMarker`, qui
     // lit `context.l10n` (le libellé de grille tarifaire) : un `Localizations`
     // ne peut pas être consulté avant la fin de `initState`, d'où le report
@@ -125,6 +145,36 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       unawaited(_prewarmCommonIcons());
       _initLocationOnOpen();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Le moteur Flutter survit à l'Activity Android (moteur en cache,
+  /// MainActivity) : au retour, l'arbre Dart est intact mais la vue native de
+  /// la carte peut avoir disparu, et rien ne la recrée. Elle restait vide
+  /// jusqu'à la fermeture complète de l'app (FLUTTER-BK).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _pausedAt ??= DateTime.now();
+      return;
+    }
+    if (state != AppLifecycleState.resumed) return;
+    final pausedAt = _pausedAt;
+    _pausedAt = null;
+    if (pausedAt == null || !mounted) return;
+    if (shouldRecreateNativeMap(DateTime.now().difference(pausedAt))) {
+      setState(() {
+        _mapGeneration++;
+        _mapController = null;
+        _lastMarkerSignature = null;
+      });
+    }
   }
 
   @override
@@ -446,17 +496,21 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     return Stack(
       children: [
         GoogleMap(
-          initialCameraPosition: const CameraPosition(
-            target: LatLng(30.0, -5.0),
-            zoom: 3.5,
-          ),
+          key: ValueKey<int>(_mapGeneration),
+          initialCameraPosition:
+              _lastCamera ??
+              const CameraPosition(target: LatLng(30.0, -5.0), zoom: 3.5),
           style: widget.mapStyle ?? resolveMapStyle(_brightness),
           onMapCreated: (controller) {
             _mapController = controller;
-            _applyInitialCamera();
+            // Carte recréée après une pause : on garde la caméra de
+            // l'utilisateur au lieu de recadrer sur sa position.
+            if (_lastCamera == null) _applyInitialCamera();
+            if (_mapGeneration > 0) unawaited(_rebuildMarkers());
           },
           onCameraMove: (position) {
             _currentZoom = position.zoom;
+            _lastCamera = position;
           },
           onCameraIdle: () => _rebuildMarkers(),
           markers: {..._markers, ...widget.extraMarkers},

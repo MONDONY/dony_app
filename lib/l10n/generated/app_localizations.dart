@@ -22076,7 +22076,7 @@ abstract class AppLocalizations {
   /// Motif de signalement (report_reason_labels.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Informations fausses ou trompeuses'**
+  /// **'Informations inexactes ou trompeuses'**
   String get reportReasonFalseInformation;
 
   /// Motif de signalement (report_reason_labels.dart).
@@ -22130,13 +22130,13 @@ abstract class AppLocalizations {
   /// Libellé du champ de description (incident_report_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Description'**
+  /// **'Explication (facultatif)'**
   String get reportDescriptionLabel;
 
   /// Indication du champ de description (incident_report_screen.dart).
   ///
   /// In fr, this message translates to:
-  /// **'Décrivez le problème rencontré…'**
+  /// **'Expliquez en quelques mots pourquoi vous signalez…'**
   String get reportDescriptionHint;
 
   /// Titre de la section des captures d'écran (incident_report_screen.dart).
@@ -26672,6 +26672,12 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ce trajet est complet : il n\'accepte plus de demande.'**
   String get listingTripFullMessage;
+
+  /// Titre de la confirmation d'envoi d'un signalement (incident_report_screen.dart, FLUTTER-BJ)
+  ///
+  /// In fr, this message translates to:
+  /// **'Signalement envoyé'**
+  String get reportSentTitle;
 }
 
 class _AppLocalizationsDelegate

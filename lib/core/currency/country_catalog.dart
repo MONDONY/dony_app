@@ -325,6 +325,9 @@ class CountryCatalog {
     }).toList();
   }
 
+  /// Apostrophes typographiques ramenées à l'apostrophe droite.
+  static const _apostrophes = {'\u2019', '\u2018', '\u02BC', '`', '\u00B4'};
+
   static String _fold(String value) {
     const from =
         'àâäçéèêëîïôöùûü'; // i18n-ignore : table de repliement d'accents, donnée
@@ -332,6 +335,13 @@ class CountryCatalog {
     final buffer = StringBuffer();
     for (final rune in value.trim().toLowerCase().runes) {
       final char = String.fromCharCode(rune);
+      // Le clavier iPhone écrit l'apostrophe courbe (’), le catalogue la
+      // droite (') : « côte d’ivoire » ne trouvait pas « Côte d'Ivoire »
+      // (FLUTTER-BR).
+      if (_apostrophes.contains(char)) {
+        buffer.write("'");
+        continue;
+      }
       final index = from.indexOf(char);
       buffer.write(index >= 0 ? to[index] : char);
     }

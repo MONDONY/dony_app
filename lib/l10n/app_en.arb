@@ -7415,7 +7415,7 @@
   "reportReasonFakeProfile": "Fake profile",
   "reportReasonScamAttempt": "Scam attempt",
   "reportReasonProhibitedItem": "Prohibited item",
-  "reportReasonFalseInformation": "False or misleading information",
+  "reportReasonFalseInformation": "Inaccurate or misleading information",
   "reportReasonInappropriateContent": "Inappropriate content",
   "reportReasonSpam": "Spam",
   "reportReasonPaymentIssue": "Payment issue",
@@ -7424,8 +7424,8 @@
   "reportScreenTitle": "Report a problem",
   "reportSentMessage": "Report sent. Our team will review it.",
   "reportReasonLabel": "Reason",
-  "reportDescriptionLabel": "Description",
-  "reportDescriptionHint": "Describe the problem you encountered…",
+  "reportDescriptionLabel": "Explanation (optional)",
+  "reportDescriptionHint": "Briefly tell us why you are reporting this…",
   "reportScreenshotsLabel": "Screenshots (optional)",
   "reportScreenshotsHint": "Up to 4 images to help our team understand.",
   "reportSendButton": "Send report",
@@ -8922,5 +8922,6 @@
   "errorTrackingNumberMismatchMessage": "This number does not match this parcel. Ask the sender for it.",
   "errorTrackingNumberRequiredTitle": "Tracking number required",
   "errorTrackingNumberRequiredMessage": "Enter the tracking number given by the sender to confirm the handover.",
-  "listingTripFullMessage": "This trip is full: it no longer accepts requests."
+  "listingTripFullMessage": "This trip is full: it no longer accepts requests.",
+  "reportSentTitle": "Report sent"
 }

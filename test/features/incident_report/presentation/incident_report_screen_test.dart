@@ -38,18 +38,24 @@ void main() {
     await photosCubit.close();
   });
 
-  Widget wrap() => MaterialApp(
-    home: MediaQuery(
-      data: const MediaQueryData(size: Size(390, 844)),
-      child: MultiBlocProvider(
-        providers: [
-          BlocProvider.value(value: reportCubit),
-          BlocProvider.value(value: photosCubit),
-        ],
-        child: const IncidentReportScreen(),
-      ),
-    ),
-  );
+  Widget wrap({bool realViewport = false}) {
+    final screen = MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: reportCubit),
+        BlocProvider.value(value: photosCubit),
+      ],
+      child: const IncidentReportScreen(),
+    );
+    return MaterialApp(
+      // `realViewport` : la fenêtre du test (clavier compris) fait foi.
+      home: realViewport
+          ? screen
+          : MediaQuery(
+              data: const MediaQueryData(size: Size(390, 844)),
+              child: screen,
+            ),
+    );
+  }
 
   testWidgets(
     'affiche motifs, description, photos et bouton désactivé sans motif',
@@ -60,7 +66,7 @@ void main() {
       for (final reason in reportReasonsFor(IncidentTargetType.app)) {
         expect(find.text(reason.label(AppL10n.current)), findsOneWidget);
       }
-      expect(find.text('Description'), findsOneWidget);
+      expect(find.text('Explication (facultatif)'), findsOneWidget);
 
       final button = tester.widget<DonyButton>(find.byType(DonyButton));
       expect(button.onPressed, isNull);
@@ -105,6 +111,32 @@ void main() {
         description: 'Double débit',
       ),
     ).called(1);
+
+    // Confirmation qui reste à l'écran jusqu'au « OK » (FLUTTER-BJ).
+    expect(find.text('Signalement envoyé'), findsOneWidget);
+    expect(
+      find.text("Signalement envoyé. Notre équipe va l'examiner."),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    expect(find.text('Signalement envoyé'), findsNothing);
+  });
+
+  testWidgets('clavier ouvert : le bouton Envoyer reste au-dessus du clavier', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(720, 1280);
+    tester.view.devicePixelRatio = 1;
+    tester.view.viewInsets = const FakeViewPadding(bottom: 450);
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(wrap(realViewport: true));
+    await tester.pump();
+
+    final button = find.text('Envoyer le signalement');
+    expect(button, findsOneWidget);
+    expect(tester.getBottomLeft(button).dy, lessThanOrEqualTo(1280 - 450));
   });
 
   testWidgets('erreur du cubit affichée en snackbar', (tester) async {
@@ -164,7 +196,7 @@ void main() {
 
     expect(find.text('Report a problem'), findsOneWidget);
     expect(find.text('App bug'), findsOneWidget);
-    expect(find.text('Description'), findsOneWidget);
+    expect(find.text('Explanation (optional)'), findsOneWidget);
     expect(find.text('Send report'), findsOneWidget);
   });
 }

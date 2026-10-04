@@ -13291,7 +13291,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get reportReasonFalseInformation =>
-      'Informations fausses ou trompeuses';
+      'Informations inexactes ou trompeuses';
 
   @override
   String get reportReasonInappropriateContent => 'Contenu inapproprié';
@@ -13319,10 +13319,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get reportReasonLabel => 'Motif';
 
   @override
-  String get reportDescriptionLabel => 'Description';
+  String get reportDescriptionLabel => 'Explication (facultatif)';
 
   @override
-  String get reportDescriptionHint => 'Décrivez le problème rencontré…';
+  String get reportDescriptionHint =>
+      'Expliquez en quelques mots pourquoi vous signalez…';
 
   @override
   String get reportScreenshotsLabel => 'Captures d\'écran (optionnel)';
@@ -16233,4 +16234,7 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get listingTripFullMessage =>
       'Ce trajet est complet : il n\'accepte plus de demande.';
+
+  @override
+  String get reportSentTitle => 'Signalement envoyé';
 }

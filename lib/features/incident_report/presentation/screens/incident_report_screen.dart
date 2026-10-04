@@ -51,21 +51,32 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
     );
   }
 
+  /// Confirmation qui reste à l'écran jusqu'au « OK » : le snackbar de 4 s
+  /// apparaissait au moment où l'écran se refermait, et le testeur ne savait
+  /// pas si son signalement était parti (FLUTTER-BJ).
+  Future<void> _confirmSent(BuildContext context) async {
+    final l = context.l10n;
+    final navigator = Navigator.of(context);
+    await DonyDialog.show(
+      context,
+      title: l.reportSentTitle,
+      message: l.reportSentMessage,
+      confirmLabel: l.commonOk,
+      showCancel: false,
+      iconAsset: 'circle-check',
+    );
+    if (navigator.mounted && navigator.canPop()) {
+      navigator.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return BlocListener<IncidentReportCubit, IncidentReportState>(
       listener: (context, state) {
         if (state is IncidentReportSuccess) {
-          DonySnackbar.show(
-            context,
-            message: context.l10n.reportSentMessage,
-            type: DonySnackbarType.success,
-          );
-          final navigator = Navigator.of(context);
-          if (navigator.canPop()) {
-            navigator.pop();
-          }
+          unawaited(_confirmSent(context));
         } else if (state is IncidentReportError) {
           if (state.error != null) {
             unawaited(ErrorPresenter.show(context, state.error));
@@ -82,6 +93,39 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
         appBar: AppBar(
           actions: const [DonyFeedbackButton()],
           title: Text(context.l10n.reportScreenTitle),
+        ),
+        // Bouton épinglé hors du défilement, décalé de la hauteur du clavier :
+        // il restait sous le champ d'explication, caché dès qu'on tapait.
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              DonySpacing.md,
+              DonySpacing.sm,
+              DonySpacing.md,
+              DonySpacing.md + MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: BlocBuilder<IncidentPhotosCubit, List<IncidentPhotoUpload>>(
+              builder: (context, photos) {
+                return BlocBuilder<IncidentReportCubit, IncidentReportState>(
+                  builder: (context, state) {
+                    final photosCubit = context.read<IncidentPhotosCubit>();
+                    final canSubmit =
+                        _reason != null &&
+                        !photosCubit.hasUploading &&
+                        state is! IncidentReportSubmitting;
+                    return SizedBox(
+                      width: double.infinity,
+                      child: DonyButton(
+                        label: context.l10n.reportSendButton,
+                        isLoading: state is IncidentReportSubmitting,
+                        onPressed: canSubmit ? () => _submit(context) : null,
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -128,33 +172,6 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                 ),
                 const SizedBox(height: DonySpacing.sm),
                 const IncidentPhotoSection(),
-                const SizedBox(height: DonySpacing.xl),
-                BlocBuilder<IncidentPhotosCubit, List<IncidentPhotoUpload>>(
-                  builder: (context, photos) {
-                    return BlocBuilder<
-                      IncidentReportCubit,
-                      IncidentReportState
-                    >(
-                      builder: (context, state) {
-                        final photosCubit = context.read<IncidentPhotosCubit>();
-                        final canSubmit =
-                            _reason != null &&
-                            !photosCubit.hasUploading &&
-                            state is! IncidentReportSubmitting;
-                        return SizedBox(
-                          width: double.infinity,
-                          child: DonyButton(
-                            label: context.l10n.reportSendButton,
-                            isLoading: state is IncidentReportSubmitting,
-                            onPressed: canSubmit
-                                ? () => _submit(context)
-                                : null,
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
               ],
             ),
           ),

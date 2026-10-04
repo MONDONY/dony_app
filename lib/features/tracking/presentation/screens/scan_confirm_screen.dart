@@ -111,7 +111,6 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
     final l = context.l10n;
     final etapeIcons = _etapeIcons[widget.etape];
     final etapeLabel = trackingStepLabel(l, widget.etape);
-    final bottomPad = MediaQuery.of(context).padding.bottom;
     final locationLabel = _displayLocationLabel(l);
 
     return BlocConsumer<TrackingBloc, TrackingState>(
@@ -147,13 +146,81 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
               child: Divider(height: 1, color: cs.outline),
             ),
           ),
+          // Le bouton principal est épinglé hors du défilement : avec le clavier
+          // numérique ouvert, il restait sous la fiche du colis, hors d'écran
+          // (FLUTTER-BN, BF). Le Scaffold ne remonte pas cette barre avec le
+          // clavier : on la décale de sa hauteur.
+          bottomNavigationBar: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.sm,
+                DonySpacing.lg,
+                DonySpacing.base + MediaQuery.viewInsetsOf(context).bottom,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Bouton principal
+                  DonyButton(
+                    label: _isArrivee
+                        ? l.scanConfirmDeliveryButton
+                        : l.scanValidateReadingButton,
+                    iconAsset: _isArrivee ? 'badge-check' : 'check',
+                    onPressed: isSubmitting ? null : () => _submit(context),
+                    isLoading: isSubmitting,
+                  ),
+
+                  const SizedBox(height: DonySpacing.sm),
+
+                  // Reprendre photo
+                  if (widget.photoPath != null)
+                    TextButton.icon(
+                      onPressed: isSubmitting ? null : () => context.pop(),
+                      icon: DonyIcon(
+                        'refresh-cw',
+                        size: 16,
+                        color: cs.onSurfaceVariant,
+                      ),
+                      label: Text(l.scanRetakePhotoButton),
+                      style: TextButton.styleFrom(
+                        foregroundColor: cs.onSurfaceVariant,
+                      ),
+                    ),
+
+                  // Message d'erreur
+                  if (state is QrScanError ||
+                      state is DeliveryConfirmError) ...[
+                    const SizedBox(height: DonySpacing.md),
+                    Text(
+                      state is QrScanError
+                          ? ErrorPresenter.resolve(
+                              state.error,
+                              l10n: context.l10n,
+                            ).message
+                          : ErrorPresenter.resolve(
+                              (state as DeliveryConfirmError).error,
+                              l10n: context.l10n,
+                            ).message,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.error,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
           body: SingleChildScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: EdgeInsets.fromLTRB(
+            padding: const EdgeInsets.fromLTRB(
               DonySpacing.lg,
               DonySpacing.xl,
               DonySpacing.lg,
-              bottomPad + DonySpacing.huge,
+              DonySpacing.xl,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -331,54 +398,6 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                     ),
                   ),
                   const SizedBox(height: DonySpacing.xl),
-                ],
-
-                // Bouton principal
-                DonyButton(
-                  label: _isArrivee
-                      ? l.scanConfirmDeliveryButton
-                      : l.scanValidateReadingButton,
-                  iconAsset: _isArrivee ? 'badge-check' : 'check',
-                  onPressed: isSubmitting ? null : () => _submit(context),
-                  isLoading: isSubmitting,
-                ),
-
-                const SizedBox(height: DonySpacing.sm),
-
-                // Reprendre photo
-                if (widget.photoPath != null)
-                  TextButton.icon(
-                    onPressed: isSubmitting ? null : () => context.pop(),
-                    icon: DonyIcon(
-                      'refresh-cw',
-                      size: 16,
-                      color: cs.onSurfaceVariant,
-                    ),
-                    label: Text(l.scanRetakePhotoButton),
-                    style: TextButton.styleFrom(
-                      foregroundColor: cs.onSurfaceVariant,
-                    ),
-                  ),
-
-                // Message d'erreur
-                if (state is QrScanError || state is DeliveryConfirmError) ...[
-                  const SizedBox(height: DonySpacing.md),
-                  Text(
-                    state is QrScanError
-                        ? ErrorPresenter.resolve(
-                            state.error,
-                            l10n: context.l10n,
-                          ).message
-                        : ErrorPresenter.resolve(
-                            (state as DeliveryConfirmError).error,
-                            l10n: context.l10n,
-                          ).message,
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.error,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
                 ],
               ],
             ),

@@ -14946,7 +14946,7 @@
   "@reportReasonProhibitedItem": {
     "description": "Motif de signalement (report_reason_labels.dart)."
   },
-  "reportReasonFalseInformation": "Informations fausses ou trompeuses",
+  "reportReasonFalseInformation": "Informations inexactes ou trompeuses",
   "@reportReasonFalseInformation": {
     "description": "Motif de signalement (report_reason_labels.dart)."
   },
@@ -14982,11 +14982,11 @@
   "@reportReasonLabel": {
     "description": "Titre de la section des motifs (incident_report_screen.dart)."
   },
-  "reportDescriptionLabel": "Description",
+  "reportDescriptionLabel": "Explication (facultatif)",
   "@reportDescriptionLabel": {
     "description": "Libellé du champ de description (incident_report_screen.dart)."
   },
-  "reportDescriptionHint": "Décrivez le problème rencontré…",
+  "reportDescriptionHint": "Expliquez en quelques mots pourquoi vous signalez…",
   "@reportDescriptionHint": {
     "description": "Indication du champ de description (incident_report_screen.dart)."
   },
@@ -18624,5 +18624,9 @@
   "listingTripFullMessage": "Ce trajet est complet : il n'accepte plus de demande.",
   "@listingTripFullMessage": {
     "description": "Pied de la feuille trajet quand le trajet est complet : bouton de demande grisé, FLUTTER-BG (traveler_announcement_bottom_sheet.dart)"
+  },
+  "reportSentTitle": "Signalement envoyé",
+  "@reportSentTitle": {
+    "description": "Titre de la confirmation d'envoi d'un signalement (incident_report_screen.dart, FLUTTER-BJ)"
   }
 }
