@@ -92,8 +92,18 @@ class _DonyBottomSheetContent extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final mq = MediaQuery.of(context);
-    final bottomInset = mq.viewInsets.bottom + mq.viewPadding.bottom;
-    final topMargin = mq.size.height * 0.1;
+    // Le clavier recouvre déjà la barre de navigation : additionner les deux
+    // comptait celle-ci deux fois et décollait le bouton du clavier
+    // (FLUTTER-AM, Redmi).
+    final bottomInset = mq.viewInsets.bottom > mq.viewPadding.bottom
+        ? mq.viewInsets.bottom
+        : mq.viewPadding.bottom;
+    // Clavier ouvert : la marge haute de 10 % mangeait l'espace de saisie sur
+    // un petit écran. La feuille monte alors jusque sous la barre d'état.
+    final keyboardOpen = mq.viewInsets.bottom > 0;
+    final topMargin = keyboardOpen
+        ? mq.viewPadding.top + DonySpacing.sm
+        : mq.size.height * 0.1;
 
     final bgColor = isDanger ? cs.errorContainer : cs.surface;
     final handleColor = isDanger
