@@ -1053,6 +1053,8 @@
   "requestCreatePromoAppliedFallback": "Code applied",
   "requestCreatePaymentAcceptedLabel": "Accepted payment",
   "requestCreatePaymentHint": "Choose how you'll pay the traveler.",
+  "requestCreateMobileMoneyAccountRequired": "To accept mobile money, set up your mobile money account first. Otherwise, untick Mobile money to publish.",
+  "requestCreateMobileMoneyAccountCta": "Set up my mobile money account",
   "requestCreateKeepOnePaymentMethod": "Keep at least one payment method.",
   "requestCreatePublishInfoBanner": "Once posted, travelers on this trip are notified. You'll get a notification at the first offer.",
   "requestCreateBudgetInputHint": "E.g. 40.00",

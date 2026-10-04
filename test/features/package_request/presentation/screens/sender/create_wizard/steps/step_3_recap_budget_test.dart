@@ -606,4 +606,82 @@ void main() {
       });
     });
   });
+
+  group('Step3RecapBudget — compte mobile money requis (FLUTTER-B2)', () {
+    PackageRequestFormState cfaSeed(Set<PaymentMethod> methods) =>
+        PackageRequestFormState(
+          currentStep: 2,
+          currency: SupportedCurrency.xof,
+          totalBudgetEur: 10000,
+          acceptedPaymentMethods: methods,
+        );
+
+    Future<ValueNotifier<bool>> pumpStep(
+      WidgetTester tester, {
+      required Set<PaymentMethod> methods,
+      required bool? accountActive,
+    }) async {
+      final canContinue = ValueNotifier<bool>(false);
+      addTearDown(canContinue.dispose);
+      await tester.pumpWidget(
+        wrap(
+          Step3RecapBudget(
+            canContinueNotifier: canContinue,
+            currency: SupportedCurrency.xof,
+            mobileMoneyAccountActive: accountActive,
+          ),
+          seed: cfaSeed(methods),
+          useMock: true,
+        ),
+      );
+      await tester.pump();
+      return canContinue;
+    }
+
+    testWidgets(
+      'mobile money coché sans compte : encart + lien, publication bloquée',
+      (tester) async {
+        final canContinue = await pumpStep(
+          tester,
+          methods: {PaymentMethod.mobileMoney, PaymentMethod.cash},
+          accountActive: false,
+        );
+        expect(
+          find.byKey(const Key('request-mobile-money-setup-notice')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('request-activate-mobile-money-cta')),
+          findsOneWidget,
+        );
+        expect(canContinue.value, isFalse);
+      },
+    );
+
+    testWidgets('compte mobile money actif : rien ne bloque', (tester) async {
+      final canContinue = await pumpStep(
+        tester,
+        methods: {PaymentMethod.mobileMoney, PaymentMethod.cash},
+        accountActive: true,
+      );
+      expect(
+        find.byKey(const Key('request-mobile-money-setup-notice')),
+        findsNothing,
+      );
+      expect(canContinue.value, isTrue);
+    });
+
+    testWidgets('mobile money décoché : publiable sans compte', (tester) async {
+      final canContinue = await pumpStep(
+        tester,
+        methods: {PaymentMethod.cash},
+        accountActive: false,
+      );
+      expect(
+        find.byKey(const Key('request-mobile-money-setup-notice')),
+        findsNothing,
+      );
+      expect(canContinue.value, isTrue);
+    });
+  });
 }

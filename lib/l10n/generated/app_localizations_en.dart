@@ -3784,6 +3784,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestCreatePaymentHint => 'Choose how you\'ll pay the traveler.';
 
   @override
+  String get requestCreateMobileMoneyAccountRequired =>
+      'To accept mobile money, set up your mobile money account first. Otherwise, untick Mobile money to publish.';
+
+  @override
+  String get requestCreateMobileMoneyAccountCta =>
+      'Set up my mobile money account';
+
+  @override
   String get requestCreateKeepOnePaymentMethod =>
       'Keep at least one payment method.';
 

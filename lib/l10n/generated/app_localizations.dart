@@ -6389,6 +6389,18 @@ abstract class AppLocalizations {
   /// **'Choisissez comment vous paierez le voyageur.'**
   String get requestCreatePaymentHint;
 
+  /// Encart sous les modes de paiement d'une demande d'envoi : mobile money coché sans compte mobile money configuré, la publication est bloquée (FLUTTER-B2)
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour accepter le mobile money, configurez d\'abord votre compte mobile money. Sinon, décochez Mobile money pour publier.'**
+  String get requestCreateMobileMoneyAccountRequired;
+
+  /// Lien de l'encart vers l'écran de configuration du compte mobile money
+  ///
+  /// In fr, this message translates to:
+  /// **'Configurer mon compte mobile money'**
+  String get requestCreateMobileMoneyAccountCta;
+
   /// Message quand l'expéditeur tente de décocher le dernier mode de paiement (step_3_recap_budget.dart)
   ///
   /// In fr, this message translates to:
