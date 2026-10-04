@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -576,6 +577,74 @@ void main() {
       expect(c.state.effectId, id);
       c.releaseScan();
       expect(c.state.busy, isFalse);
+    });
+  });
+
+  group('checkTrackingNumber (numéro saisi à la remise)', () {
+    TrackingSearchModel found(String bidId) => TrackingSearchModel(
+      trackingNumber: 'DON-AB23CD45',
+      bidId: bidId,
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      currentStep: 'ACCEPTED',
+      stepLabel: 'Accepté',
+      paymentStatus: 'PAID',
+    );
+
+    test('le numéro est celui du colis → ok', () async {
+      when(
+        () => trackingRepo.searchByTrackingNumber('DON-AB23CD45'),
+      ).thenAnswer((_) async => found('bid-1'));
+      expect(
+        await build().checkTrackingNumber('bid-1', 'DON-AB23CD45'),
+        TrackingNumberCheck.ok,
+      );
+    });
+
+    test('le numéro est celui d\'un autre colis → refusé', () async {
+      when(
+        () => trackingRepo.searchByTrackingNumber('DON-AB23CD45'),
+      ).thenAnswer((_) async => found('bid-2'));
+      expect(
+        await build().checkTrackingNumber('bid-1', 'DON-AB23CD45'),
+        TrackingNumberCheck.wrong,
+      );
+    });
+
+    test('numéro inconnu (404) ou colis d\'autrui (403) → refusé', () async {
+      // L'intercepteur range l'erreur métier dans DioException.error.
+      for (final error in <AppException>[
+        const NotFoundException(),
+        const ForbiddenException('interdit'),
+      ]) {
+        when(
+          () => trackingRepo.searchByTrackingNumber('DON-AB23CD45'),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/tracking/search'),
+            error: error,
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        expect(
+          await build().checkTrackingNumber('bid-1', 'DON-AB23CD45'),
+          TrackingNumberCheck.wrong,
+          reason: '${error.runtimeType}',
+        );
+      }
+    });
+
+    test('réseau coupé → non vérifié, le serveur tranchera', () async {
+      when(() => trackingRepo.searchByTrackingNumber('DON-AB23CD45')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/tracking/search'),
+          type: DioExceptionType.connectionError,
+        ),
+      );
+      expect(
+        await build().checkTrackingNumber('bid-1', 'DON-AB23CD45'),
+        TrackingNumberCheck.unverified,
+      );
     });
   });
 

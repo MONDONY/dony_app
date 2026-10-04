@@ -26606,6 +26606,66 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Le code de retrait contient 6 chiffres.'**
   String get scanConfirmCodeIncomplete;
+
+  /// Titre de la feuille de saisie du numéro de suivi à la remise du colis (FLUTTER-BC)
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de suivi du colis'**
+  String get suiviTrackingNumberTitle;
+
+  /// Explication de la feuille du numéro de suivi, {parcel} est le libellé du colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande à l\'expéditeur le numéro de suivi du colis {parcel} : lui seul le connaît. Il prouve que tu récupères le bon colis, avant la photo.'**
+  String suiviTrackingNumberBody(String parcel);
+
+  /// Libellé du champ du numéro de suivi
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de suivi'**
+  String get suiviTrackingNumberLabel;
+
+  /// Bouton de la feuille du numéro de suivi
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer vers la photo'**
+  String get suiviTrackingNumberContinue;
+
+  /// Champ du numéro de suivi vide
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisis le numéro de suivi.'**
+  String get suiviTrackingNumberRequired;
+
+  /// Numéro de suivi refusé
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro ne correspond pas à ce colis. Vérifie-le avec l\'expéditeur.'**
+  String get suiviTrackingNumberWrong;
+
+  /// Erreur tracking-number-mismatch
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de suivi incorrect'**
+  String get errorTrackingNumberMismatchTitle;
+
+  /// Erreur tracking-number-mismatch
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro ne correspond pas à ce colis. Demande-le à l\'expéditeur.'**
+  String get errorTrackingNumberMismatchMessage;
+
+  /// Erreur tracking-number-required
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro de suivi requis'**
+  String get errorTrackingNumberRequiredTitle;
+
+  /// Erreur tracking-number-required
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisis le numéro de suivi donné par l\'expéditeur pour valider la remise.'**
+  String get errorTrackingNumberRequiredMessage;
 }
 
 class _AppLocalizationsDelegate

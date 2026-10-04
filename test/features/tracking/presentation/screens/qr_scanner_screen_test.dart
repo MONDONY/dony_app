@@ -114,7 +114,17 @@ void main() {
     await tester.tap(find.text('Confirm'));
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 400));
+    // Remise du colis (DEPART) : sans le numéro de suivi, ni photo ni envoi.
     await tester.ensureVisible(find.text('Confirm scan'));
+    await tester.tap(find.text('Confirm scan'));
+    await tester.pump();
+    verifyNever(() => bloc.add(any()));
+
+    await tester.enterText(
+      find.byKey(const Key('scan-sheet-tracking-number')),
+      'don-ab23cd45',
+    );
+    await tester.pump();
     await tester.tap(find.text('Confirm scan'));
     await tester.pump();
 
@@ -123,6 +133,7 @@ void main() {
             as QrScanSubmitRequested;
     expect(event.bidId, 'bid-9');
     expect(event.scanMethod, ScanMethod.manual);
+    expect(event.trackingNumber, 'DON-AB23CD45');
     await tester.pump(const Duration(seconds: 2));
   });
 

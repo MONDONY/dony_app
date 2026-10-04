@@ -225,17 +225,33 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
   /// Attend la réponse réelle : un délai fixe relâchait le spinner avant
   /// elle, et un échec (qui laisse la liste intacte) passait inaperçu.
   Future<void> _onRefresh() async {
+    final error = await _reloadAndWait();
+    if (error != null && mounted) {
+      unawaited(ErrorPresenter.show(context, error));
+    }
+  }
+
+  /// Recharge la liste et rend l'erreur éventuelle, `null` si tout va bien.
+  Future<Object?> _reloadAndWait() {
     final done = Completer<Object?>();
     context.read<TravelerBidsBloc>().add(
       TravelerBidsRequested(force: true, done: done),
     );
-    final error = await done.future.timeout(
+    return done.future.timeout(
       const Duration(seconds: 20),
       onTimeout: () => null,
     );
-    if (error != null && mounted) {
-      unawaited(ErrorPresenter.show(context, error));
-    }
+  }
+
+  /// Après une acceptation : la carte reste verrouillée (spinner) jusqu'à ce
+  /// que la liste rechargée ait répondu. Libérée avant, elle réaffichait un
+  /// bouton « Accepter » actif sur l'ancien état (FLUTTER-B9), et un second
+  /// tap était refusé (« n'est plus en attente »).
+  Future<void> _reloadAfterAccept() async {
+    final error = await _reloadAndWait();
+    if (!mounted) return;
+    setState(_processingBidIds.clear);
+    if (error != null) unawaited(ErrorPresenter.show(context, error));
   }
 
   // ── Actions ────────────────────────────────────────────────────────────────
@@ -275,13 +291,12 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
 
   void _onBidStateChange(BuildContext context, BidState state) {
     if (state is BidAccepted) {
-      setState(() => _processingBidIds.remove(state.bid.id));
       DonySnackbar.show(
         context,
         message: context.l10n.bidListAcceptedSnackbar,
         type: DonySnackbarType.success,
       );
-      _reload();
+      unawaited(_reloadAfterAccept());
     } else if (state is BidRejected) {
       DonySnackbar.show(context, message: context.l10n.bidListRejectedSnackbar);
       _reload();
@@ -298,13 +313,12 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
     acs.BidAcceptanceState state,
   ) {
     if (state is acs.BidAccepted) {
-      setState(_processingBidIds.clear);
       DonySnackbar.show(
         context,
         message: context.l10n.bidListAcceptedSnackbar,
         type: DonySnackbarType.success,
       );
-      _reload();
+      unawaited(_reloadAfterAccept());
     } else if (state is acs.BidWalletInsufficient) {
       setState(_processingBidIds.clear);
       _showWalletInsufficientSheet(context, state);
@@ -393,6 +407,9 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
               onPressed: () async {
                 context.pop();
                 await context.push('/payments/commission-method');
+                // La carte ajoutée ne change pas la demande, mais l'écran
+                // doit repartir de l'état réel du serveur.
+                if (context.mounted) _reload();
               },
             ),
           ],

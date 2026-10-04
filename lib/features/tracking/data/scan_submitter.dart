@@ -50,6 +50,7 @@ class ScanSubmitter {
     double? gpsLon,
     String? gpsLabel,
     ScanMethod? scanMethod,
+    String? trackingNumber,
   }) async {
     Future<ScanSubmitResult> queue() async {
       await _offlineSync.queueScan(
@@ -60,6 +61,7 @@ class ScanSubmitter {
         gpsLabel: gpsLabel,
         photoPath: photoPath,
         scanMethod: scanMethod,
+        trackingNumber: trackingNumber,
       );
       return const ScanSubmitQueued();
     }
@@ -78,6 +80,7 @@ class ScanSubmitter {
       gpsLabel: gpsLabel,
       photoUrl: photoKey,
       scanMethod: scanMethod,
+      trackingNumber: trackingNumber,
     );
     return ScanSubmitSent(event);
   }

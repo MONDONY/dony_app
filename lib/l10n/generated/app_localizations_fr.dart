@@ -16194,4 +16194,39 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get scanConfirmCodeIncomplete =>
       'Le code de retrait contient 6 chiffres.';
+
+  @override
+  String get suiviTrackingNumberTitle => 'Numéro de suivi du colis';
+
+  @override
+  String suiviTrackingNumberBody(String parcel) {
+    return 'Demande à l\'expéditeur le numéro de suivi du colis $parcel : lui seul le connaît. Il prouve que tu récupères le bon colis, avant la photo.';
+  }
+
+  @override
+  String get suiviTrackingNumberLabel => 'Numéro de suivi';
+
+  @override
+  String get suiviTrackingNumberContinue => 'Continuer vers la photo';
+
+  @override
+  String get suiviTrackingNumberRequired => 'Saisis le numéro de suivi.';
+
+  @override
+  String get suiviTrackingNumberWrong =>
+      'Ce numéro ne correspond pas à ce colis. Vérifie-le avec l\'expéditeur.';
+
+  @override
+  String get errorTrackingNumberMismatchTitle => 'Numéro de suivi incorrect';
+
+  @override
+  String get errorTrackingNumberMismatchMessage =>
+      'Ce numéro ne correspond pas à ce colis. Demande-le à l\'expéditeur.';
+
+  @override
+  String get errorTrackingNumberRequiredTitle => 'Numéro de suivi requis';
+
+  @override
+  String get errorTrackingNumberRequiredMessage =>
+      'Saisis le numéro de suivi donné par l\'expéditeur pour valider la remise.';
 }

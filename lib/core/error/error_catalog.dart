@@ -554,6 +554,18 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.password_rounded,
     ),
+    'tracking-number-mismatch': _Entry(
+      title: (l) => l.errorTrackingNumberMismatchTitle,
+      message: (l) => l.errorTrackingNumberMismatchMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.password_rounded,
+    ),
+    'tracking-number-required': _Entry(
+      title: (l) => l.errorTrackingNumberRequiredTitle,
+      message: (l) => l.errorTrackingNumberRequiredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.password_rounded,
+    ),
     'too-many-attempts': _Entry(
       title: (l) => l.errorTooManyAttemptsTitle,
       message: (l) => l.errorTooManyAttemptsMessage,

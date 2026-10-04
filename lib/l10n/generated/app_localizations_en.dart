@@ -16097,4 +16097,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanConfirmCodeIncomplete => 'The pickup code has 6 digits.';
+
+  @override
+  String get suiviTrackingNumberTitle => 'Parcel tracking number';
+
+  @override
+  String suiviTrackingNumberBody(String parcel) {
+    return 'Ask the sender for the tracking number of parcel $parcel: only they know it. It proves you are picking up the right parcel, before the photo.';
+  }
+
+  @override
+  String get suiviTrackingNumberLabel => 'Tracking number';
+
+  @override
+  String get suiviTrackingNumberContinue => 'Continue to the photo';
+
+  @override
+  String get suiviTrackingNumberRequired => 'Enter the tracking number.';
+
+  @override
+  String get suiviTrackingNumberWrong =>
+      'This number does not match this parcel. Check it with the sender.';
+
+  @override
+  String get errorTrackingNumberMismatchTitle => 'Wrong tracking number';
+
+  @override
+  String get errorTrackingNumberMismatchMessage =>
+      'This number does not match this parcel. Ask the sender for it.';
+
+  @override
+  String get errorTrackingNumberRequiredTitle => 'Tracking number required';
+
+  @override
+  String get errorTrackingNumberRequiredMessage =>
+      'Enter the tracking number given by the sender to confirm the handover.';
 }

@@ -27,6 +27,11 @@ SuiviMode? suiviModeFromQuery(String? raw) => switch (raw) {
 
 enum SuiviLoadStatus { idle, loading, loaded, error }
 
+/// Verdict sur le numéro de suivi saisi à la remise d'un colis (DEPART).
+/// [unverified] : le serveur n'a pas pu répondre (hors ligne) ; la saisie est
+/// gardée et il la vérifiera à la réception de l'étape.
+enum TrackingNumberCheck { ok, wrong, unverified }
+
 /// Effet ponctuel à jouer par l'écran (navigation, feuille). Chaque émission
 /// incrémente [SuiviState.effectId] : l'écran n'écoute que ce compteur.
 sealed class SuiviEffect {
@@ -481,6 +486,27 @@ class SuiviCubit extends Cubit<SuiviState> {
       method: method,
       confirmNumber: method == ScanMethod.manual,
     );
+  }
+
+  /// Le [number] saisi à la remise est-il bien celui du colis [bidId] ?
+  /// Seul l'expéditeur le connaît (FLUTTER-BC).
+  Future<TrackingNumberCheck> checkTrackingNumber(
+    String bidId,
+    String number,
+  ) async {
+    try {
+      final result = await _trackingRepo.searchByTrackingNumber(number);
+      return result.bidId == bidId
+          ? TrackingNumberCheck.ok
+          : TrackingNumberCheck.wrong;
+    } catch (e) {
+      final error = unwrapDioError(e);
+      // Numéro inconnu (404) ou d'un autre colis (403) : refusé. Le reste
+      // (réseau coupé, serveur injoignable) ne dit rien du numéro.
+      return error is NotFoundException || error is ForbiddenException
+          ? TrackingNumberCheck.wrong
+          : TrackingNumberCheck.unverified;
+    }
   }
 
   /// Numéro saisi dans la feuille du mode Valider (QR illisible) : le colis

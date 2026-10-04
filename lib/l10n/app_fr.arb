@@ -18600,5 +18600,25 @@
   "scanConfirmCodeIncomplete": "Le code de retrait contient 6 chiffres.",
   "@scanConfirmCodeIncomplete": {
     "description": "Confirmation de remise : code saisi incomplet (FLUTTER-BA)"
-  }
+  },
+  "suiviTrackingNumberTitle": "Numéro de suivi du colis",
+  "@suiviTrackingNumberTitle": {"description": "Titre de la feuille de saisie du numéro de suivi à la remise du colis (FLUTTER-BC)"},
+  "suiviTrackingNumberBody": "Demande à l'expéditeur le numéro de suivi du colis {parcel} : lui seul le connaît. Il prouve que tu récupères le bon colis, avant la photo.",
+  "@suiviTrackingNumberBody": {"description": "Explication de la feuille du numéro de suivi, {parcel} est le libellé du colis", "placeholders": {"parcel": {"type": "String"}}},
+  "suiviTrackingNumberLabel": "Numéro de suivi",
+  "@suiviTrackingNumberLabel": {"description": "Libellé du champ du numéro de suivi"},
+  "suiviTrackingNumberContinue": "Continuer vers la photo",
+  "@suiviTrackingNumberContinue": {"description": "Bouton de la feuille du numéro de suivi"},
+  "suiviTrackingNumberRequired": "Saisis le numéro de suivi.",
+  "@suiviTrackingNumberRequired": {"description": "Champ du numéro de suivi vide"},
+  "suiviTrackingNumberWrong": "Ce numéro ne correspond pas à ce colis. Vérifie-le avec l'expéditeur.",
+  "@suiviTrackingNumberWrong": {"description": "Numéro de suivi refusé"},
+  "errorTrackingNumberMismatchTitle": "Numéro de suivi incorrect",
+  "@errorTrackingNumberMismatchTitle": {"description": "Erreur tracking-number-mismatch"},
+  "errorTrackingNumberMismatchMessage": "Ce numéro ne correspond pas à ce colis. Demande-le à l'expéditeur.",
+  "@errorTrackingNumberMismatchMessage": {"description": "Erreur tracking-number-mismatch"},
+  "errorTrackingNumberRequiredTitle": "Numéro de suivi requis",
+  "@errorTrackingNumberRequiredTitle": {"description": "Erreur tracking-number-required"},
+  "errorTrackingNumberRequiredMessage": "Saisis le numéro de suivi donné par l'expéditeur pour valider la remise.",
+  "@errorTrackingNumberRequiredMessage": {"description": "Erreur tracking-number-required"}
 }

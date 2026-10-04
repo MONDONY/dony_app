@@ -39,6 +39,7 @@ class TrackingRepository {
     String? photoUrl,
     DateTime? offlineTimestamp,
     ScanMethod? scanMethod,
+    String? trackingNumber,
   }) async {
     final response = await _apiClient.dio.post(
       '/tracking/events',
@@ -50,6 +51,8 @@ class TrackingRepository {
         'gpsLabel': ?gpsLabel,
         'photoUrl': ?photoUrl,
         'scanMethod': ?scanMethod?.wire,
+        // Remise du colis (DEPART) : numéro de suivi donné par l'expéditeur.
+        'trackingNumber': ?trackingNumber,
         if (offlineTimestamp != null)
           'offlineTimestamp': offlineTimestamp.toUtc().toIso8601String(),
       },
