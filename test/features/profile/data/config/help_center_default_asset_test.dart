@@ -42,6 +42,15 @@ void main() {
       },
     );
 
+    test('le lien TikTok mène au compte officiel @yadony_app', () {
+      final tiktok = config.socialLinks.singleWhere(
+        (link) => link.network == SocialNetwork.tiktok,
+      );
+
+      expect(tiktok.url.toString(), 'https://www.tiktok.com/@yadony_app');
+      expect(tiktok.active, isTrue);
+    });
+
     test('un contexte sans vidéo ne propose aucun tutoriel', () {
       for (final context in [
         TutorialContext.search,
